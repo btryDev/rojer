@@ -9,8 +9,9 @@
 
 import { clientBorne } from "@/lib/auth/portee/client";
 
+/** Le compte simulé porte l'identifiant de la personne (`vitest.setup.ts`, ADR-054). */
 export async function clientDuCompteSimule(userId = "user-1") {
-  return clientBorne({ type: "compte", userId });
+  return clientBorne({ type: "compte", compteId: userId, userId });
 }
 
 /**

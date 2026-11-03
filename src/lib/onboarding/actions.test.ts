@@ -17,15 +17,15 @@ const h = vi.hoisted(() => {
     { id: string; raisonSociale: string; effectif: number }
   >();
   type ArgsUpsert = {
-    where: { userId_siren: { userId: string; siren: string } };
+    where: { compteId_siren: { compteId: string; siren: string } };
     create: Record<string, unknown>;
     update: Record<string, unknown>;
   };
   const tx = {
     entreprise: {
       upsert: vi.fn(async (args: ArgsUpsert) => {
-        const { userId, siren } = args.where.userId_siren;
-        const cle = `${userId}|${siren}`;
+        const { compteId, siren } = args.where.compteId_siren;
+        const cle = `${compteId}|${siren}`;
         let e = entreprises.get(cle);
         if (!e) {
           e = {
@@ -290,8 +290,8 @@ describe("finaliserOnboarding — une entreprise par SIREN, rattachée dans le c
       finaliserOnboarding({ status: "idle" }, formulaire({ siret: "120 027 016 00357" })),
     ).rejects.toThrow("NEXT_REDIRECT");
     const appel = h.tx.entreprise.upsert.mock.calls.at(-1)?.[0];
-    expect(appel?.where).toEqual({ userId_siren: { userId: "user-1", siren: "120027016" } });
-    expect(appel?.create).toMatchObject({ userId: "user-1", siren: "120027016", raisonSociale: "Cabinet Martin" });
+    expect(appel?.where).toEqual({ compteId_siren: { compteId: "user-1", siren: "120027016" } });
+    expect(appel?.create).toMatchObject({ compteId: "user-1", siren: "120027016", raisonSociale: "Cabinet Martin" });
     expect(appel?.create).not.toHaveProperty("siret");
     expect(appel?.create).not.toHaveProperty("codeNaf");
     const etab = h.tx.etablissement.create.mock.calls.at(-1)?.[0].data;

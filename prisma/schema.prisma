@@ -38,10 +38,13 @@ datasource db {
 // migration `retrait_siret_naf_entreprise`, second temps du retrait. Le SIRET
 // et le NAF appartiennent à l'établissement (`Etablissement`).]
 
+// [2026-11-03, ADR-054 : la racine est le compte (`compteId`), plus
+// l'utilisateur. Plusieurs personnes y travaillent, chacune par sa ligne
+// `Membre` ; tout `where` remonte à `entreprise.compteId`.]
 model Entreprise {
   id             String          @id @default(cuid())
-  userId         String?         @db.Uuid
-  user           User?           @relation(fields: [userId], references: [id], onDelete: Restrict)
+  compteId       String?         @db.Uuid
+  compte         Compte?         @relation(fields: [compteId], references: [id], onDelete: Restrict)
   siren          String?
   raisonSociale  String
   effectif       Int
@@ -52,7 +55,8 @@ model Entreprise {
 
   // ~~@@index([userId])~~ [2026-10-28 : retiré, redondant — l'unicité
   // `[userId, siren]` commence par `userId` et sert les mêmes lectures.]
-  @@unique([userId, siren])
+  // [2026-11-03, ADR-054 : `[compteId, siren]`.]
+  @@unique([compteId, siren])
 }
 
 // ADR-001 : Etablissement est l'ancrage des obligations réglementaires.
@@ -594,10 +598,10 @@ model Equipement {
   // bloquer selon l'ordre des triggers RI. Cf. migration _batiment_fk_no_action.
   batiment        Batiment      @relation(fields: [batimentId], references: [id], onDelete: NoAction)
 
-  categorie         CategorieEquipement
-  libelle           String
-  localisation      String?
-  dateMiseEnService DateTime?
+  categorie          CategorieEquipement
+  libelle            String
+  localisation       String?
+  dateMiseEnService  DateTime?
   // Fin de vie fixée par le FABRICANT, pas par un texte : un harnais antichute
   // a typiquement dix ans, une cartouche filtrante bien moins. Le 3° de
   // l'article 2 de l'arrêté du 19 mars 1993 fait constater l'élimination des
@@ -606,16 +610,18 @@ model Equipement {
   // produit donc aucune échéance par elle-même : la remplir renseigne, elle ne
   // prescrit pas. Nullable sans défaut, pour que « je ne sais pas » reste
   // distinct de « pas de péremption ».
-  datePeremption    DateTime?
-  caracteristiques  Json?
-  actif             Boolean             @default(true)
+  datePeremption     DateTime?
+  caracteristiques   Json?
+  actif              Boolean             @default(true)
   // 2026-10-14 : la clé d'un matériel que Rojer ne suit pas
   // (`equipements/materiels-non-couverts.ts`), posée seulement en catégorie
   // AUTRE et validée contre la liste par `equipementSchema`. `null` sinon.
   materielNonCouvert String?
 
   verifications              Verification[]
-  /** Points à corriger qu'un contrôle d'ensemble a désignés sur cet appareil (ADR-048). */
+  /**
+   * Points à corriger qu'un contrôle d'ensemble a désignés sur cet appareil (ADR-048).
+   */
   pointsACorriger            Action[]
   prescriptionsParticulieres PrescriptionParticuliere[]
 
@@ -1010,7 +1016,9 @@ model RapportVerification {
 
   createdAt DateTime @default(now())
 
-  /** Les points à corriger que ce rapport a relevés (ADR-048). */
+  /**
+   * Les points à corriger que ce rapport a relevés (ADR-048).
+   */
   pointsACorriger Action[] @relation("PointsDuRapport")
 
   @@index([etablissementId, dateRapport])
@@ -1082,9 +1090,9 @@ model Action {
   echeance    DateTime?
   responsable String?
 
-  leveeLe          DateTime?
-  leveeCommentaire String?
-  leveeRapportId   String?
+  leveeLe            DateTime?
+  leveeCommentaire   String?
+  leveeRapportId     String?
   // La pièce qui prouve la correction d'un point à corriger — photo, facture
   // (ADR-048). Facultative ; mêmes règles que le fichier d'un rapport
   // (`rapports/validator.ts`), clé sous `points/<établissement>/…`.
@@ -1110,8 +1118,8 @@ model Action {
   // appareil est sa trace (ADR-048) ; la base refuse de supprimer l'appareil
   // plutôt que de l'en détacher en silence. Migration
   // `20261030100000_preuves_protegees_en_base`.]
-  equipementId String?
-  equipement   Equipement? @relation(fields: [equipementId], references: [id], onDelete: NoAction)
+  equipementId     String?
+  equipement       Equipement?          @relation(fields: [equipementId], references: [id], onDelete: NoAction)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1200,7 +1208,9 @@ model Prestataire {
   // Les pièces REMPLACÉES (2026-10-12) : la fiche ne porte que la pièce en
   // cours, une colonne par type ; l'ancienne s'inscrit ici au remplacement.
   piecesPrecedentes PiecePrestataire[]
-  /** Les contrôles dont il est le prestataire attitré (ADR-049). */
+  /**
+   * Les contrôles dont il est le prestataire attitré (ADR-049).
+   */
   controlesSuivis   Verification[]
 
   createdAt DateTime @default(now())
@@ -1814,7 +1824,7 @@ model PointReleve {
   nom             String
   localisation    String?
   batimentId      String?
-  batiment        Batiment?     @relation(fields: [batimentId], references: [id], onDelete: SetNull)
+  batiment        Batiment?        @relation(fields: [batimentId], references: [id], onDelete: SetNull)
   typeReseau      TypeReseauEau
   /// Où est le point (2026-10-14, chantier § 5). `null` : point créé avant
   /// que le type existe, jamais deviné — la fiche invite à le préciser.
@@ -1825,7 +1835,7 @@ model PointReleve {
   /// `estReleveConforme`.
   seuilMinCelsius Float?
   seuilMaxCelsius Float?
-  actif           Boolean       @default(true)
+  actif           Boolean          @default(true)
 
   releves ReleveTemperature[]
 
@@ -2204,7 +2214,10 @@ enum CategorieAssistance {
 
 model DemandeAssistance {
   id              String              @id @default(cuid())
-  /// Le compte qui demande (ADR-052).
+  /// Le compte d'où part la demande : racine (ADR-054).
+  compteId        String              @db.Uuid
+  compte          Compte              @relation(fields: [compteId], references: [id], onDelete: Restrict)
+  /// La personne qui demande (ADR-052) : un membre du compte.
   userId          String              @db.Uuid
   user            User                @relation(fields: [userId], references: [id], onDelete: Restrict)
   etablissementId String?
@@ -2219,6 +2232,7 @@ model DemandeAssistance {
   createdAt       DateTime            @default(now())
 
   @@index([userId, createdAt])
+  @@index([compteId, createdAt])
   @@index([etablissementId])
 }
 
@@ -2255,25 +2269,30 @@ model User {
   twoFactorEnabled Boolean    @default(false)
   twoFactor        TwoFactor?
 
-  entreprises        Entreprise[]
   signatures         Signature[]
   accessTokensEmis   AccessToken[]
   demandesAssistance DemandeAssistance[]
-  abonnement         Abonnement?
+  membres            Membre[]
+  invitationsEmises  InvitationCompte[]
 
   @@unique([email])
 }
 
 model Session {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  expiresAt DateTime
-  token     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  ipAddress String?
-  userAgent String?
-  userId    String   @db.Uuid
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  expiresAt     DateTime
+  token         String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  ipAddress     String?
+  userAgent     String?
+  userId        String   @db.Uuid
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Le compte choisi (plugin `organization`, `activeOrganizationId`). Une
+  /// préférence, jamais un droit : `requireCompte` relit `Membre` à chaque
+  /// appel (ADR-054 § 3). Sans clé étrangère : un compte disparu laisse une
+  /// valeur que la relecture écarte.
+  compteActifId String?  @db.Uuid
 
   @@unique([token])
   @@index([userId])
@@ -2337,10 +2356,10 @@ model AuthVerification {
 // créé (le client Stripe existe dès le premier passage au paiement).
 model Abonnement {
   id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  /// Racine de compte (ADR-051). RESTRICT : supprimer un compte devra
-  /// d'abord résilier chez Stripe.
-  userId                String    @unique @db.Uuid
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  /// Racine de compte (ADR-051, ADR-054). RESTRICT : supprimer un compte
+  /// devra d'abord résilier chez Stripe.
+  compteId              String    @unique @db.Uuid
+  compte                Compte    @relation(fields: [compteId], references: [id], onDelete: Restrict)
   stripeCustomerId      String    @unique
   stripeSubscriptionId  String?   @unique
   statut                String?
@@ -2383,4 +2402,63 @@ model EvenementStripe {
 
   // Le ménage des événements anciens (`DELETE … WHERE "recuLe" < …`).
   @@index([recuLe])
+}
+
+// ============================================================================
+// Comptes et membres — plugin `organization` de Better Auth (ADR-054)
+// ============================================================================
+// Un compte (l'« organisation » du plugin) porte les entreprises et
+// l'abonnement ; des personnes y travaillent par une ligne `Membre`, avec un
+// rôle : `owner` (propriétaire), `member` (membre), `lecture` (lecture
+// seule). Hors compte pour le client borné (ADR-051) : lus et écrits par
+// l'adaptateur de Better Auth et par `auth/membres.ts`.
+
+model Compte {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  /// Exigé unique par le plugin ; tiré au hasard, jamais affiché.
+  slug      String
+  logo      String?
+  metadata  String?
+  createdAt DateTime @default(now())
+
+  membres            Membre[]
+  invitations        InvitationCompte[]
+  entreprises        Entreprise[]
+  abonnement         Abonnement?
+  demandesAssistance DemandeAssistance[]
+
+  @@unique([slug])
+}
+
+model Membre {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  compteId  String   @db.Uuid
+  compte    Compte   @relation(fields: [compteId], references: [id], onDelete: Cascade)
+  userId    String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String   @default("member")
+  createdAt DateTime @default(now())
+
+  /// Une personne, une ligne par compte : la relecture de `requireCompte`
+  /// passe par cette clé.
+  @@unique([compteId, userId])
+  @@index([userId])
+}
+
+model InvitationCompte {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  compteId  String   @db.Uuid
+  compte    Compte   @relation(fields: [compteId], references: [id], onDelete: Cascade)
+  email     String
+  role      String?
+  /// `pending`, `accepted`, `rejected`, `canceled` (plugin).
+  status    String   @default("pending")
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  inviterId String   @db.Uuid
+  inviter   User     @relation(fields: [inviterId], references: [id], onDelete: Cascade)
+
+  @@index([compteId])
+  @@index([email])
 }

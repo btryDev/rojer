@@ -35,7 +35,11 @@ export type EquipementFaux = {
 
 export type EtablissementFaux = {
   id: string;
-  /** Le propriétaire, pour le prédicat `entreprise: { userId }` (ADR-005). */
+  /**
+   * Le compte propriétaire, pour le prédicat `entreprise: { compteId }`
+   * (ADR-054 ; `userId` avant). Le champ garde son nom : le compte simulé
+   * porte l'identifiant de la personne (`vitest.setup.ts`).
+   */
   userId: string;
   effectifSurSite: number;
   /**
@@ -273,9 +277,9 @@ export function fauxPrisma(db: Magasin) {
       v.salarieId ?? "∅",
     ].join("|");
 
-  /** Le prédicat `etablissement: { entreprise: { userId } }`, contre le magasin. */
-  const auCompte = (etablissementId: string, userId: string) =>
-    db.etablissements.some((e) => e.id === etablissementId && e.userId === userId);
+  /** Le prédicat `etablissement: { entreprise: { compteId } }`, contre le magasin. */
+  const auCompte = (etablissementId: string, compteId: string) =>
+    db.etablissements.some((e) => e.id === etablissementId && e.userId === compteId);
 
   const etablissement = {
     /** `where: { id }` + `include: { <relation>: { where } }`. */
@@ -326,11 +330,11 @@ export function fauxPrisma(db: Magasin) {
       return sortie;
     },
 
-    /** `where: { id, entreprise: { userId } }` — le prédicat de l'ADR-005. */
+    /** `where: { id, entreprise: { compteId } }` — le prédicat de l'ADR-005, au compte (ADR-054). */
     findFirst: async ({
       where,
     }: {
-      where: { id?: string; entreprise?: { userId?: string } };
+      where: { id?: string; entreprise?: { compteId?: string } };
     }) => {
       db.journal.push({ operation: "etablissement.findFirst", where });
       const { id, entreprise, ...reste } = where;
@@ -340,7 +344,7 @@ export function fauxPrisma(db: Magasin) {
       const trouve = db.etablissements.find(
         (e) =>
           (id === undefined || e.id === id) &&
-          (entreprise?.userId === undefined || e.userId === entreprise.userId),
+          (entreprise?.compteId === undefined || e.userId === entreprise.compteId),
       );
       return trouve ?? null;
     },
@@ -445,7 +449,7 @@ export function fauxPrisma(db: Magasin) {
     },
 
     /**
-     * `where: { id, etablissement: { entreprise: { userId } } }` — la lecture
+     * `where: { id, etablissement: { entreprise: { compteId } } }` — la lecture
      * du dépôt, bornée au compte (audit du 2026-10-13). Le prédicat est
      * HONORÉ contre le propriétaire du magasin : une ligne d'un autre compte
      * ne ressort pas, comme en base.
@@ -454,16 +458,16 @@ export function fauxPrisma(db: Magasin) {
       where,
       select,
     }: {
-      where: { id: string; etablissement: { entreprise: { userId: string } } };
+      where: { id: string; etablissement: { entreprise: { compteId: string } } };
       select?: Record<string, unknown>;
     }) => {
       const { id, etablissement: portee, ...reste } = where;
-      if (Object.keys(reste).length > 0 || portee?.entreprise?.userId === undefined) {
+      if (Object.keys(reste).length > 0 || portee?.entreprise?.compteId === undefined) {
         inconnu("verification.findFirst", [...Object.keys(reste), ...(portee ? [] : ["sans portée"])]);
       }
       db.journal.push({ operation: "verification.findFirst", where });
       const v = db.verifications.find(
-        (x) => x.id === id && auCompte(x.etablissementId, portee.entreprise.userId),
+        (x) => x.id === id && auCompte(x.etablissementId, portee.entreprise.compteId),
       );
       if (!v) return null;
       return select === undefined ? { ...v } : projeter(v, select);
@@ -822,21 +826,21 @@ export function fauxPrisma(db: Magasin) {
     }: {
       where:
         | { verificationId: string; resultat?: { in: readonly string[] } }
-        | { id: string; etablissement: { entreprise: { userId: string } } };
+        | { id: string; etablissement: { entreprise: { compteId: string } } };
       orderBy?: { dateRapport?: "asc" | "desc"; createdAt?: "asc" | "desc" }[];
       select?: unknown;
     }) => {
-      // Troisième forme : `where: { id, etablissement: { entreprise: { userId } } }`,
+      // Troisième forme : `where: { id, etablissement: { entreprise: { compteId } } }`,
       // la lecture du retrait bornée au compte (audit du 2026-10-13). HONORÉE
       // contre le propriétaire du magasin.
       if ("id" in where) {
         const { id, etablissement: portee, ...autres } = where;
-        if (Object.keys(autres).length > 0 || portee?.entreprise?.userId === undefined) {
+        if (Object.keys(autres).length > 0 || portee?.entreprise?.compteId === undefined) {
           inconnu("rapportVerification.findFirst", [...Object.keys(autres), ...(portee ? [] : ["sans portée"])]);
         }
         db.journal.push({ operation: "rapportVerification.findFirst", where });
         const trouve = tousLesRapports().find(
-          ({ v, r }) => r.id === id && auCompte(v.etablissementId, portee.entreprise.userId),
+          ({ v, r }) => r.id === id && auCompte(v.etablissementId, portee.entreprise.compteId),
         );
         return trouve ? ligneDeRapport(trouve, select) : null;
       }

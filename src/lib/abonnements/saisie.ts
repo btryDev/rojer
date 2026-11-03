@@ -9,7 +9,8 @@ import "server-only";
 
 import { cache } from "react";
 import { redirect } from "next/navigation";
-import { requireCompte, type Db } from "@/lib/auth/compte";
+import { getOptionalCompte, type Db } from "@/lib/auth/compte";
+import { requireUser } from "@/lib/auth/require-user";
 import { etatStripe } from "@/lib/stripe/config";
 import type { Env } from "@/lib/environnement";
 import { droitsDe, type ContexteDroits, type Droits } from "./droits";
@@ -37,19 +38,28 @@ const COLONNES = {
   finPrevueLe: true,
 } as const;
 
-/** La ligne d'abonnement du compte, lue seulement une fois l'offre lancée. */
-export const abonnementDuCompte = cache(async (db: Db, userId: string) =>
-  offreLancee(contexteDroits()) ? db.abonnement.findUnique({ where: { userId }, select: COLONNES }) : null,
+/** La ligne d'abonnement du compte (ADR-054 : une par compte), lue seulement une fois l'offre lancée. */
+export const abonnementDuCompte = cache(async (db: Db, compteId: string) =>
+  offreLancee(contexteDroits()) ? db.abonnement.findUnique({ where: { compteId }, select: COLONNES }) : null,
 );
 
 /** Les droits d'un compte ; aucune lecture tant que l'offre n'est pas lancée. */
-export async function droitsDuCompte(db: Db, userId: string): Promise<Droits> {
-  return droitsDe(await abonnementDuCompte(db, userId), contexteDroits());
+export async function droitsDuCompte(db: Db, compteId: string): Promise<Droits> {
+  return droitsDe(await abonnementDuCompte(db, compteId), contexteDroits());
 }
 
-/** La garde d'une écriture du titulaire : sans effet tant que l'offre n'est pas lancée. */
+/**
+ * La garde d'une écriture : sans effet tant que l'offre n'est pas lancée.
+ * Sans compte (personne inscrite qui n'a encore rien créé, ADR-054), pas
+ * d'abonnement non plus : page de l'abonnement — et surtout pas
+ * `requireCompte`, qui renverrait à l'onboarding qu'on vient de quitter.
+ */
 export async function verifierSaisie(): Promise<void> {
   if (!offreLancee(contexteDroits())) return;
-  const { user, db } = await requireCompte();
-  if (!(await droitsDuCompte(db, user.id)).saisie) redirect(`${PAGE_ABONNEMENT}?saisie=fermee`);
+  const c = await getOptionalCompte();
+  if (!c) {
+    await requireUser();
+    redirect(`${PAGE_ABONNEMENT}?saisie=fermee`);
+  }
+  if (!(await droitsDuCompte(c.db, c.compte.compteId)).saisie) redirect(`${PAGE_ABONNEMENT}?saisie=fermee`);
 }

@@ -21,9 +21,13 @@ vi.unmock("@/lib/auth/portee/client");
 vi.unmock("@/lib/auth/portee/lot-verifie");
 // La requête porte la portée au propriétaire : l'utilisateur est celui du
 // dossier lu, posé avant chaque test.
-const session = vi.hoisted(() => ({ userId: "" }));
+const session = vi.hoisted(() => ({ userId: "00000000-0000-4000-8000-000000000001", compteId: "" }));
 vi.mock("@/lib/auth/require-user", () => ({
   requireUser: async () => ({ id: session.userId, email: null }),
+}));
+// Le compte de la session : celui du dossier lu (ADR-054).
+vi.mock("@/lib/auth/membres", () => ({
+  appartenanceDeLaSession: async () => (session.compteId ? { compteId: session.compteId, role: "owner" } : null),
 }));
 
 const URL_BASE = process.env.REALISATIONS_INTEGRATION_URL;
@@ -77,10 +81,10 @@ describe.skipIf(!URL_BASE || !local)("dernière réalisation — PostgreSQL rée
   async function dossier() {
     const etab = await prisma.etablissement.findFirstOrThrow({
       orderBy: { verifications: { _count: "desc" } },
-      select: { id: true, entreprise: { select: { userId: true } } },
+      select: { id: true, entreprise: { select: { compteId: true } } },
     });
-    if (!etab.entreprise.userId) throw new Error("dossier sans propriétaire");
-    session.userId = etab.entreprise.userId;
+    if (!etab.entreprise.compteId) throw new Error("dossier sans compte");
+    session.compteId = etab.entreprise.compteId;
     const ids = (
       await prisma.verification.findMany({ where: { etablissementId: etab.id }, select: { id: true } })
     ).map((v) => v.id);
@@ -113,7 +117,7 @@ describe.skipIf(!URL_BASE || !local)("dernière réalisation — PostgreSQL rée
   it("un autre compte ne lit rien, même avec les bons identifiants", async () => {
     const { etablissementId, ids } = await dossier();
     expect([...(await reference(ids)).keys()].length).toBeGreaterThan(0);
-    session.userId = "00000000-0000-4000-8000-0000000000aa";
+    session.compteId = "00000000-0000-4000-8000-0000000000aa";
     expect(
       (await joindreDernieresRealisations(etablissementId, ids.map((id) => ({ id })))).every(
         (l) => l.derniereRealisation === null,

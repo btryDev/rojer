@@ -15,14 +15,17 @@ import {
   type Portee,
 } from "./borne";
 
-const A: Portee = { type: "compte", userId: "u-a" };
-const B: Portee = { type: "compte", userId: "u-b" };
-const COMPTE_A = { entreprise: { userId: "u-a" } };
+// Le compte et la personne qui agit ont des identifiants distincts (ADR-054) :
+// une borne qui confondrait l'un et l'autre tomberait ici.
+const A: Portee = { type: "compte", compteId: "c-a", userId: "u-a" };
+const B: Portee = { type: "compte", compteId: "c-b", userId: "u-b" };
+const SANS_SESSION_A: Portee = { type: "compte", compteId: "c-a", userId: null };
+const COMPTE_A = { entreprise: { compteId: "c-a" } };
 const ETAB_A = { etablissement: COMPTE_A };
 
 describe("borne d'un modèle", () => {
   it("racine, un cran, quatre crans", () => {
-    expect(borne("Entreprise", A)).toEqual({ userId: "u-a" });
+    expect(borne("Entreprise", A)).toEqual({ compteId: "c-a" });
     expect(borne("Etablissement", A)).toEqual(COMPTE_A);
     expect(borne("Risque", A)).toEqual({ unite: { duerp: ETAB_A } });
     expect(borne("ReleveTemperature", A)).toEqual({ pointReleve: { carnet: ETAB_A } });
@@ -93,7 +96,7 @@ describe("lectures et écritures par where", () => {
         "findMany",
         {
           where: {
-            OR: [{ batiment: { nom: "A" } }, { etablissement: { entreprise: { userId: "u-a" } } }],
+            OR: [{ batiment: { nom: "A" } }, { etablissement: { entreprise: { compteId: "c-a" } } }],
             actions: { some: { statut: "ouverte" } },
           },
           orderBy: [{ batiment: { nom: "asc" } }],
@@ -213,33 +216,55 @@ describe("créations et clés étrangères", () => {
 });
 
 describe("racine du compte", () => {
-  it("une Entreprise créée est rattachée au compte (cc : la racine est une relation vers User)", () => {
+  it("une Entreprise créée est rattachée au compte (ADR-054 : la racine est une relation vers Compte)", () => {
     expect(argumentsBornes("Entreprise", "create", { data: { raisonSociale: "x" } }, A).data).toEqual({
       raisonSociale: "x",
-      user: { connect: { id: "u-a" } },
+      compte: { connect: { id: "c-a" } },
     });
   });
 
   it.each([
-    ["create", { data: { userId: "u-b" } }],
-    ["update", { where: { id: "x" }, data: { userId: "u-b" } }],
-    ["update", { where: { id: "x" }, data: { userId: { set: "u-b" } } }],
-    ["update", { where: { id: "x" }, data: { userId: null } }],
-    ["updateMany", { data: { userId: "u-b" } }],
-    ["upsert", { where: { id: "x" }, create: {}, update: { userId: "u-b" } }],
-  ])("refuse la racine d'un autre compte : %s %j", (op, args) => {
+    ["create", { data: { compteId: "c-b" } }],
+    ["create, l'identifiant de la personne pris pour le compte", { data: { compteId: "u-a" } }],
+    ["update", { where: { id: "x" }, data: { compteId: "c-b" } }],
+    ["update", { where: { id: "x" }, data: { compteId: { set: "c-b" } } }],
+    ["update", { where: { id: "x" }, data: { compteId: null } }],
+    ["updateMany", { data: { compteId: "c-b" } }],
+    ["upsert", { where: { id: "x" }, create: {}, update: { compteId: "c-b" } }],
+  ])("refuse la racine d'un autre compte : %s %j", (_op, args) => {
+    const op = _op.split(",")[0];
     expect(() => argumentsBornes("Entreprise", op, args, A)).toThrow(/différent du compte/);
+  });
+
+  it.each([
+    ["un autre compte", { data: { compte: { connect: { id: "c-b" } } } }],
+    ["l'identifiant de la personne", { data: { compte: { connect: { id: "u-a" } } } }],
+  ])("refuse un connect de la racine vers %s", (_, args) => {
+    expect(() => argumentsBornes("Entreprise", "create", args, A)).toThrow(ErreurPortee);
   });
 
   it("createMany d'une racine : posée, ou refusée si elle désigne un autre compte", async () => {
     await dansUnLot(async () => {
       expect(argumentsBornes("DemandeAssistance", "createMany", { data: [{ message: "m" }] }, A).data).toEqual([
-        { message: "m", userId: "u-a" },
+        { message: "m", compteId: "c-a" },
       ]);
     });
-    expect(() => argumentsBornes("DemandeAssistance", "createMany", { data: [{ userId: "u-b" }] }, A)).toThrow(
+    expect(() => argumentsBornes("DemandeAssistance", "createMany", { data: [{ compteId: "c-b" }] }, A)).toThrow(
       ErreurPortee,
     );
+  });
+
+  it("l'auteur d'une demande ne peut être que la personne qui agit", () => {
+    expect(argumentsBornes("DemandeAssistance", "create", { data: { message: "m", userId: "u-a" } }, A).data).toEqual({
+      message: "m",
+      compte: { connect: { id: "c-a" } },
+      user: { connect: { id: "u-a" } },
+    });
+    expect(() => argumentsBornes("DemandeAssistance", "create", { data: { userId: "u-b" } }, A)).toThrow(ErreurPortee);
+    // Sans session (jeton, MCP, webhook), personne n'agit : aucun auteur.
+    expect(() =>
+      argumentsBornes("DemandeAssistance", "create", { data: { userId: "u-a" } }, SANS_SESSION_A),
+    ).toThrow(ErreurPortee);
   });
 });
 
@@ -352,7 +377,7 @@ describe("identité (cc) : relations vers User", () => {
   it.each([
     ["include vers user", { include: { user: true } }],
     ["include profond vers les sessions", { include: { user: { include: { sessions: true } } } }],
-    ["select imbriqué dans un include", { include: { etablissement: { select: { entreprise: { select: { user: true } } } } } }],
+    ["select imbriqué dans un include", { include: { etablissement: { select: { entreprise: { select: { compte: true } } } } } }],
     ["select direct", { select: { id: true, user: { select: { email: true } } } }],
     ["where qui traverse vers le second facteur", { where: { user: { twoFactor: { secret: { startsWith: "A" } } } } }],
     ["orderBy par l'adresse de l'utilisateur", { orderBy: { user: { email: "asc" } } }],
@@ -362,9 +387,9 @@ describe("identité (cc) : relations vers User", () => {
 
   it.each([
     [
-      "connect dont la condition remonte vers le second facteur",
+      "connect dont la condition remonte vers les membres du compte",
       "Etablissement",
-      { data: { entreprise: { connect: { id: "e", user: { twoFactor: { secret: { startsWith: "A" } } } } } } },
+      { data: { entreprise: { connect: { id: "e", compte: { membres: { some: { userId: "u-b" } } } } } } },
     ],
     [
       "deleteMany imbriqué dont la condition remonte vers les sessions",

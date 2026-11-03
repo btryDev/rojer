@@ -165,10 +165,10 @@ async function sansRedirection(p: Promise<unknown>): Promise<void> {
 
 function plan(id: string, etablissementId: string, statut: string): Ligne {
   // La relation jusqu'au compte : les actions du permis de feu lisent dans le
-  // périmètre du compte (`etablissement: { entreprise: { userId } }`, audit du
+  // périmètre du compte (`etablissement: { entreprise: { compteId: userId } }`, audit du
   // 2026-10-13), et `correspond` la traverse.
   const userId = etablissementId === "etab-a-moi" ? "user-1" : "user-voisin";
-  return { id, etablissementId, statut, numero: 1, etablissement: { entreprise: { userId } } };
+  return { id, etablissementId, statut, numero: 1, etablissement: { entreprise: { compteId: userId } } };
 }
 
 function signature(objetType: string, objetId: string, etablissementId: string): Ligne {
@@ -495,7 +495,7 @@ describe("garantie 2b — un objet clos ou annulé ne se signe plus, même avec 
     // pas. Seconde lecture du 2026-10-31.
     prismaMock.planPrevention.lignes.push({
       ...planComplet("pp-e2", "etab-a-moi-2", "attente_signatures"),
-      etablissement: { entreprise: { userId: "user-1" } },
+      etablissement: { entreprise: { compteId: "user-1" } },
     });
     prismaMock.accessToken.lignes.push(lienValide("plan_prevention", "pp-e2"));
 

@@ -16,6 +16,10 @@ import type Stripe from "stripe";
 vi.mock("server-only", () => ({}));
 vi.unmock("@/lib/auth/portee/client");
 vi.unmock("@/lib/auth/portee/lot-verifie");
+// L'appartenance réelle : un client d'avant l'ADR-054 se rattache par son propriétaire.
+vi.unmock("@/lib/auth/membres");
+vi.mock("@/lib/auth/better-auth", () => ({ auth: {} }));
+vi.mock("@/lib/auth/require-user", () => ({ lireSessionCourante: async () => null }));
 
 const URL_BASE = process.env.STRIPE_INTEGRATION_URL;
 const local = URL_BASE ? /@(localhost|127\.0\.0\.1)[:/]/.test(URL_BASE) : false;
@@ -27,23 +31,32 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
   const { prendreEnCharge, marquerTraite, marquerEchec, oublierLesAnciens, PRISE_EXPIREE_MS, CONSERVATION_MS } =
     await import("./evenements");
 
+  // Les comptes A et B (ADR-054) et leurs propriétaires.
   const A = "00000000-0000-0000-0000-5715e000000a";
   const B = "00000000-0000-0000-0000-5715e000000b";
+  const UA = "00000000-0000-0000-0000-5715e00001aa";
+  const UB = "00000000-0000-0000-0000-5715e00001bb";
 
   async function menage() {
-    await prisma.abonnement.deleteMany({ where: { userId: { in: [A, B] } } });
+    await prisma.abonnement.deleteMany({ where: { compteId: { in: [A, B] } } });
     await prisma.evenementStripe.deleteMany({ where: { id: { startsWith: "evt_integ_" } } });
   }
 
   beforeAll(async () => {
-    for (const id of [A, B]) {
+    for (const [compteId, id] of [[A, UA], [B, UB]]) {
       await prisma.user.upsert({ where: { id }, create: { id, name: id, email: `${id}@exemple.invalid` }, update: {} });
+      await prisma.compte.upsert({
+        where: { id: compteId },
+        create: { id: compteId, name: compteId, slug: compteId, membres: { create: { userId: id, role: "owner" } } },
+        update: {},
+      });
     }
   });
   beforeEach(menage);
   afterAll(async () => {
     await menage();
-    await prisma.user.deleteMany({ where: { id: { in: [A, B] } } });
+    await prisma.compte.deleteMany({ where: { id: { in: [A, B] } } });
+    await prisma.user.deleteMany({ where: { id: { in: [UA, UB] } } });
     await prisma.$disconnect();
   });
 
@@ -64,9 +77,9 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
       ...o,
     }) as unknown as Stripe.Subscription;
 
-  const stripe = (userId: string, abonnements: Stripe.Subscription[] | Error, client?: object) =>
+  const stripe = (compteId: string, abonnements: Stripe.Subscription[] | Error, client?: object) =>
     ({
-      customers: { retrieve: async (id: string) => client ?? { id, metadata: { userId } } },
+      customers: { retrieve: async (id: string) => client ?? { id, metadata: { compteId } } },
       subscriptions: {
         list: () => ({
           autoPagingToArray: async () => {
@@ -78,9 +91,16 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
     }) as unknown as Stripe;
   vi.spyOn(console, "error").mockImplementation(() => {});
 
-  const ligne = (userId: string) => prisma.abonnement.findUnique({ where: { userId } });
+  const ligne = (compteId: string) => prisma.abonnement.findUnique({ where: { compteId } });
 
   describe("synchroniserClientStripe", () => {
+    it("un client d'avant l'ADR-054 (metadata.userId) écrit au compte dont la personne est propriétaire", async () => {
+      const s = stripe(A, [abo({ id: "sub_1", status: "active", created: 1 })], { id: "cus_A", metadata: { userId: UA } });
+      expect(await synchroniserClientStripe(s, "cus_A", { maintenant: () => new Date(1000) })).toEqual({ issue: "ecrit" });
+      expect(await ligne(A)).toMatchObject({ stripeCustomerId: "cus_A", statut: "active" });
+      expect(await ligne(B)).toBeNull();
+    });
+
     it("crée la ligne du compte que désigne le client Stripe relu, puis la met à jour", async () => {
       const essai = 1_780_000_000;
       const s1 = stripe(A, [abo({ id: "sub_1", status: "trialing", created: 1, trial_start: essai })]);
@@ -116,7 +136,7 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
     });
 
     it("un client Stripe qui n'est pas celui de la ligne du compte ne la touche pas", async () => {
-      await prisma.abonnement.create({ data: { userId: A, stripeCustomerId: "cus_A", statut: "active" } });
+      await prisma.abonnement.create({ data: { compteId: A, stripeCustomerId: "cus_A", statut: "active" } });
       const intrus = stripe(A, [abo({ id: "sub_x", status: "canceled", created: 1 })]);
       expect(await synchroniserClientStripe(intrus, "cus_autre")).toMatchObject({ issue: "ignore" });
       expect(await ligne(A)).toMatchObject({ stripeCustomerId: "cus_A", statut: "active" });
@@ -137,8 +157,8 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
     });
 
     it("client Stripe supprimé : le compte se lit sur l'abonnement, la résiliation s'enregistre", async () => {
-      await prisma.abonnement.create({ data: { userId: A, stripeCustomerId: "cus_A", statut: "active" } });
-      const s = stripe(A, [abo({ id: "sub_1", status: "canceled", created: 1, metadata: { userId: A } })], {
+      await prisma.abonnement.create({ data: { compteId: A, stripeCustomerId: "cus_A", statut: "active" } });
+      const s = stripe(A, [abo({ id: "sub_1", status: "canceled", created: 1, metadata: { compteId: A } })], {
         id: "cus_A",
         deleted: true,
       });
@@ -147,8 +167,8 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
     });
 
     it("client Stripe supprimé dont la liste est refusée : l'abonnement relu depuis la notification suffit", async () => {
-      await prisma.abonnement.create({ data: { userId: A, stripeCustomerId: "cus_A", statut: "active" } });
-      const lu = abo({ id: "sub_1", status: "canceled", created: 1, metadata: { userId: A } });
+      await prisma.abonnement.create({ data: { compteId: A, stripeCustomerId: "cus_A", statut: "active" } });
+      const lu = abo({ id: "sub_1", status: "canceled", created: 1, metadata: { compteId: A } });
       const s = stripe(A, new Error("resource_missing"), { id: "cus_A", deleted: true });
       expect(await synchroniserClientStripe(s, "cus_A", { abonnementLu: lu })).toEqual({ issue: "ecrit" });
       expect((await ligne(A))?.statut).toBe("canceled");
@@ -163,7 +183,7 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
     });
 
     it("client Stripe déjà à un autre compte : sans effet, signalé, rien d'écrit", async () => {
-      await prisma.abonnement.create({ data: { userId: B, stripeCustomerId: "cus_X", statut: "active" } });
+      await prisma.abonnement.create({ data: { compteId: B, stripeCustomerId: "cus_X", statut: "active" } });
       const s = stripe(A, [abo({ id: "sub_x", status: "canceled", created: 1 })]);
       expect(await synchroniserClientStripe(s, "cus_X")).toMatchObject({ issue: "ignore", alerte: true });
       expect(await ligne(A)).toBeNull();
@@ -171,14 +191,14 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
     });
 
     it("abonnement déjà sur la ligne d'un autre compte : sans effet, signalé", async () => {
-      await prisma.abonnement.create({ data: { userId: B, stripeCustomerId: "cus_B", stripeSubscriptionId: "sub_b" } });
-      await prisma.abonnement.create({ data: { userId: A, stripeCustomerId: "cus_A" } });
+      await prisma.abonnement.create({ data: { compteId: B, stripeCustomerId: "cus_B", stripeSubscriptionId: "sub_b" } });
+      await prisma.abonnement.create({ data: { compteId: A, stripeCustomerId: "cus_A" } });
       const s = stripe(A, [abo({ id: "sub_b", status: "active", created: 1 })]);
       expect(await synchroniserClientStripe(s, "cus_A")).toMatchObject({ issue: "ignore", alerte: true });
     });
 
     it("n'écrit jamais dans un autre compte que celui du client Stripe relu", async () => {
-      await prisma.abonnement.create({ data: { userId: B, stripeCustomerId: "cus_B", statut: "active" } });
+      await prisma.abonnement.create({ data: { compteId: B, stripeCustomerId: "cus_B", statut: "active" } });
       await synchroniserClientStripe(stripe(A, [abo({ id: "sub_a", status: "canceled", created: 1 })]), "cus_A");
       expect(await ligne(B)).toMatchObject({ stripeCustomerId: "cus_B", statut: "active" });
       expect(await ligne(A)).toMatchObject({ stripeCustomerId: "cus_A", statut: "canceled" });

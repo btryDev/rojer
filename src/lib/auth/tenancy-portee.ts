@@ -14,11 +14,11 @@
 //     `composerRegistreDeLEtablissement`, `grouperChargeParBatiment` — retirée
 //     le 2026-10-25 avec la plaque des zones du hero). On
 //     réécrit ces formes en déclarations ordinaires avant de découper.
-//  2. `PORTEE_RELATIONNELLE` — le prédicat `entreprise: { userId …` posé hors
+//  2. `PORTEE_RELATIONNELLE` — le prédicat `entreprise: { compteId …` posé hors
 //     d'un littéral `where: {` (une variable `scope`, un argument de
 //     `toutesLesConditions(…)`). C'est aussi la forme que prennent les
 //     lectures bornées au compte d'une autre branche (`appareilDuCompte`,
-//     `permisDuCompte` : `where: { id, etablissement: { entreprise: { userId
+//     `permisDuCompte` : `where: { id, etablissement: { entreprise: { compteId
 //     } } }`) : elle doit compter comme une portée établie.
 //  3. `etablitSaPorteeLocale` — la même récursion que `etablitSaPortee`, mais
 //     sur un découpage déjà normalisé, que `etablitSaPortee` (qui relit le
@@ -56,7 +56,8 @@ export function exportsDeValeur(source: string): string[] {
 }
 
 /** Le prédicat propriétaire posé hors d'un littéral `where: {`. */
-export const PORTEE_RELATIONNELLE = /\bentreprise\s*:\s*\{\s*userId\b/;
+// [2026-11-03, ADR-054 : `compteId`, la racine du compte, et non plus `userId`.]
+export const PORTEE_RELATIONNELLE = /\bentreprise\s*:\s*\{\s*compteId\b/;
 
 /** Le corps porte, à lui seul, une portée au propriétaire. */
 export function portePortee(corps: string): boolean {

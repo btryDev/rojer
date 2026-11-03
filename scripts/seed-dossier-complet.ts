@@ -99,6 +99,7 @@ import {
   type TypeAction,
 } from "@prisma/client";
 
+import { randomUUID } from "node:crypto";
 import { genererSlug } from "@/lib/accessibilite/schema";
 import { estReleveConforme } from "@/lib/carnet-sanitaire/schema";
 import { NOM_BATIMENT_PRINCIPAL } from "@/lib/batiments/schema";
@@ -794,7 +795,7 @@ function lireEntrepriseHote(argv: string[]): string | null {
     throw new Error(
       "--second-etablissement <id> attend l'identifiant de l'entreprise\n" +
         "d'accueil. Pour le trouver :\n" +
-        '  select id, "raisonSociale", "userId" from "Entreprise";',
+        '  select id, "raisonSociale", "compteId" from "Entreprise";',
     );
   }
   return valeur;
@@ -835,6 +836,17 @@ function lireUserId(argv: string[]): string {
 // Le seed proprement dit.
 // ===========================================================================
 
+/** Le compte dont `userId` est propriétaire, créé s'il n'existe pas (ADR-054). */
+async function compteDuProprietaire(userId: string): Promise<string> {
+  const membre = await prisma.membre.findFirst({ where: { userId, role: "owner" }, select: { compteId: true } });
+  if (membre) return membre.compteId;
+  const compte = await prisma.compte.create({
+    data: { name: ENTREPRISE.raisonSociale, slug: randomUUID(), membres: { create: { userId, role: "owner" } } },
+    select: { id: true },
+  });
+  return compte.id;
+}
+
 async function main(): Promise<void> {
   const userId = lireUserId(process.argv.slice(2));
   if (!(await prisma.user.findUnique({ where: { id: userId }, select: { id: true } }))) {
@@ -868,7 +880,9 @@ async function main(): Promise<void> {
     ? await prisma.entreprise.findUniqueOrThrow({ where: { id: entrepriseHote } })
     : await prisma.entreprise.create({
     data: {
-      userId,
+      // [2026-11-03, ADR-054 : l'entreprise est au compte dont la personne
+      // est propriétaire ; il naît ici s'il n'existe pas.]
+      compteId: await compteDuProprietaire(userId),
       siren: ENTREPRISE.siret.slice(0, 9),
       raisonSociale: ENTREPRISE.raisonSociale,
       effectif: ENTREPRISE.effectif,

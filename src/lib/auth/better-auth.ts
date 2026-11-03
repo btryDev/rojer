@@ -4,6 +4,8 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { twoFactor } from "better-auth/plugins/two-factor";
+import { organization } from "better-auth/plugins/organization";
+import { ROLES_DU_PLUGIN } from "./roles";
 import { createAuthMiddleware, isAPIError } from "better-auth/api";
 import { oublierAppareilsDeConfiance } from "./appareils-de-confiance";
 import { prisma } from "@/lib/prisma";
@@ -155,6 +157,27 @@ export const auth = betterAuth({
       twoFactorCookieMaxAge: 10 * 60,
       trustDeviceMaxAge: TRENTE_JOURS,
       accountLockout: { enabled: true, maxFailedAttempts: 10, durationSeconds: VERROU_DOUBLE_AUTH_MINUTES * 60 },
+    }),
+    // Comptes et membres (ADR-054) : l'« organisation » du plugin est notre
+    // `Compte`. Le plugin tient les membres, les rôles et les invitations ;
+    // l'accès aux données, lui, ne croit jamais `compteActifId` : il relit
+    // `Membre` à chaque appel (`auth/membres.ts`). Aucune création de compte
+    // depuis une session : l'onboarding le crée par un appel serveur
+    // (`compteDOnboarding`), que le plugin appelle « action système ».
+    organization({
+      allowUserToCreateOrganization: false,
+      creatorRole: "owner",
+      ac: ROLES_DU_PLUGIN.ac,
+      roles: ROLES_DU_PLUGIN.roles,
+      invitationExpiresIn: SEPT_JOURS,
+      cancelPendingInvitationsOnReInvite: true,
+      requireEmailVerificationOnInvitation: true,
+      schema: {
+        organization: { modelName: "compte" },
+        member: { modelName: "membre", fields: { organizationId: "compteId" } },
+        invitation: { modelName: "invitationCompte", fields: { organizationId: "compteId" } },
+        session: { fields: { activeOrganizationId: "compteActifId" } },
+      },
     }),
     // `nextCookies` en dernier : sans lui, une connexion faite dans une action
     // serveur ne pose pas de cookie — ni celui du défi de double authentification.

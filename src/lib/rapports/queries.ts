@@ -57,11 +57,11 @@ export async function listerRapportsDeLEtablissement(
   etablissementId: string,
   filtres: FiltresRegistre = {},
 ) {
-  const { user, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   const rapports = await db.rapportVerification.findMany({
     where: {
       etablissementId,
-      etablissement: { entreprise: { userId: user.id } },
+      etablissement: { entreprise: { compteId: compte.compteId } },
       ...(filtres.annee === undefined
         ? {}
         : {
@@ -103,7 +103,7 @@ export async function listerRapportsDeLEtablissement(
         db.action.findMany({
           where: {
             etablissementId,
-            etablissement: { entreprise: { userId: user.id } },
+            etablissement: { entreprise: { compteId: compte.compteId } },
             rapportOrigineId: null,
             verificationId: { in: [...new Set(rapports.map((r) => r.verificationId))] },
           },
@@ -155,9 +155,9 @@ export type RapportListe = Awaited<
 >[number];
 
 export async function getRapport(id: string) {
-  const { user, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   return db.rapportVerification.findFirst({
-    where: { id, etablissement: { entreprise: { userId: user.id } } },
+    where: { id, etablissement: { entreprise: { compteId: compte.compteId } } },
     include: {
       verification: {
         include: {
@@ -172,11 +172,11 @@ export async function getRapport(id: string) {
 }
 
 export async function listerRapportsDUneVerification(verificationId: string) {
-  const { user, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   return db.rapportVerification.findMany({
     where: {
       verificationId,
-      etablissement: { entreprise: { userId: user.id } },
+      etablissement: { entreprise: { compteId: compte.compteId } },
     },
     orderBy: ORDRE_RAPPORT_PLUS_RECENT,
   });
@@ -188,17 +188,17 @@ export async function listerRapportsDUneVerification(verificationId: string) {
 export const compterRapportsDuDossier = cache(async function compterRapportsDuDossier(
   etablissementId: string,
 ) {
-  const { user, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   return db.rapportVerification.count({
-    where: { etablissementId, etablissement: { entreprise: { userId: user.id } } },
+    where: { etablissementId, etablissement: { entreprise: { compteId: compte.compteId } } },
   });
 });
 
 /** Tableau de bord : les derniers rapports, du plus récent au plus ancien (B6). */
 export async function listerRapportsRecents(etablissementId: string, nombre: number) {
-  const { user, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   return db.rapportVerification.findMany({
-    where: { etablissementId, etablissement: { entreprise: { userId: user.id } } },
+    where: { etablissementId, etablissement: { entreprise: { compteId: compte.compteId } } },
     include: { verification: true },
     orderBy: ORDRE_RAPPORT_PLUS_RECENT,
     take: nombre,

@@ -4,9 +4,11 @@ import "server-only";
 // par l'API, retenir l'abonnement courant, l'écrire. L'ordre d'arrivée des
 // événements, que Stripe ne garantit pas, cesse de compter.
 //
-// - Le compte est le `metadata.userId` posé par Rojer sur le client Stripe
+// - Le compte est le `metadata.compteId` posé par Rojer sur le client Stripe
 //   relu, ou à défaut sur l'abonnement (seul encore lisible d'un client
-//   supprimé) — jamais un identifiant pris dans la notification.
+//   supprimé) — jamais un identifiant pris dans la notification. Un client
+//   créé avant l'ADR-054 ne porte que `metadata.userId` : le compte est alors
+//   celui dont cette personne est l'unique propriétaire.
 // - La ligne n'est écrite que si elle porte CE client Stripe ; un conflit
 //   (autre client, autre compte, compte disparu) ne s'écrit pas : il se
 //   signale (`alerte`).
@@ -19,6 +21,7 @@ import "server-only";
 
 import type Stripe from "stripe";
 import { clientDuClientStripe } from "@/lib/auth/compte-hors-session";
+import { compteDontEstProprietaire } from "@/lib/auth/membres";
 import { OPTIONS_WEBHOOK } from "./client";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -77,18 +80,27 @@ export function premierEssai(abonnements: Stripe.Subscription[]): Date | null {
   return debuts.length ? date(Math.min(...debuts)) : null;
 }
 
+/** Ce que le client Stripe RELU désigne : un compte, ou (avant l'ADR-054) son propriétaire. */
+export type CompteDesigne = { compteId: string } | { proprietaire: string };
+
 /**
- * Le compte d'un client Stripe RELU : le `metadata.userId` posé par Rojer sur
- * le client, ou à défaut sur l'abonnement courant (seul encore lisible d'un
- * client supprimé). Seule déduction du compte : le multi-utilisateurs y
- * lira `metadata.compteId`.
+ * Le compte d'un client Stripe RELU : le `metadata.compteId` posé par Rojer
+ * sur le client, ou à défaut sur l'abonnement courant (seul encore lisible
+ * d'un client supprimé). Sans lui, le `metadata.userId` d'avant l'ADR-054,
+ * qui désigne le propriétaire. Seule déduction du compte.
  */
 export function compteDuClientStripe(
   client: Stripe.Customer | Stripe.DeletedCustomer,
   courant: Stripe.Subscription | null,
-): string | null {
-  const userId = (client.deleted ? undefined : client.metadata?.userId) ?? courant?.metadata?.userId;
-  return typeof userId === "string" && UUID.test(userId) ? userId : null;
+): CompteDesigne | null {
+  const lire = (cle: string) => {
+    const v = (client.deleted ? undefined : client.metadata?.[cle]) ?? courant?.metadata?.[cle];
+    return typeof v === "string" && UUID.test(v) ? v : null;
+  };
+  const compteId = lire("compteId");
+  if (compteId) return { compteId };
+  const proprietaire = lire("userId");
+  return proprietaire ? { proprietaire } : null;
 }
 
 /** Code d'une erreur Prisma, reconnu à sa forme (aussi lu par `motifDErreur`). */
@@ -103,7 +115,7 @@ export type Synchronisation =
 
 const ECRIT = { issue: "ecrit" } as const;
 const INCHANGE = { issue: "inchange" } as const;
-const SANS_COMPTE = { issue: "ignore", motif: "client Stripe sans compte Rojer (metadata.userId)" } as const;
+const SANS_COMPTE = { issue: "ignore", motif: "client Stripe sans compte Rojer (metadata.compteId)" } as const;
 const INTROUVABLE = { issue: "ignore", motif: "compte Rojer introuvable", alerte: true } as const;
 const DEJA_LIE = { issue: "ignore", motif: "client ou abonnement Stripe déjà lié à un autre compte", alerte: true } as const;
 const AUTRE_CLIENT = { issue: "ignore", motif: "le compte est lié à un autre client Stripe", alerte: true } as const;
@@ -112,9 +124,9 @@ type Db = ReturnType<typeof clientDuClientStripe>;
 type Donnees = ReturnType<typeof colonnesDe> & { relueLe: Date; essaiUtiliseLe: Date | null };
 
 /** `null` : une livraison simultanée a créé la ligne du compte — passer à la mise à jour. */
-async function creerLigne(db: Db, userId: string, customerId: string, donnees: Donnees) {
+async function creerLigne(db: Db, compteId: string, customerId: string, donnees: Donnees) {
   try {
-    await db.abonnement.create({ data: { userId, stripeCustomerId: customerId, ...donnees } });
+    await db.abonnement.create({ data: { compteId, stripeCustomerId: customerId, ...donnees } });
     return ECRIT;
   } catch (e) {
     switch (codePrisma(e)) {
@@ -131,15 +143,15 @@ async function creerLigne(db: Db, userId: string, customerId: string, donnees: D
   }
   // Unicité : la ligne du compte vient d'être créée, ou ce client Stripe est
   // déjà à un autre compte.
-  const creee = await db.abonnement.findUnique({ where: { userId }, select: { stripeCustomerId: true } });
+  const creee = await db.abonnement.findUnique({ where: { compteId }, select: { stripeCustomerId: true } });
   if (!creee) return DEJA_LIE;
   return creee.stripeCustomerId !== customerId ? AUTRE_CLIENT : null;
 }
 
-async function mettreAJour(db: Db, userId: string, customerId: string, donnees: Donnees) {
+async function mettreAJour(db: Db, compteId: string, customerId: string, donnees: Donnees) {
   try {
     const { count } = await db.abonnement.updateMany({
-      where: { userId, stripeCustomerId: customerId, OR: [{ relueLe: null }, { relueLe: { lt: donnees.relueLe } }] },
+      where: { compteId, stripeCustomerId: customerId, OR: [{ relueLe: null }, { relueLe: { lt: donnees.relueLe } }] },
       data: donnees,
     });
     return count === 1 ? ECRIT : INCHANGE;
@@ -174,13 +186,17 @@ export async function synchroniserClientStripe(
   if (!abonnements) throw (liste as PromiseRejectedResult).reason;
 
   const { courant, plusieurs } = abonnementCourant(abonnements);
-  const userId = compteDuClientStripe(client.value, courant);
-  if (!userId) return SANS_COMPTE;
+  const designe = compteDuClientStripe(client.value, courant);
+  if (!designe) return SANS_COMPTE;
+  // Un client d'avant l'ADR-054 : le compte dont la personne est l'unique
+  // propriétaire ; aucun, ou plusieurs, ne se devinent pas.
+  const compteId = "compteId" in designe ? designe.compteId : await compteDontEstProprietaire(designe.proprietaire);
+  if (!compteId) return INTROUVABLE;
   if (plusieurs) console.error(`stripe : plusieurs abonnements en cours pour un même client (${customerId})`);
 
-  const db = clientDuClientStripe(userId);
+  const db = clientDuClientStripe(compteId);
   const ligne = await db.abonnement.findUnique({
-    where: { userId },
+    where: { compteId },
     select: { stripeCustomerId: true, essaiUtiliseLe: true },
   });
   if (ligne && ligne.stripeCustomerId !== customerId) return AUTRE_CLIENT;
@@ -191,8 +207,8 @@ export async function synchroniserClientStripe(
     essaiUtiliseLe: ligne?.essaiUtiliseLe ?? premierEssai(abonnements),
   };
   if (!ligne) {
-    const issue = await creerLigne(db, userId, customerId, donnees);
+    const issue = await creerLigne(db, compteId, customerId, donnees);
     if (issue) return issue;
   }
-  return mettreAJour(db, userId, customerId, donnees);
+  return mettreAJour(db, compteId, customerId, donnees);
 }

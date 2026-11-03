@@ -36,9 +36,9 @@ import { cache } from "react";
  * partagé : un appelant ne le modifie pas.
  */
 export const etablissementDuRendu = cache(
-  async function etablissementDuRendu(db: Db, id: string, userId: string) {
+  async function etablissementDuRendu(db: Db, id: string, compteId: string) {
     return db.etablissement.findFirst({
-      where: { id, entreprise: { userId } },
+      where: { id, entreprise: { compteId } },
       include: { entreprise: true },
       // Les deux colonnes que la réparation peut réécrire après cette lecture
       // (voir ci-dessus) : absentes du type, un lecteur ne peut pas les y
@@ -67,10 +67,10 @@ export const etablissementDuRendu = cache(
 export const getEtablissement = cache(async function getEtablissement(
   id: string,
 ) {
-  const { user, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   const [etab, duerp] = await Promise.all([
-    etablissementDuRendu(db, id, user.id),
-    duerpDuRenduDuCompte(db, id, user.id),
+    etablissementDuRendu(db, id, compte.compteId),
+    duerpDuRenduDuCompte(db, id, compte.compteId),
   ]);
   if (!etab) return null;
   return { ...etab, duerp };
@@ -86,9 +86,9 @@ export const getEtablissement = cache(async function getEtablissement(
  */
 export const listerEtablissementsDuCompte = cache(
   async function listerEtablissementsDuCompte() {
-    const { user, db } = await requireCompte();
+    const { compte, db } = await requireCompte();
     return db.etablissement.findMany({
-      where: { entreprise: { userId: user.id } },
+      where: { entreprise: { compteId: compte.compteId } },
       orderBy: { createdAt: "asc" },
       select: { id: true, raisonDisplay: true },
     });

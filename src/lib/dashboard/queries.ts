@@ -175,7 +175,7 @@ export const lignesEvenementsDuRendu = cache(async function lignesEvenementsDuRe
   batimentId: string | null,
   urgentsSeulement: boolean,
 ) {
-  const { user, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   // La borne de la plus longue fenêtre (la frise, `JOURS_APRES`) reste dans la requête : les
   // fenêtres plus courtes se coupent en mémoire, mais rien au-delà de la frise
   // n'est lu (revue du lot 1).
@@ -188,7 +188,7 @@ export const lignesEvenementsDuRendu = cache(async function lignesEvenementsDuRe
     where: toutesLesConditions(
       {
         etablissementId,
-        etablissement: { entreprise: { userId: user.id } },
+        etablissement: { entreprise: { compteId: compte.compteId } },
         datePrevue: { lte: finMax },
       },
       porteeBatiment(batimentId ?? undefined),
@@ -446,14 +446,14 @@ export async function compterObligationsParMois(
   etablissementId: string,
   annee: number = composantesCiviles(new Date()).annee,
 ): Promise<BarresAnnee> {
-  const { user, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   const debut = instantCivil(annee, 1, 1);
   const fin = instantCivil(annee + 1, 1, 1);
 
   const [verifs, marques, dernieres] = await Promise.all([db.verification.findMany({
     where: {
       etablissementId,
-      etablissement: { entreprise: { userId: user.id } },
+      etablissement: { entreprise: { compteId: compte.compteId } },
       // UN SUR-ENSEMBLE, et il doit le rester : la répartition ne garde que
       // les événements datés dans l'année. Ce qui compte est de ne rien
       // exclure qu'un événement poserait dans l'année.
@@ -536,7 +536,7 @@ export async function getModulesMatrice(
   etablissementId: string,
   estERP: boolean,
 ): Promise<ModulesMatrice> {
-  const { user, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   const scope = {
     etablissementId,
   } as const;
@@ -557,7 +557,7 @@ export async function getModulesMatrice(
     prestatairesDuRendu(etablissementId),
     eauChaudeSuivieParLeCalendrier(db, {
       etablissementId,
-      etablissement: { entreprise: { userId: user.id } },
+      etablissement: { entreprise: { compteId: compte.compteId } },
     }),
   ]);
   const carnet = comptes.carnet;
@@ -711,10 +711,10 @@ const MAX_VERIFS_RECOS = 40;
 export const getDashboardData = cache(async function getDashboardData(
   etablissementId: string,
 ): Promise<DashboardData> {
-  const { user, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   const scope = {
     etablissementId,
-    etablissement: { entreprise: { userId: user.id } },
+    etablissement: { entreprise: { compteId: compte.compteId } },
   } as const;
   // L'instant du rendu, partagé : les lectures mémoïsées par jour civil
   // tombent sur la même clé (revue du lot 1).
@@ -825,14 +825,14 @@ export const getDashboardData = cache(async function getDashboardData(
     db.action.count({ where: { ...scope, risqueId: { not: null } } }),
     // Le DUERP du rendu, partagé avec l'échéance annuelle de la barre
     // latérale, la couverture et la page (plan performance, 2026-10-29).
-    duerpDuRenduDuCompte(db, etablissementId, user.id),
+    duerpDuRenduDuCompte(db, etablissementId, compte.compteId),
     // Le parc compté une fois par rendu, partagé avec la barre latérale.
     comptesParcDuRendu(etablissementId).then((c) => c.total),
     // Dans le `Promise.all` et non derrière lui : le rapprochement ne dépend
     // que de `etablissementId` et `user.id`, tous deux disponibles avant.
     // Placé après, il ajoutait trois requêtes sérialisées derrière tout le
     // reste du tableau de bord (ADR-024).
-    chargerTransmissions(db, etablissementId, user.id, now),
+    chargerTransmissions(db, etablissementId, compte.compteId, now),
     // Le même nombre que la carte du tableau de bord, lu une fois par rendu.
     compterRapportsDuDossier(etablissementId),
     // Le score ne peut pas conclure « satisfaisante » en ignorant ce que
@@ -840,7 +840,7 @@ export const getDashboardData = cache(async function getDashboardData(
     // personnes sortait à 100 avec treize états non renseignés. Lu par la même
     // entrée que cet écran — deux comptes finiraient par diverger, et c'est le
     // chiffre du tableau de bord qui porterait la version fausse.
-    compterEtatsPermanents(db, etablissementId, user.id),
+    compterEtatsPermanents(db, etablissementId, compte.compteId),
     // Les rapports RÉALISÉS de la fenêtre, comptés en base : les cartes
     // « Rapports 12 m » parlent de pièces déposées, pas de lignes couvertes,
     // et depuis l'ADR-034 les deux ne coïncident plus.
@@ -861,7 +861,7 @@ export const getDashboardData = cache(async function getDashboardData(
     // L'effectif de l'entreprise et du site conditionne la mise à jour
     // annuelle du DUERP (art. R. 4121-2) — cf. `./duerp`. La lecture de la
     // garde d'appartenance, partagée sur le rendu.
-    etablissementDuRendu(db, etablissementId, user.id),
+    etablissementDuRendu(db, etablissementId, compte.compteId),
   ]);
 
   // Répartition unique, partagée avec les documents générés : quatre

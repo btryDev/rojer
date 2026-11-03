@@ -35,26 +35,26 @@ import { cache } from "react";
 export const requireEtablissement = cache(async function requireEtablissement(
   etablissementId: string,
 ) {
-  const { user, db } = await requireCompte();
-  const etablissement = await etablissementDuRendu(db, etablissementId, user.id);
+  const { user, compte, db } = await requireCompte();
+  const etablissement = await etablissementDuRendu(db, etablissementId, compte.compteId);
   if (!etablissement) notFound();
-  return { user, db, etablissement };
+  return { user, compte, db, etablissement };
 });
 
 /**
  * Récupère un DUERP dont l'établissement appartient au user, ou 404.
  */
 export async function requireDuerp(duerpId: string) {
-  const { user, db } = await requireCompte();
+  const { user, compte, db } = await requireCompte();
   const duerp = await db.duerp.findFirst({
     where: {
       id: duerpId,
-      etablissement: { entreprise: { userId: user.id } },
+      etablissement: { entreprise: { compteId: compte.compteId } },
     },
     include: { etablissement: { include: { entreprise: true } } },
   });
   if (!duerp) notFound();
-  return { user, db, duerp };
+  return { user, compte, db, duerp };
 }
 
 /**
@@ -69,17 +69,18 @@ export async function requireDuerp(duerpId: string) {
  * ses `revalidatePath`.
  */
 export async function requireUnite(uniteId: string) {
-  const { user, db } = await requireCompte();
+  const { user, compte, db } = await requireCompte();
   const unite = await db.uniteTravail.findFirst({
     where: {
       id: uniteId,
-      duerp: { etablissement: { entreprise: { userId: user.id } } },
+      duerp: { etablissement: { entreprise: { compteId: compte.compteId } } },
     },
     include: { duerp: { select: { id: true, etablissementId: true } } },
   });
   if (!unite) notFound();
   return {
     user,
+    compte,
     db,
     unite,
     duerpId: unite.duerpId,
@@ -94,11 +95,11 @@ export async function requireUnite(uniteId: string) {
  * suppression manipulaient jusqu'ici sur un `id` brut reçu du client.
  */
 export async function requireRisque(risqueId: string) {
-  const { user, db } = await requireCompte();
+  const { user, compte, db } = await requireCompte();
   const risque = await db.risque.findFirst({
     where: {
       id: risqueId,
-      unite: { duerp: { etablissement: { entreprise: { userId: user.id } } } },
+      unite: { duerp: { etablissement: { entreprise: { compteId: compte.compteId } } } },
     },
     include: {
       unite: {
@@ -113,6 +114,7 @@ export async function requireRisque(risqueId: string) {
   if (!risque) notFound();
   return {
     user,
+    compte,
     db,
     risque,
     uniteId: risque.uniteId,
@@ -126,15 +128,15 @@ export async function requireRisque(risqueId: string) {
  * l'établissement appartient au user, ou 404.
  */
 export async function requireAction(actionId: string) {
-  const { user, db } = await requireCompte();
+  const { user, compte, db } = await requireCompte();
   const action = await db.action.findFirst({
     where: {
       id: actionId,
-      etablissement: { entreprise: { userId: user.id } },
+      etablissement: { entreprise: { compteId: compte.compteId } },
     },
   });
   if (!action) notFound();
-  return { user, db, action, etablissementId: action.etablissementId };
+  return { user, compte, db, action, etablissementId: action.etablissementId };
 }
 
 /**
@@ -151,15 +153,15 @@ export const requireMesure = requireAction;
  * user, ou 404. Utilisé avant de créer une action corrective depuis un écart.
  */
 export async function requireVerification(verificationId: string) {
-  const { user, db } = await requireCompte();
+  const { user, compte, db } = await requireCompte();
   const verification = await db.verification.findFirst({
     where: {
       id: verificationId,
-      etablissement: { entreprise: { userId: user.id } },
+      etablissement: { entreprise: { compteId: compte.compteId } },
     },
   });
   if (!verification) notFound();
-  return { user, db, verification, etablissementId: verification.etablissementId };
+  return { user, compte, db, verification, etablissementId: verification.etablissementId };
 }
 
 /**
@@ -172,35 +174,35 @@ export async function requireVerification(verificationId: string) {
 
 /** Un rapport de vérification dont l'établissement appartient au user, ou 404. */
 export async function requireRapportVerification(rapportId: string) {
-  const { user, db } = await requireCompte();
+  const { user, compte, db } = await requireCompte();
   const rapport = await db.rapportVerification.findFirst({
-    where: { id: rapportId, etablissement: { entreprise: { userId: user.id } } },
+    where: { id: rapportId, etablissement: { entreprise: { compteId: compte.compteId } } },
   });
   if (!rapport) notFound();
-  return { user, db, rapport };
+  return { user, compte, db, rapport };
 }
 
 /** Une analyse de légionelles dont le carnet appartient au user, ou 404. */
 export async function requireAnalyseLegionelle(analyseId: string) {
-  const { user, db } = await requireCompte();
+  const { user, compte, db } = await requireCompte();
   const analyse = await db.analyseLegionelle.findFirst({
     where: {
       id: analyseId,
-      carnet: { etablissement: { entreprise: { userId: user.id } } },
+      carnet: { etablissement: { entreprise: { compteId: compte.compteId } } },
     },
   });
   if (!analyse) notFound();
-  return { user, db, analyse };
+  return { user, compte, db, analyse };
 }
 
 /** Un prestataire dont l'établissement appartient au user, ou 404. */
 export async function requirePrestataire(prestataireId: string) {
-  const { user, db } = await requireCompte();
+  const { user, compte, db } = await requireCompte();
   const prestataire = await db.prestataire.findFirst({
-    where: { id: prestataireId, etablissement: { entreprise: { userId: user.id } } },
+    where: { id: prestataireId, etablissement: { entreprise: { compteId: compte.compteId } } },
   });
   if (!prestataire) notFound();
-  return { user, db, prestataire };
+  return { user, compte, db, prestataire };
 }
 
 /**
@@ -208,22 +210,22 @@ export async function requirePrestataire(prestataireId: string) {
  * user, ou 404 — une pièce rattachée à un autre de ses prestataires aussi.
  */
 export async function requirePiecePrestataire(pieceId: string, prestataireId: string) {
-  const { user, db } = await requireCompte();
+  const { user, compte, db } = await requireCompte();
   const piece = await db.piecePrestataire.findFirst({
     where: {
       id: pieceId,
       prestataireId,
-      prestataire: { etablissement: { entreprise: { userId: user.id } } },
+      prestataire: { etablissement: { entreprise: { compteId: compte.compteId } } },
     },
   });
   if (!piece) notFound();
-  return { user, db, piece };
+  return { user, compte, db, piece };
 }
 
 /**
  * Une lecture en SQL brut (`$queryRaw`), bornée au propriétaire : la ligne dont
- * `colonneEtablissement` désigne l'établissement appartient à l'utilisateur de
- * la session. La forme SQL de `etablissement: { entreprise: { userId } }`, pour
+ * `colonneEtablissement` désigne l'établissement appartient au compte de la
+ * session. La forme SQL de `etablissement: { entreprise: { compteId } }`, pour
  * les lectures que Prisma n'exprime pas (`DISTINCT ON`, `LATERAL`…).
  *
  * LE PRÉDICAT EST OBLIGATOIRE, ET C'EST LE HELPER QUI EXÉCUTE (revue du
@@ -253,14 +255,14 @@ export async function requireLectureSqlProprietaire<T>(
   if (!/^[A-Za-z_]\w*\."[A-Za-z_]\w*"$/.test(colonneEtablissement)) {
     throw new Error(`Colonne SQL invalide : « ${colonneEtablissement} »`);
   }
-  const { user, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   const proprietaire = Prisma.sql`EXISTS (
     SELECT 1 FROM "Etablissement" e_p
     JOIN "Entreprise" en_p ON en_p."id" = e_p."entrepriseId"
-    WHERE e_p."id" = ${Prisma.raw(colonneEtablissement)} AND en_p."userId" = ${user.id}::uuid
+    WHERE e_p."id" = ${Prisma.raw(colonneEtablissement)} AND en_p."compteId" = ${compte.compteId}::uuid
   )`;
   const requete = gabarit(proprietaire);
-  if (!requete.sql.includes(proprietaire.sql) || !requete.values.includes(user.id))
+  if (!requete.sql.includes(proprietaire.sql) || !requete.values.includes(compte.compteId))
     throw new Error("Requête SQL brute sans le prédicat propriétaire : refusée");
   return db.$queryRaw<T[]>(requete);
 }
@@ -278,24 +280,24 @@ export async function assertEtablissementOwnership(etablissementId: string) {
  * module qui la passe lit et écrit ensuite par `db`, sans relire la session.
  */
 export async function assertEtablissementDuCompte(etablissementId: string) {
-  const { user, db } = await requireCompte();
+  const { user, compte, db } = await requireCompte();
   const exists = await db.etablissement.findFirst({
-    where: { id: etablissementId, entreprise: { userId: user.id } },
+    where: { id: etablissementId, entreprise: { compteId: compte.compteId } },
     select: { id: true },
   });
   if (!exists) notFound();
-  return { user, db };
+  return { user, compte, db };
 }
 
 /** Vérifie qu'un entrepriseId appartient au user ; rend aussi le client borné au compte (ADR-051). */
 export async function assertEntrepriseDuCompte(entrepriseId: string) {
-  const { user, db } = await requireCompte();
+  const { user, compte, db } = await requireCompte();
   const exists = await db.entreprise.findFirst({
-    where: { id: entrepriseId, userId: user.id },
+    where: { id: entrepriseId, compteId: compte.compteId },
     select: { id: true },
   });
   if (!exists) notFound();
-  return { user, db };
+  return { user, compte, db };
 }
 
 /**
@@ -324,7 +326,7 @@ export const COOKIE_ETABLISSEMENT_ACTIF = "etablissement-actif";
  *
  * **La valeur du cookie est une entrée utilisateur**, au même titre qu'un
  * paramètre d'URL : elle est revalidée par le même prédicat que tout le reste
- * du produit — `entreprise: { userId }` — et jamais lue par un `findUnique` sur
+ * du produit — `entreprise: { compteId }` — et jamais lue par un `findUnique` sur
  * l'identifiant seul. Un cookie forgé désignant l'établissement d'un autre
  * compte ne ramène donc rien, et le repli joue : on sert le sien, jamais celui
  * d'en face. Le repli couvre du même geste le cas ordinaire — l'établissement
@@ -344,9 +346,9 @@ export const getOptionalUserEtablissement = cache(
     raisonDisplay: string;
     entrepriseId: string;
   } | null> {
-    const compte = await getOptionalCompte();
-    if (!compte) return null;
-    const { user, db } = compte;
+    const session = await getOptionalCompte();
+    if (!session) return null;
+    const { compte, db } = session;
 
     const champs = {
       id: true,
@@ -357,14 +359,14 @@ export const getOptionalUserEtablissement = cache(
     const demande = (await cookies()).get(COOKIE_ETABLISSEMENT_ACTIF)?.value;
     if (demande) {
       const actif = await db.etablissement.findFirst({
-        where: { id: demande, entreprise: { userId: user.id } },
+        where: { id: demande, entreprise: { compteId: compte.compteId } },
         select: champs,
       });
       if (actif) return actif;
     }
 
     return db.etablissement.findFirst({
-      where: { entreprise: { userId: user.id } },
+      where: { entreprise: { compteId: compte.compteId } },
       orderBy: { createdAt: "asc" },
       select: champs,
     });

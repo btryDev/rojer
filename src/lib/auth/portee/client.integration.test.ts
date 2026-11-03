@@ -27,12 +27,18 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
   const { clientBorne } = await import("./client");
   const { creerEnLotVerifie } = await import("./lot-verifie");
 
+  // Les comptes A et B, et les personnes qui y travaillent (ADR-054) :
+  // identifiants distincts, pour qu'une borne qui prendrait l'un pour l'autre
+  // tombe.
   const A = "00000000-0000-0000-0000-00000000000a";
   const B = "00000000-0000-0000-0000-00000000000b";
-  const dbA = clientBorne({ type: "compte", userId: A });
+  const UA = "00000000-0000-0000-0000-0000000001aa";
+  const UA2 = "00000000-0000-0000-0000-0000000002aa";
+  const UB = "00000000-0000-0000-0000-0000000001bb";
+  const dbA = clientBorne({ type: "compte", compteId: A, userId: UA });
 
-  // Sur `cc`, la racine pointe vers l'utilisateur de Better Auth : il doit
-  // exister avant l'entreprise.
+  // Sur `cc`, les auteurs pointent vers l'utilisateur de Better Auth, et la
+  // racine vers un compte dont il est membre : ils existent avant l'entreprise.
   const avecUtilisateurs = Prisma.dmmf.datamodel.models.some((m) => m.name === "User");
   async function utilisateur(id: string) {
     if (!avecUtilisateurs) return;
@@ -40,9 +46,12 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
     await u.upsert({ where: { id }, create: { id, name: id, email: `${id}@exemple.invalid` }, update: {} });
   }
 
-  async function semer(userId: string, nom: string) {
+  async function semer(compteId: string, userId: string, nom: string) {
     await utilisateur(userId);
-    const ent = await prisma.entreprise.create({ data: { userId, raisonSociale: nom, effectif: 5, adresse: "1 rue" } });
+    await prisma.compte.create({
+      data: { id: compteId, name: nom, slug: compteId, membres: { create: { userId, role: "owner" } } },
+    });
+    const ent = await prisma.entreprise.create({ data: { compteId, raisonSociale: nom, effectif: 5, adresse: "1 rue" } });
     const etab = await prisma.etablissement.create({
       data: { entrepriseId: ent.id, raisonDisplay: nom, adresse: "1 rue", codeNaf: "56.10A", effectifSurSite: 5 },
     });
@@ -63,12 +72,17 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
 
   beforeAll(async () => {
     await prisma.$executeRawUnsafe('TRUNCATE "Entreprise" CASCADE');
+    await prisma.$executeRawUnsafe('TRUNCATE "Compte" CASCADE');
     if (avecUtilisateurs) await prisma.$executeRawUnsafe('TRUNCATE "User" CASCADE');
-    a = await semer(A, "A");
-    b = await semer(B, "B");
+    a = await semer(A, UA, "A");
+    b = await semer(B, UB, "B");
+    // Une seconde personne, membre du compte A.
+    await utilisateur(UA2);
+    await prisma.membre.create({ data: { compteId: A, userId: UA2, role: "member" } });
   });
   afterAll(async () => {
     await prisma.$executeRawUnsafe('TRUNCATE "Entreprise" CASCADE');
+    await prisma.$executeRawUnsafe('TRUNCATE "Compte" CASCADE');
     if (avecUtilisateurs) await prisma.$executeRawUnsafe('TRUNCATE "User" CASCADE');
     await prisma.$disconnect();
   });
@@ -99,7 +113,8 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
       let n = 0;
       const p = {
         type: "compte" as const,
-        get userId() {
+        userId: null,
+        get compteId() {
           return n++ === 0 ? "00000000-0000-0000-0000-0000000000dd" : B;
         },
       };
@@ -107,11 +122,24 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
     });
 
     it("la portée est figée : modifier l'objet après coup ne déplace pas le client", async () => {
-      await utilisateur("00000000-0000-0000-0000-0000000000c0");
-      const p = { type: "compte" as const, userId: "00000000-0000-0000-0000-0000000000c0" };
+      const p = { type: "compte" as const, compteId: "00000000-0000-0000-0000-0000000000c0", userId: null };
       const dbC = clientBorne(p);
-      p.userId = B;
+      p.compteId = B;
       expect(await dbC.batiment.findMany()).toEqual([]);
+    });
+  });
+
+  describe("plusieurs personnes, un compte (ADR-054)", () => {
+    it("un autre membre du compte voit les mêmes lignes", async () => {
+      const dbA2 = clientBorne({ type: "compte", compteId: A, userId: UA2 });
+      expect((await dbA2.equipement.findMany()).map((e) => e.id)).toEqual([a.equip.id]);
+      expect(await dbA2.etablissement.findUnique({ where: { id: b.etab.id } })).toBeNull();
+    });
+
+    it("l'identifiant d'une personne n'est pas un compte : il ne voit rien", async () => {
+      const mal = clientBorne({ type: "compte", compteId: UA, userId: UA });
+      expect(await mal.etablissement.findMany()).toEqual([]);
+      expect(await mal.equipement.count()).toBe(0);
     });
   });
 
@@ -201,7 +229,7 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
           include: { entreprise: true },
         });
       });
-      expect(et.entreprise.userId).toBe(A);
+      expect(et.entreprise.compteId).toBe(A);
       await prisma.entreprise.delete({ where: { id: et.entrepriseId } });
     });
 
@@ -228,18 +256,30 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
     it.skipIf(!avecUtilisateurs)("une signature du compte se crée, clé User et clé d'établissement ensemble", async () => {
       const sig = await dbA.signature.create({
         data: {
-          etablissementId: a.etab.id, userId: A, objetType: "rapport_verification", objetId: "o",
+          etablissementId: a.etab.id, userId: UA, objetType: "rapport_verification", objetId: "o",
           signataireNom: "n", signataireEmail: "n@exemple.invalid", hashDocument: "0".repeat(64),
           methode: "compte_connecte",
         },
       });
-      expect([sig.etablissementId, sig.userId]).toEqual([a.etab.id, A]);
+      expect([sig.etablissementId, sig.userId]).toEqual([a.etab.id, UA]);
       await prisma.signature.delete({ where: { id: sig.id } });
     });
 
-    it.skipIf(!avecUtilisateurs)("une entreprise ne peut pas pointer un autre utilisateur", async () => {
+    it.skipIf(!avecUtilisateurs)("une signature ne porte que la personne qui agit, pas un autre membre", async () => {
       await expect(
-        dbA.entreprise.create({ data: { raisonSociale: "x", effectif: 1, adresse: "x", user: { connect: { id: B } } } }),
+        dbA.signature.create({
+          data: {
+            etablissementId: a.etab.id, userId: UA2, objetType: "rapport_verification", objetId: "o",
+            signataireNom: "n", signataireEmail: "n@exemple.invalid", hashDocument: "0".repeat(64),
+            methode: "compte_connecte",
+          },
+        }),
+      ).rejects.toThrow(/personne qui agit/);
+    });
+
+    it("une entreprise ne peut pas pointer un autre compte", async () => {
+      await expect(
+        dbA.entreprise.create({ data: { raisonSociale: "x", effectif: 1, adresse: "x", compte: { connect: { id: B } } } }),
       ).rejects.toThrow(/que le compte/);
     });
   });
@@ -249,32 +289,32 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
   // doit ni voir, ni toucher, ni créer l'abonnement d'un autre compte.
   describe("abonnement (ADR-053)", () => {
     beforeAll(async () => {
-      await prisma.abonnement.create({ data: { userId: B, stripeCustomerId: "cus_B", statut: "active" } });
+      await prisma.abonnement.create({ data: { compteId: B, stripeCustomerId: "cus_B", statut: "active" } });
     });
 
     it("celui d'un autre compte est absent, en lecture comme en écriture", async () => {
-      expect(await dbA.abonnement.findUnique({ where: { userId: B } })).toBeNull();
+      expect(await dbA.abonnement.findUnique({ where: { compteId: B } })).toBeNull();
       // La recherche du webhook : par le client Stripe.
       expect(await dbA.abonnement.findUnique({ where: { stripeCustomerId: "cus_B" } })).toBeNull();
-      expect((await dbA.abonnement.findMany()).filter((x) => x.userId !== A)).toEqual([]);
-      await expect(dbA.abonnement.update({ where: { userId: B }, data: { statut: "canceled" } })).rejects.toThrow();
+      expect((await dbA.abonnement.findMany()).filter((x) => x.compteId !== A)).toEqual([]);
+      await expect(dbA.abonnement.update({ where: { compteId: B }, data: { statut: "canceled" } })).rejects.toThrow();
       await expect(dbA.abonnement.upsert({
-        where: { userId: B },
-        create: { userId: B, stripeCustomerId: "cus_z" },
+        where: { compteId: B },
+        create: { compteId: B, stripeCustomerId: "cus_z" },
         update: { statut: "canceled" },
       })).rejects.toThrow();
-      expect((await prisma.abonnement.findUniqueOrThrow({ where: { userId: B } })).statut).toBe("active");
+      expect((await prisma.abonnement.findUniqueOrThrow({ where: { compteId: B } })).statut).toBe("active");
     });
 
     it("ne se crée pas au nom d'un autre compte", async () => {
-      await expect(dbA.abonnement.create({ data: { userId: B, stripeCustomerId: "cus_x" } })).rejects.toThrow();
+      await expect(dbA.abonnement.create({ data: { compteId: B, stripeCustomerId: "cus_x" } })).rejects.toThrow();
       await expect(
-        dbA.abonnement.create({ data: { stripeCustomerId: "cus_y", user: { connect: { id: B } } } }),
+        dbA.abonnement.create({ data: { stripeCustomerId: "cus_y", compte: { connect: { id: B } } } }),
       ).rejects.toThrow(/que le compte/);
     });
 
     it("celui du compte se crée et se relit", async () => {
-      await dbA.abonnement.upsert({ where: { userId: A }, create: { userId: A, stripeCustomerId: "cus_A" }, update: {} });
+      await dbA.abonnement.upsert({ where: { compteId: A }, create: { compteId: A, stripeCustomerId: "cus_A" }, update: {} });
       expect((await dbA.abonnement.findMany()).map((x) => x.stripeCustomerId)).toEqual(["cus_A"]);
     });
 
@@ -288,10 +328,10 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
       await expect(
         dbA.etablissement.update({
           where: { id: a.etab.id },
-          data: { demandesAssistance: { createMany: { data: [{ userId: B, categorie: "duerp", message: "injecté", page: "/" }] } } },
+          data: { demandesAssistance: { createMany: { data: [{ compteId: B, userId: UB, categorie: "duerp", message: "injecté", page: "/" }] } } },
         } as never),
       ).rejects.toThrow(/non servie/);
-      expect(await prisma.demandeAssistance.count({ where: { userId: B } })).toBe(0);
+      expect(await prisma.demandeAssistance.count({ where: { compteId: B } })).toBe(0);
     });
   });
 

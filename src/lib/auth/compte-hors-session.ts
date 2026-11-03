@@ -23,10 +23,12 @@ import { clientBorne, clientBorneSur, type ClientBorne } from "./portee/client";
 export async function clientDuProprietaire(etablissementId: string): Promise<ClientBorne | null> {
   const etab = await prisma.etablissement.findUnique({
     where: { id: etablissementId },
-    select: { entreprise: { select: { userId: true } } },
+    select: { entreprise: { select: { compteId: true } } },
   });
-  const userId = etab?.entreprise.userId;
-  return userId ? clientBorne({ type: "compte", userId }) : null;
+  const compteId = etab?.entreprise.compteId;
+  // Sans session, personne n'agit au nom du compte : une relation vers `User`
+  // n'y désigne personne (ADR-054 § 3).
+  return compteId ? clientBorne({ type: "compte", compteId, userId: null }) : null;
 }
 
 /**
@@ -45,18 +47,21 @@ export async function sessionStdio(
 ): Promise<{ nom: string; db: ClientBorne } | null> {
   const etab = await base.etablissement.findUnique({
     where: { id: etablissementId },
-    select: { raisonDisplay: true, entreprise: { select: { userId: true } } },
+    select: { raisonDisplay: true, entreprise: { select: { compteId: true } } },
   });
-  const userId = etab?.entreprise.userId;
-  return etab && userId ? { nom: etab.raisonDisplay, db: clientBorneSur(base, { type: "compte", userId }) } : null;
+  const compteId = etab?.entreprise.compteId;
+  return etab && compteId
+    ? { nom: etab.raisonDisplay, db: clientBorneSur(base, { type: "compte", compteId, userId: null }) }
+    : null;
 }
 
 /**
- * Le webhook Stripe (ADR-053 § 5) : le compte est le `metadata.userId` du
- * client Stripe RELU par l'API, après une notification dont la signature est
- * vérifiée — jamais un identifiant pris dans la charge utile. Réservé à
+ * Le webhook Stripe (ADR-053 § 5) : le compte est celui que désigne le client
+ * Stripe RELU par l'API (`compteDuClientStripe`), après une notification dont
+ * la signature est vérifiée — jamais un identifiant pris dans la charge utile.
+ * Personne n'agit : aucune relation vers `User` (ADR-054 § 3). Réservé à
  * `stripe/synchronisation.ts` (`portee/imports.test.ts`).
  */
-export function clientDuClientStripe(userId: string): ClientBorne {
-  return clientBorne({ type: "compte", userId });
+export function clientDuClientStripe(compteId: string): ClientBorne {
+  return clientBorne({ type: "compte", compteId, userId: null });
 }

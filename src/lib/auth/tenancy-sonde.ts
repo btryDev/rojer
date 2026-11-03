@@ -45,10 +45,12 @@ export function sansCommentairesNiChaines(src: string): string {
  * Ils se relèvent donc dans `scope.ts`, qui est l'endroit où ils vivent :
  * tout export nommé `require…` ou `assert…`. Le suivant s'ajoutera de lui-même.
  * S'y ajoutent `requireUser` (qui vit dans `require-user.ts`), le constructeur
- * de prédicat `portee(` et le champ `userId` lui-même, porté dans un `where`.
+ * de prédicat `portee(` et le champ ~~`userId`~~ `compteId` lui-même, porté
+ * dans un `where` [2026-11-03, ADR-054 : la racine est le compte ; un `userId`
+ * dans un `where` désigne désormais une personne, pas un compte].
  */
 export function marqueursDePortee(): string[] {
-  return [...helpersDAppartenance(), "requireUser", "portee(", "userId"];
+  return [...helpersDAppartenance(), "requireUser", "portee(", "compteId"];
 }
 
 /** Les exports `require…` / `assert…` de `scope.ts` : tous bornent au propriétaire. */
@@ -98,8 +100,9 @@ function relever(): string[] {
  *    là, une exemption de fait que personne n'avait décidée.
  *
  * Restent donc : l'APPEL (pas la mention) d'un helper `require…`/`assert…` de
- * `scope.ts`, l'appel de `portee(`, ou un `where` qui porte `userId` — y
- * compris imbriqué, `where: { etablissement: { entreprise: { userId …`.
+ * `scope.ts`, l'appel de `portee(`, ou un `where` qui porte `compteId` — y
+ * compris imbriqué, `where: { etablissement: { entreprise: { compteId …`
+ * (ADR-054 ; `userId` jusqu'au 2026-11-03).
  * `etablissementId` n'y figure pas en tant que tel : il ne borne que s'il sort
  * d'un établissement déjà vérifié, c'est-à-dire d'un des helpers ci-dessus.
  */
@@ -107,7 +110,7 @@ export function etablitLAppartenance(corps: string): boolean {
   return (
     helpersDAppartenance().some((h) => new RegExp(`\\b${h}\\(`).test(corps)) ||
     /\bportee\(/.test(corps) ||
-    /\bwhere\s*:\s*\{[^}]*\buserId\b/.test(corps)
+    /\bwhere\s*:\s*\{[^}]*\bcompteId\b/.test(corps)
   );
 }
 
@@ -502,9 +505,9 @@ type Evenement = { pos: number; quoi: "lecture_nue" | "appartenance"; libelle: s
  * Les événements d'une fonction, dans l'ordre du source :
  *
  *  - `lecture_nue` : un `findUnique`/`findFirst` dont le `where` littéral ne
- *    porte pas `userId` — ou l'appel d'une fonction du MÊME fichier qui en fait
+ *    porte pas `compteId` (ADR-054) — ou l'appel d'une fonction du MÊME fichier qui en fait
  *    une avant tout contrôle (`resoudreAppareil` lisait pour ses appelants) ;
- *  - `appartenance` : une lecture dont le `where` porte `userId`, l'appel d'un
+ *  - `appartenance` : une lecture dont le `where` porte `compteId`, l'appel d'un
  *    helper `require…`/`assert…` de `scope.ts`, de `portee(`, ou d'une
  *    fonction du même fichier qui commence par l'un d'eux (`permisDuCompte`).
  */
@@ -524,7 +527,7 @@ function evenements(
       pos: m.index,
       // Une lecture bornée au compte EST un contrôle : ce qu'elle ne trouve
       // pas est absent ou étranger, indistinctement.
-      quoi: /\buserId\b/.test(where) ? "appartenance" : "lecture_nue",
+      quoi: /\bcompteId\b/.test(where) ? "appartenance" : "lecture_nue",
       libelle: `${m[1]}.${m[2]}`,
     });
   }

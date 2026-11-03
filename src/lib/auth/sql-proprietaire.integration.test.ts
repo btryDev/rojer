@@ -18,12 +18,15 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 vi.unmock("@/lib/auth/portee/client");
+// L'appartenance réelle (ADR-054) : chaque personne est propriétaire d'un vrai compte.
+vi.unmock("@/lib/auth/membres");
 
 // La session : le compte « connecté » se choisit par test.
 const session = vi.hoisted(() => ({ userId: "" }));
 vi.mock("@/lib/auth/require-user", () => ({
   requireUser: async () => ({ id: session.userId, email: `${session.userId}@exemple.invalid` }),
   getOptionalUser: async () => ({ id: session.userId, email: `${session.userId}@exemple.invalid` }),
+  lireSessionCourante: async () => null,
 }));
 
 const URL_BASE = process.env.ISOLATION_INTEGRATION_URL;
@@ -36,6 +39,7 @@ describe.skipIf(!URL_BASE || !local)("SQL brut borné au propriétaire — Postg
   const { anneesDuRegistre } = await import("@/lib/rapports/queries");
   const { derniersRapportsDeLEtablissement, dernieresRealisationsDeLEtablissement } = await import("@/lib/rapports/joindre-realisations");
   const { comptesModulesDuRendu } = await import("@/lib/etablissements/modules");
+  const { creerCompteDeTest } = await import("@/test/utilisateur-de-test");
 
   const A = "00000000-0000-0000-0000-0000000005aa";
   const B = "00000000-0000-0000-0000-0000000005bb";
@@ -52,7 +56,8 @@ describe.skipIf(!URL_BASE || !local)("SQL brut borné au propriétaire — Postg
   /** Un dossier où chaque sous-requête des trois lectures a une ligne à compter. */
   async function semer(userId: string, nom: string) {
     await utilisateur(userId);
-    const ent = await prisma.entreprise.create({ data: { userId, raisonSociale: nom, effectif: 5, adresse: "1 rue" } });
+    const compteId = await creerCompteDeTest(prisma, userId);
+    const ent = await prisma.entreprise.create({ data: { compteId, raisonSociale: nom, effectif: 5, adresse: "1 rue" } });
     const etab = await prisma.etablissement.create({
       data: { entrepriseId: ent.id, raisonDisplay: nom, adresse: "1 rue", codeNaf: "56.10A", effectifSurSite: 5 },
     });
@@ -121,12 +126,14 @@ describe.skipIf(!URL_BASE || !local)("SQL brut borné au propriétaire — Postg
 
   beforeAll(async () => {
     await prisma.$executeRawUnsafe('TRUNCATE "Entreprise" CASCADE');
+    await prisma.$executeRawUnsafe('TRUNCATE "Compte" CASCADE');
     if (avecUtilisateurs) await prisma.$executeRawUnsafe('TRUNCATE "User" CASCADE');
     a = await semer(A, "A");
     await semer(B, "B");
   });
   afterAll(async () => {
     await prisma.$executeRawUnsafe('TRUNCATE "Entreprise" CASCADE');
+    await prisma.$executeRawUnsafe('TRUNCATE "Compte" CASCADE');
     if (avecUtilisateurs) await prisma.$executeRawUnsafe('TRUNCATE "User" CASCADE');
     await prisma.$disconnect();
   });

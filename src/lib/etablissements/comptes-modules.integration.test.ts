@@ -15,9 +15,13 @@ vi.mock("server-only", () => ({}));
 // test tourne contre une vraie base, il éprouve aussi la borne.
 vi.unmock("@/lib/auth/portee/client");
 vi.unmock("@/lib/auth/portee/lot-verifie");
-const session = vi.hoisted(() => ({ userId: "" }));
+const session = vi.hoisted(() => ({ userId: "00000000-0000-4000-8000-000000000001", compteId: "" }));
 vi.mock("@/lib/auth/require-user", () => ({
   requireUser: async () => ({ id: session.userId, email: null }),
+}));
+// Le compte de la session : celui du dossier lu (ADR-054).
+vi.mock("@/lib/auth/membres", () => ({
+  appartenanceDeLaSession: async () => (session.compteId ? { compteId: session.compteId, role: "owner" } : null),
 }));
 
 const URL_BASE = process.env.MODULES_INTEGRATION_URL;
@@ -69,14 +73,14 @@ describe.skipIf(!URL_BASE || !local)("comptes des modules — PostgreSQL réel",
   it("rend les mêmes nombres que les comptages Prisma, pour chaque dossier", async () => {
     const debut = new Date();
     const etabs = await prisma.etablissement.findMany({
-      select: { id: true, entreprise: { select: { userId: true } } },
+      select: { id: true, entreprise: { select: { compteId: true } } },
     });
     expect(etabs.length).toBeGreaterThan(0);
     await semer(etabs[0].id);
     const ouvertsPermis = ["brouillon", "attente_signatures", "valide", "en_cours"] as const;
     const ouvertsPlans = ["brouillon", "inspection_faite", "attente_signatures", "valide"] as const;
     for (const e of etabs) {
-      session.userId = e.entreprise.userId ?? "";
+      session.compteId = e.entreprise.compteId ?? "";
       const c = await comptesModulesDuRendu(e.id, debut.getTime());
       const id = e.id;
       expect(c.permisFeu).toEqual({
@@ -99,7 +103,7 @@ describe.skipIf(!URL_BASE || !local)("comptes des modules — PostgreSQL réel",
 
   it("un autre compte ne compte rien", async () => {
     const e = await prisma.etablissement.findFirstOrThrow({ select: { id: true } });
-    session.userId = "00000000-0000-4000-8000-0000000000aa";
+    session.compteId = "00000000-0000-4000-8000-0000000000aa";
     const c = await comptesModulesDuRendu(e.id, Date.now());
     expect(c.permisFeu.total + c.plansPrevention.total).toBe(0);
     expect(c.carnet).toBeNull();

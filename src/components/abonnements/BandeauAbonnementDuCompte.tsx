@@ -20,7 +20,7 @@ const DANS_LA_BANDE =
 export async function BandeauAbonnementDuCompte({ dansLeContenu }: { dansLeContenu?: string }) {
   const compte = await getOptionalCompte();
   if (!compte) return null;
-  const { bandeau } = await droitsDuCompte(compte.db, compte.user.id);
+  const { bandeau } = await droitsDuCompte(compte.db, compte.compte.compteId);
   if (!bandeau) return null;
   return dansLeContenu ? (
     <BandeauAbonnement bandeau={bandeau} className={dansLeContenu} />

@@ -22,7 +22,7 @@ const h = vi.hoisted(() => {
   const userDe = (etabId: string) => etabs.find((e) => e.id === etabId)?.userId;
   // `undefined` dans un where ne filtre pas — sémantique Prisma.
   const ok = (attendu: unknown, valeur: unknown) => attendu === undefined || attendu === valeur;
-  type W = { id?: string; etablissement?: { entreprise?: { userId?: string } }; carnet?: { etablissement?: { entreprise?: { userId?: string } } } };
+  type W = { id?: string; etablissement?: { entreprise?: { compteId?: string } }; carnet?: { etablissement?: { entreprise?: { compteId?: string } } } };
 
   const rapports = [
     { id: "rap-a", etablissementId: "etab-a", fichierCle: "rapports/etab-a/a.pdf", fichierMime: "application/pdf", fichierNomOriginal: "a.pdf" },
@@ -47,14 +47,14 @@ const h = vi.hoisted(() => {
     { id: "pp-a", prestataireId: "pre-a", type: "urssaf", fichierCle: "presta/etab-a/u-ancienne.pdf", fichierNom: "urssaf-2025.pdf" },
     { id: "pp-b", prestataireId: "pre-b", type: "urssaf", fichierCle: "presta/etab-b/u-ancienne.pdf", fichierNom: "urssaf-b-2025.pdf" },
   ];
-  type WP = { id?: string; prestataireId?: string; prestataire?: { etablissement?: { entreprise?: { userId?: string } } } };
+  type WP = { id?: string; prestataireId?: string; prestataire?: { etablissement?: { entreprise?: { compteId?: string } } } };
   const trouverPrecedente = async ({ where }: { where: WP }) =>
     precedentes.find((x) => {
       const etab = prestataires.find((p) => p.id === x.prestataireId)?.etablissementId ?? "";
       return (
         ok(where.id, x.id) &&
         ok(where.prestataireId, x.prestataireId) &&
-        ok(where.prestataire?.etablissement?.entreprise?.userId, userDe(etab))
+        ok(where.prestataire?.etablissement?.entreprise?.compteId, userDe(etab))
       );
     }) ?? null;
 
@@ -65,16 +65,16 @@ const h = vi.hoisted(() => {
     { id: "etab-a-sans", photoCle: null, photoMime: null },
   ];
   etabs.push({ id: "etab-a-sans", userId: "user-a" });
-  type WE = { id?: string; entreprise?: { userId?: string } };
+  type WE = { id?: string; entreprise?: { compteId?: string } };
   const trouverEtablissement = async ({ where }: { where: WE }) =>
-    etablissements.find((x) => ok(where.id, x.id) && ok(where.entreprise?.userId, userDe(x.id))) ?? null;
+    etablissements.find((x) => ok(where.id, x.id) && ok(where.entreprise?.compteId, userDe(x.id))) ?? null;
 
   const prisma = {
     etablissement: { findFirst: trouverEtablissement },
     piecePrestataire: { findFirst: trouverPrecedente },
-    rapportVerification: { findFirst: trouver(rapports, (w) => w.etablissement?.entreprise?.userId) },
-    prestataire: { findFirst: vi.fn(trouver(prestataires, (w) => w.etablissement?.entreprise?.userId)) },
-    analyseLegionelle: { findFirst: trouver(analyses, (w) => w.carnet?.etablissement?.entreprise?.userId) },
+    rapportVerification: { findFirst: trouver(rapports, (w) => w.etablissement?.entreprise?.compteId) },
+    prestataire: { findFirst: vi.fn(trouver(prestataires, (w) => w.etablissement?.entreprise?.compteId)) },
+    analyseLegionelle: { findFirst: trouver(analyses, (w) => w.carnet?.etablissement?.entreprise?.compteId) },
   };
   const get = vi.fn(async (cle: string) => Buffer.from(`contenu:${cle}`));
   return { prisma, get, requireUser: vi.fn() };

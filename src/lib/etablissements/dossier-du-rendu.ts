@@ -57,10 +57,10 @@ export const chargerEtablissementEtParc = cache(
   async function chargerEtablissementEtParc(
     db: Db,
     etablissementId: string,
-    userId: string,
+    compteId: string,
   ) {
     return db.etablissement.findFirst({
-      where: { id: etablissementId, entreprise: { userId } },
+      where: { id: etablissementId, entreprise: { compteId } },
       include: {
         entreprise: { select: { effectif: true } },
         equipements: { where: { actif: true } },
@@ -93,15 +93,15 @@ export function equipementsPourLeMoteur(
 
 /**
  * Le passage du moteur sur le dossier, une fois par rendu. `null` si le
- * dossier n'existe pas ou n'appartient pas à `userId`.
+ * dossier n'existe pas ou n'appartient pas au compte `compteId`.
  */
 export const obligationsApplicablesDuDossier = cache(
   async function obligationsApplicablesDuDossier(
     db: Db,
     etablissementId: string,
-    userId: string,
+    compteId: string,
   ) {
-    const etab = await chargerEtablissementEtParc(db, etablissementId, userId);
+    const etab = await chargerEtablissementEtParc(db, etablissementId, compteId);
     if (!etab) return null;
     const equipements = equipementsPourLeMoteur(etab.equipements);
     return {

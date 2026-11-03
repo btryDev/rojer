@@ -48,6 +48,15 @@ connecteur MCP OAuth de Supabase n'existe plus — garder la suppression de
   de plus à rejouer, rien d'autre. Suite du chantier et constats des revues :
   `docs/notes-chantier-abonnements-stripe.md` (§ 5 les lots, § 7 ce que les
   revues renvoient au webhook, aux droits et au parcours).
+- **Plusieurs utilisateurs par compte, lot 1** (2026-11-03, ADR-054, PR #159) :
+  tables `Compte`, `Membre`, `InvitationCompte` (plugin `organization` de
+  Better Auth) ; la racine de l'isolation est `compteId`, plus `userId` ;
+  l'appartenance est relue à chaque requête ; + 1 requête par page. Cinq
+  migrations, avec reprise (un compte par utilisateur existant) et arrêt
+  avant le retrait de `userId` si une ligne y échappe. **Si la bascule a lieu
+  avant la fusion de ce lot**, scinder la dernière migration (§ 10 de
+  l'ADR). Pas encore d'écran : invitation, lecture seule et membres viennent
+  aux lots suivants.
 
 ## Ce qui reste avant la bascule
 

@@ -13,8 +13,13 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import { Prisma } from "@prisma/client";
 import { CORRESPONDANCE, IDENTITES_SCALAIRES, type Classement } from "./correspondance";
 
-/** La portée d'un client borné : un compte (ADR-051, « Accès sans session »). */
-export type Portee = { type: "compte"; userId: string };
+/**
+ * La portée d'un client borné : un compte (ADR-051, ADR-054), et la personne
+ * qui agit — un membre du compte, ou `null` pour un accès sans session (jeton
+ * de prestataire, MCP, webhook) : une relation vers `User` n'y peut alors
+ * désigner personne.
+ */
+export type Portee = { type: "compte"; compteId: string; userId: string | null };
 
 /** Refus du client borné : opération ou modèle qu'il ne sait pas borner. */
 export class ErreurPortee extends Error {
@@ -35,6 +40,8 @@ type Relation = {
   nom: string;
   cible: string;
   genre: Genre;
+  /** Pour une relation vers l'identité : le champ de la portée qu'elle désigne. */
+  porteePar?: "userId" | "compteId";
   liste: boolean;
   /** La clé étrangère portée par CE modèle, s'il en porte une. */
   cle?: string;
@@ -65,7 +72,9 @@ const RELATIONS = new Map<string, Relation[]>(
         // sans borne. Le schéma n'en porte aucune.
         if (de.length > 1 || (de.length === 1 && (f.relationToFields?.[0] ?? "id") !== "id"))
           throw new ErreurPortee(`${m.name}.${f.name} : clé étrangère non simple, non bornable`);
-        return { nom: f.name, cible: f.type, genre, liste: f.isList, cle: de[0] };
+        const c = classement(f.type);
+        const porteePar = "identite" in c ? c.porteePar : undefined;
+        return { nom: f.name, cible: f.type, genre, porteePar, liste: f.isList, cle: de[0] };
       }),
   ]),
 );
@@ -88,7 +97,7 @@ function identitesScalaires(nom: string, data: Objet, portee: Portee): void {
   for (const cle of IDENTITES_SCALAIRES[nom as Prisma.ModelName] ?? []) {
     if (!(cle in data) || data[cle] === undefined) continue;
     const v = valeurScalaire(data[cle]);
-    if (v !== null && v !== portee.userId) throw new ErreurPortee(`${nom}.${cle} : utilisateur d'un autre compte`);
+    if (v !== null && v !== portee.userId) throw new ErreurPortee(`${nom}.${cle} : une autre personne que celle qui agit`);
     data[cle] = v;
   }
 }
@@ -115,7 +124,7 @@ export function clesDuCompte(nom: string): { cle: string; cible: string }[] {
 /** Le filtre `where` qui borne un modèle à la portée. */
 export function borne(nom: string, portee: Portee): Objet {
   const c = classement(nom);
-  if ("racine" in c) return { [c.racine]: portee.userId };
+  if ("racine" in c) return { [c.racine]: portee.compteId };
   if ("parent" in c) return { [c.parent]: borne(relation(nom, c.parent)!.cible, portee) };
   throw new ErreurPortee(`modèle hors compte : ${nom}`);
 }
@@ -147,24 +156,24 @@ function valeurScalaire(v: unknown): unknown {
   throw new ErreurPortee(`opération inattendue sur une clé : ${Object.keys(v).join(", ")}`);
 }
 
-/** La clé de racine d'un modèle racine (`Entreprise.userId`) — et elle seule. */
+/** La clé de racine d'un modèle racine (`Entreprise.compteId`) — et elle seule. */
 function estLaRacine(nom: string, cle: string): boolean {
   const c = classement(nom);
   return "racine" in c && c.racine === cle;
 }
 
-/** Vérifie et pose la racine (`userId`) d'une création ou d'une mise à jour. */
+/** Vérifie et pose la racine (`compteId`) d'une création ou d'une mise à jour. */
 function racineDe(nom: string, data: Objet, portee: Portee, creation: boolean): void {
   const c = classement(nom);
   if (!("racine" in c)) return;
   if (c.racine in data) {
     const v = valeurScalaire(data[c.racine]);
-    if (v !== portee.userId) throw new ErreurPortee(`${nom}.${c.racine} différent du compte`);
+    if (v !== portee.compteId) throw new ErreurPortee(`${nom}.${c.racine} différent du compte`);
     data[c.racine] = v;
     return;
   }
   const parRelation = relations(nom).some((r) => r.cle === c.racine && data[r.nom] !== undefined);
-  if (creation && !parRelation) data[c.racine] = portee.userId;
+  if (creation && !parRelation) data[c.racine] = portee.compteId;
 }
 
 // --- Écritures ----------------------------------------------------------------
@@ -212,9 +221,12 @@ export function reecrireDonnees(nom: string, data: unknown, portee: Portee, crea
 /** La cible d'un `connect` : bornée au compte, ou réduite au compte lui-même. */
 function cible(r: Relation, where: unknown, portee: Portee): Objet {
   if (r.genre === "identite") {
-    if (!estObjet(where) || Object.keys(where).length !== 1 || where.id !== portee.userId)
-      throw new ErreurPortee(`${r.nom} : une relation vers l'identité ne désigne que le compte`);
-    return { id: portee.userId };
+    // `Compte` ne désigne que le compte de la portée, `User` que la personne
+    // qui agit (ADR-054 § 3) — et personne sans session.
+    const attendu = portee[r.porteePar!];
+    if (!attendu || !estObjet(where) || Object.keys(where).length !== 1 || where.id !== attendu)
+      throw new ErreurPortee(`${r.nom} : une relation vers l'identité ne désigne que le compte ou la personne qui agit`);
+    return { id: attendu };
   }
   // La condition d'un `connect` est un filtre comme un autre : elle ne remonte
   // pas vers un modèle hors compte ni vers l'identité (seconde lecture de #142).
@@ -342,7 +354,7 @@ export function noterVus(nom: string, portee: Portee, resultat: unknown): void {
   if (!vus || !Array.isArray(resultat)) return;
   for (const ligne of resultat) {
     const id = (ligne as Objet | null)?.id;
-    if (typeof id === "string") vus.add(`${portee.userId}|${nom}:${id}`);
+    if (typeof id === "string") vus.add(`${portee.compteId}|${nom}:${id}`);
   }
 }
 
@@ -352,7 +364,7 @@ function clesNonVues(nom: string, ligne: Objet, portee: Portee): string[] {
   return clesDuCompte(nom).flatMap(({ cle, cible: c }) => {
     const v = ligne[cle];
     if (v === undefined || v === null) return [];
-    return vus.has(`${portee.userId}|${c}:${String(v)}`) ? [] : [`${c}:${String(v)}`];
+    return vus.has(`${portee.compteId}|${c}:${String(v)}`) ? [] : [`${c}:${String(v)}`];
   });
 }
 
