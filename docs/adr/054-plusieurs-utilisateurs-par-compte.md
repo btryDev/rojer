@@ -291,6 +291,41 @@ toute façon pour ce chantier.]
 5. **Recette** : § 9, revue de code, simplification et revue de sécurité,
    CI verte.
 
+## Ce que la réalisation a précisé (lot 1, 2026-11-03, PR #159)
+
+Les lots 1 et 2 ne font qu'un : renommer la racine casse toutes les
+requêtes qui la lisent, ils ne se fusionnent pas l'un sans l'autre.
+
+- **Sans session, personne n'agit.** Les accès par jeton, MCP et webhook
+  reçoivent la portée `{ compteId, userId: null }` : une relation vers `User`
+  n'y désigne personne. Avant, ils agissaient au nom du propriétaire.
+- **`Session.compteActifId` n'a pas de clé étrangère** : un compte disparu
+  laisse une valeur que la relecture de `Membre` écarte.
+- **Pas de création de compte à l'inscription.** Le compte naît au premier
+  onboarding (`requireCompteDOnboarding`), avant la transaction : si elle
+  échoue, le parcours suivant le reprend. Une personne sans compte est
+  renvoyée à l'onboarding par `requireCompte`, comme un membre retiré, en
+  attendant l'écran « Vous n'avez accès à aucun compte » (lot 4).
+- **Migration en un seul déploiement**, ancienne racine retirée dans la
+  dernière des cinq migrations : `cc` n'a pas servi de production (§ 10).
+- **Webhook Stripe** : `compteDuClientStripe` lit `metadata.compteId` ; un
+  client d'avant ce lot (`metadata.userId`) se rattache au compte dont la
+  personne est l'**unique** propriétaire, sinon rien n'est écrit (alerte).
+- **Budget de requêtes : + 1 par page**, mesuré en CI sur les treize pages —
+  la relecture de `Membre`, une fois par rendu (`cache()`).
+- **Tests.** Les tests de module simulent l'appartenance avec
+  `compteId === userId` (`vitest.setup.ts`), pour garder leurs données. Les
+  tests sur base réelle, eux, tirent des identifiants distincts pour le compte
+  et la personne : `portee/client.integration` (un second membre voit les
+  mêmes lignes ; l'identifiant d'une personne pris pour un compte ne voit
+  rien), `membres.integration` (compte actif ignoré sans appartenance ;
+  membre retiré refusé à l'appel suivant, sa session inchangée ; deux
+  mutations font tomber 5 et 1 cas), `creer-compte.integration` (le plugin
+  crée `Compte` et `Membre` sous nos noms).
+- **Le refus d'une création de compte depuis une session réelle**
+  (`allowUserToCreateOrganization: false`) est lu dans le code du plugin, pas
+  éprouvé : il faudrait un cookie de session signé.
+
 ## Ce que cette décision ne règle pas
 
 - Les droits par établissement et les droits fins (Q2 ; formule « Sur
