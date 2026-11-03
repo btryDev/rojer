@@ -28,7 +28,7 @@ beforeEach(() => {
 
 describe("clientMcp", () => {
   it("clé : le propriétaire de l'établissement servi", async () => {
-    expect(portee(await clientMcp({ etablissementId: "etab-1" }))).toEqual({ type: "compte", userId: "proprietaire-1" });
+    expect(portee(await clientMcp({ etablissementId: "etab-1" }))).toEqual({ type: "compte", compteId: "proprietaire-1", userId: "proprietaire-1" });
     expect(await clientMcp({ etablissementId: "inconnu" })).toBeNull();
   });
 

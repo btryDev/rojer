@@ -21,7 +21,7 @@
 // n'en est pas un. Le test qui s'en sert l'importe lui-même (les tests sont
 // hors de cette garde).
 
-type Portee = { type: "compte"; userId: string };
+type Portee = { type: "compte"; compteId: string; userId: string | null };
 type Modele = Record<string, unknown>;
 type ArgumentsBornes = (nom: string, operation: string, args: unknown, portee: Portee) => object;
 

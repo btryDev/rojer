@@ -29,7 +29,7 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
 
   const A = "00000000-0000-0000-0000-00000000000a";
   const B = "00000000-0000-0000-0000-00000000000b";
-  const dbA = clientBorne({ type: "compte", userId: A });
+  const dbA = clientBorne({ type: "compte", compteId: A, userId: A });
 
   // Sur `cc`, la racine pointe vers l'utilisateur de Better Auth : il doit
   // exister avant l'entreprise.

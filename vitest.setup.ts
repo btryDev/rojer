@@ -22,6 +22,18 @@
 
 import { vi } from "vitest";
 
+// L'appartenance au compte (ADR-054), simulée : la personne simulée est
+// propriétaire d'un compte qui porte son identifiant (`compteId === userId`),
+// pour que les tests de module gardent leurs données. L'appartenance réelle
+// — relue à chaque appel, refusée à un membre retiré — est éprouvée contre un
+// vrai PostgreSQL (`auth/membres.integration.test.ts`), qui lève ce
+// remplacement par `vi.unmock`.
+vi.mock("@/lib/auth/membres", () => ({
+  appartenanceCourante: async (userId: string) => ({ compteId: userId, role: "owner" }),
+  appartenanceDeLaSession: async (userId: string) => ({ compteId: userId, role: "owner" }),
+  creerCompte: async (userId: string) => ({ compteId: userId, role: "owner" }),
+}));
+
 vi.mock("@/lib/auth/portee/client", async () => {
   const { prisma } = await import("@/lib/prisma");
   const { argumentsBornes, clesDuCompte, dansUnLot, noterVus } = await vi.importActual<
@@ -31,11 +43,11 @@ vi.mock("@/lib/auth/portee/client", async () => {
   );
   const { clientBorneSimule } = await import("@/test/client-borne-simule");
   return {
-    clientBorne: (portee: { type: "compte"; userId: string }) =>
+    clientBorne: (portee: { type: "compte"; compteId: string; userId: string | null }) =>
       clientBorneSimule(prisma as object, portee, argumentsBornes, "verifier"),
     // Le même client simulé, sur un autre client brut (serveur MCP stdio,
     // `sessionStdio`).
-    clientBorneSur: (base: object, portee: { type: "compte"; userId: string }) =>
+    clientBorneSur: (base: object, portee: { type: "compte"; compteId: string; userId: string | null }) =>
       clientBorneSimule(base, portee, argumentsBornes, "verifier"),
   };
 });
@@ -60,7 +72,7 @@ vi.mock("@/lib/auth/portee/lot-verifie", async () => {
       options: object = {},
     ) => {
       if (lignes.length === 0) return { count: 0 };
-      const portee = client[PORTEE_SIMULEE] as { type: "compte"; userId: string } | undefined;
+      const portee = client[PORTEE_SIMULEE] as { type: "compte"; compteId: string; userId: string | null } | undefined;
       if (!portee) throw new Error(`creerEnLotVerifie(${nom}) : client non borné (garde simulée au client brut ?)`);
       const delegue = client[nom.charAt(0).toLowerCase() + nom.slice(1)] as {
         createMany: (a: object) => unknown;

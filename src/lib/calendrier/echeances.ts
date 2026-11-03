@@ -264,10 +264,9 @@ type ContexteSource = {
   db: Db;
   etablissementId: string;
   scope: { etablissementId: string };
-  /** Pour les seuls modules encore au client brut, qui portent le prédicat
-   *  eux-mêmes (`eauChaudeSuivieParLeCalendrier`), et le prédicat que
-   *  `duerpDuRenduDuCompte` garde encore. */
-  userId: string;
+  /** Le prédicat de compte que `eauChaudeSuivieParLeCalendrier` et
+   *  `duerpDuRenduDuCompte` gardent encore (ADR-054). */
+  compteId: string;
   aujourdhui: Date;
 };
 
@@ -703,7 +702,7 @@ const sourceActions: SourceEcheances = async ({
 
 const sourceDuerp: SourceEcheances = async ({
   db,
-  userId,
+  compteId,
   aujourdhui,
   etablissementId,
 }) => {
@@ -711,7 +710,7 @@ const sourceDuerp: SourceEcheances = async ({
   // « mise à jour annuelle » et l'âge affiché au board portent sur le même
   // document par construction. La sélection déterministe (tri, version par
   // `numero`) vit dans le chargeur ; le propriétaire est celui du périmètre.
-  const duerp = await duerpDuRenduDuCompte(db, etablissementId, userId);
+  const duerp = await duerpDuRenduDuCompte(db, etablissementId, compteId);
   const e = echeanceDuerp({
     etablissementId,
     dateDerniereVersion: duerp?.versions[0]?.createdAt ?? null,
@@ -795,7 +794,7 @@ const sourcePlansPrevention: SourceEcheances = async ({
 
 const sourceLegionelles: SourceEcheances = async ({
   db,
-  userId,
+  compteId,
   aujourdhui,
   etablissementId,
 }) => {
@@ -809,7 +808,7 @@ const sourceLegionelles: SourceEcheances = async ({
     carnetDuRendu(etablissementId),
     eauChaudeSuivieParLeCalendrier(db, {
       etablissementId,
-      etablissement: { entreprise: { userId } },
+      etablissement: { entreprise: { compteId } },
     }),
   ]);
   const e = echeanceLegionelles({
@@ -876,12 +875,12 @@ const autresEcheancesDuRendu = cache(async function autresEcheancesDuRendu(
   instant: number,
 ): Promise<EcheanceCalendrier[]> {
   const aujourdhui = new Date(instant);
-  const { user, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   const ctx: ContexteSource = {
     db,
     etablissementId,
     scope: { etablissementId },
-    userId: user.id,
+    compteId: compte.compteId,
     aujourdhui,
   };
 

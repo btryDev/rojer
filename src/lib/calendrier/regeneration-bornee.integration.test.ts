@@ -25,7 +25,7 @@ vi.mock("@/lib/auth/scope", async () => {
   return {
     assertEtablissementDuCompte: async () => ({
       user: { id: garde.compte!, email: null },
-      db: clientBorne({ type: "compte", userId: garde.compte! }),
+      db: clientBorne({ type: "compte", compteId: garde.compte!, userId: garde.compte! }),
     }),
   };
 });
@@ -101,7 +101,7 @@ describe.skipIf(!URL_BASE || !local)("régénération du calendrier — PostgreS
   });
 
   it("sur la lecture bornée réelle, un équipement de l'autre établissement du compte est refusé", async () => {
-    const lecture = await lireEntrees(clientBorne({ type: "compte", userId: A }), e1.etab.id);
+    const lecture = await lireEntrees(clientBorne({ type: "compte", compteId: A, userId: A }), e1.etab.id);
     const plan = planifier(lecture, new Date());
     expect(() => clesDuPlanDansLaLecture(plan, lecture)).not.toThrow();
     const modele = plan.aCreer[0] ?? { equipementId: null, salarieId: null, prescriptionId: null };

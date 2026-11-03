@@ -299,11 +299,11 @@ describe("les lectures exportées et les server actions qui ne font que lire", (
     const permisDuCompte = `async function permisDuCompte(permisFeuId) {
       const user = await requireUser();
       const permis = await prisma.permisFeu.findFirst({
-        where: { id: permisFeuId, etablissement: { entreprise: { userId: user.id } } },
+        where: { id: permisFeuId, etablissement: { entreprise: { compteId: compte.compteId } } },
       });
     }`;
     expect(etablitLAppartenance(permisDuCompte)).toBe(true);
-    const horsWhere = `const scope = { etablissementId, etablissement: { entreprise: { userId: user.id } } };`;
+    const horsWhere = `const scope = { etablissementId, etablissement: { entreprise: { compteId: compte.compteId } } };`;
     expect(portePortee(horsWhere)).toBe(true);
 
     const appelant = decoupe(

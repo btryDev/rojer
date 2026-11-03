@@ -23,10 +23,12 @@ import { clientBorne, clientBorneSur, type ClientBorne } from "./portee/client";
 export async function clientDuProprietaire(etablissementId: string): Promise<ClientBorne | null> {
   const etab = await prisma.etablissement.findUnique({
     where: { id: etablissementId },
-    select: { entreprise: { select: { userId: true } } },
+    select: { entreprise: { select: { compteId: true } } },
   });
-  const userId = etab?.entreprise.userId;
-  return userId ? clientBorne({ type: "compte", userId }) : null;
+  const compteId = etab?.entreprise.compteId;
+  // Sans session, personne n'agit au nom du compte : une relation vers `User`
+  // n'y désigne personne (ADR-054 § 3).
+  return compteId ? clientBorne({ type: "compte", compteId, userId: null }) : null;
 }
 
 /**
@@ -45,8 +47,10 @@ export async function sessionStdio(
 ): Promise<{ nom: string; db: ClientBorne } | null> {
   const etab = await base.etablissement.findUnique({
     where: { id: etablissementId },
-    select: { raisonDisplay: true, entreprise: { select: { userId: true } } },
+    select: { raisonDisplay: true, entreprise: { select: { compteId: true } } },
   });
-  const userId = etab?.entreprise.userId;
-  return etab && userId ? { nom: etab.raisonDisplay, db: clientBorneSur(base, { type: "compte", userId }) } : null;
+  const compteId = etab?.entreprise.compteId;
+  return etab && compteId
+    ? { nom: etab.raisonDisplay, db: clientBorneSur(base, { type: "compte", compteId, userId: null }) }
+    : null;
 }

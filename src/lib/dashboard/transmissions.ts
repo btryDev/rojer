@@ -347,7 +347,7 @@ export function rapprocher(
 export async function chargerTransmissions(
   db: Db,
   etablissementId: string,
-  userId: string,
+  compteId: string,
   /** L'horloge du tableau de bord, pour que ses cartes lisent la même. */
   now: Date,
 ): Promise<Transmissions> {
@@ -356,7 +356,7 @@ export async function chargerTransmissions(
   // même prédicat d'appartenance, même projection (`projeterEtablissement`,
   // dont la recopie champ à champ qui était ici donnait les vingt et un mêmes
   // champs). Hors rendu RSC, la lecture se fait comme avant.
-  const dossier = await obligationsApplicablesDuDossier(db, etablissementId, userId);
+  const dossier = await obligationsApplicablesDuDossier(db, etablissementId, compteId);
   if (!dossier) return AUCUNE_TRANSMISSION;
   const { etab } = dossier;
 
@@ -377,7 +377,7 @@ export async function chargerTransmissions(
     db.salarie.findMany({
       where: {
         etablissementId: etab.id,
-        etablissement: { entreprise: { userId } },
+        etablissement: { entreprise: { compteId } },
         actif: true,
       },
       select: {

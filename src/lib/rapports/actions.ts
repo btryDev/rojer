@@ -93,7 +93,7 @@ export async function uploadRapport(
   //    `serverActions.bodySizeLimit` (next.config).
   //    [2026-10-14, intégration avec `integration/audit-1013` : un seul appel,
   //    son `user` borne aussi la lecture de l'étape 3.]
-  const { user, db } = await requireCompte();
+  const { user, compte, db } = await requireCompte();
 
   // 1. Métadonnées
   const parsed = rapportMetadataSchema.safeParse({
@@ -143,7 +143,7 @@ export async function uploadRapport(
   //    pour un id absent et 404 pour celle d'autrui — un oracle d'existence.
   //    Les deux cas tombent désormais sur le même `notFound()`.
   const verif = await db.verification.findFirst({
-    where: { id: verificationId, etablissement: { entreprise: { userId: user.id } } },
+    where: { id: verificationId, etablissement: { entreprise: { compteId: compte.compteId } } },
     select: {
       id: true,
       etablissementId: true,
@@ -368,9 +368,9 @@ export async function uploadRapport(
 export async function supprimerRapport(rapportId: string): Promise<void> {
   // Lu DANS le périmètre du compte, absent et étranger confondus dans le même
   // `notFound()` (audit du 2026-10-13, comme le dépôt ci-dessus).
-  const { user, db } = await requireCompte();
+  const { user, compte, db } = await requireCompte();
   const rap = await db.rapportVerification.findFirst({
-    where: { id: rapportId, etablissement: { entreprise: { userId: user.id } } },
+    where: { id: rapportId, etablissement: { entreprise: { compteId: compte.compteId } } },
     select: {
       id: true,
       etablissementId: true,

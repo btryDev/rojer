@@ -63,7 +63,7 @@ describe("getModulesMatrice — le carnet suit le prédicat partagé", () => {
     // Le client borné de la session (ADR-051) — simulé, il porte sa portée —,
     // puis la portée écrite.
     const [db, portee] = suivie.mock.calls[0] as [Record<symbol, unknown>, unknown];
-    expect(db[PORTEE_SIMULEE]).toEqual({ type: "compte", userId: "u1" });
+    expect(db[PORTEE_SIMULEE]).toEqual({ type: "compte", compteId: "u1", userId: "u1" });
     expect(portee).toEqual({
       etablissementId: "etab-1",
       etablissement: { entreprise: { userId: "u1" } },

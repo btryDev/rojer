@@ -165,7 +165,7 @@ describe("la sonde elle-même", () => {
   const user = await requireUser();
   const p = await prisma.plan.findFirst({
     include: { lignes: { where: { actif: true } } },
-    where: { id, etablissement: { entreprise: { userId: user.id } } },
+    where: { id, etablissement: { entreprise: { compteId: compte.compteId } } },
   });
   await assertEtablissementOwnership(p.etablissementId);
 }`,
@@ -205,7 +205,7 @@ export async function f(id) {
   it("laisse la lecture bornée au compte, et la relecture après contrôle", () => {
     const src = `async function duCompte(id) {
   const user = await requireUser();
-  const p = await prisma.plan.findFirst({ where: { id, etablissement: { entreprise: { userId: user.id } } } });
+  const p = await prisma.plan.findFirst({ where: { id, etablissement: { entreprise: { compteId: compte.compteId } } } });
   if (!p) notFound();
   return p;
 }

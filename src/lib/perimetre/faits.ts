@@ -54,7 +54,7 @@ export async function couvertureDuDossier(
 export async function faitsDeCouverture(
   etablissementId: string,
 ): Promise<FaitsCouverture | null> {
-  const { user, db } = await requireCompte();
+  const { user, compte, db } = await requireCompte();
   // [2026-10-14, audit Next.js H2] L'établissement, l'effectif et le code NAF
   // de son entreprise (C37 : les seuils comptés sur l'entreprise lisent le
   // sien), et le parc EN SERVICE — un équipement désactivé ne génère plus
@@ -66,9 +66,9 @@ export async function faitsDeCouverture(
   // chacune porte la portée au compte dans sa requête, aucune n'attend que
   // l'établissement ait été établi pour s'y borner.
   const [etab, duerp, unites, nbRetires] = await Promise.all([
-    chargerEtablissementEtParc(db, etablissementId, user.id),
+    chargerEtablissementEtParc(db, etablissementId, compte.compteId),
     // Le DUERP du rendu, partagé avec le tableau de bord et la barre latérale.
-    duerpDuRenduDuCompte(db, etablissementId, user.id),
+    duerpDuRenduDuCompte(db, etablissementId, compte.compteId),
     // Ses unités, que la couverture seule lit. « 1 établissement = 1 DUERP »
     // (`Duerp.etablissementId @unique`) : celles du DUERP de l'établissement.
     db.uniteTravail.findMany({
@@ -189,7 +189,7 @@ export async function faitsDeCouverture(
 export async function faitsManquesAnnonces(
   etablissementId: string,
 ): Promise<FaitsManquesAnnonces | null> {
-  const { db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   const etab = await db.etablissement.findFirst({
     where: { id: etablissementId },
     select: {

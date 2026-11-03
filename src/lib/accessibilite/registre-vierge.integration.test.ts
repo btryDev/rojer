@@ -41,7 +41,7 @@ vi.mock("@/lib/auth/scope", async () => {
         select: { entreprise: { select: { userId: true } } },
       });
       const userId = e.entreprise.userId!;
-      return { user: { id: userId, email: null }, db: clientBorne({ type: "compte", userId }) };
+      return { user: { id: userId, email: null }, db: clientBorne({ type: "compte", compteId: userId, userId }) };
     },
   };
 });

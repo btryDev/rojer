@@ -72,9 +72,9 @@ export async function chargerPagePrescriptions(
   // la page rend une liste vide dans les deux cas, ce qui est le
   // comportement voulu : on ne dit pas à un visiteur que l'identifiant
   // existe.
-  const { user, db } = await requireCompte();
+  const { user, compte, db } = await requireCompte();
   const etab = await db.etablissement.findFirst({
-    where: { id: etablissementId, entreprise: { userId: user.id } },
+    where: { id: etablissementId, entreprise: { compteId: compte.compteId } },
     include: {
       equipements: { where: { actif: true } },
       prescriptionsParticulieres: {

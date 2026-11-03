@@ -101,7 +101,7 @@ export default async function EquipementsPage({
   // sécurité »] partent ensemble, APRÈS la garde (`getEtablissement`
   // + `notFound`) : les bâtiments étaient lus seuls, puis le reste — aucune
   // des ~~quatre~~ cinq autres ne dépend du filtre (audit Next.js du 2026-10-14, M4).
-  const { user, db } = await requireCompte();
+  const { user, compte, db } = await requireCompte();
   const [batiments, equipements, etatsVerifs, sansEcheance, fraicheur, dossier, ensembles] =
     await Promise.all([
       listerBatimentsDeLEtablissement(id),
@@ -122,7 +122,7 @@ export default async function EquipementsPage({
       // 2026-10-15 : les obligations applicables, pour la section
       // « Équipements de sécurité ». Lecture bornée au compte (le client de la
       // garde), partagée avec le reste du rendu.
-      obligationsApplicablesDuDossier(db, id, user.id),
+      obligationsApplicablesDuDossier(db, id, compte.compteId),
       // Les contrôles d'ensemble, rangés en tête de leur domaine (points à
       // corriger, lot 2).
       controlesDEnsemble(id, instantDuRendu()),

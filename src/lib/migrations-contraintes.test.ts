@@ -325,15 +325,16 @@ describe("plusieurs établissements par entreprise (ADR-028)", () => {
   // l'unicité, et le typage Prisma les refuse désormais.]
   it("un compte porte plusieurs entreprises, une seule par SIREN", () => {
     const corps = corpsDuModele("Entreprise");
-    const ligne = corps.match(/^\s*userId\s+String.*$/m);
+    // [2026-11-03, ADR-054 : la racine est `compteId`, plus `userId`.]
+    const ligne = corps.match(/^\s*compteId\s+String.*$/m);
 
-    expect(ligne, "champ `userId` introuvable").not.toBeNull();
+    expect(ligne, "champ `compteId` introuvable").not.toBeNull();
     expect(
       ligne![0],
-      "Le `@unique` est revenu sur `Entreprise.userId` : un compte ne pourrait " +
+      "Le `@unique` est revenu sur `Entreprise.compteId` : un compte ne pourrait " +
         "plus suivre deux sociétés (ADR-028 amendée le 2026-10-26).",
     ).not.toContain("@unique");
-    expect(corps).toMatch(/@@unique\(\[userId,\s*siren\]\)/);
+    expect(corps).toMatch(/@@unique\(\[compteId,\s*siren\]\)/);
     // ~~Chaque lecture cloisonnée remonte à `userId` : l'index simple remplace
     // celui que portait l'unicité.~~ [2026-10-28 : l'index simple est retiré,
     // migration `20261030100200_index_redondant_entreprise` — l'unicité `[userId, siren]`
@@ -341,9 +342,9 @@ describe("plusieurs établissements par entreprise (ADR-028)", () => {
     // `userId` est EN TÊTE de cet index.]
     expect(
       corps,
-      "Aucun index ne commence plus par `userId` : chaque lecture cloisonnée " +
-        "(`entreprise: { userId }`) parcourrait toute la table.",
-    ).toMatch(/@@(unique|index)\(\[\s*userId\b/);
+      "Aucun index ne commence plus par `compteId` : chaque lecture cloisonnée " +
+        "(`entreprise: { compteId }`) parcourrait toute la table.",
+    ).toMatch(/@@(unique|index)\(\[\s*compteId\b/);
   });
 
   it("la migration qui ouvre plusieurs entreprises par compte repose l'index", () => {

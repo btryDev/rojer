@@ -48,6 +48,11 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous" }
     motif: "compteurs techniques, hors de tout compte",
     usages: ["prisma.$executeRaw", "prisma.$queryRaw"],
   },
+  "src/lib/auth/membres.ts": {
+    motif:
+      "appartenance d'une personne à un compte (ADR-054 § 3) : relue avant de construire la portée, que le client borné ne connaît pas encore",
+    usages: ["prisma.membre.findMany"],
+  },
   "src/lib/auth/compte-hors-session.ts": {
     motif: "accès sans session : le compte propriétaire de l'établissement d'une preuve vérifiée (jeton, signature publique, clé MCP)",
     usages: ["prisma.etablissement.findUnique"],

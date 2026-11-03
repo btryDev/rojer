@@ -201,7 +201,7 @@ export async function creerPlanPrevention(
   _prev: PlanActionState,
   formData: FormData,
 ): Promise<PlanActionState> {
-  const { db } = await assertEtablissementDuCompte(etablissementId);
+  const { compte, db } = await assertEtablissementDuCompte(etablissementId);
 
   const parsed = lirePlanPrevention(formData);
   if (!parsed.success) {
@@ -255,9 +255,9 @@ export async function creerPlanPrevention(
  * `auth/tenancy-oracle.test.ts`.
  */
 async function planDuCompte(planId: string) {
-  const { user, db } = await requireCompte();
+  const { user, compte, db } = await requireCompte();
   const plan = await db.planPrevention.findFirst({
-    where: { id: planId, etablissement: { entreprise: { userId: user.id } } },
+    where: { id: planId, etablissement: { entreprise: { compteId: compte.compteId } } },
     select: {
       etablissementId: true,
       statut: true,

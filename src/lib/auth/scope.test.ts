@@ -69,7 +69,7 @@ async function attendNotFound(fn: () => Promise<unknown>): Promise<void> {
   await expect(fn()).rejects.toSatisfy(estNotFound);
 }
 
-/** Sérialise le `where` du premier appel pour y chercher le filtre userId. */
+/** Sérialise le `where` du premier appel pour y chercher le filtre de compte (`compteId`, ADR-054). */
 function whereDuPremierAppel(mock: { mock: { calls: unknown[][] } }): string {
   return JSON.stringify(
     (mock.mock.calls[0][0] as { where: unknown }).where,
@@ -93,7 +93,7 @@ describe("requireUnite", () => {
 
     const where = whereDuPremierAppel(prismaMock.uniteTravail.findFirst);
     expect(where).toContain(USER.id);
-    expect(where).toContain("userId");
+    expect(where).toContain("compteId");
     expect(res.duerpId).toBe("d1");
     expect(res.etablissementId).toBe("e1");
   });
