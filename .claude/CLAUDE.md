@@ -150,7 +150,12 @@ salariés au plus peut-elle être concernée ? » se tranche article par article
    public reçu : un restaurant de huit salariés qui sert trois cents couverts
    relève de la 3ᵉ catégorie d'ERP et reste dans la cible. Elle vaut à la
    création ; un dossier existant qui franchit le seuil garde son dossier et
-   porte un manque de couverture.
+   porte un manque de couverture. [2026-11-03, ADR-031 amendement bis :
+   l'effectif de l'entreprise est la SOMME de ses sites (apprentis non
+   compris, L. 1111-3) et de ses salariés hors Rojer, calculée
+   (`entreprises/effectif.ts`) ; il se saisit dans Équipe. La borne refuse
+   aussi ce qui fait croître dans Équipe — effectif, fiche ajoutée ou
+   réintégrée ; baisser n'est jamais refusé.]
 2. **Un ERP situé dans un immeuble de grande hauteur.** L'IGH SEUL n'est pas
    refusé — un employeur locataire d'une tour relève du Code du travail, que le
    produit sert entièrement.
@@ -645,7 +650,9 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     haute, cookie `etablissement-actif` revalidé par le scoping à chaque lecture.
     [2026-10-26, amendée : une entreprise par SIREN (`@@unique([userId, siren])`),
     plusieurs par compte ; SIRET et NAF sur l'établissement ; un onboarding par
-    établissement, seule porte de création]
+    établissement, seule porte de création] [2026-11-03 : l'effectif de
+    l'entreprise est la somme de ses établissements, la question ouverte est
+    tranchée — ADR-031, amendement bis]
 29. **029** — La zone remplace le bâtiment, et il n'y en a jamais plus de trois.
     Le modèle `Batiment` reste en base sous ce nom ; l'invariant de l'ADR-019 —
     un lieu ne porte aucun régime — est conservé mot pour mot
@@ -654,7 +661,8 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
 31. **031** — Refuser à l'entrée ce qu'on ne sait pas servir *du tout*, et
     déclarer tout le reste. Amende l'ADR-020 sans la renverser ; amendée le
     2026-10-18 (filtre à l'accueil, #68 : J, U, établissements spéciaux, R avec enfants),
-    puis le 2026-11-03 (borne d'effectif à 49 : pas de PAPRIPACT dans la cible)
+    puis le 2026-11-03 (borne d'effectif à 49 : pas de PAPRIPACT dans la cible ;
+    bis : la borne se lit sur la somme des sites, et vaut dans Équipe)
 32. **032** — Une demande d'assureur entre par les prescriptions, et ne devient
     jamais du droit : marquage obligatoire sur les neuf surfaces qui l'affichent
 33. **033** — Le DUERP est borné à cinq unités de travail, hors « Risques

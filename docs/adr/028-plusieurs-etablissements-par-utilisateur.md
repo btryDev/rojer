@@ -35,12 +35,17 @@ dossier complet et ses zones (trois au plus, ADR-029).
   changer de société, c'est ouvrir un établissement.
 - Supprimer le dernier établissement d'une entreprise supprime l'entreprise.
 
-**Ce qui reste ouvert** (décision de la propriétaire, à trancher plus tard) :
+~~**Ce qui reste ouvert** (décision de la propriétaire, à trancher plus tard) :
 l'effectif de l'entreprise est aujourd'hui **commun aux établissements d'un même
 SIREN** — c'est le chiffre que L. 2311-2 (CSE) et L. 1311-2 (règlement
 intérieur) comptent. S'il devait devenir propre à chaque établissement, il
 se déplace sur `Etablissement` par une migration additive, sans rien remettre
-en cause du reste.
+en cause du reste.~~ [2026-11-03, tranché par la propriétaire : l'effectif de
+l'entreprise est la **somme** de ses établissements (apprentis non compris) et
+de ses salariés hors Rojer, calculée (`entreprises/effectif.ts`) ; chaque
+établissement déclare le sien dans Équipe. Migration additive
+`20261103180000_effectif_par_les_sites`. Détail et borne : ADR-031,
+amendement du 2026-11-03 (bis).]
 
 **Retrait en deux temps.** `Entreprise.siret` et `Entreprise.codeNaf` restent
 en colonne, plus lus ni écrits, le temps que l'ancien code servi pendant le

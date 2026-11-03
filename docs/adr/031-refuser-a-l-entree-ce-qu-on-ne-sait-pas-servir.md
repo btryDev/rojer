@@ -261,3 +261,51 @@ n'enlève pas l'obligation de programme annuel qui vient avec la taille.
 La branche de `axeEffectif` qui parlait d'un dossier servi de cinquante
 salariés ne parle plus à personne ; elle reste pour le jour où la borne
 remonterait.
+
+## Amendement du 2026-11-03 (bis) — la borne se lit sur la somme des sites, et vaut aussi dans Équipe
+
+Décision de la propriétaire du 2026-11-03, sur la question laissée ouverte
+par l'ADR-028 (« si deux établissements ont le même SIREN, cumule-t-on les
+salariés ? ») : **oui**. Chaque établissement montre ses salariés ; la
+société les cumule, et ses obligations transverses (CSE, règlement
+intérieur) s'affichent sur chacun de ses sites. Et « du moment où ça dépasse,
+on bloque » — à l'entrée, et à l'ajout dans Équipe.
+
+**L'effectif de l'entreprise est calculé** (`entreprises/effectif.ts`, seule
+écriture) :
+
+    Entreprise.effectif = Σ (effectifSurSite − apprentisSurSite) + effectifHorsRojer
+
+- `apprentisSurSite` : apprentis et contrats de professionnalisation, que
+  L. 1111-3 (1° et 6°) écarte du calcul de l'effectif — décision de la
+  propriétaire, « la loi dit quoi » : la loi les écarte, Rojer aussi ;
+- `effectifHorsRojer` : les salariés de la société dans ses établissements que
+  Rojer ne suit pas. Sans lui, un seul site suivi sur trois ferait passer une
+  société de quarante salariés pour une de dix, et taire son CSE.
+
+Les trois nombres se saisissent dans la page Équipe (carte « Effectif »), et
+nulle part ailleurs : la fiche établissement et la fiche entreprise les
+affichent et renvoient à Équipe. Le parcours d'entrée demande toujours
+l'effectif de l'entreprise d'une société NOUVELLE, et en déduit les deux
+nombres (l'écart sous le site est fait d'apprentis, l'écart au-dessus
+travaille hors de Rojer).
+
+**La borne refuse ce qui fait CROÎTRE la société au-delà de `EFFECTIF_MAX`,
+ou un site seul** :
+- à l'onboarding, un établissement rattaché à une société suivie s'ajoute à
+  la somme (refus en direct dans le parcours, et au serveur) ;
+- dans Équipe, en augmentant un effectif, en diminuant les apprentis, en
+  augmentant les salariés hors Rojer ;
+- en ajoutant une fiche ou en réintégrant une personne : une fiche est une
+  personne, et des fiches actives au-delà de l'effectif déclaré le font monter
+  d'autant (`effectifSuitLesFiches`).
+
+**Ce qui amende le § 1 bis.** Un dossier qui dépasse déjà la borne garde son
+dossier, et baisser n'est jamais refusé. Mais il ne grandit plus dans Rojer :
+« jamais en édition » ne vaut plus pour l'effectif. Le manque de couverture
+(axe `effectif`) reste, pour les dossiers ouverts avant la règle.
+
+**Ce qui reste ouvert.** Avec des apprentis déclarés, l'écart site / société
+n'est plus un doute : la prudence de `effectifRetenuPourSeuil` (retenir le
+site « à confirmer » quand la société est sous le seuil) pourrait se lever.
+C'est une règle du moteur ; elle n'est pas touchée ici.
