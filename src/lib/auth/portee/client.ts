@@ -30,7 +30,8 @@ function etendre(base: PrismaClient, p: Portee) {
     lectureSeule: p.lectureSeule === true,
   });
   // Le SQL brut d'écriture n'est pas borné par l'extension (ADR-051 § 5) ; en
-  // lecture seule, il est refusé ici (ADR-054 § 4). Les lectures brutes ont
+  // lecture seule, il est refusé ici (ADR-054 § 4). La forme non paramétrée
+  // est interdite dans tout le dépôt par la garde du SQL brut. Les lectures brutes ont
   // leur propre garde (`requireLectureSqlProprietaire`).
   const refuserEnLecture = (operation: string) => {
     if (portee.lectureSeule) throw new ErreurLectureSeule(operation);
@@ -46,10 +47,6 @@ function etendre(base: PrismaClient, p: Portee) {
     query: {
       async $executeRaw({ args, query }) {
         refuserEnLecture("$executeRaw");
-        return query(args);
-      },
-      async $executeRawUnsafe({ args, query }) {
-        refuserEnLecture("$executeRawUnsafe");
         return query(args);
       },
       $allModels: {
