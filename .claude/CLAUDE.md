@@ -737,6 +737,11 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     vérité, Rojer une copie écrite depuis un webhook signé, après relecture
     de l'abonnement. Un impayé ferme la saisie, jamais la lecture ni
     l'export (2026-11-02, branche `lot/abonnements-stripe`)
+54. **054** — Plusieurs personnes travaillent sur le même compte : plugin
+    `organization` de Better Auth, la racine de l'isolation passe de
+    `userId` à `compteId`, trois rôles (propriétaire, membre, lecture
+    seule), appartenance relue à chaque `requireCompte` (2026-11-03,
+    acceptée ; amende les ADR-028, 051 et 053)
 
 [2026-10-15, ménage des ADR : 037, 038 et 043 manquaient à cette liste ;
 **il n'existe pas d'ADR-044** — annoncée dans
