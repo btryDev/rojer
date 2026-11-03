@@ -15,6 +15,7 @@ import {
   section3Schema,
   section4Schema,
 } from "./schema";
+import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 export type RegistreActionState =
   | { status: "idle" }
@@ -73,6 +74,7 @@ export async function sauverSection1(
   _prev: RegistreActionState,
   formData: FormData,
 ): Promise<RegistreActionState> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
   const parsed = section1Schema.safeParse({
     prestationsFournies: formData.get("prestationsFournies"),
@@ -100,6 +102,7 @@ export async function sauverSection2(
   _prev: RegistreActionState,
   formData: FormData,
 ): Promise<RegistreActionState> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
   const parsed = section2Schema.safeParse({
     conformiteRegime: formData.get("conformiteRegime"),
@@ -128,6 +131,7 @@ export async function sauverSection3(
   _prev: RegistreActionState,
   formData: FormData,
 ): Promise<RegistreActionState> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
   const parsed = section3Schema.safeParse({
     personnelForme: formData.get("personnelForme") === "on",
@@ -156,6 +160,7 @@ export async function sauverSection4(
   _prev: RegistreActionState,
   formData: FormData,
 ): Promise<RegistreActionState> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
   const parsed = section4Schema.safeParse({
     equipementsAccessibilite: formData.get("equipementsAccessibilite"),
@@ -186,6 +191,7 @@ export async function sauverSection4(
 export async function publierRegistre(
   etablissementId: string,
 ): Promise<RegistreActionState> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
   const r = await obtenirOuCreer(db, etablissementId);
 

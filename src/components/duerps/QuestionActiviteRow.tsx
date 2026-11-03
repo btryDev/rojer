@@ -1,5 +1,6 @@
 "use client";
 
+import { unstable_rethrow } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { repondreActivite } from "@/lib/activites/actions";
@@ -54,7 +55,9 @@ export function QuestionActiviteRow({
     startTransition(async () => {
       try {
         await repondreActivite(duerpId, activiteId, valeur);
-      } catch {
+      } catch (e) {
+        // Une redirection (saisie fermée, ADR-053) n'est pas un échec : Next la reprend.
+        unstable_rethrow(e);
         setEchec(true);
       }
     });

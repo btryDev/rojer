@@ -14,6 +14,7 @@ import { MESSAGE_EFFECTIF_REPRIS } from "./rattachement";
 import { EFFECTIF_MAX } from "@/lib/etablissements/schema";
 import { typesErpAutresCoherents } from "@/lib/etablissements/schema";
 import { saisieOnboardingDepuisFormData } from "./saisie";
+import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 /**
  * Server action de finalisation du parcours d'onboarding.
@@ -68,6 +69,7 @@ export async function finaliserOnboarding(
   _prev: OnboardingActionState,
   formData: FormData,
 ): Promise<OnboardingActionState> {
+  await verifierSaisie();
   const { user, db } = await requireCompte();
 
   // ~~Un compte = une entreprise : l'onboarding ne se joue qu'une fois.~~

@@ -1,5 +1,6 @@
 "use client";
 
+import { unstable_rethrow } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { creerEquipementsDepuisPreRemplissage } from "@/lib/equipements/actions";
@@ -163,7 +164,9 @@ export function PreRemplissagePanel({
         // jusqu'ici, l'échec de régénération passait inaperçu
         // (`docs/chantiers-ouverts.md`, § 0, défaut n° 6).
         setAvertissement(res.avertissement ?? null);
-      } catch {
+      } catch (e) {
+        // Une redirection (saisie fermée, ADR-053) n'est pas un échec : Next la reprend.
+        unstable_rethrow(e);
         setMessage(null);
         // ~~`e.message`~~ (rayé le 2026-10-13) : en production, Next remplace
         // le message d'une exception d'action serveur ; les refus attendus

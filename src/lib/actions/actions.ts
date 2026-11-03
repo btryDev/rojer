@@ -8,6 +8,7 @@ import { tousRisquesConnus } from "@/lib/referentiels";
 import { statutUIVersAction } from "./mapping";
 import { assertOrigineActionValide } from "./origine";
 import { constaterEpiDuCompte } from "@/lib/etablissements/epi-constate";
+import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 /**
  * Server actions pour l'entité `Action` — unifiée DUERP + vérifications
@@ -58,6 +59,7 @@ export async function toggleMesureReferentiel(
   risqueId: string,
   referentielMesureId: string,
 ): Promise<void> {
+  await verifierSaisie();
   const { db, risque, duerpId, uniteId, etablissementId } =
     await requireRisque(risqueId);
 
@@ -126,6 +128,7 @@ export async function ajouterMesureCustom(
   _prev: MesureActionState,
   formData: FormData,
 ): Promise<MesureActionState> {
+  await verifierSaisie();
   const { db, duerpId, uniteId, etablissementId } = await requireRisque(risqueId);
 
   const parsed = mesureCustomSchema.safeParse(Object.fromEntries(formData));
@@ -179,6 +182,7 @@ export async function modifierMesure(
   mesureId: string,
   patch: z.input<typeof patchSchema>,
 ): Promise<void> {
+  await verifierSaisie();
   const { db, action: actuelle } = await requireMesure(mesureId);
 
   const parsed = patchSchema.safeParse(patch);
@@ -208,6 +212,7 @@ export async function modifierMesure(
 }
 
 export async function supprimerMesure(mesureId: string): Promise<void> {
+  await verifierSaisie();
   const { db, action } = await requireMesure(mesureId);
 
   // Le risque porteur est résolu (et re-scopé) avant la suppression : c'est

@@ -368,8 +368,44 @@ dans la session Checkout (seule trace du compte si le client Stripe est un
 jour supprimé) ; seul le propriétaire du compte ouvre Checkout et le portail
 (proposition du chantier multi-utilisateurs, 2026-11-03).
 
-**Lot 3 (droits)** : décider explicitement le comportement de
-`droitsDuCompte` quand la configuration est inactive en production.
+~~**Lot 3 (droits)** : décider explicitement le comportement de
+`droitsDuCompte` quand la configuration est inactive en production.~~
+[2026-11-03, lot 3 : tranché — Stripe inactif, la saisie reste ouverte à
+tous et le démarrage prévient si `ABONNEMENT_EXIGE=oui` ; ADR-053 § 3.]
+
+**Revues du lot 3 (2026-11-03)** — sécurité : rien ; corrigé : réglage
+`ABONNEMENT_EXIGE` tolérant (espaces, casse) au démarrage comme dans la
+garde ; la garde de code exige `await verifierSaisie()` en PREMIÈRE
+instruction (analyse TypeScript, plus une mention textuelle) ; les écrans
+qui attrapent l'erreur d'une action gardée relancent la redirection
+(`unstable_rethrow` dans 7 composants, garde de code) ; bandeau aussi sur le
+DUERP et les entreprises, sous `Suspense` ; une seule lecture de la ligne sur
+la page. Limite acceptée : une fois l'offre lancée, une écriture lit la
+session deux fois (`verifierSaisie`, puis la garde de portée de l'action).
+Liens déjà émis : un tiers peut encore signer pour un compte fermé (voulu).
+
+**Contrôle visuel du lot 3 (2026-11-03, `pnpm dev` sur une base locale
+dédiée, `ABONNEMENT_EXIGE=oui`)** : onboarding refusé sans abonnement →
+page Abonnement ; abonnement actif → création, pas de bandeau ;
+`past_due`, `unpaid`, essai finissant → bandeaux justes ; écriture refusée
+depuis un formulaire et depuis un écran à `try/catch` → redirection ; lecture
+du calendrier ouverte. Trouvé et corrigé : le bandeau, placé dans le flux,
+était recouvert par l'en-tête de page (qui remonte sous la bande) — il est
+désormais en gélule dans la bande du haut. **Responsive reporté (décision de
+la propriétaire)** : sur téléphone, le bandeau est en bas et la carte de
+visite guidée peut le recouvrir.
+
+**Lot 3 fait (2026-11-03)** : `droitsDe`, `verifierSaisie` dans 88 actions,
+16 écritures ouvertes nommées, page `/compte/abonnement`, bandeau dans le
+dossier. Reste pour les lots suivants :
+- **Lot 4** : boutons « Choisir une formule » et « Gérer mon abonnement »
+  sur `/compte/abonnement` ; nom lisible de la formule (la page affiche la
+  `lookup_key` brute) ; désactiver les formulaires quand la saisie est
+  fermée (aujourd'hui l'écriture est refusée au clic, avec redirection).
+- **Lot 5 / lancement** : sans abonnement, un compte neuf ne peut même pas
+  créer son premier établissement (`finaliserOnboarding` est gardé) — l'essai
+  doit donc démarrer avant, ou à l'inscription ; décider du sort des comptes
+  existants au passage de `ABONNEMENT_EXIGE` à `oui`.
 
 **Lot 4 (parcours)** : refuser une nouvelle session Checkout tant qu'un
 abonnement non terminé existe (deux onglets → deux abonnements) ; créer le

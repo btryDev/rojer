@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { batimentSchema, MAX_ZONES, PLAFOND_ZONES } from "./schema";
+import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 /**
  * Mutations des zones (ADR-029, qui remplace l'ADR-019). Une zone est un
@@ -61,6 +62,7 @@ export async function creerBatiment(
   _prev: BatimentActionState,
   formData: FormData,
 ): Promise<BatimentActionState> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
   const parsed = batimentSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -119,6 +121,7 @@ export async function modifierBatiment(
   _prev: BatimentActionState,
   formData: FormData,
 ): Promise<BatimentActionState> {
+  await verifierSaisie();
   const b = await trouverBatimentDuUser(id);
   if (!b) return { status: "error", message: "Zone introuvable" };
 
@@ -169,6 +172,7 @@ export async function supprimerBatiment(
   id: string,
   versBatimentId: string,
 ): Promise<BatimentActionState> {
+  await verifierSaisie();
   const b = await trouverBatimentDuUser(id);
   if (!b) return { status: "error", message: "Zone introuvable" };
 

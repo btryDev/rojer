@@ -8,6 +8,7 @@ import { faitDeLaQuestion } from "@/lib/etablissements/faits-activite";
 import { ecrireFaitActivite } from "@/lib/etablissements/faits-activite-ecriture";
 import { questionTransverseParId } from "./etat";
 import { poserRisqueTransverse } from "./risque-transverse";
+import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 /**
  * Cloisonnement : `duerpId` vient du client. Sans garde, `validerTransverses`
@@ -44,6 +45,7 @@ export async function repondreQuestionTransverse(
   questionId: string,
   reponse: boolean | null,
 ): Promise<void> {
+  await verifierSaisie();
   const { db, duerp } = await requireDuerp(duerpId);
   const question = questionTransverseParId(questionId);
   if (!question) throw new Error(`Question transverse inconnue : ${questionId}`);

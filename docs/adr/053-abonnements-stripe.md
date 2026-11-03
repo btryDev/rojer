@@ -34,6 +34,21 @@ et sans croire une information qui ne vient pas de Stripe.
    bandeau) ; `unpaid`, `canceled`, `paused`, `incomplete`,
    `incomplete_expired`, et tout état inconnu → saisie fermée. Un état que
    Stripe ajouterait demain ferme la saisie plutôt que de l'ouvrir.
+   [2026-11-03, lot 3 — la garde.] La règle vit dans `abonnements/droits.ts`
+   (`droitsDe`, fonction pure) ; la garde est `verifierSaisie()`, en tête de
+   chaque server action qui écrit pour le titulaire, et une garde de code
+   l'exige de toutes (`abonnements/saisie-gardee.test.ts`, sur le balayage
+   `ecrituresExposees`). Refusée : redirection vers `/compte/abonnement`.
+   Restent ouvertes, liste fermée et motivée dans ce test : le compte et sa
+   sécurité, la demande d'assistance, le retrait d'un accès prestataire ou
+   d'une page publique, la signature d'un tiers par lien, la suppression
+   d'une entreprise ou d'un établissement (règle 9). Les accès sans session
+   (jeton, signature, MCP) ne passent pas par `requireCompte` : non gardés.
+   **Tant que l'offre n'est pas lancée, rien ne se ferme** :
+   `ABONNEMENT_EXIGE=oui` le décide, et il n'a d'effet qu'avec Stripe actif.
+   Sans lui, la garde ne lit rien (ni session ni abonnement) et aucun bandeau
+   ne s'affiche. Ce qui arrive aux comptes existants le jour où il passe à
+   `oui` (essai offert, délai) se décide avec l'offre et le lot 5.
 4. **Le SDK Stripe direct**, pas le module Stripe de Better Auth : celui-ci
    exige sa route HTTP (`/api/auth/stripe/webhook`), et `cc` n'en monte
    aucune, par choix (`auth/better-auth.ts`).

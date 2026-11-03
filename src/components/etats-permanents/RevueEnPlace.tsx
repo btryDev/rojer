@@ -1,5 +1,6 @@
 "use client";
 
+import { unstable_rethrow } from "next/navigation";
 // La fiche de « Ce qui doit être en place » (2026-10-20), reprise de la
 // maquette validée (artifact « Atelier En place », version 13) : le dessin et
 // l'état à gauche, la question à droite, trois réponses, Précédente/Suivante.
@@ -166,7 +167,9 @@ export function RevueEnPlace({
             if (res.status === "error") return setErreur(res.message);
           }
           fermer();
-        } catch {
+        } catch (e) {
+          // Une redirection (saisie fermée, ADR-053) n'est pas un échec : Next la reprend.
+          unstable_rethrow(e);
           setErreur(ERREUR_ENREGISTREMENT);
         }
       });

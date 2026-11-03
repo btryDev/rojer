@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
+import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 /**
  * ~~Les deux questions de paramétrage~~ La question de paramétrage — ADR-025 § 7, ADR-032.
@@ -54,6 +55,7 @@ export async function repondreDemandesAssureur(
   _prev: ReponseParametrage,
   formData: FormData,
 ): Promise<ReponseParametrage> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
 
   const parsed = reponseBooleenne.safeParse(formData.get("reponse"));
