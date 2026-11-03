@@ -46,11 +46,13 @@ export async function getOptionalCompte() {
 }
 
 /**
- * Le compte où l'onboarding range un nouvel établissement : celui de la
- * personne, ou un compte neuf dont elle devient propriétaire si elle n'en a
- * aucun (ADR-054 § 5 : seul l'onboarding crée un compte).
+ * Le compte de la personne, ou un compte neuf dont elle devient propriétaire
+ * si elle n'en a aucun (ADR-054 § 5). Deux portes l'appellent : l'onboarding,
+ * qui nomme le compte d'après l'entreprise, et le début d'un essai (ADR-053),
+ * qui vient avant l'onboarding et n'a pas encore de nom à donner — le compte
+ * garde alors le nom par défaut, que rien n'affiche aujourd'hui.
  */
-export async function requireCompteDOnboarding(nomSiNouveau: string) {
+export async function requireCompteDOnboarding(nomSiNouveau = "Mon compte") {
   const user = await requireUser();
   const compte = (await lireAppartenance(user.id)) ?? (await compteDOnboarding(user.id, nomSiNouveau));
   return { user, compte, db: portee(user.id, compte) };
