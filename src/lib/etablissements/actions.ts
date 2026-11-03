@@ -275,20 +275,18 @@ export async function modifierEtablissement(
   }
   const changeDEntreprise = entrepriseCible !== avant.entrepriseId;
 
-  const saisie = parsed.data;
   // Le premier type qui restera en base : le posté, sinon l'enregistré
   // (`|| undefined` en amont le laisse en place quand il n'est pas posté).
-  const typesErpAutresApres = typesErpAutresCoherents(
-    { ...saisie, typeErp: saisie.typeErp ?? avant.typeErp },
-    avant.typesErpAutres,
-  );
-
+  const typeErpApres = parsed.data.typeErp ?? avant.typeErp;
   // Les autres types d'abord : la réponse sur le sommeil se lit sur
   // l'ensemble des types (ADR-045), y compris ceux que le formulaire n'a pas
   // postés et que la base garde.
   const donnees = reponseSommeilSuivantLeType({
-    ...saisie,
-    typesErpAutres: typesErpAutresApres,
+    ...parsed.data,
+    typesErpAutres: typesErpAutresCoherents(
+      { ...parsed.data, typeErp: typeErpApres },
+      avant.typesErpAutres,
+    ),
   });
   let etab;
   try {

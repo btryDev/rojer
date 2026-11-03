@@ -98,7 +98,6 @@ const PAS_ENCORE = [
   nonPorte("la radioprotection"),
 ] as const;
 
-
 const HORS_SST = [
   nonPorte("l'hygiène alimentaire"),
   nonPorte("les affichages commerciaux"),

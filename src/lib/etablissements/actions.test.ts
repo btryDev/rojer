@@ -703,8 +703,7 @@ describe("plusieurs types d'ERP — la fiche poste la liste entière, avec son t
 describe("réalignement — la fiche accepte tout type d'ERP (2026-11-03)", () => {
   const avecAutres = (fd: FormData, autres: string[]) => {
     fd.set(CHAMP_TEMOIN_TYPES_ERP_AUTRES, "1");
-    for (const t of autres) fd.append("typesErpAutres", t);
-    return fd;
+    return avecAutresTypes(fd, autres);
   };
 
   it("un restaurant qui passe en J s'enregistre, la réponse au sommeil donnée", async () => {

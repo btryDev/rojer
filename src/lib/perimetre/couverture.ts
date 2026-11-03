@@ -90,7 +90,7 @@ import type { EtatCouverture } from "@/lib/duerps/couverture";
 import { nonPorte, porte } from "./non-couverture";
 import type { CorrespondanceSecteur } from "./secteur";
 import type { CategorieErp } from "@/lib/referentiels/types-communs";
-import { LABEL_CATEGORIE_ERP_COURT } from "@/lib/etablissements/labels";
+import { LABEL_CATEGORIE_ERP_COURT, LABEL_TYPE_ERP } from "@/lib/etablissements/labels";
 import type { TypeErp } from "@/lib/referentiels/types-communs";
 
 /**
@@ -469,65 +469,101 @@ function axeRegime(
  * - Les établissements spéciaux du livre IV, PS excepté (servi par PS 32,
  *   et accepté avant le filtre) : leurs dispositions ne sont pas lues.
  * - EF : son règlement (arrêté du 9 janvier 1990) n'est pas lu.
+ *
+ * Les dispositions LUES et pas encore suivies, par type et par livre. `refs`
+ * nomme les articles du corpus que la phrase cite : `couverture-types-erp.test.ts`
+ * tient chacun encore `obligation_manquante` — un article encodé fait tomber
+ * le test, au lieu d'une phrase qui annoncerait un manque comblé (revue de
+ * #172).
  */
-const TEXTES_NON_LUS: readonly {
-  /** Ce que Rojer n'a pas lu, écrit par `nonPorte` (le balayage le lit). */
+export const DISPOSITIONS_LUES_NON_SUIVIES: readonly {
+  type: TypeErp;
+  /** Livre II (catégories 1 à 4) ou livre III (5ᵉ catégorie). */
+  livreII: boolean;
   texte: string;
-  /** Les types qu'il vise, et leur nom pour la phrase. */
-  types: Partial<Record<TypeErp, string>>;
+  sujets: readonly string[];
+  refs: readonly string[];
 }[] = [
   {
+    type: "J",
+    livreII: true,
+    texte: "chapitre J du livre II",
+    sujets: [
+      nonPorte("les exercices pratiques semestriels propres au type J"),
+      nonPorte("les consignes remises à chaque résident"),
+      nonPorte("la vérification annuelle des équipements d'oxygénothérapie"),
+    ],
+    refs: ["J 39", "J 40", "J 33"],
+  },
+  {
+    type: "U",
+    livreII: true,
+    texte: "chapitre U du livre II",
+    sujets: [
+      nonPorte("les exercices d'évacuation simulée propres au type U"),
+      nonPorte("les consignes affichées propres aux établissements de soins"),
+      nonPorte("la vérification annuelle des installations de gaz médicaux"),
+    ],
+    refs: ["U 47", "U 48", "U 64"],
+  },
+  {
+    type: "U",
+    livreII: false,
+    texte: "articles PU du livre III",
+    sujets: [nonPorte("la vérification annuelle des installations de gaz médicaux")],
+    refs: ["PU 5"],
+  },
+];
+
+/**
+ * Les textes PAS LUS, et les types qu'ils visent. PS, au livre IV aussi, n'y
+ * est pas : servi par PS 32 et accepté avant le filtre.
+ */
+export const TEXTES_NON_LUS: readonly { texte: string; types: readonly TypeErp[] }[] = [
+  {
     texte: nonPorte("les dispositions propres aux établissements spéciaux (livre IV de l'arrêté du 25 juin 1980)"),
-    types: {
-      PA: "établissement de plein air",
-      CTS: "chapiteau, tente ou structure",
-      SG: "structure gonflable",
-      OA: "hôtel-restaurant d'altitude",
-      REF: "refuge de montagne",
-      GA: "gare",
-    },
+    types: ["PA", "CTS", "SG", "OA", "REF", "GA"],
   },
   {
     texte: nonPorte("les dispositions de sécurité propres aux établissements flottants (arrêté du 9 janvier 1990)"),
-    types: { EF: "établissement flottant" },
+    types: ["EF"],
   },
 ];
+
+/** « établissement de plein air (PA) » — le libellé du formulaire, sans sa lettre. */
+function nomDuType(t: TypeErp): string {
+  const nom = LABEL_TYPE_ERP[t].split(" · ")[1] ?? t;
+  return `${nom.charAt(0).toLowerCase()}${nom.slice(1)} (${t})`;
+}
 
 const INCOMPLETS = "Votre calendrier et votre registre sont donc incomplets.";
 
 function axeTypeErp(regime: RegimeEtablissement, manques: ManqueCouverture[]): void {
   // Hors ERP, rien ; en IGH, l'axe `igh` a déjà dit que rien de ce qui est lu
-  // ici ne couvre le régime.
-  if (!regime.estERP || regime.estIGH) return;
-  const types = regime.typesErp;
+  // ici ne couvre le régime. Sans catégorie, on ne sait pas quel livre
+  // s'applique : l'indétermination de l'axe `categorie_erp` le dit.
   const cat = regime.categorieErp;
-  const livreII = cat !== null && cat !== "N5";
+  if (!regime.estERP || regime.estIGH || cat === null) return;
+  // Le livre II vaut pour les catégories 1 à 4 : un fait du règlement, pas
+  // ce que Rojer couvre (`CATEGORIES_COUVERTES`).
+  const livreII = cat !== "N5";
+  const types = regime.typesErp;
 
-  if (types.includes("J") && livreII) {
+  for (const d of DISPOSITIONS_LUES_NON_SUIVIES) {
+    if (d.livreII !== livreII || !types.includes(d.type)) continue;
     manques.push({
       axe: "type_erp",
-      motif:
-        "Cet établissement est déclaré structure d'accueil pour personnes âgées ou handicapées (type J).",
-      consequence: `Le règlement de sécurité consacre à ce type des dispositions particulières (chapitre J du livre II). Rojer les a lues mais ne les suit pas encore : ${nonPorte("les exercices pratiques semestriels propres au type J")}, ${nonPorte("les consignes remises à chaque résident")} et ${nonPorte("la vérification annuelle des équipements d'oxygénothérapie")}, notamment. ${INCOMPLETS}`,
-    });
-  }
-
-  if (types.includes("U") && cat !== null) {
-    manques.push({
-      axe: "type_erp",
-      motif: "Cet établissement est déclaré établissement de soins (type U).",
-      consequence: livreII
-        ? `Le règlement de sécurité consacre à ce type des dispositions particulières (chapitre U du livre II). Rojer les a lues mais ne les suit pas encore : ${nonPorte("les exercices d'évacuation simulée propres au type U")}, ${nonPorte("les consignes affichées propres aux établissements de soins")} et ${nonPorte("la vérification annuelle des installations de gaz médicaux")}, notamment. ${INCOMPLETS}`
-        : `Le règlement de sécurité consacre aux petits établissements de soins des dispositions propres (articles PU du livre III). Rojer les a lues mais ne les suit pas encore : ${nonPorte("la vérification annuelle des installations de gaz médicaux")}, notamment. ${INCOMPLETS}`,
+      motif: `Cet établissement est déclaré ${nomDuType(d.type)}.`,
+      consequence: `Le règlement de sécurité consacre à ce type des dispositions particulières (${d.texte}). Rojer les a lues mais ne les suit pas encore : ${enumeration(d.sujets)}, notamment. ${INCOMPLETS}`,
     });
   }
 
   for (const { texte, types: vises } of TEXTES_NON_LUS) {
-    const declares = types.filter((t) => vises[t] !== undefined);
+    const declares = types.filter((t) => vises.includes(t));
     if (declares.length === 0) continue;
     manques.push({
       axe: "type_erp",
-      motif: `Cet établissement est déclaré ${enumeration(declares.map((t) => `${vises[t]} (${t})`))}.`,
+      motif: `Cet établissement est déclaré ${enumeration(declares.map(nomDuType))}.`,
       consequence: `Rojer ne suit pas ${texte} : il ne les a pas encore lues. ${INCOMPLETS}`,
     });
   }
