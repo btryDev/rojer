@@ -25,7 +25,7 @@ import { etatCourtDe, versFiche } from "@/lib/etats-permanents/vers-fiche";
 import { titresSansPorteur } from "@/lib/salaries/titres-sans-porteur";
 import { etatsPermanentsDuDossier } from "@/lib/etats-permanents/queries";
 import { CarteEffectif, PlacesARenseigner } from "@/components/salaries/CarteEffectif";
-import { lireEffectifsDuSite } from "@/lib/entreprises/effectif-queries";
+import { effectifsDuSite } from "@/lib/entreprises/effectif-queries";
 import { modifierEffectifs } from "@/lib/entreprises/effectif-actions";
 
 /**
@@ -50,12 +50,11 @@ export default async function EquipePage({
   const now = new Date();
   // Lectures indépendantes, en parallèle ; la dernière donne les formations
   // à organiser (ADR-047, amendée le 2026-10-24).
-  const [equipe, titresDeclares, faits, dossier, effectifs] = await Promise.all([
+  const [equipe, titresDeclares, faits, dossier] = await Promise.all([
     listerEquipe(id, now),
     libellesTitresDeclares(id),
     chargerFaitsActivite(id),
     etatsPermanentsDuDossier(db, id, user.id),
-    lireEffectifsDuSite(db, etablissement),
   ]);
   const catalogue = cataloguerTitres();
   // « Formations à organiser » : dues aux salariés sans qu'on sache lesquels.
@@ -106,6 +105,7 @@ export default async function EquipePage({
     0,
   );
   const actifs = equipe.filter((s) => s.actif).length;
+  const effectifs = effectifsDuSite(etablissement);
   // Les personnes de l'effectif sans fiche (2026-11-03) : des places, pas des
   // fiches. L'effectif ne descend jamais sous les fiches actives.
   const aRenseigner = Math.max(0, effectifs.effectifSurSite - actifs);

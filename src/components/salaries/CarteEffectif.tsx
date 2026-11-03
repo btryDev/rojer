@@ -45,8 +45,8 @@ export function CarteEffectif({
           </strong>{" "}
           salarié{effectifs.entreprise > 1 ? "s" : ""}, tous établissements confondus, apprentis non
           compris
-          {effectifs.nombreAutresSites > 0
-            ? ` — dont ${effectifs.autresSites} dans ${effectifs.nombreAutresSites > 1 ? `ses ${effectifs.nombreAutresSites} autres établissements suivis` : "son autre établissement suivi"}`
+          {effectifs.autresSites > 0
+            ? ` — dont ${effectifs.autresSites} dans ses autres établissements suivis`
             : ""}
           . C&apos;est sur ce nombre que se comptent le comité social et économique, le règlement
           intérieur et la limite de Rojer, {EFFECTIF_MAX} salariés.
