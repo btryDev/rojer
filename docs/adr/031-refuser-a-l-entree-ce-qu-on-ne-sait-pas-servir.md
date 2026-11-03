@@ -19,6 +19,10 @@
 > sait pas servir *du tout* — et c'est lui qui fonde ces refus. Voir
 > « Amendement du 2026-10-18 » en fin de document.
 
+> **Amendée le 2026-11-03.** La borne d'effectif passe de cinquante à
+> **quarante-neuf** (`EFFECTIF_MAX = 49`), sur le site comme dans
+> l'entreprise. Voir « Amendement du 2026-11-03 » en fin de document.
+
 ## Le problème
 
 La doctrine du produit est de **nommer ce qu'il ne couvre pas plutôt que de
@@ -81,7 +85,7 @@ produit. Un test le verrouille.
 **1 bis. Elle vaut à la création, pas en édition.** Un client qui
 passe de quarante-cinq à soixante salariés reste servi : lui fermer son dossier
 parce qu'il a embauché serait absurde. Mais la promesse implicite doit rester
-explicite — au-delà de cinquante, son dossier porte un manque de couverture qui
+explicite — au-delà de ~~cinquante~~ [2026-11-03 : quarante-neuf], son dossier porte un manque de couverture qui
 le dit. C'est le même traitement d'honnêteté que les ERP de 1re à 4e catégorie.
 
 **1 ter. La borne vaut aussi pour l'effectif de l'entreprise (2026-09-26,
@@ -125,7 +129,7 @@ Décision de la propriétaire du 2026-10-12, appliquée le 2026-10-13. La
 question « quelle est la cible ? » restait listée ouverte
 (`docs/chantiers-ouverts.md` § 3 bis) alors que cette ADR y répondait déjà :
 **la cible du produit est ce que l'onboarding ne refuse pas** — au plus
-cinquante travailleurs (sur le site comme dans l'entreprise, décision du
+~~cinquante~~ [2026-11-03 : quarante-neuf] travailleurs (sur le site comme dans l'entreprise, décision du
 2026-09-26), et pas d'ERP situé dans un IGH. Au sens large : les TPE/PME.
 [2026-10-18 : et, depuis le filtre à l'accueil du 2026-10-17, pas d'ERP de
 type J, U, ni d'établissement spécial PA, CTS, SG, OA, REF, GA, EF, ni de type
@@ -223,3 +227,37 @@ refusés doivent être exactement l'union de ces listes. Les sondes inverses —
 PS, et R qui répond « non » — passent. L'annexe imprime donc sept régimes, avec
 la phrase de la porte et une indication.
 
+## Amendement du 2026-11-03 — la borne à quarante-neuf
+
+Décision de la propriétaire du 2026-11-03 : « on ne fait que du moins de
+cinquante ». `EFFECTIF_MAX` passe de 50 à **49** ; la porte refuse désormais à
+partir de cinquante travailleurs sur le site ou de cinquante salariés dans
+l'entreprise.
+
+**Pourquoi.** L'art. L. 4121-3-1, III, 1° impose le programme annuel de
+prévention (PAPRIPACT) aux entreprises dont l'effectif est « supérieur ou égal
+à cinquante salariés », et L. 2312-27 le fait présenter au CSE. Rojer ne le
+produit pas. Avec une borne à cinquante, un dossier de cinquante salariés
+pile entrait avec ce manque déclaré dès sa création. Sous cinquante, le texte
+ne demande que la liste d'actions consignée au DUERP (III, 2°), que Rojer
+sert. Le critère de l'ADR ne change pas : on refuse ce qu'on ne sait pas
+servir du tout, et l'obligation propre à cette taille en est un.
+
+**Ce qui ne change pas.** § 1 bis : un dossier déjà ouvert qui atteint ou
+dépasse cinquante garde son dossier, sans borne en édition, et porte le
+manque. Les obligations dues seulement dès cinquante (règlement intérieur,
+local de restauration de `R. 4228-22`) restent au référentiel : elles naissent
+du dossier qui grandit. La garde `obligations-atteignables.test.ts` le
+modélise : ses profils passent la porte à la borne puis portent l'effectif
+réel, sans exemption ni liste d'identifiants.
+**Ce qui change pour un compte existant à cinquante.** Il garde ses
+dossiers. Mais un nouvel établissement rattaché à son entreprise passe par la
+même porte, qui lit l'effectif de l'entreprise reprise
+(`onboarding/actions.ts`, `RefusEffectifEntreprise`) : à cinquante, il est
+refusé. C'est la règle qui valait déjà pour une entreprise ayant franchi
+cinquante et un ; elle s'étend à cinquante, et c'est voulu — un site de plus
+n'enlève pas l'obligation de programme annuel qui vient avec la taille.
+
+La branche de `axeEffectif` qui parlait d'un dossier servi de cinquante
+salariés ne parle plus à personne ; elle reste pour le jour où la borne
+remonterait.
