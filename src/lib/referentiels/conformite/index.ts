@@ -550,9 +550,9 @@ export const obligationsConformite: Obligation[] = [
 // R. 4224-13 et R. 4224-17 mot pour mot, et ses références (R. 4224-12 a sa
 // ligne, entré au corpus) ; une limite écrite en `notesInternes` de
 // `porte-auto-portail-piete-coulissant`. 204 + 0 − 0 = 204.
-// `2026-11-03.1` (`lot/cch-manques-cible`, mission « alignement CCH + Code du
-// travail », décision de la propriétaire du 2026-11-03 ; numéro PROVISOIRE,
-// S3 touche les mêmes compteurs) : R 33 entre —
+// `2026-11-03.1` (`lot/cch-manques-cible`, admission du type R à l'onboarding,
+// enfants compris — décision de la propriétaire du 2026-11-03 ; numéro
+// PROVISOIRE) : R 33 entre —
 // `incendie-erp-enseignement-exercices-evacuation`, exercices d'évacuation de
 // l'année scolaire ou universitaire, établissement, type R, N1–N4, annuelle.
 // 204 + 1 − 0 = 205 ; par porteur, 96 équipement, 94 + 1 = 95 établissement,

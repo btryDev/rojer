@@ -298,8 +298,8 @@ export type SourceLecture =
    * Relu dans le jeu de données officiel LEGI de la DILA (base servie par
    * l'API Légifrance), export global + mises à jour quotidiennes appliquées
    * dans l'ordre ; verbatim recopié mot pour mot du XML ; date du jeu précisée
-   * dans la note. Posé le 2026-11-03 (mission « alignement CCH + Code du
-   * travail ») : la machine n'a pas d'identifiants PISTE, et une provenance ne
+   * dans la note. Posé le 2026-11-03 (relecture de R 33) : la machine n'a pas
+   * d'identifiants PISTE, et une provenance ne
    * s'arrondit pas — ce n'est pas `api_legifrance`.
    *
    * Classé au degré de `premiere_main` (`degreDeReference`) : rien ne transite

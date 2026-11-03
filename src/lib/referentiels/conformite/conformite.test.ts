@@ -1995,8 +1995,8 @@ describe("référentiel conformité — version et empreinte", () => {
     // `porte-auto-maintien-en-etat`, une limite en notesInternes. Hors
     // empreinte : MÊME empreinte, version incrémentée (index.ts le dit).
     { version: "2026-10-18.1", empreinte: "204-acb4dcf36b1e8fa3" },
-    // `lot/cch-manques-cible` (2026-11-03, mission « alignement CCH + Code du
-    // travail ») : `incendie-erp-enseignement-exercices-evacuation` (R 33),
+    // `lot/cch-manques-cible` (2026-11-03, admission du type R à l'onboarding,
+    // enfants compris) : `incendie-erp-enseignement-exercices-evacuation` (R 33),
     // établissement, type R, N1–N4. 204 + 1 − 0 = 205, relevée en appelant
     // `empreinteReferentiel()`. Version PROVISOIRE : S3 touche les mêmes
     // compteurs en parallèle, le second à fusionner rebase.
