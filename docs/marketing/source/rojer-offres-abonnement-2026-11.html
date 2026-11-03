@@ -63,7 +63,7 @@
   .offre .cta { font-size: 8.4pt; font-weight: 600; margin-top: 2.5mm; }
   .grille .offre { display: flex; flex-direction: column; }
   .grille .offre ul { margin-top: auto; }
-  .modules td, .modules th { padding: 1.15mm 2mm; font-size: 8.7pt; }
+  .modules td, .modules th { padding: 0.95mm 2mm; font-size: 8.5pt; }
   .modules td.c, .modules th.c { text-align: center; width: 19%; }
   .modules th.c { color: var(--ink); font-size: 9pt; }
   .modules tr.groupe td { background: var(--canvas); font-weight: 700; font-size: 8.4pt; color: var(--blue-ink);
@@ -71,76 +71,75 @@
   .modules .lim { font-weight: 600; }
   .ok { color: var(--green-ink); font-weight: 700; }
   .non { color: #9aa8b2; }
+  .cartes .offre { padding: 3.5mm 3.8mm; }
+  .cartes .bloc { font-size: 8.3pt; margin-top: 2.2mm; line-height: 1.35; }
+  .cartes .bloc ul { margin-top: 0.8mm !important; padding-left: 3.6mm; font-size: 8.1pt; }
+  .cartes .bloc li { margin-bottom: 0.4mm; }
+  .cartes .offre ul { margin-top: 0; }
+  .serre-t td, .serre-t th { padding: 1.3mm 2mm; font-size: 9pt; }
 </style>
 </head>
 <body>
 
 <!-- PAGE 1 — LA GAMME -->
 <section class="page">
-  <div class="marque">ROJER</div>
-  <h1>Offres d'abonnement</h1>
-  <p class="sous">Proposition de gamme · 3 novembre 2026 · prix HT</p>
+  <div class="marque" style="margin-bottom:4mm">ROJER</div>
+  <h1 style="font-size:22pt">Offres d'abonnement</h1>
+  <p class="sous" style="margin-bottom:4mm">Proposition de gamme · 3 novembre 2026 · prix HT</p>
 
-  <div class="grille">
+  <div class="grille cartes">
     <div class="offre">
       <div class="nom">Essentiel</div>
       <div class="pour">Un commerce, un restaurant, un cabinet : un seul site</div>
       <div class="prix">29 € <small>/mois</small></div>
       <div class="ligne-prix">ou 290 €/an (2 mois offerts)</div>
       <span class="tag vert" style="align-self:flex-start">1 mois d'essai gratuit</span>
-      <ul style="margin-top:3mm">
-        <li>1 établissement</li>
-        <li>Tous les modules, toutes les obligations</li>
-        <li>Volumes d'usage pour une petite structure</li>
-      </ul>
+      <div class="bloc"><b>1 établissement · 1 utilisateur</b></div>
+      <div class="bloc"><b>Tous les modules</b>
+        <ul><li>DUERP</li><li>Vérifications et calendrier</li><li>Registre de sécurité</li><li>Plan d'actions</li><li>Ce qui doit être en place</li><li>Équipements et zones</li><li>Équipe : salariés et titres</li><li>Prescriptions particulières</li><li>Carnet sanitaire</li><li>Registre d'accessibilité</li><li>Documents obligatoires, Préparer un contrôle</li><li>Relances email<sup>†</sup></li><li>Permis de feu, plans de prévention, prestataires, signatures</li></ul>
+      </div>
+      <div class="bloc"><b>Volumes</b>
+        <ul><li>Permis de feu : 10 par an</li><li>Plans de prévention : 5 par an</li><li>Prestataires suivis : 10</li><li>Liens d'accès prestataires : 5</li><li>Signatures : 20 par an</li><li>Stockage : 2 Go</li><li>Import d'un DUERP existant : 1</li></ul>
+      </div>
     </div>
     <div class="offre premium">
       <div class="nom">Pro</div>
-      <div class="pour">Plusieurs sites, ou un usage soutenu, avec un expert une fois par an</div>
+      <div class="pour">Plusieurs sites ou plusieurs personnes, avec un expert une fois par an</div>
       <div class="prix">69 € <small>/mois</small></div>
       <div class="ligne-prix">ou 690 €/an (2 mois offerts)</div>
-      <ul style="margin-top:3mm">
-        <li>Jusqu'à 5 établissements</li>
-        <li>Volumes d'usage relevés ou illimités</li>
-        <li>Connecter un assistant</li>
-        <li>Rendez-vous annuel d'1 h avec l'expert BTRY Solution</li>
-      </ul>
+      <div class="bloc"><b>Jusqu'à 5 établissements · jusqu'à 5 utilisateurs<sup>†</sup></b></div>
+      <div class="bloc"><b>Tous les modules d'Essentiel</b></div>
+      <div class="bloc"><b>Volumes</b>
+        <ul><li>Permis de feu : illimité</li><li>Plans de prévention : illimité</li><li>Prestataires suivis : 50</li><li>Liens d'accès prestataires : 50</li><li>Signatures : 200 par an</li><li>Stockage : 20 Go</li><li>Import d'un DUERP existant : illimité</li></ul>
+      </div>
+      <div class="bloc"><b>En plus</b>
+        <ul><li>Connecter un assistant</li><li>Rendez-vous annuel d'1 h avec l'expert BTRY Solution<sup>†</sup></li></ul>
+      </div>
     </div>
     <div class="offre">
       <div class="nom">Sur mesure</div>
       <div class="pour">Réseaux, groupes de sociétés, besoin d'un expert à la demande</div>
       <div class="prix" style="font-size:15pt">Sur devis</div>
       <div class="ligne-prix">repère interne : à partir d'environ 119 €/mois</div>
-      <ul style="margin-top:3mm">
-        <li>Au-delà de 5 établissements</li>
-        <li>Volumes sur mesure</li>
-        <li>Expert BTRY Solution à la demande</li>
-        <li>Reprise de l'historique, formation, déploiement accompagné</li>
-      </ul>
+      <div class="bloc"><b>Au-delà de 5 établissements · utilisateurs illimités, droits sur mesure<sup>†</sup></b></div>
+      <div class="bloc"><b>Tous les modules</b></div>
+      <div class="bloc"><b>Volumes sur mesure</b></div>
+      <div class="bloc"><b>En plus</b>
+        <ul><li>Tout Pro</li><li>Expert BTRY Solution à la demande<sup>†</sup></li><li>Reprise de l'historique</li><li>Formation, déploiement accompagné</li></ul>
+      </div>
     </div>
   </div>
+  <p class="note" style="margin:-1mm 0 3mm">† Pas encore livré : voir page 2. Les prestataires invités par lien ne comptent pas comme utilisateurs.</p>
 
-  <h3>Les règles de la gamme</h3>
-  <div class="carte">
+  <h3 style="margin-top:2mm">Les règles de la gamme</h3>
+  <div class="carte" style="margin-bottom:0;padding:3.5mm 5mm;font-size:8.8pt">
     <ul>
-      <li><b>Toutes les offres voient toutes les obligations.</b> Ce qui revient chaque année (vérifications, DUERP, registres, relevés) n'est jamais limité. Seul ce qui s'utilise à volonté a un quota : permis de feu, plans de prévention, prestataires, signatures, stockage.</li>
-      <li><b>Au quota, on bloque seulement la création d'un nouvel élément.</b> Tout ce qui existe reste lisible, exportable et suivi. Le compteur repart à la date anniversaire. Aucune obligation ne quitte le calendrier parce qu'un quota est atteint.</li>
-      <li><b>Mensuel sans engagement, ou annuel avec 2 mois offerts</b> (−17 %), sur toutes les offres publiques.</li>
-      <li><b>1 mois d'essai gratuit sur Essentiel</b>, toutes fonctions, sans carte bancaire. À la fin de l'essai, le client choisit Essentiel ou Pro ; sans choix, le dossier passe en lecture seule, rien n'est effacé.</li>
-      <li><b>Aucun frais de mise en service.</b> Le calendrier est généré dès la création du dossier.</li>
-      <li><b>L'expert est un expert en sécurité de BTRY Solution.</b> Il donne un conseil technique de prévention, jamais un avis juridique, et ne dit jamais « vous êtes conforme ».</li>
+      <li><b>Toutes les offres voient toutes les obligations.</b> Ce qui revient chaque année n'est jamais limité ; seul ce qui s'utilise à volonté a un quota.</li>
+      <li><b>Au quota, seule la création d'un nouvel élément est bloquée.</b> Tout ce qui existe reste lisible, exportable et suivi ; le compteur repart à la date anniversaire.</li>
+      <li><b>Mensuel sans engagement, ou annuel avec 2 mois offerts.</b> Aucun frais de mise en service.</li>
+      <li><b>Essai d'1 mois sur Essentiel</b>, toutes fonctions, sans carte bancaire. Sans choix d'offre à la fin, le dossier passe en lecture seule ; rien n'est effacé.</li>
+      <li><b>L'expert est un expert en sécurité de BTRY Solution</b> : conseil technique de prévention, jamais d'avis juridique, jamais « vous êtes conforme ».</li>
     </ul>
-  </div>
-
-  <div class="deux">
-    <div class="carte ambre" style="margin-bottom:0">
-      <h3 style="margin-top:0">Pourquoi 29 €</h3>
-      <p style="margin:0">C'est le prix d'un seul registre de sécurité chez Securylog, et moins que la combinaison la moins chère de trois outils spécialisés (≈ 32 €/mois). Rojer en couvre huit, sans paramétrage.</p>
-    </div>
-    <div class="carte ambre" style="margin-bottom:0">
-      <h3 style="margin-top:0">Pourquoi 69 € pour 5 sites</h3>
-      <p style="margin:0">Environ 14 € par site, contre ≈ 19 € par bâtiment chez Deemply, sans devis ni frais d'entrée. Le rendez-vous annuel vaut à lui seul la mise à jour d'un DUERP chez un consultant (≈ 400 €).</p>
-    </div>
   </div>
 </section>
 
@@ -150,6 +149,7 @@
   <table class="modules">
     <tr><th></th><th class="c">Essentiel</th><th class="c">Pro</th><th class="c">Sur mesure</th></tr>
     <tr><td>Établissements</td><td class="c lim">1</td><td class="c lim">jusqu'à 5</td><td class="c lim">au-delà de 5</td></tr>
+    <tr><td>Utilisateurs<sup>†</sup></td><td class="c lim">1</td><td class="c lim">jusqu'à 5</td><td class="c lim">illimités, droits sur mesure</td></tr>
 
     <tr class="groupe"><td colspan="4">Illimité dans toutes les offres : les obligations</td></tr>
     <tr><td>DUERP : unités de travail, cotation, versions conservées 40 ans</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
@@ -182,7 +182,7 @@
     <tr><td>Formation, reprise de l'historique, déploiement accompagné</td><td class="c non">—</td><td class="c non">—</td><td class="c ok">✓</td></tr>
 
   </table>
-  <p class="note">† Pas encore livré. Les relances et le téléchargement des données arrivent avec le passage sur Clever Cloud. La demande d'assistance existe dans l'app mais ne part encore vers personne (ADR-050). Tout est à mettre en service avant de publier les offres.<br>
+  <p class="note">† Pas encore livré. Les relances et le téléchargement des données arrivent avec le passage sur Clever Cloud. Le multi-utilisateur est en conception (ADR en préparation) : membres invités par email, rôles propriétaire, membre et lecture seule. La demande d'assistance existe dans l'app mais ne part encore vers personne (ADR-050). Tout est à mettre en service avant de publier les offres.<br>
   ‡ Le plan de prévention est une obligation légale dès que le chantier remplit les conditions (art. R. 4512-6 et R. 4512-7 CT) : voir « À trancher ».</p>
 </section>
 
@@ -191,6 +191,16 @@
   <h2>Sur quoi reposent ces propositions</h2>
   <p class="note" style="margin-bottom:4mm">Prix publics relevés le 2 novembre 2026 sur les sites des éditeurs. Plusieurs comparatifs sont écrits par l'éditeur sur lui-même.</p>
 
+  <div class="deux" style="margin:0 0 4mm">
+    <div class="carte ambre" style="margin-bottom:0;padding:3.5mm 5mm">
+      <h3 style="margin-top:0">Pourquoi 29 €</h3>
+      <p style="margin:0">Le prix d'un seul registre de sécurité chez Securylog, et moins que la combinaison la moins chère de trois outils spécialisés (≈ 32 €/mois). Rojer en couvre huit.</p>
+    </div>
+    <div class="carte ambre" style="margin-bottom:0;padding:3.5mm 5mm">
+      <h3 style="margin-top:0">Pourquoi 69 €, et le multi-utilisateur en Pro</h3>
+      <p style="margin:0">≈ 14 € par site contre ≈ 19 € chez Deemply. Et la plupart des TPE n'ont qu'un site : c'est le 2ᵉ utilisateur (un responsable, un associé) qui les fera passer en Pro.</p>
+    </div>
+  </div>
   <div class="kpis">
     <div class="kpi"><div class="chiffre">19-29 €</div><div class="legende">par mois : le prix d'un seul registre (DUERP ou registre de sécurité)</div></div>
     <div class="kpi"><div class="chiffre">32-58 €</div><div class="legende">par mois pour réunir DUERP + registre de sécurité + accessibilité chez des spécialistes</div></div>
@@ -211,34 +221,41 @@
     <tr><td><b>Repères « expert »</b></td><td>Juritravail · Legalstart · Captain Contrat Premium</td><td>50 € · 30-50 € · ≈ 249 €/mois</td><td>—</td><td>Juriste, avocat</td></tr>
   </table>
 
-  <h3>Les constats qui fondent la gamme</h3>
-  <table>
+</section>
+
+<!-- PAGE 4 — À TRANCHER -->
+<section class="page">
+  <h2>Les constats qui fondent la gamme</h2>
+  <table class="serre-t">
     <tr><th style="width:44%">Constat</th><th>Ce qu'on en fait</th></tr>
     <tr><td>Un registre seul se vend 19-29 €/mois ; trois outils spécialisés réunis, 32 à 58 €</td><td>Essentiel à 29 €, avec tous les modules : le prix d'un registre, sous la combinaison la moins chère.</td></tr>
     <tr><td>Hors des petits outils à un seul registre, l'engagement est la règle (12 à 36 mois)</td><td>Mensuel résiliable sur toutes les offres publiques.</td></tr>
     <tr><td>La remise annuelle va de 8 % (Securylog) à 20 % (DUPrev')</td><td>« 2 mois offerts », soit −17 %.</td></tr>
     <tr><td>Deemply et DUPrev' attirent avec une offre gratuite bridée</td><td>Un mois d'essai complet plutôt qu'un gratuit bridé, qui obligerait à cacher des obligations.</td></tr>
     <tr><td>Le site supplémentaire se facture 9 à 19 €, et la cible a presque toujours un seul site</td><td>1 site en Essentiel, jusqu'à 5 au forfait en Pro (≈ 14 €/site), au-delà sur devis.</td></tr>
+    <tr><td>Deemply : 1 utilisateur en gratuit, illimités en Pro ; Securylog : plusieurs utilisateurs par site</td><td>1 utilisateur en Essentiel, 5 en Pro : le levier de montée en gamme pour un site unique.</td></tr>
     <tr><td>L'humain multiplie le prix par 3 à 10. Pour une TPE, seul DUPrev' inclut un expert : une analyse par an, sur le DUERP seul</td><td>Rendez-vous annuel sur tout le dossier en Pro, expert à la demande sur devis.</td></tr>
   </table>
   <p class="note">Autres repères : presque tous les concurrents vendent de l'IA, et chaque obligation de Rojer cite son article. Facturer la mise en service irrite les clients ; Rojer n'en facture pas.</p>
-</section>
 
-<!-- PAGE 4 — À TRANCHER -->
-<section class="page">
-  <h2>À trancher avant de publier</h2>
+  <h2 style="margin-top:6mm">À trancher avant de publier</h2>
   <div class="carte">
     <ul>
       <li><b>Les plans de prévention en Essentiel.</b> Ils entrent dans la règle (un usage par chantier), mais c'est une obligation légale dès que le chantier remplit les conditions. Cinq par an couvrent presque toutes les TPE. Si aucune obligation légale ne doit jamais être limitée, on les passe en illimité et la limite ne porte plus que sur les permis de feu.</li>
       <li><b>Le cadre de l'expert.</b> Conseil technique de sécurité et de prévention, pas consultation juridique, qui est réservée aux professions du droit (loi du 31 décembre 1971). À écrire dans les CGV.</li>
       <li><b>La capacité de l'expert.</b> 1 h par an et par client en Pro, préparation comprise : environ 2 h, soit environ 140 € à 70 €/h (hypothèse à remplacer par le coût réel de BTRY Solution). Pro laisse alors environ 550 € par an. Répartir les rendez-vous sur l'année.</li>
-      <li><b>À livrer avant la publication :</b> relances email, téléchargement des données, envoi de la demande d'assistance, et le décompte des quotas dans l'app.</li>
+      <li><b>À livrer avant la publication :</b> relances email, téléchargement des données, multi-utilisateur, envoi de la demande d'assistance, et le décompte des quotas dans l'app.</li>
       <li><b>La fin de l'essai.</b> Sans choix d'offre, le dossier passe en lecture seule. Préciser ensuite ce qui reste consultable du DUERP, dont la loi impose la conservation pendant 40 ans.</li>
-      <li><b>Ne pas promettre</b> plusieurs utilisateurs par compte, une application mobile ou des rappels par SMS.</li>
+      <li><b>Le multi-utilisateur</b> est vendu en Pro mais n'existe pas encore. Il est en conception : ADR en préparation, membres invités par email, trois rôles. Tous les membres comptent, rôle lecture seule compris ; les prestataires invités par lien ne comptent pas. Quand un client passe à une offre inférieure, aucun membre n'est retiré, seules les nouvelles invitations sont bloquées. À livrer avant de publier Pro.</li>
+      <li><b>Ne pas promettre</b> une application mobile ou des rappels par SMS.</li>
       <li><b>Le paiement en ligne</b> : chantier en cours (`lot/abonnements-stripe`, ADR-053).</li>
     </ul>
   </div>
 
+</section>
+
+<!-- PAGE 5 -->
+<section class="page">
   <h3>Messages clés</h3>
   <div class="carte bleue">
     <ul>
@@ -246,7 +263,7 @@
       <li>« Rien à paramétrer : vos obligations sont déjà écrites, article par article. »</li>
       <li>« Aucune obligation n'est réservée à une offre plus chère. »</li>
       <li>« Essayez un mois, gratuitement, sans carte bancaire. »</li>
-      <li>Pro : « Chaque année, un expert en sécurité relit votre dossier avec vous. »</li>
+      <li>Pro : « Toute votre équipe sur le même dossier, et un expert en sécurité qui le relit avec vous chaque année. »</li>
     </ul>
   </div>
 

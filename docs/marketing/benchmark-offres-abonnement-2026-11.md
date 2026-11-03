@@ -9,11 +9,14 @@ document mis en page est `rojer-offres-abonnement-2026-11.pdf`, généré depuis
 
 | | Essentiel | Pro | Sur mesure |
 |---|---|---|---|
-| Pour qui | Un seul site | Plusieurs sites, ou un usage soutenu | Réseaux, groupes de sociétés, expert à la demande |
+| Pour qui | Un seul site | Plusieurs sites ou plusieurs personnes | Réseaux, groupes de sociétés, expert à la demande |
 | Mensuel sans engagement | 29 € | 69 € | Sur devis (repère interne : dès ≈ 119 €/mois) |
 | Annuel (2 mois offerts) | 290 € | 690 € | Au contrat |
 | Essai gratuit | **1 mois**, sans carte bancaire | — | — |
 | Établissements | 1 | jusqu'à 5 | au-delà de 5 |
+| Utilisateurs (†) | 1 | jusqu'à 5 | illimités, droits sur mesure |
+
+Tous les modules sont dans toutes les offres ; Essentiel a des volumes limités sur l'usage à volonté (détail ci-dessous). Les prestataires invités par lien ne comptent pas comme utilisateurs.
 
 ### Règles
 
@@ -32,6 +35,8 @@ document mis en page est `rojer-offres-abonnement-2026-11.pdf`, généré depuis
 
 | Module | Essentiel | Pro | Sur mesure |
 |---|---|---|---|
+| Établissements | 1 | jusqu'à 5 | au-delà de 5 |
+| Utilisateurs (†) | 1 | jusqu'à 5 | illimités, droits sur mesure |
 | **Illimité partout : les obligations** | | | |
 | DUERP (unités, cotation, versions conservées 40 ans) | ✓ | ✓ | ✓ |
 | Vérifications périodiques et calendrier | ✓ | ✓ | ✓ |
@@ -64,7 +69,7 @@ document mis en page est `rojer-offres-abonnement-2026-11.pdf`, généré depuis
 passage sur Clever Cloud (aujourd'hui seuls les emails de connexion et
 d'accès partent ; l'export du titulaire est la dette
 `docs/dette-chantier-porteur-echeance.md` § 1.1). Demande d'assistance :
-enregistrée dans l'app, ne part encore vers personne (ADR-050). À mettre en
+enregistrée dans l'app, ne part encore vers personne (ADR-050). Multi-utilisateur : en conception (ADR en préparation), membres invités par email, rôles propriétaire, membre et lecture seule. À mettre en
 service avant de publier les offres.
 
 (‡) Le plan de prévention est une obligation légale dès que le chantier
@@ -74,8 +79,10 @@ remplit les conditions (art. R. 4512-6 et R. 4512-7 CT) : voir § 3.
 
 - **29 €** : le prix d'un seul registre de sécurité chez Securylog, et moins
   que la combinaison la moins chère de trois outils spécialisés (≈ 32 €/mois).
-- **69 € pour 5 sites** : ≈ 14 € par site, contre ≈ 19 € par bâtiment chez
-  Deemply, sans devis ni frais d'entrée. Le rendez-vous annuel vaut à lui seul
+- **69 € pour 5 sites et 5 utilisateurs** : ≈ 14 € par site, contre ≈ 19 € par
+  bâtiment chez Deemply, sans devis ni frais d'entrée. La plupart des TPE n'ont
+  qu'un site : c'est le 2ᵉ utilisateur (un responsable, un associé) qui les
+  fera passer en Pro. Le rendez-vous annuel vaut à lui seul
   la mise à jour d'un DUERP chez un consultant (≈ 400 €).
 
 ## 2. Benchmark
@@ -100,6 +107,7 @@ remplit les conditions (art. R. 4512-6 et R. 4512-7 CT) : voir § 3.
 | La remise annuelle va de 8 % (Securylog) à 20 % (DUPrev') | « 2 mois offerts », soit −17 %. |
 | Deemply et DUPrev' attirent avec une offre gratuite bridée | Un mois d'essai complet, plutôt qu'un gratuit bridé qui obligerait à cacher des obligations. |
 | Le site supplémentaire se facture 9 à 19 €, et la cible a presque toujours un seul site | 1 site en Essentiel, jusqu'à 5 au forfait en Pro, au-delà sur devis. |
+| Deemply : 1 utilisateur en gratuit, illimités en Pro ; Securylog : plusieurs utilisateurs par site | 1 utilisateur en Essentiel, 5 en Pro : le levier de montée en gamme pour un site unique. |
 | L'humain multiplie le prix par 3 à 10 ; pour une TPE, seul DUPrev' inclut un expert (une analyse par an, DUERP seul) | Rendez-vous annuel sur tout le dossier en Pro, expert à la demande sur devis. |
 
 Autres repères : presque tous les concurrents vendent de l'IA, et chaque
@@ -117,12 +125,16 @@ clients ; Rojer n'en facture pas.
 - **La capacité de l'expert** : environ 2 h par client et par an en Pro,
   préparation comprise, soit ≈ 140 € à 70 €/h (hypothèse à remplacer par le
   coût réel de BTRY Solution). Pro laisse alors ≈ 550 €/an.
+- **Le multi-utilisateur** : vendu en Pro, pas encore livré (ADR en préparation).
+  Tous les membres comptent, rôle lecture seule compris ; les prestataires
+  invités par lien non. À la descente d'offre, aucun membre retiré, seules les
+  nouvelles invitations bloquées.
 - **À livrer avant la publication** : relances email, téléchargement des
-  données, envoi de la demande d'assistance, décompte des quotas dans l'app.
+  données, multi-utilisateur, envoi de la demande d'assistance, décompte des
+  quotas dans l'app.
 - **La fin de l'essai** : lecture seule sans choix d'offre ; préciser ce qui
   reste consultable du DUERP (conservation légale de 40 ans).
-- **Ne pas promettre** plusieurs utilisateurs par compte, une application
-  mobile ou des rappels par SMS.
+- **Ne pas promettre** une application mobile ou des rappels par SMS.
 - **Le paiement en ligne** : chantier `lot/abonnements-stripe` (ADR-053).
 
 ## Sources
