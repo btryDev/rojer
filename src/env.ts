@@ -141,7 +141,11 @@ const schema = z
     STRIPE_WEBHOOK_SECRET: optionnelle,
     // Le lancement de l'offre (ADR-053 § 3) : `oui`, sans abonnement valide
     // la saisie se ferme ; absente ou `non`, elle reste ouverte à tous.
-    ABONNEMENT_EXIGE: z.preprocess(vide, z.enum(["oui", "non"]).optional()),
+    // Espaces et casse tolérés : `abonnementExige` lit la même forme.
+    ABONNEMENT_EXIGE: z.preprocess(
+      (v) => (typeof v === "string" ? v.trim().toLowerCase() || undefined : v),
+      z.enum(["oui", "non"]).optional(),
+    ),
   });
 
 /**
@@ -219,7 +223,7 @@ export function avertissementsEnvironnement(env: Env = process.env): string[] {
   // serveur (ADR-053 § 7) : le démarrage le dit à qui déploie.
   const stripe = etatStripe(env);
   if (!stripe.active && stripe.motif) avertissements.push(stripe.motif);
-  if (vide(env.ABONNEMENT_EXIGE) === "oui" && !stripe.active) {
+  if (env.ABONNEMENT_EXIGE?.trim().toLowerCase() === "oui" && !stripe.active) {
     avertissements.push(
       "ABONNEMENT_EXIGE=oui alors que Stripe est désactivé : la saisie reste ouverte à tous (abonnements/droits.ts).",
     );

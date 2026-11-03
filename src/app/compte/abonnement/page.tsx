@@ -1,9 +1,8 @@
 import { FilRetour } from "@/components/ui-kit/FilRetour";
 import { BandeauAbonnement } from "@/components/abonnements/BandeauAbonnement";
 import { requireCompte } from "@/lib/auth/compte";
-import { abonnementExige, droitsDuCompte } from "@/lib/abonnements/saisie";
-import { libelleStatut } from "@/lib/abonnements/droits";
-import { etatStripe } from "@/lib/stripe/config";
+import { abonnementDuCompte, contexteDroits, offreLancee } from "@/lib/abonnements/saisie";
+import { droitsDe, libelleStatut } from "@/lib/abonnements/droits";
 import { formaterDateLongueFr } from "@/lib/dates";
 
 export const metadata = {
@@ -23,16 +22,11 @@ export default async function AbonnementPage({
 }) {
   const { user, db } = await requireCompte();
   const { saisie } = await searchParams;
-  const ouvert = etatStripe().active && abonnementExige();
-  const [droits, ligne] = await Promise.all([
-    droitsDuCompte(db, user.id),
-    ouvert
-      ? db.abonnement.findUnique({
-          where: { userId: user.id },
-          select: { statut: true, formule: true, finPeriode: true, finEssai: true },
-        })
-      : null,
-  ]);
+  const ctx = contexteDroits();
+  const ouvert = offreLancee(ctx);
+  // Une seule lecture : la ligne sert à l'état affiché et aux droits.
+  const ligne = await abonnementDuCompte(db, user.id);
+  const droits = droitsDe(ligne, ctx);
 
   return (
     <main className="flex min-h-[calc(100vh-56px)] flex-col bg-[color:var(--board-canvas)] px-6 py-14 sm:px-10">
@@ -44,19 +38,12 @@ export default async function AbonnementPage({
         </p>
 
         {saisie === "fermee" && !droits.saisie && (
-          <p
-            role="status"
-            className="m-0 mt-6 text-[14px] font-semibold leading-[1.45] text-[color:var(--board-signal-ink)]"
-          >
-            Votre dernière modification n&apos;a pas été enregistrée : la saisie est fermée.
+          <p className="m-0 mt-6 text-[14px] leading-[1.45] text-[color:var(--board-slate-ink)]">
+            Votre dernière modification n&apos;a pas été enregistrée.
           </p>
         )}
 
-        {droits.bandeau && (
-          <div className="-mx-6 sm:-mx-10">
-            <BandeauAbonnement bandeau={droits.bandeau} />
-          </div>
-        )}
+        {droits.bandeau && <BandeauAbonnement bandeau={droits.bandeau} avecLien={false} className="mt-6" />}
 
         <section className="carte-board mt-7 px-7 py-6 sm:px-8" aria-labelledby="titre-etat">
           <h2 id="titre-etat" className="board-titre m-0 text-[22px]">

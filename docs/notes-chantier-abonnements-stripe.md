@@ -373,6 +373,17 @@ jour supprimé) ; seul le propriétaire du compte ouvre Checkout et le portail
 [2026-11-03, lot 3 : tranché — Stripe inactif, la saisie reste ouverte à
 tous et le démarrage prévient si `ABONNEMENT_EXIGE=oui` ; ADR-053 § 3.]
 
+**Revues du lot 3 (2026-11-03)** — sécurité : rien ; corrigé : réglage
+`ABONNEMENT_EXIGE` tolérant (espaces, casse) au démarrage comme dans la
+garde ; la garde de code exige `await verifierSaisie()` en PREMIÈRE
+instruction (analyse TypeScript, plus une mention textuelle) ; les écrans
+qui attrapent l'erreur d'une action gardée relancent la redirection
+(`unstable_rethrow` dans 7 composants, garde de code) ; bandeau aussi sur le
+DUERP et les entreprises, sous `Suspense` ; une seule lecture de la ligne sur
+la page. Limite acceptée : une fois l'offre lancée, une écriture lit la
+session deux fois (`verifierSaisie`, puis la garde de portée de l'action).
+Liens déjà émis : un tiers peut encore signer pour un compte fermé (voulu).
+
 **Lot 3 fait (2026-11-03)** : `droitsDe`, `verifierSaisie` dans 88 actions,
 16 écritures ouvertes nommées, page `/compte/abonnement`, bandeau dans le
 dossier. Reste pour les lots suivants :

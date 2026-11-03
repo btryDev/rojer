@@ -12,20 +12,31 @@ const TONS: Record<Bandeau["ton"], { fond: string; filet: string; encre: string 
   info: { fond: "var(--board-blue-soft)", filet: "var(--board-slate-line)", encre: "var(--board-blue-ink)" },
 };
 
-export function BandeauAbonnement({ bandeau }: { bandeau: Bandeau }) {
+/** `avecLien` : faux sur la page de l'abonnement elle-même. La marge vient de l'appelant. */
+export function BandeauAbonnement({
+  bandeau,
+  avecLien = true,
+  className = "",
+}: {
+  bandeau: Bandeau;
+  avecLien?: boolean;
+  className?: string;
+}) {
   const ton = TONS[bandeau.ton];
   return (
     <section
       role={bandeau.ton === "info" ? "note" : "status"}
-      className="carte-board mx-6 mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 px-6 py-4 sm:mx-10"
+      className={`carte-board flex flex-wrap items-center gap-x-4 gap-y-2 px-6 py-4 ${className}`}
       style={{ background: ton.fond, boxShadow: `0 0 0 1px ${ton.filet}` }}
     >
       <p className="m-0 min-w-0 flex-1 text-[14px] font-semibold leading-[1.45]" style={{ color: ton.encre }}>
         {bandeau.message}
       </p>
-      <Link href="/compte/abonnement" className="text-[13.5px] font-semibold underline" style={{ color: ton.encre }}>
-        Voir mon abonnement
-      </Link>
+      {avecLien && (
+        <Link href="/compte/abonnement" className="text-[13.5px] font-semibold underline" style={{ color: ton.encre }}>
+          Voir mon abonnement
+        </Link>
+      )}
     </section>
   );
 }

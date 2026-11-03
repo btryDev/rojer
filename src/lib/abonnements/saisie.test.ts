@@ -45,9 +45,10 @@ describe("verifierSaisie", () => {
 });
 
 describe("abonnementExige", () => {
-  it("seul « oui » lance l'offre", () => {
+  it("seul « oui » lance l'offre, espaces et casse tolérés comme au démarrage", () => {
     expect(abonnementExige({ ABONNEMENT_EXIGE: "oui" })).toBe(true);
     expect(abonnementExige({ ABONNEMENT_EXIGE: " oui " })).toBe(true);
-    for (const v of [undefined, "", "non", "OUI", "1", "true"]) expect(abonnementExige({ ABONNEMENT_EXIGE: v })).toBe(false);
+    expect(abonnementExige({ ABONNEMENT_EXIGE: "OUI\n" })).toBe(true);
+    for (const v of [undefined, "", "non", "1", "true"]) expect(abonnementExige({ ABONNEMENT_EXIGE: v })).toBe(false);
   });
 });

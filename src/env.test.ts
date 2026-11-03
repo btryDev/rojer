@@ -145,6 +145,9 @@ describe("ABONNEMENT_EXIGE (ADR-053 § 3)", () => {
   it("n'accepte que oui ou non, et prévient s'il est posé sans Stripe actif", () => {
     expect(() => validerEnvironnement({ ...BASE, ABONNEMENT_EXIGE: "Oui!" })).toThrow();
     expect(() => validerEnvironnement({ ...BASE, ABONNEMENT_EXIGE: "non" })).not.toThrow();
+    // Une espace ou une majuscule ne doit pas faire tomber le serveur.
+    expect(() => validerEnvironnement({ ...BASE, ABONNEMENT_EXIGE: " OUI\n" })).not.toThrow();
+    expect(avertissementsEnvironnement({ ABONNEMENT_EXIGE: " Oui " })).toHaveLength(1);
     expect(avertissementsEnvironnement({ ABONNEMENT_EXIGE: "oui" })).toEqual([
       expect.stringMatching(/la saisie reste ouverte à tous/),
     ]);

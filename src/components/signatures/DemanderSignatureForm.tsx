@@ -1,5 +1,6 @@
 "use client";
 
+import { unstable_rethrow } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -83,6 +84,8 @@ export function DemanderSignatureForm({
         });
         setResult(r.ok ? { ok: true } : { ok: false, message: r.message });
       } catch (e) {
+        // Une redirection (saisie fermée, ADR-053) n'est pas un échec : Next la reprend.
+        unstable_rethrow(e);
         setResult({
           ok: false,
           message: e instanceof Error ? e.message : "Erreur inconnue.",

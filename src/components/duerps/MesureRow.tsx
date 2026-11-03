@@ -1,5 +1,6 @@
 "use client";
 
+import { unstable_rethrow } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -183,7 +184,9 @@ function ChampValidable({
       window.setTimeout(() => {
         setEtat((prev) => (prev === "saved" ? "idle" : prev));
       }, 1800);
-    } catch {
+    } catch (e) {
+      // Une redirection (saisie fermée, ADR-053) n'est pas un échec : Next la reprend.
+      unstable_rethrow(e);
       setEtat("idle");
     }
   };
