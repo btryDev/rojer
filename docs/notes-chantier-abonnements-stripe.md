@@ -469,6 +469,77 @@ de bord (§ 6) ; le bandeau de Rojer annonce la fin dans la dernière semaine.
 dans Checkout et non modifiables par le portail (§ 2.4) : on reste sur les
 essais classiques.
 
+## 9. Passation (2026-11-03) — ce qui n'était écrit que dans la conversation
+
+**État sur `cc`** : socle (#153), webhook (#156), droits et garde des
+écritures (#158), PR A des lots 4-5 (#164) fusionnés. La PR B attend #159
+(multi-utilisateurs, ADR-054) ; `coordination_amelioration` préviendra quand
+elle entre dans `cc`. Branche de référence de la résolution #158 × #159 :
+`lot/abonnements-stripe-droits-sur-159` (7354298e) — multi_user la reprend
+en fusionnant `cc`.
+
+**Décisions de la propriétaire (2026-11-03)** :
+- pleine page Stripe en **redirection** (pas de formulaire intégré) ;
+- essai de **30 jours, sans carte**, dans la formule choisie ; toutes les
+  formules donnent accès à tout Rojer, bridées en volume et en temps
+  d'expert ;
+- les gens remplissent l'onboarding **pendant** l'essai ;
+- compte jamais payé conservé **12 mois** (à écrire dans `docs/rgpd.md`) ;
+- CGU : texte provisoire à l'écran, relecture juriste plus tard ;
+  factures : celles de Stripe (portail), validation expert-comptable ;
+- **responsive des bandeaux reporté** : on se concentre sur le
+  fonctionnement.
+
+**Parcours retenu après la recherche UX** (sources : rapport de recherche du
+2026-11-03, résumé ici) : écran « Votre essai gratuit » entre la
+confirmation de l'adresse et l'onboarding — date de fin en clair, « aucune
+carte demandée », ce qui se passe à la fin (lecture et export restent),
+case CGU non cochée d'avance, bouton « Démarrer mon essai ». Preuve
+d'acceptation : personne, version, empreinte, date, contexte (essai ou
+paiement). Mention discrète de l'essai en permanence, bandeau dans les 7
+derniers jours (déjà fait : `droitsDe`). Jamais de prélèvement sans geste du
+client. Fin d'essai = même traitement qu'un impayé. À changer au lancement :
+la page d'inscription annonce « Aucun paiement pendant la phase bêta ».
+
+**Quotas** : seul le nombre d'établissements est prévu dans la PR B. Les
+autres quotas du catalogue (permis de feu, plans de prévention,
+prestataires, liens, signatures, stockage, imports, assistant, expert)
+attendent leur propre lot, chacun avec sa garde de création.
+
+**Pièges rencontrés** :
+- **L'en-tête de page remonte sous la bande du haut** (`.sous-la-gelule`) :
+  tout ce qu'un layout pose entre la gélule et la page est recouvert. Le
+  bandeau d'abonnement vit en gélule dans la bande, à gauche de celle du
+  compte.
+- **Une redirection depuis une action** fait échouer l'appel côté client ; un
+  `catch` qui l'avale affiche « échec » un instant (Next 16.4 navigue quand
+  même, d'après la dernière revue). Relancer par `unstable_rethrow(e)` ; une
+  garde le vérifie (`saisie-gardee.test.ts`).
+- **Avec #159, `requireCompte` renvoie vers /onboarding** quand la personne
+  n'a pas de compte : une garde posée en tête de `finaliserOnboarding` doit
+  passer par `getOptionalCompte`, sinon boucle.
+- **Sous la borne de compte, un compte disparu donne P2025**, pas P2003 : la
+  borne transforme la clé en liaison.
+- **Gardes transversales** que `--changed` ne lance pas et qui ont fait
+  tomber la CI : `dates/garde-fuseau` (`=> new Date()` lu comme une
+  comparaison), `rendu/sans-qualification` (« rappelle » lu comme la promesse
+  d'un envoi), `app/robots` (toute racine de `src/app` rangée),
+  `auth/tenancy-routes` (toute route a un contrôle d'accès).
+- **Outils** : vitest se fige parfois dans le worktree — le lancer sous
+  `perl -e 'alarm 300; exec @ARGV' … < /dev/null` ; `timeout` n'existe pas
+  sur ce Mac ; `psql` non plus (Prisma `migrate deploy` crée la base) ; la
+  pile Docker `cc` tourne en production, sans e-mail : inutilisable pour
+  s'inscrire.
+
+**Contrôle visuel en local** : worktree `duerp-stripe`, `.env.local` (ignoré
+par git) avec une base dédiée (`duerp_cc_visuel` sur le conteneur
+`duerp-verif-db`, port 5435), `APP_ENV=development`, `EMAIL_DRIVER=console`,
+`STORAGE_DRIVER=local`, une fausse clé `sk_test_…` et un faux `whsec_…`,
+`ABONNEMENT_EXIGE=oui` ; `pnpm exec next dev -p 3007` ; le lien de
+confirmation d'inscription s'affiche dans la sortie du serveur. L'état
+d'abonnement d'un compte de test se pose par un script Prisma (statut,
+fin d'essai) — aucune requête vers Stripe pendant ce contrôle.
+
 ## Sources lues
 
 - Stripe : [webhooks](https://docs.stripe.com/webhooks.md) ·
