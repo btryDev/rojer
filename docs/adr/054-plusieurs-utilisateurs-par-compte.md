@@ -390,7 +390,8 @@ Corrigé :
   encore masqués** : environ 80 écrans de formulaires, lot à part.
 - **Supprimer une entreprise ou un établissement est réservé au
   propriétaire** (`verifierProprietaire`), décision de réalisation : c'est le
-  seul geste qui efface un dossier entier. Il reste ouvert à un impayé.
+  seul geste qui efface un dossier entier. Il reste ouvert à un impayé. **À confirmer
+  par la propriétaire** (relevé dans `docs/etat-bascule-clever-cloud.md`).
 - **Gestes de l'écran Membres** : seule l'invitation, qui ajoute une place,
   passe par la garde d'abonnement ; retirer, annuler, changer un rôle restent
   possibles à un compte impayé. Toutes sont réservées au propriétaire, et
@@ -464,6 +465,9 @@ Limites écrites :
 - Un journal de qui a fait quoi. Les auteurs déjà enregistrés (signatures,
   liens) restent les seuls.
 - La suppression du compte, qui n'existe toujours pas (ADR-053).
+- La recette « 75 routes × 2 comptes » avec deux membres et un membre retiré
+  (§ 9) n'est pas rejouée : à faire avant la bascule
+  (`docs/etat-bascule-clever-cloud.md`).
 
 ## Questions à la propriétaire
 
