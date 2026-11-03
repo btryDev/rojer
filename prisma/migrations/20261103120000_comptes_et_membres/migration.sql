@@ -84,6 +84,11 @@ ALTER TABLE "InvitationCompte" ADD CONSTRAINT "InvitationCompte_role_valide" CHE
 -- même instant le passaient tous deux. Ici, le compte est verrouillé, puis les
 -- propriétaires restants comptés : le second geste attend le premier, et il
 -- échoue. Un compte supprimé emporte ses membres sans rien garder.
+-- `FOR NO KEY UPDATE` sérialise deux déclencheurs sans attendre les insertions
+-- qui pointent le compte. Limites écrites : la garantie vaut en READ COMMITTED
+-- (le niveau de Prisma et du plugin) ; et supprimer un `User` dernier
+-- propriétaire d'un compte qui existe encore est refusé — une suppression
+-- (RGPD, faite à la main) vide d'abord le compte.
 CREATE FUNCTION "membre_garde_un_proprietaire"() RETURNS trigger
 LANGUAGE plpgsql AS $$
 BEGIN
@@ -93,7 +98,7 @@ BEGIN
   IF TG_OP = 'UPDATE' AND NEW."role" = 'owner' AND NEW."compteId" = OLD."compteId" THEN
     RETURN NULL;
   END IF;
-  PERFORM 1 FROM "Compte" WHERE "id" = OLD."compteId" FOR UPDATE;
+  PERFORM 1 FROM "Compte" WHERE "id" = OLD."compteId" FOR NO KEY UPDATE;
   IF NOT FOUND THEN
     RETURN NULL;
   END IF;

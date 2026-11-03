@@ -11,6 +11,7 @@ const h = vi.hoisted(() => ({
     createInvitation: vi.fn(async () => ({})),
     cancelInvitation: vi.fn(async () => ({})),
     removeMember: vi.fn(async () => ({})),
+    leaveOrganization: vi.fn(async () => ({})),
     updateMemberRole: vi.fn(async () => ({})),
     setActiveOrganization: vi.fn(async () => ({})),
   },
@@ -18,6 +19,7 @@ const h = vi.hoisted(() => ({
   comptes: [{ compteId: "compte-a" }, { compteId: "compte-b" }],
   consommer: vi.fn(async () => ({ ok: true })),
   envoi: true,
+  annuler: vi.fn(async () => undefined),
 }));
 vi.mock("next/cache", () => ({ revalidatePath: () => undefined }));
 vi.mock("next/navigation", () => ({
@@ -26,13 +28,17 @@ vi.mock("next/navigation", () => ({
   },
 }));
 vi.mock("@/lib/abonnements/saisie", () => ({ verifierSaisie: async () => {} }));
-vi.mock("@/lib/auth/compte", () => ({ requireCompte: async () => ({ user: { id: "u1" }, compte: h.compte }) }));
+vi.mock("@/lib/auth/compte", () => ({
+  requireCompte: async () => ({ user: { id: "u1" }, compte: h.compte }),
+  getOptionalCompte: async () => ({ user: { id: "u1" }, compte: h.compte }),
+}));
 vi.mock("@/lib/auth/better-auth", () => ({ auth: { api: h.api } }));
 vi.mock("@/lib/auth/require-user", () => ({ entetesDeSession: async () => new Headers() }));
 vi.mock("@/lib/auth/scope", () => ({ requireInvitationDeLaSession: async () => ({}) }));
 vi.mock("@/lib/auth/membres", () => ({
   invitationsDuCompte: async () => h.invitations,
   comptesDeLaPersonne: async () => h.comptes,
+  annulerInvitationsEnAttenteDe: h.annuler,
 }));
 vi.mock("@/lib/email", () => ({ envoiEnService: () => h.envoi, refusUrlPublique: () => null }));
 vi.mock("@/lib/securite/limite-debit", () => ({
@@ -114,5 +120,20 @@ describe("choisirCompte (ADR-054 § 7)", () => {
     expect(h.api.setActiveOrganization).toHaveBeenCalledWith(
       expect.objectContaining({ body: { organizationId: "compte-b" } }),
     );
+  });
+});
+
+describe("quitterCompte", () => {
+  it("à son départ, les invitations en attente de la personne tombent", async () => {
+    await expect(actions.quitterCompte()).rejects.toThrow("REDIRECT /entreprises");
+    expect(h.api.leaveOrganization).toHaveBeenCalledWith(expect.objectContaining({ body: { organizationId: "compte-a" } }));
+    expect(h.annuler).toHaveBeenCalledWith("u1", "compte-a");
+  });
+
+  it("un départ refusé (dernier propriétaire) n'annule rien", async () => {
+    h.api.leaveOrganization.mockRejectedValueOnce({ body: { code: "YOU_CANNOT_LEAVE_THE_ORGANIZATION_AS_THE_ONLY_OWNER" } });
+    const r = await actions.quitterCompte();
+    expect(r).toMatchObject({ status: "error", message: expect.stringMatching(/propriétaire/) });
+    expect(h.annuler).not.toHaveBeenCalled();
   });
 });

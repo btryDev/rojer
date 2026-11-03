@@ -91,6 +91,12 @@ describe.skipIf(!URL_BASE || !local)("appartenance au compte — PostgreSQL rée
     }
   });
 
+  it("un lien d'invitation abîmé se lit comme une invitation inexistante, sans erreur", async () => {
+    const { invitationAdresseeA } = await import("./membres");
+    expect(await invitationAdresseeA("abc", "x@exemple.test")).toBeNull();
+    expect(await invitationAdresseeA(randomUUID(), "x@exemple.test")).toBeNull();
+  });
+
   it("un rôle inconnu ou multiple est refusé par la base elle-même", async () => {
     const u = randomUUID();
     await prisma.user.create({ data: { id: u, name: "x", email: `${u}@exemple.test` } });

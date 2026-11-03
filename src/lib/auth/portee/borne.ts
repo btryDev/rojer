@@ -44,6 +44,17 @@ export class ErreurPortee extends Error {
  */
 export const ECRITURES_DE_LA_LECTURE_SEULE: ReadonlySet<string> = new Set(["DemandeAssistance.create"]);
 
+/**
+ * Des champs simples, sans écriture imbriquée : l'exception de la lecture
+ * seule ne porte que sur la ligne nommée, jamais sur ce qu'elle créerait
+ * ailleurs (seconde lecture du 2026-11-03).
+ */
+function champsSimples(data: unknown): boolean {
+  return (
+    estObjet(data) && Object.values(data).every((v) => v === null || typeof v !== "object" || v instanceof Date)
+  );
+}
+
 /** Refus d'une écriture à un membre en lecture seule (ADR-054 § 4). */
 export class ErreurLectureSeule extends ErreurPortee {
   constructor(operation: string) {
@@ -418,7 +429,7 @@ export function argumentsBornes(nom: string, operation: string, args: unknown, p
   }
   // Tout ce qui n'est pas une lecture écrit, ou est refusé plus bas : en
   // lecture seule, rien ne passe (ADR-054 § 4).
-  if (portee.lectureSeule && !ECRITURES_DE_LA_LECTURE_SEULE.has(`${nom}.${operation}`))
+  if (portee.lectureSeule && !(ECRITURES_DE_LA_LECTURE_SEULE.has(`${nom}.${operation}`) && champsSimples(a.data)))
     throw new ErreurLectureSeule(`${nom}.${operation}`);
   switch (operation) {
     case "delete":

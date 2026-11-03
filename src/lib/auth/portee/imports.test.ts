@@ -55,6 +55,7 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous" }
       "prisma.compte.delete",
       "prisma.invitationCompte.findFirst",
       "prisma.invitationCompte.findMany",
+      "prisma.invitationCompte.updateMany",
       "prisma.membre.findMany",
     ],
   },

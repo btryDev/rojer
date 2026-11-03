@@ -53,6 +53,8 @@ export function nomPourEmail(brut: string): string {
 
 /** Les invitations en attente qu'une personne a envoyées pour un compte tombent (ADR-054 § 6). */
 async function annulerInvitationsDe(inviterId: string, compteId: string): Promise<void> {
+  // Sans l'un des deux, Prisma ignorerait le filtre : toutes les invitations tomberaient.
+  if (!inviterId || !compteId) throw new Error("annulation d'invitations sans personne ou sans compte");
   await prisma.invitationCompte.updateMany({
     where: { inviterId, compteId, status: "pending" },
     data: { status: "canceled" },
@@ -204,7 +206,7 @@ export const auth = betterAuth({
         envoyer(email, "Rojer — invitation à rejoindre un compte", [
           "Bonjour,",
           "",
-          `${inviter.user.name ? nomPourEmail(inviter.user.name) : "Un propriétaire du compte"} vous invite à travailler sur le compte Rojer « ${nomPourEmail(organization.name)} », en tant que ${libelleRole(role)}.`,
+          `${(inviter.user.name && nomPourEmail(inviter.user.name)) || "Un propriétaire du compte"} vous invite à travailler sur le compte Rojer « ${nomPourEmail(organization.name)} », en tant que ${libelleRole(role)}.`,
           "",
           "Pour accepter, ouvrez ce lien (valable 7 jours) :",
           lienInvitation(id),

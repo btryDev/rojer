@@ -433,6 +433,30 @@ Corrigé, chaque fois éprouvé en le cassant :
 quitter) échappent à `ecrituresExposees` ; `clientDuProprietaire` garde son
 nom, alors qu'il rend un client borné au compte sans personne derrière.
 
+### Seconde lecture des corrections (2026-11-03) — rien de bloquant
+
+Corrigé : un lien d'invitation abîmé (pas un UUID) répondait 500, il répond
+404 ; les invitations d'un propriétaire qui QUITTE le compte tombent aussi
+(`leaveOrganization` n'appelle aucun crochet) ; l'exception « assistance » de
+la lecture seule n'admet que des champs simples, pas d'écriture imbriquée ;
+l'annulation d'invitations refuse un identifiant absent (Prisma ignorerait le
+filtre) ; un nom vide après nettoyage retombe sur « Un propriétaire du
+compte » ; refuser une invitation ramène au dossier si l'on a un compte ; le
+déclencheur verrouille en `FOR NO KEY UPDATE`.
+
+Limites écrites :
+- le déclencheur du dernier propriétaire vaut en READ COMMITTED (le niveau
+  de Prisma et du plugin), pas en REPEATABLE READ ; et il refuse de supprimer
+  un `User` dernier propriétaire d'un compte qui existe encore — une
+  suppression (RGPD, faite à la main) vide d'abord le compte ;
+- `sqlPeutEcrire` n'est pas un analyseur : `SELECT … INTO` et une fonction à
+  effet appelée dans un `SELECT` passeraient. Aucune entrée utilisateur ne
+  compose le SQL brut : c'est un filet contre une erreur de code ;
+- un numéro de téléphone survit dans un nom d'e-mail (cliquable sur mobile) ;
+- la migration `20261103120000` a été complétée (CHECK, déclencheur) après
+  avoir été jouée sur des bases locales de travail : une base qui l'a déjà
+  appliquée ne les a pas, elle se remet à zéro. Aucune n'est en production.
+
 ## Ce que cette décision ne règle pas
 
 - Les droits par établissement et les droits fins (Q2 ; formule « Sur

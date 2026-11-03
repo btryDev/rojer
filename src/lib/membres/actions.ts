@@ -12,8 +12,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
-import { requireCompte } from "@/lib/auth/compte";
-import { comptesDeLaPersonne, invitationsDuCompte } from "@/lib/auth/membres";
+import { getOptionalCompte, requireCompte } from "@/lib/auth/compte";
+import { annulerInvitationsEnAttenteDe, comptesDeLaPersonne, invitationsDuCompte } from "@/lib/auth/membres";
 import { auth } from "@/lib/auth/better-auth";
 import { entetesDeSession } from "@/lib/auth/require-user";
 import { requireInvitationDeLaSession } from "@/lib/auth/scope";
@@ -159,12 +159,15 @@ export async function changerRoleMembre(_prev: EtatMembres, formData: FormData):
 
 /** Quitter le compte (tout rôle ; le dernier propriétaire ne le peut pas). */
 export async function quitterCompte(): Promise<EtatMembres> {
-  const { compte } = await requireCompte();
+  const { user, compte } = await requireCompte();
   try {
     await auth.api.leaveOrganization({ headers: await entetesDeSession(), body: { organizationId: compte.compteId } });
   } catch (e) {
     return refus(e, "quitter");
   }
+  // Ses invitations en attente tombent avec son départ (l'acceptation les
+  // refuserait de toute façon : l'invitant n'est plus propriétaire).
+  await annulerInvitationsEnAttenteDe(user.id, compte.compteId);
   redirect("/entreprises");
 }
 
@@ -193,7 +196,9 @@ export async function refuserInvitation(_prev: EtatMembres, formData: FormData):
   } catch (e) {
     return refus(e, "refuser");
   }
-  redirect("/onboarding");
+  // Avec un compte, retour au dossier ; sans, l'onboarding (qui montrera une
+  // autre invitation en attente s'il y en a une).
+  redirect((await getOptionalCompte()) ? "/entreprises" : "/onboarding");
 }
 
 /**

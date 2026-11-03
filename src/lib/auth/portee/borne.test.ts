@@ -443,6 +443,23 @@ describe("lecture seule (ADR-054 § 4)", () => {
     expect(() => argumentsBornes("Equipement", op, args, LECTURE_A)).toThrow(ErreurLectureSeule);
   });
 
+  it("la demande d'assistance passe, mais pas ce qu'elle créerait ailleurs", () => {
+    expect(() =>
+      argumentsBornes("DemandeAssistance", "create", { data: { message: "m", userId: "u-a" } }, LECTURE_A),
+    ).not.toThrow();
+    expect(() =>
+      argumentsBornes(
+        "DemandeAssistance",
+        "create",
+        { data: { message: "m", etablissement: { create: { raisonDisplay: "x" } } } },
+        LECTURE_A,
+      ),
+    ).toThrow(ErreurLectureSeule);
+    expect(() => argumentsBornes("DemandeAssistance", "update", { where: { id: "d" }, data: { message: "y" } }, LECTURE_A)).toThrow(
+      ErreurLectureSeule,
+    );
+  });
+
   it("la même écriture passe pour un membre qui saisit", () => {
     expect(() => argumentsBornes("Equipement", "update", { where: { id: "x" }, data: { libelle: "y" } }, A)).not.toThrow();
   });

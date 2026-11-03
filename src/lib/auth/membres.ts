@@ -18,6 +18,8 @@ import { estRole, type Role } from "./roles";
 
 export type Appartenance = { compteId: string; role: Role };
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
  * Le compte où la personne travaille : le compte actif de sa session si elle
  * en est membre, sinon le plus ancien de ses comptes (défaut raisonnable, comme
@@ -151,6 +153,9 @@ export async function invitationAdresseeA(
   email: string,
   maintenant = new Date(),
 ): Promise<InvitationRecue | null> {
+  // Un lien abîmé (identifiant qui n'est pas un UUID) se lit comme une
+  // invitation qui n'existe pas : 404, pas l'erreur P2023 de la base.
+  if (!UUID.test(id)) return null;
   const l = await prisma.invitationCompte.findFirst({
     where: { id, email: email.toLowerCase(), status: "pending", expiresAt: { gt: maintenant } },
     select: { id: true, role: true, compte: { select: { name: true } }, inviter: { select: { name: true, email: true } } },
@@ -168,4 +173,17 @@ export async function comptesDeLaPersonne(userId: string): Promise<CompteDeLaPer
     select: { compteId: true, role: true, compte: { select: { name: true } } },
   });
   return lignes.flatMap((l) => (estRole(l.role) ? [{ compteId: l.compteId, nom: l.compte.name, role: l.role }] : []));
+}
+
+/**
+ * Les invitations en attente qu'une personne a envoyées pour un compte tombent
+ * (ADR-054 § 6) : à son départ (`leaveOrganization` n'appelle aucun crochet du
+ * plugin). Le retrait et la rétrogradation le font par leurs crochets.
+ */
+export async function annulerInvitationsEnAttenteDe(inviterId: string, compteId: string): Promise<void> {
+  if (!inviterId || !compteId) throw new Error("annulation d'invitations sans personne ou sans compte");
+  await prisma.invitationCompte.updateMany({
+    where: { inviterId, compteId, status: "pending" },
+    data: { status: "canceled" },
+  });
 }
