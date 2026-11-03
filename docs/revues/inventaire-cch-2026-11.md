@@ -10,6 +10,13 @@ ces inventaires n'avaient pas, parce que la question a changé (décision de la
 propriétaire du 2026-11-03) : **à qui le chapitre s'adresse** — à l'exploitant, au
 propriétaire ou à l'occupant d'un bâtiment existant, ou à quelqu'un d'autre.
 
+**En bref.**
+- Le CCH au corpus : 22 articles, tous de la partie réglementaire.
+- Le livre Ier compte 83 chapitres qui portent des articles : 7 couverts (tous en partie), 74 jamais ouverts. Les livres II à VIII ne parlent que de vente, de bail, de financement et de copropriété.
+- Ce qui s'adresse à l'existant et n'est pas lu tient dans la liste du § 9.1 : 317 articles du CCH au plus.
+- Le volume à lire pour la suite est au § 9.2, environ 900 articles. S'y ajoutent les arrêtés de sécurité que le dépôt ignore (§ 6.6), non mesurés.
+- Les rythmes vagues sont au § 7. Les articles écartés par une décision antérieure sont au § 8. Les limites de la lecture sont au § 10.
+
 ---
 
 ## 1. D'où vient le plan
@@ -22,7 +29,7 @@ sert et dont le site est le rendu :
 | Pièce | Ce que c'est |
 |---|---|
 | `Freemium_legi_global_20250713-140000.tar.gz` | export global du 2025-07-13 (1 171 027 316 octets, intégrité gzip vérifiée) |
-| `LEGI_20250713-205013` … `LEGI_20261102-213929` | les **484** mises à jour quotidiennes suivantes, appliquées dans l'ordre, listes de suppression comprises |
+| `LEGI_20250713-205013` … `LEGI_20261102-213929` | les **484** mises à jour quotidiennes suivantes, appliquées dans l'ordre, listes de suppression comprises. Le fichier d'avancement `.faits` en liste 485 (l'export et les 484) ; le journal `application-mises-a-jour.log` n'en imprime que 482, celles qui ont changé quelque chose aux textes extraits |
 
 Servies par `https://echanges.dila.gouv.fr/OPENDATA/LEGI/`. Le texte est donc **à jour
 de la livraison du 2026-11-02**, et les comptes sont pris **en vigueur au 2026-11-03** :
@@ -59,11 +66,14 @@ construction ») ; l'intitulé exact est celui du plan LEGI, que la commande `pl
 
 ### 1.3 Pour relire
 
-Le jeu reconstitué est hors du dépôt, lisible par les autres sessions :
-`/Users/palomasanchezc/Documents/rojer-mission-alignement/legi-2026-11-02/`. Il porte
+Le jeu reconstitué est hors du dépôt, sur la machine de la propriétaire, lisible par les
+autres sessions : `/Users/palomasanchezc/Documents/rojer-mission-alignement/legi-2026-11-02/`.
+Ailleurs, il se reconstruit avec `extraire.py` (même dossier), à partir des archives de
+la DILA citées au § 1.1. Il porte
 le CCH, l'arrêté du 25 juin 1980, le règlement IGH, l'arrêté habitation de 1986, l'arrêté
 gaz de 2018, l'arrêté du registre d'accessibilité de 2017, l'arrêté EF de 1990, et l'en-tête de
-chaque texte non codifié. Les deux scripts sont dans le même dossier :
+chaque texte non codifié. Les deux scripts sont dans le même dossier ; les commandes se
+lancent depuis `/Users/palomasanchezc/Documents/rojer-mission-alignement` :
 
     python3 -I legi-2026-11-02/legi.py plan    legi-2026-11-02 LEGITEXT000006074096 2026-11-03
     python3 -I legi-2026-11-02/legi.py num     legi-2026-11-02 JORFTEXT000000290033 "R 33" 2026-11-03
@@ -140,7 +150,7 @@ Plan LEGI. Destinataire : article LEGI, par filtre, sauf mention « en entier »
 | **III** ch. I — Stabilité et solidité | 3 | jamais ouvert | C | — |
 | III ch. II — Prévention des risques naturels | 9 | jamais ouvert | C | — |
 | III ch. III — Risques technologiques et miniers | 2 | jamais ouvert | aucun destinataire nommé | — |
-| III ch. IV — Sécurité d'usage des bâtiments | 13 (L. 134-1 à -13) | **lu hors corpus** (`L. 134-1`, `-3`, `-4`, cités « relus sur Légifrance » en tête de `ascenseurs.ts`) | **E**, C | Ascenseurs : entretien à la charge du propriétaire (`L. 134-3`), contrôle technique périodique (`L. 134-4`). Portes et portails automatiques de garage « maintenus en bon état de fonctionnement » (`L. 134-11`, en entier) — **rythme vague**, renvoi à un décret (R. 134-58, § 4). Le reste est C : électricité et gaz (état exigé à la vente et à la location, `L. 134-7`, `-9`), piscines (`L. 134-10`), chutes (`L. 134-12`), bâtiments à usage professionnel conçus pour la sécurité des travailleurs qui les entretiennent (`L. 134-13`) — tous en entier |
+| III ch. IV — Sécurité d'usage des bâtiments | 13 (L. 134-1 à -13) | **lu hors corpus** (`L. 134-1`, `-3`, `-4`, cités « relus sur Légifrance » en tête de `ascenseurs.ts`) | **E**, C | Ascenseurs : entretien à la charge du propriétaire (`L. 134-3`), contrôle technique périodique (`L. 134-4`). Portes et portails automatiques de garage « maintenus en bon état de fonctionnement » (`L. 134-11`, en entier) — **rythme vague** (§ 7). Le reste est C : électricité et gaz (état exigé à la vente et à la location, `L. 134-7`, `-9`), piscines (`L. 134-10`), chutes (`L. 134-12`), bâtiments à usage professionnel conçus pour la sécurité des travailleurs qui les entretiennent (`L. 134-13`) — tous en entier |
 | **IV** ch. I — Objectifs généraux de sécurité contre l'incendie | 4 (L. 141-1 à -4) | jamais ouvert | C | `L. 141-4` fonde le registre de sécurité incendie (cité par R. 141-10) |
 | IV ch. II — Bâtiments d'habitation | 4 (L. 142-1 à -4) | jamais ouvert | **E** | Mesures de sécurité incendie dans les parties communes, à la charge des propriétaires (`L. 142-2`, en entier) ; entrepôt de matières explosives ou inflammables (`L. 142-3`) |
 | IV ch. III — Établissements recevant du public | 3 (L. 143-1 à -3) | jamais ouvert | **E**, A | Mesures complémentaires imposables par décret « aux propriétaires, aux constructeurs et aux exploitants » (`L. 143-2`, en entier) ; fermeture et astreinte (`L. 143-3`) |
@@ -185,16 +195,16 @@ Plan LEGI. Destinataire : article LEGI, par filtre, sauf mention « en entier »
 | II ch. V — Contrôleurs techniques et bureaux d'étude agréés | 32 | jamais ouvert | A | — |
 | II ch. V bis — Organismes de qualification | 9 | jamais ouvert | A | — |
 | II ch. VI — Exploitation des bâtiments | 62 (R. 126-1-A à -47) | jamais ouvert | **E**, T | Termites : état du bâtiment et attestation de travaux adressés au maire par le propriétaire (`R. 126-3`) ; **affichage du DPE** au public par le propriétaire, le gestionnaire ou l'exploitant, dans les bâtiments de plus de 250 m² occupés par une collectivité publique et accueillant un ERP des catégories 1 à 4, et dans ceux de plus de 500 m² accueillant un ERP des catégories 1 à 4 dont le DPE a été fait à la construction, la vente ou la location (`R. 126-18`, en entier). Le reste : diagnostics (déchets de démolition, DPE, audit, électricité, gaz, termites, structure), carnet d'information, accès des huissiers et des opérateurs |
-| **III** ch. I — Stabilité et solidité | 7 (R. 131-1 à -7) | jamais ouvert | **E**, A | **Structures provisoires et démontables** : leurs propriétaires et les organisateurs d'évènements « font procéder aux contrôles, vérifications et inspections nécessaires » (`R. 131-7`, en entier, version du 2025-02-01) — **rythme vague**, renvoi à un arrêté (§ 7.6). Termites (`R. 131-1` à `-4`) : aucun destinataire de terrain nommé |
+| **III** ch. I — Stabilité et solidité | 7 (R. 131-1 à -7) | jamais ouvert | **E**, A | **Structures provisoires et démontables** : leurs propriétaires et les organisateurs d'évènements « font procéder aux contrôles, vérifications et inspections nécessaires » (`R. 131-7`, en entier, version du 2025-02-01) — **rythme vague** (§ 7). Termites (`R. 131-1` à `-4`) : aucun destinataire de terrain nommé |
 | III ch. II — Risques naturels | 26 | jamais ouvert | C, A | — |
 | III ch. III — Risques technologiques | **0** | — | — | Chapitre vide |
-| III ch. IV — Sécurité d'usage des bâtiments | 70 (R. 134-1 à -62) | **couvert — 6 sur 70** (`R. 134-1`, `-2`, `-6`, `-7`, `-10`, `-11`, tous `retenu`, `cch-ascenseurs`) ; `R. 134-5`, `-8`, `-12`, `-13` cités dans `ascenseurs.ts` ; section 4 **écartée** (CLAUDE.md : « piscines ») | **E**, C | Section 1, ascenseurs : 56 articles (R. 134-1 à R. 134-48-8), 6 au corpus. Section 5, **portes automatiques de garage** des bâtiments d'habitation : les propriétaires « sont tenus de les faire entretenir et vérifier périodiquement aux termes de contrats écrits », interventions consignées dans un livret d'entretien (`R. 134-58`, en entier) — **rythme vague au CCH**, la périodicité est renvoyée à un arrêté (§ 7.6). `R. 134-55` à `-57` : prescriptions techniques des portes (C, et mise en conformité des portes antérieures au 1992-01-07). Section 2 (électricité, 2 articles) : état exigé à la vente, C/T. Section 4 (piscines, 4 articles, D. 134-51 à -54) : dispositif anti-noyade des piscines privatives, à la charge du maître d'ouvrage et du propriétaire. Sections 6 et 7 (4 articles) : C |
+| III ch. IV — Sécurité d'usage des bâtiments | 70 (R. 134-1 à -62) | **couvert — 6 sur 70** (`R. 134-1`, `-2`, `-6`, `-7`, `-10`, `-11`, tous `retenu`, `cch-ascenseurs`) ; `R. 134-5`, `-8`, `-12`, `-13` cités dans `ascenseurs.ts` ; section 4 **écartée** (CLAUDE.md : « piscines ») | **E**, C | Section 1, ascenseurs : 56 articles (R. 134-1 à R. 134-48-8), 6 au corpus. Section 5, **portes automatiques de garage** des bâtiments d'habitation : les propriétaires « sont tenus de les faire entretenir et vérifier périodiquement aux termes de contrats écrits », interventions consignées dans un livret d'entretien (`R. 134-58`, en entier) — **rythme vague** (§ 7). `R. 134-55` à `-57` : prescriptions techniques des portes (C, et mise en conformité des portes antérieures au 1992-01-07). Section 2 (électricité, 2 articles) : état exigé à la vente, C/T. Section 4 (piscines, 4 articles, D. 134-51 à -54) : dispositif anti-noyade des piscines privatives, à la charge du maître d'ouvrage et du propriétaire. Sections 6 et 7 (4 articles) : C |
 | **IV** ch. I — Règles générales | 17 (R. 141-1 à -17) | **couvert — 2 sur 17** (`R. 141-10`, `-11`, `retenu`, `cch-registre-securite`) | C, E | Le registre de sécurité incendie (section 3) est le seul acte d'exploitant du chapitre. `R. 141-7`, `-15`, `-17` cités dans `incendie.ts` sans lecture |
 | IV ch. II — Bâtiments d'habitation | 5 (R. 142-1 à -5) | jamais ouvert | **E** | Les installations de protection des habitants « doivent être entretenus et vérifiés » jusqu'à la destruction de l'immeuble, les propriétaires en justifient par un registre (`R. 142-1`, en entier, version du 2025-11-21) — **aucun rythme écrit**, renvoi à un arrêté (celui du 31 janvier 1986, § 6.3). Détecteur de fumée : installation par le propriétaire, entretien et renouvellement par l'occupant (`R. 142-2`, `-3`). Mesures de sécurité dans les parties communes, dont les consignes (`R. 142-4`, en entier) |
-| IV ch. III — Établissements recevant du public | 45 (R. 143-1 à -47) | **couvert — 5 sur 45** (`R. 143-19`, `-38`, `-42` `sans_objet` ; `R. 143-41`, `-44` `retenu`) | **E**, A, C | Non lus au corpus et adressés à l'exploitant : `R. 143-3` (constructeurs, propriétaires et exploitants « tenus, tant au moment de la construction qu'au cours de l'exploitation, de respecter les mesures de prévention et de sauvegarde », en entier) ; `R. 143-5` (s'assurer des essais des matériaux) ; **`R. 143-34`** (en entier, version du 2025-11-21) : les exploitants font procéder « périodiquement en cours d'exploitation aux vérifications nécessaires » par des organismes ou personnes agréés — **rythme vague au CCH**, que le règlement de sécurité chiffre ; `R. 143-21` (groupement d'exploitations sous une direction unique, déclaration de tout changement de direction, en entier) ; `R. 143-27` (recours de l'exploitant) ; `R. 143-39` (fermeture notifiée à l'exploitant). Le reste : commissions, classement, procédure |
+| IV ch. III — Établissements recevant du public | 45 (R. 143-1 à -47) | **couvert — 5 sur 45** (`R. 143-19`, `-38`, `-42` `sans_objet` ; `R. 143-41`, `-44` `retenu`) | **E**, A, C | Non lus au corpus et adressés à l'exploitant : `R. 143-3` (constructeurs, propriétaires et exploitants « tenus, tant au moment de la construction qu'au cours de l'exploitation, de respecter les mesures de prévention et de sauvegarde », en entier) ; `R. 143-5` (s'assurer des essais des matériaux) ; **`R. 143-34`** (en entier, version du 2025-11-21) : les exploitants font procéder « périodiquement en cours d'exploitation aux vérifications nécessaires » par des organismes ou personnes agréés — **rythme vague** (§ 7) ; `R. 143-21` (groupement d'exploitations sous une direction unique, déclaration de tout changement de direction, en entier) ; `R. 143-27` (recours de l'exploitant) ; `R. 143-39` (fermeture notifiée à l'exploitant). Le reste : commissions, classement, procédure |
 | IV ch. IV — Bâtiments à usage professionnel | 1 (R. 144-1) | jamais ouvert | renvoi | En entier : renvoie au chapitre VI du titre Ier du livre II de la quatrième partie du Code du travail (R. 4216-1 et s., maître d'ouvrage). Rien à l'exploitant ici |
 | IV ch. V — Immeubles de moyenne hauteur | 6 | jamais ouvert | C | `R. 145-1` (en entier) : chapitre applicable aux immeubles à construire et aux transformations |
-| IV ch. VI — Immeubles de grande hauteur | 33 (R. 146-1 à -35) | **couvert — 3 sur 33** (`R. 146-3`, `-4` `sans_objet` ; `R. 146-35` `retenu`) | **E**, A, C | Section 4, « Obligations relatives à l'occupation des locaux » (5 articles, aucun au corpus) : maintien et vérification des installations par le propriétaire (`R. 146-20`, en entier) ; service de sécurité unique et « exercices périodiques d'évacuation » (`R. 146-23`, en entier — **rythme vague au CCH**, renvoi au règlement) ; **les propriétaires, les locataires et les occupants** ne peuvent modifier les lieux contre le règlement « et doivent s'assurer que le potentiel calorifique des éléments mobiliers introduits dans l'immeuble n'excède pas les limites » du règlement (`R. 146-24`, en entier) — c'est le fondement au CCH de GH 61. Section 5 : présence du propriétaire aux visites (`R. 146-29`, `-34`) |
+| IV ch. VI — Immeubles de grande hauteur | 33 (R. 146-1 à -35) | **couvert — 3 sur 33** (`R. 146-3`, `-4` `sans_objet` ; `R. 146-35` `retenu`) | **E**, A, C | Section 4, « Obligations relatives à l'occupation des locaux » (5 articles, aucun au corpus) : maintien et vérification des installations par le propriétaire (`R. 146-20`, en entier) ; service de sécurité unique et « exercices périodiques d'évacuation » (`R. 146-23`, en entier — **rythme vague** (§ 7)) ; **les propriétaires, les locataires et les occupants** ne peuvent modifier les lieux contre le règlement « et doivent s'assurer que le potentiel calorifique des éléments mobiliers introduits dans l'immeuble n'excède pas les limites » du règlement (`R. 146-24`, en entier) — c'est le fondement au CCH de GH 61. Section 5 : présence du propriétaire aux visites (`R. 146-29`, `-34`) |
 | **V** ch. I — Objectifs généraux de qualité sanitaire | 2 | jamais ouvert | C | — |
 | V ch. II — Réseaux d'eau | 2 | jamais ouvert | C | Comptage de l'eau froide en habitation neuve (`D. 152-1`, en entier) |
 | V ch. III — Qualité d'air intérieur | 8 (R. 153-1 à -8) | jamais ouvert | **E**, C | Prévention du monoxyde de carbone dans les locaux d'**habitation** : dans l'existant, entrée d'air et évacuation à la charge du propriétaire (`R. 153-5`, en entier) ; l'occupant n'entrave pas leur fonctionnement (`R. 153-6`) |
@@ -203,11 +213,11 @@ Plan LEGI. Destinataire : article LEGI, par filtre, sauf mention « en entier »
 | **VI** ch. I — Règles générales d'accessibilité | 3 | jamais ouvert | A | Bâtiments du ministère de la défense |
 | VI ch. II — Bâtiments neufs | 15 | jamais ouvert | C | — |
 | VI ch. III — Modification de bâtiments d'habitation et à usage professionnel existants | 8 | jamais ouvert | C | — |
-| VI ch. IV — ERP existants | 6 (R. 164-1 à -6) | **couvert — 1 sur 6** (`R. 164-6`, `sans_objet`, `cch-registre-accessibilite`, aussi lu dans `documents-obligatoires.ts` avec version constatée) | **E**, A | `R. 164-1` (en entier) renvoie à un arrêté les obligations d'accessibilité des ERP existants (§ 7.6) ; `R. 164-2` à `-5` : dérogations et délais |
+| VI ch. IV — ERP existants | 6 (R. 164-1 à -6) | **couvert — 1 sur 6** (`R. 164-6`, `sans_objet`, `cch-registre-accessibilite`, aussi lu dans `documents-obligatoires.ts` avec version constatée) | **E**, A | `R. 164-1` (en entier) renvoie à un arrêté les obligations d'accessibilité des ERP existants (§ 6.6) ; `R. 164-2` à `-5` : dérogations et délais |
 | VI ch. V — Agendas d'accessibilité programmée | 21 | jamais ouvert | **E**, A | Attestation d'accessibilité, dépôt, suivi et achèvement de l'agenda par le propriétaire ou l'exploitant |
 | **VII** ch. I à III — Performance énergétique (règles générales, construction, existants) | 67 | jamais ouvert | C, A, T | Ch. III, section 4 : travaux d'économies d'énergie votés en copropriété (T) |
 | VII ch. IV — Suivi de l'efficacité énergétique | 32 (R. 174-1 à -32) | sections 2 et 3 **écartées** (CLAUDE.md : « décret tertiaire / OPERAT ») ; section 1 jamais ouverte | E | Section 1 (18 articles) : équipements de comptage et répartition des frais de chauffage des immeubles collectifs. Sections 2 et 3 (14 articles) : bâtiments tertiaires, propriétaires et preneurs à bail (`R. 174-22`) |
-| VII ch. V — Systèmes techniques des bâtiments | 10 (R. 175-1 à -9) | jamais ouvert | **E** | Hors sécurité : systèmes d'automatisation et de contrôle des bâtiments tertiaires, « soumis à inspection périodique » à l'initiative du propriétaire, rapport conservé dix ans (`R. 175-5-1`, en entier) — **rythme vague au CCH**, fréquence renvoyée à un arrêté (§ 7.6) ; fermeture des ouvertures des locaux tertiaires chauffés ou climatisés, mise en demeure de l'exploitant (`R. 175-7`, `-9`) |
+| VII ch. V — Systèmes techniques des bâtiments | 10 (R. 175-1 à -9) | jamais ouvert | **E** | Hors sécurité : systèmes d'automatisation et de contrôle des bâtiments tertiaires, « soumis à inspection périodique » à l'initiative du propriétaire, rapport conservé dix ans (`R. 175-5-1`, en entier) — **rythme vague** (§ 7) ; fermeture des ouvertures des locaux tertiaires chauffés ou climatisés, mise en demeure de l'exploitant (`R. 175-7`, `-9`) |
 | **VIII** ch. I à III | **0** | — | — | Trois chapitres vides |
 | VIII ch. IV — Règles de sécurité | 8 (R. 184-1 à -8) | jamais ouvert | A | Contraventions : propriétaire d'IGH absent aux visites (`R. 184-2`), constructeur, propriétaire ou exploitant d'ERP (`R. 184-4`, `-5`), monoxyde de carbone (`R. 184-6`), termites (`R. 184-7`) |
 | VIII ch. V — Règles en matière énergétique | 2 | jamais ouvert | A | — |
@@ -221,7 +231,8 @@ Plan LEGI. Destinataire : article LEGI, par filtre, sauf mention « en entier »
 
 Plan LEGI, au niveau du titre. Les intitulés suffisent à dire le destinataire. Ils ne
 disent pas qu'aucun article ne touche un exploitant : ces livres n'ont pas été lus article
-par article, sauf les deux articles du livre V cités.
+par article, sauf les cinq articles cités au tableau (`L. 511-1`, `-2`, `-4` et
+`R. 511-1` au livre V, `L. 731-1` au livre VII).
 
 | Livre | Articles L / R | Statut | Destinataire | Constat |
 |---|--:|---|---|---|
@@ -254,9 +265,12 @@ exploitants ») et `GN 13`. `GN 15` (structures provisoires et démontables dans
 version du 2023-11-04) ne nomme personne au filtre et renvoie à la même matière que
 R. 131-7. Aucun rythme écrit dans le livre.
 
-**Livres II et III.** Corpus `integral` : 348 et 510 entrées pour le livre II, 59 pour le
-livre III (58 entrées au plan ; l'écart d'une unité n'est pas instruit ici). Hors de cet
-inventaire.
+**Livres II et III.** Corpus `integral` : pour le livre II, 348 entrées au titre Ier
+(`arrete-1980-livre-2`, 313 au plan) et 510 au titre II (`arrete-1980-livre-2-titre-2`,
+486 au plan) ; 59 pour le livre III (58 au plan). Le corpus compte plus d'entrées que
+d'articles parce qu'il découpe certains articles par paragraphe ou par acte — « MS 69 —
+stock permanent de fournitures de rechange », « M 40 § 3 e) — contrat d'entretien… »
+en sont deux, relevées au § 8 (voir § 10.5). Hors de cet inventaire.
 
 **Livre IV, établissements spéciaux — 292 articles, 1 au corpus (`PS 32`).**
 
@@ -391,7 +405,9 @@ biennale en 2e à 4e).
 
 ## 8. Articles du corpus marqués « hors cadre » ou écartés par une décision antérieure au 2026-11-03
 
-Demandé par la coordination : leur levée est posée. Relevé en exécutant le corpus :
+Liste demandée par la coordination : la règle du 2026-11-03 (servir tout ce qui
+s'adresse à l'exploitant) rouvre la question de ces décisions, et ce document ne la
+tranche pas. Relevé en exécutant le corpus :
 les articles en `non_couvert`, `hors_perimetre` ou `obligation_manquante` dont le motif
 porte « hors cadre » ou « décision de la propriétaire ». **87 articles, dont 36 dans les
 textes du CCH** :
@@ -431,8 +447,12 @@ comptés à part.
 | **couverts** (au moins un article au corpus) | 0 | 7 | **7** |
 | **lus hors corpus** | 1 (L. 134) | 0 | **1** |
 | **écartés avec motif écrit**, en entier | 1 (L. 174, décret tertiaire) | 0 | **1** |
-| — dont écartés en partie seulement (une section) | — | 2 (R. 134 § 4 piscines ; R. 174 §§ 2-3 décret tertiaire) | 2 |
 | **jamais ouverts** | 40 | 34 | **74** |
+
+Chaque chapitre porte un seul statut, et les quatre lignes en gras font le total. Deux
+chapitres ont **en outre** une section écartée par un motif écrit, sans que cela change
+leur statut : R. 134 (couvert ; section 4, piscines) et R. 174 (jamais ouvert ;
+sections 2 et 3, décret tertiaire).
 
 Les sept chapitres couverts le sont tous partiellement : R. 122 (1 sur 37), R. 134 (6 sur
 70), R. 141 (2 sur 17), R. 143 (5 sur 45), R. 146 (3 sur 33), R. 157 (4 sur 6), R. 164
@@ -442,10 +462,12 @@ Les livres II à VIII (§ 5) sont **jamais ouverts**, et s'adressent aux parties
 vente, d'un bail, d'un financement ou d'une copropriété, ou à l'autorité : 1 093 articles
 L, 2 069 R, 56 annexes.
 
-### 9.1 Les chapitres jamais ouverts qui s'adressent à l'exploitant, au propriétaire ou à l'occupant
+### 9.1 Ce qui s'adresse à l'exploitant, au propriétaire ou à l'occupant et n'est pas au corpus
 
-Articles en vigueur au 2026-11-03. « Dont » isole la part adressée à l'existant quand le
-chapitre mêle les destinataires, et elle n'est mesurée qu'au filtre.
+Articles en vigueur au 2026-11-03. Les chapitres jamais ouverts comptent pour tous leurs
+articles. « Dont » isole la part adressée à l'existant quand le chapitre mêle les
+destinataires, et cette part n'est mesurée qu'au filtre. En fin de tableau viennent les
+articles hors corpus des chapitres couverts, comptés un par un.
 
 | Chapitre | Articles | Dont, adressés à l'existant |
 |---|--:|---|
@@ -464,17 +486,17 @@ chapitre mêle les destinataires, et elle n'est mesurée qu'au filtre.
 | R. 174 § 1 — Comptage et répartition des frais de chauffage | 18 | les dix-huit |
 | R. 175 — Systèmes techniques | 10 | R. 175-5-1, R. 175-7 |
 | Chapitres hors sécurité au sens strict (L. 113, R. 113 : recharge, vélos) | 44 | L. 113-16, -17 ; R. 113-7 à -9, -13, -14 |
-
-Et, dans des chapitres **couverts**, les articles adressés à l'existant qui ne sont pas au
-corpus : R. 134-55 à -58 (portes automatiques de garage, 4) ; R. 134 section 1, 50
-articles d'ascenseurs hors des 6 retenus ; R. 143-3, -5, -21, -27, -34, -39 (6) ;
-R. 146-20, -23, -24, -29, -34 (5).
+| *Couvert* — R. 134, ascenseurs, hors des 6 retenus | 50 | section 1 |
+| *Couvert* — R. 134, portes automatiques de garage | 4 | R. 134-55 à -58 |
+| *Couvert* — R. 143, ERP | 6 | R. 143-3, -5, -21, -27, -34, -39 |
+| *Couvert* — R. 146, IGH | 5 | R. 146-20, -23, -24, -29, -34 |
+| *Couvert* — R. 164, ERP existants (accessibilité) | 5 | R. 164-1 à -5 |
 
 ### 9.2 Le volume à lire pour le lot suivant
 
 | Bloc | Articles en vigueur | Dont déjà au corpus |
 |---|--:|--:|
-| CCH, livre Ier, chapitres du § 9.1 et articles hors corpus des chapitres couverts | 312 | 0 |
+| CCH, livre Ier : le tableau du § 9.1 | 317 | 0 |
 | Arrêté de 1980, livre Ier (GN) | 15 | 3 |
 | Arrêté de 1980, livre IV | 292 | 1 |
 | Arrêté EF du 9 janvier 1990 | 29 | 0 |
@@ -482,8 +504,8 @@ R. 146-20, -23, -24, -29, -34 (5).
 | Arrêté habitation de 1986, en entier | 112 | 12 |
 | Arrêtés du § 6.6 adressés à l'existant (portes de garage, structures provisoires, ERP existants, monoxyde de carbone, SSIAP) | non mesuré | 0 |
 
-**De l'ordre de 900 articles** à ouvrir, hors arrêtés du § 6.6. Le chiffre du CCH (312) additionne
-les chapitres entiers du § 9.1 — 72 articles L, 131 R, 44 des chapitres 113 — et les 65
+**De l'ordre de 900 articles** à ouvrir, hors arrêtés du § 6.6. Le chiffre du CCH (317) additionne
+les chapitres entiers du § 9.1 — 72 articles L, 131 R, 44 des chapitres 113 — et les 70
 articles hors corpus des chapitres couverts. Il majore, puisque ces chapitres mêlent
 les destinataires. Le volume réellement adressé à l'exploitant se mesurera à la lecture.
 
@@ -491,19 +513,16 @@ les destinataires. Le volume réellement adressé à l'exploitant se mesurera à
 
 ## 10. Ce que je n'ai pas fait
 
-1. **Aucune page de Légifrance n'a été ouverte.** Le plan, les intitulés et les comptes
-   viennent du jeu LEGI de la DILA, à jour du 2026-11-02. Leur égalité avec le rendu du
-   site n'est pas vérifiée.
-2. **La plupart des articles n'ont été lus que par filtre** (§ 1.2) : les phrases qui
-   nomment un destinataire ou un rythme. Les articles cités « en entier » sont les seuls
-   lus jusqu'au bout. Un article lu par filtre peut contenir un acte d'exploitant que le
-   filtre n'a pas vu, notamment quand le texte dit « il » ou « l'intéressé ».
-3. **Les livres II à VIII du CCH ont été classés par leurs titres**, sauf les quatre
+1. **Aucune page de Légifrance n'a été ouverte** (§ 1.1).
+2. **La plupart des articles n'ont été lus que par filtre** (§ 1.2). Un article lu par
+   filtre peut contenir un acte d'exploitant que le filtre n'a pas vu, notamment quand le
+   texte dit « il » ou « l'intéressé ».
+3. **Les livres II à VIII du CCH ont été classés par leurs titres**, sauf les cinq
    articles des livres V et VII cités au § 5.
 4. **Les arrêtés du § 6.6 n'ont pas été ouverts.** Leur titre est tiré de l'en-tête du
    jeu, et deux titres sont tronqués au relevé.
-5. **L'écart d'une unité entre le plan du livre III de 1980 (58) et son corpus (59)**
-   n'est pas instruit.
+5. **Les écarts entre le plan des livres II et III de 1980 et leurs corpus** (§ 6.1) ne
+   sont pas instruits au-delà des deux découpes citées.
 6. **Je n'ai pas vérifié qu'aucune mention du dépôt ne soit une lecture** pour les numéros
    CCH que je n'ai pas situés : seules les mentions de `ascenseurs.ts`,
    `documents-obligatoires.ts` et `incendie.ts` ont été ouvertes. Le classement « jamais
