@@ -2311,7 +2311,7 @@ export const obligationsIncendie: Obligation[] = [
       "L'EXERCICE DE NUIT est en description seulement, conditionné par le texte aux locaux réservés au sommeil. Une seule ligne : le texte ne donne pas de rythme propre aux exercices de nuit, et une seconde ligne conditionnée à `locauxSommeilPublic` ferait deux rendez-vous pour un même acte annuel.\n\n" +
       "SANS RECOUVREMENT avec `incendie-travail-exercice-semestriel` (R. 4227-39, lieux de travail de plus de cinquante personnes) : autre texte, autre champ, autre rythme. Un établissement d'enseignement qui relève des deux voit les deux lignes ; un même exercice peut honorer les deux, ce que le produit ne dit pas.\n\n" +
       "BORNE : N1 à N4 et type R. Le chapitre R est au livre II, que PE 1 § 1 écarte en 5ᵉ catégorie. En 5ᵉ, rien n'est encodé pour le type R. Le type R qui accueille des enfants est refusé à l'accueil depuis le 2026-10-17 (lot à lever, mission du 2026-11-03) ; R 1 fait entrer au chapitre la formation d'adultes dès 200 stagiaires, acceptée.\n\n" +
-      "GN 10 n'est pas cité : la ligne est une échéance récurrente, pas un état permanent (garde de `conformite.test.ts`), comme `incendie-hotel-po-instruction-personnel-semestrielle`.",
+      "GN 10 n'est pas cité : la ligne est une échéance récurrente, pas un état permanent (garde de `conformite.test.ts`), comme `incendie-hotel-po-instruction-personnel-semestrielle`. `NOTE_TITRE_2_COMMUNE` n'est pas reprise : elle dit GN 10 cité en description et les autres types non lus, deux choses fausses ici ; sa borne est redite au paragraphe BORNE.",
   },
 
   // ---------------------------------------------------------------------------
