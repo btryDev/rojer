@@ -26,7 +26,8 @@ import type { MetadataRoute } from "next";
  * Toute nouvelle racine de `src/app` doit être rangée ici, d'un côté ou de
  * l'autre : `robots.test.ts` le vérifie.
  */
-export const RACINES_INDEXABLES = ["/", "/login", "/signup"] as const;
+// `/conditions` : les conditions générales, publiques (ADR-053 § 8).
+export const RACINES_INDEXABLES = ["/", "/login", "/signup", "/conditions"] as const;
 
 export const RACINES_EXCLUES = [
   // Pages publiques, à lien ou par slug.

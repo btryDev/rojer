@@ -48,6 +48,11 @@ describe("chemins publics", () => {
     expect(cheminPublic("/api/mcp/une-cle-quelconque")).toBe(true);
   });
 
+  it("laisse lire les conditions générales sans compte (ADR-053 § 8)", () => {
+    expect(cheminPublic("/conditions")).toBe(true);
+    expect(cheminPublic("/conditionsx")).toBe(false);
+  });
+
   it("laisse passer le webhook Stripe, gardé par sa signature (ADR-053), et lui seul", () => {
     expect(cheminPublic("/api/stripe/webhook")).toBe(true);
     expect(cheminPublic("/api/stripe")).toBe(false);

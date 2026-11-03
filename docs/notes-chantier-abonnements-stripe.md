@@ -413,6 +413,42 @@ client Stripe une seule fois par compte (ligne réservée d'abord, clé
 d'idempotence dérivée du `userId`). Ne passer à un composant que
 `etatStripe`, jamais `configurationStripe`.
 
+## 8. Lots 4 et 5 — parcours d'essai et de paiement (2026-11-03)
+
+Décisions de la propriétaire (ADR-053 §§ 8 à 12) : essai de 30 jours sans
+carte, formule choisie ; conservation d'un compte jamais payé 12 mois (à
+écrire dans `docs/rgpd.md`) ; CGU provisoires à l'écran, relecture juriste à
+faire ; factures émises par Stripe, lien depuis le portail.
+
+**PR A (indépendante du compte, ce lot)** : catalogue `abonnements/formules.ts`
+(provisoire, repris de `docs/offres-abonnement`), `sousLeQuota` ;
+conditions générales provisoires (`abonnements/conditions.ts`, page publique
+`/conditions`, version + empreinte) ; appels Stripe du parcours
+(`stripe/parcours.ts`, non branchés : client, essai, changement de formule
+pendant l'essai, portail, Checkout avec CGU, prix lus chez Stripe et gardés
+10 minutes).
+
+**PR B (attend #159 dans `cc`, multi-utilisateurs)** :
+- écran « Votre essai gratuit » : commence par `aiguillageSansCompte()` (une
+  personne invitée rejoint son compte, ne démarre pas d'essai), compte par
+  `requireCompteDOnboarding()` sans nom, `verifierSaisie()` puis
+  `verifierProprietaire()` (fournies par multi_user dans `saisie.ts`, qu'il
+  garde en main) ; preuve d'acceptation (table neuve, migration datée après
+  20261103180000 et 20261103120400, RLS, rattachée à la personne) ;
+- redirection après inscription vers l'essai quand l'offre est lancée ;
+- page « Choisir ma formule », portail, Checkout (propriétaire seul) ;
+- garde de quota d'établissements dans son propre module, un appel d'une
+  ligne dans `onboarding/actions.ts` (trois sessions touchent ce fichier) ;
+- `metadata.compteId` sur le client et l'abonnement Stripe.
+
+**Rappels de fin d'essai** : ceux de Stripe (réglages Billing, e-mail 7 jours
+avant, avec lien) plutôt qu'un envoi par Rojer — à activer dans le tableau
+de bord (§ 6) ; le bandeau de Rojer annonce la fin dans la dernière semaine.
+**Offres d'essai** : Stripe classe les essais `trial_period_days` comme
+« ancienne » méthode au profit des « offres d'essai », encore en bêta privée
+dans Checkout et non modifiables par le portail (§ 2.4) : on reste sur les
+essais classiques.
+
 ## Sources lues
 
 - Stripe : [webhooks](https://docs.stripe.com/webhooks.md) ·
