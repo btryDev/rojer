@@ -88,8 +88,11 @@ compte.
 `{ user, compte, role, db }` :
 
 1. la session, comme aujourd'hui (`requireUser`) ;
-2. le compte choisi : `Session.compteActifId`, ou le seul compte de
-   l'utilisateur s'il n'en a qu'un ;
+2. le compte choisi : `Session.compteActifId`, ~~ou le seul compte de
+   l'utilisateur s'il n'en a qu'un~~ [2026-11-03, lot 1 : sinon le plus
+   ancien de ses comptes, comme l'établissement actif (ADR-028). Laisser
+   « plusieurs comptes sans choix » sans compte renvoyait à l'onboarding,
+   qui en aurait créé un de plus] ;
 3. **la ligne `Membre (compteId, userId)` relue en base, à chaque appel**. Sans
    cette ligne, on renvoie vers le choix du compte, ou vers « Vous n'avez accès
    à aucun compte ». On ne crée jamais un accès à partir de `compteActifId`

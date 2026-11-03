@@ -79,10 +79,10 @@ describe.skipIf(!URL_BASE || !local)("appartenance au compte — PostgreSQL rée
     expect(await appartenanceCourante(ETRANGER, A)).toEqual({ compteId: B, role: "owner" });
   });
 
-  it("deux comptes sans choix : aucun ; le compte actif tranche", async () => {
+  it("deux comptes sans choix : le plus ancien ; le compte actif tranche", async () => {
     await prisma.membre.create({ data: { compteId: B, userId: MEMBRE, role: "lecture" } });
     try {
-      expect(await appartenanceCourante(MEMBRE, null)).toBeNull();
+      expect(await appartenanceCourante(MEMBRE, null)).toEqual({ compteId: A, role: "member" });
       expect(await appartenanceCourante(MEMBRE, B)).toEqual({ compteId: B, role: "lecture" });
       expect(await appartenanceCourante(MEMBRE, A)).toEqual({ compteId: A, role: "member" });
     } finally {

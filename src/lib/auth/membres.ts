@@ -20,8 +20,9 @@ export type Appartenance = { compteId: string; role: Role };
 
 /**
  * Le compte où la personne travaille : le compte actif de sa session si elle
- * en est membre, sinon son seul compte. `null` si elle n'est membre d'aucun
- * compte, ou de plusieurs sans en avoir choisi un qu'elle tienne encore.
+ * en est membre, sinon le plus ancien de ses comptes (défaut raisonnable, comme
+ * l'établissement actif, ADR-028). `null` seulement si elle n'est membre
+ * d'aucun compte : c'est le seul cas où l'onboarding en crée un.
  */
 export async function appartenanceCourante(
   userId: string,
@@ -34,8 +35,7 @@ export async function appartenanceCourante(
   });
   const valides = lignes.filter((l): l is Appartenance => estRole(l.role));
   const active = compteActifId ? valides.find((l) => l.compteId === compteActifId) : undefined;
-  if (active) return active;
-  return valides.length === 1 ? valides[0] : null;
+  return active ?? valides[0] ?? null;
 }
 
 /** L'appartenance de la personne de la session courante (`compteActifId` lu dans la session). */
