@@ -113,6 +113,37 @@ et sans croire une information qui ne vient pas de Stripe.
    autorisent. Une clé refusée ferme les abonnements, pas le serveur, et le
    démarrage le signale (`avertissementsEnvironnement`).
 
+## Parcours (lots 4 et 5, décisions de la propriétaire du 2026-11-03)
+
+8. **Essai gratuit de 30 jours, sans carte**, de la formule que le client
+   choisit, démarré sur un écran dédié entre la confirmation de l'adresse et
+   l'onboarding (l'onboarding se fait pendant l'essai), une fois par compte
+   (`essaiUtiliseLe`). Une case non cochée d'avance fait accepter les
+   conditions générales ; Rojer garde la preuve (personne, version, empreinte,
+   date, contexte). Texte provisoire tant qu'un juriste ne l'a pas relu.
+9. **L'essai est un abonnement Stripe créé par l'API** :
+   `trial_period_days=30`, sans moyen de paiement,
+   `trial_settings.end_behavior.missing_payment_method=pause`. Pendant
+   l'essai, la saisie est ouverte (`trialing`) ; à la fin sans carte, l'état
+   `paused` ferme la saisie, jamais la lecture ni l'export (§ 3).
+10. **Passer au payant, c'est ajouter une carte dans le portail Stripe** :
+   l'abonnement devient payant à la fin de l'essai, sans prélèvement anticipé ;
+   un abonnement en pause se reprend du même portail. Le portail sert aussi à
+   résilier, à télécharger les factures (émises par Stripe) et à changer de
+   formule — réglé pour garder l'essai (`subscription_update.
+   trial_update_behavior = continue_trial` ; par défaut, le portail y met
+   fin). **Checkout** ne sert qu'à souscrire de nouveau après une
+   résiliation ; Rojer le refuse tant qu'un abonnement n'est pas terminé.
+11. **Les formules vivent en TypeScript** (`abonnements/formules.ts`, comme
+   les référentiels, ADR-003) : la `lookup_key` du prix Stripe → formule,
+   périodicité, quotas. Les **prix** restent chez Stripe, qui les facture.
+   Toutes les formules donnent accès à tout Rojer ; elles ne diffèrent que
+   par des quotas sur ce qui s'utilise à volonté, et l'expert. Au quota, seule
+   la création d'un nouvel élément est refusée. Catalogue repris de la
+   proposition `docs/offres-abonnement` (2026-11-03), provisoire.
+12. **Propriétaire seul** : démarrer l'essai, ouvrir le portail ou Checkout
+   (ADR-054, rôle `owner`) ; un membre voit l'état sans les boutons.
+
 ## Données
 
 - `Abonnement` : racine de compte (`userId`, ADR-051) ; `stripeCustomerId`
