@@ -56,10 +56,21 @@ export const EXCLUSIONS = {
   // écrits. Le motif s'affiche sur la page « Ce que Rojer ne couvre pas »
   // (`perimetre/exclusions.ts`) : l'ancienne rédaction est rayée ici, pas à
   // l'écran. `exclusions.test.ts` tient qu'aucun article du type X n'y est rangé.
+  // ~~libellé « Risque spécialisé hors périmètre » ; motif « ICPE soumises à
+  // autorisation, ATEX, rayonnements ionisants, piscines, bains à remous,
+  // appareils de bronzage (UV) : risques dont le traitement demande une
+  // expertise que le produit ne prétend pas porter. »~~ — 2026-11-03,
+  // réalignement CCH + Code du travail (ADR-031 amendée, décision de la
+  // propriétaire) : Rojer sert tout le CCH et tout le Code du travail
+  // adressés à l'exploitant ou à l'employeur. N'est exclu que ce qui relève
+  // d'un AUTRE code. L'ATEX et la radioprotection relèvent du Code du
+  // travail : elles quittent l'exclusion et deviennent des manques « pas
+  // encore couverts » (`perimetre/familles-non-gerees.ts`). La clé reste,
+  // pour ne pas réécrire les articles qui la citent.
   risque_specialise: {
-    libelle: "Risque spécialisé hors périmètre",
+    libelle: "Relève d'un autre code",
     motif:
-      "ICPE soumises à autorisation, ATEX, rayonnements ionisants, piscines, bains à remous, appareils de bronzage (UV) : risques dont le traitement demande une expertise que le produit ne prétend pas porter.",
+      "Installations classées pour la protection de l'environnement (Code de l'environnement), piscines, bains à remous, appareils de bronzage (UV) : leurs obligations propres relèvent d'autres codes que le code de la construction et de l'habitation et le Code du travail, que Rojer ne suit pas. Un établissement concerné n'est pas refusé pour autant.",
   },
   construction: {
     libelle: "Règle de construction, pas d'exploitation",

@@ -247,9 +247,17 @@ describe("les exclusions déclarées projettent le corpus", () => {
   it("le motif de `risque_specialise` ne nomme plus les équipements sportifs, et nomme bains à remous et UV", () => {
     const motif = EXCLUSIONS.risque_specialise.motif;
     expect(motif).not.toMatch(/équipements sportifs/);
-    for (const mot of ["ICPE", "ATEX", "rayonnements", "piscines", "bains à remous", "UV"]) {
+    // ~~"ICPE", "ATEX", "rayonnements"~~ — 2026-11-03, réalignement : l'ATEX et
+    // les rayonnements relèvent du Code du travail, ils quittent l'exclusion.
+    for (const mot of ["classées pour la protection de l'environnement", "piscines", "bains à remous", "UV"]) {
       expect(motif, mot).toContain(mot);
     }
+  });
+
+  it("réalignement : `risque_specialise` ne garde que ce qui relève d'un autre code (2026-11-03)", () => {
+    const { libelle, motif } = EXCLUSIONS.risque_specialise;
+    expect(libelle).toMatch(/autre code/);
+    expect(motif).not.toMatch(/ATEX|atmosphères explosives|rayonnements|radioprotection/);
   });
 
   it("cite le corpus mot pour mot, sans reformuler", () => {

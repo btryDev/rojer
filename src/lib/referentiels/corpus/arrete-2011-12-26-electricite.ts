@@ -89,10 +89,15 @@ export const ARRETE_2011_12_26_ELECTRICITE: Corpus = {
       versionEnVigueur: "2011-12-30",
       luLe: "2026-08-26",
       lecture: "premiere_main",
+      // 2026-11-03, réalignement (ADR-031 amendée) : l'exclusion ne garde que
+      // ce qui relève d'un autre code ; cet arrêté est pris pour l'application
+      // du Code du travail. RESTE ICI EN TRANSIT : passer `non_couvert` exige
+      // une adresse d'annonce (`declareA`, `manques-annonces.ts`), décision
+      // du lot d'encodage du Code du travail. Le motif le dit.
       statut: "hors_perimetre",
       exclusion: "risque_specialise",
       motif:
-        "Porte de vraies périodicités — vérification annuelle sur les chantiers de longue durée (2.3), vérification biennale d'au moins 25 % des tableaux sur les chantiers navals (3.4), examen visuel QUOTIDIEN des matériels sur les bancs de marchés forains (5) —, mais toutes sur des installations TEMPORAIRES : chantiers du BTP, chantiers navals, stands d'exposition, fêtes foraines, événementiel. Le produit s'adresse à des établissements fixes et ne modélise aucune installation temporaire. L'annexe III, qui liste les éléments d'information dus au vérificateur, ne porte aucune périodicité.",
+        "Porte de vraies périodicités — vérification annuelle sur les chantiers de longue durée (2.3), vérification biennale d'au moins 25 % des tableaux sur les chantiers navals (3.4), examen visuel QUOTIDIEN des matériels sur les bancs de marchés forains (5) —, mais toutes sur des installations TEMPORAIRES : chantiers du BTP, chantiers navals, stands d'exposition, fêtes foraines, événementiel. Le produit s'adresse à des établissements fixes et ne modélise aucune installation temporaire. L'annexe III, qui liste les éléments d'information dus au vérificateur, ne porte aucune périodicité. [2026-11-03, réalignement (ADR-031 amendée) : cet arrêté relève du Code du travail, que Rojer sert en entier ; ce « cas particulier » n'est plus un motif d'exclusion. L'article reste provisoirement rangé sous l'exclusion « Relève d'un autre code », qui ne le décrit pas : il est à reclasser en manque pas encore couvert, annoncé, au lot d'encodage du Code du travail. Rien n'est encodé.]",
     },
   ],
 };
