@@ -48,6 +48,12 @@ describe("chemins publics", () => {
     expect(cheminPublic("/api/mcp/une-cle-quelconque")).toBe(true);
   });
 
+  it("laisse passer le webhook Stripe, gardé par sa signature (ADR-053), et lui seul", () => {
+    expect(cheminPublic("/api/stripe/webhook")).toBe(true);
+    expect(cheminPublic("/api/stripe")).toBe(false);
+    expect(cheminPublic("/api/stripe/webhookx")).toBe(false);
+  });
+
   it("garde le dossier derrière la session", () => {
     for (const p of [
       "/etablissements/etab_1",

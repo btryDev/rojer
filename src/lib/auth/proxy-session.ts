@@ -33,6 +33,8 @@ const PUBLIC_PREFIXES = [
   "/api/accessibilite",
   // Le serveur MCP par clé (`/api/mcp/[cle]`) porte sa propre garde.
   "/api/mcp",
+  // ADR-053 : le webhook Stripe, sans session ; la signature est sa garde.
+  "/api/stripe/webhook",
   "/robots.txt",
 ];
 

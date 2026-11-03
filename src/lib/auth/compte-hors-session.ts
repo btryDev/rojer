@@ -50,3 +50,13 @@ export async function sessionStdio(
   const userId = etab?.entreprise.userId;
   return etab && userId ? { nom: etab.raisonDisplay, db: clientBorneSur(base, { type: "compte", userId }) } : null;
 }
+
+/**
+ * Le webhook Stripe (ADR-053 § 5) : le compte est le `metadata.userId` du
+ * client Stripe RELU par l'API, après une notification dont la signature est
+ * vérifiée — jamais un identifiant pris dans la charge utile. Réservé à
+ * `stripe/synchronisation.ts` (`portee/imports.test.ts`).
+ */
+export function clientDuClientStripe(userId: string): ClientBorne {
+  return clientBorne({ type: "compte", userId });
+}

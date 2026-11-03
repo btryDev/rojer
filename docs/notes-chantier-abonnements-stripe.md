@@ -99,8 +99,11 @@ le SEPA.
   secret, avec chevauchement possible de 24 heures.
 - Format « léger » (thin) recommandé par Stripe pour les nouveaux endpoints
   (l'événement ne porte que l'identifiant ; on relit l'objet). Il est cohérent
-  avec la relecture systématique ci-dessus. À choisir dans l'ADR ; le format
-  « instantané » (snapshot) reste celui de la plupart des exemples.
+  avec la relecture systématique ci-dessus. ~~À choisir dans l'ADR ; le format
+  « instantané » (snapshot) reste celui de la plupart des exemples.~~
+  [2026-11-03 : choisi, ADR-053 § 5 « Réception » ; le SDK 23.1.0 type les
+  événements `v1.customer.subscription.*`, `v1.checkout.session.*` et
+  `v1.invoice.*` au format léger.]
 - Événements de risque à écouter dès qu'on encaisse : `charge.dispute.created`,
   `charge.refunded`, `radar.early_fraud_warning.created` (au minimum une trace
   et une alerte).
@@ -316,33 +319,19 @@ colonnes `stripePriceId`, `finPrevueLe` (`cancel_at`), `traitementDebuteLe`,
 `satisfies` ; test d'isolation indépendant de l'ordre.
 
 **Lot 2 (webhook)**
-- **Plusieurs abonnements chez Stripe, une ligne chez nous.** Un
-  `customer.subscription.deleted` en retard d'un ANCIEN abonnement, relu, dit
-  `canceled` et fermerait la saisie d'un client qui paie. N'écrire que si le
-  client Stripe de l'événement est celui de la ligne ; relister les
-  abonnements du client et retenir celui qui n'est pas terminé ; alerte si
-  deux le sont.
-- **Relectures concurrentes** : écriture conditionnelle sur `relueLe`
-  (`updateMany where relueLe < t`), pour qu'une relecture ancienne n'écrase
-  pas une plus récente.
-- **Prise en charge d'un événement** : `traitementDebuteLe` posé par une mise
-  à jour conditionnelle (nul, ou ancien de plus de quelques minutes) ; une
-  livraison qui ne la prend pas répond 2xx sans traiter… ou 409 pour que
-  Stripe relance — à trancher.
-- **Délais** : options par requête plus courtes dans la route
-  (`timeout`, `maxNetworkRetries`) — le client par défaut peut tenir 35 à
-  40 s.
-- `finPeriode` se lit sur `items.data[].current_period_end` ;
-  `resilieEnFinDePeriode` ← `cancel_at_period_end`, `finPrevueLe` ← `cancel_at`.
-- Vérifier `event.livemode === (mode === "live")` : un `whsec_` ne dit pas
-  son mode.
-- **Configuration inactive en production** : la route répond 503 (Stripe
-  relance 3 jours) et lève une alerte, au lieu d'ignorer les événements —
-  sinon les résiliations ne s'enregistrent plus.
-- Ne jamais journaliser l'objet d'une erreur de signature (il porte la
-  charge utile, donc des données personnelles) ; `derniereErreur` ne garde
-  qu'un motif.
-- Ménage de `EvenementStripe` (au-delà de quelques semaines).
+- ~~**Plusieurs abonnements chez Stripe, une ligne chez nous.** Un `customer.subscription.deleted` en retard d'un ANCIEN abonnement, relu, dit `canceled` et fermerait la saisie d'un client qui paie. N'écrire que si le client Stripe de l'événement est celui de la ligne ; relister les abonnements du client et retenir celui qui n'est pas terminé ; alerte si deux le sont.~~ [2026-11-03, lot 2 : fait — `synchronisation.ts`, `abonnementCourant`]
+- ~~**Relectures concurrentes** : écriture conditionnelle sur `relueLe` (`updateMany where relueLe < t`), pour qu'une relecture ancienne n'écrase pas une plus récente.~~ [2026-11-03, lot 2 : fait — `synchronisation.ts`, `updateMany` sur `relueLe`]
+- ~~**Prise en charge d'un événement** : `traitementDebuteLe` posé par une mise à jour conditionnelle (nul, ou ancien de plus de quelques minutes) ; une livraison qui ne la prend pas répond 2xx sans traiter… ou 409 pour que Stripe relance — à trancher.~~ [2026-11-03, lot 2 : fait — `evenements.ts` ; tranché : 409, Stripe relance]
+- ~~**Délais** : options par requête plus courtes dans la route (`timeout`, `maxNetworkRetries`) — le client par défaut peut tenir 35 à 40 s.~~ [2026-11-03, lot 2 : fait — `OPTIONS_WEBHOOK` : 3 s, sans relance du SDK]
+- ~~`finPeriode` se lit sur `items.data[].current_period_end` ; `resilieEnFinDePeriode` ← `cancel_at_period_end`, `finPrevueLe` ← `cancel_at`.~~ [2026-11-03, lot 2 : fait — `colonnesDe`]
+- ~~Vérifier `event.livemode === (mode === "live")` : un `whsec_` ne dit pas son mode.~~ [2026-11-03, lot 2 : fait — `traiterNotificationStripe`]
+- ~~**Configuration inactive en production** : la route répond 503 (Stripe relance 3 jours) et lève une alerte, au lieu d'ignorer les événements — sinon les résiliations ne s'enregistrent plus.~~ [2026-11-03, lot 2 : fait — la route]
+- ~~Ne jamais journaliser l'objet d'une erreur de signature (il porte la charge utile, donc des données personnelles) ; `derniereErreur` ne garde qu'un motif.~~ [2026-11-03, lot 2 : fait — `verifierNotificationStripe`, `motifDErreur`]
+- ~~Ménage de `EvenementStripe` (au-delà de quelques semaines).~~ [2026-11-03, lot 2 : fait — `oublierLesAnciens`, 45 jours]
+- Reste du lot 2, reporté au lot 6 (recette) : abonner la destination aux
+  événements de risque (`v1.charge.dispute.created`, `v1.charge.refunded`,
+  `v1.radar.early_fraud_warning.created`) avec au moins une trace et une
+  alerte — rien ne s'encaisse avant.
 
 **Lot 3 (droits)** : décider explicitement le comportement de
 `droitsDuCompte` quand la configuration est inactive en production.

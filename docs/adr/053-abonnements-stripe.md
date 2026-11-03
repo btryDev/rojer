@@ -57,6 +57,21 @@ et sans croire une information qui ne vient pas de Stripe.
      Rojer à la création du client Stripe), jamais d'un identifiant de la
      charge utile pris tel quel — même règle que les accès sans session
      (`auth/compte-hors-session.ts`).
+   - **Réception (lot 2, 2026-11-03)** : route `/api/stripe/webhook`,
+     événements au format **léger** (thin), que la doc Stripe recommande pour
+     une intégration neuve : la notification ne porte que le type et
+     l'identifiant de l'objet, non versionnés ; tout se relit par l'API, ce
+     qui est déjà la règle ci-dessus. Un événement « instantané » est refusé
+     (400). Liste des événements à abonner : `EVENEMENTS_ECOUTES`
+     (`stripe/webhook.ts`). Quel que soit l'événement, une seule voie :
+     relire le client Stripe et tous ses abonnements, retenir le plus récent
+     non terminé (`synchronisation.ts`). Réponses : signature ou format
+     refusés, ou mode de l'événement différent de celui de la clé → 400 ;
+     doublon → 200 sans rien refaire ; livraison déjà en cours → 409 ; échec
+     → 500 (Stripe relance) ; abonnements désactivés → 503. Le traitement se
+     fait dans la requête (trois appels Stripe au plus, 3 s chacun, sans
+     relance du SDK : la relance est celle de Stripe) ; pas de file
+     d'attente au volume de Rojer.
 6. **Une ligne par compte** (`Abonnement`, `userId` unique) : l'état courant,
    l'historique restant chez Stripe (factures, abonnements passés).
    L'état est une **chaîne**, pas une énumération en base : un état inconnu
