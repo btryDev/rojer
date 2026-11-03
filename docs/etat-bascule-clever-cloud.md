@@ -20,7 +20,7 @@ connecteur MCP OAuth de Supabase n'existe plus — garder la suppression de
 `src/lib/mcp/acces-oauth*.ts` et `route-oauth.test.ts`, ne pas réintroduire
 `clientDuCompteVerifie` ni `ScopeMcp.userId`.
 
-## Ce qui est sur `cc` (au 2026-11-02, 4f4e63e4 ; ~~au 2026-11-01, e65ba81c~~)
+## Ce qui est sur `cc` (au 2026-11-03, df9dbff6 ; ~~au 2026-11-02, 4f4e63e4~~ ; ~~au 2026-11-01, e65ba81c~~)
 
 - **Better Auth**, lots 1 à 3b (#133 à #139) : inscription, connexion,
   vérification d'adresse, mot de passe oublié, page « Sécurité du compte »
@@ -48,6 +48,14 @@ connecteur MCP OAuth de Supabase n'existe plus — garder la suppression de
   de plus à rejouer, rien d'autre. Suite du chantier et constats des revues :
   `docs/notes-chantier-abonnements-stripe.md` (§ 5 les lots, § 7 ce que les
   revues renvoient au webhook, aux droits et au parcours).
+- **Abonnements Stripe, suite** (2026-11-03) : webhook (#156) ; droits du
+  compte et garde des écritures `verifierSaisie()` — un impayé ferme la
+  saisie, jamais la lecture ni l'export (#158) ; lots 4-5, partie A (#164) :
+  catalogue provisoire des formules, conditions générales provisoires
+  (`/conditions`), appels Stripe du parcours **non branchés**. Reste la
+  partie B (écran d'essai, choix de formule, Checkout, portail, quota
+  d'établissements, preuve d'acceptation des CGU) : elle attendait #159,
+  fusionnée ; plan et passation dans les notes du chantier, §§ 8 et 9 (#166).
 - **Plusieurs utilisateurs par compte, lot 1** (2026-11-03, ADR-054, PR #159,
   fusionnée dans `cc` en 5e4c8378 avec l'ADR, #157) :
   tables `Compte`, `Membre`, `InvitationCompte` (plugin `organization` de
@@ -61,6 +69,12 @@ connecteur MCP OAuth de Supabase n'existe plus — garder la suppression de
   seule (client borné et `verifierSaisie`), écran « Membres », invitation par
   e-mail, choix du compte. Reste : masquer les boutons de saisie pour la
   lecture seule, plafond de membres par formule.]
+
+- **Reports de `main`** (2026-11-03) : borne d'effectif à 49 (#161, #163) ;
+  effectif de la société = somme de ses sites, apprentis, effectif hors
+  Rojer (#165 sur `main`, reporté par #168 avec `verifierSaisie()` en tête de
+  `modifierEffectifs`). Migration `20261103180000_effectif_par_les_sites`,
+  datée après celles des comptes.
 
 ### Multi-utilisateurs : ce qui reste (2026-11-03)
 
@@ -119,6 +133,16 @@ sont pas ouverts) :
   session « pricing » : branche `docs/offres-abonnement`).
 
 ## Règles de travail qui valent ici
+
+- Ce fichier est **le même sur `main` et sur `cc`** : le modifier sur `main`
+  puis le reporter, pour que les sessions des deux branches lisent la même
+  passation (2026-11-03 : il n'était à jour que sur `cc`).
+- Previews Vercel : `vercel.json` les coupe par préfixe de branche
+  (`git.deploymentEnabled`). `report/*` et `docs/*` y manquaient jusqu'au
+  2026-11-03, et neuf previews ont été construites ce jour-là, dont plusieurs
+  du code de `cc`. Un préfixe de branche neuf s'y ajoute. Vérifier dans le
+  tableau de bord Vercel que l'environnement « Preview » ne porte aucune
+  variable de la base de production.
 
 - Fusion : revue de code, simplification et sécurité faites et corrigées,
   **puis** CI verte. Jamais avant.
