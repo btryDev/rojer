@@ -17,13 +17,39 @@ const h = vi.hoisted(() => {
     updateMany: vi.fn(async () => ({ count: 1 })),
     create: vi.fn(async () => ({ id: "sal-1" })),
   };
+  // La création passe par une transaction (2026-11-03, borne de l'effectif).
+  const prisma = {
+    salarie,
+    $transaction: async (f: (tx: unknown) => unknown): Promise<unknown> => f(prisma),
+  };
   return {
-    prisma: { salarie },
+    prisma,
     revalidatePath: vi.fn(),
     genererCalendrier: vi.fn(async () => {}),
   };
 });
 
+const eff = vi.hoisted(() => ({
+  accueillirSite: vi.fn(async () => {}),
+  ecrireEffectifs: vi.fn(async () => ({ entreprise: 0, site: 0 })),
+  effectifSuitLesFiches: vi.fn(async () => null),
+  recalculerEffectifEntreprise: vi.fn(async () => 0),
+  recalculerLesDeux: vi.fn(async () => {}),
+  regenererLaSociete: vi.fn(async () => {}),
+}));
+// Le calcul de l'effectif de la société (2026-11-03) a ses propres tests
+// (`entreprises/effectif.test.ts`) : ici, on vérifie seulement qu'il est appelé.
+vi.mock("@/lib/entreprises/effectif", () => ({
+  RefusBorneEffectif: class RefusBorneEffectif extends Error {
+    constructor(message: string, readonly champ: string) { super(message); }
+  },
+  accueillirSite: eff.accueillirSite,
+  ecrireEffectifs: eff.ecrireEffectifs,
+  effectifSuitLesFiches: eff.effectifSuitLesFiches,
+  recalculerEffectifEntreprise: eff.recalculerEffectifEntreprise,
+  recalculerLesDeux: eff.recalculerLesDeux,
+  regenererLaSociete: eff.regenererLaSociete,
+}));
 vi.mock("@/lib/prisma", () => ({ prisma: h.prisma }));
 vi.mock("next/cache", () => ({ revalidatePath: h.revalidatePath }));
 vi.mock("@/lib/auth/scope", () => ({
@@ -118,5 +144,29 @@ describe("creerSalarie — n'invalide que son module, et c'est voulu", () => {
     expect(h.revalidatePath.mock.calls).toEqual([
       ["/etablissements/etab-1/equipe"],
     ]);
+  });
+});
+
+describe("creerSalarie — la borne de Rojer (2026-11-03)", () => {
+  it("passe l'effectif aux fiches dans la transaction de la création", async () => {
+    await creerSalarie("etab-1", { status: "idle" }, formulaire("Martin", "Léa"));
+    expect(eff.effectifSuitLesFiches).toHaveBeenCalledWith(expect.anything(), "etab-1");
+    // L'effectif n'a pas monté : la société ne se recalcule pas.
+    expect(eff.regenererLaSociete).not.toHaveBeenCalled();
+  });
+
+  it("l'effectif monte : chaque site de la société se recalcule", async () => {
+    eff.effectifSuitLesFiches.mockResolvedValueOnce(13 as never);
+    await creerSalarie("etab-1", { status: "idle" }, formulaire("Martin", "Léa"));
+    expect(eff.regenererLaSociete).toHaveBeenCalledWith(expect.anything(), "etab-1");
+  });
+
+  it("au-delà de la borne, la fiche est refusée avec le message", async () => {
+    const { RefusBorneEffectif } = await import("@/lib/entreprises/effectif");
+    eff.effectifSuitLesFiches.mockRejectedValueOnce(
+      new RefusBorneEffectif("Votre société compterait 50 salariés", "effectifSurSite"),
+    );
+    const r = await creerSalarie("etab-1", { status: "idle" }, formulaire("Martin", "Léa"));
+    expect(r).toEqual({ status: "error", message: "Votre société compterait 50 salariés" });
   });
 });

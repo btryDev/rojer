@@ -87,9 +87,10 @@ export function phraseEffectifAConfirmer(
     "jusqu'au terme de ce contrat ou de l'action de professionnalisation, " +
     "que l'art. L. 1111-3 ne compte pas, ou des temps partiels et contrats à " +
     `durée déterminée que l'art. L. 1111-2 compte au prorata —, ${consequence}. ` +
+    // [2026-11-03 : l'effectif se règle dans Équipe, celui de l'entreprise en
+    // est la somme — « sur la fiche de l'entreprise » ne menait plus au champ.]
     "S'il vient d'un effectif " +
-    "d'entreprise qui n'est plus à jour, mettez-le à jour sur la fiche de " +
-    "l'entreprise."
+    "qui n'est plus à jour, mettez-le à jour dans la page Équipe."
   );
 }
 

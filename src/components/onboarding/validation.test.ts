@@ -465,3 +465,24 @@ describe("plusieurs types d'ERP — la réponse sur le sommeil est due dès qu'u
     expect(validerTypologie({ ...erp, typesErpAutres: ["M"] })?.champ).not.toBe("comporteLocauxSommeilPublic");
   });
 });
+
+describe("étape 1 — la borne sur la somme des sites d'une même société (2026-11-03)", () => {
+  // La question de la propriétaire : deux établissements d'un même SIREN.
+  const rattache = (deja: string, site: string): OnboardingState => ({
+    ...complet,
+    effectifEntreprise: deja,
+    effectifDejaSuivi: deja,
+    effectifSurSite: site,
+  });
+  it("une société de 30 et un site de 19 : 49, la porte reste ouverte", () => {
+    expect(validerIdentite(rattache("30", "19"))).toBeNull();
+  });
+  it("une société de 30 et un site de 25 : 55, refus de périmètre, au champ du site", () => {
+    const b = validerIdentite(rattache("30", "25"));
+    expect(b).toMatchObject({ champ: "effectifSurSite", perimetre: true });
+    expect(texte(b)).toMatch(/compterait 55 salariés/);
+  });
+  it("une société nouvelle n'additionne rien", () => {
+    expect(validerIdentite({ ...complet, effectifSurSite: "25", effectifEntreprise: "25" })).toBeNull();
+  });
+});

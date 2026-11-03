@@ -26,6 +26,7 @@ import {
 } from "@/lib/onboarding/schema";
 import type { CategorieErp, TypeErp } from "@/lib/referentiels/types-communs";
 import type { OnboardingState } from "./types";
+import { messageRefusEffectifEntreprise } from "@/lib/entreprises/effectif-calcul";
 import { refusDuFiltre } from "@/lib/etablissements/types-refuses";
 
 /**
@@ -103,6 +104,26 @@ export function refusEffectifEntreprise(
 }
 
 /**
+ * La borne sur la SOMME (2026-11-03, décision de la propriétaire) : quand le
+ * SIRET rattache l'établissement à une société déjà suivie, son effectif
+ * s'ajoute à celui de la société. Même lecture que le serveur
+ * (`entreprises/effectif.ts`) : l'établissement compte entier, ses apprentis se
+ * déclarent ensuite dans Équipe.
+ */
+export function refusSommeDesSites(s: OnboardingState): Blocage | null {
+  const deja = s.effectifDejaSuivi.trim();
+  const site = Number(s.effectifSurSite);
+  if (deja === "" || !Number.isInteger(site) || site < 1) return null;
+  const total = Number(deja) + site;
+  if (!Number.isInteger(total) || total <= EFFECTIF_MAX) return null;
+  return {
+    champ: "effectifSurSite",
+    perimetre: true,
+    message: `${messageRefusEffectifEntreprise(total)} ${AU_DELA_DE_LA_BORNE}`,
+  };
+}
+
+/**
  * Étape 1 — identité et lieu. Rend le message à afficher, ou `null`.
  *
  * Le contrôle de format du code NAF passe par `evaluerScopeSecteur` et par
@@ -156,7 +177,7 @@ export function validerIdentite(s: OnboardingState): Blocage | null {
   const e = s.effectifEntreprise.trim();
   if (e === "" || !Number.isInteger(Number(e)) || Number(e) < 0)
     return { champ: "effectifEntreprise", message: MESSAGE_EFFECTIF_ENTREPRISE };
-  return refusEffectifEntreprise(s.effectifEntreprise);
+  return refusEffectifEntreprise(s.effectifEntreprise) ?? refusSommeDesSites(s);
 }
 
 /**

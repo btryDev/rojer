@@ -12,6 +12,7 @@ import { assertEtablissementDuCompte, assertEtablissementOwnership } from "@/lib
 import { poserEtablissementActif } from "./etablissement-actif";
 import { sirenDuSiret } from "./siret";
 import { supprimerEntrepriseSiVide } from "@/lib/entreprises/cycle-de-vie";
+import { recalculerEffectifEntreprise, recalculerLesDeux } from "@/lib/entreprises/effectif";
 
 /** Le refus d'un SIRET dont le SIREN n'est pas celui de l'entreprise de l'établissement. */
 function refusSiretAutreEntreprise(): EtablissementActionState {
@@ -127,7 +128,6 @@ function normaliserFormData(fd: FormData): Record<string, unknown> {
     adresse: raw.adresse,
     siret: raw.siret,
     codeNaf: raw.codeNaf,
-    effectifSurSite: raw.effectifSurSite,
     personnesPresentesHabituellement: raw.personnesPresentesHabituellement,
     manipuleMatieresR422722: raw.manipuleMatieresR422722,
     estEtablissementTravail: bool("estEtablissementTravail"),
@@ -357,6 +357,8 @@ export async function modifierEtablissement(
       // L'établissement a rejoint l'entreprise de son SIREN : celle qu'il quitte part
       // si elle n'a plus d'établissement.
       if (changeDEntreprise) await supprimerEntrepriseSiVide(tx, avant.entrepriseId);
+      // Les deux sociétés recomptent leurs sites (2026-11-03).
+      if (changeDEntreprise) await recalculerLesDeux(tx, entrepriseCible, avant.entrepriseId);
       return ecrit;
     });
   } catch (e) {
@@ -483,8 +485,10 @@ export async function supprimerEtablissement(
     cles = await db.$transaction(async (tx) => {
       const c = await clesDesEtablissements(tx, [id]);
       await tx.etablissement.delete({ where: { id } });
-      // Le dernier parti, l'entreprise part avec lui (2026-10-26).
-      await supprimerEntrepriseSiVide(tx, etab.entrepriseId);
+      // Le dernier parti, l'entreprise part avec lui (2026-10-26) ; sinon elle
+      // recompte ses sites (2026-11-03).
+      if (!(await supprimerEntrepriseSiVide(tx, etab.entrepriseId)))
+        await recalculerEffectifEntreprise(tx, etab.entrepriseId);
       return c;
     });
   } catch (err) {

@@ -14,6 +14,7 @@ import { MESSAGE_EFFECTIF_REPRIS } from "./rattachement";
 import { EFFECTIF_MAX } from "@/lib/etablissements/schema";
 import { typesErpAutresCoherents } from "@/lib/etablissements/schema";
 import { saisieOnboardingDepuisFormData } from "./saisie";
+import { accueillirSite, RefusBorneEffectif } from "@/lib/entreprises/effectif";
 
 /**
  * Server action de finalisation du parcours d'onboarding.
@@ -187,6 +188,8 @@ export async function finaliserOnboarding(
         },
       });
 
+      // L'effectif de la société, somme de ses sites (2026-11-03).
+      await accueillirSite(tx, etablissement.id, d.effectifEntreprise);
       return etablissement;
     }));
   } catch (err) {
@@ -200,6 +203,13 @@ export async function finaliserOnboarding(
             `${MESSAGE_REFUS_EFFECTIF_ENTREPRISE} ${MESSAGE_EFFECTIF_REPRIS}`,
           ],
         },
+      };
+    }
+    if (err instanceof RefusBorneEffectif) {
+      return {
+        status: "error",
+        message: "Formulaire invalide",
+        fieldErrors: { effectifEntreprise: [`${err.message} ${MESSAGE_EFFECTIF_REPRIS}`] },
       };
     }
     throw err;

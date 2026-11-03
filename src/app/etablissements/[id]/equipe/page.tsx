@@ -24,6 +24,9 @@ import {
 import { etatCourtDe, versFiche } from "@/lib/etats-permanents/vers-fiche";
 import { titresSansPorteur } from "@/lib/salaries/titres-sans-porteur";
 import { etatsPermanentsDuDossier } from "@/lib/etats-permanents/queries";
+import { CarteEffectif, PlacesARenseigner } from "@/components/salaries/CarteEffectif";
+import { lireEffectifsDuSite } from "@/lib/entreprises/effectif-queries";
+import { modifierEffectifs } from "@/lib/entreprises/effectif-actions";
 
 /**
  * L'annuaire de l'équipe — le troisième porteur d'échéance (ADR-023).
@@ -47,11 +50,12 @@ export default async function EquipePage({
   const now = new Date();
   // Lectures indépendantes, en parallèle ; la dernière donne les formations
   // à organiser (ADR-047, amendée le 2026-10-24).
-  const [equipe, titresDeclares, faits, dossier] = await Promise.all([
+  const [equipe, titresDeclares, faits, dossier, effectifs] = await Promise.all([
     listerEquipe(id, now),
     libellesTitresDeclares(id),
     chargerFaitsActivite(id),
     etatsPermanentsDuDossier(db, id, user.id),
+    lireEffectifsDuSite(db, id),
   ]);
   const catalogue = cataloguerTitres();
   // « Formations à organiser » : dues aux salariés sans qu'on sache lesquels.
@@ -102,6 +106,9 @@ export default async function EquipePage({
     0,
   );
   const actifs = equipe.filter((s) => s.actif).length;
+  // Les personnes de l'effectif sans fiche (2026-11-03) : des places, pas des
+  // fiches. L'effectif ne descend jamais sous les fiches actives.
+  const aRenseigner = Math.max(0, (effectifs?.effectifSurSite ?? 0) - actifs);
 
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
@@ -149,6 +156,10 @@ export default async function EquipePage({
             </Link>
           }
         />
+        {effectifs ? (
+          <CarteEffectif action={modifierEffectifs.bind(null, id)} effectifs={effectifs} />
+        ) : null}
+
         {/* La porte d'entrée unique des faits d'activité (ADR-041) : tant
             qu'une question reste sans réponse, les formations qu'elle
             conditionne s'affichent « à confirmer ». */}
@@ -168,6 +179,11 @@ export default async function EquipePage({
               <h2 className="board-titre m-0 text-[22px]">
                 Votre équipe n&apos;est pas encore renseignée
               </h2>
+              {aRenseigner > 0 ? (
+                <p className="m-0 text-[13.5px] font-medium leading-[1.6] text-[color:var(--board-ink)]">
+                  {`${aRenseigner} personne${aRenseigner > 1 ? "s" : ""} à renseigner, d'après l'effectif déclaré.`}
+                </p>
+              ) : null}
               <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                 Commencez par les personnes qui détiennent un titre :
                 l&apos;électricien habilité, le cariste, le titulaire du SST.
@@ -196,6 +212,7 @@ export default async function EquipePage({
             {equipe.map((s) => (
               <SalarieCard key={s.id} etablissementId={id} salarie={s} />
             ))}
+            <PlacesARenseigner nombre={aRenseigner} href={`/etablissements/${id}/equipe/nouveau`} />
           </div>
         )}
 
@@ -232,7 +249,8 @@ export default async function EquipePage({
         <footer className="flex flex-wrap items-baseline gap-x-2 gap-y-1 border-t border-[color:var(--board-slate-line)] pt-4 text-[12px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           {actifs > 0 && (
             <span>
-              {actifs} personne{actifs > 1 ? "s" : ""} dans l&apos;effectif
+              {actifs} fiche{actifs > 1 ? "s" : ""} renseignée{actifs > 1 ? "s" : ""}
+              {aRenseigner > 0 && `, ${aRenseigner} à renseigner`}
               {equipe.length > actifs &&
                 `, ${equipe.length - actifs} sortie${equipe.length - actifs > 1 ? "s" : ""} conservée${equipe.length - actifs > 1 ? "s" : ""} pour la preuve`}
               {" · "}
