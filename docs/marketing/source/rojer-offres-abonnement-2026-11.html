@@ -59,138 +59,134 @@
   .sources li { margin-bottom: 0.6mm; }
   .serre td, .serre th { padding: 1.3mm 2mm; font-size: 9pt; }
   .commun { columns: 2; column-gap: 8mm; }
+  .offre .prix { margin-top: 1mm; }
+  .offre .cta { font-size: 8.4pt; font-weight: 600; margin-top: 2.5mm; }
+  .grille .offre { display: flex; flex-direction: column; }
+  .grille .offre ul { margin-top: auto; }
+  .modules td, .modules th { padding: 1.15mm 2mm; font-size: 8.7pt; }
+  .modules td.c, .modules th.c { text-align: center; width: 19%; }
+  .modules th.c { color: var(--ink); font-size: 9pt; }
+  .modules tr.groupe td { background: var(--canvas); font-weight: 700; font-size: 8.4pt; color: var(--blue-ink);
+                          text-transform: uppercase; letter-spacing: 0.04em; padding-top: 2mm; }
+  .modules .lim { font-weight: 600; }
+  .ok { color: var(--green-ink); font-weight: 700; }
+  .non { color: #9aa8b2; }
 </style>
 </head>
 <body>
 
-<!-- PAGE 1 -->
+<!-- PAGE 1 — LA GAMME -->
 <section class="page">
   <div class="marque">ROJER</div>
   <h1>Offres d'abonnement</h1>
-  <p class="sous">Benchmark et proposition tarifaire · 2 novembre 2026 · prix HT</p>
+  <p class="sous">Proposition de gamme · 3 novembre 2026 · prix HT</p>
 
-  <div class="carte bleue">
-    <h3 style="margin-top:0">En bref</h3>
-    <ul>
-      <li><b>Trois offres, qui se distinguent par la part d'humain :</b> Essentiel (le logiciel seul), Suivi (+ un rendez-vous annuel avec un expert), Accompagné (+ un expert à la demande). L'expert est un expert en sécurité de BTRY Solution.</li>
-      <li><b>1 établissement inclus partout.</b> Les sites en plus sont une option, disponible dans toutes les offres. La plupart des TPE n'ont qu'un site : le nombre de sites ne fait pas un palier.</li>
-      <li><b>Mensuel sans engagement, ou annuel avec 2 mois offerts.</b> Le marché engage souvent 12 à 36 mois : « résiliable à tout moment » nous distingue.</li>
-      <li><b>Deux niveaux de prix possibles :</b> <b>A</b> au prix du marché (Essentiel à 29 €/mois), <b>B</b> en prix d'appel (Essentiel dès 10 €/mois en annuel).</li>
-      <li><b>Toutes les offres voient toutes les obligations.</b> On fait payer l'humain, jamais ce que la loi exige.</li>
-    </ul>
-  </div>
-
-  <h3>Ce que comprend chaque offre</h3>
-  <div class="carte">
-    <ul class="commun">
-      <li>Toutes les obligations du référentiel, article cité</li>
-      <li>Tous les modules : DUERP, vérifications, registre de sécurité, plan d'actions, accessibilité, permis de feu, plans de prévention, carnet sanitaire</li>
-      <li>Calendrier généré dès la création du dossier, sans paramétrage</li>
-      <li>Relances email des échéances<sup>†</sup></li>
-      <li>Prestataires invités sans compte (lien et code) et suivi de leurs attestations</li>
-      <li>Signature électronique simple</li>
-      <li>Export « Préparer un contrôle » en un clic</li>
-      <li>Aide en ligne (guide « Comprendre ») et contact pour un problème technique</li>
-      <li>Téléchargement de ses données, y compris après résiliation<sup>†</sup></li>
-      <li>Aucun frais de mise en service · essai de 30 jours sans carte bancaire</li>
-    </ul>
-    <p class="note" style="margin:2mm 0 0">† Pas encore livré : prévu avec le passage sur Clever Cloud. À mettre en service avant de publier les offres.</p>
-  </div>
-
-  <h3>Notre recommandation</h3>
-  <div class="carte ambre">
-    <p><b>Lancer avec les prix B, comme « tarif fondateur » garanti aux premiers clients, puis appliquer les prix A aux nouveaux clients</b> si les six premiers mois montrent que les clients restent.</p>
-    <ul>
-      <li><b>Pourquoi B d'abord :</b> à 10 €, la décision d'achat est immédiate, et on récolte vite des clients et des retours. Vigie pratique le même tarif fondateur.</li>
-      <li><b>Pourquoi A ensuite :</b> 29 € est le prix d'un seul registre chez nos concurrents. Rojer en couvre huit, et un prix trop bas fait douter du sérieux sur un document à valeur légale.</li>
-      <li><b>Ce qui tranchera :</b> le coût pour acquérir un client et la durée pendant laquelle il reste. Si les clients arrivent par des partenaires (experts-comptables, assureurs, CCI), B peut rester la grille durable.</li>
-    </ul>
-  </div>
-</section>
-
-<!-- PAGE 2 -->
-<section class="page">
-  <div class="entete-option"><h2>Prix A — au prix du marché</h2><span class="tag vert">positionnement</span></div>
-  <p class="note">Rojer se place au prix d'un registre spécialisé, sous la somme des outils qu'il remplace.</p>
   <div class="grille">
     <div class="offre">
       <div class="nom">Essentiel</div>
-      <div class="pour">Le logiciel, rien d'autre</div>
+      <div class="pour">Un commerce, un restaurant, un cabinet : un seul site</div>
       <div class="prix">29 € <small>/mois</small></div>
-      <div class="ligne-prix">ou 290 €/an · 1 établissement</div>
-      <ul><li>Tout le logiciel</li></ul>
-    </div>
-    <div class="offre">
-      <div class="nom">Suivi</div>
-      <div class="pour">Un point par an avec un expert</div>
-      <div class="prix">49 € <small>/mois</small></div>
-      <div class="ligne-prix">ou 490 €/an · 1 établissement</div>
-      <ul><li>Tout Essentiel</li><li>Rendez-vous annuel avec l'expert</li></ul>
-    </div>
-    <div class="offre premium">
-      <div class="nom">Accompagné</div>
-      <div class="pour">Un expert en sécurité à la demande</div>
-      <div class="prix">129 € <small>/mois</small></div>
-      <div class="ligne-prix">ou 1 290 €/an · 1 établissement</div>
-      <ul><li>Tout Suivi</li><li>Expert à la demande</li></ul>
-    </div>
-  </div>
-  <p class="note" style="margin:-1mm 0 4mm">Établissement supplémentaire, toutes offres : +10 €/mois ou 100 €/an.</p>
-
-  <div class="entete-option"><h2>Prix B — prix d'appel « dès 10 € »</h2><span class="tag">conversion</span></div>
-  <p class="note">Le prix d'entrée passe sous tous les outils qui ne gèrent qu'un registre, et l'annuel devient le choix évident.</p>
-  <div class="grille">
-    <div class="offre">
-      <div class="nom">Essentiel</div>
-      <div class="pour">Le logiciel, rien d'autre</div>
-      <div class="prix">9,90 € <small>/mois</small></div>
-      <div class="ligne-prix">payé 119 €/an · ou 12 €/mois sans engagement<br>1 établissement</div>
-      <ul><li>Tout le logiciel</li></ul>
-    </div>
-    <div class="offre">
-      <div class="nom">Suivi</div>
-      <div class="pour">Un point par an avec un expert</div>
-      <div class="prix">24 € <small>/mois</small></div>
-      <div class="ligne-prix">payé 290 €/an · ou 29 €/mois<br>1 établissement</div>
-      <ul><li>Tout Essentiel</li><li>Rendez-vous annuel avec l'expert</li></ul>
-    </div>
-    <div class="offre premium">
-      <div class="nom">Accompagné</div>
-      <div class="pour">Un expert en sécurité à la demande</div>
-      <div class="prix">99 € <small>/mois</small></div>
-      <div class="ligne-prix">payé 1 190 €/an · ou 119 €/mois<br>1 établissement</div>
-      <ul><li>Tout Suivi</li><li>Expert à la demande</li></ul>
-    </div>
-  </div>
-  <p class="note" style="margin:-1mm 0 4mm">Établissement supplémentaire, toutes offres : +5 €/mois ou 50 €/an.</p>
-
-  <div class="deux">
-    <div class="carte" style="margin-bottom:0">
-      <h3 style="margin-top:0">L'expert BTRY Solution</h3>
-      <p><b>Suivi : un rendez-vous annuel (1 h)</b> pour relire le DUERP et le calendrier de l'année. Il tombe au moment de la mise à jour annuelle du DUERP, obligatoire dès 11 salariés (art. R. 4121-2 CT). Un consultant facture environ 400 € pour cette seule mise à jour.</p>
-      <p style="margin-bottom:1mm"><b>Accompagné : en plus</b></p>
-      <ul>
-        <li>Mise en route du dossier en visio (45 min)</li>
-        <li>Questions écrites illimitées, réponse sous 48 h ouvrées</li>
-        <li>1 h de visio par trimestre</li>
-        <li>Préparation d'un contrôle par an (inspection, commission de sécurité, assureur)</li>
+      <div class="ligne-prix">ou 290 €/an (2 mois offerts)</div>
+      <span class="tag vert" style="align-self:flex-start">1 mois d'essai gratuit</span>
+      <ul style="margin-top:3mm">
+        <li>1 établissement</li>
+        <li>Tous les modules, toutes les obligations</li>
+        <li>Volumes d'usage pour une petite structure</li>
       </ul>
     </div>
-    <div class="carte" style="margin-bottom:0">
-      <h3 style="margin-top:0">A ou B, ce qui change</h3>
-      <table>
-        <tr><th></th><th class="num">A</th><th class="num">B</th></tr>
-        <tr><td>Essentiel, recette par an</td><td class="num">290 €</td><td class="num">119 €</td></tr>
-        <tr><td>Essentiel, client resté 2 ans</td><td class="num">580 €</td><td class="num">238 €</td></tr>
-        <tr><td>Suivi, reste après l'expert*</td><td class="num">≈ 350 €</td><td class="num">≈ 150 €</td></tr>
-        <tr><td>Accompagné, reste après l'expert*</td><td class="num">≈ 790 €</td><td class="num">≈ 690 €</td></tr>
-      </table>
-      <p class="note">* Hypothèses, par client et par an, à environ 70 €/h : Suivi environ 2 h d'expert (préparation comprise), soit environ 140 € ; Accompagné environ 7 h, soit environ 500 €. À remplacer par le coût réel de BTRY Solution.</p>
+    <div class="offre premium">
+      <div class="nom">Pro</div>
+      <div class="pour">Plusieurs sites, ou un usage soutenu, avec un expert une fois par an</div>
+      <div class="prix">69 € <small>/mois</small></div>
+      <div class="ligne-prix">ou 690 €/an (2 mois offerts)</div>
+      <ul style="margin-top:3mm">
+        <li>Jusqu'à 5 établissements</li>
+        <li>Volumes d'usage relevés ou illimités</li>
+        <li>Connecter un assistant</li>
+        <li>Rendez-vous annuel d'1 h avec l'expert BTRY Solution</li>
+      </ul>
+    </div>
+    <div class="offre">
+      <div class="nom">Sur mesure</div>
+      <div class="pour">Réseaux, groupes de sociétés, besoin d'un expert à la demande</div>
+      <div class="prix" style="font-size:15pt">Sur devis</div>
+      <div class="ligne-prix">repère interne : à partir d'environ 119 €/mois</div>
+      <ul style="margin-top:3mm">
+        <li>Au-delà de 5 établissements</li>
+        <li>Volumes sur mesure</li>
+        <li>Expert BTRY Solution à la demande</li>
+        <li>Reprise de l'historique, formation, déploiement accompagné</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Les règles de la gamme</h3>
+  <div class="carte">
+    <ul>
+      <li><b>Toutes les offres voient toutes les obligations.</b> Ce qui revient chaque année (vérifications, DUERP, registres, relevés) n'est jamais limité. Seul ce qui s'utilise à volonté a un quota : permis de feu, plans de prévention, prestataires, signatures, stockage.</li>
+      <li><b>Au quota, on bloque seulement la création d'un nouvel élément.</b> Tout ce qui existe reste lisible, exportable et suivi. Le compteur repart à la date anniversaire. Aucune obligation ne quitte le calendrier parce qu'un quota est atteint.</li>
+      <li><b>Mensuel sans engagement, ou annuel avec 2 mois offerts</b> (−17 %), sur toutes les offres publiques.</li>
+      <li><b>1 mois d'essai gratuit sur Essentiel</b>, toutes fonctions, sans carte bancaire. À la fin de l'essai, le client choisit Essentiel ou Pro ; sans choix, le dossier passe en lecture seule, rien n'est effacé.</li>
+      <li><b>Aucun frais de mise en service.</b> Le calendrier est généré dès la création du dossier.</li>
+      <li><b>L'expert est un expert en sécurité de BTRY Solution.</b> Il donne un conseil technique de prévention, jamais un avis juridique, et ne dit jamais « vous êtes conforme ».</li>
+    </ul>
+  </div>
+
+  <div class="deux">
+    <div class="carte ambre" style="margin-bottom:0">
+      <h3 style="margin-top:0">Pourquoi 29 €</h3>
+      <p style="margin:0">C'est le prix d'un seul registre de sécurité chez Securylog, et moins que la combinaison la moins chère de trois outils spécialisés (≈ 32 €/mois). Rojer en couvre huit, sans paramétrage.</p>
+    </div>
+    <div class="carte ambre" style="margin-bottom:0">
+      <h3 style="margin-top:0">Pourquoi 69 € pour 5 sites</h3>
+      <p style="margin:0">Environ 14 € par site, contre ≈ 19 € par bâtiment chez Deemply, sans devis ni frais d'entrée. Le rendez-vous annuel vaut à lui seul la mise à jour d'un DUERP chez un consultant (≈ 400 €).</p>
     </div>
   </div>
 </section>
 
-<!-- PAGE 3 -->
+<!-- PAGE 2 — LE DÉTAIL -->
+<section class="page">
+  <h2>Tous les modules, offre par offre</h2>
+  <table class="modules">
+    <tr><th></th><th class="c">Essentiel</th><th class="c">Pro</th><th class="c">Sur mesure</th></tr>
+    <tr><td>Établissements</td><td class="c lim">1</td><td class="c lim">jusqu'à 5</td><td class="c lim">au-delà de 5</td></tr>
+
+    <tr class="groupe"><td colspan="4">Illimité dans toutes les offres : les obligations</td></tr>
+    <tr><td>DUERP : unités de travail, cotation, versions conservées 40 ans</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
+    <tr><td>Vérifications périodiques et calendrier</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
+    <tr><td>Ce qui doit être en place (en permanence, en cas de…)</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
+    <tr><td>Registre de sécurité : dépôt des rapports</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
+    <tr><td>Plan d'actions</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
+    <tr><td>Équipements et zones</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
+    <tr><td>Équipe : salariés, titres et visites</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
+    <tr><td>Prescriptions particulières</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
+    <tr><td>Carnet sanitaire : relevés et analyses</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
+    <tr><td>Registre d'accessibilité et affiche QR</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
+    <tr><td>Documents obligatoires, Préparer un contrôle, Comprendre</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
+    <tr><td>Relances email des échéances<sup>†</sup></td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
+    <tr><td>Téléchargement de ses données, y compris après résiliation<sup>†</sup></td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
+
+    <tr class="groupe"><td colspan="4">Limité selon l'offre : l'usage à volonté</td></tr>
+    <tr><td>Permis de feu</td><td class="c lim">10 par an</td><td class="c">illimité</td><td class="c">illimité</td></tr>
+    <tr><td>Plans de prévention<sup>‡</sup></td><td class="c lim">5 par an</td><td class="c">illimité</td><td class="c">illimité</td></tr>
+    <tr><td>Prestataires suivis (attestations, vigilance)</td><td class="c lim">10</td><td class="c lim">50</td><td class="c">illimité</td></tr>
+    <tr><td>Liens d'accès prestataires actifs</td><td class="c lim">5</td><td class="c lim">50</td><td class="c">illimité</td></tr>
+    <tr><td>Signatures électroniques</td><td class="c lim">20 par an</td><td class="c lim">200 par an</td><td class="c">sur mesure</td></tr>
+    <tr><td>Stockage des documents</td><td class="c lim">2 Go</td><td class="c lim">20 Go</td><td class="c">sur mesure</td></tr>
+    <tr><td>Import d'un DUERP existant</td><td class="c lim">1</td><td class="c">illimité</td><td class="c">reprise faite par nous</td></tr>
+    <tr><td>Connecter un assistant</td><td class="c non">—</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
+
+    <tr class="groupe"><td colspan="4">Humain : l'expert en sécurité BTRY Solution</td></tr>
+    <tr><td>Aide en ligne et contact pour un problème technique</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
+    <tr><td>Rendez-vous avec l'expert<sup>†</sup></td><td class="c non">—</td><td class="c lim">1 h par an</td><td class="c">à la demande</td></tr>
+    <tr><td>Formation, reprise de l'historique, déploiement accompagné</td><td class="c non">—</td><td class="c non">—</td><td class="c ok">✓</td></tr>
+
+  </table>
+  <p class="note">† Pas encore livré. Les relances et le téléchargement des données arrivent avec le passage sur Clever Cloud. La demande d'assistance existe dans l'app mais ne part encore vers personne (ADR-050). Tout est à mettre en service avant de publier les offres.<br>
+  ‡ Le plan de prévention est une obligation légale dès que le chantier remplit les conditions (art. R. 4512-6 et R. 4512-7 CT) : voir « À trancher ».</p>
+</section>
+
+<!-- PAGE 3 — BENCHMARK -->
 <section class="page serre">
   <h2>Sur quoi reposent ces propositions</h2>
   <p class="note" style="margin-bottom:4mm">Prix publics relevés le 2 novembre 2026 sur les sites des éditeurs. Plusieurs comparatifs sont écrits par l'éditeur sur lui-même.</p>
@@ -215,30 +211,31 @@
     <tr><td><b>Repères « expert »</b></td><td>Juritravail · Legalstart · Captain Contrat Premium</td><td>50 € · 30-50 € · ≈ 249 €/mois</td><td>—</td><td>Juriste, avocat</td></tr>
   </table>
 
-  <h3>Les cinq constats qui fondent la grille</h3>
+  <h3>Les constats qui fondent la gamme</h3>
   <table>
-    <tr><th style="width:42%">Constat</th><th>Ce qu'on en fait</th></tr>
-    <tr><td>Un registre seul se vend 19-29 €/mois</td><td>Prix A : Essentiel à 29 €, avec tous les modules. Prix B : sous tout le monde, à 9,90 €.</td></tr>
-    <tr><td>Hors des petits outils à un seul registre, l'engagement est la règle (12 à 36 mois)</td><td>Mensuel résiliable dans toutes les offres.</td></tr>
-    <tr><td>La remise annuelle va de 8 % (Securylog) à 20 % (DUPrev')</td><td>« 2 mois offerts », soit −17 %, qui se comprend sans calcul.</td></tr>
-    <tr><td>Le site supplémentaire se facture à l'unité (9 à 19 €), et la cible a presque toujours un seul site</td><td>Les sites sont une option dans toutes les offres, pas un palier.</td></tr>
-    <tr><td>L'humain multiplie le prix par 3 à 10. Pour une TPE, seul DUPrev' inclut un expert : une analyse par an, sur le DUERP seul</td><td>Les paliers se font sur la part d'expert BTRY Solution : aucun, un rendez-vous annuel sur tout le dossier, à la demande.</td></tr>
+    <tr><th style="width:44%">Constat</th><th>Ce qu'on en fait</th></tr>
+    <tr><td>Un registre seul se vend 19-29 €/mois ; trois outils spécialisés réunis, 32 à 58 €</td><td>Essentiel à 29 €, avec tous les modules : le prix d'un registre, sous la combinaison la moins chère.</td></tr>
+    <tr><td>Hors des petits outils à un seul registre, l'engagement est la règle (12 à 36 mois)</td><td>Mensuel résiliable sur toutes les offres publiques.</td></tr>
+    <tr><td>La remise annuelle va de 8 % (Securylog) à 20 % (DUPrev')</td><td>« 2 mois offerts », soit −17 %.</td></tr>
+    <tr><td>Deemply et DUPrev' attirent avec une offre gratuite bridée</td><td>Un mois d'essai complet plutôt qu'un gratuit bridé, qui obligerait à cacher des obligations.</td></tr>
+    <tr><td>Le site supplémentaire se facture 9 à 19 €, et la cible a presque toujours un seul site</td><td>1 site en Essentiel, jusqu'à 5 au forfait en Pro (≈ 14 €/site), au-delà sur devis.</td></tr>
+    <tr><td>L'humain multiplie le prix par 3 à 10. Pour une TPE, seul DUPrev' inclut un expert : une analyse par an, sur le DUERP seul</td><td>Rendez-vous annuel sur tout le dossier en Pro, expert à la demande sur devis.</td></tr>
   </table>
-  <p class="note">Autres repères : presque tous les concurrents vendent de l'IA, et chaque obligation de Rojer cite son article, ce qui se vend comme une garantie. Facturer la mise en service irrite les clients ; Rojer n'en facture pas.</p>
+  <p class="note">Autres repères : presque tous les concurrents vendent de l'IA, et chaque obligation de Rojer cite son article. Facturer la mise en service irrite les clients ; Rojer n'en facture pas.</p>
 </section>
 
-<!-- PAGE 4 -->
+<!-- PAGE 4 — À TRANCHER -->
 <section class="page">
   <h2>À trancher avant de publier</h2>
   <div class="carte">
     <ul>
-      <li><b>Le cadre de l'expert.</b> L'expert BTRY Solution donne un conseil technique de sécurité et de prévention, pas une consultation juridique, qui est réservée aux professions du droit (loi du 31 décembre 1971). Comme l'outil, il ne dit jamais « vous êtes conforme ». À écrire dans les CGV.</li>
-      <li><b>La capacité de l'expert.</b> Suivi et Accompagné ne tiennent que si le temps par client est borné. Fixer le volume (1 h par an en Suivi ; 1 h par trimestre et des réponses écrites sous 48 h en Accompagné), et suivre le temps réellement passé. Avec beaucoup de clients en Suivi, les rendez-vous annuels se répartissent sur l'année.</li>
-      <li><b>La résiliation.</b> Le téléchargement des données n'existe pas encore : l'export du titulaire du compte est une dette ouverte. À livrer avant la publication, puis préciser ce qui reste consultable du DUERP, dont la loi impose la conservation pendant 40 ans.</li>
-      <li><b>Les relances email</b> n'existent pas encore (seuls les emails de connexion et d'accès partent) : elles arrivent avec le passage sur Clever Cloud. Ne pas publier les offres avant leur mise en service.</li>
-      <li><b>Ne pas promettre ce qui n'existe pas encore :</b> plusieurs utilisateurs par compte, application mobile, rappels par SMS.</li>
-      <li><b>Le paiement en ligne</b> reste à brancher (abonnement, essai, passage d'une offre à l'autre). C'est un chantier produit à part entière.</li>
-      <li><b>Le compte des établissements</b> porte sur les sites, toutes sociétés du compte confondues : 2 établissements, ce sont 2 sites, en une ou plusieurs sociétés.</li>
+      <li><b>Les plans de prévention en Essentiel.</b> Ils entrent dans la règle (un usage par chantier), mais c'est une obligation légale dès que le chantier remplit les conditions. Cinq par an couvrent presque toutes les TPE. Si aucune obligation légale ne doit jamais être limitée, on les passe en illimité et la limite ne porte plus que sur les permis de feu.</li>
+      <li><b>Le cadre de l'expert.</b> Conseil technique de sécurité et de prévention, pas consultation juridique, qui est réservée aux professions du droit (loi du 31 décembre 1971). À écrire dans les CGV.</li>
+      <li><b>La capacité de l'expert.</b> 1 h par an et par client en Pro, préparation comprise : environ 2 h, soit environ 140 € à 70 €/h (hypothèse à remplacer par le coût réel de BTRY Solution). Pro laisse alors environ 550 € par an. Répartir les rendez-vous sur l'année.</li>
+      <li><b>À livrer avant la publication :</b> relances email, téléchargement des données, envoi de la demande d'assistance, et le décompte des quotas dans l'app.</li>
+      <li><b>La fin de l'essai.</b> Sans choix d'offre, le dossier passe en lecture seule. Préciser ensuite ce qui reste consultable du DUERP, dont la loi impose la conservation pendant 40 ans.</li>
+      <li><b>Ne pas promettre</b> plusieurs utilisateurs par compte, une application mobile ou des rappels par SMS.</li>
+      <li><b>Le paiement en ligne</b> : chantier en cours (`lot/abonnements-stripe`, ADR-053).</li>
     </ul>
   </div>
 
@@ -248,8 +245,8 @@
       <li>« Tous vos registres de prévention au même endroit. Résiliable à tout moment. »</li>
       <li>« Rien à paramétrer : vos obligations sont déjà écrites, article par article. »</li>
       <li>« Aucune obligation n'est réservée à une offre plus chère. »</li>
-      <li>Suivi : « Chaque année, un expert relit votre dossier avec vous. »</li>
-      <li>Accompagné : « Un expert en sécurité répond à vos questions, sur votre dossier. »</li>
+      <li>« Essayez un mois, gratuitement, sans carte bancaire. »</li>
+      <li>Pro : « Chaque année, un expert en sécurité relit votre dossier avec vous. »</li>
     </ul>
   </div>
 

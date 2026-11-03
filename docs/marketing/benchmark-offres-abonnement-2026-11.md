@@ -1,62 +1,82 @@
-# Offres d'abonnement Rojer — benchmark et proposition
+# Offres d'abonnement Rojer — gamme et benchmark
 
-*Relevé le 2026-11-02, prix publics HT. Le document mis en page est
-`rojer-offres-abonnement-2026-11.pdf`, généré depuis
+*Proposition du 2026-11-03, prix HT ; benchmark relevé le 2026-11-02. Le
+document mis en page est `rojer-offres-abonnement-2026-11.pdf`, généré depuis
 `source/rojer-offres-abonnement-2026-11.html` (Chrome sans interface,
 `--print-to-pdf`). Ce fichier en reprend le contenu, il ne le contredit pas.*
 
-## 1. Les offres
+## 1. La gamme
 
-Trois offres, qui se distinguent **par la part d'humain**, jamais par ce que
-la loi exige : toutes voient toutes les obligations et tous les modules.
-L'expert est un expert en sécurité de **BTRY Solution**.
-
-1 établissement inclus partout. Les sites en plus sont une **option**,
-disponible dans toutes les offres : la plupart des TPE n'ont qu'un site, le
-nombre de sites ne fait pas un palier.
-
-| | Essentiel | Suivi | Accompagné |
+| | Essentiel | Pro | Sur mesure |
 |---|---|---|---|
-| Ce que c'est | Le logiciel, rien d'autre | + un rendez-vous annuel avec l'expert | + l'expert à la demande |
-| **Prix A**, mensuel / annuel | 29 € / 290 € | 49 € / 490 € | 129 € / 1 290 € |
-| **Prix B**, payé à l'année | 119 €/an (≈ 9,90 €/mois) | 290 €/an (≈ 24 €/mois) | 1 190 €/an (≈ 99 €/mois) |
-| **Prix B**, mensuel sans engagement | 12 € | 29 € | 119 € |
-| Établissement en plus | A : +10 €/mois ou 100 €/an · B : +5 €/mois ou 50 €/an | idem | idem |
+| Pour qui | Un seul site | Plusieurs sites, ou un usage soutenu | Réseaux, groupes de sociétés, expert à la demande |
+| Mensuel sans engagement | 29 € | 69 € | Sur devis (repère interne : dès ≈ 119 €/mois) |
+| Annuel (2 mois offerts) | 290 € | 690 € | Au contrat |
+| Essai gratuit | **1 mois**, sans carte bancaire | — | — |
+| Établissements | 1 | jusqu'à 5 | au-delà de 5 |
 
-**L'expert.** Suivi : un rendez-vous annuel d'1 h pour relire le DUERP et le
-calendrier de l'année. Il tombe au moment de la mise à jour annuelle du DUERP,
-obligatoire dès 11 salariés (art. R. 4121-2 CT). Accompagné, en plus : mise en
-route du dossier en visio (45 min), questions écrites illimitées avec réponse
-sous 48 h ouvrées, 1 h de visio par trimestre, préparation d'un contrôle par an.
+### Règles
 
-**Commun à toutes les offres** : toutes les obligations, article cité ; tous
-les modules ; calendrier généré à la création ; relances email des
-échéances (†) ; prestataires invités sans compte ; signature simple ; export
-« Préparer un contrôle » ; aide en ligne et contact pour un problème
-technique ; téléchargement de ses données, y compris après résiliation (†) ;
-aucun frais de mise en service ; essai de 30 jours sans carte bancaire.
+- **Toutes les offres voient toutes les obligations.** Ce qui revient chaque
+  année n'est jamais limité ; seul ce qui s'utilise à volonté a un quota.
+- **Au quota, on bloque seulement la création d'un nouvel élément.** Tout ce qui
+  existe reste lisible, exportable et suivi ; le compteur repart à la date
+  anniversaire ; aucune obligation ne quitte le calendrier.
+- **Fin de l'essai** : le client choisit Essentiel ou Pro ; sans choix, le
+  dossier passe en lecture seule, rien n'est effacé.
+- **Aucun frais de mise en service.**
+- **L'expert est un expert en sécurité de BTRY Solution** : conseil technique de
+  prévention, jamais d'avis juridique, jamais « vous êtes conforme ».
 
-(†) **Pas encore livré** : prévu avec le passage sur Clever Cloud. Aujourd'hui
-seuls les emails de connexion et d'accès partent, et l'export du titulaire du
-compte est une dette ouverte (`docs/dette-chantier-porteur-echeance.md` § 1.1).
-À mettre en service avant de publier les offres.
+### Les modules, offre par offre
 
-**Recommandation** : lancer avec les prix B comme « tarif fondateur » garanti
-aux premiers clients, puis appliquer les prix A aux nouveaux clients si les six
-premiers mois montrent que les clients restent. Si les clients arrivent surtout
-par des partenaires (experts-comptables, assureurs, CCI), B peut rester la
-grille durable.
+| Module | Essentiel | Pro | Sur mesure |
+|---|---|---|---|
+| **Illimité partout : les obligations** | | | |
+| DUERP (unités, cotation, versions conservées 40 ans) | ✓ | ✓ | ✓ |
+| Vérifications périodiques et calendrier | ✓ | ✓ | ✓ |
+| Ce qui doit être en place | ✓ | ✓ | ✓ |
+| Registre de sécurité : dépôt des rapports | ✓ | ✓ | ✓ |
+| Plan d'actions | ✓ | ✓ | ✓ |
+| Équipements et zones | ✓ | ✓ | ✓ |
+| Équipe : salariés, titres et visites | ✓ | ✓ | ✓ |
+| Prescriptions particulières | ✓ | ✓ | ✓ |
+| Carnet sanitaire : relevés et analyses | ✓ | ✓ | ✓ |
+| Registre d'accessibilité et affiche QR | ✓ | ✓ | ✓ |
+| Documents obligatoires, Préparer un contrôle, Comprendre | ✓ | ✓ | ✓ |
+| Relances email des échéances (†) | ✓ | ✓ | ✓ |
+| Téléchargement de ses données, y compris après résiliation (†) | ✓ | ✓ | ✓ |
+| **Limité selon l'offre : l'usage à volonté** | | | |
+| Permis de feu | 10 par an | illimité | illimité |
+| Plans de prévention (‡) | 5 par an | illimité | illimité |
+| Prestataires suivis | 10 | 50 | illimité |
+| Liens d'accès prestataires actifs | 5 | 50 | illimité |
+| Signatures électroniques | 20 par an | 200 par an | sur mesure |
+| Stockage des documents | 2 Go | 20 Go | sur mesure |
+| Import d'un DUERP existant | 1 | illimité | reprise faite par nous |
+| Connecter un assistant | — | ✓ | ✓ |
+| **Humain : l'expert BTRY Solution** | | | |
+| Aide en ligne et contact pour un problème technique | ✓ | ✓ | ✓ |
+| Rendez-vous avec l'expert (†) | — | 1 h par an | à la demande |
+| Formation, reprise de l'historique, déploiement accompagné | — | — | ✓ |
 
-| Ce qui change entre A et B | A | B |
-|---|---|---|
-| Essentiel, recette par an | 290 € | 119 € |
-| Essentiel, client resté 2 ans | 580 € | 238 € |
-| Suivi, reste après l'expert* | ≈ 350 € | ≈ 150 € |
-| Accompagné, reste après l'expert* | ≈ 790 € | ≈ 690 € |
+(†) **Pas encore livré.** Relances et téléchargement des données : avec le
+passage sur Clever Cloud (aujourd'hui seuls les emails de connexion et
+d'accès partent ; l'export du titulaire est la dette
+`docs/dette-chantier-porteur-echeance.md` § 1.1). Demande d'assistance :
+enregistrée dans l'app, ne part encore vers personne (ADR-050). À mettre en
+service avant de publier les offres.
 
-\* Hypothèses, par client et par an, à environ 70 €/h : Suivi environ 2 h,
-soit environ 140 € ; Accompagné environ 7 h, soit environ 500 €. À remplacer
-par le coût réel de BTRY Solution.
+(‡) Le plan de prévention est une obligation légale dès que le chantier
+remplit les conditions (art. R. 4512-6 et R. 4512-7 CT) : voir § 3.
+
+### Pourquoi ces prix
+
+- **29 €** : le prix d'un seul registre de sécurité chez Securylog, et moins
+  que la combinaison la moins chère de trois outils spécialisés (≈ 32 €/mois).
+- **69 € pour 5 sites** : ≈ 14 € par site, contre ≈ 19 € par bâtiment chez
+  Deemply, sans devis ni frais d'entrée. Le rendez-vous annuel vaut à lui seul
+  la mise à jour d'un DUERP chez un consultant (≈ 400 €).
 
 ## 2. Benchmark
 
@@ -73,15 +93,14 @@ par le coût réel de BTRY Solution.
 | Repères « expert » | Juritravail · Legalstart · Captain Contrat Premium | 50 € · 30-50 € · ≈ 249 €/mois | — | Juriste, avocat |
 | Consultant DUERP | Création puis mise à jour | ≈ 800 € + ≈ 400 €/an | — | Sur site |
 
-**Les constats qui fondent la grille**
-
 | Constat | Ce qu'on en fait |
 |---|---|
-| Un registre seul se vend 19-29 €/mois ; réunir DUERP + registre de sécurité + accessibilité chez des spécialistes coûte 32 à 58 €/mois (France DUERP + Vigie + ACHOP au moins cher, DUPrev' + Securylog + ACHOP au plus cher) | Prix A : Essentiel à 29 €, avec tous les modules, sous la combinaison la moins chère. Prix B : 9,90 €, sous tout le monde. |
-| Hors des petits outils à un seul registre, l'engagement est la règle (12 à 36 mois) | Mensuel résiliable dans toutes les offres. |
+| Un registre seul se vend 19-29 €/mois ; trois outils spécialisés réunis, 32 à 58 € (France DUERP + Vigie + ACHOP au moins cher, DUPrev' + Securylog + ACHOP au plus cher) | Essentiel à 29 €, avec tous les modules. |
+| Hors des petits outils à un seul registre, l'engagement est la règle (12 à 36 mois) | Mensuel résiliable sur toutes les offres publiques. |
 | La remise annuelle va de 8 % (Securylog) à 20 % (DUPrev') | « 2 mois offerts », soit −17 %. |
-| Le site supplémentaire se facture à l'unité (9 à 19 €), et la cible a presque toujours un seul site | Les sites sont une option, pas un palier. |
-| L'humain multiplie le prix par 3 à 10. Pour une TPE, seul DUPrev' inclut un expert : une analyse par an, sur le DUERP seul | Paliers sur la part d'expert : aucun, un rendez-vous annuel sur tout le dossier, à la demande. |
+| Deemply et DUPrev' attirent avec une offre gratuite bridée | Un mois d'essai complet, plutôt qu'un gratuit bridé qui obligerait à cacher des obligations. |
+| Le site supplémentaire se facture 9 à 19 €, et la cible a presque toujours un seul site | 1 site en Essentiel, jusqu'à 5 au forfait en Pro, au-delà sur devis. |
+| L'humain multiplie le prix par 3 à 10 ; pour une TPE, seul DUPrev' inclut un expert (une analyse par an, DUERP seul) | Rendez-vous annuel sur tout le dossier en Pro, expert à la demande sur devis. |
 
 Autres repères : presque tous les concurrents vendent de l'IA, et chaque
 obligation de Rojer cite son article. Facturer la mise en service irrite les
@@ -89,21 +108,22 @@ clients ; Rojer n'en facture pas.
 
 ## 3. À trancher avant de publier
 
-- **Le cadre de l'expert** : un conseil technique de sécurité et de prévention,
-  pas une consultation juridique, qui est réservée aux professions du droit
-  (loi du 31 décembre 1971). Il ne dit jamais « vous êtes conforme ». À écrire
-  dans les CGV.
-- **La capacité de l'expert** : borner le temps par client (1 h par an en
-  Suivi ; 1 h par trimestre et des réponses écrites sous 48 h en Accompagné), et
-  suivre le temps réellement passé.
-- **Relances email et téléchargement des données** : à livrer avant la
-  publication (voir †). Ensuite, préciser ce qui reste consultable du DUERP,
-  dont la loi impose la conservation pendant 40 ans.
+- **Les plans de prévention en Essentiel** : usage par chantier, donc dans la
+  règle, mais obligation légale quand les conditions sont remplies. Cinq par an
+  couvrent presque toutes les TPE ; sinon, illimités, et la limite ne porte plus
+  que sur les permis de feu.
+- **Le cadre de l'expert** : conseil technique, pas consultation juridique
+  (loi du 31 décembre 1971). À écrire dans les CGV.
+- **La capacité de l'expert** : environ 2 h par client et par an en Pro,
+  préparation comprise, soit ≈ 140 € à 70 €/h (hypothèse à remplacer par le
+  coût réel de BTRY Solution). Pro laisse alors ≈ 550 €/an.
+- **À livrer avant la publication** : relances email, téléchargement des
+  données, envoi de la demande d'assistance, décompte des quotas dans l'app.
+- **La fin de l'essai** : lecture seule sans choix d'offre ; préciser ce qui
+  reste consultable du DUERP (conservation légale de 40 ans).
 - **Ne pas promettre** plusieurs utilisateurs par compte, une application
   mobile ou des rappels par SMS.
 - **Le paiement en ligne** : chantier `lot/abonnements-stripe` (ADR-053).
-- **Le compte des établissements** porte sur les sites, toutes sociétés du
-  compte confondues.
 
 ## Sources
 
