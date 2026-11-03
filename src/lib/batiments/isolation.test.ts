@@ -177,8 +177,8 @@ const { batimentParDefaut, resoudreBatimentOptionnel } = await import(
 beforeEach(() => {
   h.requireUser.mockResolvedValue({ id: USER_A, email: "a@exemple.fr" });
   h.db.entreprises = [
-    { id: "ent-a", userId: USER_A },
-    { id: "ent-b", userId: "user-b" },
+    { id: "ent-a", compteId: USER_A },
+    { id: "ent-b", compteId: "user-b" },
   ];
   h.db.etablissements = [
     { id: ETAB_A, entrepriseId: "ent-a" },

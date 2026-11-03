@@ -22,10 +22,10 @@ const { db } = vi.hoisted(() => ({
 
 function visible(p: Ligne, where: Ligne): boolean {
   const { etablissement, ...reste } = where as {
-    etablissement?: { entreprise?: { userId?: string } };
+    etablissement?: { entreprise?: { compteId?: string } };
   } & Ligne;
   if (!Object.entries(reste).every(([k, v]) => p[k] === v)) return false;
-  const userId = etablissement?.entreprise?.userId;
+  const userId = etablissement?.entreprise?.compteId;
   return userId === undefined || db.proprietaires[p.etablissementId as string] === userId;
 }
 

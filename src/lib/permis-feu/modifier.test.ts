@@ -32,7 +32,7 @@ vi.mock("@/lib/prisma", () => {
       }),
       findUnique: vi.fn(async ({ where }: { where: Ligne }) => db.permis.find((p) => correspond(p, where)) ?? null),
       // Même convention que le prestataire ci-dessous : la portée par le compte
-      // (`etablissement: { entreprise: { userId } }`) est celle du compte du
+      // (`etablissement: { entreprise: { compteId: userId } }`) est celle du compte du
       // test ; le cloisonnement est éprouvé par `perimetre.test.ts`.
       findFirst: vi.fn(async ({ where }: { where: Ligne }) => {
         const reste = { ...where };
@@ -61,7 +61,7 @@ vi.mock("@/lib/prisma", () => {
       }),
     },
     prestataire: {
-      // La portée par le compte (`etablissement: { entreprise: { userId } }`)
+      // La portée par le compte (`etablissement: { entreprise: { compteId: userId } }`)
       // est celle du compte connecté du test : seul l'établissement compte ici.
       findFirst: vi.fn(async ({ where }: { where: Ligne }) => {
         const sansPortee = { ...where };

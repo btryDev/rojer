@@ -13,7 +13,7 @@ vi.mock("@/lib/prisma", () => ({
     etablissement: {
       findUnique: async ({ where }: { where: { id: string } }) => {
         h.lecturesApp += 1;
-        return where.id === "etab-1" ? { entreprise: { userId: "proprietaire-1" } } : null;
+        return where.id === "etab-1" ? { entreprise: { compteId: "proprietaire-1" } } : null;
       },
     },
   },
@@ -28,7 +28,7 @@ beforeEach(() => {
 
 describe("clientMcp", () => {
   it("clé : le propriétaire de l'établissement servi", async () => {
-    expect(portee(await clientMcp({ etablissementId: "etab-1" }))).toEqual({ type: "compte", compteId: "proprietaire-1", userId: "proprietaire-1" });
+    expect(portee(await clientMcp({ etablissementId: "etab-1" }))).toEqual({ type: "compte", compteId: "proprietaire-1", userId: null });
     expect(await clientMcp({ etablissementId: "inconnu" })).toBeNull();
   });
 

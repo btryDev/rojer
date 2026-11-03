@@ -19,7 +19,7 @@ vi.mock("@/lib/prisma", () => ({
   prisma: {
     signature: { findUnique: async () => h.signature },
     etablissement: {
-      findUnique: async () => ({ entreprise: { userId: h.proprietaire } }),
+      findUnique: async () => ({ entreprise: { compteId: h.proprietaire } }),
     },
     rapportVerification: {
       findFirst: async ({ where }: { where: Ligne }) => h.rapports.find((r) => correspond(r, where)) ?? null,

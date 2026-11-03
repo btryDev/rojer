@@ -140,7 +140,7 @@ describe("habilitation : l'état vient des titres, plus de la case", () => {
           salarie: expect.objectContaining({
             etablissementId: "etab-1",
             actif: true,
-            etablissement: { entreprise: { userId: "user-1" } },
+            etablissement: { entreprise: { compteId: "user-1" } },
           }),
         }),
       }),

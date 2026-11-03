@@ -3,7 +3,7 @@
 // La route `duerp/[id]/pdf/preview` raconte la fuite : l'aperçu PDF rendait
 // le DUERP complet d'un autre utilisateur — raison sociale, SIRET, adresse,
 // unités, risques, cotations, mesures — à qui connaissait un identifiant. Le
-// prédicat `etablissement: { entreprise: { userId } }` a été ajouté dans
+// prédicat `etablissement: { entreprise: { compteId } }` a été ajouté dans
 // `snapshot-builder.ts`, et sa docstring l'explique.
 //
 // Rien ne le gardait. `snapshot-builder.test.ts` simule `findFirst` par une
@@ -121,7 +121,7 @@ const { construireSnapshot } = await import("./snapshot-builder");
 function dossier(suffixe: "a" | "b") {
   const entreprise = {
     id: `ent-${suffixe}`,
-    userId: `user-${suffixe}`,
+    compteId: `user-${suffixe}`,
     raisonSociale: `Société ${suffixe.toUpperCase()}`,
     siret: `1234567890123${suffixe === "a" ? 4 : 5}`,
     codeNaf: "47.11B",

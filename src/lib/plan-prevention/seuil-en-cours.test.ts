@@ -9,9 +9,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 type Ligne = Record<string, unknown>;
 const { db } = vi.hoisted(() => ({ db: { plans: [] as Ligne[] } }));
 const correspond = (l: Ligne, w: Ligne) => Object.entries(w).every(([k, v]) => l[k] === v);
-/** `etablissement: { entreprise: { userId } }` : seul « etab-a-moi » est à « u1 ». */
+/** `etablissement: { entreprise: { compteId: userId } }` : seul « etab-a-moi » est à « u1 ». */
 const auCompte = (l: Ligne, portee: unknown) => {
-  const userId = (portee as { entreprise?: { userId?: string } } | undefined)?.entreprise?.userId;
+  const userId = (portee as { entreprise?: { compteId?: string } } | undefined)?.entreprise?.compteId;
   return userId === undefined || (l.etablissementId === "etab-a-moi" ? "u1" : "u-voisin") === userId;
 };
 

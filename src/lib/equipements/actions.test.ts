@@ -51,14 +51,14 @@ const h = vi.hoisted(() => {
         async ({
           where,
         }: {
-          where: { id: string; etablissement?: { entreprise?: { userId?: string } } };
+          where: { id: string; etablissement?: { entreprise?: { compteId?: string } } };
         }) => {
           const e = db.equipements.find(
             (x) =>
               x.id === where.id &&
-              (where.etablissement?.entreprise?.userId === undefined ||
+              (where.etablissement?.entreprise?.compteId === undefined ||
                 (x.etablissementId === "etab-1" ? "user-1" : "u-voisin") ===
-                  where.etablissement.entreprise.userId),
+                  where.etablissement.entreprise.compteId),
           );
           const photo = e ? structuredClone(e) : null;
           db.apresLecture?.();
@@ -370,7 +370,7 @@ describe("un appareil retiré du parc est en lecture seule (décision du 2026-10
     // compte (`appareilDuCompte`).
     expect(h.prisma.equipement.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: "eq-1", etablissement: { entreprise: { userId: "user-1" } } },
+        where: { id: "eq-1", etablissement: { entreprise: { compteId: "user-1" } } },
       }),
     );
   });

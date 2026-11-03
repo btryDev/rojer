@@ -19,6 +19,7 @@ const DB_DU_COMPTE = vi.hoisted(() => ({ nom: "client du compte" }));
 vi.mock("@/lib/auth/scope", () => ({
   requireEtablissement: async (id: string) => ({
     user: { id: "u1" },
+    compte: { compteId: "u1", role: "owner" },
     db: DB_DU_COMPTE,
     etablissement: { id, estERP: true, raisonDisplay: "Hôtel du Port" },
   }),
@@ -76,7 +77,7 @@ describe("page du carnet — le texte suit l'installation déclarée", () => {
     // Le client que rend la garde (ADR-051), puis la portée.
     expect(suivie).toHaveBeenCalledWith(DB_DU_COMPTE, {
       etablissementId: "etab-1",
-      etablissement: { entreprise: { userId: "u1" } },
+      etablissement: { entreprise: { compteId: "u1" } },
     });
   });
 });

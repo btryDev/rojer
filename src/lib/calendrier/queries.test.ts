@@ -108,14 +108,14 @@ describe("listerVerifications — lecture documentaire par défaut", () => {
     const where = dernierWhere();
     expect(where).toEqual({
       etablissementId: "etab-1",
-      etablissement: { entreprise: { userId: "user-1" } },
+      etablissement: { entreprise: { compteId: "user-1" } },
     });
   });
 
   it("scope toujours la lecture sur l'entreprise du user", async () => {
     await listerVerifications("etab-1", { urgentsSeulement: true });
     expect(clause("etablissement")?.etablissement).toEqual({
-      entreprise: { userId: "user-1" },
+      entreprise: { compteId: "user-1" },
     });
   });
 });
@@ -413,7 +413,7 @@ describe("grouperParMois", () => {
  *
  * `listerVerifications` avait le sien depuis toujours ; `compterEtatCalendrier`,
  * `getVerification` et `calendrierDesynchronise` ne l'avaient pas — leur
- * `entreprise: { userId }` pouvait être retiré sans qu'aucun test ne bouge,
+ * `entreprise: { compteId: userId }` pouvait être retiré sans qu'aucun test ne bouge,
  * alors que ce sont les trois lectures qui alimentent l'en-tête du calendrier,
  * la fiche d'une échéance et le déclencheur de régénération.
  *
@@ -424,7 +424,7 @@ describe("cloisonnement des lectures par entreprise (ADR-005)", () => {
   it("compterEtatCalendrier scope sur l'entreprise du user", async () => {
     await compterEtatCalendrier("etab-1", NOW);
     expect(clause("etablissement")?.etablissement).toEqual({
-      entreprise: { userId: "user-1" },
+      entreprise: { compteId: "user-1" },
     });
   });
 
@@ -434,7 +434,7 @@ describe("cloisonnement des lectures par entreprise (ADR-005)", () => {
     // de `listerVerifications`. Le scope ne doit pas s'y perdre non plus.
     await compterEtatCalendrier("etab-1", NOW, { batimentId: "bat-1" });
     expect(clause("etablissement")?.etablissement).toEqual({
-      entreprise: { userId: "user-1" },
+      entreprise: { compteId: "user-1" },
     });
     expect(
       clausesDe(dernierWhere()).find((c) =>

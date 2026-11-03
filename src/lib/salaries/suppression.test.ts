@@ -66,9 +66,9 @@ const h = vi.hoisted(() => {
       return [];
     },
     etablissement: {
-      findFirst: async ({ where }: { where: { id: string; entreprise: { userId: string } } }) =>
+      findFirst: async ({ where }: { where: { id: string; entreprise: { compteId: string } } }) =>
         db.etablissements.find(
-          (e) => e.id === where.id && e.userId === where.entreprise.userId,
+          (e) => e.id === where.id && e.userId === where.entreprise.compteId,
         ) ?? null,
     },
     salarie: {

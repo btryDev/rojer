@@ -12,8 +12,8 @@ const h = vi.hoisted(() => {
   type Ligne = Record<string, unknown>;
   const db = {
     entreprises: [
-      { id: "ent-a", userId: "user-a" },
-      { id: "ent-b", userId: "user-b" },
+      { id: "ent-a", compteId: "user-a" },
+      { id: "ent-b", compteId: "user-b" },
     ] as Ligne[],
     etablissements: [
       { id: "etab-a", entrepriseId: "ent-a", conduiteEngins: true, manutentionManuelle: false },

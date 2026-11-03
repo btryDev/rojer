@@ -66,7 +66,7 @@ describe("getModulesMatrice — le carnet suit le prédicat partagé", () => {
     expect(db[PORTEE_SIMULEE]).toEqual({ type: "compte", compteId: "u1", userId: "u1" });
     expect(portee).toEqual({
       etablissementId: "etab-1",
-      etablissement: { entreprise: { userId: "u1" } },
+      etablissement: { entreprise: { compteId: "u1" } },
     });
   });
 });

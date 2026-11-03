@@ -37,10 +37,10 @@ const T1 = new Date("2026-06-02T09:00:00Z");
 /** Deux comptes, trois établissements — dont deux sous la même entreprise. */
 const donnees = () => ({
   entreprise: [
-    { id: "ent-1", userId: "user-1" },
-    { id: "ent-2", userId: "user-2" },
+    { id: "ent-1", compteId: "user-1" },
+    { id: "ent-2", compteId: "user-2" },
     // Une seconde société du même compte (2026-10-26) : un autre SIREN.
-    { id: "ent-3", userId: "user-1" },
+    { id: "ent-3", compteId: "user-1" },
   ],
   etablissement: [
     {

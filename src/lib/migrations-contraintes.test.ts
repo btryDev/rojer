@@ -320,7 +320,7 @@ describe("plusieurs établissements par entreprise (ADR-028)", () => {
   // ~~« Entreprise.userId reste @unique — la racine de tenancy ne bouge pas »~~
   // [2026-10-26 : renversé, ADR-028 amendée. Une Entreprise est l'unité légale
   // (SIREN) et un compte en porte plusieurs. Le cloisonnement n'en dépendait
-  // pas : tout `where` filtre `entreprise: { userId }`, qui reste juste avec N
+  // pas : tout `where` filtre `entreprise: { compteId }`, qui reste juste avec N
   // entreprises. Seuls les `findUnique({ where: { userId } })` supposaient
   // l'unicité, et le typage Prisma les refuse désormais.]
   it("un compte porte plusieurs entreprises, une seule par SIREN", () => {

@@ -423,8 +423,8 @@ describe("même source que l'écran — le source, faute de pouvoir exécuter la
   it("le widget lit l'entrée des états permanents et la résume par `resumeDuWidget`", () => {
     const action = lire("src/lib/etats-permanents/lecture-widget.ts");
     expect(action).toMatch(/^"use server";/);
-    expect(action).toMatch(/const \{ user, db \} = await assertEtablissementDuCompte\(etablissementId\)/);
-    expect(action).toMatch(/resumeDuWidget\(await etatsPermanentsDuDossier\(db, etablissementId, user\.id\)\)/);
+    expect(action).toMatch(/const \{ compte, db \} = await assertEtablissementDuCompte\(etablissementId\)/);
+    expect(action).toMatch(/resumeDuWidget\(await etatsPermanentsDuDossier\(db, etablissementId, compte\.compteId\)\)/);
   });
 
   it("l'écran et le widget lisent le compte de l'en-tête par la même fonction", () => {
