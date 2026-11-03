@@ -71,6 +71,15 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous" }
     motif: "slugs publics, uniques sur toute la table : seuls les slugs sont lus",
     usages: ["prisma.registreAccessibilite.findMany"],
   },
+  "src/lib/stripe/evenements.ts": {
+    motif: "événements Stripe reçus (ADR-053), hors compte, écrits avant toute identité",
+    usages: [
+      "prisma.evenementStripe.createMany",
+      "prisma.evenementStripe.deleteMany",
+      "prisma.evenementStripe.findUnique",
+      "prisma.evenementStripe.updateMany",
+    ],
+  },
   "src/lib/accessibilite/queries.ts": {
     motif: "registre public par son slug, sans session",
     usages: ["prisma.registreAccessibilite.findUnique"],
@@ -100,6 +109,10 @@ const NOMMES_ROUAGES: Record<string, Record<string, Nomme>> = {
     "src/lib/signatures/actions.ts": { motif: "pose de signature par jeton vérifié", symboles: ["clientDuProprietaire"] },
     "src/lib/signatures/verification-publique.ts": { motif: "établissement d'une signature lue par son identifiant", symboles: ["clientDuProprietaire"] },
     "src/app/acces/[token]/page.tsx": { motif: "page d'un jeton vérifié", symboles: ["clientDuProprietaire"] },
+    "src/lib/stripe/synchronisation.ts": {
+      motif: "webhook Stripe : le compte du client Stripe relu après une notification signée (ADR-053)",
+      symboles: ["clientDuClientStripe"],
+    },
   },
   "src/lib/auth/portee/borne": {
     "src/lib/auth/portee/client.ts": "l'extension",

@@ -6,20 +6,24 @@ import "server-only";
 //   compte ne changent le comportement ; `satisfies` refuse une autre valeur
 //   que celle du SDK installé, monter l'un oblige à monter l'autre.
 // - 10 s par tentative (80 par défaut) ; deux relances réseau (le défaut du
-//   SDK), idempotentes. Au pire 35 à 40 s : la route du webhook et le passage
-//   au paiement réduiront ces valeurs par requête.
+//   SDK), idempotentes. Le webhook passe des options plus courtes par
+//   requête (`OPTIONS_WEBHOOK`).
 
 import Stripe from "stripe";
-import { configurationStripe } from "./config";
+import type { ConfigurationStripe } from "./config";
 
 export const VERSION_API_STRIPE = "2026-10-28.endive" satisfies Stripe.LatestApiVersion;
 
+/**
+ * Par appel, dans le webhook : 3 s, sans relance du SDK — la relance est celle
+ * de Stripe, sur toute la livraison. Au plus trois appels par notification.
+ */
+export const OPTIONS_WEBHOOK: Stripe.RequestOptions = { timeout: 3_000, maxNetworkRetries: 0 };
+
 let client: Stripe | undefined;
 
-/** Le client Stripe, ou `null` si les abonnements sont désactivés (`config.ts`). */
-export function clientStripe(): Stripe | null {
-  const config = configurationStripe();
-  if (!config.active) return null;
+/** Le client Stripe d'une configuration active (`configurationStripe`, seule décision). */
+export function clientStripe(config: Extract<ConfigurationStripe, { active: true }>): Stripe {
   return (client ??= new Stripe(config.cle, {
     apiVersion: VERSION_API_STRIPE,
     maxNetworkRetries: 2,

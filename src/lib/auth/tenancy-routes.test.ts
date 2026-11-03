@@ -28,6 +28,8 @@ import { borneeParConstruction, decoupe, etablitSaPorteeLocale, LECTURE } from "
  *  - `requireUser`, suivi d'une lecture bornée par `userId` (le balayage des
  *    lectures ne voit pas les routes : le prédicat est exigé ici aussi) ;
  *  - `verifierAccessToken` (accès externe par jeton, ADR-007) ;
+ *  - `verifierNotificationStripe` (webhook Stripe, ADR-053 : la signature est
+ *    vérifiée avant toute lecture ; le compte vient du client Stripe relu) ;
  *  - pour le MCP, `handler.servir` d'un gestionnaire construit par
  *    `creerHandlerMcpHttp` dont la portée sort de `resoudreScopeDepuisCle` ou
  *    `resoudreScopeDepuisJeton` (ADR-013).
@@ -128,6 +130,7 @@ const appelle = (nom: string, corps: string) =>
 function controle(m: Methode): string | null {
   for (const h of helpersDAppartenance()) if (appelle(h, m.corps)) return h;
   if (appelle("verifierAccessToken", m.corps)) return "verifierAccessToken";
+  if (appelle("verifierNotificationStripe", m.corps)) return "signature Stripe";
   if (appelle("requireUser", m.corps) && /\buserId\b/.test(m.corps)) {
     return "requireUser + userId";
   }
