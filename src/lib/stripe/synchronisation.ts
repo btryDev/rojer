@@ -156,7 +156,7 @@ export async function synchroniserClientStripe(
   options: { abonnementLu?: Stripe.Subscription | null; maintenant?: () => Date } = {},
 ): Promise<Synchronisation> {
   // L'heure de la relecture, prise AVANT les deux lectures, lancées ensemble.
-  const relueLe = (options.maintenant ?? (() => new Date()))();
+  const relueLe = options.maintenant?.() ?? new Date();
   const [client, liste] = await Promise.allSettled([
     stripe.customers.retrieve(customerId, {}, OPTIONS_WEBHOOK),
     stripe.subscriptions
