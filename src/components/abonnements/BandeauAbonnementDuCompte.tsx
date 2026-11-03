@@ -1,4 +1,5 @@
-// Le bandeau du compte connecté, en tête du dossier : ne lit rien tant que
+// Le bandeau du compte connecté, en tête du dossier : la lecture seule d'un
+// membre (ADR-054 § 4), sinon l'abonnement, qui ne lit rien tant que
 // l'offre n'est pas lancée (`abonnementDuCompte`). À rendre sous
 // `<Suspense fallback={null}>` : la page ne l'attend pas.
 //
@@ -17,14 +18,21 @@ const DANS_LA_BANDE =
   "md:absolute md:inset-x-auto md:bottom-auto md:left-[var(--board-gutter)] md:top-[19px] md:w-fit " +
   "md:max-w-[calc(100%-var(--board-gutter)*2-9rem)]";
 
+/** Un membre en lecture seule (ADR-054 § 4) : son rôle passe avant l'abonnement, qu'il ne gère pas. */
+const LECTURE_SEULE = {
+  ton: "info",
+  message: "Accès en lecture seule : vous consultez et exportez les dossiers, sans les modifier.",
+} as const;
+
 export async function BandeauAbonnementDuCompte({ dansLeContenu }: { dansLeContenu?: string }) {
   const compte = await getOptionalCompte();
   if (!compte) return null;
-  const { bandeau } = await droitsDuCompte(compte.db, compte.compte.compteId);
+  const lecture = compte.compte.role === "lecture";
+  const bandeau = lecture ? LECTURE_SEULE : (await droitsDuCompte(compte.db, compte.compte.compteId)).bandeau;
   if (!bandeau) return null;
   return dansLeContenu ? (
-    <BandeauAbonnement bandeau={bandeau} className={dansLeContenu} />
+    <BandeauAbonnement bandeau={bandeau} avecLien={!lecture} className={dansLeContenu} />
   ) : (
-    <BandeauAbonnement bandeau={bandeau} compact className={DANS_LA_BANDE} />
+    <BandeauAbonnement bandeau={bandeau} avecLien={!lecture} compact className={DANS_LA_BANDE} />
   );
 }
