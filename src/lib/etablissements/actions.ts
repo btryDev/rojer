@@ -33,6 +33,7 @@ import {
 } from "./schema";
 import { typesErpAutresPostes } from "./types-erp-affiches";
 import { refusDuFiltre, rEntre, sansReponseEnfants } from "./types-refuses";
+import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 export type EtablissementActionState =
   | { status: "idle" }
@@ -223,6 +224,7 @@ export async function modifierEtablissement(
   _prev: EtablissementActionState,
   formData: FormData,
 ): Promise<EtablissementActionState> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(id);
   const brut = normaliserFormData(formData);
   const parsed = etablissementSchema.safeParse(brut);

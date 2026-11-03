@@ -40,6 +40,7 @@ import {
 import { libelleDocumentSignable } from "./libelle-document";
 import { notFound } from "next/navigation";
 import { ipClient } from "@/lib/securite/ip-client";
+import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 /**
  * Server actions de signature électronique simple (ADR-006 / ADR-008).
@@ -139,6 +140,7 @@ export type DemandeSignature = z.input<typeof demandeSignatureSchema>;
 export async function demanderSignature(
   entree: DemandeSignature,
 ): Promise<{ ok: true } | { ok: false; message: string }> {
+  await verifierSaisie();
   const parsed = demandeSignatureSchema.safeParse(entree);
   if (!parsed.success) {
     return {
@@ -620,6 +622,7 @@ export async function signerEnCompteConnecte(params: {
         | "deja_signee";
     }
 > {
+  await verifierSaisie();
   const { user, db } = await assertEtablissementDuCompte(params.etablissementId);
   // Même règle que les deux autres portes. Aucun écran ne passe de fonction
   // ici : seul un appel forgé est refusé, d'où l'exception plutôt qu'une

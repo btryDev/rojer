@@ -140,3 +140,14 @@ describe("toutes les fautes en une fois", () => {
     expect(e.variables.sort()).toEqual(["BETTER_AUTH_SECRET", "PUBLIC_APP_URL"]);
   });
 });
+
+describe("ABONNEMENT_EXIGE (ADR-053 § 3)", () => {
+  it("n'accepte que oui ou non, et prévient s'il est posé sans Stripe actif", () => {
+    expect(() => validerEnvironnement({ ...BASE, ABONNEMENT_EXIGE: "Oui!" })).toThrow();
+    expect(() => validerEnvironnement({ ...BASE, ABONNEMENT_EXIGE: "non" })).not.toThrow();
+    expect(avertissementsEnvironnement({ ABONNEMENT_EXIGE: "oui" })).toEqual([
+      expect.stringMatching(/la saisie reste ouverte à tous/),
+    ]);
+    expect(avertissementsEnvironnement({ ABONNEMENT_EXIGE: "non" })).toEqual([]);
+  });
+});

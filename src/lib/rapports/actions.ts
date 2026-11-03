@@ -30,6 +30,7 @@ import { estResultatRealise } from "./resultats";
 import { resultatRelevePoints } from "@/lib/points-a-corriger/regles";
 import { cheminControle } from "@/lib/navigation/chemins";
 import { validerFichier } from "./validator";
+import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 export type UploadRapportState =
   | { status: "idle" }
@@ -80,6 +81,7 @@ export async function uploadRapport(
   _prev: UploadRapportState,
   formData: FormData,
 ): Promise<UploadRapportState> {
+  await verifierSaisie();
   // 0. LA SESSION D'ABORD (audit OWASP du 2026-10-13, S6). Le contrôle de
   //    propriété ne peut venir qu'après la lecture de la vérification, qui
   //    donne l'établissement ; jusque-là, un appel anonyme faisait valider
@@ -366,6 +368,7 @@ export async function uploadRapport(
  * date : la ligne ne bouge pas.
  */
 export async function supprimerRapport(rapportId: string): Promise<void> {
+  await verifierSaisie();
   // Lu DANS le périmètre du compte, absent et étranger confondus dans le même
   // `notFound()` (audit du 2026-10-13, comme le dépôt ci-dessus).
   const { user, db } = await requireCompte();

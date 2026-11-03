@@ -17,6 +17,7 @@ import {
 } from "./parser";
 import { validerFichierImport } from "./format";
 import { constaterEpiDuCompte } from "@/lib/etablissements/epi-constate";
+import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 /**
  * Import d'un DUERP Excel ou CSV.
@@ -119,6 +120,7 @@ export async function commitImport(
   _prev: CommitImportState,
   formData: FormData,
 ): Promise<CommitImportState> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
 
   const fichier = formData.get("fichier");

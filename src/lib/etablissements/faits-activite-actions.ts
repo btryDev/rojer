@@ -10,6 +10,7 @@ import { FAITS_ACTIVITE, type ChampFaitActivite } from "./faits-activite";
 import { ecrireFaitActivite } from "./faits-activite-ecriture";
 import { epiConstates, MESSAGE_EPI_CONSTATES } from "./epi-constate";
 import type { ReponseParametrage } from "./parametrage";
+import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 const CHAMPS = new Set<string>(FAITS_ACTIVITE.map((f) => f.champ));
 
@@ -26,6 +27,7 @@ export async function repondreFaitActivite(
   champ: ChampFaitActivite,
   valeur: boolean | null,
 ): Promise<ReponseParametrage & { risqueConserve?: boolean }> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
   // Le champ vient du client : une colonne arbitraire n'entre pas en base.
   if (!CHAMPS.has(champ)) return { status: "error", message: "Question inconnue." };

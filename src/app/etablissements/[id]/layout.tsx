@@ -2,6 +2,7 @@ import { requireEtablissement } from "@/lib/auth/scope";
 import { BarreCompte } from "@/components/layout/BarreCompte";
 import { SidebarAvecPastilles } from "@/components/layout/SidebarAvecPastilles";
 import { listerEtablissementsDuCompte } from "@/lib/etablissements/queries";
+import { BandeauAbonnementDuCompte } from "@/components/abonnements/BandeauAbonnementDuCompte";
 
 /**
  * Layout imbriqué pour toutes les pages d'un établissement.
@@ -73,6 +74,9 @@ export default async function EtablissementLayout({
           email={user.email ?? null}
           etablissements={fratrie}
         />
+        {/* L'état de l'abonnement (ADR-053 § 3) : rien avant le lancement de
+            l'offre, ni quand tout va bien. */}
+        <BandeauAbonnementDuCompte />
         {children}
       </div>
     </div>

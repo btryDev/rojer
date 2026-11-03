@@ -36,6 +36,7 @@ import {
 } from "./reponses-exigees";
 import { MESSAGE_APPAREIL_RETIRE, estAppareilRetire } from "./retrait";
 import { constaterEpiDuCompte } from "@/lib/etablissements/epi-constate";
+import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 /**
  * Toute mutation d'équipement invalide le calendrier de vérifications : on
@@ -136,6 +137,7 @@ export async function creerEquipement(
   _prev: EquipementActionState,
   formData: FormData,
 ): Promise<EquipementActionState> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
   const parsed = equipementSchema.safeParse(normaliserFormDataEquipement(formData));
   if (!parsed.success) {
@@ -210,6 +212,7 @@ export async function modifierEquipement(
   _prev: EquipementActionState,
   formData: FormData,
 ): Promise<EquipementActionState> {
+  await verifierSaisie();
   const { appareil, db } = await appareilDuCompte(id);
   // L'appartenance d'abord, le refus ensuite : on ne dit rien d'un appareil
   // qui n'est pas à soi.
@@ -319,6 +322,7 @@ export type SuppressionEquipementResult =
 export async function supprimerEquipement(
   id: string,
 ): Promise<SuppressionEquipementResult> {
+  await verifierSaisie();
   const { appareil, db } = await appareilDuCompte(id);
   const { etablissementId } = appareil;
   // Déjà retiré : le retrait est définitif, il ne se rejoue pas. Sans ce
@@ -437,6 +441,7 @@ export async function creerEquipementsDepuisPreRemplissage(
     caracteristiques?: Partial<Record<ChampTriEtat, boolean>>;
   }[],
 ): Promise<ResultatPreRemplissage> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
   // Le tableau vient du client : un tableau, pas plus d'entrées que de
   // catégories (ASVS V2.2.1, `lot/securite-owasp-1013`), avant de le parcourir.

@@ -368,8 +368,22 @@ dans la session Checkout (seule trace du compte si le client Stripe est un
 jour supprimé) ; seul le propriétaire du compte ouvre Checkout et le portail
 (proposition du chantier multi-utilisateurs, 2026-11-03).
 
-**Lot 3 (droits)** : décider explicitement le comportement de
-`droitsDuCompte` quand la configuration est inactive en production.
+~~**Lot 3 (droits)** : décider explicitement le comportement de
+`droitsDuCompte` quand la configuration est inactive en production.~~
+[2026-11-03, lot 3 : tranché — Stripe inactif, la saisie reste ouverte à
+tous et le démarrage prévient si `ABONNEMENT_EXIGE=oui` ; ADR-053 § 3.]
+
+**Lot 3 fait (2026-11-03)** : `droitsDe`, `verifierSaisie` dans 88 actions,
+16 écritures ouvertes nommées, page `/compte/abonnement`, bandeau dans le
+dossier. Reste pour les lots suivants :
+- **Lot 4** : boutons « Choisir une formule » et « Gérer mon abonnement »
+  sur `/compte/abonnement` ; nom lisible de la formule (la page affiche la
+  `lookup_key` brute) ; désactiver les formulaires quand la saisie est
+  fermée (aujourd'hui l'écriture est refusée au clic, avec redirection).
+- **Lot 5 / lancement** : sans abonnement, un compte neuf ne peut même pas
+  créer son premier établissement (`finaliserOnboarding` est gardé) — l'essai
+  doit donc démarrer avant, ou à l'inscription ; décider du sort des comptes
+  existants au passage de `ABONNEMENT_EXIGE` à `oui`.
 
 **Lot 4 (parcours)** : refuser une nouvelle session Checkout tant qu'un
 abonnement non terminé existe (deux onglets → deux abonnements) ; créer le

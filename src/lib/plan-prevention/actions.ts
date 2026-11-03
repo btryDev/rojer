@@ -28,6 +28,7 @@ import {
 } from "@/lib/signatures/verrou-contenu";
 import { calculerHashObjet } from "@/lib/signatures/hash-objet";
 import { revoquerLiensEnVol } from "@/lib/access-tokens/revocation";
+import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 export type PlanActionState =
   | { status: "idle" }
@@ -201,6 +202,7 @@ export async function creerPlanPrevention(
   _prev: PlanActionState,
   formData: FormData,
 ): Promise<PlanActionState> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
 
   const parsed = lirePlanPrevention(formData);
@@ -298,6 +300,7 @@ export async function modifierPlanPrevention(
   _prev: PlanActionState,
   formData: FormData,
 ): Promise<PlanActionState> {
+  await verifierSaisie();
   const plan = await planDuCompte(planId);
   const etablissementId = plan.etablissementId;
   if (!statutPlanSignable(plan.statut)) {
@@ -394,6 +397,7 @@ function lireChampOptionnel(v: FormDataEntryValue | null): string | undefined {
 
 
 export async function cloturerPlan(planId: string): Promise<void> {
+  await verifierSaisie();
   const plan = await planDuCompte(planId);
   await plan.db.planPrevention.update({
     where: { id: planId },
@@ -411,6 +415,7 @@ export async function cloturerPlan(planId: string): Promise<void> {
 }
 
 export async function supprimerPlan(planId: string): Promise<void> {
+  await verifierSaisie();
   const plan = await planDuCompte(planId);
   const etabId = plan.etablissementId;
   // LE STATUT NE DIT PAS SI LE PLAN A ÉTÉ SIGNÉ. `attente_signatures` est
@@ -461,6 +466,7 @@ export async function noterInformationInspection(
   _prev: TraceInspectionState,
   formData: FormData,
 ): Promise<TraceInspectionState> {
+  await verifierSaisie();
   const plan = await planDuCompte(planId);
 
   const lu = lireDateDeclaree(
@@ -517,6 +523,7 @@ export async function noterHeuresRevisees(
   _prev: TraceInspectionState,
   formData: FormData,
 ): Promise<TraceInspectionState> {
+  await verifierSaisie();
   const plan = await planDuCompte(planId);
   if (!statutPlanSignable(plan.statut)) {
     return { status: "error", message: "Ce plan est clos ou annulé : il ne se modifie plus." };

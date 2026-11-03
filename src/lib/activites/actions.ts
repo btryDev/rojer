@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireDuerp } from "@/lib/auth/scope";
 import { ecrireReponseFermee } from "@/lib/duerps/ecrire-reponse-fermee";
 import { activitesDuSecteur } from "./reponses";
+import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 /**
  * Cloisonnement : `duerpId` vient du client. `requireDuerp` remonte jusqu'à
@@ -41,6 +42,7 @@ export async function repondreActivite(
   activiteId: string,
   exercee: boolean | null,
 ): Promise<void> {
+  await verifierSaisie();
   const { db, duerp } = await requireDuerp(duerpId);
 
   const connue = activitesDuSecteur(duerp.referentielSecteurId).some(

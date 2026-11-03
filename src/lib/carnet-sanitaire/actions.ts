@@ -22,6 +22,7 @@ import {
   releveTemperatureSchema,
   resultatAnalyse,
 } from "./schema";
+import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 export type CarnetActionState =
   | { status: "idle" }
@@ -92,6 +93,7 @@ export async function creerPointReleve(
   _prev: CarnetActionState,
   formData: FormData,
 ): Promise<CarnetActionState> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
   const parsed = lirePoint(formData);
   if (!parsed.success) return formulaireInvalide(parsed.error.flatten().fieldErrors);
@@ -137,6 +139,7 @@ export async function modifierPointReleve(
   _prev: CarnetActionState,
   formData: FormData,
 ): Promise<CarnetActionState> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
   const parsed = lirePoint(formData);
   if (!parsed.success) return formulaireInvalide(parsed.error.flatten().fieldErrors);
@@ -195,6 +198,7 @@ export async function supprimerPointReleve(
   etablissementId: string,
   pointId: string,
 ): Promise<void> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
   // Soft delete : on garde les relevés historiques, on désactive le point.
   //
@@ -229,6 +233,7 @@ export async function ajouterReleve(
   _prev: CarnetActionState,
   formData: FormData,
 ): Promise<CarnetActionState> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
   const parsed = lireReleve(formData, formData.get("pointReleveId"));
   if (!parsed.success) return formulaireInvalide(parsed.error.flatten().fieldErrors);
@@ -281,6 +286,7 @@ export async function modifierReleve(
   _prev: CarnetActionState,
   formData: FormData,
 ): Promise<CarnetActionState> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
   const releve = await releveDansLeCarnet(db, etablissementId, releveId);
   if (!releve) return { status: "error", message: "Relevé introuvable" };
@@ -306,6 +312,7 @@ export async function supprimerReleve(
   etablissementId: string,
   releveId: string,
 ): Promise<void> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
   const { count } = await db.releveTemperature.deleteMany({
     where: { id: releveId, pointReleve: { carnet: { etablissementId } } },
@@ -359,6 +366,7 @@ export async function ajouterAnalyseLegionelle(
   _prev: CarnetActionState,
   formData: FormData,
 ): Promise<CarnetActionState> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
   const parsed = lireAnalyse(formData);
   if (!parsed.success) return formulaireInvalide(parsed.error.flatten().fieldErrors);
@@ -423,6 +431,7 @@ export async function modifierAnalyseLegionelle(
   _prev: CarnetActionState,
   formData: FormData,
 ): Promise<CarnetActionState> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
   const analyse = await analyseDansLeCarnet(db, etablissementId, analyseId);
   if (!analyse) return { status: "error", message: "Analyse introuvable" };
@@ -463,6 +472,7 @@ export async function supprimerAnalyseLegionelle(
   etablissementId: string,
   analyseId: string,
 ): Promise<void> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
   const analyse = await analyseDansLeCarnet(db, etablissementId, analyseId);
   if (!analyse) notFound();

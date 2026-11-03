@@ -27,6 +27,7 @@ import {
 } from "./storage";
 import { estSiretEnDouble, MESSAGE_SIRET_EN_DOUBLE } from "./siret-en-double";
 import { piecesRemplacees } from "./pieces";
+import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 export type PrestataireActionState =
   | { status: "idle" }
@@ -164,6 +165,7 @@ export async function creerPrestataire(
   _prev: PrestataireActionState,
   formData: FormData,
 ): Promise<PrestataireActionState> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
 
   const parsed = lireSaisie(formData);
@@ -245,6 +247,7 @@ export async function modifierPrestataire(
   _prev: PrestataireActionState,
   formData: FormData,
 ): Promise<PrestataireActionState> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
 
   const existant = await db.prestataire.findFirst({
@@ -336,6 +339,7 @@ export async function enregistrerDatesAttestation(
   _prev: RemiseAttestationState,
   formData: FormData,
 ): Promise<RemiseAttestationState> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
 
   const parsed = remiseAttestationSchema.safeParse({
@@ -371,6 +375,7 @@ export async function supprimerPrestataire(
   etablissementId: string,
   prestataireId: string,
 ): Promise<void> {
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
 
   const prestataire = await db.prestataire.findFirst({

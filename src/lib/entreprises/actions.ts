@@ -12,6 +12,7 @@ import {
   regenererApresMutation,
 } from "@/lib/calendrier/regeneration-sure";
 import { entrepriseSchema } from "./schema";
+import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 export type ActionState =
   | { status: "idle" }
@@ -28,6 +29,7 @@ export async function modifierEntreprise(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+  await verifierSaisie();
   const { db } = await assertEntrepriseDuCompte(id);
   const raw = Object.fromEntries(formData);
   const parsed = entrepriseSchema.safeParse(raw);

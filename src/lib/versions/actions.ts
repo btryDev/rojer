@@ -16,6 +16,7 @@ import {
   type MotifVersion,
   type VersionActionState,
 } from "./motifs";
+import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 const motifCleSchema = z.enum(
   Object.keys(MOTIFS_VERSION) as [MotifVersion, ...MotifVersion[]],
@@ -32,6 +33,7 @@ export async function creerVersion(
   _prev: VersionActionState,
   formData: FormData,
 ): Promise<VersionActionState> {
+  await verifierSaisie();
   const cleParsed = motifCleSchema.safeParse(formData.get("motifCle"));
   if (!cleParsed.success) {
     return {
@@ -164,6 +166,7 @@ export async function noterTransmissionSpst(
   _prev: TraceTransmissionState,
   formData: FormData,
 ): Promise<TraceTransmissionState> {
+  await verifierSaisie();
   const { db } = await requireDuerp(duerpId);
   const version = await db.duerpVersion.findFirst({
     where: { id: versionId, duerpId },

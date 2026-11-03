@@ -7,6 +7,7 @@ import { ecrireFaitActivite } from "@/lib/etablissements/faits-activite-ecriture
 import { requireRisque, requireUnite } from "@/lib/auth/scope";
 import { calculerCriticite } from "@/lib/cotation";
 import { tousRisquesConnus } from "@/lib/referentiels";
+import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 /**
  * Cloisonnement entre clients : il n'y a pas de RLS effective en base (le
@@ -46,6 +47,7 @@ export async function ajouterRisqueReferentiel(
   uniteId: string,
   referentielId: string,
 ): Promise<void> {
+  await verifierSaisie();
   const { db, unite } = await requireUnite(uniteId);
 
   const existant = await db.risque.findUnique({
@@ -92,6 +94,7 @@ export async function ajouterRisqueCustom(
   _prev: RisqueActionState,
   formData: FormData,
 ): Promise<RisqueActionState> {
+  await verifierSaisie();
   // Garde d'abord, validation ensuite : un id d'unité qui n'est pas au user
   // ne doit même pas atteindre le parsing du formulaire.
   const { db, unite } = await requireUnite(uniteId);
@@ -121,6 +124,7 @@ export async function ajouterRisqueCustom(
 }
 
 export async function supprimerRisque(risqueId: string): Promise<void> {
+  await verifierSaisie();
   const { db, duerpId, uniteId } = await requireRisque(risqueId);
 
   await db.risque.delete({ where: { id: risqueId } });
@@ -133,6 +137,7 @@ export async function modifierRisqueCustom(
   _prev: RisqueActionState,
   formData: FormData,
 ): Promise<RisqueActionState> {
+  await verifierSaisie();
   const { db, risque: existant, duerpId, uniteId } = await requireRisque(risqueId);
 
   const parsed = risqueCustomSchema.safeParse(Object.fromEntries(formData));
@@ -205,6 +210,7 @@ export async function enregistrerCotation(
   _prev: CotationActionState,
   formData: FormData,
 ): Promise<CotationActionState> {
+  await verifierSaisie();
   const { db, duerpId, uniteId, etablissementId } = await requireRisque(risqueId);
 
   const entries = Object.fromEntries(formData);

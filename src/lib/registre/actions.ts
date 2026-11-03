@@ -12,6 +12,7 @@ import type { Db } from "@/lib/auth/compte";
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { saisiePourSection } from "./champs";
 import { schemaDeLaFiche, type LigneJournal } from "./schema";
+import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 export type EtatFiche =
   | { status: "idle" }
@@ -120,6 +121,7 @@ export async function enregistrerFiche(
   _prev: EtatFiche,
   formData: FormData,
 ): Promise<EtatFiche> {
+  await verifierSaisie();
   const p = await preparer(etablissementId, sectionId, formData);
   if (!p.ok) return p.etat;
   if (p.saisie.forme !== "formulaire") {
@@ -154,6 +156,7 @@ export async function ajouterLigneJournal(
   _prev: EtatFiche,
   formData: FormData,
 ): Promise<EtatFiche> {
+  await verifierSaisie();
   const p = await preparer(etablissementId, sectionId, formData);
   if (!p.ok) return p.etat;
   if (p.saisie.forme !== "journal") {

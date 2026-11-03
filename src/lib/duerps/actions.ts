@@ -12,6 +12,7 @@ import {
   messagePlafondAjout,
   placesRestantes,
 } from "./plafond-unites";
+import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 /**
  * Cloisonnement : aucune de ces actions ne peut faire confiance à
@@ -31,6 +32,7 @@ import {
  * un second.
  */
 export async function creerDuerp(etablissementId: string): Promise<void> {
+  await verifierSaisie();
   const { db, etablissement } = await requireEtablissement(etablissementId);
 
   let duerp = await db.duerp.findFirst({
@@ -80,6 +82,7 @@ export async function choisirSecteur(
   duerpId: string,
   secteurId: string,
 ): Promise<void> {
+  await verifierSaisie();
   const { db, duerp } = await requireDuerp(duerpId);
 
   const ref = trouverReferentielParId(secteurId);
@@ -173,6 +176,7 @@ export async function ajouterUnite(
   _prev: UniteActionState,
   formData: FormData,
 ): Promise<UniteActionState> {
+  await verifierSaisie();
   const { db } = await requireDuerp(duerpId);
 
   const parsed = uniteSchema.safeParse(Object.fromEntries(formData));
@@ -213,6 +217,7 @@ export async function renommerUnite(
   uniteId: string,
   nouveauNom: string,
 ): Promise<void> {
+  await verifierSaisie();
   const { db, duerpId } = await requireUnite(uniteId);
 
   // La borne de la création (`uniteSchema`), et non une seconde : un point
@@ -233,6 +238,7 @@ export async function renommerUnite(
 }
 
 export async function supprimerUnite(uniteId: string): Promise<void> {
+  await verifierSaisie();
   const { db, duerpId } = await requireUnite(uniteId);
 
   await db.uniteTravail.delete({ where: { id: uniteId } });
@@ -263,6 +269,7 @@ export async function declarerAucunRisque(
   uniteId: string,
   justification: string | null,
 ): Promise<void> {
+  await verifierSaisie();
   const { db, duerpId } = await requireUnite(uniteId);
 
   const parsed = justificationAucunRisqueSchema.safeParse(justification);
