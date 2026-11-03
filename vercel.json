@@ -5,6 +5,8 @@
     "deploymentEnabled": {
       "lot/*": false,
       "doc/*": false,
+      "docs/*": false,
+      "report/*": false,
       "fix/*": false,
       "feat/*": false,
       "spike/*": false,
