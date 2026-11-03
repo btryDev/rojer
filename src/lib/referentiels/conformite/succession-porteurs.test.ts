@@ -194,6 +194,7 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "incendie-erp-eclairage-securite-autonomie-semestrielle": "equipement",
   "incendie-erp-eclairage-securite-essai-mensuel": "equipement",
   "incendie-erp-eclairage-securite-notice-registre": "etablissement", // 2026-10-17, sous-lot C
+  "incendie-erp-enseignement-exercices-evacuation": "etablissement", // 2026-11-03, R 33
   "incendie-erp-exploitant-present-public": "etablissement", // 2026-10-17, sous-lot C
   "incendie-erp-extincteurs-annuelle": "equipement",
   "incendie-erp-extincteurs-revision-decennale": "equipement",
@@ -203,7 +204,6 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "incendie-erp-modalites-appel-pompiers-affichees": "etablissement", // 2026-10-17, sous-lot C
   "incendie-erp-pe4-entretien-installations-techniques": "etablissement",
   "incendie-erp-personnel-designe-moyens-secours": "etablissement",
-  "incendie-erp-enseignement-exercices-evacuation": "etablissement",
   "incendie-erp-personnel-qualifie-detection": "etablissement", // 2026-10-17, sous-lot C
   "incendie-erp-plan-intervention-entrees": "etablissement", // 2026-10-17, sous-lot C
   "incendie-erp-ria-annuelle": "equipement",

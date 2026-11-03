@@ -122,7 +122,9 @@ export const NOM_TYPE_ERP_PLURIEL: Partial<Record<TypeErp, string>> = {
   // ~~« salles de spectacle et de réunion »~~ — revue de G (R7) : le « et »
   // doublait celui de l'énumération.
   L: "salles de spectacle ou de réunion",
-  R: "établissements d'enseignement et de formation",
+  // ~~« établissements d'enseignement et de formation »~~ — revue de #173 :
+  // le « et » doublait celui de l'énumération (même défaut que R7 pour L).
+  R: "établissements d'enseignement ou de formation",
 };
 
 function enumeration(mots: readonly string[]): string {

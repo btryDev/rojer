@@ -361,7 +361,9 @@ function lecturesSansTexteModificateur(
   for (const c of corpus) {
     for (const a of c.articles) {
       if (a.statut === "non_depouille") continue;
-      if (a.lecture !== "premiere_main") continue;
+      // 2026-11-03 : `legi_dila` est au même degré (`degreDeReference`) ; il dit
+      // aussi par quel texte.
+      if (a.lecture !== "premiere_main" && a.lecture !== "legi_dila") continue;
       if ((a.luLe ?? "") < REGLE_MODIFICATEUR_DEPUIS) continue;
       if (a.modifiePar === undefined) muettes.push(`${c.id} / ${a.ref}`);
     }
