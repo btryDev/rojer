@@ -47,7 +47,7 @@ OA, REF, GA, EF, et R qui accueille des enfants — ADR-031, amendement du
 2026-10-18]~~ [2026-11-03 : **trois refus**, et trois seulement — plus de
 quarante-neuf travailleurs sur le site, plus de quarante-neuf salariés dans
 l'entreprise, un ERP situé dans un IGH. Le filtre à l'accueil est levé
-(ADR-031, amendements du 2026-11-03 (ter) et (quater)) : on refuse seulement
+(~~réalignement,~~ ADR-031, amendements du 2026-11-03 (ter) et (quater)) : on refuse seulement
 ce qui est hors cible par la taille ou l'IGH ; tout le reste s'accepte et se
 déclare] :
 
@@ -96,9 +96,12 @@ n'est pas refusé.
 
 Le critère : on refuse ce que le produit ne sait pas servir **du tout** — ~~un
 règlement entier qu'il n'a jamais lu, une exposition qu'il ne sait pas détecter~~
-[2026-11-03 (ADR-031, ter et quater) : la taille de la structure, ou un ERP
-situé dans un IGH. Un type d'ERP dont Rojer ne suit pas le règlement propre ne
-refuse plus : il se déclare].
+~~[2026-11-03, réalignement : la taille de la structure, ou un ERP situé dans un
+IGH. Un règlement pas encore lu, une exposition pas encore suivie, un autre code
+qui s'applique aussi ne refusent plus : ils se déclarent]~~ [2026-11-03, rayé le
+même jour (ADR-031, ter et quater) : la taille de la structure, ou un ERP situé
+dans un IGH. Un type d'ERP dont Rojer ne suit pas le règlement propre ne refuse
+plus : il se déclare].
 On déclare ce qu'il sert **incomplètement**, parce que le dirigeant y gagne quand
 même quelque chose et qu'il est prévenu de ce qui manque.
 

@@ -134,8 +134,10 @@ release (lots lancés le même jour) ; **n° 1 (gaz sans cuisine) et n° 5
    CLOS — le filtre est levé (réalignement, ADR-031 amendement ter, PR #172) ;
    tout établissement J, U, spécial ou EF, ancien ou nouveau, porte le manque
    de l'axe `type_erp` (`perimetre/couverture.ts`). Le R qui accueille des
-   enfants est accepté et ne porte pas de manque propre : les autres codes ne
-   sont pas servis.]** Le filtre
+   enfants est accepté et ne porte pas de manque propre ~~: les autres codes ne
+   sont pas servis~~ [rayé le même jour, ADR-031 (quater) : le référentiel
+   validé n'est pas élargi ; `R 33`, seul manque du type R dans la cible, reste
+   au § 9 de `couverture-declaree-du-produit.md`].]** Le filtre
    (`src/lib/etablissements/types-refuses.ts`) refuse ces types à la création
    et à leur ENTRÉE sur la fiche ; un dossier déjà enregistré dans l'un d'eux
    s'enregistre comme avant, sans avertissement — la prod n'a que des données

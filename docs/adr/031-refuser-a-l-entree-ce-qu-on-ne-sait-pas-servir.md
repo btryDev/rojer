@@ -8,7 +8,7 @@
   `src/lib/perimetre/exclusions.ts` (`refusAlEntree`, catalogue des ~~deux~~
   [2026-10-18 : trois] refus de taille et d'IGH),
   ~~`src/lib/etablissements/types-refuses.ts` (`refusDuFiltre`, le filtre à
-  l'accueil — 2026-10-18),~~ [2026-11-03 : retiré avec le filtre, réalignement]
+  l'accueil — 2026-10-18),~~ [2026-11-03 : retiré avec le filtre, ~~réalignement~~ amendement (ter)]
   `src/lib/perimetre/couverture.ts`, `src/lib/referentiels/corpus/perimetre.ts`
 - **Amende** l'ADR-020, qu'elle ne renverse pas · **Découle de** l'ADR-025
 
@@ -18,7 +18,8 @@
 > des enfants. Le critère de cette ADR ne change pas — on refuse ce qu'on ne
 > sait pas servir *du tout* — et c'est lui qui fonde ces refus. Voir
 > « Amendement du 2026-10-18 » en fin de document.~~ [2026-11-03 : amendement
-> annulé par le réalignement, ci-dessous.]
+> annulé par ~~le réalignement~~ la levée du filtre (amendements (ter) et
+> (quater)), ci-dessous.]
 
 > **Amendée le 2026-11-03 — ~~réalignement CCH + Code du travail~~ tous les
 > types d'ERP admis.** ~~Rojer sert tout le CCH et tout le Code du travail
@@ -167,7 +168,8 @@ et 102, et R. 4544-11), ~~huit~~ ~~six~~ cinq hors cadre — `docs/couverture-de
 
 ## ~~Amendement du 2026-10-18 — le filtre à l'accueil~~ [annulé le 2026-11-03]
 
-> **Annulé le 2026-11-03** par la levée du filtre à l'accueil (voir
+> **Annulé le 2026-11-03** par ~~le réalignement CCH + Code du travail~~ la
+> levée du filtre à l'accueil [rayé le même jour, amendement (quater)] (voir
 > « Amendement du 2026-11-03 (ter) »). Le texte ci-dessous est gardé tel quel :
 > il décrit le filtre tel qu'il a vécu, du 2026-10-17 au 2026-11-03, et ne
 > décrit plus le code.
@@ -412,8 +414,9 @@ chapitre PS, non lu, est un manque à déclarer au même titre (non fait ici).
   pas élargi.]
 - Le chapitre PS (livre IV), lu pour un article sur quarante-trois, n'a pas de
   manque déclaré.
-- Les quatorze obligations du référentiel fondées sur un autre code restent
-  en place ; l'établissement sans salarié n'est pas traité.
+- ~~Les quatorze obligations du référentiel fondées sur un autre code restent
+  en place~~ [2026-11-03, sans objet — (quater) : elles font partie du
+  référentiel validé] ; l'établissement sans salarié n'est pas traité.
 
 ## Amendement du 2026-11-03 (quater) — le référentiel n'est pas élargi
 

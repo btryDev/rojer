@@ -77,6 +77,9 @@ const CONDUITE = [
 
 // Le motif de l'exclusion `risque_specialise` (`corpus/perimetre.ts`), élément
 // par élément.
+// [2026-11-03 : scindée par #172 en « autres codes » et « Code du travail,
+// pas encore » ; rétablie le même jour par #175 — ADR-031 (quater), le
+// référentiel validé n'est pas élargi.]
 const RISQUES = [
   nonPorte("les installations classées soumises à autorisation"),
   nonPorte("les atmosphères explosives"),

@@ -56,6 +56,9 @@ export const EXCLUSIONS = {
   // écrits. Le motif s'affiche sur la page « Ce que Rojer ne couvre pas »
   // (`perimetre/exclusions.ts`) : l'ancienne rédaction est rayée ici, pas à
   // l'écran. `exclusions.test.ts` tient qu'aucun article du type X n'y est rangé.
+  // [2026-11-03 : réécrit par #172 (« Relève d'un autre code », sans ATEX ni
+  // rayonnements ionisants), rétabli le même jour par #175 — décision de la
+  // propriétaire, ADR-031 (quater) : le référentiel validé n'est pas élargi.]
   risque_specialise: {
     libelle: "Risque spécialisé hors périmètre",
     motif:
