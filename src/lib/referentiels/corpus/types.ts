@@ -295,6 +295,20 @@ export type SourceLecture =
    */
   | "api_legifrance"
   /**
+   * Relu dans le jeu de données officiel LEGI de la DILA (base servie par
+   * l'API Légifrance), export global + mises à jour quotidiennes appliquées
+   * dans l'ordre ; verbatim recopié mot pour mot du XML ; date du jeu précisée
+   * dans la note. Posé le 2026-11-03 (mission « alignement CCH + Code du
+   * travail ») : la machine n'a pas d'identifiants PISTE, et une provenance ne
+   * s'arrondit pas — ce n'est pas `api_legifrance`.
+   *
+   * Classé au degré de `premiere_main` (`degreDeReference`) : rien ne transite
+   * par un outil qui résume, le texte est celui de la base officielle. Ce
+   * qu'il ne dit pas : que `pnpm legifrance:verifier` l'a recomparé — le jeu
+   * est daté, l'API est vivante.
+   */
+  | "legi_dila"
+  /**
    * Lu ailleurs qu'à la source — reproduction consolidée, base
    * professionnelle, résumé. NE PEUT PAS fonder une entrée du référentiel :
    * deux reproductions concordantes peuvent dériver du même relevé, et aucune

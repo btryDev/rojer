@@ -252,7 +252,11 @@ export function degreDeReference(
   if (!article.citationCle) return "lu_sans_verbatim";
   // `api_legifrance` : verbatim recopié de l'API officielle et recomparé par
   // le script à chaque passage — le recoupement qui manque à un relevé d'agent.
-  return article.lecture === "premiere_main" || article.lecture === "api_legifrance"
+  // `legi_dila` (2026-11-03) : verbatim recopié du XML du jeu officiel LEGI,
+  // la base que sert l'API — aucun outil qui résume entre le texte et le relevé.
+  return article.lecture === "premiere_main" ||
+    article.lecture === "api_legifrance" ||
+    article.lecture === "legi_dila"
     ? "premiere_main"
     : "agent_verbatim";
 }
