@@ -29,6 +29,9 @@ import type { MetadataRoute } from "next";
 export const RACINES_INDEXABLES = ["/", "/login", "/signup"] as const;
 
 export const RACINES_EXCLUES = [
+  // Les conditions générales (ADR-053 § 8) : publiques, mais provisoires —
+  // à rendre indexables quand le texte relu par un juriste les remplacera.
+  "/conditions",
   // Pages publiques, à lien ou par slug.
   "/acces/",
   "/accessibilite/",
