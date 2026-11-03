@@ -37,11 +37,16 @@ const TRENTE_JOURS = UN_JOUR * 30;
  * qu'un nom ne fasse pas d'une invitation Rojer un hameçonnage.
  */
 export function nomPourEmail(brut: string): string {
-  // Un lien explicite, puis tout ce qu'une messagerie rendrait cliquable : un
-  // domaine nu (`evil.fr/connexion`) ou une adresse e-mail.
-  const sansLien = brut
-    .replace(/\S*(?:https?:\/\/|www\.)\S*/gi, "[lien retiré]")
-    .replace(/\S*[\p{L}\p{N}_-]\.[a-z]{2,}\b\S*/giu, "[lien retiré]");
+  // Normaliser d'abord : formes de compatibilité (NFKC), caractères invisibles
+  // retirés, points idéographiques ramenés au point.
+  const normal = brut.normalize("NFKC").replace(/\p{Cf}/gu, "").replace(/[\u3002\uFF0E\uFF61]/g, ".");
+  // Puis rien de ce qu'une messagerie rendrait cliquable : un lien explicite,
+  // et tout point collé entre deux caractères (domaine nu, adresse, IP) — le
+  // point devient une espace ; « @ » disparaît.
+  const sansLien = normal
+    .replace(/\S*(?:https?:\/\/|www\.)\S*/giu, "[lien retiré]")
+    .replace(/(?<=\S)\.(?=\S)/gu, " ")
+    .replace(/@/g, " ");
   const uneLigne = sansLien.replace(/[\u0000-\u001f\u007f\u2028\u2029]+/g, " ").replace(/\s+/g, " ").trim();
   return uneLigne.length > 80 ? `${uneLigne.slice(0, 79)}…` : uneLigne;
 }

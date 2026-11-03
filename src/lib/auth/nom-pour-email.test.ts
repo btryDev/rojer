@@ -11,9 +11,13 @@ describe("nomPourEmail (invitation, ADR-054 § 5)", () => {
     );
   });
 
-  it("retire un domaine nu et une adresse e-mail, que les messageries rendent cliquables", () => {
-    expect(nomPourEmail("Connectez-vous sur evil.fr/connexion")).toBe("Connectez-vous sur [lien retiré]");
-    expect(nomPourEmail("écrire à support@evil.fr")).toBe("écrire à [lien retiré]");
+  it("ne laisse aucun domaine, adresse ou IP, quelle que soit l'écriture", () => {
+    expect(nomPourEmail("Connectez-vous sur evil.fr/connexion")).toBe("Connectez-vous sur evil fr/connexion");
+    expect(nomPourEmail("écrire à support@evil.fr")).toBe("écrire à support evil fr");
+    expect(nomPourEmail("evil\u3002fr")).toBe("evil fr");
+    expect(nomPourEmail("evil\u200b.\u200bfr")).toBe("evil fr");
+    expect(nomPourEmail("ｅｖｉｌ．ｆｒ")).toBe("evil fr");
+    expect(nomPourEmail("192.168.0.1")).toBe("192 168 0 1");
     expect(nomPourEmail("M. Dupont, St. Malo")).toBe("M. Dupont, St. Malo");
   });
 
