@@ -20,7 +20,7 @@ connecteur MCP OAuth de Supabase n'existe plus — garder la suppression de
 `src/lib/mcp/acces-oauth*.ts` et `route-oauth.test.ts`, ne pas réintroduire
 `clientDuCompteVerifie` ni `ScopeMcp.userId`.
 
-## Ce qui est sur `cc` (au 2026-11-02, 4f4e63e4 ; ~~au 2026-11-01, e65ba81c~~)
+## Ce qui est sur `cc` (au 2026-11-03, df9dbff6 ; ~~au 2026-11-02, 4f4e63e4~~ ; ~~au 2026-11-01, e65ba81c~~)
 
 - **Better Auth**, lots 1 à 3b (#133 à #139) : inscription, connexion,
   vérification d'adresse, mot de passe oublié, page « Sécurité du compte »
@@ -48,6 +48,61 @@ connecteur MCP OAuth de Supabase n'existe plus — garder la suppression de
   de plus à rejouer, rien d'autre. Suite du chantier et constats des revues :
   `docs/notes-chantier-abonnements-stripe.md` (§ 5 les lots, § 7 ce que les
   revues renvoient au webhook, aux droits et au parcours).
+- **Abonnements Stripe, suite** (2026-11-03) : webhook (#156) ; droits du
+  compte et garde des écritures `verifierSaisie()` — un impayé ferme la
+  saisie, jamais la lecture ni l'export (#158) ; lots 4-5, partie A (#164) :
+  catalogue provisoire des formules, conditions générales provisoires
+  (`/conditions`), appels Stripe du parcours **non branchés**. Reste la
+  partie B (écran d'essai, choix de formule, Checkout, portail, quota
+  d'établissements, preuve d'acceptation des CGU) : elle attendait #159,
+  fusionnée ; plan et passation dans les notes du chantier, §§ 8 et 9 (#166).
+- **Plusieurs utilisateurs par compte, lot 1** (2026-11-03, ADR-054, PR #159,
+  fusionnée dans `cc` en 5e4c8378 avec l'ADR, #157) :
+  tables `Compte`, `Membre`, `InvitationCompte` (plugin `organization` de
+  Better Auth) ; la racine de l'isolation est `compteId`, plus `userId` ;
+  l'appartenance est relue à chaque requête ; + 1 requête par page. Cinq
+  migrations, avec reprise (un compte par utilisateur existant) et arrêt
+  avant le retrait de `userId` si une ligne y échappe. **Si la bascule a lieu
+  avant la fusion de ce lot**, scinder la dernière migration (§ 10 de
+  l'ADR). [2026-11-03 : sans objet, fusionné avant la bascule.] ~~Pas encore d'écran : invitation, lecture seule et membres viennent
+  aux lots suivants.~~ [2026-11-03 : lots 3 et 4 sur la même PR — lecture
+  seule (client borné et `verifierSaisie`), écran « Membres », invitation par
+  e-mail, choix du compte. Reste : masquer les boutons de saisie pour la
+  lecture seule, plafond de membres par formule.]
+
+- **Reports de `main`** (2026-11-03) : borne d'effectif à 49 (#161, #163) ;
+  effectif de la société = somme de ses sites, apprentis, effectif hors
+  Rojer (#165 sur `main`, reporté par #168 avec `verifierSaisie()` en tête de
+  `modifierEffectifs`). Migration `20261103180000_effectif_par_les_sites`,
+  datée après celles des comptes.
+
+### Multi-utilisateurs : ce qui reste (2026-11-03)
+
+- **Recette à rejouer AVANT la bascule** : la matrice « 75 routes × 2 comptes »
+  du 2026-10-31 n'a pas été rejouée depuis l'ADR-054 (son outil n'est pas
+  versionné). La rejouer avec un compte A à **deux membres** (un membre, un
+  lecture seule) et un compte B, plus un membre retiré (ADR-054 § 9). Les
+  tests sur base réelle (`portee/client`, `auth/membres`,
+  `membres/invitation` .integration) couvrent la borne, l'appartenance et le
+  parcours d'invitation, pas chaque route.
+- **Décision à confirmer par la propriétaire** : supprimer une entreprise ou
+  un établissement est réservé au propriétaire du compte
+  (`verifierProprietaire`), choix de réalisation (ADR-054, « Ce que la
+  réalisation a précisé, lots 3 et 4 »). Pour l'ouvrir aux membres :
+  `verifierRole` à la place, dans `entreprises/actions.ts` et
+  `etablissements/actions.ts`.
+- **Lot à part, lecture seule** : masquer les boutons de saisie pour un
+  membre en lecture seule (environ 80 écrans de formulaires). D'ici là, tout
+  geste tenté aboutit à `/compte/lecture-seule`, et le client borné refuse
+  l'écriture.
+- **Plafond de membres par formule** : à poser quand la gamme est arrêtée
+  (`membershipLimit` du plugin, lu depuis la formule, invitations en attente
+  comprises ; ADR-054 § 8). Le plugin garde aujourd'hui son défaut de 100.
+- **Choix du compte dans la gélule** : il n'existe que sur l'écran « Membres »
+  (ADR-054 § 7).
+- **Bases locales** qui ont joué `20261103120000_comptes_et_membres` avant
+  son CHECK et son déclencheur : à remettre à zéro (aucune n'est en
+  production).
 
 ## Ce qui reste avant la bascule
 
@@ -78,6 +133,16 @@ sont pas ouverts) :
   session « pricing » : branche `docs/offres-abonnement`).
 
 ## Règles de travail qui valent ici
+
+- Ce fichier est **le même sur `main` et sur `cc`** : le modifier sur `main`
+  puis le reporter, pour que les sessions des deux branches lisent la même
+  passation (2026-11-03 : il n'était à jour que sur `cc`).
+- Previews Vercel : `vercel.json` les coupe par préfixe de branche
+  (`git.deploymentEnabled`). `report/*` et `docs/*` y manquaient jusqu'au
+  2026-11-03, et neuf previews ont été construites ce jour-là, dont plusieurs
+  du code de `cc`. Un préfixe de branche neuf s'y ajoute. Vérifier dans le
+  tableau de bord Vercel que l'environnement « Preview » ne porte aucune
+  variable de la base de production.
 
 - Fusion : revue de code, simplification et sécurité faites et corrigées,
   **puis** CI verte. Jamais avant.
