@@ -98,9 +98,9 @@ export const QUESTION_PAR_OBLIGATION: Readonly<Record<string, string>> = {
     "Avez-vous un plan de vérification des buts et paniers, et un registre de leurs contrôles ?",
   // Qui s'occupe de quoi
   "elec-erp-presence-personne-qualifiee":
-    "Une personne qualifiée est-elle présente pendant l'ouverture au public ?",
+    "Une personne qualifiée en électricité est-elle présente pendant l'ouverture au public ?",
   "elec-erp-presence-personne-qualifiee-scene-n3":
-    "Une personne qualifiée est-elle présente pendant l'ouverture au public de la salle ?",
+    "Une personne qualifiée en électricité est-elle présente pendant l'ouverture au public de la salle ?",
   "elec-travail-habilitation-personnel":
     "Les salariés qui travaillent sur ou près d'installations électriques sont-ils habilités ?",
   "incendie-erp-5-sommeil-avis-controle-affiche":

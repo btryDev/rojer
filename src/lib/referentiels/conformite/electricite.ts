@@ -545,7 +545,7 @@ export const obligationsElectricite: Obligation[] = [
     id: "elec-erp-presence-personne-qualifiee",
     domaine: "electricite",
     libelle:
-      "Présence d'une personne qualifiée pendant l'ouverture au public (ERP 1ʳᵉ et 2ᵉ catégorie)",
+      "Présence d'une personne qualifiée en électricité pendant l'ouverture au public (ERP 1ʳᵉ et 2ᵉ catégorie)",
     description:
       "Dans un établissement de 1ʳᵉ ou de 2ᵉ catégorie, la présence physique d'une personne qualifiée est requise pendant toute la présence du public, pour assurer, conformément aux consignes données, l'exploitation et l'entretien quotidien des installations électriques. Ce n'est pas une vérification à date : c'est un état à tenir chaque jour d'ouverture.",
     referencesLegales: [
@@ -596,7 +596,7 @@ export const obligationsElectricite: Obligation[] = [
     id: "elec-erp-presence-personne-qualifiee-scene-n3",
     domaine: "electricite",
     libelle:
-      "Présence d'une personne qualifiée pendant l'ouverture au public (salle avec scène, ERP de 3ᵉ catégorie)",
+      "Présence d'une personne qualifiée en électricité pendant l'ouverture au public (salle avec scène, ERP de 3ᵉ catégorie)",
     description:
       "Dans une salle de type L — ou une salle de danse de type P pour ses aménagements de spectacle — de 3ᵉ catégorie qui comporte un espace scénique, le règlement de sécurité étend à la 3ᵉ catégorie la règle des 1ʳᵉ et 2ᵉ : la présence physique d'une personne qualifiée est requise pendant toute la présence du public, pour assurer, conformément aux consignes données, l'exploitation et l'entretien quotidien des installations électriques (art. L 57 § 7, qui rend applicable l'article EL 18 § 2). Ce n'est pas une vérification à date : c'est un état à tenir chaque jour d'ouverture. Dans une salle de danse, le chapitre ne s'applique qu'aux aménagements de spectacle (art. L 1 § 3) : Rojer vous présente la ligne dès qu'une scène est déclarée, sans savoir si la présence vise toute la salle.",
     referencesLegales: [
