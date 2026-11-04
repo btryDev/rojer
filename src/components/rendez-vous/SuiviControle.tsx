@@ -11,7 +11,7 @@ import {
   formaterDateHeureFr,
   versSaisieDateHeure,
 } from "@/lib/dates";
-import { avertissementRendezVous } from "@/lib/rendez-vous/regles";
+import { avertissementAgrement, avertissementRendezVous } from "@/lib/rendez-vous/regles";
 import type { SuiviControleState } from "@/lib/rendez-vous/actions";
 import type { PrestataireProposable } from "@/lib/rendez-vous/queries";
 import { NOTE_RENDEZ_VOUS_MAX } from "@/lib/rendez-vous/schema";
@@ -22,6 +22,7 @@ type Prestataire = {
   contactNom: string;
   contactTelephone: string | null;
   contactEmail: string;
+  estOrganismeAgree: boolean;
 };
 
 /**
@@ -39,6 +40,7 @@ export function SuiviControle({
   hrefNouveauPrestataire,
   hrefPrestataire,
   echeance,
+  agrementExige,
 }: {
   /** L'échéance légale, quand la ligne en a une : le formulaire compare. */
   echeance: Date | null;
@@ -51,10 +53,13 @@ export function SuiviControle({
   proposables: PrestataireProposable[];
   hrefNouveauPrestataire: string;
   hrefPrestataire: string | null;
+  /** Seul un organisme agréé peut faire ce contrôle (`agrementExige`). */
+  agrementExige: boolean;
 }) {
   const [ouvert, setOuvert] = useState(false);
   const [saisieRdv, setSaisieRdv] = useState(rendezVousLe ? versSaisieDateHeure(rendezVousLe) : "");
   const [saisieEnvoyee, setSaisieEnvoyee] = useState<string | null>(null);
+  const [choisi, setChoisi] = useState(prestataire?.id ?? "");
   const router = useRouter();
   const chemin = usePathname();
   const parametres = useSearchParams();
@@ -82,8 +87,13 @@ export function SuiviControle({
       ? avertissementRendezVous(depuisSaisieDateHeure(saisieRdv), echeance)
       : null;
   const err = (champ: string) => (state.status === "error" ? state.fieldErrors?.[champ]?.[0] : undefined);
-  const couvrants = proposables.filter((p) => p.couvre);
-  const autres = proposables.filter((p) => !p.couvre);
+  // Un contrôle réservé à un organisme agréé range l'annuaire par agrément ;
+  // sinon, par domaine couvert.
+  const enTete = (p: PrestataireProposable) => (agrementExige ? p.estOrganismeAgree : p.couvre);
+  const couvrants = proposables.filter(enTete);
+  const autres = proposables.filter((p) => !enTete(p));
+  const alerteAgrement = avertissementAgrement(agrementExige, prestataire);
+  const alerteChoix = avertissementAgrement(agrementExige, proposables.find((p) => p.id === choisi) ?? null);
 
   return (
     <section className="carte-board overflow-hidden px-7 py-6 sm:px-8">
@@ -109,7 +119,20 @@ export function SuiviControle({
             </p>
           ) : (
             <p className="m-0 mt-2 text-[13.5px] text-[color:var(--board-slate-mid)]">
-              Aucun prestataire attitré.
+              {agrementExige ? "Aucun prestataire attitré. Ce contrôle doit être fait par un organisme agréé." : "Aucun prestataire attitré."}
+            </p>
+          )}
+          {alerteAgrement && (
+            <p className="m-0 mt-1.5 text-[13px] text-[color:var(--board-amber-ink)]">
+              {alerteAgrement}
+              {hrefPrestataire && (
+                <>
+                  {" "}
+                  <Link href={`${hrefPrestataire}/modifier`} className="font-semibold underline underline-offset-4">
+                    Ouvrir sa fiche
+                  </Link>
+                </>
+              )}
             </p>
           )}
           <p
@@ -130,7 +153,11 @@ export function SuiviControle({
           </p>
         </div>
         {!ouvert && (
-          <Button type="button" variant="boardClair" size="boardSm" onClick={() => setOuvert(true)}>
+          <Button type="button" variant="boardClair" size="boardSm" onClick={() => {
+              setChoisi(prestataire?.id ?? "");
+              setOuvert(true);
+            }}
+          >
             {prestataire || rendezVousLe ? "Modifier" : "Choisir un prestataire, prendre rendez-vous"}
           </Button>
         )}
@@ -146,11 +173,12 @@ export function SuiviControle({
               id="prestataireId"
               name="prestataireId"
               className="champ-board"
-              defaultValue={prestataire?.id ?? ""}
+              value={choisi}
+              onChange={(e) => setChoisi(e.currentTarget.value)}
             >
               <option value="">— Aucun —</option>
               {couvrants.length > 0 && (
-                <optgroup label="Couvrent ce contrôle">
+                <optgroup label={agrementExige ? "Organismes agréés" : "Couvrent ce contrôle"}>
                   {couvrants.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.raisonSociale}
@@ -159,7 +187,15 @@ export function SuiviControle({
                 </optgroup>
               )}
               {autres.length > 0 && (
-                <optgroup label={couvrants.length > 0 ? "Autres prestataires" : "Votre annuaire"}>
+                <optgroup
+                  label={
+                    agrementExige
+                      ? "Non déclarés agréés"
+                      : couvrants.length > 0
+                        ? "Autres prestataires"
+                        : "Votre annuaire"
+                  }
+                >
                   {autres.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.raisonSociale}
@@ -168,6 +204,9 @@ export function SuiviControle({
                 </optgroup>
               )}
             </select>
+            {alerteChoix && (
+              <p className="m-0 mt-1.5 text-[12px] text-[color:var(--board-amber-ink)]">{alerteChoix}</p>
+            )}
             <p className="m-0 mt-1.5 text-[12px] text-[color:var(--board-slate-mid)]">
               Il n&apos;est pas dans la liste ?{" "}
               <Link href={hrefNouveauPrestataire} className="font-semibold text-[color:var(--board-blue-ink)] underline underline-offset-4">

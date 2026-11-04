@@ -3,6 +3,7 @@
  * l'action serveur lisent les mêmes fonctions.
  */
 
+import type { Realisateur } from "@prisma/client";
 import { formaterDateCourteFr, formaterDateHeureFr, formaterJourMoisFr, joursCivilsEntre } from "@/lib/dates";
 
 /**
@@ -120,4 +121,28 @@ export function avertissementRendezVous(rendezVousLe: Date, echeance: Date | nul
   if (avance > 92)
     return "Bien en avance sur l'échéance : la suivante sera comptée à partir de ce contrôle.";
   return null;
+}
+
+/**
+ * Le contrôle n'admet qu'un organisme agréé : `organisme_agree` est le seul
+ * réalisateur de la ligne. Quand une personne qualifiée ou un autre tiers est
+ * admis à côté, un prestataire non agréé peut le faire — rien à signaler.
+ * L'appelant écarte la visite de la commission de sécurité, qui garde
+ * `organisme_agree` faute de valeur propre (`estLignePourInformation`).
+ */
+export function agrementExige(realisateurs: readonly Realisateur[]): boolean {
+  return realisateurs.length > 0 && realisateurs.every((r) => r === "organisme_agree");
+}
+
+/**
+ * Ce que la carte dit d'un prestataire attitré qui n'est pas déclaré agréé
+ * dans l'annuaire, sur un contrôle qui l'exige. Signalé, jamais refusé :
+ * la case de la fiche peut simplement ne pas être cochée.
+ */
+export function avertissementAgrement(
+  exige: boolean,
+  prestataire: { raisonSociale: string; estOrganismeAgree: boolean } | null,
+): string | null {
+  if (!exige || !prestataire || prestataire.estOrganismeAgree) return null;
+  return `Ce contrôle doit être fait par un organisme agréé. ${prestataire.raisonSociale} n'est pas déclaré agréé dans votre annuaire : vérifiez son agrément, et cochez « Organisme agréé » sur sa fiche s'il l'est.`;
 }

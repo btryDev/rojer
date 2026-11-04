@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { depuisSaisieDateHeure } from "@/lib/dates";
 import {
+  agrementExige,
+  avertissementAgrement,
   avertissementRendezVous,
   datePoseeAuCalendrier,
   mentionRendezVous,
@@ -69,5 +71,23 @@ describe("le rendez-vous d'un contrôle (ADR-049)", () => {
     expect(avertissementRendezVous(t("2027-10-25T09:00"), echeance)).toMatch(/retard/);
     expect(avertissementRendezVous(t("2026-11-05T09:00"), echeance)).toMatch(/avance/);
     expect(avertissementRendezVous(t("2026-11-05T09:00"), null)).toBeNull();
+  });
+});
+
+describe("l'agrément du prestataire attitré", () => {
+  it("n'est exigé que si l'organisme agréé est le seul réalisateur admis", () => {
+    expect(agrementExige(["organisme_agree"])).toBe(true);
+    expect(agrementExige(["personne_qualifiee", "organisme_agree"])).toBe(false);
+    expect(agrementExige(["organisme_accredite"])).toBe(false);
+    expect(agrementExige([])).toBe(false);
+  });
+
+  it("signale un prestataire non déclaré agréé, et rien d'autre", () => {
+    const apave = { raisonSociale: "Apave", estOrganismeAgree: true };
+    const artisan = { raisonSociale: "Élec Martin", estOrganismeAgree: false };
+    expect(avertissementAgrement(true, artisan)).toContain("Élec Martin n'est pas déclaré agréé");
+    expect(avertissementAgrement(true, apave)).toBeNull();
+    expect(avertissementAgrement(false, artisan)).toBeNull();
+    expect(avertissementAgrement(true, null)).toBeNull();
   });
 });

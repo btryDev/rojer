@@ -81,7 +81,7 @@ import { SuiviControle } from "@/components/rendez-vous/SuiviControle";
 import { DemandeAide } from "@/components/assistance/DemandeAide";
 import { enregistrerSuiviControle } from "@/lib/rendez-vous/actions";
 import { prestatairesProposables } from "@/lib/rendez-vous/queries";
-import { recoitUnSuivi, rendezVousEnAttenteDeRapport } from "@/lib/rendez-vous/regles";
+import { agrementExige, recoitUnSuivi, rendezVousEnAttenteDeRapport } from "@/lib/rendez-vous/regles";
 import { AUCUN_TIERS_ATTENDU, DOMAINES_PRESTATAIRE_ATTENDUS } from "@/lib/prestataires/domaines";
 import { creerPointACorriger } from "@/lib/actions/plan";
 import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
@@ -697,6 +697,7 @@ export default async function VerificationDetailPage({
           hrefNouveauPrestataire={`/etablissements/${id}/prestataires/nouveau`}
           hrefPrestataire={v.prestataire ? `/etablissements/${id}/prestataires/${v.prestataire.id}` : null}
           echeance={aUnRendezVous(v, aujourdhui) ? v.datePrevue : null}
+          agrementExige={agrementExige(v.realisateurRequis) && !estLignePourInformation(v)}
         />
       ) : null}
 
