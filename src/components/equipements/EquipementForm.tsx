@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState, type ReactNode } from "react";
+import { startTransition, useActionState, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { AideCategorie, CLASSE_AIDE } from "@/components/equipements/AideCategorie";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -330,7 +330,21 @@ export function EquipementForm({
     estAeration || estEsp || questions.length > 0;
 
   return (
-    <form action={formAction} className="flex flex-col gap-8">
+    <form
+      method="post"
+      // Envoi à la main plutôt que `action={…}`, comme `EtablissementForm`
+      // (2026-11-04) : React 19 vide un formulaire après une action, et un
+      // `<select>` y revient à sa valeur de montage — la fiche enregistrée
+      // réaffichait l'ancienne réponse (le SSI A ou B d'une alarme), et l'on
+      // croyait que rien n'était pris en compte. Un refus de validation ne
+      // fait plus non plus tout ressaisir.
+      onSubmit={(e) => {
+        e.preventDefault();
+        const donnees = new FormData(e.currentTarget);
+        startTransition(() => formAction(donnees));
+      }}
+      className="flex flex-col gap-8"
+    >
       {/* Catégorie + libellé */}
       <section className="flex flex-col gap-5">
         <div>
