@@ -561,7 +561,7 @@ export function lignesHistoire(
           surtitre: "Vérification",
           libelle: v.libelleObligation,
           detail: [
-            "Rapport déposé",
+            r.realiseEnInterne ? "Faite en interne" : "Rapport déposé",
             r.organismeVerif,
             nbPoints > 0 ? nombreDePoints(nbPoints) : null,
           ]

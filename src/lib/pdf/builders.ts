@@ -1,5 +1,6 @@
 import { estActionOuverte } from "@/lib/dates/retard";
 import { LABEL_RESULTAT } from "@/lib/rapports/resultats";
+import { libelleRealisePar } from "@/lib/rapports/interne";
 import { estLignePourInformation } from "@/lib/referentiels/conformite/initiative";
 import { libelleTypesErp, numeroCategorie } from "@/lib/etablissements/types-erp-affiches";
 import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
@@ -310,7 +311,7 @@ function versLigneRapport(
     id: r.id,
     dateRapport: r.dateRapport,
     resultat: r.resultat,
-    organismeVerif: r.organismeVerif,
+    realisePar: libelleRealisePar(r),
     libelleObligation: r.verification.libelleObligation,
     equipementLibelle: libelleEquipementSitue(r.verification, multiBatiments),
     domaine: obligationParId(r.verification.obligationId)?.domaine ?? null,

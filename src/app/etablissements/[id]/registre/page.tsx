@@ -1,4 +1,5 @@
 import { estAppareilRetire } from "@/lib/equipements/retrait";
+import { libelleRealisePar } from "@/lib/rapports/interne";
 import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import { BarreDeListe } from "@/components/ui-kit/BarreDeListe";
 import { PointsDuRapport } from "@/components/points-a-corriger/PointsDuRapport";
@@ -384,6 +385,7 @@ export default async function RegistrePage({
                   const dom = obligationParId(
                     r.verification.obligationId,
                   )?.domaine;
+                  const parQui = libelleRealisePar(r);
                   return (
                     <li
                       key={r.id}
@@ -399,12 +401,12 @@ export default async function RegistrePage({
                             ·
                           </span>
                           {libellePorteur(r.verification)}
-                          {r.organismeVerif && (
+                          {parQui && (
                             <>
                               <span className="mx-2 text-[color:var(--board-slate)]">
                                 ·
                               </span>
-                              {r.organismeVerif}
+                              {parQui}
                             </>
                           )}
                           {dom && (
@@ -415,10 +417,14 @@ export default async function RegistrePage({
                               {LABEL_DOMAINE[dom]}
                             </>
                           )}
-                          <span className="mx-2 text-[color:var(--board-slate)]">
-                            ·
-                          </span>
-                          {formatTaille(r.fichierTaille)}
+                          {r.fichierTaille !== null ? (
+                            <>
+                              <span className="mx-2 text-[color:var(--board-slate)]">
+                                ·
+                              </span>
+                              {formatTaille(r.fichierTaille)}
+                            </>
+                          ) : null}
                         </p>
                         {r.commentaires && (
                           <p className="m-0 mt-1 text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
@@ -435,17 +441,21 @@ export default async function RegistrePage({
                       </div>
                       <BadgeResultat resultat={r.resultat} />
                       <div className="flex flex-none flex-wrap items-center gap-2">
-                        <a
-                          href={`/api/rapports/${r.id}/fichier`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={buttonVariants({
-                            variant: "boardClair",
-                            size: "boardSm",
-                          })}
-                        >
-                          Ouvrir
-                        </a>
+                        {/* Une vérification faite en interne peut n'avoir
+                            aucune pièce jointe (2026-11-04). */}
+                        {r.fichierCle !== null ? (
+                          <a
+                            href={`/api/rapports/${r.id}/fichier`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={buttonVariants({
+                              variant: "boardClair",
+                              size: "boardSm",
+                            })}
+                          >
+                            Ouvrir
+                          </a>
+                        ) : null}
                         <Link
                           href={avecProvenance(
                             `${base}/verifications/${r.verificationId}`,

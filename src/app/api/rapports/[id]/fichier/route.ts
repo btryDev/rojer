@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { notFound } from "next/navigation";
 import { requireRapportVerification } from "@/lib/auth/scope";
 import { servirFichier } from "@/lib/storage/servir";
 
@@ -28,12 +29,17 @@ export async function GET(
 ) {
   const { id } = await context.params;
   const { rapport } = await requireRapportVerification(id);
+  // Une vérification faite en interne sans pièce jointe (2026-11-04) : rien
+  // à servir, la même réponse qu'un rapport absent.
+  const cle = rapport.fichierCle;
+  const nomOriginal = rapport.fichierNomOriginal;
+  if (cle === null || nomOriginal === null) notFound();
 
   // Lecture et réponse : `storage/servir.ts`, commun aux trois routes de
   // fichiers (2026-09-27).
   return servirFichier({
-    cle: rapport.fichierCle,
-    nomOriginal: rapport.fichierNomOriginal,
+    cle,
+    nomOriginal,
     mime: rapport.fichierMime,
     contexte: `rapports/fichier ${id}`,
   });
