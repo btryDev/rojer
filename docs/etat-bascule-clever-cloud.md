@@ -75,6 +75,10 @@ connecteur MCP OAuth de Supabase n'existe plus — garder la suppression de
   Rojer (#165 sur `main`, reporté par #168 avec `verifierSaisie()` en tête de
   `modifierEffectifs`). Migration `20261103180000_effectif_par_les_sites`,
   datée après celles des comptes.
+- **Report de `main`** (2026-11-04) : vérification faite en interne,
+  formulaire sans fichier (#180, ADR-055). Migration additive
+  `20261104120000_releve_interne`, datée après celle de l'effectif ; sur
+  `cc`, `uploadRapport` garde `verifierSaisie()` et la portée `compteId`.
 
 ### Multi-utilisateurs : ce qui reste (2026-11-03)
 

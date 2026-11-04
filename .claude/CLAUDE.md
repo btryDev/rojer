@@ -765,6 +765,10 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     `userId` à `compteId`, trois rôles (propriétaire, membre, lecture
     seule), appartenance relue à chaque `requireCompte` (2026-11-03,
     acceptée ; amende les ADR-028, 051 et 053)
+55. **055** — Une vérification faite en interne s'enregistre par un
+    formulaire, sans fichier : switch « En interne / Par un prestataire »
+    là où `realisateurRequis` admet l'exploitant, une personne qualifiée ou
+    compétente ; rapport exigé d'un tiers (2026-11-04)
 
 [2026-10-15, ménage des ADR : 037, 038 et 043 manquaient à cette liste ;
 **il n'existe pas d'ADR-044** — annoncée dans

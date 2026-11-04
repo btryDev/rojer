@@ -128,7 +128,9 @@ export async function rapportsDeposesDuDossier(db: Db, etablissementId: string) 
     // M1). Depuis `bb03cdd` aucun dépôt n'y est possible, mais des rapports
     // antérieurs peuvent exister : documents nominatifs, parfois médicaux,
     // dans un ZIP remis à un tiers. Ils n'y entrent pas ; le README le dit.
-    where: { ...filtreRapportsDuDossier(etablissementId) },
+    // Ni les vérifications faites en interne sans pièce jointe (2026-11-04) :
+    // elles n'ont pas de fichier, l'index du registre (03) les porte.
+    where: { ...filtreRapportsDuDossier(etablissementId), fichierCle: { not: null } },
     // Pas d'`orderBy` : l'ordre des rapports vit dans
     // `ORDRE_RAPPORT_PLUS_RECENT` (garde de `derniere-realisation.test.ts`),
     // et les entrées portent leur date en tête de nom — l'archive les range.
