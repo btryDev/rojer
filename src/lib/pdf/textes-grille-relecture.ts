@@ -268,6 +268,7 @@ export const LECTURE_LISIBLE: Record<SourceLecture, string> = {
   premiere_main: "première main",
   agent_verbatim: "agent (verbatim non recoupé)",
   api_legifrance: "API Légifrance (verbatim recomparé par script)",
+  legi_dila: "jeu LEGI de la DILA (verbatim recopié du XML officiel)",
   indirect: "indirect — ne peut pas fonder",
 };
 

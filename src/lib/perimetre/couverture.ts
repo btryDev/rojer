@@ -90,7 +90,7 @@ import type { EtatCouverture } from "@/lib/duerps/couverture";
 import { nonPorte, porte } from "./non-couverture";
 import type { CorrespondanceSecteur } from "./secteur";
 import type { CategorieErp } from "@/lib/referentiels/types-communs";
-import { LABEL_CATEGORIE_ERP_COURT } from "@/lib/etablissements/labels";
+import { LABEL_CATEGORIE_ERP_COURT, LABEL_TYPE_ERP } from "@/lib/etablissements/labels";
 import type { TypeErp } from "@/lib/referentiels/types-communs";
 
 /**
@@ -103,8 +103,9 @@ import type { TypeErp } from "@/lib/referentiels/types-communs";
  * `couverture.test.ts` DÉRIVE cette liste du référentiel pour la confronter.
  */
 // 2026-10-17, sous-lot G (chapitre L) : + L, servi par L 14 et la scène.
+// 2026-11-03, `lot/cch-manques-cible` : + R, servi par R 33.
 export const TYPES_ERP_DISPOSITIONS_PARTICULIERES: readonly TypeErp[] = [
-  "M", "N", "O", "W", "P", "S", "T", "X", "Y", "L",
+  "M", "N", "O", "W", "P", "S", "T", "X", "Y", "L", "R",
 ];
 
 /** Le nom d'un type au pluriel, pour la phrase. Un type sans nom ici fait échouer le test. */
@@ -121,6 +122,9 @@ export const NOM_TYPE_ERP_PLURIEL: Partial<Record<TypeErp, string>> = {
   // ~~« salles de spectacle et de réunion »~~ — revue de G (R7) : le « et »
   // doublait celui de l'énumération.
   L: "salles de spectacle ou de réunion",
+  // ~~« établissements d'enseignement et de formation »~~ — revue de #173 :
+  // le « et » doublait celui de l'énumération (même défaut que R7 pour L).
+  R: "établissements d'enseignement ou de formation",
 };
 
 function enumeration(mots: readonly string[]): string {
@@ -153,6 +157,10 @@ export type AxeCouverture =
   | "igh"
   /** La catégorie d'ERP rouvre le livre II, que le référentiel ne connaît pas. */
   | "categorie_erp"
+  /** Un type d'ERP accepté dont Rojer ne suit pas les dispositions propres
+   *  (réalignement du 2026-11-03, ADR-031 amendée : ce qui ne se refuse plus
+   *  se déclare). */
+  | "type_erp"
   /** Le DUERP ne couvre pas tout — projection de l'ADR-020. */
   | "secteur_duerp"
   /** Des appareils du parc ne portent aucune échéance — rappel de
@@ -238,6 +246,12 @@ export type RegimeEtablissement = {
   estHabitation: boolean;
   /* `familleHabitation` a quitté ce type le 2026-09-03 avec l'axe qui la
      lisait : plus rien, dans la couverture, ne dépend de la famille. */
+  /**
+   * Les types d'ERP déclarés, le premier puis les autres (`typesErpDe`).
+   * Lus par l'axe `type_erp` (2026-11-03). Requis : optionnel, un appelant
+   * qui l'oublierait compilerait et tairait le manque (revue de #172).
+   */
+  typesErp: readonly TypeErp[];
 };
 
 /**
@@ -445,6 +459,118 @@ function axeRegime(
     // `TYPES_ERP_DISPOSITIONS_PARTICULIERES`, que le test dérive du référentiel.]
     consequence: `Rojer accepte les ERP des catégories 1 à 4. Le règlement de sécurité leur applique en entier son livre II, dont cet outil ne porte qu'une part : ${nonPorte("le service de sécurité incendie assuré par des agents de sécurité incendie")}, notamment, n'y est pas, et des dispositions particulières par type d'activité, il ne porte que quelques-unes, et seulement pour les ${enumeration(TYPES_ERP_DISPOSITIONS_PARTICULIERES.map((t) => NOM_TYPE_ERP_PLURIEL[t] ?? t))}. Votre calendrier et votre registre sont donc incomplets, et le resteront.`,
   });
+}
+
+/**
+ * Les types d'ERP acceptés depuis le réalignement (2026-11-03, ADR-031
+ * amendée) dont Rojer ne suit pas les dispositions propres. Le filtre à
+ * l'accueil du 2026-10-17 les refusait ; ils se déclarent désormais.
+ *
+ * - J et U : leurs chapitres du livre II (catégories 1 à 4) sont lus, pas
+ *   encodés ; en 5ᵉ catégorie, U relève des articles PU du livre III, lus
+ *   aussi, et J d'aucun chapitre propre (le livre III n'en a pas) : rien à
+ *   déclarer pour lui.
+ * - Les établissements spéciaux du livre IV, PS excepté (servi par PS 32,
+ *   et accepté avant le filtre) : leurs dispositions ne sont pas lues.
+ * - EF : son règlement (arrêté du 9 janvier 1990) n'est pas lu.
+ *
+ * Les dispositions LUES et pas encore suivies, par type et par livre. `refs`
+ * nomme les articles du corpus que la phrase cite : `couverture-types-erp.test.ts`
+ * tient chacun encore `obligation_manquante` — un article encodé fait tomber
+ * le test, au lieu d'une phrase qui annoncerait un manque comblé (revue de
+ * #172).
+ */
+export const DISPOSITIONS_LUES_NON_SUIVIES: readonly {
+  type: TypeErp;
+  /** Livre II (catégories 1 à 4) ou livre III (5ᵉ catégorie). */
+  livreII: boolean;
+  texte: string;
+  sujets: readonly string[];
+  refs: readonly string[];
+}[] = [
+  {
+    type: "J",
+    livreII: true,
+    texte: "chapitre J du livre II",
+    sujets: [
+      nonPorte("les exercices pratiques semestriels propres au type J"),
+      nonPorte("les consignes remises à chaque résident"),
+      nonPorte("la vérification annuelle des équipements d'oxygénothérapie"),
+    ],
+    refs: ["J 39", "J 40", "J 33"],
+  },
+  {
+    type: "U",
+    livreII: true,
+    texte: "chapitre U du livre II",
+    sujets: [
+      nonPorte("les exercices d'évacuation simulée propres au type U"),
+      nonPorte("les consignes affichées propres aux établissements de soins"),
+      nonPorte("la vérification annuelle des installations de gaz médicaux"),
+    ],
+    refs: ["U 47", "U 48", "U 64"],
+  },
+  {
+    type: "U",
+    livreII: false,
+    texte: "articles PU du livre III",
+    sujets: [nonPorte("la vérification annuelle des installations de gaz médicaux")],
+    refs: ["PU 5"],
+  },
+];
+
+/**
+ * Les textes PAS LUS, et les types qu'ils visent. PS, au livre IV aussi, n'y
+ * est pas : servi par PS 32 et accepté avant le filtre.
+ */
+export const TEXTES_NON_LUS: readonly { texte: string; types: readonly TypeErp[] }[] = [
+  {
+    texte: nonPorte("les dispositions propres aux établissements spéciaux (livre IV de l'arrêté du 25 juin 1980)"),
+    types: ["PA", "CTS", "SG", "OA", "REF", "GA"],
+  },
+  {
+    texte: nonPorte("les dispositions de sécurité propres aux établissements flottants (arrêté du 9 janvier 1990)"),
+    types: ["EF"],
+  },
+];
+
+/** « établissement de plein air (PA) » — le libellé du formulaire, sans sa lettre. */
+function nomDuType(t: TypeErp): string {
+  const nom = LABEL_TYPE_ERP[t].split(" · ")[1] ?? t;
+  return `${nom.charAt(0).toLowerCase()}${nom.slice(1)} (${t})`;
+}
+
+const INCOMPLETS = "Votre calendrier et votre registre sont donc incomplets.";
+
+function axeTypeErp(regime: RegimeEtablissement, manques: ManqueCouverture[]): void {
+  // Hors ERP, rien ; en IGH, l'axe `igh` a déjà dit que rien de ce qui est lu
+  // ici ne couvre le régime. Sans catégorie, on ne sait pas quel livre
+  // s'applique : l'indétermination de l'axe `categorie_erp` le dit.
+  const cat = regime.categorieErp;
+  if (!regime.estERP || regime.estIGH || cat === null) return;
+  // Le livre II vaut pour les catégories 1 à 4 : un fait du règlement, pas
+  // ce que Rojer couvre (`CATEGORIES_COUVERTES`).
+  const livreII = cat !== "N5";
+  const types = regime.typesErp;
+
+  for (const d of DISPOSITIONS_LUES_NON_SUIVIES) {
+    if (d.livreII !== livreII || !types.includes(d.type)) continue;
+    manques.push({
+      axe: "type_erp",
+      motif: `Cet établissement est déclaré ${nomDuType(d.type)}.`,
+      consequence: `Le règlement de sécurité consacre à ce type des dispositions particulières (${d.texte}). Rojer les a lues mais ne les suit pas encore : ${enumeration(d.sujets)}, notamment. ${INCOMPLETS}`,
+    });
+  }
+
+  for (const { texte, types: vises } of TEXTES_NON_LUS) {
+    const declares = types.filter((t) => vises.includes(t));
+    if (declares.length === 0) continue;
+    manques.push({
+      axe: "type_erp",
+      motif: `Cet établissement est déclaré ${enumeration(declares.map(nomDuType))}.`,
+      consequence: `Rojer ne suit pas ${texte} : il ne les a pas encore lues. ${INCOMPLETS}`,
+    });
+  }
 }
 
 /**
@@ -852,6 +978,7 @@ export function couvertureDeLEtablissement(
   const indeterminations: IndeterminationCouverture[] = [];
 
   axeRegime(faits.regime, manques, indeterminations);
+  axeTypeErp(faits.regime, manques);
   // Juste après le régime, et pour la même raison : la taille de la structure
   // qualifie tout le reste de ce que le dossier contient.
   axeEffectif(faits.effectif, manques);
@@ -881,5 +1008,6 @@ export function couvertureDuRegime(
   const manques: ManqueCouverture[] = [];
   const indeterminations: IndeterminationCouverture[] = [];
   axeRegime(regime, manques, indeterminations);
+  axeTypeErp(regime, manques);
   return { manques, indeterminations };
 }

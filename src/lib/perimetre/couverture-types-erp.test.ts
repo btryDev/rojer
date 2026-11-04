@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
-import { NOM_TYPE_ERP_PLURIEL, TYPES_ERP_DISPOSITIONS_PARTICULIERES } from "./couverture";
+import { CORPUS } from "@/lib/referentiels/corpus";
+import {
+  DISPOSITIONS_LUES_NON_SUIVIES,
+  NOM_TYPE_ERP_PLURIEL,
+  TEXTES_NON_LUS,
+  TYPES_ERP_DISPOSITIONS_PARTICULIERES,
+} from "./couverture";
 
 // La phrase de l'axe `categorie_erp` nomme les types dont Rojer porte des
 // dispositions particulières (sous-lot D, 2026-10-17). La liste est écrite
@@ -46,5 +52,33 @@ describe("axe categorie_erp — les types nommés sont ceux que le référentiel
     );
     expect(typesDerives(sansY)).not.toContain("Y");
     expect([...TYPES_ERP_DISPOSITIONS_PARTICULIERES].sort()).not.toEqual(typesDerives(sansY));
+  });
+});
+
+// Axe `type_erp` (réalignement, 2026-11-03 ; revue de #172) : la phrase cite
+// des manques, le test les relit dans le corpus et le référentiel.
+describe("axe type_erp — ce que la phrase annonce est encore un manque", () => {
+  const statutDe = (ref: string) =>
+    CORPUS.flatMap((c) => c.articles).find((a) => a.ref === ref)?.statut;
+
+  it("chaque article cité est encore `obligation_manquante` au corpus", () => {
+    for (const d of DISPOSITIONS_LUES_NON_SUIVIES)
+      for (const ref of d.refs) expect(statutDe(ref), ref).toBe("obligation_manquante");
+  });
+
+  it("aucun type déclaré par l'axe n'est servi par ses dispositions particulières", () => {
+    const declares = [
+      ...DISPOSITIONS_LUES_NON_SUIVIES.map((d) => d.type),
+      ...TEXTES_NON_LUS.flatMap((t) => t.types),
+    ];
+    expect(declares.filter((t) => typesDerives().includes(t))).toEqual([]);
+  });
+
+  it("les textes « pas encore lus » ne sont au corpus par aucun article du type", () => {
+    const prefixes = TEXTES_NON_LUS.flatMap((t) => t.types);
+    const lus = CORPUS.flatMap((c) => c.articles)
+      .map((a) => CHAPITRE.exec(a.ref)?.[1])
+      .filter((p): p is string => p !== undefined && prefixes.includes(p as never));
+    expect(lus).toEqual([]);
   });
 });

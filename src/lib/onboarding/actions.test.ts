@@ -387,29 +387,25 @@ describe("finaliserOnboarding — une entreprise par SIREN, rattachée dans le c
   });
 });
 
-// Venus de `creerEtablissement` (retiré le 2026-10-26) : la seule porte de
-// création porte le filtre à l'accueil.
-describe("finaliserOnboarding — filtre à l'accueil (2026-10-17)", () => {
+// ~~Venus de `creerEtablissement` (retiré le 2026-10-26) : la seule porte de
+// création porte le filtre à l'accueil.~~ — filtre levé le 2026-11-03
+// (ADR-031 amendée, réalignement).
+describe("finaliserOnboarding — réalignement : aucun type d'ERP refusé (2026-11-03)", () => {
   const erp = (over: Record<string, string>) =>
     formulaire({ estERP: "true", categorieErp: "N5", personnesPresentesHabituellement: "30", ...over });
 
-  it("un type J est refusé, rien n'est écrit", async () => {
-    const res = await finaliserOnboarding({ status: "idle" }, erp({ typeErp: "J", categorieErp: "N4", comporteLocauxSommeilPublic: "non" }));
-    expect(res.status === "error" && res.fieldErrors?.typeErp?.[0]).toBeTruthy();
-    expect(h.tx.etablissement.create).not.toHaveBeenCalled();
+  it("un type J est créé", async () => {
+    await expect(
+      finaliserOnboarding({ status: "idle" }, erp({ typeErp: "J", categorieErp: "N4", comporteLocauxSommeilPublic: "non" })),
+    ).rejects.toThrow("NEXT_REDIRECT");
+    expect(h.tx.etablissement.create).toHaveBeenCalled();
   });
 
-  it("un R sans enfants passe, et la réponse n'est pas écrite", async () => {
+  it("un R est créé ; une réponse « accueil d'enfants » postée n'est pas écrite", async () => {
     await expect(
-      finaliserOnboarding({ status: "idle" }, erp({ typeErp: "R", accueilEnfants: "non", comporteLocauxSommeilPublic: "non" })),
+      finaliserOnboarding({ status: "idle" }, erp({ typeErp: "R", accueilEnfants: "oui", comporteLocauxSommeilPublic: "non" })),
     ).rejects.toThrow("NEXT_REDIRECT");
     expect(h.tx.etablissement.create.mock.calls.at(-1)?.[0].data).not.toHaveProperty("accueilEnfants");
-  });
-
-  it("un R qui accueille des enfants est refusé", async () => {
-    const res = await finaliserOnboarding({ status: "idle" }, erp({ typeErp: "R", accueilEnfants: "oui", comporteLocauxSommeilPublic: "non" }));
-    expect(res.status === "error" && res.fieldErrors?.accueilEnfants?.[0]).toBeTruthy();
-    expect(h.tx.etablissement.create).not.toHaveBeenCalled();
   });
 });
 

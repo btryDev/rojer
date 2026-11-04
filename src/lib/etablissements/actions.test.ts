@@ -704,26 +704,16 @@ describe("plusieurs types d'ERP — la fiche poste la liste entière, avec son t
   });
 });
 
-describe("filtre à l'accueil — la fiche (2026-10-17 ; la création est au parcours d'onboarding)", () => {
+// ~~« filtre à l'accueil — la fiche (2026-10-17) »~~ — filtre levé le
+// 2026-11-03 (ADR-031 amendée, réalignement) : un type d'ERP ne se refuse
+// plus, ni à la création ni sur la fiche.
+describe("réalignement — la fiche accepte tout type d'ERP (2026-11-03)", () => {
   const avecAutres = (fd: FormData, autres: string[]) => {
     fd.set(CHAMP_TEMOIN_TYPES_ERP_AUTRES, "1");
-    for (const t of autres) fd.append("typesErpAutres", t);
-    return fd;
+    return avecAutresTypes(fd, autres);
   };
-  const champs = (res: { status: string; fieldErrors?: Record<string, unknown> }) =>
-    Object.keys(res.fieldErrors ?? {});
 
-  it("fiche : un restaurant qui passe en J est refusé, la base ne bouge pas", async () => {
-    h.db.etablissement.estERP = true;
-    h.db.etablissement.typeErp = "N";
-    h.db.etablissement.categorieErp = "N4";
-    const res = await modifierEtablissement("etab-1", { status: "idle" }, formulaire({ estERP: "on", typeErp: "J", categorieErp: "N4" }));
-    expect(res.status).toBe("error");
-    expect(champs(res as never)).toEqual(["typeErp"]);
-    expect(h.db.etablissement.typeErp).toBe("N");
-  });
-
-  it("fiche : N → J avec la réponse au sommeil donnée, refusé par le filtre à la transition", async () => {
+  it("un restaurant qui passe en J s'enregistre, la réponse au sommeil donnée", async () => {
     h.db.etablissement.estERP = true;
     h.db.etablissement.typeErp = "N";
     h.db.etablissement.categorieErp = "N4";
@@ -732,49 +722,33 @@ describe("filtre à l'accueil — la fiche (2026-10-17 ; la création est au par
       { status: "idle" },
       formulaire({ estERP: "on", typeErp: "J", categorieErp: "N4", comporteLocauxSommeilPublic: "oui" }),
     );
-    expect(champs(res as never)).toEqual(["typeErp"]);
-    expect(h.db.etablissement.typeErp).toBe("N");
+    expect(res.status).toBe("success");
+    expect(h.db.etablissement.typeErp).toBe("J");
   });
 
-  it("fiche : un U ajouté en autre type est refusé", async () => {
+  it("un U ou un établissement flottant ajouté en autre type s'enregistre", async () => {
     h.db.etablissement.estERP = true;
     h.db.etablissement.typeErp = "N";
     h.db.etablissement.categorieErp = "N4";
     const res = await modifierEtablissement(
       "etab-1",
       { status: "idle" },
-      avecAutres(formulaire({ estERP: "on", typeErp: "N", categorieErp: "N4" }), ["U"]),
+      avecAutres(formulaire({ estERP: "on", typeErp: "N", categorieErp: "N4", comporteLocauxSommeilPublic: "non" }), ["U", "EF"]),
     );
-    expect(champs(res as never)).toEqual(["typesErpAutres"]);
-  });
-
-  it("fiche : un dossier J créé avant le filtre s'enregistre comme avant", async () => {
-    h.db.etablissement.estERP = true;
-    h.db.etablissement.typeErp = "J";
-    h.db.etablissement.categorieErp = "N4";
-    const res = await modifierEtablissement("etab-1", { status: "idle" }, formulaire({ estERP: "on", typeErp: "J", categorieErp: "N4", adresse: "2 rue des Lilas", comporteLocauxSommeilPublic: "oui" }));
     expect(res.status).toBe("success");
   });
 
-  it("fiche : R qui entre sans réponse est refusé ; avec « non », accepté ; la réponse ne s'écrit pas", async () => {
+  it("R qui entre sans question d'accueil d'enfants ; une réponse postée n'est pas écrite", async () => {
     h.db.etablissement.estERP = true;
     h.db.etablissement.typeErp = "N";
     h.db.etablissement.categorieErp = "N5";
-    const sans = await modifierEtablissement("etab-1", { status: "idle" }, formulaire({ estERP: "on", typeErp: "R", categorieErp: "N5", comporteLocauxSommeilPublic: "non" }));
-    expect(champs(sans as never)).toEqual(["accueilEnfants"]);
-    const non = await modifierEtablissement("etab-1", { status: "idle" }, formulaire({ estERP: "on", typeErp: "R", categorieErp: "N5", accueilEnfants: "non", comporteLocauxSommeilPublic: "non" }));
-    expect(non.status).toBe("success");
-    expect(h.db.etablissement).not.toHaveProperty("accueilEnfants");
-  });
-
-  it("fiche : un établissement déjà R n'est pas réinterrogé, et une réponse postée est refusée", async () => {
-    h.db.etablissement.estERP = true;
-    h.db.etablissement.typeErp = "R";
-    h.db.etablissement.categorieErp = "N5";
-    const res = await modifierEtablissement("etab-1", { status: "idle" }, formulaire({ estERP: "on", typeErp: "R", categorieErp: "N5", comporteLocauxSommeilPublic: "non" }));
+    const res = await modifierEtablissement(
+      "etab-1",
+      { status: "idle" },
+      formulaire({ estERP: "on", typeErp: "R", categorieErp: "N5", accueilEnfants: "oui", comporteLocauxSommeilPublic: "non" }),
+    );
     expect(res.status).toBe("success");
-    const force = await modifierEtablissement("etab-1", { status: "idle" }, formulaire({ estERP: "on", typeErp: "R", categorieErp: "N5", accueilEnfants: "non", comporteLocauxSommeilPublic: "non" }));
-    expect(champs(force as never)).toEqual(["accueilEnfants"]);
+    expect(h.db.etablissement).not.toHaveProperty("accueilEnfants");
   });
 });
 

@@ -392,3 +392,32 @@ describe("EquipementForm : les exemples propres au défibrillateur (E4)", () => 
     expect(container.querySelector<HTMLInputElement>('input[name="libelle"]')!.placeholder).toMatch(/TGBT/);
   });
 });
+
+describe("EquipementForm : l'envoi ne vide pas le formulaire (2026-11-04)", () => {
+  // Avec `action={…}`, React 19 vidait le formulaire au retour de l'action, et
+  // un `<select>` revenait à sa valeur de montage : le SSI A ou B d'une alarme
+  // réaffichait l'ancienne réponse, alors que la base avait la nouvelle.
+  it("alarme d'un ERP : « SSI A ou B » passé à oui, enregistré → toujours oui", async () => {
+    let envois = 0;
+    const enregistrer = async () => {
+      envois++;
+      return { status: "success" as const, id: "eq" };
+    };
+    const { container } = render(
+      <EquipementForm
+        action={enregistrer}
+        libelleSubmit="Enregistrer"
+        estERP
+        valeursInitiales={{ libelle: "Centrale SSI", categorie: "ALARME_INCENDIE" }}
+      />,
+    );
+    const select = container.querySelector<HTMLSelectElement>(
+      'select[name="estSsiCategorieAouB"]',
+    )!;
+    fireEvent.change(select, { target: { value: "oui" } });
+    fireEvent.submit(container.querySelector("form")!);
+    await screen.findByText("Enregistré.");
+    expect(envois).toBe(1);
+    expect(select.value).toBe("oui");
+  });
+});

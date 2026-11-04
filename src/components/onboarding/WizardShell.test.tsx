@@ -58,12 +58,6 @@ vi.mock("@/lib/auth/actions", () => ({
 
 import { WizardShell } from "./WizardShell";
 import { CHAMP_TEMOIN_TYPES_ERP_AUTRES } from "@/lib/etablissements/types-erp-affiches";
-import {
-  PHRASE_REFUS_ENFANTS,
-  PHRASE_REFUS_J,
-  PHRASE_REFUS_SPECIAUX,
-  PHRASE_REFUS_U,
-} from "@/lib/etablissements/types-refuses";
 
 afterEach(cleanup);
 beforeEach(() => {
@@ -600,7 +594,7 @@ describe("aucune réponse de régime présélectionnée (2026-09-27, A2)", () =>
   });
 });
 
-describe("filtre à l'accueil — le refus s'écrit dans le vrai parcours (revue du 2026-10-17)", () => {
+describe("refus de périmètre — le refus s'écrit dans le vrai parcours (revue du 2026-10-17 ; filtre à l'accueil levé le 2026-11-03)", () => {
   // Le défaut relevé par la revue : `validerTypologie` rendait un refus de
   // périmètre, « Suivant » se grisait, et la phrase ne s'affichait jamais —
   // `blocage` n'était posé qu'au clic, que le bouton désactivé empêche. Il
@@ -614,29 +608,17 @@ describe("filtre à l'accueil — le refus s'écrit dans le vrai parcours (revue
     screen.getAllByRole("button", { name: /^Oui$/ })[0].click();
     await souffler();
   }
-  const suivantDesactive = () =>
-    (screen.getByRole("button", { name: /Suivant/ }) as HTMLButtonElement).disabled;
-
-  it.each([
-    ["J", PHRASE_REFUS_J],
-    ["U", PHRASE_REFUS_U],
-    ["CTS", PHRASE_REFUS_SPECIAUX],
-  ])("type %s : la phrase de refus est visible, sans catégorie choisie, et « Suivant » est grisé", async (t, phrase) => {
+  // ~~Types J, U, CTS et R qui accueille des enfants : la phrase de refus est
+  // visible~~ — le filtre à l'accueil est levé le 2026-11-03 (ADR-031
+  // amendée, réalignement) : ces types passent l'étape.
+  it.each(["J", "U", "CTS", "EF", "R"])("type %s : aucune phrase de refus, ni question d'accueil d'enfants", async (t) => {
     await etape2ERP();
     choisir(/Type d'ERP/, t);
     await souffler();
-    expect(document.body.textContent).toContain(phrase);
-    expect(suivantDesactive()).toBe(true);
-  });
-
-  it("R qui accueille des enfants : la phrase de refus est visible", async () => {
-    await etape2ERP();
-    choisir(/Type d'ERP/, "R");
+    choisir(/Catégorie d'ERP/, "N5");
     await souffler();
-    choisir(/Accueil d'enfants/, "oui");
-    await souffler();
-    expect(document.body.textContent).toContain(PHRASE_REFUS_ENFANTS);
-    expect(suivantDesactive()).toBe(true);
+    expect(document.body.textContent).not.toMatch(/ne prend pas en charge/);
+    expect(document.body.textContent).not.toMatch(/enfants/i);
   });
 
   it("ERP en IGH : la phrase de refus est visible", async () => {
@@ -649,19 +631,6 @@ describe("filtre à l'accueil — le refus s'écrit dans le vrai parcours (revue
     screen.getAllByRole("button", { name: /^Oui$/ })[1].click();
     await souffler();
     expect(document.body.textContent).toMatch(/relève du règlement de sécurité des IGH, que Rojer ne couvre pas/);
-  });
-
-  it("le champ caché de l'accueil d'enfants disparaît quand R sort de la saisie", async () => {
-    await etape2ERP();
-    choisir(/Type d'ERP/, "R");
-    await souffler();
-    choisir(/Accueil d'enfants/, "non");
-    await souffler();
-    const cache = () => document.querySelector('input[type="hidden"][name="accueilEnfants"]');
-    expect((cache() as HTMLInputElement | null)?.value).toBe("non");
-    choisir(/Type d'ERP/, "N");
-    await souffler();
-    expect(cache()).toBeNull();
   });
 });
 

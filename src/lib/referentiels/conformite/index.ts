@@ -550,7 +550,15 @@ export const obligationsConformite: Obligation[] = [
 // R. 4224-13 et R. 4224-17 mot pour mot, et ses références (R. 4224-12 a sa
 // ligne, entré au corpus) ; une limite écrite en `notesInternes` de
 // `porte-auto-portail-piete-coulissant`. 204 + 0 − 0 = 204.
-export const REFERENTIEL_VERSION = "2026-10-18.1";
+// `2026-11-03.1` (`lot/cch-manques-cible`, admission du type R à l'onboarding,
+// enfants compris — décision de la propriétaire du 2026-11-03 ; numéro
+// PROVISOIRE) : R 33 entre —
+// `incendie-erp-enseignement-exercices-evacuation`, exercices d'évacuation de
+// l'année scolaire ou universitaire, établissement, type R, N1–N4, annuelle.
+// 204 + 1 − 0 = 205 ; par porteur, 96 équipement, 94 + 1 = 95 établissement,
+// 14 salarié ; 12 au niveau audit, 193 suivies ; 23 domaines — remesuré en
+// appelant `obligationsConformite`, `porteurDe` et `estNiveauAudit`.
+export const REFERENTIEL_VERSION = "2026-11-03.1";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

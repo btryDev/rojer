@@ -85,7 +85,7 @@ describe("registre de dette — les obligations manquantes", () => {
       // ~~"MS 74"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
       // ~~"MS 75"~~ — 2026-10-17, sous-lot C : retenu ou annoncé.
       // ~~"P 21"~~ — 2026-10-17, sous-lot D : retenu (rattachement).
-      "R 33",
+      // ~~"R 33"~~ — 2026-11-03, `lot/cch-manques-cible` : retenu (`incendie-erp-enseignement-exercices-evacuation`).
       // ~~"S 15"~~ — 2026-10-17, sous-lot D : retenu (rattachement).
       // ~~"T 52"~~ — 2026-10-17, sous-lot D : retenu (rattachement).
       "U 41",
@@ -149,7 +149,11 @@ describe("registre de dette — les obligations manquantes", () => {
       // `U 43`, `U 47`, `U 48`, `J 35`, `J 39`, `J 40` hors cible — seuls des
       // types que l'onboarding refuse y sont soumis. ~~`R 33`~~ reste dans la
       // cible (revue : la formation d'adultes est acceptée).
-      libre: [1, 8],
+      // [1, 8] → [9, 0] le 2026-11-03 (réalignement, ADR-031 amendée) : le
+      // filtre est levé, les huit rentrent dans la cible.
+      // [9, 0] → [8, 0] le 2026-11-03 (`lot/cch-manques-cible`) : `R 33` retenu
+      // (`incendie-erp-enseignement-exercices-evacuation`), 9 − 1 + 0.
+      libre: [8, 0],
       // 9 → 6 le 2026-09-21 : les trois de la chaleur intense (`R. 4463-4`,
       // `-5`, `-7`) sont encodées sur la page « Quand ça arrive ».
       // 6 → 0 le même jour : cinq relues à la source et encodées ; la sixième,
@@ -184,7 +188,9 @@ describe("registre de dette — les obligations manquantes", () => {
       // d'`a_trancher`, hors cadre — aucune catégorie de désinfection des eaux.
       // [12, 0] → [8, 4] le 2026-10-17 (filtre à l'accueil) : les gaz
       // médicaux `J 33`, `U 62`, `U 64`, `PU 5` hors cible (types J et U refusés).
-      categorie_equipement: [8, 4],
+      // [8, 4] → [12, 0] le 2026-11-03 (réalignement, ADR-031 amendée) : le
+      // filtre est levé, les quatre rentrent dans la cible.
+      categorie_equipement: [12, 0],
       // 4 → 1 le 2026-09-27 (C45) : `R. 4227-23`, `R. 4227-24` et l'art. 8 de
       // l'arrêté du 10 septembre 2021 passent `non_couvert`, annoncés.
       // [1, 2] → [3, 0] le 2026-10-12 (cible redéfinie le 2026-10-12) : `MS 71`, arrêté 1986 art. 60.
@@ -314,8 +320,12 @@ describe("registre de dette — les obligations manquantes", () => {
     // `U 43`, `U 47`, `U 48`, `U 62`, `U 64`, `PU 5`, `PU 6` passent
     // `toucheLaCible: false` (~~`R 33`~~ reste, revue du même jour). Le total
     // ne bouge pas (37) : c'est une mesure de la cible, pas une dette réglée.
-    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(25);
-    expect(manquantes.length).toBe(37);
+    // 25 → 37 dans la cible le 2026-11-03 (réalignement, ADR-031 amendée),
+    // mesuré en appelant : 25 + 12 — le filtre est levé, les douze reviennent.
+    // 37 → 36 dans la cible et au total le 2026-11-03 (`lot/cch-manques-cible`),
+    // mesuré en appelant : `R 33` retenu.
+    expect(manquantes.filter((a) => a.toucheLaCible).length).toBe(36);
+    expect(manquantes.length).toBe(36);
   });
 });
 
@@ -394,7 +404,11 @@ describe("registre de dette — les réserves de lecture", () => {
     // phrase du § 5 est portée), `L 14` (agents de sécurité incendie et service
     // de représentation non suivis), `L 57` (§ 7, § 1 b et § 4 classés à part ;
     // § 1 c porté par le levage).
-    expect(n).toBe(118);
+    // 118 → 119 le 2026-11-03 (`lot/cch-manques-cible`), mesuré en appelant :
+    // `R 33` retenu avec sa réserve — le premier exercice dans le mois qui suit
+    // la rentrée, que Rojer ne date pas ; les exercices de nuit sans ligne
+    // propre. 118 + 1 − 0.
+    expect(n).toBe(119);
     expect(reservesDeLecture().length).toBe(n);
   });
 });

@@ -283,28 +283,21 @@ describe("locaux à sommeil au parcours (2026-09-09)", () => {
     // Les deux moitiés sont écrites ensemble parce qu'aucune ne vaut sans
     // l'autre : la première seule passerait avec un contrôle absent, la
     // seconde seule passerait avec un contrôle qui refuse tout.
-    // 2026-10-17, filtre à l'accueil : J, U, REF et OA sont refusés à
-    // l'accueil, mais par le FILTRE (champ `typeErp`), jamais par la question
-    // du sommeil, qui reste posée ; R exige la réponse sur l'accueil d'enfants.
-    for (const t of ["O", "R"]) {
+    // ~~2026-10-17, filtre à l'accueil : J, U, REF et OA sont refusés à
+    // l'accueil, mais par le FILTRE (champ `typeErp`)~~ — filtre levé le
+    // 2026-11-03 (ADR-031 amendée) : les six types de la question sont
+    // acceptés, et la question du sommeil reste posée.
+    for (const t of ["J", "O", "U", "R", "REF", "OA"]) {
       const res = onboardingSchema.safeParse({
         ...hotel,
         typeErp: t,
         comporteLocauxSommeilPublic: "oui",
-        ...(t === "R" ? { accueilEnfants: "non" } : {}),
       });
       expect(res.success, t).toBe(true);
     }
-    for (const t of ["J", "U", "REF", "OA"]) {
-      const res = onboardingSchema.safeParse({ ...hotel, typeErp: t, comporteLocauxSommeilPublic: "oui" });
-      expect(res.success, t).toBe(false);
-      const champs = res.success ? [] : Object.keys(res.error.flatten().fieldErrors);
-      expect(champs, t).toEqual(["typeErp"]);
-    }
-    // ~~EF~~ dans cette boucle — revue du 2026-10-17, R4 : EF est refusé par
-    // le filtre ; on asserte désormais le CHAMP, pour que la boucle teste la
-    // question du sommeil et rien d'autre.
-    for (const t of ["N", "M", "W", "Y"]) {
+    // On asserte le CHAMP (revue du 2026-10-17, R4), pour que la boucle teste
+    // la question du sommeil et rien d'autre. EF y revient : plus refusé.
+    for (const t of ["N", "M", "W", "Y", "EF"]) {
       const res = onboardingSchema.safeParse({
         ...hotel,
         typeErp: t,
@@ -314,12 +307,6 @@ describe("locaux à sommeil au parcours (2026-09-09)", () => {
       const champs = res.success ? [] : Object.keys(res.error.flatten().fieldErrors);
       expect(champs, t).toEqual(["comporteLocauxSommeilPublic"]);
     }
-  });
-
-  it("filtre à l'accueil : la réponse « accueil d'enfants » postée sur un restaurant est refusée (revue du 2026-10-17)", () => {
-    const res = onboardingSchema.safeParse({ ...hotel, typeErp: "N", accueilEnfants: "non" });
-    expect(res.success).toBe(false);
-    if (!res.success) expect(Object.keys(res.error.flatten().fieldErrors)).toContain("accueilEnfants");
   });
 
   it("refuse la réponse d'un établissement qui n'est pas ERP", () => {

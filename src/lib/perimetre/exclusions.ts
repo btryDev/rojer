@@ -14,6 +14,9 @@
 //     refuse en plus des types d'ERP (`etablissements/types-refuses.ts`,
 //     ADR-031 amendée), ~~et ce module ne les sonde pas — point ouvert~~
 //     [2026-10-18 : sondés aussi, `refusDuFiltreSondes`]. Sept en tout.]
+//     [2026-11-03, réalignement (ADR-031 amendée) : le filtre à l'accueil est
+//     levé, ses quatre sondes avec lui. Trois refus : la taille, sur le site
+//     et dans l'entreprise, et l'ERP situé dans un IGH.]
 //  2. **Servi partiellement et prévenu** — c'est `perimetre/couverture.ts`,
 //     et rien d'autre. Ce module ne le redit pas : la page appelle les deux.
 //  3. **Hors périmètre déclaré** — les articles que le dépouillement a lus et
@@ -32,9 +35,11 @@
 // plutôt que de la décrire. ~~Deux dossiers-sondes sont soumis au schéma de
 // création~~ ~~[2026-10-18 : sept dossiers-sondes sont soumis à deux schémas de
 // création — six à celui de l'établissement, un à celui de l'entreprise]~~
-// [2026-10-26 : sept dossiers-sondes sont soumis à LA porte de création, le
+// ~~[2026-10-26 : sept dossiers-sondes sont soumis à LA porte de création, le
 // schéma du parcours d'onboarding — les deux autres portes ont été retirées
-// avec `/etablissements/nouveau` et `/entreprises/nouvelle`], et
+// avec `/etablissements/nouveau` et `/entreprises/nouvelle`]~~ [2026-11-03 :
+// trois dossiers-sondes, le filtre à l'accueil levé, soumis à LA porte de
+// création, le schéma du parcours d'onboarding], et
 // ce sont ses propres messages qui sont rendus. Si la règle
 // disparaît du schéma, la sonde ne rend plus rien, et le test tombe — au lieu
 // d'une page qui continuerait d'annoncer un refus que le produit ne fait plus.
@@ -57,13 +62,9 @@ import { REGLEMENT_IGH_NON_TRAITE } from "./couverture";
 export type CleRefus =
   | "effectif"
   | "effectif_entreprise"
-  | "erp_en_igh"
-  // Le filtre à l'accueil (décisions de la propriétaire du 2026-10-17,
-  // `etablissements/types-refuses.ts`, ADR-031 amendée le 2026-10-18).
-  | "type_j"
-  | "type_u"
-  | "etablissements_speciaux"
-  | "r_accueil_enfants";
+  | "erp_en_igh";
+// ~~`type_j`, `type_u`, `etablissements_speciaux`, `r_accueil_enfants`~~ —
+// le filtre à l'accueil (2026-10-17), levé le 2026-11-03 (ADR-031 amendée).
 
 export type RefusAlEntree = {
   cle: CleRefus;
@@ -79,12 +80,6 @@ export type RefusAlEntree = {
   message: string;
   /** Ce qu'il reste à faire — la moitié qu'un refus sec ne donne pas. */
   indication: string;
-  /**
-   * Les types d'ERP que ce refus nomme, quand il porte sur le type (filtre à
-   * l'accueil). Un test soumet chaque type de GN 1 à la porte : l'ensemble des
-   * types refusés doit être exactement l'union de ces listes.
-   */
-  types?: readonly string[];
 };
 
 /**
@@ -150,7 +145,7 @@ function messageDuSeulChamp(
  * pour tout le reste ; lui fermer la porte lui retirerait tout au motif qu'on
  * ne lui donnerait pas tout.
  *
- * Rend moins de ~~deux~~ ~~[2026-10-18 : trois]~~ [2026-10-18 : sept, filtre à l'accueil compris] entrées si le schéma a cessé de refuser : c'est un fait à
+ * Rend moins de ~~deux~~ ~~[2026-10-18 : trois]~~ ~~[2026-10-18 : sept, filtre à l'accueil compris]~~ [2026-11-03 : trois, le filtre à l'accueil levé] entrées si le schéma a cessé de refuser : c'est un fait à
  * faire remonter, pas à combler.
  */
 export function refusAlEntree(): RefusAlEntree[] {
@@ -218,87 +213,14 @@ export function refusAlEntree(): RefusAlEntree[] {
     });
   }
 
-  refus.push(...refusDuFiltreSondes());
   return refus;
 }
 
-/**
- * Le filtre à l'accueil (2026-10-17), sondé sur la même porte que les trois
- * refus de taille et d'IGH. Jusqu'au 2026-10-18 ce module ne le sondait pas,
- * et l'annexe du document de relecture annonçait trois refus quand la porte
- * en faisait sept.
- *
- * Chaque sonde est un ERP de 5ᵉ catégorie que la porte accepte sous le type N,
- * et n'en change que le type — plus, pour J, U et R, la réponse « non » à la
- * question du sommeil, que ces types déclenchent : sans elle, la sonde
- * échouerait pour deux raisons.
- */
-const ERP_SONDE = {
-  ...DOSSIER_SONDE,
-  estERP: true,
-  typeErp: "N",
-  categorieErp: "N5",
-  personnesPresentesHabituellement: 30,
-};
-
-/** Ce qui reste vrai d'un dossier ouvert avant le filtre, dit une fois. */
-const AVANT_LE_FILTRE =
-  "Un dossier ouvert avant ce refus n'est pas fermé : la porte ne refuse que ce qui entre.";
-
-function refusDuFiltreSondes(): RefusAlEntree[] {
-  const refus: RefusAlEntree[] = [];
-  const sonde = (d: Record<string, unknown>, champ: string) =>
-    messageDeLaPorte({ ...ERP_SONDE, ...d }, champ);
-
-  const j = sonde({ typeErp: "J", comporteLocauxSommeilPublic: false }, "typeErp");
-  if (j !== null) {
-    refus.push({
-      cle: "type_j",
-      types: ["J"],
-      regime: "Une structure d'accueil pour personnes âgées ou handicapées (ERP de type J)",
-      message: j,
-      indication: `Les dispositions particulières de ce type, au règlement de sécurité, et les textes propres à l'accueil de ces personnes ne sont pas suivis par Rojer. La commission de sécurité qui a classé l'établissement est le premier interlocuteur pour les cadrer. ${AVANT_LE_FILTRE}`,
-    });
-  }
-
-  const u = sonde({ typeErp: "U", comporteLocauxSommeilPublic: false }, "typeErp");
-  if (u !== null) {
-    refus.push({
-      cle: "type_u",
-      types: ["U"],
-      regime: "Un établissement de soins (ERP de type U)",
-      message: u,
-      indication: `Les dispositions particulières de ce type, au règlement de sécurité, et les textes propres aux établissements de soins ne sont pas suivis par Rojer. La commission de sécurité qui a classé l'établissement est le premier interlocuteur pour les cadrer. ${AVANT_LE_FILTRE}`,
-    });
-  }
-
-  const speciaux = sonde({ typeErp: "PA" }, "typeErp");
-  if (speciaux !== null) {
-    refus.push({
-      cle: "etablissements_speciaux",
-      types: ["PA", "CTS", "SG", "OA", "REF", "GA", "EF"],
-      regime:
-        "Un établissement spécial : plein air (PA), chapiteau ou tente (CTS), structure gonflable (SG), hôtel-restaurant d'altitude (OA), refuge de montagne (REF), gare (GA), établissement flottant (EF)",
-      message: speciaux,
-      indication: `Ces établissements relèvent de dispositions propres que Rojer n'a pas lues. Les parcs de stationnement couverts (PS), établissements spéciaux eux aussi, sont acceptés. ${AVANT_LE_FILTRE}`,
-    });
-  }
-
-  const enfants = sonde(
-    { typeErp: "R", comporteLocauxSommeilPublic: false, accueilEnfants: "oui" },
-    "accueilEnfants",
-  );
-  if (enfants !== null) {
-    refus.push({
-      cle: "r_accueil_enfants",
-      regime: "Un établissement d'enseignement ou d'accueil (type R) qui accueille des enfants : crèche, école, centre de loisirs",
-      message: enfants,
-      indication: `L'accueil d'enfants relève d'obligations propres à d'autres codes que Rojer ne suit pas. Un établissement de type R qui ne forme que des adultes est accepté : la question n'est posée qu'au type R. ${AVANT_LE_FILTRE}`,
-    });
-  }
-
-  return refus;
-}
+// ~~`refusDuFiltreSondes`~~ — les quatre sondes du filtre à l'accueil
+// (type J, type U, établissements spéciaux, R qui accueille des enfants),
+// retirées le 2026-11-03 avec le filtre (ADR-031 amendée, réalignement). Un
+// type d'ERP ne se refuse plus : il se déclare (`perimetre/couverture.ts`,
+// axe `type_erp`).
 
 /* ─── 3. Ce qui est hors périmètre déclaré ────────────────────────────── */
 
