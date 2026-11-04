@@ -2004,6 +2004,10 @@ describe("référentiel conformité — version et empreinte", () => {
     // (« ou de formation ») ; 205 + 0 − 0, relevée en appelant. Version pas
     // encore servie.
     { version: "2026-11-03.1", empreinte: "205-e011935c327951ba" },
+    // `fix/libelle-personne-qualifiee-electricite` (2026-11-04, demande de la
+    // propriétaire) : les libellés d'EL 18 § 2 et de L 57 § 7 disent « en
+    // électricité ». 205 + 0 − 0, relevée en appelant.
+    { version: "2026-11-04.1", empreinte: "205-a7fba8ae5dd614bc" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
