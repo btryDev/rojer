@@ -67,17 +67,17 @@ construction ») ; l'intitulé exact est celui du plan LEGI, que la commande `pl
 ### 1.3 Pour relire
 
 Le jeu reconstitué est hors du dépôt, sur la machine de la propriétaire, lisible par les
-autres sessions : `/Users/palomasanchezc/Documents/rojer-mission-alignement/legi-2026-11-02/`.
+autres sessions : ~~`/Users/palomasanchezc/Documents/rojer-mission-alignement/legi-2026-11-02/`~~ [2026-11-04 : rangé dans `/Users/palomasanchezc/Documents/rojer-hors-depot/textes-officiels-legi/`, avec un `LISEZ-MOI.md` ; hors dépôt, jamais en production].
 Ailleurs, il se reconstruit avec `extraire.py` (même dossier), à partir des archives de
 la DILA citées au § 1.1. Il porte
 le CCH, l'arrêté du 25 juin 1980, le règlement IGH, l'arrêté habitation de 1986, l'arrêté
 gaz de 2018, l'arrêté du registre d'accessibilité de 2017, l'arrêté EF de 1990, et l'en-tête de
 chaque texte non codifié. Les deux scripts sont dans le même dossier ; les commandes se
-lancent depuis `/Users/palomasanchezc/Documents/rojer-mission-alignement` :
+lancent ~~depuis `/Users/palomasanchezc/Documents/rojer-mission-alignement`~~ [2026-11-04 : depuis le dossier rangé, `/Users/palomasanchezc/Documents/rojer-hors-depot/textes-officiels-legi`] :
 
-    python3 -I legi-2026-11-02/legi.py plan    legi-2026-11-02 LEGITEXT000006074096 2026-11-03
-    python3 -I legi-2026-11-02/legi.py num     legi-2026-11-02 JORFTEXT000000290033 "R 33" 2026-11-03
-    python3 -I legi-2026-11-02/legi.py article legi-2026-11-02 LEGIARTI000025134178
+    python3 -I legi.py plan    legi LEGITEXT000006074096 2026-11-03
+    python3 -I legi.py num     legi JORFTEXT000000290033 "R 33" 2026-11-03
+    python3 -I legi.py article legi LEGIARTI000025134178
 
 ---
 
