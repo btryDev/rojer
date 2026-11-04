@@ -464,13 +464,21 @@ async function construireArchive(
   const rapportsZip = await joindreFichiers(
     zip,
     nomDeDossier(PIECES_ZIP.rapports),
-    rapportsDeposes.map((r) => ({
-      id: r.id,
-      cle: r.fichierCle,
-      nomOriginal: r.fichierNomOriginal,
-      date: r.dateRapport,
-      etiquette: r.verification.equipement?.libelle ?? r.verification.libelleObligation,
-    })),
+    // La requête n'apporte que des rapports avec fichier ; le filtre le dit
+    // au typage (une vérification faite en interne peut n'en avoir aucun).
+    rapportsDeposes.flatMap((r) =>
+      r.fichierCle !== null && r.fichierNomOriginal !== null
+        ? [
+            {
+              id: r.id,
+              cle: r.fichierCle,
+              nomOriginal: r.fichierNomOriginal,
+              date: r.dateRapport,
+              etiquette: r.verification.equipement?.libelle ?? r.verification.libelleObligation,
+            },
+          ]
+        : [],
+    ),
     rapportsDeposes.length > 0 ? stockage() : null,
     "rapport.pdf",
   );

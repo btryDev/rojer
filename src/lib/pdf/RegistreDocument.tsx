@@ -32,11 +32,13 @@ export type LigneRapport = {
   id: string;
   dateRapport: Date;
   resultat: ResultatVerification;
-  organismeVerif: string | null;
+  /** Qui l'a faite : l'organisme, ou « En interne (nom) » (`libelleRealisePar`). */
+  realisePar: string | null;
   libelleObligation: string;
   equipementLibelle: string;
   domaine: DomaineObligation | null;
-  fichierNomOriginal: string;
+  /** `null` : vérification faite en interne, sans pièce jointe (2026-11-04). */
+  fichierNomOriginal: string | null;
   commentaires: string | null;
   /** Les points relevés par ce rapport et leur correction (ADR-048). */
   points: PointDuRapport[];
@@ -695,7 +697,7 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
               <Text style={[s.th, { width: "14%" }]}>Date</Text>
               <Text style={[s.th, { width: "36%" }]}>Obligation</Text>
               <Text style={[s.th, { width: "20%" }]}>Équipement</Text>
-              <Text style={[s.th, { width: "16%" }]}>Organisme</Text>
+              <Text style={[s.th, { width: "16%" }]}>Réalisé par</Text>
               <Text style={[s.th, { width: "14%" }]}>Résultat</Text>
             </View>
             {data.rapports.map((r) => (
@@ -719,7 +721,7 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
                   {r.equipementLibelle}
                 </Text>
                 <Text style={[s.td, { width: "16%" }]}>
-                  {r.organismeVerif ?? "—"}
+                  {r.realisePar ?? "—"}
                 </Text>
                 <Text style={[s.td, { width: "14%" }]}>
                   {LABEL_RESULTAT[r.resultat]}

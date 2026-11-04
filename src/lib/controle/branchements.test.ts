@@ -27,7 +27,9 @@ describe("branchements des fichiers déposés", () => {
     // dans `controle/queries.ts` depuis le 2026-10-14 (B6).
     const queries = lire("src/lib/controle/queries.ts");
     expect(queries).toMatch(
-      /rapportVerification\.findMany\(\{[\s\S]{0,600}?where: \{ \.\.\.filtreRapportsDuDossier\(etablissementId\) \},/,
+      // Les vérifications faites en interne sans pièce jointe en sont
+      // écartées aussi (2026-11-04) : elles n'ont pas de fichier.
+      /rapportVerification\.findMany\(\{[\s\S]{0,900}?where: \{ \.\.\.filtreRapportsDuDossier\(etablissementId\), fichierCle: \{ not: null \} \},/,
     );
     expect(zip).toMatch(/rapportsDeposesDuDossier\(db, id\)/);
   });

@@ -700,7 +700,7 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
             <View style={s.thead}>
               <Text style={[s.th, { width: "14%" }]}>Date</Text>
               <Text style={[s.th, { width: "40%" }]}>Obligation</Text>
-              <Text style={[s.th, { width: "22%" }]}>Organisme</Text>
+              <Text style={[s.th, { width: "22%" }]}>Réalisé par</Text>
               <Text style={[s.th, { width: "24%" }]}>Résultat</Text>
             </View>
             {data.rapportsRecents.map((r) => (
@@ -712,7 +712,7 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
                   {r.libelleObligation}
                 </Text>
                 <Text style={[s.td, { width: "22%" }]}>
-                  {r.organismeVerif ?? "—"}
+                  {r.realisePar ?? "—"}
                 </Text>
                 <Text style={[s.td, { width: "24%" }]}>
                   {LABEL_RESULTAT[r.resultat]}

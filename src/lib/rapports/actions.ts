@@ -30,6 +30,7 @@ import { estResultatRealise } from "./resultats";
 import { resultatRelevePoints } from "@/lib/points-a-corriger/regles";
 import { cheminControle } from "@/lib/navigation/chemins";
 import { validerFichier } from "./validator";
+import { interneAutorise, type FaitPar } from "./interne";
 
 export type UploadRapportState =
   | { status: "idle" }
@@ -110,33 +111,48 @@ export async function uploadRapport(
     };
   }
 
-  // 2. Fichier
+  // 2. Qui a fait la vérification (2026-11-04, `interne.ts`). En interne, le
+  //    formulaire est le relevé et le fichier est facultatif ; par un
+  //    prestataire, son rapport est exigé. Tout ce qui n'est pas « interne »
+  //    se lit « prestataire » : l'absence ne relâche jamais l'exigence.
+  const faitPar: FaitPar =
+    formData.get("faitPar") === "interne" ? "interne" : "prestataire";
+
+  // 3. Fichier
   //
-  // LE STOCKAGE D'ABORD (2026-09-27, `lot/stockage-supabase`). Un rapport EST
-  // un fichier : si le serveur n'a pas de stockage configuré, rien de ce qui
-  // suit ne peut aboutir, et l'utilisateur doit lire pourquoi — pas une erreur
-  // générique au moment d'écrire.
-  if (!stockageEnService()) {
-    return { status: "error", message: MESSAGE_DEPOT_NON_CONFIGURE };
-  }
-  const fichier = formData.get("fichier");
-  if (!(fichier instanceof File)) {
+  // Un champ de fichier laissé vide arrive comme un `File` sans octet : c'est
+  // une absence, pas un fichier à valider.
+  const recu = formData.get("fichier");
+  const fichier = recu instanceof File && recu.size > 0 ? recu : null;
+  if (fichier === null && faitPar === "prestataire") {
     return {
       status: "error",
       message: "Aucun fichier reçu",
-      fieldErrors: { fichier: ["Sélectionnez un fichier à uploader"] },
+      fieldErrors: { fichier: ["Joignez le rapport du prestataire"] },
     };
   }
-  const val = await validerFichier(fichier);
-  if (!val.ok) {
-    return {
-      status: "error",
-      message: val.erreur,
-      fieldErrors: { fichier: [val.erreur] },
-    };
+  // LE STOCKAGE D'ABORD (2026-09-27, `lot/stockage-supabase`), dès qu'il y a
+  // un fichier à écrire : si le serveur n'a pas de stockage configuré, rien
+  // ne peut aboutir, et l'utilisateur doit lire pourquoi — pas une erreur
+  // générique au moment d'écrire. Un relevé interne sans pièce n'en a pas
+  // besoin.
+  if (fichier !== null && !stockageEnService()) {
+    return { status: "error", message: MESSAGE_DEPOT_NON_CONFIGURE };
+  }
+  let val: { mime: string; taille: number } | null = null;
+  if (fichier !== null) {
+    const v = await validerFichier(fichier);
+    if (!v.ok) {
+      return {
+        status: "error",
+        message: v.erreur,
+        fieldErrors: { fichier: [v.erreur] },
+      };
+    }
+    val = { mime: v.mime, taille: v.taille };
   }
 
-  // 3. Contexte vérification : de quoi refuser AVANT tout stockage. La date et
+  // 4. Contexte vérification : de quoi refuser AVANT tout stockage. La date et
   //    le statut sont relus sous le verrou, dans la transaction.
   //    Lue DANS le périmètre du compte (audit du 2026-10-13) : lue par le
   //    seul `id` puis contrôlée, elle répondait « Vérification introuvable »
@@ -150,10 +166,24 @@ export async function uploadRapport(
       salarieId: true,
       archiveLe: true,
       equipementId: true,
+      realisateurRequis: true,
       equipement: { select: { actif: true } },
     },
   });
   if (!verif) notFound();
+
+  // EN INTERNE, SEULEMENT SI LE TEXTE LE PERMET. Une ligne qui exige un tiers
+  // (organisme agréé, bureau de contrôle…) ne s'enregistre pas sans son
+  // rapport ; le formulaire n'offre pas le choix, la règle tient ici pour un
+  // appel direct.
+  if (faitPar === "interne" && !interneAutorise(verif.realisateurRequis)) {
+    return {
+      status: "error",
+      message:
+        "Cette vérification doit être faite par un tiers : joignez son rapport.",
+      fieldErrors: { fichier: ["Joignez le rapport du prestataire"] },
+    };
+  }
 
   // UN APPAREIL RETIRÉ DU PARC NE REÇOIT PLUS DE RAPPORT (décision du
   // 2026-10-12, `equipements/retrait.ts`). La régénération archive ses lignes
@@ -207,21 +237,31 @@ export async function uploadRapport(
     };
   }
 
-  // 4. Lire le fichier en buffer + stocker
-  const buffer = Buffer.from(await fichier.arrayBuffer());
+  // 5. Lire le fichier en buffer + stocker, s'il y en a un
   const rapportId = `rap_${randomUUID()}`;
-  const cle = cleRapport(verif.etablissementId, rapportId, fichier.name);
+  const piece =
+    fichier !== null && val !== null
+      ? {
+          cle: cleRapport(verif.etablissementId, rapportId, fichier.name),
+          nom: fichier.name,
+          fichier,
+          ...val,
+        }
+      : null;
 
   // L'écriture qui échoue — service indisponible, clé refusée (« Invalid
   // Compact JWS », production du 2026-09-27) — rend un message métier, pas
   // l'erreur générique de Next ; rien n'est encore écrit en base. Le détail
   // va au journal du serveur.
-  const storage = getStorage();
-  try {
-    await storage.put(cle, buffer, val.mime);
-  } catch (e) {
-    console.error(`[rapports/depot] écriture du fichier impossible (${cle})`, e);
-    return { status: "error", message: MESSAGE_ECHEC_ENREGISTREMENT };
+  const storage = piece !== null ? getStorage() : null;
+  if (piece !== null && storage !== null) {
+    const buffer = Buffer.from(await piece.fichier.arrayBuffer());
+    try {
+      await storage.put(piece.cle, buffer, piece.mime);
+    } catch (e) {
+      console.error(`[rapports/depot] écriture du fichier impossible (${piece.cle})`, e);
+      return { status: "error", message: MESSAGE_ECHEC_ENREGISTREMENT };
+    }
   }
 
   const resultat = parsed.data.resultat;
@@ -280,10 +320,11 @@ export async function uploadRapport(
           organismeVerif: parsed.data.organismeVerif,
           resultat,
           commentaires: parsed.data.commentaires,
-          fichierCle: cle,
-          fichierNomOriginal: fichier.name,
-          fichierMime: val.mime,
-          fichierTaille: val.taille,
+          realiseEnInterne: faitPar === "interne",
+          fichierCle: piece?.cle ?? null,
+          fichierNomOriginal: piece?.nom ?? null,
+          fichierMime: piece?.mime ?? null,
+          fichierTaille: piece?.taille ?? null,
         },
       });
 
@@ -304,7 +345,9 @@ export async function uploadRapport(
     });
   } catch (err) {
     // Nettoyage best-effort du fichier si la DB a échoué.
-    await storage.delete(cle).catch(() => {});
+    if (piece !== null && storage !== null) {
+      await storage.delete(piece.cle).catch(() => {});
+    }
     if (err instanceof LigneModifieeEntreTemps) {
       return { status: "error", message: err.message };
     }
@@ -422,7 +465,9 @@ export async function supprimerRapport(rapportId: string): Promise<void> {
   // La base a tranché : on peut libérer le fichier.
   // Par `libererFichiers` : un stockage indisponible ne fait pas échouer une
   // suppression commitée, et l'échec est journalisé (2026-09-27).
-  await libererFichiers([rap.fichierCle], "rapports/suppression");
+  if (rap.fichierCle !== null) {
+    await libererFichiers([rap.fichierCle], "rapports/suppression");
+  }
   // La suppression est commitée et le fichier libéré : le recalage ne peut
   // plus, en échouant, faire remonter une erreur sur une opération faite.
   await regenererApresMutation(rap.etablissementId, "rapports/suppression");

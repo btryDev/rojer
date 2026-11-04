@@ -581,6 +581,75 @@ describe("uploadRapport — la date du rapport", () => {
   });
 });
 
+describe("uploadRapport — une vérification faite en interne (2026-11-04)", () => {
+  /** L'essai mensuel de l'éclairage de sécurité : l'exploitant le fait. */
+  const ECLAIRAGE_MENSUEL = "incendie-travail-eclairage-securite-essai-mensuel";
+
+  const envoyer = async (id: string, fd: FormData) => {
+    try {
+      return await uploadRapport(id, { status: "idle" }, fd);
+    } catch (e) {
+      if (e instanceof Error && e.message === "NEXT_REDIRECT") return { status: "redirige" as const };
+      throw e;
+    }
+  };
+  const releve = (faitPar: string | null, avecFichier: boolean) => {
+    const fd = formulaire("conforme", "2026-02-10");
+    if (!avecFichier) {
+      // Un champ de fichier laissé vide : le navigateur envoie un `File` vide.
+      fd.set("fichier", new File([], "", { type: "application/octet-stream" }));
+    }
+    if (faitPar !== null) fd.set("faitPar", faitPar);
+    return fd;
+  };
+
+  beforeEach(() => {
+    poserEtablissement([{ id: "eq-1", categorie: "BAES" }]);
+    poserLigne({ obligationId: ECLAIRAGE_MENSUEL });
+  });
+
+  it("s'enregistre sans fichier, marquée « en interne », et fait courir le rythme", async () => {
+    const res = await envoyer("v-1", releve("interne", false));
+    expect(res.status).toBe("redirige");
+    expect(stockage.fichiers.size).toBe(0);
+    expect(rapports()).toHaveLength(1);
+    expect(rapports()[0]).toMatchObject({ fichierCle: null, realiseEnInterne: true });
+    // La ligne roule sur le mois suivant, comme après un rapport déposé.
+    expect(ligne().statut).toBe("planifiee");
+    expect(cleJourCivil(ligne().datePrevue)).toBe("2026-03-10");
+  });
+
+  it("garde une pièce jointe si on en donne une", async () => {
+    const res = await envoyer("v-1", releve("interne", true));
+    expect(res.status).toBe("redirige");
+    expect(stockage.fichiers.size).toBe(1);
+    expect(rapports()[0]).toMatchObject({ realiseEnInterne: true });
+    expect(rapports()[0].fichierCle).not.toBeNull();
+  });
+
+  it("par un prestataire, le rapport reste exigé", async () => {
+    const res = await envoyer("v-1", releve("prestataire", false));
+    expect(res.status).toBe("error");
+    expect(rapports()).toEqual([]);
+  });
+
+  it("sans réponse, c'est « prestataire » : l'absence ne relâche pas l'exigence", async () => {
+    const res = await envoyer("v-1", releve(null, false));
+    expect(res.status).toBe("error");
+    expect(rapports()).toEqual([]);
+  });
+
+  it("refusée quand le texte exige un tiers, même par un appel direct", async () => {
+    poserEtablissement();
+    // `organisme_accredite` seul : la vérification initiale de l'installation.
+    poserLigne({ obligationId: ELEC_MISE_EN_SERVICE });
+    const res = await envoyer("v-1", releve("interne", false));
+    expect(res.status).toBe("error");
+    expect(res.status === "error" && res.message).toMatch(/tiers/);
+    expect(rapports()).toEqual([]);
+  });
+});
+
 // ---------------------------------------------------------------------------
 // Le retrait
 // ---------------------------------------------------------------------------

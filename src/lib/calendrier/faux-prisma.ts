@@ -109,7 +109,9 @@ export type RapportFaux = {
    *  pose (le magasin le complète). */
   createdAt?: Date;
   echeanceHonoree?: Date | null;
-  fichierCle?: string;
+  /** `null` : vérification faite en interne, sans pièce jointe (2026-11-04). */
+  fichierCle?: string | null;
+  realiseEnInterne?: boolean;
 };
 
 export type LigneFausse = {
@@ -760,7 +762,13 @@ export function fauxPrisma(db: Magasin) {
       dateRapport: trouve.r.dateRapport,
       resultat: trouve.r.resultat,
       echeanceHonoree: trouve.r.echeanceHonoree ?? null,
-      fichierCle: trouve.r.fichierCle ?? `rapports/${trouve.v.etablissementId}/${trouve.r.id}`,
+      // `null` est une absence réelle (vérification faite en interne) ;
+      // seul un champ non posé prend la clé par défaut.
+      fichierCle:
+        trouve.r.fichierCle === undefined
+          ? `rapports/${trouve.v.etablissementId}/${trouve.r.id}`
+          : trouve.r.fichierCle,
+      realiseEnInterne: trouve.r.realiseEnInterne ?? false,
     };
   };
 
@@ -880,7 +888,8 @@ export function fauxPrisma(db: Magasin) {
         dateRapport: Date;
         resultat: string;
         echeanceHonoree: Date | null;
-        fichierCle: string;
+        fichierCle: string | null;
+        realiseEnInterne?: boolean;
       };
     }) =>
       ecriture("rapportVerification.create", () => {
@@ -893,6 +902,7 @@ export function fauxPrisma(db: Magasin) {
           resultat: data.resultat,
           echeanceHonoree: data.echeanceHonoree,
           fichierCle: data.fichierCle,
+          realiseEnInterne: data.realiseEnInterne ?? false,
           createdAt: new Date(Date.now() + ++seq),
         };
         v.rapports = [...(v.rapports ?? []), rapport];

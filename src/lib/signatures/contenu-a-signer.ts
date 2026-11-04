@@ -152,7 +152,10 @@ export async function contenuASigner(
     return {
       type: "rapport_verification",
       titre: r.verification.libelleObligation,
-      description: `Rapport du ${formaterDateFr(r.dateRapport)} — fichier « ${r.fichierNomOriginal} ».`,
+      description:
+        r.fichierNomOriginal !== null
+          ? `Rapport du ${formaterDateFr(r.dateRapport)} — fichier « ${r.fichierNomOriginal} ».`
+          : `Vérification faite en interne le ${formaterDateFr(r.dateRapport)}, sans pièce jointe.`,
     };
   }
 
