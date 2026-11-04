@@ -2041,7 +2041,7 @@ export const obligationsIncendie: Obligation[] = [
     porteur: "etablissement",
     notesInternes:
       "RATTACHEMENTS DU 2026-10-17 (sous-lot D du plan « mise à jour du référentiel », découpage validé par c6). P 21 § 2, S 15 § 3 et Y 19 § 2 disent le même acte que N 17 et W 13 — désigner et entraîner — pour les salles de danse et de jeux, les bibliothèques et les musées des quatre premières catégories : types P, S et Y ajoutés, libellé élargi, textes cités dans la description. S 15 dit « moyens d'extinction » là où les autres disent « moyens de secours » : cité tel quel. P 21 § 2 et Y 19 § 2 portent, comme N 17 ne le fait pas, « dans les établissements ne possédant pas de service de sécurité incendie » : Rojer ne suit pas ce service (phrase de l'axe `categorie_erp`), ne sait donc pas si l'établissement en a un, et sert la ligne à tous — sur-application visible, le service d'agents la rendant sans objet. Les § 1 de P 21 et Y 19 (un service d'agents « peut être imposé par la commission de sécurité ») sont des prescriptions d'autorité (ADR-035), non suivies. Empreinte : typologies et libellé.\n\n" +
-      "RATTACHEMENT DU 2026-10-17 (sous-lot C ; décision Q2 de c6) — référence seule. MS 72 § 1 fait initier le personnel à la mise en œuvre des moyens d'extinction et d'alerte : rattaché à cette ligne, comme le prévoit le plan. TEMPORALITÉ : état permanent, sans rythme ; « cette information doit être maintenue dans le temps » ne devient PAS un défaut annuel, comme pour PE 27 § 5, sa sœur de 5ᵉ (décision de c6). Aucune norme citée au § 1 (NF X 08-003, au § 2, porte sur les panneaux). LE TROU, DIT : la ligne est bornée aux types M, N, O, W ; MS 72 vaut pour tous les types des catégories 1 à 4. Le sous-lot D l'étend à P, S, Y, le sous-lot G à L ; J et U seront refusés à l'accueil ; R, T, V et X restent sans MS 72 en catégories 1 à 4. ET L'ASSIETTE N'EST PAS LA MÊME (revue indépendante du 2026-10-17) : MS 72 fait initier « le personnel de l'établissement » tout entier ; cette ligne ne vise que le personnel spécialement désigné et entraîné. Le rattachement couvre donc l'acte pour les désignés, pas l'initiation des autres membres du personnel.\n\n" +
+      "RATTACHEMENT DU 2026-10-17 (sous-lot C ; décision Q2 de c6) — référence seule. MS 72 § 1 fait initier le personnel à la mise en œuvre des moyens d'extinction et d'alerte : rattaché à cette ligne, comme le prévoit le plan. TEMPORALITÉ : état permanent, sans rythme ; « cette information doit être maintenue dans le temps » ne devient PAS un défaut annuel, comme pour PE 27 § 5, sa sœur de 5ᵉ (décision de c6). Aucune norme citée au § 1 (NF X 08-003, au § 2, porte sur les panneaux). LE TROU, DIT : la ligne est bornée aux types M, N, O, W ; MS 72 vaut pour tous les types des catégories 1 à 4. Le sous-lot D l'étend à P, S, Y, le sous-lot G à L ; ~~J et U seront refusés à l'accueil~~ [2026-11-03 : J et U sont acceptés (réalignement, ADR-031 amendée) et restent sans MS 72 en catégories 1 à 4 — un manque, à porter au lot d'encodage] ; R, T, V et X restent sans MS 72 en catégories 1 à 4. ET L'ASSIETTE N'EST PAS LA MÊME (revue indépendante du 2026-10-17) : MS 72 fait initier « le personnel de l'établissement » tout entier ; cette ligne ne vise que le personnel spécialement désigné et entraîné. Le rattachement couvre donc l'acte pour les désignés, pas l'initiation des autres membres du personnel.\n\n" +
       "CRÉÉE LE 2026-10-14, point 1 de la décision de la propriétaire. Patron : `incendie-erp-5-instruction-personnel` (PE 27 § 5), même acte en 5ᵉ catégorie — état permanent sans rythme, `pieceAttendue: null` (le texte fait désigner et entraîner, il ne demande ni liste ni attestation), criticité 4.\n\n" +
       "UNE LIGNE POUR QUATRE ARTICLES. N 17, O 18 et W 13 disent la même phrase, à « employés » / « personnes » près ; M 29 § 1 dit la même chose avec deux précisions — la désignation est le fait de l'exploitant, et l'entraînement porte aussi sur l'évacuation du public. Même acte, même débiteur, même constat : quatre lignes auraient fait quatre cases pour une seule désignation, et un établissement n'en reçoit de toute façon qu'une ~~(un seul `typeErp`)~~ [2026-10-17, ADR-045 : même à plusieurs types — la ligne sort une fois, et son fondement cite l'article de chacun des types déclarés, N 17 et O 18 pour un hôtel-restaurant].\n\n" +
       "M 29 AU-DELÀ DE 4 000 PERSONNES. Le § 1 ne vaut que sous 4 000 ; au-delà, les § 2 à § 4 exigent des agents de sécurité incendie (SSIAP) en nombre fixé par tranche. Rojer ne connaît pas l'effectif du public et sert la ligne à tout magasin N1–N4 : au-dessus de 4 000, la ligne dit moins que le texte, et la description le dit. Le SSIAP est en réserve de M 29 au corpus. Le texte ne dit rien de l'effectif d'exactement 4 000 (« inférieur » / « supérieur ») ; la ligne le retient.\n\n" +
@@ -2267,6 +2267,51 @@ export const obligationsIncendie: Obligation[] = [
       "CRÉÉE LE 2026-10-14, point 4 de la décision de la propriétaire. Patron : `incendie-erp-5-sommeil-plans-affiches` (PE 35), la ligne des plans de la 5ᵉ catégorie. O 21 n'exige qu'un plan, à chaque niveau ; PE 35 en exige trois (hall, étage, chambre). Les deux ne se recouvrent pas : PE 35 est borné à N5, celle-ci à N1–N4.\n\n" +
       "LA NORME NF S 60-303 est NOMMÉE par le texte, non lue : elle n'est pas au corpus `normes`, et aucune référence `NORME` n'est posée (ADR-039 : une norme ne se cite comme norme que lue). La description le dit.\n\n" +
       NOTE_TITRE_2_COMMUNE,
+  },
+
+  {
+    id: "incendie-erp-enseignement-exercices-evacuation",
+    domaine: "incendie",
+    libelle:
+      "Exercices pratiques d'évacuation chaque année scolaire ou universitaire (établissement d'enseignement ou de formation, ERP des catégories 1 à 4)",
+    description:
+      "Dans un établissement d'éveil, d'enseignement ou de formation, un centre de vacances ou un centre de loisirs sans hébergement (type R) des quatre premières catégories, l'article R 33 écrit : « Des exercices pratiques d'évacuation doivent avoir lieu au cours de l'année scolaire ou universitaire ; lorsque l'établissement comporte des locaux réservés au sommeil, des exercices de nuit doivent également être organisés ; le premier exercice doit se dérouler durant le mois qui suit la rentrée. » Et : « Les conditions de leur déroulement et le temps d'évacuation doivent être consignés sur le registre de sécurité. » Rojer ne connaît pas votre date de rentrée : il vous rappelle les exercices une fois par an, sans pouvoir placer le premier dans le mois qui suit la rentrée. Les exercices de nuit ne sont dus que si l'établissement comporte des locaux réservés au sommeil.",
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. R 33 (exercices d'évacuation) — livre II, titre II, type R, établissements des quatre premières catégories",
+        article: "R 33",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000025134178",
+        note: "« Des exercices pratiques d'évacuation doivent avoir lieu au cours de l'année scolaire ou universitaire ; lorsque l'établissement comporte des locaux réservés au sommeil, des exercices de nuit doivent également être organisés ; le premier exercice doit se dérouler durant le mois qui suit la rentrée. Ces exercices ont pour objectif d'entraîner les élèves et le personnel sur la conduite à tenir en cas d'incendie. Pour cela, ils doivent être représentatifs d'une situation réaliste préparée à l'avance et être l'occasion d'une information des élèves et du personnel. Les conditions de leur déroulement et le temps d'évacuation doivent être consignés sur le registre de sécurité. » Article entier. Relu le 2026-11-03 dans le jeu LEGI de la DILA (export global du 2025-07-13 + mises à jour quotidiennes jusqu'au 2026-11-02) : LEGIARTI000025134178, en vigueur depuis le 2004-05-14, sans terme ni version future ; livre II, titre II, chapitre VI (type R), section 10 « Moyens de secours ».",
+        versionConstatee: "2004-05-14",
+      },
+    ],
+    periodicite: "annuelle",
+    nature: "echeance_recurrente",
+    pieceAttendue: "mention au registre de sécurité (conditions de déroulement et temps d'évacuation)",
+    usageEcran: null,
+    realisateurs: ["exploitant"],
+    criticite: 4,
+    transmet: [
+      {
+        vers: "modele_absent",
+        modele: "ExerciceSecurite",
+        motif:
+          "R 33 fait consigner au registre de sécurité les conditions de déroulement et le temps d'évacuation de chaque exercice. Le produit ouvre l'échéance, mais ne sait la solder que par un dépôt de fichier — là où le texte attend une mention au registre. Même manque que pour R. 4227-39 (docs/registre-securite-ecart.md § 3.2).",
+      },
+    ],
+    typologies: { erp: { categories: [...CATEGORIES_LIVRE_2], types: ["R"] } },
+    porteur: "etablissement",
+    notesInternes:
+      "CRÉÉE LE 2026-11-03 (`lot/cch-manques-cible`), admission du type R à l'onboarding, enfants compris (2026-11-03, décision de la propriétaire). Le corpus portait R 33 en `obligation_manquante`, cause `libre`, depuis la lecture du 2026-10-16. Proposition du corpus suivie : une ligne d'établissement, type R, catégories 1 à 4, annuelle, pièce = la mention au registre ; l'exercice de nuit en description.\n\n" +
+      "LE RYTHME EST ÉCRIT, pas le défaut de l'ADR-039 : « au cours de l'année scolaire ou universitaire » fait revenir l'acte chaque année. Le texte dit « des exercices », au pluriel, sans en fixer le nombre : Rojer en date au moins un par an et ne dit pas combien.\n\n" +
+      "CE QUE ROJER NE SAIT PAS DATER, ET LE DIT. « Le premier exercice doit se dérouler durant le mois qui suit la rentrée » : le produit ne connaît pas la date de rentrée, et n'en pose pas la question (pas de question nouvelle dans ce lot). L'échéance roule d'un an depuis le dernier rapport, ou naît « à planifier ». La description le dit au dirigeant.\n\n" +
+      "LES CENTRES DE VACANCES ET DE LOISIRS SANS HÉBERGEMENT sont du type R (intitulé du chapitre VI), et R 33 ne leur écrit pas d'autre rythme que « l'année scolaire ou universitaire » : la ligne leur est servie, annuelle, avec le même libellé. Pour eux, « la rentrée » ne désigne rien de précis ; Rojer ne l'interprète pas (revue de #173).\n\n" +
+      "L'EXERCICE DE NUIT est en description seulement, conditionné par le texte aux locaux réservés au sommeil. Une seule ligne : le texte ne donne pas de rythme propre aux exercices de nuit, et une seconde ligne conditionnée à `locauxSommeilPublic` ferait deux rendez-vous pour un même acte annuel.\n\n" +
+      "SANS RECOUVREMENT avec `incendie-travail-exercice-semestriel` (R. 4227-39, lieux de travail de plus de cinquante personnes) : autre texte, autre champ, autre rythme. Un établissement d'enseignement qui relève des deux voit les deux lignes ; un même exercice peut honorer les deux, ce que le produit ne dit pas.\n\n" +
+      "BORNE : N1 à N4 et type R. Le chapitre R est au livre II, que PE 1 § 1 écarte en 5ᵉ catégorie. En 5ᵉ, rien n'est encodé pour le type R. ~~Le type R qui accueille des enfants est refusé à l'accueil depuis le 2026-10-17 (lot à lever, mission du 2026-11-03) ; R 1 fait entrer au chapitre la formation d'adultes dès 200 stagiaires, acceptée.~~ [2026-11-03, après #172 (réalignement, ADR-031 amendée) : le filtre à l'accueil est levé, une école ou une crèche est acceptée. La ligne est servie à tout le type R des catégories 1 à 4, enfants compris ; R 1 fait entrer au chapitre la crèche en étage « quel que soit l'effectif » et la formation d'adultes dès 200 stagiaires.]\n\n" +
+      "GN 10 n'est pas cité : la ligne est une échéance récurrente, pas un état permanent (garde de `conformite.test.ts`), comme `incendie-hotel-po-instruction-personnel-semestrielle`. `NOTE_TITRE_2_COMMUNE` n'est pas reprise : elle dit GN 10 cité en description et les autres types non lus, deux choses fausses ici ; sa borne est redite au paragraphe BORNE.",
   },
 
   // ---------------------------------------------------------------------------

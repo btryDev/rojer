@@ -29,7 +29,6 @@ import {
   type OnboardingState,
   type StepProps,
 } from "./types";
-import { questionEnfantsPosee } from "@/lib/etablissements/types-refuses";
 
 type Etape = {
   id: "identite" | "typologie" | "resume";
@@ -547,7 +546,8 @@ function BandeauBlocage({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** Exportés pour le test de cohérence du filtre à l'accueil (2026-10-17). */
+/** Exportés pour le test de cohérence ~~du filtre à l'accueil (2026-10-17)~~
+ *  des types acceptés (`types-acceptes.test.tsx`, 2026-11-03). */
 export function ChampsCaches({ state }: { state: OnboardingState }) {
   const adresseComplete = [
     state.adresseRue.trim(),
@@ -613,12 +613,6 @@ export function ChampsCaches({ state }: { state: OnboardingState }) {
           name="comporteLocauxSommeilPublic"
           value={state.comporteLocauxSommeilPublic}
         />
-      ) : null}
-      {/* Accueil d'enfants (filtre à l'accueil, 2026-10-17) : posté seulement
-          si R est déclaré et la question répondue — hors R, le serveur refuse
-          le champ, comme le sommeil. Jamais écrit en base. */}
-      {state.accueilEnfants && questionEnfantsPosee(state) ? (
-        <input type="hidden" name="accueilEnfants" value={state.accueilEnfants} />
       ) : null}
       {/* Matières (2026-09-27) : postées seulement si elles ont une
           réponse, comme le sommeil — « je ne sais pas encore » ne devient

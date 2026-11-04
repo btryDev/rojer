@@ -49,17 +49,15 @@ describe("les refus à l'entrée sont projetés, pas recopiés", () => {
     // pas ».]
     // Le troisième est entré par décision : la propriétaire, le 2026-09-26,
     // a plafonné l'effectif de l'entreprise comme celui du site (ADR-031).
-    // Les quatre suivants aussi : le filtre à l'accueil, décisions de la
+    // ~~Les quatre suivants aussi : le filtre à l'accueil, décisions de la
     // propriétaire du 2026-10-17 (J, U, établissements spéciaux, R qui
-    // accueille des enfants ; ADR-031 amendée le 2026-10-18).
+    // accueille des enfants ; ADR-031 amendée le 2026-10-18).~~ [2026-11-03 :
+    // levés par le réalignement (ADR-031 amendée) — on ne refuse que la
+    // taille et l'ERP en IGH.]
     expect(refusAlEntree().map((r) => r.cle)).toEqual([
       "effectif",
       "effectif_entreprise",
       "erp_en_igh",
-      "type_j",
-      "type_u",
-      "etablissements_speciaux",
-      "r_accueil_enfants",
     ]);
   });
 
@@ -102,32 +100,23 @@ describe("les refus à l'entrée sont projetés, pas recopiés", () => {
     );
   });
 
-  it("filtre à l'accueil : la porte ne refuse aucun type d'ERP que la liste ne nomme pas", () => {
-    // La garde qui manquait (2026-10-18). Chaque type de GN 1 est soumis à la
-    // porte ; un type refusé doit l'être par une entrée de `refusAlEntree`.
-    // Un huitième refus de type ajouté au schéma sans entrée ici fait tomber
-    // ce test — c'est ce que la phrase rayée plus haut promettait.
-    const nommes = new Set(refusAlEntree().flatMap((r) => r.types ?? []));
-    // Borne basse : la liste nomme bien des types — vide, elle rendrait le
-    // test vrai pour une porte qui ne refuserait rien.
-    expect(nommes.size).toBeGreaterThanOrEqual(9);
+  it("réalignement : la porte ne refuse aucun type d'ERP (2026-11-03)", () => {
+    // ~~« filtre à l'accueil : la porte ne refuse aucun type d'ERP que la
+    // liste ne nomme pas »~~ — le filtre est levé (ADR-031 amendée). La garde
+    // reste, plus stricte : un refus de type réintroduit au schéma sans
+    // décision fait tomber ce test. R est soumis sans réponse sur l'accueil
+    // d'enfants : la question n'existe plus.
     for (const t of TYPES_ERP) {
       const r = onboardingSchema.safeParse({
         ...erpAccepte,
         typeErp: t,
         comporteLocauxSommeilPublic: false,
-        accueilEnfants: t === "R" ? "non" : undefined,
       });
-      const refuseSurLeType = !r.success && r.error.issues.some((i) => i.path[0] === "typeErp");
-      expect(refuseSurLeType, t).toBe(nommes.has(t));
+      const champs = r.success ? [] : r.error.issues.map((i) => i.path[0]);
+      // Le sommeil n'est posé qu'à six types : ailleurs, la réponse « non »
+      // est refusée pour elle-même, jamais le type.
+      expect(champs.filter((c) => c !== "comporteLocauxSommeilPublic"), t).toEqual([]);
     }
-  });
-
-  it("filtre à l'accueil : les sondes inverses passent — PS, et R qui répond « non »", () => {
-    const ps = { ...erpAccepte, typeErp: "PS" };
-    expect(onboardingSchema.safeParse(ps).success).toBe(true);
-    const rAdultes = { ...erpAccepte, typeErp: "R", comporteLocauxSommeilPublic: false, accueilEnfants: "non" };
-    expect(onboardingSchema.safeParse(rAdultes).success).toBe(true);
   });
 
   it("ne laisse aucun refus sans indication — un refus n'est pas un cul-de-sac", () => {
@@ -149,6 +138,7 @@ describe("les refus à l'entrée sont projetés, pas recopiés", () => {
       estIGH: true,
       categorieErp: null,
       estHabitation: false,
+      typesErp: [],
     }).manques.find((m) => m.axe === "igh")!;
     expect(igh.indication).toContain(REGLEMENT_IGH_NON_TRAITE);
     expect(enTour.consequence).toContain(REGLEMENT_IGH_NON_TRAITE);

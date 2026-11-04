@@ -265,10 +265,14 @@ describe("refus de périmètre — création seulement", () => {
     expect(onboardingSchema.safeParse(erpAccepte).success).toBe(true);
   });
 
-  it("filtre à l'accueil : la réponse « accueil d'enfants » postée sur un type autre que R est refusée (revue du 2026-10-17)", () => {
-    const res = onboardingSchema.safeParse({ ...erpAccepte, accueilEnfants: "non" });
-    expect(res.success).toBe(false);
-    if (!res.success) expect(res.error.issues.map((i) => i.path.join("."))).toEqual(["accueilEnfants"]);
+  // ~~« filtre à l'accueil : la réponse « accueil d'enfants » postée sur un
+  // type autre que R est refusée »~~ — filtre levé le 2026-11-03 (ADR-031
+  // amendée) : le champ n'existe plus ; un client resté à l'ancien parcours
+  // qui le poste n'est ni refusé ni écrit.
+  it("réalignement : une réponse « accueil d'enfants » postée est ignorée, jamais un refus", () => {
+    const res = onboardingSchema.safeParse({ ...erpAccepte, typeErp: "R", comporteLocauxSommeilPublic: "non", accueilEnfants: "oui" });
+    expect(res.success).toBe(true);
+    if (res.success) expect(res.data).not.toHaveProperty("accueilEnfants");
   });
 
   it("refuse un ERP situé dans un IGH — et pour cette seule raison", () => {

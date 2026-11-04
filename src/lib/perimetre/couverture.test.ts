@@ -17,6 +17,7 @@ const regimeCouvert: RegimeEtablissement = {
   estIGH: false,
   categorieErp: "N5",
   estHabitation: false,
+  typesErp: [],
 };
 
 /** Un dossier sans rien à signaler : chaque test n'y ajoute que son axe. */
@@ -48,6 +49,7 @@ describe("axe du régime", () => {
       estIGH: false,
       categorieErp: null,
       estHabitation: false,
+      typesErp: [],
     });
     expect(riensASignaler(c)).toBe(true);
   });
@@ -99,6 +101,49 @@ describe("axe du régime", () => {
     const c = couvertureDuRegime({ ...regimeCouvert, estIGH: true });
     expect(c.manques[0].motif).toMatch(/situé dans un immeuble déclaré de grande hauteur/);
     expect(c.manques[0].motif).not.toMatch(/est déclaré immeuble/);
+  });
+});
+
+/* ─── L'axe du type d'ERP — ce qui ne se refuse plus se déclare ───────── */
+
+describe("axe type_erp (réalignement, 2026-11-03)", () => {
+  const avec = (typesErp: RegimeEtablissement["typesErp"], categorieErp: RegimeEtablissement["categorieErp"] = "N5") =>
+    couvertureDuRegime({ ...regimeCouvert, categorieErp, typesErp });
+
+  it("se tait pour un type que Rojer sert", () => {
+    expect(riensASignaler(avec(["N", "M", "PS"]))).toBe(true);
+  });
+
+  it.each(["PA", "CTS", "SG", "OA", "REF", "GA"] as const)("déclare l'établissement spécial %s, en 5ᵉ catégorie aussi", (t) => {
+    const c = avec(["N", t]);
+    expect(axes(c)).toEqual(["type_erp"]);
+    expect(c.manques[0].motif).toContain(`(${t})`);
+    expect(c.manques[0].consequence).toMatch(/livre IV/);
+  });
+
+  it("un seul manque pour plusieurs établissements spéciaux", () => {
+    expect(axes(avec(["PA", "CTS"]))).toEqual(["type_erp"]);
+  });
+
+  it("déclare l'établissement flottant par son propre règlement", () => {
+    const c = avec(["EF"]);
+    expect(axes(c)).toEqual(["type_erp"]);
+    expect(c.manques[0].consequence).toMatch(/9 janvier 1990/);
+  });
+
+  it("J : déclaré en catégories 1 à 4, où son chapitre s'applique ; rien en 5ᵉ", () => {
+    expect(axes(avec(["J"], "N3"))).toEqual(["categorie_erp", "type_erp"]);
+    expect(riensASignaler(avec(["J"], "N5"))).toBe(true);
+  });
+
+  it("U : chapitre U en catégories 1 à 4, articles PU en 5ᵉ", () => {
+    expect(avec(["U"], "N2").manques.find((m) => m.axe === "type_erp")?.consequence).toMatch(/chapitre U du livre II/);
+    expect(avec(["U"], "N5").manques[0].consequence).toMatch(/articles PU du livre III/);
+  });
+
+  it("se tait hors ERP, et en IGH, où l'axe igh a tout dit", () => {
+    expect(riensASignaler(couvertureDuRegime({ ...regimeCouvert, estERP: false, typesErp: ["PA"] }))).toBe(true);
+    expect(axes(couvertureDuRegime({ ...regimeCouvert, estIGH: true, typesErp: ["PA"] }))).toEqual(["igh"]);
   });
 });
 
@@ -472,6 +517,7 @@ describe("les axes ne s'additionnent ni ne se recouvrent", () => {
       estIGH: false,
       categorieErp: "N2",
       estHabitation: false,
+      typesErp: [],
     },
     duerp: {
       etat: "secteur_inconnu",
@@ -519,6 +565,7 @@ describe("les axes ne s'additionnent ni ne se recouvrent", () => {
           estIGH: false,
           categorieErp: null,
           estHabitation: false,
+          typesErp: [],
         },
         equipements: { nbSansObligation: 2, nbEquipements: 5, nbRetires: 0 },
       }),

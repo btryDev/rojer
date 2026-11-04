@@ -177,9 +177,11 @@ export type StatutArticle =
        * bureau, 5ᵉ catégorie d'ERP, cinquante salariés au plus~~ ce que
        * l'onboarding ne refuse pas : cinquante travailleurs au plus, pas d'ERP
        * en IGH (ADR-031 ; tranché par la propriétaire le 2026-10-12) ?
-       * [2026-10-18 : et, depuis le filtre à l'accueil du 2026-10-17, pas de
+       * ~~[2026-10-18 : et, depuis le filtre à l'accueil du 2026-10-17, pas de
        * type J ni U, pas d'établissement spécial PA, CTS, SG, OA, REF, GA, EF,
-       * pas de type R qui accueille des enfants — ADR-031 amendée.]
+       * pas de type R qui accueille des enfants — ADR-031 amendée.]~~
+       * [2026-11-03 : filtre levé (réalignement, ADR-031 amendée) — la cible
+       * est de nouveau la taille et l'ERP hors IGH, tous types confondus.]
        *
        * `false` ne dit pas « sans importance » : il dit ~~qu'un hôtel, un
        * immeuble d'habitation, un ERP des quatre premières catégories ou un
@@ -188,6 +190,7 @@ export type StatutArticle =
        * l'onboarding refuse. ~~Au 2026-10-12, aucune entrée n'est dans ce cas.~~
        * [2026-10-17, filtre à l'accueil : douze entrées des types J et U (et
        * PU) le sont désormais ; ~~R 33~~ est resté dans la cible (revue).]
+       * [2026-11-03 : les douze reviennent dans la cible (réalignement).]
        * Dans le doute, `true` : entre sur- et sous-compter une dette, on
        * sur-compte.
        */
@@ -291,6 +294,20 @@ export type SourceLecture =
    * personne qui encode a relu l'obligation que l'article fonde.
    */
   | "api_legifrance"
+  /**
+   * Relu dans le jeu de données officiel LEGI de la DILA (base servie par
+   * l'API Légifrance), export global + mises à jour quotidiennes appliquées
+   * dans l'ordre ; verbatim recopié mot pour mot du XML ; date du jeu précisée
+   * dans la note. Posé le 2026-11-03 (relecture de R 33) : la machine n'a pas
+   * d'identifiants PISTE, et une provenance ne
+   * s'arrondit pas — ce n'est pas `api_legifrance`.
+   *
+   * Classé au degré de `premiere_main` (`degreDeReference`) : rien ne transite
+   * par un outil qui résume, le texte est celui de la base officielle. Ce
+   * qu'il ne dit pas : que `pnpm legifrance:verifier` l'a recomparé — le jeu
+   * est daté, l'API est vivante.
+   */
+  | "legi_dila"
   /**
    * Lu ailleurs qu'à la source — reproduction consolidée, base
    * professionnelle, résumé. NE PEUT PAS fonder une entrée du référentiel :

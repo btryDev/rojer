@@ -83,6 +83,9 @@ export const ARRETE_2011_12_26_ELECTRICITE: Corpus = {
         "Décrit COMMENT vérifier, jamais QUAND : méthodes d'examen, échantillonnage des prises de courant et des appareils d'éclairage, essais des dispositifs différentiels, tableau de choix des méthodes. Aucune périodicité propre. Le seul rythme qu'elle porte est un rythme d'échantillonnage — « la totalité des prises de courant des locaux de bureaux soit vérifiée au bout de deux vérifications périodiques et la totalité des appareils d'éclairage fixes au bout de trois » —, qui décrit l'étendue d'un contrôle déjà daté par ailleurs et ne crée pas d'échéance.",
     },
     {
+      // [2026-11-03 : #172 l'avait laissé « en transit » sous l'exclusion
+      // réécrite, à reclasser en manque ; #175 rétablit l'exclusion d'origine,
+      // le reclassement est sans objet (ADR-031 (quater)).]
       ref: "Arrêté 2011-12-26 annexe IV",
       intitule:
         "Processus de vérification des installations électriques temporaires",

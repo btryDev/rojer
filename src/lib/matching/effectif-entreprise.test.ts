@@ -128,6 +128,7 @@ describe("tous les lecteurs d'un seuil d'entreprise lisent la même règle", () 
         estERP: false,
         estIGH: false,
         estHabitation: false,
+        typesErp: [],
         typeErp: null,
         typesErpAutres: [],
         categorieErp: null,

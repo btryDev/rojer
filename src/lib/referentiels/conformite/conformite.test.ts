@@ -1995,6 +1995,15 @@ describe("référentiel conformité — version et empreinte", () => {
     // `porte-auto-maintien-en-etat`, une limite en notesInternes. Hors
     // empreinte : MÊME empreinte, version incrémentée (index.ts le dit).
     { version: "2026-10-18.1", empreinte: "204-acb4dcf36b1e8fa3" },
+    // `lot/cch-manques-cible` (2026-11-03, admission du type R à l'onboarding,
+    // enfants compris) : `incendie-erp-enseignement-exercices-evacuation` (R 33),
+    // établissement, type R, N1–N4. 204 + 1 − 0 = 205, relevée en appelant
+    // `empreinteReferentiel()`. Version PROVISOIRE : S3 touche les mêmes
+    // compteurs en parallèle, le second à fusionner rebase.
+    // ~~205-7c562714fbbaa1fe~~ — même jour, relecture LEGI : libellé précisé
+    // (« ou de formation ») ; 205 + 0 − 0, relevée en appelant. Version pas
+    // encore servie.
+    { version: "2026-11-03.1", empreinte: "205-e011935c327951ba" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -2188,7 +2197,10 @@ describe("référentiel conformité — version et empreinte", () => {
       // appelant `obligationsConformite`.
       // ~~200~~ — 2026-10-17, sous-lot G (chapitre L), rebasé sur D et E :
       // 200 + 4 − 0 = 204, remesuré en appelant `obligationsConformite`.
-    ).toBe(204);
+      // ~~204~~ — 2026-11-03, `lot/cch-manques-cible` : 204 + 1
+      // (`incendie-erp-enseignement-exercices-evacuation`, R 33) − 0 = 205,
+      // remesuré en appelant `obligationsConformite`.
+    ).toBe(205);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {

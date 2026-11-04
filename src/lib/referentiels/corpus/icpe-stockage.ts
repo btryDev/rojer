@@ -8,8 +8,9 @@
 // refuse ce qu'on ne peut pas servir, pas ce qu'on ne couvre pas entièrement. »
 // ~~Deux refus subsistent à l'entrée d'un dossier — plus de cinquante
 // travailleurs, et un ERP situé dans un IGH —~~ [2026-10-18 : les refus à
-// l'entrée sont l'effectif (site et entreprise), l'ERP situé dans un IGH, et
-// les types d'ERP du filtre à l'accueil (ADR-031 amendée)] et l'ICPE n'en est pas.
+// l'entrée sont l'effectif (site et entreprise), l'ERP situé dans un IGH, ~~et
+// les types d'ERP du filtre à l'accueil~~ (ADR-031 amendée) — 2026-11-03 :
+// filtre levé, réalignement] et l'ICPE n'en est pas.
 
 import type { Corpus } from "./types";
 

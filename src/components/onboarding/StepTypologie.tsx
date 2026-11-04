@@ -28,7 +28,6 @@ import { AideQuestionMatieres } from "@/components/etablissements/AideQuestionMa
 import type { StepProps } from "./types";
 import { nombreDePersonnesDemande } from "./validation";
 import { AideTypesErp } from "@/components/etablissements/AideTypesErp";
-import { QUESTION_ACCUEIL_ENFANTS, questionEnfantsPosee } from "@/lib/etablissements/types-refuses";
 
 /**
  * Étape 2 sur 3 — la typologie de l'établissement (ERP / IGH / habitation).
@@ -157,7 +156,6 @@ export function StepTypologie({
                     // poster un champ que le schéma refuse hors des quatre
                     // types.
                     comporteLocauxSommeilPublic: "",
-                    accueilEnfants: "",
                   })
                 }
               />
@@ -211,10 +209,6 @@ export function StepTypologie({
                         ...(questionSommeilPosee({ estERP: true, typeErp: t, typesErpAutres: autres })
                           ? {}
                           : { comporteLocauxSommeilPublic: "" }),
-                        // Même règle pour l'accueil d'enfants (filtre, 2026-10-17).
-                        ...(questionEnfantsPosee({ estERP: true, typeErp: t, typesErpAutres: autres })
-                          ? {}
-                          : { accueilEnfants: "" }),
                       });
                     }}
                     /* Pleine largeur de la colonne, et non `max-w-md`.
@@ -250,9 +244,6 @@ export function StepTypologie({
                         ...(questionSommeilPosee({ estERP: true, typeErp: state.typeErp, typesErpAutres: autres })
                           ? {}
                           : { comporteLocauxSommeilPublic: "" }),
-                        ...(questionEnfantsPosee({ estERP: true, typeErp: state.typeErp, typesErpAutres: autres })
-                          ? {}
-                          : { accueilEnfants: "" }),
                       })
                     }
                     erreur={messagePour("typesErpAutres")}
@@ -345,35 +336,6 @@ export function StepTypologie({
                     {messagePour("comporteLocauxSommeilPublic") && (
                       <p className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
                         {messagePour("comporteLocauxSommeilPublic")}
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {/* Accueil d'enfants — filtre à l'accueil (2026-10-17). Posée au
-                    seul type R, principal ou autre : « oui » refuse, la
-                    formation pour adultes reste acceptée. La réponse n'est pas
-                    stockée (`etablissements/types-refuses.ts`). */}
-                {questionEnfantsPosee(state) && (
-                  <div className="flex flex-col gap-3">
-                    <SousQuestion question={QUESTION_ACCUEIL_ENFANTS} />
-                    <select
-                      id="accueilEnfants"
-                      aria-label="Accueil d'enfants"
-                      value={state.accueilEnfants}
-                      onChange={(e) => update({ accueilEnfants: e.currentTarget.value })}
-                      className="champ-board"
-                      aria-invalid={Boolean(messagePour("accueilEnfants"))}
-                    >
-                      <option value="" disabled>
-                        Choisir…
-                      </option>
-                      <option value="oui">Oui</option>
-                      <option value="non">Non</option>
-                    </select>
-                    {messagePour("accueilEnfants") && (
-                      <p className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
-                        {messagePour("accueilEnfants")}
                       </p>
                     )}
                   </div>

@@ -107,6 +107,7 @@ describe("en Ã©dition : le dossier reste ouvert, la couverture le dit (ADR-031 Â
         estERP: false,
         estIGH: false,
         estHabitation: false,
+        typesErp: [],
         typeErp: null,
         categorieErp: null,
         classeIgh: null,
