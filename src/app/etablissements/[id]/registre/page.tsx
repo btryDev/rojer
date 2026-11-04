@@ -385,6 +385,7 @@ export default async function RegistrePage({
                   const dom = obligationParId(
                     r.verification.obligationId,
                   )?.domaine;
+                  const parQui = libelleRealisePar(r);
                   return (
                     <li
                       key={r.id}
@@ -400,12 +401,12 @@ export default async function RegistrePage({
                             ·
                           </span>
                           {libellePorteur(r.verification)}
-                          {libelleRealisePar(r) && (
+                          {parQui && (
                             <>
                               <span className="mx-2 text-[color:var(--board-slate)]">
                                 ·
                               </span>
-                              {libelleRealisePar(r)}
+                              {parQui}
                             </>
                           )}
                           {dom && (

@@ -58,6 +58,60 @@ export function libelleRealisePar(r: {
   return r.organismeVerif;
 }
 
+/**
+ * La même chose avec « par » devant un organisme, pour une ligne de fiche :
+ * « En interne (Marie) », « par Apave ».
+ */
+export function mentionRealisePar(r: {
+  realiseEnInterne: boolean;
+  organismeVerif: string | null;
+}): string | null {
+  const libelle = libelleRealisePar(r);
+  if (libelle === null) return null;
+  return r.realiseEnInterne ? libelle : `par ${libelle}`;
+}
+
+/**
+ * Les mots de la fiche d'un contrôle, selon que l'interne y est possible.
+ * Une seule table : la fiche ne dit plus « rapport » là où l'exploitant
+ * consigne lui-même, et ne le redit pas dix fois à la main.
+ */
+export function libellesDepot(enInternePossible: boolean) {
+  return enInternePossible
+    ? {
+        titreDepot: "Enregistrer la vérification",
+        nouveau: "Nouvelle vérification",
+        explicationNouveau:
+          "Chaque vérification enregistrée met à jour la date de réalisation et recalcule la prochaine échéance.",
+        titreSection: "Vérifications enregistrées",
+        confirmation: "Vérification enregistrée.",
+        enAttenteTitre: "Cette vérification attend d'être enregistrée.",
+        enAttenteTexte:
+          "Faite en interne, elle s'enregistre par le formulaire, sans fichier. Faite par un prestataire, joignez son rapport. Dans les deux cas, la vérification est marquée comme réalisée et la prochaine échéance est recalculée automatiquement.",
+        enAttenteListe: [
+          "La date de la vérification",
+          "Le résultat constaté",
+          "Le rapport, si un prestataire l'a faite",
+        ],
+      }
+    : {
+        titreDepot: "Déposer le rapport",
+        nouveau: "Nouveau rapport",
+        explicationNouveau:
+          "Un rapport additionnel met à jour la date de réalisation et régénère la prochaine échéance.",
+        titreSection: "Rapports déposés",
+        confirmation: "Rapport enregistré.",
+        enAttenteTitre: "Cette vérification attend son rapport.",
+        enAttenteTexte:
+          "Dès que vous téléversez le rapport du vérificateur, la vérification est marquée comme réalisée et la prochaine échéance est recalculée automatiquement.",
+        enAttenteListe: [
+          "Le fichier du rapport (PDF de préférence)",
+          "La date de réalisation",
+          "Le résultat constaté",
+        ],
+      };
+}
+
 /** Une vérification de cette ligne peut-elle être enregistrée en interne ? */
 export function interneAutorise(realisateurs: readonly Realisateur[]): boolean {
   return modeParDefaut(realisateurs) !== null;

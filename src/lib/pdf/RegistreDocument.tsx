@@ -720,9 +720,12 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
                 <Text style={[s.td, { width: "20%" }]}>
                   {r.equipementLibelle}
                 </Text>
-                <Text style={[s.td, { width: "16%" }]}>
-                  {r.realisePar ?? "—"}
-                </Text>
+                <View style={{ width: "16%", paddingRight: 4 }}>
+                  <Text style={s.td}>{r.realisePar ?? "—"}</Text>
+                  {r.fichierNomOriginal === null ? (
+                    <Text style={[s.small, { marginTop: 2 }]}>Sans pièce jointe</Text>
+                  ) : null}
+                </View>
                 <Text style={[s.td, { width: "14%" }]}>
                   {LABEL_RESULTAT[r.resultat]}
                 </Text>
@@ -873,7 +876,9 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
             {destinatairesRegistre(data.regime)}. Les
             fichiers originaux des rapports sont conservés et téléchargeables
             depuis l&apos;application ; le dossier de contrôle exporté les joint,
-            dans son dossier « Rapports/ ».
+            dans son dossier « Rapports/ ». Une vérification faite en interne
+            peut être consignée sans pièce jointe : la ligne le dit, et le
+            dossier « Rapports/ » n&apos;a alors pas de fichier pour elle.
           </Text>
           {phraseRegistreIgh(data.regime) && (
             <Text style={{ marginTop: 4 }}>{phraseRegistreIgh(data.regime)}</Text>

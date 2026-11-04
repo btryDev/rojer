@@ -75,7 +75,7 @@ import {
   LIBELLE_SOURCE,
 } from "@/lib/referentiels/conformite/types";
 import { uploadRapport } from "@/lib/rapports/actions";
-import { libelleRealisePar, modeParDefaut } from "@/lib/rapports/interne";
+import { libellesDepot, mentionRealisePar, modeParDefaut } from "@/lib/rapports/interne";
 import { avecParametres, cheminControle } from "@/lib/navigation/chemins";
 import { SuiviControle } from "@/components/rendez-vous/SuiviControle";
 import { DemandeAide } from "@/components/assistance/DemandeAide";
@@ -230,7 +230,7 @@ export default async function VerificationDetailPage({
   // Le choix « En interne / Prestataire » (2026-11-04) : `null` = un tiers
   // est exigé, le rapport aussi.
   const faitParDefaut = modeParDefaut(v.realisateurRequis);
-  const enInternePossible = faitParDefaut !== null;
+  const mots = libellesDepot(faitParDefaut !== null);
 
 
   // Horloge lue une fois pour toute la page : deux appels à `new Date()`
@@ -711,31 +711,29 @@ export default async function VerificationDetailPage({
               role="status"
               className="m-0 rounded-[18px] bg-[color:var(--board-green)] px-6 py-4 text-[13.5px] font-semibold text-[color:var(--board-green-ink)]"
             >
-              {enInternePossible ? "Vérification enregistrée." : "Rapport enregistré."}
+              {mots.confirmation}
             </p>
           ) : null}
           <TitreSection
             surtitre="Dossier"
-            titre={enInternePossible ? "Vérifications enregistrées" : "Rapports déposés"}
+            titre={mots.titreSection}
             compte={v.rapports.length}
             droite={
               depotOuvert ? (
               <details className="group">
                 <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-full px-[18px] py-2.5 text-[12.5px] font-semibold text-[color:var(--board-ink)] ring-1 ring-[color:rgba(10,10,10,.18)] transition-colors hover:bg-[color:var(--board-slate-pale)]">
                   <span className="group-open:hidden">
-                    {enInternePossible ? "+ Nouvelle vérification" : "+ Nouveau rapport"}
+                    + {mots.nouveau}
                   </span>
                   <span className="hidden group-open:inline">Annuler</span>
                 </summary>
                 <div className="carte-board mt-4 overflow-hidden md:min-w-[520px]">
                   <div className="border-b border-[color:var(--board-slate-line)] px-7 py-5">
                     <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-                      {enInternePossible ? "Nouvelle vérification" : "Nouveau rapport"}
+                      {mots.nouveau}
                     </p>
                     <p className="m-0 mt-2 text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                      {enInternePossible
-                        ? "Chaque vérification enregistrée met à jour la date de réalisation et recalcule la prochaine échéance."
-                        : "Un rapport additionnel met à jour la date de réalisation et régénère la prochaine échéance."}
+                      {mots.explicationNouveau}
                     </p>
                   </div>
                   <div className="px-7 py-6">
@@ -760,7 +758,7 @@ export default async function VerificationDetailPage({
           {/* Arrivé par une ligne « à faire » (`?deposer=1`) : le formulaire
               s'ouvre en pleine largeur, pas dans la colonne du titre. */}
           {deposer === "1" && depotOuvert && !pieceMedicale ? (
-            <CarteFiche id="depot" titre={enInternePossible ? "Nouvelle vérification" : "Nouveau rapport"}>
+            <CarteFiche id="depot" titre={mots.nouveau}>
               <UploadRapportForm action={boundUpload} organismeParDefaut={v.prestataire?.raisonSociale} faitParDefaut={faitParDefaut} />
             </CarteFiche>
           ) : null}
@@ -768,6 +766,7 @@ export default async function VerificationDetailPage({
           <ul className="m-0 flex list-none flex-col gap-[22px] p-0">
             {v.rapports.map((r, idx) => {
               const sigs = signaturesParRapport.get(r.id) ?? [];
+              const parQui = mentionRealisePar(r);
               return (
                 <li key={r.id}>
                   <article className="carte-board overflow-hidden">
@@ -783,9 +782,9 @@ export default async function VerificationDetailPage({
                           <p className="m-0 text-[16px] font-semibold leading-tight tracking-[-0.015em]">
                             {r.realiseEnInterne ? "Vérification" : "Rapport"} du {formatDate(r.dateRapport)}
                           </p>
-                          {libelleRealisePar(r) && (
+                          {parQui && (
                             <p className="m-0 mt-1 text-[13px] text-[color:var(--board-slate-mid)]">
-                              {r.realiseEnInterne ? libelleRealisePar(r) : `par ${r.organismeVerif}`}
+                              {parQui}
                             </p>
                           )}
                         </div>
@@ -898,9 +897,7 @@ export default async function VerificationDetailPage({
               titre={
                 pieceMedicale
                   ? "Ce que l'outil suit"
-                  : enInternePossible
-                    ? "Enregistrer la vérification"
-                    : "Déposer le rapport"
+                  : mots.titreDepot
               }
             >
               {pieceMedicale ? (
@@ -931,28 +928,13 @@ export default async function VerificationDetailPage({
                 En attente
               </p>
               <h2 className="board-titre m-0 mt-3 text-[22px]">
-                {enInternePossible
-                  ? "Cette vérification attend d'être enregistrée."
-                  : "Cette vérification attend son rapport."}
+                {mots.enAttenteTitre}
               </h2>
               <p className="m-0 mt-3 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
-                {enInternePossible
-                  ? "Faite en interne, elle s'enregistre par le formulaire, sans fichier. Faite par un prestataire, joignez son rapport. Dans les deux cas, la vérification est marquée comme réalisée et la prochaine échéance est recalculée automatiquement."
-                  : "Dès que vous téléversez le rapport du vérificateur, la vérification est marquée comme réalisée et la prochaine échéance est recalculée automatiquement."}
+                {mots.enAttenteTexte}
               </p>
               <ul className="m-0 mt-5 flex list-none flex-col gap-2 p-0 text-[13px] text-[color:var(--board-slate-ink)]">
-                {(enInternePossible
-                  ? [
-                      "La date de la vérification",
-                      "Le résultat constaté",
-                      "Le rapport, si un prestataire l'a faite",
-                    ]
-                  : [
-                      "Le fichier du rapport (PDF de préférence)",
-                      "La date de réalisation",
-                      "Le résultat constaté",
-                    ]
-                ).map((item) => (
+                {mots.enAttenteListe.map((item) => (
                   <li key={item} className="flex items-start gap-2.5">
                     <span
                       aria-hidden

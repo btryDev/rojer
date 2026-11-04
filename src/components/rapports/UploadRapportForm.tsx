@@ -95,49 +95,42 @@ export function UploadRapportForm({
 
   return (
     <form action={formAction} className="space-y-5">
-      <input type="hidden" name="faitPar" value={faitPar} />
-
+      {/* De vrais boutons radio, rendus en gélule : flèches du clavier,
+          un seul arrêt de tabulation, annoncés tels quels (revue de #180). */}
       {choix ? (
-        <div>
-          <p className="label-board" id="fait-par-label">
-            Qui a fait la vérification ?
-          </p>
-          <div
-            role="radiogroup"
-            aria-labelledby="fait-par-label"
-            className="inline-flex rounded-full bg-[color:var(--board-slate-pale)] p-1"
-          >
-            {OPTIONS_FAIT_PAR.map((o) => {
-              const actif = faitPar === o.valeur;
-              return (
-                <button
-                  key={o.valeur}
-                  type="button"
-                  role="radio"
-                  aria-checked={actif}
-                  onClick={() => setFaitPar(o.valeur)}
-                  className={
-                    "rounded-full px-4 py-2 text-[12.5px] font-semibold transition-colors " +
-                    (actif
-                      ? "bg-[color:var(--board-ink)] text-white"
-                      : "text-[color:var(--board-slate-mid)] hover:text-[color:var(--board-ink)]")
-                  }
-                >
+        <fieldset className="mx-0 min-w-0 border-0 p-0">
+          <legend className="label-board">Qui a fait la vérification ?</legend>
+          <div className="inline-flex rounded-full bg-[color:var(--board-slate-pale)] p-1">
+            {OPTIONS_FAIT_PAR.map((o) => (
+              <label key={o.valeur} className="cursor-pointer">
+                <input
+                  type="radio"
+                  name="faitPar"
+                  value={o.valeur}
+                  checked={faitPar === o.valeur}
+                  onChange={() => setFaitPar(o.valeur)}
+                  className="peer sr-only"
+                />
+                <span className="block rounded-full px-4 py-2 text-[12.5px] font-semibold text-[color:var(--board-slate-mid)] transition-colors hover:text-[color:var(--board-ink)] peer-checked:bg-[color:var(--board-ink)] peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-[color:var(--board-ink)] peer-focus-visible:ring-offset-2">
                   {o.libelle}
-                </button>
-              );
-            })}
+                </span>
+              </label>
+            ))}
           </div>
           <p className="m-0 mt-2 text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
             {interne
               ? "Vous ou votre équipe : remplissez le relevé, aucun fichier n'est demandé."
               : "Joignez le rapport que le prestataire vous a remis."}
           </p>
-        </div>
-      ) : null}
+        </fieldset>
+      ) : (
+        <input type="hidden" name="faitPar" value="prestataire" />
+      )}
 
-      {/* Par un prestataire, le rapport vient en premier : c'est la pièce. */}
-      {!interne ? champFichier : null}
+      {/* Le champ du fichier reste au même endroit dans les deux modes : le
+          déplacer le recréait, et un fichier déjà choisi se perdait au
+          changement de mode (revue de #180). */}
+      {champFichier}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
@@ -233,8 +226,6 @@ export function UploadRapportForm({
         )}
       </div>
 
-      {/* En interne, la pièce jointe vient en dernier : elle est facultative. */}
-      {interne ? champFichier : null}
 
       {state.status === "error" && !state.fieldErrors && (
         <p className="text-[13px] text-[color:var(--board-signal-ink)]">

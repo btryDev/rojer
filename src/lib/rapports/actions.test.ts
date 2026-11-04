@@ -648,6 +648,15 @@ describe("uploadRapport — une vérification faite en interne (2026-11-04)", ()
     expect(res.status === "error" && res.message).toMatch(/tiers/);
     expect(rapports()).toEqual([]);
   });
+
+  it("là où un tiers est exigé, « interne » AVEC fichier vaut rapport du tiers", async () => {
+    poserEtablissement();
+    poserLigne({ obligationId: ELEC_MISE_EN_SERVICE });
+    const res = await envoyer("v-1", releve("interne", true));
+    expect(res.status).toBe("redirige");
+    expect(rapports()[0]).toMatchObject({ realiseEnInterne: false });
+    expect(rapports()[0].fichierCle).not.toBeNull();
+  });
 });
 
 // ---------------------------------------------------------------------------

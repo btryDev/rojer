@@ -1,5 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { formaterDateFr } from "@/lib/dates";
+import { libelleRealisePar } from "@/lib/rapports/interne";
+import { LABEL_RESULTAT } from "@/lib/rapports/resultats";
 
 /**
  * Ce que le porteur d'un lien de signature a sous les yeux avant de signer.
@@ -145,17 +147,37 @@ export async function contenuASigner(
       select: {
         fichierNomOriginal: true,
         dateRapport: true,
+        resultat: true,
+        realiseEnInterne: true,
+        organismeVerif: true,
+        commentaires: true,
         verification: { select: { libelleObligation: true } },
       },
     });
     if (!r) return null;
+    if (r.fichierNomOriginal !== null) {
+      return {
+        type: "rapport_verification",
+        titre: r.verification.libelleObligation,
+        description: `Rapport du ${formaterDateFr(r.dateRapport)} — fichier « ${r.fichierNomOriginal} ».`,
+      };
+    }
+    // SANS FICHIER, LE SIGNATAIRE LIT CE QUE L'EMPREINTE SCELLE (2026-11-04,
+    // revue de #180) : la date, le résultat, qui l'a faite et les
+    // observations (`hash-objet.ts`, forme `releve-v1:`). Lui montrer moins
+    // lui ferait signer un contenu qu'il n'a pas vu.
+    const parQui = libelleRealisePar(r);
     return {
       type: "rapport_verification",
       titre: r.verification.libelleObligation,
-      description:
-        r.fichierNomOriginal !== null
-          ? `Rapport du ${formaterDateFr(r.dateRapport)} — fichier « ${r.fichierNomOriginal} ».`
-          : `Vérification faite en interne le ${formaterDateFr(r.dateRapport)}, sans pièce jointe.`,
+      description: [
+        `Vérification du ${formaterDateFr(r.dateRapport)}, sans pièce jointe.`,
+        parQui ? `Réalisée par : ${parQui}.` : null,
+        `Résultat : ${LABEL_RESULTAT[r.resultat]}.`,
+        r.commentaires ? `Observations : ${r.commentaires}` : null,
+      ]
+        .filter(Boolean)
+        .join(" "),
     };
   }
 

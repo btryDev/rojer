@@ -175,8 +175,11 @@ export async function uploadRapport(
   // EN INTERNE, SEULEMENT SI LE TEXTE LE PERMET. Une ligne qui exige un tiers
   // (organisme agréé, bureau de contrôle…) ne s'enregistre pas sans son
   // rapport ; le formulaire n'offre pas le choix, la règle tient ici pour un
-  // appel direct.
-  if (faitPar === "interne" && !interneAutorise(verif.realisateurRequis)) {
+  // appel direct. Avec un fichier joint, le dépôt vaut rapport du tiers : il
+  // est enregistré comme tel plutôt que refusé (un formulaire ouvert avant un
+  // changement de la ligne, revue de #180).
+  const enInterne = faitPar === "interne" && interneAutorise(verif.realisateurRequis);
+  if (faitPar === "interne" && !enInterne && fichier === null) {
     return {
       status: "error",
       message:
@@ -320,7 +323,7 @@ export async function uploadRapport(
           organismeVerif: parsed.data.organismeVerif,
           resultat,
           commentaires: parsed.data.commentaires,
-          realiseEnInterne: faitPar === "interne",
+          realiseEnInterne: enInterne,
           fichierCle: piece?.cle ?? null,
           fichierNomOriginal: piece?.nom ?? null,
           fichierMime: piece?.mime ?? null,

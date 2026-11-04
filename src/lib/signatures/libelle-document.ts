@@ -46,12 +46,16 @@ export async function libelleDocumentSignable(
       where: { id: objetId, etablissementId },
       select: {
         dateRapport: true,
+        fichierCle: true,
         verification: { select: { libelleObligation: true } },
       },
     });
+    // Une vérification faite en interne sans pièce jointe n'a pas de
+    // « rapport » (2026-11-04).
+    const quoi = r?.fichierCle === null ? "vérification du" : "rapport du";
     return r
       ? uneLigne(
-          `${r.verification.libelleObligation} — rapport du ${formaterDateFr(r.dateRapport)}`,
+          `${r.verification.libelleObligation} — ${quoi} ${formaterDateFr(r.dateRapport)}`,
         )
       : null;
   }

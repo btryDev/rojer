@@ -13,14 +13,16 @@ afterEach(cleanup);
 
 const action = async () => ({ status: "idle" as const });
 const fichier = (c: HTMLElement) => c.querySelector<HTMLInputElement>('input[name="fichier"]')!;
-const faitPar = (c: HTMLElement) => c.querySelector<HTMLInputElement>('input[name="faitPar"]')!;
+/** La valeur envoyée : le radio coché, ou le champ caché quand il n'y a pas de choix. */
+const faitPar = (c: HTMLElement) =>
+  c.querySelector<HTMLInputElement>('input[name="faitPar"]:checked, input[type="hidden"][name="faitPar"]')!;
 
 describe("UploadRapportForm : qui a fait la vérification", () => {
   it("l'exploitant peut la faire : ouvre sur « En interne », fichier facultatif", () => {
     const { container } = render(<UploadRapportForm action={action} faitParDefaut="interne" />);
     expect(faitPar(container).value).toBe("interne");
     expect(fichier(container).required).toBe(false);
-    expect(screen.getByRole("radio", { name: "En interne" }).getAttribute("aria-checked")).toBe("true");
+    expect((screen.getByRole("radio", { name: "En interne" }) as HTMLInputElement).checked).toBe(true);
     expect(screen.getByRole("button", { name: "Enregistrer la vérification" })).toBeTruthy();
   });
 
@@ -29,6 +31,14 @@ describe("UploadRapportForm : qui a fait la vérification", () => {
     fireEvent.click(screen.getByRole("radio", { name: "Par un prestataire" }));
     expect(faitPar(container).value).toBe("prestataire");
     expect(fichier(container).required).toBe(true);
+  });
+
+  it("changer de mode garde le champ du fichier, donc le fichier choisi", () => {
+    const { container } = render(<UploadRapportForm action={action} faitParDefaut="interne" />);
+    const avant = fichier(container);
+    fireEvent.click(screen.getByRole("radio", { name: "Par un prestataire" }));
+    fireEvent.click(screen.getByRole("radio", { name: "En interne" }));
+    expect(fichier(container)).toBe(avant);
   });
 
   it("un prestataire attitré fait ouvrir sur « Par un prestataire »", () => {
