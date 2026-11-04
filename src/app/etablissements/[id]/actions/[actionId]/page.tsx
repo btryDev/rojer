@@ -328,7 +328,11 @@ export default async function ActionDetailPage({
                       montré nulle part (audit du 2026-10-12). */}
                   {a.leveeRapportId ? (
                     <ChampFiche cle={point ? "Rapport de contre-visite" : "Rapport de levée"}>
-                      {a.leveeRapport ? (
+                      {a.leveeRapport && a.leveeRapport.fichierNomOriginal === null ? (
+                        // Une vérification faite en interne, sans pièce
+                        // jointe (2026-11-04) : rien à ouvrir.
+                        <span>{`${formaterDateFr(a.leveeRapport.dateRapport)} — vérification faite en interne`}</span>
+                      ) : a.leveeRapport ? (
                         <a
                           href={`/api/rapports/${a.leveeRapport.id}/fichier`}
                           target="_blank"
@@ -365,7 +369,7 @@ export default async function ActionDetailPage({
                 rapportsDisponibles={a.verification?.rapports.map((r) => ({
                   id: r.id,
                   label: `${formaterDateFr(r.dateRapport)} — ${
-                    r.fichierNomOriginal
+                    r.fichierNomOriginal ?? "vérification faite en interne"
                   }`,
                 }))}
               />

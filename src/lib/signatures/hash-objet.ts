@@ -58,6 +58,13 @@ import type { ObjetSignable } from "@prisma/client";
 export const VERSION_HASH_PLAN_PREVENTION = "v2:";
 
 /**
+ * La marque d'une vérification faite en interne sans pièce jointe
+ * (2026-11-04) : l'empreinte porte sur le relevé en JSON canonique, pas sur
+ * un fichier. Les rapports avec fichier gardent leur empreinte sans préfixe.
+ */
+export const VERSION_HASH_RELEVE_INTERNE = "releve-v1:";
+
+/**
  * La version que porte une empreinte. Une empreinte sans préfixe est de la
  * première forme, celle d'avant toute marque — d'où `"v1"` plutôt qu'une
  * chaîne vide, qui se serait comparée par accident.
@@ -92,11 +99,40 @@ export async function calculerHashObjet(
     // par l'organisme : on hashe le binaire lui-même.
     const rapport = await db.rapportVerification.findFirst({
       where: { id: objetId, etablissementId },
-      select: { fichierCle: true, fichierNomOriginal: true },
+      select: {
+        fichierCle: true,
+        fichierNomOriginal: true,
+        verificationId: true,
+        dateRapport: true,
+        resultat: true,
+        organismeVerif: true,
+        commentaires: true,
+        realiseEnInterne: true,
+      },
     });
     if (!rapport) return { ok: false, raison: "objet_introuvable" };
+    // UNE VÉRIFICATION FAITE EN INTERNE, SANS PIÈCE JOINTE (2026-11-04) : il
+    // n'y a pas de binaire, l'objet signé est le relevé lui-même, en JSON
+    // canonique (ADR-008). Sa forme porte sa propre marque : elle ne se
+    // compare jamais à l'empreinte d'un fichier.
+    if (rapport.fichierCle === null) {
+      const canonique = JSON.stringify({
+        verificationId: rapport.verificationId,
+        dateRapport: rapport.dateRapport,
+        resultat: rapport.resultat,
+        realiseEnInterne: rapport.realiseEnInterne,
+        organismeVerif: rapport.organismeVerif,
+        commentaires: rapport.commentaires,
+      });
+      return {
+        ok: true,
+        hash: VERSION_HASH_RELEVE_INTERNE + sha256Hex(canonique),
+        nomDocument: "Vérification faite en interne",
+      };
+    }
+    const cle = rapport.fichierCle;
     try {
-      const buf = await getStorage().get(rapport.fichierCle);
+      const buf = await getStorage().get(cle);
       return {
         ok: true,
         hash: sha256Hex(buf),

@@ -32,11 +32,13 @@ export type LigneRapport = {
   id: string;
   dateRapport: Date;
   resultat: ResultatVerification;
-  organismeVerif: string | null;
+  /** Qui l'a faite : l'organisme, ou « En interne (nom) » (`libelleRealisePar`). */
+  realisePar: string | null;
   libelleObligation: string;
   equipementLibelle: string;
   domaine: DomaineObligation | null;
-  fichierNomOriginal: string;
+  /** `null` : vérification faite en interne, sans pièce jointe (2026-11-04). */
+  fichierNomOriginal: string | null;
   commentaires: string | null;
   /** Les points relevés par ce rapport et leur correction (ADR-048). */
   points: PointDuRapport[];
@@ -695,7 +697,7 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
               <Text style={[s.th, { width: "14%" }]}>Date</Text>
               <Text style={[s.th, { width: "36%" }]}>Obligation</Text>
               <Text style={[s.th, { width: "20%" }]}>Équipement</Text>
-              <Text style={[s.th, { width: "16%" }]}>Organisme</Text>
+              <Text style={[s.th, { width: "16%" }]}>Réalisé par</Text>
               <Text style={[s.th, { width: "14%" }]}>Résultat</Text>
             </View>
             {data.rapports.map((r) => (
@@ -718,9 +720,12 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
                 <Text style={[s.td, { width: "20%" }]}>
                   {r.equipementLibelle}
                 </Text>
-                <Text style={[s.td, { width: "16%" }]}>
-                  {r.organismeVerif ?? "—"}
-                </Text>
+                <View style={{ width: "16%", paddingRight: 4 }}>
+                  <Text style={s.td}>{r.realisePar ?? "—"}</Text>
+                  {r.fichierNomOriginal === null ? (
+                    <Text style={[s.small, { marginTop: 2 }]}>Sans pièce jointe</Text>
+                  ) : null}
+                </View>
                 <Text style={[s.td, { width: "14%" }]}>
                   {LABEL_RESULTAT[r.resultat]}
                 </Text>
@@ -871,7 +876,9 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
             {destinatairesRegistre(data.regime)}. Les
             fichiers originaux des rapports sont conservés et téléchargeables
             depuis l&apos;application ; le dossier de contrôle exporté les joint,
-            dans son dossier « Rapports/ ».
+            dans son dossier « Rapports/ ». Une vérification faite en interne
+            peut être consignée sans pièce jointe : la ligne le dit, et le
+            dossier « Rapports/ » n&apos;a alors pas de fichier pour elle.
           </Text>
           {phraseRegistreIgh(data.regime) && (
             <Text style={{ marginTop: 4 }}>{phraseRegistreIgh(data.regime)}</Text>

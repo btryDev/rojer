@@ -1017,10 +1017,20 @@ model RapportVerification {
   resultat        ResultatVerification
   commentaires    String?
 
-  fichierCle         String
-  fichierNomOriginal String
-  fichierMime        String
-  fichierTaille      Int
+  // Vérification faite EN INTERNE par l'exploitant ou son équipe (alarme
+  // hebdomadaire, essai mensuel de l'éclairage…), enregistrée par un
+  // formulaire (2026-11-04). Le fichier y est facultatif. Une vérification
+  // faite par un prestataire garde son rapport obligatoire (R. 4323-26 : le
+  // rapport d'un tiers s'annexe au registre). Possible seulement sur une ligne
+  // dont `realisateurRequis` compte `exploitant` (`rapports/interne.ts`).
+  // Contraintes en base : le fichier est complet ou absent, et absent
+  // seulement en interne (migration `20261104120000_releve_interne`).
+  realiseEnInterne Boolean @default(false)
+
+  fichierCle         String?
+  fichierNomOriginal String?
+  fichierMime        String?
+  fichierTaille      Int?
 
   createdAt DateTime @default(now())
 

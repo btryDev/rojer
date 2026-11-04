@@ -141,6 +141,6 @@ export async function effacerSalarie(
     // La fiche : ses titres suivent en cascade (`TitreSalarie.salarie`).
     await tx.salarie.deleteMany({ where: { id: salarieId, etablissementId } });
 
-    return { cles: rapports.map((r) => r.fichierCle) };
+    return { cles: rapports.flatMap((r) => (r.fichierCle !== null ? [r.fichierCle] : [])) };
   });
 }
