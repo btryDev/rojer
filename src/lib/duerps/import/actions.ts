@@ -183,10 +183,10 @@ export async function commitImport(
   // transaction les reprend sous verrou.
   const reutilisables = new Set(unitesExistantes.filter((u) => !u.estTransverse).map((u) => u.nom));
   const aNaitre = new Set(plan.unites.map((u) => u.nom).filter((n) => !reutilisables.has(n))).size;
-  const refusEssai =
+  const refusPlafond =
     (await refusQuota(db, compte.compteId, "importsDuerp")) ??
     (aNaitre > 0 ? await refusQuota(db, compte.compteId, "unitesTravail", aNaitre) : null);
-  if (refusEssai) return { status: "error", message: `${refusEssai} Rien n'a été importé.` };
+  if (refusPlafond) return { status: "error", message: `${refusPlafond} Rien n'a été importé.` };
 
   const duerpId =
     duerpExistant?.id ??
@@ -228,8 +228,6 @@ export async function commitImport(
   // transverse que le fichier ne porte jamais.
   try {
     await db.$transaction(async (tx) => {
-      // Le plafond annuel d'imports de la formule (ADR-053 § 14).
-      await prendreQuota(tx, compte.compteId, "importsDuerp");
       // `creerEnLotVerifie` (ADR-051) : les parents de chaque lot sont lus par
       // la transaction — les unités créées juste avant y sont vues.
       if (ecritures.unitesACreer.length > 0) {
@@ -245,6 +243,9 @@ export async function commitImport(
         await creerEnLotVerifie(tx, "Action", ecritures.actions);
       }
       if (faits) await reprendreFaitsDansDuerp(tx, duerpId, faits);
+      // Le plafond annuel d'imports (ADR-053 § 14), en DERNIER : le verrou du
+      // compte n'est tenu que jusqu'à la validation, pas pendant tout l'import.
+      await prendreQuota(tx, compte.compteId, "importsDuerp");
     },
     // Une transaction interactive a 5 s par défaut ; un DUERP importé peut
     // porter des centaines de risques et d'actions (relecture du 2026-10-08).

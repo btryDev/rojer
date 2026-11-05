@@ -1,4 +1,4 @@
-import { creerSousPlafond, prendreQuota } from "@/lib/abonnements/quotas";
+import { creerSousPlafond, prendreQuota, rendreQuota } from "@/lib/abonnements/quotas";
 import { randomUUID } from "node:crypto";
 import { notFound } from "next/navigation";
 import { z } from "zod";
@@ -13,7 +13,7 @@ import {
 } from "./token";
 import { envoyerMailAcces, urlAccesPourToken } from "./mail";
 import { envoiEnService, motifErreur } from "@/lib/email";
-import { LIEN_PARTI, MOTIF_REVOCATION_ENVOI_ECHOUE } from "./revocation";
+import { LIEN_PARTI, MOTIF_REVOCATION_ENVOI_ECHOUE, estAUsageUnique } from "./revocation";
 import { generateOtp, hashOtp, otpExpirationDate } from "@/lib/signatures/otp";
 
 /**
@@ -255,8 +255,7 @@ export async function emettreAccessToken(
   const expireLe = expirationFromNow(ttl, maintenant);
 
   // OTP uniquement pour scopes à preuve (signature, dépôt de rapport).
-  const besoinOtp =
-    params.scope === "signature" || params.scope === "depot_rapport";
+  const besoinOtp = estAUsageUnique(params.scope);
   const otp = besoinOtp ? generateOtp() : null;
   const otpHash = otp ? hashOtp(otp) : null;
   // Le code a sa propre expiration (10 minutes), bien plus courte que celle
@@ -268,8 +267,9 @@ export async function emettreAccessToken(
   // Plafonds de la formule (ADR-053 § 14) : les liens actifs, et pour une
   // demande de signature, les signatures de l'année — comptées à la demande,
   // comme une enveloppe : la signature du tiers, plus tard, ne recompte pas.
+  let pris: string[] = [];
   const creation = await creerSousPlafond(db, compte.compteId, "liensAccesActifs", async (tx) => {
-    if (params.scope === "signature") await prendreQuota(tx, compte.compteId, "signaturesParAn");
+    if (params.scope === "signature") pris = await prendreQuota(tx, compte.compteId, "signaturesParAn");
     return tx.accessToken.create({
       data: {
         id: `atk_${randomUUID()}`,
@@ -316,6 +316,9 @@ export async function emettreAccessToken(
         () => "révoqué",
         (e: unknown) => `révocation impossible (${motifErreur(e)})`,
       );
+    // La signature prise pour cette demande est rendue : rien n'a atteint
+    // personne (même règle que `LIEN_PARTI` pour les plafonds de l'heure).
+    await rendreQuota(db, pris).catch((e: unknown) => console.error("[access-tokens] signature non rendue :", motifErreur(e)));
     console.error(`[access-tokens] envoi échoué, jeton ${access.id} ${revoque} :`, motifErreur(erreur));
     return { ok: false, raison: "envoi_echoue", message: MESSAGE_ENVOI_ECHOUE };
   }

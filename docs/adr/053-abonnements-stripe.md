@@ -282,15 +282,22 @@ et sans croire une information qui ne vient pas de Stripe.
      l'essai, qu'il ne suit que 5 équipements.
    - **Liens, signatures, imports** [2026-11-05, lot C] : les **liens
      d'accès actifs** se comptent sur ce qui sert encore — ni révoqué, ni
-     expiré, ni consommé s'il est à usage unique (`verifierToken`) : un lien
+     expiré, ni consommé s'il est à usage unique (`verifierAccessToken`) : un lien
      expiré libère sa place. Les **signatures** se comptent à la DEMANDE
      (émission du lien, `emettreAccessToken`) et quand le titulaire signe
      lui-même, comme les enveloppes d'un service de signature : la signature
      posée ensuite par le tiers ne recompte pas, et n'est jamais refusée au
-     tiers. Les **imports de DUERP** se comptent par an, comme les
+     tiers. Un e-mail qui n'est pas parti rend la signature prise
+     (`rendreQuota`, seule ligne du journal effacée) ; une demande révoquée
+     ensuite (document modifié, code épuisé, lien expiré) ne la rend pas :
+     redemander coûte une signature, comme une enveloppe renvoyée. Les
+     **imports de DUERP** se comptent par an, comme les
      signatures (journal, date anniversaire) : un fichier corrigé puis
-     redéposé l'année suivante repasse. Le stockage (Go) attend la taille
-     des fichiers : lot à part.
+     redéposé l'année suivante repasse ; leur verrou se prend en fin de
+     transaction. La migration reprend les signatures des douze derniers
+     mois (signatures du titulaire, demandes envoyées) ; les imports passés
+     ne laissent pas de trace distincte en base, ils ne sont pas repris. Le
+     stockage (Go) attend la taille des fichiers : lot à part.
    - **Condition de lancement** : « Sur mesure » doit avoir sa propre entrée
      dans `FORMULES` (ses plafonds) et sa clé (`lookup_key` ou
      `metadata.formule` du prix) avant toute vente — sans quoi le refus par

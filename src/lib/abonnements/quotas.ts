@@ -4,10 +4,12 @@ import "server-only";
 // compte (garde : `quotas-garde.test.ts`). Les utilisateurs passent par les
 // limites du plugin d'authentification (`limitesMembresDuPlugin`).
 
+import { randomUUID } from "node:crypto";
 import type { Prisma, PrismaClient } from "@prisma/client";
 import type { Db } from "@/lib/auth/compte";
 import { invitationsDuCompte, membresDuCompte } from "@/lib/auth/membres";
 import { creerEnLotVerifie } from "@/lib/auth/portee/lot-verifie";
+import { lienActif } from "@/lib/access-tokens/revocation";
 import type { Geles } from "@/lib/auth/portee/gel";
 import { CLES_FORMULES, FORMULES, LIBELLES_PLAFONDS, LIMITES_ESSAI, formuleDeLookupKey, type CleFormule } from "./formules";
 import { contexteDroits, offreLancee } from "./lancement";
@@ -106,6 +108,7 @@ export function debutDeLAnnee(ancre: Date | null | undefined, maintenant: Date, 
 
 /** Ce que le compte a déjà, pour une clé (le client est borné au compte). */
 async function dejaUtilisesDuCompte(db: Lecteur, cle: CleQuotaComptee, debutAnnee: Date): Promise<number> {
+  if (estAnnuelle(cle)) return db.consommationQuota.count({ where: { quota: cle, consommeLe: { gte: debutAnnee } } });
   switch (cle) {
     case "etablissements":
       return db.etablissement.count();
@@ -120,17 +123,8 @@ async function dejaUtilisesDuCompte(db: Lecteur, cle: CleQuotaComptee, debutAnne
       return db.batiment.count();
     case "unitesTravail":
       return db.uniteTravail.count({ where: { estTransverse: false } });
-    // Un lien sert tant qu'il n'est ni révoqué, ni expiré, ni consommé (s'il
-    // est à usage unique) : la même règle que `verifierToken`.
     case "liensAccesActifs":
-      return db.accessToken.count({
-        where: { revoqueLe: null, expireLe: { gt: new Date() }, OR: [{ utiliseLe: null }, { scope: "consultation" }] },
-      });
-    case "permisDeFeuParAn":
-    case "plansDePreventionParAn":
-    case "signaturesParAn":
-    case "importsDuerp":
-      return db.consommationQuota.count({ where: { quota: cle, consommeLe: { gte: debutAnnee } } });
+      return db.accessToken.count({ where: lienActif() });
   }
 }
 
@@ -196,13 +190,24 @@ export async function prendreQuota(
   compteId: string,
   cle: CleQuotaComptee,
   nombre = 1,
-): Promise<void> {
+): Promise<string[]> {
   if (lancee()) {
     const { places, regime } = await placesRestantesDuPlafond(tx, compteId, cle, tx);
     if (places < nombre) throw new RefusQuota(motifDuRefus(regime, cle));
   }
-  if (estAnnuelle(cle))
-    await creerEnLotVerifie(tx, "ConsommationQuota", Array.from({ length: nombre }, () => ({ compteId, quota: cle })));
+  if (!estAnnuelle(cle)) return [];
+  const lignes = Array.from({ length: nombre }, () => ({ id: randomUUID(), compteId, quota: cle }));
+  await creerEnLotVerifie(tx, "ConsommationQuota", lignes);
+  return lignes.map((l) => l.id);
+}
+
+/**
+ * Rendre ce qu'une action a pris au journal, quand elle n'a pas abouti APRÈS
+ * sa transaction (un e-mail qui n'est pas parti) : la seule ligne du journal
+ * que Rojer efface, identifiée par ce que `prendreQuota` a rendu.
+ */
+export async function rendreQuota(db: Db, ids: string[]): Promise<void> {
+  if (ids.length > 0) await db.consommationQuota.deleteMany({ where: { id: { in: ids } } });
 }
 
 /**

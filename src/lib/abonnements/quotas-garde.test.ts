@@ -188,7 +188,7 @@ describe("plafonds : une seule porte (ADR-053 § 14)", () => {
 
   it("l'import d'un DUERP prend son plafond annuel dans sa transaction", () => {
     expect(TEXTES.get("src/lib/duerps/import/actions.ts")!.code).toMatch(
-      /\$transaction\(async \(tx\) => \{\s*await prendreQuota\(tx, compte\.compteId, "importsDuerp"\);/,
+      /\$transaction\(async \(tx\) => \{[^]*?await prendreQuota\(tx, compte\.compteId, "importsDuerp"\);\s*\},/,
     );
   });
 

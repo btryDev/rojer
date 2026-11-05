@@ -13,6 +13,7 @@ vi.mock("@/lib/auth/membres", () => ({
 
 import type { PrismaClient } from "@prisma/client";
 import type { Db } from "@/lib/auth/compte";
+import { lienActif } from "@/lib/access-tokens/revocation";
 import {
   creerSousPlafond,
   debutDeLAnnee,
@@ -114,7 +115,7 @@ describe("prendreQuota", () => {
     expect(tx.$queryRaw).not.toHaveBeenCalled();
     expect(tx.abonnement.findUnique).not.toHaveBeenCalled();
     expect(m.journal).toHaveBeenCalledTimes(1);
-    expect(m.journal).toHaveBeenCalledWith(tx, "ConsommationQuota", [{ compteId: "c1", quota: "permisDeFeuParAn" }]);
+    expect(m.journal).toHaveBeenCalledWith(tx, "ConsommationQuota", [{ id: expect.any(String), compteId: "c1", quota: "permisDeFeuParAn" }]);
   });
 
   it("lancée : verrou du compte d'abord, puis le compte sous le plafond passe", async () => {
@@ -144,7 +145,7 @@ describe("prendreQuota", () => {
     expect(tx.consommationQuota.count).toHaveBeenCalledWith({
       where: { quota: "plansDePreventionParAn", consommeLe: { gte: new Date("2026-03-12T08:00:00Z") } },
     });
-    expect(m.journal).toHaveBeenCalledWith(tx, "ConsommationQuota", [{ compteId: "c1", quota: "plansDePreventionParAn" }]);
+    expect(m.journal).toHaveBeenCalledWith(tx, "ConsommationQuota", [{ id: expect.any(String), compteId: "c1", quota: "plansDePreventionParAn" }]);
     vi.useRealTimers();
   });
 
@@ -350,9 +351,7 @@ describe("lot C : liens d'accès actifs, signatures, imports de DUERP", () => {
     vi.useFakeTimers({ now: new Date("2026-11-05T10:00:00Z"), toFake: ["Date"] });
     const { tx, txc } = faux("rojer_essentiel_mensuel", 4);
     await prendreQuota(txc, "c1", "liensAccesActifs");
-    expect(tx.accessToken.count).toHaveBeenCalledWith({
-      where: { revoqueLe: null, expireLe: { gt: new Date("2026-11-05T10:00:00Z") }, OR: [{ utiliseLe: null }, { scope: "consultation" }] },
-    });
+    expect(tx.accessToken.count).toHaveBeenCalledWith({ where: lienActif(new Date("2026-11-05T10:00:00Z")) });
     vi.useRealTimers();
     await expect(prendreQuota(faux("rojer_essentiel_mensuel", 5).txc, "c1", "liensAccesActifs")).rejects.toThrow(
       "Votre formule Essentiel couvre 5 liens d'accès actifs : passez à Pro depuis la page Abonnement de votre compte.",
@@ -363,7 +362,7 @@ describe("lot C : liens d'accès actifs, signatures, imports de DUERP", () => {
     lancer();
     const sig = faux("rojer_essentiel_mensuel", 19);
     await prendreQuota(sig.txc, "c1", "signaturesParAn");
-    expect(m.journal).toHaveBeenCalledWith(sig.tx, "ConsommationQuota", [{ compteId: "c1", quota: "signaturesParAn" }]);
+    expect(m.journal).toHaveBeenCalledWith(sig.tx, "ConsommationQuota", [{ id: expect.any(String), compteId: "c1", quota: "signaturesParAn" }]);
     await expect(prendreQuota(faux("rojer_essentiel_mensuel", 20).txc, "c1", "signaturesParAn")).rejects.toThrow(/couvre 20 signatures par an/);
     await expect(prendreQuota(faux("rojer_essentiel_mensuel", 1).txc, "c1", "importsDuerp")).rejects.toThrow(/couvre 1 import de DUERP par an : passez à Pro/);
     await prendreQuota(faux("rojer_pro_mensuel", 2).txc, "c1", "importsDuerp");

@@ -16,6 +16,22 @@ export const MOTIF_REVOCATION_ENVOI_ECHOUE =
  * atteint personne. `revoqueMotif` est nullable : l'exclusion passe par un OR
  * explicite, `not` seul écarterait aussi les jetons sans motif.
  */
+/** Les liens à usage unique : consommés, ils ne servent plus. */
+export const SCOPES_USAGE_UNIQUE = ["signature", "depot_rapport"] as const;
+export const estAUsageUnique = (scope: string) => (SCOPES_USAGE_UNIQUE as readonly string[]).includes(scope);
+
+/**
+ * Un lien qui sert encore — la règle de `verifierAccessToken`, en clause :
+ * ni révoqué, ni expiré, ni consommé s'il est à usage unique. Porte son
+ * propre `OR` : ne pas l'étaler avec `LIEN_PARTI`, qui en porte un aussi.
+ */
+export const lienActif = (maintenant = new Date()) =>
+  ({
+    revoqueLe: null,
+    expireLe: { gt: maintenant },
+    OR: [{ utiliseLe: null }, { scope: { notIn: [...SCOPES_USAGE_UNIQUE] } }],
+  }) satisfies Prisma.AccessTokenWhereInput;
+
 export const LIEN_PARTI = {
   OR: [
     { revoqueMotif: null },
