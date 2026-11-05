@@ -5,6 +5,7 @@
 
 import type { Realisateur } from "@prisma/client";
 import { formaterDateCourteFr, formaterDateHeureFr, formaterJourMoisFr, joursCivilsEntre } from "@/lib/dates";
+import { estLignePourInformation } from "@/lib/referentiels/conformite/initiative";
 
 /**
  * Un contrôle reçoit un prestataire et un rendez-vous s'il est ouvert et
@@ -125,13 +126,22 @@ export function avertissementRendezVous(rendezVousLe: Date, echeance: Date | nul
 
 /**
  * Le contrôle n'admet qu'un organisme agréé : `organisme_agree` est le seul
- * réalisateur de la ligne. Quand une personne qualifiée ou un autre tiers est
- * admis à côté, un prestataire non agréé peut le faire — rien à signaler.
- * L'appelant écarte la visite de la commission de sécurité, qui garde
- * `organisme_agree` faute de valeur propre (`estLignePourInformation`).
+ * réalisateur de la ligne. Dès qu'un autre réalisateur est admis à côté
+ * (personne qualifiée, organisme accrédité, bureau de contrôle…), un
+ * prestataire non déclaré agréé peut être celui-là : l'annuaire ne dit que
+ * l'agrément, rien à signaler.
+ * La visite de la commission de sécurité garde `organisme_agree` faute de
+ * valeur propre ; elle n'est pas un prestataire, et en est écartée.
  */
-export function agrementExige(realisateurs: readonly Realisateur[]): boolean {
-  return realisateurs.length > 0 && realisateurs.every((r) => r === "organisme_agree");
+export function agrementExige(v: {
+  realisateurRequis: readonly Realisateur[];
+  obligationId?: string | null;
+}): boolean {
+  return (
+    v.realisateurRequis.length > 0 &&
+    v.realisateurRequis.every((r) => r === "organisme_agree") &&
+    !estLignePourInformation(v)
+  );
 }
 
 /**

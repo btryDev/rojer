@@ -697,7 +697,7 @@ export default async function VerificationDetailPage({
           hrefNouveauPrestataire={`/etablissements/${id}/prestataires/nouveau`}
           hrefPrestataire={v.prestataire ? `/etablissements/${id}/prestataires/${v.prestataire.id}` : null}
           echeance={aUnRendezVous(v, aujourdhui) ? v.datePrevue : null}
-          agrementExige={agrementExige(v.realisateurRequis) && !estLignePourInformation(v)}
+          agrementExige={agrementExige(v)}
         />
       ) : null}
 

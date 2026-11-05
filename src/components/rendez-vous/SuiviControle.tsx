@@ -122,14 +122,14 @@ export function SuiviControle({
               {agrementExige ? "Aucun prestataire attitré. Ce contrôle doit être fait par un organisme agréé." : "Aucun prestataire attitré."}
             </p>
           )}
-          {alerteAgrement && (
+          {alerteAgrement && !ouvert && (
             <p className="m-0 mt-1.5 text-[13px] text-[color:var(--board-amber-ink)]">
               {alerteAgrement}
               {hrefPrestataire && (
                 <>
                   {" "}
                   <Link href={`${hrefPrestataire}/modifier`} className="font-semibold underline underline-offset-4">
-                    Ouvrir sa fiche
+                    Modifier sa fiche
                   </Link>
                 </>
               )}

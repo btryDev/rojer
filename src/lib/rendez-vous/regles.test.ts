@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { Realisateur } from "@prisma/client";
 import { depuisSaisieDateHeure } from "@/lib/dates";
 import {
   agrementExige,
@@ -76,10 +77,21 @@ describe("le rendez-vous d'un contrôle (ADR-049)", () => {
 
 describe("l'agrément du prestataire attitré", () => {
   it("n'est exigé que si l'organisme agréé est le seul réalisateur admis", () => {
-    expect(agrementExige(["organisme_agree"])).toBe(true);
-    expect(agrementExige(["personne_qualifiee", "organisme_agree"])).toBe(false);
-    expect(agrementExige(["organisme_accredite"])).toBe(false);
-    expect(agrementExige([])).toBe(false);
+    const ligne = (realisateurRequis: Realisateur[], obligationId = "elec-erp-annuelle") => ({
+      realisateurRequis,
+      obligationId,
+    });
+    expect(agrementExige(ligne(["organisme_agree"]))).toBe(true);
+    expect(agrementExige(ligne(["personne_qualifiee", "organisme_agree"]))).toBe(false);
+    expect(agrementExige(ligne(["organisme_agree", "bureau_controle"]))).toBe(false);
+    expect(agrementExige(ligne(["organisme_accredite"]))).toBe(false);
+    expect(agrementExige(ligne([]))).toBe(false);
+  });
+
+  it("ne vise pas la visite de la commission de sécurité, qui n'est pas un prestataire", () => {
+    expect(
+      agrementExige({ realisateurRequis: ["organisme_agree"], obligationId: "incendie-erp-5-visite-commission" }),
+    ).toBe(false);
   });
 
   it("signale un prestataire non déclaré agréé, et rien d'autre", () => {
