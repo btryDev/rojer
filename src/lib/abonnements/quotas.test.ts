@@ -129,7 +129,7 @@ describe("prendreQuota", () => {
 
   it("au plafond : refus, et rien n'est inscrit au journal", async () => {
     lancer();
-    const { tx, txc } = faux("rojer_essentiel_mensuel", 10);
+    const { txc } = faux("rojer_essentiel_mensuel", 10);
     await expect(prendreQuota(txc, "c1", "permisDeFeuParAn")).rejects.toBeInstanceOf(RefusQuota);
     expect(m.journal).not.toHaveBeenCalled();
   });

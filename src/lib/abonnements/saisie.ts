@@ -11,9 +11,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { getOptionalCompte, type Db } from "@/lib/auth/compte";
 import { requireUser } from "@/lib/auth/require-user";
-import { etatStripe } from "@/lib/stripe/config";
-import type { Env } from "@/lib/environnement";
-import { droitsDe, type ContexteDroits, type Droits } from "./droits";
+import { droitsDe, type Droits } from "./droits";
 
 export const PAGE_ABONNEMENT = "/compte/abonnement";
 /** Où une écriture refusée à un membre en lecture seule renvoie (ADR-054 § 4). */
@@ -21,17 +19,10 @@ export const PAGE_LECTURE_SEULE = "/compte/lecture-seule";
 /** Où un geste réservé au propriétaire renvoie un autre membre. */
 export const PAGE_MEMBRES = "/compte/membres";
 
-/** `ABONNEMENT_EXIGE=oui` (espaces et casse tolérés, comme `env.ts`) : l'offre est lancée. */
-export function abonnementExige(env: Env = process.env): boolean {
-  return env.ABONNEMENT_EXIGE?.trim().toLowerCase() === "oui";
-}
-
-export function contexteDroits(): ContexteDroits {
-  return { stripeActif: etatStripe().active, exige: abonnementExige(), maintenant: new Date() };
-}
-
-/** L'offre est lancée et Stripe est actif : seule condition pour lire l'abonnement. */
-export const offreLancee = (ctx: ContexteDroits) => ctx.stripeActif && ctx.exige;
+// Le lancement de l'offre vit à part (`lancement.ts`), sans dépendance à la
+// session : les plafonds le lisent depuis la couche qui construit la portée.
+export { abonnementExige, contexteDroits, offreLancee } from "./lancement";
+import { contexteDroits, offreLancee } from "./lancement";
 
 const COLONNES = {
   statut: true,

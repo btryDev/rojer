@@ -9,7 +9,7 @@ import type { Db } from "@/lib/auth/compte";
 import { invitationsDuCompte, membresDuCompte } from "@/lib/auth/membres";
 import { creerEnLotVerifie } from "@/lib/auth/portee/lot-verifie";
 import { CLES_FORMULES, FORMULES, LIBELLES_PLAFONDS, LIMITES_ESSAI, formuleDeLookupKey, type CleFormule } from "./formules";
-import { contexteDroits, offreLancee } from "./saisie";
+import { contexteDroits, offreLancee } from "./lancement";
 
 /** Les plafonds appliqués (les autres clés de `Quotas` ne le sont pas encore). */
 export type CleQuota = keyof typeof LIBELLES_PLAFONDS;
