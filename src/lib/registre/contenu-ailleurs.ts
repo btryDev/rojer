@@ -48,6 +48,11 @@ import {
   type RetenueParPrudence,
 } from "@/lib/calendrier/prudence";
 import { nomDeZone } from "@/lib/batiments/nom-zone";
+import { requireCompte, type Db } from "@/lib/auth/compte";
+import { obligationsApplicablesDuDossier } from "@/lib/etablissements/dossier-du-rendu";
+import { listerEtatsPermanents } from "@/lib/etats-permanents/queries";
+import { projeterEtablissement } from "@/lib/matching/projection";
+import { annexesDuRegistre, ID_FICHE_ANNEXES } from "./annexes";
 
 /**
  * Ce que la fonction pure attend, réduit au strict nécessaire.
@@ -131,6 +136,10 @@ export type LigneTenue = {
    *  sinon. Même raison que `contractuelle` : une mention à part, jamais un
    *  mot dans `meta`. */
   rythmeRetenu?: MentionRythme | null;
+  /** Le fichier que la ligne porte, quand elle en porte un — un écrit annexé
+   *  au registre (ADR-056). Servi par une route, jamais par `href`, qui mène
+   *  à l'écran où la ligne se tient. */
+  fichier?: { pieceId: string; href: string; nom: string };
 };
 
 export type ContenuAilleurs = {
@@ -169,6 +178,10 @@ export async function lireContenuTenuAilleurs(
   // Un écran de fiche n'en rend qu'une : lire les deux listes ici coûte deux
   // requêtes, et la mémoïsation de la page fait le reste. Le PDF, lui, passe
   // par `contenuTenuAilleursDepuis` avec un parc déjà chargé.
+  if (section.id === ID_FICHE_ANNEXES) {
+    const { user, db } = await requireCompte();
+    return lireAnnexesDuRegistre(db, etablissementId, user.id);
+  }
   if (!section.categoriesEquipement?.length) return null;
   const [equipements, zones, verifications, marques] = await Promise.all([
     PARTIES_INVENTAIRE.has(partieId)
@@ -191,6 +204,48 @@ export async function lireContenuTenuAilleurs(
     new Date(),
     retenueParPrudence(marques.parObligation),
     estMultiBatiments(zones),
+  );
+}
+
+/**
+ * La fiche « Annexes » (2026-11-05) : les écrits que le texte fait annexer au
+ * registre, relus sur « Ce qui doit être en place » (`annexes.ts`).
+ *
+ * Même passage du moteur et mêmes déclarations que cet écran
+ * (`obligationsApplicablesDuDossier`, `listerEtatsPermanents`) : la fiche ne
+ * peut pas annoncer un écrit que l'écran ne demande pas. `null` si le dossier
+ * n'est pas celui de l'utilisateur.
+ */
+export async function lireAnnexesDuRegistre(
+  db: Db,
+  etablissementId: string,
+  userId: string,
+): Promise<ContenuAilleurs | null> {
+  // Le client et le compte sont REÇUS (relecture du 2026-11-05) : le PDF et
+  // le ZIP les tiennent déjà, et une seconde garde ici en ferait un second
+  // contexte d'authentification. `listerEtatsPermanents` lit encore la
+  // session pour ses déclarations — c'est sa portée, antérieure à ce lot.
+  const dossier = await obligationsApplicablesDuDossier(db, etablissementId, userId);
+  if (!dossier) return null;
+  const etats = await listerEtatsPermanents(
+    dossier.etab,
+    dossier.equipements,
+    dossier.applicables,
+  );
+  const lignes = [
+    ...etats.familles.flatMap((f) => f.blocs.flatMap((b) => b.lignes)),
+    ...etats.faits,
+    ...etats.parLEquipe,
+  ];
+  return annexesDuRegistre(
+    etablissementId,
+    lignes.map((l) => ({
+      obligationId: l.obligation.id,
+      declareLe: l.declareLe,
+      note: l.note,
+      piece: l.piece,
+    })),
+    projeterEtablissement(dossier.etab),
   );
 }
 

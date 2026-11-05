@@ -19,6 +19,8 @@
 //   champ ne le porte, et l'inventer ici le ferait mentir au rechargement.
 // Une ligne établie d'après les titres ne se déclare pas (`par-les-titres.ts`) :
 // la fiche dit pourquoi et mène à Équipe, comme la ligne le faisait.
+// Un écrit que le règlement fait annexer au registre reçoit son fichier ici
+// (ADR-056) : déposer vaut déclarer « en place », et le registre le reprend.
 
 import { DemandeAide } from "@/components/assistance/DemandeAide";
 import Image from "next/image";
@@ -34,7 +36,13 @@ import {
   type ReactNode,
 } from "react";
 import { Check } from "lucide-react";
-import { declarerEnPlace, retirerDeclaration } from "@/lib/etats-permanents/actions";
+import {
+  declarerEnPlace,
+  deposerFichierEnPlace,
+  retirerDeclaration,
+} from "@/lib/etats-permanents/actions";
+import { DepotEcritAnnexe } from "./DepotEcritAnnexe";
+import { TAILLE_MAX_OCTETS, messageFichierTropVolumineux } from "@/lib/rapports/validator";
 import type { FondementLigne } from "@/lib/etats-permanents/fondement";
 import { formaterDateFr } from "@/lib/dates";
 import {
@@ -61,6 +69,15 @@ export type FicheLigne = {
   parLesTitres: { phrase: string; hrefEquipe: string; enPlace: boolean } | null;
   aConfirmer: { phrase: string; entrepriseId: string } | null;
   questionsSansReponse: { phrases: string[]; href: string; lien: string } | null;
+  /**
+   * Le fichier d'un écrit que le règlement fait annexer au registre
+   * (ADR-056). `null` pour toute autre ligne : elle ne reçoit rien
+   * (ADR-027 § 3). Dates en ISO.
+   */
+  fichier: {
+    enCours: { nom: string; deposeLe: string; href: string } | null;
+    precedent: { nom: string; remplaceeLe: string; href: string } | null;
+  } | null;
 };
 
 const Contexte = createContext<{ ouvrir: (obligationId: string) => void } | null>(null);
@@ -172,6 +189,37 @@ export function RevueEnPlace({
       });
     },
     [l, pending, explique, index, lignes.length, aller, fermer, declare, etablissementId, parcours],
+  );
+
+  // Le fichier d'un écrit annexé au registre (ADR-056) : déposer vaut
+  // déclarer, et la page se rafraîchit par l'action (`revalidatePath`).
+  const deposer = useCallback(
+    (fichier: File | undefined, champ: HTMLInputElement) => {
+      if (!l || !fichier || pending) return;
+      // Au-delà de la borne, le corps de la requête serait refusé avant
+      // l'action, et le dirigeant ne lirait qu'un « réessayez » (relecture du
+      // 2026-11-05) — comme `UploadRapportForm`, on le dit avant d'envoyer.
+      if (fichier.size > TAILLE_MAX_OCTETS) {
+        setErreur(messageFichierTropVolumineux());
+        champ.value = "";
+        return;
+      }
+      setErreur(null);
+      const donnees = new FormData();
+      donnees.set("fichier", fichier);
+      startTransition(async () => {
+        try {
+          const res = await deposerFichierEnPlace(etablissementId, l.obligationId, donnees);
+          if (res.status === "error") setErreur(res.message);
+        } catch {
+          setErreur(ERREUR_ENREGISTREMENT);
+        } finally {
+          // Le même fichier choisi deux fois de suite doit redéclencher.
+          champ.value = "";
+        }
+      });
+    },
+    [l, pending, etablissementId],
   );
 
   // Raccourcis de la maquette : 1, 2, 3, et les flèches.
@@ -317,6 +365,13 @@ export function RevueEnPlace({
                 </div>
               )}
 
+              {/* Le SEUL dépôt de l'écran (ADR-056) : un écrit que le
+                  règlement fait annexer au registre. `fichier` n'est posé que
+                  pour ces lignes (`annexeDeLaLigne`). */}
+              {l.fichier && (
+                <DepotEcritAnnexe fichier={l.fichier} pending={pending} onDeposer={deposer} />
+              )}
+
               {l.parLesTitres ? (
                 <div className="mt-auto pt-2 text-[13px] leading-[1.5] text-[color:var(--board-slate-mid)]">
                   <p className="m-0">{l.parLesTitres.phrase}</p>
@@ -375,3 +430,4 @@ const NAV =
   "border-0 bg-transparent px-0 py-1 text-[12.5px] font-semibold text-[color:var(--board-blue-ink)] disabled:text-[color:var(--board-slate)]";
 const CLASSE_LIEN =
   "mt-1 inline-block font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]";
+

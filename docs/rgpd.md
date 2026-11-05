@@ -344,6 +344,7 @@ ne dit pas :
 | **Salarié — titres et échéances** | Durée de la relation de travail | ~~Jusqu'au terme du délai de prescription de l'action en responsabilité~~ **Aucune durée fixée** : les titres restent jusqu'à ce que l'employeur les supprime, et la suppression est définitive | Pendant l'emploi : obligation légale de l'employeur (6.1.c, audit E8). Copie d'une attestation médicale : « pendant toute sa durée de validité » (`R. 4323-56`, `R. 4544-11-1`). ~~`D. 4711-3` par analogie~~ — décision de la propriétaire, 2026-09-27 : aucune conservation par analogie |
 | Actions correctives | Tant que la vérification liée existe | — | Suppression en cascade |
 | Fichiers physiques des rapports | Idem rapports | — | Supprimés avec la ligne |
+| Écrits annexés au registre (ADR-056) | Le fichier en cours, jusqu'à son remplacement ; une ligne qui cesse de s'appliquer garde ses fichiers, non affichés, jusqu'à la suppression de l'établissement | **Le fichier précédent, jusqu'au dépôt suivant** (ou au retrait suivant s'il remplace un fichier en cours) ; deux fichiers au plus par ligne | Choix d'exploitation, aucun texte ne fixe de durée pour ces écrits (`D. 4711-3` vise les rapports de vérification) ; suppression en cascade avec l'établissement |
 | Demandes d'assistance (ADR-050) | **3 ans à compter de la demande** — durée proposée, **à valider** ; pas encore de purge automatique | — | Suppression en cascade avec l'établissement |
 
 ### 4.1 Correction d'une erreur de la version précédente

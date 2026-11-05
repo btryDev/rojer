@@ -12,7 +12,7 @@
 // lit ici, parce que c'est ici qu'elle s'imprimera.
 
 import Link from "next/link";
-import { ArrowUpRight, ChevronRight } from "lucide-react";
+import { ArrowUpRight, ChevronRight, FileText } from "lucide-react";
 import { BadgeStatut } from "@/components/calendrier/BadgeStatut";
 import { MentionContractuelle } from "@/components/prescriptions/MentionContractuelle";
 import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeRetenu";
@@ -78,6 +78,19 @@ export function ContenuTenuAilleurs({ lignes, source, vide }: ContenuAilleurs) {
                   </Link>
                 ) : (
                   <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1.5 py-3 md:flex md:gap-4">{contenu}</div>
+                )}
+                {/* Le fichier d'un écrit annexé (ADR-056) : une route, pas une
+                    page — un lien simple, jamais `Link`, qui le chercherait
+                    comme un écran. Hors de la ligne cliquable : un lien dans un
+                    lien n'est pas du HTML valide. */}
+                {ligne.fichier && (
+                  <a
+                    href={ligne.fichier.href}
+                    className="mb-3 inline-flex max-w-full items-center gap-1 truncate text-[12.5px] font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
+                  >
+                    <FileText aria-hidden className="size-3.5 flex-none" />
+                    <span className="truncate">Ouvrir le fichier : {ligne.fichier.nom}</span>
+                  </a>
                 )}
               </li>
             );

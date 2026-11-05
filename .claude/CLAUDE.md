@@ -756,6 +756,12 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     le datent pas (2026-10-24)
 50. **050** — Une demande d'assistance s'enregistre là où le doute naît, et
     ne part pas encore (2026-10-24)
+56. **056** — Un écrit que le règlement fait annexer au registre (schéma
+    d'organisation de la sécurité, contrat du SSI, notices, registre
+    technique des ascenseurs) se dépose sur sa ligne de « Ce qui doit être en
+    place », et le registre le reprend ; déposer vaut déclarer ; deux
+    fichiers au plus par ligne (2026-11-05). Amende l'ADR-027 § 3 pour ces
+    seules lignes
 55. **055** — Une vérification faite en interne s'enregistre par un
     formulaire, sans fichier : switch « En interne / Par un prestataire »
     là où `realisateurRequis` admet l'exploitant, une personne qualifiée ou

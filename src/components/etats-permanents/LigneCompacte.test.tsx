@@ -47,6 +47,7 @@ const fiche = (id: string, question: string, extra: Partial<FicheLigne> = {}): F
   parLesTitres: null,
   aConfirmer: null,
   questionsSansReponse: null,
+  fichier: null,
   ...extra,
 });
 

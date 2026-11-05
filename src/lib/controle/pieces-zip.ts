@@ -26,6 +26,8 @@ export const PIECES_ZIP = {
   /** Préfixe : le fichier est `02_DUERP_v<n>.pdf` (`fichierDuerp`). */
   duerp: "02_DUERP",
   registre: "03_Registre_securite.pdf",
+  /** Les écrits annexés au registre, déposés sur leur ligne (ADR-056). */
+  annexes: "03_Registre_annexes/",
   rapports: "Rapports/",
   plan: "04_Plan_actions.pdf",
   accessibilite: "05_Accessibilite_URL.txt",
@@ -56,6 +58,7 @@ export const PIECES_A_L_ECRAN: readonly {
   { cle: "dossier", titre: "Dossier de conformité consolidé" },
   { cle: "duerp", titre: "DUERP versionné" },
   { cle: "registre", titre: "Registre de sécurité" },
+  { cle: "annexes", titre: "Écrits annexés au registre" },
   { cle: "rapports", titre: "Fichiers des rapports de vérification" },
   { cle: "plan", titre: "Plan d'actions" },
   { cle: "accessibilite", titre: "Registre d'accessibilité ERP" },
