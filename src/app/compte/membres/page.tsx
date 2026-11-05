@@ -1,3 +1,5 @@
+import { FermerLaSaisie } from "@/components/quotas/FermerLaSaisie";
+import { refusMembres } from "@/lib/abonnements/quotas";
 import { FilRetour } from "@/components/ui-kit/FilRetour";
 import { requireCompte } from "@/lib/auth/compte";
 import { comptesDeLaPersonne, invitationsDuCompte, membresDuCompte } from "@/lib/auth/membres";
@@ -27,7 +29,7 @@ export default async function MembresPage({
 }: {
   searchParams: Promise<{ reserve?: string }>;
 }) {
-  const { user, compte } = await requireCompte();
+  const { user, compte, db } = await requireCompte();
   const { reserve } = await searchParams;
   const proprietaire = compte.role === "owner";
   const [membres, invitations, comptes] = await Promise.all([
@@ -97,7 +99,11 @@ export default async function MembresPage({
                 La personne invitée a 7 jours pour accepter. Sans compte Rojer, elle crée son mot de passe en
                 ouvrant le lien de l&apos;invitation.
               </p>
-              <FormulaireInvitation />
+              {/* Le plafond d'utilisateurs de la formule, annoncé avant d'inviter (ADR-053 § 14). */}
+              <div data-zone-saisie>
+                <FermerLaSaisie motif={proprietaire ? await refusMembres(db, compte.compteId) : null} annonce />
+                <FormulaireInvitation />
+              </div>
             </section>
 
             {invitations.length > 0 ? (

@@ -298,6 +298,20 @@ et sans croire une information qui ne vient pas de Stripe.
      mois (signatures du titulaire, demandes envoyées) ; les imports passés
      ne laissent pas de trace distincte en base, ils ne sont pas repris. Le
      stockage (Go) attend la taille des fichiers : lot à part.
+   - **Annoncé dès l'ouverture** [2026-11-05, lot D] : un formulaire qui
+     écrit ne part plus pour être refusé après coup — React efface la
+     saisie au retour, même en refus. `FermerLaSaisie` (client), dans sa
+     zone (`data-zone-saisie`), grise les boutons d'envoi des formulaires
+     de server action et arrête leur envoi ; la lecture (filtres) et les
+     formulaires marqués `data-saisie-ouverte` (demander de l'aide)
+     restent ouverts. Pages d'un site : lecture seule, abonnement fermé ou
+     site gelé (`saisieFermeeDuSite`, dans la mise en page ; le gel y porte
+     son bandeau). Pages de création : le plafond atteint
+     (`PlafondDeCreation` : prestataire, équipement, permis, plan, unité,
+     import, établissement ; utilisateurs sur la page Membres). Non
+     couverts : les boutons qui appellent une action sans formulaire (le
+     refus du serveur reste), et la création d'une zone ou d'une
+     prescription, dont le formulaire partage sa page avec d'autres.
    - **Condition de lancement** : « Sur mesure » doit avoir sa propre entrée
      dans `FORMULES` (ses plafonds) et sa clé (`lookup_key` ou
      `metadata.formule` du prix) avant toute vente — sans quoi le refus par

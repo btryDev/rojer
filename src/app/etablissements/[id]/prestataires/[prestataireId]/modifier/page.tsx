@@ -47,7 +47,7 @@ export default async function ModifierPrestatairePage({
       </header>
       {/* Un prestataire gelé (ADR-053 § 14) le dit avant qu'on remplisse le formulaire. */}
       <Suspense fallback={null}>
-        <BandeauGel cible={{ prestataireId }} className="mx-[var(--board-gutter)] mt-4" />
+        <BandeauGel prestataireId={prestataireId} className="mx-[var(--board-gutter)] mt-4" />
       </Suspense>
 
       <div className="px-[var(--board-gutter)] pt-6">

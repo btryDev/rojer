@@ -4,7 +4,7 @@ import { SidebarAvecPastilles } from "@/components/layout/SidebarAvecPastilles";
 import { listerEtablissementsDuCompte } from "@/lib/etablissements/queries";
 import { Suspense } from "react";
 import { BandeauAbonnementDuCompte } from "@/components/abonnements/BandeauAbonnementDuCompte";
-import { BandeauGel } from "@/components/quotas/BandeauGel";
+import { SaisieDuSite } from "@/components/quotas/SaisieDuSite";
 
 /**
  * Layout imbriqué pour toutes les pages d'un établissement.
@@ -81,11 +81,16 @@ export default async function EtablissementLayout({
         <Suspense fallback={null}>
           <BandeauAbonnementDuCompte />
         </Suspense>
-        {/* Un site gelé (ADR-053 § 14) le dit en tête de chacune de ses pages. */}
-        <Suspense fallback={null}>
-          <BandeauGel cible={{ etablissementId: etab.id }} className="mx-[var(--board-gutter)] mt-4" />
-        </Suspense>
-        {children}
+        {/* La saisie fermée (lecture seule, abonnement, site gelé) s'annonce
+            dès l'ouverture — le site gelé par son bandeau, en tête de chaque
+            page : les formulaires qui écrivent ne partent plus pour être
+            refusés (ADR-053 § 14, lot D). */}
+        <div data-zone-saisie className="contents">
+          <Suspense fallback={null}>
+            <SaisieDuSite etablissementId={etab.id} />
+          </Suspense>
+          {children}
+        </div>
       </div>
     </div>
   );

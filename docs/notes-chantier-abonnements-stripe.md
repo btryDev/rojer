@@ -644,10 +644,11 @@ est appliqué ; huit autres sont affichés sans l'être. Trous principaux :
   revenus) — le client règle la facture en retard au portail et reprend ; à
   confirmer au lancement. Le bac à sable résilie (testé : `past_due` puis
   `canceled` en 14 jours) ;
-- **saisie fermée annoncée dès l'ouverture d'un formulaire** (bouton
+- ~~**saisie fermée annoncée dès l'ouverture d'un formulaire** (bouton
   désactivé), au lieu d'un refus à l'envoi qui perd ce qui a été saisi —
   relevé au test ; même mécanisme d'affichage que le plafond atteint, à faire
-  au chantier « quotas ».
+  au chantier « quotas ».~~ [2026-11-05, lot D `lot/quotas-d` : fait,
+  `FermerLaSaisie`, ADR-053 § 14]
 
 **À réfléchir avec la propriétaire (2026-11-05), rien de tranché** :
 - **Essai et prix d'entrée.** Crainte : un essai gratuit avec tous les modules

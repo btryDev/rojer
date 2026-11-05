@@ -247,6 +247,16 @@ export async function creerSousPlafond<T>(
   }
 }
 
+/** Le plafond d'utilisateurs atteint (membres et invitations en attente), annoncé avant d'inviter. */
+export async function refusMembres(db: Db, compteId: string): Promise<string | null> {
+  if (!lancee()) return null;
+  const { regime } = await abonnementDesPlafonds(db, compteId);
+  const plafond = plafondDe(regime, "membres");
+  if (plafond === null) return null;
+  const [membres, invitations] = await Promise.all([membresDuCompte(compteId), invitationsDuCompte(compteId)]);
+  return membres.length + invitations.length < plafond ? null : motifDuRefus(regime, "membres");
+}
+
 /** Le refus d'une invitation au plafond d'utilisateurs, pour le propriétaire du compte. */
 export async function motifPlafondMembres(db: Db, compteId: string): Promise<string> {
   // Avant le lancement, seule la limite par défaut du plugin peut refuser.
