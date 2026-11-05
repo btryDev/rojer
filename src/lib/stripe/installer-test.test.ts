@@ -3,7 +3,7 @@
 // pas mettre fin à l'essai (ADR-053 § 10).
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type Stripe from "stripe";
-import { installer, MONTANTS_PROVISOIRES_CENTIMES, urlConditions } from "../../../scripts/stripe-installer-test";
+import { installer, MONTANTS_CENTIMES, urlConditions } from "../../../scripts/stripe-installer-test";
 import { LOOKUP_KEYS } from "@/lib/abonnements/formules";
 
 const api = {
@@ -25,7 +25,7 @@ function prixConformeA(cle: string, montant?: number) {
     active: true,
     product: `prod_${formule}`,
     lookup_key: cle,
-    unit_amount: montant ?? MONTANTS_PROVISOIRES_CENTIMES[formule][periodicite],
+    unit_amount: montant ?? MONTANTS_CENTIMES[formule][periodicite],
     currency: "eur",
     recurring: { interval: periodicite === "mensuel" ? "month" : "year", interval_count: 1 },
     tax_behavior: "exclusive",
@@ -73,7 +73,7 @@ describe("installation d'un compte Stripe de test", () => {
       expect.objectContaining({
         product: "prod_pro",
         currency: "eur",
-        unit_amount: 69_900,
+        unit_amount: 89_900,
         recurring: { interval: "year" },
         tax_behavior: "exclusive",
         lookup_key: "rojer_pro_annuel",
