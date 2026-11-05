@@ -47,6 +47,11 @@ describe("plafonds : une seule porte (ADR-053 § 14)", () => {
     expect(createurs.sort()).toEqual(Object.keys(CREATIONS).sort());
   });
 
+  it("aucun accès par crochets à un modèle plafonné (la porte ne s'y verrait pas)", () => {
+    const crochets = /\[\s*["'`](etablissement|prestataire|permisFeu|planPrevention|consommationQuota)["'`]\s*\]\s*\.\s*(create|createMany|createManyAndReturn|upsert)\b/;
+    expect([...TEXTES].filter(([, t]) => crochets.test(t.brut)).map(([f]) => f)).toEqual([]);
+  });
+
   it("chaque création se fait sur la transaction, et le module prend le plafond qui lui revient", () => {
     for (const [fichier, { modele, cle }] of Object.entries(CREATIONS)) {
       const t = TEXTES.get(fichier)!;
@@ -57,7 +62,8 @@ describe("plafonds : une seule porte (ADR-053 § 14)", () => {
         // Le client juste avant le modèle : `tx`, la transaction de la porte.
         expect(t.code.slice(Math.max(0, m.index - 3), m.index), fichier).toMatch(/\Wtx$/);
       }
-      expect(t.brut, fichier).toMatch(new RegExp(`(prendreQuota|creerSousPlafond)\\([^;]*?"${cle}"`));
+      // Le compte de la garde : le verrou, en SQL brut, n'est pas borné.
+      expect(t.brut, fichier).toMatch(new RegExp(`(prendreQuota|creerSousPlafond)\\([^;]*?compte\\.compteId, "${cle}"`));
     }
   });
 

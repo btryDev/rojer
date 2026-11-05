@@ -88,6 +88,8 @@ export async function refusQuota(db: Db, compteId: string, cle: CleQuotaComptee)
 /**
  * Prendre une unité d'un plafond, dans la transaction (du client borné) qui
  * crée l'élément. Lève `RefusQuota` au plafond, ce qui annule la transaction.
+ * `compteId` : celui de la portée du client (`compte.compteId` de la garde),
+ * jamais une valeur reçue — le verrou, en SQL brut, n'est pas borné.
  */
 export async function prendreQuota(tx: Prisma.TransactionClient, compteId: string, cle: CleQuotaComptee): Promise<void> {
   if (offreLancee(contexteDroits())) {

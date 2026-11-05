@@ -183,9 +183,14 @@ et sans croire une information qui ne vient pas de Stripe.
    - **Utilisateurs** (1 en Essentiel, 5 en Pro) : membres + invitations en
      attente non expirées, vérifié à l'invitation (`invitationLimit` du
      plugin, = plafond − membres) et à l'acceptation (`membershipLimit`, sur
-     le compte de l'invitation). Le plugin compte hors de toute transaction
-     de Rojer : deux acceptations simultanées peuvent dépasser d'un. Limite
-     acceptée — les invitations sont rares et émises par le propriétaire.
+     le compte de l'invitation). Le plugin compte et écrit hors de toute
+     transaction de Rojer, et un verrou pris dans un de ses crochets ne
+     tiendrait pas jusqu'à son écriture : des invitations envoyées puis
+     acceptées en parallèle peuvent dépasser le plafond d'autant de
+     requêtes simultanées (en Pro ; en Essentiel la limite d'invitations
+     vaut 0, étanche). Limite acceptée : il faut le vouloir (requêtes
+     parallèles du propriétaire, adresses confirmées qu'il contrôle), et
+     rien n'est perdu pour Rojer qu'une place.
    - **« Par an » = douze mois glissants**, dans un journal que rien
      n'efface (`ConsommationQuota` : compte, plafond, date ; aucun lien vers
      l'élément) : supprimer un brouillon ou un établissement ne rend pas le
