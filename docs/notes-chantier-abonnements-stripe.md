@@ -665,7 +665,8 @@ de l'offre tant que l'accès OAuth (ADR-013) n'existe pas.
 Bac à sable Stripe « environnement de test rojer », CLI Stripe 1.55.8 (binaire
 officiel, empreinte vérifiée ; Homebrew refusait faute d'outils Xcode à jour),
 relais `stripe listen --api-key … --forward-thin-to` (la clé de `.env.local`,
-sans `stripe login`), Rojer local sur la branche `lot/quotas-formules`.
+sans `stripe login`), Rojer local sur `cc` après la fusion de #190 (branche alors nommée
+`lot/quotas-formules`, devenue `lot/abonnement-retours-essai`).
 
 **Passé** : écran d'essai avec les prix lus chez Stripe ; essai Essentiel sans
 carte (`trialing`, preuve d'acceptation écrite) ; onboarding pendant l'essai ;

@@ -3,7 +3,7 @@ import { BandeauAbonnement } from "@/components/abonnements/BandeauAbonnement";
 import { getOptionalCompte } from "@/lib/auth/compte";
 import { requireUser } from "@/lib/auth/require-user";
 import { abonnementDuCompte, contexteDroits, offreLancee } from "@/lib/abonnements/saisie";
-import { abonnementEnCours, droitsDe, gesteAbonnement, libelleStatut } from "@/lib/abonnements/droits";
+import { droitsDe, gesteAbonnement, libelleStatut } from "@/lib/abonnements/droits";
 import { formaterDateLongueFr } from "@/lib/dates";
 import { Button, buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
@@ -33,6 +33,8 @@ export const metadata = {
  * membre voit l'état, sans les boutons.
  */
 const LOOKUP_DEFAUT = lookupKey("essentiel", "mensuel");
+
+const PERIODE_QUI_COURT = new Set(["trialing", "active", "past_due"]);
 
 export default async function AbonnementPage({
   searchParams,
@@ -94,8 +96,10 @@ export default async function AbonnementPage({
                   <dd className="m-0">{formaterDateLongueFr(ligne.finEssai)}</dd>
                 </>
               )}
-              {/* Un abonnement terminé n'a plus de période en cours. */}
-              {ligne?.finPeriode && abonnementEnCours(ligne.statut) && (
+              {/* Seul un abonnement qui court a une période en cours : ni un
+                  abonnement terminé, ni une pause ou un impayé, où Stripe
+                  n'avance plus la période. */}
+              {ligne?.finPeriode && PERIODE_QUI_COURT.has(ligne.statut ?? "") && (
                 <>
                   <dt className="text-[color:var(--board-slate-mid)]">Période en cours jusqu&apos;au</dt>
                   <dd className="m-0">{formaterDateLongueFr(ligne.finPeriode)}</dd>
@@ -111,7 +115,7 @@ export default async function AbonnementPage({
 
         <div className="mt-6 flex flex-col gap-3">
           <MessageFormulaire ton="alerte">
-            {stripe === "indisponible" ? "L'opération n'a pas abouti. Réessayez dans quelques minutes ; rien n'a été modifié ni facturé." : null}
+            {stripe === "indisponible" ? "L'opération n'a pas abouti. Réessayez un peu plus tard ; rien ne vous a été facturé." : null}
           </MessageFormulaire>
           <MessageFormulaire ton="info">
             {paiement === "termine"

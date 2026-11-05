@@ -35,7 +35,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Building2, Check, CreditCard, HelpCircle, Home, LogOut, Plus, ShieldCheck, Users } from "lucide-react";
+import { Building2, Check, CreditCard, HelpCircle, Home, LogOut, Plus, ShieldCheck, Users, type LucideIcon } from "lucide-react";
 import { signOutAction } from "@/lib/auth/actions";
 import { choisirEtablissementActif } from "@/lib/etablissements/actions";
 import { estMultiEtablissements } from "@/lib/etablissements/selection";
@@ -46,20 +46,34 @@ export type EtablissementCommutable = { id: string; raisonDisplay: string };
  *  recouvriraient, et fermer l'un en ouvrant l'autre est ce qu'on attend. */
 type MenuOuvert = null | "etablissements" | "compte";
 
-/** L'entrée « Ajouter un établissement », rendue dans l'un ou l'autre menu. */
-function LienAjouter({ onNavigate }: { onNavigate: () => void }) {
+/** Une commande du menu : les entrées se ressemblent toutes, une seule forme. */
+const CLASSE_ENTREE =
+  "flex w-full items-center gap-2.5 rounded-full px-3 py-2 text-left text-[13px] text-[color:var(--board-slate-ink)] transition-colors hover:bg-[color:var(--board-slate-pale)] hover:text-[color:var(--board-ink)]";
+
+/** Une entrée du menu qui mène à une page. */
+function EntreeLien({
+  href,
+  Icone,
+  libelle,
+  onNavigate,
+}: {
+  href: string;
+  Icone: LucideIcon;
+  libelle: string;
+  onNavigate: () => void;
+}) {
   return (
-    <Link
-      href="/onboarding"
-      role="menuitem"
-      onClick={onNavigate}
-      className="flex w-full items-center gap-2.5 rounded-full px-3 py-2 text-left text-[13px] text-[color:var(--board-slate-ink)] transition-colors hover:bg-[color:var(--board-slate-pale)] hover:text-[color:var(--board-ink)]"
-    >
-      <Plus aria-hidden className="size-4 opacity-90" />
-      <span className="flex-1 truncate">Ajouter un établissement</span>
+    <Link href={href} role="menuitem" onClick={onNavigate} className={CLASSE_ENTREE}>
+      <Icone aria-hidden className="size-4 opacity-90" />
+      <span className="flex-1 truncate">{libelle}</span>
     </Link>
   );
 }
+
+/** L'entrée « Ajouter un établissement », rendue dans l'un ou l'autre menu. */
+const LienAjouter = ({ onNavigate }: { onNavigate: () => void }) => (
+  <EntreeLien href="/onboarding" Icone={Plus} libelle="Ajouter un établissement" onNavigate={onNavigate} />
+);
 
 export function BarreCompte({
   etablissementId,
@@ -253,7 +267,7 @@ export function BarreCompte({
                       type="submit"
                       role="menuitem"
                       aria-current={actif ? "true" : undefined}
-                      className="flex w-full items-center gap-2.5 rounded-full px-3 py-2 text-left text-[13px] text-[color:var(--board-slate-ink)] transition-colors hover:bg-[color:var(--board-slate-pale)] hover:text-[color:var(--board-ink)]"
+                      className={CLASSE_ENTREE}
                     >
                       {/* La coche occupe sa place même absente : sans elle, les
                           libellés se décaleraient d'une ligne à l'autre. */}
@@ -299,38 +313,14 @@ export function BarreCompte({
             {multi ? null : <LienAjouter onNavigate={() => setOuvert(null)} />}
 
             {/* Mot de passe et sessions ouvertes (ADR-052, lot 3a). */}
-            <Link
-              href="/compte/securite"
-              role="menuitem"
-              onClick={() => setOuvert(null)}
-              className="flex w-full items-center gap-2.5 rounded-full px-3 py-2 text-left text-[13px] text-[color:var(--board-slate-ink)] transition-colors hover:bg-[color:var(--board-slate-pale)] hover:text-[color:var(--board-ink)]"
-            >
-              <ShieldCheck aria-hidden className="size-4 opacity-90" />
-              <span className="flex-1 truncate">Sécurité du compte</span>
-            </Link>
+            <EntreeLien href="/compte/securite" Icone={ShieldCheck} libelle="Sécurité du compte" onNavigate={() => setOuvert(null)} />
 
             {/* Les personnes qui travaillent sur le compte (ADR-054). */}
-            <Link
-              href="/compte/membres"
-              role="menuitem"
-              onClick={() => setOuvert(null)}
-              className="flex w-full items-center gap-2.5 rounded-full px-3 py-2 text-left text-[13px] text-[color:var(--board-slate-ink)] transition-colors hover:bg-[color:var(--board-slate-pale)] hover:text-[color:var(--board-ink)]"
-            >
-              <Users aria-hidden className="size-4 opacity-90" />
-              <span className="flex-1 truncate">Membres du compte</span>
-            </Link>
+            <EntreeLien href="/compte/membres" Icone={Users} libelle="Membres du compte" onNavigate={() => setOuvert(null)} />
 
             {/* L'état de l'abonnement, ouvert à tous les rôles (ADR-053 § 12 :
                 les boutons y restent au propriétaire). */}
-            <Link
-              href="/compte/abonnement"
-              role="menuitem"
-              onClick={() => setOuvert(null)}
-              className="flex w-full items-center gap-2.5 rounded-full px-3 py-2 text-left text-[13px] text-[color:var(--board-slate-ink)] transition-colors hover:bg-[color:var(--board-slate-pale)] hover:text-[color:var(--board-ink)]"
-            >
-              <CreditCard aria-hidden className="size-4 opacity-90" />
-              <span className="flex-1 truncate">Abonnement</span>
-            </Link>
+            <EntreeLien href="/compte/abonnement" Icone={CreditCard} libelle="Abonnement" onNavigate={() => setOuvert(null)} />
 
             {/* Une commande à venir se déclare désactivée, pas absente : un
                 `span aria-disabled` n'est ni annoncé ni atteignable, alors
@@ -353,7 +343,7 @@ export function BarreCompte({
                 <button
                   type="submit"
                   role="menuitem"
-                  className="flex w-full items-center gap-2.5 rounded-full px-3 py-2 text-left text-[13px] text-[color:var(--board-slate-ink)] transition-colors hover:bg-[color:var(--board-slate-pale)] hover:text-[color:var(--board-ink)]"
+                  className={CLASSE_ENTREE}
                 >
                   <LogOut aria-hidden className="size-4 opacity-90" />
                   <span className="flex-1 truncate">Déconnexion</span>
