@@ -640,6 +640,29 @@ est appliqué ; huit autres sont affichés sans l'être. Trous principaux :
   relevé au test ; même mécanisme d'affichage que le plafond atteint, à faire
   au chantier « quotas ».
 
+**À réfléchir avec la propriétaire (2026-11-05), rien de tranché** :
+- **Essai et prix d'entrée.** Crainte : un essai gratuit avec tous les modules
+  laisse faire son DUERP sans payer ; couper des modules frustre. Piste
+  envisagée par la propriétaire : premier mois payant réduit (15 € puis 29 €,
+  faisable chez Stripe par une remise `once` — à vérifier avec l'essai : la
+  facture d'essai à 0 € la consomme-t-elle ?). Avis donné : garder l'essai
+  gratuit sans carte (la cible ne sort pas sa carte pour un outil inconnu ;
+  le DUERP seul a déjà son outil gratuit, OiRA de l'INRS), brider les
+  **sorties définitives** plutôt que les modules (aperçus « version
+  d'essai », le DUERP validé et l'export de contrôle avec l'abonnement,
+  annoncé dès l'écran d'essai), et utiliser la réduction **à la conversion**
+  (bandeau des 7 derniers jours : « premier mois à 15 € »). À confronter à
+  5-10 dirigeants de la cible avant de figer.
+- **Export pour un ancien client : sous un délai.** Aujourd'hui, un compte
+  sans abonnement garde la lecture et l'export sans limite (ADR-053 § 3) :
+  Rojer stockerait à vie. À poser : un délai d'export après la fin de
+  l'abonnement (puis suppression ou archivage), cohérent avec la
+  conservation du compte jamais payé (12 mois, décision du 2026-11-03) et
+  avec `docs/rgpd.md`. Point dur : la conservation de 40 ans des versions
+  du DUERP (règle 10 de CLAUDE.md) est l'obligation de l'employeur — la
+  rendre possible par un export complet avant la fin du délai, pas en
+  gardant ses données sans fin. Amendera l'ADR-053 § 3.
+
 **Tranché sans elle (à contester si besoin)** : formule inconnue = plafonds
 d'Essentiel, avec alerte ; plafonds comptés par compte ; compteurs annuels
 tenus dans un journal que rien n'efface ; « Connecter un assistant » retiré
