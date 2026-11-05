@@ -558,7 +558,13 @@ export const obligationsConformite: Obligation[] = [
 // 204 + 1 − 0 = 205 ; par porteur, 96 équipement, 94 + 1 = 95 établissement,
 // 14 salarié ; 12 au niveau audit, 193 suivies ; 23 domaines — remesuré en
 // appelant `obligationsConformite`, `porteurDe` et `estNiveauAudit`.
-export const REFERENTIEL_VERSION = "2026-11-03.1";
+// `2026-11-04.1` (`fix/libelle-personne-qualifiee-electricite`, demande de la
+// propriétaire) : « personne qualifiée en électricité » dans les libellés de
+// `elec-erp-presence-personne-qualifiee` et de sa sœur `-scene-n3`. Le texte
+// d'EL 18 dit « personne qualifiée » ; l'article est au chapitre des
+// installations électriques et vise leur exploitation : la précision le lit,
+// elle n'ajoute rien. 205 + 0 − 0 = 205.
+export const REFERENTIEL_VERSION = "2026-11-04.1";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

@@ -79,6 +79,12 @@ connecteur MCP OAuth de Supabase n'existe plus — garder la suppression de
   formulaire sans fichier (#180, ADR-055). Migration additive
   `20261104120000_releve_interne`, datée après celle de l'effectif ; sur
   `cc`, `uploadRapport` garde `verifierSaisie()` et la portée `compteId`.
+- **Proxy** (2026-11-05, #184) : `proxyClientMaxBodySize` aligné sur les
+  25 Mo des actions serveur (le proxy coupait le corps à 10 Mo), et un POST
+  d'action serveur sans cookie passe au lieu d'être redirigé — l'action
+  renvoie elle-même à `/login` par `requireUser()`. Report de `main` du même
+  jour : #182, #185 (la même limite, sans conflit), #186. À vérifier au
+  premier déploiement : « Ce qui reste avant la bascule ».
 
 ### Multi-utilisateurs : ce qui reste (2026-11-03)
 
@@ -125,6 +131,21 @@ Documents à valider puis fusionner :
 - PR #130 — ADR-052 (Better Auth).
 
 Le jour J : suivre le plan de #126.
+
+À vérifier au premier déploiement sur Clever Cloud (ajouté le 2026-11-05,
+audit du proxy de `cc` ; le code est fusionné, il n'a jamais tourné là-bas) :
+1. **Déposer un rapport de 15 Mo** (entre 10 et 20) : il doit arriver entier.
+   Le proxy coupait le corps des requêtes à 10 Mo ; `proxyClientMaxBodySize`
+   est aligné sur les 25 Mo des actions serveur (#184 sur `cc`, #185 sur
+   `main`). Sur Vercel, le plafond de 4,5 Mo par requête masquait le défaut :
+   un rapport de plus de 4,5 Mo n'y passe pas.
+2. **Session expirée, onglet ouvert** : envoyer un formulaire doit ramener à
+   `/login`, pas afficher une erreur. Depuis #184, le proxy laisse passer le
+   POST d'une action serveur sans cookie, et `requireUser()` redirige.
+3. **`X-Forwarded-For` forgé** : envoyer l'en-tête avec une fausse adresse en
+   tête et vérifier que l'IP lue est la dernière entrée, celle du répartiteur
+   (`src/lib/securite/ip-client.ts`, « À VÉRIFIER au premier déploiement
+   CC ») — elle sert à la limitation de débit et à la preuve de signature.
 
 Abonnements (ne bloquent pas la bascule ; rien à poser tant qu'ils ne
 sont pas ouverts) :
