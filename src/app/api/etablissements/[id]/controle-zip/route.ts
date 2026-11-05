@@ -14,6 +14,8 @@ import {
   formaterDateHeureFr,
 } from "@/lib/dates";
 import { PIECES_ZIP, fichierDuerp, nomDeDossier } from "@/lib/controle/pieces-zip";
+import { lireAnnexesDuRegistre } from "@/lib/registre/contenu-ailleurs";
+import { piecesDesAnnexes } from "@/lib/registre/annexes";
 import {
   carnetSanitaireDuDossier,
   compterRapportsSalariesEcartes,
@@ -330,7 +332,7 @@ async function construireArchive(
   // ne se compose qu'à partir de ce qu'il porte.
   let annexesListees: { pieceId: string; titre: string }[] | null = null;
   try {
-    const data = await construireRegistreData(db, id);
+    const data = await construireRegistreData(db, id, user.id);
     if (data) {
       for (const v of data.verifsEnAttente) {
         if (v.contractuelle) echeancesContractuelles.add(v.id);
@@ -346,16 +348,19 @@ async function construireArchive(
   } catch (e) {
     noterEchec(PIECES_ZIP.registre, e);
   }
-  // Le registre n'a pas pu être lu : ses annexes non plus, et le README le
-  // dit au lieu d'annoncer « aucun écrit annexé ».
+  // Le registre n'a pas abouti (échec ou établissement introuvable) : les
+  // annexes se lisent seules, avec leur propre repli — une brique en panne
+  // ne prive pas l'autre (seconde relecture du 2026-11-05).
   if (annexesListees === null) {
-    noterEchec(PIECES_ZIP.annexes, new Error("registre non lu"), "la lecture du registre a échoué");
+    annexesListees = await lire(PIECES_ZIP.annexes, [], async () =>
+      piecesDesAnnexes(await lireAnnexesDuRegistre(db, id, user.id)),
+    );
   }
 
   // ── 03_Registre_annexes/ — les écrits annexés au registre ───────────
   // Ceux que la fiche « Annexes » liste (ADR-056), fichier en cours seul : le
   // PDF du registre les nomme, le tiers les lit ici.
-  const titreAnnexe = new Map((annexesListees ?? []).map((a) => [a.pieceId, a.titre]));
+  const titreAnnexe = new Map(annexesListees.map((a) => [a.pieceId, a.titre]));
   const annexesDeposees = await lire(PIECES_ZIP.annexes, [], () =>
     annexesDeposeesDuDossier(db, id, [...titreAnnexe.keys()]),
   );

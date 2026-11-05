@@ -30,7 +30,9 @@ async function effacerLesPrecedents(
   obligationId: string,
 ): Promise<string[]> {
   const precedents = await tx.pieceEtatPermanent.findMany({
-    where: { etablissementId, obligationId, remplaceeLe: { not: null } },
+    // L'état se lit sur `enCours`, la colonne de l'unicité ; `remplaceeLe` n'en
+    // est que la date (seconde relecture du 2026-11-05).
+    where: { etablissementId, obligationId, enCours: null },
     select: { id: true, fichierCle: true },
   });
   if (precedents.length === 0) return [];
@@ -42,7 +44,7 @@ async function effacerLesPrecedents(
 
 async function fichierEnCours(tx: Client, etablissementId: string, obligationId: string) {
   return tx.pieceEtatPermanent.findFirst({
-    where: { etablissementId, obligationId, remplaceeLe: null },
+    where: { etablissementId, obligationId, enCours: true },
     select: { id: true },
   });
 }

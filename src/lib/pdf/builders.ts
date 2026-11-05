@@ -408,6 +408,10 @@ export async function construirePointsEquipementData(
 export async function construireRegistreData(
   db: Db,
   etablissementId: string,
+  /** L'utilisateur de la session, celui que la route a vérifié : les annexes
+   *  se lisent avec lui, comme « Préparer un contrôle » (relecture du
+   *  2026-11-05 — `entreprise.userId`, nullable, pouvait les taire). */
+  userId: string,
 ): Promise<RegistreData | null> {
   const etab = await chargerEtablissementDuUser(db, etablissementId);
   if (!etab) return null;
@@ -459,9 +463,7 @@ export async function construireRegistreData(
     ? await Promise.all([
         listerEquipementsDeLEtablissement(etablissementId),
         // La fiche « Annexes » relit « Ce qui doit être en place » (2026-11-05).
-        etab.entreprise.userId
-          ? lireAnnexesDuRegistre(db, etablissementId, etab.entreprise.userId)
-          : Promise.resolve(null),
+        lireAnnexesDuRegistre(db, etablissementId, userId),
       ])
     : [[], null];
 

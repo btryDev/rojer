@@ -108,14 +108,13 @@ export default async function ControlePage({
     // lecture que la fiche « Annexes » et que la route. Une lecture en échec
     // ne fait pas tomber l'écran : la ligne le dit, comme le README du ZIP
     // (relecture du 2026-11-05).
+    // `null` = lecture en échec ; un dossier introuvable rend aussi `null`,
+    // mais `requireEtablissement` l'a déjà écarté plus haut.
     lireAnnexesDuRegistre(db, id, user.id).catch((e: unknown) => {
       console.error("controle : lecture des annexes du registre en échec", e);
-      return "echec" as const;
+      return null;
     }),
   ]);
-  const annexesLues = annexes === "echec" ? null : annexes;
-  const annexesLignes = annexesLues?.lignes ?? [];
-  const annexesDeposees = piecesDesAnnexes(annexesLues).length;
 
   // LE PATRON `etat-charge.ts` [2026-10-25 : fichier retiré avec la plaque
   // des zones du hero ; le patron reste], APPLIQUÉ À UN ÉCRAN : la question « sait-on ? »
@@ -213,9 +212,9 @@ export default async function ControlePage({
     },
     annexes: {
       description: phraseAnnexesDuDossier(
-        annexes === "echec" ? null : { aAnnexer: annexesLignes.length, deposes: annexesDeposees },
+        annexes && { aAnnexer: annexes.lignes.length, deposes: piecesDesAnnexes(annexes).length },
       ),
-      present: annexesDeposees > 0,
+      present: piecesDesAnnexes(annexes).length > 0,
     },
     rapports: {
       description:

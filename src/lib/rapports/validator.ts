@@ -34,6 +34,12 @@ export const FORMATS_ACCEPTES = MIME_AUTORISES.map((m) => NOM_FORMAT[m]).join(",
 
 export const TAILLE_MAX_OCTETS = 20 * 1024 * 1024; // 20 Mo
 
+/** Le refus d'un fichier trop lourd, une seule rédaction : le serveur et
+ *  les écrans qui vérifient avant l'envoi disent la même phrase. */
+export function messageFichierTropVolumineux(tailleMax: number = TAILLE_MAX_OCTETS): string {
+  return `Fichier trop volumineux (max ${Math.round(tailleMax / 1024 / 1024)} Mo)`;
+}
+
 export type ValidationFichierOk = {
   ok: true;
   mime: MimeAutorise;
@@ -155,12 +161,7 @@ export async function validerFichier(
     return { ok: false, erreur: "Aucun fichier sélectionné" };
   }
   if (fichier.size > regle.tailleMax) {
-    return {
-      ok: false,
-      erreur: `Fichier trop volumineux (max ${Math.round(
-        regle.tailleMax / 1024 / 1024,
-      )} Mo)`,
-    };
+    return { ok: false, erreur: messageFichierTropVolumineux(regle.tailleMax) };
   }
   if (!regle.types.includes(fichier.type as MimeAutorise)) {
     return {

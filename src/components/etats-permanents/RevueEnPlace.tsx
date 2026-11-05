@@ -42,7 +42,7 @@ import {
   retirerDeclaration,
 } from "@/lib/etats-permanents/actions";
 import { DepotEcritAnnexe } from "./DepotEcritAnnexe";
-import { TAILLE_MAX_OCTETS } from "@/lib/rapports/validator";
+import { TAILLE_MAX_OCTETS, messageFichierTropVolumineux } from "@/lib/rapports/validator";
 import type { FondementLigne } from "@/lib/etats-permanents/fondement";
 import { formaterDateFr } from "@/lib/dates";
 import {
@@ -89,9 +89,6 @@ export function useOuvrirFiche() {
 }
 
 const CHECK = <Check className="size-3.5" aria-hidden />;
-const MESSAGE_FICHIER_TROP_LOURD = `Fichier trop volumineux (max ${Math.round(
-  TAILLE_MAX_OCTETS / 1024 / 1024,
-)} Mo). Compressez-le, puis réessayez.`;
 const ERREUR_ENREGISTREMENT =
   "Cette réponse n'a pas pu être enregistrée. Rechargez la page, puis réessayez.";
 
@@ -203,7 +200,7 @@ export function RevueEnPlace({
       // l'action, et le dirigeant ne lirait qu'un « réessayez » (relecture du
       // 2026-11-05) — comme `UploadRapportForm`, on le dit avant d'envoyer.
       if (fichier.size > TAILLE_MAX_OCTETS) {
-        setErreur(MESSAGE_FICHIER_TROP_LOURD);
+        setErreur(messageFichierTropVolumineux());
         champ.value = "";
         return;
       }

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { obligationDeclarable } from "./garde";
 import { preparerUnDepot, retirerLeFichierEnCours } from "./pieces";
-import { ANNEXES_DU_REGISTRE, annexeDeLaLigne } from "@/lib/registre/annexes";
+import { annexeDeLaLigne } from "@/lib/registre/annexes";
 import { clePieceEtatPermanent, getStorage, stockageEnService } from "@/lib/storage";
 import {
   MESSAGE_DEPOT_NON_CONFIGURE,
@@ -120,9 +120,15 @@ export async function retirerDeclaration(
   // Le fichier en cours d'un écrit annexé au registre devient le précédent
   // (ADR-056 § 4) : « Pas encore » ne laisse pas au registre un fichier que le
   // dirigeant vient de dire absent. L'ancien précédent part, après la base.
-  // Les autres lignes ne portent jamais de fichier : elles gardent la seule
-  // suppression d'avant (relecture du 2026-11-05).
-  if (ANNEXES_DU_REGISTRE.some((a) => a.obligationId === obligationId)) {
+  // Décidé sur le FICHIER, pas sur la table des annexes : une ligne sortie de
+  // la table garde le fichier qu'on y avait déposé, et il doit pouvoir être
+  // retiré (seconde relecture du 2026-11-05). Une ligne sans fichier garde la
+  // seule suppression d'avant.
+  const aUnFichierEnCours = await db.pieceEtatPermanent.findFirst({
+    where: { etablissementId, obligationId, enCours: true },
+    select: { id: true },
+  });
+  if (aUnFichierEnCours) {
     const aLiberer = await db.$transaction(async (tx) => {
       await tx.declarationEtatPermanent.deleteMany({
         where: { etablissementId, obligationId },

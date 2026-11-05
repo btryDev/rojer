@@ -134,7 +134,7 @@ export async function annexesDeposeesDuDossier(
 ) {
   if (pieceIds.length === 0) return [];
   return db.pieceEtatPermanent.findMany({
-    where: { id: { in: pieceIds }, etablissementId, remplaceeLe: null },
+    where: { id: { in: pieceIds }, etablissementId, enCours: true },
     select: { id: true, fichierCle: true, fichierNom: true, deposeLe: true },
   });
 }

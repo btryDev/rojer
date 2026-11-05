@@ -13,6 +13,7 @@ type Piece = {
   etablissementId: string;
   obligationId: string;
   fichierCle: string;
+  enCours: true | null;
   remplaceeLe: Date | null;
 };
 
@@ -33,8 +34,21 @@ const h = vi.hoisted(() => {
         : p.id === w.id)) &&
     (w.etablissementId === undefined || p.etablissementId === w.etablissementId) &&
     (w.obligationId === undefined || p.obligationId === w.obligationId) &&
-    (w.remplaceeLe === undefined ||
-      (w.remplaceeLe === null ? p.remplaceeLe === null : p.remplaceeLe !== null));
+    (w.enCours === undefined || p.enCours === w.enCours);
+  // La CHECK `PieceEtatPermanent_bornes`, et l'unicité de `enCours` (seconde
+  // relecture du 2026-11-05 : le faux ne les modélisait pas, un archivage
+  // qui oublierait `enCours` serait passé).
+  const verifier = () => {
+    for (const p of etat.pieces) {
+      const coherent =
+        (p.enCours === true && p.remplaceeLe === null) ||
+        (p.enCours === null && p.remplaceeLe !== null);
+      if (!coherent) throw new Error(`CHECK simulée : ${p.id} incohérent`);
+    }
+    const enCours = etat.pieces.filter((p) => p.enCours === true);
+    const cles = new Set(enCours.map((p) => `${p.etablissementId}|${p.obligationId}`));
+    if (cles.size !== enCours.length) throw new Error("P2002 simulé : un second fichier en cours");
+  };
   let suivant = 0;
   const pieceEtatPermanent = {
     findFirst: vi.fn(async ({ where }: { where: Record<string, unknown> }) =>
@@ -51,22 +65,13 @@ const h = vi.hoisted(() => {
     update: vi.fn(async ({ where, data }: { where: { id: string }; data: Partial<Piece> }) => {
       const p = etat.pieces.find((x) => x.id === where.id)!;
       Object.assign(p, data);
+      verifier();
       return p;
     }),
     create: vi.fn(async ({ data }: { data: Omit<Piece, "id" | "remplaceeLe"> }) => {
-      // L'unicité du fichier en cours, comme la base (`enCours`).
-      if (
-        etat.pieces.some(
-          (x) =>
-            x.etablissementId === data.etablissementId &&
-            x.obligationId === data.obligationId &&
-            x.remplaceeLe === null,
-        )
-      ) {
-        throw new Error("P2002 simulé : un second fichier en cours");
-      }
-      const p = { id: `p${++suivant}`, remplaceeLe: null, ...data };
+      const p: Piece = { id: `p${++suivant}`, enCours: true, remplaceeLe: null, ...data };
       etat.pieces.push(p);
+      verifier();
       return p;
     }),
   };

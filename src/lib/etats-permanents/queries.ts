@@ -295,6 +295,7 @@ export async function listerEtatsPermanents(
         obligationId: true,
         fichierNom: true,
         deposeLe: true,
+        enCours: true,
         remplaceeLe: true,
       },
     }),
@@ -308,8 +309,10 @@ export async function listerEtatsPermanents(
       deposeLe: p.deposeLe,
       href: hrefPieceEtatPermanent(etablissement.id, p.id),
     };
-    if (p.remplaceeLe === null) piecesParObligation.set(p.obligationId, lue);
-    else precedentesParObligation.set(p.obligationId, { ...lue, remplaceeLe: p.remplaceeLe });
+    if (p.enCours === true) piecesParObligation.set(p.obligationId, lue);
+    else if (p.remplaceeLe) {
+      precedentesParObligation.set(p.obligationId, { ...lue, remplaceeLe: p.remplaceeLe });
+    }
   }
   const parObligation = new Map(declarations.map((d) => [d.obligationId, d]));
   const titresParObligation = new Map<string, TitreDeclare[]>();
