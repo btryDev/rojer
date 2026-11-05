@@ -78,7 +78,11 @@ import type {
 } from "./RegistreDocument";
 import { composerRegistreDeLEtablissement } from "@/lib/registre/queries";
 import { saisiePourSection } from "@/lib/registre/champs";
-import { contenuTenuAilleursDepuis } from "@/lib/registre/contenu-ailleurs";
+import {
+  contenuTenuAilleursDepuis,
+  lireAnnexesDuRegistre,
+} from "@/lib/registre/contenu-ailleurs";
+import { ID_FICHE_ANNEXES } from "@/lib/registre/annexes";
 import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
 import {
   bilanDuRegistre,
@@ -451,9 +455,13 @@ export async function construireRegistreData(
   // ferait exactement ce que l'écran a cessé de faire — laisser croire le
   // document complet.
   const registre = await composerRegistreDeLEtablissement(etablissementId);
-  const equipements = registre
-    ? await listerEquipementsDeLEtablissement(etablissementId)
-    : [];
+  const [equipements, annexes] = registre
+    ? await Promise.all([
+        listerEquipementsDeLEtablissement(etablissementId),
+        // La fiche « Annexes » relit « Ce qui doit être en place » (2026-11-05).
+        lireAnnexesDuRegistre(etablissementId),
+      ])
+    : [[], null];
 
   // Le calcul de l'écran du registre et de « Préparer un contrôle »
   // (`completudesDuRegistre`, 2026-10-12) : le PDF n'en tient plus un second.
@@ -471,7 +479,10 @@ export async function construireRegistreData(
       // Le parc et le calendrier sont lus une seule fois pour les
       // quarante-neuf fiches : une lecture par fiche ferait soixante-deux
       // requêtes pour un document.
-      const ailleurs = contenuTenuAilleursDepuis(
+      const ailleurs =
+        due.section.id === ID_FICHE_ANNEXES
+          ? annexes
+          : contenuTenuAilleursDepuis(
         etablissementId,
         partie.id,
         due.section,

@@ -48,6 +48,11 @@ import {
   type RetenueParPrudence,
 } from "@/lib/calendrier/prudence";
 import { nomDeZone } from "@/lib/batiments/nom-zone";
+import { requireCompte } from "@/lib/auth/compte";
+import { obligationsApplicablesDuDossier } from "@/lib/etablissements/dossier-du-rendu";
+import { listerEtatsPermanents } from "@/lib/etats-permanents/queries";
+import { projeterEtablissement } from "@/lib/matching/projection";
+import { annexesDuRegistre, ID_FICHE_ANNEXES } from "./annexes";
 
 /**
  * Ce que la fonction pure attend, réduit au strict nécessaire.
@@ -169,6 +174,7 @@ export async function lireContenuTenuAilleurs(
   // Un écran de fiche n'en rend qu'une : lire les deux listes ici coûte deux
   // requêtes, et la mémoïsation de la page fait le reste. Le PDF, lui, passe
   // par `contenuTenuAilleursDepuis` avec un parc déjà chargé.
+  if (section.id === ID_FICHE_ANNEXES) return lireAnnexesDuRegistre(etablissementId);
   if (!section.categoriesEquipement?.length) return null;
   const [equipements, zones, verifications, marques] = await Promise.all([
     PARTIES_INVENTAIRE.has(partieId)
@@ -191,6 +197,42 @@ export async function lireContenuTenuAilleurs(
     new Date(),
     retenueParPrudence(marques.parObligation),
     estMultiBatiments(zones),
+  );
+}
+
+/**
+ * La fiche « Annexes » (2026-11-05) : les écrits que le texte fait annexer au
+ * registre, relus sur « Ce qui doit être en place » (`annexes.ts`).
+ *
+ * Même passage du moteur et mêmes déclarations que cet écran
+ * (`obligationsApplicablesDuDossier`, `listerEtatsPermanents`) : la fiche ne
+ * peut pas annoncer un écrit que l'écran ne demande pas. `null` si le dossier
+ * n'est pas celui de l'utilisateur.
+ */
+export async function lireAnnexesDuRegistre(
+  etablissementId: string,
+): Promise<ContenuAilleurs | null> {
+  const { user, db } = await requireCompte();
+  const dossier = await obligationsApplicablesDuDossier(db, etablissementId, user.id);
+  if (!dossier) return null;
+  const etats = await listerEtatsPermanents(
+    dossier.etab,
+    dossier.equipements,
+    dossier.applicables,
+  );
+  const lignes = [
+    ...etats.familles.flatMap((f) => f.blocs.flatMap((b) => b.lignes)),
+    ...etats.faits,
+    ...etats.parLEquipe,
+  ];
+  return annexesDuRegistre(
+    etablissementId,
+    lignes.map((l) => ({
+      obligationId: l.obligation.id,
+      declareLe: l.declareLe,
+      note: l.note,
+    })),
+    projeterEtablissement(dossier.etab),
   );
 }
 
