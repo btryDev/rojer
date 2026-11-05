@@ -648,6 +648,38 @@ de l'offre tant que l'accès OAuth (ADR-013) n'existe pas.
 5. essai par SIREN ; conditions générales complétées (baisse, plafonds,
    date anniversaire).
 
+## 11. Essai de bout en bout avec un compte Stripe de test (2026-11-05)
+
+Bac à sable Stripe « environnement de test rojer », CLI Stripe 1.55.8 (binaire
+officiel, empreinte vérifiée ; Homebrew refusait faute d'outils Xcode à jour),
+relais `stripe listen --api-key … --forward-thin-to` (la clé de `.env.local`,
+sans `stripe login`), Rojer local sur la branche `lot/quotas-formules`.
+
+**Passé** : écran d'essai avec les prix lus chez Stripe ; essai Essentiel sans
+carte (`trialing`, preuve d'acceptation écrite) ; onboarding pendant l'essai ;
+carte ajoutée au portail (l'essai continue, nom de facturation remplacé par la
+raison sociale) ; fin d'essai (`trial_end=now`) : facture de 29 € payée,
+`active` ; carte refusée (`pm_card_chargeCustomerFail`) : `past_due`, message
+« paiement en échec », saisie ouverte ; résiliation : `canceled`, saisie
+fermée, lecture gardée, bouton de réabonnement ; réabonnement par Checkout :
+nouvel abonnement `active`, l'ancien reste `canceled`. Les 14 notifications
+reçues ont toutes été traitées (200).
+
+**Non passé, et pourquoi** : `unpaid` après épuisement des relances (des jours
+chez Stripe ; couvert par les tests) ; Checkout AVEC la case des conditions —
+Stripe exige l'URL des conditions dans les informations publiques du compte,
+réglables seulement sur un compte activé : le test a été fait par une session
+identique sans `consent_collection`.
+
+**Corrigé en cours de route** : entrée « Abonnement » dans le menu du compte
+(la page n'était atteinte que par le bandeau) ; messages d'erreur qui
+nommaient Stripe ; « période en cours » affichée pour un abonnement résilié.
+
+**Réglages de lancement ajoutés** (compte Stripe de production activé) : URL
+des conditions dans les informations publiques ; TVA — la facture de test est
+à 29 € sans taxe : Stripe Tax ou taux de TVA à régler avec l'expert-comptable
+(§ 6).
+
 ## Sources lues
 
 - Stripe : [webhooks](https://docs.stripe.com/webhooks.md) ·

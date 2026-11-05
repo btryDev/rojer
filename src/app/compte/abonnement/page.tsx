@@ -3,7 +3,7 @@ import { BandeauAbonnement } from "@/components/abonnements/BandeauAbonnement";
 import { getOptionalCompte } from "@/lib/auth/compte";
 import { requireUser } from "@/lib/auth/require-user";
 import { abonnementDuCompte, contexteDroits, offreLancee } from "@/lib/abonnements/saisie";
-import { droitsDe, gesteAbonnement, libelleStatut } from "@/lib/abonnements/droits";
+import { abonnementEnCours, droitsDe, gesteAbonnement, libelleStatut } from "@/lib/abonnements/droits";
 import { formaterDateLongueFr } from "@/lib/dates";
 import { Button, buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
@@ -94,7 +94,8 @@ export default async function AbonnementPage({
                   <dd className="m-0">{formaterDateLongueFr(ligne.finEssai)}</dd>
                 </>
               )}
-              {ligne?.finPeriode && (
+              {/* Un abonnement terminé n'a plus de période en cours. */}
+              {ligne?.finPeriode && abonnementEnCours(ligne.statut) && (
                 <>
                   <dt className="text-[color:var(--board-slate-mid)]">Période en cours jusqu&apos;au</dt>
                   <dd className="m-0">{formaterDateLongueFr(ligne.finPeriode)}</dd>
