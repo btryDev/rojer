@@ -766,6 +766,14 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     formulaire, sans fichier : switch « En interne / Par un prestataire »
     là où `realisateurRequis` admet l'exploitant, une personne qualifiée ou
     compétente ; rapport exigé d'un tiers (2026-11-04)
+57. **057** — Pas de chapeaux : une obligation qui concerne un appareil vit
+    sur l'appareil (`PE 4 § 2`, `PO 1 § 3`, `R. 4222-20` y passent) ; un même
+    geste fait par un même intervenant n'y fait qu'une ligne — rythme le plus
+    court, toutes les références citées (`geste`) ; électricité travail / ERP
+    et ascenseur CCH / AS 9 restent distincts ; art. 15 de l'arrêté du
+    4 novembre 1993, décennale de l'extincteur ERP et signalisation des
+    extincteurs au niveau audit ; rien ne sort du référentiel (**proposée le
+    2026-11-05**, non codée)
 
 [2026-10-15, ménage des ADR : 037, 038 et 043 manquaient à cette liste ;
 **il n'existe pas d'ADR-044** — annoncée dans
