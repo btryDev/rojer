@@ -67,6 +67,20 @@ function versConnexion(request: NextRequest): NextResponse {
   return NextResponse.redirect(url);
 }
 
+/**
+ * Un POST sur une page est une action serveur (avec JavaScript, l'en-tête
+ * `Next-Action` ; sans, un formulaire multipart). Sans cookie, le proxy la
+ * laisse passer au lieu de la rediriger : le navigateur suit un 307 en
+ * rejouant le POST sur `/login`, qui ne connaît pas l'action, et
+ * l'utilisateur dont la session a expiré, onglet ouvert, voyait une erreur
+ * (audit du proxy, 2026-11-05). L'action appelle `requireUser()`, dont le
+ * `redirect("/login")` est la redirection que le client d'action sait suivre.
+ * Rien ne s'ouvre : le proxy n'a jamais été la garde (voir en tête).
+ */
+function actionServeur(request: NextRequest, api: boolean): boolean {
+  return !api && request.method === "POST";
+}
+
 export type OptionsSession = {
   /** En-têtes à ajouter à la requête transmise au rendu (la CSP à nonce). */
   entetesRequete?: Record<string, string>;
@@ -77,10 +91,9 @@ export function garderSession(
   options: OptionsSession = {},
 ): NextResponse {
   const pathname = request.nextUrl.pathname;
-  if (!cheminPublic(pathname) && !getSessionCookie(request)) {
-    return pathname === "/api" || pathname.startsWith("/api/")
-      ? refusApi()
-      : versConnexion(request);
+  const api = pathname === "/api" || pathname.startsWith("/api/");
+  if (!cheminPublic(pathname) && !getSessionCookie(request) && !actionServeur(request, api)) {
+    return api ? refusApi() : versConnexion(request);
   }
 
   const entetes = new Headers(request.headers);
