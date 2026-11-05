@@ -35,7 +35,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Building2, Check, HelpCircle, Home, LogOut, Plus, ShieldCheck, Users } from "lucide-react";
+import { Building2, Check, CreditCard, HelpCircle, Home, LogOut, Plus, ShieldCheck, Users } from "lucide-react";
 import { signOutAction } from "@/lib/auth/actions";
 import { choisirEtablissementActif } from "@/lib/etablissements/actions";
 import { estMultiEtablissements } from "@/lib/etablissements/selection";
@@ -318,6 +318,18 @@ export function BarreCompte({
             >
               <Users aria-hidden className="size-4 opacity-90" />
               <span className="flex-1 truncate">Membres du compte</span>
+            </Link>
+
+            {/* L'état de l'abonnement, ouvert à tous les rôles (ADR-053 § 12 :
+                les boutons y restent au propriétaire). */}
+            <Link
+              href="/compte/abonnement"
+              role="menuitem"
+              onClick={() => setOuvert(null)}
+              className="flex w-full items-center gap-2.5 rounded-full px-3 py-2 text-left text-[13px] text-[color:var(--board-slate-ink)] transition-colors hover:bg-[color:var(--board-slate-pale)] hover:text-[color:var(--board-ink)]"
+            >
+              <CreditCard aria-hidden className="size-4 opacity-90" />
+              <span className="flex-1 truncate">Abonnement</span>
             </Link>
 
             {/* Une commande à venir se déclare désactivée, pas absente : un
