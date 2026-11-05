@@ -613,8 +613,9 @@ est appliqué ; huit autres sont affichés sans l'être. Trous principaux :
 - compteurs annuels remis à zéro par suppression d'un brouillon ou d'un
   établissement (cascade) ; pas de date de début d'abonnement ;
 - comptage hors verrou (deux onglets dépassent d'un) ;
-- la garde de saisie ne voit que les écritures Prisma reconnues par sa sonde
-  (un dépôt de fichier sans écriture Prisma passerait).
+- ~~la garde de saisie ne voit que les écritures Prisma reconnues par sa sonde
+  (un dépôt de fichier sans écriture Prisma passerait).~~ [2026-11-05, PR #191 :
+  la garde relève toute fonction exportée d'un module `"use server"`.]
 
 **Décisions de la propriétaire (2026-11-05)** :
 - **baisse de formule refusée** tant que le compte dépasse les plafonds de la
@@ -634,8 +635,9 @@ tenus dans un journal que rien n'efface ; « Connecter un assistant » retiré
 de l'offre tant que l'accès OAuth (ADR-013) n'existe pas.
 
 **Plan du lot « quotas »** (avant le lancement de l'offre) :
-0. garde de saisie exigée en tête de **toute** action exportée d'un module
-   `"use server"` (listes fermées des exceptions), `.tsx` compris ;
+0. ~~garde de saisie exigée en tête de **toute** action exportée d'un module
+   `"use server"` (listes fermées des exceptions), `.tsx` compris ;~~
+   [2026-11-05, PR #191]
 1. changement de formule dans Rojer (contrôle des plafonds, montée
    immédiate facturée, baisse planifiée) ; portail sans changement de
    formule ; formule inconnue fermée ; date de début d'abonnement recopiée ;
@@ -647,6 +649,12 @@ de l'offre tant que l'accès OAuth (ADR-013) n'existe pas.
 4. stockage (taille des fichiers à enregistrer, reprise de l'existant) ;
 5. essai par SIREN ; conditions générales complétées (baisse, plafonds,
    date anniversaire).
+
+- 2026-11-05 — **Lot 0 — garde de saisie générale : PR #191** (vers `cc`).
+  Toute fonction exportée d'un module `"use server"` (`.tsx` compris) ouvre
+  par `verifierSaisie`, sauf `OUVERTES` et `LECTURES_EXPOSEES` (listes
+  fermées) ; directive en ligne refusée ; écritures au rendu d'une page
+  nommées (`ECRITURES_A_LA_LECTURE`). Aucune action réellement non gardée.
 
 ## Sources lues
 
