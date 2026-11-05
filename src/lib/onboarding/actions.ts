@@ -106,9 +106,7 @@ export async function finaliserOnboarding(
   let result;
   try {
     result = await avecUneReprise(() => db.$transaction(async (tx) => {
-      // Le plafond d'établissements de la formule (ADR-053 § 14), sous le
-      // verrou du compte : deux parcours finis au même instant ne le
-      // dépassent pas.
+      // Plafond d'établissements, sous le verrou du compte (ADR-053 § 14).
       await prendreQuota(tx, compte.compteId, "etablissements");
 
       // L'entreprise du SIREN, dans CE compte — jamais ailleurs : la clé porte

@@ -28,7 +28,7 @@ import {
 import { estSiretEnDouble, MESSAGE_SIRET_EN_DOUBLE } from "./siret-en-double";
 import { piecesRemplacees } from "./pieces";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
-import { creerSousPlafond, refusQuota } from "@/lib/abonnements/quotas";
+import { prendreQuota, refusQuota, RefusQuota } from "@/lib/abonnements/quotas";
 
 export type PrestataireActionState =
   | { status: "idle" }
@@ -178,8 +178,7 @@ export async function creerPrestataire(
     };
   }
 
-  // Plafond de la formule (ADR-053 § 14) : refusé avant de déposer les
-  // pièces ; la création le reprend sous verrou.
+  // Plafond de la formule (ADR-053 § 14), avant de déposer les pièces.
   const auPlafond = await refusQuota(db, compte.compteId, "prestataires");
   if (auPlafond) return { status: "error", message: auPlafond };
 
@@ -194,23 +193,21 @@ export async function creerPrestataire(
   }
 
   try {
-    const creation = await creerSousPlafond(db, compte.compteId, "prestataires", (tx) =>
-      tx.prestataire.create({
+    await db.$transaction(async (tx) => {
+      await prendreQuota(tx, compte.compteId, "prestataires");
+      await tx.prestataire.create({
         data: {
           id: prestataireId,
           etablissementId,
           ...colonnesDeLaSaisie(parsed.data),
           ...depot.colonnes,
         },
-      }),
-    );
-    if (!creation.ok) {
-      await libererFichiers(depot.cles, "prestataires/creation");
-      return { status: "error", message: creation.motif };
-    }
+      });
+    });
   } catch (err) {
     // Les fichiers écrits ne sont référencés par aucune ligne : on les reprend.
     await libererFichiers(depot.cles, "prestataires/creation");
+    if (err instanceof RefusQuota) return { status: "error", message: err.motif };
     if (estSiretEnDouble(err)) return erreurSiret();
     throw err;
   }

@@ -59,8 +59,6 @@ const MESSAGES: Record<string, string> = {
     "Ce compte a atteint le nombre d'utilisateurs de sa formule : demandez à son propriétaire de passer à une formule supérieure.",
 };
 
-/** Plafond d'utilisateurs à l'invitation (membres et invitations en attente, ADR-053 § 14). */
-const PLAFOND_A_L_INVITATION = "INVITATION_LIMIT_REACHED";
 
 function refus(e: unknown, contexte: string): EtatMembres {
   const code = codeDe(e);
@@ -98,7 +96,8 @@ export async function inviterMembre(_prev: EtatMembres, formData: FormData): Pro
       body: { email: lu.data.email, role: lu.data.role, organizationId: compte.compteId },
     });
   } catch (e) {
-    if (codeDe(e) === PLAFOND_A_L_INVITATION) return { status: "error", message: await motifPlafondMembres(db, compte.compteId) };
+    // Plafond d'utilisateurs de la formule, invitations comprises (ADR-053 § 14).
+    if (codeDe(e) === "INVITATION_LIMIT_REACHED") return { status: "error", message: await motifPlafondMembres(db, compte.compteId) };
     return refus(e, "inviter");
   }
   revalidatePath(PAGE);

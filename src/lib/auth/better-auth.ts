@@ -92,6 +92,10 @@ async function envoyer(to: string, subject: string, lignes: string[]): Promise<v
   });
 }
 
+/** Les limites du plugin d'organisation pour un compte (`abonnements/quotas.ts`). */
+const limitesMembres = async (compteId: string) =>
+  (await import("@/lib/abonnements/quotas")).limitesMembresDuPlugin(prisma, compteId);
+
 export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: adresseApp(),
@@ -200,15 +204,10 @@ export const auth = betterAuth({
       ac: ROLES_DU_PLUGIN.ac,
       roles: ROLES_DU_PLUGIN.roles,
       invitationExpiresIn: SEPT_JOURS,
-      // Plafond d'utilisateurs de la formule (ADR-053 § 14), invitations en
-      // attente comprises : à l'invitation, le plugin refuse dès que les
-      // invitations en attente atteignent le plafond moins les membres ; à
-      // l'acceptation, dès que les membres du compte de l'invitation
-      // l'atteignent. Import différé : `abonnements/saisie` remonte jusqu'ici.
-      invitationLimit: async ({ organization }) =>
-        (await (await import("@/lib/abonnements/quotas")).limitesMembresDuPlugin(prisma, organization.id)).invitations,
-      membershipLimit: async (_user, organization) =>
-        (await (await import("@/lib/abonnements/quotas")).limitesMembresDuPlugin(prisma, organization.id)).membres,
+      // Plafond d'utilisateurs de la formule, invitations comprises (ADR-053 §
+      // 14). Import différé : `abonnements/saisie` remonte jusqu'ici.
+      invitationLimit: async ({ organization }) => (await limitesMembres(organization.id)).invitations,
+      membershipLimit: async (_user, organization) => (await limitesMembres(organization.id)).membres,
       cancelPendingInvitationsOnReInvite: true,
       requireEmailVerificationOnInvitation: true,
       sendInvitationEmail: ({ id, email, role, organization, inviter }) =>

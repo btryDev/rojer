@@ -114,9 +114,16 @@ export function formuleDuPrix(prix: { lookup_key: string | null; metadata?: Reco
   return [prix.lookup_key, deMetadata].find(estLookupKey) ?? null;
 }
 
-/** « 1 établissement », « 5 établissements » ; `null` : sans limite. */
-export const libelleEtablissements = (n: number | null) =>
-  n === null ? "Établissements sans limite" : `${n} établissement${n > 1 ? "s" : ""}`;
+const pluriel = (n: number, un: string, plusieurs: string) => `${n} ${n > 1 ? plusieurs : un}`;
+
+/** Ce qu'un plafond appliqué compte, dit au dirigeant (ADR-053 § 14). */
+export const LIBELLES_PLAFONDS = {
+  etablissements: (n: number) => pluriel(n, "établissement", "établissements"),
+  membres: (n: number) => pluriel(n, "utilisateur", "utilisateurs"),
+  prestataires: (n: number) => pluriel(n, "prestataire", "prestataires"),
+  permisDeFeuParAn: (n: number) => `${pluriel(n, "permis de feu", "permis de feu")} sur douze mois`,
+  plansDePreventionParAn: (n: number) => `${pluriel(n, "plan de prévention", "plans de prévention")} sur douze mois`,
+} as const satisfies Partial<Record<keyof Quotas, (n: number) => string>>;
 
 /** Ce qui distingue une formule à l'écran, tiré des quotas — rien de non livré. */
 export function pointsDeFormule(f: CleFormule): string[] {
@@ -125,13 +132,10 @@ export function pointsDeFormule(f: CleFormule): string[] {
     q.permisDeFeuParAn === null
       ? "Permis de feu et plans de prévention sans limite"
       : `${q.permisDeFeuParAn} permis de feu et ${q.plansDePreventionParAn ?? "∞"} plans de prévention par an`;
-  const utilisateurs =
-    q.membres === null ? "Utilisateurs sans limite" : `${q.membres} utilisateur${q.membres > 1 ? "s" : ""}`;
-  return [libelleEtablissements(q.etablissements), utilisateurs, "Tous les modules de Rojer", usage];
+  return [
+    q.etablissements === null ? "Établissements sans limite" : LIBELLES_PLAFONDS.etablissements(q.etablissements),
+    q.membres === null ? "Utilisateurs sans limite" : LIBELLES_PLAFONDS.membres(q.membres),
+    "Tous les modules de Rojer",
+    usage,
+  ];
 }
-
-/**
- * Peut-on créer un élément de plus ? `quota` nul : illimité. Au quota, seule
- * la création est refusée : ce qui existe reste lisible, exportable, suivi.
- */
-export const sousLeQuota = (quota: number | null, dejaUtilises: number) => quota === null || dejaUtilises < quota;

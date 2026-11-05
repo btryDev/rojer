@@ -135,8 +135,6 @@ export async function creerPermisFeu(
   const numero = await nextNumeroPermisFeu(etablissementId);
   const id = `pf_${randomUUID()}`;
 
-  // Plafond annuel de la formule (ADR-053 § 14) : compté au journal, que la
-  // suppression d'un brouillon n'efface pas.
   const creation = await creerSousPlafond(db, compte.compteId, "permisDeFeuParAn", (tx) =>
     tx.permisFeu.create({
       data: {

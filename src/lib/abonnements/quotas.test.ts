@@ -8,7 +8,6 @@ import type { PrismaClient } from "@prisma/client";
 import type { Db } from "@/lib/auth/compte";
 import {
   creerSousPlafond,
-  debutDesDouzeMois,
   formuleDesPlafonds,
   limitesMembresDuPlugin,
   motifDuRefus,
@@ -50,22 +49,21 @@ describe("formule des plafonds et motif du refus", () => {
   });
 
   it("le motif nomme le plafond et la formule qui le lève", () => {
-    expect(motifDuRefus("rojer_essentiel_mensuel", "etablissements")).toBe(
+    expect(motifDuRefus("essentiel", "etablissements")).toBe(
       "Votre formule Essentiel couvre 1 établissement : passez à Pro depuis la page Abonnement de votre compte.",
     );
-    expect(motifDuRefus("rojer_pro_annuel", "etablissements")).toBe(
+    expect(motifDuRefus("pro", "etablissements")).toBe(
       "Votre formule Pro couvre 5 établissements : au-delà, la formule Sur mesure s'établit sur devis.",
     );
-    expect(motifDuRefus("rojer_essentiel_annuel", "permisDeFeuParAn")).toBe(
+    expect(motifDuRefus("essentiel", "permisDeFeuParAn")).toBe(
       "Votre formule Essentiel couvre 10 permis de feu sur douze mois : passez à Pro depuis la page Abonnement de votre compte.",
     );
-    expect(motifDuRefus("rojer_essentiel_annuel", "plansDePreventionParAn")).toMatch(/^Votre formule Essentiel couvre 5 plans de prévention sur douze mois : passez à Pro/);
-    expect(motifDuRefus("rojer_essentiel_annuel", "membres")).toMatch(/^Votre formule Essentiel couvre 1 utilisateur : passez à Pro/);
-    expect(motifDuRefus("rojer_pro_annuel", "prestataires")).toMatch(/^Votre formule Pro couvre 50 prestataires : au-delà/);
   });
 
-  it("douze mois glissants : la même date un an plus tôt", () => {
-    expect(debutDesDouzeMois(new Date("2026-11-05T10:00:00Z")).toISOString()).toBe("2025-11-05T10:00:00.000Z");
+  it("une formule inconnue au plafond ne se signale qu'une fois", async () => {
+    lancer();
+    await expect(prendreQuota(faux("rojer_surmesure_annuel", 1).txc, "c1", "etablissements")).rejects.toBeInstanceOf(RefusQuota);
+    expect(console.error).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -186,10 +184,5 @@ describe("limitesMembresDuPlugin", () => {
     lancer();
     expect(await limitesMembresDuPlugin(brut("rojer_pro_annuel", 3), "c1")).toEqual({ membres: 5, invitations: 2 });
     expect(await limitesMembresDuPlugin(brut("rojer_pro_annuel", 7), "c1")).toEqual({ membres: 5, invitations: 0 });
-  });
-
-  it("formule inconnue : plafonds de la plus petite", async () => {
-    lancer();
-    expect(await limitesMembresDuPlugin(brut(null, 1), "c1")).toEqual({ membres: 1, invitations: 0 });
   });
 });

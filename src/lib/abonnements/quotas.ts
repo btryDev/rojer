@@ -1,44 +1,21 @@
 import "server-only";
 // Les plafonds des formules (ADR-053 § 14). Une seule porte : `prendreQuota`,
-// appelée DANS la transaction qui crée l'élément plafonné (garde :
-// `quotas-garde.test.ts`).
-//
-// - Verrou de la ligne du compte : deux créations du même compte passent
-//   l'une après l'autre, la seconde compte la première.
-// - Refus par défaut : une formule absente ou inconnue reçoit les plafonds de
-//   la plus petite formule, et le journal le signale.
-// - Les plafonds « par an » se comptent dans un journal que rien n'efface
-//   (`ConsommationQuota`), sur douze mois glissants. Il s'écrit même avant le
-//   lancement de l'offre ; le verrou et le refus n'agissent qu'après.
-// - Au plafond, seule la création est refusée : ce qui existe reste lisible,
-//   exportable, modifiable.
-//
-// Les utilisateurs passent par le plugin d'authentification, qui tient les
-// invitations : ses deux limites lisent `limitesMembresDuPlugin`.
+// appelée DANS la transaction qui crée l'élément plafonné, sous le verrou du
+// compte (garde : `quotas-garde.test.ts`). Les utilisateurs passent par les
+// limites du plugin d'authentification (`limitesMembresDuPlugin`).
 
 import type { Prisma, PrismaClient } from "@prisma/client";
 import type { Db } from "@/lib/auth/compte";
-import { CLES_FORMULES, FORMULES, formuleDeLookupKey, type CleFormule } from "./formules";
+import { CLES_FORMULES, FORMULES, LIBELLES_PLAFONDS, formuleDeLookupKey, type CleFormule } from "./formules";
 import { contexteDroits, offreLancee } from "./saisie";
 
 /** Les plafonds appliqués (les autres clés de `Quotas` ne le sont pas encore). */
-export type CleQuota = "etablissements" | "membres" | "prestataires" | "permisDeFeuParAn" | "plansDePreventionParAn";
+export type CleQuota = keyof typeof LIBELLES_PLAFONDS;
 /** Ceux que Rojer compte lui-même ; les membres, c'est le plugin. */
 export type CleQuotaComptee = Exclude<CleQuota, "membres">;
 
 /** Ceux qui se comptent au journal, sur douze mois glissants. */
 const PAR_AN: ReadonlySet<CleQuota> = new Set(["permisDeFeuParAn", "plansDePreventionParAn"]);
-
-const pluriel = (n: number, un: string, plusieurs: string) => `${n} ${n > 1 ? plusieurs : un}`;
-
-/** Ce qu'un plafond compte, dit au dirigeant. */
-const LIBELLES: Record<CleQuota, (n: number) => string> = {
-  etablissements: (n) => pluriel(n, "établissement", "établissements"),
-  membres: (n) => pluriel(n, "utilisateur", "utilisateurs"),
-  prestataires: (n) => pluriel(n, "prestataire", "prestataires"),
-  permisDeFeuParAn: (n) => `${pluriel(n, "permis de feu", "permis de feu")} sur douze mois`,
-  plansDePreventionParAn: (n) => `${pluriel(n, "plan de prévention", "plans de prévention")} sur douze mois`,
-};
 
 /** La formule qui fixe les plafonds : celle de l'abonnement, sinon la plus petite. */
 export function formuleDesPlafonds(formule: string | null | undefined): CleFormule {
@@ -48,13 +25,8 @@ export function formuleDesPlafonds(formule: string | null | undefined): CleFormu
   return CLES_FORMULES[0];
 }
 
-/** Le plafond d'une clé pour une formule d'abonnement ; `null` : illimité. */
-export const plafondDe = (formule: string | null | undefined, cle: CleQuota): number | null =>
-  FORMULES[formuleDesPlafonds(formule)].quotas[cle];
-
 /** Le refus, avec la formule qui lève le plafond. */
-export function motifDuRefus(formule: string | null | undefined, cle: CleQuota): string {
-  const actuelle = formuleDesPlafonds(formule);
+export function motifDuRefus(actuelle: CleFormule, cle: CleQuota): string {
   const plafond = FORMULES[actuelle].quotas[cle] ?? 0;
   const plus = CLES_FORMULES.find((f) => {
     const q = FORMULES[f].quotas[cle];
@@ -63,7 +35,7 @@ export function motifDuRefus(formule: string | null | undefined, cle: CleQuota):
   const suite = plus
     ? `passez à ${FORMULES[plus].libelle} depuis la page Abonnement de votre compte.`
     : "au-delà, la formule Sur mesure s'établit sur devis.";
-  return `Votre formule ${FORMULES[actuelle].libelle} couvre ${LIBELLES[cle](plafond)} : ${suite}`;
+  return `Votre formule ${FORMULES[actuelle].libelle} couvre ${LIBELLES_PLAFONDS[cle](plafond)} : ${suite}`;
 }
 
 /** Une création refusée au plafond ; `motif` se montre tel quel. Lever annule la transaction. */
@@ -76,13 +48,6 @@ export class RefusQuota extends Error {
 
 type Lecteur = Db | Prisma.TransactionClient;
 
-/** Le début des douze mois glissants qui finissent à `maintenant`. */
-export function debutDesDouzeMois(maintenant: Date): Date {
-  const d = new Date(maintenant);
-  d.setUTCFullYear(d.getUTCFullYear() - 1);
-  return d;
-}
-
 /** Ce que le compte a déjà, pour une clé (le client est borné au compte). */
 async function utilise(db: Lecteur, cle: CleQuotaComptee, maintenant: Date): Promise<number> {
   switch (cle) {
@@ -91,17 +56,24 @@ async function utilise(db: Lecteur, cle: CleQuotaComptee, maintenant: Date): Pro
     case "prestataires":
       return db.prestataire.count();
     case "permisDeFeuParAn":
-    case "plansDePreventionParAn":
-      return db.consommationQuota.count({ where: { quota: cle, consommeLe: { gt: debutDesDouzeMois(maintenant) } } });
+    case "plansDePreventionParAn": {
+      const debut = new Date(maintenant);
+      debut.setUTCFullYear(debut.getUTCFullYear() - 1);
+      return db.consommationQuota.count({ where: { quota: cle, consommeLe: { gt: debut } } });
+    }
   }
 }
 
+/** La formule de l'abonnement du compte, telle que recopiée de Stripe. */
+const formuleDuCompte = async (l: Lecteur | PrismaClient, compteId: string) =>
+  (await l.abonnement.findUnique({ where: { compteId }, select: { formule: true } }))?.formule;
+
 /** Le motif du refus si le compte est au plafond, sinon `null`. */
 async function auPlafond(db: Lecteur, compteId: string, cle: CleQuotaComptee): Promise<string | null> {
-  const ligne = await db.abonnement.findUnique({ where: { compteId }, select: { formule: true } });
-  const plafond = plafondDe(ligne?.formule, cle);
+  const formule = formuleDesPlafonds(await formuleDuCompte(db, compteId));
+  const plafond = FORMULES[formule].quotas[cle];
   if (plafond === null || (await utilise(db, cle, new Date())) < plafond) return null;
-  return motifDuRefus(ligne?.formule, cle);
+  return motifDuRefus(formule, cle);
 }
 
 /**
@@ -152,8 +124,7 @@ export async function creerSousPlafond<T>(
 
 /** Le refus d'une invitation au plafond d'utilisateurs, pour le propriétaire du compte. */
 export async function motifPlafondMembres(db: Db, compteId: string): Promise<string> {
-  const ligne = await db.abonnement.findUnique({ where: { compteId }, select: { formule: true } });
-  return motifDuRefus(ligne?.formule, "membres");
+  return motifDuRefus(formuleDesPlafonds(await formuleDuCompte(db, compteId)), "membres");
 }
 
 /** La limite par défaut du plugin d'organisation, inchangée tant que l'offre n'est pas lancée. */
@@ -171,8 +142,7 @@ export async function limitesMembresDuPlugin(
   compteId: string,
 ): Promise<{ membres: number; invitations: number }> {
   if (!offreLancee(contexteDroits())) return { membres: LIMITE_DU_PLUGIN, invitations: LIMITE_DU_PLUGIN };
-  const ligne = await lecteur.abonnement.findUnique({ where: { compteId }, select: { formule: true } });
-  const plafond = plafondDe(ligne?.formule, "membres");
+  const plafond = FORMULES[formuleDesPlafonds(await formuleDuCompte(lecteur, compteId))].quotas.membres;
   if (plafond === null) return { membres: LIMITE_DU_PLUGIN, invitations: LIMITE_DU_PLUGIN };
   const membres = await lecteur.membre.count({ where: { compteId } });
   return { membres: plafond, invitations: Math.max(0, plafond - membres) };

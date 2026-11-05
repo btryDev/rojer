@@ -63,7 +63,8 @@ describe("plafonds : une seule porte (ADR-053 § 14)", () => {
 
   it("les utilisateurs : les deux limites du plugin lisent le plafond", () => {
     const code = TEXTES.get("src/lib/auth/better-auth.ts")!.brut;
-    expect(code).toMatch(/invitationLimit:[\s\S]{0,200}limitesMembresDuPlugin\([\s\S]{0,40}\)\)\.invitations/);
-    expect(code).toMatch(/membershipLimit:[\s\S]{0,200}limitesMembresDuPlugin\([\s\S]{0,40}\)\)\.membres/);
+    expect(code).toMatch(/const limitesMembres = [^;]*limitesMembresDuPlugin\(prisma, compteId\);/);
+    expect(code).toMatch(/invitationLimit: async \(\{ organization \}\) => \(await limitesMembres\(organization\.id\)\)\.invitations,/);
+    expect(code).toMatch(/membershipLimit: async \(_user, organization\) => \(await limitesMembres\(organization\.id\)\)\.membres,/);
   });
 });
