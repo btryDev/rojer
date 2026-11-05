@@ -78,6 +78,14 @@
   .cartes .offre ul { margin-top: 0; }
   .serre-t td, .serre-t th { padding: 1.3mm 2mm; font-size: 9pt; }
   .bientot { display: inline-block; font-size: 6.6pt; font-weight: 600; line-height: 1; padding: 0.5mm 1.4mm; border-radius: 10mm; background: var(--amber); color: var(--amber-ink); vertical-align: 1px; white-space: nowrap; }
+  .grille-t td, .grille-t th { padding: 0.85mm 1.8mm; font-size: 8.2pt; }
+  .grille-t td.c, .grille-t th.c { text-align: center; width: 16%; }
+  .grille-t th.c { color: var(--ink); font-size: 8.8pt; }
+  .grille-t th.essai, .grille-t td.essai { background: #fffaf0; }
+  .grille-t tr.groupe td { background: var(--canvas); font-weight: 700; font-size: 7.8pt; color: var(--blue-ink);
+                          text-transform: uppercase; letter-spacing: 0.04em; padding-top: 1.8mm; }
+  .grille-t .lim { font-weight: 600; }
+  .abo { display: inline-block; font-size: 7.2pt; font-weight: 600; padding: 0.4mm 1.6mm; border-radius: 10mm; background: var(--amber); color: var(--amber-ink); white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -86,7 +94,7 @@
 <section class="page">
   <div class="marque" style="margin-bottom:4mm">ROJER</div>
   <h1 style="font-size:22pt">Offres d'abonnement</h1>
-  <p class="sous" style="margin-bottom:4mm">Proposition de gamme · 3 novembre 2026 · prix HT</p>
+  <p class="sous" style="margin-bottom:4mm">Grille tarifaire · 5 novembre 2026 · prix HT</p>
 
   <div class="grille cartes">
     <div class="offre">
@@ -94,10 +102,10 @@
       <div class="pour">Un commerce, un restaurant, un cabinet : un seul site</div>
       <div class="prix">29 € <small>/mois</small></div>
       <div class="ligne-prix">ou 295 €/an (−15 %)</div>
-      <span class="tag vert" style="align-self:flex-start">1er mois offert</span>
+      <span class="tag vert" style="align-self:flex-start">30 jours d'essai gratuit</span>
       <div class="bloc"><b>1 établissement · 1 utilisateur</b></div>
       <div class="bloc"><b>Tous les modules</b>
-        <ul><li>DUERP</li><li>Vérifications et calendrier</li><li>Registre de sécurité</li><li>Plan d'actions</li><li>Ce qui doit être en place</li><li>Équipements et zones</li><li>Équipe : salariés et titres</li><li>Prescriptions particulières</li><li>Carnet sanitaire</li><li>Registre d'accessibilité</li><li>Documents obligatoires, Préparer un contrôle</li><li>Relances email <span class="bientot">bientôt</span></li><li>Permis de feu, plans de prévention, prestataires, signatures</li></ul>
+        <ul><li>DUERP</li><li>Vérifications et calendrier</li><li>Registre de sécurité</li><li>Plan d'actions</li><li>Ce qui doit être en place</li><li>Équipements et zones</li><li>Équipe : salariés et titres</li><li>Prescriptions particulières</li><li>Carnet sanitaire</li><li>Registre d'accessibilité</li><li>Documents obligatoires, Préparer un contrôle</li><li>Relances email</li><li>Permis de feu, plans de prévention, prestataires, signatures</li></ul>
       </div>
       <div class="bloc"><b>Volumes</b>
         <ul><li>Permis de feu : 10 par an</li><li>Plans de prévention : 5 par an</li><li>Prestataires suivis : 10</li><li>Liens d'accès prestataires : 5</li><li>Signatures : 20 par an</li><li>Stockage : 2 Go</li><li>Import d'un DUERP existant : 1</li></ul>
@@ -106,181 +114,80 @@
     <div class="offre premium">
       <div class="nom">Pro</div>
       <div class="pour">Plusieurs sites ou plusieurs personnes, avec un expert une fois par an</div>
-      <div class="prix">69 € <small>/mois</small></div>
-      <div class="ligne-prix">ou 699 €/an (−15 %)</div>
-      <div class="bloc"><b>Jusqu'à 5 établissements · jusqu'à 5 utilisateurs <span class="bientot">bientôt</span></b></div>
+      <div class="prix">89 € <small>/mois</small></div>
+      <div class="ligne-prix">ou 899 €/an (−15 %)</div>
+      <div class="bloc"><b>Jusqu'à 5 établissements · jusqu'à 5 utilisateurs</b></div>
       <div class="bloc"><b>Tous les modules d'Essentiel</b></div>
       <div class="bloc"><b>Volumes</b>
-        <ul><li>Permis de feu : illimité</li><li>Plans de prévention : illimité</li><li>Prestataires suivis : 50</li><li>Liens d'accès prestataires : 50</li><li>Signatures : 200 par an</li><li>Stockage : 20 Go</li><li>Import d'un DUERP existant : illimité</li></ul>
+        <ul><li>Permis de feu : 30 par an</li><li>Plans de prévention : 15 par an</li><li>Prestataires suivis : 30</li><li>Liens d'accès prestataires : 15</li><li>Signatures : 60 par an</li><li>Stockage : 6 Go</li><li>Import d'un DUERP existant : 3</li></ul>
       </div>
       <div class="bloc"><b>En plus</b>
-        <ul><li>Connecter un assistant</li><li>Rendez-vous annuel d'1 h avec l'expert BTRY Solution <span class="bientot">bientôt</span></li></ul>
+        <ul><li>Connecter un assistant</li><li>Poser une question technique à l'expert</li><li>Rendez-vous annuel d'1 h avec l'expert</li></ul>
       </div>
     </div>
     <div class="offre">
       <div class="nom">Sur mesure</div>
-      <div class="pour">Réseaux, groupes de sociétés, besoin d'un expert à la demande</div>
+      <div class="pour">Réseaux, groupes de sociétés, administrations, fonction publique, besoin d'un expert à la demande</div>
       <div class="prix" style="font-size:15pt">Sur devis</div>
       <div class="ligne-prix">repère interne : à partir d'environ 119 €/mois</div>
-      <div class="bloc"><b>Au-delà de 5 établissements · utilisateurs illimités, droits sur mesure <span class="bientot">bientôt</span></b></div>
+      <div class="bloc"><b>Au-delà de 5 établissements · utilisateurs illimités, droits sur mesure</b></div>
       <div class="bloc"><b>Tous les modules</b></div>
       <div class="bloc"><b>Volumes sur mesure</b></div>
       <div class="bloc"><b>En plus</b>
-        <ul><li>Tout Pro</li><li>Expert BTRY Solution à la demande <span class="bientot">bientôt</span></li><li>Reprise de l'historique</li><li>Formation, déploiement accompagné</li></ul>
+        <ul><li>Tout Pro</li><li>Expert à la demande</li><li>Reprise de l'historique</li><li>Formation, déploiement accompagné</li></ul>
       </div>
     </div>
   </div>
-  <p class="note" style="margin:-1mm 0 3mm"><span class="bientot">bientôt</span> Pas encore livré : voir page 2. Les prestataires invités par lien ne comptent pas comme utilisateurs.</p>
+  <p class="note" style="margin:-1mm 0 3mm">Les prestataires invités par lien ne comptent pas comme utilisateurs.</p>
 
   <h3 style="margin-top:2mm">Les règles de la gamme</h3>
   <div class="carte" style="margin-bottom:0;padding:3.5mm 5mm;font-size:8.8pt">
     <ul>
-      <li><b>Toutes les offres voient toutes les obligations.</b> Ce qui revient chaque année n'est jamais limité ; seul ce qui s'utilise à volonté a un quota.</li>
-      <li><b>Au quota, seule la création d'un nouvel élément est bloquée.</b> Tout ce qui existe reste lisible, exportable et suivi ; le compteur repart à la date anniversaire.</li>
+      <li><b>Toutes les offres voient toutes les obligations.</b> Seul l'usage à volonté a un quota ; au quota, seule la création est bloquée, et le compteur repart à la date anniversaire.</li>
       <li><b>Mensuel sans engagement, ou annuel à −15 %.</b> Aucun frais de mise en service.</li>
-      <li><b>1er mois offert sur Essentiel</b>, en mensuel comme en annuel : toutes fonctions, sans carte bancaire. À la fin du mois, le client choisit mensuel ou annuel ; sans choix, le dossier passe en lecture seule, rien n'est effacé.</li>
-      <li><b>L'expert est un expert en sécurité de BTRY Solution</b> : conseil technique de prévention, jamais d'avis juridique, jamais « vous êtes conforme ».</li>
+      <li><b>30 jours d'essai gratuit sur Essentiel</b>, sans carte bancaire. Tout s'essaie ; valider, signer ou envoyer un document demande de s'abonner. Au jour 30 sans abonnement, le compte passe en veille : lecture, export des données et alertes, plus de saisie.</li>
+      <li><b>L'expert est un expert en sécurité</b> : conseil technique de prévention, jamais d'avis juridique, jamais « vous êtes conforme ».</li>
     </ul>
   </div>
 </section>
 
-<!-- PAGE 2 — LE DÉTAIL -->
+<!-- PAGE 2 — LA GRILLE -->
 <section class="page">
-  <h2>Tous les modules, offre par offre</h2>
-  <table class="modules">
-    <tr><th></th><th class="c">Essentiel</th><th class="c">Pro</th><th class="c">Sur mesure</th></tr>
-    <tr><td>Établissements</td><td class="c lim">1</td><td class="c lim">jusqu'à 5</td><td class="c lim">au-delà de 5</td></tr>
-    <tr><td>Utilisateurs <span class="bientot">bientôt</span></td><td class="c lim">1</td><td class="c lim">jusqu'à 5</td><td class="c lim">illimités, droits sur mesure</td></tr>
-
-    <tr class="groupe"><td colspan="4">Illimité dans toutes les offres : les obligations</td></tr>
-    <tr><td>DUERP : unités de travail, cotation, versions conservées 40 ans</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
-    <tr><td>Vérifications périodiques et calendrier</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
-    <tr><td>Ce qui doit être en place (en permanence, en cas de…)</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
-    <tr><td>Registre de sécurité : dépôt des rapports</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
-    <tr><td>Plan d'actions</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
-    <tr><td>Équipements et zones</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
-    <tr><td>Équipe : salariés, titres et visites</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
-    <tr><td>Prescriptions particulières</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
-    <tr><td>Carnet sanitaire : relevés et analyses</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
-    <tr><td>Registre d'accessibilité et affiche QR</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
-    <tr><td>Documents obligatoires, Préparer un contrôle, Comprendre</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
-    <tr><td>Relances email des échéances <span class="bientot">bientôt</span></td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
-    <tr><td>Téléchargement de ses données, y compris après résiliation <span class="bientot">bientôt</span></td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
-
-    <tr class="groupe"><td colspan="4">Limité selon l'offre : l'usage à volonté</td></tr>
-    <tr><td>Permis de feu</td><td class="c lim">10 par an</td><td class="c">illimité</td><td class="c">illimité</td></tr>
-    <tr><td>Plans de prévention<sup>*</sup></td><td class="c lim">5 par an</td><td class="c">illimité</td><td class="c">illimité</td></tr>
-    <tr><td>Prestataires suivis (attestations, vigilance)</td><td class="c lim">10</td><td class="c lim">50</td><td class="c">illimité</td></tr>
-    <tr><td>Liens d'accès prestataires actifs</td><td class="c lim">5</td><td class="c lim">50</td><td class="c">illimité</td></tr>
-    <tr><td>Signatures électroniques</td><td class="c lim">20 par an</td><td class="c lim">200 par an</td><td class="c">sur mesure</td></tr>
-    <tr><td>Stockage des documents</td><td class="c lim">2 Go</td><td class="c lim">20 Go</td><td class="c">sur mesure</td></tr>
-    <tr><td>Import d'un DUERP existant</td><td class="c lim">1</td><td class="c">illimité</td><td class="c">reprise faite par nous</td></tr>
-    <tr><td>Connecter un assistant</td><td class="c non">—</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
-
-    <tr class="groupe"><td colspan="4">Humain : l'expert en sécurité BTRY Solution</td></tr>
-    <tr><td>Aide en ligne et contact pour un problème technique</td><td class="c ok">✓</td><td class="c ok">✓</td><td class="c ok">✓</td></tr>
-    <tr><td>Rendez-vous avec l'expert <span class="bientot">bientôt</span></td><td class="c non">—</td><td class="c lim">1 h par an</td><td class="c">à la demande</td></tr>
-    <tr><td>Formation, reprise de l'historique, déploiement accompagné</td><td class="c non">—</td><td class="c non">—</td><td class="c ok">✓</td></tr>
-
+  <h2>La grille, offre par offre</h2>
+  <table class="grille-t">
+    <tr><th></th><th class="c essai">Essai<br><span style="font-weight:500;font-size:7.6pt;color:var(--muted)">30 jours, sur Essentiel</span></th><th class="c">Essentiel</th><th class="c">Pro</th><th class="c">Sur mesure</th></tr>
+    <tr class="groupe"><td colspan="5">Taille du dossier</td></tr>
+    <tr><td>Établissements</td><td class="c essai "><b>1</b></td><td class="c"><b>1</b></td><td class="c"><b>jusqu'à 5</b></td><td class="c"><b>au-delà de 5</b></td></tr>
+    <tr><td>Utilisateurs</td><td class="c essai "><b>1</b></td><td class="c"><b>1</b></td><td class="c"><b>jusqu'à 5</b></td><td class="c"><b>illimités</b></td></tr>
+    <tr><td>Unités de travail du DUERP</td><td class="c essai "><b>3</b></td><td class="c">5</td><td class="c">5</td><td class="c">5</td></tr>
+    <tr><td>Zones</td><td class="c essai "><b>1</b></td><td class="c">3</td><td class="c">3</td><td class="c">3</td></tr>
+    <tr><td>Équipements</td><td class="c essai "><b>5</b></td><td class="c">illimité</td><td class="c">illimité</td><td class="c">illimité</td></tr>
+    <tr><td>Prescriptions particulières</td><td class="c essai "><b>1</b></td><td class="c">illimité</td><td class="c">illimité</td><td class="c">illimité</td></tr>
+    <tr class="groupe"><td colspan="5">Savoir et suivre : jamais limité</td></tr>
+    <tr><td>Obligations, calendrier, registre de sécurité, plan d'actions, équipe, carnet sanitaire</td><td class="c essai "><span class="ok">✓</span></td><td class="c"><span class="ok">✓</span></td><td class="c"><span class="ok">✓</span></td><td class="c"><span class="ok">✓</span></td></tr>
+    <tr><td>Relances email des échéances</td><td class="c essai "><span class="ok">✓</span></td><td class="c"><span class="ok">✓</span></td><td class="c"><span class="ok">✓</span></td><td class="c"><span class="ok">✓</span></td></tr>
+    <tr><td>Export de ses données, y compris après résiliation</td><td class="c essai "><span class="ok">✓</span></td><td class="c"><span class="ok">✓</span></td><td class="c"><span class="ok">✓</span></td><td class="c"><span class="ok">✓</span></td></tr>
+    <tr class="groupe"><td colspan="5">Valider : documents définitifs</td></tr>
+    <tr><td>DUERP validé et figé (aperçu « Projet » pendant l'essai)</td><td class="c essai "><span class="abo">s'abonner</span></td><td class="c"><span class="ok">✓</span></td><td class="c"><span class="ok">✓</span></td><td class="c"><span class="ok">✓</span></td></tr>
+    <tr><td>Dossier de contrôle, registre consolidé</td><td class="c essai "><span class="abo">s'abonner</span></td><td class="c"><span class="ok">✓</span></td><td class="c"><span class="ok">✓</span></td><td class="c"><span class="ok">✓</span></td></tr>
+    <tr><td>Registre d'accessibilité publié et affiche QR</td><td class="c essai "><span class="abo">s'abonner</span></td><td class="c"><span class="ok">✓</span></td><td class="c"><span class="ok">✓</span></td><td class="c"><span class="ok">✓</span></td></tr>
+    <tr><td>Signatures électroniques</td><td class="c essai "><b>1 test</b></td><td class="c"><b>20 par an</b></td><td class="c"><b>60 par an</b></td><td class="c">sur mesure</td></tr>
+    <tr><td>Liens d'accès prestataires actifs</td><td class="c essai "><b>envoi à soi-même</b></td><td class="c"><b>5</b></td><td class="c"><b>15</b></td><td class="c">illimité</td></tr>
+    <tr class="groupe"><td colspan="5">Usage à volonté</td></tr>
+    <tr><td>Permis de feu (brouillons imprimables pendant l'essai)</td><td class="c essai "><b>10</b></td><td class="c"><b>10 par an</b></td><td class="c"><b>30 par an</b></td><td class="c">illimité</td></tr>
+    <tr><td>Plans de prévention<sup>*</sup> (idem)</td><td class="c essai "><b>5</b></td><td class="c"><b>5 par an</b></td><td class="c"><b>15 par an</b></td><td class="c">illimité</td></tr>
+    <tr><td>Prestataires suivis (attestations, vigilance)</td><td class="c essai "><b>10</b></td><td class="c"><b>10</b></td><td class="c"><b>30</b></td><td class="c">illimité</td></tr>
+    <tr><td>Stockage des documents</td><td class="c essai "><b>2 Go</b></td><td class="c"><b>2 Go</b></td><td class="c"><b>6 Go</b></td><td class="c">sur mesure</td></tr>
+    <tr><td>Import d'un DUERP existant</td><td class="c essai "><b>1</b></td><td class="c"><b>1</b></td><td class="c"><b>3</b></td><td class="c">reprise faite par nous</td></tr>
+    <tr><td>Connecter un assistant</td><td class="c essai "><span class="non">—</span></td><td class="c"><span class="non">—</span></td><td class="c"><span class="ok">✓</span></td><td class="c"><span class="ok">✓</span></td></tr>
+    <tr class="groupe"><td colspan="5">Humain : l'expert en sécurité</td></tr>
+    <tr><td>Aide en ligne, contact pour un problème technique</td><td class="c essai "><span class="ok">✓</span></td><td class="c"><span class="ok">✓</span></td><td class="c"><span class="ok">✓</span></td><td class="c"><span class="ok">✓</span></td></tr>
+    <tr><td>Poser une question technique à l'expert</td><td class="c essai "><span class="non">—</span></td><td class="c"><span class="non">—</span></td><td class="c"><span class="ok">✓</span></td><td class="c"><span class="ok">✓</span></td></tr>
+    <tr><td>Rendez-vous avec l'expert</td><td class="c essai "><span class="non">—</span></td><td class="c"><span class="non">—</span></td><td class="c"><b>1 h par an</b></td><td class="c">à la demande</td></tr>
+    <tr><td>Formation, reprise de l'historique, déploiement accompagné</td><td class="c essai "><span class="non">—</span></td><td class="c"><span class="non">—</span></td><td class="c"><span class="non">—</span></td><td class="c"><span class="ok">✓</span></td></tr>
   </table>
-  <p class="note"><span class="bientot">bientôt</span> Pas encore livré. Les relances et le téléchargement des données arrivent avec le passage sur Clever Cloud. Le multi-utilisateur est en conception (ADR en préparation) : membres invités par email, rôles propriétaire, membre et lecture seule. La demande d'assistance existe dans l'app mais ne part encore vers personne (ADR-050). Tout est à mettre en service avant de publier les offres.<br>
-  * Le plan de prévention est une obligation légale dès que le chantier remplit les conditions (art. R. 4512-6 et R. 4512-7 CT) : voir « À trancher ».</p>
-</section>
-
-<!-- PAGE 3 — BENCHMARK -->
-<section class="page serre">
-  <h2>Sur quoi reposent ces propositions</h2>
-  <p class="note" style="margin-bottom:4mm">Prix publics relevés le 2 novembre 2026 sur les sites des éditeurs. Plusieurs comparatifs sont écrits par l'éditeur sur lui-même.</p>
-
-  <div class="deux" style="margin:0 0 4mm">
-    <div class="carte ambre" style="margin-bottom:0;padding:3.5mm 5mm">
-      <h3 style="margin-top:0">Pourquoi 29 €</h3>
-      <p style="margin:0">Le prix d'un seul registre de sécurité chez Securylog, et moins que la combinaison la moins chère de trois outils spécialisés (≈ 32 €/mois). Rojer en couvre huit.</p>
-    </div>
-    <div class="carte ambre" style="margin-bottom:0;padding:3.5mm 5mm">
-      <h3 style="margin-top:0">Pourquoi 69 €, et le multi-utilisateur en Pro</h3>
-      <p style="margin:0">≈ 14 € par site contre ≈ 19 € chez Deemply. Et la plupart des TPE n'ont qu'un site : c'est le 2ᵉ utilisateur (un responsable, un associé) qui les fera passer en Pro.</p>
-    </div>
-  </div>
-  <div class="kpis">
-    <div class="kpi"><div class="chiffre">19-29 €</div><div class="legende">par mois : le prix d'un seul registre (DUERP ou registre de sécurité)</div></div>
-    <div class="kpi"><div class="chiffre">32-58 €</div><div class="legende">par mois pour réunir DUERP + registre de sécurité + accessibilité chez des spécialistes</div></div>
-    <div class="kpi"><div class="chiffre">≈ 19 €</div><div class="legende">par bâtiment et par mois chez Deemply, notre concurrent le plus proche</div></div>
-    <div class="kpi"><div class="chiffre">800 + 400 €</div><div class="legende">création puis mise à jour annuelle d'un DUERP par un consultant</div></div>
-  </div>
-
-  <table>
-    <tr><th>Éditeur</th><th>Ce qu'il fait</th><th>Prix</th><th>Engagement</th><th>Humain</th></tr>
-    <tr><td><b>Deemply</b></td><td>Plateforme multi-modules, pour les équipes QHSE</td><td>Gratuit (1 bâtiment) · dès 490 €/an</td><td>Annuel</td><td>Assistance ; mise en service payante</td></tr>
-    <tr><td><b>Securylog</b></td><td>Registre de sécurité</td><td>29 €/mois ou 319 €/an</td><td>36 mois</td><td>Interlocuteur en Premium</td></tr>
-    <tr><td><b>Vigie</b></td><td>Registre de sécurité, petits ERP</td><td>19 €/mois, tarif fondateur</td><td>Aucun</td><td>—</td></tr>
-    <tr><td><b>DUPrev'</b></td><td>DUERP</td><td>19 €/mois ou 179 €/an · +9 €/entreprise</td><td>12 mois</td><td>1 analyse expert par an</td></tr>
-    <tr><td><b>DUERP.ai</b></td><td>DUERP (IA)</td><td>9,90 €/mois</td><td>Aucun</td><td>Email</td></tr>
-    <tr><td><b>France DUERP</b></td><td>Générateur de DUERP</td><td>29 € + 2,99 €/mois</td><td>Aucun</td><td>—</td></tr>
-    <tr><td><b>ALEA Prevention</b></td><td>DUERP, PME multi-sites</td><td>Licence experte 89 €/mois</td><td>Annuel + formation</td><td>Hotline (clients formés)</td></tr>
-    <tr><td><b>ACHOP</b></td><td>Registre d'accessibilité</td><td>9,99 €/mois</td><td>36 mois</td><td>—</td></tr>
-    <tr><td><b>Repères « expert »</b></td><td>Juritravail · Legalstart · Captain Contrat Premium</td><td>50 € · 30-50 € · ≈ 249 €/mois</td><td>—</td><td>Juriste, avocat</td></tr>
-  </table>
-
-</section>
-
-<!-- PAGE 4 — À TRANCHER -->
-<section class="page">
-  <h2>Les constats qui fondent la gamme</h2>
-  <table class="serre-t">
-    <tr><th style="width:44%">Constat</th><th>Ce qu'on en fait</th></tr>
-    <tr><td>Un registre seul se vend 19-29 €/mois ; trois outils spécialisés réunis, 32 à 58 €</td><td>Essentiel à 29 €, avec tous les modules : le prix d'un registre, sous la combinaison la moins chère.</td></tr>
-    <tr><td>Hors des petits outils à un seul registre, l'engagement est la règle (12 à 36 mois)</td><td>Mensuel résiliable sur toutes les offres publiques.</td></tr>
-    <tr><td>La remise annuelle va de 8 % (Securylog) à 20 % (DUPrev')</td><td>−15 % sur l'annuel, au milieu de la fourchette.</td></tr>
-    <tr><td>Deemply et DUPrev' attirent avec une offre gratuite bridée</td><td>Le 1er mois offert sur Essentiel, en mensuel comme en annuel, plutôt qu'un gratuit bridé qui obligerait à cacher des obligations.</td></tr>
-    <tr><td>Le site supplémentaire se facture 9 à 19 €, et la cible a presque toujours un seul site</td><td>1 site en Essentiel, jusqu'à 5 au forfait en Pro (≈ 14 €/site), au-delà sur devis.</td></tr>
-    <tr><td>Deemply : 1 utilisateur en gratuit, illimités en Pro ; Securylog : plusieurs utilisateurs par site</td><td>1 utilisateur en Essentiel, 5 en Pro : le levier de montée en gamme pour un site unique.</td></tr>
-    <tr><td>L'humain multiplie le prix par 3 à 10. Pour une TPE, seul DUPrev' inclut un expert : une analyse par an, sur le DUERP seul</td><td>Rendez-vous annuel sur tout le dossier en Pro, expert à la demande sur devis.</td></tr>
-  </table>
-  <p class="note">Autres repères : presque tous les concurrents vendent de l'IA, et chaque obligation de Rojer cite son article. Facturer la mise en service irrite les clients ; Rojer n'en facture pas.</p>
-
-  <h2 style="margin-top:6mm">À trancher avant de publier</h2>
-  <div class="carte">
-    <ul>
-      <li><b>Les plans de prévention en Essentiel.</b> Ils entrent dans la règle (un usage par chantier), mais c'est une obligation légale dès que le chantier remplit les conditions. Cinq par an couvrent presque toutes les TPE. Si aucune obligation légale ne doit jamais être limitée, on les passe en illimité et la limite ne porte plus que sur les permis de feu.</li>
-      <li><b>Le cadre de l'expert.</b> Conseil technique de sécurité et de prévention, pas consultation juridique, qui est réservée aux professions du droit (loi du 31 décembre 1971). À écrire dans les CGV.</li>
-      <li><b>La capacité de l'expert.</b> 1 h par an et par client en Pro, préparation comprise : environ 2 h, soit environ 140 € à 70 €/h (hypothèse à remplacer par le coût réel de BTRY Solution). Pro laisse alors environ 560 € par an. Répartir les rendez-vous sur l'année.</li>
-      <li><b>À livrer avant la publication :</b> relances email, téléchargement des données, multi-utilisateur, envoi de la demande d'assistance, et le décompte des quotas dans l'app.</li>
-      <li><b>La fin de l'essai.</b> Sans choix d'offre, le dossier passe en lecture seule. Préciser ensuite ce qui reste consultable du DUERP, dont la loi impose la conservation pendant 40 ans.</li>
-      <li><b>Le multi-utilisateur</b> est vendu en Pro mais n'existe pas encore. Il est en conception : ADR en préparation, membres invités par email, trois rôles. Tous les membres comptent, rôle lecture seule et invitations en attente compris ; les prestataires invités par lien ne comptent pas (ADR-054, brouillon). Quand un client passe à une offre inférieure, aucun membre n'est retiré, seules les nouvelles invitations sont bloquées. À livrer avant de publier Pro.</li>
-      <li><b>Ne pas promettre</b> une application mobile ou des rappels par SMS.</li>
-      <li><b>Le paiement en ligne</b> : chantier en cours (`lot/abonnements-stripe`, ADR-053).</li>
-    </ul>
-  </div>
-
-</section>
-
-<!-- PAGE 5 -->
-<section class="page">
-  <h3>Messages clés</h3>
-  <div class="carte bleue">
-    <ul>
-      <li>« Tous vos registres de prévention au même endroit. Résiliable à tout moment. »</li>
-      <li>« Rien à paramétrer : vos obligations sont déjà écrites, article par article. »</li>
-      <li>« Aucune obligation n'est réservée à une offre plus chère. »</li>
-      <li>« Le premier mois est offert, sans carte bancaire. »</li>
-      <li>Pro : « Toute votre équipe sur le même dossier, et un expert en sécurité qui le relit avec vous chaque année. »</li>
-    </ul>
-  </div>
-
-  <h3>Sources</h3>
-  <ul class="sources">
-    <li>Deemply — deemply.com/tarifs</li>
-    <li>Securylog — securylog.pro</li>
-    <li>Vigie — vigie-registre.fr (site indisponible le 2 novembre, prix lu dans l'index de recherche)</li>
-    <li>DUPrev' (FJ Prévention) — app.fjprevention.fr/tarifs</li>
-    <li>DUERP.ai — duerp.ai/tarifs (service annoncé « bientôt disponible »)</li>
-    <li>France DUERP — franceduerp.fr/duerp/logiciel</li>
-    <li>ALEA Prevention — alea-prevention.com/pme-la-solution-pour-vos-salaries</li>
-    <li>ACHOP — achop.fr/registre-accessibilite.html</li>
-    <li>Prix des consultants DUERP — app.fjprevention.fr/blog/logiciel-document-unique-gratuit-comparatif ; duerp-express.fr/duerp-prix</li>
-    <li>Repères juridiques — independant.io/legalstart-ou-captain-contrat ; juritravail.com ; vitepromo.com (Captain Contrat)</li>
-  </ul>
+  <p class="note">Pendant l'essai, le calendrier signale qu'il ne compte que 5 équipements : les autres ajouteront leurs vérifications. Les maximums de 5 unités de travail et de 3 zones valent pour tout le produit.<br>
+  * Le plan de prévention est une obligation légale dès que le chantier remplit les conditions (art. R. 4512-6 et R. 4512-7 CT). Un brouillon reste toujours imprimable.</p>
 </section>
 
 </body>

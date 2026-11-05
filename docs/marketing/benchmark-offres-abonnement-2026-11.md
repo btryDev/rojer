@@ -9,14 +9,14 @@ document mis en page est `rojer-offres-abonnement-2026-11.pdf`, généré depuis
 
 | | Essentiel | Pro | Sur mesure |
 |---|---|---|---|
-| Pour qui | Un seul site | Plusieurs sites ou plusieurs personnes | Réseaux, groupes de sociétés, expert à la demande |
-| Mensuel sans engagement | 29 € | 69 € | Sur devis (repère interne : dès ≈ 119 €/mois) |
-| Annuel (−15 %, arrondi) | 295 € | 699 € | Au contrat |
+| Pour qui | Un seul site | Plusieurs sites ou plusieurs personnes | Réseaux, groupes de sociétés, administrations, fonction publique, expert à la demande |
+| Mensuel sans engagement | 29 € | 89 € | Sur devis (repère interne : dès ≈ 119 €/mois) |
+| Annuel (−15 %, arrondi) | 295 € | 899 € | Au contrat |
 | 1er mois offert | **oui**, en mensuel comme en annuel, sans carte bancaire | — | — |
 | Établissements | 1 | jusqu'à 5 | au-delà de 5 |
-| Utilisateurs (bientôt) | 1 | jusqu'à 5 | illimités, droits sur mesure |
+| Utilisateurs | 1 | jusqu'à 5 | illimités, droits sur mesure |
 
-Tous les modules sont dans toutes les offres ; Essentiel a des volumes limités sur l'usage à volonté (détail ci-dessous). Les prestataires invités par lien ne comptent pas comme utilisateurs.
+Tous les modules sont dans toutes les offres ; Essentiel et Pro ont des volumes limités sur l'usage à volonté ; ceux de Pro valent trois fois ceux d'Essentiel (détail ci-dessous). Les prestataires invités par lien ne comptent pas comme utilisateurs.
 
 ### Règles
 
@@ -28,7 +28,7 @@ Tous les modules sont dans toutes les offres ; Essentiel a des volumes limités 
 - **Fin du mois offert** : le client choisit mensuel ou annuel, Essentiel ou Pro ; sans choix, le
   dossier passe en lecture seule, rien n'est effacé.
 - **Aucun frais de mise en service.**
-- **L'expert est un expert en sécurité de BTRY Solution** : conseil technique de
+- **L'expert est un expert en sécurité** : conseil technique de
   prévention, jamais d'avis juridique, jamais « vous êtes conforme ».
 
 ### Les modules, offre par offre
@@ -36,7 +36,7 @@ Tous les modules sont dans toutes les offres ; Essentiel a des volumes limités 
 | Module | Essentiel | Pro | Sur mesure |
 |---|---|---|---|
 | Établissements | 1 | jusqu'à 5 | au-delà de 5 |
-| Utilisateurs (bientôt) | 1 | jusqu'à 5 | illimités, droits sur mesure |
+| Utilisateurs | 1 | jusqu'à 5 | illimités, droits sur mesure |
 | **Illimité partout : les obligations** | | | |
 | DUERP (unités, cotation, versions conservées 40 ans) | ✓ | ✓ | ✓ |
 | Vérifications périodiques et calendrier | ✓ | ✓ | ✓ |
@@ -49,27 +49,30 @@ Tous les modules sont dans toutes les offres ; Essentiel a des volumes limités 
 | Carnet sanitaire : relevés et analyses | ✓ | ✓ | ✓ |
 | Registre d'accessibilité et affiche QR | ✓ | ✓ | ✓ |
 | Documents obligatoires, Préparer un contrôle, Comprendre | ✓ | ✓ | ✓ |
-| Relances email des échéances (bientôt) | ✓ | ✓ | ✓ |
-| Téléchargement de ses données, y compris après résiliation (bientôt) | ✓ | ✓ | ✓ |
+| Relances email des échéances | ✓ | ✓ | ✓ |
+| Téléchargement de ses données, y compris après résiliation | ✓ | ✓ | ✓ |
 | **Limité selon l'offre : l'usage à volonté** | | | |
-| Permis de feu | 10 par an | illimité | illimité |
-| Plans de prévention (*) | 5 par an | illimité | illimité |
-| Prestataires suivis | 10 | 50 | illimité |
-| Liens d'accès prestataires actifs | 5 | 50 | illimité |
-| Signatures électroniques | 20 par an | 200 par an | sur mesure |
-| Stockage des documents | 2 Go | 20 Go | sur mesure |
-| Import d'un DUERP existant | 1 | illimité | reprise faite par nous |
+| Permis de feu | 10 par an | 30 par an | illimité |
+| Plans de prévention (*) | 5 par an | 15 par an | illimité |
+| Prestataires suivis | 10 | 30 | illimité |
+| Liens d'accès prestataires actifs | 5 | 15 | illimité |
+| Signatures électroniques | 20 par an | 60 par an | sur mesure |
+| Stockage des documents | 2 Go | 6 Go | sur mesure |
+| Import d'un DUERP existant | 1 | 3 | reprise faite par nous |
 | Connecter un assistant | — | ✓ | ✓ |
-| **Humain : l'expert BTRY Solution** | | | |
+| **Humain : l'expert en sécurité** | | | |
 | Aide en ligne et contact pour un problème technique | ✓ | ✓ | ✓ |
-| Rendez-vous avec l'expert (bientôt) | — | 1 h par an | à la demande |
+| Poser une question technique à l'expert | — | ✓ | ✓ |
+| Rendez-vous avec l'expert | — | 1 h par an | à la demande |
 | Formation, reprise de l'historique, déploiement accompagné | — | — | ✓ |
 
-(bientôt) **Pas encore livré.** Relances et téléchargement des données : avec le
+**Pas encore livré** (note interne : le badge « bientôt » a été retiré du PDF
+le 2026-11-04). Relances et téléchargement des données : avec le
 passage sur Clever Cloud (aujourd'hui seuls les emails de connexion et
 d'accès partent ; l'export du titulaire est la dette
 `docs/dette-chantier-porteur-echeance.md` § 1.1). Demande d'assistance :
-enregistrée dans l'app, ne part encore vers personne (ADR-050). Multi-utilisateur : en conception (ADR en préparation), membres invités par email, rôles propriétaire, membre et lecture seule. À mettre en
+enregistrée dans l'app, ne part encore vers personne (ADR-050). Multi-utilisateur : en conception (ADR en préparation), membres invités par email, rôles propriétaire, membre et lecture seule. Rendez-vous et questions à
+l'expert : rien n'est encore organisé. À mettre en
 service avant de publier les offres.
 
 (*) Le plan de prévention est une obligation légale dès que le chantier
@@ -79,7 +82,7 @@ remplit les conditions (art. R. 4512-6 et R. 4512-7 CT) : voir § 3.
 
 - **29 €** : le prix d'un seul registre de sécurité chez Securylog, et moins
   que la combinaison la moins chère de trois outils spécialisés (≈ 32 €/mois).
-- **69 € pour 5 sites et 5 utilisateurs** : ≈ 14 € par site, contre ≈ 19 € par
+- **89 € pour 5 sites et 5 utilisateurs** : ≈ 18 € par site, contre ≈ 19 € par
   bâtiment chez Deemply, sans devis ni frais d'entrée. La plupart des TPE n'ont
   qu'un site : c'est le 2ᵉ utilisateur (un responsable, un associé) qui les
   fera passer en Pro. Le rendez-vous annuel vaut à lui seul
@@ -116,7 +119,7 @@ clients ; Rojer n'en facture pas.
 
 ## 3. À trancher avant de publier
 
-- **Les plans de prévention en Essentiel** : usage par chantier, donc dans la
+- **Les plans de prévention limités (5 par an en Essentiel, 15 en Pro)** : usage par chantier, donc dans la
   règle, mais obligation légale quand les conditions sont remplies. Cinq par an
   couvrent presque toutes les TPE ; sinon, illimités, et la limite ne porte plus
   que sur les permis de feu.
@@ -124,7 +127,7 @@ clients ; Rojer n'en facture pas.
   (loi du 31 décembre 1971). À écrire dans les CGV.
 - **La capacité de l'expert** : environ 2 h par client et par an en Pro,
   préparation comprise, soit ≈ 140 € à 70 €/h (hypothèse à remplacer par le
-  coût réel de BTRY Solution). Pro laisse alors ≈ 560 €/an.
+  coût réel de BTRY Solution). Pro laisse alors ≈ 760 €/an.
 - **Le multi-utilisateur** : vendu en Pro, pas encore livré (ADR en préparation).
   Tous les membres comptent, rôle lecture seule et invitations en attente
   compris ; les prestataires invités par lien non (ADR-054, brouillon, PR #157). À la descente d'offre, aucun membre retiré, seules les
