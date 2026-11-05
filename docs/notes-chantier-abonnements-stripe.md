@@ -622,8 +622,10 @@ est appliqué ; huit autres sont affichés sans l'être. Trous principaux :
 - **baisse de formule refusée** tant que le compte dépasse les plafonds de la
   formule visée, **et expliquée** : l'écran dit quoi retirer. Le changement
   de formule se fait donc dans Rojer, plus dans le portail (qui garde carte,
-  factures, résiliation) ; une montée prend effet tout de suite, une baisse
-  en fin de période payée ;
+  factures, résiliation) ; une montée prend effet tout de suite, ~~une baisse
+  en fin de période payée~~ [2026-11-05, confirmé par la propriétaire : une
+  baisse aussi, avec crédit au prorata — pas de planification par
+  « subscription schedule », et rien à recréer entre la demande et la bascule] ;
 - **utilisateurs plafonnés : 1 en Essentiel, 5 en Pro**, invitations en
   attente comprises, vérifié à l'invitation et à l'acceptation ;
 - **permis de feu et plans de prévention plafonnés comme prévu** (10 et 5
