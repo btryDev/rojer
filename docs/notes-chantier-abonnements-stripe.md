@@ -658,10 +658,14 @@ est appliqué ; huit autres sont affichés sans l'être. Trous principaux :
   Rojer stockerait à vie. À poser : un délai d'export après la fin de
   l'abonnement (puis suppression ou archivage), cohérent avec la
   conservation du compte jamais payé (12 mois, décision du 2026-11-03) et
-  avec `docs/rgpd.md`. Point dur : la conservation de 40 ans des versions
-  du DUERP (règle 10 de CLAUDE.md) est l'obligation de l'employeur — la
-  rendre possible par un export complet avant la fin du délai, pas en
-  gardant ses données sans fin. Amendera l'ADR-053 § 3.
+  avec `docs/rgpd.md`. **Principe posé par la propriétaire
+  (2026-11-05) : la conservation est à l'utilisateur, pas à Rojer.** Les
+  40 ans des versions du DUERP (règle 10 de CLAUDE.md, qui se lit
+  aujourd'hui comme une charge de Rojer — à reformuler avec ce chantier)
+  sont l'obligation de l'employeur : Rojer lui permet un export complet
+  avant la fin du délai, il ne garde pas ses données sans fin. Restent à
+  trancher : la durée du délai, et ce qui se passe à son terme. Amendera
+  l'ADR-053 § 3.
 
 **Tranché sans elle (à contester si besoin)** : formule inconnue = plafonds
 d'Essentiel, avec alerte ; plafonds comptés par compte ; compteurs annuels
