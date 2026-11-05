@@ -18,6 +18,7 @@ import {
 import { validerFichierImport } from "./format";
 import { constaterEpiDuCompte } from "@/lib/etablissements/epi-constate";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
+import { prendreQuota, RefusQuota } from "@/lib/abonnements/quotas";
 
 /**
  * Import d'un DUERP Excel ou CSV.
@@ -121,7 +122,7 @@ export async function commitImport(
   formData: FormData,
 ): Promise<CommitImportState> {
   await verifierSaisie();
-  const { db } = await assertEtablissementDuCompte(etablissementId);
+  const { compte, db } = await assertEtablissementDuCompte(etablissementId);
 
   const fichier = formData.get("fichier");
   if (!(fichier instanceof File) || fichier.size === 0) {
@@ -216,23 +217,31 @@ export async function commitImport(
   // l'exécution — les unités avant les risques qui les référencent, les
   // risques avant leurs actions, puis la reprise, qui crée l'unité
   // transverse que le fichier ne porte jamais.
-  await db.$transaction(async (tx) => {
-    // `creerEnLotVerifie` (ADR-051) : les parents de chaque lot sont lus par
-    // la transaction — les unités créées juste avant y sont vues.
-    if (ecritures.unitesACreer.length > 0) {
-      await creerEnLotVerifie(tx, "UniteTravail", ecritures.unitesACreer);
-    }
-    if (ecritures.risques.length > 0) {
-      await creerEnLotVerifie(tx, "Risque", ecritures.risques);
-    }
-    if (ecritures.actions.length > 0) {
-      await creerEnLotVerifie(tx, "Action", ecritures.actions);
-    }
-    if (faits) await reprendreFaitsDansDuerp(tx, duerpId, faits);
-  },
-  // Une transaction interactive a 5 s par défaut ; un DUERP importé peut
-  // porter des centaines de risques et d'actions (relecture du 2026-10-08).
-  { timeout: 30_000 });
+  try {
+    await db.$transaction(async (tx) => {
+      // `creerEnLotVerifie` (ADR-051) : les parents de chaque lot sont lus par
+      // la transaction — les unités créées juste avant y sont vues.
+      if (ecritures.unitesACreer.length > 0) {
+        // Limite d'unités de l'essai gratuit (ADR-053 § 14) : refus en bloc,
+        // comme l'ADR-033.
+        await prendreQuota(tx, compte.compteId, "unitesTravail", ecritures.unitesACreer.length);
+        await creerEnLotVerifie(tx, "UniteTravail", ecritures.unitesACreer);
+      }
+      if (ecritures.risques.length > 0) {
+        await creerEnLotVerifie(tx, "Risque", ecritures.risques);
+      }
+      if (ecritures.actions.length > 0) {
+        await creerEnLotVerifie(tx, "Action", ecritures.actions);
+      }
+      if (faits) await reprendreFaitsDansDuerp(tx, duerpId, faits);
+    },
+    // Une transaction interactive a 5 s par défaut ; un DUERP importé peut
+    // porter des centaines de risques et d'actions (relecture du 2026-10-08).
+    { timeout: 30_000 });
+  } catch (e) {
+    if (e instanceof RefusQuota) return { status: "error", message: `${e.motif} Rien n'a été importé.` };
+    throw e;
+  }
   await constaterEpiDuCompte(db, etablissementId);
 
   revalidatePath(`/etablissements/${etablissementId}`);

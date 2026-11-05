@@ -13,6 +13,7 @@ import {
   placesRestantes,
 } from "./plafond-unites";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
+import { creerSousPlafond, placesSousLePlafond } from "@/lib/abonnements/quotas";
 
 /**
  * Cloisonnement : aucune de ces actions ne peut faire confiance à
@@ -83,7 +84,7 @@ export async function choisirSecteur(
   secteurId: string,
 ): Promise<void> {
   await verifierSaisie();
-  const { db, duerp } = await requireDuerp(duerpId);
+  const { compte, db, duerp } = await requireDuerp(duerpId);
 
   const ref = trouverReferentielParId(secteurId);
   if (!ref) throw new Error(`Secteur inconnu : ${secteurId}`);
@@ -121,28 +122,29 @@ export async function choisirSecteur(
   // supprimer les anciennes lui-même.
   const places = placesRestantes(compterUnitesPlafonnees(unitesExistantes));
 
-  await db.$transaction([
-    db.duerp.update({
+  await db.$transaction(async (tx) => {
+    await tx.duerp.update({
       where: { id: duerpId },
       data: {
         referentielSecteurId: secteurId,
         ...(changeDeSecteur ? { reponsesActivitesNonCouvertes: Prisma.DbNull } : {}),
       },
-    }),
-    ...ref.unitesTravailSuggerees
+    });
+    // Pendant l'essai gratuit, le pré-remplissage s'arrête aussi à sa limite
+    // d'unités (ADR-053 § 14), sans refuser : même règle que l'ADR-033.
+    const sousLEssai = await placesSousLePlafond(tx, compte.compteId, "unitesTravail");
+    for (const u of ref.unitesTravailSuggerees
       .filter((u) => !nomsExistants.has(u.nom.toLowerCase()))
-      .slice(0, places)
-      .map((u) =>
-        db.uniteTravail.create({
-          data: {
-            duerpId,
-            nom: u.nom,
-            description: u.description,
-            referentielUniteId: u.id,
-          },
-        }),
-      ),
-  ]);
+      .slice(0, Math.min(places, sousLEssai)))
+      await tx.uniteTravail.create({
+        data: {
+          duerpId,
+          nom: u.nom,
+          description: u.description,
+          referentielUniteId: u.id,
+        },
+      });
+  });
 
   revalidatePath(`/duerp/${duerpId}/secteur`);
   revalidatePath(`/duerp/${duerpId}/unites`);
@@ -177,7 +179,7 @@ export async function ajouterUnite(
   formData: FormData,
 ): Promise<UniteActionState> {
   await verifierSaisie();
-  const { db } = await requireDuerp(duerpId);
+  const { compte, db } = await requireDuerp(duerpId);
 
   const parsed = uniteSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -201,13 +203,17 @@ export async function ajouterUnite(
     return { status: "error", message, fieldErrors: { nom: [message] } };
   }
 
-  await db.uniteTravail.create({
-    data: {
-      duerpId,
-      nom: parsed.data.nom,
-      description: parsed.data.description,
-    },
-  });
+  // Limite d'unités de l'essai gratuit (ADR-053 § 14).
+  const creation = await creerSousPlafond(db, compte.compteId, "unitesTravail", (tx) =>
+    tx.uniteTravail.create({
+      data: {
+        duerpId,
+        nom: parsed.data.nom,
+        description: parsed.data.description,
+      },
+    }),
+  );
+  if (!creation.ok) return { status: "error", message: creation.motif, fieldErrors: { nom: [creation.motif] } };
 
   revalidatePath(`/duerp/${duerpId}/unites`);
   return { status: "success" };

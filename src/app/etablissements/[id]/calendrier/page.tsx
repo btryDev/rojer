@@ -30,6 +30,9 @@ import {
   statutDeLaLecture,
 } from "@/lib/calendrier/etats";
 import { getEtablissement } from "@/lib/etablissements/queries";
+import { getOptionalCompte } from "@/lib/auth/compte";
+import { abonnementDuCompte } from "@/lib/abonnements/saisie";
+import { LIBELLES_PLAFONDS, LIMITES_ESSAI } from "@/lib/abonnements/formules";
 import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
 import {
   compterSansObligation,
@@ -315,6 +318,10 @@ export default async function CalendrierPage({
   await assurerCalendrierAJour(id);
   const etab = await getEtablissement(id);
   if (!etab) notFound();
+  const sessionCompte = await getOptionalCompte();
+  const essaiEnCours =
+    sessionCompte !== null &&
+    (await abonnementDuCompte(sessionCompte.db, sessionCompte.compte.compteId))?.statut === "trialing";
 
   // Une seule horloge pour toute la page, et c'est celle du RENDU : la barre
   // latérale, rendue en parallèle, lit la même, si bien que le registre des
@@ -1015,6 +1022,16 @@ export default async function CalendrierPage({
     ) : (
       "Toutes vos échéances datées, au même endroit. Ouvrez-en une pour la planifier ou déposer son rapport."
     );
+  // L'essai gratuit borne les équipements (ADR-053 § 14) : le calendrier ne
+  // montre que les obligations de ceux qui sont déclarés, il le dit.
+  const descriptionAvecEssai = essaiEnCours ? (
+    <>
+      {descriptionEnTete} Pendant l&apos;essai gratuit, Rojer suit {LIBELLES_PLAFONDS.equipements(LIMITES_ESSAI.equipements)} au
+      plus : le calendrier ne montre que leurs obligations et celles de l&apos;établissement.
+    </>
+  ) : (
+    descriptionEnTete
+  );
 
   // Le zéro de l'instrument. « En retard », « sous 30 jours » et « à venir »
   // se mesurent tous depuis ce jour-là (ADR-011) : la page les colorait sans
@@ -1316,7 +1333,7 @@ export default async function CalendrierPage({
           commandes dans une barre qui suit le défilement. Deux strates au
           lieu de quatre : la page ne fait plus attendre trois bandes
           claires avant sa première donnée. */}
-      <EnTetePage item="calendrier" description={descriptionEnTete}>
+      <EnTetePage item="calendrier" description={descriptionAvecEssai}>
         {/* La seule commande de l'en-tête : elle change la vue de la page.
             Deux onglets sur du vide seraient un décor — la bascule
             n'apparaît que si le calendrier a des lignes à lire. */}

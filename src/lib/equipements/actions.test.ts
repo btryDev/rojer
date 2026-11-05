@@ -32,6 +32,9 @@ const h = vi.hoisted(() => {
   };
 
   const prisma = {
+    // La création passe par la porte des plafonds, dans une transaction
+    // (ADR-053 § 14) : le même client simulé y sert.
+    $transaction: async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma),
     equipement: {
       // Une PHOTO, comme la base en rend une. [2026-10-14 : plus aucune lecture
       // de l'action ne passe par ici — elles sont bornées au compte, par
@@ -187,6 +190,7 @@ vi.mock("@/lib/auth/scope", () => ({
   // La garde rend aussi le client borné (ADR-051) : ici, le client simulé.
   assertEtablissementDuCompte: async (...a: unknown[]) => ({
     user: (await (h.assertOwnership as (...x: unknown[]) => unknown)(...a)) ?? { id: "u1" },
+    compte: { compteId: "user-1", role: "owner" },
     db: await (await import("@/test/garde-simulee")).clientDuCompteSimule(),
   }),
 }));

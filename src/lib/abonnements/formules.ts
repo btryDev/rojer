@@ -34,6 +34,11 @@ export const INTERVALLE_STRIPE = { mensuel: "month", annuel: "year" } as const s
 export type Quotas = {
   etablissements: number | null;
   membres: number | null;
+  /** Sans limite dans les formules payantes ; bornés pendant l'essai (`LIMITES_ESSAI`). */
+  equipements: number | null;
+  unitesTravail: number | null;
+  zones: number | null;
+  prescriptions: number | null;
   permisDeFeuParAn: number | null;
   plansDePreventionParAn: number | null;
   prestataires: number | null;
@@ -54,6 +59,10 @@ export const FORMULES = {
     quotas: {
       etablissements: 1,
       membres: 1,
+      equipements: null,
+      unitesTravail: null,
+      zones: null,
+      prescriptions: null,
       permisDeFeuParAn: 10,
       plansDePreventionParAn: 5,
       prestataires: 10,
@@ -71,6 +80,10 @@ export const FORMULES = {
     quotas: {
       etablissements: 5,
       membres: 5,
+      equipements: null,
+      unitesTravail: null,
+      zones: null,
+      prescriptions: null,
       permisDeFeuParAn: 30,
       plansDePreventionParAn: 15,
       prestataires: 30,
@@ -85,6 +98,20 @@ export const FORMULES = {
 } as const satisfies Record<string, Formule>;
 
 export type CleFormule = keyof typeof FORMULES;
+
+/**
+ * Les limites de l'essai gratuit (grille du 2026-11-05), qui priment sur la
+ * formule essayée ; le reste suit ses volumes. Unités de travail comptées
+ * hors « Risques transverses », comme l'ADR-033.
+ */
+export const LIMITES_ESSAI = {
+  etablissements: 1,
+  membres: 1,
+  unitesTravail: 3,
+  zones: 1,
+  equipements: 5,
+  prescriptions: 1,
+} as const satisfies Partial<Quotas>;
 /** De la plus petite à la plus grande : la première est celle du refus par défaut. */
 export const CLES_FORMULES = Object.keys(FORMULES) as CleFormule[];
 
@@ -122,6 +149,10 @@ const pluriel = (n: number, un: string, plusieurs: string) => `${n} ${n > 1 ? pl
 export const LIBELLES_PLAFONDS = {
   etablissements: (n: number) => pluriel(n, "établissement", "établissements"),
   membres: (n: number) => pluriel(n, "utilisateur", "utilisateurs"),
+  equipements: (n: number) => pluriel(n, "équipement", "équipements"),
+  unitesTravail: (n: number) => pluriel(n, "unité de travail", "unités de travail"),
+  zones: (n: number) => pluriel(n, "zone", "zones"),
+  prescriptions: (n: number) => pluriel(n, "prescription particulière", "prescriptions particulières"),
   prestataires: (n: number) => pluriel(n, "prestataire", "prestataires"),
   permisDeFeuParAn: (n: number) => `${pluriel(n, "permis de feu", "permis de feu")} par an`,
   plansDePreventionParAn: (n: number) => `${pluriel(n, "plan de prévention", "plans de prévention")} par an`,

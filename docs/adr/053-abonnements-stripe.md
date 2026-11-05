@@ -220,6 +220,19 @@ et sans croire une information qui ne vient pas de Stripe.
      baisse est refusée tant qu'ils dépassent (Atlassian, monday). Ce qui
      dépasserait se lit par `depassements(db, compteId, formule)` ; les
      plafonds annuels ne bloquent jamais une baisse.
+   - **Limites de l'essai** [2026-11-05, A3 ; grille arrêtée le même jour] :
+     pendant l'essai (`statut = trialing`), `LIMITES_ESSAI` (`formules.ts`)
+     prime sur la formule essayée — 1 établissement, 1 utilisateur, 3 unités
+     de travail (hors « Risques transverses », comme l'ADR-033), 1 zone (la
+     zone principale, née avec l'établissement), 5 équipements, 1
+     prescription particulière ; le reste suit les volumes de la formule.
+     Ces quatre derniers sont sans limite dans les formules payantes.
+     Équipements et prescriptions se comptent retirés compris (retirer puis
+     recréer ne contourne rien). Un lot (pré-remplissage d'équipements,
+     import d'un DUERP) est créé en entier ou refusé ; les unités suggérées
+     par le secteur s'arrêtent à la limite sans refuser
+     (`placesSousLePlafond`), comme à l'ADR-033. Le calendrier dit, pendant
+     l'essai, qu'il ne suit que 5 équipements.
    - **Condition de lancement** : « Sur mesure » doit avoir sa propre entrée
      dans `FORMULES` (ses plafonds) et sa clé (`lookup_key` ou
      `metadata.formule` du prix) avant toute vente — sans quoi le refus par

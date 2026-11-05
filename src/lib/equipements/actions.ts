@@ -37,6 +37,7 @@ import {
 import { MESSAGE_APPAREIL_RETIRE, estAppareilRetire } from "./retrait";
 import { constaterEpiDuCompte } from "@/lib/etablissements/epi-constate";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
+import { creerSousPlafond } from "@/lib/abonnements/quotas";
 
 /**
  * Toute mutation d'équipement invalide le calendrier de vérifications : on
@@ -171,20 +172,24 @@ export async function creerEquipement(
     };
   }
 
-  await db.equipement.create({
-    data: {
-      etablissementId,
-      batimentId: batiment.id,
-      libelle: parsed.data.libelle,
-      categorie: parsed.data.categorie,
-      localisation: parsed.data.localisation,
-      dateMiseEnService: parsed.data.dateMiseEnService,
-      datePeremption: parsed.data.datePeremption,
-      caracteristiques: (caracs ?? undefined) as Prisma.InputJsonValue | undefined,
-      // 2026-10-14 : la clé du matériel non suivi, validée par le schéma.
-      materielNonCouvert: parsed.data.materielNonCouvert ?? null,
-    },
-  });
+  // Limite d'équipements de l'essai gratuit (ADR-053 § 14).
+  const creation = await creerSousPlafond(db, compte.compteId, "equipements", (tx) =>
+    tx.equipement.create({
+      data: {
+        etablissementId,
+        batimentId: batiment.id,
+        libelle: parsed.data.libelle,
+        categorie: parsed.data.categorie,
+        localisation: parsed.data.localisation,
+        dateMiseEnService: parsed.data.dateMiseEnService,
+        datePeremption: parsed.data.datePeremption,
+        caracteristiques: (caracs ?? undefined) as Prisma.InputJsonValue | undefined,
+        // 2026-10-14 : la clé du matériel non suivi, validée par le schéma.
+        materielNonCouvert: parsed.data.materielNonCouvert ?? null,
+      },
+    }),
+  );
+  if (!creation.ok) return { status: "error", message: creation.motif };
   if (estCategorieEpi(parsed.data.categorie)) {
     await constaterEpiDuCompte(db, etablissementId, { regenerer: false });
   }
@@ -560,17 +565,25 @@ export async function creerEquipementsDepuisPreRemplissage(
   }
 
   const batiment = await batimentParDefaut(etablissementId);
-  const result = await creerEnLotVerifie(db, "Equipement",
-    entrees.map((e, i) => ({
-      etablissementId,
-      batimentId: batiment.id,
-      categorie: e.categorie,
-      libelle: libelles[i].data as string,
-      ...(e.caracteristiques && Object.keys(e.caracteristiques).length > 0
-        ? { caracteristiques: e.caracteristiques as Prisma.InputJsonValue }
-        : {}),
-    })),
+  // Limite d'équipements de l'essai gratuit (ADR-053 § 14) : le lot entier ou rien.
+  const lignes = entrees.map((e, i) => ({
+    etablissementId,
+    batimentId: batiment.id,
+    categorie: e.categorie,
+    libelle: libelles[i].data as string,
+    ...(e.caracteristiques && Object.keys(e.caracteristiques).length > 0
+      ? { caracteristiques: e.caracteristiques as Prisma.InputJsonValue }
+      : {}),
+  }));
+  const creation = await creerSousPlafond(
+    db,
+    compte.compteId,
+    "equipements",
+    (tx) => creerEnLotVerifie(tx, "Equipement", lignes),
+    lignes.length,
   );
+  if (!creation.ok) return { status: "error", message: `${creation.motif} Rien n'a été créé.` };
+  const result = creation.valeur;
   if (entrees.some((e) => estCategorieEpi(e.categorie))) {
     await constaterEpiDuCompte(db, etablissementId, { regenerer: false });
   }
