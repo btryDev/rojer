@@ -34,6 +34,8 @@ export const metadata = {
  */
 const LOOKUP_DEFAUT = lookupKey("essentiel", "mensuel");
 
+const PERIODE_QUI_COURT = new Set(["trialing", "active", "past_due"]);
+
 export default async function AbonnementPage({
   searchParams,
 }: {
@@ -94,7 +96,10 @@ export default async function AbonnementPage({
                   <dd className="m-0">{formaterDateLongueFr(ligne.finEssai)}</dd>
                 </>
               )}
-              {ligne?.finPeriode && (
+              {/* Seul un abonnement qui court a une période en cours : ni un
+                  abonnement terminé, ni une pause ou un impayé, où Stripe
+                  n'avance plus la période. */}
+              {ligne?.finPeriode && PERIODE_QUI_COURT.has(ligne.statut ?? "") && (
                 <>
                   <dt className="text-[color:var(--board-slate-mid)]">Période en cours jusqu&apos;au</dt>
                   <dd className="m-0">{formaterDateLongueFr(ligne.finPeriode)}</dd>
@@ -110,11 +115,11 @@ export default async function AbonnementPage({
 
         <div className="mt-6 flex flex-col gap-3">
           <MessageFormulaire ton="alerte">
-            {stripe === "indisponible" ? "Stripe ne répond pas pour le moment : réessayez dans un instant." : null}
+            {stripe === "indisponible" ? "L'opération n'a pas abouti. Réessayez un peu plus tard ; rien ne vous a été facturé." : null}
           </MessageFormulaire>
           <MessageFormulaire ton="info">
             {paiement === "termine"
-              ? "Paiement terminé. L'abonnement s'affiche ici dès que Stripe l'a confirmé, en général en quelques secondes : rechargez la page."
+              ? "Paiement terminé. Votre abonnement s'affiche ici dans quelques secondes : rechargez la page s'il n'apparaît pas."
               : abonnement === "en-cours"
                 ? "Un abonnement est déjà en cours pour ce compte : gérez-le ici plutôt que d'en souscrire un second."
                 : null}
