@@ -87,6 +87,7 @@ export async function ouvrirCheckout(
     annulation,
   }: { customerId: string; priceId: string; metadata: Metadonnees; succes: string; annulation: string },
 ) {
+  await expirerSessionsOuvertes(stripe, customerId);
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     customer: customerId,
@@ -101,6 +102,25 @@ export async function ouvrirCheckout(
   });
   if (!session.url) throw new Error("session Checkout sans adresse");
   return session.url;
+}
+
+/**
+ * Les abonnements d'un client, relus chez Stripe, qui fait foi : notre copie
+ * peut retarder d'un webhook. Les plus récents d'abord ; un client Rojer n'en
+ * a qu'un ou deux (l'essai, puis un réabonnement après résiliation).
+ */
+export async function abonnementsDuClient(stripe: Stripe, customerId: string): Promise<Stripe.Subscription[]> {
+  const liste = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 10 }, { timeout: 5_000 });
+  return liste.data;
+}
+
+/**
+ * Les sessions Checkout encore ouvertes du client, expirées avant d'en ouvrir
+ * une neuve : deux onglets ne paient pas deux abonnements.
+ */
+async function expirerSessionsOuvertes(stripe: Stripe, customerId: string) {
+  const ouvertes = await stripe.checkout.sessions.list({ customer: customerId, status: "open", limit: 10 });
+  await Promise.all(ouvertes.data.map((s) => stripe.checkout.sessions.expire(s.id)));
 }
 
 export type PrixAffiche = { priceId: string; montantCentimes: number; devise: string };

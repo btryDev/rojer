@@ -8,9 +8,9 @@ import { requireCompte } from "@/lib/auth/compte";
 import { publicAppUrl } from "@/lib/email";
 import { clientStripe } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
-import { ouvrirCheckout, ouvrirPortail, prixDesFormules } from "@/lib/stripe/parcours";
+import { abonnementsDuClient, ouvrirCheckout, ouvrirPortail, prixDesFormules } from "@/lib/stripe/parcours";
 import { demarrerEssaiDuCompte, PAGE_ESSAI, type EtatEssai } from "./essai";
-import { abonnementTermine } from "./droits";
+import { abonnementEnCours, nomProvisoire } from "./droits";
 import { estLookupKey } from "./formules";
 import { PAGE_ABONNEMENT, verifierProprietaire, verifierRole } from "./saisie";
 
@@ -49,7 +49,7 @@ export async function ouvrirPortailAction(): Promise<void> {
     // Seulement si le nom est encore le provisoire de l'essai (l'adresse) : un
     // nom saisi au paiement, dans Checkout ou le portail, ne s'écrase pas.
     const client = await stripe.customers.retrieve(ligne.stripeCustomerId);
-    if (!client.deleted && (!client.name || client.name === client.email)) {
+    if (!client.deleted && (!client.name || (client.email && client.name === nomProvisoire(client.email)))) {
       const entreprise = await db.entreprise.findFirst({ orderBy: { createdAt: "asc" }, select: { raisonSociale: true } });
       if (entreprise) await stripe.customers.update(ligne.stripeCustomerId, { name: entreprise.raisonSociale });
     }
@@ -57,7 +57,7 @@ export async function ouvrirPortailAction(): Promise<void> {
   } catch {
     redirect(`${PAGE_ABONNEMENT}?stripe=indisponible`);
   }
-  redirect(url);
+  redirect(url ?? PAGE_ABONNEMENT);
 }
 
 /**
@@ -67,22 +67,25 @@ export async function ouvrirPortailAction(): Promise<void> {
 export async function souscrireAction(formData: FormData): Promise<void> {
   await verifierProprietaire();
   const { stripe, ligne, compteId } = await clientDuCompte();
-  if (ligne.statut && !abonnementTermine(ligne.statut)) redirect(PAGE_ABONNEMENT);
+  if (abonnementEnCours(ligne.statut)) redirect(PAGE_ABONNEMENT);
   const formule = String(formData.get("formule") ?? "");
   if (!estLookupKey(formule)) redirect(PAGE_ABONNEMENT);
-  let url: string;
+  // `null` : un abonnement court déjà chez Stripe (notre copie retardait).
+  let url: string | null = null;
   try {
-    const prix = (await prixDesFormules(stripe)).get(formule);
-    if (!prix) throw new Error("prix introuvable");
-    url = await ouvrirCheckout(stripe, {
-      customerId: ligne.stripeCustomerId,
-      priceId: prix.priceId,
-      metadata: { compteId },
-      succes: `${publicAppUrl()}${PAGE_ABONNEMENT}?paiement=termine`,
-      annulation: `${publicAppUrl()}${PAGE_ABONNEMENT}`,
-    });
+    if (!(await abonnementsDuClient(stripe, ligne.stripeCustomerId)).some((a) => abonnementEnCours(a.status))) {
+      const prix = (await prixDesFormules(stripe)).get(formule);
+      if (!prix) throw new Error("prix introuvable");
+      url = await ouvrirCheckout(stripe, {
+        customerId: ligne.stripeCustomerId,
+        priceId: prix.priceId,
+        metadata: { compteId },
+        succes: `${publicAppUrl()}${PAGE_ABONNEMENT}?paiement=termine`,
+        annulation: `${publicAppUrl()}${PAGE_ABONNEMENT}`,
+      });
+    }
   } catch {
     redirect(`${PAGE_ABONNEMENT}?stripe=indisponible`);
   }
-  redirect(url);
+  redirect(url ?? PAGE_ABONNEMENT);
 }

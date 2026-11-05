@@ -73,13 +73,13 @@ export default async function EssaiPage() {
       </aside>
 
       <main className="flex flex-col px-[var(--board-gutter)] py-10">
-        {/* Le rail est replié sur téléphone : la marque et la sortie y sont
-            redonnées, comme dans la mise en place (`WizardShell`). */}
-        <div className="mb-8 flex items-center justify-between lg:hidden">
-          <Link href="/" className="text-[16px] font-semibold leading-none tracking-[-0.025em]">
+        {/* La sortie, à toutes les tailles ; la marque, sur téléphone seulement,
+            où le rail est replié (comme `WizardShell`). */}
+        <div className="mb-8 flex items-center justify-between">
+          <Link href="/" className="text-[16px] font-semibold leading-none tracking-[-0.025em] lg:hidden">
             Rojer
           </Link>
-          <form action={signOutAction}>
+          <form action={signOutAction} className="ml-auto">
             <button
               type="submit"
               className="inline-flex items-center gap-1.5 text-[12.5px] text-[color:var(--board-slate-mid)] underline decoration-[color:var(--board-slate)] decoration-dotted underline-offset-4 transition-colors hover:text-[color:var(--board-ink)]"

@@ -103,11 +103,9 @@ export const estLookupKey = (v: unknown): v is string => typeof v === "string" &
  */
 export function formuleDuPrix(prix: { lookup_key: string | null; metadata?: Record<string, string> | null }): string | null {
   if (formuleDeLookupKey(prix.lookup_key)) return prix.lookup_key;
-  const f = prix.metadata?.formule;
-  const p = prix.metadata?.periodicite;
-  if (!f || (p !== "mensuel" && p !== "annuel")) return null;
-  const cle = `rojer_${f}_${p}`;
-  return formuleDeLookupKey(cle) ? cle : null;
+  const f = prix.metadata?.formule ?? "";
+  const p = prix.metadata?.periodicite ?? "";
+  return estCle(f) && (PERIODICITES as readonly string[]).includes(p) ? lookupKey(f, p as Periodicite) : null;
 }
 
 /** « 1 établissement », « 5 établissements » ; `null` : sans limite. */

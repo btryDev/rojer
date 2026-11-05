@@ -46,6 +46,7 @@ export function FormulaireEssai({ offres }: { offres: OffreAffichee[] }) {
             >
               <input
                 type="radio"
+                name="periodicite"
                 value={p}
                 checked={periodicite === p}
                 onChange={() => setPeriodicite(p)}
@@ -72,6 +73,7 @@ export function FormulaireEssai({ offres }: { offres: OffreAffichee[] }) {
               >
                 <input
                   type="radio"
+                  name="choix-formule"
                   value={o.formule}
                   checked={active}
                   onChange={() => setChoisie(o.formule)}

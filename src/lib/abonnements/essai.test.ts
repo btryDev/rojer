@@ -9,6 +9,7 @@ const m = vi.hoisted(() => ({
   requireCompteDOnboarding: vi.fn(),
   configurationStripe: vi.fn(),
   contexte: { stripeActif: true, exige: true },
+  listeAbonnements: vi.fn(),
   clientStripe: vi.fn(() => ({})),
   creerClientStripe: vi.fn(),
   demarrerEssai: vi.fn(),
@@ -24,6 +25,7 @@ vi.mock("@/lib/auth/compte", () => ({
 vi.mock("@/lib/stripe/config", () => ({ configurationStripe: m.configurationStripe }));
 vi.mock("@/lib/stripe/client", () => ({ clientStripe: m.clientStripe }));
 vi.mock("@/lib/stripe/parcours", () => ({
+  abonnementsDuClient: m.listeAbonnements,
   creerClientStripe: m.creerClientStripe,
   demarrerEssai: m.demarrerEssai,
   prixDesFormules: m.prixDesFormules,
@@ -68,11 +70,12 @@ beforeEach(() => {
   db.abonnement.findUnique.mockResolvedValue(null);
   m.creerClientStripe.mockImplementation(async () => (m.ordre.push("client"), "cus_1"));
   db.abonnement.create.mockImplementation(async () => m.ordre.push("réservation"));
-  db.abonnement.updateMany.mockImplementation(async (a: { data: { essaiUtiliseLe: Date | null } }) => {
-    m.ordre.push(a.data.essaiUtiliseLe ? "verrou" : "verrou rendu");
+  db.abonnement.updateMany.mockImplementation(async (a: { where: { essaiUtiliseLe: unknown } }) => {
+    m.ordre.push(a.where.essaiUtiliseLe instanceof Date ? "verrou rendu" : "verrou");
     return { count: 1 };
   });
   db.acceptationConditions.create.mockImplementation(async () => (m.ordre.push("acceptation"), { id: "acc_1" }));
+  m.listeAbonnements.mockResolvedValue([]);
   m.demarrerEssai.mockImplementation(async () => m.ordre.push("essai"));
   m.synchroniserClientStripe.mockImplementation(async () => (m.ordre.push("relecture"), { issue: "ecrit" }));
 });
@@ -93,13 +96,13 @@ describe("aiguillageEssai", () => {
     expect(await aiguillageEssai()).toBeNull();
   });
 
-  it("essai déjà pris ou abonnement existant : plus d'écran d'essai ; une réservation interrompue le laisse ouvert", async () => {
+  it("abonnement existant : plus d'écran d'essai ; une réservation ou un démarrage interrompus le laissent ouvert", async () => {
     m.getOptionalCompte.mockResolvedValue(compte());
-    db.abonnement.findUnique.mockResolvedValueOnce({ stripeSubscriptionId: null, essaiUtiliseLe: new Date() });
+    db.abonnement.findUnique.mockResolvedValueOnce({ statut: "canceled", stripeSubscriptionId: "sub_1", essaiUtiliseLe: new Date() });
     expect(await aiguillageEssai()).toBeNull();
-    db.abonnement.findUnique.mockResolvedValueOnce({ stripeSubscriptionId: "sub_1", essaiUtiliseLe: null });
-    expect(await aiguillageEssai()).toBeNull();
-    db.abonnement.findUnique.mockResolvedValueOnce({ stripeSubscriptionId: null, essaiUtiliseLe: null });
+    db.abonnement.findUnique.mockResolvedValueOnce({ statut: null, stripeSubscriptionId: null, essaiUtiliseLe: new Date() });
+    expect(await aiguillageEssai()).toBe("/essai");
+    db.abonnement.findUnique.mockResolvedValueOnce({ statut: null, stripeSubscriptionId: null, essaiUtiliseLe: null });
     expect(await aiguillageEssai()).toBe("/essai");
   });
 });
@@ -115,7 +118,6 @@ describe("demarrerEssaiDuCompte", () => {
     expect(m.demarrerEssai).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ customerId: "cus_1", priceId: "price_e", metadata: { compteId: "c1" } }));
     expect(db.acceptationConditions.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ compteId: "c1", userId: "u1", contexte: "essai", version: expect.any(String), empreinte: expect.stringMatching(/^[0-9a-f]{64}$/) }),
-      select: { id: true },
     });
   });
 
@@ -132,8 +134,8 @@ describe("demarrerEssaiDuCompte", () => {
     expect(m.creerClientStripe).not.toHaveBeenCalled();
   });
 
-  it("essai déjà pris : la page de l'abonnement, pas de second essai", async () => {
-    db.abonnement.findUnique.mockResolvedValue({ stripeCustomerId: "cus_1", stripeSubscriptionId: null, essaiUtiliseLe: new Date() });
+  it("abonnement enregistré : la page de l'abonnement, pas de second essai", async () => {
+    db.abonnement.findUnique.mockResolvedValue({ stripeCustomerId: "cus_1", stripeSubscriptionId: "sub_1", essaiUtiliseLe: new Date() });
     expect(await redirigeVers(demarrerEssaiDuCompte(FORMULE, true))).toBe("/compte/abonnement");
     expect(m.demarrerEssai).not.toHaveBeenCalled();
   });
@@ -146,31 +148,65 @@ describe("demarrerEssaiDuCompte", () => {
     expect(m.demarrerEssai).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ customerId: "cus_ancien" }));
   });
 
-  it("double clic : la réservation déjà posée par l'autre envoi avec le même client est reprise ; un autre client est refusé", async () => {
+  it("double clic : la réservation déjà posée par l'autre envoi l'emporte, son client sert à l'essai", async () => {
     db.abonnement.create.mockRejectedValueOnce({ code: "P2002" });
-    db.abonnement.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({ stripeCustomerId: "cus_1" });
+    db.abonnement.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({ stripeCustomerId: "cus_enregistre" });
     expect(await redirigeVers(demarrerEssaiDuCompte(FORMULE, true))).toBe("/onboarding");
-
-    db.abonnement.create.mockRejectedValueOnce({ code: "P2002" });
-    db.abonnement.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({ stripeCustomerId: "cus_autre" });
-    expect(await demarrerEssaiDuCompte(FORMULE, true)).toMatchObject({ status: "error" });
+    expect(m.demarrerEssai).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ customerId: "cus_enregistre" }));
   });
 
   it("deux envois simultanés : le verrou n'en laisse passer qu'un, l'autre ne touche pas Stripe", async () => {
-    db.abonnement.updateMany.mockResolvedValueOnce({ count: 0 });
+    db.abonnement.updateMany.mockResolvedValueOnce({ count: 0 }).mockResolvedValueOnce({ count: 0 });
     expect(await demarrerEssaiDuCompte(FORMULE, true)).toEqual({ status: "error", message: expect.stringMatching(/déjà en cours/) });
     expect(m.demarrerEssai).not.toHaveBeenCalled();
     expect(db.acceptationConditions.create).not.toHaveBeenCalled();
   });
 
-  it("Stripe échoue après le verrou : le verrou est rendu, un nouvel essai reste possible", async () => {
+  it("Stripe refuse l'essai et confirme n'avoir rien créé : le verrou est rendu, la preuve reste au journal", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     m.demarrerEssai.mockRejectedValue(new Error("panne"));
     expect(await demarrerEssaiDuCompte(FORMULE, true)).toMatchObject({ status: "error" });
     expect(m.ordre).toContain("verrou rendu");
-    expect(db.acceptationConditions.delete).toHaveBeenCalledWith({ where: { id: "acc_1" } });
+    expect(db.acceptationConditions.delete).not.toHaveBeenCalled();
     const rendu = db.abonnement.updateMany.mock.calls[1][0];
     expect(rendu).toEqual({ where: { compteId: "c1", essaiUtiliseLe: expect.any(Date) }, data: { essaiUtiliseLe: null } });
+  });
+
+  it("réponse perdue, l'essai existe chez Stripe : on le relit, on ne rend rien, l'onboarding", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    m.demarrerEssai.mockRejectedValue(new Error("délai dépassé"));
+    m.listeAbonnements.mockResolvedValue([{ id: "sub_1" }]);
+    expect(await redirigeVers(demarrerEssaiDuCompte(FORMULE, true))).toBe("/onboarding");
+    expect(m.ordre).not.toContain("verrou rendu");
+    expect(m.synchroniserClientStripe).toHaveBeenCalledWith(expect.anything(), "cus_1");
+  });
+
+  it("réponse perdue et Stripe injoignable : le verrou est gardé (il expirera), une erreur", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    m.demarrerEssai.mockRejectedValue(new Error("délai dépassé"));
+    m.listeAbonnements.mockRejectedValue(new Error("injoignable"));
+    expect(await demarrerEssaiDuCompte(FORMULE, true)).toMatchObject({ status: "error" });
+    expect(m.ordre).not.toContain("verrou rendu");
+  });
+
+  it("verrou expiré : repris ; si Stripe a déjà l'essai, relu sans en créer un second", async () => {
+    const ancien = new Date(Date.now() - 10 * 60_000);
+    db.abonnement.findUnique.mockResolvedValue({ stripeCustomerId: "cus_1", stripeSubscriptionId: null, essaiUtiliseLe: ancien });
+    db.abonnement.updateMany.mockResolvedValueOnce({ count: 0 }).mockResolvedValueOnce({ count: 1 });
+    m.listeAbonnements.mockResolvedValue([{ id: "sub_1" }]);
+    expect(await redirigeVers(demarrerEssaiDuCompte(FORMULE, true))).toBe("/onboarding");
+    expect(m.demarrerEssai).not.toHaveBeenCalled();
+    expect(db.abonnement.updateMany.mock.calls[1][0].where).toMatchObject({ essaiUtiliseLe: { lt: expect.any(Date) } });
+  });
+
+  it("verrou expiré, rien chez Stripe, nouvel échec : le verrou retrouve sa valeur d'avant, jamais vide", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const ancien = new Date(Date.now() - 10 * 60_000);
+    db.abonnement.findUnique.mockResolvedValue({ stripeCustomerId: "cus_1", stripeSubscriptionId: null, essaiUtiliseLe: ancien });
+    db.abonnement.updateMany.mockResolvedValueOnce({ count: 0 }).mockResolvedValueOnce({ count: 1 });
+    m.demarrerEssai.mockRejectedValue(new Error("panne"));
+    expect(await demarrerEssaiDuCompte(FORMULE, true)).toMatchObject({ status: "error" });
+    expect(db.abonnement.updateMany.mock.calls[2][0].data).toEqual({ essaiUtiliseLe: ancien });
   });
 
   it("Stripe en panne : une erreur affichable qui dit que rien n'a été facturé, sans détail technique", async () => {

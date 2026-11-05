@@ -145,7 +145,7 @@ export function parametresPortail(
         // Après l'essai : l'écart est porté sur la prochaine facture, pas prélevé sur-le-champ.
         proration_behavior: "create_prorations",
       },
-      customer_update: { enabled: true, allowed_updates: ["email", "address", "tax_id"] },
+      customer_update: { enabled: true, allowed_updates: ["name", "email", "address", "tax_id"] },
     },
   };
 }

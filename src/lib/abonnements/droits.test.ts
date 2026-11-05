@@ -100,6 +100,8 @@ describe("gesteAbonnement", () => {
     for (const statut of ["canceled", "incomplete_expired"]) {
       expect(g(ligne({ statut, stripeSubscriptionId: "sub_1", essaiUtiliseLe: new Date() })), statut).toBe("souscrire");
     }
-    expect(g(ligne({ essaiUtiliseLe: new Date() }))).toBe("souscrire");
+    // Un démarrage en cours ou interrompu (verrou, pas d'abonnement) se tranche
+    // sur l'écran d'essai, qui relit Stripe — jamais par un Checkout.
+    expect(g(ligne({ essaiUtiliseLe: new Date() }))).toBe("essai");
   });
 });

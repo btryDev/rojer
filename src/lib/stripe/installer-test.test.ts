@@ -127,7 +127,7 @@ describe("installation d'un compte Stripe de test", () => {
         trial_update_behavior: "continue_trial",
         proration_behavior: "create_prorations",
       },
-      customer_update: { enabled: true, allowed_updates: ["email", "address", "tax_id"] },
+      customer_update: { enabled: true, allowed_updates: ["name", "email", "address", "tax_id"] },
     });
   });
 
