@@ -98,6 +98,14 @@ export const COLONNES_ECARTEES: Record<
     motif: "Métadonnée de la pièce d'un point corrigé (son type), pas une clé de stockage.",
     jamaisEcrite: false,
   },
+  "PieceEtatPermanent.fichierNom": {
+    motif: "Métadonnée d'un écrit annexé au registre (son nom d'origine), pas une clé de stockage.",
+    jamaisEcrite: false,
+  },
+  "PieceEtatPermanent.fichierMime": {
+    motif: "Métadonnée d'un écrit annexé au registre (son type), pas une clé de stockage.",
+    jamaisEcrite: false,
+  },
 };
 
 type Client = Prisma.TransactionClient;

@@ -284,21 +284,26 @@ export async function listerEtatsPermanents(
           },
         }),
     // Les fichiers des écrits annexés au registre (ADR-056) : deux au plus
-    // par ligne, celui en cours et le précédent.
-    db.pieceEtatPermanent.findMany({
-      where: {
-        etablissementId: etablissement.id,
-        etablissement: { entreprise: { userId: user.id } },
-      },
-      select: {
-        id: true,
-        obligationId: true,
-        fichierNom: true,
-        deposeLe: true,
-        enCours: true,
-        remplaceeLe: true,
-      },
-    }),
+    // par ligne, celui en cours et le précédent. Lus seulement si une ligne du
+    // dossier en reçoit un : sinon la page paierait une requête pour rien —
+    // le tableau de bord et Équipe passent par ici (budget de requêtes, CI du
+    // 2026-11-05).
+    !applicables.some((a) => annexeDeLaLigne(a.obligation.id, projete))
+      ? Promise.resolve([])
+      : db.pieceEtatPermanent.findMany({
+          where: {
+            etablissementId: etablissement.id,
+            etablissement: { entreprise: { userId: user.id } },
+          },
+          select: {
+            id: true,
+            obligationId: true,
+            fichierNom: true,
+            deposeLe: true,
+            enCours: true,
+            remplaceeLe: true,
+          },
+        }),
   ]);
   const piecesParObligation = new Map<string, PieceDeLaLigne>();
   const precedentesParObligation = new Map<string, PieceDeLaLigne & { remplaceeLe: Date }>();

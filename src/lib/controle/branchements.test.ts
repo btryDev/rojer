@@ -20,6 +20,9 @@ describe("branchements des fichiers déposés", () => {
     expect(zip).toMatch(/joindreFichiers\(\s*zip,\s*nomDeDossier\(PIECES_ZIP\.rapports\),/);
     expect(zip).toMatch(/joindreFichiers\(\s*zip,\s*nomDeDossier\(PIECES_ZIP\.analyses\),/);
     expect(zip).toMatch(/rapportsZip,\s*rapportsSalariesEcartes,\s*analysesZip,/);
+    // Les écrits annexés au registre (ADR-056).
+    expect(zip).toMatch(/joindreFichiers\(\s*zip,\s*nomDeDossier\(PIECES_ZIP\.annexes\),/);
+    expect(zip).toMatch(/analysesZip,\s*annexesZip,/);
   });
 
   it("le ZIP lit les rapports de CET établissement, et jamais ceux d'une ligne de salarié (M1)", () => {

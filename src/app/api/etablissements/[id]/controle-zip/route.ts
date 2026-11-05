@@ -360,9 +360,13 @@ async function construireArchive(
   // ── 03_Registre_annexes/ — les écrits annexés au registre ───────────
   // Ceux que la fiche « Annexes » liste (ADR-056), fichier en cours seul : le
   // PDF du registre les nomme, le tiers les lit ici.
-  const titreAnnexe = new Map(annexesListees.map((a) => [a.pieceId, a.titre]));
+  // Un objet et non une `Map` : la garde H3 (`branchements.test.ts`) compte
+  // chaque appel de lecture du fichier comme une lecture du stockage.
+  const titreAnnexe: Record<string, string> = Object.fromEntries(
+    annexesListees.map((a) => [a.pieceId, a.titre]),
+  );
   const annexesDeposees = await lire(PIECES_ZIP.annexes, [], () =>
-    annexesDeposeesDuDossier(db, id, [...titreAnnexe.keys()]),
+    annexesDeposeesDuDossier(db, id, Object.keys(titreAnnexe)),
   );
   const annexesZip = await joindreFichiers(
     zip,
@@ -372,7 +376,7 @@ async function construireArchive(
       cle: p.fichierCle,
       nomOriginal: p.fichierNom,
       date: p.deposeLe,
-      etiquette: titreAnnexe.get(p.id) ?? null,
+      etiquette: titreAnnexe[p.id] ?? null,
     })),
     annexesDeposees.length > 0 ? stockage() : null,
     "annexe.pdf",
@@ -700,9 +704,9 @@ async function construireArchive(
     piecesPrestataires,
     piecesPrestatairesPrecedentes,
     rapportsZip,
-    annexesZip,
     rapportsSalariesEcartes,
     analysesZip,
+    annexesZip,
     aRegistreAccessibilite: Boolean(registreAccess?.publie),
     nbPrestataires: prestataires.length,
     datesAttestations: echecs.has(PIECES_ZIP.prestataires)
