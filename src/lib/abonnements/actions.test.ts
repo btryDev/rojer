@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { redirigeVers } from "@/test/redirection";
 
 // Le réabonnement (Checkout) : jamais un second abonnement tant qu'un autre
 // court — ni d'après notre copie, ni d'après Stripe, qui fait foi.
@@ -12,6 +13,7 @@ const m = vi.hoisted(() => ({
   abonnementsDuClient: vi.fn(),
   ouvrirCheckout: vi.fn(),
   prixDesFormules: vi.fn(),
+  synchroniser: vi.fn(async () => ({ issue: "ecrit" })),
 }));
 vi.mock("next/navigation", () => ({ redirect: m.redirect }));
 vi.mock("@/lib/auth/compte", () => ({
@@ -29,6 +31,7 @@ vi.mock("@/lib/stripe/parcours", () => ({
   ouvrirPortail: vi.fn(),
   prixDesFormules: m.prixDesFormules,
 }));
+vi.mock("@/lib/stripe/synchronisation", () => ({ synchroniserClientStripe: m.synchroniser }));
 vi.mock("./essai", () => ({ PAGE_ESSAI: "/essai", demarrerEssaiDuCompte: vi.fn() }));
 vi.mock("./saisie", () => ({
   PAGE_ABONNEMENT: "/compte/abonnement",
@@ -42,14 +45,6 @@ const formulaire = (formule = "rojer_essentiel_mensuel") => {
   const f = new FormData();
   f.set("formule", formule);
   return f;
-};
-const redirigeVers = async (p: Promise<unknown>) => {
-  try {
-    await p;
-  } catch (e) {
-    return (e as { url?: string }).url;
-  }
-  return null;
 };
 
 beforeEach(() => {
@@ -72,13 +67,14 @@ describe("souscrireAction", () => {
     expect(m.ouvrirCheckout).not.toHaveBeenCalled();
   });
 
-  it("notre copie retarde (statut vide ou terminé) mais Stripe a un abonnement en cours : pas de Checkout", async () => {
+  it("notre copie retarde (statut vide ou terminé) mais Stripe a un abonnement en cours : pas de Checkout, la copie relue, la page le dit", async () => {
     for (const statut of [null, "canceled"]) {
       m.ligne.statut = statut;
       m.abonnementsDuClient.mockResolvedValue([{ status: "trialing" }, { status: "canceled" }]);
-      expect(await redirigeVers(souscrireAction(formulaire()))).toBe("/compte/abonnement");
+      expect(await redirigeVers(souscrireAction(formulaire()))).toBe("/compte/abonnement?abonnement=en-cours");
     }
     expect(m.ouvrirCheckout).not.toHaveBeenCalled();
+    expect(m.synchroniser).toHaveBeenCalledWith(expect.anything(), "cus_1");
   });
 
   it("Stripe injoignable : on ne parie pas, page d'erreur sans Checkout", async () => {

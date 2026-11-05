@@ -37,13 +37,13 @@ const LOOKUP_DEFAUT = lookupKey("essentiel", "mensuel");
 export default async function AbonnementPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saisie?: string; stripe?: string; paiement?: string }>;
+  searchParams: Promise<{ saisie?: string; stripe?: string; paiement?: string; abonnement?: string }>;
 }) {
   // Sans compte encore (rien créé), la page se lit quand même : aucun
   // abonnement (ADR-054). `requireCompte` renverrait à l'onboarding.
   await requireUser();
   const c = await getOptionalCompte();
-  const { saisie, stripe, paiement } = await searchParams;
+  const { saisie, stripe, paiement, abonnement } = await searchParams;
   const ctx = contexteDroits();
   const ouvert = offreLancee(ctx);
   // Une seule lecture : la ligne sert à l'état affiché et aux droits.
@@ -115,7 +115,9 @@ export default async function AbonnementPage({
           <MessageFormulaire ton="info">
             {paiement === "termine"
               ? "Paiement terminé. L'abonnement s'affiche ici dès que Stripe l'a confirmé, en général en quelques secondes : rechargez la page."
-              : null}
+              : abonnement === "en-cours"
+                ? "Un abonnement est déjà en cours pour ce compte : gérez-le ici plutôt que d'en souscrire un second."
+                : null}
           </MessageFormulaire>
         </div>
 

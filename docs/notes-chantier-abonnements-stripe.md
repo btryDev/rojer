@@ -525,7 +525,7 @@ la page d'inscription annonce « Aucun paiement pendant la phase bêta ».
 **Quotas** : seul le nombre d'établissements est prévu dans la PR B. Les
 autres quotas du catalogue (permis de feu, plans de prévention,
 prestataires, liens, signatures, stockage, imports, assistant, expert)
-attendent leur propre lot, chacun avec sa garde de création.
+attendent leur propre lot, chacun avec sa garde de création. [2026-11-05 : audit fait, décisions et plan au § 10.]
 
 **Pièges rencontrés** :
 - **L'en-tête de page remonte sous la bande du haut** (`.sous-la-gelule`) :
@@ -580,6 +580,73 @@ coller le `whsec_…` affiché dans `.env.local`. Cartes de test : `4242 4242
 prélèvement (impayé). Fin d'essai : une horloge de simulation (Billing >
 Horloges de simulation) avec un client et son abonnement, avancée au-delà
 des 30 jours.
+
+## 10. Second tour de revue de la PR B, et cloisonnement par formule (2026-11-05)
+
+**Second tour (correction, simplification, sécurité) — corrigé** :
+- **Stripe fait foi en cas de doute.** Le verrou de l'essai ne se rend que sur
+  un refus net de Stripe (`StripeInvalidRequestError`, `StripeCardError`, hors
+  409) ; une réponse perdue relit les abonnements du client : s'il y en a un,
+  on le relit et on continue ; sinon le verrou reste, expire au bout de cinq
+  minutes, et sa reprise relit Stripe avant tout nouvel essai. Rendu, il
+  retrouve sa valeur d'avant (jamais vide si un essai avait été constaté).
+- **La preuve d'acceptation est un journal** : jamais effacée.
+- **Réabonnement** : refusé si Stripe a un abonnement en cours, même quand
+  notre copie retarde — la copie est alors relue et la page le dit
+  (`?abonnement=en-cours`) ; les sessions Checkout encore ouvertes du client
+  sont expirées avant d'en ouvrir une neuve.
+- **Accepté, non corrigé** : un client Stripe **supprimé à la main** dans le
+  tableau de bord laisse le compte sans essai possible ni paiement (le même
+  identifiant est réutilisé). Règle d'exploitation : ne jamais supprimer un
+  client Stripe ; si c'est fait, remettre la ligne `Abonnement` à la main.
+- Sécurité : aucun constat exploitable.
+
+**Audit du cloisonnement (2026-11-05)** — seul le plafond d'établissements
+est appliqué ; huit autres sont affichés sans l'être. Trous principaux :
+- **monter en Pro puis redescendre** dans le portail : les deux proratas
+  s'annulent, le compte garde la capacité de Pro au prix d'Essentiel. Le
+  portail ne planifie une baisse en fin de période qu'entre prix d'un même
+  produit, et ne sait pas la refuser (doc lue : `configure-portal`,
+  `customer_portal/configurations/create`) ;
+- utilisateurs non plafonnés (`inviterMembre`, `accepterInvitation`) ;
+- formule inconnue = illimité (`quotas.ts`) ;
+- compteurs annuels remis à zéro par suppression d'un brouillon ou d'un
+  établissement (cascade) ; pas de date de début d'abonnement ;
+- comptage hors verrou (deux onglets dépassent d'un) ;
+- la garde de saisie ne voit que les écritures Prisma reconnues par sa sonde
+  (un dépôt de fichier sans écriture Prisma passerait).
+
+**Décisions de la propriétaire (2026-11-05)** :
+- **baisse de formule refusée** tant que le compte dépasse les plafonds de la
+  formule visée, **et expliquée** : l'écran dit quoi retirer. Le changement
+  de formule se fait donc dans Rojer, plus dans le portail (qui garde carte,
+  factures, résiliation) ; une montée prend effet tout de suite, une baisse
+  en fin de période payée ;
+- **utilisateurs plafonnés : 1 en Essentiel, 5 en Pro**, invitations en
+  attente comprises, vérifié à l'invitation et à l'acceptation ;
+- **permis de feu et plans de prévention plafonnés comme prévu** (10 et 5
+  par an en Essentiel, sans limite en Pro) ;
+- **un essai par compte ET par SIREN**.
+
+**Tranché sans elle (à contester si besoin)** : formule inconnue = plafonds
+d'Essentiel, avec alerte ; plafonds comptés par compte ; compteurs annuels
+tenus dans un journal que rien n'efface ; « Connecter un assistant » retiré
+de l'offre tant que l'accès OAuth (ADR-013) n'existe pas.
+
+**Plan du lot « quotas »** (avant le lancement de l'offre) :
+0. garde de saisie exigée en tête de **toute** action exportée d'un module
+   `"use server"` (listes fermées des exceptions), `.tsx` compris ;
+1. changement de formule dans Rojer (contrôle des plafonds, montée
+   immédiate facturée, baisse planifiée) ; portail sans changement de
+   formule ; formule inconnue fermée ; date de début d'abonnement recopiée ;
+2. une seule fonction `verifierQuota`, sous verrou de compte, journal
+   `ConsommationQuota`, et une garde qui relit le code : chaque création
+   d'un modèle plafonné (et chaque dépôt de fichier) passe par elle ;
+3. plafonds à la création : utilisateurs, prestataires, permis de feu, plans
+   de prévention, signatures, liens, import ;
+4. stockage (taille des fichiers à enregistrer, reprise de l'existant) ;
+5. essai par SIREN ; conditions générales complétées (baisse, plafonds,
+   date anniversaire).
 
 ## Sources lues
 

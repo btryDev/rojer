@@ -59,7 +59,7 @@ describe("parcours Stripe", () => {
       consent_collection: { terms_of_service: "required" },
       subscription_data: { metadata: { userId: "u1" } },
     });
-    expect(api.checkout.sessions.list).toHaveBeenCalledWith({ customer: "cus_1", status: "open", limit: 10 });
+    expect(api.checkout.sessions.list).toHaveBeenCalledWith({ customer: "cus_1", status: "open", limit: 10 }, expect.anything());
     expect(api.checkout.sessions.expire).toHaveBeenCalledWith("cs_ancienne");
     expect(api.checkout.sessions.expire.mock.invocationCallOrder[0]).toBeLessThan(api.checkout.sessions.create.mock.invocationCallOrder[0]);
   });

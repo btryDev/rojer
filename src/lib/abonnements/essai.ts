@@ -14,7 +14,7 @@ import "server-only";
 //    se tranche en relisant Stripe, qui fait foi ;
 // 6. la relecture immédiate : la saisie s'ouvre sans attendre le webhook.
 
-import type Stripe from "stripe";
+import Stripe from "stripe";
 import { redirect } from "next/navigation";
 import { getOptionalCompte, requireCompteDOnboarding, type Db } from "@/lib/auth/compte";
 import { clientStripe } from "@/lib/stripe/client";
@@ -37,8 +37,7 @@ export const PAGE_ESSAI = "/essai";
  * Un membre n'y est pas envoyé : l'essai est le geste du propriétaire.
  */
 export async function aiguillageEssai(): Promise<string | null> {
-  const ctx = contexteDroits();
-  if (!offreLancee(ctx)) return null;
+  if (!offreLancee(contexteDroits())) return null;
   const c = await getOptionalCompte();
   const ligne = c ? await abonnementDuCompte(c.db, c.compte.compteId) : null;
   return gesteAbonnement({ ouvert: true, role: c?.compte.role ?? null, ligne }) === "essai" ? PAGE_ESSAI : null;
@@ -86,12 +85,12 @@ export async function demarrerEssaiDuCompte(formule: string, accepte: boolean): 
   // Stripe fait foi : s'il a déjà un abonnement pour ce client (un démarrage
   // précédent dont la réponse s'est perdue), on le relit au lieu d'en créer un.
   const verrou = await prendreLeVerrou(db, compteId);
-  if (!verrou) return erreur("Votre essai est déjà en cours de démarrage. Patientez un instant.");
+  if (!verrou) return erreur(ATTENDRE);
   // Rendre le verrou, c'est remettre la valeur d'avant : un essai déjà
   // constaté chez Stripe (client supprimé depuis) ne s'efface jamais.
   const rendre = () => rendreLeVerrou(db, compteId, verrou.prise, existante?.essaiUtiliseLe ?? null);
   if (verrou.repris) {
-    const deja = await abonnementChezStripe(stripe, customerId).catch(() => null);
+    const deja = await abonnementChezStripe(stripe, customerId);
     if (deja) return relireEtContinuer(stripe, customerId);
     if (deja === null) {
       await rendre();
@@ -108,16 +107,32 @@ export async function demarrerEssaiDuCompte(formule: string, accepte: boolean): 
   try {
     await demarrerEssai(stripe, { customerId, priceId: prix.priceId, metadata: { compteId }, idempotence: compteId });
   } catch (e) {
-    // Une réponse perdue n'est pas un refus : si Stripe a créé l'essai, il
-    // existe. Le verrou ne se rend que si Stripe confirme qu'il n'y a rien ;
-    // si Stripe ne répond pas, il expire de lui-même (`VERROU_EXPIRE_MS`).
-    const existe = await abonnementChezStripe(stripe, customerId).catch(() => null);
-    if (existe) return relireEtContinuer(stripe, customerId);
-    if (existe === false) await rendre();
-    return echec(e);
+    // Un refus (requête traitée, rejetée) : rien n'a été créé, le verrou se rend.
+    if (refusDefinitif(e)) {
+      await rendre();
+      return echec(e);
+    }
+    // Une réponse perdue n'est pas un refus : l'essai existe peut-être, ou se
+    // crée encore chez Stripe. Le verrou reste ; il expire (`VERROU_EXPIRE_MS`)
+    // et la reprise relit Stripe avant tout nouvel essai.
+    if (await abonnementChezStripe(stripe, customerId)) return relireEtContinuer(stripe, customerId);
+    console.error(`essai : réponse de Stripe perdue — ${e instanceof Error ? e.name : "erreur"}`);
+    return erreur(ATTENDRE);
   }
   return relireEtContinuer(stripe, customerId);
 }
+
+const ATTENDRE =
+  "Votre essai est en cours de démarrage chez Stripe. Revenez dans quelques minutes ; rien ne vous a été facturé.";
+
+/**
+ * Stripe a traité la requête et l'a rejetée (paramètre, prix, client) : rien
+ * n'a été créé. Tout le reste (réseau, 5xx, 409 « en cours », débit) est un
+ * doute, que seule une relecture tranche.
+ */
+const refusDefinitif = (e: unknown) =>
+  (e instanceof Stripe.errors.StripeInvalidRequestError || e instanceof Stripe.errors.StripeCardError) &&
+  e.statusCode !== 409;
 
 /** Au-delà, un verrou sans abonnement est celui d'un démarrage interrompu : il se reprend. */
 export const VERROU_EXPIRE_MS = 5 * 60_000;
@@ -146,9 +161,9 @@ async function rendreLeVerrou(db: Db, compteId: string, prise: Date, precedent: 
   await db.abonnement.updateMany({ where: { compteId, essaiUtiliseLe: prise }, data: { essaiUtiliseLe: precedent } });
 }
 
-/** Le client Stripe a-t-il un abonnement, quel qu'en soit l'état ? */
-const abonnementChezStripe = async (stripe: Stripe, customerId: string) =>
-  (await abonnementsDuClient(stripe, customerId)).length > 0;
+/** Le client Stripe a-t-il un abonnement, quel qu'en soit l'état ? `null` : Stripe ne répond pas. */
+const abonnementChezStripe = (stripe: Stripe, customerId: string) =>
+  abonnementsDuClient(stripe, customerId).then((l) => l.length > 0, () => null);
 
 /**
  * L'essai existe chez Stripe. Le relire ouvre la saisie tout de suite ; s'il

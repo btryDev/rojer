@@ -20,6 +20,9 @@ export const VERSION_API_STRIPE = "2026-10-28.endive" satisfies Stripe.LatestApi
  */
 export const OPTIONS_WEBHOOK: Stripe.RequestOptions = { timeout: 3_000, maxNetworkRetries: 0 };
 
+/** Par appel, pour une relecture de garde dans un geste de l'utilisateur : 5 s, il attend. */
+export const OPTIONS_RELECTURE: Stripe.RequestOptions = { timeout: 5_000 };
+
 let client: Stripe | undefined;
 
 /** Le client Stripe d'une configuration active (`configurationStripe`, seule décision). */

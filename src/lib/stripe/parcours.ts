@@ -10,6 +10,7 @@ import "server-only";
 // l'appel (lot de branchement).
 
 import type Stripe from "stripe";
+import { OPTIONS_RELECTURE } from "./client";
 import { INTERVALLE_STRIPE, LOOKUP_KEYS, formuleDeLookupKey } from "@/lib/abonnements/formules";
 
 export const DUREE_ESSAI_JOURS = 30;
@@ -110,7 +111,7 @@ export async function ouvrirCheckout(
  * a qu'un ou deux (l'essai, puis un réabonnement après résiliation).
  */
 export async function abonnementsDuClient(stripe: Stripe, customerId: string): Promise<Stripe.Subscription[]> {
-  const liste = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 10 }, { timeout: 5_000 });
+  const liste = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 10 }, OPTIONS_RELECTURE);
   return liste.data;
 }
 
@@ -119,7 +120,7 @@ export async function abonnementsDuClient(stripe: Stripe, customerId: string): P
  * une neuve : deux onglets ne paient pas deux abonnements.
  */
 async function expirerSessionsOuvertes(stripe: Stripe, customerId: string) {
-  const ouvertes = await stripe.checkout.sessions.list({ customer: customerId, status: "open", limit: 10 });
+  const ouvertes = await stripe.checkout.sessions.list({ customer: customerId, status: "open", limit: 10 }, OPTIONS_RELECTURE);
   await Promise.all(ouvertes.data.map((s) => stripe.checkout.sessions.expire(s.id)));
 }
 

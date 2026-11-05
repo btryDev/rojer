@@ -109,6 +109,9 @@ export const essaiDisponible = (ligne: { stripeSubscriptionId: string | null } |
 
 /** Le nom posé sur le client Stripe à l'essai, avant de connaître l'entreprise. */
 export const nomProvisoire = (email: string) => email;
+/** Le client Stripe porte-t-il encore ce nom provisoire (ou aucun) ? */
+export const aNomProvisoire = (c: { name?: string | null; email?: string | null }) =>
+  !c.name || (!!c.email && c.name === nomProvisoire(c.email));
 
 export type Geste = "membre" | "essai" | "portail" | "souscrire";
 
