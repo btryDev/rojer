@@ -110,11 +110,11 @@ export default async function AbonnementPage({
 
         <div className="mt-6 flex flex-col gap-3">
           <MessageFormulaire ton="alerte">
-            {stripe === "indisponible" ? "Stripe ne répond pas pour le moment : réessayez dans un instant." : null}
+            {stripe === "indisponible" ? "L'opération n'a pas abouti. Réessayez dans quelques minutes ; rien n'a été modifié ni facturé." : null}
           </MessageFormulaire>
           <MessageFormulaire ton="info">
             {paiement === "termine"
-              ? "Paiement terminé. L'abonnement s'affiche ici dès que Stripe l'a confirmé, en général en quelques secondes : rechargez la page."
+              ? "Paiement terminé. Votre abonnement s'affiche ici dans quelques secondes : rechargez la page s'il n'apparaît pas."
               : abonnement === "en-cours"
                 ? "Un abonnement est déjà en cours pour ce compte : gérez-le ici plutôt que d'en souscrire un second."
                 : null}

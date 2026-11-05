@@ -123,7 +123,7 @@ export async function demarrerEssaiDuCompte(formule: string, accepte: boolean): 
 }
 
 const ATTENDRE =
-  "Votre essai est en cours de démarrage chez Stripe. Revenez dans quelques minutes ; rien ne vous a été facturé.";
+  "Votre essai est en cours de démarrage. Revenez dans quelques minutes ; rien ne vous a été facturé.";
 
 /**
  * Stripe a traité la requête et l'a rejetée (paramètre, prix, client) : rien
