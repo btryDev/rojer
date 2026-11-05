@@ -68,7 +68,7 @@ const h = vi.hoisted(() => {
       verifier();
       return p;
     }),
-    create: vi.fn(async ({ data }: { data: Omit<Piece, "id" | "remplaceeLe"> }) => {
+    create: vi.fn(async ({ data }: { data: Omit<Piece, "id" | "remplaceeLe" | "enCours"> }) => {
       const p: Piece = { id: `p${++suivant}`, enCours: true, remplaceeLe: null, ...data };
       etat.pieces.push(p);
       verifier();
