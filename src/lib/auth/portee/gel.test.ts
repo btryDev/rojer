@@ -119,6 +119,24 @@ describe("verifierGel : refusé avant d'écrire", () => {
     ).rejects.toThrow(REFUS);
   });
 
+  it("une action ouverte au gel, appelée comme Next l'appelle : l'appelant et les actions suivantes n'en héritent pas", async () => {
+    const { client } = base(["etab-gele"]);
+    // Le schéma de chaque geste ouvert : la garde (un `await`), puis l'ouverture.
+    const geste = async () => {
+      await Promise.resolve();
+      ouvrirAuGel();
+      await verifierGel(client, "AccessToken", "updateMany", { where: { id: "t" }, data: {} }, GELES);
+    };
+    await geste();
+    await expect(verifierGel(client, "Equipement", "create", { data: { etablissementId: "etab-gele" } }, GELES)).rejects.toThrow(REFUS);
+    const suivante = async () => {
+      await Promise.resolve();
+      await verifierGel(client, "Equipement", "create", { data: { etablissementId: "etab-gele" } }, GELES);
+    };
+    await expect(suivante()).rejects.toThrow(REFUS);
+    await expect(Promise.all([geste(), suivante()])).rejects.toThrow(REFUS);
+  });
+
   it("la lecture et la suppression restent ouvertes, sans rien lire", async () => {
     const { client, delegue } = base(["etab-gele"]);
     for (const op of ["findMany", "findFirst", "count", "delete", "deleteMany"])
