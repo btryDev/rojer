@@ -9,9 +9,11 @@
 // et finirait par se contredire.
 //
 // Elle reprend la déclaration telle qu'elle est — une date et une note du
-// dirigeant —, jamais comme une pièce vérifiée (ADR-027). Le fichier
+// dirigeant —, jamais comme une pièce vérifiée (ADR-027). ~~Le fichier
 // lui-même n'est pas dans Rojer : l'écran des états permanents n'ouvre aucune
-// surface de dépôt.
+// surface de dépôt.~~ [2026-11-05, ADR-056 : le fichier se dépose sur la
+// ligne de ces seuls écrits ; la fiche reprend le fichier en cours, sans en
+// lire le contenu.]
 //
 // Module **pur** : ni Prisma, ni React.
 
@@ -77,11 +79,45 @@ export const ANNEXES_DU_REGISTRE: readonly AnnexeDuRegistre[] = [
   },
 ];
 
+/**
+ * L'annexe que porte une ligne POUR CET établissement, ou `null` : la ligne
+ * n'est pas à la table, ou l'annexion ne vaut pas ici (`seulementSi`).
+ *
+ * Le seul prédicat de « cette ligne reçoit un fichier » (ADR-056 § 2) : la
+ * fiche de « Ce qui doit être en place » s'en sert pour proposer le dépôt,
+ * l'action pour le refuser, le registre pour le lister.
+ */
+export function annexeDeLaLigne(
+  obligationId: string,
+  etab: EtablissementMatching,
+): AnnexeDuRegistre | null {
+  const annexe = ANNEXES_DU_REGISTRE.find((a) => a.obligationId === obligationId);
+  if (!annexe) return null;
+  if (annexe.seulementSi && !matchTypologie(annexe.seulementSi, etab).ok) return null;
+  return annexe;
+}
+
+/** Le fichier en cours d'une ligne, tel que l'écran et le registre le lisent. */
+export type PieceDeLaLigne = {
+  id: string;
+  nom: string;
+  deposeLe: Date;
+  /** La route qui le sert, bornée au compte. */
+  href: string;
+};
+
+/** La route qui sert le fichier d'une ligne (ADR-056). */
+export function hrefPieceEtatPermanent(etablissementId: string, pieceId: string): string {
+  return `/api/etablissements/${etablissementId}/pieces/${pieceId}`;
+}
+
 /** Une ligne de « Ce qui doit être en place », réduite à ce que la fiche lit. */
 export type EtatPourAnnexe = {
   obligationId: string;
   declareLe: Date | null;
   note: string | null;
+  /** Le fichier en cours, s'il y en a un (ADR-056). */
+  piece?: PieceDeLaLigne | null;
 };
 
 /**
@@ -104,21 +140,26 @@ export function annexesDuRegistre(
   const lignes = ANNEXES_DU_REGISTRE.flatMap((annexe) => {
     const etat = parObligation.get(annexe.obligationId);
     if (!etat) return [];
-    if (annexe.seulementSi && !matchTypologie(annexe.seulementSi, etab).ok) {
-      return [];
-    }
+    if (!annexeDeLaLigne(annexe.obligationId, etab)) return [];
     const declaration = etat.declareLe
       ? phraseDeclaration("etat", formaterDateCourteFr(etat.declareLe))
       : "Pas encore déclaré en place";
     const note = etat.note?.trim();
+    const piece = etat.piece ?? null;
     return [
       {
         id: annexe.obligationId,
         titre: annexe.titre,
-        meta: [annexe.article, declaration, note ? `« ${note} »` : null]
+        meta: [
+          annexe.article,
+          declaration,
+          piece ? `fichier déposé le ${formaterDateCourteFr(piece.deposeLe)}` : "aucun fichier déposé",
+          note ? `« ${note} »` : null,
+        ]
           .filter(Boolean)
           .join(" · "),
         href: `${hrefEcran}#${ancreEtatPermanent(annexe.obligationId)}`,
+        fichier: piece ? { pieceId: piece.id, href: piece.href, nom: piece.nom } : undefined,
       },
     ];
   });
@@ -128,4 +169,12 @@ export function annexesDuRegistre(
     source: { libelle: "« Ce qui doit être en place »", href: hrefEcran },
     vide: "Aucun écrit à annexer au registre ne vous est demandé par les lignes que Rojer suit. Les procès-verbaux de la commission de sécurité et les plans que vous y joignez se tiennent avec le registre, hors de l'outil.",
   };
+}
+
+/** Les fichiers en cours que la fiche « Annexes » porte, par identifiant —
+ *  ce que le ZIP de contrôle joint et ce que son écran compte. */
+export function piecesDesAnnexes(contenu: ContenuAilleurs | null): { pieceId: string; titre: string }[] {
+  return (contenu?.lignes ?? []).flatMap((l) =>
+    l.fichier ? [{ pieceId: l.fichier.pieceId, titre: l.titre }] : [],
+  );
 }

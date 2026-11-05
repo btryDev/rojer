@@ -3,7 +3,13 @@ import {
   obligationParId,
 } from "@/lib/referentiels/conformite";
 import type { EtablissementMatching } from "@/lib/matching";
-import { ANNEXES_DU_REGISTRE, annexesDuRegistre, ID_FICHE_ANNEXES } from "./annexes";
+import {
+  ANNEXES_DU_REGISTRE,
+  annexeDeLaLigne,
+  annexesDuRegistre,
+  ID_FICHE_ANNEXES,
+  piecesDesAnnexes,
+} from "./annexes";
 import { SECTIONS_REGISTRE } from "./sections";
 import { alimentationDeLaPartie } from "./alimentation";
 
@@ -74,7 +80,10 @@ describe("annexesDuRegistre", () => {
     expect(contenu.lignes).toHaveLength(1);
     const [ligne] = contenu.lignes;
     expect(ligne.titre).toBe("Schéma d'organisation globale de la sécurité");
-    expect(ligne.meta).toMatch(/^M 31 · Déclaré en place le .+ · « classeur sécurité, bureau du directeur »$/);
+    expect(ligne.meta).toMatch(
+      /^M 31 · Déclaré en place le .+ · aucun fichier déposé · « classeur sécurité, bureau du directeur »$/,
+    );
+    expect(ligne.fichier).toBeUndefined();
     expect(ligne.href).toBe(
       "/etablissements/e1/etats-permanents#etat-incendie-erp-schema-organisation-securite",
     );
@@ -87,7 +96,7 @@ describe("annexesDuRegistre", () => {
       [{ obligationId: "incendie-erp-eclairage-securite-notice-registre", declareLe: null, note: null }],
       magasinN4,
     );
-    expect(contenu.lignes[0].meta).toBe("EC 13 · Pas encore déclaré en place");
+    expect(contenu.lignes[0].meta).toBe("EC 13 · Pas encore déclaré en place · aucun fichier déposé");
     expect(contenu.lignes[0].meta).not.toMatch(/vérifi|conforme/i);
   });
 
@@ -120,5 +129,48 @@ describe("annexesDuRegistre", () => {
       "incendie-erp-schema-organisation-securite",
       "incendie-erp-eclairage-securite-notice-registre",
     ]);
+  });
+});
+
+describe("le fichier déposé sur la ligne (ADR-056)", () => {
+  it("la fiche le reprend : sa date dans la ligne, et un lien qui le sert", () => {
+    const contenu = annexesDuRegistre(
+      "e1",
+      [
+        {
+          obligationId: "incendie-erp-schema-organisation-securite",
+          declareLe: new Date("2026-11-05T10:00:00Z"),
+          note: null,
+          piece: {
+            id: "p1",
+            nom: "schema-2026.pdf",
+            deposeLe: new Date("2026-11-05T10:00:00Z"),
+            href: "/api/etablissements/e1/pieces/p1",
+          },
+        },
+      ],
+      magasinN4,
+    );
+    const [ligne] = contenu.lignes;
+    expect(ligne.meta).toMatch(/fichier déposé le /);
+    expect(ligne.fichier).toEqual({
+      pieceId: "p1",
+      href: "/api/etablissements/e1/pieces/p1",
+      nom: "schema-2026.pdf",
+    });
+    expect(piecesDesAnnexes(contenu)).toEqual([
+      { pieceId: "p1", titre: "Schéma d'organisation globale de la sécurité" },
+    ]);
+  });
+
+  it("annexeDeLaLigne : la table, et la condition propre à l'annexion", () => {
+    expect(annexeDeLaLigne("incendie-erp-schema-organisation-securite", magasinN4)?.article).toBe("M 31");
+    expect(annexeDeLaLigne("information-etablissement-affichages-obligatoires", magasinN4)).toBeNull();
+    expect(annexeDeLaLigne("ascenseur-carnet-entretien", bureauTravail)).toBeNull();
+    expect(annexeDeLaLigne("ascenseur-carnet-entretien", magasinN4)?.article).toBe("AS 11");
+  });
+
+  it("piecesDesAnnexes ne rend rien sans contenu", () => {
+    expect(piecesDesAnnexes(null)).toEqual([]);
   });
 });

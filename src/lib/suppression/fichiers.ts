@@ -39,6 +39,8 @@ export const CLES_STOCKEES = {
   Action: ["leveeFichierCle"],
   // La photo du lieu, dans le hero du tableau de bord (2026-10-25).
   Etablissement: ["photoCle"],
+  // Les écrits annexés au registre, en cours et précédent (ADR-056).
+  PieceEtatPermanent: ["fichierCle"],
 } as const;
 
 /**
@@ -114,7 +116,8 @@ export async function clesDesEtablissements(
 ): Promise<string[]> {
   if (etablissementIds.length === 0) return [];
   const dans = { in: etablissementIds };
-  const [rapports, prestataires, analyses, piecesPrecedentes, pieces, photos] = await Promise.all([
+  const [rapports, prestataires, analyses, piecesPrecedentes, pieces, photos, annexes] =
+    await Promise.all([
     tx.rapportVerification.findMany({
       where: { etablissementId: dans },
       select: { fichierCle: true },
@@ -139,6 +142,10 @@ export async function clesDesEtablissements(
       where: { id: dans, photoCle: { not: null } },
       select: { photoCle: true },
     }),
+    tx.pieceEtatPermanent.findMany({
+      where: { etablissementId: dans },
+      select: { fichierCle: true },
+    }),
   ]);
   return nonNulles([
     ...rapports.map((r) => r.fichierCle),
@@ -147,6 +154,7 @@ export async function clesDesEtablissements(
     ...piecesPrecedentes.map((p) => p.fichierCle),
     ...pieces.map((p) => p.leveeFichierCle),
     ...photos.map((p) => p.photoCle),
+    ...annexes.map((p) => p.fichierCle),
   ]);
 }
 

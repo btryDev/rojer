@@ -14,12 +14,15 @@ import {
   formaterDateHeureFr,
 } from "@/lib/dates";
 import { PIECES_ZIP, fichierDuerp, nomDeDossier } from "@/lib/controle/pieces-zip";
+import { lireAnnexesDuRegistre } from "@/lib/registre/contenu-ailleurs";
+import { piecesDesAnnexes } from "@/lib/registre/annexes";
 import {
   carnetSanitaireDuDossier,
   compterRapportsSalariesEcartes,
   permisFeuDuDossier,
   plansPreventionDuDossier,
   prestatairesDuDossier,
+  annexesDeposeesDuDossier,
   rapportsDeposesDuDossier,
   registreAccessibiliteDuDossier,
   versionsDuDuerpDuDossier,
@@ -339,6 +342,30 @@ async function construireArchive(
   } catch (e) {
     noterEchec(PIECES_ZIP.registre, e);
   }
+
+  // ── 03_Registre_annexes/ — les écrits annexés au registre ───────────
+  // Ceux que la fiche « Annexes » liste (ADR-056), fichier en cours seul : le
+  // PDF du registre les nomme, le tiers les lit ici.
+  const annexesListees = await lire(PIECES_ZIP.annexes, [], async () =>
+    piecesDesAnnexes(await lireAnnexesDuRegistre(id)),
+  );
+  const titreAnnexe = new Map(annexesListees.map((a) => [a.pieceId, a.titre]));
+  const annexesDeposees = await lire(PIECES_ZIP.annexes, [], () =>
+    annexesDeposeesDuDossier(db, id, [...titreAnnexe.keys()]),
+  );
+  const annexesZip = await joindreFichiers(
+    zip,
+    nomDeDossier(PIECES_ZIP.annexes),
+    annexesDeposees.map((p) => ({
+      id: p.id,
+      cle: p.fichierCle,
+      nomOriginal: p.fichierNom,
+      date: p.deposeLe,
+      etiquette: titreAnnexe.get(p.id) ?? null,
+    })),
+    annexesDeposees.length > 0 ? stockage() : null,
+    "annexe.pdf",
+  );
 
   // ── 04 Plan d'actions ───────────────────────────────────────────────
   try {
@@ -662,6 +689,7 @@ async function construireArchive(
     piecesPrestataires,
     piecesPrestatairesPrecedentes,
     rapportsZip,
+    annexesZip,
     rapportsSalariesEcartes,
     analysesZip,
     aRegistreAccessibilite: Boolean(registreAccess?.publie),

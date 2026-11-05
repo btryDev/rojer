@@ -11,7 +11,7 @@ import { cleanup, render } from "@testing-library/react";
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
-    declarationEtatPermanent: { findMany: vi.fn(async () => []) },
+    declarationEtatPermanent: { findMany: vi.fn(async () => []) }, pieceEtatPermanent: { findMany: vi.fn(async () => []) },
     titreSalarie: { findMany: vi.fn(async () => []) },
   },
 }));

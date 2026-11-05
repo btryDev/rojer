@@ -570,7 +570,11 @@ function ficheDuPdf(
       source: ailleurs.source.libelle,
       tenues: ailleurs.lignes.map((l) => ({
         titre: l.titre,
-        meta: l.meta ?? "",
+        // Le nom du fichier annexé (ADR-056) : l'écran le donne en lien, le
+        // papier le nomme — le fichier lui-même part dans le ZIP de contrôle.
+        meta: [l.meta, l.fichier ? `fichier : ${l.fichier.nom}` : null]
+          .filter(Boolean)
+          .join(" · "),
       })),
     };
   }

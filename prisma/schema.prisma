@@ -272,6 +272,8 @@ model Etablissement {
   fichesRegistre             FicheRegistre[]
   salaries                   Salarie[]
   etatsDeclares              DeclarationEtatPermanent[]
+  /// Les écrits annexés au registre, déposés sur leur ligne (ADR-056).
+  piecesEtatsPermanents      PieceEtatPermanent[]
   demandesAssistance         DemandeAssistance[]
 
   /**
@@ -2191,6 +2193,42 @@ model DeclarationEtatPermanent {
   /// Pas d'`@@index([etablissementId])` : c'est la colonne de TÊTE de l'index
   /// unique ci-dessus, qui sert donc déjà `WHERE etablissementId = ?`.
   @@unique([etablissementId, obligationId])
+}
+
+/// Le fichier d'un écrit que le règlement fait annexer au registre de
+/// sécurité, déposé sur sa ligne de « Ce qui doit être en place » (ADR-056).
+/// Seules les lignes de `ANNEXES_DU_REGISTRE` (`registre/annexes.ts`) en
+/// reçoivent : partout ailleurs, l'ADR-027 § 3 tient — aucune surface de
+/// dépôt.
+///
+/// Séparé de `DeclarationEtatPermanent`, que « Pas encore » efface : le
+/// fichier survit au retrait, comme version précédente.
+///
+/// DEUX FICHIERS AU PLUS PAR LIGNE : celui en cours (`remplaceeLe` nul) et le
+/// précédent. L'unicité du fichier en cours est un index unique PARTIEL,
+/// invisible ici et écrit dans la migration `20261105120000` ; la borne du
+/// précédent est tenue par l'action (`etats-permanents/pieces.ts`), qui
+/// efface l'ancien précédent à chaque dépôt et à chaque retrait.
+model PieceEtatPermanent {
+  id              String        @id @default(cuid())
+  etablissementId String
+  etablissement   Etablissement @relation(fields: [etablissementId], references: [id], onDelete: Cascade)
+
+  /// L'obligation du référentiel (ADR-003), sans clé étrangère — comme
+  /// `DeclarationEtatPermanent.obligationId`.
+  obligationId String
+
+  fichierCle    String
+  fichierNom    String
+  fichierMime   String
+  fichierTaille Int
+
+  deposeLe    DateTime  @default(now())
+  /// Nul = le fichier en cours. Daté = la version précédente, effacée au
+  /// remplacement suivant (ADR-056 § 4).
+  remplaceeLe DateTime?
+
+  @@index([etablissementId, obligationId])
 }
 
 // ----------------------------------------------------------------------------

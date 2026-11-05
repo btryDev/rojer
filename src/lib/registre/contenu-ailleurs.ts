@@ -136,6 +136,10 @@ export type LigneTenue = {
    *  sinon. Même raison que `contractuelle` : une mention à part, jamais un
    *  mot dans `meta`. */
   rythmeRetenu?: MentionRythme | null;
+  /** Le fichier que la ligne porte, quand elle en porte un — un écrit annexé
+   *  au registre (ADR-056). Servi par une route, jamais par `href`, qui mène
+   *  à l'écran où la ligne se tient. */
+  fichier?: { pieceId: string; href: string; nom: string };
 };
 
 export type ContenuAilleurs = {
@@ -231,6 +235,7 @@ export async function lireAnnexesDuRegistre(
       obligationId: l.obligation.id,
       declareLe: l.declareLe,
       note: l.note,
+      piece: l.piece,
     })),
     projeterEtablissement(dossier.etab),
   );

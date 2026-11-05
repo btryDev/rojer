@@ -121,6 +121,24 @@ export async function prestatairesDuDossier(db: Db, etablissementId: string) {
   });
 }
 
+/**
+ * Les fichiers des écrits annexés au registre que la fiche « Annexes » porte
+ * (ADR-056) : seulement ceux EN COURS, et seulement ceux qu'elle liste —
+ * `pieceIds` vient de `piecesDesAnnexes`, qui ne garde que les lignes
+ * applicables. Le précédent reste dans l'application.
+ */
+export async function annexesDeposeesDuDossier(
+  db: Db,
+  etablissementId: string,
+  pieceIds: string[],
+) {
+  if (pieceIds.length === 0) return [];
+  return db.pieceEtatPermanent.findMany({
+    where: { id: { in: pieceIds }, etablissementId, remplaceeLe: null },
+    select: { id: true, fichierCle: true, fichierNom: true, deposeLe: true },
+  });
+}
+
 /** Les rapports dont le fichier entre au ZIP (`filtreRapportsDuDossier`). */
 export async function rapportsDeposesDuDossier(db: Db, etablissementId: string) {
   return db.rapportVerification.findMany({

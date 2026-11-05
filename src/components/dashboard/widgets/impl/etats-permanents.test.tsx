@@ -59,6 +59,9 @@ function ligne(
     mode: "etat",
     compteDansLEnTete: true,
     parLesTitres: null,
+    accepteUnFichier: false,
+    piece: null,
+    piecePrecedente: null,
     pieceAttendue: null,
     declareLe: null,
     note: null,
@@ -151,7 +154,7 @@ const base = vi.hoisted(() => ({ declarations: [] as unknown[] }));
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
-    declarationEtatPermanent: { findMany: vi.fn(async () => base.declarations) },
+    declarationEtatPermanent: { findMany: vi.fn(async () => base.declarations) }, pieceEtatPermanent: { findMany: vi.fn(async () => []) },
     titreSalarie: { findMany: vi.fn(async () => []) },
   },
 }));

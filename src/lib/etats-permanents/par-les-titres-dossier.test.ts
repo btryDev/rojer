@@ -18,7 +18,7 @@ const h = vi.hoisted(() => ({
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
-    declarationEtatPermanent: { findMany: h.declarations },
+    declarationEtatPermanent: { findMany: h.declarations }, pieceEtatPermanent: { findMany: vi.fn(async () => []) },
     titreSalarie: { findMany: h.titres },
   },
 }));

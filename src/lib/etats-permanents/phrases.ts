@@ -173,6 +173,12 @@ export function libelleRetour(): string {
   return "Revenir dessus";
 }
 
+/** Le bouton du dépôt d'un écrit annexé au registre (ADR-056). */
+export function libelleDepot(dejaDepose: boolean): string {
+  if (dejaDepose) return "Remplacer le fichier";
+  return "Déposer le fichier";
+}
+
 /*
  * ~~`etatDeLaLigne`~~ (retirée le 2026-10-17, contrôle visuel de c6) : l'état
  * d'une ligne en quelques mots, pour le widget du tableau de bord, qui listait

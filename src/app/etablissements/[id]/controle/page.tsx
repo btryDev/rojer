@@ -22,6 +22,8 @@ import {
   pastilleDuFait,
 } from "@/lib/pdf/checklist-controle";
 import { composerRegistreDeLEtablissement } from "@/lib/registre/queries";
+import { lireAnnexesDuRegistre } from "@/lib/registre/contenu-ailleurs";
+import { piecesDesAnnexes } from "@/lib/registre/annexes";
 import { bilanDuRegistre, completudesDuRegistre } from "@/lib/registre/completude";
 import {
   NB_ANALYSES_DU_DOSSIER,
@@ -82,6 +84,7 @@ export default async function ControlePage({
     couverture,
     registre,
     points,
+    annexes,
   ] = await Promise.all([
     getDashboardData(id),
     compterVigilanceParGravite(id),
@@ -101,7 +104,12 @@ export default async function ControlePage({
     // Les points à corriger, que le plan d'actions ne compte plus (ADR-048,
     // lot 3) : un écart électrique en retard doit se voir ici.
     compterActions(id, maintenant, { origine: "verification" }),
+    // Les écrits annexés au registre que le ZIP joint (ADR-056) : la même
+    // lecture que la fiche « Annexes » et que la route.
+    lireAnnexesDuRegistre(id),
   ]);
+  const annexesLignes = annexes?.lignes ?? [];
+  const annexesDeposees = piecesDesAnnexes(annexes).length;
 
   // LE PATRON `etat-charge.ts` [2026-10-25 : fichier retiré avec la plaque
   // des zones du hero ; le patron reste], APPLIQUÉ À UN ÉCRAN : la question « sait-on ? »
@@ -196,6 +204,13 @@ export default async function ControlePage({
       // Ce n'est PAS L. 4711-5, qui autorise seulement à réunir plusieurs
       // registres en un seul (verbatim relevé le 2026-08-28).
       reference: "Art. R. 4323-25 et R. 4323-26 CT",
+    },
+    annexes: {
+      description:
+        annexesLignes.length === 0
+          ? "Aucun écrit à annexer au registre ne vous est demandé par les lignes que Rojer suit."
+          : `${annexesDeposees} fichier${annexesDeposees > 1 ? "s" : ""} déposé${annexesDeposees > 1 ? "s" : ""} sur ${annexesLignes.length} écrit${annexesLignes.length > 1 ? "s" : ""} à annexer, joint${annexesDeposees > 1 ? "s" : ""} dans le dossier ${PIECES_ZIP.annexes}. Ils se déposent dans « Ce qui doit être en place ».`,
+      present: annexesDeposees > 0,
     },
     rapports: {
       description:
