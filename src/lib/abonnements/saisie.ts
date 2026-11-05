@@ -36,6 +36,8 @@ export const offreLancee = (ctx: ContexteDroits) => ctx.stripeActif && ctx.exige
 const COLONNES = {
   statut: true,
   formule: true,
+  stripeSubscriptionId: true,
+  essaiUtiliseLe: true,
   finEssai: true,
   finPeriode: true,
   resilieEnFinDePeriode: true,

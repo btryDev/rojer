@@ -9,10 +9,8 @@ import "server-only";
 // bloqué qu'à la création suivante, jamais en lecture.
 
 import type { Db } from "@/lib/auth/compte";
-import { CLES_FORMULES, FORMULES, formuleDeLookupKey, sousLeQuota } from "./formules";
+import { CLES_FORMULES, FORMULES, formuleDeLookupKey, libelleEtablissements, sousLeQuota } from "./formules";
 import { abonnementDuCompte, contexteDroits, offreLancee } from "./saisie";
-
-const etablissements = (n: number) => `${n} établissement${n > 1 ? "s" : ""}`;
 
 /**
  * Le motif du refus d'un établissement de plus, ou `null`. Formule inconnue
@@ -25,11 +23,11 @@ export async function refusQuotaEtablissements(db: Db, compteId: string): Promis
   if (!formule) return null;
   const quota = FORMULES[formule].quotas.etablissements;
   const nombre = await db.etablissement.count();
-  if (quota === null || sousLeQuota(quota, nombre)) return null;
+  if (sousLeQuota(quota, nombre)) return null;
   const { libelle } = FORMULES[formule];
   const plus = CLES_FORMULES.find((f) => sousLeQuota(FORMULES[f].quotas.etablissements, nombre));
   const suite = plus
     ? `passez à ${FORMULES[plus].libelle} depuis la page Abonnement de votre compte pour en ajouter.`
     : "au-delà, la formule Sur mesure s'établit sur devis.";
-  return `Votre formule ${libelle} couvre ${etablissements(quota)} : ${suite}`;
+  return `Votre formule ${libelle} couvre ${libelleEtablissements(quota)} : ${suite}`;
 }

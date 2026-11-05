@@ -23,6 +23,7 @@ import type Stripe from "stripe";
 import { clientDuClientStripe } from "@/lib/auth/compte-hors-session";
 import { compteDontEstProprietaire } from "@/lib/auth/membres";
 import { OPTIONS_WEBHOOK } from "./client";
+import { formuleDuPrix } from "@/lib/abonnements/formules";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -65,7 +66,7 @@ export function colonnesDe(s: Stripe.Subscription | null) {
   return {
     stripeSubscriptionId: s?.id ?? null,
     statut: s?.status ?? null,
-    formule: item?.price.lookup_key ?? null,
+    formule: item ? formuleDuPrix(item.price) : null,
     stripePriceId: item?.price.id ?? null,
     finPeriode: date(item?.current_period_end),
     finEssai: date(s?.trial_end),

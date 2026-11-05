@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cheminDeRetour } from "@/lib/auth/chemin-de-retour";
 import { SignupForm } from "./SignupForm";
 import { contexteDroits, offreLancee } from "@/lib/abonnements/saisie";
+import { DUREE_ESSAI_JOURS } from "@/lib/stripe/parcours";
 
 export const metadata = {
   title: "Créer un compte — Rojer",
@@ -29,7 +30,7 @@ export default async function SignupPage({
 
         <p className="m-0 mt-4 max-w-[38ch] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           Vos données restent en Europe. {offreLancee(contexteDroits())
-            ? "30 jours d'essai gratuit, sans carte bancaire."
+            ? `${DUREE_ESSAI_JOURS} jours d'essai gratuit, sans carte bancaire.`
             : "Aucun paiement pendant la phase bêta."}
         </p>
 

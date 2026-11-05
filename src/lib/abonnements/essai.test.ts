@@ -35,6 +35,7 @@ vi.mock("@/lib/stripe/synchronisation", async (reel) => ({
 vi.mock("./saisie", () => ({
   PAGE_ABONNEMENT: "/compte/abonnement",
   PAGE_MEMBRES: "/compte/membres",
+  abonnementDuCompte: (d: typeof db, compteId: string) => d.abonnement.findUnique({ where: { compteId } }),
   contexteDroits: () => ({ ...m.contexte, maintenant: new Date() }),
   offreLancee: (c: { stripeActif: boolean; exige: boolean }) => c.stripeActif && c.exige,
 }));
@@ -43,8 +44,8 @@ import { aiguillageEssai, demarrerEssaiDuCompte } from "./essai";
 
 const FORMULE = "rojer_essentiel_mensuel";
 const db = {
-  abonnement: { findUnique: vi.fn(), create: vi.fn() },
-  acceptationConditions: { create: vi.fn() },
+  abonnement: { findUnique: vi.fn(), create: vi.fn(), updateMany: vi.fn() },
+  acceptationConditions: { create: vi.fn(), delete: vi.fn() },
 };
 const compte = (role = "owner") => ({ user: { id: "u1", email: "a@b.fr" }, compte: { compteId: "c1", role }, db });
 const redirigeVers = async (p: Promise<unknown>) => {
@@ -67,7 +68,11 @@ beforeEach(() => {
   db.abonnement.findUnique.mockResolvedValue(null);
   m.creerClientStripe.mockImplementation(async () => (m.ordre.push("client"), "cus_1"));
   db.abonnement.create.mockImplementation(async () => m.ordre.push("réservation"));
-  db.acceptationConditions.create.mockImplementation(async () => m.ordre.push("acceptation"));
+  db.abonnement.updateMany.mockImplementation(async (a: { data: { essaiUtiliseLe: Date | null } }) => {
+    m.ordre.push(a.data.essaiUtiliseLe ? "verrou" : "verrou rendu");
+    return { count: 1 };
+  });
+  db.acceptationConditions.create.mockImplementation(async () => (m.ordre.push("acceptation"), { id: "acc_1" }));
   m.demarrerEssai.mockImplementation(async () => m.ordre.push("essai"));
   m.synchroniserClientStripe.mockImplementation(async () => (m.ordre.push("relecture"), { issue: "ecrit" }));
 });
@@ -102,11 +107,15 @@ describe("aiguillageEssai", () => {
 describe("demarrerEssaiDuCompte", () => {
   it("dans l'ordre : client, ligne réservée, preuve d'acceptation, essai, relecture — puis l'onboarding", async () => {
     expect(await redirigeVers(demarrerEssaiDuCompte(FORMULE, true))).toBe("/onboarding");
-    expect(m.ordre).toEqual(["client", "réservation", "acceptation", "essai", "relecture"]);
+    expect(m.ordre).toEqual(["client", "réservation", "verrou", "acceptation", "essai", "relecture"]);
+    expect(db.abonnement.updateMany.mock.calls[0][0]).toMatchObject({
+      where: { compteId: "c1", essaiUtiliseLe: null, stripeSubscriptionId: null },
+    });
     expect(m.creerClientStripe).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ metadata: { compteId: "c1" }, idempotence: "c1" }));
     expect(m.demarrerEssai).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ customerId: "cus_1", priceId: "price_e", metadata: { compteId: "c1" } }));
     expect(db.acceptationConditions.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ compteId: "c1", userId: "u1", contexte: "essai", version: expect.any(String), empreinte: expect.stringMatching(/^[0-9a-f]{64}$/) }),
+      select: { id: true },
     });
   });
 
@@ -147,12 +156,43 @@ describe("demarrerEssaiDuCompte", () => {
     expect(await demarrerEssaiDuCompte(FORMULE, true)).toMatchObject({ status: "error" });
   });
 
+  it("deux envois simultanés : le verrou n'en laisse passer qu'un, l'autre ne touche pas Stripe", async () => {
+    db.abonnement.updateMany.mockResolvedValueOnce({ count: 0 });
+    expect(await demarrerEssaiDuCompte(FORMULE, true)).toEqual({ status: "error", message: expect.stringMatching(/déjà en cours/) });
+    expect(m.demarrerEssai).not.toHaveBeenCalled();
+    expect(db.acceptationConditions.create).not.toHaveBeenCalled();
+  });
+
+  it("Stripe échoue après le verrou : le verrou est rendu, un nouvel essai reste possible", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    m.demarrerEssai.mockRejectedValue(new Error("panne"));
+    expect(await demarrerEssaiDuCompte(FORMULE, true)).toMatchObject({ status: "error" });
+    expect(m.ordre).toContain("verrou rendu");
+    expect(db.acceptationConditions.delete).toHaveBeenCalledWith({ where: { id: "acc_1" } });
+    const rendu = db.abonnement.updateMany.mock.calls[1][0];
+    expect(rendu).toEqual({ where: { compteId: "c1", essaiUtiliseLe: expect.any(Date) }, data: { essaiUtiliseLe: null } });
+  });
+
   it("Stripe en panne : une erreur affichable qui dit que rien n'a été facturé, sans détail technique", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     m.demarrerEssai.mockRejectedValue(new Error("No such price: client@exemple.fr"));
     const r = await demarrerEssaiDuCompte(FORMULE, true);
     expect(r).toEqual({ status: "error", message: expect.stringMatching(/rien ne vous a été facturé/) });
     expect(JSON.stringify(r)).not.toContain("exemple.fr");
+  });
+
+  it("une formule sans prix ne crée ni compte, ni client", async () => {
+    m.prixDesFormules.mockResolvedValue(new Map());
+    expect(await demarrerEssaiDuCompte(FORMULE, true)).toMatchObject({ status: "error", message: expect.stringMatching(/pas disponible/) });
+    expect(m.requireCompteDOnboarding).not.toHaveBeenCalled();
+    expect(m.creerClientStripe).not.toHaveBeenCalled();
+  });
+
+  it("la relecture échoue après l'essai créé : pas d'échec annoncé, l'onboarding, le verrou gardé", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    m.synchroniserClientStripe.mockRejectedValue(new Error("panne"));
+    expect(await redirigeVers(demarrerEssaiDuCompte(FORMULE, true))).toBe("/onboarding");
+    expect(m.ordre).not.toContain("verrou rendu");
   });
 
   it("offre non lancée ou Stripe désactivé : l'onboarding, rien de créé", async () => {

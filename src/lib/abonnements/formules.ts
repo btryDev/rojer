@@ -15,6 +15,15 @@
 export const PERIODICITES = ["mensuel", "annuel"] as const;
 export type Periodicite = (typeof PERIODICITES)[number];
 
+/** Ce que l'écran dit d'une périodicité : « facturation mensuelle », « par mois ». */
+export const LIBELLE_PERIODICITE = {
+  mensuel: { adjectif: "mensuelle", unite: "mois" },
+  annuel: { adjectif: "annuelle", unite: "an" },
+} as const satisfies Record<Periodicite, { adjectif: string; unite: string }>;
+
+/** L'intervalle Stripe d'une périodicité (prix récurrent). */
+export const INTERVALLE_STRIPE = { mensuel: "month", annuel: "year" } as const satisfies Record<Periodicite, string>;
+
 /** `null` : illimité. Les compteurs « par an » repartent à la date anniversaire. */
 export type Quotas = {
   etablissements: number | null;
@@ -82,6 +91,37 @@ export function formuleDeLookupKey(cle: string | null | undefined): { formule: C
   const m = /^rojer_([a-z]+)_(mensuel|annuel)$/.exec(cle ?? "");
   if (!m || !estCle(m[1])) return null;
   return { formule: m[1], periodicite: m[2] as Periodicite };
+}
+
+/** Une clé de notre catalogue, et rien d'autre (une valeur reçue du navigateur). */
+export const estLookupKey = (v: unknown): v is string => typeof v === "string" && formuleDeLookupKey(v) !== null;
+
+/**
+ * La formule d'un prix Stripe : sa `lookup_key`, ou à défaut celle que ses
+ * `metadata` désignent. Un prix remplacé perd sa clé (`transfer_lookup_key`) ;
+ * ses abonnés restent sur lui, et leur formule ne doit pas disparaître.
+ */
+export function formuleDuPrix(prix: { lookup_key: string | null; metadata?: Record<string, string> | null }): string | null {
+  if (formuleDeLookupKey(prix.lookup_key)) return prix.lookup_key;
+  const f = prix.metadata?.formule;
+  const p = prix.metadata?.periodicite;
+  if (!f || (p !== "mensuel" && p !== "annuel")) return null;
+  const cle = `rojer_${f}_${p}`;
+  return formuleDeLookupKey(cle) ? cle : null;
+}
+
+/** « 1 établissement », « 5 établissements » ; `null` : sans limite. */
+export const libelleEtablissements = (n: number | null) =>
+  n === null ? "Établissements sans limite" : `${n} établissement${n > 1 ? "s" : ""}`;
+
+/** Ce qui distingue une formule à l'écran, tiré des quotas — rien de non livré. */
+export function pointsDeFormule(f: CleFormule): string[] {
+  const q: Quotas = FORMULES[f].quotas;
+  const usage =
+    q.permisDeFeuParAn === null
+      ? "Permis de feu et plans de prévention sans limite"
+      : `${q.permisDeFeuParAn} permis de feu et ${q.plansDePreventionParAn ?? "∞"} plans de prévention par an`;
+  return [libelleEtablissements(q.etablissements), "Tous les modules de Rojer", usage];
 }
 
 /**

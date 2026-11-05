@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FORMULES, LOOKUP_KEYS, formuleDeLookupKey, lookupKey, sousLeQuota } from "./formules";
+import { FORMULES, LOOKUP_KEYS, estLookupKey, formuleDeLookupKey, formuleDuPrix, libelleEtablissements, lookupKey, sousLeQuota } from "./formules";
 
 describe("formules", () => {
   it("une lookup_key par formule et par périodicité, relue à l'identique", () => {
@@ -31,5 +31,26 @@ describe("formules", () => {
       if (typeof a === "boolean") expect(b === true || a === false, k).toBe(true);
       else expect(b === null || (a !== null && (b as number) >= a), k).toBe(true);
     }
+  });
+});
+
+describe("formuleDuPrix, estLookupKey, libellés", () => {
+  it("la clé du prix, sinon ses metadata ; jamais une formule inventée", () => {
+    expect(formuleDuPrix({ lookup_key: "rojer_pro_mensuel" })).toBe("rojer_pro_mensuel");
+    expect(formuleDuPrix({ lookup_key: null, metadata: { formule: "pro", periodicite: "annuel" } })).toBe("rojer_pro_annuel");
+    expect(formuleDuPrix({ lookup_key: null, metadata: { formule: "surmesure", periodicite: "annuel" } })).toBeNull();
+    expect(formuleDuPrix({ lookup_key: null, metadata: { formule: "pro", periodicite: "trimestriel" } })).toBeNull();
+    expect(formuleDuPrix({ lookup_key: "autre", metadata: null })).toBeNull();
+  });
+
+  it("estLookupKey n'accepte que le catalogue", () => {
+    expect(estLookupKey("rojer_essentiel_annuel")).toBe(true);
+    for (const v of ["", "rojer_surmesure_annuel", 12, null]) expect(estLookupKey(v)).toBe(false);
+  });
+
+  it("le pluriel et l'illimité des établissements", () => {
+    expect(libelleEtablissements(1)).toBe("1 établissement");
+    expect(libelleEtablissements(5)).toBe("5 établissements");
+    expect(libelleEtablissements(null)).toMatch(/sans limite/);
   });
 });

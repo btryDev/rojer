@@ -10,11 +10,9 @@ import { clientStripe } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
 import { ouvrirCheckout, ouvrirPortail, prixDesFormules } from "@/lib/stripe/parcours";
 import { demarrerEssaiDuCompte, PAGE_ESSAI, type EtatEssai } from "./essai";
-import { LOOKUP_KEYS } from "./formules";
+import { abonnementTermine } from "./droits";
+import { estLookupKey } from "./formules";
 import { PAGE_ABONNEMENT, verifierProprietaire, verifierRole } from "./saisie";
-
-/** Les états d'un abonnement terminé : on en souscrit un nouveau par Checkout. */
-const TERMINES = new Set(["canceled", "incomplete_expired"]);
 
 /**
  * Démarrer l'essai (écran « Votre essai gratuit »). Le rôle d'abord : le
@@ -48,8 +46,13 @@ export async function ouvrirPortailAction(): Promise<void> {
   const { stripe, db, ligne } = await clientDuCompte();
   let url: string;
   try {
-    const entreprise = await db.entreprise.findFirst({ orderBy: { createdAt: "asc" }, select: { raisonSociale: true } });
-    if (entreprise) await stripe.customers.update(ligne.stripeCustomerId, { name: entreprise.raisonSociale });
+    // Seulement si le nom est encore le provisoire de l'essai (l'adresse) : un
+    // nom saisi au paiement, dans Checkout ou le portail, ne s'écrase pas.
+    const client = await stripe.customers.retrieve(ligne.stripeCustomerId);
+    if (!client.deleted && (!client.name || client.name === client.email)) {
+      const entreprise = await db.entreprise.findFirst({ orderBy: { createdAt: "asc" }, select: { raisonSociale: true } });
+      if (entreprise) await stripe.customers.update(ligne.stripeCustomerId, { name: entreprise.raisonSociale });
+    }
     url = await ouvrirPortail(stripe, { customerId: ligne.stripeCustomerId, retour: `${publicAppUrl()}${PAGE_ABONNEMENT}` });
   } catch {
     redirect(`${PAGE_ABONNEMENT}?stripe=indisponible`);
@@ -64,9 +67,9 @@ export async function ouvrirPortailAction(): Promise<void> {
 export async function souscrireAction(formData: FormData): Promise<void> {
   await verifierProprietaire();
   const { stripe, ligne, compteId } = await clientDuCompte();
-  if (ligne.statut && !TERMINES.has(ligne.statut)) redirect(PAGE_ABONNEMENT);
+  if (ligne.statut && !abonnementTermine(ligne.statut)) redirect(PAGE_ABONNEMENT);
   const formule = String(formData.get("formule") ?? "");
-  if (!(LOOKUP_KEYS as readonly string[]).includes(formule)) redirect(PAGE_ABONNEMENT);
+  if (!estLookupKey(formule)) redirect(PAGE_ABONNEMENT);
   let url: string;
   try {
     const prix = (await prixDesFormules(stripe)).get(formule);

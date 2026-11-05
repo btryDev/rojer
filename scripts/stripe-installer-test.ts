@@ -19,7 +19,7 @@
 
 import { existsSync } from "node:fs";
 import Stripe from "stripe";
-import { CLES_FORMULES, FORMULES, PERIODICITES, lookupKey, LOOKUP_KEYS, type CleFormule, type Periodicite } from "../src/lib/abonnements/formules";
+import { CLES_FORMULES, FORMULES, INTERVALLE_STRIPE, PERIODICITES, lookupKey, LOOKUP_KEYS, type CleFormule, type Periodicite } from "../src/lib/abonnements/formules";
 
 type Env = Record<string, string | undefined>;
 
@@ -29,7 +29,6 @@ export const MONTANTS_PROVISOIRES_CENTIMES = {
   pro: { mensuel: 6_900, annuel: 69_900 },
 } as const satisfies Record<CleFormule, Record<Periodicite, number>>;
 
-const INTERVALLE = { mensuel: "month", annuel: "year" } as const satisfies Record<Periodicite, string>;
 const DEVISE = "eur";
 /** Marque la configuration de portail créée par ce script quand le compte n'en a aucune par défaut. */
 const MARQUE_PORTAIL = { rojer: "installer-test" };
@@ -68,7 +67,7 @@ export function prixConforme(p: Stripe.Price, produitId: string, montant: number
     idProduit(p.product) === produitId &&
     p.unit_amount === montant &&
     p.currency === DEVISE &&
-    p.recurring?.interval === INTERVALLE[periodicite] &&
+    p.recurring?.interval === INTERVALLE_STRIPE[periodicite] &&
     (p.recurring?.interval_count ?? 1) === 1 &&
     p.tax_behavior === "exclusive"
   );
@@ -99,7 +98,7 @@ export async function installerPrix(stripe: Stripe, produits: Record<CleFormule,
         product: produitId,
         currency: DEVISE,
         unit_amount: montant,
-        recurring: { interval: INTERVALLE[periodicite] },
+        recurring: { interval: INTERVALLE_STRIPE[periodicite] },
         tax_behavior: "exclusive",
         lookup_key: cle,
         transfer_lookup_key: true,

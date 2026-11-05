@@ -93,3 +93,30 @@ export function libelleStatut(statut: string | null): string {
   if (!statut) return "Aucun abonnement";
   return LIBELLES[statut] ?? "État inconnu";
 }
+
+/** Les états dont on ne revient pas : on souscrit un nouvel abonnement (Checkout). */
+const TERMINES = new Set(["canceled", "incomplete_expired"]);
+export const abonnementTermine = (statut: string | null) => statut !== null && TERMINES.has(statut);
+
+/** Le compte peut-il démarrer son essai ? Ni abonnement, ni essai déjà pris. */
+export const essaiDisponible = (ligne: { stripeSubscriptionId: string | null; essaiUtiliseLe: Date | null } | null) =>
+  !ligne?.stripeSubscriptionId && !ligne?.essaiUtiliseLe;
+
+export type Geste = "membre" | "essai" | "portail" | "souscrire";
+
+/**
+ * Le geste que la page de l'abonnement propose (ADR-053 §§ 10, 12) : l'essai
+ * tant qu'il est disponible — y compris sans compte encore —, le portail tant
+ * qu'un abonnement court, Checkout après sa fin. Un membre voit l'état sans
+ * geste ; offre non lancée, aucun.
+ */
+export function gesteAbonnement(o: {
+  ouvert: boolean;
+  role: string | null;
+  ligne: { statut: string | null; stripeSubscriptionId: string | null; essaiUtiliseLe: Date | null } | null;
+}): Geste | null {
+  if (!o.ouvert) return null;
+  if (o.role !== null && o.role !== "owner") return "membre";
+  if (essaiDisponible(o.ligne)) return "essai";
+  return o.ligne?.statut && !abonnementTermine(o.ligne.statut) ? "portail" : "souscrire";
+}

@@ -59,11 +59,19 @@ describe("abonnementCourant", () => {
 });
 
 describe("colonnesDe", () => {
+  it("un prix remplacé (sans clé) garde sa formule par ses metadata ; une clé inconnue ne donne rien", () => {
+    const remplace = abo({ id: "sub_1" });
+    (remplace.items.data[0].price as unknown as Record<string, unknown>).lookup_key = null;
+    (remplace.items.data[0].price as unknown as Record<string, unknown>).metadata = { formule: "essentiel", periodicite: "mensuel" };
+    expect(colonnesDe(remplace).formule).toBe("rojer_essentiel_mensuel");
+    expect(colonnesDe(abo({ id: "sub_2", prix: "suivi_annuel" })).formule).toBeNull();
+  });
+
   it("recopie l'état, la formule et les dates (secondes Stripe → dates)", () => {
     const s = abo({
       id: "sub_1",
       status: "trialing",
-      prix: "suivi_annuel",
+      prix: "rojer_pro_annuel",
       trial_end: 1_790_000_000,
       cancel_at_period_end: true,
       cancel_at: 1_800_000_000,
@@ -71,8 +79,8 @@ describe("colonnesDe", () => {
     expect(colonnesDe(s)).toEqual({
       stripeSubscriptionId: "sub_1",
       statut: "trialing",
-      formule: "suivi_annuel",
-      stripePriceId: "price_suivi_annuel",
+      formule: "rojer_pro_annuel",
+      stripePriceId: "price_rojer_pro_annuel",
       finPeriode: new Date(1_800_000_000_000),
       finEssai: new Date(1_790_000_000_000),
       resilieEnFinDePeriode: true,

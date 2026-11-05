@@ -10,7 +10,7 @@ import "server-only";
 // l'appel (lot de branchement).
 
 import type Stripe from "stripe";
-import { LOOKUP_KEYS, formuleDeLookupKey } from "@/lib/abonnements/formules";
+import { INTERVALLE_STRIPE, LOOKUP_KEYS, formuleDeLookupKey } from "@/lib/abonnements/formules";
 
 export const DUREE_ESSAI_JOURS = 30;
 
@@ -107,7 +107,6 @@ export type PrixAffiche = { priceId: string; montantCentimes: number; devise: st
 
 let cachePrix: { lu: number; prix: ReadonlyMap<string, PrixAffiche> } | undefined;
 const DUREE_CACHE_PRIX_MS = 10 * 60_000;
-const INTERVALLE = { mensuel: "month", annuel: "year" } as const;
 
 /**
  * Les prix des formules, lus chez Stripe (qui les facture) par `lookup_key`.
@@ -123,7 +122,7 @@ export async function prixDesFormules(stripe: Stripe, maintenant = Date.now()): 
   for (const p of liste.data) {
     const cle = formuleDeLookupKey(p.lookup_key);
     if (!cle || p.unit_amount === null) continue;
-    if (p.recurring?.interval !== INTERVALLE[cle.periodicite]) {
+    if (p.recurring?.interval !== INTERVALLE_STRIPE[cle.periodicite]) {
       console.error(`stripe : le prix ${p.id} (${p.lookup_key}) n'a pas l'intervalle de sa clé`);
       continue;
     }

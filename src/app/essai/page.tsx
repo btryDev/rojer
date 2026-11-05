@@ -4,7 +4,9 @@ import { FormulaireEssai, type OffreAffichee } from "@/components/abonnements/Fo
 import { aiguillageSansCompte } from "@/lib/auth/compte";
 import { requireUser } from "@/lib/auth/require-user";
 import { aiguillageEssai } from "@/lib/abonnements/essai";
-import { CLES_FORMULES, FORMULES, PERIODICITES, lookupKey } from "@/lib/abonnements/formules";
+import { CLES_FORMULES, FORMULES, PERIODICITES, lookupKey, pointsDeFormule } from "@/lib/abonnements/formules";
+import { LogOut } from "lucide-react";
+import { signOutAction } from "@/lib/auth/actions";
 import { clientStripe } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
 import { DUREE_ESSAI_JOURS, prixDesFormules } from "@/lib/stripe/parcours";
@@ -41,7 +43,7 @@ export default async function EssaiPage() {
     formule: f,
     libelle: FORMULES[f].libelle,
     pourQui: FORMULES[f].pourQui,
-    points: pointsDe(f),
+    points: pointsDeFormule(f),
     prix: Object.fromEntries(
       PERIODICITES.map((p) => {
         const cle = lookupKey(f, p);
@@ -71,6 +73,22 @@ export default async function EssaiPage() {
       </aside>
 
       <main className="flex flex-col px-[var(--board-gutter)] py-10">
+        {/* Le rail est replié sur téléphone : la marque et la sortie y sont
+            redonnées, comme dans la mise en place (`WizardShell`). */}
+        <div className="mb-8 flex items-center justify-between lg:hidden">
+          <Link href="/" className="text-[16px] font-semibold leading-none tracking-[-0.025em]">
+            Rojer
+          </Link>
+          <form action={signOutAction}>
+            <button
+              type="submit"
+              className="inline-flex items-center gap-1.5 text-[12.5px] text-[color:var(--board-slate-mid)] underline decoration-[color:var(--board-slate)] decoration-dotted underline-offset-4 transition-colors hover:text-[color:var(--board-ink)]"
+            >
+              <LogOut aria-hidden className="size-3.5" />
+              Déconnexion
+            </button>
+          </form>
+        </div>
         <div className="w-full max-w-[760px]">
           <h1 className="board-titre m-0 text-[clamp(30px,3.4vw,44px)] leading-[1.08]">
             Essayez Rojer jusqu&apos;au {formaterDateLongueFr(fin)}.
@@ -84,15 +102,4 @@ export default async function EssaiPage() {
       </main>
     </div>
   );
-}
-
-/** Ce qui distingue une formule, tiré du catalogue (ADR-053 § 11) — rien de non livré. */
-function pointsDe(f: (typeof CLES_FORMULES)[number]): string[] {
-  const q = FORMULES[f].quotas;
-  const etab = q.etablissements === 1 ? "1 établissement" : `Jusqu'à ${q.etablissements} établissements`;
-  const usage =
-    q.permisDeFeuParAn === null
-      ? "Permis de feu et plans de prévention sans limite"
-      : `${q.permisDeFeuParAn} permis de feu et ${q.plansDePreventionParAn} plans de prévention par an`;
-  return [etab, "Tous les modules de Rojer", usage];
 }

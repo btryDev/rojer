@@ -3,13 +3,22 @@ import { BandeauAbonnement } from "@/components/abonnements/BandeauAbonnement";
 import { getOptionalCompte } from "@/lib/auth/compte";
 import { requireUser } from "@/lib/auth/require-user";
 import { abonnementDuCompte, contexteDroits, offreLancee } from "@/lib/abonnements/saisie";
-import { droitsDe, libelleStatut } from "@/lib/abonnements/droits";
+import { droitsDe, gesteAbonnement, libelleStatut } from "@/lib/abonnements/droits";
 import { formaterDateLongueFr } from "@/lib/dates";
 import { Button, buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
 import { ouvrirPortailAction, souscrireAction } from "@/lib/abonnements/actions";
-import { essaiDisponible, PAGE_ESSAI } from "@/lib/abonnements/essai";
-import { CLES_FORMULES, FORMULES, PERIODICITES, formuleDeLookupKey, lookupKey } from "@/lib/abonnements/formules";
+import { PAGE_ESSAI } from "@/lib/abonnements/essai";
+import {
+  CLES_FORMULES,
+  FORMULES,
+  LIBELLE_PERIODICITE,
+  PERIODICITES,
+  formuleDeLookupKey,
+  lookupKey,
+} from "@/lib/abonnements/formules";
+import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
+import { DUREE_ESSAI_JOURS } from "@/lib/stripe/parcours";
 
 export const metadata = {
   title: "Abonnement — Rojer",
@@ -23,8 +32,6 @@ export const metadata = {
  * portail Stripe tant qu'un abonnement court, Checkout après sa fin. Un autre
  * membre voit l'état, sans les boutons.
  */
-/** Un abonnement terminé : on en souscrit un nouveau (Checkout). */
-const TERMINES = new Set(["canceled", "incomplete_expired"]);
 const LOOKUP_DEFAUT = lookupKey("essentiel", "mensuel");
 
 export default async function AbonnementPage({
@@ -42,16 +49,8 @@ export default async function AbonnementPage({
   // Une seule lecture : la ligne sert à l'état affiché et aux droits.
   const ligne = c ? await abonnementDuCompte(c.db, c.compte.compteId) : null;
   const droits = droitsDe(ligne, ctx);
-  const proprietaire = c?.compte.role === "owner";
-  const geste = !ouvert
-    ? null
-    : !proprietaire
-      ? "membre"
-      : !c || (await essaiDisponible(c.db, c.compte.compteId))
-        ? "essai"
-        : ligne?.statut && !TERMINES.has(ligne.statut)
-          ? "portail"
-          : "souscrire";
+  // Sans compte encore, `role` est nul : l'essai reste proposé.
+  const geste = gesteAbonnement({ ouvert, role: c?.compte.role ?? null, ligne });
   const formule = formuleDeLookupKey(ligne?.formule);
 
   return (
@@ -84,7 +83,7 @@ export default async function AbonnementPage({
                   <dt className="text-[color:var(--board-slate-mid)]">Formule</dt>
                   <dd className="m-0">
                     {formule
-                      ? `${FORMULES[formule.formule].libelle}, ${formule.periodicite === "mensuel" ? "mensuelle" : "annuelle"}`
+                      ? `${FORMULES[formule.formule].libelle}, facturation ${LIBELLE_PERIODICITE[formule.periodicite].adjectif}`
                       : ligne.formule}
                   </dd>
                 </>
@@ -109,17 +108,16 @@ export default async function AbonnementPage({
           )}
         </section>
 
-        {stripe === "indisponible" && (
-          <p role="alert" className="m-0 mt-6 text-[12.5px] text-[color:var(--board-signal-ink)]">
-            Stripe ne répond pas pour le moment : réessayez dans un instant.
-          </p>
-        )}
-        {paiement === "termine" && (
-          <p role="status" className="m-0 mt-6 text-[14px] leading-[1.5] text-[color:var(--board-slate-ink)]">
-            Paiement terminé. L&apos;abonnement s&apos;affiche ici dès que Stripe l&apos;a confirmé, en
-            général en quelques secondes : rechargez la page.
-          </p>
-        )}
+        <div className="mt-6 flex flex-col gap-3">
+          <MessageFormulaire ton="alerte">
+            {stripe === "indisponible" ? "Stripe ne répond pas pour le moment : réessayez dans un instant." : null}
+          </MessageFormulaire>
+          <MessageFormulaire ton="info">
+            {paiement === "termine"
+              ? "Paiement terminé. L'abonnement s'affiche ici dès que Stripe l'a confirmé, en général en quelques secondes : rechargez la page."
+              : null}
+          </MessageFormulaire>
+        </div>
 
         {geste && (
           <section className="carte-board mt-5 px-7 py-6 sm:px-8" aria-labelledby="titre-gerer">
@@ -134,7 +132,7 @@ export default async function AbonnementPage({
             {geste === "essai" && (
               <>
                 <p className="m-0 mt-2 mb-5 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                  30 jours gratuits, sans carte bancaire, dans la formule de votre choix.
+                  {DUREE_ESSAI_JOURS} jours gratuits, sans carte bancaire, dans la formule de votre choix.
                 </p>
                 <Link href={PAGE_ESSAI} className={buttonVariants({ variant: "board", size: "board" })}>
                   Démarrer mon essai gratuit
@@ -164,7 +162,7 @@ export default async function AbonnementPage({
                   {CLES_FORMULES.flatMap((f) =>
                     PERIODICITES.map((p) => (
                       <option key={lookupKey(f, p)} value={lookupKey(f, p)}>
-                        {FORMULES[f].libelle}, facturation {p === "mensuel" ? "mensuelle" : "annuelle"}
+                        {FORMULES[f].libelle}, facturation {LIBELLE_PERIODICITE[p].adjectif}
                       </option>
                     )),
                   )}

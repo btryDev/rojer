@@ -6,7 +6,9 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { demarrerEssaiAction } from "@/lib/abonnements/actions";
-import type { CleFormule, Periodicite } from "@/lib/abonnements/formules";
+import { LIBELLE_PERIODICITE, type CleFormule, type Periodicite } from "@/lib/abonnements/formules";
+import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
+import { CASE_A_COCHER } from "@/components/ui-kit/case-a-cocher";
 
 export type OffreAffichee = {
   formule: CleFormule;
@@ -24,16 +26,17 @@ export function FormulaireEssai({ offres }: { offres: OffreAffichee[] }) {
   const [periodicite, setPeriodicite] = useState<Periodicite>("mensuel");
   const [choisie, setChoisie] = useState<CleFormule>(offres[0].formule);
   const [accepte, setAccepte] = useState(false);
-  const cle = offres.find((o) => o.formule === choisie)!.prix[periodicite].cle;
-  const prixManquent = offres.some((o) => o.prix[periodicite].centimes === null);
+  const prixChoisi = (offres.find((o) => o.formule === choisie) ?? offres[0]).prix[periodicite];
+  // Seul le prix choisi compte : une autre formule sans prix ne bloque rien.
+  const prixManquant = prixChoisi.centimes === null;
 
   return (
     <form action={envoyer} className="mt-10 flex flex-col gap-8">
-      <input type="hidden" name="formule" value={cle} />
+      <input type="hidden" name="formule" value={prixChoisi.cle} />
 
       <fieldset className="m-0 border-0 p-0">
         <legend className="mb-3 text-[14px] font-semibold">Facturation après l&apos;essai</legend>
-        <div className="inline-flex rounded-full bg-[color:var(--board-slate-pale)] p-1" role="radiogroup">
+        <div className="inline-flex rounded-full bg-[color:var(--board-slate-pale)] p-1">
           {(["mensuel", "annuel"] as const).map((p) => (
             <label
               key={p}
@@ -43,13 +46,12 @@ export function FormulaireEssai({ offres }: { offres: OffreAffichee[] }) {
             >
               <input
                 type="radio"
-                name="periodicite"
                 value={p}
                 checked={periodicite === p}
                 onChange={() => setPeriodicite(p)}
                 className="sr-only"
               />
-              {p === "mensuel" ? "Mensuelle" : "Annuelle"}
+              {LIBELLE_PERIODICITE[p].adjectif.replace(/^./, (c) => c.toUpperCase())}
             </label>
           ))}
         </div>
@@ -70,7 +72,6 @@ export function FormulaireEssai({ offres }: { offres: OffreAffichee[] }) {
               >
                 <input
                   type="radio"
-                  name="choix-formule"
                   value={o.formule}
                   checked={active}
                   onChange={() => setChoisie(o.formule)}
@@ -86,7 +87,7 @@ export function FormulaireEssai({ offres }: { offres: OffreAffichee[] }) {
                   ) : (
                     <>
                       <strong className="text-[20px] tabular-nums">{euros(prix)}</strong> HT par{" "}
-                      {periodicite === "mensuel" ? "mois" : "an"}
+                      {LIBELLE_PERIODICITE[periodicite].unite}
                     </>
                   )}
                 </span>
@@ -120,7 +121,7 @@ export function FormulaireEssai({ offres }: { offres: OffreAffichee[] }) {
             value="oui"
             checked={accepte}
             onChange={(e) => setAccepte(e.target.checked)}
-            className="mt-1 size-4 flex-none accent-[color:var(--board-ink)]"
+            className={CASE_A_COCHER}
           />
           <span>
             J&apos;accepte les{" "}
@@ -130,18 +131,12 @@ export function FormulaireEssai({ offres }: { offres: OffreAffichee[] }) {
             (s&apos;ouvrent dans un nouvel onglet).
           </span>
         </label>
-        {etat.status === "error" && (
-          <p role="alert" className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
-            {etat.message}
-          </p>
-        )}
-        {prixManquent && (
-          <p className="m-0 text-[12.5px] text-[color:var(--board-slate-mid)]">
-            Les prix ne sont pas disponibles pour le moment : réessayez dans quelques minutes.
-          </p>
-        )}
+        <MessageFormulaire ton="alerte">{etat.status === "error" ? etat.message : null}</MessageFormulaire>
+        <MessageFormulaire ton="info">
+          {prixManquant ? "Le prix de cette formule n'est pas disponible pour le moment : réessayez dans quelques minutes." : null}
+        </MessageFormulaire>
         <div>
-          <Button type="submit" variant="board" size="board" disabled={!accepte || enCours || prixManquent}>
+          <Button type="submit" variant="board" size="board" disabled={!accepte || enCours || prixManquant}>
             {enCours ? "Démarrage de l'essai…" : "Démarrer mon essai"}
           </Button>
         </div>

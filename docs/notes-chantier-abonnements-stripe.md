@@ -458,6 +458,23 @@ abonnement n'est pas terminé ; au webhook d'un Checkout, enregistrer la
 preuve d'acceptation (version, empreinte) ; nom et adresse du client depuis
 l'entreprise.
 
+**Revues de la PR B (#190, 2026-11-05)** — sécurité : rien d'exploitable ;
+corrigé : verrou de l'essai (`essaiUtiliseLe`, mise à jour conditionnelle,
+rendu si Stripe échoue — deux onglets ne font plus deux essais) ; prix
+vérifié avant de créer le compte ; preuve retirée si l'essai échoue ;
+relecture en échec ≠ essai en échec ; nouvel inscrit sans compte : bouton
+d'essai sur la page Abonnement ; nom de facturation posé seulement s'il est
+encore provisoire ; formule lue aussi sur les `metadata` du prix (un prix
+remplacé garde son plafond) ; `gesteAbonnement`, `essaiDisponible`,
+`abonnementTermine` (droits.ts), libellés et intervalle dans `formules.ts`,
+kit (`MessageFormulaire`, `CASE_A_COCHER`), marque et sortie sur téléphone.
+Reporté : extraire un cadre commun à `WizardShell` et `/essai`, et une
+`BasculeGelule` partagée avec `UploadRapportForm` ; annoncer le plafond
+d'établissements dès l'ouverture de l'onboarding (aujourd'hui à la fin) ;
+compte nommé « Mon compte » à l'essai (choix ADR-054, nom non affiché) ;
+`AcceptationConditions` en RESTRICT bloque la suppression d'un compte, à
+traiter avec le lot de suppression.
+
 **Réglages du tableau de bord Stripe, avant le lancement** (complète § 6) :
 URL des conditions (`/conditions`) dans les réglages publics — sans elle,
 Checkout refuse `consent_collection` ; portail : changement de formule avec
