@@ -23,7 +23,7 @@ import {
 } from "@/lib/pdf/checklist-controle";
 import { composerRegistreDeLEtablissement } from "@/lib/registre/queries";
 import { lireAnnexesDuRegistre } from "@/lib/registre/contenu-ailleurs";
-import { piecesDesAnnexes } from "@/lib/registre/annexes";
+import { phraseAnnexesDuDossier, piecesDesAnnexes } from "@/lib/registre/annexes";
 import { bilanDuRegistre, completudesDuRegistre } from "@/lib/registre/completude";
 import {
   NB_ANALYSES_DU_DOSSIER,
@@ -62,7 +62,7 @@ export default async function ControlePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { etablissement } = await requireEtablissement(id);
+  const { etablissement, db, user } = await requireEtablissement(id);
   // Une horloge, lue une fois : l'âge du DUERP et la fenêtre de douze mois
   // décrivent le même instant.
   const maintenant = new Date();
@@ -105,11 +105,17 @@ export default async function ControlePage({
     // lot 3) : un écart électrique en retard doit se voir ici.
     compterActions(id, maintenant, { origine: "verification" }),
     // Les écrits annexés au registre que le ZIP joint (ADR-056) : la même
-    // lecture que la fiche « Annexes » et que la route.
-    lireAnnexesDuRegistre(id),
+    // lecture que la fiche « Annexes » et que la route. Une lecture en échec
+    // ne fait pas tomber l'écran : la ligne le dit, comme le README du ZIP
+    // (relecture du 2026-11-05).
+    lireAnnexesDuRegistre(db, id, user.id).catch((e: unknown) => {
+      console.error("controle : lecture des annexes du registre en échec", e);
+      return "echec" as const;
+    }),
   ]);
-  const annexesLignes = annexes?.lignes ?? [];
-  const annexesDeposees = piecesDesAnnexes(annexes).length;
+  const annexesLues = annexes === "echec" ? null : annexes;
+  const annexesLignes = annexesLues?.lignes ?? [];
+  const annexesDeposees = piecesDesAnnexes(annexesLues).length;
 
   // LE PATRON `etat-charge.ts` [2026-10-25 : fichier retiré avec la plaque
   // des zones du hero ; le patron reste], APPLIQUÉ À UN ÉCRAN : la question « sait-on ? »
@@ -206,10 +212,9 @@ export default async function ControlePage({
       reference: "Art. R. 4323-25 et R. 4323-26 CT",
     },
     annexes: {
-      description:
-        annexesLignes.length === 0
-          ? "Aucun écrit à annexer au registre ne vous est demandé par les lignes que Rojer suit."
-          : `${annexesDeposees} fichier${annexesDeposees > 1 ? "s" : ""} déposé${annexesDeposees > 1 ? "s" : ""} sur ${annexesLignes.length} écrit${annexesLignes.length > 1 ? "s" : ""} à annexer, joint${annexesDeposees > 1 ? "s" : ""} dans le dossier ${PIECES_ZIP.annexes}. Ils se déposent dans « Ce qui doit être en place ».`,
+      description: phraseAnnexesDuDossier(
+        annexes === "echec" ? null : { aAnnexer: annexesLignes.length, deposes: annexesDeposees },
+      ),
       present: annexesDeposees > 0,
     },
     rapports: {

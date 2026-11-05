@@ -43,12 +43,13 @@ ni de le remettre dans le dossier de contrôle.
    (ADR-027 reste entier sur ce point). Le score n'en tient pas compte
    autrement qu'une case cochée.
 4. **Deux fichiers au plus par ligne.** Le fichier en cours, et le précédent
-   (`remplaceeLe` daté). Un nouveau dépôt fait du fichier en cours le
-   précédent et **efface** l'ancien précédent, en base puis au stockage.
-   « Pas encore » retire la déclaration et fait du fichier en cours le
-   précédent, de la même façon. La base l'impose : un seul fichier en cours
-   par ligne (index unique partiel), et l'action ne laisse jamais plus d'un
-   précédent.
+   (`remplaceeLe` daté). Un nouveau dépôt **efface toujours** l'ancien
+   précédent, en base puis au stockage, et fait du fichier en cours, s'il y
+   en a un, le précédent. « Pas encore » retire la déclaration et fait du
+   fichier en cours le précédent (l'ancien précédent part) ; sans fichier en
+   cours, il ne touche à aucun fichier. La base impose un seul fichier en
+   cours par ligne (`enCours` vrai ou nul, unique — PostgreSQL ne compare
+   pas les NULL), et l'action ne laisse jamais plus d'un précédent.
 5. **Pourquoi garder le précédent.** Si un incendie ou un contrôle survient
    juste après un remplacement, on peut montrer ce qui était annexé avant.
    Au-delà, aucun texte ne fixe de durée pour ces écrits — `D. 4711-3` vise

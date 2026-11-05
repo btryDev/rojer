@@ -82,7 +82,7 @@ import {
   contenuTenuAilleursDepuis,
   lireAnnexesDuRegistre,
 } from "@/lib/registre/contenu-ailleurs";
-import { ID_FICHE_ANNEXES } from "@/lib/registre/annexes";
+import { ID_FICHE_ANNEXES, piecesDesAnnexes } from "@/lib/registre/annexes";
 import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
 import {
   bilanDuRegistre,
@@ -459,7 +459,9 @@ export async function construireRegistreData(
     ? await Promise.all([
         listerEquipementsDeLEtablissement(etablissementId),
         // La fiche « Annexes » relit « Ce qui doit être en place » (2026-11-05).
-        lireAnnexesDuRegistre(etablissementId),
+        etab.entreprise.userId
+          ? lireAnnexesDuRegistre(db, etablissementId, etab.entreprise.userId)
+          : Promise.resolve(null),
       ])
     : [[], null];
 
@@ -517,6 +519,9 @@ export async function construireRegistreData(
     bilan: bilanDuRegistre([...completudes.values()]),
     rapports: lignesRapports,
     verifsEnAttente,
+    // Les fichiers que la fiche « Annexes » porte : le ZIP les joint sans
+    // refaire la lecture (relecture du 2026-11-05).
+    annexes: piecesDesAnnexes(annexes),
   };
 }
 

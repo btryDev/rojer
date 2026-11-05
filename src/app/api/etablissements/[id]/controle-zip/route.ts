@@ -14,8 +14,6 @@ import {
   formaterDateHeureFr,
 } from "@/lib/dates";
 import { PIECES_ZIP, fichierDuerp, nomDeDossier } from "@/lib/controle/pieces-zip";
-import { lireAnnexesDuRegistre } from "@/lib/registre/contenu-ailleurs";
-import { piecesDesAnnexes } from "@/lib/registre/annexes";
 import {
   carnetSanitaireDuDossier,
   compterRapportsSalariesEcartes,
@@ -328,6 +326,9 @@ async function construireArchive(
   }
 
   // ── 03 Registre de sécurité ─────────────────────────────────────────
+  // `null` tant que le registre n'a pas été lu (ADR-056) : 03_Registre_annexes/
+  // ne se compose qu'à partir de ce qu'il porte.
+  let annexesListees: { pieceId: string; titre: string }[] | null = null;
   try {
     const data = await construireRegistreData(db, id);
     if (data) {
@@ -336,20 +337,25 @@ async function construireArchive(
         if (v.rythmeRetenu) rythmesRetenus.set(v.id, v.rythmeRetenu);
         if (v.pourInformation) visitesPourInformation.add(v.id);
       }
+      // Les annexes, lues avec le registre : une seule lecture pour le PDF
+      // et pour 03_Registre_annexes/ (relecture du 2026-11-05).
+      annexesListees = data.annexes ?? [];
       const buf = await renderToBuffer(RegistreDocument({ data }));
       zip.file(PIECES_ZIP.registre, new Uint8Array(buf));
     }
   } catch (e) {
     noterEchec(PIECES_ZIP.registre, e);
   }
+  // Le registre n'a pas pu être lu : ses annexes non plus, et le README le
+  // dit au lieu d'annoncer « aucun écrit annexé ».
+  if (annexesListees === null) {
+    noterEchec(PIECES_ZIP.annexes, new Error("registre non lu"), "la lecture du registre a échoué");
+  }
 
   // ── 03_Registre_annexes/ — les écrits annexés au registre ───────────
   // Ceux que la fiche « Annexes » liste (ADR-056), fichier en cours seul : le
   // PDF du registre les nomme, le tiers les lit ici.
-  const annexesListees = await lire(PIECES_ZIP.annexes, [], async () =>
-    piecesDesAnnexes(await lireAnnexesDuRegistre(id)),
-  );
-  const titreAnnexe = new Map(annexesListees.map((a) => [a.pieceId, a.titre]));
+  const titreAnnexe = new Map((annexesListees ?? []).map((a) => [a.pieceId, a.titre]));
   const annexesDeposees = await lire(PIECES_ZIP.annexes, [], () =>
     annexesDeposeesDuDossier(db, id, [...titreAnnexe.keys()]),
   );

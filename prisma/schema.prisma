@@ -2204,11 +2204,14 @@ model DeclarationEtatPermanent {
 /// Séparé de `DeclarationEtatPermanent`, que « Pas encore » efface : le
 /// fichier survit au retrait, comme version précédente.
 ///
-/// DEUX FICHIERS AU PLUS PAR LIGNE : celui en cours (`remplaceeLe` nul) et le
-/// précédent. L'unicité du fichier en cours est un index unique PARTIEL,
-/// invisible ici et écrit dans la migration `20261105120000` ; la borne du
-/// précédent est tenue par l'action (`etats-permanents/pieces.ts`), qui
-/// efface l'ancien précédent à chaque dépôt et à chaque retrait.
+/// DEUX FICHIERS AU PLUS PAR LIGNE : celui en cours (`enCours` vrai,
+/// `remplaceeLe` nul) et le précédent (`enCours` nul, `remplaceeLe` daté).
+/// L'unicité du fichier en cours tient à `@@unique([…, enCours])` : PostgreSQL
+/// ne compare pas les NULL, seul `true` est unique. ~~Un index unique
+/// partiel~~ [relecture du 2026-11-05 : Prisma ne sait pas l'écrire, et un
+/// `migrate dev` suivant l'aurait effacé]. La borne du précédent est tenue
+/// par l'action (`etats-permanents/pieces.ts`) ; la cohérence des deux
+/// colonnes, par une CHECK de la migration.
 model PieceEtatPermanent {
   id              String        @id @default(cuid())
   etablissementId String
@@ -2224,11 +2227,15 @@ model PieceEtatPermanent {
   fichierTaille Int
 
   deposeLe    DateTime  @default(now())
+  /// Vrai = le fichier en cours ; nul = la version précédente. Jamais faux
+  /// (CHECK) : c'est le NULL qui laisse l'unicité ne porter que sur le
+  /// fichier en cours.
+  enCours     Boolean?  @default(true)
   /// Nul = le fichier en cours. Daté = la version précédente, effacée au
-  /// remplacement suivant (ADR-056 § 4).
+  /// dépôt suivant (ADR-056 § 4).
   remplaceeLe DateTime?
 
-  @@index([etablissementId, obligationId])
+  @@unique([etablissementId, obligationId, enCours])
 }
 
 // ----------------------------------------------------------------------------

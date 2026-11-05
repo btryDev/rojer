@@ -54,6 +54,17 @@ const h = vi.hoisted(() => {
       return p;
     }),
     create: vi.fn(async ({ data }: { data: Omit<Piece, "id" | "remplaceeLe"> }) => {
+      // L'unicité du fichier en cours, comme la base (`enCours`).
+      if (
+        etat.pieces.some(
+          (x) =>
+            x.etablissementId === data.etablissementId &&
+            x.obligationId === data.obligationId &&
+            x.remplaceeLe === null,
+        )
+      ) {
+        throw new Error("P2002 simulé : un second fichier en cours");
+      }
       const p = { id: `p${++suivant}`, remplaceeLe: null, ...data };
       etat.pieces.push(p);
       return p;
@@ -207,6 +218,18 @@ describe("deux fichiers au plus par ligne (ADR-056 § 4)", () => {
     // v1 part, v2 devient le précédent ; plus aucun fichier en cours.
     expect(h.etat.pieces).toHaveLength(1);
     expect(h.etat.pieces[0].remplaceeLe).not.toBeNull();
+    expect(h.etat.pieces[0].fichierCle).toMatch(/v2\.pdf$/);
+    expect(h.etat.stockage.effaces).toHaveLength(1);
+    expect(h.etat.stockage.effaces[0]).toMatch(/v1\.pdf$/);
+  });
+
+  it("après un « Pas encore », le dépôt suivant efface bien le précédent, comme l'écran le promet", async () => {
+    // Le défaut relevé à la relecture du 2026-11-05 : sans fichier en cours,
+    // le dépôt gardait le précédent, et la ligne portait C1 et C2.
+    await deposerFichierEnPlace("etab-1", SCHEMA, unPdf("v1.pdf"));
+    await retirerDeclaration("etab-1", SCHEMA);
+    await deposerFichierEnPlace("etab-1", SCHEMA, unPdf("v2.pdf"));
+    expect(h.etat.pieces).toHaveLength(1);
     expect(h.etat.pieces[0].fichierCle).toMatch(/v2\.pdf$/);
     expect(h.etat.stockage.effaces).toHaveLength(1);
     expect(h.etat.stockage.effaces[0]).toMatch(/v1\.pdf$/);

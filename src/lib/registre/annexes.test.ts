@@ -8,6 +8,7 @@ import {
   annexeDeLaLigne,
   annexesDuRegistre,
   ID_FICHE_ANNEXES,
+  phraseAnnexesDuDossier,
   piecesDesAnnexes,
 } from "./annexes";
 import { SECTIONS_REGISTRE } from "./sections";
@@ -172,5 +173,25 @@ describe("le fichier déposé sur la ligne (ADR-056)", () => {
 
   it("piecesDesAnnexes ne rend rien sans contenu", () => {
     expect(piecesDesAnnexes(null)).toEqual([]);
+  });
+});
+
+describe("phraseAnnexesDuDossier — ce que « Préparer un contrôle » en dit", () => {
+  it("ne dit rien « joint » quand aucun fichier ne l'est (relecture du 2026-11-05)", () => {
+    const p = phraseAnnexesDuDossier({ aAnnexer: 2, deposes: 0 });
+    expect(p).not.toMatch(/joint/);
+    expect(p).toMatch(/Aucun fichier déposé pour 2 écrits à annexer/);
+  });
+
+  it("nomme le dossier du ZIP quand un fichier y part, accordé au nombre", () => {
+    expect(phraseAnnexesDuDossier({ aAnnexer: 2, deposes: 1 })).toMatch(
+      /^1 fichier déposé, joint dans le dossier 03_Registre_annexes\/, pour 2 écrits à annexer\./,
+    );
+    expect(phraseAnnexesDuDossier({ aAnnexer: 2, deposes: 2 })).toMatch(/^2 fichiers déposés, joints/);
+  });
+
+  it("dit une lecture en échec, et une liste vide, sans les confondre", () => {
+    expect(phraseAnnexesDuDossier(null)).toMatch(/n'a pas pu être lue/);
+    expect(phraseAnnexesDuDossier({ aAnnexer: 0, deposes: 0 })).toMatch(/^Aucun écrit à annexer/);
   });
 });

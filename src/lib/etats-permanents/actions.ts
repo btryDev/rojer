@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { obligationDeclarable } from "./garde";
-import { faireDuFichierEnCoursLePrecedent } from "./pieces";
-import { annexeDeLaLigne } from "@/lib/registre/annexes";
+import { preparerUnDepot, retirerLeFichierEnCours } from "./pieces";
+import { ANNEXES_DU_REGISTRE, annexeDeLaLigne } from "@/lib/registre/annexes";
 import { clePieceEtatPermanent, getStorage, stockageEnService } from "@/lib/storage";
 import {
   MESSAGE_DEPOT_NON_CONFIGURE,
@@ -120,13 +120,21 @@ export async function retirerDeclaration(
   // Le fichier en cours d'un écrit annexé au registre devient le précédent
   // (ADR-056 § 4) : « Pas encore » ne laisse pas au registre un fichier que le
   // dirigeant vient de dire absent. L'ancien précédent part, après la base.
-  const aLiberer = await db.$transaction(async (tx) => {
-    await tx.declarationEtatPermanent.deleteMany({
+  // Les autres lignes ne portent jamais de fichier : elles gardent la seule
+  // suppression d'avant (relecture du 2026-11-05).
+  if (ANNEXES_DU_REGISTRE.some((a) => a.obligationId === obligationId)) {
+    const aLiberer = await db.$transaction(async (tx) => {
+      await tx.declarationEtatPermanent.deleteMany({
+        where: { etablissementId, obligationId },
+      });
+      return retirerLeFichierEnCours(tx, etablissementId, obligationId, new Date());
+    });
+    await libererFichiers(aLiberer, "etats-permanents/retrait");
+  } else {
+    await db.declarationEtatPermanent.deleteMany({
       where: { etablissementId, obligationId },
     });
-    return faireDuFichierEnCoursLePrecedent(tx, etablissementId, obligationId, new Date());
-  });
-  await libererFichiers(aLiberer, "etats-permanents/retrait");
+  }
 
   revalidatePath(`/etablissements/${etablissementId}/etats-permanents`);
   // ~~Les lignes nées d'un fait d'activité se déclarent sous leur question
@@ -148,7 +156,8 @@ const NOM_FICHIER_MAX = 255;
  * redatée, sa note gardée. Rojer ne lit pas le fichier — la phrase sous les
  * réponses le dit toujours.
  *
- * Le fichier en cours devient le précédent, l'ancien précédent part (§ 4).
+ * L'ancien précédent part, le fichier en cours devient le précédent (§ 4,
+ * `preparerUnDepot`).
  * Le fichier neuf est écrit AVANT la base et effacé si la base refuse ; les
  * anciens sont libérés APRÈS, comme partout (`suppression/fichiers.ts`).
  */
@@ -195,12 +204,7 @@ export async function deposerFichierEnPlace(
   let aLiberer: string[];
   try {
     aLiberer = await db.$transaction(async (tx) => {
-      const anciens = await faireDuFichierEnCoursLePrecedent(
-        tx,
-        etablissementId,
-        obligationId,
-        maintenant,
-      );
+      const anciens = await preparerUnDepot(tx, etablissementId, obligationId, maintenant);
       await tx.pieceEtatPermanent.create({
         data: {
           etablissementId,
@@ -229,6 +233,9 @@ export async function deposerFichierEnPlace(
   await libererFichiers(aLiberer, "etats-permanents/depot");
 
   revalidatePath(`/etablissements/${etablissementId}/etats-permanents`);
+  // Déposer vaut déclarer : les mêmes surfaces que « Oui, c'est en place »
+  // (relecture du 2026-11-05).
+  revalidatePath(`/etablissements/${etablissementId}/equipe`, "layout");
   revalidatePath(`/etablissements/${etablissementId}/registre`, "layout");
   return { status: "success" };
 }

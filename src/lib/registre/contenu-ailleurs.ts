@@ -48,7 +48,7 @@ import {
   type RetenueParPrudence,
 } from "@/lib/calendrier/prudence";
 import { nomDeZone } from "@/lib/batiments/nom-zone";
-import { requireCompte } from "@/lib/auth/compte";
+import { requireCompte, type Db } from "@/lib/auth/compte";
 import { obligationsApplicablesDuDossier } from "@/lib/etablissements/dossier-du-rendu";
 import { listerEtatsPermanents } from "@/lib/etats-permanents/queries";
 import { projeterEtablissement } from "@/lib/matching/projection";
@@ -178,7 +178,10 @@ export async function lireContenuTenuAilleurs(
   // Un écran de fiche n'en rend qu'une : lire les deux listes ici coûte deux
   // requêtes, et la mémoïsation de la page fait le reste. Le PDF, lui, passe
   // par `contenuTenuAilleursDepuis` avec un parc déjà chargé.
-  if (section.id === ID_FICHE_ANNEXES) return lireAnnexesDuRegistre(etablissementId);
+  if (section.id === ID_FICHE_ANNEXES) {
+    const { user, db } = await requireCompte();
+    return lireAnnexesDuRegistre(db, etablissementId, user.id);
+  }
   if (!section.categoriesEquipement?.length) return null;
   const [equipements, zones, verifications, marques] = await Promise.all([
     PARTIES_INVENTAIRE.has(partieId)
@@ -214,10 +217,15 @@ export async function lireContenuTenuAilleurs(
  * n'est pas celui de l'utilisateur.
  */
 export async function lireAnnexesDuRegistre(
+  db: Db,
   etablissementId: string,
+  userId: string,
 ): Promise<ContenuAilleurs | null> {
-  const { user, db } = await requireCompte();
-  const dossier = await obligationsApplicablesDuDossier(db, etablissementId, user.id);
+  // Le client et le compte sont REÇUS (relecture du 2026-11-05) : le PDF et
+  // le ZIP les tiennent déjà, et une seconde garde ici en ferait un second
+  // contexte d'authentification. `listerEtatsPermanents` lit encore la
+  // session pour ses déclarations — c'est sa portée, antérieure à ce lot.
+  const dossier = await obligationsApplicablesDuDossier(db, etablissementId, userId);
   if (!dossier) return null;
   const etats = await listerEtatsPermanents(
     dossier.etab,

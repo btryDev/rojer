@@ -23,6 +23,9 @@ import type { TypologieApplication } from "@/lib/referentiels/types-communs";
 import { ancreEtatPermanent } from "@/lib/etats-permanents/ancre";
 import { phraseDeclaration } from "@/lib/etats-permanents/phrases";
 import type { ContenuAilleurs } from "./contenu-ailleurs";
+import { PIECES_ZIP } from "@/lib/controle/pieces-zip";
+
+const PIECES_ZIP_ANNEXES = PIECES_ZIP.annexes;
 
 /** L'identifiant de la fiche « Annexes » au catalogue (`sections.ts`). */
 export const ID_FICHE_ANNEXES = "annexes";
@@ -177,4 +180,31 @@ export function piecesDesAnnexes(contenu: ContenuAilleurs | null): { pieceId: st
   return (contenu?.lignes ?? []).flatMap((l) =>
     l.fichier ? [{ pieceId: l.fichier.pieceId, titre: l.titre }] : [],
   );
+}
+
+/**
+ * Ce que « Préparer un contrôle » dit des écrits annexés (ADR-056). `null` =
+ * la liste n'a pas pu être lue : on le dit, sans rien affirmer d'autre.
+ * Rien n'est dit « joint » quand aucun fichier ne l'est (relecture du
+ * 2026-11-05).
+ */
+export function phraseAnnexesDuDossier(
+  compte: { aAnnexer: number; deposes: number } | null,
+): string {
+  if (compte === null) {
+    return "La liste des écrits à annexer n'a pas pu être lue. Rechargez la page.";
+  }
+  const { aAnnexer, deposes } = compte;
+  if (aAnnexer === 0) {
+    return "Aucun écrit à annexer au registre ne vous est demandé par les lignes que Rojer suit.";
+  }
+  const ecrits = aAnnexer > 1 ? `${aAnnexer} écrits à annexer` : "1 écrit à annexer";
+  if (deposes === 0) {
+    return `Aucun fichier déposé pour ${ecrits} au registre. Ils se déposent dans « Ce qui doit être en place ».`;
+  }
+  const fichiers =
+    deposes > 1
+      ? `${deposes} fichiers déposés, joints dans le dossier ${PIECES_ZIP_ANNEXES}`
+      : `1 fichier déposé, joint dans le dossier ${PIECES_ZIP_ANNEXES}`;
+  return `${fichiers}, pour ${ecrits}. Ils se déposent dans « Ce qui doit être en place ».`;
 }
