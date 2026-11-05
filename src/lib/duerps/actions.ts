@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
@@ -246,6 +247,7 @@ export async function renommerUnite(
 
 export async function supprimerUnite(uniteId: string): Promise<void> {
   await verifierSaisie();
+  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   const { db, duerpId } = await requireUnite(uniteId);
 
   await db.uniteTravail.delete({ where: { id: uniteId } });

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { redirect } from "next/navigation";
 import { libererFichiers } from "@/lib/suppression/fichiers";
 import { effacerSalarie } from "./suppression";
@@ -303,6 +304,7 @@ export async function retirerTitre(
   titreId: string,
 ): Promise<void> {
   await verifierSaisie();
+  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   const { db } = await assertEtablissementDuCompte(etablissementId);
   await db.titreSalarie.deleteMany({
     where: { id: titreId, salarie: { id: salarieId, etablissementId } },
@@ -325,6 +327,7 @@ export async function supprimerSalarie(
   salarieId: string,
 ): Promise<void> {
   await verifierSaisie();
+  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   const { db } = await assertEtablissementDuCompte(etablissementId);
   const efface = await effacerSalarie(db, etablissementId, salarieId);
   if (efface) {

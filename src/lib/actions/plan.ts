@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { redirect } from "next/navigation";
 import { requireAction, requireVerification } from "@/lib/auth/scope";
 import { estActionEnRetard, estActionOuverte } from "@/lib/dates/retard";
@@ -439,6 +440,7 @@ export async function abandonnerAction(actionId: string): Promise<void> {
 
 export async function supprimerActionPlan(actionId: string): Promise<void> {
   await verifierSaisie();
+  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   const { db, action, etablissementId } = await requireAction(actionId);
 
   await db.action.delete({ where: { id: actionId } });

@@ -1,6 +1,7 @@
 "use server";
 
 import { requireCompte, type Db } from "@/lib/auth/compte";
+import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
@@ -345,6 +346,7 @@ export async function marquerTermine(permisFeuId: string): Promise<void> {
 
 export async function supprimerPermisFeu(permisFeuId: string): Promise<void> {
   await verifierSaisie();
+  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   const permis = await permisDuCompte(permisFeuId);
   // On ne supprime pas un permis déjà signé : on l'annule à la place pour
   // conserver la piste d'audit. LE STATUT NE LE DISAIT PAS : un permis est

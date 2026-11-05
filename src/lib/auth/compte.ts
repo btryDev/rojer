@@ -23,11 +23,7 @@ import { appartenanceDeLaSession, compteDOnboarding, invitationsPourAdresse, typ
  */
 const lireAppartenance = cache((userId: string): Promise<Appartenance | null> => appartenanceDeLaSession(userId));
 
-/**
- * Le client borné de la session. Il porte le gel du compte (ADR-053 § 14) :
- * ce qui dépasse la formule d'un compte qui a payé ne se modifie plus. Lu une
- * fois par rendu ; inutile en lecture seule, où rien ne s'écrit.
- */
+/** Le client borné de la session, qui porte le gel du compte (ADR-053 § 14) — inutile en lecture seule. */
 async function portee(userId: string, a: Appartenance): Promise<ClientBorne> {
   const p = { type: "compte" as const, compteId: a.compteId, userId, lectureSeule: a.role === "lecture" };
   const db = clientBorne(p);
@@ -35,7 +31,7 @@ async function portee(userId: string, a: Appartenance): Promise<ClientBorne> {
   const geles = await lireGeles(db, a.compteId);
   return geles ? clientBorne({ ...p, geles }) : db;
 }
-const lireGeles = cache((db: ClientBorne, compteId: string) => gelesDuCompte(db, compteId));
+const lireGeles = cache(gelesDuCompte);
 
 /**
  * Sans compte (personne inscrite sans établissement, membre retiré), renvoie

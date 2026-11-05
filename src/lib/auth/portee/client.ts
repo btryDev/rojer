@@ -20,7 +20,7 @@ import {
   sqlPeutEcrire,
   type Portee,
 } from "./borne";
-import { verifierGel } from "./gel";
+import { transactionEnCours, verifierGel } from "./gel";
 
 function etendre(base: PrismaClient, p: Portee) {
   // Copie figée : un appelant qui garderait l'objet ne peut plus déplacer la
@@ -30,7 +30,7 @@ function etendre(base: PrismaClient, p: Portee) {
     compteId: p.compteId,
     userId: p.userId,
     lectureSeule: p.lectureSeule === true,
-    ...(p.geles ? { geles: p.geles } : {}),
+    geles: p.geles,
   });
   // Le SQL brut d'écriture n'est pas borné par l'extension (ADR-051 § 5) ; en
   // lecture seule, il est refusé ici (ADR-054 § 4). La forme non paramétrée
@@ -70,7 +70,19 @@ function etendre(base: PrismaClient, p: Portee) {
       },
     },
   });
-  return client as unknown as PrismaClient;
+  // La transaction interactive en cours est suivie : le gel y lit (`gel.ts`).
+  return new Proxy(client as unknown as PrismaClient, {
+    get(cible, cle, recepteur) {
+      const valeur = Reflect.get(cible, cle, recepteur);
+      if (cle !== "$transaction" || typeof valeur !== "function") return valeur;
+      return (ops: unknown, ...reste: unknown[]) =>
+        valeur.call(
+          cible,
+          typeof ops === "function" ? (tx: object) => transactionEnCours.run(tx, () => ops(tx)) : ops,
+          ...reste,
+        );
+    },
+  });
 }
 
 /** Le texte d'une requête brute, sous les formes que Prisma passe à l'extension. */
@@ -100,14 +112,10 @@ function lirePortee(portee: Portee): Portee {
     throw new ErreurPortee("portée sans compte : client refusé");
   if (userId !== null && (typeof userId !== "string" || userId.length === 0))
     throw new ErreurPortee("portée à la personne invalide : client refusé");
-  // Le gel, figé, et seulement s'il gèle quelque chose : une portée sans gel
-  // garde le même client en cache.
+  // Le gel, figé (`gelesDuCompte` ne rend jamais un gel vide).
   const g = portee.geles;
-  const geles =
-    g && (g.etablissements.length > 0 || g.prestataires.length > 0)
-      ? Object.freeze({ etablissements: Object.freeze([...g.etablissements]), prestataires: Object.freeze([...g.prestataires]) })
-      : undefined;
-  return { type: "compte", compteId, userId, lectureSeule: portee.lectureSeule === true, ...(geles ? { geles } : {}) };
+  const geles = g && Object.freeze({ etablissements: Object.freeze([...g.etablissements]), prestataires: Object.freeze([...g.prestataires]) });
+  return { type: "compte", compteId, userId, lectureSeule: portee.lectureSeule === true, geles };
 }
 
 export function clientBorne(portee: Portee): ClientBorne {

@@ -83,7 +83,7 @@ export default async function EtablissementLayout({
         </Suspense>
         {/* Un site gelé (ADR-053 § 14) le dit en tête de chacune de ses pages. */}
         <Suspense fallback={null}>
-          <BandeauGel etablissementId={etab.id} className="mx-[var(--board-gutter)] mt-4" />
+          <BandeauGel cible={{ etablissementId: etab.id }} className="mx-[var(--board-gutter)] mt-4" />
         </Suspense>
         {children}
       </div>

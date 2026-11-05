@@ -1,6 +1,7 @@
 "use server";
 
 import { creerEnLotVerifie } from "@/lib/auth/portee/lot-verifie";
+import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -385,6 +386,7 @@ export async function supprimerPrestataire(
   prestataireId: string,
 ): Promise<void> {
   await verifierSaisie();
+  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   const { db } = await assertEtablissementDuCompte(etablissementId);
 
   const prestataire = await db.prestataire.findFirst({

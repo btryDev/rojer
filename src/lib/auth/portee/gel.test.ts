@@ -12,7 +12,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 import type { PrismaClient } from "@prisma/client";
-import { filtreGele, verifierGel, PAGE_DU_GEL, type Geles } from "./gel";
+import { filtreGele, ouvrirAuGel, transactionEnCours, verifierGel, PAGE_DU_GEL, type Geles } from "./gel";
 
 const GELES: Geles = { etablissements: ["etab-gele"], prestataires: ["pre-gele"] };
 const REFUS = `REDIRECT ${PAGE_DU_GEL}`;
@@ -21,13 +21,15 @@ const REFUS = `REDIRECT ${PAGE_DU_GEL}`;
  * Le client brut, réduit à ce que la vérification lit : une ligne est gelée
  * si son identifiant figure dans `gelees` (le filtre lui-même est testé à part).
  */
-function base(gelees: string[], trouvee: { id: string } | null = { id: "ligne" }) {
+function base(gelees: string[]) {
+  type Where = { id?: string; OR?: { id?: string }[] };
   const delegue = {
-    count: vi.fn(async ({ where }: { where: { AND: [{ id?: { in: string[] } } & Record<string, unknown>, unknown] } }) => {
-      const ids = where.AND[0].id?.in;
-      return ids ? ids.filter((i) => gelees.includes(i)).length : gelees.length;
-    }),
-    findUnique: vi.fn(async () => trouvee),
+    count: vi.fn(async ({ where }: { where: Where }) =>
+      where.OR ? where.OR.filter((w) => w.id !== undefined && gelees.includes(w.id)).length : gelees.length,
+    ),
+    findUnique: vi.fn(async ({ where }: { where: Where }) =>
+      typeof where.id === "string" && gelees.includes(where.id) ? { id: where.id } : null,
+    ),
   };
   return { client: new Proxy({}, { get: () => delegue }) as unknown as PrismaClient, delegue };
 }
@@ -68,21 +70,49 @@ describe("verifierGel : refusé avant d'écrire", () => {
     await expect(verifierGel(base(["x"]).client, "Equipement", "updateMany", { where: { actif: true }, data: { actif: false } }, GELES)).rejects.toThrow(REFUS);
   });
 
-  it("désigner un prestataire gelé : par sa clé ou par un connect", async () => {
+  it("créer en désignant un prestataire gelé : par sa clé, en `{ set }`, ou par un connect", async () => {
     const b = () => base(["pre-gele"]).client;
     await expect(verifierGel(b(), "PermisFeu", "create", { data: { etablissementId: "etab-libre", prestataireId: "pre-gele" } }, GELES)).rejects.toThrow(REFUS);
-    await expect(verifierGel(b(), "PermisFeu", "update", { where: { id: "p" }, data: { prestataire: { connect: { id: "pre-gele" } } } }, GELES)).rejects.toThrow(REFUS);
+    await expect(verifierGel(b(), "PermisFeu", "create", { data: { etablissementId: "etab-libre", prestataireId: { set: "pre-gele" } } }, GELES)).rejects.toThrow(REFUS);
+    await expect(verifierGel(b(), "PermisFeu", "create", { data: { etablissement: { connect: { id: "etab-libre" } }, prestataire: { connect: { id: "pre-gele" } } } }, GELES)).rejects.toThrow(REFUS);
   });
 
-  it("une écriture portée par le parent : création ou modification imbriquée", async () => {
+  it("modifier sans changer de prestataire passe ; déplacer vers un site gelé, non", async () => {
+    await verifierGel(base(["pre-gele"]).client, "PermisFeu", "update", { where: { id: "p" }, data: { prestataireId: "pre-gele", motif: "x" } }, GELES);
+    await expect(verifierGel(base(["etab-gele"]).client, "Equipement", "update", { where: { id: "e" }, data: { etablissementId: { set: "etab-gele" } } }, GELES)).rejects.toThrow(REFUS);
+  });
+
+  it("un connect par une autre clé unique que l'identifiant est lu tel quel", async () => {
+    const { client, delegue } = base([]);
+    await verifierGel(client, "PointReleve", "create", { data: { carnet: { connect: { etablissementId: "etab-gele" } } } }, GELES).catch(() => {});
+    expect(delegue.count.mock.calls.some(([a]) => JSON.stringify(a).includes('"etablissementId":"etab-gele"'))).toBe(true);
+  });
+
+  it("dans une transaction, le gel lit par elle, jamais par le client brut (une seule connexion)", async () => {
+    const brut = base(["etab-gele"]);
+    const tx = base(["etab-gele"]);
     await expect(
-      verifierGel(base(["pre-gele"], null).client, "Etablissement", "update", {
-        where: { id: "etab-libre" },
-        data: { prestataires: { update: { where: { id: "pre-gele" }, data: { raisonSociale: "x" } } } },
-      }, GELES),
+      transactionEnCours.run(tx.client, () => verifierGel(brut.client, "Equipement", "create", { data: { etablissementId: "etab-gele" } }, GELES)),
     ).rejects.toThrow(REFUS);
+    expect(tx.delegue.count).toHaveBeenCalled();
+    expect(brut.delegue.count).not.toHaveBeenCalled();
+  });
+
+  it("un geste ouvert au gel (supprimer, retirer, demander de l'aide) écrit malgré lui", async () => {
+    const { client, delegue } = base(["etab-gele"]);
+    await transactionEnCours.run({}, async () => {
+      await Promise.resolve();
+      ouvrirAuGel();
+      await verifierGel(client, "AccessToken", "updateMany", { where: { id: "t" }, data: { revoqueLe: new Date() } }, GELES);
+    });
+    expect(delegue.count).not.toHaveBeenCalled();
+    // Le contexte de l'appelant n'en hérite pas.
+    await expect(verifierGel(client, "Equipement", "create", { data: { etablissementId: "etab-gele" } }, GELES)).rejects.toThrow(REFUS);
+  });
+
+  it("une création portée par le parent, qui désigne un élément gelé", async () => {
     await expect(
-      verifierGel(base(["pre-gele"], null).client, "Etablissement", "update", {
+      verifierGel(base(["pre-gele"]).client, "Etablissement", "update", {
         where: { id: "etab-libre" },
         data: { permisFeu: { create: { prestataireId: "pre-gele" } } },
       }, GELES),

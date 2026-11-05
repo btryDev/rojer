@@ -8,18 +8,17 @@ import { motifDuGel } from "@/lib/abonnements/quotas";
 import { BandeauAbonnement } from "@/components/abonnements/BandeauAbonnement";
 
 export async function BandeauGel({
-  etablissementId,
-  prestataireId,
+  cible,
   className = "",
 }: {
-  etablissementId: string;
-  prestataireId?: string;
-  /** La place, donnée par l'appelant (en tête de page, ou dans une fiche). */
+  /** Un site (en tête de ses pages) ou un prestataire (sur sa fiche). */
+  cible: { etablissementId: string } | { prestataireId: string };
+  /** La place, donnée par l'appelant. */
   className?: string;
 }) {
   const compte = await getOptionalCompte();
   if (!compte || compte.compte.role === "lecture") return null;
-  const message = await motifDuGel(compte.db, compte.compte.compteId, { etablissementId, prestataireId });
+  const message = await motifDuGel(compte.db, compte.compte.compteId, cible);
   if (!message) return null;
   return (
     <BandeauAbonnement

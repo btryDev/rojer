@@ -112,9 +112,10 @@ export default async function PrestataireDetailPage({
       <CorpsFiche
         principal={
           <>
-            {/* Un prestataire gelé (ADR-053 § 14) le dit dès l'ouverture. */}
+            {/* Un prestataire gelé (ADR-053 § 14) le dit dès l'ouverture ; un
+                site gelé, son bandeau est celui de la mise en page. */}
             <Suspense fallback={null}>
-              <BandeauGel etablissementId={id} prestataireId={prestataireId} />
+              <BandeauGel cible={{ prestataireId }} />
             </Suspense>
             <section className="carte-board px-7 py-6 sm:px-8">
               <div className="flex flex-wrap items-start justify-between gap-4">

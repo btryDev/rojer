@@ -1,6 +1,7 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
+import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
@@ -219,6 +220,7 @@ export async function depublierRegistre(
 ): Promise<void> {
   // Ouverte à un compte impayé, pas à la lecture seule (ADR-054 § 4).
   await verifierRole();
+  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   const { db } = await assertEtablissementDuCompte(etablissementId);
   const r = await db.registreAccessibilite.findUnique({
     where: { etablissementId },

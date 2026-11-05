@@ -1,6 +1,7 @@
 "use server";
 
 import { creerEnLotVerifie } from "@/lib/auth/portee/lot-verifie";
+import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { requireCompte, type Db } from "@/lib/auth/compte";
 import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
@@ -328,6 +329,7 @@ export async function supprimerEquipement(
   id: string,
 ): Promise<SuppressionEquipementResult> {
   await verifierSaisie();
+  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   const { appareil, db } = await appareilDuCompte(id);
   const { etablissementId } = appareil;
   // Déjà retiré : le retrait est définitif, il ne se rejoue pas. Sans ce

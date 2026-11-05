@@ -1,6 +1,7 @@
 "use server";
 
 import { requireCompte } from "@/lib/auth/compte";
+import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
@@ -415,6 +416,7 @@ export async function uploadRapport(
  */
 export async function supprimerRapport(rapportId: string): Promise<void> {
   await verifierSaisie();
+  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   // Lu DANS le périmètre du compte, absent et étranger confondus dans le même
   // `notFound()` (audit du 2026-10-13, comme le dépôt ci-dessus).
   const { compte, db } = await requireCompte();

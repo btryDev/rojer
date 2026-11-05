@@ -1,6 +1,7 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
+import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { revalidatePath } from "next/cache";
 import { notFound } from "next/navigation";
 import type { Db } from "@/lib/auth/compte";
@@ -199,6 +200,7 @@ export async function supprimerPointReleve(
   pointId: string,
 ): Promise<void> {
   await verifierSaisie();
+  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   const { db } = await assertEtablissementDuCompte(etablissementId);
   // Soft delete : on garde les relevés historiques, on désactive le point.
   //
@@ -313,6 +315,7 @@ export async function supprimerReleve(
   releveId: string,
 ): Promise<void> {
   await verifierSaisie();
+  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   const { db } = await assertEtablissementDuCompte(etablissementId);
   const { count } = await db.releveTemperature.deleteMany({
     where: { id: releveId, pointReleve: { carnet: { etablissementId } } },
@@ -473,6 +476,7 @@ export async function supprimerAnalyseLegionelle(
   analyseId: string,
 ): Promise<void> {
   await verifierSaisie();
+  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   const { db } = await assertEtablissementDuCompte(etablissementId);
   const analyse = await analyseDansLeCarnet(db, etablissementId, analyseId);
   if (!analyse) notFound();

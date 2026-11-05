@@ -1,5 +1,6 @@
 "use server";
 
+import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import {
   clesDesEtablissements,
   libererFichiers,
@@ -410,6 +411,7 @@ export async function supprimerEtablissement(
   // Ouverte à un compte impayé (RGPD) ; réservée au propriétaire : elle
   // efface un dossier entier (ADR-054 § 2).
   await verifierProprietaire();
+  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   const { db } = await assertEtablissementDuCompte(id);
 
   const etab = await db.etablissement.findUnique({

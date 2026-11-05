@@ -35,6 +35,43 @@ const SQL_BRUT_ECRIT: Record<string, string> = {
   "src/lib/auth/portee/client.ts": "l'extension (lecture seule)",
 };
 
+/**
+ * Les gestes qu'un gel laisse ouverts, liste FERMÉE : supprimer (règle 9,
+ * et c'est ce qui dégèle), retirer un accès, une page publique, une
+ * déclaration ou une photo, demander de l'aide.
+ */
+const OUVERTS_AU_GEL: Record<string, string[]> = {
+  "src/lib/assistance/actions.ts": ["demanderAssistance"],
+  "src/lib/batiments/actions.ts": ["supprimerBatiment"],
+  "src/lib/equipements/actions.ts": ["supprimerEquipement"],
+  "src/lib/carnet-sanitaire/actions.ts": ["supprimerPointReleve", "supprimerReleve", "supprimerAnalyseLegionelle"],
+  "src/lib/rapports/actions.ts": ["supprimerRapport"],
+  "src/lib/access-tokens/actions.ts": ["revoquerAccessToken"],
+  "src/lib/risques/actions.ts": ["supprimerRisque"],
+  "src/lib/salaries/actions.ts": ["retirerTitre", "supprimerSalarie"],
+  "src/lib/permis-feu/actions.ts": ["supprimerPermisFeu"],
+  "src/lib/actions/actions.ts": ["supprimerMesure"],
+  "src/lib/actions/plan.ts": ["supprimerActionPlan"],
+  "src/lib/plan-prevention/actions.ts": ["supprimerPlan"],
+  "src/lib/duerps/actions.ts": ["supprimerUnite"],
+  "src/lib/entreprises/actions.ts": ["supprimerEntreprise"],
+  "src/lib/accessibilite/actions.ts": ["depublierRegistre"],
+  "src/lib/etats-permanents/actions.ts": ["retirerDeclaration"],
+  "src/lib/etablissements/photo.ts": ["retirerPhotoEtablissement"],
+  "src/lib/etablissements/actions.ts": ["supprimerEtablissement"],
+  "src/lib/prescriptions/actions.ts": ["supprimerPrescription"],
+  "src/lib/prestataires/actions.ts": ["supprimerPrestataire"],
+};
+
+/** Le corps d'une fonction exportée (jusqu'à la prochaine fonction exportée). */
+function corps(f: string, nom: string): string {
+  const c = code(f);
+  const i = c.indexOf(`export async function ${nom}(`);
+  if (i < 0) return "";
+  const j = c.indexOf("export ", i + 10);
+  return c.slice(i, j < 0 ? undefined : j);
+}
+
 describe("le gel (ADR-053 § 14)", () => {
   it("l'extension vérifie le gel avant chaque opération, avec la portée", () => {
     expect(code("src/lib/auth/portee/client.ts")).toMatch(
@@ -56,5 +93,16 @@ describe("le gel (ADR-053 § 14)", () => {
     const appelants = [...TEXTES.keys()].filter((f) => /\becrireReponseFermee\(/.test(code(f)) && !f.endsWith("ecrire-reponse-fermee.ts"));
     expect(appelants.length).toBeGreaterThan(0);
     for (const f of appelants) expect(code(f), f).toMatch(/refuserSiGele\(/);
+  });
+
+  it("les gestes ouverts au gel sont nommés, et s'ouvrent juste après leur garde", () => {
+    const appelants = [...TEXTES.keys()].filter((f) => f !== "src/lib/auth/portee/gel.ts" && /\bouvrirAuGel\(\)/.test(code(f)));
+    expect(appelants.sort()).toEqual(Object.keys(OUVERTS_AU_GEL).sort());
+    for (const [f, noms] of Object.entries(OUVERTS_AU_GEL)) {
+      const c = code(f);
+      expect((c.match(/\bouvrirAuGel\(\)/g) ?? []).length, f).toBe(noms.length);
+      // Après le premier `await` (la garde) : le contexte de l'appelant n'en hérite pas.
+      for (const nom of noms) expect(corps(f, nom), `${f}:${nom}`).toMatch(/^[^{]*\{[^;]*\bawait\b[^;]*;\s*ouvrirAuGel\(\);/);
+    }
   });
 });

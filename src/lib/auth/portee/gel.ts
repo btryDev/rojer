@@ -1,108 +1,98 @@
 import "server-only";
-// Le gel (ADR-053 § 14) : ce qui dépasse la formule d'un compte qui a payé —
-// les établissements et prestataires au-delà du plafond, les plus récents —
-// reste lisible et exportable, mais ne se modifie plus et ne sert plus de
-// source à une création. Le refus vit ici, dans le client borné, la seule
-// couche que traversent toutes les écritures de la session (ADR-051) ; il
-// précède l'écriture, jamais un filtre silencieux.
-//
-// Ouvert : la lecture, et la SUPPRESSION (règle 9 ; supprimer est le moyen de
-// dégeler). Hors de portée, et voulus : les écritures du client brut
-// (régénération du calendrier) et des accès sans session (signature d'un
-// tiers, dépôt d'un rapport par jeton), dont la portée ne porte pas le gel
-// (`quotas-gel-garde.test.ts`, liste fermée).
+// Le gel (ADR-053 § 14) : refusé dans le client borné, AVANT l'écriture —
+// jamais un filtre silencieux. Lecture et suppression ouvertes. Hors de
+// portée : le client brut et les accès sans session (`quotas-gel-garde.test.ts`).
 
+import { AsyncLocalStorage } from "node:async_hooks";
 import { redirect } from "next/navigation";
-import { Prisma } from "@prisma/client";
 import type { PrismaClient } from "@prisma/client";
-import { CORRESPONDANCE } from "./correspondance";
+import { avecBorne, filtreVers, relations, type Geles } from "./borne";
 
-/** Les identifiants gelés d'un compte. */
-export type Geles = Readonly<{ etablissements: readonly string[]; prestataires: readonly string[] }>;
+export type { Geles };
 
 /** Où un refus renvoie : la page qui dit pourquoi, et ce qui lève le gel. */
 export const PAGE_DU_GEL = "/compte/abonnement?saisie=gelee";
 
+/**
+ * La transaction interactive en cours (son client), posée par le client borné
+ * (`client.ts`) : le gel y lit ce que l'écriture vise. Lire par le client
+ * brut attendrait la seule connexion du pool, que la transaction tient
+ * (`connection_limit=1` en production).
+ */
+export const transactionEnCours = new AsyncLocalStorage<object>();
+
+/**
+ * Les gestes qu'un gel laisse ouverts, liste fermée (`quotas-gel-garde.test.ts`) :
+ * supprimer, retirer un accès ou une page publique, demander de l'aide — les
+ * mêmes que la saisie fermée laisse ouverts (ADR-053 § 3).
+ */
+const ouvertAuGel = new AsyncLocalStorage<true>();
+/**
+ * Ouvre au gel la suite de l'action en cours. À appeler APRÈS son premier
+ * `await` (sa garde) : le contexte de l'appelant n'en hérite pas, seule la
+ * suite de cette action.
+ */
+export function ouvrirAuGel(): void {
+  ouvertAuGel.enterWith(true);
+}
+
 /** Les opérations refusées sur un élément gelé (ni la lecture, ni la suppression). */
-export const ECRITURES_GELEES: ReadonlySet<string> = new Set([
-  "create",
-  "createMany",
-  "createManyAndReturn",
-  "update",
-  "updateMany",
-  "upsert",
-]);
+const ECRITURES_GELEES: ReadonlySet<string> = new Set(["create", "createMany", "createManyAndReturn", "update", "updateMany", "upsert"]);
 
 type Objet = Record<string, unknown>;
 const estObjet = (v: unknown): v is Objet => typeof v === "object" && v !== null && !Array.isArray(v);
 const lister = (v: unknown): unknown[] => (Array.isArray(v) ? v : v === undefined ? [] : [v]);
 
-const MODELES = new Map(Prisma.dmmf.datamodel.models.map((m) => [m.name, m]));
+const SEUL_L_ETABLISSEMENT: ReadonlySet<string> = new Set(["Etablissement"]);
+
 const RACINES = [
   ["Etablissement", "etablissements"],
   ["Prestataire", "prestataires"],
 ] as const;
 
-/** La cible d'une relation (`Risque.unite` → `UniteTravail`). */
-const cibleDe = (nom: string, champ: string) => MODELES.get(nom)?.fields.find((f) => f.name === champ)?.type;
-
-/** Les champs de relation qui mènent de `nom` à `racine` (vide : c'est elle), ou `null`. */
-function chemin(nom: string, racine: string): string[] | null {
-  if (nom === racine) return [];
-  const c = CORRESPONDANCE[nom as keyof typeof CORRESPONDANCE] as { parent?: string } | undefined;
-  if (!c?.parent) return null;
-  const suite = chemin(cibleDe(nom, c.parent)!, racine);
-  return suite ? [c.parent, ...suite] : null;
-}
-
 /** Le filtre des lignes gelées d'un modèle, ou `null` s'il n'en a aucune à craindre. */
 export function filtreGele(nom: string, geles: Geles): Objet | null {
   const ou = RACINES.flatMap(([racine, cle]) => {
-    const ids = geles[cle];
-    const c = ids.length > 0 ? chemin(nom, racine) : null;
-    return c ? [c.reduceRight<Objet>((f, champ) => ({ [champ]: f }), { id: { in: [...ids] } })] : [];
+    const f = geles[cle].length > 0 && filtreVers(nom, racine, { id: { in: [...geles[cle]] } });
+    return f ? [f] : [];
   });
   return ou.length > 0 ? { OR: ou } : null;
 }
 
-type Delegue = { count(a: object): Promise<number>; findUnique(a: object): Promise<{ id: string } | null> };
+type Delegue = { count(a: object): Promise<number>; findUnique(a: object): Promise<unknown> };
+/** Le lecteur du gel : la transaction en cours, sinon le client brut. */
 const delegue = (base: PrismaClient, nom: string) =>
-  (base as unknown as Record<string, Delegue>)[nom.charAt(0).toLowerCase() + nom.slice(1)];
-
-/** Vrai si l'une des lignes `id` du modèle est gelée. */
-async function estGele(base: PrismaClient, nom: string, ids: string[], geles: Geles): Promise<boolean> {
-  const f = filtreGele(nom, geles);
-  if (!f || ids.length === 0) return false;
-  return (await delegue(base, nom).count({ where: { AND: [{ id: { in: ids } }, f] } })) > 0;
-}
+  ((transactionEnCours.getStore() ?? base) as unknown as Record<string, Delegue>)[nom.charAt(0).toLowerCase() + nom.slice(1)];
 
 /**
- * Les lignes qu'une écriture DÉSIGNE (une clé, un `connect`), et les données
- * des créations imbriquées, à suivre : tout ce qui ferait d'un élément gelé
- * la source d'une création ou d'une modification.
+ * Les lignes qu'une écriture désigne : clé étrangère, `connect`, et les
+ * créations imbriquées (les autres formes imbriquées, la borne les refuse).
+ * `cibles` : les modèles à relever — une mise à jour ne relève que
+ * l'établissement (y déplacer une ligne), pas le prestataire qu'elle garde.
  */
-function designees(nom: string, data: unknown, sortie: Map<string, Set<string>>): void {
+function designees(
+  nom: string,
+  data: unknown,
+  sortie: Map<string, Objet[]>,
+  cibles?: ReadonlySet<string>,
+): void {
   for (const ligne of lister(data)) {
     if (!estObjet(ligne)) continue;
-    for (const f of MODELES.get(nom)?.fields ?? []) {
-      if (f.kind !== "object") continue;
-      const ajouter = (id: unknown) => {
-        if (typeof id === "string") sortie.set(f.type, (sortie.get(f.type) ?? new Set()).add(id));
+    for (const r of relations(nom)) {
+      const releve = !cibles || cibles.has(r.cible);
+      const ajouter = (where: Objet) => {
+        if (releve) sortie.set(r.cible, [...(sortie.get(r.cible) ?? []), where]);
       };
-      const cle = f.relationFromFields?.[0];
-      if (cle) ajouter(ligne[cle]);
-      const n = ligne[f.name];
+      // Une clé, nue ou en `{ set }` (que la borne accepte aussi).
+      const v = r.cle ? ligne[r.cle] : undefined;
+      const id = estObjet(v) ? v.set : v;
+      if (typeof id === "string") ajouter({ id });
+      const n = ligne[r.nom];
       if (!estObjet(n)) continue;
-      for (const c of lister(n.connect)) if (estObjet(c)) ajouter(c.id);
-      for (const c of lister(n.connectOrCreate)) if (estObjet(c)) designees(f.type, c.create, sortie);
-      designees(f.type, n.create, sortie);
-      if (estObjet(n.createMany)) designees(f.type, n.createMany.data, sortie);
-      // Une ligne liée modifiée par son parent : désignée par son `where`.
-      for (const u of [...lister(n.upsert), ...lister(n.update), ...lister(n.updateMany)]) {
-        if (!estObjet(u)) continue;
-        if (estObjet(u.where)) ajouter(u.where.id);
-        designees(f.type, "data" in u ? u.data : "create" in u ? [u.create, u.update] : u, sortie);
-      }
+      // Un `connect` par n'importe quelle clé unique, `id` ou autre.
+      for (const c of lister(n.connect)) if (estObjet(c)) ajouter(c);
+      // Une création imbriquée est une création : tout ce qu'elle désigne est relevé.
+      designees(r.cible, n.create, sortie);
     }
   }
 }
@@ -119,18 +109,21 @@ function refuser(nom: string, operation: string): never {
  * les identifiants gelés sont ceux du compte de la portée.
  */
 export async function verifierGel(base: PrismaClient, nom: string, operation: string, args: unknown, geles: Geles): Promise<void> {
-  if (!ECRITURES_GELEES.has(operation)) return;
+  if (!ECRITURES_GELEES.has(operation) || ouvertAuGel.getStore()) return;
   const a: Objet = estObjet(args) ? args : {};
   const f = filtreGele(nom, geles);
-  // Les lignes modifiées.
-  if (f && (operation === "update" || operation === "upsert")) {
-    const ligne = await delegue(base, nom).findUnique({ where: a.where as object, select: { id: true } });
-    if (ligne && (await estGele(base, nom, [ligne.id], geles))) refuser(nom, operation);
-  }
-  if (f && operation === "updateMany" && (await delegue(base, nom).count({ where: { AND: [a.where ?? {}, f] } })) > 0)
+  // La ligne modifiée (le `where` unique, borné au gel comme la borne le fait au compte).
+  if (f && (operation === "update" || operation === "upsert"))
+    if (await delegue(base, nom).findUnique({ where: avecBorne(a.where, f), select: { id: true } })) refuser(nom, operation);
+  if (f && operation === "updateMany" && (await delegue(base, nom).count({ where: avecBorne(a.where, f) })) > 0)
     refuser(nom, operation);
   // Les lignes désignées par ce qui s'écrit.
-  const vues = new Map<string, Set<string>>();
-  designees(nom, operation === "upsert" ? [a.create, a.update] : a.data, vues);
-  for (const [cible, ids] of vues) if (await estGele(base, cible, [...ids], geles)) refuser(nom, operation);
+  const vues = new Map<string, Objet[]>();
+  if (operation === "update" || operation === "updateMany") designees(nom, a.data, vues, SEUL_L_ETABLISSEMENT);
+  else designees(nom, operation === "upsert" ? a.create : a.data, vues);
+  if (operation === "upsert") designees(nom, a.update, vues, SEUL_L_ETABLISSEMENT);
+  for (const [cible, wheres] of vues) {
+    const fc = filtreGele(cible, geles);
+    if (fc && (await delegue(base, cible).count({ where: avecBorne({ OR: wheres }, fc) })) > 0) refuser(nom, operation);
+  }
 }

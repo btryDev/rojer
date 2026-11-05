@@ -233,6 +233,17 @@ et sans croire une information qui ne vient pas de Stripe.
      désigne une (clé, `connect`, écriture imbriquée portée par le parent) ;
      jamais un filtre silencieux. Refus : redirection vers
      `/compte/abonnement?saisie=gelee`. Lecture et suppression ouvertes.
+     Le gel lit ce que l'écriture vise par la transaction en cours (suivie
+     par le client borné) : par le client brut, il attendrait la seule
+     connexion du pool (`connection_limit=1`). Une mise à jour ne relève que
+     l'établissement qu'elle désigne (y déplacer une ligne), pas le
+     prestataire qu'elle garde : modifier un permis qui nomme un prestataire
+     gelé reste possible, en désigner un à la création non. Gestes ouverts
+     malgré le gel, liste fermée (`ouvrirAuGel`, juste après la garde) :
+     supprimer (c'est aussi ce qui dégèle), retirer un accès, une page
+     publique, une déclaration ou une photo, demander de l'aide. L'entreprise
+     (raison sociale, effectif) n'est pas gelée : elle n'appartient à aucun
+     site.
      Le SQL brut d'une saisie appelle `refuserSiGele` (registre de sécurité,
      réponses fermées du DUERP). Hors gel, liste fermée
      (`quotas-gel-garde.test.ts`) : la régénération du calendrier (client

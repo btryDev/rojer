@@ -1,6 +1,7 @@
 "use server";
 
 import { requireCompte } from "@/lib/auth/compte";
+import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
@@ -420,6 +421,7 @@ export async function cloturerPlan(planId: string): Promise<void> {
 
 export async function supprimerPlan(planId: string): Promise<void> {
   await verifierSaisie();
+  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   const plan = await planDuCompte(planId);
   const etabId = plan.etablissementId;
   // LE STATUT NE DIT PAS SI LE PLAN A ÉTÉ SIGNÉ. `attente_signatures` est

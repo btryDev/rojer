@@ -105,7 +105,7 @@ export function debutDeLAnnee(ancre: Date | null | undefined, maintenant: Date, 
 }
 
 /** Ce que le compte a déjà, pour une clé (le client est borné au compte). */
-async function utilise(db: Lecteur, cle: CleQuotaComptee, debutAnnee: Date): Promise<number> {
+async function dejaUtilisesDuCompte(db: Lecteur, cle: CleQuotaComptee, debutAnnee: Date): Promise<number> {
   switch (cle) {
     case "etablissements":
       return db.etablissement.count();
@@ -126,18 +126,23 @@ async function utilise(db: Lecteur, cle: CleQuotaComptee, debutAnnee: Date): Pro
   }
 }
 
-/** Le régime et l'année des plafonds du compte, lus sur son abonnement recopié de Stripe. */
-async function abonnementDesPlafonds(l: Lecteur | PrismaClient, compteId: string) {
-  const ligne = await l.abonnement.findUnique({
-    where: { compteId },
-    select: { formule: true, statut: true, debutPayantLe: true, essaiUtiliseLe: true },
-  });
+/** Ce que les plafonds lisent de l'abonnement recopié de Stripe. */
+const COLONNES_PLAFONDS = { formule: true, statut: true, debutPayantLe: true, essaiUtiliseLe: true } as const;
+type LignePlafonds = { formule: string | null; statut: string | null; debutPayantLe: Date | null; essaiUtiliseLe: Date | null } | null;
+
+/** Le régime et l'année des plafonds, d'une ligne d'abonnement. */
+function plafondsDeLaLigne(ligne: LignePlafonds) {
   const regime: Regime = { formule: formuleDesPlafonds(ligne?.formule), essai: essaiDe(ligne) };
   return { regime, debutAnnee: debutDeLAnnee(ligne?.debutPayantLe, new Date(), ligne?.essaiUtiliseLe) };
 }
 
+/** Le régime et l'année des plafonds du compte (client borné, jamais le brut). */
+async function abonnementDesPlafonds(l: Lecteur, compteId: string) {
+  return plafondsDeLaLigne(await l.abonnement.findUnique({ where: { compteId }, select: COLONNES_PLAFONDS }));
+}
+
 /** Le verrou de la ligne du compte, pour la durée de la transaction. */
-async function verrouiller(tx: Prisma.TransactionClient, compteId: string): Promise<void> {
+async function verrouillerLeCompte(tx: Prisma.TransactionClient, compteId: string): Promise<void> {
   // NO KEY : verrou exclusif entre créations, sans bloquer les insertions
   // d'autres transactions qui référencent le compte (clé étrangère).
   await tx.$queryRaw`SELECT 1 FROM "Compte" WHERE "id" = ${compteId}::uuid FOR NO KEY UPDATE`;
@@ -148,7 +153,7 @@ async function verrouiller(tx: Prisma.TransactionClient, compteId: string): Prom
  * le motif. `verrou` : la transaction où le prendre, seulement s'il y a un
  * plafond — un compte sans limite ne bloque pas ses autres créations.
  */
-async function reste(
+async function placesRestantesDuPlafond(
   db: Lecteur,
   compteId: string,
   cle: CleQuotaComptee,
@@ -157,8 +162,8 @@ async function reste(
   const { regime, debutAnnee } = await abonnementDesPlafonds(db, compteId);
   const plafond = plafondDe(regime, cle);
   if (plafond === null) return { places: Infinity, regime };
-  if (verrou) await verrouiller(verrou, compteId);
-  return { places: Math.max(0, plafond - (await utilise(db, cle, debutAnnee))), regime };
+  if (verrou) await verrouillerLeCompte(verrou, compteId);
+  return { places: Math.max(0, plafond - (await dejaUtilisesDuCompte(db, cle, debutAnnee))), regime };
 }
 
 /**
@@ -167,7 +172,7 @@ async function reste(
  */
 export async function refusQuota(db: Db, compteId: string, cle: CleQuotaComptee, nombre = 1): Promise<string | null> {
   if (!lancee()) return null;
-  const { places, regime } = await reste(db, compteId, cle);
+  const { places, regime } = await placesRestantesDuPlafond(db, compteId, cle);
   return places >= nombre ? null : motifDuRefus(regime, cle);
 }
 
@@ -185,7 +190,7 @@ export async function prendreQuota(
   nombre = 1,
 ): Promise<void> {
   if (lancee()) {
-    const { places, regime } = await reste(tx, compteId, cle, tx);
+    const { places, regime } = await placesRestantesDuPlafond(tx, compteId, cle, tx);
     if (places < nombre) throw new RefusQuota(motifDuRefus(regime, cle));
   }
   if (estAnnuelle(cle))
@@ -203,7 +208,7 @@ export async function placesSousLePlafond(
   cle: Exclude<CleQuotaComptee, CleAnnuelle>,
 ): Promise<number> {
   if (!lancee()) return Infinity;
-  return (await reste(tx, compteId, cle, tx)).places;
+  return (await placesRestantesDuPlafond(tx, compteId, cle, tx)).places;
 }
 
 /**
@@ -251,7 +256,9 @@ export async function limitesMembresDuPlugin(
   compteId: string,
 ): Promise<{ membres: number; invitations: number }> {
   if (!lancee()) return { membres: LIMITE_DU_PLUGIN, invitations: LIMITE_DU_PLUGIN };
-  const plafond = plafondDe((await abonnementDesPlafonds(lecteur, compteId)).regime, "membres");
+  // Sa propre lecture : le client brut du plugin ne passe à aucune fonction partagée.
+  const ligne = await lecteur.abonnement.findUnique({ where: { compteId }, select: COLONNES_PLAFONDS });
+  const plafond = plafondDe(plafondsDeLaLigne(ligne).regime, "membres");
   if (plafond === null) return { membres: LIMITE_DU_PLUGIN, invitations: LIMITE_DU_PLUGIN };
   const membres = await lecteur.membre.count({ where: { compteId } });
   return { membres: plafond, invitations: Math.max(0, plafond - membres) };
@@ -273,7 +280,7 @@ export async function depassements(db: Db, compteId: string, formule: string): P
   const cible: Regime = { formule: formuleDesPlafonds(formule), essai: null };
   const nombres = await Promise.all(
     STOCKS.map(async (cle) => {
-      if (cle !== "membres") return utilise(db, cle, new Date());
+      if (cle !== "membres") return dejaUtilisesDuCompte(db, cle, new Date());
       const [membres, invitations] = await Promise.all([membresDuCompte(compteId), invitationsDuCompte(compteId)]);
       return membres.length + invitations.length;
     }),
@@ -287,16 +294,18 @@ export async function depassements(db: Db, compteId: string, formule: string): P
 /**
  * Ce qui est gelé dans un compte (ADR-053 § 14) : les établissements et les
  * prestataires au-delà des plafonds de la formule, les plus récents, pour un
- * compte qui a déjà payé. Recalculé à chaque appel, rien n'est stocké :
- * retirer un ancien dégèle le suivant. `undefined` : rien de gelé (offre non
- * lancée, essai, ou rien au-delà) — l'essai bloque la création, il ne gèle
- * rien.
+ * compte qui a déjà payé — l'essai bloque la création, il ne gèle rien.
+ * Recalculé à chaque appel, rien n'est stocké : retirer un ancien dégèle le
+ * suivant. `undefined` : rien de gelé.
  */
 export async function gelesDuCompte(db: Db, compteId: string): Promise<Geles | undefined> {
   if (!lancee()) return undefined;
-  const ligne = await db.abonnement.findUnique({ where: { compteId }, select: { formule: true, statut: true, debutPayantLe: true } });
-  if (!ligne || essaiDe(ligne)) return undefined;
-  const q = FORMULES[formuleDesPlafonds(ligne.formule)].quotas;
+  return gelesDuRegime(db, (await abonnementDesPlafonds(db, compteId)).regime);
+}
+
+async function gelesDuRegime(db: Db, regime: Regime): Promise<Geles | undefined> {
+  if (regime.essai) return undefined;
+  const q = FORMULES[regime.formule].quotas;
   const ordre = [{ createdAt: "asc" as const }, { id: "asc" as const }];
   const [etablissements, prestataires] = await Promise.all([
     q.etablissements === null ? [] : db.etablissement.findMany({ orderBy: ordre, skip: q.etablissements, select: { id: true } }),
@@ -307,6 +316,11 @@ export async function gelesDuCompte(db: Db, compteId: string): Promise<Geles | u
 }
 
 
+const DIT_DU_GEL = {
+  etablissements: { nom: "Ce site", ancien: "un site plus ancien" },
+  prestataires: { nom: "Ce prestataire", ancien: "un prestataire plus ancien" },
+} as const;
+
 /**
  * Ce que l'écran dit d'un site ou d'un prestataire gelé (ADR-053 § 14), dès
  * l'ouverture de sa page ; `null` s'il ne l'est pas. Le refus dans le client
@@ -315,17 +329,17 @@ export async function gelesDuCompte(db: Db, compteId: string): Promise<Geles | u
 export async function motifDuGel(
   db: Db,
   compteId: string,
-  cible: { etablissementId: string; prestataireId?: string },
+  cible: { etablissementId: string } | { prestataireId: string },
 ): Promise<string | null> {
-  const geles = await gelesDuCompte(db, compteId);
-  if (!geles) return null;
-  const quoi = geles.etablissements.includes(cible.etablissementId)
-    ? { cle: "etablissements" as const, nom: "Ce site", ancien: "un site plus ancien" }
-    : cible.prestataireId && geles.prestataires.includes(cible.prestataireId)
-      ? { cle: "prestataires" as const, nom: "Ce prestataire", ancien: "un prestataire plus ancien" }
-      : null;
-  if (!quoi) return null;
-  const formule = formuleDesPlafonds((await abonnementDesPlafonds(db, compteId)).regime.formule);
-  const plafond = FORMULES[formule].quotas[quoi.cle] ?? 0;
-  return `${quoi.nom} dépasse votre formule ${FORMULES[formule].libelle}, qui couvre ${LIBELLES_PLAFONDS[quoi.cle](plafond)} : il reste consultable et exportable, mais ne se modifie plus. Supprimez ${quoi.ancien} ou passez à une formule supérieure pour le modifier.`;
+  if (!lancee()) return null;
+  const { regime } = await abonnementDesPlafonds(db, compteId);
+  const geles = await gelesDuRegime(db, regime);
+  const cle =
+    "etablissementId" in cible
+      ? geles?.etablissements.includes(cible.etablissementId) && ("etablissements" as const)
+      : geles?.prestataires.includes(cible.prestataireId) && ("prestataires" as const);
+  if (!cle) return null;
+  const { nom, ancien } = DIT_DU_GEL[cle];
+  const plafond = FORMULES[regime.formule].quotas[cle] ?? 0;
+  return `${nom} dépasse votre formule ${FORMULES[regime.formule].libelle}, qui couvre ${LIBELLES_PLAFONDS[cle](plafond)} : il reste consultable et exportable, mais ne se modifie plus. Pour le modifier, le propriétaire du compte peut passer à une formule supérieure, ou supprimer ${ancien}.`;
 }

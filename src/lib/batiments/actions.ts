@@ -1,6 +1,7 @@
 "use server";
 
 import { requireCompte } from "@/lib/auth/compte";
+import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
@@ -178,6 +179,7 @@ export async function supprimerBatiment(
   versBatimentId: string,
 ): Promise<BatimentActionState> {
   await verifierSaisie();
+  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   const b = await trouverBatimentDuUser(id);
   if (!b) return { status: "error", message: "Zone introuvable" };
 
