@@ -627,6 +627,45 @@ est appliqué ; huit autres sont affichés sans l'être. Trous principaux :
 - **permis de feu et plans de prévention plafonnés comme prévu** (10 et 5
   par an en Essentiel, sans limite en Pro) ;
 - **un essai par compte ET par SIREN**.
+- [2026-11-05, après l'essai de bout en bout] **des limites d'usage propres à
+  l'essai** aussi, en plus des plafonds de la formule essayée — lesquelles et
+  à quel niveau : à préciser au début du chantier « quotas » ;
+- **fin des relances d'un impayé** : recommandé « marquer l'abonnement comme
+  impayé » plutôt que « résilier » (réglage Stripe, Billing > Récupération des
+  revenus) — le client règle la facture en retard au portail et reprend ; à
+  confirmer au lancement. Le bac à sable résilie (testé : `past_due` puis
+  `canceled` en 14 jours) ;
+- **saisie fermée annoncée dès l'ouverture d'un formulaire** (bouton
+  désactivé), au lieu d'un refus à l'envoi qui perd ce qui a été saisi —
+  relevé au test ; même mécanisme d'affichage que le plafond atteint, à faire
+  au chantier « quotas ».
+
+**À réfléchir avec la propriétaire (2026-11-05), rien de tranché** :
+- **Essai et prix d'entrée.** Crainte : un essai gratuit avec tous les modules
+  laisse faire son DUERP sans payer ; couper des modules frustre. Piste
+  envisagée par la propriétaire : premier mois payant réduit (15 € puis 29 €,
+  faisable chez Stripe par une remise `once` — à vérifier avec l'essai : la
+  facture d'essai à 0 € la consomme-t-elle ?). Avis donné : garder l'essai
+  gratuit sans carte (la cible ne sort pas sa carte pour un outil inconnu ;
+  le DUERP seul a déjà son outil gratuit, OiRA de l'INRS), brider les
+  **sorties définitives** plutôt que les modules (aperçus « version
+  d'essai », le DUERP validé et l'export de contrôle avec l'abonnement,
+  annoncé dès l'écran d'essai), et utiliser la réduction **à la conversion**
+  (bandeau des 7 derniers jours : « premier mois à 15 € »). À confronter à
+  5-10 dirigeants de la cible avant de figer.
+- **Export pour un ancien client : sous un délai.** Aujourd'hui, un compte
+  sans abonnement garde la lecture et l'export sans limite (ADR-053 § 3) :
+  Rojer stockerait à vie. À poser : un délai d'export après la fin de
+  l'abonnement (puis suppression ou archivage), cohérent avec la
+  conservation du compte jamais payé (12 mois, décision du 2026-11-03) et
+  avec `docs/rgpd.md`. **Principe posé par la propriétaire
+  (2026-11-05) : la conservation est à l'utilisateur, pas à Rojer.** Les
+  40 ans des versions du DUERP (règle 10 de CLAUDE.md, qui se lit
+  aujourd'hui comme une charge de Rojer — à reformuler avec ce chantier)
+  sont l'obligation de l'employeur : Rojer lui permet un export complet
+  avant la fin du délai, il ne garde pas ses données sans fin. Restent à
+  trancher : la durée du délai, et ce qui se passe à son terme. Amendera
+  l'ADR-053 § 3.
 
 **Tranché sans elle (à contester si besoin)** : formule inconnue = plafonds
 d'Essentiel, avec alerte ; plafonds comptés par compte ; compteurs annuels
@@ -647,6 +686,39 @@ de l'offre tant que l'accès OAuth (ADR-013) n'existe pas.
 4. stockage (taille des fichiers à enregistrer, reprise de l'existant) ;
 5. essai par SIREN ; conditions générales complétées (baisse, plafonds,
    date anniversaire).
+
+## 11. Essai de bout en bout avec un compte Stripe de test (2026-11-05)
+
+Bac à sable Stripe « environnement de test rojer », CLI Stripe 1.55.8 (binaire
+officiel, empreinte vérifiée ; Homebrew refusait faute d'outils Xcode à jour),
+relais `stripe listen --api-key … --forward-thin-to` (la clé de `.env.local`,
+sans `stripe login`), Rojer local sur `cc` après la fusion de #190 (branche alors nommée
+`lot/quotas-formules`, devenue `lot/abonnement-retours-essai`).
+
+**Passé** : écran d'essai avec les prix lus chez Stripe ; essai Essentiel sans
+carte (`trialing`, preuve d'acceptation écrite) ; onboarding pendant l'essai ;
+carte ajoutée au portail (l'essai continue, nom de facturation remplacé par la
+raison sociale) ; fin d'essai (`trial_end=now`) : facture de 29 € payée,
+`active` ; carte refusée (`pm_card_chargeCustomerFail`) : `past_due`, message
+« paiement en échec », saisie ouverte ; résiliation : `canceled`, saisie
+fermée, lecture gardée, bouton de réabonnement ; réabonnement par Checkout :
+nouvel abonnement `active`, l'ancien reste `canceled`. Les 14 notifications
+reçues ont toutes été traitées (200).
+
+**Non passé, et pourquoi** : `unpaid` après épuisement des relances (des jours
+chez Stripe ; couvert par les tests) ; Checkout AVEC la case des conditions —
+Stripe exige l'URL des conditions dans les informations publiques du compte,
+réglables seulement sur un compte activé : le test a été fait par une session
+identique sans `consent_collection`.
+
+**Corrigé en cours de route** : entrée « Abonnement » dans le menu du compte
+(la page n'était atteinte que par le bandeau) ; messages d'erreur qui
+nommaient Stripe ; « période en cours » affichée pour un abonnement résilié.
+
+**Réglages de lancement ajoutés** (compte Stripe de production activé) : URL
+des conditions dans les informations publiques ; TVA — la facture de test est
+à 29 € sans taxe : Stripe Tax ou taux de TVA à régler avec l'expert-comptable
+(§ 6).
 
 ## Sources lues
 
