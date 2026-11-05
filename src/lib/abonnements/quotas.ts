@@ -8,6 +8,7 @@ import type { Prisma, PrismaClient } from "@prisma/client";
 import type { Db } from "@/lib/auth/compte";
 import { invitationsDuCompte, membresDuCompte } from "@/lib/auth/membres";
 import { creerEnLotVerifie } from "@/lib/auth/portee/lot-verifie";
+import type { Geles } from "@/lib/auth/portee/gel";
 import { CLES_FORMULES, FORMULES, LIBELLES_PLAFONDS, LIMITES_ESSAI, formuleDeLookupKey, type CleFormule } from "./formules";
 import { contexteDroits, offreLancee } from "./lancement";
 
@@ -281,4 +282,50 @@ export async function depassements(db: Db, compteId: string, formule: string): P
     const plafond = plafondDe(cible, quota);
     return plafond !== null && nombres[i] > plafond ? [{ quota, utilise: nombres[i], plafond }] : [];
   });
+}
+
+/**
+ * Ce qui est gelé dans un compte (ADR-053 § 14) : les établissements et les
+ * prestataires au-delà des plafonds de la formule, les plus récents, pour un
+ * compte qui a déjà payé. Recalculé à chaque appel, rien n'est stocké :
+ * retirer un ancien dégèle le suivant. `undefined` : rien de gelé (offre non
+ * lancée, essai, ou rien au-delà) — l'essai bloque la création, il ne gèle
+ * rien.
+ */
+export async function gelesDuCompte(db: Db, compteId: string): Promise<Geles | undefined> {
+  if (!lancee()) return undefined;
+  const ligne = await db.abonnement.findUnique({ where: { compteId }, select: { formule: true, statut: true, debutPayantLe: true } });
+  if (!ligne || essaiDe(ligne)) return undefined;
+  const q = FORMULES[formuleDesPlafonds(ligne.formule)].quotas;
+  const ordre = [{ createdAt: "asc" as const }, { id: "asc" as const }];
+  const [etablissements, prestataires] = await Promise.all([
+    q.etablissements === null ? [] : db.etablissement.findMany({ orderBy: ordre, skip: q.etablissements, select: { id: true } }),
+    q.prestataires === null ? [] : db.prestataire.findMany({ orderBy: ordre, skip: q.prestataires, select: { id: true } }),
+  ]);
+  if (etablissements.length === 0 && prestataires.length === 0) return undefined;
+  return { etablissements: etablissements.map((e) => e.id), prestataires: prestataires.map((p) => p.id) };
+}
+
+
+/**
+ * Ce que l'écran dit d'un site ou d'un prestataire gelé (ADR-053 § 14), dès
+ * l'ouverture de sa page ; `null` s'il ne l'est pas. Le refus dans le client
+ * borné reste le filet.
+ */
+export async function motifDuGel(
+  db: Db,
+  compteId: string,
+  cible: { etablissementId: string; prestataireId?: string },
+): Promise<string | null> {
+  const geles = await gelesDuCompte(db, compteId);
+  if (!geles) return null;
+  const quoi = geles.etablissements.includes(cible.etablissementId)
+    ? { cle: "etablissements" as const, nom: "Ce site", ancien: "un site plus ancien" }
+    : cible.prestataireId && geles.prestataires.includes(cible.prestataireId)
+      ? { cle: "prestataires" as const, nom: "Ce prestataire", ancien: "un prestataire plus ancien" }
+      : null;
+  if (!quoi) return null;
+  const formule = formuleDesPlafonds((await abonnementDesPlafonds(db, compteId)).regime.formule);
+  const plafond = FORMULES[formule].quotas[quoi.cle] ?? 0;
+  return `${quoi.nom} dépasse votre formule ${FORMULES[formule].libelle}, qui couvre ${LIBELLES_PLAFONDS[quoi.cle](plafond)} : il reste consultable et exportable, mais ne se modifie plus. Supprimez ${quoi.ancien} ou passez à une formule supérieure pour le modifier.`;
 }

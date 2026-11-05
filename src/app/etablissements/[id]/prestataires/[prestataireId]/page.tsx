@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Suspense } from "react";
+import { BandeauGel } from "@/components/quotas/BandeauGel";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -110,6 +112,10 @@ export default async function PrestataireDetailPage({
       <CorpsFiche
         principal={
           <>
+            {/* Un prestataire gelé (ADR-053 § 14) le dit dès l'ouverture. */}
+            <Suspense fallback={null}>
+              <BandeauGel etablissementId={id} prestataireId={prestataireId} />
+            </Suspense>
             <section className="carte-board px-7 py-6 sm:px-8">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">

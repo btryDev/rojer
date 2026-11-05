@@ -125,6 +125,12 @@ const NOMMES_ROUAGES: Record<string, Record<string, Nomme>> = {
       symboles: ["clientDuClientStripe"],
     },
   },
+  // Le gel (ADR-053 § 14) : refusé dans l'extension, calculé par les plafonds.
+  "src/lib/auth/portee/gel": {
+    "src/lib/auth/portee/client.ts": "l'extension : le refus avant l'écriture",
+    "src/lib/abonnements/quotas.ts": { motif: "le type des identifiants gelés", typesSeuls: true },
+    "src/lib/abonnements/gel-saisie.ts": { motif: "la page du refus, pour le SQL brut d'une saisie", symboles: ["PAGE_DU_GEL"] },
+  },
   "src/lib/auth/portee/borne": {
     "src/lib/auth/portee/client.ts": "l'extension",
     "src/lib/auth/portee/lot-verifie.ts": "erreurs et classement des modèles",

@@ -28,6 +28,12 @@ export type Portee = {
    * ici, quelle que soit l'action qui l'oublierait. Absent ou faux ailleurs.
    */
   lectureSeule?: boolean;
+  /**
+   * Ce qui est gelé (ADR-053 § 14) : établissements et prestataires au-delà
+   * de la formule d'un compte qui a payé. Absent : rien. Posé par
+   * `requireCompte` seulement — les accès sans session ne le portent pas.
+   */
+  geles?: Readonly<{ etablissements: readonly string[]; prestataires: readonly string[] }>;
 };
 
 /** Refus du client borné : opération ou modèle qu'il ne sait pas borner. */

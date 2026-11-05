@@ -20,6 +20,7 @@ import {
   sqlPeutEcrire,
   type Portee,
 } from "./borne";
+import { verifierGel } from "./gel";
 
 function etendre(base: PrismaClient, p: Portee) {
   // Copie figée : un appelant qui garderait l'objet ne peut plus déplacer la
@@ -29,6 +30,7 @@ function etendre(base: PrismaClient, p: Portee) {
     compteId: p.compteId,
     userId: p.userId,
     lectureSeule: p.lectureSeule === true,
+    ...(p.geles ? { geles: p.geles } : {}),
   });
   // Le SQL brut d'écriture n'est pas borné par l'extension (ADR-051 § 5) ; en
   // lecture seule, il est refusé ici (ADR-054 § 4). La forme non paramétrée
@@ -58,6 +60,9 @@ function etendre(base: PrismaClient, p: Portee) {
       },
       $allModels: {
         async $allOperations({ model, operation, args, query }) {
+          // Le gel (ADR-053 § 14) : refusé avant d'écrire, sur les arguments
+          // tels que l'action les donne.
+          if (portee.geles) await verifierGel(base, model, operation, args, portee.geles);
           const resultat = await query(argumentsBornes(model, operation, args, portee) as typeof args);
           if (estLectureDIdentifiants(operation, args)) noterVus(model, portee, resultat);
           return resultat;
@@ -95,12 +100,20 @@ function lirePortee(portee: Portee): Portee {
     throw new ErreurPortee("portée sans compte : client refusé");
   if (userId !== null && (typeof userId !== "string" || userId.length === 0))
     throw new ErreurPortee("portée à la personne invalide : client refusé");
-  return { type: "compte", compteId, userId, lectureSeule: portee.lectureSeule === true };
+  // Le gel, figé, et seulement s'il gèle quelque chose : une portée sans gel
+  // garde le même client en cache.
+  const g = portee.geles;
+  const geles =
+    g && (g.etablissements.length > 0 || g.prestataires.length > 0)
+      ? Object.freeze({ etablissements: Object.freeze([...g.etablissements]), prestataires: Object.freeze([...g.prestataires]) })
+      : undefined;
+  return { type: "compte", compteId, userId, lectureSeule: portee.lectureSeule === true, ...(geles ? { geles } : {}) };
 }
 
 export function clientBorne(portee: Portee): ClientBorne {
   const lue = lirePortee(portee);
-  const cle = `compte:${lue.compteId}|${lue.userId ?? "-"}|${lue.lectureSeule ? "lecture" : "saisie"}`;
+  const gel = lue.geles ? `|gel:${lue.geles.etablissements.join(",")};${lue.geles.prestataires.join(",")}` : "";
+  const cle = `compte:${lue.compteId}|${lue.userId ?? "-"}|${lue.lectureSeule ? "lecture" : "saisie"}${gel}`;
   let client = CLIENTS.get(cle);
   if (client) {
     // Le plus récemment servi passe en queue : l'éviction vise le moins

@@ -223,6 +223,24 @@ et sans croire une information qui ne vient pas de Stripe.
      baisse est refusée tant qu'ils dépassent (Atlassian, monday). Ce qui
      dépasserait se lit par `depassements(db, compteId, formule)` ; les
      plafonds annuels ne bloquent jamais une baisse.
+     [2026-11-05, A4 — le gel, construit.] `gelesDuCompte` (`quotas.ts`)
+     calcule, pour un compte qui a payé, les établissements et prestataires
+     au-delà des plafonds (les plus récents, `createdAt` puis `id`) ;
+     `requireCompte` les pose sur la portée (`Portee.geles`) — seule la
+     session, jamais un accès sans session. Le client borné refuse AVANT
+     d'écrire (`portee/gel.ts`, `verifierGel`) toute création, mise à jour
+     ou upsert qui modifie une ligne rattachée à un élément gelé, ou en
+     désigne une (clé, `connect`, écriture imbriquée portée par le parent) ;
+     jamais un filtre silencieux. Refus : redirection vers
+     `/compte/abonnement?saisie=gelee`. Lecture et suppression ouvertes.
+     Le SQL brut d'une saisie appelle `refuserSiGele` (registre de sécurité,
+     réponses fermées du DUERP). Hors gel, liste fermée
+     (`quotas-gel-garde.test.ts`) : la régénération du calendrier (client
+     brut) et les accès sans session (signature d'un tiers, dépôt d'un
+     rapport par jeton). Un bandeau le dit en tête des pages d'un site gelé
+     et sur la fiche d'un prestataire gelé ; les boutons désactivés dès
+     l'ouverture viennent avec le lot D (même mécanisme que la saisie
+     fermée).
    - **Limites de l'essai** [2026-11-05, A3 ; grille arrêtée le même jour] :
      pendant l'essai (`statut = trialing`), `LIMITES_ESSAI` (`formules.ts`)
      prime sur la formule essayée — 1 établissement, 1 utilisateur, 3 unités

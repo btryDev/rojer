@@ -17,6 +17,7 @@ import {
   creerSousPlafond,
   debutDeLAnnee,
   depassements,
+  gelesDuCompte,
   formuleDesPlafonds,
   limitesMembresDuPlugin,
   placesSousLePlafond,
@@ -307,5 +308,37 @@ describe("jamais payé : limites de l'essai, même hors essai", () => {
       "Tant que votre premier paiement n'est pas confirmé, Rojer garde les limites de l'essai (5 équipements) : réglez votre abonnement depuis la page Abonnement de votre compte.",
     );
     await prendreQuota(faux("rojer_essentiel_mensuel", 5, PAYE_DEPUIS, "past_due").txc, "c1", "equipements");
+  });
+});
+
+describe("gelesDuCompte : qui est gelé après une baisse", () => {
+  function compte(ligne: object | null, nbEtab: number, nbPre: number) {
+    const ids = (p: string, n: number) => Array.from({ length: n }, (_, i) => ({ id: `${p}${i + 1}` }));
+    const lire = (tous: { id: string }[]) => vi.fn(async ({ skip }: { skip: number }) => tous.slice(skip));
+    const db = {
+      abonnement: { findUnique: vi.fn().mockResolvedValue(ligne) },
+      etablissement: { findMany: lire(ids("e", nbEtab)) },
+      prestataire: { findMany: lire(ids("p", nbPre)) },
+    };
+    return db as unknown as Db & typeof db;
+  }
+  const paye = { formule: "rojer_essentiel_mensuel", statut: "active", debutPayantLe: PAYE_DEPUIS };
+
+  it("les plus récents au-delà du plafond, les plus anciens gardés", async () => {
+    lancer();
+    const db = compte(paye, 3, 12);
+    expect(await gelesDuCompte(db, "c1")).toEqual({ etablissements: ["e2", "e3"], prestataires: ["p11", "p12"] });
+    expect(db.etablissement.findMany).toHaveBeenCalledWith({ orderBy: [{ createdAt: "asc" }, { id: "asc" }], skip: 1, select: { id: true } });
+  });
+
+  it("rien de gelé : tout tient, offre non lancée, ou compte qui n'a jamais payé (l'essai bloque, il ne gèle pas)", async () => {
+    lancer();
+    expect(await gelesDuCompte(compte(paye, 1, 10), "c1")).toBeUndefined();
+    expect(await gelesDuCompte(compte({ ...paye, statut: "trialing" }, 3, 3), "c1")).toBeUndefined();
+    expect(await gelesDuCompte(compte({ ...paye, statut: "past_due", debutPayantLe: null }, 3, 3), "c1")).toBeUndefined();
+    lancer(false);
+    const db = compte(paye, 3, 3);
+    expect(await gelesDuCompte(db, "c1")).toBeUndefined();
+    expect(db.abonnement.findUnique).not.toHaveBeenCalled();
   });
 });
