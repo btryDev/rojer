@@ -24,6 +24,7 @@ import {
 import { calculerHashObjet } from "@/lib/signatures/hash-objet";
 import { revoquerLiensEnVol } from "@/lib/access-tokens/revocation";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
+import { creerSousPlafond } from "@/lib/abonnements/quotas";
 
 export type PermisFeuActionState =
   | { status: "idle" }
@@ -134,16 +135,22 @@ export async function creerPermisFeu(
   const numero = await nextNumeroPermisFeu(etablissementId);
   const id = `pf_${randomUUID()}`;
 
-  const permis = await db.permisFeu.create({
-    data: {
-      id,
-      etablissementId,
-      numero,
-      ...colonnesPermis(parsed.data),
-      batimentId: batiment.id,
-      statut: "attente_signatures",
-    },
-  });
+  // Plafond annuel de la formule (ADR-053 § 14) : compté au journal, que la
+  // suppression d'un brouillon n'efface pas.
+  const creation = await creerSousPlafond(db, compte.compteId, "permisDeFeuParAn", (tx) =>
+    tx.permisFeu.create({
+      data: {
+        id,
+        etablissementId,
+        numero,
+        ...colonnesPermis(parsed.data),
+        batimentId: batiment.id,
+        statut: "attente_signatures",
+      },
+    }),
+  );
+  if (!creation.ok) return { status: "error", message: creation.motif };
+  const permis = creation.valeur;
 
   revalidatePath(`/etablissements/${etablissementId}/permis-feu`);
   return { status: "success", permisFeuId: permis.id, numero: permis.numero };

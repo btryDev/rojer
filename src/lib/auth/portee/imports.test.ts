@@ -182,6 +182,7 @@ const SQL_BRUT_NOMMES: Record<string, string> = {
   "src/lib/salaries/suppression.ts": "verrou FOR UPDATE borné au salarié et à l'établissement gardés",
   "src/lib/calendrier/recalcul-ligne.ts": "verrou FOR UPDATE d'une ligne déjà lue par le client borné",
   "src/lib/entreprises/cycle-de-vie.ts": "verrou FOR UPDATE d'une entreprise déjà gardée",
+  "src/lib/abonnements/quotas.ts": "verrou FOR NO KEY UPDATE de la ligne du compte de la portée (plafonds, ADR-053 § 14)",
   "src/lib/registre/actions.ts": "UPDATE jsonb borné à l'établissement gardé",
   "src/lib/duerps/ecrire-reponse-fermee.ts": "UPDATE jsonb d'un DUERP déjà gardé",
   "src/lib/calendrier/faux-prisma.ts": "faux client des tests",

@@ -2454,6 +2454,22 @@ model AcceptationConditions {
   @@index([compteId, accepteeLe])
 }
 
+/// Le journal des plafonds « par an » d'une formule (ADR-053 § 14) : une ligne
+/// par élément créé (permis de feu, plan de prévention). Rattaché au COMPTE et
+/// sans lien vers l'élément : supprimer un brouillon ou un établissement ne
+/// rend pas le crédit. Compté sur douze mois glissants ; jamais modifié.
+model ConsommationQuota {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// Racine (ADR-054).
+  compteId   String   @db.Uuid
+  compte     Compte   @relation(fields: [compteId], references: [id], onDelete: Cascade)
+  /// La clé du plafond (`permisDeFeuParAn`…), `Quotas` de `abonnements/formules.ts`.
+  quota      String
+  consommeLe DateTime @default(now())
+
+  @@index([compteId, quota, consommeLe])
+}
+
 model Compte {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name      String
@@ -2469,6 +2485,7 @@ model Compte {
   abonnement             Abonnement?
   demandesAssistance     DemandeAssistance[]
   acceptationsConditions AcceptationConditions[]
+  consommationsQuota     ConsommationQuota[]
 
   @@unique([slug])
 }

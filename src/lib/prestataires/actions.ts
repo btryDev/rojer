@@ -28,6 +28,7 @@ import {
 import { estSiretEnDouble, MESSAGE_SIRET_EN_DOUBLE } from "./siret-en-double";
 import { piecesRemplacees } from "./pieces";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
+import { creerSousPlafond, refusQuota } from "@/lib/abonnements/quotas";
 
 export type PrestataireActionState =
   | { status: "idle" }
@@ -166,7 +167,7 @@ export async function creerPrestataire(
   formData: FormData,
 ): Promise<PrestataireActionState> {
   await verifierSaisie();
-  const { db } = await assertEtablissementDuCompte(etablissementId);
+  const { compte, db } = await assertEtablissementDuCompte(etablissementId);
 
   const parsed = lireSaisie(formData);
   if (!parsed.success) {
@@ -176,6 +177,11 @@ export async function creerPrestataire(
       fieldErrors: parsed.error.flatten().fieldErrors,
     };
   }
+
+  // Plafond de la formule (ADR-053 § 14) : refusé avant de déposer les
+  // pièces ; la création le reprend sous verrou.
+  const auPlafond = await refusQuota(db, compte.compteId, "prestataires");
+  if (auPlafond) return { status: "error", message: auPlafond };
 
   const prestataireId = `pre_${randomUUID()}`;
   const depot = await deposerPieces(etablissementId, prestataireId, formData);
@@ -188,14 +194,20 @@ export async function creerPrestataire(
   }
 
   try {
-    await db.prestataire.create({
-      data: {
-        id: prestataireId,
-        etablissementId,
-        ...colonnesDeLaSaisie(parsed.data),
-        ...depot.colonnes,
-      },
-    });
+    const creation = await creerSousPlafond(db, compte.compteId, "prestataires", (tx) =>
+      tx.prestataire.create({
+        data: {
+          id: prestataireId,
+          etablissementId,
+          ...colonnesDeLaSaisie(parsed.data),
+          ...depot.colonnes,
+        },
+      }),
+    );
+    if (!creation.ok) {
+      await libererFichiers(depot.cles, "prestataires/creation");
+      return { status: "error", message: creation.motif };
+    }
   } catch (err) {
     // Les fichiers écrits ne sont référencés par aucune ligne : on les reprend.
     await libererFichiers(depot.cles, "prestataires/creation");

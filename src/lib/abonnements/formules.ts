@@ -24,9 +24,14 @@ export const LIBELLE_PERIODICITE = {
 /** L'intervalle Stripe d'une périodicité (prix récurrent). */
 export const INTERVALLE_STRIPE = { mensuel: "month", annuel: "year" } as const satisfies Record<Periodicite, string>;
 
-/** `null` : illimité. Les compteurs « par an » repartent à la date anniversaire. */
+/**
+ * `null` : illimité. Les plafonds « par an » se comptent sur les douze mois
+ * glissants qui précèdent, dans un journal que rien n'efface (ADR-053 § 14).
+ * `membres` compte aussi les invitations en attente.
+ */
 export type Quotas = {
   etablissements: number | null;
+  membres: number | null;
   permisDeFeuParAn: number | null;
   plansDePreventionParAn: number | null;
   prestataires: number | null;
@@ -46,6 +51,7 @@ export const FORMULES = {
     pourQui: "Un seul site",
     quotas: {
       etablissements: 1,
+      membres: 1,
       permisDeFeuParAn: 10,
       plansDePreventionParAn: 5,
       prestataires: 10,
@@ -62,6 +68,7 @@ export const FORMULES = {
     pourQui: "Plusieurs sites ou plusieurs personnes",
     quotas: {
       etablissements: 5,
+      membres: 5,
       permisDeFeuParAn: null,
       plansDePreventionParAn: null,
       prestataires: 50,
@@ -76,6 +83,7 @@ export const FORMULES = {
 } as const satisfies Record<string, Formule>;
 
 export type CleFormule = keyof typeof FORMULES;
+/** De la plus petite à la plus grande : la première est celle du refus par défaut. */
 export const CLES_FORMULES = Object.keys(FORMULES) as CleFormule[];
 
 /** La `lookup_key` du prix Stripe d'une formule et d'une périodicité. */
@@ -117,7 +125,9 @@ export function pointsDeFormule(f: CleFormule): string[] {
     q.permisDeFeuParAn === null
       ? "Permis de feu et plans de prévention sans limite"
       : `${q.permisDeFeuParAn} permis de feu et ${q.plansDePreventionParAn ?? "∞"} plans de prévention par an`;
-  return [libelleEtablissements(q.etablissements), "Tous les modules de Rojer", usage];
+  const utilisateurs =
+    q.membres === null ? "Utilisateurs sans limite" : `${q.membres} utilisateur${q.membres > 1 ? "s" : ""}`;
+  return [libelleEtablissements(q.etablissements), utilisateurs, "Tous les modules de Rojer", usage];
 }
 
 /**

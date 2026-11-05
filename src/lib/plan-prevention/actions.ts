@@ -29,6 +29,7 @@ import {
 import { calculerHashObjet } from "@/lib/signatures/hash-objet";
 import { revoquerLiensEnVol } from "@/lib/access-tokens/revocation";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
+import { creerSousPlafond } from "@/lib/abonnements/quotas";
 
 export type PlanActionState =
   | { status: "idle" }
@@ -228,18 +229,23 @@ export async function creerPlanPrevention(
   const numero = await nextNumeroPlan(etablissementId);
   const id = `pp_${randomUUID()}`;
 
-  await db.planPrevention.create({
-    data: {
-      id,
-      etablissementId,
-      numero,
-      ...colonnesPlan(parsed.data),
-      batimentId: batiment.id,
-      statut: "attente_signatures",
-      phasesDangereuses: { create: phasesACreer(parsed.data) },
-      lignes: { create: lignesACreer(parsed.data) },
-    },
-  });
+  // Plafond annuel de la formule (ADR-053 § 14) : compté au journal, que la
+  // suppression d'un brouillon n'efface pas.
+  const creation = await creerSousPlafond(db, compte.compteId, "plansDePreventionParAn", (tx) =>
+    tx.planPrevention.create({
+      data: {
+        id,
+        etablissementId,
+        numero,
+        ...colonnesPlan(parsed.data),
+        batimentId: batiment.id,
+        statut: "attente_signatures",
+        phasesDangereuses: { create: phasesACreer(parsed.data) },
+        lignes: { create: lignesACreer(parsed.data) },
+      },
+    }),
+  );
+  if (!creation.ok) return { status: "error", message: creation.motif };
 
   revalidatePath(`/etablissements/${etablissementId}/plan-prevention`);
   return { status: "success", planId: id, numero };

@@ -110,7 +110,16 @@ vi.mock("@/lib/calendrier/regeneration-sure", () => ({
   regenererApresMutation: h.regenererApresMutation,
 }));
 
+// La porte des plafonds a ses tests (`abonnements/quotas.test.ts`) : ici, son
+// appel dans la transaction et la réponse à un refus.
+const q = vi.hoisted(() => ({ prendreQuota: vi.fn(async (..._a: unknown[]) => {}) }));
+vi.mock("@/lib/abonnements/quotas", async (original) => ({
+  ...(await original<typeof import("@/lib/abonnements/quotas")>()),
+  prendreQuota: q.prendreQuota,
+}));
+
 const { finaliserOnboarding } = await import("./actions");
+const { RefusQuota } = await import("@/lib/abonnements/quotas");
 
 function formulaire(over: Record<string, string> = {}): FormData {
   const fd = new FormData();
@@ -137,6 +146,25 @@ beforeEach(() => {
   h.tx.entreprise.upsert.mockClear();
   h.regenererApresMutation.mockClear();
   h.tx.etablissement.create.mockClear();
+  q.prendreQuota.mockClear();
+});
+
+describe("plafond d'établissements de la formule (ADR-053 § 14)", () => {
+  it("pris dans la transaction, avant la création", async () => {
+    await expect(finaliserOnboarding({ status: "idle" }, formulaire())).rejects.toThrow("NEXT_REDIRECT");
+    expect(q.prendreQuota).toHaveBeenCalledWith(expect.anything(), expect.any(String), "etablissements");
+    expect(q.prendreQuota.mock.invocationCallOrder[0]).toBeLessThan(h.tx.etablissement.create.mock.invocationCallOrder[0]);
+  });
+
+  it("au plafond : le motif, aucun établissement, aucun calendrier", async () => {
+    q.prendreQuota.mockRejectedValueOnce(new RefusQuota("Votre formule Essentiel couvre 1 établissement : passez à Pro."));
+    expect(await finaliserOnboarding({ status: "idle" }, formulaire())).toEqual({
+      status: "error",
+      message: "Votre formule Essentiel couvre 1 établissement : passez à Pro.",
+    });
+    expect(h.tx.etablissement.create).not.toHaveBeenCalled();
+    expect(h.regenererApresMutation).not.toHaveBeenCalled();
+  });
 });
 
 describe("finaliserOnboarding — le calendrier naît avec l'établissement", () => {

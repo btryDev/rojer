@@ -162,6 +162,42 @@ et sans croire une information qui ne vient pas de Stripe.
    lancement verront l'écran d'essai à leur prochain onboarding — à confirmer
    au lancement.
 
+14. **Les plafonds, une seule porte (lot A du chantier « quotas »,
+   2026-11-05)** — décisions de la propriétaire du 2026-11-05 ; le reste,
+   tranché par la session « stripe », est contestable.
+   - **Comptés par compte**, toutes entreprises et tous établissements
+     confondus ; plafonds de la formule de l'abonnement (`formules.ts`).
+   - **Une seule porte** : `prendreQuota` (`abonnements/quotas.ts`), appelée
+     DANS la transaction qui crée l'élément. Elle verrouille la ligne du
+     compte (`FOR NO KEY UPDATE` : deux créations du même compte passent
+     l'une après l'autre, et l'insertion d'une ligne qui référence le compte
+     n'est pas bloquée), compte, refuse au plafond (`RefusQuota`, qui annule
+     la transaction). Un pré-contrôle sans verrou (`refusQuota`) peut
+     précéder, pour refuser avant de déposer des fichiers ; il ne remplace
+     jamais la porte. Une garde relit le code (`quotas-garde.test.ts`) :
+     toute création d'un modèle plafonné passe par elle.
+   - **Refus par défaut** : une formule absente ou inconnue reçoit les
+     plafonds de la plus petite formule, et le journal le signale. (Était :
+     pas de plafond.)
+   - **Établissements, prestataires** : comptés sur ce qui existe.
+   - **Utilisateurs** (1 en Essentiel, 5 en Pro) : membres + invitations en
+     attente non expirées, vérifié à l'invitation (`invitationLimit` du
+     plugin, = plafond − membres) et à l'acceptation (`membershipLimit`, sur
+     le compte de l'invitation). Le plugin compte hors de toute transaction
+     de Rojer : deux acceptations simultanées peuvent dépasser d'un. Limite
+     acceptée — les invitations sont rares et émises par le propriétaire.
+   - **« Par an » = douze mois glissants**, dans un journal que rien
+     n'efface (`ConsommationQuota` : compte, plafond, date ; aucun lien vers
+     l'élément) : supprimer un brouillon ou un établissement ne rend pas le
+     crédit, une résiliation suivie d'une souscription non plus. Le journal
+     s'écrit dès aujourd'hui, offre lancée ou non, et la migration y reprend
+     les permis de feu et plans de prévention existants : au lancement, les
+     douze derniers mois sont déjà comptés. Le verrou et le refus, eux,
+     n'agissent qu'une fois l'offre lancée. Concernés : permis de feu,
+     plans de prévention (Essentiel : 10 et 5).
+   - Au plafond, seule la création est refusée, et le message nomme la
+     formule qui le lève (« Sur mesure » sur devis au-delà de Pro).
+
 ## Données
 
 - `Abonnement` : racine de compte (`userId`, ADR-051) ; `stripeCustomerId`
@@ -176,6 +212,9 @@ et sans croire une information qui ne vient pas de Stripe.
 - `AcceptationConditions` (PR B) : racine `compteId`, auteur `userId`,
   `version`, `empreinte`, `contexte` (`essai`), `accepteeLe` ; écrite une
   fois, jamais modifiée.
+- `ConsommationQuota` (§ 14) : racine `compteId` (suppression en cascade
+  avec le compte), `quota` (la clé de `Quotas`), `consommeLe` ; une ligne
+  par élément « par an » créé, jamais modifiée ni effacée par Rojer.
 - `EvenementStripe` : hors compte (ADR-051), écrit avant toute identité :
   `id` (l'identifiant Stripe `evt_…`), `type`, `recuLe` (indexé, pour le
   ménage), `traitementDebuteLe`, `traiteLe`, `derniereErreur` (un motif,
