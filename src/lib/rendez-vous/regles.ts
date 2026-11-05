@@ -3,7 +3,9 @@
  * l'action serveur lisent les mêmes fonctions.
  */
 
+import type { Realisateur } from "@prisma/client";
 import { formaterDateCourteFr, formaterDateHeureFr, formaterJourMoisFr, joursCivilsEntre } from "@/lib/dates";
+import { estLignePourInformation } from "@/lib/referentiels/conformite/initiative";
 
 /**
  * Un contrôle reçoit un prestataire et un rendez-vous s'il est ouvert et
@@ -120,4 +122,66 @@ export function avertissementRendezVous(rendezVousLe: Date, echeance: Date | nul
   if (avance > 92)
     return "Bien en avance sur l'échéance : la suivante sera comptée à partir de ce contrôle.";
   return null;
+}
+
+/**
+ * Le contrôle n'admet qu'un organisme agréé : `organisme_agree` est le seul
+ * réalisateur de la ligne. Dès qu'un autre réalisateur est admis à côté
+ * (personne qualifiée, organisme accrédité, bureau de contrôle…), un
+ * prestataire non déclaré agréé peut être celui-là : l'annuaire ne dit que
+ * l'agrément, rien à signaler.
+ * La visite de la commission de sécurité garde `organisme_agree` faute de
+ * valeur propre ; elle n'est pas un prestataire, et en est écartée.
+ */
+export function agrementExige(v: {
+  realisateurRequis: readonly Realisateur[];
+  obligationId?: string | null;
+}): boolean {
+  return (
+    v.realisateurRequis.length > 0 &&
+    v.realisateurRequis.every((r) => r === "organisme_agree") &&
+    !estLignePourInformation(v)
+  );
+}
+
+/** La phrase, écrite une fois pour la carte et l'alerte. */
+export const AGREMENT_EXIGE = "Ce contrôle doit être fait par un organisme agréé.";
+
+/**
+ * Ce que la carte dit d'un prestataire attitré qui n'est pas déclaré agréé
+ * dans l'annuaire, sur un contrôle qui l'exige. Signalé, jamais refusé :
+ * la case de la fiche peut simplement ne pas être cochée.
+ */
+export function avertissementAgrement(
+  exige: boolean,
+  prestataire: { raisonSociale: string; estOrganismeAgree: boolean } | null,
+): string | null {
+  if (!exige || !prestataire || prestataire.estOrganismeAgree) return null;
+  return `${AGREMENT_EXIGE} ${prestataire.raisonSociale} n'est pas déclaré agréé dans votre annuaire : vérifiez son agrément, et cochez « Organisme agréé » sur sa fiche s'il l'est.`;
+}
+
+/** Un groupe de la liste du prestataire attitré. */
+export type GroupeAnnuaire<P> = { label: string; items: P[] };
+
+/**
+ * L'annuaire tel que le choix du prestataire attitré le range : par agrément
+ * quand le contrôle l'exige, sinon par domaine couvert. Groupes vides omis.
+ */
+export function rangerAnnuaire<P extends { couvre: boolean; estOrganismeAgree: boolean }>(
+  proposables: readonly P[],
+  exige: boolean,
+): GroupeAnnuaire<P>[] {
+  const enTete = (p: P) => (exige ? p.estOrganismeAgree : p.couvre);
+  const tete = proposables.filter(enTete);
+  const autres = proposables.filter((p) => !enTete(p));
+  const groupes = exige
+    ? [
+        { label: "Organismes agréés", items: tete },
+        { label: "Non déclarés agréés", items: autres },
+      ]
+    : [
+        { label: "Couvrent ce contrôle", items: tete },
+        { label: tete.length > 0 ? "Autres prestataires" : "Votre annuaire", items: autres },
+      ];
+  return groupes.filter((g) => g.items.length > 0);
 }

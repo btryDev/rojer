@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
+import type { Realisateur } from "@prisma/client";
 import { depuisSaisieDateHeure } from "@/lib/dates";
 import {
+  agrementExige,
+  avertissementAgrement,
   avertissementRendezVous,
+  rangerAnnuaire,
   datePoseeAuCalendrier,
   mentionRendezVous,
   pastilleRendezVous,
@@ -69,5 +73,56 @@ describe("le rendez-vous d'un contrôle (ADR-049)", () => {
     expect(avertissementRendezVous(t("2027-10-25T09:00"), echeance)).toMatch(/retard/);
     expect(avertissementRendezVous(t("2026-11-05T09:00"), echeance)).toMatch(/avance/);
     expect(avertissementRendezVous(t("2026-11-05T09:00"), null)).toBeNull();
+  });
+});
+
+describe("l'agrément du prestataire attitré", () => {
+  it("n'est exigé que si l'organisme agréé est le seul réalisateur admis", () => {
+    const ligne = (realisateurRequis: Realisateur[], obligationId = "elec-erp-annuelle") => ({
+      realisateurRequis,
+      obligationId,
+    });
+    expect(agrementExige(ligne(["organisme_agree"]))).toBe(true);
+    expect(agrementExige(ligne(["personne_qualifiee", "organisme_agree"]))).toBe(false);
+    expect(agrementExige(ligne(["organisme_agree", "bureau_controle"]))).toBe(false);
+    expect(agrementExige(ligne(["organisme_accredite"]))).toBe(false);
+    expect(agrementExige(ligne([]))).toBe(false);
+  });
+
+  it("ne vise pas la visite de la commission de sécurité, qui n'est pas un prestataire", () => {
+    expect(
+      agrementExige({ realisateurRequis: ["organisme_agree"], obligationId: "incendie-erp-5-visite-commission" }),
+    ).toBe(false);
+  });
+
+  it("signale un prestataire non déclaré agréé, et rien d'autre", () => {
+    const apave = { raisonSociale: "Apave", estOrganismeAgree: true };
+    const artisan = { raisonSociale: "Élec Martin", estOrganismeAgree: false };
+    expect(avertissementAgrement(true, artisan)).toContain("Élec Martin n'est pas déclaré agréé");
+    expect(avertissementAgrement(true, apave)).toBeNull();
+    expect(avertissementAgrement(false, artisan)).toBeNull();
+    expect(avertissementAgrement(true, null)).toBeNull();
+  });
+});
+
+describe("le rangement de l'annuaire du prestataire attitré", () => {
+  const a = { id: "a", couvre: false, estOrganismeAgree: true };
+  const b = { id: "b", couvre: true, estOrganismeAgree: false };
+  const vue = (g: ReturnType<typeof rangerAnnuaire<typeof a>>) => g.map((x) => [x.label, x.items.map((p) => p.id)]);
+
+  it("par agrément quand le contrôle l'exige, par domaine sinon", () => {
+    expect(vue(rangerAnnuaire([a, b], true))).toEqual([
+      ["Organismes agréés", ["a"]],
+      ["Non déclarés agréés", ["b"]],
+    ]);
+    expect(vue(rangerAnnuaire([a, b], false))).toEqual([
+      ["Couvrent ce contrôle", ["b"]],
+      ["Autres prestataires", ["a"]],
+    ]);
+  });
+
+  it("omet les groupes vides, et dit « Votre annuaire » quand rien ne couvre le domaine", () => {
+    expect(vue(rangerAnnuaire([a], false))).toEqual([["Votre annuaire", ["a"]]]);
+    expect(vue(rangerAnnuaire([], true))).toEqual([]);
   });
 });
