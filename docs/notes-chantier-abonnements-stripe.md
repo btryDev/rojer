@@ -428,7 +428,11 @@ conditions générales provisoires (`abonnements/conditions.ts`, page publique
 pendant l'essai, portail, Checkout avec CGU, prix lus chez Stripe et gardés
 10 minutes).
 
-**PR B (attend #159 dans `cc`, multi-utilisateurs)** :
+~~**PR B (attend #159 dans `cc`, multi-utilisateurs)** :~~ [2026-11-05 :
+#159 est dans `cc` ; PR B faite, `lot/abonnements-stripe-parcours-b` —
+ADR-053 § 13. Reportés : nom et adresse du client depuis l'entreprise
+(seul le nom passe, à l'ouverture du portail ; l'adresse se saisit dans le
+portail) ; la preuve d'acceptation au paiement reste chez Stripe.]
 - écran « Votre essai gratuit » : commence par `aiguillageSansCompte()` (une
   personne invitée rejoint son compte, ne démarre pas d'essai), compte par
   `requireCompteDOnboarding()` sans nom, `verifierSaisie()` puis
@@ -539,6 +543,26 @@ par git) avec une base dédiée (`duerp_cc_visuel` sur le conteneur
 confirmation d'inscription s'affiche dans la sortie du serveur. L'état
 d'abonnement d'un compte de test se pose par un script Prisma (statut,
 fin d'essai) — aucune requête vers Stripe pendant ce contrôle.
+
+**Préparer un compte Stripe de test** (pour essayer le parcours de bout en
+bout, au lieu de poser l'état par Prisma) : créer le compte Stripe et rester
+en mode test ; coller la clé de test (`sk_test_…`, ou `rk_test_…` qui écrit
+produits, prix et portail) dans `.env.local` du worktree — jamais dans la
+conversation ; lancer `pnpm exec tsx scripts/stripe-installer-test.ts`
+(produits, prix aux `lookup_key` `rojer_<formule>_<periodicite>`, montants
+provisoires, portail réglé `continue_trial` ; idempotent, refuse toute clé
+live sans rien appeler ; il imprime ce qui reste à régler à la main :
+conditions dans les réglages publics, rappel de fin d'essai, et la
+configuration par défaut du portail si le compte n'en a pas). Installer la
+CLI Stripe, puis `stripe listen --forward-thin-to
+localhost:3007/api/stripe/webhook --thin-events
+"v1.checkout.session.completed,v1.customer.subscription.created,v1.customer.subscription.updated,v1.customer.subscription.deleted,v1.customer.subscription.paused,v1.customer.subscription.resumed,v1.customer.subscription.trial_will_end,v1.invoice.paid,v1.invoice.payment_failed,v1.invoice.payment_action_required"`
+(la liste est `EVENEMENTS_ECOUTES` de `src/lib/stripe/webhook.ts`) et
+coller le `whsec_…` affiché dans `.env.local`. Cartes de test : `4242 4242
+4242 4242` acceptée ; `4000 0000 0000 0341` s'enregistre puis est refusée au
+prélèvement (impayé). Fin d'essai : une horloge de simulation (Billing >
+Horloges de simulation) avec un client et son abonnement, avancée au-delà
+des 30 jours.
 
 ## Sources lues
 

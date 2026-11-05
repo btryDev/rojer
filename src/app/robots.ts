@@ -32,6 +32,8 @@ export const RACINES_EXCLUES = [
   // Les conditions générales (ADR-053 § 8) : publiques, mais provisoires —
   // à rendre indexables quand le texte relu par un juriste les remplacera.
   "/conditions",
+  // L'écran d'essai gratuit (ADR-053 § 8), derrière la connexion.
+  "/essai",
   // Pages publiques, à lien ou par slug.
   "/acces/",
   "/accessibilite/",

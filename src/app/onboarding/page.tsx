@@ -1,6 +1,7 @@
 import { WizardShell } from "@/components/onboarding/WizardShell";
 import { redirect } from "next/navigation";
 import { aiguillageSansCompte } from "@/lib/auth/compte";
+import { aiguillageEssai } from "@/lib/abonnements/essai";
 import { requireUser } from "@/lib/auth/require-user";
 import { listerEntreprisesConnues } from "@/lib/entreprises/queries";
 
@@ -27,6 +28,10 @@ export default async function OnboardingPage() {
   // voit l'invitation avant de créer un compte à elle. Refusée, elle revient ici.
   const aiguillage = await aiguillageSansCompte();
   if (aiguillage) redirect(aiguillage);
+  // L'essai gratuit avant la mise en place, une fois par compte, quand l'offre
+  // est lancée (ADR-053 § 8).
+  const essai = await aiguillageEssai();
+  if (essai) redirect(essai);
   // ~~Un compte = une entreprise : le parcours ne se joue qu'une fois.~~
   // [2026-10-26 : chaque établissement passe par ce parcours. Un compte suit
   // plusieurs entreprises, une par SIREN ; un SIRET qui reprend le SIREN de

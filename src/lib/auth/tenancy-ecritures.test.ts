@@ -155,6 +155,17 @@ const EXEMPTIONS = new Map<string, Exemption>([
   // seconde borne désormais par elle-même — son `upsert` cherche l'entreprise
   // par `(compteId, siren)`, l'identifiant du compte connecté en clé.]
   [
+    "lib/abonnements/actions.ts:demarrerEssaiAction",
+    {
+      garde: "demarrerEssaiDuCompte",
+      raison:
+        "L'essai gratuit (ADR-053 § 8), création pour soi : `demarrerEssaiDuCompte` " +
+        "(abonnements/essai.ts) prend le compte de la SESSION par `requireCompteDOnboarding`, " +
+        "vérifie qu'elle en est propriétaire, et n'écrit que par le client borné à ce " +
+        "compte (`where: { compteId }`). Aucun identifiant reçu du navigateur ne désigne la ligne.",
+    },
+  ],
+  [
     "lib/signatures/actions.ts:poserSignatureAvecToken",
     {
       garde: "verifierAccessToken",

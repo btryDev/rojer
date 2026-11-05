@@ -16,6 +16,7 @@ import { EFFECTIF_MAX } from "@/lib/etablissements/schema";
 import { typesErpAutresCoherents } from "@/lib/etablissements/schema";
 import { saisieOnboardingDepuisFormData } from "./saisie";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
+import { refusQuotaEtablissements } from "@/lib/abonnements/quotas";
 import { accueillirSite, RefusBorneEffectif } from "@/lib/entreprises/effectif";
 
 /**
@@ -99,6 +100,8 @@ export async function finaliserOnboarding(
   // neuf dont elle devient propriétaire (ADR-054 § 5). Créé avant la
   // transaction : si elle échoue, le parcours suivant le reprend.
   const { compte, db } = await requireCompteDOnboarding(d.raisonSociale);
+  const refusQuota = await refusQuotaEtablissements(db, compte.compteId);
+  if (refusQuota) return { status: "error", message: refusQuota };
 
   const siren = sirenDuSiret(d.siret);
 
