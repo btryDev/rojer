@@ -18,8 +18,11 @@ const { ecritures, enregistrer, prescription } = vi.hoisted(() => {
   return { ecritures, enregistrer, prescription };
 });
 
-vi.mock("@/lib/prisma", () => ({
-  prisma: {
+vi.mock("@/lib/prisma", () => {
+  const prisma: Record<string, unknown> = {
+    // La création passe par la porte des plafonds, dans une transaction
+    // (ADR-053 § 14) : le même client simulé y sert.
+    $transaction: async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma),
     uniteTravail: { update: enregistrer("uniteTravail", "update") },
     equipement: { createMany: enregistrer("equipement", "createMany") },
     // Le régime lu par le pré-remplissage (2026-10-14) : aucun établissement
@@ -33,8 +36,9 @@ vi.mock("@/lib/prisma", () => ({
       create: enregistrer("action", "create"),
       update: enregistrer("action", "update"),
     },
-  },
-}));
+  };
+  return { prisma };
+});
 vi.mock("@/lib/auth/scope", async (orig) => ({
   ...(await orig<object>()),
   // Les gardes rendent aussi le client borné (ADR-051) : ici, le client simulé.
@@ -50,7 +54,7 @@ vi.mock("@/lib/auth/scope", async (orig) => ({
     action: { echeance: null, leveeLe: null, risqueId: null },
   }),
   assertEtablissementOwnership: async () => undefined,
-  assertEtablissementDuCompte: async () => ({ user: { id: "u1" }, db: await (await import("@/test/garde-simulee")).clientDuCompteSimule() }),
+  assertEtablissementDuCompte: async () => ({ user: { id: "u1" }, compte: { compteId: "user-1", role: "owner" }, db: await (await import("@/test/garde-simulee")).clientDuCompteSimule() }),
 }));
 vi.mock("next/cache", () => ({ revalidatePath: () => undefined, revalidateTag: () => undefined }));
 vi.mock("@/lib/etablissements/epi-constate", () => ({
