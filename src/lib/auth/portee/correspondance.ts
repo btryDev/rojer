@@ -30,6 +30,7 @@ export const CORRESPONDANCE = {
   // Posée par l'action d'un membre connecté, qui en est l'auteur (`userId`) ;
   // son `etablissementId` est facultatif (ADR-050).
   DemandeAssistance: { racine: "compteId" },
+  AcceptationConditions: { racine: "compteId" },
   // L'abonnement du compte (ADR-053) : écrit depuis un webhook signé, par le
   // client borné au compte que désigne l'objet Stripe relu.
   Abonnement: { racine: "compteId" },

@@ -3,8 +3,22 @@ import { BandeauAbonnement } from "@/components/abonnements/BandeauAbonnement";
 import { getOptionalCompte } from "@/lib/auth/compte";
 import { requireUser } from "@/lib/auth/require-user";
 import { abonnementDuCompte, contexteDroits, offreLancee } from "@/lib/abonnements/saisie";
-import { droitsDe, libelleStatut } from "@/lib/abonnements/droits";
+import { droitsDe, gesteAbonnement, libelleStatut } from "@/lib/abonnements/droits";
 import { formaterDateLongueFr } from "@/lib/dates";
+import { Button, buttonVariants } from "@/components/ui/button";
+import Link from "next/link";
+import { ouvrirPortailAction, souscrireAction } from "@/lib/abonnements/actions";
+import { PAGE_ESSAI } from "@/lib/abonnements/essai";
+import {
+  CLES_FORMULES,
+  FORMULES,
+  LIBELLE_PERIODICITE,
+  PERIODICITES,
+  formuleDeLookupKey,
+  lookupKey,
+} from "@/lib/abonnements/formules";
+import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
+import { DUREE_ESSAI_JOURS } from "@/lib/stripe/parcours";
 
 export const metadata = {
   title: "Abonnement — Rojer",
@@ -13,24 +27,31 @@ export const metadata = {
 /**
  * L'abonnement du compte (ADR-053) : son état, et pourquoi une saisie a été
  * refusée (`verifierSaisie` y renvoie avec `?saisie=fermee`). La lecture et
- * l'export ne sont jamais fermés — la page le dit. Le choix d'une formule et
- * le portail de gestion viennent au lot 4.
+ * l'export ne sont jamais fermés — la page le dit. Le propriétaire y gère
+ * l'abonnement (ADR-053 §§ 10, 12) : l'essai s'il est encore disponible, le
+ * portail Stripe tant qu'un abonnement court, Checkout après sa fin. Un autre
+ * membre voit l'état, sans les boutons.
  */
+const LOOKUP_DEFAUT = lookupKey("essentiel", "mensuel");
+
 export default async function AbonnementPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saisie?: string }>;
+  searchParams: Promise<{ saisie?: string; stripe?: string; paiement?: string; abonnement?: string }>;
 }) {
   // Sans compte encore (rien créé), la page se lit quand même : aucun
   // abonnement (ADR-054). `requireCompte` renverrait à l'onboarding.
   await requireUser();
   const c = await getOptionalCompte();
-  const { saisie } = await searchParams;
+  const { saisie, stripe, paiement, abonnement } = await searchParams;
   const ctx = contexteDroits();
   const ouvert = offreLancee(ctx);
   // Une seule lecture : la ligne sert à l'état affiché et aux droits.
   const ligne = c ? await abonnementDuCompte(c.db, c.compte.compteId) : null;
   const droits = droitsDe(ligne, ctx);
+  // Sans compte encore, `role` est nul : l'essai reste proposé.
+  const geste = gesteAbonnement({ ouvert, role: c?.compte.role ?? null, ligne });
+  const formule = formuleDeLookupKey(ligne?.formule);
 
   return (
     <main className="flex min-h-[calc(100vh-56px)] flex-col bg-[color:var(--board-canvas)] px-6 py-14 sm:px-10">
@@ -60,7 +81,11 @@ export default async function AbonnementPage({
               {ligne?.formule && (
                 <>
                   <dt className="text-[color:var(--board-slate-mid)]">Formule</dt>
-                  <dd className="m-0">{ligne.formule}</dd>
+                  <dd className="m-0">
+                    {formule
+                      ? `${FORMULES[formule.formule].libelle}, facturation ${LIBELLE_PERIODICITE[formule.periodicite].adjectif}`
+                      : ligne.formule}
+                  </dd>
                 </>
               )}
               {ligne?.finEssai && ligne.statut === "trialing" && (
@@ -82,6 +107,75 @@ export default async function AbonnementPage({
             </p>
           )}
         </section>
+
+        <div className="mt-6 flex flex-col gap-3">
+          <MessageFormulaire ton="alerte">
+            {stripe === "indisponible" ? "Stripe ne répond pas pour le moment : réessayez dans un instant." : null}
+          </MessageFormulaire>
+          <MessageFormulaire ton="info">
+            {paiement === "termine"
+              ? "Paiement terminé. L'abonnement s'affiche ici dès que Stripe l'a confirmé, en général en quelques secondes : rechargez la page."
+              : abonnement === "en-cours"
+                ? "Un abonnement est déjà en cours pour ce compte : gérez-le ici plutôt que d'en souscrire un second."
+                : null}
+          </MessageFormulaire>
+        </div>
+
+        {geste && (
+          <section className="carte-board mt-5 px-7 py-6 sm:px-8" aria-labelledby="titre-gerer">
+            <h2 id="titre-gerer" className="board-titre m-0 text-[22px]">
+              Gérer
+            </h2>
+            {geste === "membre" && (
+              <p className="m-0 mt-2 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                Seul le propriétaire du compte gère l&apos;abonnement.
+              </p>
+            )}
+            {geste === "essai" && (
+              <>
+                <p className="m-0 mt-2 mb-5 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                  {DUREE_ESSAI_JOURS} jours gratuits, sans carte bancaire, dans la formule de votre choix.
+                </p>
+                <Link href={PAGE_ESSAI} className={buttonVariants({ variant: "board", size: "board" })}>
+                  Démarrer mon essai gratuit
+                </Link>
+              </>
+            )}
+            {geste === "portail" && (
+              <form action={ouvrirPortailAction}>
+                <p className="m-0 mt-2 mb-5 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                  Ajouter ou changer de carte, changer de formule, résilier, télécharger vos factures : sur la page
+                  sécurisée de Stripe, notre prestataire de paiement.
+                </p>
+                <Button type="submit" variant="board" size="board">
+                  Gérer mon abonnement
+                </Button>
+              </form>
+            )}
+            {geste === "souscrire" && (
+              <form action={souscrireAction}>
+                <p className="m-0 mt-2 mb-4 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                  Choisissez une formule : le paiement se fait sur la page sécurisée de Stripe.
+                </p>
+                <label className="label-board" htmlFor="formule">
+                  Formule
+                </label>
+                <select id="formule" name="formule" className="champ-board mt-1.5 mb-5" defaultValue={LOOKUP_DEFAUT}>
+                  {CLES_FORMULES.flatMap((f) =>
+                    PERIODICITES.map((p) => (
+                      <option key={lookupKey(f, p)} value={lookupKey(f, p)}>
+                        {FORMULES[f].libelle}, facturation {LIBELLE_PERIODICITE[p].adjectif}
+                      </option>
+                    )),
+                  )}
+                </select>
+                <Button type="submit" variant="board" size="board">
+                  Souscrire
+                </Button>
+              </form>
+            )}
+          </section>
+        )}
       </div>
     </main>
   );

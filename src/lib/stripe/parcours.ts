@@ -10,7 +10,8 @@ import "server-only";
 // l'appel (lot de branchement).
 
 import type Stripe from "stripe";
-import { LOOKUP_KEYS, formuleDeLookupKey } from "@/lib/abonnements/formules";
+import { OPTIONS_RELECTURE } from "./client";
+import { INTERVALLE_STRIPE, LOOKUP_KEYS, formuleDeLookupKey } from "@/lib/abonnements/formules";
 
 export const DUREE_ESSAI_JOURS = 30;
 
@@ -87,6 +88,7 @@ export async function ouvrirCheckout(
     annulation,
   }: { customerId: string; priceId: string; metadata: Metadonnees; succes: string; annulation: string },
 ) {
+  await expirerSessionsOuvertes(stripe, customerId);
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     customer: customerId,
@@ -103,11 +105,29 @@ export async function ouvrirCheckout(
   return session.url;
 }
 
+/**
+ * Les abonnements d'un client, relus chez Stripe, qui fait foi : notre copie
+ * peut retarder d'un webhook. Les plus récents d'abord ; un client Rojer n'en
+ * a qu'un ou deux (l'essai, puis un réabonnement après résiliation).
+ */
+export async function abonnementsDuClient(stripe: Stripe, customerId: string): Promise<Stripe.Subscription[]> {
+  const liste = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 10 }, OPTIONS_RELECTURE);
+  return liste.data;
+}
+
+/**
+ * Les sessions Checkout encore ouvertes du client, expirées avant d'en ouvrir
+ * une neuve : deux onglets ne paient pas deux abonnements.
+ */
+async function expirerSessionsOuvertes(stripe: Stripe, customerId: string) {
+  const ouvertes = await stripe.checkout.sessions.list({ customer: customerId, status: "open", limit: 10 }, OPTIONS_RELECTURE);
+  await Promise.all(ouvertes.data.map((s) => stripe.checkout.sessions.expire(s.id)));
+}
+
 export type PrixAffiche = { priceId: string; montantCentimes: number; devise: string };
 
 let cachePrix: { lu: number; prix: ReadonlyMap<string, PrixAffiche> } | undefined;
 const DUREE_CACHE_PRIX_MS = 10 * 60_000;
-const INTERVALLE = { mensuel: "month", annuel: "year" } as const;
 
 /**
  * Les prix des formules, lus chez Stripe (qui les facture) par `lookup_key`.
@@ -123,7 +143,7 @@ export async function prixDesFormules(stripe: Stripe, maintenant = Date.now()): 
   for (const p of liste.data) {
     const cle = formuleDeLookupKey(p.lookup_key);
     if (!cle || p.unit_amount === null) continue;
-    if (p.recurring?.interval !== INTERVALLE[cle.periodicite]) {
+    if (p.recurring?.interval !== INTERVALLE_STRIPE[cle.periodicite]) {
       console.error(`stripe : le prix ${p.id} (${p.lookup_key}) n'a pas l'intervalle de sa clé`);
       continue;
     }

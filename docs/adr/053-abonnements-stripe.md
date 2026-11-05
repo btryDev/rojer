@@ -144,6 +144,24 @@ et sans croire une information qui ne vient pas de Stripe.
 12. **Propriétaire seul** : démarrer l'essai, ouvrir le portail ou Checkout
    (ADR-054, rôle `owner`) ; un membre voit l'état sans les boutons.
 
+13. **Le parcours, branché (PR B, 2026-11-05)** : `/essai` (écran d'essai),
+   atteint par l'onboarding (`aiguillageEssai`, après `aiguillageSansCompte`)
+   quand l'offre est lancée et que le compte — s'il existe, et pour son
+   propriétaire — n'a jamais eu d'abonnement. Le démarrage
+   (`abonnements/essai.ts`) : compte par `requireCompteDOnboarding`,
+   propriétaire seul, client Stripe puis ligne `Abonnement` RÉSERVÉE avant
+   l'essai, preuve d'acceptation (`AcceptationConditions`), essai, relecture
+   immédiate (la saisie s'ouvre sans attendre le webhook). La page
+   `/compte/abonnement` porte le geste : l'essai s'il est disponible, le
+   portail tant qu'un abonnement court (le nom de l'entreprise passe sur le
+   client Stripe juste avant, pour la facture), Checkout après sa fin. Les
+   trois actions restent ouvertes à un impayé et sont réservées au
+   propriétaire. Plafond d'établissements à l'onboarding
+   (`abonnements/quotas.ts`). L'acceptation au paiement (Checkout) est gardée
+   par Stripe sur la session, pas recopiée. Les comptes existants au
+   lancement verront l'écran d'essai à leur prochain onboarding — à confirmer
+   au lancement.
+
 ## Données
 
 - `Abonnement` : racine de compte (`userId`, ADR-051) ; `stripeCustomerId`
@@ -155,6 +173,9 @@ et sans croire une information qui ne vient pas de Stripe.
   `relueLe` (dernière relecture chez Stripe). Clé étrangère vers `User` en
   `RESTRICT` : supprimer un compte (qui n'existe pas encore) devra d'abord
   résilier chez Stripe.
+- `AcceptationConditions` (PR B) : racine `compteId`, auteur `userId`,
+  `version`, `empreinte`, `contexte` (`essai`), `accepteeLe` ; écrite une
+  fois, jamais modifiée.
 - `EvenementStripe` : hors compte (ADR-051), écrit avant toute identité :
   `id` (l'identifiant Stripe `evt_…`), `type`, `recuLe` (indexé, pour le
   ménage), `traitementDebuteLe`, `traiteLe`, `derniereErreur` (un motif,

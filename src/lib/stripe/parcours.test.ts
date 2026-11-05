@@ -15,7 +15,7 @@ import {
 const api = {
   customers: { create: vi.fn() },
   subscriptions: { create: vi.fn() },
-  checkout: { sessions: { create: vi.fn() } },
+  checkout: { sessions: { create: vi.fn(), list: vi.fn(), expire: vi.fn() } },
   prices: { list: vi.fn() },
 };
 const stripe = api as unknown as Stripe;
@@ -49,7 +49,8 @@ describe("parcours Stripe", () => {
     expect(DUREE_ESSAI_JOURS).toBe(30);
   });
 
-  it("Checkout exige l'acceptation des conditions générales", async () => {
+  it("Checkout exige l'acceptation des conditions générales, et expire d'abord les sessions encore ouvertes", async () => {
+    api.checkout.sessions.list.mockResolvedValue({ data: [{ id: "cs_ancienne" }] });
     api.checkout.sessions.create.mockResolvedValue({ url: "https://checkout.stripe.com/x" });
     await ouvrirCheckout(stripe, { customerId: "cus_1", priceId: "price_e", metadata: { userId: "u1" }, succes: "s", annulation: "a" });
     expect(api.checkout.sessions.create.mock.calls[0][0]).toMatchObject({
@@ -58,6 +59,9 @@ describe("parcours Stripe", () => {
       consent_collection: { terms_of_service: "required" },
       subscription_data: { metadata: { userId: "u1" } },
     });
+    expect(api.checkout.sessions.list).toHaveBeenCalledWith({ customer: "cus_1", status: "open", limit: 10 }, expect.anything());
+    expect(api.checkout.sessions.expire).toHaveBeenCalledWith("cs_ancienne");
+    expect(api.checkout.sessions.expire.mock.invocationCallOrder[0]).toBeLessThan(api.checkout.sessions.create.mock.invocationCallOrder[0]);
   });
 
   it("les prix viennent de Stripe, par lookup_key et au bon intervalle, gardés dix minutes s'ils sont complets", async () => {

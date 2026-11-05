@@ -32,6 +32,12 @@ const OUVERTES = new Map<string, string>([
   ["lib/entreprises/actions.ts:supprimerEntreprise", "supprimer ses données reste possible à tout moment (RGPD, règle 9)"],
   ["lib/etablissements/actions.ts:supprimerEtablissement", "supprimer ses données reste possible à tout moment (RGPD, règle 9)"],
   ["lib/membres/actions.ts:quitterCompte", "quitter un compte reste possible à tout moment, quel que soit son rôle (ADR-054 § 6)"],
+  // L'abonnement lui-même (ADR-053 §§ 8 à 12) : c'est par lui qu'un compte
+  // impayé reprend la main. Propriétaire seul (`verifierProprietaire`) ;
+  // l'essai, avant que le compte existe, ouvre par `verifierRole`.
+  ["lib/abonnements/actions.ts:demarrerEssaiAction", "démarrer l'essai : avant tout abonnement, propriétaire seul"],
+  ["lib/abonnements/actions.ts:ouvrirPortailAction", "le portail : payer, reprendre, résilier — propriétaire seul"],
+  ["lib/abonnements/actions.ts:souscrireAction", "souscrire de nouveau après un abonnement terminé — propriétaire seul"],
 ]);
 
 /**

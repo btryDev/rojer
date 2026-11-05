@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { droitsDe, type ContexteDroits, type LigneAbonnement } from "./droits";
+import { droitsDe, gesteAbonnement, type ContexteDroits, type LigneAbonnement } from "./droits";
 
 const MAINTENANT = new Date("2026-11-03T10:00:00Z");
 const EXIGE: ContexteDroits = { stripeActif: true, exige: true, maintenant: MAINTENANT };
@@ -67,5 +67,41 @@ describe("droitsDe", () => {
 
   it("abonnement actif sans échéance particulière : rien à dire", () => {
     expect(droitsDe(ligne({}), EXIGE)).toEqual({ saisie: true, bandeau: null });
+  });
+});
+
+describe("gesteAbonnement", () => {
+  const ligne = (o: Partial<{ statut: string | null; stripeSubscriptionId: string | null; essaiUtiliseLe: Date | null }>) => ({
+    statut: null,
+    stripeSubscriptionId: null,
+    essaiUtiliseLe: null,
+    ...o,
+  });
+
+  it("offre non lancée : aucun geste", () => {
+    expect(gesteAbonnement({ ouvert: false, role: "owner", ligne: null })).toBeNull();
+  });
+
+  it("sans compte encore : l'essai (pas « réservé au propriétaire »)", () => {
+    expect(gesteAbonnement({ ouvert: true, role: null, ligne: null })).toBe("essai");
+  });
+
+  it("un membre ou un lecteur : l'état seul", () => {
+    for (const role of ["member", "lecture"]) expect(gesteAbonnement({ ouvert: true, role, ligne: null })).toBe("membre");
+  });
+
+  it("propriétaire : l'essai tant qu'il est disponible, le portail tant qu'un abonnement court, sinon Checkout", () => {
+    const g = (l: ReturnType<typeof ligne> | null) => gesteAbonnement({ ouvert: true, role: "owner", ligne: l });
+    expect(g(null)).toBe("essai");
+    expect(g(ligne({}))).toBe("essai");
+    for (const statut of ["trialing", "active", "past_due", "unpaid", "paused", "incomplete"]) {
+      expect(g(ligne({ statut, stripeSubscriptionId: "sub_1", essaiUtiliseLe: new Date() })), statut).toBe("portail");
+    }
+    for (const statut of ["canceled", "incomplete_expired"]) {
+      expect(g(ligne({ statut, stripeSubscriptionId: "sub_1", essaiUtiliseLe: new Date() })), statut).toBe("souscrire");
+    }
+    // Un démarrage en cours ou interrompu (verrou, pas d'abonnement) se tranche
+    // sur l'écran d'essai, qui relit Stripe — jamais par un Checkout.
+    expect(g(ligne({ essaiUtiliseLe: new Date() }))).toBe("essai");
   });
 });

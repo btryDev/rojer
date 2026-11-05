@@ -73,7 +73,7 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
       trial_start: null,
       cancel_at: null,
       cancel_at_period_end: false,
-      items: { data: [{ current_period_end: 1_800_000_000, price: { id: "price_1", lookup_key: o.prix ?? "suivi" } }] },
+      items: { data: [{ current_period_end: 1_800_000_000, price: { id: "price_1", lookup_key: o.prix ?? "rojer_essentiel_mensuel" } }] },
       ...o,
     }) as unknown as Stripe.Subscription;
 
@@ -109,7 +109,7 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
         stripeCustomerId: "cus_A",
         stripeSubscriptionId: "sub_1",
         statut: "trialing",
-        formule: "suivi",
+        formule: "rojer_essentiel_mensuel",
         essaiUtiliseLe: new Date(essai * 1000),
       });
 

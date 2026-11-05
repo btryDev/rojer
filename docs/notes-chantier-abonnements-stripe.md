@@ -428,7 +428,11 @@ conditions générales provisoires (`abonnements/conditions.ts`, page publique
 pendant l'essai, portail, Checkout avec CGU, prix lus chez Stripe et gardés
 10 minutes).
 
-**PR B (attend #159 dans `cc`, multi-utilisateurs)** :
+~~**PR B (attend #159 dans `cc`, multi-utilisateurs)** :~~ [2026-11-05 :
+#159 est dans `cc` ; PR B faite, `lot/abonnements-stripe-parcours-b` —
+ADR-053 § 13. Reportés : nom et adresse du client depuis l'entreprise
+(seul le nom passe, à l'ouverture du portail ; l'adresse se saisit dans le
+portail) ; la preuve d'acceptation au paiement reste chez Stripe.]
 - écran « Votre essai gratuit » : commence par `aiguillageSansCompte()` (une
   personne invitée rejoint son compte, ne démarre pas d'essai), compte par
   `requireCompteDOnboarding()` sans nom, `verifierSaisie()` puis
@@ -453,6 +457,23 @@ ligne `Abonnement` réservée avant l'appel ; refuser Checkout tant qu'un
 abonnement n'est pas terminé ; au webhook d'un Checkout, enregistrer la
 preuve d'acceptation (version, empreinte) ; nom et adresse du client depuis
 l'entreprise.
+
+**Revues de la PR B (#190, 2026-11-05)** — sécurité : rien d'exploitable ;
+corrigé : verrou de l'essai (`essaiUtiliseLe`, mise à jour conditionnelle,
+rendu si Stripe échoue — deux onglets ne font plus deux essais) ; prix
+vérifié avant de créer le compte ; preuve retirée si l'essai échoue ;
+relecture en échec ≠ essai en échec ; nouvel inscrit sans compte : bouton
+d'essai sur la page Abonnement ; nom de facturation posé seulement s'il est
+encore provisoire ; formule lue aussi sur les `metadata` du prix (un prix
+remplacé garde son plafond) ; `gesteAbonnement`, `essaiDisponible`,
+`abonnementTermine` (droits.ts), libellés et intervalle dans `formules.ts`,
+kit (`MessageFormulaire`, `CASE_A_COCHER`), marque et sortie sur téléphone.
+Reporté : extraire un cadre commun à `WizardShell` et `/essai`, et une
+`BasculeGelule` partagée avec `UploadRapportForm` ; annoncer le plafond
+d'établissements dès l'ouverture de l'onboarding (aujourd'hui à la fin) ;
+compte nommé « Mon compte » à l'essai (choix ADR-054, nom non affiché) ;
+`AcceptationConditions` en RESTRICT bloque la suppression d'un compte, à
+traiter avec le lot de suppression.
 
 **Réglages du tableau de bord Stripe, avant le lancement** (complète § 6) :
 URL des conditions (`/conditions`) dans les réglages publics — sans elle,
@@ -504,7 +525,7 @@ la page d'inscription annonce « Aucun paiement pendant la phase bêta ».
 **Quotas** : seul le nombre d'établissements est prévu dans la PR B. Les
 autres quotas du catalogue (permis de feu, plans de prévention,
 prestataires, liens, signatures, stockage, imports, assistant, expert)
-attendent leur propre lot, chacun avec sa garde de création.
+attendent leur propre lot, chacun avec sa garde de création. [2026-11-05 : audit fait, décisions et plan au § 10.]
 
 **Pièges rencontrés** :
 - **L'en-tête de page remonte sous la bande du haut** (`.sous-la-gelule`) :
@@ -539,6 +560,93 @@ par git) avec une base dédiée (`duerp_cc_visuel` sur le conteneur
 confirmation d'inscription s'affiche dans la sortie du serveur. L'état
 d'abonnement d'un compte de test se pose par un script Prisma (statut,
 fin d'essai) — aucune requête vers Stripe pendant ce contrôle.
+
+**Préparer un compte Stripe de test** (pour essayer le parcours de bout en
+bout, au lieu de poser l'état par Prisma) : créer le compte Stripe et rester
+en mode test ; coller la clé de test (`sk_test_…`, ou `rk_test_…` qui écrit
+produits, prix et portail) dans `.env.local` du worktree — jamais dans la
+conversation ; lancer `pnpm exec tsx scripts/stripe-installer-test.ts`
+(produits, prix aux `lookup_key` `rojer_<formule>_<periodicite>`, montants
+provisoires, portail réglé `continue_trial` ; idempotent, refuse toute clé
+live sans rien appeler ; il imprime ce qui reste à régler à la main :
+conditions dans les réglages publics, rappel de fin d'essai, et la
+configuration par défaut du portail si le compte n'en a pas). Installer la
+CLI Stripe, puis `stripe listen --forward-thin-to
+localhost:3007/api/stripe/webhook --thin-events
+"v1.checkout.session.completed,v1.customer.subscription.created,v1.customer.subscription.updated,v1.customer.subscription.deleted,v1.customer.subscription.paused,v1.customer.subscription.resumed,v1.customer.subscription.trial_will_end,v1.invoice.paid,v1.invoice.payment_failed,v1.invoice.payment_action_required"`
+(la liste est `EVENEMENTS_ECOUTES` de `src/lib/stripe/webhook.ts`) et
+coller le `whsec_…` affiché dans `.env.local`. Cartes de test : `4242 4242
+4242 4242` acceptée ; `4000 0000 0000 0341` s'enregistre puis est refusée au
+prélèvement (impayé). Fin d'essai : une horloge de simulation (Billing >
+Horloges de simulation) avec un client et son abonnement, avancée au-delà
+des 30 jours.
+
+## 10. Second tour de revue de la PR B, et cloisonnement par formule (2026-11-05)
+
+**Second tour (correction, simplification, sécurité) — corrigé** :
+- **Stripe fait foi en cas de doute.** Le verrou de l'essai ne se rend que sur
+  un refus net de Stripe (`StripeInvalidRequestError`, `StripeCardError`, hors
+  409) ; une réponse perdue relit les abonnements du client : s'il y en a un,
+  on le relit et on continue ; sinon le verrou reste, expire au bout de cinq
+  minutes, et sa reprise relit Stripe avant tout nouvel essai. Rendu, il
+  retrouve sa valeur d'avant (jamais vide si un essai avait été constaté).
+- **La preuve d'acceptation est un journal** : jamais effacée.
+- **Réabonnement** : refusé si Stripe a un abonnement en cours, même quand
+  notre copie retarde — la copie est alors relue et la page le dit
+  (`?abonnement=en-cours`) ; les sessions Checkout encore ouvertes du client
+  sont expirées avant d'en ouvrir une neuve.
+- **Accepté, non corrigé** : un client Stripe **supprimé à la main** dans le
+  tableau de bord laisse le compte sans essai possible ni paiement (le même
+  identifiant est réutilisé). Règle d'exploitation : ne jamais supprimer un
+  client Stripe ; si c'est fait, remettre la ligne `Abonnement` à la main.
+- Sécurité : aucun constat exploitable.
+
+**Audit du cloisonnement (2026-11-05)** — seul le plafond d'établissements
+est appliqué ; huit autres sont affichés sans l'être. Trous principaux :
+- **monter en Pro puis redescendre** dans le portail : les deux proratas
+  s'annulent, le compte garde la capacité de Pro au prix d'Essentiel. Le
+  portail ne planifie une baisse en fin de période qu'entre prix d'un même
+  produit, et ne sait pas la refuser (doc lue : `configure-portal`,
+  `customer_portal/configurations/create`) ;
+- utilisateurs non plafonnés (`inviterMembre`, `accepterInvitation`) ;
+- formule inconnue = illimité (`quotas.ts`) ;
+- compteurs annuels remis à zéro par suppression d'un brouillon ou d'un
+  établissement (cascade) ; pas de date de début d'abonnement ;
+- comptage hors verrou (deux onglets dépassent d'un) ;
+- la garde de saisie ne voit que les écritures Prisma reconnues par sa sonde
+  (un dépôt de fichier sans écriture Prisma passerait).
+
+**Décisions de la propriétaire (2026-11-05)** :
+- **baisse de formule refusée** tant que le compte dépasse les plafonds de la
+  formule visée, **et expliquée** : l'écran dit quoi retirer. Le changement
+  de formule se fait donc dans Rojer, plus dans le portail (qui garde carte,
+  factures, résiliation) ; une montée prend effet tout de suite, une baisse
+  en fin de période payée ;
+- **utilisateurs plafonnés : 1 en Essentiel, 5 en Pro**, invitations en
+  attente comprises, vérifié à l'invitation et à l'acceptation ;
+- **permis de feu et plans de prévention plafonnés comme prévu** (10 et 5
+  par an en Essentiel, sans limite en Pro) ;
+- **un essai par compte ET par SIREN**.
+
+**Tranché sans elle (à contester si besoin)** : formule inconnue = plafonds
+d'Essentiel, avec alerte ; plafonds comptés par compte ; compteurs annuels
+tenus dans un journal que rien n'efface ; « Connecter un assistant » retiré
+de l'offre tant que l'accès OAuth (ADR-013) n'existe pas.
+
+**Plan du lot « quotas »** (avant le lancement de l'offre) :
+0. garde de saisie exigée en tête de **toute** action exportée d'un module
+   `"use server"` (listes fermées des exceptions), `.tsx` compris ;
+1. changement de formule dans Rojer (contrôle des plafonds, montée
+   immédiate facturée, baisse planifiée) ; portail sans changement de
+   formule ; formule inconnue fermée ; date de début d'abonnement recopiée ;
+2. une seule fonction `verifierQuota`, sous verrou de compte, journal
+   `ConsommationQuota`, et une garde qui relit le code : chaque création
+   d'un modèle plafonné (et chaque dépôt de fichier) passe par elle ;
+3. plafonds à la création : utilisateurs, prestataires, permis de feu, plans
+   de prévention, signatures, liens, import ;
+4. stockage (taille des fichiers à enregistrer, reprise de l'existant) ;
+5. essai par SIREN ; conditions générales complétées (baisse, plafonds,
+   date anniversaire).
 
 ## Sources lues
 
