@@ -21,7 +21,7 @@ import { PAGE_ABONNEMENT, verifierProprietaire, verifierRole } from "./saisie";
  */
 export async function demarrerEssaiAction(_prev: EtatEssai, formData: FormData): Promise<EtatEssai> {
   await verifierRole();
-  return demarrerEssaiDuCompte(String(formData.get("formule") ?? ""), formData.get("accepte") === "oui");
+  return demarrerEssaiDuCompte(formData.get("accepte") === "oui");
 }
 
 /** Le client Stripe du compte, ou la page qui dit pourquoi il n'y en a pas. */
