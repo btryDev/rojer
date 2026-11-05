@@ -17,6 +17,19 @@ import { reglesEntetes } from "./src/lib/securite/entetes";
 const EXTENSIONS_PAGES = ["tsx", "ts", "jsx", "js"];
 const EXTENSIONS_PAGES_DEV = ["dev.tsx", "dev.ts"];
 
+/**
+ * La taille maximale d'un corps de requête : un rapport de vérification va
+ * jusqu'à 20 Mo (`src/lib/rapports/validator.ts`), 25 laissent la marge des
+ * métadonnées du FormData. Au-delà, passer à un upload S3 pré-signé.
+ *
+ * Une seule valeur pour deux réglages, qui doivent rester égaux : quand un
+ * proxy tourne, Next garde le corps en mémoire et le COUPE à
+ * `proxyClientMaxBodySize` (10 Mo par défaut) avant de le passer à l'action
+ * — un rapport de 15 Mo arrivait tronqué, et l'action échouait sur un
+ * fichier qu'elle déclare accepter (audit du proxy, 2026-11-05).
+ */
+const LIMITE_CORPS_REQUETE = "25mb";
+
 const nextConfig: NextConfig = {
   // Serveur autonome (`.next/standalone/server.js`) pour Clever Cloud (plan
   // de bascule, 0.3) : seules les dépendances tracées sont copiées. `public/`
@@ -31,13 +44,8 @@ const nextConfig: NextConfig = {
   // et désigne le cadre à viser (audit du 2026-10-13).
   poweredByHeader: false,
   experimental: {
-    serverActions: {
-      // Les rapports de vérification peuvent atteindre 20 Mo (cf.
-      // `src/lib/rapports/validator.ts`) ; on monte la limite à 25 Mo
-      // pour garder une marge sur les métadonnées du FormData. Au-delà,
-      // passer à un upload S3 pré-signé.
-      bodySizeLimit: "25mb",
-    },
+    serverActions: { bodySizeLimit: LIMITE_CORPS_REQUETE },
+    proxyClientMaxBodySize: LIMITE_CORPS_REQUETE,
   },
   // En-têtes de sécurité sur toutes les réponses — le détail, la CSP à nonce
   // posée par le proxy et la CSP propre aux fichiers déposés sont dans
