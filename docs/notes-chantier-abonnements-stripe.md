@@ -627,6 +627,18 @@ est appliqué ; huit autres sont affichés sans l'être. Trous principaux :
 - **permis de feu et plans de prévention plafonnés comme prévu** (10 et 5
   par an en Essentiel, sans limite en Pro) ;
 - **un essai par compte ET par SIREN**.
+- [2026-11-05, après l'essai de bout en bout] **des limites d'usage propres à
+  l'essai** aussi, en plus des plafonds de la formule essayée — lesquelles et
+  à quel niveau : à préciser au début du chantier « quotas » ;
+- **fin des relances d'un impayé** : recommandé « marquer l'abonnement comme
+  impayé » plutôt que « résilier » (réglage Stripe, Billing > Récupération des
+  revenus) — le client règle la facture en retard au portail et reprend ; à
+  confirmer au lancement. Le bac à sable résilie (testé : `past_due` puis
+  `canceled` en 14 jours) ;
+- **saisie fermée annoncée dès l'ouverture d'un formulaire** (bouton
+  désactivé), au lieu d'un refus à l'envoi qui perd ce qui a été saisi —
+  relevé au test ; même mécanisme d'affichage que le plafond atteint, à faire
+  au chantier « quotas ».
 
 **Tranché sans elle (à contester si besoin)** : formule inconnue = plafonds
 d'Essentiel, avec alerte ; plafonds comptés par compte ; compteurs annuels
