@@ -7,6 +7,7 @@ import "server-only";
 import type { Prisma, PrismaClient } from "@prisma/client";
 import type { Db } from "@/lib/auth/compte";
 import { CLES_FORMULES, FORMULES, LIBELLES_PLAFONDS, formuleDeLookupKey, type CleFormule } from "./formules";
+import { invitationsDuCompte, membresDuCompte } from "@/lib/auth/membres";
 import { contexteDroits, offreLancee } from "./saisie";
 
 /** Les plafonds appliqués (les autres clés de `Quotas` ne le sont pas encore). */
@@ -14,7 +15,7 @@ export type CleQuota = keyof typeof LIBELLES_PLAFONDS;
 /** Ceux que Rojer compte lui-même ; les membres, c'est le plugin. */
 export type CleQuotaComptee = Exclude<CleQuota, "membres">;
 
-/** Ceux qui se comptent au journal, sur douze mois glissants. */
+/** Ceux qui se comptent au journal, depuis la date anniversaire. */
 const PAR_AN: ReadonlySet<CleQuota> = new Set(["permisDeFeuParAn", "plansDePreventionParAn"]);
 
 /** La formule qui fixe les plafonds : celle de l'abonnement, sinon la plus petite. */
@@ -48,31 +49,47 @@ export class RefusQuota extends Error {
 
 type Lecteur = Db | Prisma.TransactionClient;
 
+/** L'anniversaire d'`ancre` dans l'année `annee` (le 29 février tombe le 28). */
+function anniversaire(ancre: Date, annee: number): Date {
+  const mois = ancre.getUTCMonth();
+  const jour = Math.min(ancre.getUTCDate(), new Date(Date.UTC(annee, mois + 1, 0)).getUTCDate());
+  return new Date(Date.UTC(annee, mois, jour, ancre.getUTCHours(), ancre.getUTCMinutes(), ancre.getUTCSeconds(), ancre.getUTCMilliseconds()));
+}
+
+/**
+ * Le début de l'année en cours des plafonds annuels : le dernier anniversaire
+ * du premier abonnement payant du compte (`debutPayantLe`) ; sans lui (essai,
+ * jamais payé), les douze derniers mois.
+ */
+export function debutDeLAnnee(ancre: Date | null | undefined, maintenant: Date): Date {
+  if (!ancre) return anniversaire(maintenant, maintenant.getUTCFullYear() - 1);
+  const cetteAnnee = anniversaire(ancre, maintenant.getUTCFullYear());
+  return cetteAnnee <= maintenant ? cetteAnnee : anniversaire(ancre, maintenant.getUTCFullYear() - 1);
+}
+
 /** Ce que le compte a déjà, pour une clé (le client est borné au compte). */
-async function utilise(db: Lecteur, cle: CleQuotaComptee, maintenant: Date): Promise<number> {
+async function utilise(db: Lecteur, cle: CleQuotaComptee, debutAnnee: Date): Promise<number> {
   switch (cle) {
     case "etablissements":
       return db.etablissement.count();
     case "prestataires":
       return db.prestataire.count();
     case "permisDeFeuParAn":
-    case "plansDePreventionParAn": {
-      const debut = new Date(maintenant);
-      debut.setUTCFullYear(debut.getUTCFullYear() - 1);
-      return db.consommationQuota.count({ where: { quota: cle, consommeLe: { gt: debut } } });
-    }
+    case "plansDePreventionParAn":
+      return db.consommationQuota.count({ where: { quota: cle, consommeLe: { gte: debutAnnee } } });
   }
 }
 
-/** La formule de l'abonnement du compte, telle que recopiée de Stripe. */
-const formuleDuCompte = async (l: Lecteur | PrismaClient, compteId: string) =>
-  (await l.abonnement.findUnique({ where: { compteId }, select: { formule: true } }))?.formule;
+/** La formule et l'ancre annuelle de l'abonnement du compte, recopiées de Stripe. */
+const abonnementDesPlafonds = (l: Lecteur | PrismaClient, compteId: string) =>
+  l.abonnement.findUnique({ where: { compteId }, select: { formule: true, debutPayantLe: true } });
 
 /** Le motif du refus si le compte est au plafond, sinon `null`. */
 async function auPlafond(db: Lecteur, compteId: string, cle: CleQuotaComptee): Promise<string | null> {
-  const formule = formuleDesPlafonds(await formuleDuCompte(db, compteId));
+  const ligne = await abonnementDesPlafonds(db, compteId);
+  const formule = formuleDesPlafonds(ligne?.formule);
   const plafond = FORMULES[formule].quotas[cle];
-  if (plafond === null || (await utilise(db, cle, new Date())) < plafond) return null;
+  if (plafond === null || (await utilise(db, cle, debutDeLAnnee(ligne?.debutPayantLe, new Date()))) < plafond) return null;
   return motifDuRefus(formule, cle);
 }
 
@@ -128,7 +145,7 @@ export async function creerSousPlafond<T>(
 export async function motifPlafondMembres(db: Db, compteId: string): Promise<string> {
   // Avant le lancement, seule la limite par défaut du plugin peut refuser.
   if (!offreLancee(contexteDroits())) return "Ce compte a atteint le nombre maximal d'invitations en attente.";
-  return motifDuRefus(formuleDesPlafonds(await formuleDuCompte(db, compteId)), "membres");
+  return motifDuRefus(formuleDesPlafonds((await abonnementDesPlafonds(db, compteId))?.formule), "membres");
 }
 
 /** La limite par défaut du plugin d'organisation, inchangée tant que l'offre n'est pas lancée. */
@@ -146,8 +163,35 @@ export async function limitesMembresDuPlugin(
   compteId: string,
 ): Promise<{ membres: number; invitations: number }> {
   if (!offreLancee(contexteDroits())) return { membres: LIMITE_DU_PLUGIN, invitations: LIMITE_DU_PLUGIN };
-  const plafond = FORMULES[formuleDesPlafonds(await formuleDuCompte(lecteur, compteId))].quotas.membres;
+  const plafond = FORMULES[formuleDesPlafonds((await abonnementDesPlafonds(lecteur, compteId))?.formule)].quotas.membres;
   if (plafond === null) return { membres: LIMITE_DU_PLUGIN, invitations: LIMITE_DU_PLUGIN };
   const membres = await lecteur.membre.count({ where: { compteId } });
   return { membres: plafond, invitations: Math.max(0, plafond - membres) };
+}
+
+/** Un plafond de stock que le compte dépasse pour une formule. */
+export type Depassement = { quota: CleQuota; utilise: number; plafond: number };
+
+/** Les plafonds de STOCK : ceux qu'une baisse de formule fait dépasser (les annuels repartent à l'anniversaire). */
+const STOCKS = ["etablissements", "membres", "prestataires"] as const satisfies readonly CleQuota[];
+
+/**
+ * Ce que le compte dépasse dans la formule `formule` (une `lookup_key`), pour
+ * une baisse (ADR-053 § 14) : utilisateurs (invitations en attente
+ * comprises) — la baisse est alors refusée —, établissements et prestataires —
+ * l'excédent sera gelé. Vide : rien ne dépasse.
+ */
+export async function depassements(db: Db, compteId: string, formule: string): Promise<Depassement[]> {
+  const cible = formuleDesPlafonds(formule);
+  const nombres = await Promise.all(
+    STOCKS.map(async (cle) => {
+      if (cle !== "membres") return utilise(db, cle, new Date());
+      const [membres, invitations] = await Promise.all([membresDuCompte(compteId), invitationsDuCompte(compteId)]);
+      return membres.length + invitations.length;
+    }),
+  );
+  return STOCKS.flatMap((quota, i) => {
+    const plafond = FORMULES[cible].quotas[quota];
+    return plafond !== null && nombres[i] > plafond ? [{ quota, utilise: nombres[i], plafond }] : [];
+  });
 }

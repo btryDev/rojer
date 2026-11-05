@@ -26,8 +26,9 @@ export const LIBELLE_PERIODICITE = {
 export const INTERVALLE_STRIPE = { mensuel: "month", annuel: "year" } as const satisfies Record<Periodicite, string>;
 
 /**
- * `null` : illimité. Les plafonds « par an » se comptent sur les douze mois
- * glissants qui précèdent, dans un journal que rien n'efface (ADR-053 § 14).
+ * `null` : illimité. Les plafonds « par an » repartent à la date anniversaire
+ * du premier abonnement payant du compte, comptés dans un journal que rien
+ * n'efface (ADR-053 § 14).
  * `membres` compte aussi les invitations en attente.
  */
 export type Quotas = {
@@ -122,8 +123,8 @@ export const LIBELLES_PLAFONDS = {
   etablissements: (n: number) => pluriel(n, "établissement", "établissements"),
   membres: (n: number) => pluriel(n, "utilisateur", "utilisateurs"),
   prestataires: (n: number) => pluriel(n, "prestataire", "prestataires"),
-  permisDeFeuParAn: (n: number) => `${pluriel(n, "permis de feu", "permis de feu")} sur douze mois`,
-  plansDePreventionParAn: (n: number) => `${pluriel(n, "plan de prévention", "plans de prévention")} sur douze mois`,
+  permisDeFeuParAn: (n: number) => `${pluriel(n, "permis de feu", "permis de feu")} par an`,
+  plansDePreventionParAn: (n: number) => `${pluriel(n, "plan de prévention", "plans de prévention")} par an`,
 } as const satisfies Partial<Record<keyof Quotas, (n: number) => string>>;
 
 /** Ce qui distingue une formule à l'écran, tiré des quotas — rien de non livré. */

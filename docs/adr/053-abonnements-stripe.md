@@ -191,7 +191,14 @@ et sans croire une information qui ne vient pas de Stripe.
      vaut 0, étanche). Limite acceptée : il faut le vouloir (requêtes
      parallèles du propriétaire, adresses confirmées qu'il contrôle), et
      rien n'est perdu pour Rojer qu'une place.
-   - **« Par an » = douze mois glissants**, dans un journal que rien
+   - [2026-11-05, A2 — règles tranchées par la session « stripe », mandatée
+     par la propriétaire, selon la pratique courante (Docusign, Zapier,
+     Adobe) : **« par an » repart à la date anniversaire** du premier
+     abonnement payant du COMPTE (`Abonnement.debutPayantLe`, écrit une fois
+     par la synchronisation quand Stripe dit `active` ou `past_due`, jamais
+     écrasé : résilier puis se réabonner ne remet rien à zéro) ; sans ancre
+     (essai, jamais payé), les douze derniers mois. Le journal ne change pas,
+     seule la borne.] ~~**« Par an » = douze mois glissants**~~, dans un journal que rien
      n'efface (`ConsommationQuota` : compte, plafond, date ; aucun lien vers
      l'élément) : supprimer un brouillon ou un établissement ne rend pas le
      crédit, une résiliation suivie d'une souscription non plus. Le journal
@@ -202,6 +209,17 @@ et sans croire une information qui ne vient pas de Stripe.
      plans de prévention (Essentiel : 10 et 5).
    - Au plafond, seule la création est refusée, et le message nomme la
      formule qui le lève (« Sur mesure » sur devis au-delà de Pro).
+   - **Baisse de formule** [2026-11-05, même source ; Notion, Airtable,
+     HubSpot, Calendly, Zapier ; remplace « refusée tant qu'on dépasse »] :
+     acceptée, effective en fin de période payée, sans crédit (changement de
+     formule : session « stripe »). Ce qui dépasse alors un plafond de
+     stock est **gelé**, jamais supprimé : lisible et exportable, ni modifié
+     ni source de création. Sont gardés les plus anciens jusqu'au plafond ;
+     le gel se recalcule à chaque lecture, rien n'est stocké — retirer un
+     ancien dégèle le suivant (lot A4). Exception : les **utilisateurs**, la
+     baisse est refusée tant qu'ils dépassent (Atlassian, monday). Ce qui
+     dépasserait se lit par `depassements(db, compteId, formule)` ; les
+     plafonds annuels ne bloquent jamais une baisse.
    - **Condition de lancement** : « Sur mesure » doit avoir sa propre entrée
      dans `FORMULES` (ses plafonds) et sa clé (`lookup_key` ou
      `metadata.formule` du prix) avant toute vente — sans quoi le refus par

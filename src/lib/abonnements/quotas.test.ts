@@ -3,11 +3,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 const { etatStripe } = vi.hoisted(() => ({ etatStripe: vi.fn() }));
 vi.mock("@/lib/stripe/config", () => ({ etatStripe }));
+const m = vi.hoisted(() => ({ membres: [] as unknown[], invitations: [] as unknown[] }));
+vi.mock("@/lib/auth/membres", () => ({
+  membresDuCompte: async () => m.membres,
+  invitationsDuCompte: async () => m.invitations,
+}));
 
 import type { PrismaClient } from "@prisma/client";
 import type { Db } from "@/lib/auth/compte";
 import {
   creerSousPlafond,
+  debutDeLAnnee,
+  depassements,
   formuleDesPlafonds,
   limitesMembresDuPlugin,
   motifDuRefus,
@@ -17,10 +24,10 @@ import {
 } from "./quotas";
 
 // Le client borné (et sa transaction), réduit à ce que la porte lit.
-function faux(formule: string | null, nombre: number) {
+function faux(formule: string | null, nombre: number, debutPayantLe: Date | null = null) {
   const tx = {
     $queryRaw: vi.fn(),
-    abonnement: { findUnique: vi.fn().mockResolvedValue(formule === null ? null : { formule }) },
+    abonnement: { findUnique: vi.fn().mockResolvedValue(formule === null ? null : { formule, debutPayantLe }) },
     etablissement: { count: vi.fn().mockResolvedValue(nombre) },
     prestataire: { count: vi.fn().mockResolvedValue(nombre) },
     consommationQuota: { count: vi.fn().mockResolvedValue(nombre), create: vi.fn() },
@@ -56,7 +63,7 @@ describe("formule des plafonds et motif du refus", () => {
       "Votre formule Pro couvre 5 établissements : au-delà, la formule Sur mesure s'établit sur devis.",
     );
     expect(motifDuRefus("essentiel", "permisDeFeuParAn")).toBe(
-      "Votre formule Essentiel couvre 10 permis de feu sur douze mois : passez à Pro depuis la page Abonnement de votre compte.",
+      "Votre formule Essentiel couvre 10 permis de feu par an : passez à Pro depuis la page Abonnement de votre compte.",
     );
   });
 
@@ -64,6 +71,21 @@ describe("formule des plafonds et motif du refus", () => {
     lancer();
     await expect(prendreQuota(faux("rojer_surmesure_annuel", 1).txc, "c1", "etablissements")).rejects.toBeInstanceOf(RefusQuota);
     expect(console.error).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("debutDeLAnnee : l'année des plafonds annuels", () => {
+  const ancre = new Date("2025-03-12T08:00:00Z");
+  it("le dernier anniversaire du premier abonnement payant", () => {
+    expect(debutDeLAnnee(ancre, new Date("2026-11-05T10:00:00Z"))).toEqual(new Date("2026-03-12T08:00:00Z"));
+    expect(debutDeLAnnee(ancre, new Date("2026-03-12T07:59:59Z"))).toEqual(new Date("2025-03-12T08:00:00Z"));
+    expect(debutDeLAnnee(ancre, new Date("2026-03-12T08:00:00Z"))).toEqual(new Date("2026-03-12T08:00:00Z"));
+  });
+  it("un 29 février tombe le 28 les années communes", () => {
+    expect(debutDeLAnnee(new Date("2024-02-29T00:00:00Z"), new Date("2025-06-01T00:00:00Z"))).toEqual(new Date("2025-02-28T00:00:00Z"));
+  });
+  it("sans ancre (essai, jamais payé) : les douze derniers mois", () => {
+    expect(debutDeLAnnee(null, new Date("2026-11-05T10:00:00Z"))).toEqual(new Date("2025-11-05T10:00:00Z"));
   });
 });
 
@@ -98,13 +120,13 @@ describe("prendreQuota", () => {
     expect(tx.consommationQuota.create).not.toHaveBeenCalled();
   });
 
-  it("par an : compté au journal sur douze mois, puis inscrit", async () => {
+  it("par an : compté au journal depuis le dernier anniversaire du premier abonnement payant, puis inscrit", async () => {
     lancer();
     vi.useFakeTimers({ now: new Date("2026-11-05T10:00:00Z"), toFake: ["Date"] });
-    const { tx, txc } = faux("rojer_essentiel_mensuel", 4);
+    const { tx, txc } = faux("rojer_essentiel_mensuel", 4, new Date("2025-03-12T08:00:00Z"));
     await prendreQuota(txc, "c1", "plansDePreventionParAn");
     expect(tx.consommationQuota.count).toHaveBeenCalledWith({
-      where: { quota: "plansDePreventionParAn", consommeLe: { gt: new Date("2025-11-05T10:00:00Z") } },
+      where: { quota: "plansDePreventionParAn", consommeLe: { gte: new Date("2026-03-12T08:00:00Z") } },
     });
     expect(tx.consommationQuota.create).toHaveBeenCalledWith({ data: { compteId: "c1", quota: "plansDePreventionParAn" } });
     vi.useRealTimers();
@@ -124,7 +146,7 @@ describe("prendreQuota", () => {
     await prendreQuota(sous.txc, "c1", "permisDeFeuParAn");
     expect(sous.tx.consommationQuota.create).toHaveBeenCalled();
     await expect(prendreQuota(faux("rojer_pro_mensuel", 30).txc, "c1", "permisDeFeuParAn")).rejects.toThrow(
-      "Votre formule Pro couvre 30 permis de feu sur douze mois : au-delà, la formule Sur mesure s'établit sur devis.",
+      "Votre formule Pro couvre 30 permis de feu par an : au-delà, la formule Sur mesure s'établit sur devis.",
     );
   });
 });
@@ -186,5 +208,25 @@ describe("limitesMembresDuPlugin", () => {
     lancer();
     expect(await limitesMembresDuPlugin(brut("rojer_pro_annuel", 3), "c1")).toEqual({ membres: 5, invitations: 2 });
     expect(await limitesMembresDuPlugin(brut("rojer_pro_annuel", 7), "c1")).toEqual({ membres: 5, invitations: 0 });
+  });
+});
+
+describe("depassements : ce qu'une baisse fait dépasser", () => {
+  it("rien quand tout tient dans la formule visée", async () => {
+    m.membres = [{}];
+    m.invitations = [];
+    expect(await depassements(faux("rojer_pro_annuel", 1).db, "c1", "rojer_essentiel_mensuel")).toEqual([]);
+  });
+
+  it("les stocks au-delà du plafond, invitations en attente comprises ; jamais les compteurs annuels", async () => {
+    m.membres = [{}, {}];
+    m.invitations = [{}];
+    const { db, tx } = faux("rojer_pro_annuel", 12);
+    expect(await depassements(db, "c1", "rojer_essentiel_mensuel")).toEqual([
+      { quota: "etablissements", utilise: 12, plafond: 1 },
+      { quota: "membres", utilise: 3, plafond: 1 },
+      { quota: "prestataires", utilise: 12, plafond: 10 },
+    ]);
+    expect(tx.consommationQuota.count).not.toHaveBeenCalled();
   });
 });

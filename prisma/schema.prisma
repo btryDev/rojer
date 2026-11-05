@@ -2398,6 +2398,11 @@ model Abonnement {
   finPrevueLe           DateTime?
   /// Un essai par compte : posé au premier abonnement en essai, jamais effacé.
   essaiUtiliseLe        DateTime?
+  /// Début du PREMIER abonnement payant du compte (`trial_end` s'il y a eu un
+  /// essai, sinon `start_date`), écrit une fois quand Stripe le dit `active`
+  /// ou `past_due`, jamais écrasé : l'ancre des plafonds annuels (ADR-053 §
+  /// 14), qu'une résiliation suivie d'une souscription ne remet pas à zéro.
+  debutPayantLe         DateTime?
   /// Dernière relecture de l'abonnement chez Stripe.
   relueLe               DateTime?
   createdAt             DateTime  @default(now())
