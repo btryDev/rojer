@@ -118,12 +118,14 @@ describe("prendreQuota", () => {
     }
   });
 
-  it("Pro : sans limite de permis de feu, rien n'est compté mais tout est inscrit", async () => {
+  it("Pro : le plafond de Pro, compté puis inscrit", async () => {
     lancer();
-    const { tx, txc } = faux("rojer_pro_mensuel", 10_000);
-    await prendreQuota(txc, "c1", "permisDeFeuParAn");
-    expect(tx.consommationQuota.count).not.toHaveBeenCalled();
-    expect(tx.consommationQuota.create).toHaveBeenCalled();
+    const sous = faux("rojer_pro_mensuel", 29);
+    await prendreQuota(sous.txc, "c1", "permisDeFeuParAn");
+    expect(sous.tx.consommationQuota.create).toHaveBeenCalled();
+    await expect(prendreQuota(faux("rojer_pro_mensuel", 30).txc, "c1", "permisDeFeuParAn")).rejects.toThrow(
+      "Votre formule Pro couvre 30 permis de feu sur douze mois : au-delà, la formule Sur mesure s'établit sur devis.",
+    );
   });
 });
 

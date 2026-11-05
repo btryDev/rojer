@@ -7,9 +7,10 @@
 // Stripe (`Abonnement.formule`, recopiée par le webhook) :
 // `rojer_<formule>_<periodicite>`. Une clé inconnue ne donne aucune formule.
 //
-// CATALOGUE PROVISOIRE : repris de la proposition du 2026-11-03
-// (`docs/marketing/benchmark-offres-abonnement-2026-11.md`, branche
-// `docs/offres-abonnement`), pas encore arrêté par la propriétaire.
+// CATALOGUE : grille arrêtée avec la propriétaire le 2026-11-05
+// (`docs/marketing/rojer-offres-abonnement-2026-11.pdf`, branche
+// `docs/offres-abonnement`, ab9caea3) ; les limites propres à l'essai n'y
+// sont pas encore.
 // « Sur mesure » se vend sur devis : il n'a pas de clé en libre-service.
 
 export const PERIODICITES = ["mensuel", "annuel"] as const;
@@ -69,13 +70,13 @@ export const FORMULES = {
     quotas: {
       etablissements: 5,
       membres: 5,
-      permisDeFeuParAn: null,
-      plansDePreventionParAn: null,
-      prestataires: 50,
-      liensAccesActifs: 50,
-      signaturesParAn: 200,
-      stockageGo: 20,
-      importsDuerp: null,
+      permisDeFeuParAn: 30,
+      plansDePreventionParAn: 15,
+      prestataires: 30,
+      liensAccesActifs: 15,
+      signaturesParAn: 60,
+      stockageGo: 6,
+      importsDuerp: 3,
       connecterUnAssistant: true,
       heuresExpertParAn: 1,
     },
