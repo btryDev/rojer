@@ -144,6 +144,9 @@ export function agrementExige(v: {
   );
 }
 
+/** La phrase, écrite une fois pour la carte et l'alerte. */
+export const AGREMENT_EXIGE = "Ce contrôle doit être fait par un organisme agréé.";
+
 /**
  * Ce que la carte dit d'un prestataire attitré qui n'est pas déclaré agréé
  * dans l'annuaire, sur un contrôle qui l'exige. Signalé, jamais refusé :
@@ -154,5 +157,31 @@ export function avertissementAgrement(
   prestataire: { raisonSociale: string; estOrganismeAgree: boolean } | null,
 ): string | null {
   if (!exige || !prestataire || prestataire.estOrganismeAgree) return null;
-  return `Ce contrôle doit être fait par un organisme agréé. ${prestataire.raisonSociale} n'est pas déclaré agréé dans votre annuaire : vérifiez son agrément, et cochez « Organisme agréé » sur sa fiche s'il l'est.`;
+  return `${AGREMENT_EXIGE} ${prestataire.raisonSociale} n'est pas déclaré agréé dans votre annuaire : vérifiez son agrément, et cochez « Organisme agréé » sur sa fiche s'il l'est.`;
+}
+
+/** Un groupe de la liste du prestataire attitré. */
+export type GroupeAnnuaire<P> = { label: string; items: P[] };
+
+/**
+ * L'annuaire tel que le choix du prestataire attitré le range : par agrément
+ * quand le contrôle l'exige, sinon par domaine couvert. Groupes vides omis.
+ */
+export function rangerAnnuaire<P extends { couvre: boolean; estOrganismeAgree: boolean }>(
+  proposables: readonly P[],
+  exige: boolean,
+): GroupeAnnuaire<P>[] {
+  const enTete = (p: P) => (exige ? p.estOrganismeAgree : p.couvre);
+  const tete = proposables.filter(enTete);
+  const autres = proposables.filter((p) => !enTete(p));
+  const groupes = exige
+    ? [
+        { label: "Organismes agréés", items: tete },
+        { label: "Non déclarés agréés", items: autres },
+      ]
+    : [
+        { label: "Couvrent ce contrôle", items: tete },
+        { label: tete.length > 0 ? "Autres prestataires" : "Votre annuaire", items: autres },
+      ];
+  return groupes.filter((g) => g.items.length > 0);
 }

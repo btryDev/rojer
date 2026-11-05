@@ -11,7 +11,12 @@ import {
   formaterDateHeureFr,
   versSaisieDateHeure,
 } from "@/lib/dates";
-import { avertissementAgrement, avertissementRendezVous } from "@/lib/rendez-vous/regles";
+import {
+  AGREMENT_EXIGE,
+  avertissementAgrement,
+  avertissementRendezVous,
+  rangerAnnuaire,
+} from "@/lib/rendez-vous/regles";
 import type { SuiviControleState } from "@/lib/rendez-vous/actions";
 import type { PrestataireProposable } from "@/lib/rendez-vous/queries";
 import { NOTE_RENDEZ_VOUS_MAX } from "@/lib/rendez-vous/schema";
@@ -59,7 +64,6 @@ export function SuiviControle({
   const [ouvert, setOuvert] = useState(false);
   const [saisieRdv, setSaisieRdv] = useState(rendezVousLe ? versSaisieDateHeure(rendezVousLe) : "");
   const [saisieEnvoyee, setSaisieEnvoyee] = useState<string | null>(null);
-  const [choisi, setChoisi] = useState(prestataire?.id ?? "");
   const router = useRouter();
   const chemin = usePathname();
   const parametres = useSearchParams();
@@ -87,13 +91,8 @@ export function SuiviControle({
       ? avertissementRendezVous(depuisSaisieDateHeure(saisieRdv), echeance)
       : null;
   const err = (champ: string) => (state.status === "error" ? state.fieldErrors?.[champ]?.[0] : undefined);
-  // Un contrôle réservé à un organisme agréé range l'annuaire par agrément ;
-  // sinon, par domaine couvert.
-  const enTete = (p: PrestataireProposable) => (agrementExige ? p.estOrganismeAgree : p.couvre);
-  const couvrants = proposables.filter(enTete);
-  const autres = proposables.filter((p) => !enTete(p));
-  const alerteAgrement = avertissementAgrement(agrementExige, prestataire);
-  const alerteChoix = avertissementAgrement(agrementExige, proposables.find((p) => p.id === choisi) ?? null);
+  // Formulaire ouvert, c'est le choix (`ChoixPrestataire`) qui le dit.
+  const alerteAgrement = ouvert ? null : avertissementAgrement(agrementExige, prestataire);
 
   return (
     <section className="carte-board overflow-hidden px-7 py-6 sm:px-8">
@@ -119,10 +118,10 @@ export function SuiviControle({
             </p>
           ) : (
             <p className="m-0 mt-2 text-[13.5px] text-[color:var(--board-slate-mid)]">
-              {agrementExige ? "Aucun prestataire attitré. Ce contrôle doit être fait par un organisme agréé." : "Aucun prestataire attitré."}
+              Aucun prestataire attitré.{agrementExige && ` ${AGREMENT_EXIGE}`}
             </p>
           )}
-          {alerteAgrement && !ouvert && (
+          {alerteAgrement && (
             <p className="m-0 mt-1.5 text-[13px] text-[color:var(--board-amber-ink)]">
               {alerteAgrement}
               {hrefPrestataire && (
@@ -153,10 +152,7 @@ export function SuiviControle({
           </p>
         </div>
         {!ouvert && (
-          <Button type="button" variant="boardClair" size="boardSm" onClick={() => {
-              setChoisi(prestataire?.id ?? "");
-              setOuvert(true);
-            }}
+          <Button type="button" variant="boardClair" size="boardSm" onClick={() => setOuvert(true)}
           >
             {prestataire || rendezVousLe ? "Modifier" : "Choisir un prestataire, prendre rendez-vous"}
           </Button>
@@ -169,44 +165,11 @@ export function SuiviControle({
             <label className="label-board" htmlFor="prestataireId">
               Prestataire attitré
             </label>
-            <select
-              id="prestataireId"
-              name="prestataireId"
-              className="champ-board"
-              value={choisi}
-              onChange={(e) => setChoisi(e.currentTarget.value)}
-            >
-              <option value="">— Aucun —</option>
-              {couvrants.length > 0 && (
-                <optgroup label={agrementExige ? "Organismes agréés" : "Couvrent ce contrôle"}>
-                  {couvrants.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.raisonSociale}
-                    </option>
-                  ))}
-                </optgroup>
-              )}
-              {autres.length > 0 && (
-                <optgroup
-                  label={
-                    agrementExige
-                      ? "Non déclarés agréés"
-                      : couvrants.length > 0
-                        ? "Autres prestataires"
-                        : "Votre annuaire"
-                  }
-                >
-                  {autres.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.raisonSociale}
-                    </option>
-                  ))}
-                </optgroup>
-              )}
-            </select>
-            {alerteChoix && (
-              <p className="m-0 mt-1.5 text-[12px] text-[color:var(--board-amber-ink)]">{alerteChoix}</p>
-            )}
+            <ChoixPrestataire
+              proposables={proposables}
+              initial={prestataire?.id ?? ""}
+              agrementExige={agrementExige}
+            />
             <p className="m-0 mt-1.5 text-[12px] text-[color:var(--board-slate-mid)]">
               Il n&apos;est pas dans la liste ?{" "}
               <Link href={hrefNouveauPrestataire} className="font-semibold text-[color:var(--board-blue-ink)] underline underline-offset-4">
@@ -270,5 +233,45 @@ export function SuiviControle({
         </form>
       )}
     </section>
+  );
+}
+
+/**
+ * La liste du prestataire attitré et son alerte d'agrément. Son état naît à
+ * chaque ouverture du formulaire : rien à remettre à zéro.
+ */
+function ChoixPrestataire({
+  proposables,
+  initial,
+  agrementExige,
+}: {
+  proposables: PrestataireProposable[];
+  initial: string;
+  agrementExige: boolean;
+}) {
+  const [choisi, setChoisi] = useState(initial);
+  const alerte = avertissementAgrement(agrementExige, proposables.find((p) => p.id === choisi) ?? null);
+  return (
+    <>
+      <select
+        id="prestataireId"
+        name="prestataireId"
+        className="champ-board"
+        value={choisi}
+        onChange={(e) => setChoisi(e.currentTarget.value)}
+      >
+        <option value="">— Aucun —</option>
+        {rangerAnnuaire(proposables, agrementExige).map((g) => (
+          <optgroup key={g.label} label={g.label}>
+            {g.items.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.raisonSociale}
+              </option>
+            ))}
+          </optgroup>
+        ))}
+      </select>
+      {alerte && <p className="m-0 mt-1.5 text-[12px] text-[color:var(--board-amber-ink)]">{alerte}</p>}
+    </>
   );
 }

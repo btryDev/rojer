@@ -5,6 +5,7 @@ import {
   agrementExige,
   avertissementAgrement,
   avertissementRendezVous,
+  rangerAnnuaire,
   datePoseeAuCalendrier,
   mentionRendezVous,
   pastilleRendezVous,
@@ -101,5 +102,27 @@ describe("l'agrément du prestataire attitré", () => {
     expect(avertissementAgrement(true, apave)).toBeNull();
     expect(avertissementAgrement(false, artisan)).toBeNull();
     expect(avertissementAgrement(true, null)).toBeNull();
+  });
+});
+
+describe("le rangement de l'annuaire du prestataire attitré", () => {
+  const a = { id: "a", couvre: false, estOrganismeAgree: true };
+  const b = { id: "b", couvre: true, estOrganismeAgree: false };
+  const vue = (g: ReturnType<typeof rangerAnnuaire<typeof a>>) => g.map((x) => [x.label, x.items.map((p) => p.id)]);
+
+  it("par agrément quand le contrôle l'exige, par domaine sinon", () => {
+    expect(vue(rangerAnnuaire([a, b], true))).toEqual([
+      ["Organismes agréés", ["a"]],
+      ["Non déclarés agréés", ["b"]],
+    ]);
+    expect(vue(rangerAnnuaire([a, b], false))).toEqual([
+      ["Couvrent ce contrôle", ["b"]],
+      ["Autres prestataires", ["a"]],
+    ]);
+  });
+
+  it("omet les groupes vides, et dit « Votre annuaire » quand rien ne couvre le domaine", () => {
+    expect(vue(rangerAnnuaire([a], false))).toEqual([["Votre annuaire", ["a"]]]);
+    expect(vue(rangerAnnuaire([], true))).toEqual([]);
   });
 });
