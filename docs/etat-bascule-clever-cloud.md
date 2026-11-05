@@ -79,6 +79,12 @@ connecteur MCP OAuth de Supabase n'existe plus — garder la suppression de
   formulaire sans fichier (#180, ADR-055). Migration additive
   `20261104120000_releve_interne`, datée après celle de l'effectif ; sur
   `cc`, `uploadRapport` garde `verifierSaisie()` et la portée `compteId`.
+- **Proxy** (2026-11-05, #184) : `proxyClientMaxBodySize` aligné sur les
+  25 Mo des actions serveur (le proxy coupait le corps à 10 Mo), et un POST
+  d'action serveur sans cookie passe au lieu d'être redirigé — l'action
+  renvoie elle-même à `/login` par `requireUser()`. Report de `main` du même
+  jour : #182, #185 (la même limite, sans conflit), #186. À vérifier au
+  premier déploiement : « Ce qui reste avant la bascule ».
 
 ### Multi-utilisateurs : ce qui reste (2026-11-03)
 
