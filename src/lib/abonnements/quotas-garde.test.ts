@@ -8,7 +8,6 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { sansCommentairesNiChaines } from "@/lib/auth/tenancy-sonde";
 
 const DEPOT = join(dirname(fileURLToPath(import.meta.url)), "../../..");
 
@@ -37,14 +36,25 @@ const CREATEURS = [
   "src/lib/duerps/import/actions.ts",
 ];
 
-/** Les créations hors plafond, liste FERMÉE, chacune avec son motif. */
-const EXEMPTEES: Record<string, string> = {
-  "src/lib/transverses/risque-transverse.ts:uniteTravail":
-    "l'unité « Risques transverses », hors plafond comme à l'ADR-033 (comptée hors `estTransverse`)",
-  "src/lib/duerps/actions.ts:unites":
-    "le DUERP naît avec son unité « Risques transverses », hors plafond (ADR-033)",
-  "src/lib/onboarding/actions.ts:batiments":
-    "la zone principale naît avec l'établissement (ADR-019), lui-même plafonné dans la même transaction",
+/**
+ * Les créations hors plafond, liste FERMÉE : chacune désigne UNE création
+ * (fichier, relation ou modèle), avec son motif et ce que la création doit
+ * porter, lu juste après elle — une autre création au même endroit n'est pas
+ * exemptée.
+ */
+const EXEMPTEES: Record<string, { motif: string; preuve: RegExp }> = {
+  "src/lib/transverses/risque-transverse.ts:uniteTravail": {
+    motif: "l'unité « Risques transverses », hors plafond comme à l'ADR-033 (comptée hors `estTransverse`)",
+    preuve: /^[^;]*estTransverse:\s*true/,
+  },
+  "src/lib/duerps/actions.ts:unites": {
+    motif: "le DUERP naît avec son unité « Risques transverses », hors plafond (ADR-033)",
+    preuve: /^[^;]*estTransverse:\s*true/,
+  },
+  "src/lib/onboarding/actions.ts:batiments": {
+    motif: "la zone principale naît avec l'établissement (ADR-019), lui-même plafonné dans la même transaction",
+    preuve: /^\s*:\s*\{\s*create:\s*\{\s*nom:\s*NOM_BATIMENT_PRINCIPAL/,
+  },
 };
 
 const NOMS = Object.keys(MODELES).join("|");
@@ -53,18 +63,50 @@ const CREATION_DIRECTE = new RegExp(`\\.\\s*(${NOMS})\\s*\\.\\s*(create|createMa
 // des champs de relation vers un modèle plafonné, lus dans le schéma — un nom
 // écrit à la main en avait manqué un.
 const SCHEMA = readFileSync(join(DEPOT, "prisma/schema.prisma"), "utf8");
-const NOMS_MODELES_ = Object.values(MODELES).map((m) => m.nom).join("|");
+const NOMS_MODELES = Object.values(MODELES).map((m) => m.nom).join("|");
 const RELATIONS = [
-  ...new Set([...SCHEMA.matchAll(new RegExp(`^\\s+(\\w+)\\s+(?:${NOMS_MODELES_})(?:\\[\\]|\\?)?\\s`, "gm"))].map((m) => m[1])),
+  ...new Set([...SCHEMA.matchAll(new RegExp(`^\\s+(\\w+)\\s+(?:${NOMS_MODELES})(?:\\[\\]|\\?)?\\s`, "gm"))].map((m) => m[1])),
 ].join("|");
 const CREATION_IMBRIQUEE = new RegExp(`\\b(${RELATIONS})\\s*:\\s*\\{\\s*(create|createMany|connectOrCreate|upsert)\\b`, "g");
-// En lot par son nom de modèle : lu sur le texte BRUT (les chaînes sont effacées du code analysé).
-const NOMS_MODELES = Object.values(MODELES).map((m) => m.nom).join("|");
+// En lot par son nom de modèle (`creerEnLotVerifie(tx, "Equipement", …)`).
 const CREATION_PAR_NOM = new RegExp(`creerEnLotVerifie\\(\\s*(\\w+)\\s*,\\s*["'\`](${NOMS_MODELES})["'\`]`, "g");
 const CROCHETS = new RegExp(`\\[\\s*["'\`](${NOMS}|consommationQuota)["'\`]\\s*\\]\\s*\\.\\s*(create|createMany|createManyAndReturn|upsert)\\b`);
-const PORTE = /\b(prendreQuota|creerSousPlafond|placesSousLePlafond)\(/;
+/** La porte, avec le compte de la garde et la clé du plafond (le verrou, en SQL brut, n'est pas borné). */
+const porte = (cle: string) => new RegExp(`\\b(prendreQuota|creerSousPlafond|placesSousLePlafond)\\([^;]*?compte\\.compteId,\\s*"${cle}"`);
 /** La porte doit précéder chaque création, à cette distance au plus (en caractères). */
 const PORTEE_DE_LA_PORTE = 700;
+
+/**
+ * Le texte sans ses commentaires, à longueur égale (les positions restent
+ * celles du fichier) ; les chaînes restent, la clé d'un plafond en est une.
+ */
+function sansCommentaires(src: string): string {
+  let sortie = "";
+  let i = 0;
+  while (i < src.length) {
+    const c = src[i];
+    if (c === "/" && src[i + 1] === "/") {
+      const fin = src.indexOf("\n", i);
+      const j = fin === -1 ? src.length : fin;
+      sortie += " ".repeat(j - i);
+      i = j;
+    } else if (c === "/" && src[i + 1] === "*") {
+      const fin = src.indexOf("*/", i + 2);
+      const j = fin === -1 ? src.length : fin + 2;
+      sortie += src.slice(i, j).replace(/[^\n]/g, " ");
+      i = j;
+    } else if (c === '"' || c === "'" || c === "`") {
+      let j = i + 1;
+      while (j < src.length && src[j] !== c) j += src[j] === "\\" ? 2 : 1;
+      sortie += src.slice(i, j + 1);
+      i = j + 1;
+    } else {
+      sortie += c;
+      i++;
+    }
+  }
+  return sortie;
+}
 
 function fichiers(dossier: string): string[] {
   return readdirSync(dossier).flatMap((nom) => {
@@ -77,25 +119,36 @@ function fichiers(dossier: string): string[] {
 const TEXTES = new Map(
   fichiers(join(DEPOT, "src")).map((f) => {
     const brut = readFileSync(f, "utf8");
-    return [relative(DEPOT, f), { brut, code: sansCommentairesNiChaines(brut) }] as const;
+    return [relative(DEPOT, f), { brut, code: sansCommentaires(brut) }] as const;
   }),
 );
 
 type Creation = { fichier: string; modele: string; avant: string; client: string };
 
+const exemptionsVues = new Map<string, number>();
+
+/** Vrai si la création à `index` est l'une des exemptées (et la compte). */
+function exemptee(fichier: string, nom: string, code: string, fin: number): boolean {
+  const cle = `${fichier}:${nom}`;
+  const e = EXEMPTEES[cle];
+  if (!e || !e.preuve.test(code.slice(fin, fin + 400))) return false;
+  exemptionsVues.set(cle, (exemptionsVues.get(cle) ?? 0) + 1);
+  return true;
+}
+
 /** Toutes les créations de modèles plafonnés du dépôt, hors exemptées. */
-const CREATIONS: Creation[] = [...TEXTES].flatMap(([fichier, t]) => {
+const CREATIONS: Creation[] = [...TEXTES].flatMap(([fichier, { code }]) => {
   const trouvees: Creation[] = [];
-  for (const m of t.code.matchAll(CREATION_DIRECTE)) {
-    const client = /(\w+)\s*$/.exec(t.code.slice(Math.max(0, m.index - 40), m.index))?.[1] ?? "";
-    if (!(`${fichier}:${m[1]}` in EXEMPTEES))
-      trouvees.push({ fichier, modele: m[1], client, avant: t.code.slice(Math.max(0, m.index - PORTEE_DE_LA_PORTE), m.index) });
+  const avant = (i: number) => code.slice(Math.max(0, i - PORTEE_DE_LA_PORTE), i);
+  for (const m of code.matchAll(CREATION_DIRECTE)) {
+    const client = /(\w+)\s*$/.exec(code.slice(Math.max(0, m.index - 40), m.index))?.[1] ?? "";
+    if (!exemptee(fichier, m[1], code, m.index + m[0].length)) trouvees.push({ fichier, modele: m[1], client, avant: avant(m.index) });
   }
-  for (const m of t.code.matchAll(CREATION_IMBRIQUEE))
-    if (!(`${fichier}:${m[1]}` in EXEMPTEES)) trouvees.push({ fichier, modele: m[1], client: "imbriquee", avant: "" });
-  for (const m of t.brut.matchAll(CREATION_PAR_NOM)) {
+  for (const m of code.matchAll(CREATION_IMBRIQUEE))
+    if (!exemptee(fichier, m[1], code, m.index + m[1].length)) trouvees.push({ fichier, modele: m[1], client: "imbriquee", avant: "" });
+  for (const m of code.matchAll(CREATION_PAR_NOM)) {
     const modele = Object.keys(MODELES).find((k) => MODELES[k].nom === m[2])!;
-    trouvees.push({ fichier, modele, client: m[1], avant: t.brut.slice(Math.max(0, m.index - PORTEE_DE_LA_PORTE), m.index) });
+    trouvees.push({ fichier, modele, client: m[1], avant: avant(m.index) });
   }
   return trouvees;
 });
@@ -105,12 +158,8 @@ describe("plafonds : une seule porte (ADR-053 § 14)", () => {
     expect([...new Set(CREATIONS.map((c) => c.fichier))].sort()).toEqual([...CREATEURS].sort());
   });
 
-  it("chaque exemption désigne encore une création", () => {
-    for (const cle of Object.keys(EXEMPTEES)) {
-      const [fichier, modele] = cle.split(":");
-      const code = TEXTES.get(fichier)?.code ?? "";
-      expect(code, cle).toMatch(new RegExp(`(\\.\\s*${modele}\\s*\\.\\s*create|\\b${modele}\\s*:\\s*\\{\\s*create)`));
-    }
+  it("chaque exemption désigne exactement une création, qui porte sa preuve", () => {
+    for (const cle of Object.keys(EXEMPTEES)) expect(exemptionsVues.get(cle) ?? 0, cle).toBe(1);
   });
 
   it("aucune création imbriquée d'un modèle plafonné (la porte ne la verrait pas)", () => {
@@ -125,12 +174,7 @@ describe("plafonds : une seule porte (ADR-053 § 14)", () => {
     for (const c of CREATIONS.filter((c) => c.client !== "imbriquee")) {
       const ou = `${c.fichier} (${c.modele})`;
       expect(c.client, ou).toBe("tx");
-      expect(c.avant, `${ou} : création sans porte juste avant`).toMatch(PORTE);
-      // Le compte de la garde : le verrou, en SQL brut, n'est pas borné.
-      const brut = TEXTES.get(c.fichier)!.brut;
-      expect(brut, ou).toMatch(
-        new RegExp(`(prendreQuota|creerSousPlafond|placesSousLePlafond)\\([^;]*?compte\\.compteId,\\s*"${MODELES[c.modele].cle}"`),
-      );
+      expect(c.avant, `${ou} : création sans sa porte juste avant`).toMatch(porte(MODELES[c.modele].cle));
     }
   });
 

@@ -38,6 +38,7 @@ const COLONNES = {
   formule: true,
   stripeSubscriptionId: true,
   essaiUtiliseLe: true,
+  debutPayantLe: true,
   finEssai: true,
   finPeriode: true,
   resilieEnFinDePeriode: true,

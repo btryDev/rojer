@@ -3,7 +3,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 const { etatStripe } = vi.hoisted(() => ({ etatStripe: vi.fn() }));
 vi.mock("@/lib/stripe/config", () => ({ etatStripe }));
-const m = vi.hoisted(() => ({ membres: [] as unknown[], invitations: [] as unknown[] }));
+const m = vi.hoisted(() => ({ membres: [] as unknown[], invitations: [] as unknown[], journal: vi.fn() }));
+// Le journal s'écrit par la voie des lots vérifiés (ADR-051) : on relève ce qu'elle reçoit.
+vi.mock("@/lib/auth/portee/lot-verifie", () => ({ creerEnLotVerifie: m.journal }));
 vi.mock("@/lib/auth/membres", () => ({
   membresDuCompte: async () => m.membres,
   invitationsDuCompte: async () => m.invitations,
@@ -37,7 +39,7 @@ function faux(formule: string | null, nombre: number, debutPayantLe: Date | null
     prescriptionParticuliere: compte(),
     batiment: compte(),
     uniteTravail: compte(),
-    consommationQuota: { count: vi.fn().mockResolvedValue(nombre), createMany: vi.fn() },
+    consommationQuota: { count: vi.fn().mockResolvedValue(nombre) },
   };
   const db = { ...tx, $transaction: vi.fn((cb: (t: typeof tx) => unknown) => cb(tx)) };
   return { tx, db: db as unknown as Db, txc: tx as never };
@@ -63,13 +65,13 @@ describe("formule des plafonds et motif du refus", () => {
   });
 
   it("le motif nomme le plafond et la formule qui le lève", () => {
-    expect(motifDuRefus({ formule: "essentiel", essai: false }, "etablissements")).toBe(
+    expect(motifDuRefus({ formule: "essentiel", essai: null }, "etablissements")).toBe(
       "Votre formule Essentiel couvre 1 établissement : passez à Pro depuis la page Abonnement de votre compte.",
     );
-    expect(motifDuRefus({ formule: "pro", essai: false }, "etablissements")).toBe(
+    expect(motifDuRefus({ formule: "pro", essai: null }, "etablissements")).toBe(
       "Votre formule Pro couvre 5 établissements : au-delà, la formule Sur mesure s'établit sur devis.",
     );
-    expect(motifDuRefus({ formule: "essentiel", essai: false }, "permisDeFeuParAn")).toBe(
+    expect(motifDuRefus({ formule: "essentiel", essai: null }, "permisDeFeuParAn")).toBe(
       "Votre formule Essentiel couvre 10 permis de feu par an : passez à Pro depuis la page Abonnement de votre compte.",
     );
   });
@@ -91,6 +93,11 @@ describe("debutDeLAnnee : l'année des plafonds annuels", () => {
   it("un 29 février tombe le 28 les années communes", () => {
     expect(debutDeLAnnee(new Date("2024-02-29T00:00:00Z"), new Date("2025-06-01T00:00:00Z"))).toEqual(new Date("2025-02-28T00:00:00Z"));
   });
+  it("la première année part du début de l'essai, s'il la précède ; les suivantes, de l'anniversaire", () => {
+    const essai = new Date("2025-02-10T08:00:00Z");
+    expect(debutDeLAnnee(ancre, new Date("2025-06-01T00:00:00Z"), essai)).toEqual(essai);
+    expect(debutDeLAnnee(ancre, new Date("2026-06-01T00:00:00Z"), essai)).toEqual(new Date("2026-03-12T08:00:00Z"));
+  });
   it("sans ancre (essai, jamais payé) : les douze derniers mois", () => {
     expect(debutDeLAnnee(null, new Date("2026-11-05T10:00:00Z"))).toEqual(new Date("2025-11-05T10:00:00Z"));
   });
@@ -104,8 +111,8 @@ describe("prendreQuota", () => {
     await prendreQuota(txc, "c1", "permisDeFeuParAn");
     expect(tx.$queryRaw).not.toHaveBeenCalled();
     expect(tx.abonnement.findUnique).not.toHaveBeenCalled();
-    expect(tx.consommationQuota.createMany).toHaveBeenCalledTimes(1);
-    expect(tx.consommationQuota.createMany).toHaveBeenCalledWith({ data: [{ compteId: "c1", quota: "permisDeFeuParAn" }] });
+    expect(m.journal).toHaveBeenCalledTimes(1);
+    expect(m.journal).toHaveBeenCalledWith(tx, "ConsommationQuota", [{ compteId: "c1", quota: "permisDeFeuParAn" }]);
   });
 
   it("lancée : verrou du compte d'abord, puis le compte sous le plafond passe", async () => {
@@ -117,14 +124,14 @@ describe("prendreQuota", () => {
     expect(id).toBe("c1");
     expect(tx.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(tx.etablissement.count.mock.invocationCallOrder[0]);
     expect(tx.abonnement.findUnique).toHaveBeenCalledWith(expect.objectContaining({ where: { compteId: "c1" } }));
-    expect(tx.consommationQuota.createMany).not.toHaveBeenCalled();
+    expect(m.journal).not.toHaveBeenCalled();
   });
 
   it("au plafond : refus, et rien n'est inscrit au journal", async () => {
     lancer();
     const { tx, txc } = faux("rojer_essentiel_mensuel", 10);
     await expect(prendreQuota(txc, "c1", "permisDeFeuParAn")).rejects.toBeInstanceOf(RefusQuota);
-    expect(tx.consommationQuota.createMany).not.toHaveBeenCalled();
+    expect(m.journal).not.toHaveBeenCalled();
   });
 
   it("par an : compté au journal depuis le dernier anniversaire du premier abonnement payant, puis inscrit", async () => {
@@ -135,7 +142,7 @@ describe("prendreQuota", () => {
     expect(tx.consommationQuota.count).toHaveBeenCalledWith({
       where: { quota: "plansDePreventionParAn", consommeLe: { gte: new Date("2026-03-12T08:00:00Z") } },
     });
-    expect(tx.consommationQuota.createMany).toHaveBeenCalledWith({ data: [{ compteId: "c1", quota: "plansDePreventionParAn" }] });
+    expect(m.journal).toHaveBeenCalledWith(tx, "ConsommationQuota", [{ compteId: "c1", quota: "plansDePreventionParAn" }]);
     vi.useRealTimers();
   });
 
@@ -144,7 +151,7 @@ describe("prendreQuota", () => {
     for (const formule of ["rojer_surmesure_annuel", null]) {
       const { txc } = faux(formule, 1);
       // Sans ligne du tout, le compte n'a jamais payé : la limite de l'essai, la même.
-      await expect(prendreQuota(txc, "c1", "etablissements"), String(formule)).rejects.toThrow(/couvre 1 établissement/);
+      await expect(prendreQuota(txc, "c1", "etablissements"), String(formule)).rejects.toThrow(/1 établissement/);
     }
   });
 
@@ -152,7 +159,7 @@ describe("prendreQuota", () => {
     lancer();
     const sous = faux("rojer_pro_mensuel", 29);
     await prendreQuota(sous.txc, "c1", "permisDeFeuParAn");
-    expect(sous.tx.consommationQuota.createMany).toHaveBeenCalled();
+    expect(m.journal).toHaveBeenCalled();
     await expect(prendreQuota(faux("rojer_pro_mensuel", 30).txc, "c1", "permisDeFeuParAn")).rejects.toThrow(
       "Votre formule Pro couvre 30 permis de feu par an : au-delà, la formule Sur mesure s'établit sur devis.",
     );
@@ -264,7 +271,9 @@ describe("l'essai gratuit : ses limites priment sur la formule essayée", () => 
     lancer();
     const paye = faux("rojer_essentiel_mensuel", 10_000);
     for (const cle of ["equipements", "zones", "prescriptions", "unitesTravail"] as const) await prendreQuota(paye.txc, "c1", cle);
-    expect(paye.tx.equipement.count).not.toHaveBeenCalled();
+    for (const t of [paye.tx.equipement, paye.tx.batiment, paye.tx.prescriptionParticuliere, paye.tx.uniteTravail])
+      expect(t.count).not.toHaveBeenCalled();
+    expect(paye.tx.$queryRaw).not.toHaveBeenCalled();
   });
 
   it("pendant l'essai, un plafond de la formule garde le motif de la formule", async () => {
@@ -295,7 +304,7 @@ describe("jamais payé : limites de l'essai, même hors essai", () => {
   it("premier paiement en échec à la fin de l'essai (past_due, sans ancre) : toujours 5 équipements", async () => {
     lancer();
     await expect(prendreQuota(faux("rojer_essentiel_mensuel", 5, null, "past_due").txc, "c1", "equipements")).rejects.toThrow(
-      /^L'essai gratuit couvre 5 équipements/,
+      "Tant que votre premier paiement n'est pas confirmé, Rojer garde les limites de l'essai (5 équipements) : réglez votre abonnement depuis la page Abonnement de votre compte.",
     );
     await prendreQuota(faux("rojer_essentiel_mensuel", 5, PAYE_DEPUIS, "past_due").txc, "c1", "equipements");
   });

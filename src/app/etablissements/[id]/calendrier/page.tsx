@@ -32,6 +32,7 @@ import {
 import { getEtablissement } from "@/lib/etablissements/queries";
 import { getOptionalCompte } from "@/lib/auth/compte";
 import { abonnementDuCompte } from "@/lib/abonnements/saisie";
+import { essaiDe } from "@/lib/abonnements/quotas";
 import { LIBELLES_PLAFONDS, LIMITES_ESSAI } from "@/lib/abonnements/formules";
 import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
 import {
@@ -319,9 +320,9 @@ export default async function CalendrierPage({
   const etab = await getEtablissement(id);
   if (!etab) notFound();
   const sessionCompte = await getOptionalCompte();
-  const essaiEnCours =
-    sessionCompte !== null &&
-    (await abonnementDuCompte(sessionCompte.db, sessionCompte.compte.compteId))?.statut === "trialing";
+  // `abonnementDuCompte` ne lit rien avant le lancement de l'offre : pas de mention.
+  const ligneAbonnement = sessionCompte && (await abonnementDuCompte(sessionCompte.db, sessionCompte.compte.compteId));
+  const essai = ligneAbonnement ? essaiDe(ligneAbonnement) : null;
 
   // Une seule horloge pour toute la page, et c'est celle du RENDU : la barre
   // latérale, rendue en parallèle, lit la même, si bien que le registre des
@@ -1024,13 +1025,14 @@ export default async function CalendrierPage({
     );
   // L'essai gratuit borne les équipements (ADR-053 § 14) : le calendrier ne
   // montre que les obligations de ceux qui sont déclarés, il le dit.
-  const descriptionAvecEssai = essaiEnCours ? (
+  const suivis = LIBELLES_PLAFONDS.equipements(LIMITES_ESSAI.equipements);
+  const descriptionAvecEssai = (
     <>
-      {descriptionEnTete} Pendant l&apos;essai gratuit, Rojer suit {LIBELLES_PLAFONDS.equipements(LIMITES_ESSAI.equipements)} au
-      plus : le calendrier ne montre que leurs obligations et celles de l&apos;établissement.
+      {descriptionEnTete}
+      {essai
+        ? ` ${essai === "en_cours" ? "Pendant l'essai gratuit" : "Tant que votre premier paiement n'est pas confirmé"}, Rojer suit ${suivis} au plus : le calendrier ne montre que leurs obligations et celles de l'établissement.`
+        : null}
     </>
-  ) : (
-    descriptionEnTete
   );
 
   // Le zéro de l'instrument. « En retard », « sous 30 jours » et « à venir »

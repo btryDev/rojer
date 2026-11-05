@@ -195,10 +195,13 @@ et sans croire une information qui ne vient pas de Stripe.
      par la propriétaire, selon la pratique courante (Docusign, Zapier,
      Adobe) : **« par an » repart à la date anniversaire** du premier
      abonnement payant du COMPTE (`Abonnement.debutPayantLe`, écrit une fois
-     par la synchronisation quand Stripe dit `active` ou `past_due`, jamais
-     écrasé : résilier puis se réabonner ne remet rien à zéro) ; sans ancre
-     (essai, jamais payé), les douze derniers mois. Le journal ne change pas,
-     seule la borne.] ~~**« Par an » = douze mois glissants**~~, dans un journal que rien
+     par la synchronisation à la première facture réellement payée — jamais
+     sur `past_due`, et pas sur un `active` dont la facture n'est pas encore
+     réglée —, jamais écrasé : résilier puis se réabonner ne remet rien à
+     zéro) ; sans ancre (essai, jamais payé), les douze derniers mois. La
+     première année part du début de l'essai (`essaiUtiliseLe`) : ce qui a
+     été créé pendant l'essai y compte. Le journal ne change pas, seule la
+     borne.] ~~**« Par an » = douze mois glissants**~~, dans un journal que rien
      n'efface (`ConsommationQuota` : compte, plafond, date ; aucun lien vers
      l'élément) : supprimer un brouillon ou un établissement ne rend pas le
      crédit, une résiliation suivie d'une souscription non plus. Le journal
@@ -228,10 +231,20 @@ et sans croire une information qui ne vient pas de Stripe.
      prescription particulière ; le reste suit les volumes de la formule.
      Ces quatre derniers sont sans limite dans les formules payantes.
      « Pendant l'essai » se lit : tant que le compte n'a jamais payé
-     (`statut = trialing` ou `debutPayantLe` vide) — un premier paiement
-     en échec à la fin de l'essai (`past_due`) n'ouvre pas les volumes de
-     la formule. D'où une condition de lancement : la synchronisation
-     écrit `debutPayantLe` dès le premier abonnement `active`.
+     (`statut = trialing` ou `debutPayantLe` vide, `essaiDe`) — un premier
+     paiement en échec à la fin de l'essai (`past_due`) n'ouvre pas les
+     volumes de la formule, et le refus le dit (« tant que votre premier
+     paiement n'est pas confirmé »). D'où une **condition de lancement** :
+     la synchronisation écrit `debutPayantLe` à la première facture payée ;
+     sans elle, un compte payant resterait aux limites de l'essai. Le verrou
+     du compte n'est pris que s'il y a un plafond : un compte sans limite
+     pour une clé ne bloque pas ses autres créations.
+     Les limites de l'essai bloquent la **création**, elles ne gèlent rien
+     [2026-11-05, session « stripe »] : un compte existant au lancement qui
+     démarre l'essai avec plus que ses limites (trois sites, vingt
+     équipements) garde ce qu'il a et travaille dessus, sans rien ajouter
+     au-delà ; il s'abonne pour en ajouter. Pas d'exception codée. Le gel ne
+     vise qu'un compte qui a déjà payé et dépasse sa formule.
      Équipements et prescriptions se comptent retirés compris (retirer puis
      recréer ne contourne rien). Un lot (pré-remplissage d'équipements,
      import d'un DUERP) est créé en entier ou refusé ; les unités suggérées

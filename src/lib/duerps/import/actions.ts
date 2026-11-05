@@ -18,7 +18,7 @@ import {
 import { validerFichierImport } from "./format";
 import { constaterEpiDuCompte } from "@/lib/etablissements/epi-constate";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
-import { prendreQuota, RefusQuota } from "@/lib/abonnements/quotas";
+import { prendreQuota, refusQuota, RefusQuota } from "@/lib/abonnements/quotas";
 
 /**
  * Import d'un DUERP Excel ou CSV.
@@ -178,6 +178,12 @@ export async function commitImport(
     plan.unites.map((u) => u.nom),
   );
   if (!borne.ok) return { status: "error", message: borne.message };
+  // Limite d'unités de l'essai (ADR-053 § 14), même règle de comptage : refusée
+  // ici aussi, AVANT la création du DUERP ; la transaction la reprend sous verrou.
+  const reutilisables = new Set(unitesExistantes.filter((u) => !u.estTransverse).map((u) => u.nom));
+  const aNaitre = new Set(plan.unites.map((u) => u.nom).filter((n) => !reutilisables.has(n))).size;
+  const refusEssai = aNaitre > 0 ? await refusQuota(db, compte.compteId, "unitesTravail", aNaitre) : null;
+  if (refusEssai) return { status: "error", message: `${refusEssai} Rien n'a été importé.` };
 
   const duerpId =
     duerpExistant?.id ??

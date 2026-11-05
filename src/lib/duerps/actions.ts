@@ -123,6 +123,10 @@ export async function choisirSecteur(
   const places = placesRestantes(compterUnitesPlafonnees(unitesExistantes));
 
   await db.$transaction(async (tx) => {
+    // Pendant l'essai gratuit, le pré-remplissage s'arrête aussi à sa limite
+    // d'unités (ADR-053 § 14), sans refuser : même règle que l'ADR-033. Le
+    // verrou du compte d'abord, comme partout ailleurs.
+    const sousLEssai = await placesSousLePlafond(tx, compte.compteId, "unitesTravail");
     await tx.duerp.update({
       where: { id: duerpId },
       data: {
@@ -130,9 +134,6 @@ export async function choisirSecteur(
         ...(changeDeSecteur ? { reponsesActivitesNonCouvertes: Prisma.DbNull } : {}),
       },
     });
-    // Pendant l'essai gratuit, le pré-remplissage s'arrête aussi à sa limite
-    // d'unités (ADR-053 § 14), sans refuser : même règle que l'ADR-033.
-    const sousLEssai = await placesSousLePlafond(tx, compte.compteId, "unitesTravail");
     for (const u of ref.unitesTravailSuggerees
       .filter((u) => !nomsExistants.has(u.nom.toLowerCase()))
       .slice(0, Math.min(places, sousLEssai)))
