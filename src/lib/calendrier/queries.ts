@@ -153,7 +153,14 @@ export async function getVerification(id: string) {
       prescription: { select: { source: true, reference: true } },
       // Le prestataire attitré (ADR-049) : ce que la carte de suivi montre.
       prestataire: {
-        select: { id: true, raisonSociale: true, contactNom: true, contactTelephone: true, contactEmail: true },
+        select: {
+          id: true,
+          raisonSociale: true,
+          contactNom: true,
+          contactTelephone: true,
+          contactEmail: true,
+          estOrganismeAgree: true,
+        },
       },
     },
   });

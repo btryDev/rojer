@@ -8,6 +8,8 @@ export type PrestataireProposable = {
   raisonSociale: string;
   /** Il couvre le domaine de ce contrôle (`DOMAINES_PRESTATAIRE_ATTENDUS`). */
   couvre: boolean;
+  /** Déclaré « Organisme agréé » sur sa fiche. */
+  estOrganismeAgree: boolean;
 };
 
 /**
@@ -22,7 +24,7 @@ export async function prestatairesProposables(
   const { db } = await requireCompte();
   const lignes = await db.prestataire.findMany({
     where: { etablissementId },
-    select: { id: true, raisonSociale: true, domaines: true },
+    select: { id: true, raisonSociale: true, domaines: true, estOrganismeAgree: true },
     orderBy: { raisonSociale: "asc" },
   });
   return lignes
@@ -30,6 +32,7 @@ export async function prestatairesProposables(
       id: p.id,
       raisonSociale: p.raisonSociale,
       couvre: p.domaines.some((d) => domainesAttendus.includes(d)),
+      estOrganismeAgree: p.estOrganismeAgree,
     }))
     .sort((a, b) => Number(b.couvre) - Number(a.couvre));
 }
