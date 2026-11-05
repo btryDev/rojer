@@ -18,7 +18,7 @@ export type CleQuota = keyof typeof LIBELLES_PLAFONDS;
 export type CleQuotaComptee = Exclude<CleQuota, "membres">;
 
 /** Ceux qui se comptent au journal, depuis la date anniversaire. */
-const PAR_AN = ["permisDeFeuParAn", "plansDePreventionParAn"] as const;
+const PAR_AN = ["permisDeFeuParAn", "plansDePreventionParAn", "signaturesParAn", "importsDuerp"] as const;
 type CleAnnuelle = (typeof PAR_AN)[number];
 const estAnnuelle = (cle: CleQuota): cle is CleAnnuelle => (PAR_AN as readonly string[]).includes(cle);
 
@@ -120,8 +120,16 @@ async function dejaUtilisesDuCompte(db: Lecteur, cle: CleQuotaComptee, debutAnne
       return db.batiment.count();
     case "unitesTravail":
       return db.uniteTravail.count({ where: { estTransverse: false } });
+    // Un lien sert tant qu'il n'est ni révoqué, ni expiré, ni consommé (s'il
+    // est à usage unique) : la même règle que `verifierToken`.
+    case "liensAccesActifs":
+      return db.accessToken.count({
+        where: { revoqueLe: null, expireLe: { gt: new Date() }, OR: [{ utiliseLe: null }, { scope: "consultation" }] },
+      });
     case "permisDeFeuParAn":
     case "plansDePreventionParAn":
+    case "signaturesParAn":
+    case "importsDuerp":
       return db.consommationQuota.count({ where: { quota: cle, consommeLe: { gte: debutAnnee } } });
   }
 }

@@ -21,6 +21,8 @@ const MODELES: Record<string, { nom: string; cle: string }> = {
   uniteTravail: { nom: "UniteTravail", cle: "unitesTravail" },
   batiment: { nom: "Batiment", cle: "zones" },
   prescriptionParticuliere: { nom: "PrescriptionParticuliere", cle: "prescriptions" },
+  accessToken: { nom: "AccessToken", cle: "liensAccesActifs" },
+  signature: { nom: "Signature", cle: "signaturesParAn" },
 };
 
 /** Les modules qui créent un élément plafonné. */
@@ -34,6 +36,8 @@ const CREATEURS = [
   "src/lib/prescriptions/actions.ts",
   "src/lib/duerps/actions.ts",
   "src/lib/duerps/import/actions.ts",
+  "src/lib/access-tokens/emission.ts",
+  "src/lib/signatures/actions.ts",
 ];
 
 /**
@@ -50,6 +54,10 @@ const EXEMPTEES: Record<string, { motif: string; preuve: RegExp }> = {
   "src/lib/duerps/actions.ts:unites": {
     motif: "le DUERP naît avec son unité « Risques transverses », hors plafond (ADR-033)",
     preuve: /^[^;]*estTransverse:\s*true/,
+  },
+  "src/lib/signatures/actions.ts:signature": {
+    motif: "la signature d'un tiers par son lien : comptée à la demande (`emettreAccessToken`), comme une enveloppe",
+    preuve: /^[^;]*etablissementId:\s*token\.etablissementId/,
   },
   "src/lib/onboarding/actions.ts:batiments": {
     motif: "la zone principale naît avec l'établissement (ADR-019), lui-même plafonné dans la même transaction",
@@ -176,6 +184,12 @@ describe("plafonds : une seule porte (ADR-053 § 14)", () => {
       expect(c.client, ou).toBe("tx");
       expect(c.avant, `${ou} : création sans sa porte juste avant`).toMatch(porte(MODELES[c.modele].cle));
     }
+  });
+
+  it("l'import d'un DUERP prend son plafond annuel dans sa transaction", () => {
+    expect(TEXTES.get("src/lib/duerps/import/actions.ts")!.code).toMatch(
+      /\$transaction\(async \(tx\) => \{\s*await prendreQuota\(tx, compte\.compteId, "importsDuerp"\);/,
+    );
   });
 
   it("les utilisateurs : les deux limites du plugin lisent le plafond", () => {

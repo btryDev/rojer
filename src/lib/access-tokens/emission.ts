@@ -1,3 +1,4 @@
+import { creerSousPlafond, prendreQuota } from "@/lib/abonnements/quotas";
 import { randomUUID } from "node:crypto";
 import { notFound } from "next/navigation";
 import { z } from "zod";
@@ -157,7 +158,7 @@ export type EmissionResultat =
   | { ok: true; accessTokenId: string; expireLe: Date }
   | {
       ok: false;
-      raison: "frequence" | "envoi_hors_service" | "envoi_echoue";
+      raison: "frequence" | "envoi_hors_service" | "envoi_echoue" | "plafond";
       message: string;
     };
 
@@ -184,7 +185,7 @@ export async function emettreAccessToken(
   const params = emissionSchema.parse(entree);
   // Une seule lecture de la session : la garde rend l'utilisateur et le
   // client borné.
-  const { user, db } = await assertEtablissementDuCompte(params.etablissementId);
+  const { user, compte, db } = await assertEtablissementDuCompte(params.etablissementId);
 
   // `etablissementId` et `objetId` arrivent du même appel, et jusqu'ici rien
   // ne vérifiait qu'ils avaient un rapport entre eux : posséder son propre
@@ -264,23 +265,31 @@ export async function emettreAccessToken(
   // — l'email annonçait 10 minutes, le code en durait des jours.
   const otpExpireLe = otp ? otpExpirationDate(maintenant) : null;
 
-  const access = await db.accessToken.create({
-    data: {
-      id: `atk_${randomUUID()}`,
-      tokenHash,
-      etablissementId: params.etablissementId,
-      scope: params.scope,
-      objetType: params.objetType,
-      objetId: params.objetId,
-      partie: params.partie,
-      emailDestinataire: params.emailDestinataire,
-      nomDestinataire: params.nomDestinataire,
-      otpHash,
-      otpExpireLe,
-      expireLe,
-      createdByUserId: user.id,
-    },
+  // Plafonds de la formule (ADR-053 § 14) : les liens actifs, et pour une
+  // demande de signature, les signatures de l'année — comptées à la demande,
+  // comme une enveloppe : la signature du tiers, plus tard, ne recompte pas.
+  const creation = await creerSousPlafond(db, compte.compteId, "liensAccesActifs", async (tx) => {
+    if (params.scope === "signature") await prendreQuota(tx, compte.compteId, "signaturesParAn");
+    return tx.accessToken.create({
+      data: {
+        id: `atk_${randomUUID()}`,
+        tokenHash,
+        etablissementId: params.etablissementId,
+        scope: params.scope,
+        objetType: params.objetType,
+        objetId: params.objetId,
+        partie: params.partie,
+        emailDestinataire: params.emailDestinataire,
+        nomDestinataire: params.nomDestinataire,
+        otpHash,
+        otpExpireLe,
+        expireLe,
+        createdByUserId: user.id,
+      },
+    });
   });
+  if (!creation.ok) return { ok: false, raison: "plafond", message: creation.motif };
+  const access = creation.valeur;
 
   try {
     await envoyerMailAcces({

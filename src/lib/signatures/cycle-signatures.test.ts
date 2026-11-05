@@ -115,7 +115,11 @@ vi.mock("@/lib/auth/scope", () => ({
       (e as { digest?: string }).digest = "NEXT_HTTP_ERROR_FALLBACK;404";
       throw e;
     }
-    return { user: { id: "user-1" }, db: await (await import("@/test/garde-simulee")).clientDuCompteSimule() };
+    return {
+      user: { id: "user-1" },
+      compte: { compteId: "user-1", role: "owner" },
+      db: await (await import("@/test/garde-simulee")).clientDuCompteSimule(),
+    };
   }),
 }));
 vi.mock("@/lib/batiments/queries", () => ({ resoudreBatimentOptionnel: vi.fn() }));
@@ -204,6 +208,8 @@ beforeEach(() => {
   prismaMock.signature = table([]);
   prismaMock.accessToken = table([]);
   prismaMock.quotaEnvoiOtp = table([]);
+  // Le journal des plafonds annuels (ADR-053 § 14), écrit même avant le lancement de l'offre.
+  prismaMock.consommationQuota = table([]);
   prismaMock.$transaction = async (fn) => fn(prismaMock);
   verrous.length = 0;
   prismaMock.$queryRaw = async (q, ...v) => {

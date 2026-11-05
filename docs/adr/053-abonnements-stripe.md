@@ -280,6 +280,17 @@ et sans croire une information qui ne vient pas de Stripe.
      par le secteur s'arrêtent à la limite sans refuser
      (`placesSousLePlafond`), comme à l'ADR-033. Le calendrier dit, pendant
      l'essai, qu'il ne suit que 5 équipements.
+   - **Liens, signatures, imports** [2026-11-05, lot C] : les **liens
+     d'accès actifs** se comptent sur ce qui sert encore — ni révoqué, ni
+     expiré, ni consommé s'il est à usage unique (`verifierToken`) : un lien
+     expiré libère sa place. Les **signatures** se comptent à la DEMANDE
+     (émission du lien, `emettreAccessToken`) et quand le titulaire signe
+     lui-même, comme les enveloppes d'un service de signature : la signature
+     posée ensuite par le tiers ne recompte pas, et n'est jamais refusée au
+     tiers. Les **imports de DUERP** se comptent par an, comme les
+     signatures (journal, date anniversaire) : un fichier corrigé puis
+     redéposé l'année suivante repasse. Le stockage (Go) attend la taille
+     des fichiers : lot à part.
    - **Condition de lancement** : « Sur mesure » doit avoir sa propre entrée
      dans `FORMULES` (ses plafonds) et sa clé (`lookup_key` ou
      `metadata.formule` du prix) avant toute vente — sans quoi le refus par

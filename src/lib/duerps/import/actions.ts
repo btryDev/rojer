@@ -178,11 +178,14 @@ export async function commitImport(
     plan.unites.map((u) => u.nom),
   );
   if (!borne.ok) return { status: "error", message: borne.message };
-  // Limite d'unités de l'essai (ADR-053 § 14), même règle de comptage : refusée
-  // ici aussi, AVANT la création du DUERP ; la transaction la reprend sous verrou.
+  // Plafond d'imports, puis limite d'unités de l'essai (ADR-053 § 14), même
+  // règle de comptage : refusés ici, AVANT la création du DUERP ; la
+  // transaction les reprend sous verrou.
   const reutilisables = new Set(unitesExistantes.filter((u) => !u.estTransverse).map((u) => u.nom));
   const aNaitre = new Set(plan.unites.map((u) => u.nom).filter((n) => !reutilisables.has(n))).size;
-  const refusEssai = aNaitre > 0 ? await refusQuota(db, compte.compteId, "unitesTravail", aNaitre) : null;
+  const refusEssai =
+    (await refusQuota(db, compte.compteId, "importsDuerp")) ??
+    (aNaitre > 0 ? await refusQuota(db, compte.compteId, "unitesTravail", aNaitre) : null);
   if (refusEssai) return { status: "error", message: `${refusEssai} Rien n'a été importé.` };
 
   const duerpId =
@@ -225,6 +228,8 @@ export async function commitImport(
   // transverse que le fichier ne porte jamais.
   try {
     await db.$transaction(async (tx) => {
+      // Le plafond annuel d'imports de la formule (ADR-053 § 14).
+      await prendreQuota(tx, compte.compteId, "importsDuerp");
       // `creerEnLotVerifie` (ADR-051) : les parents de chaque lot sont lus par
       // la transaction — les unités créées juste avant y sont vues.
       if (ecritures.unitesACreer.length > 0) {

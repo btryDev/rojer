@@ -156,6 +156,9 @@ export const LIBELLES_PLAFONDS = {
   prestataires: (n: number) => pluriel(n, "prestataire", "prestataires"),
   permisDeFeuParAn: (n: number) => `${pluriel(n, "permis de feu", "permis de feu")} par an`,
   plansDePreventionParAn: (n: number) => `${pluriel(n, "plan de prévention", "plans de prévention")} par an`,
+  liensAccesActifs: (n: number) => pluriel(n, "lien d'accès actif", "liens d'accès actifs"),
+  signaturesParAn: (n: number) => `${pluriel(n, "signature", "signatures")} par an`,
+  importsDuerp: (n: number) => `${pluriel(n, "import de DUERP", "imports de DUERP")} par an`,
 } as const satisfies Partial<Record<keyof Quotas, (n: number) => string>>;
 
 /** Ce qui distingue une formule à l'écran, tiré des quotas — rien de non livré. */

@@ -1,5 +1,6 @@
 "use server";
 
+import { prendreQuota, RefusQuota } from "@/lib/abonnements/quotas";
 import { randomUUID } from "node:crypto";
 import { headers } from "next/headers";
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
@@ -621,9 +622,10 @@ export async function signerEnCompteConnecte(params: {
         | "non_signable"
         | "deja_signee";
     }
+  | { ok: false; raison: "plafond"; message: string }
 > {
   await verifierSaisie();
-  const { user, db } = await assertEtablissementDuCompte(params.etablissementId);
+  const { user, compte, db } = await assertEtablissementDuCompte(params.etablissementId);
   // Même règle que les deux autres portes. Aucun écran ne passe de fonction
   // ici : seul un appel forgé est refusé, d'où l'exception plutôt qu'une
   // raison de plus dans le retour.
@@ -673,6 +675,8 @@ export async function signerEnCompteConnecte(params: {
         params.etablissementId,
       );
       if (!h.ok) return h;
+      // Plafond annuel de signatures de la formule (ADR-053 § 14).
+      await prendreQuota(tx, compte.compteId, "signaturesParAn");
       const signature = await tx.signature.create({
         data: {
           id: `sig_${randomUUID()}`,
@@ -695,6 +699,7 @@ export async function signerEnCompteConnecte(params: {
     });
   } catch (e) {
     if (estPartieDejaSignee(e)) return { ok: false, raison: "deja_signee" };
+    if (e instanceof RefusQuota) return { ok: false, raison: "plafond", message: e.motif };
     throw e;
   }
   if (!resultat.ok) return { ok: false, raison: resultat.raison };

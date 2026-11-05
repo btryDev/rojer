@@ -40,6 +40,7 @@ function faux(formule: string | null, nombre: number, debutPayantLe: Date | null
     prescriptionParticuliere: compte(),
     batiment: compte(),
     uniteTravail: compte(),
+    accessToken: compte(),
     consommationQuota: { count: vi.fn().mockResolvedValue(nombre) },
   };
   const db = { ...tx, $transaction: vi.fn((cb: (t: typeof tx) => unknown) => cb(tx)) };
@@ -340,5 +341,31 @@ describe("gelesDuCompte : qui est gelé après une baisse", () => {
     const db = compte(paye, 3, 3);
     expect(await gelesDuCompte(db, "c1")).toBeUndefined();
     expect(db.abonnement.findUnique).not.toHaveBeenCalled();
+  });
+});
+
+describe("lot C : liens d'accès actifs, signatures, imports de DUERP", () => {
+  it("un lien actif : ni révoqué, ni expiré, ni consommé s'il est à usage unique", async () => {
+    lancer();
+    vi.useFakeTimers({ now: new Date("2026-11-05T10:00:00Z"), toFake: ["Date"] });
+    const { tx, txc } = faux("rojer_essentiel_mensuel", 4);
+    await prendreQuota(txc, "c1", "liensAccesActifs");
+    expect(tx.accessToken.count).toHaveBeenCalledWith({
+      where: { revoqueLe: null, expireLe: { gt: new Date("2026-11-05T10:00:00Z") }, OR: [{ utiliseLe: null }, { scope: "consultation" }] },
+    });
+    vi.useRealTimers();
+    await expect(prendreQuota(faux("rojer_essentiel_mensuel", 5).txc, "c1", "liensAccesActifs")).rejects.toThrow(
+      "Votre formule Essentiel couvre 5 liens d'accès actifs : passez à Pro depuis la page Abonnement de votre compte.",
+    );
+  });
+
+  it("signatures et imports : comptés au journal sur l'année, puis inscrits", async () => {
+    lancer();
+    const sig = faux("rojer_essentiel_mensuel", 19);
+    await prendreQuota(sig.txc, "c1", "signaturesParAn");
+    expect(m.journal).toHaveBeenCalledWith(sig.tx, "ConsommationQuota", [{ compteId: "c1", quota: "signaturesParAn" }]);
+    await expect(prendreQuota(faux("rojer_essentiel_mensuel", 20).txc, "c1", "signaturesParAn")).rejects.toThrow(/couvre 20 signatures par an/);
+    await expect(prendreQuota(faux("rojer_essentiel_mensuel", 1).txc, "c1", "importsDuerp")).rejects.toThrow(/couvre 1 import de DUERP par an : passez à Pro/);
+    await prendreQuota(faux("rojer_pro_mensuel", 2).txc, "c1", "importsDuerp");
   });
 });
