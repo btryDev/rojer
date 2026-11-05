@@ -110,6 +110,37 @@ describe("garderSession : refus sans cookie de session", () => {
   });
 });
 
+describe("garderSession : action serveur sans cookie (audit du 2026-11-05)", () => {
+  function post(chemin: string, entetes: Record<string, string> = {}): NextRequest {
+    return new NextRequest(`http://localhost${chemin}`, { method: "POST", headers: entetes });
+  }
+
+  it("un POST sur une page passe : l'action redirige elle-même par requireUser", () => {
+    const r = garderSession(post("/etablissements/e1/rapports", { "next-action": "abc123" }));
+    expect(r.headers.get("x-middleware-next")).toBe("1");
+    expect(r.headers.get("location")).toBeNull();
+  });
+
+  it("de même pour un formulaire envoyé sans JavaScript", () => {
+    const r = garderSession(post("/etablissements/e1/rapports"));
+    expect(r.headers.get("x-middleware-next")).toBe("1");
+  });
+
+  it("garde l'IP publiée pour Better Auth sur ce passage", () => {
+    const r = garderSession(post("/etablissements/e1", { [ENTETE_IP_CLIENT]: "6.6.6.6" }));
+    expect(transmis(r, ENTETE_IP_CLIENT)).toBeNull();
+  });
+
+  it("un POST sur /api/* reste refusé en 401", () => {
+    const r = garderSession(post("/api/duerp/import", { "next-action": "abc123" }));
+    expect(r.status).toBe(401);
+  });
+
+  it("un GET sur une page reste redirigé vers /login", () => {
+    expect(garderSession(requete("/etablissements/e1")).status).toBe(307);
+  });
+});
+
 describe("garderSession : passage", () => {
   it("avec un cookie, un chemin protégé passe (la validation est à requireUser)", () => {
     const r = garderSession(requete("/etablissements/e1", { cookie: COOKIE }));
