@@ -106,9 +106,6 @@ export async function finaliserOnboarding(
   let result;
   try {
     result = await avecUneReprise(() => db.$transaction(async (tx) => {
-      // Plafond d'établissements, sous le verrou du compte (ADR-053 § 14).
-      await prendreQuota(tx, compte.compteId, "etablissements");
-
       // L'entreprise du SIREN, dans CE compte — jamais ailleurs : la clé porte
       // `compteId`, un SIREN suivi par un autre compte n'est ni lu ni touché.
       // `upsert` sur l'unicité `(compteId, siren)` : deux parcours finis au même
@@ -138,6 +135,9 @@ export async function finaliserOnboarding(
       // ce cas. Le parcours l'affiche déjà et bloque ; une requête forgée ne
       // passe pas pour autant. Lever annule la transaction.
       if (entreprise.effectif > EFFECTIF_MAX) throw new RefusEffectifEntreprise();
+
+      // Plafond d'établissements, sous le verrou du compte (ADR-053 § 14).
+      await prendreQuota(tx, compte.compteId, "etablissements");
 
       const etablissement = await tx.etablissement.create({
         data: {

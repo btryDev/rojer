@@ -20,10 +20,16 @@ const CREATIONS: Record<string, { modele: string; cle: string }> = {
   "src/lib/plan-prevention/actions.ts": { modele: "planPrevention", cle: "plansDePreventionParAn" },
 };
 
-// Création directe d'un modèle plafonné, ou imbriquée depuis un parent
-// (`etablissements: { create … }`). Accès par crochets compris.
+// Création directe d'un modèle plafonné, imbriquée depuis une relation (au
+// pluriel comme au singulier), ou en lot par son nom de modèle
+// (`creerEnLotVerifie(tx, "PermisFeu", …)`, lu sur le texte brut : les chaînes
+// sont effacées du code analysé).
 const CREATION_DIRECTE = /\.\s*(etablissement|prestataire|permisFeu|planPrevention)\s*\.\s*(create|createMany|createManyAndReturn|upsert)\b/g;
-const CREATION_IMBRIQUEE = /\b(etablissements|prestataires|permisFeu|plansPrevention)\s*:\s*\{\s*(create|createMany|connectOrCreate)\b/;
+const CREATION_IMBRIQUEE =
+  /\b(etablissements?|prestataires?|permisFeu|plansPrevention|planPrevention)\s*:\s*\{\s*(create|createMany|connectOrCreate|upsert)\b/;
+const CREATION_PAR_NOM = /creerEnLotVerifie\([^)]*["'`](Etablissement|Prestataire|PermisFeu|PlanPrevention)["'`]/;
+/** La porte doit précéder chaque création, à cette distance au plus (en caractères de code). */
+const PORTEE_DE_LA_PORTE = 600;
 
 function fichiers(dossier: string): string[] {
   return readdirSync(dossier).flatMap((nom) => {
@@ -43,7 +49,9 @@ const TEXTES = new Map(
 describe("plafonds : une seule porte (ADR-053 § 14)", () => {
   it("seuls les modules nommés créent un élément plafonné", () => {
     const directe = new RegExp(CREATION_DIRECTE.source);
-    const createurs = [...TEXTES].filter(([, t]) => directe.test(t.code) || CREATION_IMBRIQUEE.test(t.code)).map(([f]) => f);
+    const createurs = [...TEXTES]
+      .filter(([, t]) => directe.test(t.code) || CREATION_IMBRIQUEE.test(t.code) || CREATION_PAR_NOM.test(t.brut))
+      .map(([f]) => f);
     expect(createurs.sort()).toEqual(Object.keys(CREATIONS).sort());
   });
 
@@ -61,6 +69,9 @@ describe("plafonds : une seule porte (ADR-053 § 14)", () => {
         expect(m[1], fichier).toBe(modele);
         // Le client juste avant le modèle : `tx`, la transaction de la porte.
         expect(t.code.slice(Math.max(0, m.index - 3), m.index), fichier).toMatch(/\Wtx$/);
+        // Et la porte juste avant, dans la même transaction : pas ailleurs dans le fichier.
+        const avant = t.code.slice(Math.max(0, m.index - PORTEE_DE_LA_PORTE), m.index);
+        expect(avant, `${fichier} : création sans porte juste avant`).toMatch(/\b(prendreQuota|creerSousPlafond)\(/);
       }
       // Le compte de la garde : le verrou, en SQL brut, n'est pas borné.
       expect(t.brut, fichier).toMatch(new RegExp(`(prendreQuota|creerSousPlafond)\\([^;]*?compte\\.compteId, "${cle}"`));

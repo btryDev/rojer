@@ -126,6 +126,8 @@ export async function creerSousPlafond<T>(
 
 /** Le refus d'une invitation au plafond d'utilisateurs, pour le propriétaire du compte. */
 export async function motifPlafondMembres(db: Db, compteId: string): Promise<string> {
+  // Avant le lancement, seule la limite par défaut du plugin peut refuser.
+  if (!offreLancee(contexteDroits())) return "Ce compte a atteint le nombre maximal d'invitations en attente.";
   return motifDuRefus(formuleDesPlafonds(await formuleDuCompte(db, compteId)), "membres");
 }
 

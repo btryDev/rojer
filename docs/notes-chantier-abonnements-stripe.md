@@ -608,11 +608,13 @@ est appliqué ; huit autres sont affichés sans l'être. Trous principaux :
   portail ne planifie une baisse en fin de période qu'entre prix d'un même
   produit, et ne sait pas la refuser (doc lue : `configure-portal`,
   `customer_portal/configurations/create`) ;
-- utilisateurs non plafonnés (`inviterMembre`, `accepterInvitation`) ;
-- formule inconnue = illimité (`quotas.ts`) ;
-- compteurs annuels remis à zéro par suppression d'un brouillon ou d'un
-  établissement (cascade) ; pas de date de début d'abonnement ;
-- comptage hors verrou (deux onglets dépassent d'un) ;
+- ~~utilisateurs non plafonnés (`inviterMembre`, `accepterInvitation`) ;~~ [2026-11-05, lot A `lot/quotas-a` : fait, ADR-053 § 14] ;
+- ~~formule inconnue = illimité (`quotas.ts`) ;~~ [2026-11-05, lot A `lot/quotas-a` : fait, ADR-053 § 14] ;
+- ~~compteurs annuels remis à zéro par suppression d'un brouillon ou d'un
+  établissement (cascade) ; pas de date de début d'abonnement ;~~ [2026-11-05, lot A `lot/quotas-a` : fait, ADR-053 § 14] — journal
+  `ConsommationQuota`, douze mois glissants : la date de début n'est plus nécessaire ;
+- ~~comptage hors verrou (deux onglets dépassent d'un) ;~~ [2026-11-05, lot A `lot/quotas-a` : fait, ADR-053 § 14] ; reste les
+  utilisateurs, comptés par le plugin hors verrou (limite acceptée, ADR-053 § 14) ;
 - la garde de saisie ne voit que les écritures Prisma reconnues par sa sonde
   (un dépôt de fichier sans écriture Prisma passerait).
 
@@ -678,11 +680,12 @@ de l'offre tant que l'accès OAuth (ADR-013) n'existe pas.
 1. changement de formule dans Rojer (contrôle des plafonds, montée
    immédiate facturée, baisse planifiée) ; portail sans changement de
    formule ; formule inconnue fermée ; date de début d'abonnement recopiée ;
-2. une seule fonction `verifierQuota`, sous verrou de compte, journal
+2. ~~une seule fonction `verifierQuota`, sous verrou de compte, journal
    `ConsommationQuota`, et une garde qui relit le code : chaque création
-   d'un modèle plafonné (et chaque dépôt de fichier) passe par elle ;
-3. plafonds à la création : utilisateurs, prestataires, permis de feu, plans
-   de prévention, signatures, liens, import ;
+   d'un modèle plafonné (et chaque dépôt de fichier) passe par elle ;~~ [2026-11-05, lot A `lot/quotas-a` : fait, ADR-053 § 14]
+   (`prendreQuota` ; le dépôt de fichier reste au lot du stockage) ;
+3. plafonds à la création : ~~utilisateurs, prestataires, permis de feu, plans
+   de prévention,~~ [2026-11-05, lot A `lot/quotas-a` : fait, ADR-053 § 14] signatures, liens, import ;
 4. stockage (taille des fichiers à enregistrer, reprise de l'existant) ;
 5. essai par SIREN ; conditions générales complétées (baisse, plafonds,
    date anniversaire).
