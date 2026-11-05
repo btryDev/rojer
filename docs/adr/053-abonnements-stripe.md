@@ -227,6 +227,11 @@ et sans croire une information qui ne vient pas de Stripe.
      zone principale, née avec l'établissement), 5 équipements, 1
      prescription particulière ; le reste suit les volumes de la formule.
      Ces quatre derniers sont sans limite dans les formules payantes.
+     « Pendant l'essai » se lit : tant que le compte n'a jamais payé
+     (`statut = trialing` ou `debutPayantLe` vide) — un premier paiement
+     en échec à la fin de l'essai (`past_due`) n'ouvre pas les volumes de
+     la formule. D'où une condition de lancement : la synchronisation
+     écrit `debutPayantLe` dès le premier abonnement `active`.
      Équipements et prescriptions se comptent retirés compris (retirer puis
      recréer ne contourne rien). Un lot (pré-remplissage d'équipements,
      import d'un DUERP) est créé en entier ou refusé ; les unités suggérées

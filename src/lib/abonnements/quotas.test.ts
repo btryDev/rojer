@@ -25,7 +25,8 @@ import {
 } from "./quotas";
 
 // Le client borné (et sa transaction), réduit à ce que la porte lit.
-function faux(formule: string | null, nombre: number, debutPayantLe: Date | null = null, statut = "active") {
+const PAYE_DEPUIS = new Date("2026-01-15T00:00:00Z");
+function faux(formule: string | null, nombre: number, debutPayantLe: Date | null = PAYE_DEPUIS, statut = "active") {
   const compte = () => ({ count: vi.fn().mockResolvedValue(nombre) });
   const tx = {
     $queryRaw: vi.fn(),
@@ -142,7 +143,8 @@ describe("prendreQuota", () => {
     lancer();
     for (const formule of ["rojer_surmesure_annuel", null]) {
       const { txc } = faux(formule, 1);
-      await expect(prendreQuota(txc, "c1", "etablissements"), String(formule)).rejects.toThrow(/Essentiel couvre 1 établissement/);
+      // Sans ligne du tout, le compte n'a jamais payé : la limite de l'essai, la même.
+      await expect(prendreQuota(txc, "c1", "etablissements"), String(formule)).rejects.toThrow(/couvre 1 établissement/);
     }
   });
 
@@ -194,7 +196,7 @@ describe("creerSousPlafond et refusQuota", () => {
 describe("limitesMembresDuPlugin", () => {
   const brut = (formule: string | null, membres: number) =>
     ({
-      abonnement: { findUnique: vi.fn().mockResolvedValue(formule === null ? null : { formule }) },
+      abonnement: { findUnique: vi.fn().mockResolvedValue(formule === null ? null : { formule, statut: "active", debutPayantLe: PAYE_DEPUIS }) },
       membre: { count: vi.fn().mockResolvedValue(membres) },
     }) as unknown as PrismaClient;
 
@@ -286,5 +288,15 @@ describe("l'essai gratuit : ses limites priment sur la formule essayée", () => 
     lancer();
     const brut = { abonnement: { findUnique: vi.fn().mockResolvedValue({ formule: "rojer_pro_mensuel", statut: "trialing" }) }, membre: { count: vi.fn().mockResolvedValue(1) } };
     expect(await limitesMembresDuPlugin(brut as never, "c1")).toEqual({ membres: 1, invitations: 0 });
+  });
+});
+
+describe("jamais payé : limites de l'essai, même hors essai", () => {
+  it("premier paiement en échec à la fin de l'essai (past_due, sans ancre) : toujours 5 équipements", async () => {
+    lancer();
+    await expect(prendreQuota(faux("rojer_essentiel_mensuel", 5, null, "past_due").txc, "c1", "equipements")).rejects.toThrow(
+      /^L'essai gratuit couvre 5 équipements/,
+    );
+    await prendreQuota(faux("rojer_essentiel_mensuel", 5, PAYE_DEPUIS, "past_due").txc, "c1", "equipements");
   });
 });

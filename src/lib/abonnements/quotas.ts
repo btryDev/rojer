@@ -104,7 +104,13 @@ async function utilise(db: Lecteur, cle: CleQuotaComptee, debutAnnee: Date): Pro
 /** La formule, l'état et l'ancre annuelle de l'abonnement du compte, recopiés de Stripe. */
 async function abonnementDesPlafonds(l: Lecteur | PrismaClient, compteId: string) {
   const ligne = await l.abonnement.findUnique({ where: { compteId }, select: { formule: true, statut: true, debutPayantLe: true } });
-  const regime: Regime = { formule: formuleDesPlafonds(ligne?.formule), essai: ligne?.statut === "trialing" };
+  // Les limites de l'essai valent tant que le compte n'a JAMAIS payé : un
+  // premier paiement en échec à la fin de l'essai (`past_due`) garde la
+  // saisie ouverte, il ne doit pas ouvrir les volumes de la formule.
+  const regime: Regime = {
+    formule: formuleDesPlafonds(ligne?.formule),
+    essai: ligne?.statut === "trialing" || !ligne?.debutPayantLe,
+  };
   return { regime, ancre: ligne?.debutPayantLe ?? null };
 }
 
