@@ -202,6 +202,10 @@ et sans croire une information qui ne vient pas de Stripe.
      plans de prévention (Essentiel : 10 et 5).
    - Au plafond, seule la création est refusée, et le message nomme la
      formule qui le lève (« Sur mesure » sur devis au-delà de Pro).
+   - **Condition de lancement** : « Sur mesure » doit avoir sa propre entrée
+     dans `FORMULES` (ses plafonds) et sa clé (`lookup_key` ou
+     `metadata.formule` du prix) avant toute vente — sans quoi le refus par
+     défaut lui applique les plafonds de la plus petite formule.
 
 ## Données
 
