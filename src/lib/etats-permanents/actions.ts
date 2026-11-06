@@ -3,6 +3,7 @@
 import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { deposerFichier, rendreReservations } from "@/lib/abonnements/stockage";
 import { revalidatePath } from "next/cache";
+import { unstable_rethrow } from "next/navigation";
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { obligationDeclarable } from "./garde";
 import { preparerUnDepot, retirerLeFichierEnCours } from "./pieces";
@@ -211,6 +212,8 @@ export async function deposerFichierEnPlace(
     const refus = await deposerFichier(db, compte.compteId, cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
     if (refus) return { status: "error", message: refus };
   } catch (e) {
+    // Une redirection (site gelé, rôle) n'est pas un échec : Next la reprend.
+    unstable_rethrow(e);
     console.error(`[etats-permanents/depot] écriture du fichier impossible (${cle})`, e);
     return { status: "error", message: MESSAGE_ECHEC_ENREGISTREMENT };
   }
@@ -244,6 +247,9 @@ export async function deposerFichierEnPlace(
     console.error(`[etats-permanents/depot] enregistrement refusé (${cle})`, e);
     await libererFichiers([cle], "etats-permanents/depot-refuse");
     await rendreReservations(db, [cle]);
+    // Le site gelé refuse l'écriture par une redirection (ADR-053 § 14) : le
+    // fichier est rendu, puis la redirection repart, comme pour la photo.
+    unstable_rethrow(e);
     return { status: "error", message: MESSAGE_ECHEC_ENREGISTREMENT };
   }
   await libererFichiers(aLiberer, "etats-permanents/depot");

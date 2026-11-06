@@ -24,6 +24,11 @@ const h = vi.hoisted(() => {
     pieces: [] as Piece[],
     declarations: [] as { obligationId: string; declareLe: Date }[],
     echecTransaction: false,
+    // L'erreur que la base lève, quand ce n'est pas un refus ordinaire (la
+    // redirection du site gelé, ADR-053 § 14).
+    erreurTransaction: null as Error | null,
+    // La porte du plafond de stockage (cc) : son refus, et les réservations rendues.
+    plafond: { refus: null as string | null, rendues: [] as string[] },
     etablissement: {} as Record<string, unknown>,
     stockage: { ecrits: [] as string[], effaces: [] as string[] },
   };
@@ -92,6 +97,7 @@ const h = vi.hoisted(() => {
       const sauvegarde = structuredClone({ p: etat.pieces, d: etat.declarations });
       try {
         const r = await fn(prisma);
+        if (etat.erreurTransaction) throw etat.erreurTransaction;
         if (etat.echecTransaction) throw new Error("refus simulé de la base");
         return r;
       } catch (e) {
@@ -134,10 +140,13 @@ vi.mock("@/lib/storage", () => ({
 // lui-même est éprouvé par `abonnements/stockage.test.ts`.
 vi.mock("@/lib/abonnements/stockage", () => ({
   deposerFichier: async (_db: unknown, _compteId: string, cle: string) => {
+    if (h.etat.plafond.refus) return h.etat.plafond.refus;
     h.etat.stockage.ecrits.push(cle);
     return null;
   },
-  rendreReservations: async () => {},
+  rendreReservations: async (_db: unknown, cles: string[]) => {
+    h.etat.plafond.rendues.push(...cles);
+  },
 }));
 
 const { deposerFichierEnPlace, retirerDeclaration } = await import("./actions");
@@ -168,6 +177,8 @@ beforeEach(() => {
   h.etat.pieces = [];
   h.etat.declarations = [];
   h.etat.echecTransaction = false;
+  h.etat.erreurTransaction = null;
+  h.etat.plafond = { refus: null, rendues: [] };
   h.etat.etablissement = { ...MAGASIN_N4 };
   h.etat.stockage = { ecrits: [], effaces: [] };
 });
@@ -268,5 +279,28 @@ describe("deux fichiers au plus par ligne (ADR-056 § 4)", () => {
     expect(h.etat.pieces[0].remplaceeLe).toBeNull();
     expect(h.etat.stockage.effaces).toHaveLength(1);
     expect(h.etat.stockage.effaces[0]).toMatch(/v2\.pdf$/);
+    // La réservation du plafond est rendue avec le fichier (cc, ADR-053 § 14).
+    expect(h.etat.plafond.rendues).toEqual(h.etat.stockage.effaces);
+  });
+});
+
+describe("le plafond de stockage et le gel (cc, ADR-053 § 14)", () => {
+  it("au plafond : le refus est rendu tel quel, et rien n'est écrit ni déclaré", async () => {
+    h.etat.plafond.refus = "Votre espace de stockage est plein.";
+    const r = await deposerFichierEnPlace("etab-1", SCHEMA, unPdf());
+    expect(r).toEqual({ status: "error", message: "Votre espace de stockage est plein." });
+    expect(h.etat.pieces).toHaveLength(0);
+    expect(h.etat.declarations).toHaveLength(0);
+    expect(h.etat.stockage.ecrits).toHaveLength(0);
+  });
+
+  it("site gelé : la redirection repart, après avoir rendu le fichier et sa réservation", async () => {
+    h.etat.erreurTransaction = Object.assign(new Error("NEXT_REDIRECT"), {
+      digest: "NEXT_REDIRECT;replace;/compte/abonnement?saisie=gelee;307;",
+    });
+    await expect(deposerFichierEnPlace("etab-1", SCHEMA, unPdf())).rejects.toThrow("NEXT_REDIRECT");
+    expect(h.etat.pieces).toHaveLength(0);
+    expect(h.etat.stockage.effaces).toHaveLength(1);
+    expect(h.etat.plafond.rendues).toEqual(h.etat.stockage.effaces);
   });
 });
