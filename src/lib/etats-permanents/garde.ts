@@ -7,6 +7,7 @@ import "server-only";
 
 import type { Db } from "@/lib/auth/compte";
 import { etabliParLesTitres } from "./par-les-titres";
+import { etabliParLeParc } from "./par-le-parc";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import { modeDeclarationApplique } from "./regle";
 import {
@@ -18,6 +19,7 @@ import {
 export type Declarabilite =
   | { statut: false }
   | { statut: "etabli_par_les_titres" }
+  | { statut: "etabli_par_le_parc" }
   | { statut: true; projete: EtablissementMatching };
 
 /**
@@ -93,6 +95,11 @@ export async function obligationDeclarable(
   // (`etabliParLesTitres`), pas un voisin (revue du 2026-10-16).
   if (etabliParLesTitres(app.obligation, mode.mode)) {
     return { statut: "etabli_par_les_titres" };
+  }
+  // Établie d'après le parc (ADR-057 § 4) : même raison, l'appareil déclaré
+  // fait foi. LE prédicat de la lecture (`etabliParLeParc`).
+  if (etabliParLeParc(app.obligation, mode.mode)) {
+    return { statut: "etabli_par_le_parc" };
   }
   return { statut: true, projete };
 }

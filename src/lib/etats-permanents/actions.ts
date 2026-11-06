@@ -71,6 +71,13 @@ export async function declarerEnPlace(
         "Cette ligne ne se coche pas : elle se remplit d'après les formations et habilitations déclarées sur les fiches de votre équipe.",
     };
   }
+  if (declarable === "etabli_par_le_parc") {
+    return {
+      status: "error",
+      message:
+        "Cette ligne ne se coche pas : elle se remplit d'après les appareils déclarés sur la page Équipements.",
+    };
+  }
   if (!declarable) {
     return {
       status: "error",

@@ -1,4 +1,8 @@
-// La section « Équipements de sécurité » de la page Équipements.
+// Les obligations de présence de la page Équipements — ~~la section
+// « Équipements de sécurité »~~ [2026-11-06, ADR-057 § 4 : posées en tête de
+// leur groupe, `PresenceObligatoire.tsx` ; les trois de catégorie sont
+// établies d'après le parc, `etats-permanents/par-le-parc.ts`, qui porte la
+// même table].
 //
 // DÉCISION DE LA PROPRIÉTAIRE DU 2026-10-15. Un regroupement d'AFFICHAGE : le
 // référentiel ne bouge pas. Certaines obligations portées par l'établissement
@@ -42,6 +46,7 @@ import { phrasesAConfirmer } from "@/lib/matching/marques";
 import type { ObligationApplicable } from "@/lib/matching/types";
 import { LABEL_CATEGORIE_EQUIPEMENT } from "@/lib/equipements/labels";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
+import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
 
 /** Ce qui fait passer une ligne à « déclaré ». */
 export type CibleDeclaration =
@@ -123,6 +128,9 @@ export type LigneEquipementSecurite = {
   /** Les appareils déclarés de la catégorie ; vide si aucun, ou sans catégorie. */
   appareils: AppareilDuParc[];
   etat: "declare" | "pas_encore_declare" | "ailleurs";
+  /** Le domaine de l'obligation : le groupe de la page où la ligne se pose
+   *  (ADR-057 § 4). */
+  domaine: DomaineObligation;
 };
 
 /**
@@ -163,6 +171,7 @@ export function lignesEquipementsSecurite(
       aConfirmer: phrasesAConfirmer(a).length > 0,
       cible,
       appareils,
+      domaine: a.obligation.domaine,
       etat:
         cible.kind === "etat_permanent"
           ? "ailleurs"

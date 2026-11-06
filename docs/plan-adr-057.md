@@ -107,6 +107,9 @@ après déploiement, lecture du statut Vercel (migration).
 
 ## Lot B — interface
 
+[2026-11-06 : codé, `lot/adr-057-b`. B1 et B3 comme écrit ; B2 par la
+décision « d'après le parc » (ADR § 4) ; B4 sans changement.]
+
 - **B1. Page Équipements** : la section « Équipements de sécurité » est
   retirée. Chaque groupe porte en tête son obligation de présence quand elle
   s'applique : « Premiers secours » (matériel de premiers secours, déclaré par

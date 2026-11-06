@@ -35,11 +35,17 @@ import {
   estPorteeParSalarie,
   type Obligation,
 } from "@/lib/referentiels/conformite/types";
-import type { Realisateur } from "@/lib/referentiels/types-communs";
+import type { CategorieEquipement, Realisateur } from "@/lib/referentiels/types-communs";
 
 /** Une obligation au niveau audit, telle que la page la nomme. */
 export type LigneNiveauAudit = {
   id: string;
+  /**
+   * Les obligations du référentiel que la ligne nomme : la sienne, ou celles
+   * qu'un regroupement par appareil réunit (ADR-057). La première fonde
+   * `reference`.
+   */
+  obligations: string[];
   libelle: string;
   /** Le texte fondateur, tel que le référentiel le cite (premier rang). */
   reference: string;
@@ -154,8 +160,33 @@ function porteePar(
 }
 
 /**
+ * Les obligations que la rubrique réunit PAR APPAREIL (ADR-057, décision de
+ * la propriétaire du 2026-11-05 : « une seule ligne pour tous les extincteurs
+ * et une ligne pour tous les RIA »). Trois textes — l'arrêté du 4 novembre
+ * 1993 en lieu de travail, MS 39 en ERP des catégories 1 à 4, PE 26 en 5ᵉ —
+ * demandent le même geste : que l'appareil soit identifié et signalé. Un
+ * regroupement d'AFFICHAGE : les trois obligations restent au référentiel,
+ * chacune avec sa source.
+ */
+const SIGNALISATION_PAR_APPAREIL: {
+  ids: ReadonlySet<string>;
+  libelles: Partial<Record<CategorieEquipement, string>>;
+} = {
+  ids: new Set([
+    "signalisation-incendie-moyens-lutte",
+    "signalisation-erp-extincteurs-identification",
+    "signalisation-erp-5-extincteurs-identification",
+  ]),
+  libelles: {
+    EXTINCTEUR: "Signalisation des extincteurs",
+    RIA: "Signalisation des robinets d'incendie armés",
+  },
+};
+
+/**
  * Les obligations au niveau audit qui peuvent concerner ce dossier, dans
- * l'ordre du référentiel.
+ * l'ordre du référentiel — la signalisation des extincteurs et des RIA réunie
+ * en une ligne par appareil (`SIGNALISATION_PAR_APPAREIL`).
  */
 export function obligationsNiveauAuditDuDossier(
   etab: EtablissementMatching,
@@ -168,14 +199,24 @@ export function obligationsNiveauAuditDuDossier(
     ),
   );
   const out: LigneNiveauAudit[] = [];
+  // La signalisation réunie, posée à la place du premier de ses textes.
+  let signalisationPosee = false;
   for (const o of obligations) {
     if (!estNiveauAudit(o)) continue;
     const applicable = parId.get(o.id);
     const salarie = estPorteeParSalarie(o) && etab.estEtablissementTravail;
     if (!applicable && !salarie) continue;
+    if (SIGNALISATION_PAR_APPAREIL.ids.has(o.id)) {
+      if (!signalisationPosee) {
+        signalisationPosee = true;
+        out.push(...signalisationParAppareil(o, parId));
+      }
+      continue;
+    }
     const [fondement] = o.referencesLegales;
     out.push({
       id: o.id,
+      obligations: [o.id],
       libelle: o.libelle,
       reference: fondement.reference,
       url: fondement.url ?? null,
@@ -184,4 +225,32 @@ export function obligationsNiveauAuditDuDossier(
     });
   }
   return out;
+}
+
+/** Une ligne par appareil signalé — extincteurs, puis RIA —, pour ce dossier. */
+function signalisationParAppareil(
+  premier: Obligation,
+  parId: ReadonlyMap<string, { equipementsConcernes: EquipementMatching[] }>,
+): LigneNiveauAudit[] {
+  const membres = [...SIGNALISATION_PAR_APPAREIL.ids].filter((id) => parId.has(id));
+  const appareils = membres.flatMap((id) => parId.get(id)?.equipementsConcernes ?? []);
+  const [fondement] = premier.referencesLegales;
+  return (Object.entries(SIGNALISATION_PAR_APPAREIL.libelles) as [CategorieEquipement, string][])
+    .flatMap(([categorie, libelle]) => {
+      const vises = [...new Map(
+        appareils.filter((e) => e.categorie === categorie).map((e) => [e.id, e]),
+      ).values()];
+      if (vises.length === 0) return [];
+      return [
+        {
+          id: `signalisation-par-appareil:${categorie}`,
+          obligations: [premier.id, ...membres.filter((id) => id !== premier.id)],
+          libelle,
+          reference: fondement.reference,
+          url: fondement.url ?? null,
+          porteePar: porteePar(premier, vises),
+          geste: gesteHorsQuotidien(premier),
+        },
+      ];
+    });
 }

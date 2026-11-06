@@ -195,6 +195,15 @@ Incendie
   en tête de leur groupe.
 - La section « Équipements de sécurité » (`equipements-securite.ts`,
   décision du 2026-10-15) disparaît.
+- [2026-11-06, lot B, décision de la propriétaire : « d'après le parc »] Le
+  défibrillateur, les extincteurs et l'alarme sonore ne se cochent plus sur
+  « Ce qui doit être en place » : ils sont EN PLACE dès qu'un appareil de la
+  catégorie est déclaré au parc (`etats-permanents/par-le-parc.ts`), comme
+  une formation l'est d'après les titres déclarés dans Équipe. Ils restent
+  comptés au score et au PDF (« D'après le parc déclaré : 2 appareils
+  « Extincteurs » »), ne s'affichent plus sur « Ce qui doit être en place »,
+  et une ancienne case cochée est ignorée. Le matériel de premiers secours,
+  sans catégorie d'appareil, reste une case de cet écran.
 
 ### 5. Catégories jumelles
 

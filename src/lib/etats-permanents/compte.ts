@@ -29,9 +29,14 @@ export function compteDeLaPage(d: EtatsPermanentsDuDossier): {
   const titresDesRisques = d.parLEquipe.filter(
     (l) => l.compteDansLEnTete && l.parLesTitres?.enPlace,
   ).length;
+  // Les obligations de présence établies d'après le parc (ADR-057 § 4) ne
+  // s'affichent pas non plus sur la page : elles sont en tête de leur groupe
+  // sur la page Équipements. Le score, le PDF et `d.total` les gardent.
+  const parc = d.parLeParc.filter((l) => l.compteDansLEnTete);
   return {
-    enPlace: d.enPlace - risques.enPlace,
-    total: d.total - risques.total,
+    enPlace:
+      d.enPlace - risques.enPlace - parc.filter((l) => l.parLeParc?.enPlace).length,
+    total: d.total - risques.total - parc.length,
     parLesTitres: d.parLesTitres.enPlace - titresDesRisques,
   };
 }
