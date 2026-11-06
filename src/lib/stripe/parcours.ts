@@ -251,6 +251,14 @@ export async function planifierBaisse(
 ): Promise<void> {
   const item = abonnement.items.data[0];
   if (!item) return;
+  // Stripe refuse un planning sur un abonnement réglé pour se mettre en pause à
+  // la fin de l'essai (réglage de l'essai, §§ 8-9) : une fois payant, il ne
+  // sert plus, on le rend à sa valeur par défaut.
+  if (abonnement.trial_settings?.end_behavior?.missing_payment_method === "pause") {
+    await stripe.subscriptions.update(abonnement.id, {
+      trial_settings: { end_behavior: { missing_payment_method: "create_invoice" } },
+    });
+  }
   const existant = idStripe(abonnement.schedule);
   const planning = existant
     ? await stripe.subscriptionSchedules.retrieve(existant)

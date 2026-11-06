@@ -12,6 +12,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
+import { refusInvitationBaissePrevue } from "@/lib/abonnements/baisse";
 import { motifPlafondMembres } from "@/lib/abonnements/quotas";
 import { getOptionalCompte, requireCompte } from "@/lib/auth/compte";
 import { annulerInvitationsEnAttenteDe, comptesDeLaPersonne, invitationsDuCompte } from "@/lib/auth/membres";
@@ -80,6 +81,9 @@ export async function inviterMembre(_prev: EtatMembres, formData: FormData): Pro
   const { compte, db } = p;
   const lu = schemaInvitation.safeParse({ email: formData.get("email"), role: formData.get("role") });
   if (!lu.success) return { status: "error", message: lu.error.issues[0]?.message ?? "Formulaire invalide" };
+  // Une baisse de formule planifiée borne déjà les utilisateurs (ADR-053 § 10).
+  const baisse = await refusInvitationBaissePrevue(db, compte.compteId);
+  if (baisse) return { status: "error", message: baisse };
   // Sans pilote d'e-mail réel (ou sans adresse publique pour le lien), aucune
   // invitation ne partirait : on le dit avant d'en créer une (même règle que
   // l'inscription et les liens prestataires).

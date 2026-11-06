@@ -160,7 +160,12 @@ et sans croire une information qui ne vient pas de Stripe.
    une période, puis rendu) ; refusée tant que le compte a plus
    d'utilisateurs que la formule visée ; ce qui dépasse d'autre passe en
    lecture seule (§ 14), annoncé avant le clic. Une montée abandonne une
-   baisse planifiée ; « Garder ma formule » la rend.]] ~~Passer au payant, c'est ajouter une carte dans le portail Stripe~~ :
+   baisse planifiée ; « Garder ma formule » la rend. Tant qu'une baisse est
+   planifiée, une invitation qu'elle ne permettrait pas est refusée
+   (`refusInvitationBaissePrevue`) : sans cela, on inviterait après l'avoir
+   planifiée et on garderait trop d'utilisateurs — ils ne sont jamais
+   gelés. Stripe refuse un planning sur un abonnement réglé pour se mettre
+   en pause à la fin de l'essai : ce réglage est levé d'abord.]] ~~Passer au payant, c'est ajouter une carte dans le portail Stripe~~ :
    l'abonnement devient payant à la fin de l'essai, sans prélèvement anticipé ;
    un abonnement en pause se reprend du même portail. Le portail sert aussi à
    résilier, à télécharger les factures (émises par Stripe) et à changer de

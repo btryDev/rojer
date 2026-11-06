@@ -95,14 +95,19 @@ async function changementsPossibles(
       }),
   );
   let baisse: { libelle: string; le: Date } | null = null;
+  let baisseCle: string | null = null;
   if (ligne?.stripeSubscriptionId) {
     const prevue = await stripe.subscriptions
       .retrieve(ligne.stripeSubscriptionId)
       .then((s) => baissePrevue(stripe, s))
       .catch(() => null);
-    if (prevue) baisse = { libelle: prevue.lookupKey ? libelleDe(prevue.lookupKey) : "une autre formule", le: prevue.le };
+    if (prevue) {
+      baisse = { libelle: prevue.lookupKey ? libelleDe(prevue.lookupKey) : "une autre formule", le: prevue.le };
+      baisseCle = prevue.lookupKey;
+    }
   }
-  return { options, baisse };
+  // La formule déjà prévue ne se propose pas une seconde fois.
+  return { options: baisseCle ? options.filter((o) => o.cle !== baisseCle) : options, baisse };
 }
 
 /** Les formules et leurs prix lus chez Stripe ; sans réponse, les prix manquent et le bouton reste fermé. */

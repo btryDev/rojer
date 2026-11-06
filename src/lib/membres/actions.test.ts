@@ -4,6 +4,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // avant le plugin, et le compte passé au plugin est TOUJOURS celui de
 // `requireCompte`, jamais une valeur du formulaire.
 
+// Une baisse de formule planifiée (ADR-053 § 10) : testée dans `abonnements/baisse.test.ts`.
+const baisse = vi.hoisted(() => ({ refus: vi.fn(async (): Promise<string | null> => null) }));
+vi.mock("@/lib/abonnements/baisse", () => ({ refusInvitationBaissePrevue: baisse.refus }));
 vi.mock("server-only", () => ({}));
 const h = vi.hoisted(() => ({
   compte: { compteId: "compte-a", role: "owner" as string },
@@ -116,6 +119,14 @@ describe("gestes réservés au propriétaire", () => {
 });
 
 describe("plafond d'utilisateurs de la formule (ADR-053 § 14)", () => {
+  it("une baisse planifiée qui ne permettrait pas un utilisateur de plus : refus, rien n'est créé", async () => {
+    baisse.refus.mockResolvedValueOnce("Le passage à Essentiel est prévu le …");
+    const r = await actions.inviterMembre(IDLE, fd({ email: "x@exemple.fr", role: "member" }));
+    expect(r).toEqual({ status: "error", message: "Le passage à Essentiel est prévu le …" });
+    expect(baisse.refus).toHaveBeenCalledWith("db-borne", "compte-a");
+    expect(h.api.createInvitation).not.toHaveBeenCalled();
+  });
+
   it("à l'invitation, le propriétaire lit le plafond de sa formule et la formule qui le lève", async () => {
     h.api.createInvitation.mockRejectedValueOnce({ body: { code: "INVITATION_LIMIT_REACHED" } } as never);
     const r = await actions.inviterMembre(IDLE, fd({ email: "x@exemple.fr", role: "member" }));

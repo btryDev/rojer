@@ -148,9 +148,17 @@ describe("parcours Stripe", () => {
   });
 
   it("baisser : un planning — la période en cours, puis la nouvelle formule une période, puis rendu à lui-même ; annuler = rendre", async () => {
-    const sub = { id: "sub_1", schedule: null, items: { data: [{ id: "si_1", quantity: 1, price: { id: "price_pm" } }] } } as unknown as Stripe.Subscription;
+    const sub = {
+      id: "sub_1",
+      schedule: null,
+      trial_settings: { end_behavior: { missing_payment_method: "pause" } },
+      items: { data: [{ id: "si_1", quantity: 1, price: { id: "price_pm" } }] },
+    } as unknown as Stripe.Subscription;
+    api.subscriptions.update.mockClear();
     api.subscriptionSchedules.create.mockResolvedValue({ id: "sub_sched_1", current_phase: { start_date: 100, end_date: 200 }, phases: [] });
     await planifierBaisse(stripe, sub, { priceId: "price_em", intervalle: "month" });
+    // Le réglage « pause à la fin de l'essai » est levé d'abord : Stripe refuse sinon le planning.
+    expect(api.subscriptions.update).toHaveBeenCalledWith("sub_1", { trial_settings: { end_behavior: { missing_payment_method: "create_invoice" } } });
     expect(api.subscriptionSchedules.create).toHaveBeenCalledWith({ from_subscription: "sub_1" });
     expect(api.subscriptionSchedules.update).toHaveBeenCalledWith("sub_sched_1", {
       end_behavior: "release",

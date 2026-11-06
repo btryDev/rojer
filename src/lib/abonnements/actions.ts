@@ -204,7 +204,8 @@ export async function changerFormuleAction(formData: FormData): Promise<void> {
         }
       }
     }
-  } catch {
+  } catch (e) {
+    console.error(`abonnement : changement de formule en échec — ${e instanceof Error ? e.name : "erreur"}`);
     redirect(`${PAGE_ABONNEMENT}?stripe=indisponible`);
   }
   redirect(cible);
