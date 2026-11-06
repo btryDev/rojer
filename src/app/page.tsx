@@ -4,9 +4,9 @@ import { Etapes } from "@/components/landing/Etapes";
 import { Hero } from "@/components/landing/Hero";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { Manifeste } from "@/components/landing/Manifeste";
+import { OutilSimple } from "@/components/landing/OutilSimple";
 import { Questions } from "@/components/landing/Questions";
 import { SiteFooter } from "@/components/landing/SiteFooter";
-import { TableauDeBord } from "@/components/landing/TableauDeBord";
 import { getOptionalUser } from "@/lib/auth/require-user";
 import { getOptionalUserEtablissement } from "@/lib/auth/scope";
 import { chiffresReferentielSuivi } from "@/lib/referentiels/conformite";
@@ -71,7 +71,7 @@ export default async function Home({
           ce que Rojer produit d'abord, ce qu'il apporte ensuite. */}
       <Cadran chiffres={chiffres} />
       <Manifeste />
-      <TableauDeBord />
+      <OutilSimple />
       <Etapes
         chiffres={chiffres}
         ctaHref={ctaHref}
