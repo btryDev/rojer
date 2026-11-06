@@ -1,5 +1,6 @@
 "use server";
 
+import { deposerFichier } from "@/lib/abonnements/stockage";
 import { randomUUID } from "node:crypto";
 import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { revalidatePath } from "next/cache";
@@ -356,7 +357,9 @@ async function deposerRapportLabo(
   // Même règle que le dépôt d'un rapport (2026-09-27) : message métier,
   // rien d'écrit en base.
   try {
-    await getStorage().put(cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
+    // Le plafond de stockage de la formule (ADR-053 § 14), avant d'écrire.
+    const refus = await deposerFichier(cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
+    if (refus) return { ok: false, message: refus };
   } catch (e) {
     console.error(`[carnet-sanitaire/depot] écriture du fichier impossible (${cle})`, e);
     return { ok: false, message: MESSAGE_ECHEC_ENREGISTREMENT };

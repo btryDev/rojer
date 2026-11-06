@@ -16,8 +16,8 @@ import { contexteDroits, offreLancee } from "./lancement";
 
 /** Les plafonds appliqués (les autres clés de `Quotas` ne le sont pas encore). */
 export type CleQuota = keyof typeof LIBELLES_PLAFONDS;
-/** Ceux que Rojer compte lui-même ; les membres, c'est le plugin. */
-export type CleQuotaComptee = Exclude<CleQuota, "membres">;
+/** Ceux que Rojer compte par la porte ; les membres, c'est le plugin ; le stockage, `refusStockage`. */
+export type CleQuotaComptee = Exclude<CleQuota, "membres" | "stockageGo">;
 
 /** Ceux qui se comptent au journal, depuis la date anniversaire. */
 const PAR_AN = ["permisDeFeuParAn", "plansDePreventionParAn", "signaturesParAn", "importsDuerp"] as const;
@@ -366,4 +366,17 @@ export async function motifDuGel(
   const { nom, ancien } = DIT_DU_GEL[cle];
   const plafond = FORMULES[regime.formule].quotas[cle] ?? 0;
   return `${nom} dépasse votre formule ${FORMULES[regime.formule].libelle}, qui couvre ${LIBELLES_PLAFONDS[cle](plafond)} : il reste consultable et exportable, mais ne se modifie plus. Pour le modifier, le propriétaire du compte peut passer à une formule supérieure, ou supprimer ${ancien}.`;
+}
+
+/**
+ * Le refus d'un dépôt de `ajout` octets au-delà du plafond de stockage de la
+ * formule (Go, ADR-053 § 14), ou `null`. `utilises` : ce que le compte occupe
+ * déjà (`abonnements/stockage.ts`). Rien avant le lancement de l'offre.
+ */
+export async function refusStockage(db: Db, compteId: string, utilises: () => Promise<number>, ajout: number): Promise<string | null> {
+  if (!lancee()) return null;
+  const { regime } = await abonnementDesPlafonds(db, compteId);
+  const plafond = plafondDe(regime, "stockageGo");
+  if (plafond === null || (await utilises()) + ajout <= plafond * 1e9) return null;
+  return motifDuRefus(regime, "stockageGo");
 }

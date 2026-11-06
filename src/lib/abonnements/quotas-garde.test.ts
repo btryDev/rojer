@@ -192,6 +192,14 @@ describe("plafonds : une seule porte (ADR-053 § 14)", () => {
     );
   });
 
+  it("le stockage : tout dépôt de fichier passe par `deposerFichier`, qui prend le plafond", () => {
+    const deposent = [...TEXTES]
+      .filter(([f, t]) => !f.startsWith("src/lib/storage/") && /\b(?:getStorage\(\)|storage)\s*\.\s*put\(/.test(t.code))
+      .map(([f]) => f);
+    expect(deposent).toEqual(["src/lib/abonnements/stockage.ts"]);
+    expect(TEXTES.get("src/lib/abonnements/stockage.ts")!.code).toMatch(/refusStockage\([^;]*\);\s*if \(refus\) return refus;\s*\}\s*await getStorage\(\)\.put\(/);
+  });
+
   it("les utilisateurs : les deux limites du plugin lisent le plafond", () => {
     const code = TEXTES.get("src/lib/auth/better-auth.ts")!.brut;
     expect(code).toMatch(/const limitesMembres = [^;]*limitesMembresDuPlugin\(prisma, compteId\);/);

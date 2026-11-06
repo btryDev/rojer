@@ -300,6 +300,16 @@ et sans croire une information qui ne vient pas de Stripe.
      mois (signatures du titulaire, demandes envoyées) ; les imports passés
      ne laissent pas de trace distincte en base, ils ne sont pas repris. Le
      stockage (Go) attend la taille des fichiers : lot à part.
+   - **Stockage** [2026-11-06, lot C2] (2 / 6 Go) : la somme des tailles
+     des fichiers que le compte RÉFÉRENCE encore (`FichierStocke` : clé,
+     compte, octets, écrit au dépôt) — un fichier retiré cesse de compter
+     sans rien effacer. Tout dépôt passe par `deposerFichier`
+     (`abonnements/stockage.ts`) : refus au plafond avant d'écrire, dépôt,
+     taille enregistrée. Pas de verrou : deux dépôts simultanés peuvent
+     dépasser d'un fichier. Les fichiers existants se reprennent par
+     `scripts/reprendre-tailles-fichiers.ts` (dry-run, puis `--appliquer`),
+     avant le lancement ; tant qu'un fichier n'a pas de taille connue, il ne
+     compte pas, au bénéfice du client.
    - **Annoncé dès l'ouverture** [2026-11-05, lot D] : un formulaire qui
      écrit ne part plus pour être refusé après coup — React efface la
      saisie au retour, même en refus. `FermerLaSaisie` (client), dans sa

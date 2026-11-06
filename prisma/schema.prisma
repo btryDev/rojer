@@ -2479,6 +2479,21 @@ model ConsommationQuota {
   @@index([compteId, quota, consommeLe])
 }
 
+/// La taille d'un fichier déposé (ADR-053 § 14, plafond de stockage), par sa
+/// clé de stockage : écrite au dépôt, jamais effacée. Ne compte que ce que le
+/// compte référence encore (un fichier retiré cesse de compter sans qu'on
+/// l'efface ici).
+model FichierStocke {
+  cle      String   @id
+  /// Racine (ADR-054).
+  compteId String   @db.Uuid
+  compte   Compte   @relation(fields: [compteId], references: [id], onDelete: Cascade)
+  octets   Int
+  deposeLe DateTime @default(now())
+
+  @@index([compteId])
+}
+
 model Compte {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name      String
@@ -2495,6 +2510,7 @@ model Compte {
   demandesAssistance     DemandeAssistance[]
   acceptationsConditions AcceptationConditions[]
   consommationsQuota     ConsommationQuota[]
+  fichiersStockes        FichierStocke[]
 
   @@unique([slug])
 }

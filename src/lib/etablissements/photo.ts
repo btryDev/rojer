@@ -1,5 +1,6 @@
 "use server";
 
+import { deposerFichier } from "@/lib/abonnements/stockage";
 import { revalidatePath } from "next/cache";
 import { unstable_rethrow } from "next/navigation";
 import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
@@ -53,7 +54,9 @@ export async function deposerPhotoEtablissement(
 
   const cle = clePhotoEtablissement(etablissement.id, fichier.name);
   try {
-    await getStorage().put(cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
+    // Le plafond de stockage de la formule (ADR-053 § 14), avant d'écrire.
+    const refus = await deposerFichier(cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
+    if (refus) return { status: "error", message: refus };
   } catch (e) {
     console.error(`[etablissements/photo] écriture impossible (${cle})`, e);
     return { status: "error", message: MESSAGE_ECHEC_ENREGISTREMENT };

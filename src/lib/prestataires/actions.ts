@@ -1,5 +1,6 @@
 "use server";
 
+import { deposerFichier } from "@/lib/abonnements/stockage";
 import { creerEnLotVerifie } from "@/lib/auth/portee/lot-verifie";
 import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { randomUUID } from "node:crypto";
@@ -115,10 +116,14 @@ async function deposerPieces(
       // Même règle que le dépôt d'un rapport (2026-09-27) : l'échec
       // d'écriture rend un message métier sur le champ.
       try {
-        await storage.put(cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
-        cles.push(cle);
-        colonnes[piece.cle] = cle;
-        colonnes[piece.nom] = fichier.name;
+        // Le plafond de stockage de la formule (ADR-053 § 14), avant d'écrire.
+        const refus = await deposerFichier(cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
+        if (refus) erreur = refus;
+        else {
+          cles.push(cle);
+          colonnes[piece.cle] = cle;
+          colonnes[piece.nom] = fichier.name;
+        }
       } catch (e) {
         console.error(`[prestataires/depot] écriture du fichier impossible (${cle})`, e);
         erreur = MESSAGE_ECHEC_ENREGISTREMENT;

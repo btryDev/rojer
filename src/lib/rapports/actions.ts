@@ -1,5 +1,6 @@
 "use server";
 
+import { deposerFichier } from "@/lib/abonnements/stockage";
 import { requireCompte } from "@/lib/auth/compte";
 import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { randomUUID } from "node:crypto";
@@ -263,7 +264,9 @@ export async function uploadRapport(
   if (piece !== null && storage !== null) {
     const buffer = Buffer.from(await piece.fichier.arrayBuffer());
     try {
-      await storage.put(piece.cle, buffer, piece.mime);
+      // Le plafond de stockage de la formule (ADR-053 § 14), avant d'écrire.
+      const refus = await deposerFichier(piece.cle, buffer, piece.mime);
+      if (refus) return { status: "error", message: refus };
     } catch (e) {
       console.error(`[rapports/depot] écriture du fichier impossible (${piece.cle})`, e);
       return { status: "error", message: MESSAGE_ECHEC_ENREGISTREMENT };

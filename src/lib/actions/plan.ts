@@ -1,5 +1,6 @@
 "use server";
 
+import { deposerFichier } from "@/lib/abonnements/stockage";
 import { revalidatePath } from "next/cache";
 import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { redirect } from "next/navigation";
@@ -369,7 +370,9 @@ async function lirePiece(
   }
   const cle = clePieceDePoint(action.etablissementId, action.id, fichier.name);
   try {
-    await getStorage().put(cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
+    // Le plafond de stockage de la formule (ADR-053 § 14), avant d'écrire.
+    const refus = await deposerFichier(cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
+    if (refus) return { status: "error", message: refus, fieldErrors: { piece: [refus] } };
   } catch (e) {
     console.error(`[points/correction] écriture de la pièce impossible (${cle})`, e);
     return { status: "error", message: MESSAGE_ECHEC_ENREGISTREMENT };

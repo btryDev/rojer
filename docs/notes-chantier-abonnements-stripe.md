@@ -694,7 +694,8 @@ de l'offre tant que l'accès OAuth (ADR-013) n'existe pas.
    (`prendreQuota` ; le dépôt de fichier reste au lot du stockage) ;
 3. plafonds à la création : ~~utilisateurs, prestataires, permis de feu, plans
    de prévention,~~ [2026-11-05, lot A `lot/quotas-a` : fait, ADR-053 § 14] ~~signatures, liens, import~~ [2026-11-05, lot C `lot/quotas-c`] ;
-4. stockage (taille des fichiers à enregistrer, reprise de l'existant) ;
+4. ~~stockage (taille des fichiers à enregistrer, reprise de l'existant) ;~~
+   [2026-11-06, lot C2 `lot/quotas-c2` : fait, ADR-053 § 14] ;
 5. essai par SIREN ; conditions générales complétées (baisse, plafonds,
    date anniversaire).
 
