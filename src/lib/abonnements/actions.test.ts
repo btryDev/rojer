@@ -17,6 +17,8 @@ const m = vi.hoisted(() => ({
   prixDesFormules: vi.fn(),
   synchroniser: vi.fn(async () => ({ issue: "ecrit" })),
   finaliserCarte: vi.fn(),
+  carteParDefaut: vi.fn(),
+  appliquerFormule: vi.fn(),
 }));
 vi.mock("next/navigation", () => ({ redirect: m.redirect }));
 vi.mock("@/lib/auth/compte", () => ({
@@ -30,6 +32,7 @@ vi.mock("@/lib/stripe/client", () => ({ clientStripe: () => ({}) }));
 vi.mock("@/lib/stripe/config", () => ({ configurationStripe: () => ({ active: true }) }));
 vi.mock("@/lib/stripe/parcours", () => ({
   abonnementsDuClient: m.abonnementsDuClient,
+  appliquerFormule: m.appliquerFormule,
   ouvrirCheckout: m.ouvrirCheckout,
   ouvrirCheckoutCarte: m.ouvrirCheckoutCarte,
   ouvrirPortail: vi.fn(),
@@ -39,7 +42,7 @@ vi.mock("@/lib/stripe/synchronisation", async (reel) => ({
   ...(await reel<typeof import("@/lib/stripe/synchronisation")>()),
   synchroniserClientStripe: m.synchroniser,
 }));
-vi.mock("./souscription", () => ({ finaliserCarte: m.finaliserCarte }));
+vi.mock("./souscription", () => ({ finaliserCarte: m.finaliserCarte, carteParDefaut: m.carteParDefaut }));
 vi.mock("./essai", () => ({ PAGE_ESSAI: "/essai", demarrerEssaiDuCompte: vi.fn() }));
 vi.mock("./saisie", () => ({
   PAGE_ABONNEMENT: "/compte/abonnement",
@@ -64,6 +67,8 @@ beforeEach(() => {
   m.prixDesFormules.mockResolvedValue(new Map([["rojer_pro_annuel", { priceId: "price_pa" }]]));
   m.ouvrirCheckout.mockResolvedValue("https://checkout.stripe.test/abonnement");
   m.ouvrirCheckoutCarte.mockResolvedValue("https://checkout.stripe.test/carte");
+  m.carteParDefaut.mockResolvedValue(null);
+  m.appliquerFormule.mockResolvedValue(null);
 });
 
 describe("sAbonnerAction", () => {
@@ -85,6 +90,23 @@ describe("sAbonnerAction", () => {
     expect(m.ouvrirCheckoutCarte.mock.calls[0][1].metadata.immediat).toBe("oui");
     m.abonnementsDuClient.mockResolvedValue([abonnement("paused")]);
     expect(await redirigeVers(sAbonnerAction(formulaire()))).toBe("https://checkout.stripe.test/carte");
+  });
+
+  it("essai avec une carte déjà enregistrée : la formule s'applique sans repasser par Stripe, l'essai continue", async () => {
+    m.abonnementsDuClient.mockResolvedValue([abonnement("trialing")]);
+    m.carteParDefaut.mockResolvedValue("pm_1");
+    expect(await redirigeVers(sAbonnerAction(formulaire()))).toBe("https://rojer.test/compte/abonnement?abonnement=formule-choisie");
+    expect(m.appliquerFormule).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ id: "sub_trialing" }), expect.objectContaining({ priceId: "price_pa", paymentMethodId: "pm_1", immediat: false }));
+    expect(m.ouvrirCheckoutCarte).not.toHaveBeenCalled();
+  });
+
+  it("pause avec une carte : reprise payée tout de suite ; une facture à régler renvoie vers elle", async () => {
+    m.abonnementsDuClient.mockResolvedValue([abonnement("paused")]);
+    m.carteParDefaut.mockResolvedValue("pm_1");
+    expect(await redirigeVers(sAbonnerAction(formulaire()))).toBe("https://rojer.test/compte/abonnement?paiement=termine");
+    expect(m.appliquerFormule.mock.calls[0][2].immediat).toBe(true);
+    m.appliquerFormule.mockResolvedValue("https://invoice.stripe.com/i/1");
+    expect(await redirigeVers(sAbonnerAction(formulaire()))).toBe("https://invoice.stripe.com/i/1");
   });
 
   it("abonnement terminé partout : Checkout souscrit, au nom du compte", async () => {
@@ -115,10 +137,22 @@ describe("sAbonnerAction", () => {
 });
 
 describe("finaliserCarteAction", () => {
-  it("applique la session du client du compte, puis la page dit le paiement", async () => {
-    m.finaliserCarte.mockResolvedValue("appliquee");
-    expect(await redirigeVers(finaliserCarteAction("cs_test_123"))).toBe("/compte/abonnement?paiement=termine");
+  it("applique la session du client du compte ; la page dit « enregistré » ou « payé » selon le cas", async () => {
+    m.finaliserCarte.mockResolvedValue({ issue: "appliquee", immediat: false });
+    expect(await redirigeVers(finaliserCarteAction("cs_test_123"))).toBe("/compte/abonnement?abonnement=formule-choisie");
     expect(m.finaliserCarte).toHaveBeenCalledWith(expect.anything(), "cs_test_123", { customerId: "cus_1" });
+    m.finaliserCarte.mockResolvedValue({ issue: "appliquee", immediat: true });
+    expect(await redirigeVers(finaliserCarteAction("cs_test_123"))).toBe("/compte/abonnement?paiement=termine");
+    m.finaliserCarte.mockResolvedValue({ issue: "aRegler", url: "https://invoice.stripe.com/i/1" });
+    expect(await redirigeVers(finaliserCarteAction("cs_test_123"))).toBe("https://invoice.stripe.com/i/1");
+  });
+
+  it("le webhook applique la même session au même instant (409) : pas d'erreur affichée", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    m.finaliserCarte.mockRejectedValue(Object.assign(new Error("en cours"), { statusCode: 409 }));
+    expect(await redirigeVers(finaliserCarteAction("cs_test_123"))).toBe("/compte/abonnement");
+    m.finaliserCarte.mockRejectedValue(new Error("panne"));
+    expect(await redirigeVers(finaliserCarteAction("cs_test_123"))).toBe("/compte/abonnement?stripe=indisponible");
   });
 
   it("un identifiant qui n'est pas une session Checkout : rien n'est appelé", async () => {

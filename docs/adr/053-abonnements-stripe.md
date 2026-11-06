@@ -139,7 +139,15 @@ et sans croire une information qui ne vient pas de Stripe.
    portail sert à changer de carte, télécharger les factures et résilier :
    **il ne change plus la formule** (`subscription_update` désactivé) — il ne
    sait ni refuser une baisse ni la planifier entre produits (§ 14).
-   Checkout « subscription » reste le chemin après une résiliation.] ~~Passer au payant, c'est ajouter une carte dans le portail Stripe~~ :
+   Checkout « subscription » reste le chemin après une résiliation. Une
+   carte déjà enregistrée : la formule s'applique sans repasser par Stripe.
+   Rejouée (retour, webhook, rechargement), l'application ne refait rien :
+   clés d'idempotence de la session, dernier choix daté sur l'abonnement
+   (`rojerChoixLe`), facture d'une reprise en attente renvoyée telle quelle.
+   Choisir Pro pendant l'essai ne donne rien de plus : les limites de l'essai
+   valent jusqu'au premier paiement confirmé (§ 14). Changer de formule une
+   fois payant n'est PAS encore livré (montée immédiate, baisse en fin de
+   période, § 14) : d'ici là, aucun chemin.] ~~Passer au payant, c'est ajouter une carte dans le portail Stripe~~ :
    l'abonnement devient payant à la fin de l'essai, sans prélèvement anticipé ;
    un abonnement en pause se reprend du même portail. Le portail sert aussi à
    résilier, à télécharger les factures (émises par Stripe) et à changer de

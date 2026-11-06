@@ -8,7 +8,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { sAbonnerAction } from "@/lib/abonnements/actions";
 import { eurosHT } from "@/lib/abonnements/affichage";
-import { LIBELLE_PERIODICITE, type CleFormule, type Periodicite } from "@/lib/abonnements/formules";
+import { LIBELLE_PERIODICITE, PERIODICITES, type CleFormule, type Periodicite } from "@/lib/abonnements/formules";
 
 export type OffreAffichee = {
   formule: CleFormule;
@@ -24,11 +24,14 @@ export function FormulaireAbonnement({
   offres,
   quand,
   immediat,
+  libelle,
 }: {
   offres: OffreAffichee[];
   /** Ce qui se passe une fois la carte enregistrée, en une phrase. */
   quand: string;
   immediat: boolean;
+  /** Le texte du bouton : il dit ce qui se passe au clic. */
+  libelle: string;
 }) {
   const [periodicite, setPeriodicite] = useState<Periodicite>("mensuel");
   const [choisie, setChoisie] = useState<CleFormule>(offres[0].formule);
@@ -42,7 +45,7 @@ export function FormulaireAbonnement({
       <fieldset className="m-0 border-0 p-0">
         <legend className="mb-3 text-[14px] font-semibold">Paiement</legend>
         <div className="inline-flex rounded-full bg-[color:var(--board-slate-pale)] p-1">
-          {(["mensuel", "annuel"] as const).map((p) => (
+          {PERIODICITES.map((p) => (
             <label
               key={p}
               className={`cursor-pointer rounded-full px-4 py-1.5 text-[13.5px] font-medium transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 ${
@@ -51,6 +54,7 @@ export function FormulaireAbonnement({
             >
               <input
                 type="radio"
+                // Le nom groupe les boutons (flèches du clavier) ; seul `formule` est lu.
                 name="periodicite"
                 value={p}
                 checked={periodicite === p}
@@ -112,7 +116,7 @@ export function FormulaireAbonnement({
       <p className="m-0 max-w-[var(--board-mesure)] text-[14px] leading-[1.6] text-[color:var(--board-slate-mid)]">{quand}</p>
       <div>
         <Button type="submit" variant="board" size="board" disabled={prixChoisi.centimes === null}>
-          {immediat ? "Payer et m'abonner" : "Continuer vers le paiement"}
+          {libelle}
         </Button>
       </div>
     </form>

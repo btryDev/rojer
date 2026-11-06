@@ -1,15 +1,16 @@
 import { FilRetour } from "@/components/ui-kit/FilRetour";
 import { BandeauAbonnement } from "@/components/abonnements/BandeauAbonnement";
-import { getOptionalCompte } from "@/lib/auth/compte";
+import { getOptionalCompte, type Db } from "@/lib/auth/compte";
 import { requireUser } from "@/lib/auth/require-user";
 import { abonnementDuCompte, contexteDroits, offreLancee } from "@/lib/abonnements/saisie";
-import { droitsDe, gesteAbonnement, libelleStatut } from "@/lib/abonnements/droits";
+import { droitsDe, gesteAbonnement, libelleStatut, OUVRENT } from "@/lib/abonnements/droits";
 import { formaterDateLongueFr } from "@/lib/dates";
 import { Button, buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
 import { ouvrirPortailAction } from "@/lib/abonnements/actions";
 import { FormulaireAbonnement, type OffreAffichee } from "@/components/abonnements/FormulaireAbonnement";
 import { FinalisationCarte } from "@/components/abonnements/FinalisationCarte";
+import { carteParDefaut } from "@/lib/abonnements/souscription";
 import { clientStripe } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
 import { PAGE_ESSAI } from "@/lib/abonnements/essai";
@@ -41,6 +42,15 @@ export const metadata = {
  * officiel attend l'abonnement, le premier mois se paie tout de suite.
  */
 
+/** Le compte a-t-il une carte par défaut chez Stripe ? Sans réponse, comme sans carte. */
+async function carteDuCompte(db: Db, compteId: string): Promise<boolean> {
+  const config = configurationStripe();
+  if (!config.active) return false;
+  const ligne = await db.abonnement.findUnique({ where: { compteId }, select: { stripeCustomerId: true } });
+  if (!ligne) return false;
+  return carteParDefaut(clientStripe(config), ligne.stripeCustomerId).then((c) => c !== null, () => false);
+}
+
 /** Les formules et leurs prix lus chez Stripe ; sans réponse, les prix manquent et le bouton reste fermé. */
 async function offresAffichees(): Promise<OffreAffichee[]> {
   const config = configurationStripe();
@@ -56,7 +66,6 @@ async function offresAffichees(): Promise<OffreAffichee[]> {
   }));
 }
 
-const PERIODE_QUI_COURT = new Set(["trialing", "active", "past_due"]);
 
 export default async function AbonnementPage({
   searchParams,
@@ -85,14 +94,21 @@ export default async function AbonnementPage({
   const formule = formuleDeLookupKey(ligne?.formule);
   const offres = geste === "abonner" || geste === "souscrire" ? await offresAffichees() : [];
   const payerMaintenant = immediat === "1" || ligne?.statut === "paused";
+  // Essai avec une carte déjà enregistrée : la formule est choisie, l'abonnement
+  // démarrera seul à la fin de l'essai ; on peut encore en changer.
+  const carteEnregistree =
+    geste === "abonner" && ligne?.statut === "trialing" && c ? await carteDuCompte(c.db, c.compte.compteId) : false;
+  const finEssai = ligne?.finEssai ? `, le ${formaterDateLongueFr(ligne.finEssai)}` : "";
   const quand =
     geste === "souscrire"
       ? "Le paiement se fait sur la page sécurisée de Stripe, notre prestataire de paiement."
       : payerMaintenant
-        ? "Votre carte s'enregistre sur la page sécurisée de Stripe ; le premier paiement est prélevé aussitôt et votre abonnement démarre."
-        : `Votre carte s'enregistre sur la page sécurisée de Stripe. Rien n'est prélevé avant la fin de votre essai${
-            ligne?.finEssai ? `, le ${formaterDateLongueFr(ligne.finEssai)}` : ""
-          }.`;
+        ? carteEnregistree
+          ? "Le premier paiement est prélevé aussitôt sur votre carte enregistrée, et votre abonnement démarre."
+          : "Votre carte s'enregistre sur la page sécurisée de Stripe ; le premier paiement est prélevé aussitôt et votre abonnement démarre."
+        : carteEnregistree
+          ? `La nouvelle formule s'applique tout de suite. Rien n'est prélevé avant la fin de votre essai${finEssai}.`
+          : `Votre carte s'enregistre sur la page sécurisée de Stripe. Rien n'est prélevé avant la fin de votre essai${finEssai}.`;
 
   return (
     <main className="flex min-h-[calc(100vh-56px)] flex-col bg-[color:var(--board-canvas)] px-6 py-14 sm:px-10">
@@ -135,7 +151,7 @@ export default async function AbonnementPage({
                   <dt className="text-[color:var(--board-slate-mid)]">Formule</dt>
                   <dd className="m-0">
                     {formule
-                      ? ligne.statut === "trialing"
+                      ? ligne.statut === "trialing" && !carteEnregistree
                         ? // Pendant l'essai, le rythme n'est pas encore choisi : il se choisit en s'abonnant.
                           `${FORMULES[formule.formule].libelle} (essai)`
                         : `${FORMULES[formule.formule].libelle}, facturation ${LIBELLE_PERIODICITE[formule.periodicite].adjectif}`
@@ -152,7 +168,7 @@ export default async function AbonnementPage({
               {/* Seul un abonnement qui court a une période en cours : ni un
                   abonnement terminé, ni une pause ou un impayé, où Stripe
                   n'avance plus la période. */}
-              {ligne?.finPeriode && PERIODE_QUI_COURT.has(ligne.statut ?? "") && (
+              {ligne?.finPeriode && OUVRENT.has(ligne.statut ?? "") && (
                 <>
                   <dt className="text-[color:var(--board-slate-mid)]">Période en cours jusqu&apos;au</dt>
                   <dd className="m-0">{formaterDateLongueFr(ligne.finPeriode)}</dd>
@@ -175,7 +191,9 @@ export default async function AbonnementPage({
               ? "Paiement terminé. Votre abonnement s'affiche ici dans quelques secondes : rechargez la page s'il n'apparaît pas."
               : abonnement === "en-cours"
                 ? "Un abonnement est déjà en cours pour ce compte : gérez-le ici plutôt que d'en souscrire un second."
-                : null}
+                : abonnement === "formule-choisie"
+                  ? `C'est enregistré. Rien n'est prélevé avant la fin de votre essai${finEssai} ; votre abonnement démarre alors.`
+                  : null}
           </MessageFormulaire>
         </div>
 
@@ -216,7 +234,27 @@ export default async function AbonnementPage({
               </div>
             ) : (
               (geste === "abonner" || geste === "souscrire") && (
-                <FormulaireAbonnement offres={offres} quand={quand} immediat={payerMaintenant} />
+                <>
+                  {carteEnregistree && (
+                    <p className="m-0 mt-2 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                      Votre carte est enregistrée : votre abonnement démarre à la fin de l&apos;essai{finEssai}. Vous
+                      pouvez encore changer de formule.
+                    </p>
+                  )}
+                  <FormulaireAbonnement
+                    offres={offres}
+                    quand={quand}
+                    immediat={payerMaintenant}
+                    libelle={payerMaintenant ? "Payer et m'abonner" : carteEnregistree ? "Changer de formule" : "Continuer vers le paiement"}
+                  />
+                  {carteEnregistree && (
+                    <form action={ouvrirPortailAction} className="mt-4">
+                      <Button type="submit" variant="boardClair" size="board">
+                        Changer de carte, voir mes factures
+                      </Button>
+                    </form>
+                  )}
+                </>
               )
             )}
           </section>

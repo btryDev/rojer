@@ -3,14 +3,15 @@
 // compte (ADR-054). Tous restent ouverts à un compte impayé : c'est par eux
 // qu'il reprend la main (`saisie-gardee.test.ts`, liste OUVERTES).
 
+import Stripe from "stripe";
 import { redirect } from "next/navigation";
 import { requireCompte } from "@/lib/auth/compte";
 import { publicAppUrl } from "@/lib/email";
 import { clientStripe } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
 import { abonnementCourant, synchroniserClientStripe } from "@/lib/stripe/synchronisation";
-import { abonnementsDuClient, ouvrirCheckout, ouvrirCheckoutCarte, ouvrirPortail, prixDesFormules } from "@/lib/stripe/parcours";
-import { finaliserCarte } from "./souscription";
+import { abonnementsDuClient, appliquerFormule, ouvrirCheckout, ouvrirCheckoutCarte, ouvrirPortail, prixDesFormules } from "@/lib/stripe/parcours";
+import { carteParDefaut, finaliserCarte, type IssueCarte } from "./souscription";
 import { demarrerEssaiDuCompte, PAGE_ESSAI, type EtatEssai } from "./essai";
 import { aNomProvisoire, abonnementEnCours, SANS_PAIEMENT_ENCORE } from "./droits";
 import { estLookupKey } from "./formules";
@@ -83,7 +84,22 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
   try {
     const { courant } = abonnementCourant(await abonnementsDuClient(stripe, ligne.stripeCustomerId));
     if (courant && SANS_PAIEMENT_ENCORE.has(courant.status)) {
-      url = await ouvrirCheckoutCarte(stripe, {
+      // Une carte est déjà enregistrée : la formule s'applique sans repasser
+      // par Stripe (changer de formule pendant l'essai, reprendre une pause).
+      const carte = await carteParDefaut(stripe, ligne.stripeCustomerId);
+      if (carte) {
+        const prix = (await prixDesFormules(stripe)).get(formule);
+        if (!prix) throw new Error("prix introuvable");
+        const paye = immediat || courant.status === "paused";
+        const aRegler = await appliquerFormule(stripe, courant, {
+          priceId: prix.priceId,
+          paymentMethodId: carte,
+          immediat: paye,
+          choisiLe: Math.floor(Date.now() / 1000),
+        });
+        await synchroniserClientStripe(stripe, ligne.stripeCustomerId).catch(() => null);
+        url = aRegler ?? `${base}${paye ? "?paiement=termine" : "?abonnement=formule-choisie"}`;
+      } else url = await ouvrirCheckoutCarte(stripe, {
         customerId: ligne.stripeCustomerId,
         metadata: { compteId, formule, immediat: immediat ? "oui" : "non" },
         // `{CHECKOUT_SESSION_ID}` : remplacé par Stripe au retour.
@@ -117,14 +133,23 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
 export async function finaliserCarteAction(sessionId: string): Promise<void> {
   await verifierProprietaire();
   const { stripe, ligne } = await clientDuCompte();
-  let issue = "rien";
+  let issue: IssueCarte = { issue: "rien" };
   try {
     if (/^cs_[A-Za-z0-9_]+$/.test(sessionId)) {
       issue = await finaliserCarte(stripe, sessionId, { customerId: ligne.stripeCustomerId });
     }
   } catch (e) {
+    // Le webhook applique la même session au même instant (clé d'idempotence
+    // partagée) : ce n'est pas un échec, la page relira l'état.
+    if (e instanceof Stripe.errors.StripeIdempotencyError || (e as { statusCode?: number })?.statusCode === 409) {
+      redirect(PAGE_ABONNEMENT);
+    }
     console.error(`abonnement : finalisation de la carte en échec — ${e instanceof Error ? e.name : "erreur"}`);
     redirect(`${PAGE_ABONNEMENT}?stripe=indisponible`);
   }
-  redirect(issue === "appliquee" ? `${PAGE_ABONNEMENT}?paiement=termine` : PAGE_ABONNEMENT);
+  if (issue.issue === "aRegler") redirect(issue.url);
+  if (issue.issue === "appliquee") {
+    redirect(`${PAGE_ABONNEMENT}${issue.immediat ? "?paiement=termine" : "?abonnement=formule-choisie"}`);
+  }
+  redirect(PAGE_ABONNEMENT);
 }

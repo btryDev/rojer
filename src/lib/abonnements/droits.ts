@@ -38,7 +38,8 @@ export type ContexteDroits = {
   maintenant: Date;
 };
 
-const OUVRENT = new Set(["trialing", "active", "past_due"]);
+/** Les états qui ouvrent la saisie, et dont la période court. */
+export const OUVRENT: ReadonlySet<string> = new Set(["trialing", "active", "past_due"]);
 /** Une fin d'essai s'annonce une semaine avant. */
 const PREAVIS_ESSAI_MS = 7 * 24 * 60 * 60_000;
 

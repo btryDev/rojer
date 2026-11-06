@@ -120,14 +120,10 @@ export function urlConditions(env: Env): string | null {
 
 /**
  * Le portail (ADR-053 § 10) : factures, moyen de paiement, résiliation en fin
- * de période, changement de formule entre les prix installés SANS mettre fin
- * à l'essai, e-mail, adresse et numéro de TVA.
+ * de période, nom, e-mail, adresse et numéro de TVA. Pas de changement de
+ * formule : il se fait dans Rojer.
  */
-export function parametresPortail(
-  produits: Record<CleFormule, Stripe.Product>,
-  prix: PrixInstalle[],
-  conditions: string | null,
-): Stripe.BillingPortal.ConfigurationCreateParams {
+export function parametresPortail(conditions: string | null): Stripe.BillingPortal.ConfigurationCreateParams {
   return {
     ...(conditions ? { business_profile: { terms_of_service_url: conditions } } : {}),
     features: {
@@ -183,7 +179,7 @@ export async function installer(env: Env, creerClient: (cle: string) => Stripe):
   const produits = await installerProduits(stripe);
   const prix = await installerPrix(stripe, produits);
   const conditions = urlConditions(env);
-  const portail = await installerPortail(stripe, parametresPortail(produits, prix, conditions));
+  const portail = await installerPortail(stripe, parametresPortail(conditions));
   return { ok: true, produits, prix, portail, conditions };
 }
 
