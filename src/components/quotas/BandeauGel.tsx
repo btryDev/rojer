@@ -10,11 +10,14 @@ import { BandeauAbonnement } from "@/components/abonnements/BandeauAbonnement";
 export async function BandeauGel({
   cible,
   className = "",
+  compact = false,
 }: {
   /** Un site (en tête de ses pages) ou un prestataire (sur sa fiche). */
   cible: { etablissementId: string } | { prestataireId: string };
   /** La place, donnée par l'appelant. */
   className?: string;
+  /** Dans la bande du haut (mise en page d'un site), seul endroit que l'en-tête de page ne recouvre pas. */
+  compact?: boolean;
 }) {
   const compte = await getOptionalCompte();
   if (!compte || compte.compte.role === "lecture") return null;
@@ -23,6 +26,7 @@ export async function BandeauGel({
   return (
     <BandeauAbonnement
       bandeau={{ ton: "ferme", message }}
+      compact={compact}
       className={className}
     />
   );
