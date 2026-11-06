@@ -77,9 +77,10 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
       ...o,
     }) as unknown as Stripe.Subscription;
 
-  const stripe = (compteId: string, abonnements: Stripe.Subscription[] | Error, client?: object) =>
+  const stripe = (compteId: string, abonnements: Stripe.Subscription[] | Error, client?: object, factures: object[] = []) =>
     ({
       customers: { retrieve: async (id: string) => client ?? { id, metadata: { compteId } } },
+      invoices: { list: () => ({ autoPagingToArray: async () => factures }) },
       subscriptions: {
         list: () => ({
           autoPagingToArray: async () => {
@@ -94,6 +95,19 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
   const ligne = (compteId: string) => prisma.abonnement.findUnique({ where: { compteId } });
 
   describe("synchroniserClientStripe", () => {
+    it("premier paiement : la plus ancienne facture payée non nulle, écrite une fois, jamais écrasée", async () => {
+      const facture = (paye: number, montant: number) => ({ amount_paid: montant, status_transitions: { paid_at: paye } });
+      const actif = [abo({ id: "sub_1", status: "active", created: 1 })];
+      // Facture d'essai à zéro seulement : pas encore de paiement.
+      await synchroniserClientStripe(stripe(A, actif, undefined, [facture(500, 0)]), "cus_A", { maintenant: () => new Date(1000) });
+      expect((await ligne(A))?.debutPayantLe).toBeNull();
+      await synchroniserClientStripe(stripe(A, actif, undefined, [facture(900, 2900), facture(700, 2900), facture(500, 0)]), "cus_A", { maintenant: () => new Date(2000) });
+      expect((await ligne(A))?.debutPayantLe).toEqual(new Date(700_000));
+      // Une relecture plus tard (nouvelles factures, ou une liste vide) ne la déplace pas.
+      await synchroniserClientStripe(stripe(A, actif, undefined, [facture(100, 2900)]), "cus_A", { maintenant: () => new Date(3000) });
+      expect((await ligne(A))?.debutPayantLe).toEqual(new Date(700_000));
+    });
+
     it("un client d'avant l'ADR-054 (metadata.userId) écrit au compte dont la personne est propriétaire", async () => {
       const s = stripe(A, [abo({ id: "sub_1", status: "active", created: 1 })], { id: "cus_A", metadata: { userId: UA } });
       expect(await synchroniserClientStripe(s, "cus_A", { maintenant: () => new Date(1000) })).toEqual({ issue: "ecrit" });

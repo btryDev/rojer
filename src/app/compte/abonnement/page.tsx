@@ -93,6 +93,9 @@ export default async function AbonnementPage({
   const geste = gesteAbonnement({ ouvert, role: c?.compte.role ?? null, ligne });
   const formule = formuleDeLookupKey(ligne?.formule);
   const offres = geste === "abonner" || geste === "souscrire" ? await offresAffichees() : [];
+  // Vient de payer, la confirmation de Stripe n'est pas encore là : la page le
+  // dit et ne propose jamais de payer une seconde fois (le geste est le portail).
+  const paiementEnConfirmation = ligne?.statut === "active" && !ligne.debutPayantLe;
   const payerMaintenant = immediat === "1" || ligne?.statut === "paused";
   // Essai avec une carte déjà enregistrée : la formule est choisie, l'abonnement
   // démarrera seul à la fin de l'essai ; on peut encore en changer.
@@ -189,7 +192,9 @@ export default async function AbonnementPage({
           <MessageFormulaire ton="info">
             {paiement === "termine"
               ? "Paiement terminé. Votre abonnement s'affiche ici dans quelques secondes : rechargez la page s'il n'apparaît pas."
-              : abonnement === "en-cours"
+              : paiementEnConfirmation
+                ? "Votre paiement est en cours de confirmation : les fonctions réservées aux abonnés s'ouvrent dès qu'il est confirmé, en général en quelques minutes. Inutile de payer de nouveau."
+                : abonnement === "en-cours"
                 ? "Un abonnement est déjà en cours pour ce compte : gérez-le ici plutôt que d'en souscrire un second."
                 : abonnement === "formule-choisie"
                   ? `C'est enregistré. Rien n'est prélevé avant la fin de votre essai${finEssai} ; votre abonnement démarre alors.`

@@ -78,6 +78,23 @@ export function colonnesDe(s: Stripe.Subscription | null) {
   };
 }
 
+/**
+ * Le premier paiement CONFIRMÉ du client (ADR-053 § 14) : la date de la plus
+ * ancienne facture payée d'un montant non nul. Ni un état `active` (Stripe
+ * l'affiche environ une heure avant de prélever la fin d'un essai), ni une
+ * facture à zéro (celle de l'essai). Lue seulement tant que le compte n'en a
+ * pas : une fois écrite, elle ne change plus.
+ */
+export async function premierPaiement(stripe: Stripe, customerId: string): Promise<Date | null> {
+  const payees = await stripe.invoices
+    .list({ customer: customerId, status: "paid", limit: 100 }, OPTIONS_WEBHOOK)
+    .autoPagingToArray({ limit: 1000 });
+  const dates = payees
+    .filter((f) => f.amount_paid > 0 && f.status_transitions?.paid_at)
+    .map((f) => f.status_transitions.paid_at as number);
+  return dates.length ? date(Math.min(...dates)) : null;
+}
+
 /** Le premier essai pris par ce client, sur quelque abonnement que ce soit. */
 export function premierEssai(abonnements: Stripe.Subscription[]): Date | null {
   const debuts = abonnements.map((s) => s.trial_start).filter((t): t is number => !!t);
@@ -125,7 +142,7 @@ const DEJA_LIE = { issue: "ignore", motif: "client ou abonnement Stripe déjà l
 const AUTRE_CLIENT = { issue: "ignore", motif: "le compte est lié à un autre client Stripe", alerte: true } as const;
 
 type Db = ReturnType<typeof clientDuClientStripe>;
-type Donnees = ReturnType<typeof colonnesDe> & { relueLe: Date; essaiUtiliseLe: Date | null };
+type Donnees = ReturnType<typeof colonnesDe> & { relueLe: Date; essaiUtiliseLe: Date | null; debutPayantLe: Date | null };
 
 /** `null` : une livraison simultanée a créé la ligne du compte — passer à la mise à jour. */
 async function creerLigne(db: Db, compteId: string, customerId: string, donnees: Donnees) {
@@ -201,7 +218,7 @@ export async function synchroniserClientStripe(
   const db = clientDuClientStripe(compteId);
   const ligne = await db.abonnement.findUnique({
     where: { compteId },
-    select: { stripeCustomerId: true, essaiUtiliseLe: true },
+    select: { stripeCustomerId: true, essaiUtiliseLe: true, debutPayantLe: true },
   });
   if (ligne && ligne.stripeCustomerId !== customerId) return AUTRE_CLIENT;
 
@@ -209,6 +226,9 @@ export async function synchroniserClientStripe(
     ...colonnesDe(courant),
     relueLe,
     essaiUtiliseLe: ligne?.essaiUtiliseLe ?? premierEssai(abonnements),
+    // Écrite une fois, jamais écrasée ni remise à zéro (un réabonnement garde
+    // l'ancre du compte). Un client supprimé n'a plus de factures lisibles.
+    debutPayantLe: ligne?.debutPayantLe ?? (supprime ? null : await premierPaiement(stripe, customerId)),
   };
   if (!ligne) {
     const issue = await creerLigne(db, compteId, customerId, donnees);
