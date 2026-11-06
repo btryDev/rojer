@@ -41,6 +41,7 @@ import {
 } from "@/lib/equipements/equipements-securite";
 import { getEtablissement } from "@/lib/etablissements/queries";
 import { declarationsDePresence } from "@/lib/etats-permanents/queries";
+import { pluriel } from "@/lib/rendu/pluriel";
 import {
   grouperParCategorie,
   listerEquipementsDeLEtablissement,
@@ -277,7 +278,6 @@ export default async function EquipementsPage({
     })(),
     href: avecProvenance(`${base}/equipements/${eq.id}`, origine),
   });
-  const parId = new Map(equipements.map((eq) => [eq.id, eq]));
   const periodicitesDe = (liste: { id: string }[]) =>
     liste.flatMap((eq) => etatsVerifs.get(eq.id)?.periodicites ?? []);
 
@@ -294,17 +294,10 @@ export default async function EquipementsPage({
           declarations,
         )
       : []
-  ).map((l) => {
-    const declares = l.appareils.flatMap((a) => {
-      const eq = parId.get(a.id);
-      return eq ? [eq] : [];
-    });
-    return {
-      ...l,
-      appareils: declares.map(versAppareil),
-      hrefAction: hrefActionSecurite(l, { base, hrefNouveau }),
-    };
-  });
+  ).map((l) => ({
+    ...l,
+    hrefAction: l.cible.kind === "etat_permanent" ? hrefActionSecurite(l, { base, hrefNouveau }) : null,
+  }));
   const presenceParCategorie = new Map<CategorieEquipement, LigneSecuriteAffichee>();
   for (const l of lignesSecurite) {
     if (l.cible.kind === "categorie") presenceParCategorie.set(l.cible.categorie, l);
@@ -344,20 +337,19 @@ export default async function EquipementsPage({
     ensembles,
     horsParc.map((l) => l.domaine),
   );
-  // Ce qu'un texte exige et qui n'est pas encore déclaré, par domaine (ADR-057
-  // § 4) — ce que la section « Équipements de sécurité » signalait « à
-  // déclarer ».
-  // Sans les lignes « à confirmer » : la carte dit « À confirmer ici », le
-  // domaine ne peut pas dire « à déclarer » (relecture du 2026-11-06).
+  // Ce qu'un texte exige ici, par domaine (ADR-057 § 4) — ce que la section
+  // « Équipements de sécurité » signalait « à déclarer », sans les lignes
+  // « à confirmer » : la carte dit « À confirmer ici », le domaine ne peut pas
+  // dire « à déclarer » (relecture du 2026-11-06).
+  const presenceParDomaine = new Map<DomaineObligation | null, { total: number; aDeclarer: number }>();
+  for (const l of lignesSecurite) {
+    const p = presenceParDomaine.get(l.domaine) ?? { total: 0, aDeclarer: 0 };
+    p.total += 1;
+    if (!l.aConfirmer && (l.etat === "aucun" || l.etat === "ancienne_case")) p.aDeclarer += 1;
+    presenceParDomaine.set(l.domaine, p);
+  }
   const aDeclarerDans = (domaine: DomaineObligation | null) =>
-    lignesSecurite.filter(
-      (l) =>
-        l.domaine === domaine &&
-        !l.aConfirmer &&
-        (l.etat === "pas_encore_declare" || l.etat === "ancienne_case"),
-    ).length;
-  const presencesDans = (domaine: DomaineObligation | null) =>
-    lignesSecurite.filter((l) => l.domaine === domaine).length;
+    presenceParDomaine.get(domaine)?.aDeclarer ?? 0;
   // S'ouvre le premier domaine qui a du dépassé — contrôles d'ensemble
   // compris —, puis celui où un matériel exigé reste à déclarer, à défaut le
   // premier.
@@ -459,7 +451,7 @@ export default async function EquipementsPage({
           domaines.map(({ domaine, sections: ss, propres, depassees }) => {
             const nbAppareils = ss.reduce((n, s) => n + s.appareils.length, 0);
             const aDeclarer = aDeclarerDans(domaine);
-            const presences = presencesDans(domaine);
+            const presences = presenceParDomaine.get(domaine)?.total ?? 0;
             return (
             // Un domaine = une carte repliable (décision de la propriétaire du
             // 2026-10-24) ; le plus en peine s'ouvre.
@@ -471,7 +463,7 @@ export default async function EquipementsPage({
                   ? `${nbAppareils} équipement${nbAppareils > 1 ? "s" : ""}`
                   : propres.length > 0
                     ? `${propres.length} contrôle${propres.length > 1 ? "s" : ""} d'ensemble`
-                    : `${presences} obligatoire${presences > 1 ? "s" : ""}`
+                    : pluriel(presences, "obligatoire")
               }
               alerte={
                 depassees > 0

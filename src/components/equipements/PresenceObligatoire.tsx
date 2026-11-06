@@ -13,20 +13,19 @@
 
 import Link from "next/link";
 import { BriefcaseMedical } from "lucide-react";
-import type { AppareilListe } from "@/components/equipements/CarteCategorie";
 import { MarqueIcone } from "@/components/equipements/MarqueCategorie";
 import { PastilleFondement } from "@/components/etats-permanents/PastilleFondement";
 import { buttonVariants } from "@/components/ui/button";
 import type { LigneEquipementSecurite } from "@/lib/equipements/equipements-securite";
 import { LABEL_CATEGORIE_EQUIPEMENT } from "@/lib/equipements/labels";
-import { DAE_DETENTION } from "@/lib/etats-permanents/par-le-parc";
+import { NOTE_DAE_PARTAGE } from "@/lib/etats-permanents/par-le-parc";
+import { pluriel } from "@/lib/rendu/pluriel";
 import { CasePartageDae } from "@/components/equipements/CasePartageDae";
 
-/** Une ligne prête à poser : ses appareils, comme le parc les montre. */
-export type LigneSecuriteAffichee = Omit<LigneEquipementSecurite, "appareils"> & {
-  appareils: AppareilListe[];
-  /** « Déclarer » (`hrefActionSecurite`) pour le matériel hors parc ; l'ajout
-   *  d'un appareil de la catégorie sinon. */
+/** Une ligne prête à poser. */
+export type LigneSecuriteAffichee = LigneEquipementSecurite & {
+  /** « Déclarer » (`hrefActionSecurite`), pour le matériel hors parc : la
+   *  carte d'une catégorie a déjà son bouton d'ajout. */
   hrefAction: string | null;
 };
 
@@ -55,7 +54,7 @@ export function MentionPresence({
         ? "indiqué en place, aucun appareil déclaré"
         : n === 0
           ? "aucun déclaré"
-          : `${n === 1 ? "1 déclaré" : `${n} déclarés`}${sousUnFiltre ? " dans l'établissement" : ""}`;
+          : `${pluriel(n, "déclaré")}${sousUnFiltre ? " dans l'établissement" : ""}`;
   return (
     <>
       <span className="board-eyebrow text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
@@ -86,8 +85,12 @@ export function SousLEnTetePresence({
       </p>
     ) : null;
   const partage =
-    ligne.obligationId === DAE_DETENTION && ligne.appareils.length === 0 ? (
-      <CasePartageDae etablissementId={etablissementId} partage={ligne.partage} />
+    ligne.admetLePartage && ligne.appareils.length === 0 ? (
+      <CasePartageDae
+        etablissementId={etablissementId}
+        partage={ligne.etat === "partage"}
+        libelle={NOTE_DAE_PARTAGE}
+      />
     ) : null;
   if (!rappel && !partage) return null;
   return (
@@ -112,7 +115,7 @@ export function MaterielHorsParc({ ligne }: { ligne: LigneSecuriteAffichee }) {
             {ligne.libelle}
             <span className="board-eyebrow text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
               {ligne.aConfirmer ? "À confirmer ici" : "Obligatoire ici"}
-              {ligne.etat === "declare" ? " · déclaré" : ""}
+              {ligne.etat === "appareils" ? " · déclaré" : ""}
             </span>
             {ligne.fondement ? <PastilleFondement fondement={ligne.fondement} /> : null}
           </h2>

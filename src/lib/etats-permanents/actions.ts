@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { obligationDeclarable } from "./garde";
+import { NOTE_DAE_PARTAGE, PRESENCE_PAR_LE_PARC } from "./par-le-parc";
 import { preparerUnDepot, retirerLeFichierEnCours } from "./pieces";
 import { annexeDeLaLigne } from "@/lib/registre/annexes";
 import { clePieceEtatPermanent, getStorage, stockageEnService } from "@/lib/storage";
@@ -161,6 +162,50 @@ export async function retirerDeclaration(
   revalidatePath(`/etablissements/${etablissementId}/equipements`);
   return { status: "success" };
 }
+
+/**
+ * Le défibrillateur PARTAGÉ avec un établissement voisin (CCH R. 157-3 ;
+ * ADR-057 § 4, décision de la propriétaire du 2026-11-06), coché ou décoché
+ * depuis la page Équipements. La seule déclaration qu'une ligne établie
+ * d'après le parc admet encore — la table le dit (`declarationAdmise`). Le
+ * repère est posé ici, jamais reçu du navigateur.
+ */
+export async function basculerDaePartage(
+  etablissementId: string,
+  partage: boolean,
+): Promise<DeclarationActionState> {
+  const { db } = await assertEtablissementDuCompte(etablissementId);
+  const { statut } = await obligationDeclarable(db, etablissementId, DAE_DETENTION);
+  if (
+    statut !== "etabli_par_le_parc" ||
+    PRESENCE_PAR_LE_PARC[DAE_DETENTION]?.declarationAdmise !== "partage"
+  ) {
+    return {
+      status: "error",
+      message: "Le défibrillateur ne s'applique pas à cet établissement.",
+    };
+  }
+  if (partage) {
+    await db.declarationEtatPermanent.upsert({
+      where: {
+        etablissementId_obligationId: { etablissementId, obligationId: DAE_DETENTION },
+      },
+      update: { declareLe: new Date(), note: NOTE_DAE_PARTAGE },
+      create: { etablissementId, obligationId: DAE_DETENTION, note: NOTE_DAE_PARTAGE },
+    });
+  } else {
+    await db.declarationEtatPermanent.deleteMany({
+      where: { etablissementId, obligationId: DAE_DETENTION, note: NOTE_DAE_PARTAGE },
+    });
+  }
+  revalidatePath(`/etablissements/${etablissementId}/equipements`);
+  revalidatePath(`/etablissements/${etablissementId}/etats-permanents`);
+  revalidatePath(`/etablissements/${etablissementId}/registre`, "layout");
+  return { status: "success" };
+}
+
+/** L'obligation de détention du défibrillateur (CCH R. 157-2). */
+const DAE_DETENTION = "dae-erp-detention";
 
 /** La borne du nom d'un fichier, comme la base (`PieceEtatPermanent_bornes`). */
 const NOM_FICHIER_MAX = 255;

@@ -7,7 +7,7 @@ import "server-only";
 
 import type { Db } from "@/lib/auth/compte";
 import { etabliParLesTitres } from "./par-les-titres";
-import { accepteUneDeclaration, etabliParLeParc } from "./par-le-parc";
+import { etabliParLeParc } from "./par-le-parc";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import { modeDeclarationApplique } from "./regle";
 import {
@@ -97,10 +97,10 @@ export async function obligationDeclarable(
     return { statut: "etabli_par_les_titres" };
   }
   // Établie d'après le parc (ADR-057 § 4) : même raison, l'appareil déclaré
-  // fait foi. LE prédicat de la lecture (`etabliParLeParc`). Seul le DAE
-  // partagé avec un voisin se déclare encore (CCH R. 157-3, décision du
-  // 2026-11-06) — depuis la page Équipements.
-  if (etabliParLeParc(app.obligation, mode.mode) && !accepteUneDeclaration(app.obligation)) {
+  // fait foi. LE prédicat de la lecture (`etabliParLeParc`). La seule
+  // déclaration qu'une telle ligne admet encore — le DAE partagé — passe par
+  // sa propre action (`basculerDaePartage`), qui lit la table.
+  if (etabliParLeParc(app.obligation, mode.mode)) {
     return { statut: "etabli_par_le_parc" };
   }
   return { statut: true, projete };

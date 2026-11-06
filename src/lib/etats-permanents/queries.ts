@@ -52,9 +52,10 @@ import {
   type EtatParLesTitres,
   type TitreDeclare,
 } from "./par-les-titres";
+import { estEnPlace } from "./en-place";
 import {
   etabliParLeParc,
-  etatParLeParc,
+  etatsParLeParc,
   type DeclarationLue,
   type EtatParLeParc,
 } from "./par-le-parc";
@@ -358,12 +359,12 @@ export async function listerEtatsPermanents(
   const faits: LigneEtatPermanent[] = [];
   const parLEquipe: LigneEtatPermanent[] = [];
   const parLeParc: LigneEtatPermanent[] = [];
-  // Les appareils déclarés par catégorie, pour les lignes établies d'après le
-  // parc.
-  const appareilsParCategorie = new Map<string, number>();
-  for (const eq of equipements) {
-    appareilsParCategorie.set(eq.categorie, (appareilsParCategorie.get(eq.categorie) ?? 0) + 1);
-  }
+  // L'état des obligations de présence, d'après le parc et les déclarations
+  // (`etatsParLeParc`, le rassemblement que la page Équipements appelle aussi).
+  const parLeParcParObligation = etatsParLeParc(
+    equipements,
+    new Map(declarations.map((d) => [d.obligationId, d])),
+  );
   let enPlace = 0;
   let total = 0;
   const parLesTitresCompte = { total: 0, enPlace: 0 };
@@ -386,10 +387,10 @@ export async function listerEtatsPermanents(
     // déclaration y est ignorée. D'après le parc, elle compte encore — un DAE
     // partagé, ou une ancienne case gardée avec un rappel (`par-le-parc.ts`).
     const d = parLesTitres ? null : (parObligation.get(o.id) ?? null);
-    const categorieDuParc = parLesTitres ? null : etabliParLeParc(o, mode.mode);
-    const etatDuParc = categorieDuParc
-      ? etatParLeParc(categorieDuParc, appareilsParCategorie.get(categorieDuParc) ?? 0, d)
-      : null;
+    const etatDuParc =
+      !parLesTitres && etabliParLeParc(o, mode.mode)
+        ? (parLeParcParObligation.get(o.id) ?? null)
+        : null;
     const ligne: LigneEtatPermanent = {
       obligation: o,
       mode: mode.mode,
@@ -647,16 +648,6 @@ export async function compterEtatsPermanents(
     userId,
   );
   return { total, enPlace };
-}
-
-/**
- * Une ligne est-elle en place ? D'après les titres, d'après le parc, sinon
- * d'après la déclaration. LA lecture, pour les compteurs de ce module.
- */
-export function estEnPlace(l: Pick<LigneEtatPermanent, "parLesTitres" | "parLeParc" | "declareLe">): boolean {
-  if (l.parLesTitres) return l.parLesTitres.enPlace;
-  if (l.parLeParc) return l.parLeParc.enPlace;
-  return l.declareLe !== null;
 }
 
 /**

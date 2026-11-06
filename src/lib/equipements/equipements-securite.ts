@@ -42,9 +42,10 @@ import { ancreEtatPermanent } from "@/lib/etats-permanents/ancre";
 import { cheminDeDeclaration } from "@/lib/etats-permanents/par-l-equipe";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import {
-  etatParLeParc,
+  etatsParLeParc,
   PRESENCE_PAR_LE_PARC,
   type DeclarationLue,
+  type SourceParLeParc,
 } from "@/lib/etats-permanents/par-le-parc";
 import { modeDeclarationApplique } from "@/lib/etats-permanents/regle";
 import { phrasesAConfirmer } from "@/lib/matching/marques";
@@ -94,7 +95,7 @@ const LIBELLE_PRESENCE: Readonly<Record<string, string>> = {
  */
 export const EQUIPEMENTS_DE_SECURITE: readonly EquipementDeSecurite[] = [
   ...Object.entries(PRESENCE_PAR_LE_PARC).map(
-    ([obligationId, categorie]): EquipementDeSecurite => ({
+    ([obligationId, { categorie }]): EquipementDeSecurite => ({
       obligationId,
       cible: { kind: "categorie", categorie },
       ...(LIBELLE_PRESENCE[obligationId] ? { libelle: LIBELLE_PRESENCE[obligationId] } : {}),
@@ -140,16 +141,14 @@ export type LigneEquipementSecurite = {
   /** Les appareils déclarés de la catégorie ; vide si aucun, ou sans catégorie. */
   appareils: AppareilDuParc[];
   /**
-   * - `declare` : un appareil de la catégorie au parc, ou la case cochée du
-   *   matériel de premiers secours ;
-   * - `partage` : un défibrillateur partagé avec un voisin (CCH R. 157-3) ;
-   * - `ancienne_case` : une case cochée avant le 2026-11-06, sans appareil au
-   *   parc — en place, avec un rappel de déclarer les appareils ;
-   * - `pas_encore_declare` : rien.
+   * D'où vient la présence — le vocabulaire de `par-le-parc.ts`, un seul :
+   * `appareils` (au parc ; pour le matériel de premiers secours, sa case
+   * cochée), `partage` (DAE partagé), `ancienne_case` (case d'avant, sans
+   * appareil : un rappel), `aucun`.
    */
-  etat: "declare" | "partage" | "ancienne_case" | "pas_encore_declare";
-  /** La déclaration du DAE partagé, pour la case qui la retire. */
-  partage: boolean;
+  etat: SourceParLeParc;
+  /** La ligne admet la case « DAE partagé » (`PRESENCE_PAR_LE_PARC`). */
+  admetLePartage: boolean;
   /** Le domaine de l'obligation : le groupe de la page où la ligne se pose
    *  (ADR-057 § 4). */
   domaine: DomaineObligation;
@@ -172,6 +171,9 @@ export function lignesEquipementsSecurite(
   declarations: ReadonlyMap<string, DeclarationLue> = new Map(),
 ): LigneEquipementSecurite[] {
   const parId = new Map(applicables.map((a) => [a.obligation.id, a]));
+  // Le rassemblement que la lecture de « Ce qui doit être en place » appelle
+  // aussi : les deux écrans disent le même état.
+  const parLeParc = etatsParLeParc(parc, declarations);
   const lignes: LigneEquipementSecurite[] = [];
   for (const e of EQUIPEMENTS_DE_SECURITE) {
     const a = parId.get(e.obligationId);
@@ -183,19 +185,10 @@ export function lignesEquipementsSecurite(
     // vivrait aux deux endroits avec deux états (relecture du 2026-11-06).
     if (modeDeclarationApplique(a)?.mode !== "etat") continue;
     const cible = e.cible;
-    const declaration = declarations.get(e.obligationId) ?? null;
     const appareils =
       cible.kind === "categorie"
         ? parc.filter((p) => p.categorie === cible.categorie)
         : [];
-    // L'état d'une présence est celui de `etatParLeParc` — la même lecture que
-    // « Ce qui doit être en place », le score et le PDF.
-    const source =
-      cible.kind === "categorie"
-        ? etatParLeParc(cible.categorie, appareils.length, declaration).source
-        : declaration
-          ? "appareils"
-          : "aucun";
     lignes.push({
       obligationId: e.obligationId,
       libelle: libelleEquipementSecurite(e),
@@ -207,14 +200,9 @@ export function lignesEquipementsSecurite(
       appareils,
       domaine: a.obligation.domaine,
       etat:
-        source === "appareils"
-          ? "declare"
-          : source === "partage"
-            ? "partage"
-            : source === "ancienne_case"
-              ? "ancienne_case"
-              : "pas_encore_declare",
-      partage: source === "partage",
+        parLeParc.get(e.obligationId)?.source ??
+        (declarations.has(e.obligationId) ? "appareils" : "aucun"),
+      admetLePartage: PRESENCE_PAR_LE_PARC[e.obligationId]?.declarationAdmise === "partage",
     });
   }
   return lignes;
@@ -231,7 +219,7 @@ export function hrefActionSecurite(
   l: Pick<LigneEquipementSecurite, "obligationId" | "cible" | "etat">,
   liens: { base: string; hrefNouveau: (categorie: CategorieEquipement) => string },
 ): string | null {
-  if (l.etat === "declare" || l.etat === "partage") return null;
+  if (l.etat === "appareils" || l.etat === "partage") return null;
   if (l.cible.kind === "categorie") return liens.hrefNouveau(l.cible.categorie);
   // Une formation se déclare dans ~~Équipe › Formations~~ [2026-10-24 : section « Formations à organiser » d'Équipe] (`par-l-equipe.ts`,
   // ADR-047) : l'écran « en place » ne l'affiche pas.

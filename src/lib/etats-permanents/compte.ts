@@ -9,6 +9,7 @@
 
 import type { EtatsPermanentsDuDossier } from "./queries";
 import { compteParLEquipe } from "./par-l-equipe";
+import { estEnPlace } from "./en-place";
 
 /**
  * Les trois nombres de l'en-tête de PAGE (`CompteurDeLaPage`), lus d'une seule
@@ -35,7 +36,7 @@ export function compteDeLaPage(d: EtatsPermanentsDuDossier): {
   const parc = d.parLeParc.filter((l) => l.compteDansLEnTete);
   return {
     enPlace:
-      d.enPlace - risques.enPlace - parc.filter((l) => l.parLeParc?.enPlace).length,
+      d.enPlace - risques.enPlace - parc.filter(estEnPlace).length,
     total: d.total - risques.total - parc.length,
     parLesTitres: d.parLesTitres.enPlace - titresDesRisques,
   };

@@ -21,23 +21,15 @@ const commun = {
   hrefAction: null,
 };
 
-const appareil = (id: string) => ({
-  id,
-  libelle: id,
-  lieu: null,
-  resume: { etat: "aPlanifier" as const, signaux: [], aConfirmer: [] },
-  horsReferentiel: null,
-  aCompleter: [],
-  href: `/${id}`,
-});
+const appareil = (id: string) => ({ id, libelle: id, categorie: "DEFIBRILLATEUR" as const });
 
 const dae = (n: number): LigneSecuriteAffichee => ({
   ...commun,
   obligationId: "dae-erp-detention",
   libelle: "Défibrillateur (DAE)",
   cible: { kind: "categorie", categorie: "DEFIBRILLATEUR" },
-  etat: n > 0 ? "declare" : "pas_encore_declare",
-  partage: false,
+  etat: n > 0 ? "appareils" : "aucun",
+  admetLePartage: true,
   domaine: "secours",
   appareils: Array.from({ length: n }, (_, i) => appareil(`dae-${i}`)),
 });
@@ -75,7 +67,7 @@ describe("MentionPresence", () => {
   });
 
   it("DAE partagé, ancienne case : chacun son mot", () => {
-    render(<MentionPresence ligne={{ ...dae(0), etat: "partage", partage: true }} />);
+    render(<MentionPresence ligne={{ ...dae(0), etat: "partage" }} />);
     expect(screen.getByText(/partagé avec un voisin/)).toBeTruthy();
     cleanup();
     render(<MentionPresence ligne={{ ...dae(0), etat: "ancienne_case" }} />);
@@ -97,8 +89,8 @@ describe("MaterielHorsParc", () => {
           obligationId: "secours-etablissement-materiel",
           libelle: "Matériel de premiers secours",
           cible: { kind: "etat_permanent" },
-          etat: "pas_encore_declare",
-          partage: false,
+          etat: "aucun",
+          admetLePartage: false,
           domaine: "secours",
           appareils: [],
           hrefAction: "/e/etats-permanents#etat-secours-etablissement-materiel",
@@ -130,6 +122,7 @@ describe("SousLEnTetePresence", () => {
           libelle: "Extincteurs",
           cible: { kind: "categorie", categorie: "EXTINCTEUR" },
           etat: "ancienne_case",
+          admetLePartage: false,
           domaine: "incendie",
         }}
         etablissementId="e"

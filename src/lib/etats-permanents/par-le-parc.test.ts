@@ -9,7 +9,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { EQUIPEMENTS_DE_SECURITE } from "@/lib/equipements/equipements-securite";
 import {
-  accepteUneDeclaration,
   etabliParLeParc,
   etatParLeParc,
   NOTE_DAE_PARTAGE,
@@ -88,7 +87,9 @@ describe("la table", () => {
         e.cible.kind === "categorie" ? [[e.obligationId, e.cible.categorie]] : [],
       ),
     );
-    expect(PRESENCE_PAR_LE_PARC).toEqual(deLaPage);
+    expect(
+      Object.fromEntries(Object.entries(PRESENCE_PAR_LE_PARC).map(([id, p]) => [id, p.categorie])),
+    ).toEqual(deLaPage);
   });
 
   it("chaque obligation de la table existe au référentiel", () => {
@@ -125,14 +126,14 @@ describe("la table", () => {
     ).toBe("appareils");
   });
 
-  it("le DAE partagé (R. 157-3) : en place, dit comme tel ; seul le DAE se déclare encore", () => {
+  it("le DAE partagé (R. 157-3) : en place, dit comme tel ; seul le DAE l'admet", () => {
     const e = etatParLeParc("DEFIBRILLATEUR", 0, {
       declareLe: new Date("2026-11-06T12:00:00Z"),
       note: NOTE_DAE_PARTAGE,
     });
     expect(e).toMatchObject({ enPlace: true, source: "partage" });
-    expect(accepteUneDeclaration({ id: "dae-erp-detention" })).toBe(true);
-    expect(accepteUneDeclaration({ id: DOTATION })).toBe(false);
+    expect(PRESENCE_PAR_LE_PARC["dae-erp-detention"].declarationAdmise).toBe("partage");
+    expect(PRESENCE_PAR_LE_PARC[DOTATION].declarationAdmise).toBeUndefined();
   });
 });
 
@@ -154,7 +155,7 @@ describe("la lecture de « Ce qui doit être en place »", () => {
   it("un extincteur déclaré la met en place", async () => {
     const d = await listerEtatsPermanents(etab, [appareil("e1", "EXTINCTEUR")], undefined, NOW);
     const ligne = d.parLeParc.find((l) => l.obligation.id === DOTATION)!;
-    expect(ligne.parLeParc).toMatchObject({ enPlace: true, declares: 1 });
+    expect(ligne.parLeParc).toMatchObject({ enPlace: true, source: "appareils" });
   });
 
   it("elle quitte les familles de l'écran, pas le dossier : comptée au total et au PDF", async () => {

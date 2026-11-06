@@ -106,7 +106,7 @@ describe("la table des équipements de sécurité", () => {
 describe("la bascule déclaré / pas encore déclaré", () => {
   it("un restaurant de 3ᵉ catégorie sans DAE : « pas encore déclaré », l'article cité", () => {
     const l = section(RESTAURANT_N3, []).find((x) => x.obligationId === "dae-erp-detention");
-    expect(l?.etat).toBe("pas_encore_declare");
+    expect(l?.etat).toBe("aucun");
     expect(l?.appareils).toEqual([]);
     // La lecture de l'écran « Ce qui doit être en place », pas une seconde.
     expect(l?.fondement).toEqual(fondementDe(obligationParId("dae-erp-detention")!, contexteFondementDe({
@@ -120,20 +120,20 @@ describe("la bascule déclaré / pas encore déclaré", () => {
 
   it("le même restaurant qui déclare un DAE : « déclaré », avec l'appareil", () => {
     const l = section(RESTAURANT_N3, [dae]).find((x) => x.obligationId === "dae-erp-detention");
-    expect(l?.etat).toBe("declare");
+    expect(l?.etat).toBe("appareils");
     expect(l?.appareils.map((a) => a.id)).toEqual(["d1"]);
   });
 
   it("un appareil d'une autre catégorie ne déclare pas le DAE", () => {
     const extincteur: AppareilDuParc = { id: "e1", libelle: "Extincteur", categorie: "EXTINCTEUR" };
     const lignes = section(RESTAURANT_N3, [extincteur]);
-    expect(lignes.find((x) => x.obligationId === "dae-erp-detention")?.etat).toBe("pas_encore_declare");
-    expect(lignes.find((x) => x.obligationId === "incendie-travail-extincteurs-dotation")?.etat).toBe("declare");
+    expect(lignes.find((x) => x.obligationId === "dae-erp-detention")?.etat).toBe("aucun");
+    expect(lignes.find((x) => x.obligationId === "incendie-travail-extincteurs-dotation")?.etat).toBe("appareils");
   });
 
   it("le matériel de premiers secours n'est jamais « déclaré » par le parc : par sa case seulement", () => {
     const l = section(RESTAURANT_N3, [dae]).find((x) => x.obligationId === "secours-etablissement-materiel");
-    expect(l?.etat).toBe("pas_encore_declare");
+    expect(l?.etat).toBe("aucun");
     // ~~« ailleurs »~~ (2026-11-06, relecture) : la ligne lit sa case.
     const cochee = lignesEquipementsSecurite(
       determineObligationsApplicables(RESTAURANT_N3, []),
@@ -141,7 +141,7 @@ describe("la bascule déclaré / pas encore déclaré", () => {
       SANS_ERP,
       new Map([["secours-etablissement-materiel", { declareLe: new Date(), note: null }]]),
     ).find((x) => x.obligationId === "secours-etablissement-materiel");
-    expect(cochee?.etat).toBe("declare");
+    expect(cochee?.etat).toBe("appareils");
   });
 });
 
@@ -219,7 +219,7 @@ describe("« Déclarer » suit l'écran, pas le référentiel seul (revue c6, 20
 
   it("tel que le référentiel le porte, la ligne attend sa case", () => {
     const [l] = lignesEquipementsSecurite([applicable(materiel)], [], contexte);
-    expect(l?.etat).toBe("pas_encore_declare");
+    expect(l?.etat).toBe("aucun");
   });
 
   it("au rythme annuel, l'écran ne la montre pas : la section ne pose pas la ligne", () => {
