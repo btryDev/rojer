@@ -62,7 +62,7 @@ export default async function ControlePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { etablissement, db, user } = await requireEtablissement(id);
+  const { etablissement, db, compte } = await requireEtablissement(id);
   // Une horloge, lue une fois : l'âge du DUERP et la fenêtre de douze mois
   // décrivent le même instant.
   const maintenant = new Date();
@@ -110,7 +110,7 @@ export default async function ControlePage({
     // (relecture du 2026-11-05).
     // `null` = lecture en échec ; un dossier introuvable rend aussi `null`,
     // mais `requireEtablissement` l'a déjà écarté plus haut.
-    lireAnnexesDuRegistre(db, id, user.id).catch((e: unknown) => {
+    lireAnnexesDuRegistre(db, id, compte.compteId).catch((e: unknown) => {
       console.error("controle : lecture des annexes du registre en échec", e);
       return null;
     }),

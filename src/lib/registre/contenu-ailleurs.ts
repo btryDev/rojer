@@ -179,8 +179,8 @@ export async function lireContenuTenuAilleurs(
   // requêtes, et la mémoïsation de la page fait le reste. Le PDF, lui, passe
   // par `contenuTenuAilleursDepuis` avec un parc déjà chargé.
   if (section.id === ID_FICHE_ANNEXES) {
-    const { user, db } = await requireCompte();
-    return lireAnnexesDuRegistre(db, etablissementId, user.id);
+    const { compte, db } = await requireCompte();
+    return lireAnnexesDuRegistre(db, etablissementId, compte.compteId);
   }
   if (!section.categoriesEquipement?.length) return null;
   const [equipements, zones, verifications, marques] = await Promise.all([
@@ -219,13 +219,13 @@ export async function lireContenuTenuAilleurs(
 export async function lireAnnexesDuRegistre(
   db: Db,
   etablissementId: string,
-  userId: string,
+  compteId: string,
 ): Promise<ContenuAilleurs | null> {
   // Le client et le compte sont REÇUS (relecture du 2026-11-05) : le PDF et
   // le ZIP les tiennent déjà, et une seconde garde ici en ferait un second
   // contexte d'authentification. `listerEtatsPermanents` lit encore la
   // session pour ses déclarations — c'est sa portée, antérieure à ce lot.
-  const dossier = await obligationsApplicablesDuDossier(db, etablissementId, userId);
+  const dossier = await obligationsApplicablesDuDossier(db, etablissementId, compteId);
   if (!dossier) return null;
   const etats = await listerEtatsPermanents(
     dossier.etab,

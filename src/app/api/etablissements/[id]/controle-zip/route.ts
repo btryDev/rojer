@@ -121,7 +121,7 @@ export async function GET(
   const { id } = await context.params;
   // L'utilisateur, lu une fois ici, est passé aux builders (M7) : hors rendu,
   // chaque `requireUser()` est un `getUser()` réseau.
-  const { db, etablissement } = await requireEtablissement(id);
+  const { db, compte, etablissement } = await requireEtablissement(id);
 
   // Une place d'export (H3, `exports/limite.ts`), tenue pendant la
   // construction — lectures, quatre rendus PDF, vérification des fichiers — et
@@ -132,7 +132,7 @@ export async function GET(
   if (liberer instanceof Response) return liberer;
   let archive: Awaited<ReturnType<typeof construireArchive>>;
   try {
-    archive = await construireArchive(db, id, etablissement);
+    archive = await construireArchive(db, id, etablissement, compte.compteId);
   } finally {
     liberer();
   }
@@ -150,6 +150,8 @@ async function construireArchive(
   db: Db,
   id: string,
   etablissement: Awaited<ReturnType<typeof requireEtablissement>>["etablissement"],
+  /** Le compte de la session : le registre et ses annexes se lisent avec lui. */
+  compteId: string,
 ) {
   // LA FRAÎCHEUR SE LIT AVANT TOUT LE RESTE, et elle ne répare rien.
   // Ce dossier part chez un tiers qui n'a aucun moyen de recouper ce
@@ -330,7 +332,7 @@ async function construireArchive(
   // ne se compose qu'à partir de ce qu'il porte.
   let annexesListees: { pieceId: string; titre: string }[] | null = null;
   try {
-    const data = await construireRegistreData(db, id, user.id);
+    const data = await construireRegistreData(db, id, compteId);
     if (data) {
       for (const v of data.verifsEnAttente) {
         if (v.contractuelle) echeancesContractuelles.add(v.id);
@@ -351,7 +353,7 @@ async function construireArchive(
   // ne prive pas l'autre (seconde relecture du 2026-11-05).
   if (annexesListees === null) {
     annexesListees = await lire(PIECES_ZIP.annexes, [], async () =>
-      piecesDesAnnexes(await lireAnnexesDuRegistre(db, id, user.id)),
+      piecesDesAnnexes(await lireAnnexesDuRegistre(db, id, compteId)),
     );
   }
 

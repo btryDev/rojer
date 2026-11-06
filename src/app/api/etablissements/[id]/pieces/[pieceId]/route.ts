@@ -18,12 +18,12 @@ export async function GET(
   context: { params: Promise<{ id: string; pieceId: string }> },
 ) {
   const { id, pieceId } = await context.params;
-  const { db, user } = await requireEtablissement(id);
+  const { db, compte } = await requireEtablissement(id);
   const piece = await db.pieceEtatPermanent.findFirst({
     where: {
       id: pieceId,
       etablissementId: id,
-      etablissement: { entreprise: { userId: user.id } },
+      etablissement: { entreprise: { compteId: compte.compteId } },
     },
     select: { fichierCle: true, fichierNom: true, fichierMime: true },
   });

@@ -293,7 +293,7 @@ export async function listerEtatsPermanents(
       : db.pieceEtatPermanent.findMany({
           where: {
             etablissementId: etablissement.id,
-            etablissement: { entreprise: { userId: user.id } },
+            etablissement: { entreprise: { compteId: compte.compteId } },
           },
           select: {
             id: true,
