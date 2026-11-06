@@ -29,6 +29,13 @@ import {
  * Il rougit si l'annuelle ERP est un jour restreinte aux quatre premières
  * catégories sans que la ligne de la norme le soit du même mouvement : la
  * 5ᵉ catégorie n'aurait plus d'annuelle du tout.
+ *
+ * [2026-11-05, ADR-057 : ~~la ligne de la norme porte `erp: false`~~ — la
+ * partition est désormais le GESTE. L'annuelle ERP, celle du Code du travail
+ * et, en 5ᵉ catégorie, PE 4 § 2 portent `verification_periodique` : une ligne
+ * par appareil, le rythme écrit par le texte titulaire. Ce test tient
+ * toujours la même chose — une annuelle et une seule par extincteur. La
+ * décennale ERP passe au niveau audit, comme sa jumelle hors ERP.]
  */
 
 const etab = (o: Partial<EtablissementMatching>): EtablissementMatching => ({
@@ -99,12 +106,15 @@ const rythmesDeLExtincteur = (e: EtablissementMatching) =>
 // passe au niveau audit. L'annuelle reste une et une seule partout ; la
 // décennale reste une et une seule en ERP (MS 38 § 4), et n'est plus servie
 // hors ERP. Jamais deux : la partition tient toujours.
-describe("extincteur : une annuelle partout ; une décennale en ERP, aucune hors ERP", () => {
+// [2026-11-05, ADR-057 : la décennale ERP passe à son tour au niveau audit
+// (« ignorer la révision décennale de l'extincteur ») : aucune décennale n'est
+// plus servie, en ERP comme hors ERP.]
+describe("extincteur : une annuelle partout ; aucune décennale servie", () => {
   for (const { nom, e } of PROFILS) {
     it(nom, () => {
       const rythmes = rythmesDeLExtincteur(e);
       expect(rythmes.filter((r) => r === "annuelle"), nom).toHaveLength(1);
-      expect(rythmes.filter((r) => r === "decennale"), nom).toHaveLength(e.estERP ? 1 : 0);
+      expect(rythmes.filter((r) => r === "decennale"), nom).toHaveLength(0);
     });
   }
 });
@@ -117,7 +127,9 @@ describe("extincteur : une annuelle partout ; une décennale en ERP, aucune hors
  * retrouver exactement sa place : une décennale et une seule, partout.
  */
 const SANS_MARQUEUR: Obligation[] = obligationsConformite.map((o) =>
-  o.id === "incendie-travail-extincteurs-revision-atelier-decennale"
+  o.id === "incendie-travail-extincteurs-revision-atelier-decennale" ||
+  // 2026-11-05 (ADR-057) : la décennale ERP est au niveau audit à son tour.
+  o.id === "incendie-erp-extincteurs-revision-decennale"
     ? ({ ...o, niveau: undefined } as Obligation)
     : o,
 );
@@ -167,13 +179,14 @@ describe("une ancienne valeur `typeExtincteur` en base est inerte", () => {
       expect(rythmes.filter((r) => r === "annuelle")).toHaveLength(1);
       expect(rythmes.filter((r) => r === "decennale")).toHaveLength(0);
       expect(rythmes).toHaveLength(1);
-      // Le type reste inerte en ERP aussi, où la décennale est servie.
+      // Le type reste inerte en ERP aussi : ~~où la décennale est servie~~
+      // [2026-11-05, ADR-057 : elle ne l'est plus — l'annuelle seule].
       const erp = rythmesDeLAppareil(
         etab({ estERP: true, categorieErp: "N3", typeErp: "M" }),
         "EXTINCTEUR",
         { typeExtincteur },
       );
-      expect(erp.filter((r) => r === "decennale")).toHaveLength(1);
+      expect(erp).toEqual(["annuelle"]);
     });
   }
 });

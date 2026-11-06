@@ -294,7 +294,10 @@ const client = prisma as unknown as ClientPasse;
 
 const ETAB_ID = "etab-1";
 /** Établissement, annuelle, sans source : S1. */
-const AERATION_R4222_20 = "aeration-controle-installations-r4222-20";
+// [2026-11-05, ADR-057 : ~~R. 4222-20~~ passe à l'appareil ; l'obligation
+// d'établissement annuelle, sans appareil, de ces tests est désormais la
+// liste des postes à risques particuliers (R. 4624-23 III).]
+const AERATION_R4222_20 = "sante-travail-etablissement-liste-postes-risques";
 /** Équipement électrique, annuelle : S2 à S5 selon la mise en service. */
 const ELEC_ANNUELLE = "elec-travail-periodique-annuelle";
 /** Équipement électrique, contrôle UNIQUE à la mise en service. */
@@ -547,6 +550,7 @@ describe("l'export JSON — des identifiants, jamais un nom", () => {
           libelleObligation: "Contrôle demandé par MutuelleTruc",
           periodicite: "annuelle",
           realisateurRequis: ["exploitant"],
+          fondeeAussiPar: [],
           datePrevue: d("2026-09-17"),
           statut: "planifiee",
           prescriptionId: "p1",
@@ -673,6 +677,7 @@ describe("appliquerPlanEnMemoire — ce que la base porterait après le plan", (
           libelleObligation: "y",
           periodicite: "semestrielle",
           realisateurRequis: ["exploitant"],
+          fondeeAussiPar: [],
           datePrevue: d("2026-06-01"),
           statut: "a_planifier",
           prescriptionId: "p",

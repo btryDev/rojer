@@ -42,6 +42,7 @@
 
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
+import { gesteDe } from "@/lib/referentiels/conformite/geste";
 import {
   estPorteeParEquipement,
   porteurDe,
@@ -1251,7 +1252,7 @@ export function determineObligationsApplicables(
     const res = evaluerObligation(o, etab, equipements);
     if (res) out.push(res);
   }
-  return resoudreGroupesExclusifs(out);
+  return fusionnerGestes(resoudreGroupesExclusifs(out));
 }
 
 /** Jours d'un rythme, pour comparer deux membres d'un groupe ; sans rythme = le moins exigeant. */
@@ -1308,6 +1309,140 @@ function resoudreGroupesExclusifs(
     const g = a.obligation.groupeExclusif;
     return g === undefined || retenu.get(g) === a;
   });
+}
+
+/**
+ * D'où vient le rythme d'une obligation, pour départager deux membres d'un
+ * geste au même rythme : le texte, puis la norme, puis le défaut annuel
+ * (ADR-039 — « un rythme écrit l'emporte toujours »). Plus petit = plus fort.
+ */
+function rangDuRythme(o: Obligation): number {
+  if (o.rythmeRetenu === undefined) return 0;
+  return o.rythmeRetenu.motif === "norme" ? 1 : 2;
+}
+
+/**
+ * `a` est-il le titulaire plutôt que `b` sur un appareil (ADR-057) ? Le rythme
+ * le plus court ; à rythme égal, le rythme écrit par un texte sur celui d'une
+ * norme ou du défaut ; puis le membre ÉTABLI sur celui que retient le
+ * silence (comme `lEmporte`) ; à égalité encore, le premier du référentiel,
+ * que l'ordre d'appel garde. Le rang du rythme avant tout le reste garde la
+ * ligne d'un ERP sous son obligation ERP : sans lui, l'annuelle du Code du
+ * travail (rythme de norme), placée plus haut dans le référentiel, prendrait
+ * les lignes d'extincteur de tous les ERP employeurs.
+ */
+function estTitulairePlutotQue(
+  a: ObligationApplicable,
+  b: ObligationApplicable,
+): boolean {
+  const ja = joursDuRythme(a.obligation);
+  const jb = joursDuRythme(b.obligation);
+  if (ja !== jb) return ja < jb;
+  const ra = rangDuRythme(a.obligation);
+  const rb = rangDuRythme(b.obligation);
+  if (ra !== rb) return ra < rb;
+  return estAConfirmer(b) && !estAConfirmer(a);
+}
+
+/**
+ * Un geste, une ligne par appareil (ADR-057). Sur chaque appareil, les
+ * obligations applicables qui portent le même geste (`gesteDe`) se réunissent
+ * sous un TITULAIRE (`estTitulairePlutotQue`) : lui seul garde l'appareil dans
+ * ses `equipementsConcernes`, les autres l'en retirent et lui sont rattachées
+ * dans `aussiFondeePar`. Une obligation qui n'a plus aucun appareil sort du
+ * résultat.
+ *
+ * Par appareil et non par obligation : `PE 4 § 2` rejoint l'annuelle ERP sur
+ * un extincteur et reste seul sur un ascenseur. Les membres absorbés restent
+ * dans l'ordre du référentiel, celui de l'appel.
+ *
+ * Ce que la fusion ne fait pas : choisir un rythme. La ligne garde celui de
+ * son titulaire, qui est par construction le plus court des membres ; une
+ * prescription particulière s'applique ensuite (`appliquerPrescriptions`,
+ * qui sait la retrouver quand elle vise un membre absorbé).
+ */
+function fusionnerGestes(
+  applicables: ObligationApplicable[],
+): ObligationApplicable[] {
+  const membresParAppareil = new Map<string, ObligationApplicable[]>();
+  for (const a of applicables) {
+    if (a.porteur !== "equipement" || gesteDe(a.obligation) === null) continue;
+    for (const e of a.equipementsConcernes) {
+      const membres = membresParAppareil.get(e.id) ?? [];
+      membres.push(a);
+      membresParAppareil.set(e.id, membres);
+    }
+  }
+
+  const retires = new Map<ObligationApplicable, Set<string>>();
+  const absorbes = new Map<ObligationApplicable, Record<string, Obligation[]>>();
+  for (const [appareil, membres] of membresParAppareil) {
+    for (const geste of new Set(membres.map((m) => gesteDe(m.obligation)))) {
+      const duGeste = membres.filter((m) => gesteDe(m.obligation) === geste);
+      if (duGeste.length < 2) continue;
+      const titulaire = duGeste.reduce((t, m) =>
+        estTitulairePlutotQue(m, t) ? m : t,
+      );
+      const table = absorbes.get(titulaire) ?? {};
+      table[appareil] = duGeste
+        .filter((m) => m !== titulaire)
+        .map((m) => m.obligation);
+      absorbes.set(titulaire, table);
+      for (const m of duGeste) {
+        if (m === titulaire) continue;
+        const r = retires.get(m) ?? new Set<string>();
+        r.add(appareil);
+        retires.set(m, r);
+      }
+    }
+  }
+  if (absorbes.size === 0) return applicables;
+
+  const out: ObligationApplicable[] = [];
+  for (const a of applicables) {
+    const r = retires.get(a);
+    const equipementsConcernes = r
+      ? a.equipementsConcernes.filter((e) => !r.has(e.id))
+      : a.equipementsConcernes;
+    if (r && equipementsConcernes.length === 0) continue;
+    const table = absorbes.get(a);
+    out.push({
+      ...a,
+      equipementsConcernes,
+      ...(table ? { aussiFondeePar: table } : {}),
+    });
+  }
+  return out;
+}
+
+/**
+ * Toutes les obligations que les lignes suivent, ABSORBÉES COMPRISES
+ * (ADR-057) : les titulaires, puis, sans doublon, les obligations qu'un
+ * titulaire a absorbées sur l'un de ses appareils. Une obligation absorbée
+ * n'est pas perdue — sa ligne est celle du titulaire, qui la cite.
+ *
+ * La lecture à prendre partout où l'on demande « quelles obligations
+ * s'appliquent ici ? » plutôt que « quelles lignes naissent ? » : le guide,
+ * la couverture, les comptes. `determineObligationsApplicables` rend les
+ * LIGNES ; ses `obligation.id` seuls oublieraient les absorbées.
+ */
+export function obligationsSuivies(
+  applicables: readonly ObligationApplicable[],
+): Obligation[] {
+  const vues = new Set<string>();
+  const out: Obligation[] = [];
+  const ajouter = (o: Obligation) => {
+    if (vues.has(o.id)) return;
+    vues.add(o.id);
+    out.push(o);
+  };
+  for (const a of applicables) ajouter(a.obligation);
+  for (const a of applicables) {
+    for (const membres of Object.values(a.aussiFondeePar ?? {})) {
+      for (const m of membres) ajouter(m);
+    }
+  }
+  return out;
 }
 
 /**

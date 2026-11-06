@@ -1313,6 +1313,7 @@ describe("réconciliation — cycles de vérification", () => {
           libelleObligation: "Obligation porte-maintien",
           periodicite: "autre",
           realisateurRequis: ["personne_qualifiee"],
+          fondeeAussiPar: [],
           datePrevue: new Date("2026-03-01T00:00:00Z"),
           statut: "realisee_conforme",
           prescriptionId: null,

@@ -4,8 +4,8 @@
      écraserait la correction, et un test compare déjà ce fichier au rendu
      du script. Pour le mettre à jour : pnpm verification --ecrire -->
 
-**Généré le** : 2026-11-04
-**Référentiel** : `2026-11-04.1`
+**Généré le** : 2026-11-06
+**Référentiel** : `2026-11-06.1`
 **Régénérer** : `pnpm verification --ecrire`
 
 Ce document répond à une question, et à une seule : **de quoi le
@@ -158,8 +158,8 @@ Aucun domaine n'est entièrement dépourvu de verbatim.
 
 |  | obl. | réf. | 5 | 4 | 3 | 2 | 1 | 0 | vérifiées à la source | sans ancre | lu entre |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `equipement` | 96 | 201 | 62 | 33 | 1 | · | · | · | 95 / 96 — 99 % | 22 / 201 | 2026-08-26 → 2026-10-18 |
-| `etablissement` | 95 | 218 | 53 | 40 | 2 | · | · | · | 93 / 95 — 98 % | 0 / 218 | 2026-08-26 → 2026-11-03 |
+| `equipement` | 99 | 210 | 64 | 33 | 2 | · | · | · | 97 / 99 — 98 % | 22 / 210 | 2026-08-26 → 2026-10-18 |
+| `etablissement` | 92 | 209 | 51 | 40 | 1 | · | · | · | 91 / 92 — 99 % | 0 / 209 | 2026-08-26 → 2026-11-03 |
 | `salarie` | 14 | 33 | · | 13 | · | 1 | · | · | 13 / 14 — 93 % | 1 / 33 | 2026-08-27 → 2026-10-07 |
 
 Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, mesuré au plancher — **5** première main, **4** agent + verbatim, **3** lu sans verbatim, **2** indirect, **1** sans trace, **0** non rattaché.
@@ -281,7 +281,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `elec-salarie-habilitation` | electricite | salarie | 2 | 4 · agent + verbatim | 2 · indirect | 1 / 2 | 2026-09-01 → 2026-10-07 |
 | `elec-travail-habilitation-personnel` | electricite | equipement | 2 | 4 · agent + verbatim | 3 · lu sans verbatim | 1 / 2 | 2026-08-26 → 2026-09-01 |
-| `incendie-erp-pe4-entretien-installations-techniques` | incendie | etablissement | 3 | 5 · première main | 3 · lu sans verbatim | 0 / 3 | 2026-08-26 → 2026-09-27 |
+| `incendie-erp-pe4-entretien-installations-techniques` | incendie | equipement | 3 | 5 · première main | 3 · lu sans verbatim | 0 / 3 | 2026-08-26 → 2026-09-27 |
 | `sante-travail-etablissement-adhesion-spst` | sante_travail | etablissement | 3 | 4 · agent + verbatim | 3 · lu sans verbatim | 0 / 3 | 2026-08-31 |
 | `aeration-erp-chauffage-ventilation-annuelle` | aeration | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-01 → 2026-09-27 |
 | `aeration-erp-ps-surveillance-qualite-air-inf-250` | aeration | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
@@ -369,7 +369,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `signalisation-stockage-substances-dangereuses` | signalisation | equipement | 2 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 2 | 2026-09-02 → 2026-10-17 |
 | `stockage-dangereux-etablissement-formation-personnel` | stockage_dangereux | etablissement | 4 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 4 | 2026-08-31 → 2026-10-07 |
 | `stockage-dangereux-fiches-donnees` | stockage_dangereux | equipement | 1 | 4 · agent + verbatim | 4 · agent + verbatim | 0 / 1 | 2026-09-01 |
-| `aeration-controle-installations-r4222-20` | aeration | etablissement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-08-27 |
+| `aeration-controle-installations-r4222-20` | aeration | equipement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-08-27 |
 | `aeration-erp-filtres-livret-entretien` | aeration | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-10-14 |
 | `aeration-erp-filtres-visite-periodique` | aeration | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-10-14 |
 | `aeration-habitation-vmc-gaz-annuelle` | aeration | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-27 |
@@ -448,7 +448,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `incendie-erp-visite-commission-cat4-r-avec-hebergement-triennale` | incendie | etablissement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-08-26 → 2026-10-17 |
 | `incendie-erp-visite-commission-cat4-r-sans-hebergement-quinquennale` | incendie | etablissement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-08-26 → 2026-10-17 |
 | `incendie-erp-visite-commission-cat4-triennale` | incendie | etablissement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-08-26 → 2026-10-17 |
-| `incendie-hotel-po-controle-biennal-installations` | incendie | etablissement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-08-26 → 2026-10-07 |
+| `incendie-hotel-po-controle-biennal-installations` | incendie | equipement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-08-26 → 2026-10-07 |
 | `incendie-travail-chiffons-impregnes-recipients-clos` | incendie | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-27 |
 | `incendie-travail-consigne-affichee` | incendie | etablissement | 5 | 5 · première main | 5 · première main | 0 / 5 | 2026-09-01 → 2026-10-14 |
 | `incendie-travail-eclairage-securite-autonomie-semestrielle` | incendie | equipement | 4 | 5 · première main | 5 · première main | 0 / 4 | 2026-09-01 |

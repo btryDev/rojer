@@ -26,6 +26,7 @@ import {
   type DomaineObligation,
   type Obligation,
   type PorteurObligation,
+  type ReferenceLegale,
 } from "./types";
 import { obligationsElectricite } from "./electricite";
 import { obligationsIncendie } from "./incendie";
@@ -52,6 +53,7 @@ import { obligationsEauChaudeSanitaire } from "./eau-chaude-sanitaire";
 import { obligationsEtablissementSportif } from "./etablissement-sportif";
 import { obligationsScene } from "./scene";
 import { estNiveauAudit } from "./niveau-audit";
+import { gesteDe, referencesDuGeste } from "./geste";
 
 export {
   obligationsElectricite,
@@ -564,7 +566,19 @@ export const obligationsConformite: Obligation[] = [
 // d'EL 18 dit « personne qualifiée » ; l'article est au chapitre des
 // installations électriques et vise leur exploitation : la précision le lit,
 // elle n'ajoute rien. 205 + 0 − 0 = 205.
-export const REFERENTIEL_VERSION = "2026-11-04.1";
+// `2026-11-06.1` (`lot/adr-057-a`, ADR-057, décisions de la propriétaire du
+// 2026-11-05) : pas de chapeaux, un geste une ligne. `PE 4 § 2`,
+// `PO 1 § 3` et `R. 4222-20` passent de l'établissement à l'appareil, sous
+// le même identifiant (dispersion de la ligne d'établissement,
+// `realisationDispersee`) ; le champ `geste` (`verification_periodique`) entre
+// sur quinze obligations, qui ne font plus qu'une ligne par appareil ; les
+// cinq lignes « travail » du geste perdent `erp: false` ; six obligations
+// passent au niveau audit (les deux de l'art. 15 de l'arrêté du 4 novembre
+// 1993, la décennale ERP de l'extincteur, les trois signalisations des
+// extincteurs et RIA). 205 + 0 − 0 = 205 ; 18 au niveau audit, 187 suivies ;
+// par porteur, 99 équipement, 92 établissement, 14 salarié — remesuré en
+// appelant `obligationsConformite`, `porteurDe` et `estNiveauAudit`.
+export const REFERENTIEL_VERSION = "2026-11-06.1";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.
@@ -891,6 +905,10 @@ export function empreinteReferentiel(
         // un établissement porte plusieurs types : il entre, en segment
         // ajouté et seulement quand il est présent.
         ...(o.groupeExclusif ? [`groupe:${o.groupeExclusif}`] : []),
+        // Le geste (ADR-057) décide du NOMBRE de lignes d'un appareil : les
+        // membres applicables d'un même geste n'en font qu'une. Il entre, en
+        // segment ajouté et seulement quand il est présent.
+        ...(gesteDe(o) ? [`geste:${gesteDe(o)}`] : []),
         ...(o.rythmeRetenu
           ? [
               `rythme:${o.rythmeRetenu.periodicite}:${o.rythmeRetenu.motif}:${
@@ -928,6 +946,41 @@ export function obligationParId(id: string): Obligation | undefined {
     for (const o of obligationsConformite) _index.set(o.id, o);
   }
   return _index.get(id);
+}
+
+/**
+ * Les AUTRES obligations du même geste (ADR-057). Ce sont celles dont la
+ * ligne d'un appareil peut être reprise quand le titulaire du geste change —
+ * l'établissement devient ERP, change de catégorie : la ligne reste la même
+ * rangée, avec ses rapports (`VerificationGenere.succedeA`). Sans filtre de
+ * catégorie, et c'est exact : une ligne n'existe sur un appareil que si son
+ * obligation en visait la catégorie. Vide pour une obligation sans geste.
+ */
+export function autresMembresDuGeste(o: Obligation): string[] {
+  const geste = gesteDe(o);
+  if (geste === null) return [];
+  return obligationsConformite
+    .filter((m) => m.id !== o.id && gesteDe(m) === geste)
+    .map((m) => m.id);
+}
+
+/**
+ * Les références qu'une LIGNE de suivi cite (ADR-057) : celles de son
+ * obligation, puis celles des obligations du même geste qu'elle suit aussi sur
+ * son appareil (`Verification.fondeeAussiPar`). Vide pour une obligation
+ * inconnue (une prescription sur mesure, une obligation retirée). Une
+ * absorbée sortie du référentiel est passée sous silence.
+ */
+export function referencesDeLigne(ligne: {
+  obligationId: string;
+  fondeeAussiPar?: readonly string[] | null;
+}): ReferenceLegale[] {
+  const titulaire = obligationParId(ligne.obligationId);
+  if (titulaire === undefined) return [];
+  const absorbees = (ligne.fondeeAussiPar ?? [])
+    .map(obligationParId)
+    .filter((o): o is Obligation => o !== undefined);
+  return referencesDuGeste(titulaire, absorbees);
 }
 
 export function obligationsParDomaine(

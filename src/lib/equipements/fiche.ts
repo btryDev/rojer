@@ -730,7 +730,11 @@ export function obligationsApplicablesALAppareil(
 
   return applicables
     .filter((a) => a.porteur === "equipement")
-    .map((a) => ({ obligation: a.obligation, raisons: a.raisons }));
+    .map((a) => ({
+      obligation: a.obligation,
+      raisons: a.raisons,
+      aussiFondeePar: a.aussiFondeePar?.[eq.id] ?? [],
+    }));
 }
 
 /**
@@ -746,4 +750,9 @@ export function obligationsApplicablesALAppareil(
 export type ObligationDeLAppareil = {
   obligation: Obligation;
   raisons: string[];
+  /**
+   * Les obligations du même geste que celle-ci suit aussi sur cet appareil
+   * (ADR-057) : une seule ligne, qui cite leurs références. Vide sinon.
+   */
+  aussiFondeePar: Obligation[];
 };

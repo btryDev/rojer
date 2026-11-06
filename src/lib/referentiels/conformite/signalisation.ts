@@ -285,6 +285,10 @@ export const obligationsSignalisation: Obligation[] = [
 
   {
     id: "signalisation-incendie-moyens-lutte",
+    // ADR-057 (2026-11-05, décision de la propriétaire) : niveau audit —
+    // signalisation des extincteurs et RIA, nommée une fois par catégorie sur «
+    // Ce que Rojer ne couvre pas ».
+    niveau: "audit",
     domaine: "signalisation",
     libelle:
       "Identification des équipements de lutte contre l'incendie : coloration rouge et panneau de localisation",
@@ -304,7 +308,10 @@ export const obligationsSignalisation: Obligation[] = [
     periodicite: "autre",
     nature: "etat_permanent",
     pieceAttendue: null,
-    usageEcran: { groupe: "incendie_secours", sous: "eteindre" },
+    // ~~{ groupe: "incendie_secours", sous: "eteindre" }~~ — 2026-11-05
+    // (ADR-057) : au niveau audit, hors de l'écran, comme les autres lignes
+    // audit. À reposer si le marqueur se lève.
+    usageEcran: null,
     realisateurs: ["exploitant"],
     criticite: 3,
     typologies: { travail: true },
@@ -319,6 +326,10 @@ export const obligationsSignalisation: Obligation[] = [
     // MS39 PE26 », en regard de la ligne ci-dessus). Sœur ERP, quatre
     // premières catégories ; la 5ᵉ a sa ligne juste en dessous.
     id: "signalisation-erp-extincteurs-identification",
+    // ADR-057 (2026-11-05, décision de la propriétaire) : niveau audit —
+    // signalisation des extincteurs et RIA, nommée une fois par catégorie sur «
+    // Ce que Rojer ne couvre pas ».
+    niveau: "audit",
     domaine: "signalisation",
     libelle:
       "Identification et signalisation des moyens d'extinction, selon l'appareil (ERP des quatre premières catégories)",
@@ -356,7 +367,10 @@ export const obligationsSignalisation: Obligation[] = [
     periodicite: "autre",
     nature: "etat_permanent",
     pieceAttendue: null,
-    usageEcran: { groupe: "incendie_secours", sous: "eteindre" },
+    // ~~{ groupe: "incendie_secours", sous: "eteindre" }~~ — 2026-11-05
+    // (ADR-057) : au niveau audit, hors de l'écran, comme les autres lignes
+    // audit. À reposer si le marqueur se lève.
+    usageEcran: null,
     realisateurs: ["exploitant"],
     criticite: 3,
     typologies: { erp: { categories: ["N1", "N2", "N3", "N4"] } },
@@ -369,6 +383,10 @@ export const obligationsSignalisation: Obligation[] = [
   {
     // CRÉÉE LE 2026-10-07 — même annotation du préventeur, 5ᵉ catégorie.
     id: "signalisation-erp-5-extincteurs-identification",
+    // ADR-057 (2026-11-05, décision de la propriétaire) : niveau audit —
+    // signalisation des extincteurs et RIA, nommée une fois par catégorie sur «
+    // Ce que Rojer ne couvre pas ».
+    niveau: "audit",
     domaine: "signalisation",
     libelle:
       "Emplacement de l'extincteur repéré par une signalisation durable, panneau de localisation de l'appareil d'extinction non apparent (ERP de 5ᵉ catégorie)",
@@ -397,7 +415,10 @@ export const obligationsSignalisation: Obligation[] = [
     periodicite: "autre",
     nature: "etat_permanent",
     pieceAttendue: null,
-    usageEcran: { groupe: "incendie_secours", sous: "eteindre" },
+    // ~~{ groupe: "incendie_secours", sous: "eteindre" }~~ — 2026-11-05
+    // (ADR-057) : au niveau audit, hors de l'écran, comme les autres lignes
+    // audit. À reposer si le marqueur se lève.
+    usageEcran: null,
     realisateurs: ["exploitant"],
     criticite: 3,
     typologies: { erp: { categories: ["N5"] } },
@@ -525,6 +546,10 @@ export const obligationsSignalisation: Obligation[] = [
 
   {
     id: "signalisation-etablissement-signaux-lumineux-acoustiques-semestrielle",
+    // ADR-057 (2026-11-05, décision de la propriétaire) : niveau audit — art. 15
+    // de l'arrêté du 4 novembre 1993 non pris en compte au quotidien : le geste
+    // est celui des essais des BAES et de l'alarme, portés par l'appareil.
+    niveau: "audit",
     domaine: "signalisation",
     libelle:
       "Vérification semestrielle du bon fonctionnement des signaux lumineux et acoustiques",
@@ -557,6 +582,11 @@ export const obligationsSignalisation: Obligation[] = [
 
   {
     id: "signalisation-etablissement-alimentations-secours-annuelle",
+    // ADR-057 (2026-11-05, décision de la propriétaire) : niveau audit — art. 15
+    // de l'arrêté du 4 novembre 1993 non pris en compte au quotidien : la
+    // batterie est vérifiée par l'autonomie des BAES et la vérification de
+    // l'alarme.
+    niveau: "audit",
     domaine: "signalisation",
     libelle:
       "Vérification annuelle des alimentations de secours des signalisations",
