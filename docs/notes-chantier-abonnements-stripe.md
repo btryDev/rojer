@@ -654,6 +654,17 @@ est appliqué ; huit autres sont affichés sans l'être. Trous principaux :
   annoncé dès l'écran d'essai), et utiliser la réduction **à la conversion**
   (bandeau des 7 derniers jours : « premier mois à 15 € »). À confronter à
   5-10 dirigeants de la cible avant de figer.
+- [2026-11-06, tranché d'après la pratique courante — Docusign, Airtable,
+  Pennylane, Zendesk, et My DU, concurrent direct (1 mois) : **pas de « compte
+  en veille » à part**. Sans abonnement (fin d'essai, impayé définitif,
+  résiliation) : saisie fermée, lecture et export ouverts **pendant 12 mois**
+  après la fin de l'essai ou du dernier abonnement, puis suppression. Une
+  règle pour tous, cohérente avec les 12 mois du compte jamais payé.
+  E-mails : J-7 et J-1 avant la fin de l'essai ; J-30 et J-7 avant la
+  suppression, avec le lien d'export. Les CGU et ces e-mails disent que les
+  40 ans de conservation du DUERP incombent à l'employeur. « Valider =
+  s'abonner » protège la valeur : un compte jamais payé n'a pas de document
+  officiel à perdre. Reste à coder : la suppression à 12 mois et ses e-mails.]
 - **Export pour un ancien client : sous un délai.** Aujourd'hui, un compte
   sans abonnement garde la lecture et l'export sans limite (ADR-053 § 3) :
   Rojer stockerait à vie. À poser : un délai d'export après la fin de
