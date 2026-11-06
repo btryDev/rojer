@@ -8,6 +8,7 @@
 // le contenu reste lisible.
 
 import { useEffect, useRef } from "react";
+import { cn } from "@/lib/utils";
 
 export function Reveal({
   children,
@@ -59,11 +60,7 @@ export function Reveal({
       ref={ref}
       data-vu="false"
       style={delai ? ({ "--lp-delai": `${delai}ms` } as React.CSSProperties) : undefined}
-      className={
-        "lp-reveal" +
-        (ample ? ` lp-reveal-${ample}` : "") +
-        (className ? " " + className : "")
-      }
+      className={cn("lp-reveal", ample && `lp-reveal-${ample}`, className)}
     >
       {children}
     </Balise>

@@ -883,6 +883,13 @@
   .lp-h2 {
     font-size: clamp(1.9rem, 3.6vw, 3.1rem);
   }
+  /* Le titre d'un temps dans une section (« Simple à utiliser ») : un cran
+     au-dessus de .lp-h3, sous .lp-h2. */
+  .lp-h3-temps {
+    font-size: clamp(1.5rem, 2.2vw, 1.9rem);
+    letter-spacing: -0.03em;
+    line-height: 1.12;
+  }
   .lp-h3 {
     font-size: clamp(1.15rem, 1.5vw, 1.35rem);
     letter-spacing: -0.02em;
@@ -1118,7 +1125,6 @@
     transition:
       opacity 1000ms cubic-bezier(0.22, 1, 0.36, 1),
       transform 1400ms cubic-bezier(0.16, 1, 0.3, 1);
-    transition-delay: var(--lp-delai, 0ms);
   }
   .lp-reveal-texte {
     transform: translateY(48px);
@@ -1130,6 +1136,19 @@
     opacity: 1;
     transform: none;
   }
+}
+
+/* La fiche détachée — matière des cartes de la page publique : des
+   ombres empilées, toutes issues d'une même lumière haute (un contact net,
+   une diffusion moyenne, une longue portée), aucune perspective. */
+.lp-fiche-carte {
+  background: var(--board-card);
+  border-radius: 26px;
+  box-shadow:
+    0 0 0 1px rgba(13, 18, 36, 0.05),
+    0 2px 4px rgba(13, 18, 36, 0.04),
+    0 16px 32px -18px rgba(13, 18, 36, 0.18),
+    0 56px 90px -56px rgba(13, 18, 36, 0.42);
 }
 
 @media (prefers-reduced-motion: reduce) {

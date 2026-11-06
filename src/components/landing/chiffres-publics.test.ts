@@ -91,11 +91,33 @@ function sourcesLanding(): { fichier: string; texte: string }[] {
  * restriction, « 85 obligations · 10 domaines » rattachait aussi 85 au mot
  * « domaines », et le test échouait sur une page pourtant juste. Chaque
  * nombre appartient au mot qui le suit immédiatement, pas au suivant.
+ *
+ * Et le nombre doit être **isolé** : collé à une lettre, un point, un tiret
+ * ou un crochet, c'est une classe ou une mesure (`max-w-[42ch]`, `mt-3.5`),
+ * pas un compte — « max-w-[42ch]">Chaque obligation » faisait échouer la
+ * garde sur une page juste (2026-11-06).
  */
 function comptesAnnonces(texte: string, mot: RegExp): number[] {
-  const motif = new RegExp(String.raw`(\d+)[^\d]{0,40}?` + mot.source, "g");
+  const motif = new RegExp(
+    String.raw`(?<![\w.\-\[])(\d+)(?![\w.\]])[^\d]{0,40}?` + mot.source,
+    "g",
+  );
   return [...texte.matchAll(motif)].map((m) => Number(m[1]));
 }
+
+describe("comptesAnnonces — ce qui est un compte", () => {
+  it("lit un nombre isolé, même séparé de son mot par du JSX", () => {
+    expect(comptesAnnonces("Sur 188 obligations suivies", /obligations?/)).toEqual([188]);
+    expect(comptesAnnonces("{n}\n 85\n            obligations", /obligations?/)).toEqual([85]);
+  });
+
+  it("ne lit pas une classe ni une mesure comme un compte", () => {
+    expect(
+      comptesAnnonces('<p className="lp-texte mt-3.5 max-w-[42ch]">Chaque obligation', /obligations?/),
+    ).toEqual([]);
+    expect(comptesAnnonces('grid-cols-[0.6fr_1.4fr]"> une obligation', /obligations?/)).toEqual([]);
+  });
+});
 
 describe("les chiffres de la page publique", () => {
   it("le compte suivi est le référentiel moins le niveau audit", () => {

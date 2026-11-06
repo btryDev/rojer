@@ -1,22 +1,44 @@
 // « UN OUTIL SIMPLE ET TRANSPARENT » — en deux temps. D'abord l'usage (un
 // passage de la visite guidée des équipements), puis les sources (chaque
-// obligation cite son texte ; un rythme que le texte ne fixe pas est dit
-// comme un choix de Rojer, ADR-039).
+// obligation cite son texte).
 //
 // L'illustration suit la piste notée dans `docs/marketing/direction-
 // illustration.md` (branche `docs/communication`) : isométrie au trait fin,
 // bleu pâle, un sujet simple. Elle est décorative : tout ce qu'elle dit est
 // écrit à côté.
+//
+// Les apparitions sont « amples » (Reveal) : la section se découvre au
+// défilement, le texte d'abord, le média ensuite.
 
-import Image from "next/image";
+import { fichiersVisite } from "@/lib/visite/visites";
 import { ExtraitVideo } from "./ExtraitVideo";
+import { PhotoCadre } from "./PhotoCadre";
 import { Reveal } from "./Reveal";
 
-const SIMPLE =
-  "Chaque écran répond à une question : ce qu'il faut faire cette semaine, ce qui manque, où se trouve un rapport. Déclarer un équipement, déposer un rapport ou ajouter un salarié se fait depuis la page concernée, en quelques champs.";
+const VISITE = fichiersVisite("equipements");
 
-const TRANSPARENT =
-  "Chaque obligation cite son article (Code du travail, règlement de sécurité ERP, norme) avec un lien vers Légifrance. Quand un texte ne fixe pas de rythme, Rojer l'écrit.";
+/** Le bloc texte d'un temps : sur-titre, titre, paragraphe. */
+function Temps({
+  surTitre,
+  titre,
+  texte,
+  delai,
+  className,
+}: {
+  surTitre: string;
+  titre: string;
+  texte: string;
+  delai?: number;
+  className?: string;
+}) {
+  return (
+    <Reveal ample="texte" delai={delai} className={className}>
+      <p className="lp-eyebrow">{surTitre}</p>
+      <h3 className="lp-titre lp-h3-temps mt-3.5">{titre}</h3>
+      <p className="lp-texte mt-3.5 max-w-[42ch]">{texte}</p>
+    </Reveal>
+  );
+}
 
 export function OutilSimple() {
   return (
@@ -30,23 +52,16 @@ export function OutilSimple() {
 
         {/* 1 · Simple : le texte, puis la vidéo, plus large */}
         <div className="mt-24 grid grid-cols-1 items-center gap-12 sm:mt-40 lg:grid-cols-[0.6fr_1.4fr] lg:gap-20">
-          <Reveal ample="texte">
-            <p className="font-mono text-[0.68rem] uppercase tracking-[0.16em] text-[color:var(--board-blue-ink)]">
-              Simple
-            </p>
-            <h3 className="lp-titre mt-3.5 text-[clamp(1.5rem,2.2vw,1.9rem)]">
-              Simple à utiliser
-            </h3>
-            <p className="lp-texte mt-3.5 max-w-[42ch]">
-              {SIMPLE}
-            </p>
-          </Reveal>
-
+          <Temps
+            surTitre="Simple"
+            titre="Simple à utiliser"
+            texte="Chaque écran répond à une question : ce qu'il faut faire cette semaine, ce qui manque, où se trouve un rapport. Déclarer un équipement, déposer un rapport ou ajouter un salarié se fait depuis la page concernée, en quelques champs."
+          />
           <Reveal ample="media" delai={180}>
-            <div className="overflow-hidden rounded-[26px] bg-[color:var(--board-card)] shadow-[0_0_0_1px_rgba(13,18,36,0.05),0_2px_4px_rgba(13,18,36,0.04),0_16px_32px_-18px_rgba(13,18,36,0.18),0_56px_90px_-56px_rgba(13,18,36,0.42)]">
+            <div className="lp-fiche-carte overflow-hidden">
               <ExtraitVideo
-                src="/videos/visite-equipements.mp4"
-                poster="/videos/visite-equipements.jpg"
+                src={VISITE.video}
+                poster={VISITE.affiche}
                 debut={30}
                 fin={47}
                 label="Démonstration : dépôt du rapport des extincteurs et calcul de la prochaine échéance"
@@ -57,31 +72,20 @@ export function OutilSimple() {
 
         {/* 2 · Transparent : l'illustration, puis le texte */}
         <div className="mt-28 grid grid-cols-1 items-center gap-12 sm:mt-40 lg:grid-cols-[1.15fr_0.85fr] lg:gap-20">
-          <Reveal ample="texte" delai={180} className="lg:order-2">
-            <p className="font-mono text-[0.68rem] uppercase tracking-[0.16em] text-[color:var(--board-blue-ink)]">
-              Transparent
-            </p>
-            <h3 className="lp-titre mt-3.5 text-[clamp(1.5rem,2.2vw,1.9rem)]">
-              Transparent sur ses sources
-            </h3>
-            <p className="lp-texte mt-3.5 max-w-[42ch]">
-              {TRANSPARENT}
-            </p>
-            <span className="mt-5 inline-flex rounded-full bg-[color:var(--board-card)] px-3.5 py-2 font-mono text-[0.7rem] tracking-[0.04em] text-[color:var(--board-ink)] shadow-[0_0_0_1px_rgba(10,10,10,0.08)]">
-              1 fois par an (choix de Rojer)
-            </span>
-          </Reveal>
-
+          <Temps
+            surTitre="Transparent"
+            titre="Transparent sur ses sources"
+            texte="Chaque obligation cite son article (Code du travail, règlement de sécurité ERP, norme) avec un lien vers Légifrance. Quand un texte ne fixe pas de rythme, Rojer l'écrit."
+            delai={180}
+            className="lg:order-2"
+          />
           <Reveal ample="media" className="lg:order-1">
-            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[30px] bg-[color:var(--board-blue-pale)] lg:rounded-[38px]">
-              <Image
-                src="/illustrations/landing/transparence-sources.jpg"
-                alt=""
-                fill
-                sizes="(max-width: 1023px) 92vw, 55vw"
-                className="object-cover"
-              />
-            </div>
+            <PhotoCadre
+              photo={{ src: "/illustrations/landing/transparence-sources.jpg", alt: "" }}
+              fond="var(--board-blue-pale)"
+              ratio="4 / 3"
+              sizes="(max-width: 1023px) 92vw, (max-width: 1600px) 50vw, 800px"
+            />
           </Reveal>
         </div>
       </div>

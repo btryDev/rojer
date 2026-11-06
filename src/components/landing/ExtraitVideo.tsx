@@ -1,12 +1,12 @@
 "use client";
 
-// Un passage d'une vidéo, joué en boucle, muet. La vidéo n'est chargée que
-// lorsque la section approche de l'écran : la page ne paie pas ses
-// mégaoctets à l'ouverture. Avec `prefers-reduced-motion`, rien ne joue :
-// l'image d'aperçu reste.
+// Un passage d'une vidéo, joué en boucle, muet. `preload="none"` : rien
+// n'est téléchargé avant que la section approche de l'écran. Avec
+// `prefers-reduced-motion`, rien ne joue : l'image d'aperçu reste.
 //
-// TODO lot suivant : couper l'extrait en fichier à part (FFmpeg) pour ne
-// plus télécharger la visite entière.
+// Le passage est lu dans la visite entière, faute d'extrait coupé (FFmpeg
+// n'est pas installé) : quand il le sera, `debut`/`fin` disparaissent au
+// profit de l'attribut `loop`.
 
 import { useEffect, useRef } from "react";
 
@@ -31,28 +31,17 @@ export function ExtraitVideo({
     if (!video) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
+    // Ramène au début du passage hors des bornes — au premier départ comme
+    // à chaque tour.
     const boucler = () => {
       if (video.currentTime >= fin || video.currentTime < debut - 0.5) {
         video.currentTime = debut;
       }
     };
-    const demarrer = () => {
-      video.currentTime = debut;
-      void video.play().catch(() => {});
-    };
-
     const observateur = new IntersectionObserver(
       ([entree]) => {
-        if (!entree.isIntersecting) {
-          video.pause();
-          return;
-        }
-        if (!video.src) {
-          video.src = src;
-          video.addEventListener("loadedmetadata", demarrer, { once: true });
-        } else {
-          void video.play().catch(() => {});
-        }
+        if (entree.isIntersecting) void video.play().catch(() => {});
+        else video.pause();
       },
       { rootMargin: "200px 0px" },
     );
@@ -62,11 +51,12 @@ export function ExtraitVideo({
       observateur.disconnect();
       video.removeEventListener("timeupdate", boucler);
     };
-  }, [src, debut, fin]);
+  }, [debut, fin]);
 
   return (
     <video
       ref={ref}
+      src={src}
       poster={poster}
       muted
       playsInline
