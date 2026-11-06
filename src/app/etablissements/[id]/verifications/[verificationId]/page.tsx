@@ -25,7 +25,6 @@ import {
 } from "@/lib/referentiels/conformite/initiative";
 import { MentionPourInformation } from "@/components/calendrier/MentionPourInformation";
 import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
-import { referencesCitees } from "@/lib/referentiels/conformite/rythme-retenu";
 import { MentionAConfirmer } from "@/components/calendrier/MentionAConfirmer";
 import { BlocAConfirmer } from "@/components/calendrier/BlocAConfirmer";
 import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
@@ -67,7 +66,7 @@ import {
 } from "@/lib/calendrier/labels";
 import { estAppareilRetire } from "@/lib/equipements/retrait";
 import { LABEL_CATEGORIE_EQUIPEMENT } from "@/lib/equipements/labels";
-import { obligationParId } from "@/lib/referentiels/conformite";
+import { obligationParId, referencesDeLigne } from "@/lib/referentiels/conformite";
 import { modeSurLEcranEnPlace } from "@/lib/etats-permanents/regle";
 import {
   estPorteeParEquipement,
@@ -164,6 +163,9 @@ export default async function VerificationDetailPage({
     : calendrier;
 
   const obligation = obligationParId(v.obligationId);
+  // Les références de la LIGNE : son obligation, et celles du même geste
+  // qu'elle suit aussi sur son appareil (ADR-057).
+  const references = referencesDeLigne(v);
   // La ligne est-elle retenue par prudence ? Même calcul que le calendrier
   // (`matching/marques.ts`) : la fiche d'une ligne ne peut pas taire ce que
   // la liste dit.
@@ -572,7 +574,7 @@ export default async function VerificationDetailPage({
 
       {/* Ce qui fonde l'obligation — replié : on le consulte une fois, on
           ne le relit pas à chaque visite. */}
-      {obligation && obligation.referencesLegales.length > 0 ? (
+      {references.length > 0 ? (
         <details className="carte-board group overflow-hidden">
           <summary className="flex cursor-pointer select-none items-center justify-between gap-4 px-7 py-5 sm:px-8">
             <span className="board-eyebrow text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
@@ -580,8 +582,8 @@ export default async function VerificationDetailPage({
             </span>
             <span className="flex items-center gap-3">
               <span className="pastille-board bg-[color:var(--board-slate-pale)] text-[color:var(--board-slate-mid)]">
-                {referencesCitees(obligation).length} référence
-                {referencesCitees(obligation).length > 1 ? "s" : ""}
+                {references.length} référence
+                {references.length > 1 ? "s" : ""}
               </span>
               <span
                 aria-hidden
@@ -593,8 +595,10 @@ export default async function VerificationDetailPage({
           </summary>
           <ul className="m-0 list-none border-t border-[color:var(--board-slate-line)] p-0">
             {/* La norme d'un rythme retenu y figure, sous son libellé
-                « Norme » (ADR-039) : citée comme norme, jamais comme un article. */}
-            {referencesCitees(obligation).map((ref, idx) => (
+                « Norme » (ADR-039) : citée comme norme, jamais comme un article.
+                Une ligne qui suit plusieurs textes du même geste les cite tous
+                (ADR-057, `referencesDeLigne`). */}
+            {references.map((ref, idx) => (
               <li
                 key={idx}
                 className="flex flex-wrap items-center justify-between gap-3 border-t border-[color:var(--board-slate-line)] px-7 py-4 first:border-t-0 sm:px-8"

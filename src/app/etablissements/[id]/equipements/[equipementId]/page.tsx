@@ -3,6 +3,7 @@ import { suiviParPersonne } from "@/lib/referentiels/conformite/transmissions";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { mentionRythmeRetenu } from "@/lib/referentiels/conformite/mention-rythme";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
+import { intervenantsCommuns } from "@/lib/referentiels/conformite/geste";
 import Link from "next/link";
 import { FormulairePoint } from "@/components/points-a-corriger/FormulairePoint";
 import { ListePoints } from "@/components/points-a-corriger/ListePoints";
@@ -66,6 +67,7 @@ import { ReferencesMateriel } from "@/components/equipements/ReferencesMateriel"
 import { LABEL_PERIODICITE, LABEL_REALISATEUR } from "@/lib/calendrier/labels";
 import { LABEL_RESULTAT } from "@/lib/rapports/resultats";
 import type { RegistreLigne } from "@/lib/calendrier/etats";
+import type { Realisateur } from "@/lib/referentiels/types-communs";
 import {
   formaterDateLongueFr,
   formaterJourMoisFr,
@@ -175,9 +177,8 @@ export default async function EquipementDetailPage({
   // automatique en ERP annonçait 2 obligations sur 4. La pastille et le
   // panneau « ? » lisent désormais le MOTEUR, toutes natures, comme la carte
   // des événementielles dont c'est la source (`obligationsApplicablesALAppareil`).]
-  const obligationsCitees = obligationsApplicablesALAppareil(eq).map(
-    (a) => a.obligation,
-  );
+  const deLAppareil = obligationsApplicablesALAppareil(eq);
+  const obligationsCitees = deLAppareil.map((a) => a.obligation);
 
   const caracteristiques = caracteristiquesLisibles(
     eq.categorie,
@@ -285,7 +286,13 @@ export default async function EquipementDetailPage({
   const chapeau = `${chapeauAFaire(aFaire, tete, maintenant)}. ${trace}`;
   const resteAFaire = mentionResteAFaire(aFaire);
 
-  const realisateurs = realisateursRequis(obligationsCitees);
+  // Une ligne qui suit plusieurs textes du même geste (ADR-057) n'admet que
+  // l'intervenant que tous admettent.
+  const realisateurs = realisateursRequis(
+    deLAppareil.map((a) => ({
+      realisateurs: intervenantsCommuns([a.obligation, ...a.aussiFondeePar]),
+    })),
+  );
 
   // Les propriétés qui bornent réellement une obligation de CET appareil.
   // Une question à trois états est posée dès que la catégorie correspond,
@@ -419,7 +426,7 @@ export default async function EquipementDetailPage({
                       Chacune cite l&apos;article qui la fonde&nbsp;: c&apos;est
                       celui qu&apos;on présente en cas de contrôle.
                     </p>
-                    {obligationsCitees.map((o) => (
+                    {deLAppareil.map(({ obligation: o, aussiFondeePar }) => (
                       <div
                         key={o.id}
                         className="rounded-[18px] bg-[color:var(--board-slate-pale)] px-4 py-3.5"
@@ -433,6 +440,16 @@ export default async function EquipementDetailPage({
                         <p className="m-0 mt-1.5 text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
                           {o.referencesLegales[0].reference}
                         </p>
+                        {/* ADR-057 : les autres textes qui demandent le même
+                            contrôle sur cet appareil — une seule ligne. */}
+                        {aussiFondeePar.length > 0 ? (
+                          <p className="m-0 mt-1 text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+                            Aussi exigé par{" "}
+                            {aussiFondeePar
+                              .map((a) => a.referencesLegales[0].reference)
+                              .join(" · ")}
+                          </p>
+                        ) : null}
                         <span className="mt-3 flex flex-wrap items-center gap-1.5">
                           <span className="pastille-board bg-[color:var(--board-blue-pale)] text-[color:var(--board-blue-ink)]">
                             {LABEL_PERIODICITE[periodiciteEffective(o)]}
@@ -858,7 +875,7 @@ export default async function EquipementDetailPage({
  * de trancher à leur place.
  */
 function realisateursRequis(
-  obligations: ReturnType<typeof obligationsDeLEquipement>,
+  obligations: readonly { realisateurs: readonly Realisateur[] }[],
 ): string | null {
   const vus = new Set<string>();
   for (const o of obligations) {

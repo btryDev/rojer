@@ -8,6 +8,7 @@ import { chargerLignesViseesDuCompte } from "./lecture-preuves";
 import {
   appliquerPrescriptions,
   determineObligationsApplicables,
+  obligationsSuivies,
   estPrescriptionLevee,
   type PrescriptionMatching,
 } from "@/lib/matching";
@@ -172,10 +173,13 @@ export async function chargerPagePrescriptions(
 
   return {
     prescriptions,
-    obligations: applicables.map((a) => ({
-      id: a.obligation.id,
-      libelle: a.obligation.libelle,
-      periodicite: periodiciteEffective(a.obligation),
+    // Absorbées comprises (ADR-057) : une prescription peut viser une
+    // obligation que la ligne de son geste suit ; elle s'applique alors à
+    // cette ligne (`appliquerPrescriptions`).
+    obligations: obligationsSuivies(applicables).map((o) => ({
+      id: o.id,
+      libelle: o.libelle,
+      periodicite: periodiciteEffective(o),
     })),
     equipements: etab.equipements.map((e) => ({
       id: e.id,

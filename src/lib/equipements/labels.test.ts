@@ -199,7 +199,11 @@ describe("une aide ne promet pas le rythme d'une ligne au niveau audit (2026-10-
       ...DESCRIPTION_CATEGORIE,
       EXTINCTEUR: `${DESCRIPTION_CATEGORIE.EXTINCTEUR} Révision en atelier tous les dix ans.`,
     };
-    expect(rythmesAuditNonDits(casse)).toEqual(["EXTINCTEUR → incendie-travail-extincteurs-revision-atelier-decennale"]);
+    // 2026-11-05 (ADR-057) : la décennale ERP est au niveau audit à son tour.
+    expect(rythmesAuditNonDits(casse)).toEqual([
+      "EXTINCTEUR → incendie-travail-extincteurs-revision-atelier-decennale",
+      "EXTINCTEUR → incendie-erp-extincteurs-revision-decennale",
+    ]);
   });
 
   it("cassure : l'aide de l'appareil respiratoire sans la mention est vue", () => {
