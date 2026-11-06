@@ -106,6 +106,21 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
       // Une relecture plus tard (nouvelles factures, ou une liste vide) ne la déplace pas.
       await synchroniserClientStripe(stripe(A, actif, undefined, [facture(100, 2900)]), "cus_A", { maintenant: () => new Date(3000) });
       expect((await ligne(A))?.debutPayantLe).toEqual(new Date(700_000));
+      // Le client supprimé ensuite : la résiliation s'écrit, la date reste.
+      const supprime = stripe(A, [abo({ id: "sub_1", status: "canceled", created: 1, metadata: { compteId: A } })], { id: "cus_A", deleted: true });
+      await synchroniserClientStripe(supprime, "cus_A", { maintenant: () => new Date(4000) });
+      expect(await ligne(A)).toMatchObject({ statut: "canceled", debutPayantLe: new Date(700_000) });
+    });
+
+    it("la liste des factures en échec ne bloque pas la relecture : l'état s'écrit, la date viendra plus tard", async () => {
+      const s = stripe(B, [abo({ id: "sub_2", status: "active", created: 1 })]);
+      (s as unknown as { invoices: { list: () => unknown } }).invoices.list = () => ({
+        autoPagingToArray: async () => {
+          throw new Error("délai dépassé");
+        },
+      });
+      expect(await synchroniserClientStripe(s, "cus_B", { maintenant: () => new Date(1000) })).toEqual({ issue: "ecrit" });
+      expect(await ligne(B)).toMatchObject({ statut: "active", debutPayantLe: null });
     });
 
     it("un client d'avant l'ADR-054 (metadata.userId) écrit au compte dont la personne est propriétaire", async () => {

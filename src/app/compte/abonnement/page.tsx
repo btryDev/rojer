@@ -193,7 +193,7 @@ export default async function AbonnementPage({
             {paiement === "termine"
               ? "Paiement terminé. Votre abonnement s'affiche ici dans quelques secondes : rechargez la page s'il n'apparaît pas."
               : paiementEnConfirmation
-                ? "Votre paiement est en cours de confirmation : les fonctions réservées aux abonnés s'ouvrent dès qu'il est confirmé, en général en quelques minutes. Inutile de payer de nouveau."
+                ? "Le premier paiement est en cours : les fonctions réservées aux abonnés s'ouvrent dès qu'il est confirmé. Inutile de payer de nouveau."
                 : abonnement === "en-cours"
                 ? "Un abonnement est déjà en cours pour ce compte : gérez-le ici plutôt que d'en souscrire un second."
                 : abonnement === "formule-choisie"

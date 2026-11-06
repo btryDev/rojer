@@ -82,8 +82,11 @@ export function colonnesDe(s: Stripe.Subscription | null) {
  * Le premier paiement CONFIRMÉ du client (ADR-053 § 14) : la date de la plus
  * ancienne facture payée d'un montant non nul. Ni un état `active` (Stripe
  * l'affiche environ une heure avant de prélever la fin d'un essai), ni une
- * facture à zéro (celle de l'essai). Lue seulement tant que le compte n'en a
- * pas : une fois écrite, elle ne change plus.
+ * facture à zéro (celle de l'essai, ou couverte par un crédit ou une remise
+ * de 100 % : un abonnement gratuit n'est pas prévu). Lue seulement tant que
+ * le compte n'en a pas : une fois écrite, elle ne change plus. Limite
+ * assumée : un paiement remboursé ou contesté reste un paiement — la
+ * facture reste `paid` chez Stripe.
  */
 export async function premierPaiement(stripe: Stripe, customerId: string): Promise<Date | null> {
   const payees = await stripe.invoices
@@ -142,7 +145,7 @@ const DEJA_LIE = { issue: "ignore", motif: "client ou abonnement Stripe déjà l
 const AUTRE_CLIENT = { issue: "ignore", motif: "le compte est lié à un autre client Stripe", alerte: true } as const;
 
 type Db = ReturnType<typeof clientDuClientStripe>;
-type Donnees = ReturnType<typeof colonnesDe> & { relueLe: Date; essaiUtiliseLe: Date | null; debutPayantLe: Date | null };
+type Donnees = ReturnType<typeof colonnesDe> & { relueLe: Date; essaiUtiliseLe: Date | null };
 
 /** `null` : une livraison simultanée a créé la ligne du compte — passer à la mise à jour. */
 async function creerLigne(db: Db, compteId: string, customerId: string, donnees: Donnees) {
@@ -226,13 +229,26 @@ export async function synchroniserClientStripe(
     ...colonnesDe(courant),
     relueLe,
     essaiUtiliseLe: ligne?.essaiUtiliseLe ?? premierEssai(abonnements),
-    // Écrite une fois, jamais écrasée ni remise à zéro (un réabonnement garde
-    // l'ancre du compte). Un client supprimé n'a plus de factures lisibles.
-    debutPayantLe: ligne?.debutPayantLe ?? (supprime ? null : await premierPaiement(stripe, customerId)),
   };
-  if (!ligne) {
-    const issue = await creerLigne(db, compteId, customerId, donnees);
-    if (issue) return issue;
-  }
-  return mettreAJour(db, compteId, customerId, donnees);
+  let issue: Synchronisation | null = null;
+  if (!ligne) issue = await creerLigne(db, compteId, customerId, donnees);
+  issue ??= await mettreAJour(db, compteId, customerId, donnees);
+  if (issue.issue !== "ignore" && !ligne?.debutPayantLe && !supprime) await noterPremierPaiement(stripe, db, compteId, customerId);
+  return issue;
+}
+
+/**
+ * Le premier paiement confirmé, écrit à part de l'instantané : seulement là
+ * où la ligne n'en a pas (`debutPayantLe: null` dans la clause), donc jamais
+ * écrasé ni effacé par une relecture plus tardive, quel que soit l'ordre des
+ * notifications. La liste des factures en échec (délai) ne bloque pas la
+ * relecture : la date viendra à la suivante.
+ */
+async function noterPremierPaiement(stripe: Stripe, db: Db, compteId: string, customerId: string) {
+  const debut = await premierPaiement(stripe, customerId).catch(() => null);
+  if (!debut) return;
+  await db.abonnement.updateMany({
+    where: { compteId, stripeCustomerId: customerId, debutPayantLe: null },
+    data: { debutPayantLe: debut },
+  });
 }
