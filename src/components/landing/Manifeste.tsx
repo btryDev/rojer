@@ -65,7 +65,7 @@ export function Manifeste() {
           </h2>
         </Reveal>
 
-        <div className="mt-16 grid grid-cols-1 items-center gap-14 lg:grid-cols-[0.85fr_1.15fr] lg:gap-[clamp(56px,8vw,140px)]">
+        <div className="mt-16 grid grid-cols-1 items-center gap-14 md:grid-cols-[0.85fr_1.15fr] md:gap-10 lg:gap-[clamp(56px,8vw,140px)]">
           <Reveal>
             <PhotoCadre photo={PHOTO_MANIFESTE} fond="rgba(255,255,255,0.05)" />
           </Reveal>

@@ -86,11 +86,19 @@ export function TarifOffres({
         ))}
       </div>
 
-      <div className="mt-14 grid grid-cols-1 gap-5 lg:grid-cols-3">
+      <div className="mt-14 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
         {OFFRES.map((o) => {
           const t = TEINTE[o.misEnAvant ? "encre" : "claire"];
           return (
-            <article key={o.nom} className={cn("flex flex-col gap-[22px] rounded-[26px] px-7 py-[30px]", t.carte)}>
+            <article
+              key={o.nom}
+              className={cn(
+                "flex flex-col gap-[22px] rounded-[26px] px-7 py-[30px]",
+                // Sur tablette, deux cartes côte à côte ; « Sur mesure » dessous, en largeur.
+                !o.prix && "md:col-span-2 lg:col-span-1",
+                t.carte,
+              )}
+            >
               <div className="grid gap-1.5">
                 <h3 className="lp-titre flex items-center justify-between gap-2.5 text-[1.35rem] text-current">
                   {o.nom}
