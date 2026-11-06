@@ -9,13 +9,6 @@ import type { Prisma } from "@prisma/client";
 export const MOTIF_REVOCATION_ENVOI_ECHOUE =
   "l'e-mail n'a pas pu être envoyé ; demandez un nouveau lien à votre interlocuteur";
 
-/**
- * Les jetons dont l'e-mail est parti : UNE règle pour tous les plafonds qui
- * comptent des liens (par établissement, par utilisateur, par adresse). Sans
- * elle, une panne du fournisseur épuisait les plafonds sans qu'aucun lien ait
- * atteint personne. `revoqueMotif` est nullable : l'exclusion passe par un OR
- * explicite, `not` seul écarterait aussi les jetons sans motif.
- */
 /** Les liens à usage unique : consommés, ils ne servent plus. */
 export const SCOPES_USAGE_UNIQUE = ["signature", "depot_rapport"] as const;
 export const estAUsageUnique = (scope: string) => (SCOPES_USAGE_UNIQUE as readonly string[]).includes(scope);
@@ -32,6 +25,13 @@ export const lienActif = (maintenant = new Date()) =>
     OR: [{ utiliseLe: null }, { scope: { notIn: [...SCOPES_USAGE_UNIQUE] } }],
   }) satisfies Prisma.AccessTokenWhereInput;
 
+/**
+ * Les jetons dont l'e-mail est parti : UNE règle pour tous les plafonds qui
+ * comptent des liens (par établissement, par utilisateur, par adresse). Sans
+ * elle, une panne du fournisseur épuisait les plafonds sans qu'aucun lien ait
+ * atteint personne. `revoqueMotif` est nullable : l'exclusion passe par un OR
+ * explicite, `not` seul écarterait aussi les jetons sans motif.
+ */
 export const LIEN_PARTI = {
   OR: [
     { revoqueMotif: null },

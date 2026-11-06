@@ -232,7 +232,9 @@ export async function commitImport(
       // la transaction — les unités créées juste avant y sont vues.
       if (ecritures.unitesACreer.length > 0) {
         // Limite d'unités de l'essai gratuit (ADR-053 § 14) : refus en bloc,
-        // comme l'ADR-033.
+        // comme l'ADR-033. Avant la création des unités, qu'elle compte : le
+        // verrou du compte est alors tenu jusqu'à la fin de l'import — pendant
+        // l'essai seulement, où un import ne crée que quelques unités.
         await prendreQuota(tx, compte.compteId, "unitesTravail", ecritures.unitesACreer.length);
         await creerEnLotVerifie(tx, "UniteTravail", ecritures.unitesACreer);
       }

@@ -288,8 +288,9 @@ et sans croire une information qui ne vient pas de Stripe.
      (émission du lien, `emettreAccessToken`) et quand le titulaire signe
      lui-même, comme les enveloppes d'un service de signature : la signature
      posée ensuite par le tiers ne recompte pas, et n'est jamais refusée au
-     tiers. Un e-mail qui n'est pas parti rend la signature prise
-     (`rendreQuota`, seule ligne du journal effacée) ; une demande révoquée
+     tiers. Un e-mail qui n'est pas parti rend la signature prise,
+     si le lien est bien révoqué (`rendreQuota`, seule ligne du journal
+     effacée ; non révoqué, le lien a pu partir) ; une demande révoquée
      ensuite (document modifié, code épuisé, lien expiré) ne la rend pas :
      redemander coûte une signature, comme une enveloppe renvoyée. Les
      **imports de DUERP** se comptent par an, comme les

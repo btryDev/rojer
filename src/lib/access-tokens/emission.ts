@@ -316,9 +316,11 @@ export async function emettreAccessToken(
         () => "révoqué",
         (e: unknown) => `révocation impossible (${motifErreur(e)})`,
       );
-    // La signature prise pour cette demande est rendue : rien n'a atteint
-    // personne (même règle que `LIEN_PARTI` pour les plafonds de l'heure).
-    await rendreQuota(db, pris).catch((e: unknown) => console.error("[access-tokens] signature non rendue :", motifErreur(e)));
+    // La signature prise pour cette demande est rendue, si le lien est bien
+    // révoqué : rien n'a atteint personne (même règle que `LIEN_PARTI`). Non
+    // révoqué, le lien a pu partir (délai dépassé, e-mail accepté) : elle reste.
+    if (revoque === "révoqué")
+      await rendreQuota(db, pris).catch((e: unknown) => console.error("[access-tokens] signature non rendue :", motifErreur(e)));
     console.error(`[access-tokens] envoi échoué, jeton ${access.id} ${revoque} :`, motifErreur(erreur));
     return { ok: false, raison: "envoi_echoue", message: MESSAGE_ENVOI_ECHOUE };
   }
