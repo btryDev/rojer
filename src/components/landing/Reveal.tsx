@@ -8,18 +8,23 @@
 // le contenu reste lisible.
 
 import { useEffect, useRef } from "react";
+import { cn } from "@/lib/utils";
 
 export function Reveal({
   children,
   delai = 0,
   className,
   as: Balise = "div",
+  ample,
 }: {
   children: React.ReactNode;
   /** Décalage de l'apparition, en ms — pour cascader une rangée. */
   delai?: number;
   className?: string;
   as?: "div" | "li" | "section" | "header";
+  /** Apparition plus ample, déclenchée plus tard : « texte » monte de plus
+   *  loin, « media » monte et se dézoome. Pour les sections qu'on découvre. */
+  ample?: "texte" | "media";
 }) {
   const ref = useRef<HTMLElement | null>(null);
 
@@ -39,11 +44,15 @@ export function Reveal({
           obs.disconnect();
         }
       },
-      { rootMargin: "0px 0px -12% 0px", threshold: 0.08 },
+      // Ample : l'élément attend d'être bien entré dans l'écran (un quart),
+      // pour qu'on le voie arriver plutôt que de le trouver déjà posé.
+      ample
+        ? { rootMargin: "0px 0px -25% 0px", threshold: 0 }
+        : { rootMargin: "0px 0px -12% 0px", threshold: 0.08 },
     );
     obs.observe(el);
     return () => obs.disconnect();
-  }, []);
+  }, [ample]);
 
   return (
     <Balise
@@ -51,7 +60,7 @@ export function Reveal({
       ref={ref}
       data-vu="false"
       style={delai ? ({ "--lp-delai": `${delai}ms` } as React.CSSProperties) : undefined}
-      className={"lp-reveal" + (className ? " " + className : "")}
+      className={cn("lp-reveal", ample && `lp-reveal-${ample}`, className)}
     >
       {children}
     </Balise>

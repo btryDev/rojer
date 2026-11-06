@@ -1,46 +1,43 @@
 # Photos de la page publique
 
-Les photos vivent ici et ne sont référencées qu'à un endroit dans le code :
-la constante `PHOTO_HERO` en tête de `src/components/landing/HeroBrief.tsx`.
-Déposer un fichier ici ne l'affiche pas — il faut changer la ligne (chemin +
-texte alternatif) pour qu'il entre dans la page.
+Chaque photo est référencée par une constante `PHOTO_*` en tête du composant
+qui l'affiche, dans `src/components/landing/`. Déposer un fichier ici ne
+l'affiche pas : il faut changer la constante (chemin et texte alternatif).
+Tout ce qui est ici part dans chaque déploiement — une photo qui ne sert pas
+va dans `docs/illustrations/photos-reserve/`.
 
 ## Ce qui est en place
 
-| Fichier               | Emplacement            | Cadrage      |
-| --------------------- | ---------------------- | ------------ |
-| `hero-terrain.jpg`    | Hero, tuile centrale   | 4/5 vertical |
-| `etapes-atelier.jpg`  | « Trois étapes », gauche | 4/5 vertical |
+| Fichier | Emplacement | Cadrage | Constante |
+| --- | --- | --- | --- |
+| `hero-restaurateur.jpg` | Hero, bord à bord | 16/9 paysage | `PHOTO_HERO` (`Hero.tsx`) |
+| `manifeste-boulangere.jpg` | « Concentrez-vous », gauche | 4/5 vertical | `PHOTO_MANIFESTE` (`Manifeste.tsx`) |
 
-Origine de `hero-terrain.jpg` : [Pexels 8986129](https://www.pexels.com/photo/a-mechanic-using-a-cellphone-at-an-auto-repair-shop-8986129/),
-licence Pexels (usage commercial libre, sans attribution obligatoire).
+**Origine** : générées avec Krea le 2026-11-06 (Krea 2 Large ; le
+restaurateur est une retouche Nano Banana Pro de la restauratrice, même
+scène). Direction photo : `docs/marketing/direction-photo.md` (branche
+`docs/communication`). `manifeste-boulangere.jpg` fait 928 px de large :
+**à agrandir** avant la mise en ligne.
 
-Origine de `etapes-atelier.jpg` : [Pexels 6790046](https://www.pexels.com/photo/6790046/),
-même licence. Référencée par la constante `PHOTO_ETAPES` en tête de
-`src/components/landing/Etapes.tsx`.
+**Licence à confirmer** avant la mise en ligne publique : vérifier les
+conditions d'usage commercial du plan Krea et les écrire ici.
 
-~~Origine de `guide-ordinateur.jpg` : [Pexels 3874620](https://www.pexels.com/photo/young-businesswoman-working-remotely-with-laptop-in-cafe-during-daytime-3874620/),
-photo de Gustavo Fring, licence Pexels. Référencée par le guide de mise en
-place du tableau de bord (`src/components/layout/OnboardingChecklist.tsx`),
-à droite de la carte, à partir de `md`.~~ [2026-10-25 : retirée avec le bandeau du guide, devenu une fenêtre
-ouverte depuis la fiche du hero.]
-
-`hero-cuisine.jpg` n'est plus référencé : la bande « Sur le terrain » qui
-l'accueillait a été fusionnée dans la section noire, désormais en frise sans
-photo. Le fichier reste ici, disponible pour un futur emplacement.
+**En réserve** (`docs/illustrations/photos-reserve/`) : `hero-restauratrice.jpg`
+(la même scène avec une femme) et `hero-cuisine.jpg` (Pexels).
 
 ## Emplacements prêts à recevoir une photo
 
 Aucun n'est obligatoire : la page tient debout sans eux.
 
-1. **Remplacer la photo du hero** — sujet au travail, 4/5 vertical, ≥ 1200 px
-   de large, **de face ou de trois quarts**, lumière naturelle. Les fiches du
-   produit mordent sur les bords gauche et droit : garder le sujet dans le
-   tiers central.
+1. **Remplacer la photo du hero** — sujet au travail, 16/9 paysage, ≥ 2 000 px
+   de large, **de face ou de trois quarts**, lumière naturelle. La photo est
+   bord à bord, sous la barre de navigation, le texte en blanc à gauche :
+   sujet dans le tiers droit, la gauche et le haut assez calmes et sombres
+   pour porter le texte.
 2. **Second métier** — commerce ou bureau, pour équilibrer la restauration.
    4/3 paysage, ≥ 1600 px de large.
 3. **Détail d'équipement** — extincteur, hotte, tableau électrique. 1/1,
-   ≥ 1000 px. Sert de vignette dans « Par métier ».
+   ≥ 1000 px.
 
 ## Consignes
 
@@ -52,6 +49,3 @@ Aucun n'est obligatoire : la page tient debout sans eux.
   studio — la charte est claire et calme, les photos doivent l'être aussi.
 - **Texte alternatif** : décrire ce qu'on voit, pas ce qu'on vend. « Deux
   cuisiniers au passe », pas « la sérénité au travail ».
-
-
-~~`hero-en-place.jpg`~~ [2026-10-25 : retirée avec l'en-tête photo de « Ce qui doit être en place », remplacé par l'en-tête illustré commun (`src/components/entete-page`).]

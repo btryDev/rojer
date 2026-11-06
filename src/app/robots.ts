@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { OUVERT_AUX_MOTEURS } from "@/lib/indexation";
 
 /**
  * `robots.txt` (audit Next.js du 2026-10-14, B11).
@@ -25,6 +26,9 @@ import type { MetadataRoute } from "next";
  *
  * Toute nouvelle racine de `src/app` doit être rangée ici, d'un côté ou de
  * l'autre : `robots.test.ts` le vérifie.
+ *
+ * Tant que le site n'est pas ouvert aux moteurs (`OUVERT_AUX_MOTEURS`,
+ * `lib/indexation.ts`), tout est interdit, accueil compris.
  */
 export const RACINES_INDEXABLES = ["/", "/login", "/signup"] as const;
 
@@ -54,6 +58,7 @@ export const RACINES_EXCLUES = [
 ] as const;
 
 export default function robots(): MetadataRoute.Robots {
+  if (!OUVERT_AUX_MOTEURS) return { rules: { userAgent: "*", disallow: "/" } };
   return {
     rules: {
       userAgent: "*",

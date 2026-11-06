@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { NOINDEX, OUVERT_AUX_MOTEURS } from "@/lib/indexation";
 import { entetesSecurite, nonceCsp, politiqueContenu } from "./entetes";
 
 const PROD = {
@@ -13,6 +14,10 @@ function valeur(nom: string): string | undefined {
 }
 
 describe("entetesSecurite", () => {
+  it("ferme le site aux moteurs tant qu'il n'est pas ouvert", () => {
+    expect(valeur("X-Robots-Tag")).toBe(OUVERT_AUX_MOTEURS ? undefined : NOINDEX);
+  });
+
   it("interdit l'encadrement par les deux mécanismes", () => {
     expect(valeur("X-Frame-Options")).toBe("DENY");
     expect(valeur("Content-Security-Policy")).toBe("frame-ancestors 'none'");
