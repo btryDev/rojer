@@ -56,6 +56,7 @@ export const GESTE_PAR_OBLIGATION: Readonly<Record<string, Geste>> = {
   "incendie-erp-hotel-consigne-chambres": "afficher",
   "incendie-erp-hotel-plans-evacuation-niveaux": "afficher",
   "incendie-erp-plan-intervention-entrees": "afficher",
+  "incendie-erp-5-plan-intervention-entree": "afficher",
   "signalisation-etablissement-cheminements-evacuation": "afficher",
   "cuisson-erp-consignes-arret-urgence": "afficher",
   "incendie-erp-interdiction-fumer-affichee": "afficher",

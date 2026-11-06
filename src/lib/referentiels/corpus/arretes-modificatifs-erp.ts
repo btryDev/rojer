@@ -34,7 +34,7 @@ export const ARRETES_MODIFICATIFS_ERP: Corpus = {
         "incendie-erp-pe4-entretien-installations-techniques",
       ],
       prescrit:
-        "Texte modificateur. Il réécrit PE 4 § 2 — « En cours d'exploitation » devient « Tous les trois ans au plus », et « installations de gaz » est ajouté à la liste — et PE 10. Entrée en vigueur différée au 1er juillet 2026, donc en vigueur à ce jour.",
+        "Texte modificateur. Il réécrit PE 4 § 2 — « En cours d'exploitation » devient « Tous les trois ans au plus », et « installations de gaz » est ajouté à la liste — et PE 10. Entrée en vigueur différée au 1er juillet 2026, donc en vigueur à ce jour. [2026-11-06, relu sur Légifrance : son art. 12 réécrit aussi la première phrase de PE 27 § 6 — « A l'entrée de chaque établissement, un plan schématique doit être apposé pour faciliter l'intervention des sapeurs-pompiers » ; son art. 13 fait entrer l'arrêté en vigueur le 1er janvier 2026, PE 4 et PE 10 B au 1er juillet 2026, sans disposition propre aux établissements existants.]",
     },
   ],
 };
