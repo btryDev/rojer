@@ -1,3 +1,4 @@
+import { PlafondDeCreation } from "@/components/quotas/PlafondDeCreation";
 import { GelDuPrestataire } from "@/components/quotas/BandeauGel";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -46,6 +47,8 @@ export default async function ModifierPrestatairePage({
       </header>
       {/* Un prestataire gelé (ADR-053 § 14) le dit avant qu'on remplisse le formulaire. */}
       <GelDuPrestataire prestataireId={prestataireId} className="mx-[var(--board-gutter)] mt-4">
+      {/* Le stockage plein, annoncé avant de remplacer une pièce (ADR-053 § 14). */}
+      <PlafondDeCreation etStockage className="mx-[var(--board-gutter)] mt-4">
 
       <div className="px-[var(--board-gutter)] pt-6">
         <div className="carte-board max-w-[880px] px-7 py-7 sm:px-8">
@@ -76,6 +79,7 @@ export default async function ModifierPrestatairePage({
           />
         </div>
       </div>
+      </PlafondDeCreation>
       </GelDuPrestataire>
     </main>
   );

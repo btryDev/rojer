@@ -39,6 +39,7 @@ vi.mock("@/lib/auth/scope", () => ({
   // La garde rend aussi le client borné (ADR-051) : ici, le client simulé.
   assertEtablissementDuCompte: async (...a: unknown[]) => ({
     user: (await (vi.fn(async () => ({ id: "u1" })) as (...x: unknown[]) => unknown)(...a)) ?? { id: "u1" },
+    compte: { compteId: "user-1", role: "owner" },
     db: await (await import("@/test/garde-simulee")).clientDuCompteSimule(),
   }),
 }));

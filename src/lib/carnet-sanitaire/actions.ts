@@ -340,6 +340,8 @@ function lireAnalyse(formData: FormData) {
  * écriture en base (2026-09-27).
  */
 async function deposerRapportLabo(
+  db: Db,
+  compteId: string,
   etablissementId: string,
   formData: FormData,
 ): Promise<
@@ -358,7 +360,7 @@ async function deposerRapportLabo(
   // rien d'écrit en base.
   try {
     // Le plafond de stockage de la formule (ADR-053 § 14), avant d'écrire.
-    const refus = await deposerFichier(cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
+    const refus = await deposerFichier(db, compteId, cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
     if (refus) return { ok: false, message: refus };
   } catch (e) {
     console.error(`[carnet-sanitaire/depot] écriture du fichier impossible (${cle})`, e);
@@ -373,13 +375,13 @@ export async function ajouterAnalyseLegionelle(
   formData: FormData,
 ): Promise<CarnetActionState> {
   await verifierSaisie();
-  const { db } = await assertEtablissementDuCompte(etablissementId);
+  const { compte, db } = await assertEtablissementDuCompte(etablissementId);
   const parsed = lireAnalyse(formData);
   if (!parsed.success) return formulaireInvalide(parsed.error.flatten().fieldErrors);
 
   const carnet = await obtenirOuCreerCarnet(db, etablissementId);
 
-  const depot = await deposerRapportLabo(etablissementId, formData);
+  const depot = await deposerRapportLabo(db, compte.compteId, etablissementId, formData);
   if (!depot.ok) return { status: "error", message: depot.message };
 
   // ~~`valeurUfcParL === undefined ||`~~ : une analyse sans valeur n'est pas
@@ -438,13 +440,13 @@ export async function modifierAnalyseLegionelle(
   formData: FormData,
 ): Promise<CarnetActionState> {
   await verifierSaisie();
-  const { db } = await assertEtablissementDuCompte(etablissementId);
+  const { compte, db } = await assertEtablissementDuCompte(etablissementId);
   const analyse = await analyseDansLeCarnet(db, etablissementId, analyseId);
   if (!analyse) return { status: "error", message: "Analyse introuvable" };
   const parsed = lireAnalyse(formData);
   if (!parsed.success) return formulaireInvalide(parsed.error.flatten().fieldErrors);
 
-  const depot = await deposerRapportLabo(etablissementId, formData);
+  const depot = await deposerRapportLabo(db, compte.compteId, etablissementId, formData);
   if (!depot.ok) return { status: "error", message: depot.message };
 
   try {

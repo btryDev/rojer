@@ -265,7 +265,7 @@ export async function uploadRapport(
     const buffer = Buffer.from(await piece.fichier.arrayBuffer());
     try {
       // Le plafond de stockage de la formule (ADR-053 § 14), avant d'écrire.
-      const refus = await deposerFichier(piece.cle, buffer, piece.mime);
+      const refus = await deposerFichier(db, compte.compteId, piece.cle, buffer, piece.mime);
       if (refus) return { status: "error", message: refus };
     } catch (e) {
       console.error(`[rapports/depot] écriture du fichier impossible (${piece.cle})`, e);

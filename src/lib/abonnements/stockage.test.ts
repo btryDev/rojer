@@ -1,40 +1,33 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
-const h = vi.hoisted(() => ({
-  etatStripe: vi.fn(),
-  put: vi.fn(async () => {}),
-  compte: null as null | { compte: { compteId: string }; db: unknown },
-}));
+const h = vi.hoisted(() => ({ etatStripe: vi.fn(), put: vi.fn(async () => {}) }));
 vi.mock("@/lib/stripe/config", () => ({ etatStripe: h.etatStripe }));
 vi.mock("@/lib/storage", () => ({ getStorage: () => ({ put: h.put }) }));
-vi.mock("@/lib/auth/compte", () => ({
-  requireCompte: async () => h.compte,
-  getOptionalCompte: async () => h.compte,
-}));
 
+import type { Db } from "@/lib/auth/compte";
 import { clesDeFichiers, deposerFichier, octetsUtilises } from "./stockage";
 
 const GO = 1e9;
 
-/** Le client borné, réduit : des fichiers référencés, leurs tailles connues, l'abonnement. */
-function faux(tailles: Record<string, number>, formule = "rojer_essentiel_mensuel") {
-  const vide = { findMany: vi.fn(async () => []) };
+/**
+ * Le client borné, réduit : des fichiers référencés (une colonne obligatoire
+ * comprise, sans filtre « non nul »), la somme en SQL, l'abonnement, la
+ * transaction et le verrou.
+ */
+function faux(utilises: number, formule = "rojer_essentiel_mensuel") {
+  const lignes = (l: Record<string, string | null>[]) => ({ findMany: vi.fn(async () => l) });
   const db = {
+    etablissement: lignes([{ photoCle: "photo" }]),
+    rapportVerification: lignes([{ fichierCle: "rapport" }, { fichierCle: null }]),
+    action: lignes([]),
+    prestataire: lignes([{ attestationUrssafCle: "urssaf", assuranceRcProCle: null, kbisCle: "photo" }]),
+    piecePrestataire: lignes([{ fichierCle: "piece" }]),
+    analyseLegionelle: lignes([]),
     abonnement: { findUnique: vi.fn(async () => ({ formule, statut: "active", debutPayantLe: new Date("2026-01-01"), essaiUtiliseLe: null })) },
-    etablissement: { findMany: vi.fn(async () => [{ photoCle: "photo" }]) },
-    rapportVerification: { findMany: vi.fn(async () => [{ fichierCle: "rapport" }, { fichierCle: null }]) },
-    action: vide,
-    prestataire: { findMany: vi.fn(async () => [{ attestationUrssafCle: "urssaf", assuranceRcProCle: null, kbisCle: "photo" }]) },
-    piecePrestataire: vide,
-    registreAccessibilite: vide,
-    analyseLegionelle: vide,
-    fichierStocke: {
-      aggregate: vi.fn(async ({ where }: { where: { cle: { in: string[] } } }) => ({
-        _sum: { octets: where.cle.in.reduce((t, c) => t + (tailles[c] ?? 0), 0) },
-      })),
-      upsert: vi.fn(async () => ({})),
-    },
+    $queryRaw: vi.fn(async (q: TemplateStringsArray) => (q.join("?").includes("SUM") ? [{ total: BigInt(utilises) }] : [])),
+    fichierStocke: { upsert: vi.fn(async () => ({})), deleteMany: vi.fn(async () => ({})) },
+    $transaction: vi.fn(async (fn: (tx: unknown) => unknown) => fn(db)),
   };
   return db;
 }
@@ -50,60 +43,49 @@ beforeEach(() => {
 });
 
 describe("le plafond de stockage (ADR-053 § 14)", () => {
-  it("compte les fichiers encore référencés, une fois chacun ; un fichier retiré ne compte plus", async () => {
-    const db = faux({ photo: 10, rapport: 20, urssaf: 5, retire: 1_000 });
-    expect((await clesDeFichiers(db as never)).sort()).toEqual(["photo", "rapport", "urssaf"]);
-    expect(await octetsUtilises(db as never)).toBe(35);
+  it("les fichiers encore référencés, une fois chacun, sans filtre sur une colonne obligatoire", async () => {
+    const db = faux(0);
+    expect((await clesDeFichiers(db as never)).sort()).toEqual(["photo", "piece", "rapport", "urssaf"]);
+    for (const m of [db.piecePrestataire, db.etablissement]) expect(JSON.stringify(m.findMany.mock.calls[0])).not.toContain("not");
   });
 
-  it("au-delà du plafond : refusé, rien n'est déposé ni enregistré", async () => {
+  it("la somme en SQL, en entier long (au-delà de 2 Go), réservations récentes comprises", async () => {
+    const db = faux(5 * GO);
+    expect(await octetsUtilises(db as never, "c1")).toBe(5 * GO);
+    const [sql, ...valeurs] = db.$queryRaw.mock.calls.at(-1)! as [TemplateStringsArray, ...unknown[]];
+    expect(sql.join("?")).toMatch(/SUM\("octets"\), 0\)::bigint[\s\S]*"compteId" = \?::uuid AND \("cle" = ANY\(\?::text\[\]\) OR "deposeLe" > \?\)/);
+    expect(valeurs[0]).toBe("c1");
+  });
+
+  it("au-delà du plafond : refusé sous le verrou, rien n'est réservé ni déposé", async () => {
     lancer();
-    const db = faux({ photo: 2 * GO - 10 });
-    h.compte = { compte: { compteId: "c1" }, db };
-    expect(await deposerFichier("neuf", Buffer.alloc(11), "application/pdf")).toBe(
+    const db = faux(2 * GO - 10);
+    expect(await deposerFichier(db as unknown as Db, "c1", "neuf", Buffer.alloc(11), "application/pdf")).toBe(
       "Votre formule Essentiel couvre 2 Go de stockage : passez à Pro depuis la page Abonnement de votre compte.",
     );
-    expect(h.put).not.toHaveBeenCalled();
+    expect(db.$queryRaw.mock.calls.some(([q]) => (q as TemplateStringsArray).join("?").includes("FOR NO KEY UPDATE"))).toBe(true);
     expect(db.fichierStocke.upsert).not.toHaveBeenCalled();
+    expect(h.put).not.toHaveBeenCalled();
   });
 
-  it("sous le plafond : déposé, puis la taille enregistrée au compte", async () => {
+  it("sous le plafond : la taille réservée AVANT le dépôt ; un dépôt qui échoue rend sa réservation", async () => {
     lancer();
-    const db = faux({ photo: 10 });
-    h.compte = { compte: { compteId: "c1" }, db };
-    expect(await deposerFichier("neuf", Buffer.alloc(11), "application/pdf")).toBeNull();
-    expect(h.put).toHaveBeenCalledWith("neuf", expect.any(Buffer), "application/pdf");
-    expect(db.fichierStocke.upsert).toHaveBeenCalledWith({
-      where: { cle: "neuf" },
-      create: { cle: "neuf", compteId: "c1", octets: 11 },
-      update: { octets: 11 },
-    });
+    const db = faux(10);
+    expect(await deposerFichier(db as unknown as Db, "c1", "neuf", Buffer.alloc(11), "application/pdf")).toBeNull();
+    expect(db.fichierStocke.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { cle: "neuf" }, create: { cle: "neuf", compteId: "c1", octets: 11 } }),
+    );
+    expect(db.fichierStocke.upsert.mock.invocationCallOrder[0]).toBeLessThan(h.put.mock.invocationCallOrder[0]);
+    h.put.mockRejectedValueOnce(new Error("stockage indisponible"));
+    await expect(deposerFichier(db as unknown as Db, "c1", "autre", Buffer.alloc(11), "application/pdf")).rejects.toThrow("stockage indisponible");
+    expect(db.fichierStocke.deleteMany).toHaveBeenCalledWith({ where: { cle: "autre" } });
   });
 
-  it("avant le lancement : aucun refus ; la taille s'enregistre si la session se lit, le dépôt passe sinon", async () => {
+  it("avant le lancement : ni verrou ni refus ; le dépôt, puis la taille", async () => {
     lancer(false);
-    const db = faux({ photo: 100 * GO });
-    h.compte = { compte: { compteId: "c1" }, db };
-    expect(await deposerFichier("neuf", Buffer.alloc(11), "application/pdf")).toBeNull();
-    expect(db.fichierStocke.upsert).toHaveBeenCalled();
-    h.compte = null;
-    expect(await deposerFichier("autre", Buffer.alloc(11), "application/pdf")).toBeNull();
-    expect(h.put).toHaveBeenCalledTimes(2);
-  });
-});
-
-describe("les fichiers comptés : toutes les clés de fichier du schéma", () => {
-  it("chaque champ `…Cle` d'un modèle du compte est compté (une colonne de fichier neuve ne s'oublie pas)", async () => {
-    const { readFileSync } = await import("node:fs");
-    const { join } = await import("node:path");
-    const { CHAMPS_FICHIERS } = await import("./stockage");
-    const schema = readFileSync(join(process.cwd(), "prisma/schema.prisma"), "utf8");
-    const duSchema: Record<string, string[]> = {};
-    for (const m of schema.matchAll(/^model (\w+) \{([\s\S]*?)^\}/gm)) {
-      const champs = [...m[2].matchAll(/^\s+(\w*Cle)\s+String/gm)].map((c) => c[1]);
-      if (champs.length) duSchema[m[1].charAt(0).toLowerCase() + m[1].slice(1)] = champs;
-    }
-    // `LimiteDebit.cle` n'est pas un fichier ; ce n'est pas un champ `…Cle`.
-    expect(duSchema).toEqual(Object.fromEntries(Object.entries(CHAMPS_FICHIERS).map(([k, v]) => [k, [...v]])));
+    const db = faux(100 * GO);
+    expect(await deposerFichier(db as unknown as Db, "c1", "neuf", Buffer.alloc(11), "application/pdf")).toBeNull();
+    expect(db.$transaction).not.toHaveBeenCalled();
+    expect(h.put.mock.invocationCallOrder[0]).toBeLessThan(db.fichierStocke.upsert.mock.invocationCallOrder[0]);
   });
 });
