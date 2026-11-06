@@ -337,6 +337,27 @@ et sans croire une information qui ne vient pas de Stripe.
      `metadata.formule` du prix) avant toute vente — sans quoi le refus par
      défaut lui applique les plafonds de la plus petite formule.
 
+15. **Valider = s'abonner (2026-11-06)** — grille du 2026-11-05 (session
+   « pricing »), décisions transmises par la session « stripe », mandatée
+   par la propriétaire. Pendant l'essai et sans abonnement, tout s'utilise
+   SAUF les gestes qui produisent un document officiel ou engagent un tiers :
+   valider une version du DUERP (`creerVersion`) ; exporter le dossier de
+   contrôle et le registre consolidé (`controle-zip`, `registre/pdf`) ;
+   publier le registre d'accessibilité (`publierRegistre` — l'affiche QR ne
+   sert que d'un registre publié) ; signer (`signerEnCompteConnecte`) ou
+   envoyer un lien (`demanderSignature`) — une seule signature de test par
+   compte, et le lien seulement à soi-même. Ils demandent un premier
+   paiement **confirmé** (`debutPayantLe`, la première facture payée), pas
+   un `active` : `aDejaPaye`, `exigerUnPaiement`
+   (`abonnements/validation.ts`). Refusé : `/compte/abonnement?immediat=1`
+   (la page « S'abonner », session « stripe »). Un ancien abonné garde ses
+   exports (il a payé ; § 3, 12 mois). Les aperçus sont marqués « Projet –
+   non validé » (`MentionProjet` : aperçu du DUERP, toujours ; dossier de
+   conformité, pour un compte qui n'a jamais payé). Les brouillons de permis
+   de feu et de plans de prévention restent imprimables. Pas de « compte en
+   veille » (notes § 10, 2026-11-06). Rien ne change avant le lancement de
+   l'offre.
+
 ## Données
 
 - `Abonnement` : racine de compte (`userId`, ADR-051) ; `stripeCustomerId`

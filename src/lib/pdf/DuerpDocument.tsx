@@ -1,3 +1,4 @@
+import { LIBELLE_PROJET } from "./MentionProjet";
 import {
   Document,
   Page,
@@ -233,7 +234,7 @@ export function DuerpDocument({ snapshot, historique, brouillon = false }: Props
   const bandeau = brouillon ? (
       <View style={s.watermarkBand} fixed>
         <Text style={s.watermarkLabel}>
-          DOCUMENT NON VALIDÉ — APERÇU
+          {LIBELLE_PROJET}
         </Text>
         <Text style={s.watermarkHint}>
           Aperçu de la version {version}, non validée

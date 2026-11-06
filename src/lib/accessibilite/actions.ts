@@ -1,5 +1,6 @@
 "use server";
 
+import { exigerUnPaiement } from "@/lib/abonnements/validation";
 import { randomUUID } from "node:crypto";
 import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { revalidatePath } from "next/cache";
@@ -193,7 +194,9 @@ export async function publierRegistre(
   etablissementId: string,
 ): Promise<RegistreActionState> {
   await verifierSaisie();
-  const { db } = await assertEtablissementDuCompte(etablissementId);
+  const { compte, db } = await assertEtablissementDuCompte(etablissementId);
+  // Publier le registre demande un abonnement payé (ADR-053 § 15).
+  await exigerUnPaiement(db, compte.compteId);
   const r = await obtenirOuCreer(db, etablissementId);
 
   const manque: string[] = [];

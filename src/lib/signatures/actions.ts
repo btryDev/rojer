@@ -1,5 +1,6 @@
 "use server";
 
+import { aDejaPaye, PAGE_S_ABONNER, signatureDEssaiDisponible } from "@/lib/abonnements/validation";
 import { prendreQuota, RefusQuota } from "@/lib/abonnements/quotas";
 import { randomUUID } from "node:crypto";
 import { headers } from "next/headers";
@@ -39,7 +40,7 @@ import {
   partiesAttendues,
 } from "./parties";
 import { libelleDocumentSignable } from "./libelle-document";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ipClient } from "@/lib/securite/ip-client";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
 
@@ -154,7 +155,14 @@ export async function demanderSignature(
     return { ok: false, message: "Partie signataire invalide pour ce document." };
   }
 
-  const { db } = await assertEtablissementDuCompte(params.etablissementId);
+  const { user, compte, db } = await assertEtablissementDuCompte(params.etablissementId);
+  // Sans abonnement payé (ADR-053 § 15) : un lien ne part qu'à soi-même, et
+  // pour la seule signature de test du compte.
+  if (
+    !(await aDejaPaye(db, compte.compteId)) &&
+    (params.signataireEmail.trim().toLowerCase() !== (user.email ?? "").toLowerCase() || !(await signatureDEssaiDisponible(db)))
+  )
+    redirect(PAGE_S_ABONNER);
   // Aucun lien ne part pour un objet clos ou annulé : il serait refusé au
   // moment de signer (`poserSignatureAvecToken`), autant ne pas envoyer au
   // tiers un courriel qui ne mène à rien.
@@ -626,6 +634,8 @@ export async function signerEnCompteConnecte(params: {
 > {
   await verifierSaisie();
   const { user, compte, db } = await assertEtablissementDuCompte(params.etablissementId);
+  // Sans abonnement payé, la seule signature de test du compte (ADR-053 § 15).
+  if (!(await aDejaPaye(db, compte.compteId)) && !(await signatureDEssaiDisponible(db))) redirect(PAGE_S_ABONNER);
   // Même règle que les deux autres portes. Aucun écran ne passe de fonction
   // ici : seul un appel forgé est refusé, d'où l'exception plutôt qu'une
   // raison de plus dans le retour.

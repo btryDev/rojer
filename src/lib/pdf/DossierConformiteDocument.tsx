@@ -1,3 +1,4 @@
+import { MentionProjet } from "./MentionProjet";
 import { Document, Page, Text, View } from "@react-pdf/renderer";
 import { MENTION_POUR_INFORMATION_DOCUMENT } from "@/lib/referentiels/conformite/initiative";
 import type { FraicheurCalendrier } from "@/lib/calendrier/fraicheur";
@@ -251,7 +252,9 @@ function EncadreALire({
   );
 }
 
-export function DossierConformiteDocument({ data }: { data: DossierData }) {
+export function DossierConformiteDocument({ data, projet = false }: { data: DossierData; projet?: boolean }) {
+  // Un compte qui n'a jamais payé : un aperçu, pas un document officiel (ADR-053 § 15).
+  const mention = projet ? <MentionProjet precision="Aperçu : le dossier officiel demande un abonnement." /> : null;
   // Muet si la couverture n'a pas pu être lue : un document qui ne sait pas
   // ce qu'il ignore ne doit pas écrire qu'il n'ignore rien.
   const chapeau = data.couverture
@@ -268,6 +271,7 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
     <Document>
       {/* Page de garde */}
       <Page size="A4" style={s.pageGarde}>
+        {mention}
         <View>
           <Text style={{ fontSize: 10, color: BOARD.ardoiseMoyenne }}>
             Dossier de conformité santé-sécurité
@@ -394,6 +398,7 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
 
       {/* Synthèse */}
       <Page size="A4" style={s.page}>
+        {mention}
         <Text style={s.h1}>Synthèse</Text>
 
         <View style={{ marginTop: 8 }}>
@@ -495,6 +500,7 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
           Aucune phrase n'est décidée ici : elles viennent toutes de
           `mentions-etats-permanents.ts`, où elles se testent. */}
       <Page size="A4" style={s.page}>
+        {mention}
         <Text style={s.h1}>Ce qui doit être en place</Text>
 
         {data.etatsPermanents.vide ? (
@@ -545,6 +551,7 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
 
       {/* Vérifs en retard */}
       <Page size="A4" style={s.page}>
+        {mention}
         <Text style={s.h1}>Vérifications à rattraper</Text>
         <Text style={s.small}>
           Occurrences dépassées ou à planifier à la date d&apos;édition.
@@ -671,6 +678,7 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
 
       {/* Mesures et points à corriger en cours (ADR-048, lot 3) */}
       <Page size="A4" style={s.page}>
+        {mention}
         <Text style={s.h1}>Mesures de prévention en cours</Text>
         <TableActions actions={data.actionsEnCours} colonne="Mesure" vide="Aucune mesure en cours." />
         {/* `minPresenceAhead` : le titre ne reste pas seul en bas de page,
@@ -690,6 +698,7 @@ export function DossierConformiteDocument({ data }: { data: DossierData }) {
 
       {/* Rapports récents + mentions légales */}
       <Page size="A4" style={s.page}>
+        {mention}
         <Text style={s.h1}>Rapports de vérification récents</Text>
         {data.rapportsRecents.length === 0 ? (
           <Text style={[s.small, { marginTop: 12 }]}>
