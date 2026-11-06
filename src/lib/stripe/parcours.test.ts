@@ -8,13 +8,15 @@ import {
   creerClientStripe,
   demarrerEssai,
   oublierLesPrix,
+  appliquerFormule,
   ouvrirCheckout,
+  ouvrirCheckoutCarte,
   prixDesFormules,
 } from "./parcours";
 
 const api = {
   customers: { create: vi.fn() },
-  subscriptions: { create: vi.fn() },
+  subscriptions: { create: vi.fn(), update: vi.fn(), resume: vi.fn() },
   checkout: { sessions: { create: vi.fn(), list: vi.fn(), expire: vi.fn() } },
   prices: { list: vi.fn() },
 };
@@ -62,6 +64,37 @@ describe("parcours Stripe", () => {
     expect(api.checkout.sessions.list).toHaveBeenCalledWith({ customer: "cus_1", status: "open", limit: 10 }, expect.anything());
     expect(api.checkout.sessions.expire).toHaveBeenCalledWith("cs_ancienne");
     expect(api.checkout.sessions.expire.mock.invocationCallOrder[0]).toBeLessThan(api.checkout.sessions.create.mock.invocationCallOrder[0]);
+  });
+
+  it("la carte d'un abonnement qui court : Checkout « setup », sessions ouvertes expirées d'abord", async () => {
+    api.checkout.sessions.list.mockResolvedValue({ data: [] });
+    api.checkout.sessions.create.mockResolvedValue({ url: "https://checkout.stripe.com/c" });
+    await ouvrirCheckoutCarte(stripe, { customerId: "cus_1", metadata: { formule: "f" }, succes: "s", annulation: "a" });
+    expect(api.checkout.sessions.create.mock.calls[0][0]).toMatchObject({
+      mode: "setup",
+      customer: "cus_1",
+      currency: "eur",
+      metadata: { formule: "f" },
+      setup_intent_data: { metadata: { formule: "f" } },
+    });
+  });
+
+  it("appliquer la formule : essai continu sans facture ; immédiat = fin d'essai ; pause = reprise ; déjà fait = rien", async () => {
+    const sub = (status: string, price = "price_e", pm: string | null = null) =>
+      ({ id: "sub_1", status, default_payment_method: pm, items: { data: [{ id: "si_1", price: { id: price } }] } }) as unknown as Stripe.Subscription;
+    await appliquerFormule(stripe, sub("trialing"), { priceId: "price_pa", paymentMethodId: "pm_1", immediat: false });
+    expect(api.subscriptions.update).toHaveBeenLastCalledWith("sub_1", {
+      items: [{ id: "si_1", price: "price_pa" }],
+      default_payment_method: "pm_1",
+      proration_behavior: "none",
+    });
+    await appliquerFormule(stripe, sub("trialing"), { priceId: "price_pa", paymentMethodId: "pm_1", immediat: true });
+    expect(api.subscriptions.update.mock.lastCall?.[1]).toMatchObject({ trial_end: "now" });
+    await appliquerFormule(stripe, sub("paused"), { priceId: "price_pa", paymentMethodId: "pm_1", immediat: false });
+    expect(api.subscriptions.resume).toHaveBeenCalledWith("sub_1", { proration_behavior: "none" });
+    api.subscriptions.update.mockClear();
+    await appliquerFormule(stripe, sub("trialing", "price_pa", "pm_1"), { priceId: "price_pa", paymentMethodId: "pm_1", immediat: false });
+    expect(api.subscriptions.update).not.toHaveBeenCalled();
   });
 
   it("les prix viennent de Stripe, par lookup_key et au bon intervalle, gardés dix minutes s'ils sont complets", async () => {

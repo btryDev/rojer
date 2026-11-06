@@ -8,10 +8,11 @@ import { requireCompte } from "@/lib/auth/compte";
 import { publicAppUrl } from "@/lib/email";
 import { clientStripe } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
-import { synchroniserClientStripe } from "@/lib/stripe/synchronisation";
-import { abonnementsDuClient, ouvrirCheckout, ouvrirPortail, prixDesFormules } from "@/lib/stripe/parcours";
+import { abonnementCourant, synchroniserClientStripe } from "@/lib/stripe/synchronisation";
+import { abonnementsDuClient, ouvrirCheckout, ouvrirCheckoutCarte, ouvrirPortail, prixDesFormules } from "@/lib/stripe/parcours";
+import { finaliserCarte } from "./souscription";
 import { demarrerEssaiDuCompte, PAGE_ESSAI, type EtatEssai } from "./essai";
-import { aNomProvisoire, abonnementEnCours } from "./droits";
+import { aNomProvisoire, abonnementEnCours, SANS_PAIEMENT_ENCORE } from "./droits";
 import { estLookupKey } from "./formules";
 import { PAGE_ABONNEMENT, verifierProprietaire, verifierRole } from "./saisie";
 
@@ -62,20 +63,34 @@ export async function ouvrirPortailAction(): Promise<void> {
 }
 
 /**
- * Souscrire de nouveau, après un abonnement terminé (§ 10) : Checkout.
- * Refusé tant qu'un abonnement court — deux onglets feraient deux abonnements.
+ * S'abonner (§ 10, amendé le 2026-11-05) : la formule et le rythme choisis
+ * dans Rojer. Un abonnement qui court sans payer encore (essai, pause) reçoit
+ * la carte par Checkout « setup », puis la formule (`souscription.ts`) ;
+ * après une résiliation, Checkout souscrit un nouvel abonnement. Stripe fait
+ * foi : un abonnement déjà payant ne se double jamais — la copie est relue et
+ * la page le dit. `immediat` : l'essai s'arrête et le premier mois se paie
+ * tout de suite (valider un document légal pendant l'essai).
  */
-export async function souscrireAction(formData: FormData): Promise<void> {
+export async function sAbonnerAction(formData: FormData): Promise<void> {
   await verifierProprietaire();
   const { stripe, ligne, compteId } = await clientDuCompte();
-  if (abonnementEnCours(ligne.statut)) redirect(PAGE_ABONNEMENT);
   const formule = String(formData.get("formule") ?? "");
   if (!estLookupKey(formule)) redirect(PAGE_ABONNEMENT);
-  // `null` : un abonnement court déjà chez Stripe (notre copie retardait) —
-  // on la remet à jour, et la page le dit.
+  const immediat = formData.get("immediat") === "oui";
+  const base = `${publicAppUrl()}${PAGE_ABONNEMENT}`;
+  // `null` : un abonnement paie déjà (notre copie retardait).
   let url: string | null = null;
   try {
-    if ((await abonnementsDuClient(stripe, ligne.stripeCustomerId)).some((a) => abonnementEnCours(a.status))) {
+    const { courant } = abonnementCourant(await abonnementsDuClient(stripe, ligne.stripeCustomerId));
+    if (courant && SANS_PAIEMENT_ENCORE.has(courant.status)) {
+      url = await ouvrirCheckoutCarte(stripe, {
+        customerId: ligne.stripeCustomerId,
+        metadata: { compteId, formule, immediat: immediat ? "oui" : "non" },
+        // `{CHECKOUT_SESSION_ID}` : remplacé par Stripe au retour.
+        succes: `${base}?carte={CHECKOUT_SESSION_ID}`,
+        annulation: base,
+      });
+    } else if (courant && abonnementEnCours(courant.status)) {
       await synchroniserClientStripe(stripe, ligne.stripeCustomerId).catch(() => null);
     } else {
       const prix = (await prixDesFormules(stripe)).get(formule);
@@ -84,12 +99,32 @@ export async function souscrireAction(formData: FormData): Promise<void> {
         customerId: ligne.stripeCustomerId,
         priceId: prix.priceId,
         metadata: { compteId },
-        succes: `${publicAppUrl()}${PAGE_ABONNEMENT}?paiement=termine`,
-        annulation: `${publicAppUrl()}${PAGE_ABONNEMENT}`,
+        succes: `${base}?paiement=termine`,
+        annulation: base,
       });
     }
   } catch {
     redirect(`${PAGE_ABONNEMENT}?stripe=indisponible`);
   }
   redirect(url ?? `${PAGE_ABONNEMENT}?abonnement=en-cours`);
+}
+
+/**
+ * Au retour de Checkout « carte » : appliquer la formule choisie. Appelée
+ * par la page dès son ouverture ; le webhook fait de même si l'onglet a été
+ * fermé (`finaliserCarte` est idempotente).
+ */
+export async function finaliserCarteAction(sessionId: string): Promise<void> {
+  await verifierProprietaire();
+  const { stripe, ligne } = await clientDuCompte();
+  let issue = "rien";
+  try {
+    if (/^cs_[A-Za-z0-9_]+$/.test(sessionId)) {
+      issue = await finaliserCarte(stripe, sessionId, { customerId: ligne.stripeCustomerId });
+    }
+  } catch (e) {
+    console.error(`abonnement : finalisation de la carte en échec — ${e instanceof Error ? e.name : "erreur"}`);
+    redirect(`${PAGE_ABONNEMENT}?stripe=indisponible`);
+  }
+  redirect(issue === "appliquee" ? `${PAGE_ABONNEMENT}?paiement=termine` : PAGE_ABONNEMENT);
 }

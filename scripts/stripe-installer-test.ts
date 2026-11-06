@@ -134,18 +134,10 @@ export function parametresPortail(
       invoice_history: { enabled: true },
       payment_method_update: { enabled: true },
       subscription_cancel: { enabled: true, mode: "at_period_end", proration_behavior: "none" },
-      subscription_update: {
-        enabled: true,
-        default_allowed_updates: ["price"],
-        products: CLES_FORMULES.map((f) => ({
-          product: produits[f].id,
-          prices: prix.filter((p) => idProduit(p.prix.product) === produits[f].id).map((p) => p.prix.id),
-        })),
-        // Pendant l'essai : la nouvelle formule, l'essai continue, rien n'est facturé.
-        trial_update_behavior: "continue_trial",
-        // Après l'essai : l'écart est porté sur la prochaine facture, pas prélevé sur-le-champ.
-        proration_behavior: "create_prorations",
-      },
+      // La formule se change dans Rojer, qui contrôle les plafonds (ADR-053 §§ 10
+      // et 14) : le portail ne sait ni refuser une baisse, ni la planifier
+      // entre deux produits — passer par lui rouvrirait « Pro une heure ».
+      subscription_update: { enabled: false },
       customer_update: { enabled: true, allowed_updates: ["name", "email", "address", "tax_id"] },
     },
   };

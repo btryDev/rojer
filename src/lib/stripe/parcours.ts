@@ -124,6 +124,62 @@ async function expirerSessionsOuvertes(stripe: Stripe, customerId: string) {
   await Promise.all(ouvertes.data.map((s) => stripe.checkout.sessions.expire(s.id)));
 }
 
+/**
+ * La carte d'un client qui a déjà un abonnement (essai, en pause) : Checkout
+ * en mode « setup » — la page hébergée enregistre la carte sans rien
+ * prélever. La formule choisie voyage dans les métadonnées de la session,
+ * relue à son retour (`abonnements/souscription.ts`).
+ */
+export async function ouvrirCheckoutCarte(
+  stripe: Stripe,
+  { customerId, metadata, succes, annulation }: { customerId: string; metadata: Metadonnees; succes: string; annulation: string },
+) {
+  await expirerSessionsOuvertes(stripe, customerId);
+  const session = await stripe.checkout.sessions.create({
+    mode: "setup",
+    customer: customerId,
+    currency: "eur",
+    metadata,
+    setup_intent_data: { metadata },
+    success_url: succes,
+    cancel_url: annulation,
+  });
+  if (!session.url) throw new Error("session Checkout sans adresse");
+  return session.url;
+}
+
+/**
+ * Appliquer la formule choisie et la carte enregistrée à l'abonnement qui
+ * court encore sans payer : l'essai continue (`proration_behavior: none`,
+ * rien n'est facturé avant sa fin), sauf `immediat` — l'essai s'arrête et le
+ * premier mois est prélevé tout de suite (valider un document légal pendant
+ * l'essai, décision du 2026-11-05) ; un abonnement en pause reprend et paie.
+ * Idempotent : rejouée (retour de Checkout, puis webhook), elle ne refait rien.
+ */
+export async function appliquerFormule(
+  stripe: Stripe,
+  abonnement: Stripe.Subscription,
+  { priceId, paymentMethodId, immediat }: { priceId: string; paymentMethodId: string; immediat: boolean },
+) {
+  const item = abonnement.items.data[0];
+  const pmActuel = typeof abonnement.default_payment_method === "string"
+    ? abonnement.default_payment_method
+    : abonnement.default_payment_method?.id;
+  const finEssai = immediat && abonnement.status === "trialing";
+  const dejaFait = item?.price.id === priceId && pmActuel === paymentMethodId && !finEssai && abonnement.status !== "paused";
+  if (dejaFait) return;
+  await stripe.subscriptions.update(abonnement.id, {
+    items: item ? [{ id: item.id, price: priceId }] : [{ price: priceId }],
+    default_payment_method: paymentMethodId,
+    proration_behavior: "none",
+    ...(finEssai ? { trial_end: "now" as const } : {}),
+  });
+  if (abonnement.status === "paused") {
+    // Reprise : la période repart à aujourd'hui (le défaut de l'API) et se paie.
+    await stripe.subscriptions.resume(abonnement.id, { proration_behavior: "none" });
+  }
+}
+
 export type PrixAffiche = { priceId: string; montantCentimes: number; devise: string };
 
 let cachePrix: { lu: number; prix: ReadonlyMap<string, PrixAffiche> } | undefined;

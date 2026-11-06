@@ -94,7 +94,10 @@ describe("gesteAbonnement", () => {
     const g = (l: ReturnType<typeof ligne> | null) => gesteAbonnement({ ouvert: true, role: "owner", ligne: l });
     expect(g(null)).toBe("essai");
     expect(g(ligne({}))).toBe("essai");
-    for (const statut of ["trialing", "active", "past_due", "unpaid", "paused", "incomplete"]) {
+    for (const statut of ["trialing", "paused"]) {
+      expect(g(ligne({ statut, stripeSubscriptionId: "sub_1", essaiUtiliseLe: new Date() })), statut).toBe("abonner");
+    }
+    for (const statut of ["active", "past_due", "unpaid", "incomplete"]) {
       expect(g(ligne({ statut, stripeSubscriptionId: "sub_1", essaiUtiliseLe: new Date() })), statut).toBe("portail");
     }
     for (const statut of ["canceled", "incomplete_expired"]) {

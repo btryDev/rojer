@@ -18,6 +18,7 @@ import type { ModeStripe } from "./config";
 import { OPTIONS_WEBHOOK } from "./client";
 import { marquerEchec, marquerTraite, oublierLesAnciens, prendreEnCharge } from "./evenements";
 import { codePrisma, synchroniserClientStripe, type Synchronisation } from "./synchronisation";
+import { finaliserCarte } from "@/lib/abonnements/souscription";
 
 /** Une notification légère pèse moins d'un kilo-octet. */
 export const TAILLE_MAX_NOTIFICATION = 64 * 1024;
@@ -98,7 +99,10 @@ async function objetSuivi(stripe: Stripe, n: NotificationStripe): Promise<ObjetS
     }
     case "v1.checkout.session.completed": {
       const session = await stripe.checkout.sessions.retrieve(n.related_object.id, {}, OPTIONS_WEBHOOK);
-      return { customerId: session.mode === "subscription" ? idDe(session.customer) : null };
+      // La carte d'un abonnement qui court sans payer : la formule choisie
+      // s'applique ici si le retour de Checkout ne l'a pas déjà fait.
+      if (session.mode === "setup") await finaliserCarte(stripe, session.id);
+      return { customerId: session.mode === "subscription" || session.mode === "setup" ? idDe(session.customer) : null };
     }
     case "v1.invoice.paid":
     case "v1.invoice.payment_failed":
