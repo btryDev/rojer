@@ -1,8 +1,8 @@
 # Photos de la page publique
 
 Les photos vivent ici. Chacune est référencée par une constante `PHOTO_*`
-en tête du composant qui l'affiche (`Hero.tsx`, `Manifeste.tsx`,
-`Etapes.tsx`, dans `src/components/landing/`). Déposer un fichier ici ne
+en tête du composant qui l'affiche (`Hero.tsx`, `Manifeste.tsx`
+dans `src/components/landing/`). Déposer un fichier ici ne
 l'affiche pas — il faut changer la constante (chemin + texte alternatif).
 
 ## Ce qui est en place
@@ -11,7 +11,6 @@ l'affiche pas — il faut changer la constante (chemin + texte alternatif).
 | --------------------- | ---------------------- | ------------ |
 | `hero-restaurateur.jpg` | Hero, pleine largeur | 16/9 paysage |
 | `manifeste-boulangere.jpg` | « Concentrez-vous », gauche | 4/5 vertical |
-| `etapes-atelier.jpg`  | « Une prise en main rapide », gauche | 4/5 vertical |
 
 [2026-11-06 : `hero-terrain.jpg` (Pexels 8986129, un garagiste) remplacée
 par `hero-restauratrice.jpg` et supprimée — le garagiste ne parlait pas à la
@@ -35,8 +34,8 @@ restauratrice, boulangère) avant la mise en ligne
 publique : vérifier les conditions d'usage commercial du plan Krea et les
 écrire ici.
 
-Origine de `etapes-atelier.jpg` : [Pexels 6790046](https://www.pexels.com/photo/6790046/),
-licence Pexels (usage commercial libre, sans attribution obligatoire).
+[2026-11-06 : `etapes-atelier.jpg` (Pexels 6790046) supprimée avec la
+section « Une prise en main rapide ».]
 
 ~~Origine de `guide-ordinateur.jpg` : [Pexels 3874620](https://www.pexels.com/photo/young-businesswoman-working-remotely-with-laptop-in-cafe-during-daytime-3874620/),
 photo de Gustavo Fring, licence Pexels. Référencée par le guide de mise en

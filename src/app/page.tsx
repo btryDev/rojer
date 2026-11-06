@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { Cadran } from "@/components/landing/Cadran";
-import { Etapes } from "@/components/landing/Etapes";
 import { Hero } from "@/components/landing/Hero";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { Manifeste } from "@/components/landing/Manifeste";
@@ -72,12 +71,6 @@ export default async function Home({
       <Cadran chiffres={chiffres} />
       <Manifeste />
       <OutilSimple />
-      <Etapes
-        chiffres={chiffres}
-        ctaHref={ctaHref}
-        ctaLabel={ctaLabel}
-        connecte={Boolean(user)}
-      />
       <Tarif ctaHref={ctaHref} />
       <SiteFooter />
     </main>

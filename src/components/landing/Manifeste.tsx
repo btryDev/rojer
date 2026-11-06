@@ -3,8 +3,8 @@
 // Partage éditorial de la page, pour qu'aucune section ne répète l'autre :
 //   · ici       → ce que Rojer vous apporte (pas comment il marche)
 //   · le cadran → ce que ça produit (les six documents)
-//   · « Une prise en main rapide » → comment on s'y met (≈ 30 min, puis ce
-//                 qui arrive à échéance)
+//   · « Un outil simple et transparent » → l'usage et les sources
+//   · le tarif → ce que ça coûte
 //
 // Chaque apport dit ce que Rojer fait, sans accroche et sans automatisme :
 // on ne dit pas qu'un rapport « se range tout seul », ni qu'un rappel part.

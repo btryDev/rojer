@@ -10,7 +10,6 @@ import {
   obligationsConformite,
 } from "@/lib/referentiels/conformite";
 import { Cadran } from "./Cadran";
-import { Etapes } from "./Etapes";
 
 /**
  * La page d'accueil est **publique** — `src/proxy.ts` laisse passer `/` sans
@@ -43,7 +42,9 @@ import { Etapes } from "./Etapes";
  * vérifie donc trois choses : (1) le texte RENDU annonce le compte suivi,
  * recalculé ici à la main (total − audit) et non relu dans la fonction qu'il
  * contrôle ; (2) aucun chiffre écrit dans les sources ne s'en écarte ; (3) la
- * page d'accueil passe bien le calcul aux deux composants.
+ * page d'accueil passe bien le calcul au cadran. [2026-11-06 : la note de
+ * provenance de « Une prise en main rapide » est partie avec la section ; le
+ * cadran est le seul à annoncer le compte.]
  */
 
 const DOSSIER = dirname(fileURLToPath(import.meta.url));
@@ -60,15 +61,7 @@ const DOMAINES = new Set(
 function texteRendu(): string {
   const chiffres = chiffresReferentielSuivi();
   return (
-    renderToStaticMarkup(createElement(Cadran, { chiffres })) +
-    renderToStaticMarkup(
-      createElement(Etapes, {
-        chiffres,
-        ctaHref: "/signup",
-        ctaLabel: "Créer mon compte",
-        connecte: false,
-      }),
-    )
+    renderToStaticMarkup(createElement(Cadran, { chiffres }))
   );
 }
 
@@ -133,8 +126,9 @@ describe("les chiffres de la page publique", () => {
 
   it("le texte rendu annonce le nombre d'obligations suivies au quotidien", () => {
     const annonces = comptesAnnonces(texteRendu(), /obligations?/);
-    // Les deux composants l'annoncent : le cadran et la note de provenance.
-    expect(annonces.length).toBeGreaterThanOrEqual(2);
+    // Le cadran l'annonce (la note de provenance est partie avec « Une prise
+    // en main rapide », 2026-11-06) : au moins une annonce, et toutes justes.
+    expect(annonces.length).toBeGreaterThanOrEqual(1);
     expect(
       annonces.filter((n) => n !== OBLIGATIONS),
       `La page d'accueil est publique et annonce un nombre d'obligations qui n'est pas celui que Rojer suit au quotidien (${OBLIGATIONS} = référentiel − niveau audit). Corrigez le calcul — ne relâchez pas ce test.`,
@@ -143,7 +137,7 @@ describe("les chiffres de la page publique", () => {
 
   it("le texte rendu annonce le nombre de domaines suivis", () => {
     const annonces = comptesAnnonces(texteRendu(), /domaines?/);
-    expect(annonces.length).toBeGreaterThanOrEqual(2);
+    expect(annonces.length).toBeGreaterThanOrEqual(1);
     expect(annonces.filter((n) => n !== DOMAINES)).toEqual([]);
   });
 
@@ -162,12 +156,11 @@ describe("les chiffres de la page publique", () => {
     expect(fautifs).toEqual([]);
   });
 
-  it("la page d'accueil passe le calcul aux deux composants", () => {
+  it("la page d'accueil passe le calcul au cadran", () => {
     // Les props sont obligatoires (tsc) ; ce qui reste à garder, c'est
     // qu'elles viennent du calcul et non d'un littéral.
     const page = readFileSync(join(DOSSIER, "../../app/page.tsx"), "utf8");
     expect(page).toMatch(/const chiffres = chiffresReferentielSuivi\(\);/);
     expect(page).toMatch(/<Cadran chiffres=\{chiffres\} \/>/);
-    expect(page).toMatch(/<Etapes[^>]*chiffres=\{chiffres\}/);
   });
 });

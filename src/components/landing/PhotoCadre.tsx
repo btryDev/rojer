@@ -1,7 +1,7 @@
 // Le cadre photo des sections de la page publique : coins très arrondis,
-// image recadrée sans être déformée. 4/5 par défaut (« Concentrez-vous »,
-// « Une prise en main rapide ») ; l'illustration de « Un outil simple et
-// transparent » le prend en 4/3. Un seul endroit pour les rayons.
+// image recadrée sans être déformée. 4/5 par défaut (« Concentrez-vous ») ;
+// l'illustration de « Un outil simple et transparent » le prend en 4/3. Un
+// seul endroit pour les rayons.
 
 import Image from "next/image";
 
