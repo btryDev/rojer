@@ -580,11 +580,7 @@ export const obligationsConformite: Obligation[] = [
 // extincteurs et RIA). 205 + 0 − 0 = 205 ; 18 au niveau audit, 187 suivies ;
 // par porteur, 99 équipement, 92 établissement, 14 salarié — remesuré en
 // appelant `obligationsConformite`, `porteurDe` et `estNiveauAudit`.
-// `2026-11-06.2` (`lot/adr-057-a`, relecture du même jour) : le geste retiré
-// de `incendie-hotel-po-controle-annuel-electricite`, posé sans décision de la
-// propriétaire — le tableau de l'ADR-057 ne réunit pas l'électricité.
-// Quatorze obligations portent le geste. 205 + 0 − 0 = 205.
-export const REFERENTIEL_VERSION = "2026-11-06.2";
+export const REFERENTIEL_VERSION = "2026-11-06.1";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

@@ -118,6 +118,7 @@ Les gestes retenus :
 | RIA | `incendie-erp-ria-annuelle` · `PE 4` · `PO 1` · `incendie-travail-ria-entretien-verification` | annuel | personne qualifiée |
 | Appareil de cuisson | `cuisson-erp-appareils-annuelle` · `PE 4` · `PO 1` · `cuisson-travail-appareils-entretien-verification` | annuel | personne qualifiée |
 | Ventilation | `aeration-controle-installations-r4222-20` · `aeration-erp-chauffage-ventilation-annuelle` | annuel | personne qualifiée |
+| Électricité, ERP de 5ᵉ qui groupe un hôtel et un autre type | `PE 4` · `incendie-hotel-po-controle-annuel-electricite` (PO 1 § 3) — ajouté le 2026-11-06, décision de la propriétaire | annuel | personne qualifiée |
 
 Désenfumage, RIA et cuisson sont retenus par analogie avec l'extincteur et
 l'alarme (la propriétaire n'a rien objecté) ; à confirmer à la relecture de
@@ -246,11 +247,13 @@ n'a pas été discutée le 2026-11-05 :
   qu'un geste) ;
 - l'électricité Code du travail : elle ne vise que les lieux de travail ; un
   ERP sans salarié ou une habitation seule ne la reçoivent pas. Voulu ?
-- [2026-11-06, lot A] l'électricité d'un ERP de 5ᵉ qui groupe un hôtel et
+- ~~[2026-11-06, lot A] l'électricité d'un ERP de 5ᵉ qui groupe un hôtel et
   un autre type : PE 4 § 2 (triennal) et le contrôle annuel de PO 1 § 3
   visent la même installation. Avant l'ADR-057, le groupe exclusif
   PE 4 / PO 1 n'en servait qu'une ligne ; sans geste commun, il y en a deux.
-  Les réunir (même acte, personne qualifiée admise par les deux) ?
+  Les réunir (même acte, personne qualifiée admise par les deux) ?~~
+  [2026-11-06 : tranché — « si ça respecte notre règle alors c'est bon » ;
+  une ligne annuelle, au tableau ci-dessus.]
 - [2026-11-06, lot A] la liste de `PE 4 § 2` : le texte cite aussi « le
   chauffage, l'éclairage, les circuits d'extraction », et la liste relue par
   le préventeur ne porte ni la hotte, ni la ventilation, ni l'éclairage de

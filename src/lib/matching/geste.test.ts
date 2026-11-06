@@ -141,10 +141,10 @@ describe("le geste — la structure du référentiel", () => {
       CTA: ["aeration-controle-installations-r4222-20", "aeration-erp-chauffage-ventilation-annuelle"],
       // Seuls sur leur appareil : un membre du geste sans partenaire.
       HOTTE_PRO: ["aeration-controle-installations-r4222-20"],
-      // Électricité : PE 4 § 2 seul porte le geste. Ni le Code du travail
-      // (décision de la propriétaire), ni le contrôle annuel de l'hôtel
-      // (non décidé, ADR-057 « À trancher »).
-      INSTALLATION_ELECTRIQUE: [PE4],
+      // Électricité : PE 4 § 2 et le contrôle annuel de l'hôtel (PO 1 § 3),
+      // deux textes ERP du même acte (décision du 2026-11-06) — jamais la
+      // vérification du Code du travail, qui reste une ligne à part.
+      INSTALLATION_ELECTRIQUE: [PE4, "incendie-hotel-po-controle-annuel-electricite"],
       ASCENSEUR: [PE4],
       INSTALLATION_GAZ: [PE4, PO1],
     };

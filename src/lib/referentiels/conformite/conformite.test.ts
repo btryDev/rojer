@@ -2009,7 +2009,6 @@ describe("référentiel conformité — version et empreinte", () => {
     // électricité ». 205 + 0 − 0, relevée en appelant.
     { version: "2026-11-04.1", empreinte: "205-a7fba8ae5dd614bc" },
     { version: "2026-11-06.1", empreinte: "205-80a0dac86aa622c8" },
-    { version: "2026-11-06.2", empreinte: "205-76cbc4d9ff61461d" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
