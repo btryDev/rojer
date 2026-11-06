@@ -34,11 +34,10 @@ export function Tarif({ ctaHref }: { ctaHref: string }) {
       <div className="lp-shell">
         <Reveal as="header" className="text-center">
           <p className="lp-eyebrow">Tarif</p>
-          <h2 className="lp-titre lp-h2 mt-3.5">Toutes les obligations, dans toutes les offres</h2>
+          <h2 className="lp-titre lp-h2 mt-3.5">Une offre selon la taille de votre structure</h2>
           <p className="lp-lede mx-auto mt-4 max-w-[52ch]">
-            Les offres se distinguent par le nombre d&apos;établissements,
-            d&apos;utilisateurs et l&apos;usage à volonté. Ce qui revient chaque
-            année n&apos;est jamais limité.
+            30 jours d&apos;essai sur Essentiel, sans carte bancaire. Mensuel
+            sans engagement, ou annuel à −15&nbsp;%.
           </p>
         </Reveal>
 
