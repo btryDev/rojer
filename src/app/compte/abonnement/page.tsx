@@ -119,7 +119,7 @@ export default async function AbonnementPage({
         <FilRetour provenance={null} canonique={{ href: "/entreprises", label: "Mon dossier" }} />
         <h1 className="board-titre m-0 mt-6 text-[clamp(29px,3vw,39px)]">Abonnement</h1>
         <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-          Vos dossiers restent toujours consultables et exportables, quel que soit l&apos;état de l&apos;abonnement.
+          Vos dossiers restent toujours consultables, quel que soit l&apos;état de l&apos;abonnement.
         </p>
 
         {saisie === "fermee" && !droits.saisie && (
@@ -135,6 +135,17 @@ export default async function AbonnementPage({
               Votre dernière modification n&apos;a pas été enregistrée. Ce site ou ce prestataire dépasse votre
               formule : il reste consultable et exportable, mais ne se modifie plus. Supprimez-en un plus ancien ou
               passez à une formule supérieure pour le modifier.
+            </MessageFormulaire>
+          </div>
+        )}
+
+        {/* Un geste réservé aux abonnés y renvoie (`exigerUnPaiement`) : on dit pourquoi on est là. */}
+        {immediat === "1" && geste === "abonner" && (
+          <div className="mt-6">
+            <MessageFormulaire ton="info">
+              Valider un document, exporter un dossier officiel, publier, signer ou envoyer un lien à un
+              prestataire est réservé aux abonnés. Abonnez-vous : le premier mois est prélevé aussitôt, et vous
+              pouvez le faire tout de suite.
             </MessageFormulaire>
           </div>
         )}
