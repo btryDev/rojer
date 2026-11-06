@@ -304,14 +304,20 @@ et sans croire une information qui ne vient pas de Stripe.
      zone (`data-zone-saisie`), grise les boutons d'envoi des formulaires
      de server action et arrête leur envoi ; la lecture (filtres) et les
      formulaires marqués `data-saisie-ouverte` (demander de l'aide)
-     restent ouverts. Pages d'un site : lecture seule, abonnement fermé ou
-     site gelé (`saisieFermeeDuSite`, dans la mise en page ; le gel y porte
-     son bandeau). Pages de création : le plafond atteint
+     restent ouverts (se déconnecter compris). Pages d'un site et du
+     DUERP, et modification de l'entreprise : lecture seule, abonnement
+     fermé ou site gelé (`VerrouDeLaPage` dans la mise en page, panneaux
+     en portail compris par `data-portail-saisie` ; le gel y porte son
+     bandeau). Pages de création : le plafond atteint
      (`PlafondDeCreation` : prestataire, équipement, permis, plan, unité,
-     import, établissement ; utilisateurs sur la page Membres). Non
-     couverts : les boutons qui appellent une action sans formulaire (le
-     refus du serveur reste), et la création d'une zone ou d'une
-     prescription, dont le formulaire partage sa page avec d'autres.
+     import, établissement ; utilisateurs sur la page Membres) ; fiche et
+     page Modifier d'un prestataire gelé (`GelDuPrestataire`). Non
+     couverts : les boutons qui appellent une action sans formulaire, et
+     les formulaires sans server action déclarée (le refus du serveur
+     reste) ; la création d'une zone ou d'une prescription au plafond de
+     l'essai, dont le formulaire partage sa page avec d'autres. Le motif
+     n'est relu qu'au rendu : un dégel ou un paiement fait ailleurs
+     s'applique au prochain affichage.
    - **Condition de lancement** : « Sur mesure » doit avoir sa propre entrée
      dans `FORMULES` (ses plafonds) et sa clé (`lookup_key` ou
      `metadata.formule` du prix) avant toute vente — sans quoi le refus par

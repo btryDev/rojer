@@ -1423,8 +1423,10 @@
 /* La saisie fermée annoncée dès l'ouverture (ADR-053 § 14, lot D,
    `FermerLaSaisie`) : les boutons d'envoi des formulaires qui écrivent sont
    grisés ; l'envoi lui-même est arrêté par le composant. */
-[data-saisie-fermee] form[method="post" i]:not([data-saisie-ouverte]) button[type="submit"],
-[data-saisie-fermee] form[action^="javascript:"]:not([data-saisie-ouverte]) button[type="submit"] {
+[data-saisie-fermee] form[method="post" i]:not([data-saisie-ouverte]) button:not([type="button"]),
+[data-saisie-fermee] form[action^="javascript:"]:not([data-saisie-ouverte]) button:not([type="button"]),
+body:has([data-saisie-fermee]) [data-portail-saisie] form[method="post" i]:not([data-saisie-ouverte]) button:not([type="button"]),
+body:has([data-saisie-fermee]) [data-portail-saisie] form[action^="javascript:"]:not([data-saisie-ouverte]) button:not([type="button"]) {
   opacity: 0.45;
   cursor: not-allowed;
 }

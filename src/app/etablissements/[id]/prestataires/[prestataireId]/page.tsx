@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { Suspense } from "react";
-import { BandeauGel } from "@/components/quotas/BandeauGel";
+import { GelDuPrestataire } from "@/components/quotas/BandeauGel";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -109,14 +108,12 @@ export default async function PrestataireDetailPage({
 
   return (
     <EcranFiche provenance={provenance} canonique={annuaire}>
+      {/* Un prestataire gelé (ADR-053 § 14) le dit dès l'ouverture, et sa fiche
+          ne s'envoie plus ; un site gelé, c'est la mise en page qui le dit. */}
+      <GelDuPrestataire prestataireId={prestataireId}>
       <CorpsFiche
         principal={
           <>
-            {/* Un prestataire gelé (ADR-053 § 14) le dit dès l'ouverture ; un
-                site gelé, son bandeau est celui de la mise en page. */}
-            <Suspense fallback={null}>
-              <BandeauGel prestataireId={prestataireId} />
-            </Suspense>
             <section className="carte-board px-7 py-6 sm:px-8">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
@@ -364,6 +361,7 @@ export default async function PrestataireDetailPage({
           </>
         }
       />
+      </GelDuPrestataire>
     </EcranFiche>
   );
 }

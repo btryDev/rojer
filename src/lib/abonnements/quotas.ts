@@ -247,14 +247,12 @@ export async function creerSousPlafond<T>(
   }
 }
 
-/** Le plafond d'utilisateurs atteint (membres et invitations en attente), annoncé avant d'inviter. */
-export async function refusMembres(db: Db, compteId: string): Promise<string | null> {
+/** Le plafond d'utilisateurs atteint (`occupes` : membres et invitations en attente, déjà lus), annoncé avant d'inviter. */
+export async function refusMembres(db: Db, compteId: string, occupes: number): Promise<string | null> {
   if (!lancee()) return null;
   const { regime } = await abonnementDesPlafonds(db, compteId);
   const plafond = plafondDe(regime, "membres");
-  if (plafond === null) return null;
-  const [membres, invitations] = await Promise.all([membresDuCompte(compteId), invitationsDuCompte(compteId)]);
-  return membres.length + invitations.length < plafond ? null : motifDuRefus(regime, "membres");
+  return plafond === null || occupes < plafond ? null : motifDuRefus(regime, "membres");
 }
 
 /** Le refus d'une invitation au plafond d'utilisateurs, pour le propriétaire du compte. */

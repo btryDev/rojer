@@ -19,9 +19,8 @@ export async function PlafondDeCreation({
   const c = await getOptionalCompte();
   const motif = c && c.compte.role !== "lecture" ? await refusQuota(c.db, c.compte.compteId, cle) : null;
   return (
-    <div data-zone-saisie className="contents">
-      <FermerLaSaisie motif={motif} annonce className={className} />
+    <FermerLaSaisie motif={motif} className={className}>
       {children}
-    </div>
+    </FermerLaSaisie>
   );
 }

@@ -1,49 +1,71 @@
 "use client";
 // La saisie fermée annoncée DÈS L'OUVERTURE (ADR-053 § 14, lot D) : un
-// formulaire qui écrit ne part plus pour être refusé après coup — ce qui
-// faisait perdre ce qui avait été saisi. Dans la zone (`data-zone-saisie`)
-// qui le contient, ce composant grise les boutons d'envoi des formulaires qui
-// écrivent (server action) et arrête leur envoi, avant que React ne le
-// prenne. Les formulaires de lecture (filtres, recherche) restent ouverts,
-// comme ceux marqués `data-saisie-ouverte` (demander de l'aide). Le refus du
-// serveur reste le filet.
+// formulaire qui écrit ne part plus pour être refusé après coup — React
+// efface la saisie au retour, même en refus. Les boutons d'envoi des
+// formulaires qui écrivent (server action) sont grisés, et leur envoi arrêté
+// en capture, avant que React ne le prenne. Les formulaires de lecture
+// (filtres) restent ouverts, comme ceux marqués `data-saisie-ouverte`
+// (demander de l'aide, se déconnecter). Le refus du serveur reste le filet.
+//
+// Deux formes :
+// - `FermerLaSaisie` enveloppe ce qu'elle ferme (une création au plafond, une
+//   fiche gelée) : sa zone est la sienne, rendue côté serveur ;
+// - `VerrouDeLaPage`, frère des pages dans une mise en page (`data-zone-saisie`),
+//   ferme toute la page — panneaux en portail compris (`data-portail-saisie`) —
+//   sans retarder son rendu.
 
 import { useEffect, useRef } from "react";
 import { BandeauAbonnement } from "@/components/abonnements/BandeauAbonnement";
 
 /** Un formulaire qui écrit : une server action (React pose `javascript:` ou `POST`). */
 export function formulaireQuiEcrit(form: HTMLFormElement): boolean {
-  if (form.closest("[data-saisie-ouverte]")) return false;
+  if (form.hasAttribute("data-saisie-ouverte")) return false;
   return (form.getAttribute("method") ?? "").toLowerCase() === "post" || (form.getAttribute("action") ?? "").startsWith("javascript:");
+}
+
+/** Arrête, en capture sur `cible`, l'envoi des formulaires qui écrivent et que `garde` retient. */
+function arreterLesEnvois(cible: EventTarget, garde: (form: HTMLFormElement) => boolean): () => void {
+  const arreter = (e: Event) => {
+    const form = e.target;
+    if (form instanceof HTMLFormElement && formulaireQuiEcrit(form) && garde(form)) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+  cible.addEventListener("submit", arreter, true);
+  return () => cible.removeEventListener("submit", arreter, true);
 }
 
 export function FermerLaSaisie({
   motif,
-  annonce = false,
   className = "mb-4",
+  children,
 }: {
   motif: string | null;
-  /** Dire le motif ici (sinon un autre bandeau le dit déjà). */
-  annonce?: boolean;
   className?: string;
+  children: React.ReactNode;
 }) {
+  const zone = useRef<HTMLDivElement>(null);
+  useEffect(() => (motif && zone.current ? arreterLesEnvois(zone.current, () => true) : undefined), [motif]);
+  return (
+    <div ref={zone} data-zone-saisie data-saisie-fermee={motif ? "" : undefined} className="contents">
+      {motif ? <BandeauAbonnement bandeau={{ ton: "ferme", message: motif }} className={className} /> : null}
+      {children}
+    </div>
+  );
+}
+
+export function VerrouDeLaPage({ motif, annonce = false, className }: { motif: string | null; annonce?: boolean; className?: string }) {
   const repere = useRef<HTMLSpanElement>(null);
   useEffect(() => {
     const zone = repere.current?.closest<HTMLElement>("[data-zone-saisie]");
     if (!zone || !motif) return;
     zone.dataset.saisieFermee = "";
-    // En capture, sur la zone : avant que l'envoi ne remonte à React.
-    const arreter = (e: Event) => {
-      const form = e.target;
-      if (form instanceof HTMLFormElement && formulaireQuiEcrit(form)) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    };
-    zone.addEventListener("submit", arreter, true);
+    // Sur le document : un panneau en portail sort de la zone dans le DOM, pas de la page.
+    const retirer = arreterLesEnvois(document, (form) => zone.contains(form) || form.closest("[data-portail-saisie]") !== null);
     return () => {
       delete zone.dataset.saisieFermee;
-      zone.removeEventListener("submit", arreter, true);
+      retirer();
     };
   }, [motif]);
   return (

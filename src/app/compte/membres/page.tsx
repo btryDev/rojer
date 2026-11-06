@@ -100,10 +100,9 @@ export default async function MembresPage({
                 ouvrant le lien de l&apos;invitation.
               </p>
               {/* Le plafond d'utilisateurs de la formule, annoncé avant d'inviter (ADR-053 § 14). */}
-              <div data-zone-saisie>
-                <FermerLaSaisie motif={proprietaire ? await refusMembres(db, compte.compteId) : null} annonce />
+              <FermerLaSaisie motif={await refusMembres(db, compte.compteId, membres.length + invitations.length)}>
                 <FormulaireInvitation />
-              </div>
+              </FermerLaSaisie>
             </section>
 
             {invitations.length > 0 ? (
