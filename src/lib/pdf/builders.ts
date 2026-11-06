@@ -4,7 +4,7 @@ import { libelleRealisePar } from "@/lib/rapports/interne";
 import { estLignePourInformation } from "@/lib/referentiels/conformite/initiative";
 import { libelleTypesErp, numeroCategorie } from "@/lib/etablissements/types-erp-affiches";
 import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
-import type { Db } from "@/lib/auth/compte";
+import type { AccesCompte, Db } from "@/lib/auth/compte";
 import {
   compterActions,
   compterActionsParOrigine,
@@ -134,7 +134,7 @@ import {
  * reçu (ADR-051). Retourne `null` aussi bien pour un établissement inexistant que
  * pour celui d'un tiers : l'appelant ne doit pas pouvoir les distinguer.
  *
- * L'utilisateur est REÇU, pas relu (audit Next.js du 2026-10-14, M7) : hors
+ * ~~L'utilisateur~~ Le compte est REÇU, pas relu (audit Next.js du 2026-10-14, M7) : hors
  * rendu, `requireUser()` refait un `getUser()` réseau à chaque appel, et le
  * ZIP de contrôle en faisait vingt-trois. Les builders le reçoivent de la
  * route, qui le tient de `requireEtablissement`. Le client borné au compte
@@ -405,13 +405,12 @@ export async function construirePointsEquipementData(
 }
 
 export async function construireRegistreData(
-  db: Db,
+  /** Le compte et son client, tels que la route les tient de sa garde : les
+   *  annexes se lisent avec eux, comme « Préparer un contrôle » (ADR-054). */
+  acces: AccesCompte,
   etablissementId: string,
-  /** Le compte de la session, celui que la route a vérifié : les annexes
-   *  se lisent avec lui, comme « Préparer un contrôle » (relecture du
-   *  2026-11-05 ; sur cc, le compte et non l'utilisateur — ADR-054). */
-  compteId: string,
 ): Promise<RegistreData | null> {
+  const { db } = acces;
   const etab = await chargerEtablissementDuUser(db, etablissementId);
   if (!etab) return null;
   const multiBatiments = etab._count.batiments > 1;
@@ -462,7 +461,7 @@ export async function construireRegistreData(
     ? await Promise.all([
         listerEquipementsDeLEtablissement(etablissementId),
         // La fiche « Annexes » relit « Ce qui doit être en place » (2026-11-05).
-        lireAnnexesDuRegistre(db, etablissementId, compteId),
+        lireAnnexesDuRegistre(acces, etablissementId),
       ])
     : [[], null];
 

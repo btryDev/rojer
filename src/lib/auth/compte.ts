@@ -79,3 +79,12 @@ export type Compte = Awaited<ReturnType<typeof requireCompte>>;
  * appelant déjà authentifié — jamais fabriqué par elles.
  */
 export type Db = Compte["db"];
+
+/**
+ * Le compte vérifié et son client borné, reçus ENSEMBLE d'une garde
+ * (`requireCompte`, `requireEtablissement`) : une lecture qui les prend ainsi
+ * ne peut ni relire la session — un second contexte, qu'un changement de
+ * compte dans un autre onglet ferait diverger —, ni recevoir un `user.id` à la
+ * place du compte (report main → cc du 2026-11-06, ADR-054).
+ */
+export type AccesCompte = Pick<Compte, "compte" | "db">;

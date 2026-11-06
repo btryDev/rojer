@@ -1,5 +1,5 @@
 import "server-only";
-import { requireCompte, type Db } from "@/lib/auth/compte";
+import { requireCompte, type AccesCompte, type Db } from "@/lib/auth/compte";
 /**
  * Ce que l'écran « Ce qui doit être en place » lit.
  *
@@ -214,6 +214,12 @@ export async function listerEtatsPermanents(
     equipements,
   ),
   now: Date = new Date(),
+  /**
+   * Le compte et son client, quand l'appelant les tient déjà d'une garde
+   * (registre, ZIP, « Préparer un contrôle ») : un seul contexte de compte
+   * pour tout le document. Absent, la session est lue ici, comme avant.
+   */
+  acces?: AccesCompte,
 ): Promise<EtatsPermanentsDuDossier> {
   const projete = projeterEtablissement(etablissement);
   // Le fondement affiché dépend du type d'ERP (livre II, titre II : une ligne
@@ -235,7 +241,7 @@ export async function listerEtatsPermanents(
   // l'appelle : c'est ce que `batiments/queries.ts` formule par « une lecture
   // qui ne le porte pas devient une fuite le jour où quelqu'un rend la fonction
   // publique ».
-  const { compte, db } = await requireCompte();
+  const { compte, db } = acces ?? (await requireCompte());
 
   // Les titres des personnes actives, pour les seules lignes établies d'après
   // eux (`etabliParLesTitres`, le prédicat que lit aussi la garde de
@@ -253,7 +259,7 @@ export async function listerEtatsPermanents(
 
   // Deux lectures indépendantes, lancées ensemble (revue du 2026-10-16).
   //
-  // ⚠ LE PRÉDICAT D'APPARTENANCE DES TITRES (`userId`) N'A QU'UNE GARDE :
+  // ⚠ LE PRÉDICAT D'APPARTENANCE DES TITRES (~~`userId`~~ `compteId`, ADR-054) N'A QU'UNE GARDE :
   // `par-les-titres-dossier.test.ts` (« ne lit que les titres des personnes
   // actives de CE dossier »). `tenancy-lectures.test.ts` ne voit pas cette
   // lecture. Retirer le prédicat ne fait tomber que ce test-là.

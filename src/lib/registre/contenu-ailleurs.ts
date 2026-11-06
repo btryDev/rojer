@@ -48,7 +48,7 @@ import {
   type RetenueParPrudence,
 } from "@/lib/calendrier/prudence";
 import { nomDeZone } from "@/lib/batiments/nom-zone";
-import { requireCompte, type Db } from "@/lib/auth/compte";
+import { requireCompte, type AccesCompte, type Db } from "@/lib/auth/compte";
 import { obligationsApplicablesDuDossier } from "@/lib/etablissements/dossier-du-rendu";
 import { listerEtatsPermanents } from "@/lib/etats-permanents/queries";
 import { projeterEtablissement } from "@/lib/matching/projection";
@@ -179,8 +179,7 @@ export async function lireContenuTenuAilleurs(
   // requêtes, et la mémoïsation de la page fait le reste. Le PDF, lui, passe
   // par `contenuTenuAilleursDepuis` avec un parc déjà chargé.
   if (section.id === ID_FICHE_ANNEXES) {
-    const { compte, db } = await requireCompte();
-    return lireAnnexesDuRegistre(db, etablissementId, compte.compteId);
+    return lireAnnexesDuRegistre(await requireCompte(), etablissementId);
   }
   if (!section.categoriesEquipement?.length) return null;
   const [equipements, zones, verifications, marques] = await Promise.all([
@@ -214,23 +213,28 @@ export async function lireContenuTenuAilleurs(
  * Même passage du moteur et mêmes déclarations que cet écran
  * (`obligationsApplicablesDuDossier`, `listerEtatsPermanents`) : la fiche ne
  * peut pas annoncer un écrit que l'écran ne demande pas. `null` si le dossier
- * n'est pas celui de l'utilisateur.
+ * n'est pas celui du compte.
  */
 export async function lireAnnexesDuRegistre(
-  db: Db,
+  acces: AccesCompte,
   etablissementId: string,
-  compteId: string,
 ): Promise<ContenuAilleurs | null> {
-  // Le client et le compte sont REÇUS (relecture du 2026-11-05) : le PDF et
-  // le ZIP les tiennent déjà, et une seconde garde ici en ferait un second
-  // contexte d'authentification. `listerEtatsPermanents` lit encore la
-  // session pour ses déclarations — c'est sa portée, antérieure à ce lot.
-  const dossier = await obligationsApplicablesDuDossier(db, etablissementId, compteId);
+  // Le compte et son client sont REÇUS ensemble (relecture du 2026-11-05 ;
+  // report main → cc du 2026-11-06) : le PDF et le ZIP les tiennent déjà, et
+  // `listerEtatsPermanents` les reçoit aussi — un seul contexte de compte, et
+  // aucune garde imbriquée dont la redirection serait avalée par un `catch`.
+  const dossier = await obligationsApplicablesDuDossier(
+    acces.db,
+    etablissementId,
+    acces.compte.compteId,
+  );
   if (!dossier) return null;
   const etats = await listerEtatsPermanents(
     dossier.etab,
     dossier.equipements,
     dossier.applicables,
+    new Date(),
+    acces,
   );
   const lignes = [
     ...etats.familles.flatMap((f) => f.blocs.flatMap((b) => b.lignes)),

@@ -18,7 +18,7 @@ export async function GET(
   const { id } = await context.params;
   const { db, compte } = await requireEtablissement(id);
 
-  const data = await construireRegistreData(db, id, compte.compteId);
+  const data = await construireRegistreData({ compte, db }, id);
   if (!data) return new Response("Établissement introuvable", { status: 404 });
 
   return reponsePdf(

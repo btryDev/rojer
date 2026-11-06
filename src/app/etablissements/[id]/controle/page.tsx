@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { unstable_rethrow } from "next/navigation";
 import { compterActions } from "@/lib/actions/queries";
 import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import { LegalBadge, ReferenceSansLien, Textes, WhyCard, StatusPill } from "@/components/ui-kit";
@@ -110,7 +111,9 @@ export default async function ControlePage({
     // (relecture du 2026-11-05).
     // `null` = lecture en échec ; un dossier introuvable rend aussi `null`,
     // mais `requireEtablissement` l'a déjà écarté plus haut.
-    lireAnnexesDuRegistre(db, id, compte.compteId).catch((e: unknown) => {
+    lireAnnexesDuRegistre({ compte, db }, id).catch((e: unknown) => {
+      // Une redirection n'est pas un échec de lecture : Next la reprend.
+      unstable_rethrow(e);
       console.error("controle : lecture des annexes du registre en échec", e);
       return null;
     }),
