@@ -664,7 +664,14 @@ est appliqué ; huit autres sont affichés sans l'être. Trous principaux :
   suppression, avec le lien d'export. Les CGU et ces e-mails disent que les
   40 ans de conservation du DUERP incombent à l'employeur. « Valider =
   s'abonner » protège la valeur : un compte jamais payé n'a pas de document
-  officiel à perdre. Reste à coder : la suppression à 12 mois et ses e-mails.]
+  officiel à perdre. Reste à coder : la suppression à 12 mois et ses e-mails.
+  **Règle pour tout futur e-mail automatique** (rappels d'échéances, relances
+  des prestataires…) : réservé aux comptes qui paient ; il vérifie
+  l'abonnement avant chaque envoi, comme la saisie. Sans abonnement, seuls
+  partent ceux de Stripe sur le paiement, les rappels de fin d'essai et les
+  avertissements avant suppression. Le calendrier, lui, reste calculé et
+  lisible sans abonnement (lecture) ; les limites de l'essai (5 équipements)
+  le gardent incomplet, et il le dit.]
 - **Export pour un ancien client : sous un délai.** Aujourd'hui, un compte
   sans abonnement garde la lecture et l'export sans limite (ADR-053 § 3) :
   Rojer stockerait à vie. À poser : un délai d'export après la fin de
