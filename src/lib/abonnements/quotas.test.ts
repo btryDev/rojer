@@ -99,6 +99,9 @@ describe("debutDeLAnnee : l'année des plafonds annuels", () => {
     expect(debutDeLAnnee(ancre, new Date("2025-06-01T00:00:00Z"), essai)).toEqual(essai);
     expect(debutDeLAnnee(ancre, new Date("2026-06-01T00:00:00Z"), essai)).toEqual(new Date("2026-03-12T08:00:00Z"));
   });
+  it("un essai lointain ne remonte pas au-delà d'un an avant l'ancre", () => {
+    expect(debutDeLAnnee(ancre, new Date("2025-06-01T00:00:00Z"), new Date("2024-01-10T00:00:00Z"))).toEqual(new Date("2024-03-12T08:00:00Z"));
+  });
   it("sans ancre (essai, jamais payé) : les douze derniers mois", () => {
     expect(debutDeLAnnee(null, new Date("2026-11-05T10:00:00Z"))).toEqual(new Date("2025-11-05T10:00:00Z"));
   });
