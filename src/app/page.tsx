@@ -9,6 +9,7 @@ import { SiteFooter } from "@/components/landing/SiteFooter";
 import { getOptionalUser } from "@/lib/auth/require-user";
 import { getOptionalUserEtablissement } from "@/lib/auth/scope";
 import { chiffresReferentielSuivi } from "@/lib/referentiels/conformite";
+import { Tarif } from "@/components/landing/Tarif";
 import { RecoveryHashRedirect } from "./RecoveryHashRedirect";
 
 export default async function Home({
@@ -77,6 +78,7 @@ export default async function Home({
         ctaLabel={ctaLabel}
         connecte={Boolean(user)}
       />
+      <Tarif ctaHref={ctaHref} />
       <SiteFooter />
     </main>
   );

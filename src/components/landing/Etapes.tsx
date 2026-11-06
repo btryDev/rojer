@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ChiffresReferentielSuivi } from "@/lib/referentiels/conformite";
+import { lienContact } from "./contact";
 import { PhotoCadre, type PhotoLanding } from "./PhotoCadre";
 import { Reveal } from "./Reveal";
 
@@ -42,14 +43,6 @@ const PHOTO_ETAPES: PhotoLanding = {
   position: "50% 44%",
 };
 
-/**
- * Adresse de contact affichée en bas de la section.
- *
- * ⚠︎ À confirmer avant la mise en ligne : c'est l'adresse du compte, pas
- * forcément celle qu'on veut exposer publiquement. Un seul endroit à
- * changer si elle bouge.
- */
-const CONTACT = "contact@btry.fr";
 
 const ETAPES = [
   {
@@ -182,7 +175,7 @@ export function Etapes({
                 </p>
               </div>
               <a
-                href={`mailto:${CONTACT}?subject=${encodeURIComponent("Une question sur Rojer")}`}
+                href={lienContact("Une question sur Rojer")}
                 className="lp-btn lp-btn-clair flex-none"
               >
                 Nous écrire

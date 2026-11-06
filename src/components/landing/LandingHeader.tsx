@@ -17,12 +17,10 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { signOutAction } from "@/lib/auth/actions";
 
-// Deux entrées, deux destinations à venir : aucune des deux pages
-// n'existe encore. On les affiche quand même — la barre doit montrer la
-// forme définitive du site. `#comprendre` et `#tarif` ne correspondent à
-// aucune ancre de la page : le clic ne fait donc rien, il ne casse rien
-// non plus. À rebrancher sur /comprendre et /tarif le jour où ces pages
-// existent.
+// « Tarif » mène à la section du même nom (`#tarif`). « Comprendre » n'a
+// pas encore de destination : `#comprendre` ne correspond à aucune ancre,
+// le clic ne fait rien et ne casse rien. À rebrancher sur /comprendre le
+// jour où la page existe.
 const LIENS = [
   { href: "#comprendre", label: "Comprendre" },
   { href: "#tarif", label: "Tarif" },
