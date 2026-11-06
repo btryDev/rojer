@@ -131,9 +131,17 @@ describe("la bascule déclaré / pas encore déclaré", () => {
     expect(lignes.find((x) => x.obligationId === "incendie-travail-extincteurs-dotation")?.etat).toBe("declare");
   });
 
-  it("le matériel de premiers secours se déclare ailleurs, jamais « déclaré » par le parc", () => {
+  it("le matériel de premiers secours n'est jamais « déclaré » par le parc : par sa case seulement", () => {
     const l = section(RESTAURANT_N3, [dae]).find((x) => x.obligationId === "secours-etablissement-materiel");
-    expect(l?.etat).toBe("ailleurs");
+    expect(l?.etat).toBe("pas_encore_declare");
+    // ~~« ailleurs »~~ (2026-11-06, relecture) : la ligne lit sa case.
+    const cochee = lignesEquipementsSecurite(
+      determineObligationsApplicables(RESTAURANT_N3, []),
+      [],
+      SANS_ERP,
+      new Map([["secours-etablissement-materiel", { declareLe: new Date(), note: null }]]),
+    ).find((x) => x.obligationId === "secours-etablissement-materiel");
+    expect(cochee?.etat).toBe("declare");
   });
 });
 
@@ -209,9 +217,9 @@ describe("« Déclarer » suit l'écran, pas le référentiel seul (revue c6, 20
   });
   const contexte = SANS_ERP;
 
-  it("tel que le référentiel le porte, la ligne se déclare ailleurs", () => {
+  it("tel que le référentiel le porte, la ligne attend sa case", () => {
     const [l] = lignesEquipementsSecurite([applicable(materiel)], [], contexte);
-    expect(l?.etat).toBe("ailleurs");
+    expect(l?.etat).toBe("pas_encore_declare");
   });
 
   it("au rythme annuel, l'écran ne la montre pas : la section ne pose pas la ligne", () => {

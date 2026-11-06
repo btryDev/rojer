@@ -202,8 +202,13 @@ Incendie
   une formation l'est d'après les titres déclarés dans Équipe. Ils restent
   comptés au score et au PDF (« D'après le parc déclaré : 2 appareils
   « Extincteurs » »), ne s'affichent plus sur « Ce qui doit être en place »,
-  et une ancienne case cochée est ignorée. Le matériel de premiers secours,
-  sans catégorie d'appareil, reste une case de cet écran.
+  et ~~une ancienne case cochée est ignorée~~ [relecture du même jour,
+  décisions de la propriétaire : une ancienne case cochée sans appareil
+  reste en place, avec le rappel « Vous aviez indiqué en avoir : déclarez-les
+  ici » ; un défibrillateur PARTAGÉ avec un voisin (CCH R. 157-3) se déclare
+  d'une case sur la carte « Défibrillateur », sans maintenance ni Géo'DAE à
+  suivre]. Le matériel de premiers secours, sans catégorie d'appareil, reste
+  une case de cet écran ; sa ligne sur la page Équipements lit cette case.
 
 ### 5. Catégories jumelles
 

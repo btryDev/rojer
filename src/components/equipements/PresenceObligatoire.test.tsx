@@ -4,6 +4,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import {
   MaterielHorsParc,
   MentionPresence,
+  SousLEnTetePresence,
   type LigneSecuriteAffichee,
 } from "./PresenceObligatoire";
 
@@ -36,6 +37,7 @@ const dae = (n: number): LigneSecuriteAffichee => ({
   libelle: "Défibrillateur (DAE)",
   cible: { kind: "categorie", categorie: "DEFIBRILLATEUR" },
   etat: n > 0 ? "declare" : "pas_encore_declare",
+  partage: false,
   domaine: "secours",
   appareils: Array.from({ length: n }, (_, i) => appareil(`dae-${i}`)),
 });
@@ -67,6 +69,19 @@ describe("MentionPresence", () => {
     expect(screen.getByText(/Obligatoire ici — système d'alarme sonore · 1 déclaré/)).toBeTruthy();
   });
 
+  it("sous un filtre de zone, le nombre se dit « dans l'établissement »", () => {
+    render(<MentionPresence ligne={dae(2)} sousUnFiltre />);
+    expect(screen.getByText(/2 déclarés dans l'établissement/)).toBeTruthy();
+  });
+
+  it("DAE partagé, ancienne case : chacun son mot", () => {
+    render(<MentionPresence ligne={{ ...dae(0), etat: "partage", partage: true }} />);
+    expect(screen.getByText(/partagé avec un voisin/)).toBeTruthy();
+    cleanup();
+    render(<MentionPresence ligne={{ ...dae(0), etat: "ancienne_case" }} />);
+    expect(screen.getByText(/indiqué en place, aucun appareil déclaré/)).toBeTruthy();
+  });
+
   it("« à confirmer » quand le moteur la retient par prudence", () => {
     render(<MentionPresence ligne={{ ...dae(0), aConfirmer: true }} />);
     expect(screen.getByText(/À confirmer ici/)).toBeTruthy();
@@ -82,7 +97,8 @@ describe("MaterielHorsParc", () => {
           obligationId: "secours-etablissement-materiel",
           libelle: "Matériel de premiers secours",
           cible: { kind: "etat_permanent" },
-          etat: "ailleurs",
+          etat: "pas_encore_declare",
+          partage: false,
           domaine: "secours",
           appareils: [],
           hrefAction: "/e/etats-permanents#etat-secours-etablissement-materiel",
@@ -91,5 +107,34 @@ describe("MaterielHorsParc", () => {
     );
     const lien = screen.getByRole("link", { name: /Déclarer/ });
     expect(lien.getAttribute("href")).toBe("/e/etats-permanents#etat-secours-etablissement-materiel");
+  });
+});
+
+describe("SousLEnTetePresence", () => {
+  it("le DAE sans appareil propose la case « partagé »", () => {
+    render(<SousLEnTetePresence ligne={dae(0)} etablissementId="e" />);
+    expect(screen.getByRole("checkbox", { name: /partagé avec un établissement voisin/ })).toBeTruthy();
+  });
+
+  it("le DAE déclaré au parc ne la propose plus", () => {
+    const { container } = render(<SousLEnTetePresence ligne={dae(1)} etablissementId="e" />);
+    expect(container.textContent).toBe("");
+  });
+
+  it("une ancienne case rappelle de déclarer les appareils", () => {
+    render(
+      <SousLEnTetePresence
+        ligne={{
+          ...dae(0),
+          obligationId: "incendie-travail-extincteurs-dotation",
+          libelle: "Extincteurs",
+          cible: { kind: "categorie", categorie: "EXTINCTEUR" },
+          etat: "ancienne_case",
+          domaine: "incendie",
+        }}
+        etablissementId="e"
+      />,
+    );
+    expect(screen.getByText(/Vous aviez indiqué en avoir/)).toBeTruthy();
   });
 });

@@ -115,7 +115,7 @@ export const CCH_DEFIBRILLATEUR: Corpus = {
         "Lorsque plusieurs établissements recevant du public, mentionnés à l'article R. 157-1, sont situés soit sur un même site géographique soit sont placés sous une direction commune au sens de l'article R. 143-21, le défibrillateur automatisé externe peut être mis en commun.",
       statut: "sans_objet",
       motif:
-        "Une FACULTÉ, pas une obligation : « peut être mis en commun ». Elle ne crée aucune ligne et n'en retire aucune — l'établissement qui partage le DAE d'un voisin détient toujours un DAE au sens de R. 157-1, et le déclare « en place » sur `dae-erp-detention`, dont la note le dit.",
+        "Une FACULTÉ, pas une obligation : « peut être mis en commun ». Elle ne crée aucune ligne et n'en retire aucune — l'établissement qui partage le DAE d'un voisin détient toujours un DAE au sens de R. 157-1, et le déclare « en place » sur `dae-erp-detention`, dont la note le dit. [2026-11-06, ADR-057 § 4 : par la case « Défibrillateur partagé avec un établissement voisin » de la page Équipements — la détention est sinon établie d'après le parc.]",
     },
     {
       ref: "CCH R. 157-4",

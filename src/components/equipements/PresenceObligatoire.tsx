@@ -19,6 +19,8 @@ import { PastilleFondement } from "@/components/etats-permanents/PastilleFondeme
 import { buttonVariants } from "@/components/ui/button";
 import type { LigneEquipementSecurite } from "@/lib/equipements/equipements-securite";
 import { LABEL_CATEGORIE_EQUIPEMENT } from "@/lib/equipements/labels";
+import { DAE_DETENTION } from "@/lib/etats-permanents/par-le-parc";
+import { CasePartageDae } from "@/components/equipements/CasePartageDae";
 
 /** Une ligne prête à poser : ses appareils, comme le parc les montre. */
 export type LigneSecuriteAffichee = Omit<LigneEquipementSecurite, "appareils"> & {
@@ -31,23 +33,67 @@ export type LigneSecuriteAffichee = Omit<LigneEquipementSecurite, "appareils"> &
 /**
  * À côté du titre d'une carte de catégorie : « Obligatoire ici · 2 déclarés »,
  * le texte qui l'exige. Le nombre est celui du parc ENTIER — un DAE déclaré
- * dans une autre zone est déclaré.
+ * dans une autre zone est déclaré ; sous un filtre de zone, la mention le dit.
  */
-export function MentionPresence({ ligne }: { ligne: LigneSecuriteAffichee }) {
+export function MentionPresence({
+  ligne,
+  sousUnFiltre = false,
+}: {
+  ligne: LigneSecuriteAffichee;
+  sousUnFiltre?: boolean;
+}) {
   const n = ligne.appareils.length;
   const libelleCategorie =
     ligne.cible.kind === "categorie" ? LABEL_CATEGORIE_EQUIPEMENT[ligne.cible.categorie] : null;
   // Le nom de l'obligation quand il n'est pas celui de la catégorie : R. 4227-34
   // exige un « système d'alarme sonore », dont un SSI n'est qu'une forme.
   const nom = ligne.libelle !== libelleCategorie ? ` — ${enMinuscule(ligne.libelle)}` : "";
-  const declares = n === 0 ? "aucun déclaré" : n === 1 ? "1 déclaré" : `${n} déclarés`;
+  const etat =
+    ligne.etat === "partage"
+      ? "partagé avec un voisin"
+      : ligne.etat === "ancienne_case"
+        ? "indiqué en place, aucun appareil déclaré"
+        : n === 0
+          ? "aucun déclaré"
+          : `${n === 1 ? "1 déclaré" : `${n} déclarés`}${sousUnFiltre ? " dans l'établissement" : ""}`;
   return (
     <>
       <span className="board-eyebrow text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
         {ligne.aConfirmer ? "À confirmer ici" : "Obligatoire ici"}
-        {nom} · {declares}
+        {nom} · {etat}
       </span>
       {ligne.fondement ? <PastilleFondement fondement={ligne.fondement} /> : null}
+    </>
+  );
+}
+
+/**
+ * Sous l'en-tête de la carte : le rappel d'une ancienne case cochée sans
+ * appareil, et la case du défibrillateur partagé (décisions de la
+ * propriétaire du 2026-11-06). `null` quand il n'y a rien à dire.
+ */
+export function SousLEnTetePresence({
+  ligne,
+  etablissementId,
+}: {
+  ligne: LigneSecuriteAffichee;
+  etablissementId: string;
+}) {
+  const rappel =
+    ligne.etat === "ancienne_case" ? (
+      <p className="m-0 mt-3 text-[13px] leading-[1.6] text-[color:var(--board-slate-ink)]">
+        Vous aviez indiqué en avoir : déclarez-les ici pour que Rojer suive leurs vérifications.
+      </p>
+    ) : null;
+  const partage =
+    ligne.obligationId === DAE_DETENTION && ligne.appareils.length === 0 ? (
+      <CasePartageDae etablissementId={etablissementId} partage={ligne.partage} />
+    ) : null;
+  if (!rappel && !partage) return null;
+  return (
+    <>
+      {rappel}
+      {partage}
     </>
   );
 }
@@ -66,6 +112,7 @@ export function MaterielHorsParc({ ligne }: { ligne: LigneSecuriteAffichee }) {
             {ligne.libelle}
             <span className="board-eyebrow text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
               {ligne.aConfirmer ? "À confirmer ici" : "Obligatoire ici"}
+              {ligne.etat === "declare" ? " · déclaré" : ""}
             </span>
             {ligne.fondement ? <PastilleFondement fondement={ligne.fondement} /> : null}
           </h2>

@@ -28,16 +28,19 @@ import {
 import {
   MaterielHorsParc,
   MentionPresence,
+  SousLEnTetePresence,
   type LigneSecuriteAffichee,
 } from "@/components/equipements/PresenceObligatoire";
 import { requireCompte } from "@/lib/auth/compte";
 import { contexteFondementDe } from "@/lib/etats-permanents/fondement";
 import { obligationsApplicablesDuDossier } from "@/lib/etablissements/dossier-du-rendu";
 import {
+  EQUIPEMENTS_DE_SECURITE,
   hrefActionSecurite,
   lignesEquipementsSecurite,
 } from "@/lib/equipements/equipements-securite";
 import { getEtablissement } from "@/lib/etablissements/queries";
+import { declarationsDePresence } from "@/lib/etats-permanents/queries";
 import {
   grouperParCategorie,
   listerEquipementsDeLEtablissement,
@@ -103,7 +106,7 @@ export default async function EquipementsPage({
   // + `notFound`) : les bâtiments étaient lus seuls, puis le reste — aucune
   // des ~~quatre~~ cinq autres ne dépend du filtre (audit Next.js du 2026-10-14, M4).
   const { user, db } = await requireCompte();
-  const [batiments, equipements, etatsVerifs, sansEcheance, fraicheur, dossier, ensembles] =
+  const [batiments, equipements, etatsVerifs, sansEcheance, fraicheur, dossier, ensembles, declarations] =
     await Promise.all([
       listerBatimentsDeLEtablissement(id),
       listerEquipementsDeLEtablissement(id),
@@ -127,6 +130,12 @@ export default async function EquipementsPage({
       // Les contrôles d'ensemble, rangés en tête de leur domaine (points à
       // corriger, lot 2).
       controlesDEnsemble(id, instantDuRendu()),
+      // Les déclarations des lignes de présence (ADR-057 § 4) : premiers
+      // secours, DAE partagé, anciennes cases.
+      declarationsDePresence(
+        id,
+        EQUIPEMENTS_DE_SECURITE.map((e) => e.obligationId),
+      ),
     ]);
   const multiBatiments = estMultiBatiments(batiments);
   const batimentFiltre = resoudreFiltreBatiment(batiments, batiment);
@@ -278,7 +287,12 @@ export default async function EquipementsPage({
   // catégorie, le matériel sans catégorie dans son domaine.
   const lignesSecurite: LigneSecuriteAffichee[] = (
     dossier
-      ? lignesEquipementsSecurite(dossier.applicables, equipements, contexteFondementDe(etab))
+      ? lignesEquipementsSecurite(
+          dossier.applicables,
+          equipements,
+          contexteFondementDe(etab),
+          declarations,
+        )
       : []
   ).map((l) => {
     const declares = l.appareils.flatMap((a) => {
@@ -300,10 +314,15 @@ export default async function EquipementsPage({
   // Une section par catégorie, la plus en peine en tête : sur un parc de
   // quinze appareils, l'ordre alphabétique enterrait le seul retard.
   // Une catégorie dont la présence est exigée a sa carte même sans appareil
-  // déclaré : c'est elle qui dit « aucun déclaré » et propose l'ajout.
+  // déclaré : c'est elle qui dit « aucun déclaré » et propose l'ajout. Sous un
+  // filtre de zone, seulement si le parc entier n'en déclare aucun — sinon la
+  // carte dirait « 0 équipement » à côté de « 2 déclarés » (relecture du
+  // 2026-11-06) : ils sont ailleurs, la zone n'a rien à en dire.
   const parCategorieAvecPresence = new Map(parCategorie);
-  for (const c of presenceParCategorie.keys()) {
-    if (!parCategorieAvecPresence.has(c)) parCategorieAvecPresence.set(c, []);
+  for (const [c, l] of presenceParCategorie) {
+    if (parCategorieAvecPresence.has(c)) continue;
+    if (batimentFiltre && l.appareils.length > 0) continue;
+    parCategorieAvecPresence.set(c, []);
   }
   const sections = [...parCategorieAvecPresence.entries()]
     .map(([categorie, liste]) => ({
@@ -311,8 +330,13 @@ export default async function EquipementsPage({
       appareils: liste.map(versAppareil),
       periodicites: periodicitesDe(liste),
     }))
+    // La présence exigée en tête de son groupe (ADR-057 § 4), puis la plus en
+    // peine.
     .sort(
-      (a, b) => urgenceCategorie(b.appareils) - urgenceCategorie(a.appareils),
+      (a, b) =>
+        Number(presenceParCategorie.has(b.categorie)) -
+          Number(presenceParCategorie.has(a.categorie)) ||
+        urgenceCategorie(b.appareils) - urgenceCategorie(a.appareils),
     );
 
   const domaines = parDomaine(
@@ -323,8 +347,15 @@ export default async function EquipementsPage({
   // Ce qu'un texte exige et qui n'est pas encore déclaré, par domaine (ADR-057
   // § 4) — ce que la section « Équipements de sécurité » signalait « à
   // déclarer ».
+  // Sans les lignes « à confirmer » : la carte dit « À confirmer ici », le
+  // domaine ne peut pas dire « à déclarer » (relecture du 2026-11-06).
   const aDeclarerDans = (domaine: DomaineObligation | null) =>
-    lignesSecurite.filter((l) => l.domaine === domaine && l.etat === "pas_encore_declare").length;
+    lignesSecurite.filter(
+      (l) =>
+        l.domaine === domaine &&
+        !l.aConfirmer &&
+        (l.etat === "pas_encore_declare" || l.etat === "ancienne_case"),
+    ).length;
   const presencesDans = (domaine: DomaineObligation | null) =>
     lignesSecurite.filter((l) => l.domaine === domaine).length;
   // S'ouvre le premier domaine qui a du dépassé — contrôles d'ensemble
@@ -469,7 +500,19 @@ export default async function EquipementsPage({
                   <CarteCategorie
                     key={s.categorie}
                     categorie={s.categorie}
-                    mention={presence ? <MentionPresence ligne={presence} /> : undefined}
+                    mention={
+                      presence ? (
+                        <MentionPresence
+                          ligne={presence}
+                          sousUnFiltre={Boolean(batimentFiltre)}
+                        />
+                      ) : undefined
+                    }
+                    sousLEnTete={
+                      presence ? (
+                        <SousLEnTetePresence ligne={presence} etablissementId={id} />
+                      ) : undefined
+                    }
                     appareils={s.appareils}
                     periodicites={s.periodicites}
                     hrefAjouter={hrefNouveau(s.categorie)}

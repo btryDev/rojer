@@ -41,6 +41,11 @@ import {
 import { ancreEtatPermanent } from "@/lib/etats-permanents/ancre";
 import { cheminDeDeclaration } from "@/lib/etats-permanents/par-l-equipe";
 import { obligationParId } from "@/lib/referentiels/conformite";
+import {
+  etatParLeParc,
+  PRESENCE_PAR_LE_PARC,
+  type DeclarationLue,
+} from "@/lib/etats-permanents/par-le-parc";
 import { modeDeclarationApplique } from "@/lib/etats-permanents/regle";
 import { phrasesAConfirmer } from "@/lib/matching/marques";
 import type { ObligationApplicable } from "@/lib/matching/types";
@@ -71,23 +76,30 @@ export type EquipementDeSecurite = {
   cible: CibleDeclaration;
 };
 
+/**
+ * Le nom d'une obligation de présence, quand il n'est pas celui de sa
+ * catégorie.
+ */
+const LIBELLE_PRESENCE: Readonly<Record<string, string>> = {
+  // Pas le libellé de la catégorie (« SSI et équipement d'alarme
+  // incendie ») : R. 4227-34 exige un « système d'alarme sonore », et un
+  // SSI n'en est qu'une forme possible.
+  "incendie-travail-alarme-sonore": "Système d'alarme sonore",
+};
+
+/**
+ * Les lignes de présence de la page : celles qui s'établissent d'après le
+ * parc — LA table, `PRESENCE_PAR_LE_PARC` (relecture du 2026-11-06 : elle était
+ * écrite deux fois) —, puis le matériel de premiers secours, sans catégorie.
+ */
 export const EQUIPEMENTS_DE_SECURITE: readonly EquipementDeSecurite[] = [
-  {
-    obligationId: "dae-erp-detention",
-    cible: { kind: "categorie", categorie: "DEFIBRILLATEUR" },
-  },
-  {
-    obligationId: "incendie-travail-extincteurs-dotation",
-    cible: { kind: "categorie", categorie: "EXTINCTEUR" },
-  },
-  {
-    obligationId: "incendie-travail-alarme-sonore",
-    // Pas le libellé de la catégorie (« SSI et équipement d'alarme
-    // incendie ») : R. 4227-34 exige un « système d'alarme sonore », et un
-    // SSI n'en est qu'une forme possible.
-    libelle: "Système d'alarme sonore",
-    cible: { kind: "categorie", categorie: "ALARME_INCENDIE" },
-  },
+  ...Object.entries(PRESENCE_PAR_LE_PARC).map(
+    ([obligationId, categorie]): EquipementDeSecurite => ({
+      obligationId,
+      cible: { kind: "categorie", categorie },
+      ...(LIBELLE_PRESENCE[obligationId] ? { libelle: LIBELLE_PRESENCE[obligationId] } : {}),
+    }),
+  ),
   {
     obligationId: "secours-etablissement-materiel",
     libelle: "Matériel de premiers secours",
@@ -127,7 +139,17 @@ export type LigneEquipementSecurite = {
   cible: CibleDeclaration;
   /** Les appareils déclarés de la catégorie ; vide si aucun, ou sans catégorie. */
   appareils: AppareilDuParc[];
-  etat: "declare" | "pas_encore_declare" | "ailleurs";
+  /**
+   * - `declare` : un appareil de la catégorie au parc, ou la case cochée du
+   *   matériel de premiers secours ;
+   * - `partage` : un défibrillateur partagé avec un voisin (CCH R. 157-3) ;
+   * - `ancienne_case` : une case cochée avant le 2026-11-06, sans appareil au
+   *   parc — en place, avec un rappel de déclarer les appareils ;
+   * - `pas_encore_declare` : rien.
+   */
+  etat: "declare" | "partage" | "ancienne_case" | "pas_encore_declare";
+  /** La déclaration du DAE partagé, pour la case qui la retire. */
+  partage: boolean;
   /** Le domaine de l'obligation : le groupe de la page où la ligne se pose
    *  (ADR-057 § 4). */
   domaine: DomaineObligation;
@@ -143,25 +165,37 @@ export function lignesEquipementsSecurite(
   parc: readonly AppareilDuParc[],
   /** Le type et la catégorie d'ERP, qui choisissent l'article à montrer. */
   contexte: ContexteFondement,
+  /**
+   * Les déclarations « en place » du dossier, par obligation : la case du
+   * matériel de premiers secours, celle du DAE partagé, les anciennes cases.
+   */
+  declarations: ReadonlyMap<string, DeclarationLue> = new Map(),
 ): LigneEquipementSecurite[] {
   const parId = new Map(applicables.map((a) => [a.obligation.id, a]));
   const lignes: LigneEquipementSecurite[] = [];
   for (const e of EQUIPEMENTS_DE_SECURITE) {
     const a = parId.get(e.obligationId);
     if (!a) continue;
-    // « Déclarer sur Ce qui doit être en place » ne se promet que si l'écran
-    // montre la ligne : la règle de cet écran le décide (`modeDeclarationApplique`),
-    // pas cette table. Une obligation qui y gagnerait un rythme (prescription,
-    // rythme retenu) quitterait l'écran pour le calendrier ; le lien serait
-    // mort, et la ligne n'est alors pas posée ici (charte, interdit 19).
-    if (e.cible.kind === "etat_permanent" && modeDeclarationApplique(a)?.mode !== "etat") {
-      continue;
-    }
+    // La ligne ne se pose que si l'obligation se déclare en « état » — la
+    // règle de « Ce qui doit être en place » (`modeDeclarationApplique`), pas
+    // cette table. Une obligation qu'une prescription fait passer au
+    // calendrier quitte cette page comme elle quitte l'autre : sinon elle
+    // vivrait aux deux endroits avec deux états (relecture du 2026-11-06).
+    if (modeDeclarationApplique(a)?.mode !== "etat") continue;
     const cible = e.cible;
+    const declaration = declarations.get(e.obligationId) ?? null;
     const appareils =
       cible.kind === "categorie"
         ? parc.filter((p) => p.categorie === cible.categorie)
         : [];
+    // L'état d'une présence est celui de `etatParLeParc` — la même lecture que
+    // « Ce qui doit être en place », le score et le PDF.
+    const source =
+      cible.kind === "categorie"
+        ? etatParLeParc(cible.categorie, appareils.length, declaration).source
+        : declaration
+          ? "appareils"
+          : "aucun";
     lignes.push({
       obligationId: e.obligationId,
       libelle: libelleEquipementSecurite(e),
@@ -173,11 +207,14 @@ export function lignesEquipementsSecurite(
       appareils,
       domaine: a.obligation.domaine,
       etat:
-        cible.kind === "etat_permanent"
-          ? "ailleurs"
-          : appareils.length > 0
-            ? "declare"
-            : "pas_encore_declare",
+        source === "appareils"
+          ? "declare"
+          : source === "partage"
+            ? "partage"
+            : source === "ancienne_case"
+              ? "ancienne_case"
+              : "pas_encore_declare",
+      partage: source === "partage",
     });
   }
   return lignes;
@@ -194,7 +231,7 @@ export function hrefActionSecurite(
   l: Pick<LigneEquipementSecurite, "obligationId" | "cible" | "etat">,
   liens: { base: string; hrefNouveau: (categorie: CategorieEquipement) => string },
 ): string | null {
-  if (l.etat === "declare") return null;
+  if (l.etat === "declare" || l.etat === "partage") return null;
   if (l.cible.kind === "categorie") return liens.hrefNouveau(l.cible.categorie);
   // Une formation se déclare dans ~~Équipe › Formations~~ [2026-10-24 : section « Formations à organiser » d'Équipe] (`par-l-equipe.ts`,
   // ADR-047) : l'écran « en place » ne l'affiche pas.

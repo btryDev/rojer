@@ -110,6 +110,8 @@ export async function declarerEnPlace(
   // ~~Équipe › Formations~~ [2026-10-24 : section « Formations à organiser » d'Équipe], et leur nombre s'affiche ~~sur l'onglet d'Équipe~~ [2026-10-24 : sur la section].]
   revalidatePath(`/etablissements/${etablissementId}/equipe`, "layout");
   revalidatePath(`/etablissements/${etablissementId}/registre`, "layout");
+  // Le DAE partagé se déclare depuis la page Équipements (ADR-057 § 4).
+  revalidatePath(`/etablissements/${etablissementId}/equipements`);
   return { status: "success" };
 }
 
@@ -155,6 +157,8 @@ export async function retirerDeclaration(
   // ~~Équipe › Formations~~ [2026-10-24 : section « Formations à organiser » d'Équipe], et leur nombre s'affiche ~~sur l'onglet d'Équipe~~ [2026-10-24 : sur la section].]
   revalidatePath(`/etablissements/${etablissementId}/equipe`, "layout");
   revalidatePath(`/etablissements/${etablissementId}/registre`, "layout");
+  // Le DAE partagé se déclare depuis la page Équipements (ADR-057 § 4).
+  revalidatePath(`/etablissements/${etablissementId}/equipements`);
   return { status: "success" };
 }
 
@@ -250,5 +254,7 @@ export async function deposerFichierEnPlace(
   // (relecture du 2026-11-05).
   revalidatePath(`/etablissements/${etablissementId}/equipe`, "layout");
   revalidatePath(`/etablissements/${etablissementId}/registre`, "layout");
+  // Le DAE partagé se déclare depuis la page Équipements (ADR-057 § 4).
+  revalidatePath(`/etablissements/${etablissementId}/equipements`);
   return { status: "success" };
 }

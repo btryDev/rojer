@@ -230,26 +230,32 @@ export function obligationsNiveauAuditDuDossier(
 /** Une ligne par appareil signalé — extincteurs, puis RIA —, pour ce dossier. */
 function signalisationParAppareil(
   premier: Obligation,
-  parId: ReadonlyMap<string, { equipementsConcernes: EquipementMatching[] }>,
+  parId: ReadonlyMap<string, { obligation: Obligation; equipementsConcernes: EquipementMatching[] }>,
 ): LigneNiveauAudit[] {
   const membres = [...SIGNALISATION_PAR_APPAREIL.ids].filter((id) => parId.has(id));
   const appareils = membres.flatMap((id) => parId.get(id)?.equipementsConcernes ?? []);
-  const [fondement] = premier.referencesLegales;
   return (Object.entries(SIGNALISATION_PAR_APPAREIL.libelles) as [CategorieEquipement, string][])
     .flatMap(([categorie, libelle]) => {
       const vises = [...new Map(
         appareils.filter((e) => e.categorie === categorie).map((e) => [e.id, e]),
       ).values()];
       if (vises.length === 0) return [];
+      // Les textes qui visent un appareil DE CETTE catégorie, et eux seuls.
+      const membresDeLaCategorie = membres.filter((id) =>
+        (parId.get(id)?.equipementsConcernes ?? []).some((e) => e.categorie === categorie),
+      );
+      // Le texte en tête : celui du premier texte qui vise la catégorie.
+      const tete = parId.get(membresDeLaCategorie[0])?.obligation ?? premier;
+      const [fondement] = tete.referencesLegales;
       return [
         {
           id: `signalisation-par-appareil:${categorie}`,
-          obligations: [premier.id, ...membres.filter((id) => id !== premier.id)],
+          obligations: membresDeLaCategorie,
           libelle,
           reference: fondement.reference,
           url: fondement.url ?? null,
-          porteePar: porteePar(premier, vises),
-          geste: gesteHorsQuotidien(premier),
+          porteePar: porteePar(tete, vises),
+          geste: gesteHorsQuotidien(tete),
         },
       ];
     });

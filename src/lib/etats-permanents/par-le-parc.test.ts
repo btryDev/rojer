@@ -2,12 +2,19 @@
 // décision de la propriétaire du 2026-11-06 : « d'après le parc »). Elles se
 // voient sur la page Équipements, pas sur « Ce qui doit être en place » ; elles
 // sont en place dès qu'un appareil de la catégorie est déclaré, et restent
-// comptées au dossier (score, PDF). Une ancienne case cochée est ignorée.
+// comptées au dossier (score, PDF). Une ancienne case cochée compte encore
+// (rappel), et le DAE partagé se déclare d'une case — décisions du 2026-11-06.
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { EQUIPEMENTS_DE_SECURITE } from "@/lib/equipements/equipements-securite";
-import { etabliParLeParc, etatParLeParc, PRESENCE_PAR_LE_PARC } from "./par-le-parc";
+import {
+  accepteUneDeclaration,
+  etabliParLeParc,
+  etatParLeParc,
+  NOTE_DAE_PARTAGE,
+  PRESENCE_PAR_LE_PARC,
+} from "./par-le-parc";
 
 const h = vi.hoisted(() => ({
   declarations: vi.fn(async () => [] as unknown[]),
@@ -62,16 +69,16 @@ type Parc = Parameters<typeof listerEtatsPermanents>[1];
 const appareil = (id: string, categorie: string) =>
   ({ id, libelle: id, categorie, caracteristiques: null }) as Parc[number];
 
+// Une case cochée d'avant, sur toutes les obligations.
+const toutCoche = async () =>
+  obligationsConformite.map(({ id: obligationId }) => ({
+    obligationId,
+    declareLe: new Date("2026-01-15T00:00:00Z"),
+    note: null,
+  }));
+
 beforeEach(() => {
-  // Une case cochée d'avant, sur toutes les obligations : elle ne doit rien
-  // changer aux lignes établies d'après le parc.
-  h.declarations.mockImplementation(async () =>
-    obligationsConformite.map(({ id: obligationId }) => ({
-      obligationId,
-      declareLe: new Date("2026-01-15T00:00:00Z"),
-      note: null,
-    })),
-  );
+  h.declarations.mockImplementation(async () => []);
 });
 
 describe("la table", () => {
@@ -97,20 +104,51 @@ describe("la table", () => {
   });
 
   it("la phrase dit ce qui est déclaré, jamais que c'est en place", () => {
-    expect(etatParLeParc("EXTINCTEUR", 0)).toMatchObject({ enPlace: false });
+    expect(etatParLeParc("EXTINCTEUR", 0)).toMatchObject({ enPlace: false, source: "aucun" });
     expect(etatParLeParc("EXTINCTEUR", 2).phrase).toBe(
       "D'après le parc déclaré : 2 appareils « Extincteurs ».",
     );
   });
+
+  it("une ancienne case, sans appareil : en place, à compléter", () => {
+    const e = etatParLeParc("EXTINCTEUR", 0, {
+      declareLe: new Date("2026-01-15T12:00:00Z"),
+      note: null,
+    });
+    expect(e).toMatchObject({ enPlace: true, source: "ancienne_case" });
+    expect(e.phrase).toBe("Déclaré en place le 15/01/2026, sans appareil « Extincteurs » au parc.");
+  });
+
+  it("un appareil déclaré l'emporte sur la case", () => {
+    expect(
+      etatParLeParc("EXTINCTEUR", 1, { declareLe: new Date(), note: null }).source,
+    ).toBe("appareils");
+  });
+
+  it("le DAE partagé (R. 157-3) : en place, dit comme tel ; seul le DAE se déclare encore", () => {
+    const e = etatParLeParc("DEFIBRILLATEUR", 0, {
+      declareLe: new Date("2026-11-06T12:00:00Z"),
+      note: NOTE_DAE_PARTAGE,
+    });
+    expect(e).toMatchObject({ enPlace: true, source: "partage" });
+    expect(accepteUneDeclaration({ id: "dae-erp-detention" })).toBe(true);
+    expect(accepteUneDeclaration({ id: DOTATION })).toBe(false);
+  });
 });
 
 describe("la lecture de « Ce qui doit être en place »", () => {
-  it("sans extincteur déclaré : la ligne n'est pas en place, la case cochée est ignorée", async () => {
+  it("sans extincteur déclaré ni case : la ligne n'est pas en place", async () => {
     const d = await listerEtatsPermanents(etab, [], undefined, NOW);
     const ligne = d.parLeParc.find((l) => l.obligation.id === DOTATION)!;
     expect(ligne.parLeParc?.enPlace).toBe(false);
-    expect(ligne.declareLe).toBeNull();
     expect(ligne.accepteUnFichier).toBe(false);
+  });
+
+  it("une ancienne case, sans extincteur déclaré : en place, à compléter", async () => {
+    h.declarations.mockImplementation(toutCoche);
+    const d = await listerEtatsPermanents(etab, [], undefined, NOW);
+    const ligne = d.parLeParc.find((l) => l.obligation.id === DOTATION)!;
+    expect(ligne.parLeParc).toMatchObject({ enPlace: true, source: "ancienne_case" });
   });
 
   it("un extincteur déclaré la met en place", async () => {

@@ -52,7 +52,12 @@ import {
   type EtatParLesTitres,
   type TitreDeclare,
 } from "./par-les-titres";
-import { etabliParLeParc, etatParLeParc, type EtatParLeParc } from "./par-le-parc";
+import {
+  etabliParLeParc,
+  etatParLeParc,
+  type DeclarationLue,
+  type EtatParLeParc,
+} from "./par-le-parc";
 
 export type LigneEtatPermanent = {
   obligation: Obligation;
@@ -377,13 +382,14 @@ export async function listerEtatsPermanents(
     const parLesTitres = titre
       ? etatParLesTitres(titre, titresParObligation.get(titre.id) ?? [], now)
       : null;
+    // Une ligne établie d'après les titres ne se coche pas : une ancienne
+    // déclaration y est ignorée. D'après le parc, elle compte encore — un DAE
+    // partagé, ou une ancienne case gardée avec un rappel (`par-le-parc.ts`).
+    const d = parLesTitres ? null : (parObligation.get(o.id) ?? null);
     const categorieDuParc = parLesTitres ? null : etabliParLeParc(o, mode.mode);
     const etatDuParc = categorieDuParc
-      ? etatParLeParc(categorieDuParc, appareilsParCategorie.get(categorieDuParc) ?? 0)
+      ? etatParLeParc(categorieDuParc, appareilsParCategorie.get(categorieDuParc) ?? 0, d)
       : null;
-    // Une ligne établie d'après les titres ou le parc ne se coche pas : une
-    // ancienne déclaration est ignorée.
-    const d = parLesTitres || etatDuParc ? null : (parObligation.get(o.id) ?? null);
     const ligne: LigneEtatPermanent = {
       obligation: o,
       mode: mode.mode,
@@ -529,7 +535,6 @@ export async function listerEtatsPermanents(
   // la ligne suivante au moment précis où on va la cliquer.
   ordonnerLignes(faits);
   ordonnerLignes(parLEquipe);
-  ordonnerLignes(parLeParc);
 
   return {
     familles,
@@ -652,4 +657,26 @@ export function estEnPlace(l: Pick<LigneEtatPermanent, "parLesTitres" | "parLePa
   if (l.parLesTitres) return l.parLesTitres.enPlace;
   if (l.parLeParc) return l.parLeParc.enPlace;
   return l.declareLe !== null;
+}
+
+/**
+ * Les déclarations « en place » des lignes de présence de la page
+ * Équipements (ADR-057 § 4) : le matériel de premiers secours, le DAE
+ * partagé, les anciennes cases des extincteurs et de l'alarme. Bornée au
+ * compte comme la lecture de l'écran (`listerEtatsPermanents`).
+ */
+export async function declarationsDePresence(
+  etablissementId: string,
+  obligationIds: readonly string[],
+): Promise<Map<string, DeclarationLue>> {
+  const { user, db } = await requireCompte();
+  const lignes = await db.declarationEtatPermanent.findMany({
+    where: {
+      etablissementId,
+      etablissement: { entreprise: { userId: user.id } },
+      obligationId: { in: [...obligationIds] },
+    },
+    select: { obligationId: true, declareLe: true, note: true },
+  });
+  return new Map(lignes.map((l) => [l.obligationId, { declareLe: l.declareLe, note: l.note }]));
 }

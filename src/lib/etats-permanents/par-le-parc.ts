@@ -10,7 +10,10 @@
  * fait. Elles s'affichent désormais en tête de leur groupe sur la page
  * Équipements, et sont EN PLACE dès qu'un appareil de la catégorie y est
  * déclaré — comme une formation l'est d'après les titres déclarés dans Équipe
- * (`par-les-titres.ts`).
+ * (`par-les-titres.ts`). Deux exceptions, décidées le même jour : un
+ * défibrillateur PARTAGÉ avec un voisin se déclare d'une case, sur la page
+ * Équipements ; une ancienne case cochée reste en place, avec un rappel de
+ * déclarer les appareils.
  *
  * CE QUE ÇA NE DIT JAMAIS : que le matériel est installé, suffisant ou
  * entretenu. « Déclaré dans Rojer » est un fait de saisie (ADR-027) — le même
@@ -22,6 +25,7 @@
  * Pur : aucune horloge, aucune base. `queries.ts` compte et appelle.
  */
 
+import { formaterDateFr } from "@/lib/dates";
 import { LABEL_CATEGORIE_EQUIPEMENT } from "@/lib/equipements/labels";
 import type { Obligation } from "@/lib/referentiels/conformite/types";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
@@ -51,11 +55,43 @@ export function etabliParLeParc(
   return PRESENCE_PAR_LE_PARC[o.id] ?? null;
 }
 
+/**
+ * Le repère d'un défibrillateur PARTAGÉ (CCH R. 157-3, décision de la
+ * propriétaire du 2026-11-06) : la détention est en place sans appareil au
+ * parc — l'appareil est celui d'un voisin, qui en assure la maintenance.
+ * Écrit dans la note de la déclaration, et lu par elle seule.
+ */
+export const NOTE_DAE_PARTAGE =
+  "Défibrillateur partagé avec un établissement voisin (CCH, art. R. 157-3)";
+
+/** La seule obligation de la table qui accepte encore une déclaration : le
+ *  DAE partagé. Les autres ne se cochent plus (garde de l'action). */
+export const DAE_DETENTION = "dae-erp-detention";
+
+export function accepteUneDeclaration(o: Pick<Obligation, "id">): boolean {
+  return o.id === DAE_DETENTION;
+}
+
+/** Une déclaration lue en base : son jour et son repère. */
+export type DeclarationLue = { declareLe: Date; note: string | null };
+
+/**
+ * D'où vient l'état :
+ *  - `appareils` : au moins un appareil de la catégorie déclaré au parc ;
+ *  - `partage` : un défibrillateur partagé avec un voisin, déclaré ;
+ *  - `ancienne_case` : une case cochée avant le 2026-11-06, sans appareil
+ *    au parc — gardée en place, avec un rappel de déclarer les appareils
+ *    (décision de la propriétaire : « garder + rappel ») ;
+ *  - `aucun` : rien.
+ */
+export type SourceParLeParc = "appareils" | "partage" | "ancienne_case" | "aucun";
+
 export type EtatParLeParc = {
   categorie: CategorieEquipement;
   /** Le nombre d'appareils de la catégorie déclarés au parc (en service). */
   declares: number;
-  /** Au moins un appareil déclaré. */
+  source: SourceParLeParc;
+  /** Un appareil déclaré, un DAE partagé ou une ancienne case. */
   enPlace: boolean;
   /** Pour l'écran et pour ce qui sort du produit : aucun nom de personne. */
   phrase: string;
@@ -64,13 +100,39 @@ export type EtatParLeParc = {
 export function etatParLeParc(
   categorie: CategorieEquipement,
   declares: number,
+  declaration: DeclarationLue | null = null,
 ): EtatParLeParc {
   const libelle = LABEL_CATEGORIE_EQUIPEMENT[categorie];
-  const phrase =
-    declares === 0
-      ? `D'après le parc déclaré : aucun appareil « ${libelle} ».`
-      : declares === 1
+  if (declares > 0) {
+    const phrase =
+      declares === 1
         ? `D'après le parc déclaré : 1 appareil « ${libelle} ».`
         : `D'après le parc déclaré : ${declares} appareils « ${libelle} ».`;
-  return { categorie, declares, enPlace: declares > 0, phrase };
+    return { categorie, declares, source: "appareils", enPlace: true, phrase };
+  }
+  if (declaration !== null) {
+    const le = formaterDateFr(declaration.declareLe);
+    return declaration.note === NOTE_DAE_PARTAGE
+      ? {
+          categorie,
+          declares,
+          source: "partage",
+          enPlace: true,
+          phrase: `Défibrillateur partagé avec un établissement voisin, déclaré le ${le}.`,
+        }
+      : {
+          categorie,
+          declares,
+          source: "ancienne_case",
+          enPlace: true,
+          phrase: `Déclaré en place le ${le}, sans appareil « ${libelle} » au parc.`,
+        };
+  }
+  return {
+    categorie,
+    declares,
+    source: "aucun",
+    enPlace: false,
+    phrase: `D'après le parc déclaré : aucun appareil « ${libelle} ».`,
+  };
 }
