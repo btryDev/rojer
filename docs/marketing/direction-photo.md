@@ -62,6 +62,10 @@ mardi matin avant l'ouverture ».
   l'ancienne » sépia.
 - Contraste doux, noirs un peu levés, léger grain. Pas de HDR, pas de
   peau lissée.
+- **Réchauffer = retoucher, pas regénérer** (2026-11-06). Une image validée
+  se réchauffe par un léger étalonnage (rouge +5 %, bleu −8 %, luminosité
+  +3 %). Les regénérations « bright, warm » ont donné des images cramées,
+  refusées.
 
 ## Cadrage
 

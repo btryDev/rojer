@@ -14,6 +14,7 @@ propriétaire.*
 | [`rojer-offres-abonnement-2026-11.pdf`](rojer-offres-abonnement-2026-11.pdf) · [`source/`](source/) | La même proposition mise en page (HTML → PDF) | Idem |
 | [`concurrents/duerp-go-2026-11-05.md`](concurrents/duerp-go-2026-11-05.md) | DUERP & GO (Prévensia) : ce qu'ils font, prix, erreurs relevées | Relevé du 2026-11-05 |
 | [`direction-photo.md`](direction-photo.md) · [`photos/`](photos/) | L'ambiance des photos : qui, où, lumière, cadrage, interdits, prompt Krea de base, deux références | Décidée le 2026-11-06 |
+| [`direction-illustration.md`](direction-illustration.md) · [`illustrations/`](illustrations/) | Le style des illustrations de la page publique : isométrie au trait fin, bleu pâle, un sujet simple ; prompt de base | Piste du 2026-11-06, non définitive |
 
 ## Ce qui touche la com et vit ailleurs (ne pas recopier ici)
 
