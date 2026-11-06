@@ -10,11 +10,23 @@ import { publicAppUrl } from "@/lib/email";
 import { clientStripe } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
 import { abonnementCourant, synchroniserClientStripe } from "@/lib/stripe/synchronisation";
-import { abonnementsDuClient, appliquerFormule, ouvrirCheckout, ouvrirCheckoutCarte, ouvrirPortail, prixDesFormules } from "@/lib/stripe/parcours";
+import {
+  abonnementsDuClient,
+  annulerBaisse,
+  appliquerFormule,
+  monterDeFormule,
+  ouvrirCheckout,
+  ouvrirCheckoutCarte,
+  ouvrirPortail,
+  planifierBaisse,
+  prixDesFormules,
+} from "@/lib/stripe/parcours";
 import { carteParDefaut, finaliserCarte, type IssueCarte } from "./souscription";
 import { demarrerEssaiDuCompte, PAGE_ESSAI, type EtatEssai } from "./essai";
 import { aNomProvisoire, abonnementEnCours, SANS_PAIEMENT_ENCORE } from "./droits";
-import { estLookupKey } from "./formules";
+import { INTERVALLE_STRIPE, estLookupKey, formuleDeLookupKey, formuleDuPrix } from "./formules";
+import { sensDuChangement } from "./changement";
+import { depassements } from "./quotas";
 import { PAGE_ABONNEMENT, verifierProprietaire, verifierRole } from "./saisie";
 
 /**
@@ -152,4 +164,61 @@ export async function finaliserCarteAction(sessionId: string): Promise<void> {
     redirect(`${PAGE_ABONNEMENT}${issue.immediat ? "?paiement=termine" : "?abonnement=formule-choisie"}`);
   }
   redirect(PAGE_ABONNEMENT);
+}
+
+/**
+ * Changer de formule, pour un abonnement qui paie (§ 10, amendé le
+ * 2026-11-06). Montée : tout de suite, la différence prélevée aussitôt et la
+ * formule appliquée seulement si ce paiement passe. Baisse : à la fin de la
+ * période payée, refusée tant que le compte a plus d'utilisateurs que la
+ * formule visée n'en permet ; ce qui dépasse d'autre passera en lecture
+ * seule (§ 14, la page le dit avant le clic).
+ */
+export async function changerFormuleAction(formData: FormData): Promise<void> {
+  await verifierProprietaire();
+  const { stripe, db, ligne, compteId } = await clientDuCompte();
+  const formule = String(formData.get("formule") ?? "");
+  const visee = formuleDeLookupKey(formule);
+  if (!visee) redirect(PAGE_ABONNEMENT);
+  let cible = PAGE_ABONNEMENT;
+  try {
+    const { courant } = abonnementCourant(await abonnementsDuClient(stripe, ligne.stripeCustomerId));
+    const item = courant?.items.data[0];
+    if (!courant || courant.status !== "active" || !item) {
+      cible = `${PAGE_ABONNEMENT}?formule=impossible`;
+    } else {
+      const sens = sensDuChangement(formuleDuPrix(item.price), formule);
+      const prix = (await prixDesFormules(stripe)).get(formule);
+      if (!prix) throw new Error("prix introuvable");
+      if (sens === "montee") {
+        const aRegler = await monterDeFormule(stripe, courant, prix.priceId);
+        await synchroniserClientStripe(stripe, ligne.stripeCustomerId).catch(() => null);
+        cible = aRegler ?? `${PAGE_ABONNEMENT}?formule=changee`;
+      } else if (sens === "baisse") {
+        const trop = await depassements(db, compteId, formule);
+        if (trop.some((d) => d.quota === "membres")) {
+          cible = `${PAGE_ABONNEMENT}?formule=trop-d-utilisateurs`;
+        } else {
+          await planifierBaisse(stripe, courant, { priceId: prix.priceId, intervalle: INTERVALLE_STRIPE[visee.periodicite] });
+          cible = `${PAGE_ABONNEMENT}?formule=prevue`;
+        }
+      }
+    }
+  } catch {
+    redirect(`${PAGE_ABONNEMENT}?stripe=indisponible`);
+  }
+  redirect(cible);
+}
+
+/** Renoncer à une baisse de formule planifiée (§ 10). */
+export async function annulerBaisseAction(): Promise<void> {
+  await verifierProprietaire();
+  const { stripe, ligne } = await clientDuCompte();
+  try {
+    const { courant } = abonnementCourant(await abonnementsDuClient(stripe, ligne.stripeCustomerId));
+    if (courant) await annulerBaisse(stripe, courant);
+  } catch {
+    redirect(`${PAGE_ABONNEMENT}?stripe=indisponible`);
+  }
+  redirect(`${PAGE_ABONNEMENT}?formule=gardee`);
 }

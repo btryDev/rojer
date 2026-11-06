@@ -213,6 +213,86 @@ export async function appliquerFormule(
   return factureARegler(stripe, repris.latest_invoice);
 }
 
+/**
+ * Monter de formule (ADR-053 § 10, client qui paie) : tout de suite, la
+ * différence facturée au prorata et prélevée aussitôt. `pending_if_incomplete`
+ * : la nouvelle formule ne s'applique que si ce paiement passe — sinon
+ * l'abonnement garde l'ancienne, et la facture attend (rendue à régler). Une
+ * baisse déjà planifiée est abandonnée d'abord : le dernier choix l'emporte.
+ */
+export async function monterDeFormule(stripe: Stripe, abonnement: Stripe.Subscription, priceId: string): Promise<string | null> {
+  const item = abonnement.items.data[0];
+  if (!item || item.price.id === priceId) return null;
+  const planning = idStripe(abonnement.schedule);
+  if (planning) await stripe.subscriptionSchedules.release(planning);
+  const misAJour = await stripe.subscriptions.update(
+    abonnement.id,
+    {
+      items: [{ id: item.id, price: priceId }],
+      proration_behavior: "always_invoice",
+      payment_behavior: "pending_if_incomplete",
+      expand: ["latest_invoice"],
+    },
+    { idempotencyKey: `monter-${abonnement.id}-${item.price.id}-${priceId}` },
+  );
+  return factureARegler(stripe, misAJour.latest_invoice);
+}
+
+/**
+ * Baisser de formule (client qui paie) : à la FIN de la période payée, sans
+ * crédit (pratique courante — Notion, Airtable, HubSpot). Un planning Stripe
+ * (« subscription schedule ») porte la période en cours, puis la nouvelle
+ * formule, et rend l'abonnement à lui-même ensuite (`release`).
+ */
+export async function planifierBaisse(
+  stripe: Stripe,
+  abonnement: Stripe.Subscription,
+  { priceId, intervalle }: { priceId: string; intervalle: "month" | "year" },
+): Promise<void> {
+  const item = abonnement.items.data[0];
+  if (!item) return;
+  const existant = idStripe(abonnement.schedule);
+  const planning = existant
+    ? await stripe.subscriptionSchedules.retrieve(existant)
+    : await stripe.subscriptionSchedules.create({ from_subscription: abonnement.id });
+  const enCours = planning.current_phase ?? planning.phases[0];
+  await stripe.subscriptionSchedules.update(planning.id, {
+    end_behavior: "release",
+    proration_behavior: "none",
+    phases: [
+      {
+        items: [{ price: item.price.id, quantity: item.quantity ?? 1 }],
+        start_date: enCours.start_date,
+        end_date: enCours.end_date,
+      },
+      // Une période dans la nouvelle formule, puis l'abonnement continue seul.
+      { items: [{ price: priceId, quantity: 1 }], duration: { interval: intervalle, interval_count: 1 } },
+    ],
+  });
+}
+
+/** Renoncer à une baisse planifiée : l'abonnement reste sur sa formule. */
+export async function annulerBaisse(stripe: Stripe, abonnement: Stripe.Subscription): Promise<void> {
+  const planning = idStripe(abonnement.schedule);
+  if (planning) await stripe.subscriptionSchedules.release(planning);
+}
+
+/** La baisse planifiée d'un abonnement, s'il y en a une : le prix visé et la date. */
+export async function baissePrevue(
+  stripe: Stripe,
+  abonnement: Stripe.Subscription,
+): Promise<{ priceId: string; lookupKey: string | null; le: Date } | null> {
+  const id = idStripe(abonnement.schedule);
+  if (!id) return null;
+  const planning = await stripe.subscriptionSchedules.retrieve(id, { expand: ["phases.items.price"] });
+  const maintenant = Math.floor(Date.now() / 1000);
+  const suivante = planning.phases.find((p) => p.start_date > maintenant);
+  const prix = suivante?.items[0]?.price;
+  if (!suivante || !prix) return null;
+  const lookupKey = typeof prix !== "string" && "lookup_key" in prix ? prix.lookup_key : null;
+  return { priceId: typeof prix === "string" ? prix : prix.id, lookupKey, le: new Date(suivante.start_date * 1000) };
+}
+
 export type PrixAffiche = { priceId: string; montantCentimes: number; devise: string };
 
 let cachePrix: { lu: number; prix: ReadonlyMap<string, PrixAffiche> } | undefined;

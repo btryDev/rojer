@@ -148,9 +148,19 @@ et sans croire une information qui ne vient pas de Stripe.
    clés d'idempotence de la session, dernier choix daté sur l'abonnement
    (`rojerChoixLe`), facture d'une reprise en attente renvoyée telle quelle.
    Choisir Pro pendant l'essai ne donne rien de plus : les limites de l'essai
-   valent jusqu'au premier paiement confirmé (§ 14). Changer de formule une
-   fois payant n'est PAS encore livré (montée immédiate, baisse en fin de
-   période, § 14) : d'ici là, aucun chemin.] ~~Passer au payant, c'est ajouter une carte dans le portail Stripe~~ :
+   valent jusqu'au premier paiement confirmé (§ 14). ~~Changer de formule une
+   fois payant n'est PAS encore livré~~ [2026-11-06, livré : **changer de
+   formule une fois payant** se fait sur la page de l'abonnement, abonnement
+   à jour seulement (`active`). Le sens se lit sur la formule puis le rythme
+   (`sensDuChangement`). **Montée** : tout de suite, différence facturée au
+   prorata et prélevée (`always_invoice`), appliquée seulement si le paiement
+   passe (`pending_if_incomplete`). **Baisse** : à la fin de la période
+   payée, sans crédit (pratique courante), par un planning Stripe
+   (`subscription schedule` : la période en cours, puis la nouvelle formule
+   une période, puis rendu) ; refusée tant que le compte a plus
+   d'utilisateurs que la formule visée ; ce qui dépasse d'autre passe en
+   lecture seule (§ 14), annoncé avant le clic. Une montée abandonne une
+   baisse planifiée ; « Garder ma formule » la rend.]] ~~Passer au payant, c'est ajouter une carte dans le portail Stripe~~ :
    l'abonnement devient payant à la fin de l'essai, sans prélèvement anticipé ;
    un abonnement en pause se reprend du même portail. Le portail sert aussi à
    résilier, à télécharger les factures (émises par Stripe) et à changer de

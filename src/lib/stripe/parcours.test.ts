@@ -8,9 +8,13 @@ import {
   creerClientStripe,
   demarrerEssai,
   oublierLesPrix,
+  annulerBaisse,
   appliquerFormule,
+  baissePrevue,
+  monterDeFormule,
   ouvrirCheckout,
   ouvrirCheckoutCarte,
+  planifierBaisse,
   prixDesFormules,
 } from "./parcours";
 
@@ -18,6 +22,7 @@ const api = {
   customers: { create: vi.fn() },
   subscriptions: { create: vi.fn(), update: vi.fn(), resume: vi.fn() },
   invoices: { retrieve: vi.fn() },
+  subscriptionSchedules: { create: vi.fn(), retrieve: vi.fn(), update: vi.fn(), release: vi.fn() },
   checkout: { sessions: { create: vi.fn(), list: vi.fn(), expire: vi.fn() } },
   prices: { list: vi.fn() },
 };
@@ -126,6 +131,58 @@ describe("parcours Stripe", () => {
 
     api.subscriptions.update.mockResolvedValue({ latest_invoice: enAttente });
     expect(await appliquerFormule(stripe, sub("trialing"), { ...choix, immediat: true })).toBe("https://invoice.stripe.com/i/1");
+  });
+
+  it("monter : tout de suite, prorata facturé, appliquée seulement si payée ; une baisse planifiée est abandonnée d'abord", async () => {
+    const sub = { id: "sub_1", schedule: "sub_sched_1", items: { data: [{ id: "si_1", price: { id: "price_em" } }] } } as unknown as Stripe.Subscription;
+    api.subscriptions.update.mockResolvedValue({ latest_invoice: { status: "paid" } });
+    expect(await monterDeFormule(stripe, sub, "price_pm")).toBeNull();
+    expect(api.subscriptionSchedules.release).toHaveBeenCalledWith("sub_sched_1");
+    expect(api.subscriptions.update).toHaveBeenLastCalledWith(
+      "sub_1",
+      { items: [{ id: "si_1", price: "price_pm" }], proration_behavior: "always_invoice", payment_behavior: "pending_if_incomplete", expand: ["latest_invoice"] },
+      { idempotencyKey: "monter-sub_1-price_em-price_pm" },
+    );
+    api.subscriptions.update.mockResolvedValue({ latest_invoice: { status: "open", hosted_invoice_url: "https://invoice.stripe.com/i/2" } });
+    expect(await monterDeFormule(stripe, { ...sub, schedule: null } as unknown as Stripe.Subscription, "price_pm")).toBe("https://invoice.stripe.com/i/2");
+  });
+
+  it("baisser : un planning — la période en cours, puis la nouvelle formule une période, puis rendu à lui-même ; annuler = rendre", async () => {
+    const sub = { id: "sub_1", schedule: null, items: { data: [{ id: "si_1", quantity: 1, price: { id: "price_pm" } }] } } as unknown as Stripe.Subscription;
+    api.subscriptionSchedules.create.mockResolvedValue({ id: "sub_sched_1", current_phase: { start_date: 100, end_date: 200 }, phases: [] });
+    await planifierBaisse(stripe, sub, { priceId: "price_em", intervalle: "month" });
+    expect(api.subscriptionSchedules.create).toHaveBeenCalledWith({ from_subscription: "sub_1" });
+    expect(api.subscriptionSchedules.update).toHaveBeenCalledWith("sub_sched_1", {
+      end_behavior: "release",
+      proration_behavior: "none",
+      phases: [
+        { items: [{ price: "price_pm", quantity: 1 }], start_date: 100, end_date: 200 },
+        { items: [{ price: "price_em", quantity: 1 }], duration: { interval: "month", interval_count: 1 } },
+      ],
+    });
+    // Une seconde baisse reprend le planning existant.
+    api.subscriptionSchedules.retrieve.mockResolvedValue({ id: "sub_sched_1", current_phase: { start_date: 100, end_date: 200 }, phases: [] });
+    api.subscriptionSchedules.create.mockClear();
+    await planifierBaisse(stripe, { ...sub, schedule: "sub_sched_1" } as unknown as Stripe.Subscription, { priceId: "price_ea", intervalle: "year" });
+    expect(api.subscriptionSchedules.create).not.toHaveBeenCalled();
+    await annulerBaisse(stripe, { ...sub, schedule: "sub_sched_1" } as unknown as Stripe.Subscription);
+    expect(api.subscriptionSchedules.release).toHaveBeenLastCalledWith("sub_sched_1");
+  });
+
+  it("la baisse prévue : la phase suivante, son prix et sa date ; sans planning, rien", async () => {
+    const dans = Math.floor(Date.now() / 1000) + 86_400;
+    api.subscriptionSchedules.retrieve.mockResolvedValue({
+      phases: [
+        { start_date: 1, items: [{ price: { id: "price_pm", lookup_key: "rojer_pro_mensuel" } }] },
+        { start_date: dans, items: [{ price: { id: "price_em", lookup_key: "rojer_essentiel_mensuel" } }] },
+      ],
+    });
+    expect(await baissePrevue(stripe, { schedule: "sub_sched_1" } as unknown as Stripe.Subscription)).toEqual({
+      priceId: "price_em",
+      lookupKey: "rojer_essentiel_mensuel",
+      le: new Date(dans * 1000),
+    });
+    expect(await baissePrevue(stripe, { schedule: null } as unknown as Stripe.Subscription)).toBeNull();
   });
 
   it("les prix viennent de Stripe, par lookup_key et au bon intervalle, gardés dix minutes s'ils sont complets", async () => {
