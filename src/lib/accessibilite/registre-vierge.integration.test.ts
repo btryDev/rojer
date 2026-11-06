@@ -42,7 +42,12 @@ vi.mock("@/lib/auth/scope", async () => {
       });
       const compteId = e.entreprise.compteId!;
       const userId = e.entreprise.compte!.membres[0].userId;
-      return { user: { id: userId, email: null }, db: clientBorne({ type: "compte", compteId, userId }) };
+      return {
+        user: { id: userId, email: null },
+        // Le compte de la garde : « valider = s'abonner » le lit (ADR-053 § 15).
+        compte: { compteId, role: "owner" },
+        db: clientBorne({ type: "compte", compteId, userId }),
+      };
     },
   };
 });
