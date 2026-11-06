@@ -22,9 +22,6 @@ const PHOTO_HERO = {
   position: "68% 20%",
 };
 
-/** Hauteur de l'en-tête de la page publique, sous lequel la photo passe. */
-const ENTETE_PX = 68;
-
 export function Hero({
   ctaHref,
   ctaLabel,
@@ -34,8 +31,9 @@ export function Hero({
 }) {
   return (
     <section
-      className="relative isolate flex h-[100svh] max-h-[1000px] min-h-[640px] overflow-hidden bg-[color:var(--board-ink)]"
-      style={{ marginTop: -ENTETE_PX }}
+      // La photo remonte de la hauteur de l'en-tête (`--lp-entete`) pour
+      // passer dessous ; le texte la redescend d'autant.
+      className="relative isolate -mt-[var(--lp-entete)] flex h-[100svh] max-h-[1000px] min-h-[640px] overflow-hidden bg-[color:var(--board-ink)]"
     >
       <Image
         src={PHOTO_HERO.src}
@@ -55,19 +53,17 @@ export function Hero({
         aria-hidden
         className="absolute inset-0 -z-10 bg-linear-to-t from-[rgba(8,12,20,0.85)] via-[rgba(8,12,20,0.55)] via-55% to-transparent lg:bg-linear-to-r lg:from-[rgba(8,12,20,0.82)] lg:via-[rgba(8,12,20,0.62)] lg:via-38% lg:to-62%"
       />
+      {/* Une bande sombre en haut, pour l'en-tête blanc. */}
       <div
         aria-hidden
         className="absolute inset-x-0 top-0 -z-10 h-40 bg-linear-to-b from-[rgba(8,12,20,0.55)] to-transparent"
       />
 
-      <div
-        className="lp-shell flex flex-col justify-end pb-12 sm:pb-16 lg:justify-center lg:pb-0"
-        style={{ paddingTop: ENTETE_PX }}
-      >
+      <div className="lp-shell flex flex-col justify-end pt-[var(--lp-entete)] pb-12 sm:pb-16 lg:justify-center lg:pb-0">
         <div className="max-w-[760px]">
-          {/* Une seule ligne dès qu'il y a la place ; la taille est bornée pour
-              que le titre ne déborde pas sur la personne, à droite. */}
-          <h1 className="lp-titre text-[clamp(2.4rem,6vw,3.6rem)] text-white lg:whitespace-nowrap lg:text-[clamp(2.6rem,3.9vw,4rem)]">
+          {/* Une seule ligne dès qu'il y a la place (.lp-h1 est bornée pour
+              ne pas déborder sur la personne, à droite). */}
+          <h1 className="lp-titre lp-h1 text-white lg:whitespace-nowrap">
             Votre copilote prévention
           </h1>
           <p className="lp-lede mt-6 max-w-[44ch] text-white [text-shadow:0_1px_12px_rgba(8,12,20,0.55)]">

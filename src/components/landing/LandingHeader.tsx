@@ -9,7 +9,7 @@
 // barre (`Hero`). Tant qu'elle n'a pas défilé, la barre passe en blanc ;
 // l'îlot, lui, garde ses couleurs sur son verre clair.
 //
-// L'enveloppe garde une hauteur fixe de 68px et l'îlot est posé en
+// L'enveloppe garde une hauteur fixe (`--lp-entete`, 68 px) et l'îlot est posé en
 // absolu dedans : si l'en-tête lui-même rétrécissait, il entraînerait
 // toute la page de quelques pixels vers le haut pendant l'animation.
 
@@ -41,9 +41,11 @@ export function LandingHeader({
 }) {
   const [pose, setPose] = useState(false);
   const blanc = surPhoto && !pose;
-  const lien = blanc
-    ? "text-[0.875rem] text-white/80 transition-colors hover:text-white"
-    : "text-[0.875rem] text-[color:var(--board-slate-mid)] transition-colors hover:text-[color:var(--board-ink)]";
+  const lien =
+    "text-[0.875rem] transition-colors " +
+    (blanc
+      ? "text-white/80 hover:text-white"
+      : "text-[color:var(--board-slate-mid)] hover:text-[color:var(--board-ink)]");
 
   useEffect(() => {
     // Deux seuils plutôt qu'un : sans cette hystérésis, un défilement qui
@@ -59,7 +61,7 @@ export function LandingHeader({
     // pointer-events : l'enveloppe couvre toute la largeur, mais seule
     // l'îlot doit intercepter les clics — sinon les gouttières de part et
     // d'autre avaleraient ceux destinés à la page.
-    <header className="pointer-events-none sticky top-0 z-50 h-[68px]">
+    <header className="pointer-events-none sticky top-0 z-50 h-[var(--lp-entete)]">
       <div
         className={
           "lp-nav pointer-events-auto absolute inset-x-0 top-0" +

@@ -68,7 +68,7 @@ export default async function Home({
 
       {/* « Ce que Rojer tient à jour » passe avant « Concentrez-vous sur
           votre activité » (décision de la propriétaire du 2026-11-06) :
-          ce que Rojer produit d'abord, la charge qu'il retire ensuite. */}
+          ce que Rojer produit d'abord, ce qu'il apporte ensuite. */}
       <Cadran chiffres={chiffres} />
       <Manifeste />
       <TableauDeBord />

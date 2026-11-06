@@ -23,9 +23,8 @@ import {
 // texte non relu à la source : sur une page publique, une référence
 // approximative coûte plus cher que pas de référence du tout.
 //
-// La question sur l'absence d'IA a été retirée : le sujet est traité sans
-// détour dans la bande noire, et une FAQ n'est pas l'endroit où défendre
-// un choix d'architecture.
+// La question sur l'absence d'IA a été retirée : une FAQ n'est pas
+// l'endroit où défendre un choix d'architecture.
 
 const QUESTIONS = [
   {

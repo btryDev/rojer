@@ -9,14 +9,14 @@
 // Chaque apport dit ce que Rojer fait, sans accroche et sans automatisme :
 // on ne dit pas qu'un rapport « se range tout seul », ni qu'un rappel part.
 
-import Image from "next/image";
+import { PhotoCadre, type PhotoLanding } from "./PhotoCadre";
 import { Reveal } from "./Reveal";
 
 /**
  * La photo de la section. Une commerçante avec une cliente : la cible au
  * travail, pas devant un écran. Cf. `public/photos/README.md`.
  */
-const PHOTO_MANIFESTE = {
+const PHOTO_MANIFESTE: PhotoLanding = {
   src: "/photos/manifeste-boulangere.jpg",
   alt: "Une boulangère en tablier marine tend un pain à une cliente par-dessus le comptoir",
   position: "55% 40%",
@@ -60,23 +60,14 @@ export function Manifeste() {
         </Reveal>
 
         <Reveal delai={90}>
-          <h2 className="lp-titre mt-7 text-[clamp(2.1rem,4vw,3.6rem)] text-white lg:whitespace-nowrap">
+          <h2 className="lp-titre lp-h1 mt-7 text-white lg:whitespace-nowrap">
             Concentrez-vous sur votre activité
           </h2>
         </Reveal>
 
         <div className="mt-16 grid grid-cols-1 items-center gap-14 lg:grid-cols-[0.85fr_1.15fr] lg:gap-[clamp(56px,8vw,140px)]">
           <Reveal>
-            <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[30px] bg-white/5 lg:rounded-[38px]">
-              <Image
-                src={PHOTO_MANIFESTE.src}
-                alt={PHOTO_MANIFESTE.alt}
-                fill
-                sizes="(max-width: 1023px) 92vw, 34vw"
-                className="object-cover"
-                style={{ objectPosition: PHOTO_MANIFESTE.position }}
-              />
-            </div>
+            <PhotoCadre photo={PHOTO_MANIFESTE} fond="rgba(255,255,255,0.05)" />
           </Reveal>
 
           <ol className="m-0 list-none p-0">
@@ -91,10 +82,7 @@ export function Manifeste() {
                   {a.numero}
                 </span>
                 <div>
-                  <h3
-                    className="text-[1.25rem] font-semibold leading-[1.22] tracking-[-0.025em] text-[color:var(--board-sky)]"
-                    style={{ fontFamily: "var(--font-titre), sans-serif" }}
-                  >
+                  <h3 className="lp-titre lp-h3 text-[color:var(--board-sky)]">
                     {a.titre}
                   </h3>
                   <p className="mt-2 max-w-[44ch] text-[0.9375rem] leading-[1.62] text-white/60">

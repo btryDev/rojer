@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { ChiffresReferentielSuivi } from "@/lib/referentiels/conformite";
+import { PhotoCadre, type PhotoLanding } from "./PhotoCadre";
 import { Reveal } from "./Reveal";
 
 // Le sujet de cette section, c'est la prise en main : combien de temps
@@ -36,7 +36,7 @@ import { Reveal } from "./Reveal";
  * Cadrage attendu : portrait 2/3, sujet dans le tiers central, lumière
  * naturelle. Cf. `public/photos/README.md`.
  */
-const PHOTO_ETAPES = {
+const PHOTO_ETAPES: PhotoLanding = {
   src: "/photos/etapes-atelier.jpg",
   alt: "Une menuisière consulte un ordinateur portable posé sur l'établi de son atelier",
   position: "50% 44%",
@@ -88,16 +88,7 @@ export function Etapes({
     <section className="bg-[color:var(--board-card)] py-20 sm:py-28">
       <div className="lp-shell grid grid-cols-1 items-start gap-14 lg:grid-cols-[0.82fr_1.18fr] lg:gap-20">
         <Reveal className="lg:sticky lg:top-24">
-          <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[30px] bg-[color:var(--board-slate-pale)] lg:rounded-[38px]">
-            <Image
-              src={PHOTO_ETAPES.src}
-              alt={PHOTO_ETAPES.alt}
-              fill
-              sizes="(max-width: 1023px) 92vw, 34vw"
-              className="object-cover"
-              style={{ objectPosition: PHOTO_ETAPES.position }}
-            />
-          </div>
+          <PhotoCadre photo={PHOTO_ETAPES} fond="var(--board-slate-pale)" />
         </Reveal>
 
         <div>
