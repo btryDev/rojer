@@ -1,7 +1,7 @@
 "use server";
 
 import type { Db } from "@/lib/auth/compte";
-import { deposerFichier } from "@/lib/abonnements/stockage";
+import { deposerFichier, rendreReservations } from "@/lib/abonnements/stockage";
 import { revalidatePath } from "next/cache";
 import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { redirect } from "next/navigation";
@@ -333,11 +333,17 @@ export async function cloturerAction(
       },
     }));
   } catch (err) {
-    if (piece.status === "piece") await libererFichiers([piece.cle], "points/correction");
+    if (piece.status === "piece") {
+      await libererFichiers([piece.cle], "points/correction");
+      await rendreReservations(db, [piece.cle]);
+    }
     throw err;
   }
   if (ecrites === 0) {
-    if (piece.status === "piece") await libererFichiers([piece.cle], "points/correction");
+    if (piece.status === "piece") {
+      await libererFichiers([piece.cle], "points/correction");
+      await rendreReservations(db, [piece.cle]);
+    }
     return { status: "error", message: "Déjà corrigée" };
   }
 

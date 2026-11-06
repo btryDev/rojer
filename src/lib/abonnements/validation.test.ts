@@ -56,16 +56,24 @@ describe("valider = s'abonner (ADR-053 § 15)", () => {
 });
 
 describe("les gestes qui demandent l'abonnement passent par la règle", () => {
-  const GESTES: [string, RegExp][] = [
-    ["src/lib/versions/actions.ts", /export async function creerVersion\([\s\S]*?await exigerUnPaiement\(db, compte\.compteId\)/],
-    ["src/lib/accessibilite/actions.ts", /export async function publierRegistre\([\s\S]*?await exigerUnPaiement\(db, compte\.compteId\)/],
-    ["src/app/api/etablissements/[id]/controle-zip/route.ts", /export async function GET\([\s\S]*?await exigerUnPaiement\(db, compte\.compteId\)/],
-    ["src/app/api/etablissements/[id]/registre/pdf/route.ts", /export async function GET\([\s\S]*?await exigerUnPaiement\(db, compte\.compteId\)/],
-    ["src/lib/signatures/actions.ts", /export async function demanderSignature\([\s\S]*?await exigerSignatureDEssai\(db, compte\.compteId, user\.email, params\.signataireEmail\)/],
-    ["src/lib/signatures/actions.ts", /export async function signerEnCompteConnecte\([\s\S]*?await exigerSignatureDEssai\(db, compte\.compteId, user\.email\)/],
-    ["src/app/api/etablissements/[id]/dossier-conformite/pdf/route.ts", /projet: !\(await aDejaPaye\(db, compte\.compteId\)\)/],
+  // Le corps de la fonction, et lui seul : un appel identique plus bas dans le
+  // fichier ne doit pas faire passer un geste qui aurait perdu sa garde.
+  const corpsDe = (source: string, fonction: string) => {
+    const debut = source.indexOf(`export async function ${fonction}(`);
+    if (debut < 0) return "";
+    const fin = source.indexOf("\n}\n", debut);
+    return source.slice(debut, fin < 0 ? undefined : fin);
+  };
+  const GESTES: [string, string, string][] = [
+    ["src/lib/versions/actions.ts", "creerVersion", "await exigerUnPaiement(db, compte.compteId)"],
+    ["src/lib/accessibilite/actions.ts", "publierRegistre", "await exigerUnPaiement(db, compte.compteId)"],
+    ["src/app/api/etablissements/[id]/controle-zip/route.ts", "GET", "await exigerUnPaiement(db, compte.compteId)"],
+    ["src/app/api/etablissements/[id]/registre/pdf/route.ts", "GET", "await exigerUnPaiement(db, compte.compteId)"],
+    ["src/lib/signatures/actions.ts", "demanderSignature", "await exigerSignatureDEssai(db, compte.compteId, user.email, params.signataireEmail)"],
+    ["src/lib/signatures/actions.ts", "signerEnCompteConnecte", "await exigerSignatureDEssai(db, compte.compteId, user.email)"],
+    ["src/app/api/etablissements/[id]/dossier-conformite/pdf/route.ts", "GET", "projet: !(await aDejaPaye(db, compte.compteId))"],
   ];
-  it.each(GESTES)("%s", (fichier, motif) => {
-    expect(readFileSync(join(process.cwd(), fichier), "utf8")).toMatch(motif);
+  it.each(GESTES)("%s : %s", (fichier, fonction, appel) => {
+    expect(corpsDe(readFileSync(join(process.cwd(), fichier), "utf8"), fonction)).toContain(appel);
   });
 });

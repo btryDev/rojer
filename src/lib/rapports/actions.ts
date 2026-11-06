@@ -1,6 +1,6 @@
 "use server";
 
-import { deposerFichier } from "@/lib/abonnements/stockage";
+import { deposerFichier, rendreReservations } from "@/lib/abonnements/stockage";
 import { requireCompte } from "@/lib/auth/compte";
 import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { randomUUID } from "node:crypto";
@@ -356,6 +356,7 @@ export async function uploadRapport(
     // Nettoyage best-effort du fichier si la DB a échoué.
     if (piece !== null && storage !== null) {
       await storage.delete(piece.cle).catch(() => {});
+      await rendreReservations(db, [piece.cle]);
     }
     if (err instanceof LigneModifieeEntreTemps) {
       return { status: "error", message: err.message };

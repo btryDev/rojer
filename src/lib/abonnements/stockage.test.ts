@@ -6,7 +6,7 @@ vi.mock("@/lib/stripe/config", () => ({ etatStripe: h.etatStripe }));
 vi.mock("@/lib/storage", () => ({ getStorage: () => ({ put: h.put }) }));
 
 import type { Db } from "@/lib/auth/compte";
-import { clesDeFichiers, deposerFichier, octetsUtilises } from "./stockage";
+import { clesDeFichiers, deposerFichier, octetsUtilises, rendreReservations } from "./stockage";
 
 const GO = 1e9;
 
@@ -87,5 +87,16 @@ describe("le plafond de stockage (ADR-053 § 14)", () => {
     expect(await deposerFichier(db as unknown as Db, "c1", "neuf", Buffer.alloc(11), "application/pdf")).toBeNull();
     expect(db.$transaction).not.toHaveBeenCalled();
     expect(h.put.mock.invocationCallOrder[0]).toBeLessThan(db.fichierStocke.upsert.mock.invocationCallOrder[0]);
+  });
+});
+
+describe("rendreReservations", () => {
+  it("un dépôt abandonné rend sa réservation, et une erreur ne remonte pas", async () => {
+    const deleteMany = vi.fn().mockResolvedValue({ count: 2 });
+    await rendreReservations({ fichierStocke: { deleteMany } } as unknown as Db, ["a", "b"]);
+    expect(deleteMany).toHaveBeenCalledWith({ where: { cle: { in: ["a", "b"] } } });
+    await rendreReservations({ fichierStocke: { deleteMany } } as unknown as Db, []);
+    expect(deleteMany).toHaveBeenCalledTimes(1);
+    await expect(rendreReservations({} as unknown as Db, ["a"])).resolves.toBeUndefined();
   });
 });

@@ -1,7 +1,7 @@
 "use server";
 
 import type { Db } from "@/lib/auth/compte";
-import { deposerFichier } from "@/lib/abonnements/stockage";
+import { deposerFichier, rendreReservations } from "@/lib/abonnements/stockage";
 import { creerEnLotVerifie } from "@/lib/auth/portee/lot-verifie";
 import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { randomUUID } from "node:crypto";
@@ -134,6 +134,7 @@ async function deposerPieces(
     }
     if (erreur) {
       await Promise.all(cles.map((c) => storage?.delete(c).catch(() => {})));
+      await rendreReservations(db, cles);
       return { ok: false, champ: piece.champ, message: erreur };
     }
   }

@@ -1,6 +1,6 @@
 "use server";
 
-import { deposerFichier } from "@/lib/abonnements/stockage";
+import { deposerFichier, rendreReservations } from "@/lib/abonnements/stockage";
 import { randomUUID } from "node:crypto";
 import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { revalidatePath } from "next/cache";
@@ -411,6 +411,7 @@ export async function ajouterAnalyseLegionelle(
   } catch (e) {
     if (depot.rapport) {
       await getStorage().delete(depot.rapport.cle).catch(() => {});
+      await rendreReservations(db, [depot.rapport.cle]);
     }
     throw e;
   }

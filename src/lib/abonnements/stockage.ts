@@ -82,6 +82,22 @@ export async function deposerFichier(db: Db, compteId: string, cle: string, data
   return null;
 }
 
+/**
+ * Rendre les réservations de fichiers déposés puis abandonnés (écriture en
+ * base refusée après le dépôt) : sinon ils compteraient encore pendant la
+ * fenêtre des réservations, et un nouvel essai près du plafond serait refusé
+ * à tort. À appeler avec l'effacement des fichiers. Un échec ne fait que
+ * compter trop, jamais trop peu.
+ */
+export async function rendreReservations(db: Db, cles: string[]): Promise<void> {
+  if (cles.length === 0) return;
+  try {
+    await db.fichierStocke.deleteMany({ where: { cle: { in: cles } } });
+  } catch {
+    // Compter trop quinze minutes ne bloque rien d'autre que ce compte.
+  }
+}
+
 /** Le stockage plein, pour l'annoncer dès l'ouverture d'un formulaire qui dépose (lot D). */
 export async function stockagePlein(db: Db, compteId: string): Promise<string | null> {
   if (!offreLancee(contexteDroits())) return null;
