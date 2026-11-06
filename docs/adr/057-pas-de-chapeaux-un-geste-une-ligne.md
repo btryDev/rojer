@@ -236,3 +236,9 @@ n'a pas été discutée le 2026-11-05 :
   qu'un geste) ;
 - l'électricité Code du travail : elle ne vise que les lieux de travail ; un
   ERP sans salarié ou une habitation seule ne la reçoivent pas. Voulu ?
+- [2026-11-06, lot A] la liste de `PE 4 § 2` : le texte cite aussi « le
+  chauffage, l'éclairage, les circuits d'extraction », et la liste relue par
+  le préventeur ne porte ni la hotte, ni la ventilation, ni l'éclairage de
+  sécurité. Portée par l'appareil, la ligne ne les vise donc plus, quand
+  l'ancienne ligne d'établissement les couvrait par « l'ensemble ». Leurs
+  vérifications annuelles ERP restent servies.

@@ -30,8 +30,11 @@ modification. Tests : `niveau-audit.test.ts`, chiffres publics,
   le paragraphe « l'intersection, pas l'union » et la reprise de la
   criticité du gaz, avec la date et le renvoi à l'ADR-057.
 - `R. 4222-20` : équipement, `VMC`, `CTA`, `HOTTE_PRO`.
-- `cuisson-gaz-installations-annuelle` : `categoriesEquipement` →
-  `INSTALLATION_GAZ` seule.
+- ~~`cuisson-gaz-installations-annuelle` : `categoriesEquipement` →
+  `INSTALLATION_GAZ` seule.~~ [2026-11-06, lot A : reporté au lot C. Sa note
+  dit que retirer l'appareil de cuisson retirerait GZ 15 aux restaurants de
+  catégories 1 à 4 qui n'ont pas déclaré leur installation de gaz ; la
+  question « au gaz ? » de l'appareil se pose avec la fusion des catégories.]
 - Les cinq lignes « travail » des gestes (`incendie-travail-moyens-lutte`,
   `-alarme-entretien-verification`, `-desenfumage-entretien-verification`,
   `-ria-entretien-verification`, `cuisson-travail-appareils-entretien-verification`) :
