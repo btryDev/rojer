@@ -728,6 +728,15 @@ des conditions dans les informations publiques ; TVA — la facture de test est
 à 29 € sans taxe : Stripe Tax ou taux de TVA à régler avec l'expert-comptable
 (§ 6).
 
+**À faire — la facture du client** (demande de la propriétaire, 2026-11-06) :
+une facture conforme pour chaque paiement. Mentions de Rojer (raison sociale,
+SIREN, adresse, numéro de TVA, mentions légales B2B : pénalités de retard,
+indemnité forfaitaire de 40 €), TVA appliquée, raison sociale, adresse et
+numéro de TVA du client (déjà demandés au paiement), numérotation continue
+(Stripe), téléchargement depuis la page Abonnement de Rojer et pas seulement
+le portail, envoi par e-mail ; facture électronique obligatoire au
+1er septembre 2027 (plateforme agréée). À valider avec l'expert-comptable.
+
 ## Sources lues
 
 - Stripe : [webhooks](https://docs.stripe.com/webhooks.md) ·
