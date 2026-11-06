@@ -69,7 +69,7 @@ de montée en gamme et ce qui nous sort de la guerre des prix.
 
 Cadre à tenir dans les CGV : conseil technique, pas consultation juridique (loi
 du 31 décembre 1971). Voir
-[`benchmark-offres-abonnement-2026-11.md`](benchmark-offres-abonnement-2026-11.md) § 3.
+`benchmark-offres-abonnement-2026-11.md` § 3 (branche `docs/offres-abonnement`).
 
 ## 3. Le zéro-IA, argument opposable
 
@@ -138,7 +138,7 @@ le concurrent se trompe, pas un terrain à l'imiter.
 ## 8. Comparatifs — à utiliser, avec prudence
 
 Le benchmark (dix éditeurs) est dans
-[`benchmark-offres-abonnement-2026-11.md`](benchmark-offres-abonnement-2026-11.md).
+`benchmark-offres-abonnement-2026-11.md` (branche `docs/offres-abonnement`).
 Les fiches concurrents vivent dans [`concurrents/`](concurrents/).
 - **Deemply** : outil de préventeur (service QHSE), pas notre cible. Ne pas se
   battre sur le nombre de modules. Rapport : https://claude.ai/artifact/B1K84XPvWc9i81HmHn7cR4
