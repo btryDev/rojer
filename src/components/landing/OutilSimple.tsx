@@ -29,8 +29,8 @@ export function OutilSimple() {
         </Reveal>
 
         {/* 1 · Simple : le texte, puis la vidéo, plus large */}
-        <div className="mt-20 grid grid-cols-1 items-center gap-12 sm:mt-28 lg:grid-cols-[0.6fr_1.4fr] lg:gap-20">
-          <Reveal>
+        <div className="mt-24 grid grid-cols-1 items-center gap-12 sm:mt-40 lg:grid-cols-[0.6fr_1.4fr] lg:gap-20">
+          <Reveal ample="texte">
             <p className="font-mono text-[0.68rem] uppercase tracking-[0.16em] text-[color:var(--board-blue-ink)]">
               Simple
             </p>
@@ -42,7 +42,7 @@ export function OutilSimple() {
             </p>
           </Reveal>
 
-          <Reveal delai={120}>
+          <Reveal ample="media" delai={180}>
             <div className="overflow-hidden rounded-[26px] bg-[color:var(--board-card)] shadow-[0_0_0_1px_rgba(13,18,36,0.05),0_2px_4px_rgba(13,18,36,0.04),0_16px_32px_-18px_rgba(13,18,36,0.18),0_56px_90px_-56px_rgba(13,18,36,0.42)]">
               <ExtraitVideo
                 src="/videos/visite-equipements.mp4"
@@ -57,7 +57,7 @@ export function OutilSimple() {
 
         {/* 2 · Transparent : l'illustration, puis le texte */}
         <div className="mt-28 grid grid-cols-1 items-center gap-12 sm:mt-40 lg:grid-cols-[1.15fr_0.85fr] lg:gap-20">
-          <Reveal className="lg:order-2">
+          <Reveal ample="texte" delai={180} className="lg:order-2">
             <p className="font-mono text-[0.68rem] uppercase tracking-[0.16em] text-[color:var(--board-blue-ink)]">
               Transparent
             </p>
@@ -72,7 +72,7 @@ export function OutilSimple() {
             </span>
           </Reveal>
 
-          <Reveal delai={120} className="lg:order-1">
+          <Reveal ample="media" className="lg:order-1">
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[30px] bg-[color:var(--board-blue-pale)] lg:rounded-[38px]">
               <Image
                 src="/illustrations/landing/transparence-sources.jpg"

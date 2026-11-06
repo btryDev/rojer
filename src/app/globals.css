@@ -1110,6 +1110,22 @@
       transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
     transition-delay: var(--lp-delai, 0ms);
   }
+  /* L'apparition ample (Reveal `ample`) : plus de course, plus de durée,
+     une courbe qui freine longtemps — le mouvement se pose, il ne rebondit
+     pas. Le média monte en se dézoomant d'un cran. */
+  .lp-reveal-texte,
+  .lp-reveal-media {
+    transition:
+      opacity 1000ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 1400ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: var(--lp-delai, 0ms);
+  }
+  .lp-reveal-texte {
+    transform: translateY(48px);
+  }
+  .lp-reveal-media {
+    transform: translateY(72px) scale(0.94);
+  }
   .lp-reveal[data-vu="true"] {
     opacity: 1;
     transform: none;
