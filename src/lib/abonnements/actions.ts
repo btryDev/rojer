@@ -170,7 +170,7 @@ export async function finaliserCarteAction(sessionId: string): Promise<void> {
 const dejaEnCours = (e: unknown) =>
   e instanceof Stripe.errors.StripeIdempotencyError ||
   (e as { statusCode?: number })?.statusCode === 409 ||
-  /already (has|attached to) a subscription schedule/i.test(e instanceof Error ? e.message : "");
+  /already (has|attached to) a (subscription )?schedule/i.test(e instanceof Error ? e.message : "");
 
 /**
  * Changer de formule, pour un abonnement qui paie (§ 10, amendé le

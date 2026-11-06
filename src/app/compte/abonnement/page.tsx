@@ -69,7 +69,7 @@ function effetDuChangement(sens: "montee" | "baisse", actuelle: string | null, v
     return "Tout de suite : l'année est prélevée maintenant, moins ce qui reste de votre mois en cours.";
   }
   if (de === "annuel" && vers === "mensuel") {
-    return "Tout de suite : votre période repart aujourd'hui, et ce qui reste de votre année est déduit de vos prochaines factures.";
+    return "Tout de suite : votre période repart aujourd'hui ; ce qui reste de votre année est déduit du nouveau prix, et la différence éventuelle est prélevée maintenant.";
   }
   return "Tout de suite : la différence pour la période en cours est prélevée maintenant.";
 }

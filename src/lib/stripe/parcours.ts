@@ -234,8 +234,17 @@ export async function monterDeFormule(stripe: Stripe, abonnement: Stripe.Subscri
     },
     { idempotencyKey: `monter-${abonnement.id}-${item.price.id}-${priceId}` },
   );
+  // La montée est faite : rendre la baisse prévue ne doit pas la faire passer
+  // pour un échec. Si Stripe refuse, la page montre encore la baisse et
+  // propose « Garder ma formule ».
   const planning = idStripe(abonnement.schedule);
-  if (planning) await stripe.subscriptionSchedules.release(planning);
+  if (planning) {
+    try {
+      await stripe.subscriptionSchedules.release(planning);
+    } catch (e) {
+      console.error(`stripe : baisse prévue non rendue après une montée (${planning}) — ${e instanceof Error ? e.name : "erreur"}`);
+    }
+  }
   return factureARegler(stripe, misAJour.latest_invoice);
 }
 
@@ -303,7 +312,11 @@ export async function rendrePlanningEchu(stripe: Stripe, abonnement: Stripe.Subs
   if (!id) return;
   const planning = await stripe.subscriptionSchedules.retrieve(id);
   const maintenant = Math.floor(Date.now() / 1000);
-  if (planning.status === "active" && !planning.phases.some((p) => p.start_date > maintenant)) {
+  // Un planning tout juste créé n'a encore qu'une phase (celle en cours) :
+  // `planifierBaisse` y ajoute la baisse dans la foulée. Ne rendre que ceux
+  // qui ont porté une baisse, ou un orphelin de plus de cinq minutes.
+  const aPorteUneBaisse = planning.phases.length > 1 || planning.created < maintenant - 300;
+  if (planning.status === "active" && aPorteUneBaisse && !planning.phases.some((p) => p.start_date > maintenant)) {
     await stripe.subscriptionSchedules.release(id);
   }
 }

@@ -110,7 +110,10 @@ export async function inviterMembre(_prev: EtatMembres, formData: FormData): Pro
   // vérification la voit, et l'invitation de trop est retirée.
   const apres = await refusInvitationBaissePrevue(db, compte.compteId, { apresCreation: true });
   if (apres && invitationId) {
-    await auth.api.cancelInvitation({ headers: await entetesDeSession(), body: { invitationId } }).catch(() => {});
+    const retirer = async () => auth.api.cancelInvitation({ headers: await entetesDeSession(), body: { invitationId } });
+    await retirer().catch(retirer).catch((e: unknown) =>
+      console.error(JSON.stringify({ type: "membres_invitation_non_retiree", invitationId, code: codeDe(e) })),
+    );
     return { status: "error", message: apres };
   }
   revalidatePath(PAGE);
