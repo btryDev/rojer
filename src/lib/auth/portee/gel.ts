@@ -43,8 +43,6 @@ type Objet = Record<string, unknown>;
 const estObjet = (v: unknown): v is Objet => typeof v === "object" && v !== null && !Array.isArray(v);
 const lister = (v: unknown): unknown[] => (Array.isArray(v) ? v : v === undefined ? [] : [v]);
 
-const SEUL_L_ETABLISSEMENT: ReadonlySet<string> = new Set(["Etablissement"]);
-
 const RACINES = [
   ["Etablissement", "etablissements"],
   ["Prestataire", "prestataires"],
@@ -65,32 +63,25 @@ const delegue = (base: PrismaClient, nom: string) =>
   ((transactionEnCours.getStore() ?? base) as unknown as Record<string, Delegue>)[nom.charAt(0).toLowerCase() + nom.slice(1)];
 
 /**
- * Les lignes qu'une écriture désigne : clé étrangère, `connect`, et les
- * créations imbriquées (les autres formes imbriquées, la borne les refuse).
- * `cibles` : les modèles à relever — une mise à jour ne relève que
- * l'établissement (y déplacer une ligne), pas le prestataire qu'elle garde.
+ * Les lignes qu'une écriture désigne : clé étrangère (nue ou en `{ set }`),
+ * `connect` par n'importe quelle clé unique, et les créations imbriquées (les
+ * autres formes imbriquées, la borne les refuse). `actuelle` : la ligne
+ * qu'une mise à jour modifie, telle qu'en base — une clé qu'elle garde à
+ * l'identique ne désigne rien de neuf (modifier un permis qui nomme déjà un
+ * prestataire gelé reste possible ; en désigner un, non).
  */
-function designees(
-  nom: string,
-  data: unknown,
-  sortie: Map<string, Objet[]>,
-  cibles?: ReadonlySet<string>,
-): void {
+function designees(nom: string, data: unknown, sortie: Map<string, Objet[]>, actuelle?: Objet | null): void {
   for (const ligne of lister(data)) {
     if (!estObjet(ligne)) continue;
     for (const r of relations(nom)) {
-      const releve = !cibles || cibles.has(r.cible);
-      const ajouter = (where: Objet) => {
-        if (releve) sortie.set(r.cible, [...(sortie.get(r.cible) ?? []), where]);
-      };
-      // Une clé, nue ou en `{ set }` (que la borne accepte aussi).
+      const garde = (id: unknown) => actuelle != null && r.cle !== undefined && actuelle[r.cle] === id;
+      const ajouter = (where: Objet) => sortie.set(r.cible, [...(sortie.get(r.cible) ?? []), where]);
       const v = r.cle ? ligne[r.cle] : undefined;
       const id = estObjet(v) ? v.set : v;
-      if (typeof id === "string") ajouter({ id });
+      if (typeof id === "string" && !garde(id)) ajouter({ id });
       const n = ligne[r.nom];
       if (!estObjet(n)) continue;
-      // Un `connect` par n'importe quelle clé unique, `id` ou autre.
-      for (const c of lister(n.connect)) if (estObjet(c)) ajouter(c);
+      for (const c of lister(n.connect)) if (estObjet(c) && !garde(c.id)) ajouter(c);
       // Une création imbriquée est une création : tout ce qu'elle désigne est relevé.
       designees(r.cible, n.create, sortie);
     }
@@ -117,11 +108,18 @@ export async function verifierGel(base: PrismaClient, nom: string, operation: st
     if (await delegue(base, nom).findUnique({ where: avecBorne(a.where, f), select: { id: true } })) refuser(nom, operation);
   if (f && operation === "updateMany" && (await delegue(base, nom).count({ where: avecBorne(a.where, f) })) > 0)
     refuser(nom, operation);
-  // Les lignes désignées par ce qui s'écrit.
+  // Les lignes désignées par ce qui s'écrit ; pour une mise à jour, au regard
+  // de la ligne en base, lue par la transaction en cours.
   const vues = new Map<string, Objet[]>();
-  if (operation === "update" || operation === "updateMany") designees(nom, a.data, vues, SEUL_L_ETABLISSEMENT);
-  else designees(nom, operation === "upsert" ? a.create : a.data, vues);
-  if (operation === "upsert") designees(nom, a.update, vues, SEUL_L_ETABLISSEMENT);
+  const misAJour = operation === "update" ? a.data : operation === "upsert" ? a.update : undefined;
+  if (misAJour !== undefined) {
+    const cles = relations(nom).flatMap((r) => (r.cle ? [[r.cle, true] as const] : []));
+    const actuelle = cles.length
+      ? ((await delegue(base, nom).findUnique({ where: a.where as object, select: Object.fromEntries(cles) })) as Objet | null)
+      : null;
+    designees(nom, misAJour, vues, actuelle);
+  }
+  if (operation !== "update") designees(nom, operation === "upsert" ? a.create : a.data, vues);
   for (const [cible, wheres] of vues) {
     const fc = filtreGele(cible, geles);
     if (fc && (await delegue(base, cible).count({ where: avecBorne({ OR: wheres }, fc) })) > 0) refuser(nom, operation);

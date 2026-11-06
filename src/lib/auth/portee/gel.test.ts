@@ -21,14 +21,21 @@ const REFUS = `REDIRECT ${PAGE_DU_GEL}`;
  * Le client brut, réduit à ce que la vérification lit : une ligne est gelée
  * si son identifiant figure dans `gelees` (le filtre lui-même est testé à part).
  */
-function base(gelees: string[]) {
-  type Where = { id?: string; OR?: { id?: string }[] };
+function base(gelees: string[], actuelles: Record<string, Record<string, unknown>> = {}) {
+  type Where = { id?: string; OR?: { id?: string }[]; AND?: unknown };
   const delegue = {
     count: vi.fn(async ({ where }: { where: Where }) =>
       where.OR ? where.OR.filter((w) => w.id !== undefined && gelees.includes(w.id)).length : gelees.length,
     ),
+    // Avec le filtre du gel (`AND`) : la ligne si elle est gelée ; sans lui : la ligne en base.
     findUnique: vi.fn(async ({ where }: { where: Where }) =>
-      typeof where.id === "string" && gelees.includes(where.id) ? { id: where.id } : null,
+      typeof where.id !== "string"
+        ? null
+        : where.AND
+          ? gelees.includes(where.id)
+            ? { id: where.id }
+            : null
+          : (actuelles[where.id] ?? null),
     ),
   };
   return { client: new Proxy({}, { get: () => delegue }) as unknown as PrismaClient, delegue };
@@ -77,8 +84,18 @@ describe("verifierGel : refusé avant d'écrire", () => {
     await expect(verifierGel(b(), "PermisFeu", "create", { data: { etablissement: { connect: { id: "etab-libre" } }, prestataire: { connect: { id: "pre-gele" } } } }, GELES)).rejects.toThrow(REFUS);
   });
 
-  it("modifier sans changer de prestataire passe ; déplacer vers un site gelé, non", async () => {
-    await verifierGel(base(["pre-gele"]).client, "PermisFeu", "update", { where: { id: "p" }, data: { prestataireId: "pre-gele", motif: "x" } }, GELES);
+  it("une mise à jour qui garde son prestataire gelé passe ; qui en désigne un, non", async () => {
+    const enBase = { p: { prestataireId: "pre-gele", etablissementId: "etab-libre" }, r: { prestataireId: null, etablissementId: "etab-libre" } };
+    await verifierGel(base(["pre-gele"], enBase).client, "PermisFeu", "update", { where: { id: "p" }, data: { prestataireId: "pre-gele", motif: "x" } }, GELES);
+    await expect(
+      verifierGel(base(["pre-gele"], enBase).client, "PermisFeu", "update", { where: { id: "r" }, data: { prestataireId: "pre-gele" } }, GELES),
+    ).rejects.toThrow(REFUS);
+    await expect(
+      verifierGel(base(["pre-gele"], enBase).client, "PermisFeu", "update", { where: { id: "r" }, data: { prestataire: { connect: { id: "pre-gele" } } } }, GELES),
+    ).rejects.toThrow(REFUS);
+  });
+
+  it("déplacer une ligne vers un site gelé est refusé", async () => {
     await expect(verifierGel(base(["etab-gele"]).client, "Equipement", "update", { where: { id: "e" }, data: { etablissementId: { set: "etab-gele" } } }, GELES)).rejects.toThrow(REFUS);
   });
 

@@ -235,10 +235,11 @@ et sans croire une information qui ne vient pas de Stripe.
      `/compte/abonnement?saisie=gelee`. Lecture et suppression ouvertes.
      Le gel lit ce que l'écriture vise par la transaction en cours (suivie
      par le client borné) : par le client brut, il attendrait la seule
-     connexion du pool (`connection_limit=1`). Une mise à jour ne relève que
-     l'établissement qu'elle désigne (y déplacer une ligne), pas le
-     prestataire qu'elle garde : modifier un permis qui nomme un prestataire
-     gelé reste possible, en désigner un à la création non. Gestes ouverts
+     connexion du pool (`connection_limit=1`). Une mise à jour relève ce
+     qu'elle désigne au regard de la ligne en base : une clé gardée à
+     l'identique ne désigne rien de neuf (modifier un permis qui nomme déjà
+     un prestataire gelé reste possible), une clé changée vers un élément
+     gelé est refusée (y nommer un prestataire gelé, y déplacer une ligne). Gestes ouverts
      malgré le gel, liste fermée (`ouvrirAuGel`, juste après la garde) :
      supprimer (c'est aussi ce qui dégèle), retirer un accès, une page
      publique, une déclaration ou une photo, demander de l'aide. L'entreprise
