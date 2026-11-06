@@ -5,28 +5,29 @@
 // Rien n'y dit « conforme » : l'expert donne un conseil technique, jamais un
 // avis juridique, et la mention le rappelle.
 
-import { ChevronRepli } from "@/components/ui/repli";
+import { ChevronRepli, LIEN_REPLI } from "@/components/ui/repli";
+import { cn } from "@/lib/utils";
 import { lienContact } from "./contact";
 import { Reveal } from "./Reveal";
-import { GRILLE } from "./tarif-donnees";
+import { ABONNEMENT, GRILLE, INCLUS, NON_INCLUS } from "./tarif-grille";
 import { TarifOffres } from "./TarifOffres";
 
-const COLONNES = ["Essai", "Essentiel", "Pro", "Sur mesure"] as const;
+const COLONNES = [
+  { nom: "Essai", detail: "30 jours, sur Essentiel" },
+  { nom: "Essentiel" },
+  { nom: "Pro" },
+  { nom: "Sur mesure" },
+] as const;
 
-function Case({ valeur, essai }: { valeur: string; essai: boolean }) {
-  const fond = essai ? " bg-[#fffaf0]" : "";
-  if (valeur === "✓")
-    return <td className={"px-4 py-3 text-center font-semibold text-[color:var(--board-blue-ink)]" + fond}>✓</td>;
-  if (valeur === "—")
-    return <td className={"px-4 py-3 text-center text-[#b5c4cf]" + fond}>—</td>;
-  if (valeur === "s'abonner")
-    return (
-      <td className={"px-4 py-3 text-center font-mono text-[0.66rem] tracking-[0.06em] text-[color:var(--board-amber-ink)]" + fond}>
-        s&apos;abonner
-      </td>
-    );
-  return <td className={"px-4 py-3 text-center" + fond}>{valeur}</td>;
-}
+/** Le fond de la colonne « Essai ». */
+const FOND_ESSAI = "bg-[color:var(--board-amber-wash)]";
+
+/** Le ton d'une case qui ne porte pas un chiffre. */
+const TON: Record<string, string> = {
+  [INCLUS]: "font-semibold text-[color:var(--board-blue-ink)]",
+  [NON_INCLUS]: "text-[color:var(--board-slate)]",
+  [ABONNEMENT]: "font-mono text-[0.66rem] tracking-[0.06em] text-[color:var(--board-amber-ink)]",
+};
 
 export function Tarif({ ctaHref }: { ctaHref: string }) {
   return (
@@ -69,7 +70,7 @@ export function Tarif({ ctaHref }: { ctaHref: string }) {
 
         {/* La grille complète, repliée : la page reste lisible. */}
         <details className="group mt-10">
-          <summary className="mx-auto flex w-max cursor-pointer list-none items-center gap-2 text-[0.92rem] font-semibold text-[color:var(--board-ink)] [&::-webkit-details-marker]:hidden">
+          <summary className={cn(LIEN_REPLI, "mx-auto flex w-max text-[0.92rem] text-[color:var(--board-ink)]")}>
             <ChevronRepli />
             Voir le détail des offres
           </summary>
@@ -79,17 +80,11 @@ export function Tarif({ ctaHref }: { ctaHref: string }) {
               <thead>
                 <tr className="border-b border-[color:var(--board-slate-pale)]">
                   <th scope="col" className="px-4 py-3 text-left font-semibold">Module</th>
-                  {COLONNES.map((c) => (
-                    <th
-                      key={c}
-                      scope="col"
-                      className={"w-[15%] px-4 py-3 text-center font-semibold" + (c === "Essai" ? " bg-[#fffaf0]" : "")}
-                    >
-                      {c}
-                      {c === "Essai" ? (
-                        <span className="block text-[0.72rem] font-normal text-[color:var(--board-slate-soft)]">
-                          30 jours, sur Essentiel
-                        </span>
+                  {COLONNES.map((c, i) => (
+                    <th key={c.nom} scope="col" className={cn("w-[15%] px-4 py-3 text-center font-semibold", i === 0 && FOND_ESSAI)}>
+                      {c.nom}
+                      {"detail" in c ? (
+                        <span className="block text-[0.72rem] font-normal text-[color:var(--board-slate-soft)]">{c.detail}</span>
                       ) : null}
                     </th>
                   ))}
@@ -110,7 +105,9 @@ export function Tarif({ ctaHref }: { ctaHref: string }) {
                     <tr key={l.libelle} className="border-b border-[color:var(--board-slate-pale)] last:border-b-0">
                       <th scope="row" className="px-4 py-3 text-left font-normal">{l.libelle}</th>
                       {l.cases.map((v, i) => (
-                        <Case key={COLONNES[i]} valeur={v} essai={i === 0} />
+                        <td key={COLONNES[i].nom} className={cn("px-4 py-3 text-center", TON[v], i === 0 && FOND_ESSAI)}>
+                          {v}
+                        </td>
                       ))}
                     </tr>
                   ))}

@@ -57,12 +57,17 @@ const DOMAINES = new Set(
   obligationsConformite.filter((o) => !AUDIT.includes(o)).map((o) => o.domaine),
 ).size;
 
+/** Les composants de la page qui annoncent le compte suivi. Ajouter ou
+ *  retirer une section qui l'annonce, c'est ajouter ou retirer une ligne ici :
+ *  le plancher d'annonces et la vérification de `page.tsx` en découlent. */
+const ANNONCEURS = [{ nom: "Cadran", composant: Cadran }];
+
 /** Le texte que la page publique rend, avec les chiffres que la page calcule. */
 function texteRendu(): string {
   const chiffres = chiffresReferentielSuivi();
-  return (
-    renderToStaticMarkup(createElement(Cadran, { chiffres }))
-  );
+  return ANNONCEURS.map(({ composant }) =>
+    renderToStaticMarkup(createElement(composant, { chiffres })),
+  ).join("");
 }
 
 /** Les composants de la page publique, sans les tests. */
@@ -126,9 +131,8 @@ describe("les chiffres de la page publique", () => {
 
   it("le texte rendu annonce le nombre d'obligations suivies au quotidien", () => {
     const annonces = comptesAnnonces(texteRendu(), /obligations?/);
-    // Le cadran l'annonce (la note de provenance est partie avec « Une prise
-    // en main rapide », 2026-11-06) : au moins une annonce, et toutes justes.
-    expect(annonces.length).toBeGreaterThanOrEqual(1);
+    // Chaque annonceur l'annonce au moins une fois, et toutes sont justes.
+    expect(annonces.length).toBeGreaterThanOrEqual(ANNONCEURS.length);
     expect(
       annonces.filter((n) => n !== OBLIGATIONS),
       `La page d'accueil est publique et annonce un nombre d'obligations qui n'est pas celui que Rojer suit au quotidien (${OBLIGATIONS} = référentiel − niveau audit). Corrigez le calcul — ne relâchez pas ce test.`,
@@ -137,7 +141,7 @@ describe("les chiffres de la page publique", () => {
 
   it("le texte rendu annonce le nombre de domaines suivis", () => {
     const annonces = comptesAnnonces(texteRendu(), /domaines?/);
-    expect(annonces.length).toBeGreaterThanOrEqual(1);
+    expect(annonces.length).toBeGreaterThanOrEqual(ANNONCEURS.length);
     expect(annonces.filter((n) => n !== DOMAINES)).toEqual([]);
   });
 
@@ -161,6 +165,8 @@ describe("les chiffres de la page publique", () => {
     // qu'elles viennent du calcul et non d'un littéral.
     const page = readFileSync(join(DOSSIER, "../../app/page.tsx"), "utf8");
     expect(page).toMatch(/const chiffres = chiffresReferentielSuivi\(\);/);
-    expect(page).toMatch(/<Cadran chiffres=\{chiffres\} \/>/);
+    for (const { nom } of ANNONCEURS) {
+      expect(page).toMatch(new RegExp(`<${nom}[^>]*chiffres=\\{chiffres\\}`));
+    }
   });
 });

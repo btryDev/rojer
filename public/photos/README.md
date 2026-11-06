@@ -1,51 +1,29 @@
 # Photos de la page publique
 
-Les photos vivent ici. Chacune est référencée par une constante `PHOTO_*`
-en tête du composant qui l'affiche (`Hero.tsx`, `Manifeste.tsx`
-dans `src/components/landing/`). Déposer un fichier ici ne
-l'affiche pas — il faut changer la constante (chemin + texte alternatif).
+Chaque photo est référencée par une constante `PHOTO_*` en tête du composant
+qui l'affiche, dans `src/components/landing/`. Déposer un fichier ici ne
+l'affiche pas : il faut changer la constante (chemin et texte alternatif).
+Tout ce qui est ici part dans chaque déploiement — une photo qui ne sert pas
+va dans `docs/illustrations/photos-reserve/`.
 
 ## Ce qui est en place
 
-| Fichier               | Emplacement            | Cadrage      |
-| --------------------- | ---------------------- | ------------ |
-| `hero-restaurateur.jpg` | Hero, pleine largeur | 16/9 paysage |
-| `manifeste-boulangere.jpg` | « Concentrez-vous », gauche | 4/5 vertical |
+| Fichier | Emplacement | Cadrage | Constante |
+| --- | --- | --- | --- |
+| `hero-restaurateur.jpg` | Hero, bord à bord | 16/9 paysage | `PHOTO_HERO` (`Hero.tsx`) |
+| `manifeste-boulangere.jpg` | « Concentrez-vous », gauche | 4/5 vertical | `PHOTO_MANIFESTE` (`Manifeste.tsx`) |
 
-[2026-11-06 : `hero-terrain.jpg` (Pexels 8986129, un garagiste) remplacée
-par `hero-restauratrice.jpg` et supprimée — le garagiste ne parlait pas à la
-cible.]
+**Origine** : générées avec Krea le 2026-11-06 (Krea 2 Large ; le
+restaurateur est une retouche Nano Banana Pro de la restauratrice, même
+scène). Direction photo : `docs/marketing/direction-photo.md` (branche
+`docs/communication`). `manifeste-boulangere.jpg` fait 928 px de large :
+**à agrandir** avant la mise en ligne.
 
-Origine de `hero-restauratrice.jpg` : générée avec Krea le 2026-11-06
-(Krea 2 Large), réchauffée d'un cran par étalonnage, peau des bras
-retouchée (Nano Banana Pro), 2 400 px de large. `hero-restaurateur.jpg` en
-est la retouche avec un homme (Nano Banana Pro, même scène), c'est elle qui
-est affichée. La version avec une femme est gardée hors de `public/`, pour
-ne pas partir dans chaque déploiement :
-`docs/illustrations/photos-reserve/hero-restauratrice.jpg`.
+**Licence à confirmer** avant la mise en ligne publique : vérifier les
+conditions d'usage commercial du plan Krea et les écrire ici.
 
-Origine de `manifeste-boulangere.jpg` : générée avec Krea le 2026-11-06
-(Krea 2 Large), 928 px de large — **à agrandir** avant la mise en ligne.
-Référencée par `PHOTO_MANIFESTE` en tête de
-`src/components/landing/Manifeste.tsx`. Direction photo :
-`docs/marketing/direction-photo.md` (branche `docs/communication`).
-**Licence à confirmer** pour les photos générées avec Krea (restaurateur,
-restauratrice, boulangère) avant la mise en ligne
-publique : vérifier les conditions d'usage commercial du plan Krea et les
-écrire ici.
-
-[2026-11-06 : `etapes-atelier.jpg` (Pexels 6790046) supprimée avec la
-section « Une prise en main rapide ».]
-
-~~Origine de `guide-ordinateur.jpg` : [Pexels 3874620](https://www.pexels.com/photo/young-businesswoman-working-remotely-with-laptop-in-cafe-during-daytime-3874620/),
-photo de Gustavo Fring, licence Pexels. Référencée par le guide de mise en
-place du tableau de bord (`src/components/layout/OnboardingChecklist.tsx`),
-à droite de la carte, à partir de `md`.~~ [2026-10-25 : retirée avec le bandeau du guide, devenu une fenêtre
-ouverte depuis la fiche du hero.]
-
-`hero-cuisine.jpg` n'est plus référencé : la bande « Sur le terrain » qui
-l'accueillait a été fusionnée dans la section noire. Le fichier reste ici,
-disponible pour un futur emplacement.
+**En réserve** (`docs/illustrations/photos-reserve/`) : `hero-restauratrice.jpg`
+(la même scène avec une femme) et `hero-cuisine.jpg` (Pexels).
 
 ## Emplacements prêts à recevoir une photo
 
@@ -71,6 +49,3 @@ Aucun n'est obligatoire : la page tient debout sans eux.
   studio — la charte est claire et calme, les photos doivent l'être aussi.
 - **Texte alternatif** : décrire ce qu'on voit, pas ce qu'on vend. « Deux
   cuisiniers au passe », pas « la sérénité au travail ».
-
-
-~~`hero-en-place.jpg`~~ [2026-10-25 : retirée avec l'en-tête photo de « Ce qui doit être en place », remplacé par l'en-tête illustré commun (`src/components/entete-page`).]

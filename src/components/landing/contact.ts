@@ -3,8 +3,9 @@
  * route accompagnée).
  *
  * ⚠︎ À confirmer avant la mise en ligne : c'est l'adresse du compte, pas
- * forcément celle qu'on veut exposer publiquement. Un seul endroit à
- * changer si elle bouge.
+ * forcément celle qu'on veut exposer publiquement. La même adresse est le
+ * point d'entrée RGPD (`docs/rgpd.md`) : si elle change, vérifier si celle-ci
+ * suit.
  */
 export const CONTACT = "contact@btry.fr";
 
