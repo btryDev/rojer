@@ -42,7 +42,7 @@ export async function deposerPhotoEtablissement(
   formData: FormData,
 ): Promise<ResultatPhoto> {
   await verifierSaisie();
-  const { db, etablissement } = await requireEtablissement(etablissementId);
+  const { compte, db, etablissement } = await requireEtablissement(etablissementId);
   const fichier = formData.get("photo");
   if (!(fichier instanceof File) || fichier.size === 0) {
     return { status: "error", message: "Aucune photo sélectionnée." };
@@ -55,7 +55,7 @@ export async function deposerPhotoEtablissement(
   const cle = clePhotoEtablissement(etablissement.id, fichier.name);
   try {
     // Le plafond de stockage de la formule (ADR-053 § 14), avant d'écrire.
-    const refus = await deposerFichier(cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
+    const refus = await deposerFichier(db, compte.compteId, cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
     if (refus) return { status: "error", message: refus };
   } catch (e) {
     console.error(`[etablissements/photo] écriture impossible (${cle})`, e);

@@ -370,13 +370,21 @@ export async function motifDuGel(
 
 /**
  * Le refus d'un dépôt de `ajout` octets au-delà du plafond de stockage de la
- * formule (Go, ADR-053 § 14), ou `null`. `utilises` : ce que le compte occupe
- * déjà (`abonnements/stockage.ts`). Rien avant le lancement de l'offre.
+ * formule (Go, ADR-053 § 14), ou `null` ; sous le verrou du compte s'il y a
+ * un plafond. `utilises` : ce que le compte occupe déjà (`stockage.ts`), lu
+ * après le verrou.
  */
-export async function refusStockage(db: Db, compteId: string, utilises: () => Promise<number>, ajout: number): Promise<string | null> {
-  if (!lancee()) return null;
-  const { regime } = await abonnementDesPlafonds(db, compteId);
+export async function refusStockage(
+  tx: Lecteur,
+  compteId: string,
+  utilises: () => Promise<number>,
+  ajout: number,
+  /** La transaction où prendre le verrou ; sans elle, une lecture pour l'annoncer. */
+  verrou?: Prisma.TransactionClient,
+): Promise<string | null> {
+  const { regime } = await abonnementDesPlafonds(tx, compteId);
   const plafond = plafondDe(regime, "stockageGo");
-  if (plafond === null || (await utilises()) + ajout <= plafond * 1e9) return null;
-  return motifDuRefus(regime, "stockageGo");
+  if (plafond === null) return null;
+  if (verrou) await verrouillerLeCompte(verrou, compteId);
+  return (await utilises()) + ajout <= plafond * 1e9 ? null : motifDuRefus(regime, "stockageGo");
 }

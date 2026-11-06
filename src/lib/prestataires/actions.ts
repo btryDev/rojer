@@ -1,5 +1,6 @@
 "use server";
 
+import type { Db } from "@/lib/auth/compte";
 import { deposerFichier } from "@/lib/abonnements/stockage";
 import { creerEnLotVerifie } from "@/lib/auth/portee/lot-verifie";
 import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
@@ -93,6 +94,8 @@ type ColonnePiece =
  * l'appelant n'écrit rien en base.
  */
 async function deposerPieces(
+  db: Db,
+  compteId: string,
   etablissementId: string,
   prestataireId: string,
   formData: FormData,
@@ -117,7 +120,7 @@ async function deposerPieces(
       // d'écriture rend un message métier sur le champ.
       try {
         // Le plafond de stockage de la formule (ADR-053 § 14), avant d'écrire.
-        const refus = await deposerFichier(cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
+        const refus = await deposerFichier(db, compteId, cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
         if (refus) erreur = refus;
         else {
           cles.push(cle);
@@ -189,7 +192,7 @@ export async function creerPrestataire(
   if (auPlafond) return { status: "error", message: auPlafond };
 
   const prestataireId = `pre_${randomUUID()}`;
-  const depot = await deposerPieces(etablissementId, prestataireId, formData);
+  const depot = await deposerPieces(db, compte.compteId, etablissementId, prestataireId, formData);
   if (!depot.ok) {
     return {
       status: "error",
@@ -263,7 +266,7 @@ export async function modifierPrestataire(
   formData: FormData,
 ): Promise<PrestataireActionState> {
   await verifierSaisie();
-  const { db } = await assertEtablissementDuCompte(etablissementId);
+  const { compte, db } = await assertEtablissementDuCompte(etablissementId);
 
   const existant = await db.prestataire.findFirst({
     where: { id: prestataireId, etablissementId },
@@ -292,7 +295,7 @@ export async function modifierPrestataire(
     };
   }
 
-  const depot = await deposerPieces(etablissementId, existant.id, formData);
+  const depot = await deposerPieces(db, compte.compteId, etablissementId, existant.id, formData);
   if (!depot.ok) {
     return {
       status: "error",

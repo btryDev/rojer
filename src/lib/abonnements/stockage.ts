@@ -1,72 +1,89 @@
 import "server-only";
 // Le plafond de stockage des formules (ADR-053 § 14) : la taille des fichiers
-// que le compte référence encore. Chaque dépôt passe par `deposerFichier`
-// (garde : `quotas-garde.test.ts`), qui refuse au plafond AVANT d'écrire,
-// dépose, puis enregistre la taille (`FichierStocke`). Un fichier retiré
-// cesse de compter : seules les clés encore référencées sont sommées.
+// que le compte référence encore, plus ses dépôts en cours. Chaque dépôt
+// passe par `deposerFichier` (garde : `quotas-garde.test.ts`) : SOUS LE
+// VERROU DU COMPTE, refus au plafond ou réservation de la taille
+// (`FichierStocke`) ; puis le dépôt ; un dépôt qui échoue rend sa
+// réservation. Un fichier retiré cesse de compter : seules les clés encore
+// référencées sont sommées, avec les réservations récentes (un dépôt dont la
+// ligne n'est pas encore écrite).
 
-import { getOptionalCompte, requireCompte, type Db } from "@/lib/auth/compte";
+import type { Prisma } from "@prisma/client";
+import type { Db } from "@/lib/auth/compte";
+import { CLES_STOCKEES } from "@/lib/suppression/fichiers";
 import { getStorage } from "@/lib/storage";
 import { refusStockage } from "./quotas";
 import { contexteDroits, offreLancee } from "./lancement";
 
-/** Les champs qui portent une clé de fichier, par modèle. */
-export const CHAMPS_FICHIERS = {
-  etablissement: ["photoCle"],
-  rapportVerification: ["fichierCle"],
-  action: ["leveeFichierCle"],
-  prestataire: ["attestationUrssafCle", "assuranceRcProCle", "kbisCle"],
-  piecePrestataire: ["fichierCle"],
-  registreAccessibilite: ["attestationCle", "agendaAdapCle", "attestationFormationCle"],
-  analyseLegionelle: ["rapportCle"],
-} as const;
+type Lecteur = Db | Prisma.TransactionClient;
+type Delegue = { findMany(a: object): Promise<Record<string, string | null>[]> };
 
-type Lecteur = { findMany(a: object): Promise<Record<string, string | null>[]> };
+/** Le temps pendant lequel une réservation compte sans être encore référencée. */
+const DUREE_D_UNE_RESERVATION_MS = 15 * 60_000;
 
 /** Les clés de fichiers que le compte référence (client borné au compte). */
-export async function clesDeFichiers(db: Db): Promise<string[]> {
+export async function clesDeFichiers(db: Lecteur): Promise<string[]> {
   const lots = await Promise.all(
-    Object.entries(CHAMPS_FICHIERS).map(async ([modele, champs]) => {
-      const lignes = await (db as unknown as Record<string, Lecteur>)[modele].findMany({
-        where: { OR: champs.map((c) => ({ [c]: { not: null } })) },
-        select: Object.fromEntries(champs.map((c) => [c, true])),
-      });
+    Object.entries(CLES_STOCKEES).map(async ([modele, champs]) => {
+      const delegue = (db as unknown as Record<string, Delegue>)[modele.charAt(0).toLowerCase() + modele.slice(1)];
+      // Aucun filtre « non nul » : une colonne obligatoire le refuserait.
+      const lignes = await delegue.findMany({ select: Object.fromEntries(champs.map((c) => [c, true])) });
       return lignes.flatMap((l) => champs.map((c) => l[c]).filter((v): v is string => typeof v === "string"));
     }),
   );
   return [...new Set(lots.flat())];
 }
 
-/** Les octets que le compte occupe : les tailles connues des fichiers qu'il référence. */
-export async function octetsUtilises(db: Db): Promise<number> {
+/**
+ * Les octets que le compte occupe : les fichiers qu'il référence, et ses
+ * réservations récentes. La somme en SQL, en entier long : au-delà de 2 Go,
+ * un entier simple déborde. `compteId` : celui de la portée.
+ */
+export async function octetsUtilises(db: Lecteur, compteId: string, maintenant = new Date()): Promise<number> {
   const cles = await clesDeFichiers(db);
-  if (cles.length === 0) return 0;
-  const { _sum } = await db.fichierStocke.aggregate({ where: { cle: { in: cles } }, _sum: { octets: true } });
-  return _sum.octets ?? 0;
+  const depuis = new Date(maintenant.getTime() - DUREE_D_UNE_RESERVATION_MS);
+  const [{ total }] = await db.$queryRaw<{ total: bigint }[]>`
+    SELECT COALESCE(SUM("octets"), 0)::bigint AS total FROM "FichierStocke"
+    WHERE "compteId" = ${compteId}::uuid AND ("cle" = ANY(${cles}::text[]) OR "deposeLe" > ${depuis})`;
+  return Number(total);
 }
 
 /**
- * Déposer un fichier pour le compte de la session : le refus au plafond
- * (rendu, rien n'est écrit), sinon le dépôt — qui peut lever, comme
- * `put` —, puis sa taille enregistrée. Un échec de cet enregistrement ne
- * défait pas le dépôt : le fichier ne compte pas, au bénéfice du client.
+ * Déposer un fichier pour un compte (`db` : son client borné, `compteId` :
+ * celui de la portée). Offre lancée : refus au plafond (rendu, rien
+ * d'écrit) ou réservation, sous le verrou du compte, puis le dépôt — qui
+ * peut lever, comme `put`, et rend alors sa réservation. Avant le lancement :
+ * le dépôt, puis la taille enregistrée.
  */
-export async function deposerFichier(cle: string, data: Buffer, mime: string): Promise<string | null> {
-  // Offre lancée : la session est exigée, le plafond s'applique. Avant : la
-  // taille s'enregistre si la session se lit, sans rien exiger (la reprise,
-  // `scripts/reprendre-tailles-fichiers.ts`, rattrape le reste).
-  const c = offreLancee(contexteDroits()) ? await requireCompte() : await getOptionalCompte().catch(() => null);
-  if (c) {
-    const refus = await refusStockage(c.db, c.compte.compteId, () => octetsUtilises(c.db), data.length);
-    if (refus) return refus;
+export async function deposerFichier(db: Db, compteId: string, cle: string, data: Buffer, mime: string): Promise<string | null> {
+  const ligne = { cle, compteId, octets: data.length };
+  if (!offreLancee(contexteDroits())) {
+    await getStorage().put(cle, data, mime);
+    // Un échec ne défait pas le dépôt : le fichier ne compte pas, au bénéfice
+    // du client, jusqu'à la reprise (`scripts/reprendre-tailles-fichiers.ts`).
+    await Promise.resolve()
+      .then(() => db.fichierStocke.upsert({ where: { cle }, create: ligne, update: { octets: data.length } }))
+      .catch((e: unknown) => console.error(`[stockage] taille non enregistrée (${cle})`, e instanceof Error ? e.message : e));
+    return null;
   }
-  await getStorage().put(cle, data, mime);
-  await c?.db.fichierStocke
-    .upsert({
-      where: { cle },
-      create: { cle, compteId: c.compte.compteId, octets: data.length },
-      update: { octets: data.length },
-    })
-    .catch((e: unknown) => console.error(`[stockage] taille non enregistrée (${cle})`, e instanceof Error ? e.message : e));
+  const refus = await db.$transaction(async (tx) => {
+    const motif = await refusStockage(tx, compteId, () => octetsUtilises(tx, compteId), data.length, tx);
+    if (motif) return motif;
+    await tx.fichierStocke.upsert({ where: { cle }, create: ligne, update: { octets: data.length, deposeLe: new Date() } });
+    return null;
+  });
+  if (refus) return refus;
+  try {
+    await getStorage().put(cle, data, mime);
+  } catch (e) {
+    await db.fichierStocke.deleteMany({ where: { cle } }).catch(() => {});
+    throw e;
+  }
   return null;
+}
+
+/** Le stockage plein, pour l'annoncer dès l'ouverture d'un formulaire qui dépose (lot D). */
+export async function stockagePlein(db: Db, compteId: string): Promise<string | null> {
+  if (!offreLancee(contexteDroits())) return null;
+  return refusStockage(db, compteId, () => octetsUtilises(db, compteId), 1);
 }

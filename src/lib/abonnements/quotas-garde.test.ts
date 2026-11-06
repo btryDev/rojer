@@ -197,7 +197,10 @@ describe("plafonds : une seule porte (ADR-053 § 14)", () => {
       .filter(([f, t]) => !f.startsWith("src/lib/storage/") && /\b(?:getStorage\(\)|storage)\s*\.\s*put\(/.test(t.code))
       .map(([f]) => f);
     expect(deposent).toEqual(["src/lib/abonnements/stockage.ts"]);
-    expect(TEXTES.get("src/lib/abonnements/stockage.ts")!.code).toMatch(/refusStockage\([^;]*\);\s*if \(refus\) return refus;\s*\}\s*await getStorage\(\)\.put\(/);
+    // Offre lancée : refus ou réservation sous le verrou, AVANT le dépôt.
+    expect(TEXTES.get("src/lib/abonnements/stockage.ts")!.code).toMatch(
+      /refusStockage\(tx, compteId, [^;]*, tx\);\s*if \(motif\) return motif;\s*await tx\.fichierStocke\.upsert\([\s\S]*?if \(refus\) return refus;\s*try \{\s*await getStorage\(\)\.put\(/,
+    );
   });
 
   it("les utilisateurs : les deux limites du plugin lisent le plafond", () => {
