@@ -1,3 +1,4 @@
+import { aDejaPaye } from "@/lib/abonnements/validation";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { construireDossierConformiteData } from "@/lib/pdf/builders";
 import { DossierConformiteDocument } from "@/lib/pdf/DossierConformiteDocument";
@@ -19,13 +20,14 @@ export async function GET(
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
-  const { db } = await requireEtablissement(id);
+  const { compte, db } = await requireEtablissement(id);
 
   const data = await construireDossierConformiteData(db, id);
   if (!data) return new Response("Établissement introuvable", { status: 404 });
 
   return reponsePdf(
-    DossierConformiteDocument({ data }),
+    // Sans abonnement payé, un aperçu marqué « Projet – non validé » (ADR-053 § 15).
+    DossierConformiteDocument({ data, projet: !(await aDejaPaye(db, compte.compteId)) }),
     `Dossier_conformite_${slugifyFilename(data.etablissement)}.pdf`,
   );
 }

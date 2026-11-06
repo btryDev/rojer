@@ -1,3 +1,4 @@
+import { exigerUnPaiement } from "@/lib/abonnements/validation";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { construireRegistreData } from "@/lib/pdf/builders";
 import { RegistreDocument } from "@/lib/pdf/RegistreDocument";
@@ -16,7 +17,10 @@ export async function GET(
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
-  const { db, compte } = await requireEtablissement(id);
+  const { compte, db } = await requireEtablissement(id);
+  // Le registre consolidé demande d'avoir payé (ADR-053 § 15) ; un ancien
+  // abonné le garde, une fois l'abonnement fini.
+  await exigerUnPaiement(db, compte.compteId);
 
   const data = await construireRegistreData({ compte, db }, id);
   if (!data) return new Response("Établissement introuvable", { status: 404 });

@@ -1,3 +1,4 @@
+import { PlafondDeCreation } from "@/components/quotas/PlafondDeCreation";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
@@ -76,7 +77,10 @@ export default async function UnitesPage({
         )}
 
         <div className="border-t border-[color:var(--board-slate-line)]">
-          <AjouterUniteForm duerpId={id} />
+          {/* La limite d'unités de l'essai, annoncée avant la saisie (ADR-053 § 14). */}
+          <PlafondDeCreation cle="unitesTravail" className="mx-6 mt-4">
+            <AjouterUniteForm duerpId={id} />
+          </PlafondDeCreation>
         </div>
       </section>
 

@@ -1,11 +1,13 @@
 "use server";
 
+import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
+import { deposerFichier, rendreReservations } from "@/lib/abonnements/stockage";
 import { revalidatePath } from "next/cache";
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { obligationDeclarable } from "./garde";
 import { preparerUnDepot, retirerLeFichierEnCours } from "./pieces";
 import { annexeDeLaLigne } from "@/lib/registre/annexes";
-import { clePieceEtatPermanent, getStorage, stockageEnService } from "@/lib/storage";
+import { clePieceEtatPermanent, stockageEnService } from "@/lib/storage";
 import {
   MESSAGE_DEPOT_NON_CONFIGURE,
   MESSAGE_ECHEC_ENREGISTREMENT,
@@ -113,6 +115,7 @@ export async function retirerDeclaration(
   obligationId: string,
 ): Promise<DeclarationActionState> {
   await verifierSaisie();
+  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   const { db } = await assertEtablissementDuCompte(etablissementId);
 
   // `deleteMany` et non `delete` : décocher une ligne jamais déclarée ne doit
@@ -176,7 +179,7 @@ export async function deposerFichierEnPlace(
   formData: FormData,
 ): Promise<DeclarationActionState> {
   await verifierSaisie();
-  const { db } = await assertEtablissementDuCompte(etablissementId);
+  const { compte, db } = await assertEtablissementDuCompte(etablissementId);
 
   const garde = await obligationDeclarable(db, etablissementId, obligationId);
   if (garde.statut !== true || !annexeDeLaLigne(obligationId, garde.projete)) {
@@ -204,7 +207,9 @@ export async function deposerFichierEnPlace(
 
   const cle = clePieceEtatPermanent(etablissementId, obligationId, fichier.name);
   try {
-    await getStorage().put(cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
+    // Le plafond de stockage de la formule (ADR-053 § 14), avant d'écrire.
+    const refus = await deposerFichier(db, compte.compteId, cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
+    if (refus) return { status: "error", message: refus };
   } catch (e) {
     console.error(`[etats-permanents/depot] écriture du fichier impossible (${cle})`, e);
     return { status: "error", message: MESSAGE_ECHEC_ENREGISTREMENT };
@@ -238,6 +243,7 @@ export async function deposerFichierEnPlace(
     // refuse le second, dont le fichier ne serait plus référencé.
     console.error(`[etats-permanents/depot] enregistrement refusé (${cle})`, e);
     await libererFichiers([cle], "etats-permanents/depot-refuse");
+    await rendreReservations(db, [cle]);
     return { status: "error", message: MESSAGE_ECHEC_ENREGISTREMENT };
   }
   await libererFichiers(aLiberer, "etats-permanents/depot");

@@ -44,6 +44,9 @@ const h = vi.hoisted(() => {
     permisFeu: deplacement("permisFeu"),
     planPrevention: deplacement("planPrevention"),
     batiment: {
+      // La création passe par la porte des plafonds, dans une transaction
+      // (ADR-053 § 14) : la même que hors transaction.
+      create: (args: { data: { ordre: number } }) => prisma.batiment.create(args),
       update: async (args: unknown) => {
         db.appels.push({ table: "batiment.update", args });
         return {};
@@ -85,7 +88,11 @@ vi.mock("@/lib/auth/scope", () => ({
   // simulé ; elle passe par la simulation d'origine, refus compris.
   assertEtablissementDuCompte: async (id: string) => {
     await (h.assertEtablissementOwnership as (x: string) => Promise<unknown>)(id);
-    return { user: await h.requireUser(), db: await (await import("@/test/garde-simulee")).clientDuCompteSimule() };
+    return {
+      user: await h.requireUser(),
+      compte: { compteId: "user-1", role: "owner" },
+      db: await (await import("@/test/garde-simulee")).clientDuCompteSimule(),
+    };
   },
 }));
 

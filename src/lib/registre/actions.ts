@@ -13,6 +13,7 @@ import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { saisiePourSection } from "./champs";
 import { schemaDeLaFiche, type LigneJournal } from "./schema";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
+import { refuserSiGele } from "@/lib/abonnements/gel-saisie";
 
 export type EtatFiche =
   | { status: "idle" }
@@ -65,6 +66,8 @@ async function preparer(
   fd: FormData,
 ): Promise<Prepare> {
   const { db } = await assertEtablissementDuCompte(etablissementId);
+  // Le SQL brut échappe au gel du client borné (ADR-053 § 14).
+  await refuserSiGele(etablissementId);
 
   // `sectionId` vient du client. Il ne devient une fiche que s'il désigne une
   // question du catalogue — sinon la table se remplirait de sections

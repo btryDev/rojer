@@ -77,6 +77,9 @@ export function PanneauModal({
       // Repère des raccourcis clavier d'un écran sous-jacent (RevueEnPlace) :
       // une touche frappée dans le panneau ne leur appartient pas.
       data-panneau-modal=""
+      // Un panneau sort de la page dans le DOM, pas pour la saisie fermée
+      // (`VerrouDeLaPage`, ADR-053 § 14) : ses formulaires restent couverts.
+      data-portail-saisie=""
       aria-labelledby={titreId}
       // Au-dessus des autres couches fixes (revue « en place », z-50) : un
       // panneau s'ouvre souvent depuis l'une d'elles.

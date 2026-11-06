@@ -113,6 +113,7 @@ vi.mock("next/cache", () => ({ revalidatePath: h.revalidatePath }));
 vi.mock("@/lib/auth/scope", () => ({
   assertEtablissementDuCompte: vi.fn(async () => ({
     user: { id: "user-1" },
+    compte: { compteId: "compte-1" },
     db: await (await import("@/test/garde-simulee")).clientDuCompteSimule(),
   })),
 }));
@@ -127,6 +128,16 @@ vi.mock("@/lib/storage", () => ({
       h.etat.stockage.effaces.push(cle);
     },
   }),
+}));
+
+// Le plafond de stockage (ADR-053 § 14, cc) : sa porte dépose ; le plafond
+// lui-même est éprouvé par `abonnements/stockage.test.ts`.
+vi.mock("@/lib/abonnements/stockage", () => ({
+  deposerFichier: async (_db: unknown, _compteId: string, cle: string) => {
+    h.etat.stockage.ecrits.push(cle);
+    return null;
+  },
+  rendreReservations: async () => {},
 }));
 
 const { deposerFichierEnPlace, retirerDeclaration } = await import("./actions");

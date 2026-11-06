@@ -47,6 +47,7 @@ function table(lignes: Ligne[]) {
       lignes.filter((l) => correspond(l, where)).length,
     ),
     create: vi.fn(async ({ data }: { data: Ligne }) => data),
+    createMany: vi.fn(async ({ data }: { data: Ligne[] }) => ({ count: data.length })),
     update: vi.fn(),
     delete: vi.fn(),
   };
@@ -85,6 +86,7 @@ vi.mock("@/lib/auth/scope", () => ({
   // La même garde, qui rend aussi le client borné (ADR-051) : ici, le client simulé.
   assertEtablissementDuCompte: vi.fn(async () => ({
     user: { id: "user-1" },
+    compte: { compteId: "user-1", role: "owner" },
     db: await (await import("@/test/garde-simulee")).clientDuCompteSimule(),
   })),
 }));
@@ -119,6 +121,7 @@ function estNotFound(e: unknown): boolean {
 
 function aucuneEcriture(): void {
   for (const modele of Object.values(prismaMock)) {
+    if (typeof modele === "function") continue; // `$transaction`
     expect(modele.create).not.toHaveBeenCalled();
     expect(modele.update).not.toHaveBeenCalled();
     expect(modele.delete).not.toHaveBeenCalled();
@@ -134,6 +137,9 @@ beforeEach(() => {
   prismaMock.registreAccessibilite = table([]);
   prismaMock.duerpVersion = table([]);
   prismaMock.accessToken = table([]);
+  // L'émission passe par la porte des plafonds (ADR-053 § 14) : une transaction, et le journal.
+  prismaMock.consommationQuota = table([]);
+  (prismaMock as Record<string, unknown>).$transaction = async (fn: (tx: unknown) => Promise<unknown>) => fn(prismaMock);
   prismaMock.etablissement = table([
     {
       id: "etab-a-moi",

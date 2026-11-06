@@ -12,7 +12,8 @@ import "server-only";
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { getOptionalUser, requireUser } from "./require-user";
-import { clientBorne } from "./portee/client";
+import { clientBorne, type ClientBorne } from "./portee/client";
+import { gelesDuCompte } from "@/lib/abonnements/quotas";
 import { appartenanceDeLaSession, compteDOnboarding, invitationsPourAdresse, type Appartenance } from "./membres";
 
 /**
@@ -22,9 +23,15 @@ import { appartenanceDeLaSession, compteDOnboarding, invitationsPourAdresse, typ
  */
 const lireAppartenance = cache((userId: string): Promise<Appartenance | null> => appartenanceDeLaSession(userId));
 
-function portee(userId: string, a: Appartenance) {
-  return clientBorne({ type: "compte", compteId: a.compteId, userId, lectureSeule: a.role === "lecture" });
+/** Le client borné de la session, qui porte le gel du compte (ADR-053 § 14) — inutile en lecture seule. */
+async function portee(userId: string, a: Appartenance): Promise<ClientBorne> {
+  const p = { type: "compte" as const, compteId: a.compteId, userId, lectureSeule: a.role === "lecture" };
+  const db = clientBorne(p);
+  if (p.lectureSeule) return db;
+  const geles = await lireGeles(db, a.compteId);
+  return geles ? clientBorne({ ...p, geles }) : db;
 }
+const lireGeles = cache(gelesDuCompte);
 
 /**
  * Sans compte (personne inscrite sans établissement, membre retiré), renvoie
@@ -34,7 +41,7 @@ export async function requireCompte() {
   const user = await requireUser();
   const compte = await lireAppartenance(user.id);
   if (!compte) redirect("/onboarding");
-  return { user, compte, db: portee(user.id, compte) };
+  return { user, compte, db: await portee(user.id, compte) };
 }
 
 /** Variante sans redirection : `null` sans personne connectée ou sans compte. */
@@ -42,7 +49,7 @@ export async function getOptionalCompte() {
   const user = await getOptionalUser();
   if (!user) return null;
   const compte = await lireAppartenance(user.id);
-  return compte ? { user, compte, db: portee(user.id, compte) } : null;
+  return compte ? { user, compte, db: await portee(user.id, compte) } : null;
 }
 
 /**
@@ -55,7 +62,7 @@ export async function getOptionalCompte() {
 export async function requireCompteDOnboarding(nomSiNouveau = "Mon compte") {
   const user = await requireUser();
   const compte = (await lireAppartenance(user.id)) ?? (await compteDOnboarding(user.id, nomSiNouveau));
-  return { user, compte, db: portee(user.id, compte) };
+  return { user, compte, db: await portee(user.id, compte) };
 }
 
 /**

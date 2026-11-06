@@ -14,12 +14,14 @@ const h = vi.hoisted(() => ({
     leaveOrganization: vi.fn(async () => ({})),
     updateMemberRole: vi.fn(async () => ({})),
     setActiveOrganization: vi.fn(async () => ({})),
+    acceptInvitation: vi.fn(async () => ({})),
   },
   invitations: [{ id: "inv-a" }],
   comptes: [{ compteId: "compte-a" }, { compteId: "compte-b" }],
   consommer: vi.fn(async () => ({ ok: true })),
   envoi: true,
   annuler: vi.fn(async () => undefined),
+  motifPlafond: vi.fn(async () => "Votre formule Essentiel couvre 1 utilisateur : passez à Pro."),
 }));
 vi.mock("next/cache", () => ({ revalidatePath: () => undefined }));
 vi.mock("next/navigation", () => ({
@@ -28,8 +30,9 @@ vi.mock("next/navigation", () => ({
   },
 }));
 vi.mock("@/lib/abonnements/saisie", () => ({ verifierSaisie: async () => {} }));
+vi.mock("@/lib/abonnements/quotas", () => ({ motifPlafondMembres: h.motifPlafond }));
 vi.mock("@/lib/auth/compte", () => ({
-  requireCompte: async () => ({ user: { id: "u1" }, compte: h.compte }),
+  requireCompte: async () => ({ user: { id: "u1" }, compte: h.compte, db: "db-borne" }),
   getOptionalCompte: async () => ({ user: { id: "u1" }, compte: h.compte }),
 }));
 vi.mock("@/lib/auth/better-auth", () => ({ auth: { api: h.api } }));
@@ -109,6 +112,22 @@ describe("gestes réservés au propriétaire", () => {
     h.consommer.mockResolvedValueOnce({ ok: false, reessayerDansSecondes: 60 } as never);
     expect((await actions.inviterMembre(IDLE, fd({ email: "x@exemple.fr", role: "member" }))).status).toBe("error");
     expect(h.api.createInvitation).not.toHaveBeenCalled();
+  });
+});
+
+describe("plafond d'utilisateurs de la formule (ADR-053 § 14)", () => {
+  it("à l'invitation, le propriétaire lit le plafond de sa formule et la formule qui le lève", async () => {
+    h.api.createInvitation.mockRejectedValueOnce({ body: { code: "INVITATION_LIMIT_REACHED" } } as never);
+    const r = await actions.inviterMembre(IDLE, fd({ email: "x@exemple.fr", role: "member" }));
+    expect(r).toEqual({ status: "error", message: "Votre formule Essentiel couvre 1 utilisateur : passez à Pro." });
+    expect(h.motifPlafond).toHaveBeenCalledWith("db-borne", "compte-a");
+  });
+
+  it("à l'acceptation, la personne invitée apprend que le compte est plein, sans sa formule", async () => {
+    h.api.acceptInvitation.mockRejectedValueOnce({ body: { code: "ORGANIZATION_MEMBERSHIP_LIMIT_REACHED" } } as never);
+    const r = await actions.accepterInvitation(IDLE, fd({ invitationId: "inv-a" }));
+    expect(r).toMatchObject({ status: "error", message: expect.stringMatching(/^Ce compte a atteint le nombre d'utilisateurs de sa formule/) });
+    expect(h.motifPlafond).not.toHaveBeenCalled();
   });
 });
 

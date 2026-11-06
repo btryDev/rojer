@@ -608,6 +608,15 @@ est appliqué ; huit autres sont affichés sans l'être. Trous principaux :
   portail ne planifie une baisse en fin de période qu'entre prix d'un même
   produit, et ne sait pas la refuser (doc lue : `configure-portal`,
   `customer_portal/configurations/create`) ;
+- ~~utilisateurs non plafonnés (`inviterMembre`, `accepterInvitation`) ;~~ [2026-11-05, lot A `lot/quotas-a` : fait, ADR-053 § 14] ;
+- ~~formule inconnue = illimité (`quotas.ts`) ;~~ [2026-11-05, lot A `lot/quotas-a` : fait, ADR-053 § 14] ;
+- ~~compteurs annuels remis à zéro par suppression d'un brouillon ou d'un
+  établissement (cascade) ; pas de date de début d'abonnement ;~~ [2026-11-05, lot A `lot/quotas-a` : fait, ADR-053 § 14] — journal
+  `ConsommationQuota`, douze mois glissants : la date de début n'est plus nécessaire ;
+- ~~comptage hors verrou (deux onglets dépassent d'un) ;~~ [2026-11-05, lot A `lot/quotas-a` : fait, ADR-053 § 14] ; reste les
+  utilisateurs, comptés par le plugin hors verrou (limite acceptée, ADR-053 § 14) ;
+- la garde de saisie ne voit que les écritures Prisma reconnues par sa sonde
+  (un dépôt de fichier sans écriture Prisma passerait).
 - utilisateurs non plafonnés (`inviterMembre`, `accepterInvitation`) ;
 - formule inconnue = illimité (`quotas.ts`) ;
 - compteurs annuels remis à zéro par suppression d'un brouillon ou d'un
@@ -618,11 +627,18 @@ est appliqué ; huit autres sont affichés sans l'être. Trous principaux :
   la garde relève toute fonction exportée d'un module `"use server"`.]
 
 **Décisions de la propriétaire (2026-11-05)** :
-- **baisse de formule refusée** tant que le compte dépasse les plafonds de la
-  formule visée, **et expliquée** : l'écran dit quoi retirer. Le changement
+- ~~**baisse de formule refusée** tant que le compte dépasse les plafonds de la
+  formule visée, **et expliquée** : l'écran dit quoi retirer.~~ [2026-11-05,
+  tranché par la session « stripe » mandatée : baisse acceptée en fin de
+  période, excédent gelé ; refusée seulement pour les utilisateurs — ADR-053
+  § 14] Le changement
   de formule se fait donc dans Rojer, plus dans le portail (qui garde carte,
-  factures, résiliation) ; une montée prend effet tout de suite, une baisse
-  en fin de période payée ;
+  factures, résiliation) ; une montée prend effet tout de suite, ~~une baisse
+  en fin de période payée~~ [2026-11-05, confirmé par la propriétaire : une
+  baisse aussi, avec crédit au prorata — pas de planification par
+  « subscription schedule », et rien à recréer entre la demande et la bascule]
+  [2026-11-05, remplacé dans la soirée : baisse en fin de période payée, sans
+  crédit, excédent gelé — ADR-053 § 14] ;
 - **utilisateurs plafonnés : 1 en Essentiel, 5 en Pro**, invitations en
   attente comprises, vérifié à l'invitation et à l'acceptation ;
 - **permis de feu et plans de prévention plafonnés comme prévu** (10 et 5
@@ -636,10 +652,11 @@ est appliqué ; huit autres sont affichés sans l'être. Trous principaux :
   revenus) — le client règle la facture en retard au portail et reprend ; à
   confirmer au lancement. Le bac à sable résilie (testé : `past_due` puis
   `canceled` en 14 jours) ;
-- **saisie fermée annoncée dès l'ouverture d'un formulaire** (bouton
+- ~~**saisie fermée annoncée dès l'ouverture d'un formulaire** (bouton
   désactivé), au lieu d'un refus à l'envoi qui perd ce qui a été saisi —
   relevé au test ; même mécanisme d'affichage que le plafond atteint, à faire
-  au chantier « quotas ».
+  au chantier « quotas ».~~ [2026-11-05, lot D `lot/quotas-d` : fait,
+  `FermerLaSaisie`, ADR-053 § 14]
 
 **À réfléchir avec la propriétaire (2026-11-05), rien de tranché** :
 - **Essai et prix d'entrée.** Crainte : un essai gratuit avec tous les modules
@@ -654,6 +671,24 @@ est appliqué ; huit autres sont affichés sans l'être. Trous principaux :
   annoncé dès l'écran d'essai), et utiliser la réduction **à la conversion**
   (bandeau des 7 derniers jours : « premier mois à 15 € »). À confronter à
   5-10 dirigeants de la cible avant de figer.
+- [2026-11-06, tranché d'après la pratique courante — Docusign, Airtable,
+  Pennylane, Zendesk, et My DU, concurrent direct (1 mois) : **pas de « compte
+  en veille » à part**. Sans abonnement (fin d'essai, impayé définitif,
+  résiliation) : saisie fermée, lecture et export ouverts **pendant 12 mois**
+  après la fin de l'essai ou du dernier abonnement, puis suppression. Une
+  règle pour tous, cohérente avec les 12 mois du compte jamais payé.
+  E-mails : J-7 et J-1 avant la fin de l'essai ; J-30 et J-7 avant la
+  suppression, avec le lien d'export. Les CGU et ces e-mails disent que les
+  40 ans de conservation du DUERP incombent à l'employeur. « Valider =
+  s'abonner » protège la valeur : un compte jamais payé n'a pas de document
+  officiel à perdre. Reste à coder : la suppression à 12 mois et ses e-mails.
+  **Règle pour tout futur e-mail automatique** (rappels d'échéances, relances
+  des prestataires…) : réservé aux comptes qui paient ; il vérifie
+  l'abonnement avant chaque envoi, comme la saisie. Sans abonnement, seuls
+  partent ceux de Stripe sur le paiement, les rappels de fin d'essai et les
+  avertissements avant suppression. Le calendrier, lui, reste calculé et
+  lisible sans abonnement (lecture) ; les limites de l'essai (5 équipements)
+  le gardent incomplet, et il le dit.]
 - **Export pour un ancien client : sous un délai.** Aujourd'hui, un compte
   sans abonnement garde la lecture et l'export sans limite (ADR-053 § 3) :
   Rojer stockerait à vie. À poser : un délai d'export après la fin de
@@ -680,12 +715,14 @@ de l'offre tant que l'accès OAuth (ADR-013) n'existe pas.
 1. changement de formule dans Rojer (contrôle des plafonds, montée
    immédiate facturée, baisse planifiée) ; portail sans changement de
    formule ; formule inconnue fermée ; date de début d'abonnement recopiée ;
-2. une seule fonction `verifierQuota`, sous verrou de compte, journal
+2. ~~une seule fonction `verifierQuota`, sous verrou de compte, journal
    `ConsommationQuota`, et une garde qui relit le code : chaque création
-   d'un modèle plafonné (et chaque dépôt de fichier) passe par elle ;
-3. plafonds à la création : utilisateurs, prestataires, permis de feu, plans
-   de prévention, signatures, liens, import ;
-4. stockage (taille des fichiers à enregistrer, reprise de l'existant) ;
+   d'un modèle plafonné (et chaque dépôt de fichier) passe par elle ;~~ [2026-11-05, lot A `lot/quotas-a` : fait, ADR-053 § 14]
+   (`prendreQuota` ; le dépôt de fichier reste au lot du stockage) ;
+3. plafonds à la création : ~~utilisateurs, prestataires, permis de feu, plans
+   de prévention,~~ [2026-11-05, lot A `lot/quotas-a` : fait, ADR-053 § 14] ~~signatures, liens, import~~ [2026-11-05, lot C `lot/quotas-c`] ;
+4. ~~stockage (taille des fichiers à enregistrer, reprise de l'existant) ;~~
+   [2026-11-06, lot C2 `lot/quotas-c2` : fait, ADR-053 § 14] ;
 5. essai par SIREN ; conditions générales complétées (baisse, plafonds,
    date anniversaire).
 
@@ -727,6 +764,15 @@ nommaient Stripe ; « période en cours » affichée pour un abonnement résili�
 des conditions dans les informations publiques ; TVA — la facture de test est
 à 29 € sans taxe : Stripe Tax ou taux de TVA à régler avec l'expert-comptable
 (§ 6).
+
+**À faire — la facture du client** (demande de la propriétaire, 2026-11-06) :
+une facture conforme pour chaque paiement. Mentions de Rojer (raison sociale,
+SIREN, adresse, numéro de TVA, mentions légales B2B : pénalités de retard,
+indemnité forfaitaire de 40 €), TVA appliquée, raison sociale, adresse et
+numéro de TVA du client (déjà demandés au paiement), numérotation continue
+(Stripe), téléchargement depuis la page Abonnement de Rojer et pas seulement
+le portail, envoi par e-mail ; facture électronique obligatoire au
+1er septembre 2027 (plateforme agréée). À valider avec l'expert-comptable.
 
 ## Sources lues
 

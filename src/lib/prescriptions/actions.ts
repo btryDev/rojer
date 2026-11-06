@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import type { Prisma } from "@prisma/client";
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
@@ -11,6 +12,7 @@ import { chargerLignesViseesDuCompte } from "./lecture-preuves";
 import { raisonDuRefus } from "./refus-suppression";
 import { estPrescriptionLevee } from "@/lib/matching/prescriptions";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
+import { creerSousPlafond } from "@/lib/abonnements/quotas";
 
 /**
  * Prescriptions particulières (ADR-035) — création, levée, suppression.
@@ -41,7 +43,7 @@ export async function creerPrescription(
   formData: FormData,
 ): Promise<PrescriptionActionState> {
   await verifierSaisie();
-  const { db } = await assertEtablissementDuCompte(etablissementId);
+  const { compte, db } = await assertEtablissementDuCompte(etablissementId);
 
   const parsed = validerPrescription(normaliser(formData));
   if (!parsed.success) {
@@ -96,10 +98,12 @@ export async function creerPrescription(
           categorieEquipement: d.categorieEquipement ?? null,
         };
 
-  const p = await db.prescriptionParticuliere.create({
-    data,
-    select: { id: true },
-  });
+  // Limite de prescriptions de l'essai gratuit (ADR-053 § 14).
+  const creation = await creerSousPlafond(db, compte.compteId, "prescriptions", (tx) =>
+    tx.prescriptionParticuliere.create({ data, select: { id: true } }),
+  );
+  if (!creation.ok) return { status: "error", message: creation.motif };
+  const p = creation.valeur;
 
   await regenererApresMutation(etablissementId, "prescriptions");
   revalidatePath(`/etablissements/${etablissementId}/prescriptions`);
@@ -202,6 +206,7 @@ export async function supprimerPrescription(
   prescriptionId: string,
 ): Promise<PrescriptionActionState> {
   await verifierSaisie();
+  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   const { db } = await assertEtablissementDuCompte(etablissementId);
 
   // (Une garde « prescription levée » a vécu ici quelques heures, le

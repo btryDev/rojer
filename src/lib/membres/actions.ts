@@ -12,6 +12,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
+import { motifPlafondMembres } from "@/lib/abonnements/quotas";
 import { getOptionalCompte, requireCompte } from "@/lib/auth/compte";
 import { annulerInvitationsEnAttenteDe, comptesDeLaPersonne, invitationsDuCompte } from "@/lib/auth/membres";
 import { auth } from "@/lib/auth/better-auth";
@@ -34,10 +35,10 @@ const REFUS_PROPRIETAIRE: EtatMembres = { status: "error", message: "Seul un pro
  * compte impayé — ce sont des mesures de sécurité.
  */
 async function proprietaireOuRefus(): Promise<
-  { compte: Awaited<ReturnType<typeof requireCompte>>["compte"] } | { refus: EtatMembres }
+  Pick<Awaited<ReturnType<typeof requireCompte>>, "compte" | "db"> | { refus: EtatMembres }
 > {
-  const { compte } = await requireCompte();
-  return compte.role === "owner" ? { compte } : { refus: REFUS_PROPRIETAIRE };
+  const { compte, db } = await requireCompte();
+  return compte.role === "owner" ? { compte, db } : { refus: REFUS_PROPRIETAIRE };
 }
 
 /** Le code d'erreur du plugin, s'il en porte un. */
@@ -52,7 +53,12 @@ const MESSAGES: Record<string, string> = {
     "Le compte doit garder au moins un propriétaire : nommez-en un autre d'abord.",
   YOU_CANNOT_LEAVE_THE_ORGANIZATION_WITHOUT_AN_OWNER:
     "Le compte doit garder au moins un propriétaire : nommez-en un autre d'abord.",
+  // Plafond d'utilisateurs de la formule, à l'acceptation (ADR-053 § 14) : la
+  // personne invitée ne voit pas la formule du compte qui l'invite.
+  ORGANIZATION_MEMBERSHIP_LIMIT_REACHED:
+    "Ce compte a atteint le nombre d'utilisateurs de sa formule : demandez à son propriétaire de passer à une formule supérieure.",
 };
+
 
 function refus(e: unknown, contexte: string): EtatMembres {
   const code = codeDe(e);
@@ -71,7 +77,7 @@ export async function inviterMembre(_prev: EtatMembres, formData: FormData): Pro
   await verifierSaisie();
   const p = await proprietaireOuRefus();
   if ("refus" in p) return p.refus;
-  const { compte } = p;
+  const { compte, db } = p;
   const lu = schemaInvitation.safeParse({ email: formData.get("email"), role: formData.get("role") });
   if (!lu.success) return { status: "error", message: lu.error.issues[0]?.message ?? "Formulaire invalide" };
   // Sans pilote d'e-mail réel (ou sans adresse publique pour le lien), aucune
@@ -90,6 +96,8 @@ export async function inviterMembre(_prev: EtatMembres, formData: FormData): Pro
       body: { email: lu.data.email, role: lu.data.role, organizationId: compte.compteId },
     });
   } catch (e) {
+    // Plafond d'utilisateurs de la formule, invitations comprises (ADR-053 § 14).
+    if (codeDe(e) === "INVITATION_LIMIT_REACHED") return { status: "error", message: await motifPlafondMembres(db, compte.compteId) };
     return refus(e, "inviter");
   }
   revalidatePath(PAGE);

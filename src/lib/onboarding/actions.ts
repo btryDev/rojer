@@ -16,7 +16,7 @@ import { EFFECTIF_MAX } from "@/lib/etablissements/schema";
 import { typesErpAutresCoherents } from "@/lib/etablissements/schema";
 import { saisieOnboardingDepuisFormData } from "./saisie";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
-import { refusQuotaEtablissements } from "@/lib/abonnements/quotas";
+import { prendreQuota, RefusQuota } from "@/lib/abonnements/quotas";
 import { accueillirSite, RefusBorneEffectif } from "@/lib/entreprises/effectif";
 
 /**
@@ -100,8 +100,6 @@ export async function finaliserOnboarding(
   // neuf dont elle devient propriétaire (ADR-054 § 5). Créé avant la
   // transaction : si elle échoue, le parcours suivant le reprend.
   const { compte, db } = await requireCompteDOnboarding(d.raisonSociale);
-  const refusQuota = await refusQuotaEtablissements(db, compte.compteId);
-  if (refusQuota) return { status: "error", message: refusQuota };
 
   const siren = sirenDuSiret(d.siret);
 
@@ -137,6 +135,9 @@ export async function finaliserOnboarding(
       // ce cas. Le parcours l'affiche déjà et bloque ; une requête forgée ne
       // passe pas pour autant. Lever annule la transaction.
       if (entreprise.effectif > EFFECTIF_MAX) throw new RefusEffectifEntreprise();
+
+      // Plafond d'établissements, sous le verrou du compte (ADR-053 § 14).
+      await prendreQuota(tx, compte.compteId, "etablissements");
 
       const etablissement = await tx.etablissement.create({
         data: {
@@ -205,6 +206,7 @@ export async function finaliserOnboarding(
       return etablissement;
     }));
   } catch (err) {
+    if (err instanceof RefusQuota) return { status: "error", message: err.motif };
     if (err instanceof RefusEffectifEntreprise) {
       // Le champ est en lecture seule dans ce cas : le message dit où agir.
       return {

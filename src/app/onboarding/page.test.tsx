@@ -37,6 +37,10 @@ vi.mock("@/components/onboarding/WizardShell", () => ({
 
 import OnboardingPage from "./page";
 
+/** Les propriétés de l'assistant, dans l'annonce du plafond qui l'enveloppe (ADR-053 § 14). */
+const assistant = (element: unknown) =>
+  (element as { props: { children: { props: Record<string, unknown> } } }).props.children.props;
+
 beforeEach(() => {
   h.redirect.mockClear();
   h.connues.mockReset();
@@ -51,7 +55,7 @@ describe("/onboarding", () => {
     h.connues.mockResolvedValue(connues);
     const element = await OnboardingPage();
     expect(h.redirect).not.toHaveBeenCalled();
-    expect((element as { props: Record<string, unknown> }).props).toMatchObject({
+    expect(assistant(element)).toMatchObject({
       email: "dirigeant@example.test",
       entreprisesConnues: connues,
     });
@@ -60,7 +64,7 @@ describe("/onboarding", () => {
   it("s'ouvre pour un compte neuf, sans entreprise à reprendre", async () => {
     h.connues.mockResolvedValue([]);
     const element = await OnboardingPage();
-    expect((element as { props: Record<string, unknown> }).props).toMatchObject({
+    expect(assistant(element)).toMatchObject({
       entreprisesConnues: [],
     });
   });

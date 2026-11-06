@@ -1,6 +1,8 @@
 "use server";
 
+import { deposerFichier, rendreReservations } from "@/lib/abonnements/stockage";
 import { randomUUID } from "node:crypto";
+import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { revalidatePath } from "next/cache";
 import { notFound } from "next/navigation";
 import type { Db } from "@/lib/auth/compte";
@@ -199,6 +201,7 @@ export async function supprimerPointReleve(
   pointId: string,
 ): Promise<void> {
   await verifierSaisie();
+  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   const { db } = await assertEtablissementDuCompte(etablissementId);
   // Soft delete : on garde les relevés historiques, on désactive le point.
   //
@@ -313,6 +316,7 @@ export async function supprimerReleve(
   releveId: string,
 ): Promise<void> {
   await verifierSaisie();
+  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   const { db } = await assertEtablissementDuCompte(etablissementId);
   const { count } = await db.releveTemperature.deleteMany({
     where: { id: releveId, pointReleve: { carnet: { etablissementId } } },
@@ -336,6 +340,8 @@ function lireAnalyse(formData: FormData) {
  * écriture en base (2026-09-27).
  */
 async function deposerRapportLabo(
+  db: Db,
+  compteId: string,
   etablissementId: string,
   formData: FormData,
 ): Promise<
@@ -353,7 +359,9 @@ async function deposerRapportLabo(
   // Même règle que le dépôt d'un rapport (2026-09-27) : message métier,
   // rien d'écrit en base.
   try {
-    await getStorage().put(cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
+    // Le plafond de stockage de la formule (ADR-053 § 14), avant d'écrire.
+    const refus = await deposerFichier(db, compteId, cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
+    if (refus) return { ok: false, message: refus };
   } catch (e) {
     console.error(`[carnet-sanitaire/depot] écriture du fichier impossible (${cle})`, e);
     return { ok: false, message: MESSAGE_ECHEC_ENREGISTREMENT };
@@ -367,13 +375,13 @@ export async function ajouterAnalyseLegionelle(
   formData: FormData,
 ): Promise<CarnetActionState> {
   await verifierSaisie();
-  const { db } = await assertEtablissementDuCompte(etablissementId);
+  const { compte, db } = await assertEtablissementDuCompte(etablissementId);
   const parsed = lireAnalyse(formData);
   if (!parsed.success) return formulaireInvalide(parsed.error.flatten().fieldErrors);
 
   const carnet = await obtenirOuCreerCarnet(db, etablissementId);
 
-  const depot = await deposerRapportLabo(etablissementId, formData);
+  const depot = await deposerRapportLabo(db, compte.compteId, etablissementId, formData);
   if (!depot.ok) return { status: "error", message: depot.message };
 
   // ~~`valeurUfcParL === undefined ||`~~ : une analyse sans valeur n'est pas
@@ -403,6 +411,7 @@ export async function ajouterAnalyseLegionelle(
   } catch (e) {
     if (depot.rapport) {
       await getStorage().delete(depot.rapport.cle).catch(() => {});
+      await rendreReservations(db, [depot.rapport.cle]);
     }
     throw e;
   }
@@ -432,13 +441,13 @@ export async function modifierAnalyseLegionelle(
   formData: FormData,
 ): Promise<CarnetActionState> {
   await verifierSaisie();
-  const { db } = await assertEtablissementDuCompte(etablissementId);
+  const { compte, db } = await assertEtablissementDuCompte(etablissementId);
   const analyse = await analyseDansLeCarnet(db, etablissementId, analyseId);
   if (!analyse) return { status: "error", message: "Analyse introuvable" };
   const parsed = lireAnalyse(formData);
   if (!parsed.success) return formulaireInvalide(parsed.error.flatten().fieldErrors);
 
-  const depot = await deposerRapportLabo(etablissementId, formData);
+  const depot = await deposerRapportLabo(db, compte.compteId, etablissementId, formData);
   if (!depot.ok) return { status: "error", message: depot.message };
 
   try {
@@ -456,7 +465,10 @@ export async function modifierAnalyseLegionelle(
       },
     });
   } catch (e) {
-    if (depot.rapport) await libererFichiers([depot.rapport.cle], "carnet-sanitaire/modification");
+    if (depot.rapport) {
+      await libererFichiers([depot.rapport.cle], "carnet-sanitaire/modification");
+      await rendreReservations(db, [depot.rapport.cle]);
+    }
     throw e;
   }
   if (depot.rapport && analyse.rapportCle) {
@@ -473,6 +485,7 @@ export async function supprimerAnalyseLegionelle(
   analyseId: string,
 ): Promise<void> {
   await verifierSaisie();
+  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   const { db } = await assertEtablissementDuCompte(etablissementId);
   const analyse = await analyseDansLeCarnet(db, etablissementId, analyseId);
   if (!analyse) notFound();

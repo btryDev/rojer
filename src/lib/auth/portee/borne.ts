@@ -19,6 +19,9 @@ import { CORRESPONDANCE, IDENTITES_SCALAIRES, type Classement } from "./correspo
  * de prestataire, MCP, webhook) : une relation vers `User` n'y peut alors
  * désigner personne.
  */
+/** Les identifiants gelés d'un compte (ADR-053 § 14). */
+export type Geles = Readonly<{ etablissements: readonly string[]; prestataires: readonly string[] }>;
+
 export type Portee = {
   type: "compte";
   compteId: string;
@@ -28,6 +31,8 @@ export type Portee = {
    * ici, quelle que soit l'action qui l'oublierait. Absent ou faux ailleurs.
    */
   lectureSeule?: boolean;
+  /** Le gel du compte (ADR-053 § 14), posé par la session seule. */
+  geles?: Geles;
 };
 
 /** Refus du client borné : opération ou modèle qu'il ne sait pas borner. */
@@ -136,7 +141,7 @@ function identitesScalaires(nom: string, data: Objet, portee: Portee): void {
   }
 }
 
-function relations(nom: string): Relation[] {
+export function relations(nom: string): Relation[] {
   const r = RELATIONS.get(nom);
   if (!r) throw new ErreurPortee(`modèle inconnu : ${nom}`);
   return r;
@@ -161,6 +166,15 @@ export function borne(nom: string, portee: Portee): Objet {
   if ("racine" in c) return { [c.racine]: portee.compteId };
   if ("parent" in c) return { [c.parent]: borne(relation(nom, c.parent)!.cible, portee) };
   throw new ErreurPortee(`modèle hors compte : ${nom}`);
+}
+
+/** Le filtre de `nom` jusqu'au modèle `vers`, qui y pose `feuille` ; `null` s'il n'y mène pas. */
+export function filtreVers(nom: string, vers: string, feuille: Objet): Objet | null {
+  if (nom === vers) return feuille;
+  const c = classement(nom);
+  if (!("parent" in c)) return null;
+  const suite = filtreVers(relation(nom, c.parent)!.cible, vers, feuille);
+  return suite && { [c.parent]: suite };
 }
 
 /** Ajoute la borne à un `where` sans toucher à ses champs uniques. */

@@ -108,7 +108,8 @@ const OUVERTES = new Map<string, Ouverte>([
   // l'essai, avant que le compte existe, ouvre par `verifierRole`.
   ["lib/abonnements/actions.ts:demarrerEssaiAction", { motif: "démarrer l'essai : avant tout abonnement, propriétaire seul" }],
   ["lib/abonnements/actions.ts:ouvrirPortailAction", { motif: "le portail : payer, reprendre, résilier — propriétaire seul" }],
-  ["lib/abonnements/actions.ts:souscrireAction", { motif: "souscrire de nouveau après un abonnement terminé — propriétaire seul" }],
+  ["lib/abonnements/actions.ts:sAbonnerAction", { motif: "s'abonner : formule, rythme, carte — c'est par là qu'un compte en essai, en pause ou résilié reprend la main ; propriétaire seul" }],
+  ["lib/abonnements/actions.ts:finaliserCarteAction", { motif: "appliquer la formule au retour de la page de paiement — propriétaire seul" }],
 ]);
 
 /**

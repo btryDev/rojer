@@ -57,6 +57,11 @@ function table(lignes: Ligne[]) {
       }
       return { count: touchees.length };
     }),
+    deleteMany: vi.fn(async ({ where }: { where: Ligne }) => {
+      const avant = lignes.length;
+      for (let i = lignes.length - 1; i >= 0; i--) if (correspond(lignes[i], where)) lignes.splice(i, 1);
+      return { count: avant - lignes.length };
+    }),
     delete: vi.fn(async ({ where }: { where: Ligne }) => {
       const i = lignes.findIndex((x) => correspond(x, where));
       if (i === -1) throw new Error("P2025");
@@ -115,7 +120,11 @@ vi.mock("@/lib/auth/scope", () => ({
       (e as { digest?: string }).digest = "NEXT_HTTP_ERROR_FALLBACK;404";
       throw e;
     }
-    return { user: { id: "user-1" }, db: await (await import("@/test/garde-simulee")).clientDuCompteSimule() };
+    return {
+      user: { id: "user-1" },
+      compte: { compteId: "user-1", role: "owner" },
+      db: await (await import("@/test/garde-simulee")).clientDuCompteSimule(),
+    };
   }),
 }));
 vi.mock("@/lib/batiments/queries", () => ({ resoudreBatimentOptionnel: vi.fn() }));
@@ -204,6 +213,8 @@ beforeEach(() => {
   prismaMock.signature = table([]);
   prismaMock.accessToken = table([]);
   prismaMock.quotaEnvoiOtp = table([]);
+  // Le journal des plafonds annuels (ADR-053 § 14), écrit même avant le lancement de l'offre.
+  prismaMock.consommationQuota = table([]);
   prismaMock.$transaction = async (fn) => fn(prismaMock);
   verrous.length = 0;
   prismaMock.$queryRaw = async (q, ...v) => {
@@ -877,6 +888,8 @@ describe("envoi échoué : rien de valable ne reste, et l'écran le dit", () => 
     expect(prismaMock.accessToken.lignes[0].revoqueLe).toBeInstanceOf(Date);
     expect(prismaMock.accessToken.lignes[0].revoqueMotif).toBe(MOTIF_REVOCATION_ENVOI_ECHOUE);
     expect(mailsEnvoyes).toHaveLength(0);
+    // La signature prise pour la demande est rendue (ADR-053 § 14) : rien n'a atteint personne.
+    expect(prismaMock.consommationQuota.lignes).toHaveLength(0);
   });
 
   it("renvoi du code : la place au plafond est rendue, et rien n'annonce un envoi", async () => {

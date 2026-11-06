@@ -1,3 +1,4 @@
+import { exigerUnPaiement } from "@/lib/abonnements/validation";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { mesureParId, surListeAnterieure } from "@/lib/permis-feu/referentiel";
 import { dureeHhMm } from "@/lib/permis-feu/duree";
@@ -121,7 +122,10 @@ export async function GET(
   const { id } = await context.params;
   // Le compte, lu une fois ici, est passé aux builders (M7) : hors rendu,
   // chaque garde relit la session.
-  const { db, compte, etablissement } = await requireEtablissement(id);
+  const { compte, db, etablissement } = await requireEtablissement(id);
+  // Exporter le dossier de contrôle demande d'avoir payé (ADR-053 § 15) ;
+  // un ancien abonné le garde, une fois l'abonnement fini.
+  await exigerUnPaiement(db, compte.compteId);
 
   // Une place d'export (H3, `exports/limite.ts`), tenue pendant la
   // construction — lectures, quatre rendus PDF, vérification des fichiers — et

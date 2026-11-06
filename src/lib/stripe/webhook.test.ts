@@ -139,6 +139,7 @@ describe("traiterNotificationStripe", () => {
     // L'abonnement relu suit : seule trace du compte si le client Stripe est supprimé.
     expect(synchroniserClientStripe).toHaveBeenCalledWith(faux, "cus_1", {
       abonnementLu: expect.objectContaining({ id: "sub_1" }),
+      depuisWebhook: true,
     });
     expect(evenements.marquerTraite).toHaveBeenCalledWith("evt_test_1", PRISE, null);
   });
@@ -154,11 +155,11 @@ describe("traiterNotificationStripe", () => {
   it("facture et paiement Checkout : le client de l'objet relu", async () => {
     api.invoices.retrieve.mockResolvedValue({ customer: { id: "cus_2" } });
     await traiterNotificationStripe(faux, notif("v1.invoice.payment_failed", "in_1"), "test");
-    expect(synchroniserClientStripe).toHaveBeenLastCalledWith(faux, "cus_2", { abonnementLu: undefined });
+    expect(synchroniserClientStripe).toHaveBeenLastCalledWith(faux, "cus_2", { abonnementLu: undefined, depuisWebhook: true });
 
     api.checkout.sessions.retrieve.mockResolvedValue({ mode: "subscription", customer: "cus_3" });
     await traiterNotificationStripe(faux, notif("v1.checkout.session.completed", "cs_1"), "test");
-    expect(synchroniserClientStripe).toHaveBeenLastCalledWith(faux, "cus_3", { abonnementLu: undefined });
+    expect(synchroniserClientStripe).toHaveBeenLastCalledWith(faux, "cus_3", { abonnementLu: undefined, depuisWebhook: true });
   });
 
   it("sans client à suivre (paiement ponctuel, type non écouté) : traité sans effet, avec un motif", async () => {

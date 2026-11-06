@@ -81,6 +81,11 @@ export const COLONNES_ECARTEES: Record<
     motif: "Métadonnée du fichier (son nom d'origine), pas une clé de stockage.",
     jamaisEcrite: false,
   },
+  "FichierStocke.cle": {
+    motif:
+      "Index des tailles pour le plafond de stockage (ADR-053 § 14) : la clé d'un fichier déjà référencé par l'une des colonnes collectées, qui le libèrent ; la ligne suit le compte (suppression en cascade).",
+    jamaisEcrite: false,
+  },
   "LimiteDebit.cle": {
     motif:
       "Clé d'un compteur de limitation de débit (`action:dimension:empreinte`), pas une clé de stockage.",

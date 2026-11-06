@@ -1,10 +1,12 @@
 "use server";
 
+import { deposerFichier, rendreReservations } from "@/lib/abonnements/stockage";
 import { revalidatePath } from "next/cache";
+import { unstable_rethrow } from "next/navigation";
+import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { requireEtablissement } from "@/lib/auth/scope";
 import {
   clePhotoEtablissement,
-  getStorage,
   MESSAGE_DEPOT_NON_CONFIGURE,
   MESSAGE_ECHEC_ENREGISTREMENT,
   stockageEnService,
@@ -39,7 +41,7 @@ export async function deposerPhotoEtablissement(
   formData: FormData,
 ): Promise<ResultatPhoto> {
   await verifierSaisie();
-  const { db, etablissement } = await requireEtablissement(etablissementId);
+  const { compte, db, etablissement } = await requireEtablissement(etablissementId);
   const fichier = formData.get("photo");
   if (!(fichier instanceof File) || fichier.size === 0) {
     return { status: "error", message: "Aucune photo sélectionnée." };
@@ -51,7 +53,9 @@ export async function deposerPhotoEtablissement(
 
   const cle = clePhotoEtablissement(etablissement.id, fichier.name);
   try {
-    await getStorage().put(cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
+    // Le plafond de stockage de la formule (ADR-053 § 14), avant d'écrire.
+    const refus = await deposerFichier(db, compte.compteId, cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
+    if (refus) return { status: "error", message: refus };
   } catch (e) {
     console.error(`[etablissements/photo] écriture impossible (${cle})`, e);
     return { status: "error", message: MESSAGE_ECHEC_ENREGISTREMENT };
@@ -62,6 +66,7 @@ export async function deposerPhotoEtablissement(
   // et de la laisser orpheline dans le stockage.
   const ancienne = etablissement.photoCle;
   let enregistree = false;
+  let echec: unknown;
   try {
     const { count } = await db.etablissement.updateMany({
       where: { id: etablissement.id, photoCle: ancienne },
@@ -69,10 +74,14 @@ export async function deposerPhotoEtablissement(
     });
     enregistree = count > 0;
   } catch (err) {
-    console.error("[etablissements/photo] enregistrement impossible", err);
+    echec = err;
   }
   if (!enregistree) {
     await libererFichiers([cle], "etablissements/photo");
+    await rendreReservations(db, [cle]);
+    // Une redirection (site gelé, ADR-053 § 14) n'est pas un échec : elle suit son cours.
+    unstable_rethrow(echec);
+    if (echec) console.error("[etablissements/photo] enregistrement impossible", echec);
     return { status: "error", message: MESSAGE_ECHEC_ENREGISTREMENT };
   }
   if (ancienne) await libererFichiers([ancienne], "etablissements/photo-remplacee");
@@ -85,6 +94,7 @@ export async function retirerPhotoEtablissement(
   etablissementId: string,
 ): Promise<ResultatPhoto> {
   await verifierSaisie();
+  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   const { db, etablissement } = await requireEtablissement(etablissementId);
   if (!etablissement.photoCle) return { status: "ok" };
   // Borné à la clé lue : un dépôt concurrent qui l'aurait déjà remplacée
@@ -99,6 +109,7 @@ export async function retirerPhotoEtablissement(
     });
     if (count > 0) await libererFichiers([etablissement.photoCle], "etablissements/photo-retiree");
   } catch (err) {
+    unstable_rethrow(err);
     console.error("[etablissements/photo] retrait impossible", err);
     return { status: "error", message: MESSAGE_ECHEC_ENREGISTREMENT };
   }

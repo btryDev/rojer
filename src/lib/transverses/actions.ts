@@ -9,6 +9,7 @@ import { ecrireFaitActivite } from "@/lib/etablissements/faits-activite-ecriture
 import { questionTransverseParId } from "./etat";
 import { poserRisqueTransverse } from "./risque-transverse";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
+import { refuserSiGele } from "@/lib/abonnements/gel-saisie";
 
 /**
  * Cloisonnement : `duerpId` vient du client. Sans garde, `validerTransverses`
@@ -47,6 +48,8 @@ export async function repondreQuestionTransverse(
 ): Promise<void> {
   await verifierSaisie();
   const { db, duerp } = await requireDuerp(duerpId);
+  // Le SQL brut échappe au gel du client borné (ADR-053 § 14).
+  await refuserSiGele(duerp.etablissementId);
   const question = questionTransverseParId(questionId);
   if (!question) throw new Error(`Question transverse inconnue : ${questionId}`);
   // Une question qui pose un FAIT D'ACTIVITÉ (ADR-041) : la réponse vit sur

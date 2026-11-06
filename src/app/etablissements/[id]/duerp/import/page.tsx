@@ -1,3 +1,4 @@
+import { PlafondDeCreation } from "@/components/quotas/PlafondDeCreation";
 import Link from "next/link";
 import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import { BarreDeListe } from "@/components/ui-kit/BarreDeListe";
@@ -64,7 +65,10 @@ export default async function ImportDuerpPage({
           </div>
         </WhyCard>
 
-        <ImportDuerpWizard etablissementId={id} />
+        {/* Le plafond d'imports de la formule, annoncé avant le dépôt (ADR-053 § 14). */}
+        <PlafondDeCreation cle="importsDuerp">
+          <ImportDuerpWizard etablissementId={id} />
+        </PlafondDeCreation>
 
         <div className="rounded-[22px] bg-[color:var(--board-slate-pale)] px-7 py-5 sm:px-8">
           <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">

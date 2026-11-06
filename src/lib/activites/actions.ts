@@ -5,6 +5,7 @@ import { requireDuerp } from "@/lib/auth/scope";
 import { ecrireReponseFermee } from "@/lib/duerps/ecrire-reponse-fermee";
 import { activitesDuSecteur } from "./reponses";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
+import { refuserSiGele } from "@/lib/abonnements/gel-saisie";
 
 /**
  * Cloisonnement : `duerpId` vient du client. `requireDuerp` remonte jusqu'à
@@ -44,6 +45,8 @@ export async function repondreActivite(
 ): Promise<void> {
   await verifierSaisie();
   const { db, duerp } = await requireDuerp(duerpId);
+  // Le SQL brut échappe au gel du client borné (ADR-053 § 14).
+  await refuserSiGele(duerp.etablissementId);
 
   const connue = activitesDuSecteur(duerp.referentielSecteurId).some(
     (a) => a.id === activiteId,

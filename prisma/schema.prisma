@@ -2449,6 +2449,13 @@ model Abonnement {
   finPrevueLe           DateTime?
   /// Un essai par compte : posé au premier abonnement en essai, jamais effacé.
   essaiUtiliseLe        DateTime?
+  /// Début du PREMIER abonnement payant du compte (`trial_end` s'il y a eu un
+  /// essai, sinon `start_date`), écrit une fois, à la première facture
+  /// réellement payée (jamais sur `past_due`), jamais écrasé : l'ancre des
+  /// plafonds annuels (ADR-053 § 14), qu'une résiliation suivie d'une
+  /// souscription ne remet pas à zéro. Vide : le compte n'a jamais payé, les
+  /// limites de l'essai s'appliquent.
+  debutPayantLe         DateTime?
   /// Dernière relecture de l'abonnement chez Stripe.
   relueLe               DateTime?
   createdAt             DateTime  @default(now())
@@ -2505,6 +2512,39 @@ model AcceptationConditions {
   @@index([compteId, accepteeLe])
 }
 
+/// Le journal des plafonds « par an » d'une formule (ADR-053 § 14) : une ligne
+/// par élément compté (permis de feu, plan de prévention, signature, import de
+/// DUERP). Rattaché au COMPTE et sans lien vers l'élément : supprimer un
+/// brouillon ou un établissement ne rend pas le crédit. Compté depuis la date
+/// anniversaire du premier abonnement payant ; jamais modifié, et effacé
+/// seulement quand l'action n'a pas abouti après sa transaction (`rendreQuota`).
+model ConsommationQuota {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// Racine (ADR-054).
+  compteId   String   @db.Uuid
+  compte     Compte   @relation(fields: [compteId], references: [id], onDelete: Cascade)
+  /// La clé du plafond (`permisDeFeuParAn`…), `Quotas` de `abonnements/formules.ts`.
+  quota      String
+  consommeLe DateTime @default(now())
+
+  @@index([compteId, quota, consommeLe])
+}
+
+/// La taille d'un fichier déposé (ADR-053 § 14, plafond de stockage), par sa
+/// clé de stockage : écrite au dépôt, jamais effacée. Ne compte que ce que le
+/// compte référence encore (un fichier retiré cesse de compter sans qu'on
+/// l'efface ici).
+model FichierStocke {
+  cle      String   @id
+  /// Racine (ADR-054).
+  compteId String   @db.Uuid
+  compte   Compte   @relation(fields: [compteId], references: [id], onDelete: Cascade)
+  octets   Int
+  deposeLe DateTime @default(now())
+
+  @@index([compteId])
+}
+
 model Compte {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name      String
@@ -2520,6 +2560,8 @@ model Compte {
   abonnement             Abonnement?
   demandesAssistance     DemandeAssistance[]
   acceptationsConditions AcceptationConditions[]
+  consommationsQuota     ConsommationQuota[]
+  fichiersStockes        FichierStocke[]
 
   @@unique([slug])
 }

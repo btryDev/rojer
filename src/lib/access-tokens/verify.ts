@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { LIEN_PARTI } from "./revocation";
+import { LIEN_PARTI, SCOPES_USAGE_UNIQUE, estAUsageUnique } from "./revocation";
 import type { AccessToken, Prisma } from "@prisma/client";
 import { sha256Hex } from "@/lib/signatures/hash";
 import {
@@ -37,7 +37,7 @@ export async function verifierAccessToken(
   // `consultation` est multi-usage ; `signature` et `depot_rapport` mono-usage.
   if (
     token.utiliseLe &&
-    (token.scope === "signature" || token.scope === "depot_rapport")
+    estAUsageUnique(token.scope)
   ) {
     return { ok: false, raison: "deja_utilise", utiliseLe: token.utiliseLe };
   }
@@ -181,7 +181,7 @@ export async function reserverEnvoiOtp(
     where: {
       emailDestinataire,
       createdAt: { gte: ouverture },
-      scope: { in: ["signature", "depot_rapport"] },
+      scope: { in: [...SCOPES_USAGE_UNIQUE] },
       // Un lien dont l'e-mail n'est pas parti n'a rien envoyé à cette adresse.
       ...LIEN_PARTI,
     },

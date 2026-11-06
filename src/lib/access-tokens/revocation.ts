@@ -9,6 +9,22 @@ import type { Prisma } from "@prisma/client";
 export const MOTIF_REVOCATION_ENVOI_ECHOUE =
   "l'e-mail n'a pas pu être envoyé ; demandez un nouveau lien à votre interlocuteur";
 
+/** Les liens à usage unique : consommés, ils ne servent plus. */
+export const SCOPES_USAGE_UNIQUE = ["signature", "depot_rapport"] as const;
+export const estAUsageUnique = (scope: string) => (SCOPES_USAGE_UNIQUE as readonly string[]).includes(scope);
+
+/**
+ * Un lien qui sert encore — la règle de `verifierAccessToken`, en clause :
+ * ni révoqué, ni expiré, ni consommé s'il est à usage unique. Porte son
+ * propre `OR` : ne pas l'étaler avec `LIEN_PARTI`, qui en porte un aussi.
+ */
+export const lienActif = (maintenant = new Date()) =>
+  ({
+    revoqueLe: null,
+    expireLe: { gt: maintenant },
+    OR: [{ utiliseLe: null }, { scope: { notIn: [...SCOPES_USAGE_UNIQUE] } }],
+  }) satisfies Prisma.AccessTokenWhereInput;
+
 /**
  * Les jetons dont l'e-mail est parti : UNE règle pour tous les plafonds qui
  * comptent des liens (par établissement, par utilisateur, par adresse). Sans

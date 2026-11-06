@@ -16,7 +16,8 @@ export const VERSION_API_STRIPE = "2026-10-28.endive" satisfies Stripe.LatestApi
 
 /**
  * Par appel, dans le webhook : 3 s, sans relance du SDK — la relance est celle
- * de Stripe, sur toute la livraison. Au plus trois appels par notification.
+ * de Stripe, sur toute la livraison. Trois ou quatre appels par notification
+ * (le quatrième, la liste des factures, tant que le premier paiement manque).
  */
 export const OPTIONS_WEBHOOK: Stripe.RequestOptions = { timeout: 3_000, maxNetworkRetries: 0 };
 

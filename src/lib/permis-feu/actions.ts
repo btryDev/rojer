@@ -1,6 +1,7 @@
 "use server";
 
 import { requireCompte, type Db } from "@/lib/auth/compte";
+import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
@@ -24,6 +25,7 @@ import {
 import { calculerHashObjet } from "@/lib/signatures/hash-objet";
 import { revoquerLiensEnVol } from "@/lib/access-tokens/revocation";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
+import { creerSousPlafond } from "@/lib/abonnements/quotas";
 
 export type PermisFeuActionState =
   | { status: "idle" }
@@ -134,16 +136,20 @@ export async function creerPermisFeu(
   const numero = await nextNumeroPermisFeu(etablissementId);
   const id = `pf_${randomUUID()}`;
 
-  const permis = await db.permisFeu.create({
-    data: {
-      id,
-      etablissementId,
-      numero,
-      ...colonnesPermis(parsed.data),
-      batimentId: batiment.id,
-      statut: "attente_signatures",
-    },
-  });
+  const creation = await creerSousPlafond(db, compte.compteId, "permisDeFeuParAn", (tx) =>
+    tx.permisFeu.create({
+      data: {
+        id,
+        etablissementId,
+        numero,
+        ...colonnesPermis(parsed.data),
+        batimentId: batiment.id,
+        statut: "attente_signatures",
+      },
+    }),
+  );
+  if (!creation.ok) return { status: "error", message: creation.motif };
+  const permis = creation.valeur;
 
   revalidatePath(`/etablissements/${etablissementId}/permis-feu`);
   return { status: "success", permisFeuId: permis.id, numero: permis.numero };
@@ -340,6 +346,7 @@ export async function marquerTermine(permisFeuId: string): Promise<void> {
 
 export async function supprimerPermisFeu(permisFeuId: string): Promise<void> {
   await verifierSaisie();
+  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   const permis = await permisDuCompte(permisFeuId);
   // On ne supprime pas un permis déjà signé : on l'annule à la place pour
   // conserver la piste d'audit. LE STATUT NE LE DISAIT PAS : un permis est
