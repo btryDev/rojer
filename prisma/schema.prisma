@@ -2462,9 +2462,11 @@ model AcceptationConditions {
 }
 
 /// Le journal des plafonds « par an » d'une formule (ADR-053 § 14) : une ligne
-/// par élément créé (permis de feu, plan de prévention). Rattaché au COMPTE et
-/// sans lien vers l'élément : supprimer un brouillon ou un établissement ne
-/// rend pas le crédit. Compté sur douze mois glissants ; jamais modifié.
+/// par élément compté (permis de feu, plan de prévention, signature, import de
+/// DUERP). Rattaché au COMPTE et sans lien vers l'élément : supprimer un
+/// brouillon ou un établissement ne rend pas le crédit. Compté depuis la date
+/// anniversaire du premier abonnement payant ; jamais modifié, et effacé
+/// seulement quand l'action n'a pas abouti après sa transaction (`rendreQuota`).
 model ConsommationQuota {
   id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   /// Racine (ADR-054).

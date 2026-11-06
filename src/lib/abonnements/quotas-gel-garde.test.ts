@@ -102,7 +102,10 @@ describe("le gel (ADR-053 § 14)", () => {
       const c = code(f);
       expect((c.match(/\bouvrirAuGel\(\)/g) ?? []).length, f).toBe(noms.length);
       // Après le premier `await` (la garde) : le contexte de l'appelant n'en hérite pas.
-      for (const nom of noms) expect(corps(f, nom), `${f}:${nom}`).toMatch(/^[^{]*\{[^;]*\bawait\b[^;]*;\s*ouvrirAuGel\(\);/);
+      // Une garde inconditionnelle — `await f();` ou `const … = await f();` —, jamais
+      // un `await` qu'une condition peut sauter (`x ?? await f()`).
+      for (const nom of noms)
+        expect(corps(f, nom), `${f}:${nom}`).toMatch(/^[^{]*\{\s*(?:const [^=;]+=\s*)?await [\w.]+\([^;?|&]*\);\s*ouvrirAuGel\(\);/);
     }
   });
 });

@@ -96,14 +96,17 @@ function anniversaire(ancre: Date, annee: number): Date {
  * Le début de l'année en cours des plafonds annuels : le dernier anniversaire
  * du premier abonnement payant du compte (`debutPayantLe`) ; sans lui (essai,
  * jamais payé), les douze derniers mois. La première année part du début de
- * l'essai (`debutEssai`) s'il le précède : ce qui a été créé pendant l'essai
- * compte dans la première année payée.
+ * l'essai (`debutEssai`) s'il le précède — au plus un an avant l'ancre : ce
+ * qui a été créé pendant l'essai compte dans la première année payée.
  */
 export function debutDeLAnnee(ancre: Date | null | undefined, maintenant: Date, debutEssai?: Date | null): Date {
   if (!ancre) return anniversaire(maintenant, maintenant.getUTCFullYear() - 1);
   const cetteAnnee = anniversaire(ancre, maintenant.getUTCFullYear());
   const debut = cetteAnnee <= maintenant ? cetteAnnee : anniversaire(ancre, maintenant.getUTCFullYear() - 1);
-  return debut <= ancre && debutEssai && debutEssai < debut ? debutEssai : debut;
+  if (!(debut <= ancre && debutEssai && debutEssai < debut)) return debut;
+  // L'essai ne remonte pas au-delà d'un an avant l'ancre : un compte qui paie
+  // quatorze mois après son essai n'a pas une première année de vingt-six mois.
+  return debutEssai < anniversaire(ancre, ancre.getUTCFullYear() - 1) ? anniversaire(ancre, ancre.getUTCFullYear() - 1) : debutEssai;
 }
 
 /** Ce que le compte a déjà, pour une clé (le client est borné au compte). */
