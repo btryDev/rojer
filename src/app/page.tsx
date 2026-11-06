@@ -5,7 +5,6 @@ import { Hero } from "@/components/landing/Hero";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { Manifeste } from "@/components/landing/Manifeste";
 import { OutilSimple } from "@/components/landing/OutilSimple";
-import { Questions } from "@/components/landing/Questions";
 import { SiteFooter } from "@/components/landing/SiteFooter";
 import { getOptionalUser } from "@/lib/auth/require-user";
 import { getOptionalUserEtablissement } from "@/lib/auth/scope";
@@ -78,7 +77,6 @@ export default async function Home({
         ctaLabel={ctaLabel}
         connecte={Boolean(user)}
       />
-      <Questions />
       <SiteFooter />
     </main>
   );

@@ -27,9 +27,6 @@ export function SiteFooter() {
             <a href="#documents" className="text-white/70 transition-colors hover:text-white">
               Les documents
             </a>
-            <a href="#questions" className="text-white/70 transition-colors hover:text-white">
-              Questions
-            </a>
             <Link href="/login" className="text-white/70 transition-colors hover:text-white">
               Se connecter
             </Link>
