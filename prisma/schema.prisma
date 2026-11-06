@@ -736,6 +736,12 @@ model Verification {
   libelleObligation String
   periodicite       Periodicite
   realisateurRequis Realisateur[]
+  // Les obligations du même geste que la ligne suit aussi sur son appareil
+  // (ADR-057) : sur un extincteur d'ERP de 5ᵉ catégorie, l'annuelle ERP
+  // (`obligationId`) suit aussi PE 4 § 2 et le Code du travail. La ligne cite
+  // leurs références ; `realisateurRequis` est l'intersection des
+  // intervenants. Écrite par la réconciliation, comme `realisateurRequis`.
+  fondeeAussiPar    String[]      @default([])
 
   // Version du référentiel de conformité (ADR-003 : le référentiel vit en
   // TypeScript versionné, pas en base) avec laquelle cette ligne a été générée

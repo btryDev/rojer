@@ -116,8 +116,11 @@ describe("reperterSansEcheance — le référentiel réel", () => {
     // annuel de R. 4224-17 hors ERP. L'exemple passe à la hotte, que rien ne
     // vise chez un employeur seul (la ventilation est portée par
     // l'établissement, R. 4222-20).]
+    // [2026-11-05, ADR-057 : R. 4222-20 est porté par l'appareil, la hotte
+    // comprise. L'exemple passe à l'installation de gaz, que seuls GZ 15
+    // (ERP N1–N4) et PE 4 § 2 (ERP N5) visent.]
     const m = reperterSansEcheance(etablissement({ estERP: false }), [
-      equipement("eq1", "HOTTE_PRO"),
+      equipement("eq1", "INSTALLATION_GAZ"),
       equipement("eq2", "AUTRE"),
     ]);
 

@@ -6,9 +6,8 @@ import { cleJourCivil } from "@/lib/dates";
 import { compterLignesAvecPreuve } from "./preuves";
 import { chargerLignesViseesDuCompte } from "./lecture-preuves";
 import {
-  appliquerPrescriptions,
-  determineObligationsApplicables,
   estPrescriptionLevee,
+  lignesDuCalendrier,
   type PrescriptionMatching,
 } from "@/lib/matching";
 import { obligationParId, OBLIGATIONS_RETIREES } from "@/lib/referentiels/conformite";
@@ -125,12 +124,15 @@ export async function chargerPagePrescriptions(
       unknown
     > | null,
   }));
-  const applicables = determineObligationsApplicables(
+  // Le chemin de la passe (ADR-057) : une prescription que la fusion des
+  // gestes rend sans effet y est dite ignorée, avec son motif.
+  const actives = etab.prescriptionsParticulieres.filter((p) => p.actif);
+  const res = lignesDuCalendrier(
     projeterEtablissement(etab),
     equipements,
+    actives,
+    now,
   );
-  const actives = etab.prescriptionsParticulieres.filter((p) => p.actif);
-  const res = appliquerPrescriptions(applicables, actives, equipements, now);
   const ignorees = new Map(
     res.ignorees.map((i) => [i.prescription.id, i.raison]),
   );
@@ -172,7 +174,9 @@ export async function chargerPagePrescriptions(
 
   return {
     prescriptions,
-    obligations: applicables.map((a) => ({
+    // Avant la fusion (ADR-057) : toutes les obligations applicables, celles
+    // qu'une ligne de geste réunit comprises, restent visables.
+    obligations: res.obligations.map((a) => ({
       id: a.obligation.id,
       libelle: a.obligation.libelle,
       periodicite: periodiciteEffective(a.obligation),

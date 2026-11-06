@@ -2008,6 +2008,7 @@ describe("référentiel conformité — version et empreinte", () => {
     // propriétaire) : les libellés d'EL 18 § 2 et de L 57 § 7 disent « en
     // électricité ». 205 + 0 − 0, relevée en appelant.
     { version: "2026-11-04.1", empreinte: "205-a7fba8ae5dd614bc" },
+    { version: "2026-11-06.1", empreinte: "205-80a0dac86aa622c8" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

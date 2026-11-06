@@ -86,8 +86,12 @@ const appareil = (
  * condition, qui vaudra le jour où le marqueur se lèvera. Que la porte la
  * ferme, c'est le test suivant ce bloc.
  */
+// 2026-11-05 (ADR-057) : l'annuelle (art. 15) passe à son tour au niveau
+// audit. Les deux gardes s'éprouvent donc marqueur levé.
 const SANS_MARQUEUR: Obligation[] = obligationsConformite.map((o) =>
-  o.id === PRESENCE ? ({ ...o, niveau: undefined } as Obligation) : o,
+  o.id === PRESENCE || o.id === ALIM
+    ? ({ ...o, niveau: undefined } as Obligation)
+    : o,
 );
 
 for (const ID of [ALIM, PRESENCE]) describe(`${ID} — sur un appareil alimenté déclaré`, () => {
@@ -144,22 +148,21 @@ for (const ID of [ALIM, PRESENCE]) describe(`${ID} — sur un appareil alimenté
   });
 });
 
-it("la présence est au niveau audit : aucune ligne, même un BAES et une alarme déclarés ; l'annuelle reste servie", () => {
-  const presence = obligationsConformite.find((o) => o.id === PRESENCE)!;
-  expect(estNiveauAudit(presence)).toBe(true);
+it("la présence et l'annuelle sont au niveau audit : aucune ligne, même un BAES et une alarme déclarés (ADR-057)", () => {
+  for (const id of [PRESENCE, ALIM]) {
+    expect(estNiveauAudit(obligationsConformite.find((o) => o.id === id)!)).toBe(true);
+  }
   const ids = determineObligationsApplicables(BUREAU, [
     appareil("BAES"),
     appareil("ALARME_INCENDIE", "a1"),
   ]).map((a) => a.obligation.id);
   expect(ids).not.toContain(PRESENCE);
-  expect(ids).toContain(ALIM);
+  expect(ids).not.toContain(ALIM);
 });
 
-it("l'annuelle garde son rythme annuel", () => {
-  const l = determineObligationsApplicables(BUREAU, [appareil("BAES")]).find(
-    (a) => a.obligation.id === ALIM,
-  );
-  expect(l?.obligation.periodicite).toBe("annuelle");
+it("l'annuelle garde son rythme annuel au référentiel", () => {
+  const o = obligationsConformite.find((x) => x.id === ALIM)!;
+  expect(o.periodicite).toBe("annuelle");
 });
 
 describe("groupe électrogène de sécurité — sur un « oui » déclaré seulement", () => {

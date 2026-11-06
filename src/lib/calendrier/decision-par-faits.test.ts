@@ -416,12 +416,13 @@ describe("faitsDeLigne — ce que la stratégie apporte à la fonction", () => {
       derniereRealisation: d("2026-06-01"),
       dernierResultat: "conforme",
     });
-    expect(faitsDeLigne(g, ex, d("2020-01-01"), NOW)).toEqual({
+    expect(faitsDeLigne(g, ex, d("2020-01-01"), NOW, null)).toEqual({
       periodicite: "annuelle",
       // D1 : le plus court des deux plafonds, trois ans contre un an.
       premierPas: "annuelle",
       dateDuTitre: null,
       realisation: { date: d("2026-06-01"), resultat: "conforme" },
+      realisationEquivalente: null,
       realisationHeritee: d("2020-01-01"),
       miseEnService: d("2025-12-01"),
       origine: d("2025-12-01"),
@@ -437,8 +438,8 @@ describe("faitsDeLigne — ce que la stratégie apporte à la fonction", () => {
       derniereRealisation: d("2026-06-01"),
       dernierResultat: "non_verifiable",
     });
-    expect(faitsDeLigne(g, ex, null, NOW).realisation).toBeNull();
-    expect(faitsDeLigne(g, null, null, NOW).origine).toBe(NOW);
+    expect(faitsDeLigne(g, ex, null, NOW, null).realisation).toBeNull();
+    expect(faitsDeLigne(g, null, null, NOW, null).origine).toBe(NOW);
   });
 
   it("une ligne générée sans `sources` est REFUSÉE — le repli silencieux est parti à la bascule", () => {
@@ -450,7 +451,7 @@ describe("faitsDeLigne — ce que la stratégie apporte à la fonction", () => {
     const o = obligationEquipement({ id: "elec-annuelle", periodicite: "annuelle" });
     const [g] = genererProchainesVerifications([applicable(o, [EQ])], { now: NOW });
     const sansSources = { ...g, sources: undefined } as unknown as VerificationGenere;
-    expect(() => faitsDeLigne(sansSources, null, null, NOW)).toThrow(/sources/);
+    expect(() => faitsDeLigne(sansSources, null, null, NOW, null)).toThrow(/sources/);
   });
 
   it("une ligne existante sans `suiviDepuis` ni `dernierResultat` est REFUSÉE, comme sans `sources`", () => {
@@ -468,16 +469,16 @@ describe("faitsDeLigne — ce que la stratégie apporte à la fonction", () => {
       dernierResultat: "conforme",
     });
     // Borne basse : la ligne complète passe, avec sa réalisation.
-    expect(faitsDeLigne(g, complete, null, NOW).realisation).toEqual({
+    expect(faitsDeLigne(g, complete, null, NOW, null).realisation).toEqual({
       date: d("2025-12-01"),
       resultat: "conforme",
     });
 
     const sansOrigine = { ...complete, suiviDepuis: undefined } as unknown as OccurrenceExistante;
-    expect(() => faitsDeLigne(g, sansOrigine, null, NOW)).toThrow(/suiviDepuis/);
+    expect(() => faitsDeLigne(g, sansOrigine, null, NOW, null)).toThrow(/suiviDepuis/);
 
     const sansResultat = { ...complete, dernierResultat: undefined } as unknown as OccurrenceExistante;
-    expect(() => faitsDeLigne(g, sansResultat, null, NOW)).toThrow(/dernierResultat/);
+    expect(() => faitsDeLigne(g, sansResultat, null, NOW, null)).toThrow(/dernierResultat/);
 
     // Une date de rapport SANS son résultat : les deux se lisent sur le même
     // rapport, l'un sans l'autre est un défaut de lecture — refusé, ni
@@ -488,7 +489,7 @@ describe("faitsDeLigne — ce que la stratégie apporte à la fonction", () => {
       derniereRealisation: d("2025-12-01"),
       dernierResultat: null,
     });
-    expect(() => faitsDeLigne(g, dateSeule, null, NOW)).toThrow(/sans son résultat/);
+    expect(() => faitsDeLigne(g, dateSeule, null, NOW, null)).toThrow(/sans son résultat/);
   });
 });
 

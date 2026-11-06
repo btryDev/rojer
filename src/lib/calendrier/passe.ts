@@ -29,14 +29,11 @@
 
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import type { Prisma } from "@prisma/client";
-import {
-  appliquerPrescriptions,
-  determineObligationsApplicables,
-  projeterEtablissement,
-} from "@/lib/matching";
+import { lignesDuCalendrier, projeterEtablissement } from "@/lib/matching";
 import { estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
 import {
   estPorteeParSalarie,
+  autresMembresDuGeste,
   obligationParId,
   OBLIGATIONS_RETIREES,
 } from "@/lib/referentiels/conformite";
@@ -140,6 +137,7 @@ export async function lireEntrees(client: ClientPasse, etablissementId: string) 
       libelleObligation: true,
       periodicite: true,
       realisateurRequis: true,
+      fondeeAussiPar: true,
       datePrevue: true,
       // L'archivage (ADR-034, N3) : sans lui, la réconciliation ne sait plus
       // qu'une ligne est barrée et la ré-archiverait à chaque passe.
@@ -179,6 +177,7 @@ export async function lireEntrees(client: ClientPasse, etablissementId: string) 
     libelleObligation: v.libelleObligation,
     periodicite: v.periodicite,
     realisateurRequis: v.realisateurRequis,
+    fondeeAussiPar: v.fondeeAussiPar,
     datePrevue: v.datePrevue,
     archiveLe: v.archiveLe,
     derniereRealisation: dernieresRealisations.get(v.id)?.dateRapport ?? null,
@@ -234,14 +233,12 @@ export function preparer(lecture: LecturePasse, now: Date): EntreesReconciliatio
 
   // 2. Matching du référentiel, puis modulation par les prescriptions
   //    particulières propres à l'établissement.
-  const obligationsReferentiel = determineObligationsApplicables(
+  //    Puis la fusion des gestes (ADR-057), APRÈS les prescriptions — l'ordre
+  //    de `lignesDuCalendrier`, écrit là seulement.
+  const { applicables: obligations, surMesure } = lignesDuCalendrier(
     projeterEtablissement(etab),
     equipementsMatching,
-  );
-  const { applicables: obligations, surMesure } = appliquerPrescriptions(
-    obligationsReferentiel,
     etab.prescriptionsParticulieres,
-    equipementsMatching,
     now,
   );
 
@@ -268,7 +265,10 @@ export function preparer(lecture: LecturePasse, now: Date): EntreesReconciliatio
   // historique. `now` n'entre qu'au réconciliateur, comme origine d'une ligne
   // à naître.
   const aGenerer = [
-    ...genererProchainesVerifications(obligations, { misesEnService }),
+    ...genererProchainesVerifications(obligations, {
+      misesEnService,
+      autresMembresDuGeste,
+    }),
     ...genererVerificationsDepuisTitres(titresSalaries, obligationParId),
     ...genererVerificationsSurMesure(surMesure),
   ];
@@ -346,6 +346,11 @@ export function preparer(lecture: LecturePasse, now: Date): EntreesReconciliatio
       equipementsEnService: new Set(etab.equipements.map((eq) => eq.id)),
       titresActifs,
       successions: SUCCESSIONS_DECLAREES,
+      // La date de déclaration de chaque appareil, pour la dispersion d'une
+      // ligne d'établissement sur les appareils (ADR-057).
+      appareilsDeclaresLe: new Map(
+        etab.equipements.map((eq) => [eq.id, eq.createdAt]),
+      ),
     },
   };
 }
