@@ -28,40 +28,40 @@ export const GRILLE: GroupeGrille[] = [
     lignes: [
       {
         libelle: "Obligations, calendrier, registre de sécurité, plan d'actions, équipe, carnet sanitaire",
-        cases: ["✓", "✓", "✓", "✓"],
+        cases: [INCLUS, INCLUS, INCLUS, INCLUS],
       },
-      { libelle: "Relances email des échéances", cases: ["✓", "✓", "✓", "✓"] },
-      { libelle: "Export de ses données, y compris après résiliation", cases: ["✓", "✓", "✓", "✓"] },
+      { libelle: "Relances email des échéances", cases: [INCLUS, INCLUS, INCLUS, INCLUS] },
+      { libelle: "Export de ses données, y compris après résiliation", cases: [INCLUS, INCLUS, INCLUS, INCLUS] },
     ],
   },
   {
     titre: "Valider : documents définitifs",
     lignes: [
-      { libelle: "DUERP validé et figé (aperçu « Projet » pendant l'essai)", cases: ["s'abonner", "✓", "✓", "✓"] },
-      { libelle: "Dossier de contrôle, registre consolidé", cases: ["s'abonner", "✓", "✓", "✓"] },
-      { libelle: "Registre d'accessibilité publié et affiche QR", cases: ["s'abonner", "✓", "✓", "✓"] },
+      { libelle: "DUERP validé et figé (aperçu « Projet » pendant l'essai)", cases: [ABONNEMENT, INCLUS, INCLUS, INCLUS] },
+      { libelle: "Dossier de contrôle, registre consolidé", cases: [ABONNEMENT, INCLUS, INCLUS, INCLUS] },
+      { libelle: "Registre d'accessibilité publié et affiche QR", cases: [ABONNEMENT, INCLUS, INCLUS, INCLUS] },
       { libelle: "Signatures électroniques", cases: ["1 test", "20 par an", "60 par an", "sur mesure"] },
       { libelle: "Liens d'accès prestataires actifs", cases: ["envoi à soi-même", "5", "15", "illimité"] },
     ],
   },
   {
-    titre: "Usage à volonté",
+    titre: "Usage, selon l'offre",
     lignes: [
       { libelle: "Permis de feu (brouillons imprimables pendant l'essai)", cases: ["10", "10 par an", "30 par an", "illimité"] },
       { libelle: "Plans de prévention (idem)", cases: ["5", "5 par an", "15 par an", "illimité"] },
       { libelle: "Prestataires suivis (attestations, vigilance)", cases: ["10", "10", "30", "illimité"] },
       { libelle: "Stockage des documents", cases: ["2 Go", "2 Go", "6 Go", "sur mesure"] },
       { libelle: "Import d'un DUERP existant", cases: ["1", "1", "3", "reprise faite par nous"] },
-      { libelle: "Connecter un assistant IA", cases: ["—", "—", "✓", "✓"] },
+      { libelle: "Connecter un assistant IA", cases: [NON_INCLUS, NON_INCLUS, INCLUS, INCLUS] },
     ],
   },
   {
     titre: "Humain : l'expert en sécurité",
     lignes: [
-      { libelle: "Aide en ligne, contact pour un problème technique", cases: ["✓", "✓", "✓", "✓"] },
-      { libelle: "Poser une question technique à l'expert", cases: ["—", "—", "✓", "✓"] },
-      { libelle: "Rendez-vous avec l'expert", cases: ["—", "—", "1 h par an", "à la demande"] },
-      { libelle: "Formation, reprise de l'historique, déploiement accompagné", cases: ["—", "—", "—", "✓"] },
+      { libelle: "Aide en ligne, contact pour un problème technique", cases: [INCLUS, INCLUS, INCLUS, INCLUS] },
+      { libelle: "Poser une question technique à l'expert", cases: [NON_INCLUS, NON_INCLUS, INCLUS, INCLUS] },
+      { libelle: "Rendez-vous avec l'expert", cases: [NON_INCLUS, NON_INCLUS, "1 h par an", "à la demande"] },
+      { libelle: "Formation, reprise de l'historique, déploiement accompagné", cases: [NON_INCLUS, NON_INCLUS, NON_INCLUS, INCLUS] },
     ],
   },
 ];

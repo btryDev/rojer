@@ -71,7 +71,7 @@ export default async function Home({
       <Cadran chiffres={chiffres} />
       <Manifeste />
       <OutilSimple />
-      <Tarif ctaHref={ctaHref} />
+      <Tarif ctaHref={ctaHref} ctaLabel={ctaLabel} connecte={Boolean(user)} />
       <SiteFooter />
     </main>
   );

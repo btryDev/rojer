@@ -29,7 +29,15 @@ const TON: Record<string, string> = {
   [ABONNEMENT]: "font-mono text-[0.66rem] tracking-[0.06em] text-[color:var(--board-amber-ink)]",
 };
 
-export function Tarif({ ctaHref }: { ctaHref: string }) {
+export function Tarif({
+  ctaHref,
+  ctaLabel,
+  connecte,
+}: {
+  ctaHref: string;
+  ctaLabel: string;
+  connecte: boolean;
+}) {
   return (
     <section id="tarif" className="bg-[color:var(--board-card)] py-24 sm:py-32">
       <div className="lp-shell">
@@ -43,7 +51,7 @@ export function Tarif({ ctaHref }: { ctaHref: string }) {
         </Reveal>
 
         <Reveal delai={120}>
-          <TarifOffres ctaHref={ctaHref} />
+          <TarifOffres ctaHref={ctaHref} ctaLabel={ctaLabel} connecte={connecte} />
         </Reveal>
 
         {/* La mise en route accompagnée : pas de prix pour l'instant. */}
@@ -95,7 +103,7 @@ export function Tarif({ ctaHref }: { ctaHref: string }) {
                   <tr>
                     <th
                       colSpan={5}
-                      scope="colgroup"
+                      scope="rowgroup"
                       className="bg-[color:var(--board-blue-pale)] px-4 py-2 text-left font-mono text-[0.66rem] font-medium uppercase tracking-[0.14em] text-[color:var(--board-blue-ink)]"
                     >
                       {g.titre}

@@ -32,7 +32,7 @@ export type Offre = {
 export const OFFRES: Offre[] = [
   {
     nom: "Essentiel",
-    pourQui: "Un commerce, un restaurant, un cabinet : un seul site",
+    pourQui: "Un commerce, un restaurant, un cabinet : un seul établissement",
     badge: "30 jours d'essai",
     prix: { mois: 29, an: 295 },
     points: [
@@ -46,7 +46,7 @@ export const OFFRES: Offre[] = [
   {
     nom: "Pro",
     misEnAvant: true,
-    pourQui: "Plusieurs sites ou plusieurs personnes",
+    pourQui: "Plusieurs établissements ou plusieurs personnes",
     badge: "Avec un expert",
     prix: { mois: 89, an: 899 },
     points: [
@@ -79,5 +79,5 @@ export function parMoisSurUnAn(an: number) {
 
 /** Un prix en euros, l'unité tenue par une espace insécable : « 29 € ». */
 export function enEuros(montant: number) {
-  return `${montant}${ESPACE_UNITE}€`;
+  return `${formaterNombreFr(montant)}${ESPACE_UNITE}€`;
 }

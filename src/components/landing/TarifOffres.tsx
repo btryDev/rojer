@@ -53,7 +53,16 @@ function Prix({ offre, periode, t }: { offre: Offre; periode: Periode; t: (typeo
   );
 }
 
-export function TarifOffres({ ctaHref }: { ctaHref: string }) {
+export function TarifOffres({
+  ctaHref,
+  ctaLabel,
+  connecte,
+}: {
+  ctaHref: string;
+  ctaLabel: string;
+  /** Connecté, le bouton mène au dossier : il dit « Reprendre mon dossier », pas l'offre. */
+  connecte: boolean;
+}) {
   const [periode, setPeriode] = useState<Periode>("mois");
 
   return (
@@ -107,7 +116,7 @@ export function TarifOffres({ ctaHref }: { ctaHref: string }) {
 
               {o.prix ? (
                 <Link href={ctaHref} className={cn("lp-btn mt-auto justify-center", t.bouton)}>
-                  {o.cta}
+                  {connecte ? ctaLabel : o.cta}
                 </Link>
               ) : (
                 <a href={lienContact("Rojer sur mesure")} className="lp-btn lp-btn-clair mt-auto justify-center">

@@ -1125,6 +1125,9 @@
     transition:
       opacity 1000ms cubic-bezier(0.22, 1, 0.36, 1),
       transform 1400ms cubic-bezier(0.16, 1, 0.3, 1);
+    /* Après l'abrégée, qui remet le délai à zéro : sans cette ligne, la
+       cascade de `delai` est perdue (revue de la PR #209). */
+    transition-delay: var(--lp-delai, 0ms);
   }
   .lp-reveal-texte {
     transform: translateY(48px);

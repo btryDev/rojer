@@ -2,8 +2,11 @@ import type { Metadata, Viewport } from "next";
 import { connection } from "next/server";
 import { variablesPolices } from "./polices";
 import "./globals.css";
+import { OUVERT_AUX_MOTEURS } from "@/lib/indexation";
 
 export const metadata: Metadata = {
+  // Fermé aux moteurs tant que le site n'est pas ouvert (`lib/indexation.ts`).
+  ...(OUVERT_AUX_MOTEURS ? {} : { robots: { index: false, follow: false } }),
   title: "Rojer — Conformité santé-sécurité TPE/PME",
   description:
     "Plateforme continue d'accompagnement à la conformité santé-sécurité pour dirigeants de TPE/PME : DUERP, calendrier de vérifications, registre de sécurité, plan d'actions.",

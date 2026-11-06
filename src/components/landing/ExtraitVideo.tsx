@@ -38,6 +38,12 @@ export function ExtraitVideo({
         video.currentTime = debut;
       }
     };
+    // Au premier chargement, se placer au début du passage avant de jouer :
+    // sinon l'image d'ouverture de la visite passe un instant.
+    const placer = () => {
+      video.currentTime = debut;
+    };
+    video.addEventListener("loadedmetadata", placer, { once: true });
     const observateur = new IntersectionObserver(
       ([entree]) => {
         if (entree.isIntersecting) void video.play().catch(() => {});
@@ -50,6 +56,7 @@ export function ExtraitVideo({
     return () => {
       observateur.disconnect();
       video.removeEventListener("timeupdate", boucler);
+      video.removeEventListener("loadedmetadata", placer);
     };
   }, [debut, fin]);
 

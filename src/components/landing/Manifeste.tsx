@@ -45,7 +45,7 @@ const APPORTS = [
     numero: "04",
     titre: "Un expert en cas de besoin",
     corps:
-      "Un expert en sécurité répond à vos questions sur une obligation ou un rapport.",
+      "Avec les offres Pro et Sur mesure, un expert en sécurité répond à vos questions sur une obligation ou un rapport.",
   },
 ];
 
