@@ -10,7 +10,6 @@ import {
   obligationsConformite,
 } from "@/lib/referentiels/conformite";
 import { Cadran } from "./Cadran";
-import { Etapes } from "./Etapes";
 
 /**
  * La page d'accueil est **publique** — `src/proxy.ts` laisse passer `/` sans
@@ -43,7 +42,9 @@ import { Etapes } from "./Etapes";
  * vérifie donc trois choses : (1) le texte RENDU annonce le compte suivi,
  * recalculé ici à la main (total − audit) et non relu dans la fonction qu'il
  * contrôle ; (2) aucun chiffre écrit dans les sources ne s'en écarte ; (3) la
- * page d'accueil passe bien le calcul aux deux composants.
+ * page d'accueil passe bien le calcul au cadran. [2026-11-06 : la note de
+ * provenance de « Une prise en main rapide » est partie avec la section ; le
+ * cadran est le seul à annoncer le compte.]
  */
 
 const DOSSIER = dirname(fileURLToPath(import.meta.url));
@@ -56,20 +57,17 @@ const DOMAINES = new Set(
   obligationsConformite.filter((o) => !AUDIT.includes(o)).map((o) => o.domaine),
 ).size;
 
+/** Les composants de la page qui annoncent le compte suivi. Ajouter ou
+ *  retirer une section qui l'annonce, c'est ajouter ou retirer une ligne ici :
+ *  le plancher d'annonces et la vérification de `page.tsx` en découlent. */
+const ANNONCEURS = [{ nom: "Cadran", composant: Cadran }];
+
 /** Le texte que la page publique rend, avec les chiffres que la page calcule. */
 function texteRendu(): string {
   const chiffres = chiffresReferentielSuivi();
-  return (
-    renderToStaticMarkup(createElement(Cadran, { chiffres })) +
-    renderToStaticMarkup(
-      createElement(Etapes, {
-        chiffres,
-        ctaHref: "/signup",
-        ctaLabel: "Créer mon compte",
-        connecte: false,
-      }),
-    )
-  );
+  return ANNONCEURS.map(({ composant }) =>
+    renderToStaticMarkup(createElement(composant, { chiffres })),
+  ).join("");
 }
 
 /** Les composants de la page publique, sans les tests. */
@@ -91,11 +89,33 @@ function sourcesLanding(): { fichier: string; texte: string }[] {
  * restriction, « 85 obligations · 10 domaines » rattachait aussi 85 au mot
  * « domaines », et le test échouait sur une page pourtant juste. Chaque
  * nombre appartient au mot qui le suit immédiatement, pas au suivant.
+ *
+ * Et le nombre doit être **isolé** : collé à une lettre, un point, un tiret
+ * ou un crochet, c'est une classe ou une mesure (`max-w-[42ch]`, `mt-3.5`),
+ * pas un compte — « max-w-[42ch]">Chaque obligation » faisait échouer la
+ * garde sur une page juste (2026-11-06).
  */
 function comptesAnnonces(texte: string, mot: RegExp): number[] {
-  const motif = new RegExp(String.raw`(\d+)[^\d]{0,40}?` + mot.source, "g");
+  const motif = new RegExp(
+    String.raw`(?<![\w.\-\[])(\d+)(?![\w.\]])[^\d]{0,40}?` + mot.source,
+    "g",
+  );
   return [...texte.matchAll(motif)].map((m) => Number(m[1]));
 }
+
+describe("comptesAnnonces — ce qui est un compte", () => {
+  it("lit un nombre isolé, même séparé de son mot par du JSX", () => {
+    expect(comptesAnnonces("Sur 188 obligations suivies", /obligations?/)).toEqual([188]);
+    expect(comptesAnnonces("{n}\n 85\n            obligations", /obligations?/)).toEqual([85]);
+  });
+
+  it("ne lit pas une classe ni une mesure comme un compte", () => {
+    expect(
+      comptesAnnonces('<p className="lp-texte mt-3.5 max-w-[42ch]">Chaque obligation', /obligations?/),
+    ).toEqual([]);
+    expect(comptesAnnonces('grid-cols-[0.6fr_1.4fr]"> une obligation', /obligations?/)).toEqual([]);
+  });
+});
 
 describe("les chiffres de la page publique", () => {
   it("le compte suivi est le référentiel moins le niveau audit", () => {
@@ -111,8 +131,8 @@ describe("les chiffres de la page publique", () => {
 
   it("le texte rendu annonce le nombre d'obligations suivies au quotidien", () => {
     const annonces = comptesAnnonces(texteRendu(), /obligations?/);
-    // Les deux composants l'annoncent : le cadran et la note de provenance.
-    expect(annonces.length).toBeGreaterThanOrEqual(2);
+    // Chaque annonceur l'annonce au moins une fois, et toutes sont justes.
+    expect(annonces.length).toBeGreaterThanOrEqual(ANNONCEURS.length);
     expect(
       annonces.filter((n) => n !== OBLIGATIONS),
       `La page d'accueil est publique et annonce un nombre d'obligations qui n'est pas celui que Rojer suit au quotidien (${OBLIGATIONS} = référentiel − niveau audit). Corrigez le calcul — ne relâchez pas ce test.`,
@@ -121,7 +141,7 @@ describe("les chiffres de la page publique", () => {
 
   it("le texte rendu annonce le nombre de domaines suivis", () => {
     const annonces = comptesAnnonces(texteRendu(), /domaines?/);
-    expect(annonces.length).toBeGreaterThanOrEqual(2);
+    expect(annonces.length).toBeGreaterThanOrEqual(ANNONCEURS.length);
     expect(annonces.filter((n) => n !== DOMAINES)).toEqual([]);
   });
 
@@ -140,12 +160,13 @@ describe("les chiffres de la page publique", () => {
     expect(fautifs).toEqual([]);
   });
 
-  it("la page d'accueil passe le calcul aux deux composants", () => {
+  it("la page d'accueil passe le calcul au cadran", () => {
     // Les props sont obligatoires (tsc) ; ce qui reste à garder, c'est
     // qu'elles viennent du calcul et non d'un littéral.
     const page = readFileSync(join(DOSSIER, "../../app/page.tsx"), "utf8");
     expect(page).toMatch(/const chiffres = chiffresReferentielSuivi\(\);/);
-    expect(page).toMatch(/<Cadran chiffres=\{chiffres\} \/>/);
-    expect(page).toMatch(/<Etapes[^>]*chiffres=\{chiffres\}/);
+    for (const { nom } of ANNONCEURS) {
+      expect(page).toMatch(new RegExp(`<${nom}[^>]*chiffres=\\{chiffres\\}`));
+    }
   });
 });

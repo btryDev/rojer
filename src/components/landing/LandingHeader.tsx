@@ -5,7 +5,11 @@
 // tête de page la barre ne se voit pas ; au défilement, elle se resserre
 // en un îlot flottant en verre (voir .lp-nav dans globals.css).
 //
-// L'enveloppe garde une hauteur fixe de 68px et l'îlot est posé en
+// `surPhoto` : la page s'ouvre sur une photo sombre qui passe sous la
+// barre (`Hero`). Tant qu'elle n'a pas défilé, la barre passe en blanc ;
+// l'îlot, lui, garde ses couleurs sur son verre clair.
+//
+// L'enveloppe garde une hauteur fixe (`--lp-entete`, 68 px) et l'îlot est posé en
 // absolu dedans : si l'en-tête lui-même rétrécissait, il entraînerait
 // toute la page de quelques pixels vers le haut pendant l'animation.
 
@@ -13,12 +17,10 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { signOutAction } from "@/lib/auth/actions";
 
-// Deux entrées, deux destinations à venir : aucune des deux pages
-// n'existe encore. On les affiche quand même — la barre doit montrer la
-// forme définitive du site. `#comprendre` et `#tarif` ne correspondent à
-// aucune ancre de la page : le clic ne fait donc rien, il ne casse rien
-// non plus. À rebrancher sur /comprendre et /tarif le jour où ces pages
-// existent.
+// « Tarif » mène à la section du même nom (`#tarif`). « Comprendre » n'a
+// pas encore de destination : `#comprendre` ne correspond à aucune ancre,
+// le clic ne fait rien et ne casse rien. À rebrancher sur /comprendre le
+// jour où la page existe.
 const LIENS = [
   { href: "#comprendre", label: "Comprendre" },
   { href: "#tarif", label: "Tarif" },
@@ -28,12 +30,20 @@ export function LandingHeader({
   ctaHref,
   ctaLabel,
   connecte,
+  surPhoto = false,
 }: {
   ctaHref: string;
   ctaLabel: string;
   connecte: boolean;
+  surPhoto?: boolean;
 }) {
   const [pose, setPose] = useState(false);
+  const blanc = surPhoto && !pose;
+  const lien =
+    "text-[0.875rem] transition-colors " +
+    (blanc
+      ? "text-white/80 hover:text-white"
+      : "text-[color:var(--board-slate-mid)] hover:text-[color:var(--board-ink)]");
 
   useEffect(() => {
     // Deux seuils plutôt qu'un : sans cette hystérésis, un défilement qui
@@ -49,7 +59,7 @@ export function LandingHeader({
     // pointer-events : l'enveloppe couvre toute la largeur, mais seule
     // l'îlot doit intercepter les clics — sinon les gouttières de part et
     // d'autre avaleraient ceux destinés à la page.
-    <header className="pointer-events-none sticky top-0 z-50 h-[68px]">
+    <header className="pointer-events-none sticky top-0 z-50 h-[var(--lp-entete)]">
       <div
         className={
           "lp-nav pointer-events-auto absolute inset-x-0 top-0" +
@@ -59,7 +69,10 @@ export function LandingHeader({
         <div className="lp-nav-barre flex items-center justify-between gap-6">
           <Link
             href="/"
-            className="flex items-baseline gap-[3px] text-[1.3rem] font-semibold tracking-[-0.03em] text-[color:var(--board-ink)]"
+            className={
+              "flex items-baseline gap-[3px] text-[1.3rem] font-semibold tracking-[-0.03em] transition-colors " +
+              (blanc ? "text-white" : "text-[color:var(--board-ink)]")
+            }
             style={{ fontFamily: "var(--font-titre), sans-serif" }}
           >
             Rojer
@@ -71,7 +84,7 @@ export function LandingHeader({
               <a
                 key={l.href}
                 href={l.href}
-                className="text-[0.875rem] text-[color:var(--board-slate-mid)] transition-colors hover:text-[color:var(--board-ink)]"
+                className={lien}
               >
                 {l.label}
               </a>
@@ -82,7 +95,7 @@ export function LandingHeader({
             {!connecte ? (
               <Link
                 href="/login"
-                className="text-[0.875rem] text-[color:var(--board-slate-mid)] transition-colors hover:text-[color:var(--board-ink)]"
+                className={lien}
               >
                 Se connecter
               </Link>
@@ -96,7 +109,7 @@ export function LandingHeader({
               <form action={signOutAction}>
                 <button
                   type="submit"
-                  className="text-[0.875rem] text-[color:var(--board-slate-mid)] transition-colors hover:text-[color:var(--board-ink)]"
+                  className={lien}
                 >
                   Déconnexion
                 </button>
@@ -104,7 +117,10 @@ export function LandingHeader({
             )}
             <Link
               href={ctaHref}
-              className="lp-btn lp-btn-ink px-[18px] py-[10px] text-[0.875rem]"
+              className={
+                "lp-btn px-[18px] py-[10px] text-[0.875rem] " +
+                (blanc ? "lp-btn-blanc" : "lp-btn-ink")
+              }
             >
               {ctaLabel}
             </Link>
