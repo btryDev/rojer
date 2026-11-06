@@ -135,7 +135,10 @@ export default async function AbonnementPage({
                   <dt className="text-[color:var(--board-slate-mid)]">Formule</dt>
                   <dd className="m-0">
                     {formule
-                      ? `${FORMULES[formule.formule].libelle}, facturation ${LIBELLE_PERIODICITE[formule.periodicite].adjectif}`
+                      ? ligne.statut === "trialing"
+                        ? // Pendant l'essai, le rythme n'est pas encore choisi : il se choisit en s'abonnant.
+                          `${FORMULES[formule.formule].libelle} (essai)`
+                        : `${FORMULES[formule.formule].libelle}, facturation ${LIBELLE_PERIODICITE[formule.periodicite].adjectif}`
                       : ligne.formule}
                   </dd>
                 </>
