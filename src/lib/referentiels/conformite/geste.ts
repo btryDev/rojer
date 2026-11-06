@@ -46,8 +46,8 @@ export type GesteObligation = "verification_periodique";
  * Le geste de l'obligation, ou `null`. LA lecture du champ : aucune surface
  * ne lit `o.geste` elle-même.
  */
-export function gesteDe(o: Obligation): GesteObligation | null {
-  return "geste" in o && o.geste !== undefined ? o.geste : null;
+export function gesteDe(o: Pick<Obligation, "geste">): GesteObligation | null {
+  return o.geste ?? null;
 }
 
 /**
@@ -73,23 +73,59 @@ export function intervenantsCommuns(
 }
 
 /**
- * Les références d'une ligne qui suit plusieurs obligations du même geste :
- * celles du titulaire d'abord — l'article qu'on citerait seul devant un
- * inspecteur reste en tête —, puis celles des absorbées, sans doublon. La norme
- * d'un rythme retenu y est, comme partout (`referencesCitees`).
+ * Ce qu'une LIGNE qui suit plusieurs textes du même geste exige et cite
+ * (ADR-057) — écrit une fois, pour le générateur et pour les fiches.
  */
-export function referencesDuGeste(
-  titulaire: Pick<Obligation, "referencesLegales" | "rythmeRetenu">,
-  absorbees: readonly Pick<Obligation, "referencesLegales" | "rythmeRetenu">[],
+
+/** L'intervenant de la ligne : celui que tous les textes admettent. */
+export function realisateursDeLigne(
+  titulaire: Pick<Obligation, "realisateurs">,
+  absorbees: readonly Pick<Obligation, "realisateurs">[],
+): Realisateur[] {
+  return intervenantsCommuns([titulaire, ...absorbees]);
+}
+
+/** La criticité de la ligne : la plus haute — une absorbée plus critique ne
+ *  la déclasse pas. */
+export function criticiteDeLigne(
+  titulaire: Pick<Obligation, "criticite">,
+  absorbees: readonly Pick<Obligation, "criticite">[],
+): Obligation["criticite"] {
+  return absorbees.reduce<Obligation["criticite"]>(
+    (c, a) => (a.criticite > c ? a.criticite : c),
+    titulaire.criticite,
+  );
+}
+
+type AvecReferences = Pick<Obligation, "referencesLegales" | "rythmeRetenu">;
+
+/**
+ * Les références que les absorbées AJOUTENT à celles du titulaire, sans
+ * doublon — « Aussi exigé par » sur une fiche. La norme d'un rythme retenu y
+ * est, comme partout (`referencesCitees`).
+ */
+export function referencesAjoutees(
+  titulaire: AvecReferences,
+  absorbees: readonly AvecReferences[],
 ): ReferenceLegale[] {
-  const vues = new Set<string>();
+  const vues = new Set(referencesCitees(titulaire).map((r) => r.reference));
   const out: ReferenceLegale[] = [];
-  for (const o of [titulaire, ...absorbees]) {
-    for (const r of referencesCitees(o)) {
-      if (vues.has(r.reference)) continue;
-      vues.add(r.reference);
-      out.push(r);
-    }
+  for (const r of absorbees.flatMap(referencesCitees)) {
+    if (vues.has(r.reference)) continue;
+    vues.add(r.reference);
+    out.push(r);
   }
   return out;
+}
+
+/**
+ * Toutes les références de la ligne : celles du titulaire d'abord —
+ * l'article qu'on citerait seul devant un inspecteur reste en tête —, puis
+ * celles que les absorbées ajoutent.
+ */
+export function referencesDuGeste(
+  titulaire: AvecReferences,
+  absorbees: readonly AvecReferences[],
+): ReferenceLegale[] {
+  return [...referencesCitees(titulaire), ...referencesAjoutees(titulaire, absorbees)];
 }

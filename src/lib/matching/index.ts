@@ -1,6 +1,5 @@
 export {
   determineObligationsApplicables,
-  obligationsSuivies,
   fusionnerGestes,
   determineObligationsNiveauAudit,
   evaluerObligation,
@@ -34,3 +33,4 @@ export type {
   PrescriptionMatching,
   SurchargePeriodicite,
 } from "./types";
+export { lignesDuCalendrier, type LignesDuCalendrier } from "./lignes";

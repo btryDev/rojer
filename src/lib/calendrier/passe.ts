@@ -29,12 +29,7 @@
 
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import type { Prisma } from "@prisma/client";
-import {
-  appliquerPrescriptions,
-  determineObligationsApplicables,
-  fusionnerGestes,
-  projeterEtablissement,
-} from "@/lib/matching";
+import { lignesDuCalendrier, projeterEtablissement } from "@/lib/matching";
 import { estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
 import {
   estPorteeParSalarie,
@@ -238,21 +233,14 @@ export function preparer(lecture: LecturePasse, now: Date): EntreesReconciliatio
 
   // 2. Matching du référentiel, puis modulation par les prescriptions
   //    particulières propres à l'établissement.
-  //    Puis la fusion des gestes (ADR-057), APRÈS les prescriptions : un
-  //    membre qu'un acte d'autorité raccourcit devient titulaire sur son
-  //    appareil, avec sa surcharge.
-  const obligationsReferentiel = determineObligationsApplicables(
+  //    Puis la fusion des gestes (ADR-057), APRÈS les prescriptions — l'ordre
+  //    de `lignesDuCalendrier`, écrit là seulement.
+  const { applicables: obligations, surMesure } = lignesDuCalendrier(
     projeterEtablissement(etab),
     equipementsMatching,
-    { fusion: false },
-  );
-  const { applicables: prescrites, surMesure } = appliquerPrescriptions(
-    obligationsReferentiel,
     etab.prescriptionsParticulieres,
-    equipementsMatching,
     now,
   );
-  const obligations = fusionnerGestes(prescrites);
 
   // 3. Ensemble des couples applicables, sans historique : cf. la doc de
   //    `reconcilierCalendrier`. Les mises en service sont portées dans les

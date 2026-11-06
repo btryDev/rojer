@@ -105,7 +105,7 @@ export function faitsDeLigne(
   heritee: Date | null,
   now: Date,
   /** Voir `FaitsDeLigne.realisationEquivalente` (ADR-057). */
-  equivalente: Date | null = null,
+  equivalente: Date | null,
 ): FaitsDeLigne {
   // Le type le rend requis ; une fixture ou une donnée passée par un `as` peut
   // encore arriver sans. On refuse, en nommant la ligne.

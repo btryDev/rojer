@@ -10,7 +10,7 @@ import { FAMILLES_ESP } from "@/lib/equipements/esp";
 import {
   determineObligationsApplicables,
   evaluerObligation,
-  obligationsSuivies,
+  fusionnerGestes,
   type EquipementMatching,
   type EtablissementMatching,
 } from "./index";
@@ -763,7 +763,8 @@ describe("moteur matching — scénarios intégrés", () => {
       cuissonErp(),
     ]);
     const ids = idsObligations(res);
-    const suivis = obligationsSuivies(res).map((o) => o.id);
+    // Les LIGNES, réunies par geste (ADR-057) : ce que le calendrier sert.
+    const lignes = idsObligations(fusionnerGestes(res));
     // Élec — cat 5 : quinquennale + mise en service + travail annuelle + initiale + reg sécurité élec
     expect(ids).toContain("elec-travail-periodique-annuelle");
     expect(ids).toContain("elec-travail-mise-en-service");
@@ -775,10 +776,11 @@ describe("moteur matching — scénarios intégrés", () => {
     // ne vise plus que le lieu de travail HORS ERP — l'annuelle de MS 38 § 4,
     // écrite par le texte, l'emporte chez un ERP (une seule annuelle par
     // extincteur, `extincteurs-partition.test.ts`).
-    expect(ids).not.toContain("incendie-travail-moyens-lutte");
-    // [2026-11-05, ADR-057 : elle n'a pas de ligne à elle, mais la ligne de
-    // l'annuelle ERP la cite — même geste.]
-    expect(suivis).toContain("incendie-travail-moyens-lutte");
+    // [2026-11-05, ADR-057 : ~~`erp: false`~~ — elle s'applique en ERP comme
+    // ailleurs, et c'est le geste qui la réunit à l'annuelle ERP : pas de
+    // ligne à elle, l'annuelle ERP la cite.]
+    expect(ids).toContain("incendie-travail-moyens-lutte");
+    expect(lignes).not.toContain("incendie-travail-moyens-lutte");
     expect(ids).toContain("incendie-travail-extincteurs-dotation");
     expect(ids).toContain("incendie-erp-extincteurs-annuelle");
     expect(ids).toContain("incendie-erp-ssi-annuelle");
@@ -787,8 +789,9 @@ describe("moteur matching — scénarios intégrés", () => {
     // Aération — 2026-11-05 (ADR-057) : un seul contrôle annuel par VMC, qui
     // suit R. 4222-20 et CH 58 ; la seconde est citée, pas servie à part.
     expect(ids).toContain("aeration-controle-installations-r4222-20");
-    expect(ids).not.toContain("aeration-erp-chauffage-ventilation-annuelle");
-    expect(suivis).toContain("aeration-erp-chauffage-ventilation-annuelle");
+    expect(ids).toContain("aeration-erp-chauffage-ventilation-annuelle");
+    expect(lignes).toContain("aeration-controle-installations-r4222-20");
+    expect(lignes).not.toContain("aeration-erp-chauffage-ventilation-annuelle");
     // Ramonage annuel des circuits d'extraction (GC 20) : une seule entrée
     // depuis la fusion du doublon `aeration-hotte-pro-annuelle`.
     expect(ids).toContain("cuisson-erp-circuits-extraction-nettoyage");
@@ -1475,15 +1478,13 @@ describe("moteur matching — aucun établissement existant ne perd une obligati
     }));
 
   it("le résultat inclut toutes les obligations criticité ≥ 4 conditionnées en « non infirmée »", () => {
-    // Absorbées comprises (ADR-057) : une obligation citée par la ligne de
-    // son geste n'est pas perdue.
     const ids = new Set(
-      obligationsSuivies(
+      idsObligations(
         determineObligationsApplicables(
           etabTousRegimes,
           parcSansCaracteristiques,
         ),
-      ).map((o) => o.id),
+      ),
     );
 
     const perdues = obligationsConformite

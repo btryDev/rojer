@@ -316,6 +316,7 @@ export function comparerAuMoteur(lecture: LecturePasse, now: Date): Comparaison 
             dateDuTitre: null,
             realisation: null,
             realisationHeritee: null,
+            realisationEquivalente: null,
             miseEnService: null,
             origine: ex.suiviDepuis,
           }

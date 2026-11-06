@@ -21,7 +21,7 @@ import {
   type CategorieErp,
   type TypeErp,
 } from "@/lib/referentiels/types-communs";
-import { determineObligationsApplicables, evaluerObligation } from "./engine";
+import { determineObligationsApplicables, evaluerObligation, fusionnerGestes } from "./engine";
 import type { EquipementMatching, EtablissementMatching } from "./types";
 import { typesErpDe } from "./types-erp";
 import { projeterEtablissement } from "./projection";
@@ -219,7 +219,9 @@ describe("plusieurs types : l'union, puis un membre par groupe", () => {
     // sur l'installation de gaz, la ligne de l'hôtel (biennale) l'emporte et
     // cite PE 4 § 2.
     const gaz: EquipementMatching = { id: "gaz", libelle: "Gaz", categorie: "INSTALLATION_GAZ", caracteristiques: null };
-    const surLeGaz = determineObligationsApplicables(erp(["N", "O"], "N5", true), [gaz]).filter(
+    const surLeGaz = fusionnerGestes(
+      determineObligationsApplicables(erp(["N", "O"], "N5", true), [gaz]),
+    ).filter(
       (a) => a.equipementsConcernes.some((q) => q.id === "gaz"),
     );
     expect(surLeGaz.map((a) => a.obligation.id)).toEqual([

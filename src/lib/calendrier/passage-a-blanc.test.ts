@@ -38,6 +38,7 @@ function faits(over: Partial<FaitsDeLigne> & { origine: Date }): FaitsDeLigne {
     dateDuTitre: null,
     realisation: null,
     realisationHeritee: null,
+    realisationEquivalente: null,
     miseEnService: null,
     ...over,
   };
@@ -261,6 +262,7 @@ describe("classerEcart — un cas par catégorie, dans l'ordre des motifs", () =
       miseEnService: d("2025-12-01"),
       realisation: { date: d("2026-03-01"), resultat: "conforme" },
       realisationHeritee: d("2021-01-10"),
+      realisationEquivalente: null,
       dateDuTitre: d("2031-06-01"),
       origine: instantCivil(2026, 6, 15, 10, 12),
     });
@@ -535,6 +537,7 @@ describe("l'export JSON — des identifiants, jamais un nom", () => {
           salarieId: null,
           periodicite: "semestrielle",
           realisateurRequis: [],
+          fondeeAussiPar: [],
           datePrevue: d("2026-09-17"),
           statut: "a_planifier",
           criticiteObligation: 4,
@@ -694,6 +697,7 @@ describe("appliquerPlanEnMemoire — ce que la base porterait après le plan", (
           salarieId: null,
           periodicite: "annuelle",
           realisateurRequis: [],
+          fondeeAussiPar: [],
           datePrevue: d("2026-09-17"),
           statut: "a_planifier",
           criticiteObligation: 3,

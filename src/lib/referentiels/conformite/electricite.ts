@@ -731,7 +731,11 @@ export const obligationsElectricite: Obligation[] = [
     transmet: [],
     typologies: { erp: { categories: ["N5"], types: ["O"] } },
     categoriesEquipement: ["INSTALLATION_ELECTRIQUE"],
-    geste: "verification_periodique",
+    // ~~geste: "verification_periodique"~~ — 2026-11-06 : posé sans
+    // décision de la propriétaire, retiré. Le tableau de l'ADR-057 ne réunit
+    // pas l'électricité. Sur un ERP qui groupe un hôtel et un autre type,
+    // cette ligne et celle de PE 4 § 2 sont donc deux — question posée à la
+    // propriétaire (ADR-057, « À trancher »).
     notesInternes:
       "Créée le 2026-08-26. `elec-erp-cat1-4-annuelle` s'arrête aux quatre premières catégories : un petit hôtel de 5ᵉ catégorie n'avait AUCUN contrôle électrique annuel, alors que PO 1 § 3 le lui impose nommément. Le manque était déclaré `non_couvert` sur le chapitre PO avec la mention « le manque est un choix, pas une impossibilité » — il ne l'est plus.\n\nLa détection incendie, que le même paragraphe soumet au même rythme annuel, n'est PAS ajoutée ici : `incendie-erp-ssi-annuelle` porte `erp: true` et couvre donc déjà tous les ERP, cinquième catégorie comprise. L'ajouter aurait créé un doublon.\n\n`personne_qualifiee` traduit « technicien compétent » : le texte n'exige ni organisme agréé ni accréditation, et l'exploitant ne peut pas s'en charger lui-même.\n\nDomaine `electricite` et non `incendie` : le domaine décrit l'objet contrôlé, pas le texte qui l'impose. L'obligation vit donc auprès des autres vérifications électriques, où le dirigeant la cherchera.",
   },

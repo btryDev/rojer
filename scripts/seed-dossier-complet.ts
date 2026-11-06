@@ -117,11 +117,7 @@ import { questionsActivites } from "@/lib/activites/reponses";
 import { figerCouverture } from "@/lib/activites/snapshot";
 import type { DuerpSnapshot, UniteSnapshot } from "@/lib/versions/snapshot";
 import type { TypeMesure } from "@/lib/referentiels/types";
-import {
-  appliquerPrescriptions,
-  determineObligationsApplicables,
-  projeterEtablissement,
-} from "@/lib/matching";
+import { lignesDuCalendrier, projeterEtablissement } from "@/lib/matching";
 import {
   genererProchainesVerifications,
   genererVerificationsDepuisTitres,
@@ -130,7 +126,7 @@ import {
 } from "@/lib/calendrier/generateur";
 import { echeanceDeLigne } from "@/lib/calendrier/echeance-de-ligne";
 import { faitsDeLigne } from "@/lib/calendrier/decision-par-faits";
-import { obligationParId } from "@/lib/referentiels/conformite";
+import { autresMembresDuGeste, obligationParId } from "@/lib/referentiels/conformite";
 
 const prisma = new PrismaClient();
 
@@ -1607,13 +1603,11 @@ async function main(): Promise<void> {
     caracteristiques: (eq.caracteristiques ?? null) as Record<string, unknown> | null,
   }));
 
-  const { applicables: obligations, surMesure } = appliquerPrescriptions(
-    determineObligationsApplicables(
-      projeterEtablissement(pourMatching),
-      equipementsMatching,
-    ),
-    pourMatching.prescriptionsParticulieres,
+  // Le chemin de la passe (ADR-057) : prescriptions, puis fusion des gestes.
+  const { applicables: obligations, surMesure } = lignesDuCalendrier(
+    projeterEtablissement(pourMatching),
     equipementsMatching,
+    pourMatching.prescriptionsParticulieres,
     MAINTENANT,
   );
 
@@ -1645,7 +1639,10 @@ async function main(): Promise<void> {
   }
 
   const aGenerer = [
-    ...genererProchainesVerifications(obligations, { misesEnService }),
+    ...genererProchainesVerifications(obligations, {
+      misesEnService,
+      autresMembresDuGeste,
+    }),
     ...genererVerificationsDepuisTitres(titresSalaries, obligationParId),
     ...genererVerificationsSurMesure(surMesure),
   ];
@@ -1663,7 +1660,7 @@ async function main(): Promise<void> {
   const compte = { titre: 0, assureur: 0, autres: 0 };
   for (const v of aGenerer) {
     const origine = v.prescriptionId !== null ? prescription.dateDocument : SUIVI_DEPUIS;
-    const echeance = echeanceDeLigne(faitsDeLigne(v, null, null, origine));
+    const echeance = echeanceDeLigne(faitsDeLigne(v, null, null, origine, null));
     operations.push(
       prisma.verification.create({
         data: {
@@ -1674,6 +1671,7 @@ async function main(): Promise<void> {
           libelleObligation: v.libelleObligation,
           periodicite: v.periodicite as Periodicite,
           realisateurRequis: v.realisateurRequis as Realisateur[],
+          fondeeAussiPar: v.fondeeAussiPar,
           datePrevue: echeance.datePrevue,
           statut: echeance.statut as StatutVerification,
           suiviDepuis: origine,

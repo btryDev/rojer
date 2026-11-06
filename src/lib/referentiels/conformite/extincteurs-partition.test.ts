@@ -7,7 +7,7 @@ import {
 } from "@/lib/calendrier/generateur";
 import { obligationParId, obligationsConformite, OBLIGATIONS_RETIREES } from "./index";
 import type { Obligation } from "./types";
-import { determineObligationsApplicables } from "@/lib/matching";
+import { determineObligationsApplicables, fusionnerGestes } from "@/lib/matching";
 import type { EtablissementMatching } from "@/lib/matching";
 import {
   CATEGORIES_ERP,
@@ -83,10 +83,13 @@ function rythmesDeLAppareil(
   caracteristiques: Record<string, unknown> | null = null,
   obligations?: Obligation[],
 ): Periodicite[] {
-  const applicables = determineObligationsApplicables(
-    e,
-    [{ id: "eq", libelle: categorie, categorie, caracteristiques }],
-    obligations ? { obligations } : undefined,
+  // Les LIGNES (ADR-057) : le moteur, puis la fusion des gestes.
+  const applicables = fusionnerGestes(
+    determineObligationsApplicables(
+      e,
+      [{ id: "eq", libelle: categorie, categorie, caracteristiques }],
+      obligations ? { obligations } : undefined,
+    ),
   );
   return genererProchainesVerifications(applicables)
     .filter((l) => l.equipementId === "eq")
@@ -203,9 +206,11 @@ describe("une ancienne valeur `typeExtincteur` en base est inerte", () => {
 describe("appareil de cuisson : une annuelle de l'appareil et une seule, quel que soit le régime", () => {
   for (const { nom, e } of PROFILS) {
     it(nom, () => {
-      const applicables = determineObligationsApplicables(e, [
-        { id: "eq", libelle: "Four", categorie: "APPAREIL_CUISSON_ERP", caracteristiques: null },
-      ]);
+      const applicables = fusionnerGestes(
+        determineObligationsApplicables(e, [
+          { id: "eq", libelle: "Four", categorie: "APPAREIL_CUISSON_ERP", caracteristiques: null },
+        ]),
+      );
       const fondements = new Map(
         applicables.map((a) => [a.obligation.id, a.obligation.referencesLegales[0].article]),
       );
@@ -233,9 +238,11 @@ describe("appareil de cuisson : une annuelle de l'appareil et une seule, quel qu
 describe("alarme : une annuelle de l'appareil et une seule, quel que soit le régime", () => {
   for (const { nom, e } of PROFILS) {
     it(nom, () => {
-      const applicables = determineObligationsApplicables(e, [
-        { id: "eq", libelle: "Alarme", categorie: "ALARME_INCENDIE", caracteristiques: null },
-      ]);
+      const applicables = fusionnerGestes(
+        determineObligationsApplicables(e, [
+          { id: "eq", libelle: "Alarme", categorie: "ALARME_INCENDIE", caracteristiques: null },
+        ]),
+      );
       const fondements = new Map(
         applicables.map((a) => [a.obligation.id, a.obligation.referencesLegales[0].article]),
       );

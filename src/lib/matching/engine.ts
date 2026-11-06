@@ -1239,13 +1239,6 @@ function evaluerChamp(
 export type DetermineOptions = {
   /** Remplacement complet du référentiel par défaut — utile pour les tests. */
   obligations?: Obligation[];
-  /**
-   * `false` : rend les obligations du même geste SANS les réunir (ADR-057).
-   * Pour la seule voie qui applique les prescriptions particulières — elles
-   * s'appliquent à chaque obligation AVANT la fusion, qui les lit
-   * (`appliquerPrescriptions`, puis `fusionnerGestes`). Défaut : réunies.
-   */
-  fusion?: boolean;
 };
 
 export function determineObligationsApplicables(
@@ -1259,13 +1252,31 @@ export function determineObligationsApplicables(
     const res = evaluerObligation(o, etab, equipements);
     if (res) out.push(res);
   }
-  const resolues = resoudreGroupesExclusifs(out);
-  return options?.fusion === false ? resolues : fusionnerGestes(resolues);
+  // ADR-057 : rend CE QUI S'APPLIQUE, obligations du même geste comprises,
+  // chacune pour soi. La réunion en lignes est l'affaire de la seule voie qui
+  // produit des lignes (`lignesDuCalendrier`, `fusionnerGestes`).
+  return resoudreGroupesExclusifs(out);
 }
 
-/** Jours d'un rythme, pour comparer deux membres d'un groupe ; sans rythme = le moins exigeant. */
-function joursDuRythme(o: Obligation): number {
-  return PERIODICITE_EN_JOURS[periodiciteEffective(o)] ?? Number.POSITIVE_INFINITY;
+/**
+ * Le rythme d'un membre, en jours — sur un appareil, celui d'une prescription
+ * particulière qui l'y renforce (ADR-035), sinon le sien. Sans rythme = le
+ * moins exigeant.
+ */
+function joursDuRythme(a: ObligationApplicable, appareil?: string): number {
+  const p = (appareil !== undefined ? a.surcharges?.[appareil]?.periodicite : undefined)
+    ?? periodiciteEffective(a.obligation);
+  return PERIODICITE_EN_JOURS[p] ?? Number.POSITIVE_INFINITY;
+}
+
+/**
+ * D'où vient le rythme d'une obligation : le texte, puis la norme, puis le
+ * défaut annuel (ADR-039 — « un rythme écrit l'emporte toujours »). Plus
+ * petit = plus fort.
+ */
+function rangDuRythme(o: Obligation): number {
+  if (o.rythmeRetenu === undefined) return 0;
+  return o.rythmeRetenu.motif === "norme" ? 1 : 2;
 }
 
 /** Le membre retient-il « à confirmer » — une question sans réponse ou un effectif à confirmer ? */
@@ -1274,22 +1285,35 @@ function estAConfirmer(a: ObligationApplicable): boolean {
 }
 
 /**
- * `a` l'emporte-t-il sur `b` dans un groupe exclusif ? Le rythme le plus court
- * d'abord ; à rythme égal, le membre ÉTABLI sur celui que retient le silence
- * — même règle que la composition du registre (`registre/composition.ts` :
- * « la prudente ne sert que si aucune autre ne tient ») ; à égalité encore,
- * le premier du référentiel, que l'ordre d'appel garde.
+ * `a` est-il plus exigeant que `b` ? LA règle du départage, pour les groupes
+ * exclusifs (ADR-045) comme pour les gestes (ADR-057, sur un appareil) :
+ *
+ *  1. le rythme le plus court — sur un appareil, prescription comprise ;
+ *  2. à rythme égal, le rythme écrit par un texte avant celui d'une norme ou
+ *     du défaut — sans quoi l'annuelle du Code du travail (norme), placée plus
+ *     haut dans le référentiel, prendrait les lignes d'extincteur des ERP ;
+ *  3. puis le membre ÉTABLI sur celui que retient le silence — même règle que
+ *     la composition du registre (`registre/composition.ts` : « la prudente ne
+ *     sert que si aucune autre ne tient ») ;
+ *  4. à égalité encore, le premier du référentiel, que l'ordre d'appel garde.
  */
-function lEmporte(a: ObligationApplicable, b: ObligationApplicable): boolean {
-  const ja = joursDuRythme(a.obligation);
-  const jb = joursDuRythme(b.obligation);
+function plusExigeant(
+  a: ObligationApplicable,
+  b: ObligationApplicable,
+  appareil?: string,
+): boolean {
+  const ja = joursDuRythme(a, appareil);
+  const jb = joursDuRythme(b, appareil);
   if (ja !== jb) return ja < jb;
+  const ra = rangDuRythme(a.obligation);
+  const rb = rangDuRythme(b.obligation);
+  if (ra !== rb) return ra < rb;
   return estAConfirmer(b) && !estAConfirmer(a);
 }
 
 /**
  * Un seul membre par groupe exclusif (ADR-045) : le plus exigeant, au sens de
- * `lEmporte`. Les autres sont retirés.
+ * `plusExigeant`. Les autres sont retirés.
  *
  * Deux égalités de rythme existent aujourd'hui, toutes deux dans le groupe de
  * la 4ᵉ catégorie (un type R avec un type à trois ans, ou R sans hébergement
@@ -1309,7 +1333,7 @@ function resoudreGroupesExclusifs(
     const g = a.obligation.groupeExclusif;
     if (g === undefined) continue;
     const deja = retenu.get(g);
-    if (deja === undefined || lEmporte(a, deja)) {
+    if (deja === undefined || plusExigeant(a, deja)) {
       retenu.set(g, a);
     }
   }
@@ -1320,54 +1344,9 @@ function resoudreGroupesExclusifs(
 }
 
 /**
- * D'où vient le rythme d'une obligation, pour départager deux membres d'un
- * geste au même rythme : le texte, puis la norme, puis le défaut annuel
- * (ADR-039 — « un rythme écrit l'emporte toujours »). Plus petit = plus fort.
- */
-function rangDuRythme(o: Obligation): number {
-  if (o.rythmeRetenu === undefined) return 0;
-  return o.rythmeRetenu.motif === "norme" ? 1 : 2;
-}
-
-/**
- * Le rythme d'un membre SUR CET APPAREIL : celui d'une prescription
- * particulière qui l'y renforce (ADR-035), sinon le sien.
- */
-function joursSurLAppareil(a: ObligationApplicable, appareil: string): number {
-  const surcharge = a.surcharges?.[appareil]?.periodicite;
-  return surcharge !== undefined
-    ? (PERIODICITE_EN_JOURS[surcharge] ?? Number.POSITIVE_INFINITY)
-    : joursDuRythme(a.obligation);
-}
-
-/**
- * `a` est-il le titulaire plutôt que `b` sur un appareil (ADR-057) ? Le rythme
- * le plus court — prescription particulière comprise ; à rythme égal, le rythme écrit par un texte sur celui d'une
- * norme ou du défaut ; puis le membre ÉTABLI sur celui que retient le
- * silence (comme `lEmporte`) ; à égalité encore, le premier du référentiel,
- * que l'ordre d'appel garde. Le rang du rythme avant tout le reste garde la
- * ligne d'un ERP sous son obligation ERP : sans lui, l'annuelle du Code du
- * travail (rythme de norme), placée plus haut dans le référentiel, prendrait
- * les lignes d'extincteur de tous les ERP employeurs.
- */
-function estTitulairePlutotQue(
-  a: ObligationApplicable,
-  b: ObligationApplicable,
-  appareil: string,
-): boolean {
-  const ja = joursSurLAppareil(a, appareil);
-  const jb = joursSurLAppareil(b, appareil);
-  if (ja !== jb) return ja < jb;
-  const ra = rangDuRythme(a.obligation);
-  const rb = rangDuRythme(b.obligation);
-  if (ra !== rb) return ra < rb;
-  return estAConfirmer(b) && !estAConfirmer(a);
-}
-
-/**
  * Un geste, une ligne par appareil (ADR-057). Sur chaque appareil, les
  * obligations applicables qui portent le même geste (`gesteDe`) se réunissent
- * sous un TITULAIRE (`estTitulairePlutotQue`) : lui seul garde l'appareil dans
+ * sous un TITULAIRE (`plusExigeant`, sur l'appareil) : lui seul garde l'appareil dans
  * ses `equipementsConcernes`, les autres l'en retirent et lui sont rattachées
  * dans `aussiFondeePar`. Une obligation qui n'a plus aucun appareil sort du
  * résultat.
@@ -1379,48 +1358,43 @@ function estTitulairePlutotQue(
  * Ce que la fusion ne fait pas : choisir un rythme. La ligne garde celui de
  * son titulaire, qui est par construction le plus court des membres. Les
  * prescriptions particulières s'appliquent AVANT (relecture du 2026-11-06,
- * plan A3) : la passe appelle le moteur sans fusion, applique les
- * prescriptions, puis appelle cette fonction — un membre qu'un acte
+ * plan A3) — c'est l'ordre de `lignesDuCalendrier` : un membre qu'un acte
  * d'autorité raccourcit devient titulaire sur son appareil, avec sa
  * surcharge. La surcharge d'un membre absorbé, moins stricte que la ligne,
  * tombe avec lui (`prescriptionsSansEffet`).
  */
 export function fusionnerGestes(
-  applicables: ObligationApplicable[],
+  applicables: readonly ObligationApplicable[],
 ): ObligationApplicable[] {
-  const membresParAppareil = new Map<string, ObligationApplicable[]>();
+  // Les membres de chaque geste, par appareil.
+  const membres = new Map<string, { appareil: string; liste: ObligationApplicable[] }>();
   for (const a of applicables) {
-    if (a.porteur !== "equipement" || gesteDe(a.obligation) === null) continue;
+    const geste = gesteDe(a.obligation);
+    if (a.porteur !== "equipement" || geste === null) continue;
     for (const e of a.equipementsConcernes) {
-      const membres = membresParAppareil.get(e.id) ?? [];
-      membres.push(a);
-      membresParAppareil.set(e.id, membres);
+      const cle = `${e.id}|${geste}`;
+      const groupe = membres.get(cle) ?? { appareil: e.id, liste: [] };
+      groupe.liste.push(a);
+      membres.set(cle, groupe);
     }
   }
 
   const retires = new Map<ObligationApplicable, Set<string>>();
   const absorbes = new Map<ObligationApplicable, Record<string, Obligation[]>>();
-  for (const [appareil, membres] of membresParAppareil) {
-    for (const geste of new Set(membres.map((m) => gesteDe(m.obligation)))) {
-      const duGeste = membres.filter((m) => gesteDe(m.obligation) === geste);
-      if (duGeste.length < 2) continue;
-      const titulaire = duGeste.reduce((t, m) =>
-        estTitulairePlutotQue(m, t, appareil) ? m : t,
-      );
-      const table = absorbes.get(titulaire) ?? {};
-      table[appareil] = duGeste
-        .filter((m) => m !== titulaire)
-        .map((m) => m.obligation);
-      absorbes.set(titulaire, table);
-      for (const m of duGeste) {
-        if (m === titulaire) continue;
-        const r = retires.get(m) ?? new Set<string>();
-        r.add(appareil);
-        retires.set(m, r);
-      }
+  for (const { appareil, liste } of membres.values()) {
+    if (liste.length < 2) continue;
+    const titulaire = liste.reduce((t, m) => (plusExigeant(m, t, appareil) ? m : t));
+    const table = absorbes.get(titulaire) ?? {};
+    table[appareil] = liste.filter((m) => m !== titulaire).map((m) => m.obligation);
+    absorbes.set(titulaire, table);
+    for (const m of liste) {
+      if (m === titulaire) continue;
+      const r = retires.get(m) ?? new Set<string>();
+      r.add(appareil);
+      retires.set(m, r);
     }
   }
-  if (absorbes.size === 0) return applicables;
+  if (absorbes.size === 0) return [...applicables];
 
   const out: ObligationApplicable[] = [];
   for (const a of applicables) {
@@ -1435,36 +1409,6 @@ export function fusionnerGestes(
       equipementsConcernes,
       ...(table ? { aussiFondeePar: table } : {}),
     });
-  }
-  return out;
-}
-
-/**
- * Toutes les obligations que les lignes suivent, ABSORBÉES COMPRISES
- * (ADR-057) : les titulaires, puis, sans doublon, les obligations qu'un
- * titulaire a absorbées sur l'un de ses appareils. Une obligation absorbée
- * n'est pas perdue — sa ligne est celle du titulaire, qui la cite.
- *
- * La lecture à prendre partout où l'on demande « quelles obligations
- * s'appliquent ici ? » plutôt que « quelles lignes naissent ? » : le guide,
- * la couverture, les comptes. `determineObligationsApplicables` rend les
- * LIGNES ; ses `obligation.id` seuls oublieraient les absorbées.
- */
-export function obligationsSuivies(
-  applicables: readonly ObligationApplicable[],
-): Obligation[] {
-  const vues = new Set<string>();
-  const out: Obligation[] = [];
-  const ajouter = (o: Obligation) => {
-    if (vues.has(o.id)) return;
-    vues.add(o.id);
-    out.push(o);
-  };
-  for (const a of applicables) ajouter(a.obligation);
-  for (const a of applicables) {
-    for (const membres of Object.values(a.aussiFondeePar ?? {})) {
-      for (const m of membres) ajouter(m);
-    }
   }
   return out;
 }

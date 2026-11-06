@@ -2,13 +2,10 @@ import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeReten
 import { suiviParPersonne } from "@/lib/referentiels/conformite/transmissions";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { mentionRythmeRetenu } from "@/lib/referentiels/conformite/mention-rythme";
+import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import {
-  periodiciteEffective,
-  referencesCitees,
-} from "@/lib/referentiels/conformite/rythme-retenu";
-import {
-  intervenantsCommuns,
-  referencesDuGeste,
+  realisateursDeLigne,
+  referencesAjoutees,
 } from "@/lib/referentiels/conformite/geste";
 import Link from "next/link";
 import { FormulairePoint } from "@/components/points-a-corriger/FormulairePoint";
@@ -296,7 +293,7 @@ export default async function EquipementDetailPage({
   // l'intervenant que tous admettent.
   const realisateurs = realisateursRequis(
     deLAppareil.map((a) => ({
-      realisateurs: intervenantsCommuns([a.obligation, ...a.aussiFondeePar]),
+      realisateurs: realisateursDeLigne(a.obligation, a.aussiFondeePar),
     })),
   );
 
@@ -451,11 +448,9 @@ export default async function EquipementDetailPage({
                         {aussiFondeePar.length > 0 ? (
                           <p className="m-0 mt-1 text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
                             Aussi exigé par{" "}
-                            {/* La lecture unique des références d'une ligne
-                                (`referencesDuGeste`), moins celles du titulaire :
-                                la même liste que la fiche de vérification. */}
-                            {referencesDuGeste(o, aussiFondeePar)
-                              .slice(referencesCitees(o).length)
+                            {/* Ce que les autres textes ajoutent — la même
+                                lecture que la fiche de vérification. */}
+                            {referencesAjoutees(o, aussiFondeePar)
                               .map((r) => r.reference)
                               .join(" · ")}
                           </p>

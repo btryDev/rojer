@@ -114,7 +114,7 @@ export type FaitsDeLigne = {
    * contrôle fait : la PLUS RÉCENTE de celle-ci et de la réalisation propre
    * date la ligne. Absent = aucune.
    */
-  realisationEquivalente?: Date | null;
+  realisationEquivalente: Date | null;
   /** `null` pour un porteur établissement ou salarié, pour une ligne sur mesure,
    *  et pour un appareil dont la date n'a pas été saisie. */
   miseEnService: Date | null;
@@ -180,6 +180,18 @@ export { premierPas } from "./periodicite";
  *
  * L'ORDRE DES RÈGLES est la décision ; le changer change le produit.
  */
+/**
+ * La plus RÉCENTE de deux réalisations, l'une ou l'autre absente. Le pendant
+ * de `reprendreLaRealisation` (la plus ANCIENNE, pour l'héritage prudent d'une
+ * obligation retirée) : ici le même acte, dont le dernier contrôle remet le
+ * compteur à zéro (ADR-057). À égalité, la seconde.
+ */
+export function laPlusRecente(a: Date | null, b: Date | null): Date | null {
+  if (a === null) return b;
+  if (b === null) return a;
+  return a > b ? a : b;
+}
+
 export function echeanceDeLigne(f: FaitsDeLigne): EcheanceDeLigne {
   // 1. LA DATE DU TITRE, EN PREMIER. Elle n'est pas un calcul : elle est écrite
   //    sur la pièce que l'employeur a en main. Placée après la réalisation, elle
@@ -253,11 +265,7 @@ export function echeanceDeLigne(f: FaitsDeLigne): EcheanceDeLigne {
   //    Une réalisation ÉQUIVALENTE (ADR-057 : le même acte, sur une autre
   //    ligne) compte comme la propre, et la plus récente des deux l'emporte —
   //    un contrôle fait sous un autre texte du geste remet le compteur à zéro.
-  const equivalente = f.realisationEquivalente ?? null;
-  const faite =
-    equivalente !== null && (realisee === null || equivalente > realisee)
-      ? equivalente
-      : realisee;
+  const faite = laPlusRecente(f.realisationEquivalente, realisee);
   const dernier = faite ?? f.realisationHeritee;
   if (dernier !== null) {
     const prochaine = prochaineEcheance(dernier, f.periodicite);

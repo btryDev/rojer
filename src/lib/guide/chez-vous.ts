@@ -25,7 +25,7 @@ import {
   phraseEffectifAConfirmer,
   seuilEntrepriseAtteint,
 } from "@/lib/matching/effectif-entreprise";
-import { determineObligationsApplicables, obligationsSuivies } from "@/lib/matching";
+import { determineObligationsApplicables } from "@/lib/matching";
 import type {
   EquipementMatching,
   EtablissementMatching,
@@ -229,16 +229,6 @@ export function construireChezVous(
       agg.equipements.add(eq.libelle);
       categoriesDeclenchantes.add(eq.categorie);
     }
-  }
-
-  // ADR-057 : une obligation absorbée par la ligne de son geste s'applique
-  // toujours — elle compte, dans son domaine. Son rythme n'est pas ajouté :
-  // aucune ligne ne le porte, la ligne du geste a le rythme le plus court.
-  const titulaires = new Set(applicables.map((a) => a.obligation.id));
-  for (const o of obligationsSuivies(applicables)) {
-    if (titulaires.has(o.id)) continue;
-    const agg = parDomaine.get(o.domaine);
-    if (agg) agg.nb += 1;
   }
 
   // Ordre stable : celui du référentiel, pas celui de la Map.

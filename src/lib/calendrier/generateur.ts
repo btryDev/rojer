@@ -56,7 +56,10 @@ import { PREFIXE_PRESCRIPTION } from "@/lib/matching/prescriptions";
 import { estSansRendezVous } from "@/lib/etats-permanents/regle";
 import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
 import { estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
-import { intervenantsCommuns } from "@/lib/referentiels/conformite/geste";
+import {
+  criticiteDeLigne,
+  realisateursDeLigne,
+} from "@/lib/referentiels/conformite/geste";
 import {
   estPorteeParSalarie,
   type Obligation,
@@ -65,7 +68,11 @@ import {
 // que `faitsDeLigne` rassemble. `decision-par-faits.ts` n'importe de ce module
 // que des TYPES (`import type`) : aucun cycle à l'exécution.
 import { faitsDeLigne } from "./decision-par-faits";
-import { echeanceDeLigne, type SourceEcheance } from "./echeance-de-ligne";
+import {
+  echeanceDeLigne,
+  laPlusRecente,
+  type SourceEcheance,
+} from "./echeance-de-ligne";
 
 /**
  * Sentinelle du porteur « établissement » dans la clé de ligne.
@@ -265,9 +272,19 @@ export type VerificationGenere = {
    * Les obligations du même geste que la ligne suit aussi sur cet appareil
    * (ADR-057, `ObligationApplicable.aussiFondeePar`) : la ligne cite leurs
    * références, et son `realisateurRequis` est l'intersection des
-   * intervenants. Absent ou vide = la ligne ne fonde que sur son obligation.
+   * intervenants. Vide = la ligne ne fonde que sur son obligation.
    */
-  fondeeAussiPar?: string[];
+  fondeeAussiPar: string[];
+  /**
+   * Les autres obligations du MÊME ACTE que cet appareil peut porter (ADR-057,
+   * les membres du geste). Deux usages, distincts de `succedeA` — la scission,
+   * dont l'héritage garde la réalisation la plus ANCIENNE :
+   *  · la reprise de la rangée quand le titulaire change (`adopter`) ;
+   *  · la réalisation équivalente — la plus RÉCENTE de ces lignes date
+   *    celle-ci (`realisationsDuMemeActe`).
+   * Absent = aucun.
+   */
+  memeActeQue?: string[];
   /**
    * Les SOURCES de calcul que le générateur a lues pour cette ligne — ce que le
    * temps 1 sait et que le temps 2 ne peut pas deviner (ADR-036 § 4) : le pas
@@ -554,14 +571,13 @@ export function genererProchainesVerifications(
       });
 
       // Le geste (ADR-057) : les obligations absorbées sur CET appareil, et
-      // celles du geste dont la ligne peut être reprise.
+      // les autres membres du geste qu'il peut porter — le même acte.
       const absorbees =
         eq.id === null ? [] : (oa.aussiFondeePar?.[eq.id] ?? []);
-      const membres =
+      const memeActeQue =
         eq.id === null || eq.categorie === null
           ? []
           : (options.autresMembresDuGeste?.(o, eq.categorie) ?? []);
-      const succedeA = [...(o.succedeA ?? []), ...membres];
 
       out.push({
         cleUnique,
@@ -570,20 +586,11 @@ export function genererProchainesVerifications(
         equipementId: eq.id,
         salarieId: eq.salarieId,
         periodicite,
-        realisateurRequis:
-          absorbees.length > 0
-            ? intervenantsCommuns([o, ...absorbees])
-            : o.realisateurs,
-        // La plus haute des obligations que la ligne suit (ADR-057) : une
-        // absorbée plus critique ne déclasse pas la ligne.
-        criticiteObligation: absorbees.reduce(
-          (c, a) => (a.criticite > c ? a.criticite : c),
-          o.criticite,
-        ),
-        ...(succedeA.length > 0 ? { succedeA } : {}),
-        ...(absorbees.length > 0
-          ? { fondeeAussiPar: absorbees.map((a) => a.id) }
-          : {}),
+        realisateurRequis: realisateursDeLigne(o, absorbees),
+        criticiteObligation: criticiteDeLigne(o, absorbees),
+        succedeA: o.succedeA,
+        ...(memeActeQue.length > 0 ? { memeActeQue } : {}),
+        fondeeAussiPar: absorbees.map((a) => a.id),
         raisons,
         prescriptionId,
         sources: {
@@ -700,6 +707,7 @@ export function genererVerificationsDepuisTitres(
         salarieId: t.salarieId,
         periodicite: rythme,
         realisateurRequis: o.realisateurs,
+        fondeeAussiPar: [],
         criticiteObligation: o.criticite,
         succedeA: o.succedeA,
         raisons: [`titre détenu par ${t.libelle}`],
@@ -744,6 +752,7 @@ export function genererVerificationsSurMesure(
         salarieId: null,
         periodicite: p.periodicite,
         realisateurRequis: p.realisateurRequis,
+        fondeeAussiPar: [],
         criticiteObligation: CRITICITE_SUR_MESURE,
         raisons: sm.raisons,
         prescriptionId: p.id,
@@ -1228,9 +1237,8 @@ export function realisationDispersee(
  * `FaitsDeLigne.realisationEquivalente`) : la plus récente des réalisations du
  * même acte portées par d'AUTRES lignes —
  *
- *  · une ligne d'un autre texte du même geste, ou d'une obligation dont
- *    celle-ci a hérité par scission (`g.succedeA`), sur le même appareil,
- *    vivante ou archivée : c'est le même contrôle, fait sous un autre texte
+ *  · une ligne d'un autre texte du même geste (`g.memeActeQue`) sur le même
+ *    appareil, vivante ou archivée : c'est le même contrôle, fait sous un autre texte
  *    (relecture du 2026-11-06 : un établissement redevenu ERP rouvrait la
  *    ligne ERP de 2024 et barrait celle du Code du travail de 2026) ;
  *  · la ligne d'établissement dont l'obligation est passée à l'appareil
@@ -1247,24 +1255,21 @@ export function realisationsDuMemeActe(
 ): (
   g: Pick<
     VerificationGenere,
-    "obligationId" | "equipementId" | "fondeeAussiPar" | "succedeA"
+    "obligationId" | "equipementId" | "salarieId" | "fondeeAussiPar" | "memeActeQue"
   >,
   ex: OccurrenceExistante | null,
 ) => Date | null {
-  // Les réalisations des lignes d'ÉTABLISSEMENT, par obligation : une
-  // obligation n'a jamais deux porteurs à la fois, donc une ligne
-  // d'établissement dont l'obligation engendre des lignes d'appareil est celle
-  // d'avant le changement de porteur.
+  // Les lignes existantes par clé (`cleDeLigne`, la convention du
+  // réconciliateur), et les réalisations des lignes d'ÉTABLISSEMENT par
+  // obligation : une obligation n'a jamais deux porteurs à la fois, donc une
+  // ligne d'établissement dont l'obligation engendre des lignes d'appareil est
+  // celle d'avant le changement de porteur.
+  const parCle = new Map<string, OccurrenceExistante>();
   const lignesEtablissement = new Map<string, Date>();
-  const parAppareil = new Map<string, OccurrenceExistante[]>();
   for (const ex of existantes) {
-    if ((ex.salarieId ?? null) !== null) continue;
-    if (ex.equipementId !== null) {
-      const liste = parAppareil.get(ex.equipementId) ?? [];
-      liste.push(ex);
-      parAppareil.set(ex.equipementId, liste);
-      continue;
-    }
+    const salarieId = ex.salarieId ?? null;
+    parCle.set(cleDeLigne(ex.obligationId, { equipementId: ex.equipementId, salarieId }), ex);
+    if (ex.equipementId !== null || salarieId !== null) continue;
     const realisation = realisationConnue(ex);
     if (realisation === null) continue;
     lignesEtablissement.set(
@@ -1276,11 +1281,10 @@ export function realisationsDuMemeActe(
   return (g, ex) => {
     if (g.equipementId === null) return null;
     let retenue = realisationDispersee(g, lignesEtablissement, appareilsDeclaresLe);
-    const memeActe = new Set(g.succedeA ?? []);
-    for (const autre of parAppareil.get(g.equipementId) ?? []) {
-      if (autre === ex || !memeActe.has(autre.obligationId)) continue;
-      const d = realisationConnue(autre);
-      if (d !== null && (retenue === null || d > retenue)) retenue = d;
+    for (const id of g.memeActeQue ?? []) {
+      const autre = parCle.get(cleDeLigne(id, g));
+      if (autre === undefined || autre === ex) continue;
+      retenue = laPlusRecente(realisationConnue(autre), retenue);
     }
     return retenue;
   };
@@ -1363,7 +1367,9 @@ export function reconcilierCalendrier(
     ajouterPredecesseur(nouveau, ancien);
   }
   for (const g of aGenerer) {
-    for (const ancien of g.succedeA ?? []) {
+    // La scission (`succedeA`) et le même acte (`memeActeQue`, ADR-057) :
+    // dans les deux cas, la rangée du même porteur est reprise.
+    for (const ancien of [...(g.succedeA ?? []), ...(g.memeActeQue ?? [])]) {
       ajouterPredecesseur(g.obligationId, ancien);
     }
   }
@@ -1478,7 +1484,7 @@ export function reconcilierCalendrier(
       libelleObligation: g.libelleObligation,
       periodicite: g.periodicite,
       realisateurRequis: g.realisateurRequis,
-      fondeeAussiPar: g.fondeeAussiPar ?? [],
+      fondeeAussiPar: g.fondeeAussiPar,
       datePrevue: decidee.datePrevue,
       statut: decidee.statut,
       prescriptionId: g.prescriptionId,

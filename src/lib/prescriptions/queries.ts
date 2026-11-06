@@ -6,16 +6,10 @@ import { cleJourCivil } from "@/lib/dates";
 import { compterLignesAvecPreuve } from "./preuves";
 import { chargerLignesViseesDuCompte } from "./lecture-preuves";
 import {
-  appliquerPrescriptions,
-  determineObligationsApplicables,
-  fusionnerGestes,
   estPrescriptionLevee,
+  lignesDuCalendrier,
   type PrescriptionMatching,
 } from "@/lib/matching";
-import {
-  MOTIF_PRESCRIPTION_SANS_EFFET,
-  prescriptionsSansEffet,
-} from "@/lib/matching/prescriptions";
 import { obligationParId, OBLIGATIONS_RETIREES } from "@/lib/referentiels/conformite";
 import { libelleObligationRetiree } from "@/lib/matching/obligation-retiree";
 import { derniersLibellesConnusDuCompte } from "./libelles-retires";
@@ -130,26 +124,18 @@ export async function chargerPagePrescriptions(
       unknown
     > | null,
   }));
-  // Le chemin de la passe (ADR-057) : sans fusion, les prescriptions, puis la
-  // fusion des gestes. Une prescription que la fusion rend sans effet est
-  // dite ignorée, avec son motif.
-  const applicables = determineObligationsApplicables(
+  // Le chemin de la passe (ADR-057) : une prescription que la fusion des
+  // gestes rend sans effet y est dite ignorée, avec son motif.
+  const actives = etab.prescriptionsParticulieres.filter((p) => p.actif);
+  const res = lignesDuCalendrier(
     projeterEtablissement(etab),
     equipements,
-    { fusion: false },
-  );
-  const actives = etab.prescriptionsParticulieres.filter((p) => p.actif);
-  const res = appliquerPrescriptions(applicables, actives, equipements, now);
-  const sansEffet = prescriptionsSansEffet(
-    res.applicables,
-    fusionnerGestes(res.applicables),
+    actives,
+    now,
   );
   const ignorees = new Map(
     res.ignorees.map((i) => [i.prescription.id, i.raison]),
   );
-  for (const id of sansEffet) {
-    if (!ignorees.has(id)) ignorees.set(id, MOTIF_PRESCRIPTION_SANS_EFFET);
-  }
   const prescriptions = etab.prescriptionsParticulieres.map((p) => {
     let etat: EtatPrescription;
     const raison = ignorees.get(p.id);
@@ -190,7 +176,7 @@ export async function chargerPagePrescriptions(
     prescriptions,
     // Avant la fusion (ADR-057) : toutes les obligations applicables, celles
     // qu'une ligne de geste réunit comprises, restent visables.
-    obligations: applicables.map((a) => ({
+    obligations: res.obligations.map((a) => ({
       id: a.obligation.id,
       libelle: a.obligation.libelle,
       periodicite: periodiciteEffective(a.obligation),

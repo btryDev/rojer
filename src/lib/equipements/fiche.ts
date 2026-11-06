@@ -44,6 +44,7 @@ import { cheminDeDeclaration } from "@/lib/etats-permanents/par-l-equipe";
 import type { Obligation } from "@/lib/referentiels/conformite/types";
 import {
   determineObligationsApplicables,
+  fusionnerGestes,
   projeterEtablissement,
 } from "@/lib/matching";
 import {
@@ -713,7 +714,11 @@ export function obligationsDeclencheesParUnFait(
 export function obligationsApplicablesALAppareil(
   eq: FicheEquipement,
 ): ObligationDeLAppareil[] {
-  const applicables = determineObligationsApplicables(
+  // Réunies par geste, comme les lignes (ADR-057) — sans les prescriptions,
+  // que cette lecture ne charge pas (même lacune que ci-dessous) : si un acte
+  // d'autorité fait d'un autre membre le titulaire, la fiche nomme encore
+  // celui du référentiel.
+  const applicables = fusionnerGestes(determineObligationsApplicables(
     projeterEtablissement(eq.etablissement),
     [
       {
@@ -726,7 +731,7 @@ export function obligationsApplicablesALAppareil(
         > | null,
       },
     ],
-  );
+  ));
 
   return applicables
     .filter((a) => a.porteur === "equipement")

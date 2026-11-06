@@ -184,6 +184,14 @@ const FAMILLES_DECLAREES: {
   // portés par l'appareil, l'instruction du personnel par l'établissement ;
   // deux porteurs différents ne forment plus de paire (`memeCible`).
   {
+    famille: "5ᵉ catégorie, électricité : PE 4 § 2 et le contrôle annuel de l'hôtel",
+    motif:
+      "Sur un ERP de 5ᵉ qui groupe un hôtel et un autre type, PE 4 § 2 (triennal, porté par l'appareil depuis l'ADR-057) et le contrôle annuel des installations électriques de PO 1 § 3 visent la même installation. Avant l'ADR-057, le groupe exclusif PE 4 / PO 1 n'en servait qu'une. Les réunir par le geste n'a pas été décidé par la propriétaire : la paire est déclarée, et la question est au « À trancher » de l'ADR-057.",
+    cotes: [
+      [/^incendie-erp-pe4-entretien-installations-techniques$/, /^incendie-hotel-po-controle-annuel-electricite$/],
+    ],
+  },
+  {
     famille: "code du sport (type X) ↔ règlement de sécurité d'un autre type",
     motif:
       "La trousse, le moyen d'alerte et le tableau des secours de R. 322-4 (code du sport, établissement où se pratiquent des activités physiques ou sportives, lu sur le type X) ne sont aucun des actes du règlement de sécurité qu'un autre type fait naître : visite de la commission, consignes et plans, personnel désigné, interdiction de fumer, schéma d'organisation, contrat d'entretien du SDI, contrôle et instruction de l'hôtel. Une salle de sport qui comporte un hôtel ou un magasin doit les deux textes (sous-lot E, 2026-10-17). Identifiants nommés un à un.",
