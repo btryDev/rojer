@@ -93,7 +93,9 @@ const A_FAIRE = [
   {
     // Pas les extincteurs : la liste « prochaines échéances » plus bas les
     // donne à venir, et une même ligne ne peut pas être les deux.
-    titre: "Entretien et vérification de l'ensemble des installations techniques (ERP 5ᵉ catégorie)",
+    // [2026-11-05, ADR-057 : le libellé suit celui du référentiel — PE 4 § 2
+    // est porté par l'appareil.]
+    titre: "Entretien et vérification de l'installation, tous les trois ans au plus (ERP 5ᵉ catégorie)",
     detail: "Vérification · en retard",
     jour: "J−3",
   },

@@ -38,6 +38,11 @@ import {
 import { modeDeclarationApplique, type ModeDeclaration } from "./regle";
 import { estFormation } from "@/lib/referentiels/conformite/types";
 import { ordonnerLignes } from "./ordre";
+import {
+  annexeDeLaLigne,
+  hrefPieceEtatPermanent,
+  type PieceDeLaLigne,
+} from "@/lib/registre/annexes";
 import { contexteFondementDe, fondementDe, type FondementLigne } from "./fondement";
 import { PHRASE_SANS_REPONSE } from "@/lib/matching/sans-reponse";
 import { obligationsApplicablesDuDossier } from "@/lib/etablissements/dossier-du-rendu";
@@ -84,6 +89,19 @@ export type LigneEtatPermanent = {
    * déclaration est ignorée. `null` pour toute autre ligne.
    */
   parLesTitres: EtatParLesTitres | null;
+  /**
+   * La ligne reçoit-elle un fichier ? Vrai pour les seuls écrits que le
+   * règlement fait annexer au registre, là où l'annexion vaut
+   * (`annexeDeLaLigne`, ADR-056). Faux partout ailleurs : l'ADR-027 § 3 tient.
+   */
+  accepteUnFichier: boolean;
+  /** Le fichier en cours, s'il y en a un. `null` sinon. */
+  piece: PieceDeLaLigne | null;
+  /**
+   * Le fichier précédent, gardé jusqu'au dépôt suivant (ADR-056 § 4-5) : on
+   * peut montrer ce qui était annexé avant un remplacement. `null` sinon.
+   */
+  piecePrecedente: (PieceDeLaLigne & { remplaceeLe: Date }) | null;
 };
 
 /**
@@ -239,7 +257,7 @@ export async function listerEtatsPermanents(
   // `par-les-titres-dossier.test.ts` (« ne lit que les titres des personnes
   // actives de CE dossier »). `tenancy-lectures.test.ts` ne voit pas cette
   // lecture. Retirer le prédicat ne fait tomber que ce test-là.
-  const [declarations, titres] = await Promise.all([
+  const [declarations, titres, pieces] = await Promise.all([
     db.declarationEtatPermanent.findMany({
       where: {
         etablissementId: etablissement.id,
@@ -265,7 +283,42 @@ export async function listerEtatsPermanents(
             salarie: { select: { prenom: true, nom: true } },
           },
         }),
+    // Les fichiers des écrits annexés au registre (ADR-056) : deux au plus
+    // par ligne, celui en cours et le précédent. Lus seulement si une ligne du
+    // dossier en reçoit un : sinon la page paierait une requête pour rien —
+    // le tableau de bord et Équipe passent par ici (budget de requêtes, CI du
+    // 2026-11-05).
+    !applicables.some((a) => annexeDeLaLigne(a.obligation.id, projete))
+      ? Promise.resolve([])
+      : db.pieceEtatPermanent.findMany({
+          where: {
+            etablissementId: etablissement.id,
+            etablissement: { entreprise: { userId: user.id } },
+          },
+          select: {
+            id: true,
+            obligationId: true,
+            fichierNom: true,
+            deposeLe: true,
+            enCours: true,
+            remplaceeLe: true,
+          },
+        }),
   ]);
+  const piecesParObligation = new Map<string, PieceDeLaLigne>();
+  const precedentesParObligation = new Map<string, PieceDeLaLigne & { remplaceeLe: Date }>();
+  for (const p of pieces) {
+    const lue = {
+      id: p.id,
+      nom: p.fichierNom,
+      deposeLe: p.deposeLe,
+      href: hrefPieceEtatPermanent(etablissement.id, p.id),
+    };
+    if (p.enCours === true) piecesParObligation.set(p.obligationId, lue);
+    else if (p.remplaceeLe) {
+      precedentesParObligation.set(p.obligationId, { ...lue, remplaceeLe: p.remplaceeLe });
+    }
+  }
   const parObligation = new Map(declarations.map((d) => [d.obligationId, d]));
   const titresParObligation = new Map<string, TitreDeclare[]>();
   for (const t of titres) {
@@ -320,6 +373,11 @@ export async function listerEtatsPermanents(
       ),
       fondement: fondementDe(o, contexteFondement),
       parLesTitres,
+      // Une ligne établie d'après les titres ne se coche pas : elle ne reçoit
+      // pas non plus de fichier, déposer y vaudrait déclarer.
+      accepteUnFichier: !parLesTitres && annexeDeLaLigne(o.id, projete) !== null,
+      piece: piecesParObligation.get(o.id) ?? null,
+      piecePrecedente: precedentesParObligation.get(o.id) ?? null,
     };
 
     if (mode.compteDansLEnTete) {

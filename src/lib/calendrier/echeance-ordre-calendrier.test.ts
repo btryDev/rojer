@@ -24,6 +24,7 @@ function faits(p: Partial<FaitsDeLigne> & { periodicite?: Periodicite }): FaitsD
     dateDuTitre: null,
     realisation: null,
     realisationHeritee: null,
+    realisationEquivalente: null,
     miseEnService: null,
     origine: J("2026-01-01"),
     ...p,
@@ -47,6 +48,7 @@ describe("echeanceDeLigne — ordre des règles (cas croisés non couverts)", ()
       faits({
         realisation: { date: J("2026-01-10"), resultat: "conforme" },
         realisationHeritee: J("2025-05-01"),
+        realisationEquivalente: null,
         miseEnService: J("2026-06-01"),
       }),
     );

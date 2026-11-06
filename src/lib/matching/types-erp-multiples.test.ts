@@ -15,12 +15,13 @@ import { describe, expect, it } from "vitest";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { porteurDe } from "@/lib/referentiels/conformite/types";
 import { estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
+import { gesteDe } from "@/lib/referentiels/conformite/geste";
 import {
   CATEGORIES_EQUIPEMENT,
   type CategorieErp,
   type TypeErp,
 } from "@/lib/referentiels/types-communs";
-import { determineObligationsApplicables, evaluerObligation } from "./engine";
+import { determineObligationsApplicables, evaluerObligation, fusionnerGestes } from "./engine";
 import type { EquipementMatching, EtablissementMatching } from "./types";
 import { typesErpDe } from "./types-erp";
 import { projeterEtablissement } from "./projection";
@@ -84,16 +85,21 @@ const TRIPLETS: TypeErp[][] = TYPES.flatMap((a, i) =>
 );
 
 describe("les groupes exclusifs — la structure", () => {
-  it("toute obligation à `typesExclus` appartient à un groupe", () => {
+  it("toute obligation à `typesExclus` appartient à un groupe, ou porte un geste", () => {
+    // 2026-11-05 (ADR-057) : une obligation portée par l'appareil ne peut pas
+    // appartenir à un groupe exclusif (la résolution retire une obligation
+    // entière) ; c'est son geste qui départage, appareil par appareil
+    // (PE 4 § 2 / PO 1 § 3).
     const orphelines = obligationsConformite.filter(
       (o) =>
         typeof o.typologies.erp === "object" &&
         (o.typologies.erp.typesExclus?.length ?? 0) > 0 &&
-        o.groupeExclusif === undefined,
+        o.groupeExclusif === undefined &&
+        gesteDe(o) === null,
     );
     expect(
       orphelines.map((o) => o.id),
-      "Une ligne à `typesExclus` est le membre général d'une paire : sans groupe, " +
+      "Une ligne à `typesExclus` est le membre général d'une paire : sans groupe ni geste, " +
         "un établissement qui déclare un type de chaque côté reçoit les deux (ADR-045).",
     ).toEqual([]);
   });
@@ -209,9 +215,22 @@ describe("plusieurs types : l'union, puis un membre par groupe", () => {
   });
 
   it("l'hôtel-restaurant de 5ᵉ : les lignes de l'hôtel, pas les lignes générales qu'elles absorbent", () => {
+    // 2026-11-05 (ADR-057) : PE 4 § 2 et PO 1 § 3 sont portés par l'appareil ;
+    // sur l'installation de gaz, la ligne de l'hôtel (biennale) l'emporte et
+    // cite PE 4 § 2.
+    const gaz: EquipementMatching = { id: "gaz", libelle: "Gaz", categorie: "INSTALLATION_GAZ", caracteristiques: null };
+    const surLeGaz = fusionnerGestes(
+      determineObligationsApplicables(erp(["N", "O"], "N5", true), [gaz]),
+    ).filter(
+      (a) => a.equipementsConcernes.some((q) => q.id === "gaz"),
+    );
+    expect(surLeGaz.map((a) => a.obligation.id)).toEqual([
+      "incendie-hotel-po-controle-biennal-installations",
+    ]);
+    expect(surLeGaz[0].aussiFondeePar?.gaz?.map((o) => o.id)).toEqual([
+      "incendie-erp-pe4-entretien-installations-techniques",
+    ]);
     const sortie = ids(erp(["N", "O"], "N5", true));
-    expect(sortie.has("incendie-hotel-po-controle-biennal-installations")).toBe(true);
-    expect(sortie.has("incendie-erp-pe4-entretien-installations-techniques")).toBe(false);
     expect(sortie.has("incendie-hotel-po-instruction-personnel-semestrielle")).toBe(true);
     expect(sortie.has("incendie-erp-5-instruction-personnel")).toBe(false);
     // Le sommeil se lit sur l'ensemble des types : O le rend plausible.

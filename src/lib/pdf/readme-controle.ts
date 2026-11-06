@@ -127,6 +127,8 @@ export function genererReadme(args: {
   piecesPrestatairesPrecedentes?: number;
   /** Fichiers des rapports de vérification : déposés, mis au ZIP, non récupérés. */
   rapportsZip?: CompteFichiers;
+  /** Les écrits annexés au registre (ADR-056). */
+  annexesZip?: CompteFichiers;
   /** Rapports de lignes de salarié, écartés du ZIP (documents nominatifs) ;
    *  `null` si le comptage a échoué — la règle est alors dite sans nombre. */
   rapportsSalariesEcartes?: number | null;
@@ -206,6 +208,7 @@ export function genererReadme(args: {
     // ~~« Rapports de vérifications périodiques »~~ : le registre porte
     // l'INDEX des rapports ; leurs fichiers sont dans Rapports/ (2026-09-27).
     ligne(PIECES_ZIP.registre, "Registre des vérifications, index des rapports", "Non inclus"),
+    ligneFichiers(PIECES_ZIP.annexes, "écrit(s) annexé(s) au registre", "Aucun écrit annexé déposé", args.annexesZip),
     ligneFichiers(PIECES_ZIP.rapports, "fichier(s) de rapport de vérification", "Aucun rapport déposé", args.rapportsZip),
     ...(args.rapportsSalariesEcartes === null
       ? ["   Les rapports déposés sur le titre d'un salarié ne sont jamais joints :", "   documents nominatifs, conservés dans l'application."]

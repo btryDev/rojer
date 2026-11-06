@@ -396,8 +396,9 @@ export function suggererEquipements(ctx: ContexteEtablissement): Entree[] {
       // moteur, et le rythme en dépend (annuel en 1ʳᵉ-4ᵉ, triennal en 5ᵉ).
       fondements.push({ obligationId: "elec-erp-cat1-4-annuelle" });
       // En 5ᵉ catégorie, le fondement est PE 4 § 2, désormais encodé entier et
-      // porté par l'établissement (ADR-022) — le fragment « installations
-      // électriques » a été absorbé. La suggestion reste juste : c'est bien ce
+      // ~~porté par l'établissement (ADR-022)~~ [2026-11-06, ADR-057 : porté
+      // par l'appareil] — le fragment « installations électriques » a été
+      // absorbé. La suggestion reste juste : c'est bien ce
       // texte qui impose le contrôle triennal de cette installation.
       fondements.push({
         obligationId: "incendie-erp-pe4-entretien-installations-techniques",
@@ -543,8 +544,9 @@ export function suggererEquipements(ctx: ContexteEtablissement): Entree[] {
       libelle: "Ventilation des locaux de travail",
       motif: "Entretien et contrôle périodiques des installations d'aération",
       fondements: [
-        // R. 4222-20 est désormais encodé entier et porté par l'établissement
-        // (ADR-022) : le fragment « VMC/CTA » a été absorbé. La suggestion
+        // R. 4222-20 est désormais encodé entier et ~~porté par
+        // l'établissement (ADR-022)~~ [2026-11-06, ADR-057 : porté par
+        // l'appareil] : le fragment « VMC/CTA » a été absorbé. La suggestion
         // reste juste — c'est bien ce texte qui impose d'entretenir et de
         // contrôler cette installation.
         {

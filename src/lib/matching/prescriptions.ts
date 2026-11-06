@@ -322,3 +322,29 @@ export function appliquerPrescriptions(
     ignorees,
   };
 }
+
+/**
+ * Les prescriptions qui renforçaient une obligation avant la fusion des gestes
+ * et n'ont plus de ligne après (ADR-057) : l'obligation visée a été absorbée,
+ * sur chaque appareil où l'acte la renforçait, par une ligne au rythme déjà
+ * plus strict. Rien n'est perdu — la ligne est plus exigeante que l'acte —,
+ * mais la page des prescriptions doit le dire au lieu d'annoncer un rythme
+ * qu'aucune ligne ne porte.
+ */
+export function prescriptionsSansEffet(
+  avantFusion: readonly ObligationApplicable[],
+  apresFusion: readonly ObligationApplicable[],
+): Set<string> {
+  const ids = (liste: readonly ObligationApplicable[]) =>
+    new Set(
+      liste.flatMap((a) =>
+        Object.values(a.surcharges ?? {}).map((s) => s.prescriptionId),
+      ),
+    );
+  const apres = ids(apresFusion);
+  return new Set([...ids(avantFusion)].filter((id) => !apres.has(id)));
+}
+
+/** Le motif affiché pour une prescription que `prescriptionsSansEffet` rend. */
+export const MOTIF_PRESCRIPTION_SANS_EFFET =
+  "Sur les appareils visés, Rojer suit cette obligation sur une ligne qui en réunit plusieurs, à un rythme déjà plus strict : la prescription n'a rien à renforcer.";

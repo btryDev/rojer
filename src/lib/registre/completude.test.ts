@@ -210,7 +210,9 @@ describe("une fiche tenue sur un autre écran", () => {
       completudeDeLaFiche(FORMULAIRE, { champs: { a: "x", b: "y" } }),
       completudeDeLaFiche(undefined, null, alimentationDeLaPartie("2.1", base)),
       completudeDeLaFiche(undefined, null, alimentationDeLaPartie("3.2", base)),
-      completudeDeLaFiche(undefined, null, alimentationDeLaPartie("5", base)),
+      // ~~« 5 »~~ (2026-11-05) : les annexes se relisent désormais sur « Ce
+      // qui doit être en place » ; la partie 4 reste sans autre écran.
+      completudeDeLaFiche(undefined, null, alimentationDeLaPartie("4", base)),
     ]);
     expect(bilan).toEqual({
       dues: 4,

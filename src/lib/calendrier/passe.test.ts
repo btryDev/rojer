@@ -25,7 +25,10 @@ const USER_ID = "user-1";
 const ETAB_ID = "etab-1";
 /** Portée par l'ÉTABLISSEMENT, annuelle, sans aucune source de date : elle
  *  naît « à planifier », datée du début du jour de son origine (règle 5). */
-const AERATION_R4222_20 = "aeration-controle-installations-r4222-20";
+// [2026-11-05, ADR-057 : ~~R. 4222-20~~ passe à l'appareil ; l'obligation
+// d'établissement annuelle, sans appareil, de ces tests est désormais la
+// liste des postes à risques particuliers (R. 4624-23 III).]
+const AERATION_R4222_20 = "sante-travail-etablissement-liste-postes-risques";
 
 const { db, prisma } = await h;
 const client = prisma as unknown as ClientPasse;

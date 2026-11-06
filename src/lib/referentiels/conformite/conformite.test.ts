@@ -636,6 +636,22 @@ describe("référentiel conformité — anti-doublon", () => {
     },
     {
       paire: [
+        "incendie-erp-5-consignes-affichees",
+        "incendie-erp-5-plan-intervention-entree",
+      ],
+      raison:
+        "Instruit le 2026-11-06, ce n'est PAS un doublon. `PE 27` fait afficher deux écrits différents : par son § 4, des CONSIGNES — trois mentions destinées à quiconque découvre un sinistre — ; par son § 6, un PLAN schématique de l'établissement destiné aux sapeurs-pompiers. L'un ne remplace pas l'autre. La clé d'article reste « PE 27 » parce que le corpus ne descend pas au paragraphe.",
+    },
+    {
+      paire: [
+        "incendie-erp-5-instruction-personnel",
+        "incendie-erp-5-plan-intervention-entree",
+      ],
+      raison:
+        "Instruit le 2026-11-06, ce n'est PAS un doublon. `PE 27` fonde par son § 5 un ACTE envers des personnes — instruire et entraîner le personnel — et par son § 6 un ÉCRIT affiché, le plan d'intervention. La clé d'article reste « PE 27 » parce que le corpus ne descend pas au paragraphe.",
+    },
+    {
+      paire: [
         "incendie-erp-hotel-consigne-chambres",
         "incendie-erp-hotel-plans-evacuation-niveaux",
       ],
@@ -2008,6 +2024,12 @@ describe("référentiel conformité — version et empreinte", () => {
     // propriétaire) : les libellés d'EL 18 § 2 et de L 57 § 7 disent « en
     // électricité ». 205 + 0 − 0, relevée en appelant.
     { version: "2026-11-04.1", empreinte: "205-a7fba8ae5dd614bc" },
+    { version: "2026-11-06.1", empreinte: "205-80a0dac86aa622c8" },
+    // `lot/pe27-plan-intervention` (2026-11-06, décision de la propriétaire,
+    // « ajout pour tous »), rebasé derrière la PR #200 :
+    // `incendie-erp-5-plan-intervention-entree` (PE 27 § 6), établissement,
+    // toute la 5ᵉ. 205 + 1 − 0 = 206, relevée en appelant `empreinteReferentiel()`.
+    { version: "2026-11-06.2", empreinte: "206-8dcc938ef54ccb22" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -2204,7 +2226,10 @@ describe("référentiel conformité — version et empreinte", () => {
       // ~~204~~ — 2026-11-03, `lot/cch-manques-cible` : 204 + 1
       // (`incendie-erp-enseignement-exercices-evacuation`, R 33) − 0 = 205,
       // remesuré en appelant `obligationsConformite`.
-    ).toBe(205);
+      // ~~205~~ — 2026-11-06, `lot/pe27-plan-intervention` : 205 + 1
+      // (`incendie-erp-5-plan-intervention-entree`, PE 27 § 6) − 0 = 206,
+      // remesuré en appelant `obligationsConformite`.
+    ).toBe(206);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {

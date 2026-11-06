@@ -160,6 +160,11 @@ export type RegistreData = {
   bilan: BilanPdf;
   rapports: LigneRapport[];
   verifsEnAttente: LigneVerif[];
+  /**
+   * Les écrits annexés dont un fichier est déposé (ADR-056) : le PDF ne les
+   * imprime pas ici — la fiche « Annexes » les nomme —, le ZIP les joint.
+   */
+  annexes?: { pieceId: string; titre: string }[];
 };
 
 const LIBELLE_STATUT_VERIF: Record<StatutPeint, string> = {

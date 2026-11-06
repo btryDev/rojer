@@ -77,7 +77,11 @@ import type {
 } from "./RegistreDocument";
 import { composerRegistreDeLEtablissement } from "@/lib/registre/queries";
 import { saisiePourSection } from "@/lib/registre/champs";
-import { contenuTenuAilleursDepuis } from "@/lib/registre/contenu-ailleurs";
+import {
+  contenuTenuAilleursDepuis,
+  lireAnnexesDuRegistre,
+} from "@/lib/registre/contenu-ailleurs";
+import { ID_FICHE_ANNEXES, piecesDesAnnexes } from "@/lib/registre/annexes";
 import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
 import {
   bilanDuRegistre,
@@ -403,6 +407,10 @@ export async function construirePointsEquipementData(
 export async function construireRegistreData(
   db: Db,
   etablissementId: string,
+  /** L'utilisateur de la session, celui que la route a vérifié : les annexes
+   *  se lisent avec lui, comme « Préparer un contrôle » (relecture du
+   *  2026-11-05 — `entreprise.userId`, nullable, pouvait les taire). */
+  userId: string,
 ): Promise<RegistreData | null> {
   const etab = await chargerEtablissementDuUser(db, etablissementId);
   if (!etab) return null;
@@ -450,9 +458,13 @@ export async function construireRegistreData(
   // ferait exactement ce que l'écran a cessé de faire — laisser croire le
   // document complet.
   const registre = await composerRegistreDeLEtablissement(etablissementId);
-  const equipements = registre
-    ? await listerEquipementsDeLEtablissement(etablissementId)
-    : [];
+  const [equipements, annexes] = registre
+    ? await Promise.all([
+        listerEquipementsDeLEtablissement(etablissementId),
+        // La fiche « Annexes » relit « Ce qui doit être en place » (2026-11-05).
+        lireAnnexesDuRegistre(db, etablissementId, userId),
+      ])
+    : [[], null];
 
   // Le calcul de l'écran du registre et de « Préparer un contrôle »
   // (`completudesDuRegistre`, 2026-10-12) : le PDF n'en tient plus un second.
@@ -470,7 +482,10 @@ export async function construireRegistreData(
       // Le parc et le calendrier sont lus une seule fois pour les
       // quarante-neuf fiches : une lecture par fiche ferait soixante-deux
       // requêtes pour un document.
-      const ailleurs = contenuTenuAilleursDepuis(
+      const ailleurs =
+        due.section.id === ID_FICHE_ANNEXES
+          ? annexes
+          : contenuTenuAilleursDepuis(
         etablissementId,
         partie.id,
         due.section,
@@ -505,6 +520,9 @@ export async function construireRegistreData(
     bilan: bilanDuRegistre([...completudes.values()]),
     rapports: lignesRapports,
     verifsEnAttente,
+    // Les fichiers que la fiche « Annexes » porte : le ZIP les joint sans
+    // refaire la lecture (relecture du 2026-11-05).
+    annexes: piecesDesAnnexes(annexes),
   };
 }
 
@@ -558,7 +576,11 @@ function ficheDuPdf(
       source: ailleurs.source.libelle,
       tenues: ailleurs.lignes.map((l) => ({
         titre: l.titre,
-        meta: l.meta ?? "",
+        // Le nom du fichier annexé (ADR-056) : l'écran le donne en lien, le
+        // papier le nomme — le fichier lui-même part dans le ZIP de contrôle.
+        meta: [l.meta, l.fichier ? `fichier : ${l.fichier.nom}` : null]
+          .filter(Boolean)
+          .join(" · "),
       })),
     };
   }

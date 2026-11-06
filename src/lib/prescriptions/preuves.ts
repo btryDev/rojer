@@ -89,7 +89,14 @@ export function lignesVisees(
   if (p.obligationId === null) return null;
   return {
     etablissementId,
-    obligationId: p.obligationId,
+    // L'obligation visée a sa ligne, OU elle est suivie par la ligne de son
+    // geste (ADR-057, `fondeeAussiPar`) : un rapport déposé sur celle-ci peut
+    // avoir été fait sous l'acte. Plus large que nécessaire, et c'est le sens
+    // prudent pour la garde qui interdit de supprimer une preuve.
+    OR: [
+      { obligationId: p.obligationId },
+      { fondeeAussiPar: { has: p.obligationId } },
+    ],
     // Sans appareil désigné, la surcharge vise tous ceux qui déclenchent
     // l'obligation : toutes les lignes de l'obligation, archivées comprises —
     // un appareil retiré depuis a pu être contrôlé sous l'acte.

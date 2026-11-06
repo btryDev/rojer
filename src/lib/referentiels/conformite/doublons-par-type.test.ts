@@ -26,6 +26,7 @@ import {
 } from "@/lib/referentiels/types-communs";
 import { obligationsConformite } from "./index";
 import { estPorteeParEquipement, porteurDe, type Obligation } from "./types";
+import { gesteDe } from "./geste";
 
 const sonde = (
   categorieErp: CategorieErp | null,
@@ -104,6 +105,9 @@ function pairesSepareesParLeType(obligations: Obligation[]): [string, string][] 
       const a = obligations[i];
       const b = obligations[j];
       if (a.groupeExclusif !== undefined && a.groupeExclusif === b.groupeExclusif) continue;
+      // Le geste (ADR-057) départage, appareil par appareil, deux lignes
+      // portées par l'appareil : une seule ligne par appareil, jamais deux.
+      if (gesteDe(a) !== null && gesteDe(a) === gesteDe(b)) continue;
       if (!memeCible(a, b)) continue;
       if (seRecouvrent(mono[i], mono[j])) continue;
       if (!seRecouvrent(duo[i], duo[j])) continue;
@@ -175,15 +179,10 @@ const FAMILLES_DECLAREES: {
       ],
     ],
   },
-  {
-    famille: "5ᵉ catégorie : une paire générale/hôtel croisée avec l'autre",
-    motif:
-      "Deux groupes exclusifs vivent en 5ᵉ : entretien des installations techniques (PE 4 § 2 / PO 1 § 3) et instruction du personnel (PE 27 § 5 / PO 7). Leurs membres se départagent DANS chaque groupe. Croisés — l'instruction générale avec le contrôle biennal de l'hôtel, l'entretien général avec l'instruction semestrielle de l'hôtel —, ce sont deux actes différents, l'un sur les installations, l'autre sur le personnel. Paires nommées une à une : une famille plus large couvrirait le doublon réel d'un même groupe dont on aurait retiré le `groupeExclusif`.",
-    cotes: [
-      [/^incendie-erp-5-instruction-personnel$/, /^incendie-hotel-po-controle-biennal-installations$/],
-      [/^incendie-erp-pe4-entretien-installations-techniques$/, /^incendie-hotel-po-instruction-personnel-semestrielle$/],
-    ],
-  },
+  // ~~« 5ᵉ catégorie : une paire générale/hôtel croisée avec l'autre »~~ —
+  // famille retirée le 2026-11-05 (ADR-057) : PE 4 § 2 et PO 1 § 3 sont
+  // portés par l'appareil, l'instruction du personnel par l'établissement ;
+  // deux porteurs différents ne forment plus de paire (`memeCible`).
   {
     famille: "code du sport (type X) ↔ règlement de sécurité d'un autre type",
     motif:

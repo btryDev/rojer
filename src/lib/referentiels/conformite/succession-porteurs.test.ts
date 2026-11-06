@@ -20,7 +20,13 @@ import type { PorteurObligation } from "./types";
  *    équipement, le même salarié, ou l'établissement des deux côtés) ;
  *  · le REPORT D'ÉCHÉANCE — N lignes d'ÉQUIPEMENT retirées au profit d'une
  *    ligne d'ÉTABLISSEMENT (`heritageDesRetirees`, table `parObligation`,
- *    consultée par la seule ligne d'établissement).
+ *    consultée par la seule ligne d'établissement) ;
+ *  · [2026-11-05, ADR-057] la DISPERSION — une ligne d'ÉTABLISSEMENT dont
+ *    l'obligation passe, SOUS LE MÊME IDENTIFIANT, au porteur appareil : chaque
+ *    appareil reprend sa dernière réalisation s'il était déclaré à sa date
+ *    (`realisationDispersee`). C'est le chemin de `PE 4 § 2`, `PO 1 § 3` et
+ *    `R. 4222-20` ; le sens inverse (appareil → établissement) reste sans
+ *    mécanisme, et ce fusible le garde.
  *
  * Tout le reste casse la continuité EN SILENCE : l'ancienne ligne est archivée
  * (« Ne s'applique plus ») et la nouvelle naît « à planifier », sans rien
@@ -71,7 +77,8 @@ import type { PorteurObligation } from "./types";
  * dans ce cas.
  */
 const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
-  "aeration-controle-installations-r4222-20": "etablissement",
+  // 2026-11-05 (ADR-057) : ~~établissement~~ → appareil, par la dispersion.
+  "aeration-controle-installations-r4222-20": "equipement",
   "aeration-etablissement-consigne-utilisation": "etablissement",
   "aeration-erp-chauffage-ventilation-annuelle": "equipement",
   "aeration-erp-filtres-livret-entretien": "equipement",
@@ -180,6 +187,7 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "habitation-registre-securite": "etablissement",
   "habitation-verification-annuelle-installations-securite": "etablissement",
   "incendie-erp-5-consignes-affichees": "etablissement",
+  "incendie-erp-5-plan-intervention-entree": "etablissement", // 2026-11-06, PE 27 § 6
   "incendie-erp-5-instruction-personnel": "etablissement",
   "incendie-erp-5-sommeil-avis-controle-affiche": "etablissement", // 2026-10-17, sous-lot C
   "incendie-erp-5-sommeil-consigne-chambres": "etablissement",
@@ -202,7 +210,8 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "incendie-erp-hotel-plans-evacuation-niveaux": "etablissement",
   "incendie-erp-interdiction-fumer-affichee": "etablissement",
   "incendie-erp-modalites-appel-pompiers-affichees": "etablissement", // 2026-10-17, sous-lot C
-  "incendie-erp-pe4-entretien-installations-techniques": "etablissement",
+  // 2026-11-05 (ADR-057) : ~~établissement~~ → appareil, par la dispersion.
+  "incendie-erp-pe4-entretien-installations-techniques": "equipement",
   "incendie-erp-personnel-designe-moyens-secours": "etablissement",
   "incendie-erp-personnel-qualifie-detection": "etablissement", // 2026-10-17, sous-lot C
   "incendie-erp-plan-intervention-entrees": "etablissement", // 2026-10-17, sous-lot C
@@ -220,7 +229,8 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "incendie-erp-visite-commission-cat4-r-sans-hebergement-quinquennale": "etablissement",
   "incendie-erp-visite-commission-cat4-triennale": "etablissement",
   "incendie-hotel-po-controle-annuel-electricite": "equipement",
-  "incendie-hotel-po-controle-biennal-installations": "etablissement",
+  // 2026-11-05 (ADR-057) : ~~établissement~~ → appareil, par la dispersion.
+  "incendie-hotel-po-controle-biennal-installations": "equipement",
   "incendie-hotel-po-instruction-personnel-semestrielle": "etablissement",
   "incendie-igh-charge-calorifique-quinquennale": "etablissement",
   "incendie-igh-moyens-secours-annuelle": "equipement",

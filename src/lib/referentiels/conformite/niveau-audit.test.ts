@@ -71,6 +71,26 @@ function etabLarge(): EtablissementMatching {
 }
 
 /**
+ * Les profils qui, ensemble, atteignent le champ de chaque obligation audit.
+ * Le lieu de travail seul ne suffit plus depuis le 2026-11-05 (ADR-057) : la
+ * décennale ERP de l'extincteur et la signalisation ERP des extincteurs
+ * (N1–N4 et N5) ne visent que des ERP. Un établissement ne porte qu'une
+ * catégorie : il en faut deux.
+ */
+function profilsAudit(): EtablissementMatching[] {
+  return [
+    etabLarge(),
+    { ...etabLarge(), estERP: true, typeErp: "M", categorieErp: "N3" },
+    { ...etabLarge(), estERP: true, typeErp: "M", categorieErp: "N5" },
+  ];
+}
+
+/** L'union, sur les profils, des identifiants qu'une lecture rend. */
+function surLesProfils(lire: (e: EtablissementMatching) => string[]): string[] {
+  return [...new Set(profilsAudit().flatMap(lire))].sort();
+}
+
+/**
  * Un appareil de chaque catégorie que vise une obligation audit — celles qui
  * la portent, et celles qui la font naître (`siEquipementDeclare`, 2026-10-17).
  * Éprouvé en le retirant : aujourd'hui l'ajout ne change rien, l'`ASCENSEUR`
@@ -93,9 +113,9 @@ function parcAudit(): EquipementMatching[] {
 }
 
 describe("niveau audit — (d) borne basse, jamais la liste exacte", () => {
-  it("au moins les obligations des décisions du 2026-10-08 et du 2026-10-17 sont au niveau audit", () => {
+  it("au moins les obligations des décisions du 2026-10-08, du 2026-10-17 et du 2026-11-05 sont au niveau audit", () => {
     const ids = new Set(AUDIT.map((o) => o.id));
-    expect(ids.size).toBeGreaterThanOrEqual(12);
+    expect(ids.size).toBeGreaterThanOrEqual(18);
     for (const id of [
       // Décision du 2026-10-08.
       "incendie-travail-chiffons-impregnes-recipients-clos",
@@ -111,6 +131,13 @@ describe("niveau audit — (d) borne basse, jamais la liste exacte", () => {
       "ascenseur-rapport-annuel-activite",
       "signalisation-etablissement-obstacles-zones-dangereuses",
       "incendie-travail-extincteurs-revision-atelier-decennale",
+      // Décision du 2026-11-05 (ADR-057).
+      "signalisation-etablissement-signaux-lumineux-acoustiques-semestrielle",
+      "signalisation-etablissement-alimentations-secours-annuelle",
+      "incendie-erp-extincteurs-revision-decennale",
+      "signalisation-incendie-moyens-lutte",
+      "signalisation-erp-extincteurs-identification",
+      "signalisation-erp-5-extincteurs-identification",
     ]) {
       expect(ids.has(id), id).toBe(true);
     }
@@ -131,18 +158,20 @@ describe("niveau audit — (d) borne basse, jamais la liste exacte", () => {
 
 describe("niveau audit — (a) aucune ligne", () => {
   it("le champ de chaque obligation audit est atteint par le profil (sinon la garde serait vide)", () => {
-    const atteintes = determineObligationsNiveauAudit(etabLarge(), parcAudit()).map(
-      (a) => a.obligation.id,
+    const atteintes = surLesProfils((e) =>
+      determineObligationsNiveauAudit(e, parcAudit()).map((a) => a.obligation.id),
     );
     const nonSalarie = AUDIT.filter((o) => o.porteur !== "salarie").map((o) => o.id);
-    expect([...atteintes].sort()).toEqual([...nonSalarie].sort());
+    expect(atteintes).toEqual([...nonSalarie].sort());
   });
 
   it("le moteur ne rend aucune obligation audit applicable", () => {
-    const servies = determineObligationsApplicables(etabLarge(), parcAudit())
-      .map((a) => a.obligation)
-      .filter(estNiveauAudit)
-      .map((o) => o.id);
+    const servies = surLesProfils((e) =>
+      determineObligationsApplicables(e, parcAudit())
+        .map((a) => a.obligation)
+        .filter(estNiveauAudit)
+        .map((o) => o.id),
+    );
     expect(servies).toEqual([]);
   });
 
@@ -151,11 +180,13 @@ describe("niveau audit — (a) aucune ligne", () => {
     const leves = AUDIT.map(
       (o) => ({ ...o, niveau: undefined }) as Obligation,
     );
-    const servies = determineObligationsApplicables(etabLarge(), parcAudit(), {
-      obligations: leves,
-    }).map((a) => a.obligation.id);
+    const servies = surLesProfils((e) =>
+      determineObligationsApplicables(e, parcAudit(), {
+        obligations: leves,
+      }).map((a) => a.obligation.id),
+    );
     const nonSalarie = AUDIT.filter((o) => o.porteur !== "salarie").map((o) => o.id);
-    expect([...servies].sort()).toEqual([...nonSalarie].sort());
+    expect(servies).toEqual([...nonSalarie].sort());
   });
 
   it("la voie des titres salarié ne produit aucune ligne pour une obligation audit", () => {
@@ -207,8 +238,8 @@ describe("niveau audit — (a) aucune ligne", () => {
 
 describe("niveau audit — (b) nommée dans la rubrique « Niveau audit »", () => {
   it("chaque obligation audit atteinte figure dans la rubrique du dossier", () => {
-    const rubrique = obligationsNiveauAuditDuDossier(etabLarge(), parcAudit()).map(
-      (l) => l.id,
+    const rubrique = surLesProfils((e) =>
+      obligationsNiveauAuditDuDossier(e, parcAudit()).map((l) => l.id),
     );
     for (const o of AUDIT) expect(rubrique, o.id).toContain(o.id);
   });
