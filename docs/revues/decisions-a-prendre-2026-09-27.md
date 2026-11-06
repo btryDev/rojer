@@ -409,7 +409,8 @@ l'erreur resterait visible pour qui la subit.
   `obligation_manquante` ; **R. 4323-101/-102, R. 4323-104 3° et 4°** : priorité
   faible.
 - **Arrêté du 1er décembre 2025** : son `prescrit` omet PE 2, PE 7, PE 9, PE 21 et
-  PE 27 § 6, qu'il modifie.
+  ~~PE 27 § 6~~, qu'il modifie. [2026-11-06 : PE 27 § 6 ajouté au `prescrit`,
+  relu sur Légifrance, et encodé (`incendie-erp-5-plan-intervention-entree`).]
 
 ## D24 — La question des matières (point ouvert du lot 1)
 

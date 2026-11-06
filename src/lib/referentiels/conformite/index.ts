@@ -580,7 +580,14 @@ export const obligationsConformite: Obligation[] = [
 // extincteurs et RIA). 205 + 0 − 0 = 205 ; 18 au niveau audit, 187 suivies ;
 // par porteur, 99 équipement, 92 établissement, 14 salarié — remesuré en
 // appelant `obligationsConformite`, `porteurDe` et `estNiveauAudit`.
-export const REFERENTIEL_VERSION = "2026-11-06.1";
+// `2026-11-06.2` (`lot/pe27-plan-intervention`, décision de la propriétaire du
+// 2026-11-06, « ajout pour tous ») : PE 27 § 6 entre —
+// `incendie-erp-5-plan-intervention-entree`, plan d'intervention apposé à
+// l'entrée, établissement, toute la 5ᵉ, avec la phrase GN 10. 205 + 1 − 0 = 206 ;
+// par porteur, 99 équipement, 92 + 1 = 93 établissement, 14 salarié ; 18 au
+// niveau audit, 188 suivies ; 23 domaines — remesuré en appelant `obligationsConformite`, `porteurDe`
+// et `estNiveauAudit`.
+export const REFERENTIEL_VERSION = "2026-11-06.2";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

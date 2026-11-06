@@ -1948,6 +1948,40 @@ export const obligationsIncendie: Obligation[] = [
       "TROUVÉE EN OUVRANT L'ARTICLE POUR SON § 5, le 2026-09-21. Le corpus ne nommait de l'article que l'alinéa facultatif sur les exercices — qui est au § 2 c), et non au § 4 comme l'ancien motif l'écrivait — ; la consigne affichée du § 4 n'était relevée nulle part. C'est pourtant une obligation entière, sans seuil, de tout ERP de 5ᵉ catégorie.\n\nÀ NE PAS CONFONDRE avec `incendie-travail-consigne-affichee` (`R. 4227-37`) : celle-là est une consigne du Code du travail, due au-delà de cinquante personnes, avec huit rubriques (`R. 4227-38`). Celle-ci est du règlement de sécurité, due dès la 5ᵉ catégorie, avec trois mentions. Un restaurant de six salariés et trente couverts doit celle-ci et pas l'autre ; au-delà de cinquante personnes il doit les deux, et un même affichage peut porter les deux contenus — ce que le produit ne dit pas, n'ayant pas à le dire.\n\n`pieceAttendue` NOMMÉE : l'obligation EST un écrit affiché.\n\nCriticité 3, celle de `incendie-travail-consigne-affichee`.\n\nGN 10, OUVERT LE 2026-09-21 : le règlement « ne s'applique pas aux établissements existants », sauf administratif, contrôles, vérifications et entretien — et cette obligation n'est rien de tout cela. Elle est pourtant servie à TOUT ERP de 5ᵉ catégorie : le moteur ne lit pas `dateAutorisationOuverture`. ~~« la date d'entrée en vigueur du paragraphe n'est pas relevée »~~ — RELEVÉE le 2026-09-21 : le paragraphe figure dans PE 27 depuis sa création par l'arrêté du 22 juin 1990, en vigueur le 27 AOÛT 1990 (six versions de l'article lues sur Légifrance). ~~La sur-application ne touche donc que les établissements ouverts avant cette date et jamais modifiés — une minorité, que le produit ne sait pas reconnaître.~~ [2026-09-26 : c'est une LECTURE — `GN 10` ne date pas l'« existant » ; voir C23 du journal.] Sur-application VISIBLE et assumée ~~, écrite dans la description que le dirigeant lit~~ [2026-09-26 : la description ne conclut plus ; elle cite `GN 10`, ses deux paragraphes, et la date du type PE] ; la décision de la borner est au dossier des décisions (A6). Voir `corpus/arrete-1980-livre-1.ts`, entrée GN 10.",
   },
 
+  {
+    id: "incendie-erp-5-plan-intervention-entree",
+    domaine: "incendie",
+    libelle:
+      "Plan d'intervention pour les sapeurs-pompiers apposé à l'entrée de l'établissement (ERP de 5ᵉ catégorie)",
+    description:
+      "Dans un établissement recevant du public de 5ᵉ catégorie, le règlement écrit : « A l'entrée de chaque établissement, un plan schématique doit être apposé pour faciliter l'intervention des sapeurs-pompiers » (PE 27 § 6). Ce plan, dit plan d'intervention, représente au minimum le sous-sol, le rez-de-chaussée et chaque étage ou l'étage courant ; y figurent, outre les dégagements et les cloisonnements principaux, l'emplacement des locaux techniques et des autres locaux à risques particuliers, des dispositifs et commandes de sécurité, des organes de coupure des fluides et des sources d'énergie, et des moyens d'extinction fixes et d'alarme. Jusqu'au 31 décembre 2025, le paragraphe ne visait que les établissements implantés en étage ou en sous-sol ; l'arrêté du 1er décembre 2025 l'étend à chaque établissement à compter du 1er janvier 2026, sans disposition propre aux établissements existants. " +
+      GN_10_PHRASE,
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference: "Arrêté du 25 juin 1980, art. PE 27 § 6 (plan d'intervention)",
+        article: "PE 27",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000024766984",
+        note: "« A l'entrée de chaque établissement, un plan schématique doit être apposé pour faciliter l'intervention des sapeurs-pompiers. » Version en vigueur depuis le 1er mai 2026 (arrêté du 4 février 2026, art. 1, qui ne touche pas le § 6). Le § 6 a été réécrit par l'arrêté du 1er décembre 2025 (NOR INTE2529354A, JORFTEXT000053020948), art. 12, en vigueur le 1er janvier 2026 par son art. 13, sans disposition propre aux établissements existants. Relu sur Légifrance le 2026-11-06 : la version en vigueur du 20 septembre 2023 au 1er janvier 2026 (arrêté du 11 septembre 2023, art. 18) disait « Dans les établissements implantés en étage ou en sous-sol » ; la rédaction actuelle ne dit rien des établissements existants.",
+        versionConstatee: "2026-05-01",
+      },
+    ],
+    periodicite: "autre",
+    nature: "etat_permanent",
+    pieceAttendue: "plan d'intervention apposé à l'entrée",
+    usageEcran: { groupe: "incendie_secours", sous: "evacuer" },
+    realisateurs: ["exploitant"],
+    criticite: 3,
+    transmet: [],
+    typologies: { erp: { categories: ["N5"] } },
+    porteur: "etablissement",
+    notesInternes:
+      "TEMPORALITÉ : état permanent, sans rythme.\n\n" +
+      "CRÉÉE LE 2026-11-06, décision de la propriétaire (« ajout pour tous »), sur le patron de `incendie-erp-plan-intervention-entrees` (MS 41, N1–N4) : même acte, même phrase GN 10, même famille d'écran. La réserve (1) de PE 27 au corpus la retenait faute de décision sur la classe GN 10 / A6.\n\n" +
+      "SUR-APPLICATION ASSUMÉE ET DITE : un ERP de 5ᵉ de plain-pied ouvert avant 2026 n'était pas visé par l'ancienne rédaction, et GN 10 peut l'écarter de la nouvelle. Le moteur ne lit pas la date d'ouverture ; la description cite les dates et GN 10, sans conclure.\n\n" +
+      "TOUTE LA 5ᵉ, SANS CRITÈRE DE SOMMEIL : `locauxSommeilPublic: false` rejetterait le silence, et la question n'est posée qu'aux types où le sommeil est plausible — un magasin (M) ne verrait jamais la ligne. En 5ᵉ avec locaux à sommeil, `incendie-erp-5-sommeil-plans-affiches` (PE 35 § 1) demande aussi un plan « conforme aux dispositions de l'article MS 41 » dans le hall d'entrée : un même plan peut répondre aux deux.",
+  },
+
   // ---------------------------------------------------------------------------
   // Livre II, titre II — types M, N, O, W, catégories 1 à 4 (2026-10-14)
   // ---------------------------------------------------------------------------
@@ -2398,7 +2432,7 @@ export const obligationsIncendie: Obligation[] = [
     notesInternes:
       "TEMPORALITÉ : état permanent, sans rythme. NORME CITÉE NON LUE : MS 41 renvoie à la NF S 60-303 (20 septembre 1987) pour les caractéristiques du plan — un contenu, pas un rythme ; elle n'est pas au corpus `normes`.\n\n" +
       "CRÉÉE LE 2026-10-17 (sous-lot C, ligne 1 du plan). La classe GN 10 / A6 qui la retenait est tranchée pour MS 41 et MS 70 § 5 par la propriétaire le 2026-10-17 (constats, § 4) : servis aux N1–N4 avec la phrase GN 10, dans « Ce qui doit être en place ».\n\n" +
-      "SANS RECOUVREMENT : en 5ᵉ avec locaux à sommeil, `incendie-erp-5-sommeil-plans-affiches` (PE 35 § 1, qui exige un plan « conforme aux dispositions de l'article MS 41 ») ; à l'hôtel N1–N4, `incendie-erp-hotel-plans-evacuation-niveaux` (O 21) porte des plans d'ÉVACUATION par niveau, destinés aux occupants — pas ce plan d'INTERVENTION, destiné aux secours. Un hôtel N1–N4 reçoit donc les deux, et ce sont deux affichages.\n\n" +
+      "SANS RECOUVREMENT : en 5ᵉ ~~avec locaux à sommeil~~ [2026-11-06 : toute la 5ᵉ porte `incendie-erp-5-plan-intervention-entree` (PE 27 § 6) ; avec locaux à sommeil, aussi] `incendie-erp-5-sommeil-plans-affiches` (PE 35 § 1, qui exige un plan « conforme aux dispositions de l'article MS 41 ») ; à l'hôtel N1–N4, `incendie-erp-hotel-plans-evacuation-niveaux` (O 21) porte des plans d'ÉVACUATION par niveau, destinés aux occupants — pas ce plan d'INTERVENTION, destiné aux secours. Un hôtel N1–N4 reçoit donc les deux, et ce sont deux affichages.\n\n" +
       "LA NORME NF S 60-303 est NOMMÉE par le texte, non lue : aucune référence `NORME` n'est posée (ADR-039). La description le dit.\n\nÉCRAN : « Évacuer », la famille de sa sœur de 5ᵉ (`incendie-erp-5-sommeil-plans-affiches`, PE 35, qui renvoie à MS 41) — une seule famille pour les deux plans (revue indépendante du 2026-10-17).\n\n" +
       NOTE_TITRE_1_COMMUNE,
   },

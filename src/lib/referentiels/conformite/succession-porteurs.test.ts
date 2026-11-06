@@ -187,6 +187,7 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "habitation-registre-securite": "etablissement",
   "habitation-verification-annuelle-installations-securite": "etablissement",
   "incendie-erp-5-consignes-affichees": "etablissement",
+  "incendie-erp-5-plan-intervention-entree": "etablissement", // 2026-11-06, PE 27 § 6
   "incendie-erp-5-instruction-personnel": "etablissement",
   "incendie-erp-5-sommeil-avis-controle-affiche": "etablissement", // 2026-10-17, sous-lot C
   "incendie-erp-5-sommeil-consigne-chambres": "etablissement",
