@@ -13,7 +13,6 @@ import { constaterEpiDuCompte } from "@/lib/etablissements/epi-constate";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import {
   clePieceDePoint,
-  getStorage,
   MESSAGE_DEPOT_NON_CONFIGURE,
   MESSAGE_ECHEC_ENREGISTREMENT,
   stockageEnService,
