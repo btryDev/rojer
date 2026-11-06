@@ -51,10 +51,18 @@ describe("FermerLaSaisie (sa zone, rendue côté serveur)", () => {
         <Formulaires />
       </FermerLaSaisie>,
     );
-    expect(screen.getByText("Votre formule Essentiel couvre 10 prestataires.")).toBeTruthy();
+    expect(screen.getAllByText("Votre formule Essentiel couvre 10 prestataires.").length).toBeGreaterThan(0);
     expect(container.querySelector("[data-saisie-fermee]")).not.toBeNull();
+    // Dès l'ouverture : le bouton d'envoi est désactivé, et dit pourquoi à un lecteur d'écran.
+    const creer = screen.getByText("Créer");
+    expect(creer.getAttribute("aria-disabled")).toBe("true");
+    expect(document.getElementById(creer.getAttribute("aria-describedby")!)?.textContent).toBe("Votre formule Essentiel couvre 10 prestataires.");
+    expect(screen.getByText("Filtrer").hasAttribute("aria-disabled")).toBe(false);
+    expect(screen.getByText("Se déconnecter").hasAttribute("aria-disabled")).toBe(false);
     fireEvent.submit(screen.getByTestId("ecrit"));
     expect(envoye).not.toHaveBeenCalled();
+    // Au clic : une alerte, près du bouton.
+    expect(screen.getByRole("alert").textContent).toBe("Non envoyé : Votre formule Essentiel couvre 10 prestataires.");
     fireEvent.submit(screen.getByTestId("filtre"));
     fireEvent.submit(screen.getByTestId("ouvert"));
     expect(envoye).toHaveBeenCalledTimes(2);

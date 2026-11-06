@@ -303,8 +303,10 @@ et sans croire une information qui ne vient pas de Stripe.
    - **Annoncé dès l'ouverture** [2026-11-05, lot D] : un formulaire qui
      écrit ne part plus pour être refusé après coup — React efface la
      saisie au retour, même en refus. `FermerLaSaisie` (client), dans sa
-     zone (`data-zone-saisie`), grise les boutons d'envoi des formulaires
-     de server action et arrête leur envoi ; la lecture (filtres) et les
+     zone (`data-zone-saisie`), désactive dès l'ouverture les boutons
+     d'envoi des formulaires de server action (`aria-disabled`, le motif en
+     description pour un lecteur d'écran, grisés), arrête leur envoi, et
+     dit au clic, près du bouton, pourquoi rien n'est parti ; la lecture (filtres) et les
      formulaires marqués `data-saisie-ouverte` (demander de l'aide)
      restent ouverts (se déconnecter compris). Pages d'un site et du
      DUERP, et modification de l'entreprise : lecture seule, abonnement
