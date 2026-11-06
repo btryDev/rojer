@@ -21,5 +21,8 @@ export async function saisieFermeeDuSite(etablissementId?: string): Promise<{ mo
     return droits.bandeau ? { motif: droits.bandeau.message, annonce: false } : { motif: "La saisie est fermée pour ce compte.", annonce: true };
   if (!etablissementId) return null;
   const gel = await motifDuGel(c.db, c.compte.compteId, { etablissementId });
-  return gel ? { motif: gel, annonce: true } : null;
+  // Une seule place dans la bande du haut : si l'abonnement y dit déjà
+  // quelque chose (impayé, fin programmée), il la garde, et le gel se lit au
+  // refus (`/compte/abonnement?saisie=gelee`).
+  return gel ? { motif: gel, annonce: !droits.bandeau } : null;
 }

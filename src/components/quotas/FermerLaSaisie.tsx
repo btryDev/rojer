@@ -55,7 +55,19 @@ export function FermerLaSaisie({
   );
 }
 
-export function VerrouDeLaPage({ motif, annonce = false, className }: { motif: string | null; annonce?: boolean; className?: string }) {
+/**
+ * La place du bandeau d'une page : la bande du haut, à gauche de la gélule du
+ * compte — le seul endroit que l'en-tête de page ne recouvre pas (il remonte
+ * sous la bande, `.sous-la-gelule`). Sur téléphone, en bas. La même que le
+ * bandeau de l'abonnement (`BandeauAbonnementDuCompte`), qui ne s'affiche pas
+ * en même temps (`saisieFermeeDuSite`).
+ */
+const DANS_LA_BANDE =
+  "fixed inset-x-3 bottom-[calc(var(--reserve-nav-bas)+0.75rem)] z-40 " +
+  "md:absolute md:inset-x-auto md:bottom-auto md:left-[var(--board-gutter)] md:top-[19px] md:w-fit " +
+  "md:max-w-[calc(100%-var(--board-gutter)*2-9rem)]";
+
+export function VerrouDeLaPage({ motif, annonce = false }: { motif: string | null; annonce?: boolean }) {
   const repere = useRef<HTMLSpanElement>(null);
   useEffect(() => {
     const zone = repere.current?.closest<HTMLElement>("[data-zone-saisie]");
@@ -71,7 +83,7 @@ export function VerrouDeLaPage({ motif, annonce = false, className }: { motif: s
   return (
     <>
       <span ref={repere} hidden />
-      {motif && annonce ? <BandeauAbonnement bandeau={{ ton: "ferme", message: motif }} className={className} /> : null}
+      {motif && annonce ? <BandeauAbonnement bandeau={{ ton: "ferme", message: motif }} compact className={DANS_LA_BANDE} /> : null}
     </>
   );
 }

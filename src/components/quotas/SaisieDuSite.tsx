@@ -8,5 +8,5 @@ import { VerrouDeLaPage } from "./FermerLaSaisie";
 
 export async function SaisieDuSite({ etablissementId }: { etablissementId?: string }) {
   const fermee = await saisieFermeeDuSite(etablissementId);
-  return <VerrouDeLaPage motif={fermee?.motif ?? null} annonce={fermee?.annonce} className="mx-[var(--board-gutter)] mt-4" />;
+  return <VerrouDeLaPage motif={fermee?.motif ?? null} annonce={fermee?.annonce} />;
 }
