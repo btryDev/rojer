@@ -111,6 +111,9 @@ export const LIMITES_ESSAI = {
   zones: 1,
   equipements: 5,
   prescriptions: 1,
+  // « Valider = s'abonner » (ADR-053 § 15) : une signature de test, comptée
+  // par la porte, sous le verrou du compte.
+  signaturesParAn: 1,
 } as const satisfies Partial<Quotas>;
 /** De la plus petite à la plus grande : la première est celle du refus par défaut. */
 export const CLES_FORMULES = Object.keys(FORMULES) as CleFormule[];

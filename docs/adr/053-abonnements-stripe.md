@@ -354,7 +354,9 @@ et sans croire une information qui ne vient pas de Stripe.
    publier le registre d'accessibilité (`publierRegistre` — l'affiche QR ne
    sert que d'un registre publié) ; signer (`signerEnCompteConnecte`) ou
    envoyer un lien (`demanderSignature`) — une seule signature de test par
-   compte, et le lien seulement à soi-même. Ils demandent un premier
+   compte (`LIMITES_ESSAI.signaturesParAn = 1`, tenue par la porte sous le
+   verrou ; `signatureDEssaiDisponible` n'en est que le pré-contrôle), et le
+   lien seulement à soi-même. Ils demandent un premier
    paiement **confirmé** (`debutPayantLe`, la première facture payée), pas
    un `active` : `aDejaPaye`, `exigerUnPaiement`
    (`abonnements/validation.ts`). Refusé : `/compte/abonnement?immediat=1`

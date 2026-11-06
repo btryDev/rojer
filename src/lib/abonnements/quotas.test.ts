@@ -371,3 +371,14 @@ describe("lot C : liens d'accès actifs, signatures, imports de DUERP", () => {
     await prendreQuota(faux("rojer_pro_mensuel", 2).txc, "c1", "importsDuerp");
   });
 });
+
+describe("valider = s'abonner : une signature de test, tenue par la porte", () => {
+  it("jamais payé : la première signature passe, la seconde est refusée sous le verrou", async () => {
+    lancer();
+    await prendreQuota(faux("rojer_essentiel_mensuel", 0, null, "trialing").txc, "c1", "signaturesParAn");
+    await expect(prendreQuota(faux("rojer_essentiel_mensuel", 1, null, "trialing").txc, "c1", "signaturesParAn")).rejects.toThrow(
+      /^L'essai gratuit couvre 1 signature par an/,
+    );
+    await prendreQuota(faux("rojer_essentiel_mensuel", 1).txc, "c1", "signaturesParAn");
+  });
+});

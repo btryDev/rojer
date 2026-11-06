@@ -31,6 +31,8 @@ export async function exigerUnPaiement(db: Db, compteId: string): Promise<void> 
 /**
  * La signature de test d'un compte qui n'a jamais payé : une seule, la
  * première du compte (aucune au journal des signatures, demandes comprises).
+ * Pré-contrôle pour renvoyer à la page « S'abonner » ; la limite elle-même
+ * est tenue par la porte, sous le verrou (`LIMITES_ESSAI.signaturesParAn`).
  */
 export async function signatureDEssaiDisponible(db: Db): Promise<boolean> {
   return (await db.consommationQuota.count({ where: { quota: "signaturesParAn" } })) === 0;
