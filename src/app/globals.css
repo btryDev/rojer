@@ -727,10 +727,8 @@
   .lp-shell {
     margin-inline: auto;
     width: 100%;
-    /* 1600 et non 1240 : née pour l'ancienne scène du hero (texte +
-       photo + fiches), gardée parce que toute la page s'aligne dessus —
-       en-tête compris. Sur un écran large, 1400 laissait des gouttières
-       trop grasses de chaque côté. */
+    /* 1600 : toute la page s'aligne dessus, en-tête compris. Sur un
+       écran large, 1400 laissait des gouttières trop grasses. */
     max-width: 1600px;
     padding-inline: clamp(20px, 5vw, 64px);
   }
@@ -1057,7 +1055,7 @@
     background: var(--board-card);
     box-shadow: inset 0 0 0 1px rgba(10, 10, 10, 0.32);
   }
-  /* Les deux mêmes, posés sur une photo sombre (hero). */
+  /* Les deux mêmes, posés sur un fond sombre (photo du hero, bande noire). */
   .lp-btn-blanc {
     background: #fff;
     color: var(--board-ink);
@@ -1092,26 +1090,6 @@
     line-height: 1;
     white-space: nowrap;
   }
-  .lp-pill-retard {
-    background: var(--board-signal);
-    color: var(--board-signal-ink);
-  }
-  .lp-pill-proche {
-    background: var(--board-amber);
-    color: var(--board-amber-ink);
-  }
-  .lp-pill-fait {
-    background: var(--board-green);
-    color: var(--board-green-ink);
-  }
-  .lp-pill-bleu {
-    background: var(--board-blue-pale);
-    color: var(--board-blue-ink);
-  }
-  .lp-pill-neutre {
-    background: var(--board-slate-pale);
-    color: var(--board-slate-mid);
-  }
 
   /* Apparition au défilement — 12 px et une seule fois. */
   .lp-reveal {
@@ -1128,23 +1106,9 @@
   }
 }
 
-/* =============================================================
-   La fiche détachée — matière des cartes de la page publique
-   -------------------------------------------------------------
-   Née pour la scène de l'ancien hero (retirée le 2026-11-06, le
-   hero est devenu une photo), elle reste celle du tableau de bord
-   de la page. La perspective a été retirée : à ces angles-là, l'œil lisait des
-   cartes de travers plutôt qu'une profondeur. Ce qui reste fait le
-   même travail sans tordre une seule ligne — décalages latéraux,
-   chevauchements, et surtout des ombres empilées qui écartent les
-   fiches les unes des autres.
-   Pas de neumorphisme au sens strict non plus (relief embossé,
-   contrastes trop faibles pour un texte réglementaire) : ce qu'on
-   garde de cette famille, c'est la matière.
-   ============================================================= */
-/* Ombres empilées, toutes issues d'une même lumière haute : un contact
-   net, une diffusion moyenne, une longue portée. Aucune n'est décalée
-   latéralement — la lumière ne vient pas de côté. */
+/* La fiche détachée — matière des cartes de la page publique : des
+   ombres empilées, toutes issues d'une même lumière haute (un contact net,
+   une diffusion moyenne, une longue portée), aucune perspective. */
 .lp-fiche-carte {
   background: var(--board-card);
   border-radius: 24px;
@@ -1153,9 +1117,6 @@
     0 2px 4px rgba(13, 18, 36, 0.04),
     0 16px 32px -18px rgba(13, 18, 36, 0.18),
     0 56px 90px -56px rgba(13, 18, 36, 0.42);
-  transition:
-    transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 260ms ease;
 }
 /* LES MODULES QU'ON RÉORDONNE — section « tableau de bord » de la page
    publique. Deux voisins échangent leur place, en boucle lente : c'est la

@@ -1,116 +1,52 @@
-// LA BANDE NOIRE — la phrase de marque, puis sa contrepartie concrète :
-// ce que Rojer prend en charge pour que vous puissiez travailler.
+// LA BANDE NOIRE — la phrase de marque, puis ce que Rojer apporte.
 //
 // Partage éditorial de la page, pour qu'aucune section ne répète l'autre :
-//   · ici       → ce qu'on vous retire des mains (les dates, le classement
-//                 des preuves, l'ordre de priorité)
+//   · ici       → ce que Rojer vous apporte (pas comment il marche)
 //   · le cadran → ce que ça produit (les six documents)
-//   · « Trois étapes » → ce que ça coûte à prendre en main (≈ 30 min, puis
-//                 ce qui arrive à échéance)
-//   · ~~« Par métier »~~ — n'est plus une section de cette page (elle vit
-//     dans le guide, derrière la connexion) ; le lien du pied est retiré.
+//   · « Une prise en main rapide » → comment on s'y met (≈ 30 min, puis ce
+//                 qui arrive à échéance)
 //
-// Cette bande a absorbé l'ancienne « Sur le terrain », qui racontait la
-// même mécanique une troisième fois. Chaque charge est nommée par ce
-// qu'elle vous épargne, jamais par un automatisme : on ne dit pas qu'un
-// rapport « se range tout seul », on dit où il va.
-//
-// Chaque temps porte un petit schéma en CSS plutôt qu'une icône.
+// Chaque apport dit ce que Rojer fait, sans accroche et sans automatisme :
+// on ne dit pas qu'un rapport « se range tout seul », ni qu'un rappel part.
 
+import Image from "next/image";
 import { Reveal } from "./Reveal";
 
-const CHARGES = [
+/**
+ * La photo de la section. Une commerçante avec une cliente : la cible au
+ * travail, pas devant un écran. Cf. `public/photos/README.md`.
+ */
+const PHOTO_MANIFESTE = {
+  src: "/photos/manifeste-boulangere.jpg",
+  alt: "Une boulangère en tablier marine tend un pain à une cliente par-dessus le comptoir",
+  position: "55% 40%",
+};
+
+const APPORTS = [
   {
     numero: "01",
-    titre: "Vos échéances, posées et recalculées",
+    titre: "Une saisie guidée",
     corps:
-      "Quand un texte fixe le rythme d'une vérification, sa date se pose, et se reporte à chaque rapport déposé. Le reste se lit sans date : un état à tenir, un événement qui déclenche.",
+      "Le DUERP part des risques connus de votre métier, d'après les guides de l'INRS. Les équipements se choisissent dans une liste.",
   },
   {
-    // Pas seulement des rapports : le stockage reçoit aussi les
-    // attestations de prestataires (URSSAF, RC Pro, Kbis) et les bulletins
-    // d'analyse du carnet sanitaire.
     numero: "02",
-    titre: "Vos pièces, classées à l'arrivée",
+    titre: "Vos documents au même endroit",
     corps:
-      "Rapport, attestation, analyse d'eau, permis signé : chacune se range là où elle sert, horodatée.",
+      "Rapports, attestations et analyses sont rangés et horodatés. Le jour d'un contrôle, ils sortent en un seul export.",
   },
   {
     numero: "03",
-    titre: "Votre semaine, déjà triée",
+    titre: "Les échéances calculées",
     corps:
-      "Le retard passe devant, ce qui approche est annoncé, le reste attend son tour.",
+      "Rojer calcule la date de chaque vérification à partir du texte qui en fixe le rythme. Le tableau de bord montre ce qui est en retard et ce qui approche.",
   },
-];
-
-/** Jeton du schéma : un mot posé sur un fond d'encre claire. */
-function Jeton({
-  children,
-  fort = false,
-}: {
-  children: React.ReactNode;
-  fort?: boolean;
-}) {
-  return (
-    <span
-      className={
-        "inline-flex items-center rounded-full px-3 py-1.5 font-mono text-[0.62rem] uppercase tracking-[0.12em] " +
-        (fort
-          ? "bg-[color:var(--board-sky)] text-[color:var(--board-ink)]"
-          : "bg-white/10 text-white/70")
-      }
-    >
-      {children}
-    </span>
-  );
-}
-
-/** Les trois files d'attente du brief, dans l'ordre où Rojer les sert. */
-const FILES = [
-  { ton: "var(--board-signal)", label: "En retard", compte: "1" },
-  { ton: "var(--board-amber)", label: "Cette semaine", compte: "2" },
-  { ton: "rgba(255,255,255,.22)", label: "Plus tard", compte: "12" },
-];
-
-/** Les trois schémas. Un par charge, dans l'ordre. */
-const SCHEMAS = [
-  // 01 — la date qui se repose d'elle-même, douze mois plus loin.
-  <div key="dates" className="flex items-center gap-2">
-    <Jeton>12 mars 2026</Jeton>
-    <span aria-hidden className="relative h-px w-16 flex-none bg-white/25">
-      <span className="absolute -top-[9px] left-1/2 -translate-x-1/2 whitespace-nowrap font-mono text-[0.55rem] tracking-[0.1em] text-white/45">
-        +12 mois
-      </span>
-    </span>
-    <Jeton fort>12 mars 2027</Jeton>
-  </div>,
-
-  // 02 — la pièce déposée et sa place. « Pièce » et non « rapport » :
-  // attestations, analyses et photos passent par le même chemin.
-  <div key="preuves" className="flex items-center gap-2">
-    <Jeton>Pièce déposée</Jeton>
-    <span aria-hidden className="h-px w-6 flex-none bg-white/25" />
-    <Jeton fort>Classée, horodatée</Jeton>
-  </div>,
-
-  // 03 — l'ordre de passage : trois files, une seule à traiter maintenant.
-  <div key="priorite" className="flex flex-col gap-2.5">
-    {FILES.map((f) => (
-      <span key={f.label} className="flex items-center gap-3">
-        <span
-          aria-hidden
-          className="size-2 flex-none rounded-full"
-          style={{ background: f.ton }}
-        />
-        <span className="font-mono text-[0.62rem] uppercase tracking-[0.12em] text-white/55">
-          {f.label}
-        </span>
-        <span className="font-mono text-[0.62rem] tabular-nums text-white/35">
-          {f.compte}
-        </span>
-      </span>
-    ))}
-  </div>,
+  {
+    numero: "04",
+    titre: "Un expert en cas de besoin",
+    corps:
+      "Un expert en sécurité répond à vos questions sur une obligation ou un rapport.",
+  },
 ];
 
 export function Manifeste() {
@@ -124,71 +60,51 @@ export function Manifeste() {
         </Reveal>
 
         <Reveal delai={90}>
-          <p className="lp-titre lp-h1 mt-7 max-w-[20ch] text-white">
-            Concentrez-vous sur votre activité.
-          </p>
+          <h2 className="lp-titre mt-7 text-[clamp(2.1rem,4vw,3.6rem)] text-white lg:whitespace-nowrap">
+            Concentrez-vous sur votre activité
+          </h2>
         </Reveal>
 
-        <Reveal delai={180}>
-          <p className="lp-lede mt-7 max-w-[40ch] text-white/60">
-            Trois charges que Rojer porte à votre place, toute l&apos;année.
-          </p>
-        </Reveal>
+        <div className="mt-16 grid grid-cols-1 items-center gap-14 lg:grid-cols-[0.85fr_1.15fr] lg:gap-[clamp(56px,8vw,140px)]">
+          <Reveal>
+            <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[30px] bg-white/5 lg:rounded-[38px]">
+              <Image
+                src={PHOTO_MANIFESTE.src}
+                alt={PHOTO_MANIFESTE.alt}
+                fill
+                sizes="(max-width: 1023px) 92vw, 34vw"
+                className="object-cover"
+                style={{ objectPosition: PHOTO_MANIFESTE.position }}
+              />
+            </div>
+          </Reveal>
 
-        {/* La frise. Le filet qui part de chaque numéro relie les trois
-            charges sur grand écran ; en colonne, il devient un simple
-            soulignement. */}
-        <ol className="m-0 mt-20 grid list-none grid-cols-1 gap-14 p-0 sm:mt-24 lg:grid-cols-3 lg:gap-16">
-          {CHARGES.map((c, i) => (
-            <Reveal as="li" key={c.numero} delai={i * 110}>
-              <div className="flex items-center gap-4">
-                <span className="flex size-9 flex-none items-center justify-center rounded-full border border-white/20 font-mono text-[0.68rem] text-[color:var(--board-sky)]">
-                  {c.numero}
-                </span>
-                <span aria-hidden className="h-px flex-1 bg-white/12" />
-              </div>
-
-              <h3
-                className="mt-7 max-w-[22ch] text-[1.25rem] font-semibold leading-[1.2] tracking-[-0.025em] text-white"
-                style={{ fontFamily: "var(--font-titre), sans-serif" }}
+          <ol className="m-0 list-none p-0">
+            {APPORTS.map((a, i) => (
+              <Reveal
+                as="li"
+                key={a.numero}
+                delai={i * 90}
+                className="flex gap-5 border-t border-white/10 py-7 last:border-b"
               >
-                {c.titre}
-              </h3>
-              <p className="mt-3 max-w-[38ch] text-[0.9375rem] leading-[1.62] text-white/55">
-                {c.corps}
-              </p>
-
-              <div className="mt-7">{SCHEMAS[i]}</div>
-            </Reveal>
-          ))}
-        </ol>
-
-        {/* La sortie des trois charges. Ce n'est pas une quatrième colonne :
-            c'est ce que les trois produisent ensemble. On nomme le moment
-            du contrôle et on renvoie au cadran (document 06, le dossier de
-            contrôle) plutôt que de réexpliquer l'export ici. */}
-        <Reveal delai={340}>
-          <div className="mt-20 flex flex-col gap-8 border-t border-white/10 pt-10 sm:flex-row sm:items-end sm:justify-between">
-            <p
-              className="max-w-[30ch] text-[1.5rem] leading-[1.22] tracking-[-0.03em] text-white sm:text-[1.75rem]"
-              style={{ fontFamily: "var(--font-titre), sans-serif" }}
-            >
-              <span className="text-[color:var(--board-sky)]">
-                Le jour d&apos;un contrôle,
-              </span>{" "}
-              ce que Rojer tient part en un seul export.
-            </p>
-
-            <a
-              href="#documents"
-              className="inline-flex flex-none items-center gap-2 self-start rounded-full border border-white/25 px-5 py-3 text-[0.875rem] font-medium text-white transition-colors hover:bg-white/10 sm:self-auto"
-            >
-              Voir le dossier de contrôle
-              <span aria-hidden>→</span>
-            </a>
-          </div>
-        </Reveal>
-
+                <span className="flex size-9 flex-none items-center justify-center rounded-full border border-white/20 font-mono text-[0.68rem] text-[color:var(--board-sky)]">
+                  {a.numero}
+                </span>
+                <div>
+                  <h3
+                    className="text-[1.25rem] font-semibold leading-[1.22] tracking-[-0.025em] text-[color:var(--board-sky)]"
+                    style={{ fontFamily: "var(--font-titre), sans-serif" }}
+                  >
+                    {a.titre}
+                  </h3>
+                  <p className="mt-2 max-w-[44ch] text-[0.9375rem] leading-[1.62] text-white/60">
+                    {a.corps}
+                  </p>
+                </div>
+              </Reveal>
+            ))}
+          </ol>
+        </div>
       </div>
     </section>
   );

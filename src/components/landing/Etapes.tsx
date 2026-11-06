@@ -25,7 +25,7 @@ import { Reveal } from "./Reveal";
 // prendre en main — c'est là que la question se pose.
 //
 // La composition rime avec le hero sans le copier : là-bas le texte tient
-// la gauche et la scène la droite, ici c'est l'inverse. Les trois crans
+// la gauche et la personne la droite, ici c'est l'inverse. Les trois crans
 // passent donc en colonne — ils tenaient en trois colonnes quand la
 // section faisait toute la largeur.
 

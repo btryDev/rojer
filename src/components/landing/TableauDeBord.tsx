@@ -26,7 +26,7 @@ import { ZoomAuDefilement } from "./ZoomAuDefilement";
 // fenêtre a une hauteur fixe et coupe net — c'est la coupe qui dit que
 // l'écran continue, pas un fondu.
 //
-// La matière de la fenêtre vient du hero : coins très arrondis,
+// La matière de la fenêtre est celle des fiches : coins très arrondis,
 // profondeur portée par l'ombre seule (.lp-fiche-carte), aucune
 // perspective ni inclinaison.
 //

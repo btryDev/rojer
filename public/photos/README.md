@@ -1,8 +1,7 @@
 # Photos de la page publique
 
 Les photos vivent ici et ne sont référencées qu'à un endroit dans le code :
-~~la constante `PHOTO_HERO` en tête de `src/components/landing/HeroBrief.tsx`~~
-[2026-11-06 : `HeroBrief` retiré ; `PHOTO_HERO` est en tête de `src/app/page.tsx`].
+la constante `PHOTO_HERO` en tête de `src/components/landing/Hero.tsx`.
 Déposer un fichier ici ne l'affiche pas — il faut changer la ligne (chemin +
 texte alternatif) pour qu'il entre dans la page.
 
@@ -10,21 +9,29 @@ texte alternatif) pour qu'il entre dans la page.
 
 | Fichier               | Emplacement            | Cadrage      |
 | --------------------- | ---------------------- | ------------ |
-| ~~`hero-terrain.jpg`~~ | ~~Hero, tuile centrale~~ | ~~4/5 vertical~~ |
-| `hero-restauratrice.jpg` | Hero, pleine largeur | 16/9 paysage |
+| `hero-restaurateur.jpg` | Hero, pleine largeur | 16/9 paysage |
+| `hero-restauratrice.jpg` | En réserve (même scène, une femme) | 16/9 paysage |
+| `manifeste-boulangere.jpg` | « Concentrez-vous », gauche | 4/5 vertical |
 | `etapes-atelier.jpg`  | « Trois étapes », gauche | 4/5 vertical |
 
-~~Origine de `hero-terrain.jpg` : [Pexels 8986129](https://www.pexels.com/photo/a-mechanic-using-a-cellphone-at-an-auto-repair-shop-8986129/),
-licence Pexels (usage commercial libre, sans attribution obligatoire).~~
-[2026-11-06 : remplacée par `hero-restauratrice.jpg` et supprimée — un
-garagiste ne parlait pas à la cible, les fiches du hero parlaient de hotte.]
+[2026-11-06 : `hero-terrain.jpg` (Pexels 8986129, un garagiste) remplacée
+par `hero-restauratrice.jpg` et supprimée — le garagiste ne parlait pas à la
+cible.]
 
 Origine de `hero-restauratrice.jpg` : générée avec Krea le 2026-11-06
 (Krea 2 Large), réchauffée d'un cran par étalonnage, peau des bras
-retouchée (Nano Banana Pro), 2 400 px de large. Direction photo :
+retouchée (Nano Banana Pro), 2 400 px de large. `hero-restaurateur.jpg` en
+est la retouche avec un homme (Nano Banana Pro, même scène), c'est elle qui
+est affichée ; la première reste en réserve.
+
+Origine de `manifeste-boulangere.jpg` : générée avec Krea le 2026-11-06
+(Krea 2 Large), 928 px de large — **à agrandir** avant la mise en ligne.
+Référencée par `PHOTO_MANIFESTE` en tête de
+`src/components/landing/Manifeste.tsx`. Direction photo :
 `docs/marketing/direction-photo.md` (branche `docs/communication`).
-**Licence à confirmer** avant la mise en ligne publique : vérifier les
-conditions d'usage commercial du plan Krea et les écrire ici.
+**Licence à confirmer** pour ces trois photos avant la mise en ligne
+publique : vérifier les conditions d'usage commercial du plan Krea et les
+écrire ici.
 
 Origine de `etapes-atelier.jpg` : [Pexels 6790046](https://www.pexels.com/photo/6790046/),
 même licence. Référencée par la constante `PHOTO_ETAPES` en tête de
@@ -44,12 +51,11 @@ photo. Le fichier reste ici, disponible pour un futur emplacement.
 
 Aucun n'est obligatoire : la page tient debout sans eux.
 
-1. **Remplacer la photo du hero** — sujet au travail, ~~4/5 vertical, ≥ 1200 px
-   de large~~ 16/9 paysage, ≥ 2 000 px de large, **de face ou de trois quarts**,
-   lumière naturelle. ~~Les fiches du produit mordent sur les bords gauche et
-   droit : garder le sujet dans le tiers central.~~ [2026-11-06 : le hero est
-   une photo pleine largeur, texte en blanc à gauche] Sujet dans le tiers
-   droit, la gauche assez calme et sombre pour porter le texte.
+1. **Remplacer la photo du hero** — sujet au travail, 16/9 paysage, ≥ 2 000 px
+   de large, **de face ou de trois quarts**, lumière naturelle. La photo est
+   bord à bord, sous la barre de navigation, le texte en blanc à gauche :
+   sujet dans le tiers droit, la gauche et le haut assez calmes et sombres
+   pour porter le texte.
 2. **Second métier** — commerce ou bureau, pour équilibrer la restauration.
    4/3 paysage, ≥ 1600 px de large.
 3. **Détail d'équipement** — extincteur, hotte, tableau électrique. 1/1,
