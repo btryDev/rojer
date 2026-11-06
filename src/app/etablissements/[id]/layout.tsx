@@ -83,7 +83,13 @@ export default async function EtablissementLayout({
         </Suspense>
         {/* Un site gelé (ADR-053 § 14) le dit en tête de chacune de ses pages. */}
         <Suspense fallback={null}>
-          <BandeauGel cible={{ etablissementId: etab.id }} className="mx-[var(--board-gutter)] mt-4" />
+          {/* Dans la bande du haut, comme le bandeau de l'abonnement : posé
+              entre la gélule et la page, l'en-tête de page le recouvrait. */}
+          <BandeauGel
+            cible={{ etablissementId: etab.id }}
+            compact
+            className="fixed inset-x-3 bottom-[calc(var(--reserve-nav-bas)+0.75rem)] z-40 md:absolute md:inset-x-auto md:bottom-auto md:left-[var(--board-gutter)] md:top-[19px] md:w-fit md:max-w-[calc(100%-var(--board-gutter)*2-9rem)]"
+          />
         </Suspense>
         {children}
       </div>
