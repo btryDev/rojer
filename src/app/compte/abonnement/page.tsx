@@ -57,6 +57,23 @@ async function carteDuCompte(db: Db, compteId: string): Promise<boolean> {
   return carteParDefaut(clientStripe(config), ligne.stripeCustomerId).then((c) => c !== null, () => false);
 }
 
+/** Ce que fait un changement de formule, dit avant le clic — le changement de rythme compris. */
+function effetDuChangement(sens: "montee" | "baisse", actuelle: string | null, visee: string, finPeriode: Date | null): string {
+  if (sens === "baisse") {
+    const fin = finPeriode ? `le ${formaterDateLongueFr(finPeriode)}` : "à la fin de la période payée";
+    return `À la fin de votre période payée, ${fin}, sans remboursement de la période en cours.`;
+  }
+  const de = formuleDeLookupKey(actuelle)?.periodicite;
+  const vers = formuleDeLookupKey(visee)?.periodicite;
+  if (de === "mensuel" && vers === "annuel") {
+    return "Tout de suite : l'année est prélevée maintenant, moins ce qui reste de votre mois en cours.";
+  }
+  if (de === "annuel" && vers === "mensuel") {
+    return "Tout de suite : votre période repart aujourd'hui, et ce qui reste de votre année est déduit de vos prochaines factures.";
+  }
+  return "Tout de suite : la différence pour la période en cours est prélevée maintenant.";
+}
+
 /**
  * Les formules vers lesquelles un abonnement qui paie peut aller, avec, pour
  * chacune, son sens (montée tout de suite, baisse en fin de période) et ce qui
@@ -66,6 +83,7 @@ async function changementsPossibles(
   db: Db,
   compteId: string,
   actuelle: string | null,
+  finPeriode: Date | null,
 ): Promise<{ options: OptionDeFormule[]; baisse: { libelle: string; le: Date } | null }> {
   const config = configurationStripe();
   if (!config.active) return { options: [], baisse: null };
@@ -88,6 +106,7 @@ async function changementsPossibles(
         return {
           cle,
           sens,
+          effet: effetDuChangement(sens, actuelle, cle, finPeriode),
           libelle: libelleDe(cle),
           prix: montant ? `${eurosHT(montant)} HT par ${LIBELLE_PERIODICITE[f.periodicite].unite}` : null,
           depassements: sens === "baisse" ? await depassements(db, compteId, cle) : [],
@@ -132,6 +151,7 @@ const MESSAGES_FORMULE = {
   prevue: "C'est noté : votre nouvelle formule s'appliquera à la fin de la période payée.",
   gardee: "Vous gardez votre formule actuelle.",
   impossible: "Le changement de formule n'est possible que pour un abonnement à jour de ses paiements.",
+  "resiliation-prevue": "Votre abonnement prend fin à la date prévue : reprenez-le d'abord depuis « Gérer mon abonnement » pour changer de formule.",
   "trop-d-utilisateurs": "Cette formule permet moins d'utilisateurs que votre compte n'en a : retirez-en d'abord depuis Membres du compte.",
 } as const;
 
@@ -173,8 +193,9 @@ export default async function AbonnementPage({
     geste === "abonner" && ligne?.statut === "trialing" && c ? await carteDuCompte(c.db, c.compte.compteId) : false;
   // Changer de formule : un abonnement qui paie, pour son propriétaire.
   const { options: optionsChangement, baisse } =
-    geste === "portail" && ligne?.statut === "active" && c
-      ? await changementsPossibles(c.db, c.compte.compteId, ligne.formule)
+    // Une résiliation prévue : on ne change pas une formule qui s'arrête.
+    geste === "portail" && ligne?.statut === "active" && !ligne.resilieEnFinDePeriode && !ligne.finPrevueLe && c
+      ? await changementsPossibles(c.db, c.compte.compteId, ligne.formule, ligne.finPeriode)
       : { options: [], baisse: null };
   const finEssai = ligne?.finEssai ? `, le ${formaterDateLongueFr(ligne.finEssai)}` : "";
   const quand =
@@ -311,13 +332,16 @@ export default async function AbonnementPage({
               </>
             )}
             {geste === "portail" && optionsChangement.length > 0 && (
-              <ChangerDeFormule options={optionsChangement} finPeriode={ligne?.finPeriode ?? null} baisse={baisse} />
+              <ChangerDeFormule options={optionsChangement} baisse={baisse} />
             )}
             {geste === "portail" && (
               <form action={ouvrirPortailAction} className={optionsChangement.length > 0 ? "mt-6" : undefined}>
                 <p className="m-0 mt-2 mb-5 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                   Changer de carte, résilier, télécharger vos factures : sur la page sécurisée de Stripe, notre
                   prestataire de paiement.
+                  {baisse
+                    ? " Un changement de formule est prévu : pour résilier, choisissez d'abord « Garder ma formule »."
+                    : null}
                 </p>
                 <Button type="submit" variant="board" size="board">
                   Gérer mon abonnement

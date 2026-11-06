@@ -46,6 +46,14 @@ describe("refusInvitationBaissePrevue", () => {
     expect(await refusInvitationBaissePrevue(db, "c1")).toBeNull();
   });
 
+  it("après la création de l'invitation, la nouvelle est comptée : refus seulement au-delà du plafond", async () => {
+    m.membres.mockResolvedValue([{}]);
+    m.invitations.mockResolvedValue([]);
+    expect(await refusInvitationBaissePrevue(db, "c1", { apresCreation: true })).toBeNull();
+    m.invitations.mockResolvedValue([{}]);
+    expect(await refusInvitationBaissePrevue(db, "c1", { apresCreation: true })).not.toBeNull();
+  });
+
   it("Stripe injoignable : refus (une invitation peut attendre)", async () => {
     m.retrieve.mockRejectedValue(new Error("délai"));
     expect(await refusInvitationBaissePrevue(db, "c1")).toMatch(/momentanément/);

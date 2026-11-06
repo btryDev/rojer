@@ -166,6 +166,12 @@ export async function finaliserCarteAction(sessionId: string): Promise<void> {
   redirect(PAGE_ABONNEMENT);
 }
 
+/** Le même geste envoyé deux fois : Stripe le dit par un 409, ou par un planning déjà rattaché. */
+const dejaEnCours = (e: unknown) =>
+  e instanceof Stripe.errors.StripeIdempotencyError ||
+  (e as { statusCode?: number })?.statusCode === 409 ||
+  /already (has|attached to) a subscription schedule/i.test(e instanceof Error ? e.message : "");
+
 /**
  * Changer de formule, pour un abonnement qui paie (§ 10, amendé le
  * 2026-11-06). Montée : tout de suite, la différence prélevée aussitôt et la
@@ -186,6 +192,9 @@ export async function changerFormuleAction(formData: FormData): Promise<void> {
     const item = courant?.items.data[0];
     if (!courant || courant.status !== "active" || !item) {
       cible = `${PAGE_ABONNEMENT}?formule=impossible`;
+    } else if (courant.cancel_at_period_end || courant.cancel_at) {
+      // Une résiliation est prévue : on ne change pas une formule qui s'arrête.
+      cible = `${PAGE_ABONNEMENT}?formule=resiliation-prevue`;
     } else {
       const sens = sensDuChangement(formuleDuPrix(item.price), formule);
       const prix = (await prixDesFormules(stripe)).get(formule);
@@ -200,11 +209,19 @@ export async function changerFormuleAction(formData: FormData): Promise<void> {
           cible = `${PAGE_ABONNEMENT}?formule=trop-d-utilisateurs`;
         } else {
           await planifierBaisse(stripe, courant, { priceId: prix.priceId, intervalle: INTERVALLE_STRIPE[visee.periodicite] });
-          cible = `${PAGE_ABONNEMENT}?formule=prevue`;
+          // Une invitation partie entre la vérification et le planning : on
+          // revérifie, et la baisse est rendue si elle ne tient plus.
+          if ((await depassements(db, compteId, formule)).some((d) => d.quota === "membres")) {
+            await annulerBaisse(stripe, (await abonnementsDuClient(stripe, ligne.stripeCustomerId)).find((a) => a.id === courant.id) ?? courant);
+            cible = `${PAGE_ABONNEMENT}?formule=trop-d-utilisateurs`;
+          } else cible = `${PAGE_ABONNEMENT}?formule=prevue`;
         }
       }
     }
   } catch (e) {
+    // Un double clic : le premier envoi est passé (clé d'idempotence, ou
+    // planning déjà créé) — la page relit l'état, sans erreur.
+    if (dejaEnCours(e)) redirect(PAGE_ABONNEMENT);
     console.error(`abonnement : changement de formule en échec — ${e instanceof Error ? e.name : "erreur"}`);
     redirect(`${PAGE_ABONNEMENT}?stripe=indisponible`);
   }

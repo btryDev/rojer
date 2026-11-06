@@ -119,6 +119,14 @@ describe("gestes réservés au propriétaire", () => {
 });
 
 describe("plafond d'utilisateurs de la formule (ADR-053 § 14)", () => {
+  it("course avec une baisse planifiée au même instant : l'invitation créée est retirée", async () => {
+    h.api.createInvitation.mockResolvedValueOnce({ id: "inv_1" } as never);
+    baisse.refus.mockResolvedValueOnce(null).mockResolvedValueOnce("Le passage à Essentiel est prévu le …");
+    const r = await actions.inviterMembre(IDLE, fd({ email: "x@exemple.fr", role: "member" }));
+    expect(r).toEqual({ status: "error", message: "Le passage à Essentiel est prévu le …" });
+    expect(h.api.cancelInvitation).toHaveBeenCalledWith(expect.objectContaining({ body: { invitationId: "inv_1" } }));
+  });
+
   it("une baisse planifiée qui ne permettrait pas un utilisateur de plus : refus, rien n'est créé", async () => {
     baisse.refus.mockResolvedValueOnce("Le passage à Essentiel est prévu le …");
     const r = await actions.inviterMembre(IDLE, fd({ email: "x@exemple.fr", role: "member" }));

@@ -21,7 +21,11 @@ import { contexteDroits, offreLancee } from "./saisie";
  * permettrait pas, ou `null`. Stripe injoignable : refus (on ne sait pas s'il
  * y a une baisse, et une invitation peut attendre).
  */
-export async function refusInvitationBaissePrevue(db: Db, compteId: string): Promise<string | null> {
+export async function refusInvitationBaissePrevue(
+  db: Db,
+  compteId: string,
+  { apresCreation = false }: { apresCreation?: boolean } = {},
+): Promise<string | null> {
   if (!offreLancee(contexteDroits())) return null;
   const config = configurationStripe();
   if (!config.active) return null;
@@ -39,6 +43,9 @@ export async function refusInvitationBaissePrevue(db: Db, compteId: string): Pro
   const plafond = plafondDe({ formule, essai: null }, "membres");
   if (plafond === null) return null;
   const [membres, invitations] = await Promise.all([membresDuCompte(compteId), invitationsDuCompte(compteId)]);
-  if (membres.length + invitations.length < plafond) return null;
+  // Avant de créer : il faut une place libre. Après (contrôle de la course
+  // avec une baisse planifiée au même instant) : la nouvelle est comptée.
+  const occupes = membres.length + invitations.length;
+  if (apresCreation ? occupes <= plafond : occupes < plafond) return null;
   return `Le passage à ${FORMULES[formule].libelle} est prévu le ${formaterDateLongueFr(prevue.le)} : cette formule permet ${LIBELLES_PLAFONDS.membres(plafond)}. Gardez votre formule actuelle (page Abonnement) pour inviter quelqu'un de plus.`;
 }

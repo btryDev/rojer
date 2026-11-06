@@ -223,8 +223,7 @@ export async function appliquerFormule(
 export async function monterDeFormule(stripe: Stripe, abonnement: Stripe.Subscription, priceId: string): Promise<string | null> {
   const item = abonnement.items.data[0];
   if (!item || item.price.id === priceId) return null;
-  const planning = idStripe(abonnement.schedule);
-  if (planning) await stripe.subscriptionSchedules.release(planning);
+  // La mise à jour d'abord : si elle échoue, la baisse prévue reste intacte.
   const misAJour = await stripe.subscriptions.update(
     abonnement.id,
     {
@@ -235,6 +234,8 @@ export async function monterDeFormule(stripe: Stripe, abonnement: Stripe.Subscri
     },
     { idempotencyKey: `monter-${abonnement.id}-${item.price.id}-${priceId}` },
   );
+  const planning = idStripe(abonnement.schedule);
+  if (planning) await stripe.subscriptionSchedules.release(planning);
   return factureARegler(stripe, misAJour.latest_invoice);
 }
 
@@ -264,7 +265,8 @@ export async function planifierBaisse(
     ? await stripe.subscriptionSchedules.retrieve(existant)
     : await stripe.subscriptionSchedules.create({ from_subscription: abonnement.id });
   const enCours = planning.current_phase ?? planning.phases[0];
-  await stripe.subscriptionSchedules.update(planning.id, {
+  try {
+    await stripe.subscriptionSchedules.update(planning.id, {
     end_behavior: "release",
     proration_behavior: "none",
     phases: [
@@ -276,7 +278,34 @@ export async function planifierBaisse(
       // Une période dans la nouvelle formule, puis l'abonnement continue seul.
       { items: [{ price: priceId, quantity: 1 }], duration: { interval: intervalle, interval_count: 1 } },
     ],
-  });
+    });
+  } catch (e) {
+    // Un planning créé ici sans sa baisse bloquerait le portail sans rien
+    // afficher : on le rend avant de remonter l'erreur.
+    if (!existant) {
+      try {
+        await stripe.subscriptionSchedules.release(planning.id);
+      } catch {
+        // L'erreur d'origine est celle qui compte ; le planning seul se rendra à la notification suivante.
+      }
+    }
+    throw e;
+  }
+}
+
+/**
+ * Le planning d'une baisse a fait son office (la nouvelle formule court, plus
+ * de phase à venir) : on le rend, sinon il resterait attaché une période
+ * entière et le portail refuserait toute résiliation (doc du portail).
+ */
+export async function rendrePlanningEchu(stripe: Stripe, abonnement: Stripe.Subscription): Promise<void> {
+  const id = idStripe(abonnement.schedule);
+  if (!id) return;
+  const planning = await stripe.subscriptionSchedules.retrieve(id);
+  const maintenant = Math.floor(Date.now() / 1000);
+  if (planning.status === "active" && !planning.phases.some((p) => p.start_date > maintenant)) {
+    await stripe.subscriptionSchedules.release(id);
+  }
 }
 
 /** Renoncer à une baisse planifiée : l'abonnement reste sur sa formule. */

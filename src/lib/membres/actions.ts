@@ -94,15 +94,24 @@ export async function inviterMembre(_prev: EtatMembres, formData: FormData): Pro
     { cle: cleLimite("invitation", "compte", compte.compteId), limite: LIMITES.invitationCompte },
   ]);
   if (!verdict.ok) return { status: "error", message: messageTropDeTentatives(verdict.reessayerDansSecondes) };
+  let invitationId: string | null = null;
   try {
-    await auth.api.createInvitation({
+    const creee = await auth.api.createInvitation({
       headers: await entetesDeSession(),
       body: { email: lu.data.email, role: lu.data.role, organizationId: compte.compteId },
     });
+    invitationId = (creee as { id?: string } | null)?.id ?? null;
   } catch (e) {
     // Plafond d'utilisateurs de la formule, invitations comprises (ADR-053 § 14).
     if (codeDe(e) === "INVITATION_LIMIT_REACHED") return { status: "error", message: await motifPlafondMembres(db, compte.compteId) };
     return refus(e, "inviter");
+  }
+  // Une baisse planifiée au même instant que cette invitation : la seconde
+  // vérification la voit, et l'invitation de trop est retirée.
+  const apres = await refusInvitationBaissePrevue(db, compte.compteId, { apresCreation: true });
+  if (apres && invitationId) {
+    await auth.api.cancelInvitation({ headers: await entetesDeSession(), body: { invitationId } }).catch(() => {});
+    return { status: "error", message: apres };
   }
   revalidatePath(PAGE);
   return { status: "success", message: `Invitation envoyée à ${lu.data.email}.` };

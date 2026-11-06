@@ -16,6 +16,7 @@ import {
   ouvrirCheckoutCarte,
   planifierBaisse,
   prixDesFormules,
+  rendrePlanningEchu,
 } from "./parcours";
 
 const api = {
@@ -138,6 +139,13 @@ describe("parcours Stripe", () => {
     api.subscriptions.update.mockResolvedValue({ latest_invoice: { status: "paid" } });
     expect(await monterDeFormule(stripe, sub, "price_pm")).toBeNull();
     expect(api.subscriptionSchedules.release).toHaveBeenCalledWith("sub_sched_1");
+    // La mise à jour d'abord : si elle échoue, la baisse prévue reste intacte.
+    expect(api.subscriptions.update.mock.invocationCallOrder.at(-1)).toBeLessThan(api.subscriptionSchedules.release.mock.invocationCallOrder.at(-1)!);
+    api.subscriptionSchedules.release.mockClear();
+    api.subscriptions.update.mockRejectedValueOnce(new Error("refus"));
+    await expect(monterDeFormule(stripe, sub, "price_pm")).rejects.toThrow("refus");
+    expect(api.subscriptionSchedules.release).not.toHaveBeenCalled();
+    api.subscriptions.update.mockResolvedValue({ latest_invoice: { status: "paid" } });
     expect(api.subscriptions.update).toHaveBeenLastCalledWith(
       "sub_1",
       { items: [{ id: "si_1", price: "price_pm" }], proration_behavior: "always_invoice", payment_behavior: "pending_if_incomplete", expand: ["latest_invoice"] },
@@ -175,6 +183,25 @@ describe("parcours Stripe", () => {
     expect(api.subscriptionSchedules.create).not.toHaveBeenCalled();
     await annulerBaisse(stripe, { ...sub, schedule: "sub_sched_1" } as unknown as Stripe.Subscription);
     expect(api.subscriptionSchedules.release).toHaveBeenLastCalledWith("sub_sched_1");
+  });
+
+  it("baisser : un planning créé dont la mise à jour échoue est rendu ; un planning échu (plus de phase à venir) aussi", async () => {
+    const sub = { id: "sub_1", schedule: null, items: { data: [{ id: "si_1", quantity: 1, price: { id: "price_pm" } }] } } as unknown as Stripe.Subscription;
+    api.subscriptionSchedules.create.mockResolvedValue({ id: "sub_sched_2", current_phase: { start_date: 100, end_date: 200 }, phases: [] });
+    api.subscriptionSchedules.update.mockRejectedValueOnce(new Error("phases refusées"));
+    api.subscriptionSchedules.release.mockClear();
+    await expect(planifierBaisse(stripe, sub, { priceId: "price_em", intervalle: "month" })).rejects.toThrow("phases refusées");
+    expect(api.subscriptionSchedules.release).toHaveBeenCalledWith("sub_sched_2");
+
+    const passe = Math.floor(Date.now() / 1000) - 86_400;
+    api.subscriptionSchedules.retrieve.mockResolvedValue({ status: "active", phases: [{ start_date: passe - 10 }, { start_date: passe }] });
+    api.subscriptionSchedules.release.mockClear();
+    await rendrePlanningEchu(stripe, { schedule: "sub_sched_3" } as unknown as Stripe.Subscription);
+    expect(api.subscriptionSchedules.release).toHaveBeenCalledWith("sub_sched_3");
+    api.subscriptionSchedules.retrieve.mockResolvedValue({ status: "active", phases: [{ start_date: passe }, { start_date: passe + 10 * 86_400 }] });
+    api.subscriptionSchedules.release.mockClear();
+    await rendrePlanningEchu(stripe, { schedule: "sub_sched_3" } as unknown as Stripe.Subscription);
+    expect(api.subscriptionSchedules.release).not.toHaveBeenCalled();
   });
 
   it("la baisse prévue : la phase suivante, son prix et sa date ; sans planning, rien", async () => {

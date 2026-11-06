@@ -195,6 +195,27 @@ describe("changerFormuleAction", () => {
     expect(m.monterDeFormule).not.toHaveBeenCalled();
   });
 
+  it("une résiliation déjà prévue : pas de changement de formule", async () => {
+    m.abonnementsDuClient.mockResolvedValue([{ ...actif("rojer_essentiel_mensuel"), cancel_at_period_end: true }]);
+    expect(await redirigeVers(changerFormuleAction(formulaire("rojer_pro_annuel")))).toBe("/compte/abonnement?formule=resiliation-prevue");
+    expect(m.monterDeFormule).not.toHaveBeenCalled();
+  });
+
+  it("course avec une invitation : revérifié après le planning, la baisse est rendue si elle ne tient plus", async () => {
+    m.abonnementsDuClient.mockResolvedValue([actif("rojer_pro_annuel")]);
+    m.depassements.mockResolvedValueOnce([]).mockResolvedValueOnce([{ quota: "membres", utilise: 2, plafond: 1 }]);
+    expect(await redirigeVers(changerFormuleAction(formulaire("rojer_essentiel_mensuel")))).toBe("/compte/abonnement?formule=trop-d-utilisateurs");
+    expect(m.planifierBaisse).toHaveBeenCalled();
+    expect(m.annulerBaisse).toHaveBeenCalled();
+  });
+
+  it("double clic : un 409 de Stripe n'affiche pas d'erreur", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    m.abonnementsDuClient.mockResolvedValue([actif("rojer_essentiel_mensuel")]);
+    m.monterDeFormule.mockRejectedValueOnce(Object.assign(new Error("en cours"), { statusCode: 409 }));
+    expect(await redirigeVers(changerFormuleAction(formulaire("rojer_pro_annuel")))).toBe("/compte/abonnement");
+  });
+
   it("hors d'un abonnement à jour (essai, impayé) : rien ; formule hors catalogue : rien", async () => {
     for (const status of ["trialing", "past_due"]) {
       m.abonnementsDuClient.mockResolvedValue([{ ...actif("rojer_essentiel_mensuel"), status }]);
