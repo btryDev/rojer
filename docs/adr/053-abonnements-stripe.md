@@ -129,7 +129,28 @@ et sans croire une information qui ne vient pas de Stripe.
    `trial_settings.end_behavior.missing_payment_method=pause`. Pendant
    l'essai, la saisie est ouverte (`trialing`) ; à la fin sans carte, l'état
    `paused` ferme la saisie, jamais la lecture ni l'export (§ 3).
-10. **Passer au payant, c'est ajouter une carte dans le portail Stripe** :
+10. [2026-11-06, amendé — grille du 2026-11-05 : **s'abonner se fait dans
+   Rojer**. Le propriétaire choisit la formule et le rythme (mensuel,
+   annuel) sur la page de l'abonnement ; la carte s'enregistre ensuite sur
+   la page hébergée de Stripe (Checkout en mode « setup », sans
+   prélèvement), puis la formule s'applique à l'abonnement qui court
+   (`abonnements/souscription.ts`, idempotent, rejoué par le webhook
+   `checkout.session.completed`). Pendant l'essai, rien n'est facturé avant
+   sa fin ; `immediat` (valider un document officiel pendant l'essai) arrête
+   l'essai et prélève le premier mois ; un abonnement en pause reprend et
+   paie. L'essai se fait sur la plus petite formule (`PRIX_D_ESSAI`). Le
+   portail sert à changer de carte, télécharger les factures et résilier :
+   **il ne change plus la formule** (`subscription_update` désactivé) — il ne
+   sait ni refuser une baisse ni la planifier entre produits (§ 14).
+   Checkout « subscription » reste le chemin après une résiliation. Une
+   carte déjà enregistrée : la formule s'applique sans repasser par Stripe.
+   Rejouée (retour, webhook, rechargement), l'application ne refait rien :
+   clés d'idempotence de la session, dernier choix daté sur l'abonnement
+   (`rojerChoixLe`), facture d'une reprise en attente renvoyée telle quelle.
+   Choisir Pro pendant l'essai ne donne rien de plus : les limites de l'essai
+   valent jusqu'au premier paiement confirmé (§ 14). Changer de formule une
+   fois payant n'est PAS encore livré (montée immédiate, baisse en fin de
+   période, § 14) : d'ici là, aucun chemin.] ~~Passer au payant, c'est ajouter une carte dans le portail Stripe~~ :
    l'abonnement devient payant à la fin de l'essai, sans prélèvement anticipé ;
    un abonnement en pause se reprend du même portail. Le portail sert aussi à
    résilier, à télécharger les factures (émises par Stripe) et à changer de

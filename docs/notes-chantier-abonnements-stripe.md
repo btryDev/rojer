@@ -617,6 +617,14 @@ est appliqué ; huit autres sont affichés sans l'être. Trous principaux :
   utilisateurs, comptés par le plugin hors verrou (limite acceptée, ADR-053 § 14) ;
 - la garde de saisie ne voit que les écritures Prisma reconnues par sa sonde
   (un dépôt de fichier sans écriture Prisma passerait).
+- utilisateurs non plafonnés (`inviterMembre`, `accepterInvitation`) ;
+- formule inconnue = illimité (`quotas.ts`) ;
+- compteurs annuels remis à zéro par suppression d'un brouillon ou d'un
+  établissement (cascade) ; pas de date de début d'abonnement ;
+- comptage hors verrou (deux onglets dépassent d'un) ;
+- ~~la garde de saisie ne voit que les écritures Prisma reconnues par sa sonde
+  (un dépôt de fichier sans écriture Prisma passerait).~~ [2026-11-05, PR #191 :
+  la garde relève toute fonction exportée d'un module `"use server"`.]
 
 **Décisions de la propriétaire (2026-11-05)** :
 - ~~**baisse de formule refusée** tant que le compte dépasse les plafonds de la
@@ -663,6 +671,24 @@ est appliqué ; huit autres sont affichés sans l'être. Trous principaux :
   annoncé dès l'écran d'essai), et utiliser la réduction **à la conversion**
   (bandeau des 7 derniers jours : « premier mois à 15 € »). À confronter à
   5-10 dirigeants de la cible avant de figer.
+- [2026-11-06, tranché d'après la pratique courante — Docusign, Airtable,
+  Pennylane, Zendesk, et My DU, concurrent direct (1 mois) : **pas de « compte
+  en veille » à part**. Sans abonnement (fin d'essai, impayé définitif,
+  résiliation) : saisie fermée, lecture et export ouverts **pendant 12 mois**
+  après la fin de l'essai ou du dernier abonnement, puis suppression. Une
+  règle pour tous, cohérente avec les 12 mois du compte jamais payé.
+  E-mails : J-7 et J-1 avant la fin de l'essai ; J-30 et J-7 avant la
+  suppression, avec le lien d'export. Les CGU et ces e-mails disent que les
+  40 ans de conservation du DUERP incombent à l'employeur. « Valider =
+  s'abonner » protège la valeur : un compte jamais payé n'a pas de document
+  officiel à perdre. Reste à coder : la suppression à 12 mois et ses e-mails.
+  **Règle pour tout futur e-mail automatique** (rappels d'échéances, relances
+  des prestataires…) : réservé aux comptes qui paient ; il vérifie
+  l'abonnement avant chaque envoi, comme la saisie. Sans abonnement, seuls
+  partent ceux de Stripe sur le paiement, les rappels de fin d'essai et les
+  avertissements avant suppression. Le calendrier, lui, reste calculé et
+  lisible sans abonnement (lecture) ; les limites de l'essai (5 équipements)
+  le gardent incomplet, et il le dit.]
 - **Export pour un ancien client : sous un délai.** Aujourd'hui, un compte
   sans abonnement garde la lecture et l'export sans limite (ADR-053 § 3) :
   Rojer stockerait à vie. À poser : un délai d'export après la fin de
@@ -683,8 +709,9 @@ tenus dans un journal que rien n'efface ; « Connecter un assistant » retiré
 de l'offre tant que l'accès OAuth (ADR-013) n'existe pas.
 
 **Plan du lot « quotas »** (avant le lancement de l'offre) :
-0. garde de saisie exigée en tête de **toute** action exportée d'un module
-   `"use server"` (listes fermées des exceptions), `.tsx` compris ;
+0. ~~garde de saisie exigée en tête de **toute** action exportée d'un module
+   `"use server"` (listes fermées des exceptions), `.tsx` compris ;~~
+   [2026-11-05, PR #191]
 1. changement de formule dans Rojer (contrôle des plafonds, montée
    immédiate facturée, baisse planifiée) ; portail sans changement de
    formule ; formule inconnue fermée ; date de début d'abonnement recopiée ;
@@ -698,6 +725,12 @@ de l'offre tant que l'accès OAuth (ADR-013) n'existe pas.
    [2026-11-06, lot C2 `lot/quotas-c2` : fait, ADR-053 § 14] ;
 5. essai par SIREN ; conditions générales complétées (baisse, plafonds,
    date anniversaire).
+
+- 2026-11-05 — **Lot 0 — garde de saisie générale : PR #191** (vers `cc`).
+  Toute fonction exportée d'un module `"use server"` (`.tsx` compris) ouvre
+  par `verifierSaisie`, sauf `OUVERTES` et `LECTURES_EXPOSEES` (listes
+  fermées) ; directive en ligne refusée ; écritures au rendu d'une page
+  nommées (`ECRITURES_A_LA_LECTURE`). Aucune action réellement non gardée.
 
 ## 11. Essai de bout en bout avec un compte Stripe de test (2026-11-05)
 
@@ -731,6 +764,15 @@ nommaient Stripe ; « période en cours » affichée pour un abonnement résili�
 des conditions dans les informations publiques ; TVA — la facture de test est
 à 29 € sans taxe : Stripe Tax ou taux de TVA à régler avec l'expert-comptable
 (§ 6).
+
+**À faire — la facture du client** (demande de la propriétaire, 2026-11-06) :
+une facture conforme pour chaque paiement. Mentions de Rojer (raison sociale,
+SIREN, adresse, numéro de TVA, mentions légales B2B : pénalités de retard,
+indemnité forfaitaire de 40 €), TVA appliquée, raison sociale, adresse et
+numéro de TVA du client (déjà demandés au paiement), numérotation continue
+(Stripe), téléchargement depuis la page Abonnement de Rojer et pas seulement
+le portail, envoi par e-mail ; facture électronique obligatoire au
+1er septembre 2027 (plateforme agréée). À valider avec l'expert-comptable.
 
 ## Sources lues
 

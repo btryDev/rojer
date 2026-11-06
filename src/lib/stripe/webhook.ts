@@ -17,7 +17,8 @@ import Stripe from "stripe";
 import type { ModeStripe } from "./config";
 import { OPTIONS_WEBHOOK } from "./client";
 import { marquerEchec, marquerTraite, oublierLesAnciens, prendreEnCharge } from "./evenements";
-import { codePrisma, synchroniserClientStripe, type Synchronisation } from "./synchronisation";
+import { codePrisma, idStripe, synchroniserClientStripe, type Synchronisation } from "./synchronisation";
+import { finaliserCarte } from "@/lib/abonnements/souscription";
 
 /** Une notification légère pèse moins d'un kilo-octet. */
 export const TAILLE_MAX_NOTIFICATION = 64 * 1024;
@@ -80,7 +81,6 @@ export function verifierNotificationStripe(
   }
 }
 
-const idDe = (c: string | { id: string } | null | undefined) => (typeof c === "string" ? c : (c?.id ?? null));
 
 type ObjetSuivi = { customerId: string | null; abonnement?: Stripe.Subscription };
 
@@ -94,16 +94,20 @@ async function objetSuivi(stripe: Stripe, n: NotificationStripe): Promise<ObjetS
     case "v1.customer.subscription.resumed":
     case "v1.customer.subscription.trial_will_end": {
       const abonnement = await stripe.subscriptions.retrieve(n.related_object.id, {}, OPTIONS_WEBHOOK);
-      return { customerId: idDe(abonnement.customer), abonnement };
+      return { customerId: idStripe(abonnement.customer), abonnement };
     }
     case "v1.checkout.session.completed": {
-      const session = await stripe.checkout.sessions.retrieve(n.related_object.id, {}, OPTIONS_WEBHOOK);
-      return { customerId: session.mode === "subscription" ? idDe(session.customer) : null };
+      const session = await stripe.checkout.sessions.retrieve(n.related_object.id, { expand: ["setup_intent"] }, OPTIONS_WEBHOOK);
+      // La carte d'un abonnement qui court sans payer : la formule choisie
+      // s'applique ici si le retour de Checkout ne l'a pas déjà fait. La
+      // synchronisation est celle du webhook, juste après.
+      if (session.mode === "setup") await finaliserCarte(stripe, session, { synchroniser: false });
+      return { customerId: session.mode === "subscription" || session.mode === "setup" ? idStripe(session.customer) : null };
     }
     case "v1.invoice.paid":
     case "v1.invoice.payment_failed":
     case "v1.invoice.payment_action_required":
-      return { customerId: idDe((await stripe.invoices.retrieve(n.related_object.id, {}, OPTIONS_WEBHOOK)).customer) };
+      return { customerId: idStripe((await stripe.invoices.retrieve(n.related_object.id, {}, OPTIONS_WEBHOOK)).customer) };
     default:
       return { customerId: null };
   }

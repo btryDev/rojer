@@ -174,7 +174,8 @@ type Module = {
 
 const modules = new Map<string, Module | null>();
 
-function resoudre(depuis: string, specifiant: string): string | null {
+/** Le fichier `.ts` du dépôt que désigne un import (`@/…` ou relatif), ou `null` (paquet, `.tsx`). */
+export function resoudre(depuis: string, specifiant: string): string | null {
   let base: string;
   if (specifiant.startsWith("@/")) base = join(SRC(), specifiant.slice(2));
   else if (specifiant.startsWith(".")) base = join(dirname(depuis), specifiant);
@@ -421,8 +422,14 @@ export function estServerAction(source: string): boolean {
   );
 }
 
+/**
+ * Les modules `"use server"` du dépôt, `.tsx` compris (garde de saisie,
+ * 2026-11-05) : une directive dans un composant échappait au balayage.
+ */
 export function modulesServerAction(): string[] {
-  const fichiers = execSync(`find "${SRC()}" -name "*.ts" -not -name "*.test.ts"`)
+  const fichiers = execSync(
+    `find "${SRC()}" \\( -name "*.ts" -o -name "*.tsx" \\) -not -name "*.test.ts" -not -name "*.test.tsx"`,
+  )
     .toString()
     .trim()
     .split("\n");
