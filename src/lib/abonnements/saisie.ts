@@ -5,7 +5,8 @@ import "server-only";
 // du compte (garde : `abonnements/saisie-gardee.test.ts`). Tant que
 // l'abonnement n'est pas exigé, elle ne lit RIEN : aucun coût avant le
 // lancement de l'offre. Exigé et refusé : redirection vers la page de
-// l'abonnement, qui dit pourquoi — la lecture et l'export restent ouverts.
+// l'abonnement, qui dit pourquoi — la lecture reste ouverte (l'export d'un
+// document officiel demande d'avoir payé une fois, ADR-053 § 15).
 
 import { cache } from "react";
 import { redirect } from "next/navigation";

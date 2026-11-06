@@ -12,11 +12,11 @@ vi.mock("next/navigation", () => ({
 }));
 
 import type { Db } from "@/lib/auth/compte";
-import { aDejaPaye, exigerUnPaiement, PAGE_S_ABONNER, signatureDEssaiDisponible } from "./validation";
+import { aDejaPaye, exigerSignatureDEssai, exigerUnPaiement, PAGE_S_ABONNER } from "./validation";
 
 const db = (debutPayantLe: Date | null, signatures = 0) =>
   ({
-    abonnement: { findUnique: vi.fn(async () => ({ debutPayantLe })) },
+    abonnement: { findUnique: vi.fn(async () => ({ debutPayantLe, formule: "rojer_essentiel_mensuel", statut: "trialing", essaiUtiliseLe: null })) },
     consommationQuota: { count: vi.fn(async () => signatures) },
   }) as unknown as Db;
 
@@ -43,9 +43,15 @@ describe("valider = s'abonner (ADR-053 § 15)", () => {
     await exigerUnPaiement(db(new Date("2026-01-01")), "c1");
   });
 
-  it("une seule signature de test : la première du compte", async () => {
-    expect(await signatureDEssaiDisponible(db(null, 0))).toBe(true);
-    expect(await signatureDEssaiDisponible(db(null, 1))).toBe(false);
+  it("sans abonnement payé : une signature de test, et un lien seulement à soi-même", async () => {
+    lancer();
+    const SOI = "moi@exemple.fr";
+    await exigerSignatureDEssai(db(null, 0), "c1", SOI);
+    await exigerSignatureDEssai(db(null, 0), "c1", SOI, SOI);
+    await expect(exigerSignatureDEssai(db(null, 0), "c1", SOI, "tiers@exemple.fr")).rejects.toThrow(`REDIRECT ${PAGE_S_ABONNER}`);
+    await expect(exigerSignatureDEssai(db(null, 1), "c1", SOI)).rejects.toThrow(`REDIRECT ${PAGE_S_ABONNER}`);
+    // Abonné : rien de tout cela.
+    await exigerSignatureDEssai(db(new Date("2026-01-01"), 9), "c1", SOI, "tiers@exemple.fr");
   });
 });
 
@@ -55,8 +61,8 @@ describe("les gestes qui demandent l'abonnement passent par la règle", () => {
     ["src/lib/accessibilite/actions.ts", /export async function publierRegistre\([\s\S]*?await exigerUnPaiement\(db, compte\.compteId\)/],
     ["src/app/api/etablissements/[id]/controle-zip/route.ts", /export async function GET\([\s\S]*?await exigerUnPaiement\(db, compte\.compteId\)/],
     ["src/app/api/etablissements/[id]/registre/pdf/route.ts", /export async function GET\([\s\S]*?await exigerUnPaiement\(db, compte\.compteId\)/],
-    ["src/lib/signatures/actions.ts", /export async function demanderSignature\([\s\S]*?aDejaPaye\(db, compte\.compteId\)[\s\S]*?signatureDEssaiDisponible\(db\)[\s\S]*?redirect\(PAGE_S_ABONNER\)/],
-    ["src/lib/signatures/actions.ts", /export async function signerEnCompteConnecte\([\s\S]*?aDejaPaye\(db, compte\.compteId\)[\s\S]*?signatureDEssaiDisponible\(db\)[\s\S]*?redirect\(PAGE_S_ABONNER\)/],
+    ["src/lib/signatures/actions.ts", /export async function demanderSignature\([\s\S]*?await exigerSignatureDEssai\(db, compte\.compteId, user\.email, params\.signataireEmail\)/],
+    ["src/lib/signatures/actions.ts", /export async function signerEnCompteConnecte\([\s\S]*?await exigerSignatureDEssai\(db, compte\.compteId, user\.email\)/],
     ["src/app/api/etablissements/[id]/dossier-conformite/pdf/route.ts", /projet: !\(await aDejaPaye\(db, compte\.compteId\)\)/],
   ];
   it.each(GESTES)("%s", (fichier, motif) => {

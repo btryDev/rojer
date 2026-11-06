@@ -27,7 +27,10 @@ et sans croire une information qui ne vient pas de Stripe.
    redirection), et le client gère son abonnement dans le portail hébergé.
    Rojer ne charge aucun script Stripe : la CSP ne s'ouvre pas, et un script
    injecté dans Rojer ne peut pas imiter le formulaire de carte.
-3. **Un impayé ferme la saisie, jamais la lecture ni l'export.** Le client
+3. **Un impayé ferme la saisie, jamais la lecture ~~ni l'export~~.**
+   [2026-11-06, § 15 : l'export d'un document officiel (dossier de
+   contrôle, registre consolidé) demande d'avoir payé une fois ; un ancien
+   abonné le garde.] Le client
    garde la main sur ce qu'il est tenu de conserver (DUERP : 40 ans).
    Correspondance des états Stripe, seule lecture : `droitsDuCompte` (lot 3).
    `trialing`, `active`, `past_due` → saisie ouverte (`past_due` avec un
@@ -361,7 +364,19 @@ et sans croire une information qui ne vient pas de Stripe.
    un `active` : `aDejaPaye`, `exigerUnPaiement`
    (`abonnements/validation.ts`). Refusé : `/compte/abonnement?immediat=1`
    (la page « S'abonner », session « stripe »). Un ancien abonné garde ses
-   exports (il a payé ; § 3, 12 mois). Les aperçus sont marqués « Projet –
+   exports (il a payé) ; leur délai de 12 mois après la fin de l'abonnement
+   (notes § 10, 2026-11-06) reste à coder. **Condition de lancement** : la
+   synchronisation écrit `debutPayantLe` à la première facture payée
+   (session « stripe ») ; sans elle, tous les gestes de ce paragraphe sont
+   refusés à tous, abonnés compris. Ce qui existait avant le lancement ne se
+   perd pas : une version de DUERP déjà figée reste téléchargeable, un
+   registre d'accessibilité déjà publié le reste (le republier après l'avoir
+   retiré demande l'abonnement). Le plan d'actions et les points à corriger
+   en PDF sont des documents de travail : ni bloqués ni marqués. La
+   signature de test se compte depuis le début de l'essai (ce qui a été signé
+   avant ne l'entame pas), par la porte comme par le pré-contrôle. Non fait :
+   l'annonce avant le clic (le bouton ne dit rien ; on l'apprend à la
+   redirection). Les aperçus sont marqués « Projet –
    non validé » (`MentionProjet` : aperçu du DUERP, toujours ; dossier de
    conformité, pour un compte qui n'a jamais payé). Les brouillons de permis
    de feu et de plans de prévention restent imprimables. Pas de « compte en

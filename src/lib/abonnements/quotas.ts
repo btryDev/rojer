@@ -95,12 +95,17 @@ function anniversaire(ancre: Date, annee: number): Date {
 /**
  * Le début de l'année en cours des plafonds annuels : le dernier anniversaire
  * du premier abonnement payant du compte (`debutPayantLe`) ; sans lui (essai,
- * jamais payé), les douze derniers mois. La première année part du début de
+ * jamais payé), les douze derniers mois, depuis le début de l'essai au plus tôt. La première année part du début de
  * l'essai (`debutEssai`) s'il le précède — au plus un an avant l'ancre : ce
  * qui a été créé pendant l'essai compte dans la première année payée.
  */
 export function debutDeLAnnee(ancre: Date | null | undefined, maintenant: Date, debutEssai?: Date | null): Date {
-  if (!ancre) return anniversaire(maintenant, maintenant.getUTCFullYear() - 1);
+  if (!ancre) {
+    // Jamais payé : les douze derniers mois, et pas avant le début de l'essai
+    // (ce qui a été fait avant le lancement de l'offre ne l'entame pas).
+    const douzeMois = anniversaire(maintenant, maintenant.getUTCFullYear() - 1);
+    return debutEssai && debutEssai > douzeMois ? debutEssai : douzeMois;
+  }
   const cetteAnnee = anniversaire(ancre, maintenant.getUTCFullYear());
   const debut = cetteAnnee <= maintenant ? cetteAnnee : anniversaire(ancre, maintenant.getUTCFullYear() - 1);
   if (!(debut <= ancre && debutEssai && debutEssai < debut)) return debut;
@@ -387,4 +392,15 @@ export async function refusStockage(
   if (plafond === null) return null;
   if (verrou) await verrouillerLeCompte(verrou, compteId);
   return (await utilises()) + ajout <= plafond * 1e9 ? null : motifDuRefus(regime, "stockageGo");
+}
+
+/**
+ * La signature de test d'un compte qui n'a jamais payé (ADR-053 § 15) :
+ * disponible si aucune n'a été prise depuis le début de l'essai — la même
+ * durée que la porte (`LIMITES_ESSAI.signaturesParAn`), qui la tient sous le
+ * verrou. Pré-contrôle, pour renvoyer à la page « S'abonner ».
+ */
+export async function signatureDEssaiDisponible(db: Db, compteId: string): Promise<boolean> {
+  const { debutAnnee } = await abonnementDesPlafonds(db, compteId);
+  return (await db.consommationQuota.count({ where: { quota: "signaturesParAn", consommeLe: { gte: debutAnnee } } })) === 0;
 }

@@ -1,4 +1,4 @@
-import { LIBELLE_PROJET } from "./MentionProjet";
+import { MentionProjet } from "./MentionProjet";
 import {
   Document,
   Page,
@@ -108,29 +108,6 @@ const s = StyleSheet.create({
     paddingTop: 6,
   },
   pageNumber: { fontSize: 8 },
-  watermarkBand: {
-    position: "absolute",
-    top: 14,
-    left: 40,
-    right: 40,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    backgroundColor: "#fef3c7",
-    borderWidth: 0.5,
-    borderColor: "#d97706",
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  watermarkLabel: {
-    fontSize: 8,
-    fontFamily: "Helvetica-Bold",
-    color: "#92400e",
-    letterSpacing: 1.2,
-  },
-  watermarkHint: {
-    fontSize: 7,
-    color: "#92400e",
-  },
 });
 
 function badgeColor(criticite: number): string {
@@ -231,16 +208,7 @@ export function DuerpDocument({ snapshot, historique, brouillon = false }: Props
 
   // Élément (pas un composant défini au rendu — react-hooks/static-components) :
   // le bandeau est identique sur toutes les pages.
-  const bandeau = brouillon ? (
-      <View style={s.watermarkBand} fixed>
-        <Text style={s.watermarkLabel}>
-          {LIBELLE_PROJET}
-        </Text>
-        <Text style={s.watermarkHint}>
-          Aperçu de la version {version}, non validée
-        </Text>
-      </View>
-  ) : null;
+  const bandeau = brouillon ? <MentionProjet precision={`Aperçu de la version ${version}, non validée`} /> : null;
 
   return (
     <Document

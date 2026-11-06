@@ -13,6 +13,7 @@ import "server-only";
 import { redirect } from "next/navigation";
 import type { Db } from "@/lib/auth/compte";
 import { contexteDroits, offreLancee } from "./lancement";
+import { signatureDEssaiDisponible } from "./quotas";
 
 export const PAGE_S_ABONNER = "/compte/abonnement?immediat=1";
 
@@ -29,11 +30,18 @@ export async function exigerUnPaiement(db: Db, compteId: string): Promise<void> 
 }
 
 /**
- * La signature de test d'un compte qui n'a jamais payé : une seule, la
- * première du compte (aucune au journal des signatures, demandes comprises).
- * Pré-contrôle pour renvoyer à la page « S'abonner » ; la limite elle-même
- * est tenue par la porte, sous le verrou (`LIMITES_ESSAI.signaturesParAn`).
+ * La règle des signatures sans abonnement payé : une signature de test, et
+ * un lien seulement à soi-même (`destinataire` : l'adresse du lien, déjà
+ * normalisée ; absente pour une signature en compte connecté). Sinon, la
+ * page « S'abonner ».
  */
-export async function signatureDEssaiDisponible(db: Db): Promise<boolean> {
-  return (await db.consommationQuota.count({ where: { quota: "signaturesParAn" } })) === 0;
+export async function exigerSignatureDEssai(
+  db: Db,
+  compteId: string,
+  emailDuCompte: string | null | undefined,
+  destinataire?: string,
+): Promise<void> {
+  if (await aDejaPaye(db, compteId)) return;
+  const aSoiMeme = destinataire === undefined || destinataire === (emailDuCompte ?? "").toLowerCase();
+  if (!aSoiMeme || !(await signatureDEssaiDisponible(db, compteId))) redirect(PAGE_S_ABONNER);
 }

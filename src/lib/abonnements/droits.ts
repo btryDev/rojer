@@ -2,8 +2,9 @@
 // correspondance entre les états Stripe et la saisie. Fonction pure : la
 // lecture de la ligne et du réglage est dans `saisie.ts`.
 //
-// - La lecture et l'export ne sont JAMAIS fermés : seules les écritures
-//   passent par cette règle (`verifierSaisie`).
+// - La lecture n'est JAMAIS fermée : seules les écritures passent par cette
+//   règle (`verifierSaisie`). L'export des documents officiels demande d'avoir
+//   payé une fois (ADR-053 § 15, `validation.ts`) : le bandeau le dit.
 // - Tant que l'abonnement n'est pas exigé (`ABONNEMENT_EXIGE`, posé au
 //   lancement de l'offre) ou que Stripe est désactivé, la saisie reste
 //   ouverte pour tous, sans bandeau.
@@ -20,6 +21,8 @@ export type LigneAbonnement = {
   finPeriode: Date | null;
   resilieEnFinDePeriode: boolean;
   finPrevueLe: Date | null;
+  /** Le premier paiement confirmé (ADR-053 § 15) : sans lui, pas d'export officiel. */
+  debutPayantLe?: Date | null;
 };
 
 export type Bandeau = { ton: "info" | "alerte" | "ferme"; message: string };
@@ -51,8 +54,8 @@ export function droitsDe(ligne: LigneAbonnement | null, ctx: ContexteDroits): Dr
       bandeau: {
         ton: "ferme",
         message: ligne?.statut
-          ? "Votre abonnement n'est plus actif : vos dossiers restent consultables et exportables, la saisie est fermée."
-          : "Choisissez une formule pour saisir dans Rojer : vos dossiers restent consultables et exportables.",
+          ? `Votre abonnement n'est plus actif : vos dossiers restent consultables${ligne.debutPayantLe ? " et exportables" : ""}, la saisie est fermée.`
+          : "Choisissez une formule pour saisir dans Rojer : vos dossiers restent consultables.",
       },
     };
   }
