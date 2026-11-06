@@ -2,8 +2,9 @@
 // correspondance entre les états Stripe et la saisie. Fonction pure : la
 // lecture de la ligne et du réglage est dans `saisie.ts`.
 //
-// - La lecture et l'export ne sont JAMAIS fermés : seules les écritures
-//   passent par cette règle (`verifierSaisie`).
+// - La lecture n'est JAMAIS fermée : seules les écritures passent par cette
+//   règle (`verifierSaisie`). L'export des documents officiels demande d'avoir
+//   payé une fois (ADR-053 § 15, `validation.ts`) : le bandeau le dit.
 // - Tant que l'abonnement n'est pas exigé (`ABONNEMENT_EXIGE`, posé au
 //   lancement de l'offre) ou que Stripe est désactivé, la saisie reste
 //   ouverte pour tous, sans bandeau.
@@ -20,6 +21,8 @@ export type LigneAbonnement = {
   finPeriode: Date | null;
   resilieEnFinDePeriode: boolean;
   finPrevueLe: Date | null;
+  /** Le premier paiement confirmé (ADR-053 § 15) : sans lui, pas d'export officiel. */
+  debutPayantLe?: Date | null;
 };
 
 export type Bandeau = { ton: "info" | "alerte" | "ferme"; message: string };
@@ -38,7 +41,8 @@ export type ContexteDroits = {
   maintenant: Date;
 };
 
-const OUVRENT = new Set(["trialing", "active", "past_due"]);
+/** Les états qui ouvrent la saisie, et dont la période court. */
+export const OUVRENT: ReadonlySet<string> = new Set(["trialing", "active", "past_due"]);
 /** Une fin d'essai s'annonce une semaine avant. */
 const PREAVIS_ESSAI_MS = 7 * 24 * 60 * 60_000;
 
@@ -51,8 +55,8 @@ export function droitsDe(ligne: LigneAbonnement | null, ctx: ContexteDroits): Dr
       bandeau: {
         ton: "ferme",
         message: ligne?.statut
-          ? "Votre abonnement n'est plus actif : vos dossiers restent consultables et exportables, la saisie est fermée."
-          : "Choisissez une formule pour saisir dans Rojer : vos dossiers restent consultables et exportables.",
+          ? `Votre abonnement n'est plus actif : vos dossiers restent consultables${ligne.debutPayantLe ? " et exportables" : ""}, la saisie est fermée.`
+          : "Choisissez une formule pour saisir dans Rojer : vos dossiers restent consultables.",
       },
     };
   }
@@ -113,13 +117,18 @@ export const nomProvisoire = (email: string) => email;
 export const aNomProvisoire = (c: { name?: string | null; email?: string | null }) =>
   !c.name || (!!c.email && c.name === nomProvisoire(c.email));
 
-export type Geste = "membre" | "essai" | "portail" | "souscrire";
+/** Les états où l'abonnement court sans payer encore (essai, pause) : on s'y abonne. */
+export const SANS_PAIEMENT_ENCORE: ReadonlySet<string> = new Set(["trialing", "paused"]);
+
+export type Geste = "membre" | "essai" | "abonner" | "portail" | "souscrire";
 
 /**
  * Le geste que la page de l'abonnement propose (ADR-053 §§ 10, 12) : l'essai
- * tant qu'il est disponible — y compris sans compte encore —, le portail tant
- * qu'un abonnement court, Checkout après sa fin. Un membre voit l'état sans
- * geste ; offre non lancée, aucun.
+ * tant qu'il est disponible — y compris sans compte encore — ; « s'abonner »
+ * (formule, rythme, carte) tant que l'abonnement court sans payer (essai,
+ * pause) ; le portail une fois payant (carte, factures, résiliation) ;
+ * Checkout après la fin. Un membre voit l'état sans geste ; offre non
+ * lancée, aucun.
  */
 export function gesteAbonnement(o: {
   ouvert: boolean;
@@ -129,5 +138,7 @@ export function gesteAbonnement(o: {
   if (!o.ouvert) return null;
   if (o.role !== null && o.role !== "owner") return "membre";
   if (essaiDisponible(o.ligne)) return "essai";
-  return abonnementEnCours(o.ligne?.statut ?? null) ? "portail" : "souscrire";
+  const statut = o.ligne?.statut ?? null;
+  if (statut && SANS_PAIEMENT_ENCORE.has(statut)) return "abonner";
+  return abonnementEnCours(statut) ? "portail" : "souscrire";
 }

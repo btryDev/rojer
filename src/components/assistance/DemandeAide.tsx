@@ -170,7 +170,8 @@ function Formulaire({
       </p>
     {/* Le portail sort le formulaire du DOM d'un éventuel formulaire parent,
         pas de son arbre React : l'envoi ne doit pas remonter jusqu'à lui. */}
-    <form action={action} onSubmit={(e) => e.stopPropagation()} className="space-y-4">
+    {/* Demander de l'aide reste ouvert quand la saisie est fermée (ADR-053 § 3, § 14). */}
+    <form action={action} onSubmit={(e) => e.stopPropagation()} className="space-y-4" data-saisie-ouverte>
       <input type="hidden" name="page" value={page} />
       {etablissementId && <input type="hidden" name="etablissementId" value={etablissementId} />}
       {contexte && <input type="hidden" name="contexte" value={contexte} />}

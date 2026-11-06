@@ -36,12 +36,16 @@ describe("droitsDe", () => {
     expect(droitsDe(ligne({ statut: "nouvel_etat" }), EXIGE)).toMatchObject({ saisie: false, bandeau: { ton: "ferme" } });
   });
 
-  it("exigé, sans abonnement : saisie fermée, et le bandeau rappelle que lecture et export restent ouverts", () => {
+  it("exigé, sans abonnement : saisie fermée, la lecture reste ouverte ; l'export, seulement à qui a payé (ADR-053 § 15)", () => {
     for (const l of [null, ligne({ statut: null })]) {
       const d = droitsDe(l, EXIGE);
       expect(d.saisie).toBe(false);
-      expect(d.bandeau?.message).toMatch(/consultables et exportables/);
+      expect(d.bandeau?.message).toMatch(/restent consultables\./);
     }
+    expect(droitsDe(ligne({ statut: "canceled", debutPayantLe: new Date("2026-01-01") }), EXIGE).bandeau?.message).toMatch(
+      /consultables et exportables/,
+    );
+    expect(droitsDe(ligne({ statut: "paused" }), EXIGE).bandeau?.message).not.toMatch(/exportables/);
   });
 
   it("paiement échoué : saisie ouverte, alerte", () => {
@@ -94,7 +98,10 @@ describe("gesteAbonnement", () => {
     const g = (l: ReturnType<typeof ligne> | null) => gesteAbonnement({ ouvert: true, role: "owner", ligne: l });
     expect(g(null)).toBe("essai");
     expect(g(ligne({}))).toBe("essai");
-    for (const statut of ["trialing", "active", "past_due", "unpaid", "paused", "incomplete"]) {
+    for (const statut of ["trialing", "paused"]) {
+      expect(g(ligne({ statut, stripeSubscriptionId: "sub_1", essaiUtiliseLe: new Date() })), statut).toBe("abonner");
+    }
+    for (const statut of ["active", "past_due", "unpaid", "incomplete"]) {
       expect(g(ligne({ statut, stripeSubscriptionId: "sub_1", essaiUtiliseLe: new Date() })), statut).toBe("portail");
     }
     for (const statut of ["canceled", "incomplete_expired"]) {

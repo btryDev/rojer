@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { GelDuPrestataire } from "@/components/quotas/BandeauGel";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -107,6 +108,9 @@ export default async function PrestataireDetailPage({
 
   return (
     <EcranFiche provenance={provenance} canonique={annuaire}>
+      {/* Un prestataire gelé (ADR-053 § 14) le dit dès l'ouverture, et sa fiche
+          ne s'envoie plus ; un site gelé, c'est la mise en page qui le dit. */}
+      <GelDuPrestataire prestataireId={prestataireId}>
       <CorpsFiche
         principal={
           <>
@@ -357,6 +361,7 @@ export default async function PrestataireDetailPage({
           </>
         }
       />
+      </GelDuPrestataire>
     </EcranFiche>
   );
 }

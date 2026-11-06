@@ -1,6 +1,9 @@
 "use server";
 
+import type { Db } from "@/lib/auth/compte";
+import { deposerFichier, rendreReservations } from "@/lib/abonnements/stockage";
 import { revalidatePath } from "next/cache";
+import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { redirect } from "next/navigation";
 import { requireAction, requireVerification } from "@/lib/auth/scope";
 import { estActionEnRetard, estActionOuverte } from "@/lib/dates/retard";
@@ -10,7 +13,6 @@ import { constaterEpiDuCompte } from "@/lib/etablissements/epi-constate";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import {
   clePieceDePoint,
-  getStorage,
   MESSAGE_DEPOT_NON_CONFIGURE,
   MESSAGE_ECHEC_ENREGISTREMENT,
   stockageEnService,
@@ -259,7 +261,7 @@ export async function cloturerAction(
   formData: FormData,
 ): Promise<ActionPlanState> {
   await verifierSaisie();
-  const { db, action: existante } = await requireAction(actionId);
+  const { compte, db, action: existante } = await requireAction(actionId);
 
   const parsed = cloturerActionSchema.safeParse({
     commentaire: formData.get("commentaire"),
@@ -302,7 +304,7 @@ export async function cloturerAction(
   // LA PIÈCE (ADR-048) : facultative, pour un point à corriger seulement, aux
   // règles du fichier d'un rapport (`validerFichier` : type réel, taille).
   // Écrite AVANT la base, effacée si la base refuse — comme un rapport.
-  const piece = await lirePiece(formData, existante);
+  const piece = await lirePiece(db, compte.compteId, formData, existante);
   if (piece.status === "error") return piece;
 
   // `updateMany` borné aux statuts OUVERTS (`estActionOuverte`) : deux
@@ -330,11 +332,17 @@ export async function cloturerAction(
       },
     }));
   } catch (err) {
-    if (piece.status === "piece") await libererFichiers([piece.cle], "points/correction");
+    if (piece.status === "piece") {
+      await libererFichiers([piece.cle], "points/correction");
+      await rendreReservations(db, [piece.cle]);
+    }
     throw err;
   }
   if (ecrites === 0) {
-    if (piece.status === "piece") await libererFichiers([piece.cle], "points/correction");
+    if (piece.status === "piece") {
+      await libererFichiers([piece.cle], "points/correction");
+      await rendreReservations(db, [piece.cle]);
+    }
     return { status: "error", message: "Déjà corrigée" };
   }
 
@@ -351,6 +359,8 @@ type LecturePiece =
 
 /** La pièce d'une correction, validée et stockée — ou aucune. */
 async function lirePiece(
+  db: Db,
+  compteId: string,
   formData: FormData,
   action: { id: string; etablissementId: string; verificationId: string | null },
 ): Promise<LecturePiece> {
@@ -368,7 +378,9 @@ async function lirePiece(
   }
   const cle = clePieceDePoint(action.etablissementId, action.id, fichier.name);
   try {
-    await getStorage().put(cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
+    // Le plafond de stockage de la formule (ADR-053 § 14), avant d'écrire.
+    const refus = await deposerFichier(db, compteId, cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
+    if (refus) return { status: "error", message: refus, fieldErrors: { piece: [refus] } };
   } catch (e) {
     console.error(`[points/correction] écriture de la pièce impossible (${cle})`, e);
     return { status: "error", message: MESSAGE_ECHEC_ENREGISTREMENT };
@@ -439,6 +451,7 @@ export async function abandonnerAction(actionId: string): Promise<void> {
 
 export async function supprimerActionPlan(actionId: string): Promise<void> {
   await verifierSaisie();
+  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   const { db, action, etablissementId } = await requireAction(actionId);
 
   await db.action.delete({ where: { id: actionId } });

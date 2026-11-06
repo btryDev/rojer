@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { z } from "zod";
 import { estJourCivilReel } from "@/lib/dates";
 import { requireMesure, requireRisque } from "@/lib/auth/scope";
@@ -213,6 +214,7 @@ export async function modifierMesure(
 
 export async function supprimerMesure(mesureId: string): Promise<void> {
   await verifierSaisie();
+  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   const { db, action } = await requireMesure(mesureId);
 
   // Le risque porteur est résolu (et re-scopé) avant la suppression : c'est

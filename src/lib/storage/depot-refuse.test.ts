@@ -27,7 +27,15 @@ const h = vi.hoisted(() => {
         },
       },
     );
-  const prisma = new Proxy({}, { get: (_t, nom: string) => table(nom) });
+  // La forme interactive de `$transaction` reçoit le même client simulé (la
+  // création d'un prestataire passe par la porte des plafonds, ADR-053 § 14).
+  const prisma: object = new Proxy(
+    {},
+    {
+      get: (_t, nom: string) =>
+        nom === "$transaction" ? async (cb: (tx: object) => unknown) => cb(prisma) : table(nom),
+    },
+  );
   return { prisma, ecritures };
 });
 
@@ -37,6 +45,7 @@ vi.mock("@/lib/auth/scope", () => ({
   // La garde rend aussi le client borné (ADR-051) : ici, le client simulé.
   assertEtablissementDuCompte: vi.fn(async () => ({
     user: { id: "u1" },
+    compte: { compteId: "c1", role: "owner" },
     db: await (await import("@/test/garde-simulee")).clientDuCompteSimule(),
   })),
   requireEtablissement: vi.fn(async () => ({ etablissement: { id: "e1" } })),

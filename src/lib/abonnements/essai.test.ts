@@ -105,7 +105,7 @@ describe("aiguillageEssai", () => {
 
 describe("demarrerEssaiDuCompte", () => {
   it("dans l'ordre : client, ligne réservée, preuve d'acceptation, essai, relecture — puis l'onboarding", async () => {
-    expect(await redirigeVers(demarrerEssaiDuCompte(FORMULE, true))).toBe("/onboarding");
+    expect(await redirigeVers(demarrerEssaiDuCompte(true))).toBe("/onboarding");
     expect(m.ordre).toEqual(["client", "réservation", "verrou", "acceptation", "essai", "relecture"]);
     expect(db.abonnement.updateMany.mock.calls[0][0]).toMatchObject({
       where: { compteId: "c1", essaiUtiliseLe: null, stripeSubscriptionId: null },
@@ -117,28 +117,27 @@ describe("demarrerEssaiDuCompte", () => {
     });
   });
 
-  it("sans la case cochée, ou avec une formule inconnue : une erreur, rien chez Stripe", async () => {
-    expect(await demarrerEssaiDuCompte(FORMULE, false)).toEqual({ status: "error", message: expect.stringMatching(/conditions générales/) });
-    expect(await demarrerEssaiDuCompte("rojer_surmesure_mensuel", true)).toMatchObject({ status: "error" });
+  it("sans la case cochée : une erreur, rien chez Stripe", async () => {
+    expect(await demarrerEssaiDuCompte(false)).toEqual({ status: "error", message: expect.stringMatching(/conditions générales/) });
     expect(m.requireCompteDOnboarding).not.toHaveBeenCalled();
     expect(m.creerClientStripe).not.toHaveBeenCalled();
   });
 
   it("un membre qui n'est pas propriétaire : la page des membres, rien chez Stripe", async () => {
     m.requireCompteDOnboarding.mockResolvedValue(compte("member"));
-    expect(await redirigeVers(demarrerEssaiDuCompte(FORMULE, true))).toBe("/compte/membres?reserve=proprietaire");
+    expect(await redirigeVers(demarrerEssaiDuCompte(true))).toBe("/compte/membres?reserve=proprietaire");
     expect(m.creerClientStripe).not.toHaveBeenCalled();
   });
 
   it("abonnement enregistré : la page de l'abonnement, pas de second essai", async () => {
     db.abonnement.findUnique.mockResolvedValue({ stripeCustomerId: "cus_1", stripeSubscriptionId: "sub_1", essaiUtiliseLe: new Date() });
-    expect(await redirigeVers(demarrerEssaiDuCompte(FORMULE, true))).toBe("/compte/abonnement");
+    expect(await redirigeVers(demarrerEssaiDuCompte(true))).toBe("/compte/abonnement");
     expect(m.demarrerEssai).not.toHaveBeenCalled();
   });
 
   it("une réservation interrompue reprend avec son client, sans en créer un autre", async () => {
     db.abonnement.findUnique.mockResolvedValue({ stripeCustomerId: "cus_ancien", stripeSubscriptionId: null, essaiUtiliseLe: null });
-    expect(await redirigeVers(demarrerEssaiDuCompte(FORMULE, true))).toBe("/onboarding");
+    expect(await redirigeVers(demarrerEssaiDuCompte(true))).toBe("/onboarding");
     expect(m.creerClientStripe).not.toHaveBeenCalled();
     expect(db.abonnement.create).not.toHaveBeenCalled();
     expect(m.demarrerEssai).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ customerId: "cus_ancien" }));
@@ -147,13 +146,13 @@ describe("demarrerEssaiDuCompte", () => {
   it("double clic : la réservation déjà posée par l'autre envoi l'emporte, son client sert à l'essai", async () => {
     db.abonnement.create.mockRejectedValueOnce({ code: "P2002" });
     db.abonnement.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({ stripeCustomerId: "cus_enregistre" });
-    expect(await redirigeVers(demarrerEssaiDuCompte(FORMULE, true))).toBe("/onboarding");
+    expect(await redirigeVers(demarrerEssaiDuCompte(true))).toBe("/onboarding");
     expect(m.demarrerEssai).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ customerId: "cus_enregistre" }));
   });
 
   it("deux envois simultanés : le verrou n'en laisse passer qu'un, l'autre ne touche pas Stripe", async () => {
     db.abonnement.updateMany.mockResolvedValueOnce({ count: 0 }).mockResolvedValueOnce({ count: 0 });
-    expect(await demarrerEssaiDuCompte(FORMULE, true)).toEqual({ status: "error", message: expect.stringMatching(/en cours de démarrage/) });
+    expect(await demarrerEssaiDuCompte(true)).toEqual({ status: "error", message: expect.stringMatching(/en cours de démarrage/) });
     expect(m.demarrerEssai).not.toHaveBeenCalled();
     expect(db.acceptationConditions.create).not.toHaveBeenCalled();
   });
@@ -161,7 +160,7 @@ describe("demarrerEssaiDuCompte", () => {
   it("Stripe refuse l'essai (requête rejetée) : le verrou est rendu, la preuve reste au journal", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     m.demarrerEssai.mockRejectedValue(refus());
-    expect(await demarrerEssaiDuCompte(FORMULE, true)).toMatchObject({ status: "error" });
+    expect(await demarrerEssaiDuCompte(true)).toMatchObject({ status: "error" });
     expect(m.ordre).toContain("verrou rendu");
     expect(db.acceptationConditions.delete).not.toHaveBeenCalled();
     const rendu = db.abonnement.updateMany.mock.calls[1][0];
@@ -172,7 +171,7 @@ describe("demarrerEssaiDuCompte", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     m.demarrerEssai.mockRejectedValue(new Error("délai dépassé"));
     m.listeAbonnements.mockResolvedValue([{ id: "sub_1" }]);
-    expect(await redirigeVers(demarrerEssaiDuCompte(FORMULE, true))).toBe("/onboarding");
+    expect(await redirigeVers(demarrerEssaiDuCompte(true))).toBe("/onboarding");
     expect(m.ordre).not.toContain("verrou rendu");
     expect(m.synchroniserClientStripe).toHaveBeenCalledWith(expect.anything(), "cus_1");
   });
@@ -180,7 +179,7 @@ describe("demarrerEssaiDuCompte", () => {
   it("réponse perdue, rien encore chez Stripe : le verrou est gardé (l'essai se crée peut-être encore)", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     m.demarrerEssai.mockRejectedValue(new Error("délai dépassé"));
-    expect(await demarrerEssaiDuCompte(FORMULE, true)).toEqual({ status: "error", message: expect.stringMatching(/quelques minutes/) });
+    expect(await demarrerEssaiDuCompte(true)).toEqual({ status: "error", message: expect.stringMatching(/quelques minutes/) });
     expect(m.ordre).not.toContain("verrou rendu");
   });
 
@@ -188,7 +187,7 @@ describe("demarrerEssaiDuCompte", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     m.demarrerEssai.mockRejectedValue(new Error("délai dépassé"));
     m.listeAbonnements.mockRejectedValue(new Error("injoignable"));
-    expect(await demarrerEssaiDuCompte(FORMULE, true)).toMatchObject({ status: "error" });
+    expect(await demarrerEssaiDuCompte(true)).toMatchObject({ status: "error" });
     expect(m.ordre).not.toContain("verrou rendu");
   });
 
@@ -197,7 +196,7 @@ describe("demarrerEssaiDuCompte", () => {
     db.abonnement.findUnique.mockResolvedValue({ stripeCustomerId: "cus_1", stripeSubscriptionId: null, essaiUtiliseLe: ancien });
     db.abonnement.updateMany.mockResolvedValueOnce({ count: 0 }).mockResolvedValueOnce({ count: 1 });
     m.listeAbonnements.mockResolvedValue([{ id: "sub_1" }]);
-    expect(await redirigeVers(demarrerEssaiDuCompte(FORMULE, true))).toBe("/onboarding");
+    expect(await redirigeVers(demarrerEssaiDuCompte(true))).toBe("/onboarding");
     expect(m.demarrerEssai).not.toHaveBeenCalled();
     expect(db.abonnement.updateMany.mock.calls[1][0].where).toMatchObject({ essaiUtiliseLe: { lt: expect.any(Date) } });
   });
@@ -208,21 +207,21 @@ describe("demarrerEssaiDuCompte", () => {
     db.abonnement.findUnique.mockResolvedValue({ stripeCustomerId: "cus_1", stripeSubscriptionId: null, essaiUtiliseLe: ancien });
     db.abonnement.updateMany.mockResolvedValueOnce({ count: 0 }).mockResolvedValueOnce({ count: 1 });
     m.demarrerEssai.mockRejectedValue(refus());
-    expect(await demarrerEssaiDuCompte(FORMULE, true)).toMatchObject({ status: "error" });
+    expect(await demarrerEssaiDuCompte(true)).toMatchObject({ status: "error" });
     expect(db.abonnement.updateMany.mock.calls[2][0].data).toEqual({ essaiUtiliseLe: ancien });
   });
 
   it("Stripe en panne : une erreur affichable qui dit que rien n'a été facturé, sans détail technique", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     m.demarrerEssai.mockRejectedValue(new Error("No such price: client@exemple.fr"));
-    const r = await demarrerEssaiDuCompte(FORMULE, true);
+    const r = await demarrerEssaiDuCompte(true);
     expect(r).toEqual({ status: "error", message: expect.stringMatching(/rien ne vous a été facturé/) });
     expect(JSON.stringify(r)).not.toContain("exemple.fr");
   });
 
-  it("une formule sans prix ne crée ni compte, ni client", async () => {
+  it("sans prix d'essai chez Stripe : ni compte, ni client", async () => {
     m.prixDesFormules.mockResolvedValue(new Map());
-    expect(await demarrerEssaiDuCompte(FORMULE, true)).toMatchObject({ status: "error", message: expect.stringMatching(/pas disponible/) });
+    expect(await demarrerEssaiDuCompte(true)).toMatchObject({ status: "error", message: expect.stringMatching(/ne peut pas démarrer/) });
     expect(m.requireCompteDOnboarding).not.toHaveBeenCalled();
     expect(m.creerClientStripe).not.toHaveBeenCalled();
   });
@@ -230,16 +229,16 @@ describe("demarrerEssaiDuCompte", () => {
   it("la relecture échoue après l'essai créé : pas d'échec annoncé, l'onboarding, le verrou gardé", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     m.synchroniserClientStripe.mockRejectedValue(new Error("panne"));
-    expect(await redirigeVers(demarrerEssaiDuCompte(FORMULE, true))).toBe("/onboarding");
+    expect(await redirigeVers(demarrerEssaiDuCompte(true))).toBe("/onboarding");
     expect(m.ordre).not.toContain("verrou rendu");
   });
 
   it("offre non lancée ou Stripe désactivé : l'onboarding, rien de créé", async () => {
     m.contexte.exige = false;
-    expect(await redirigeVers(demarrerEssaiDuCompte(FORMULE, true))).toBe("/onboarding");
+    expect(await redirigeVers(demarrerEssaiDuCompte(true))).toBe("/onboarding");
     m.contexte.exige = true;
     m.configurationStripe.mockReturnValue({ active: false, motif: null });
-    expect(await redirigeVers(demarrerEssaiDuCompte(FORMULE, true))).toBe("/onboarding");
+    expect(await redirigeVers(demarrerEssaiDuCompte(true))).toBe("/onboarding");
     expect(m.requireCompteDOnboarding).not.toHaveBeenCalled();
   });
 });

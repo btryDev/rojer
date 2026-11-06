@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { SaisieDuSite } from "@/components/quotas/SaisieDuSite";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EntrepriseForm } from "@/components/entreprises/EntrepriseForm";
@@ -23,7 +25,11 @@ export default async function ModifierEntreprisePage({
   const perimetre = await mesurerPerimetreEntreprise(id);
 
   return (
-    <main className="mx-auto max-w-[760px] px-6 py-10">
+    <main data-zone-saisie className="mx-auto max-w-[760px] px-6 py-10">
+      {/* La saisie fermée (lecture seule, abonnement) s'annonce dès l'ouverture (ADR-053 § 14). */}
+      <Suspense fallback={null}>
+        <SaisieDuSite />
+      </Suspense>
       <nav className="board-eyebrow text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
         <Link href={`/entreprises/${id}`} className="hover:underline">
           ← {entreprise.raisonSociale}

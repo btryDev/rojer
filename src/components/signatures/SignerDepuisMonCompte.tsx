@@ -11,7 +11,7 @@ type Raison = Exclude<
   { ok: true }
 >["raison"];
 
-const MESSAGES: Record<Raison, string> = {
+const MESSAGES: Record<Exclude<Raison, "plafond">, string> = {
   non_signable: "Ce document n'est plus à signer : il a été clos ou annulé.",
   deja_signee: "Cette partie a déjà signé ce document.",
   objet_introuvable: "Ce document n'existe plus.",
@@ -58,7 +58,8 @@ export function SignerDepuisMonCompte({
         setOuvert(false);
         router.refresh();
       } else {
-        setErreur(MESSAGES[r.raison]);
+        // Le plafond de la formule porte son propre message (ADR-053 § 14).
+        setErreur(r.raison === "plafond" ? r.message : MESSAGES[r.raison]);
       }
     });
   }

@@ -1,3 +1,4 @@
+import { PlafondDeCreation } from "@/components/quotas/PlafondDeCreation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { FormulairePlanPrevention } from "@/components/plan-prevention/FormulairePlanPrevention";
@@ -34,6 +35,8 @@ export default async function NouveauPlanPreventionPage({
 
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
+      {/* Le plafond de la formule, annoncé avant la saisie (ADR-053 § 14). */}
+      <PlafondDeCreation cle="plansDePreventionParAn" className="mx-[var(--board-gutter)] mt-4">
       <header className="border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] py-[22px]">
         <Link
           href={`/etablissements/${id}/plan-prevention`}
@@ -59,6 +62,7 @@ export default async function NouveauPlanPreventionPage({
           />
         </div>
       </div>
+      </PlafondDeCreation>
     </main>
   );
 }

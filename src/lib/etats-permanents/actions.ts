@@ -1,6 +1,7 @@
 "use server";
 
 import type { Db } from "@/lib/auth/compte";
+import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { etabliParLesTitres } from "./par-les-titres";
 import { revalidatePath } from "next/cache";
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
@@ -180,6 +181,7 @@ export async function retirerDeclaration(
   obligationId: string,
 ): Promise<DeclarationActionState> {
   await verifierSaisie();
+  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   const { db } = await assertEtablissementDuCompte(etablissementId);
 
   // `deleteMany` et non `delete` : décocher une ligne jamais déclarée ne doit

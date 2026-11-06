@@ -1,3 +1,4 @@
+import { creerSousPlafond, prendreQuota, rendreQuota } from "@/lib/abonnements/quotas";
 import { randomUUID } from "node:crypto";
 import { notFound } from "next/navigation";
 import { z } from "zod";
@@ -12,7 +13,7 @@ import {
 } from "./token";
 import { envoyerMailAcces, urlAccesPourToken } from "./mail";
 import { envoiEnService, motifErreur } from "@/lib/email";
-import { LIEN_PARTI, MOTIF_REVOCATION_ENVOI_ECHOUE } from "./revocation";
+import { LIEN_PARTI, MOTIF_REVOCATION_ENVOI_ECHOUE, estAUsageUnique } from "./revocation";
 import { generateOtp, hashOtp, otpExpirationDate } from "@/lib/signatures/otp";
 
 /**
@@ -157,7 +158,7 @@ export type EmissionResultat =
   | { ok: true; accessTokenId: string; expireLe: Date }
   | {
       ok: false;
-      raison: "frequence" | "envoi_hors_service" | "envoi_echoue";
+      raison: "frequence" | "envoi_hors_service" | "envoi_echoue" | "plafond";
       message: string;
     };
 
@@ -184,7 +185,7 @@ export async function emettreAccessToken(
   const params = emissionSchema.parse(entree);
   // Une seule lecture de la session : la garde rend l'utilisateur et le
   // client borné.
-  const { user, db } = await assertEtablissementDuCompte(params.etablissementId);
+  const { user, compte, db } = await assertEtablissementDuCompte(params.etablissementId);
 
   // `etablissementId` et `objetId` arrivent du même appel, et jusqu'ici rien
   // ne vérifiait qu'ils avaient un rapport entre eux : posséder son propre
@@ -254,8 +255,7 @@ export async function emettreAccessToken(
   const expireLe = expirationFromNow(ttl, maintenant);
 
   // OTP uniquement pour scopes à preuve (signature, dépôt de rapport).
-  const besoinOtp =
-    params.scope === "signature" || params.scope === "depot_rapport";
+  const besoinOtp = estAUsageUnique(params.scope);
   const otp = besoinOtp ? generateOtp() : null;
   const otpHash = otp ? hashOtp(otp) : null;
   // Le code a sa propre expiration (10 minutes), bien plus courte que celle
@@ -264,23 +264,32 @@ export async function emettreAccessToken(
   // — l'email annonçait 10 minutes, le code en durait des jours.
   const otpExpireLe = otp ? otpExpirationDate(maintenant) : null;
 
-  const access = await db.accessToken.create({
-    data: {
-      id: `atk_${randomUUID()}`,
-      tokenHash,
-      etablissementId: params.etablissementId,
-      scope: params.scope,
-      objetType: params.objetType,
-      objetId: params.objetId,
-      partie: params.partie,
-      emailDestinataire: params.emailDestinataire,
-      nomDestinataire: params.nomDestinataire,
-      otpHash,
-      otpExpireLe,
-      expireLe,
-      createdByUserId: user.id,
-    },
+  // Plafonds de la formule (ADR-053 § 14) : les liens actifs, et pour une
+  // demande de signature, les signatures de l'année — comptées à la demande,
+  // comme une enveloppe : la signature du tiers, plus tard, ne recompte pas.
+  let pris: string[] = [];
+  const creation = await creerSousPlafond(db, compte.compteId, "liensAccesActifs", async (tx) => {
+    if (params.scope === "signature") pris = await prendreQuota(tx, compte.compteId, "signaturesParAn");
+    return tx.accessToken.create({
+      data: {
+        id: `atk_${randomUUID()}`,
+        tokenHash,
+        etablissementId: params.etablissementId,
+        scope: params.scope,
+        objetType: params.objetType,
+        objetId: params.objetId,
+        partie: params.partie,
+        emailDestinataire: params.emailDestinataire,
+        nomDestinataire: params.nomDestinataire,
+        otpHash,
+        otpExpireLe,
+        expireLe,
+        createdByUserId: user.id,
+      },
+    });
   });
+  if (!creation.ok) return { ok: false, raison: "plafond", message: creation.motif };
+  const access = creation.valeur;
 
   try {
     await envoyerMailAcces({
@@ -307,6 +316,11 @@ export async function emettreAccessToken(
         () => "révoqué",
         (e: unknown) => `révocation impossible (${motifErreur(e)})`,
       );
+    // La signature prise pour cette demande est rendue, si le lien est bien
+    // révoqué : rien n'a atteint personne (même règle que `LIEN_PARTI`). Non
+    // révoqué, le lien a pu partir (délai dépassé, e-mail accepté) : elle reste.
+    if (revoque === "révoqué")
+      await rendreQuota(db, pris).catch((e: unknown) => console.error("[access-tokens] signature non rendue :", motifErreur(e)));
     console.error(`[access-tokens] envoi échoué, jeton ${access.id} ${revoque} :`, motifErreur(erreur));
     return { ok: false, raison: "envoi_echoue", message: MESSAGE_ENVOI_ECHOUE };
   }

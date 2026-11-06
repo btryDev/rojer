@@ -5,7 +5,7 @@ vi.mock("server-only", () => ({}));
 const { clientDuClientStripe } = vi.hoisted(() => ({ clientDuClientStripe: vi.fn() }));
 vi.mock("@/lib/auth/compte-hors-session", () => ({ clientDuClientStripe }));
 
-import { abonnementCourant, colonnesDe, premierEssai, synchroniserClientStripe } from "./synchronisation";
+import { abonnementCourant, colonnesDe, premierEssai, premierPaiement, synchroniserClientStripe } from "./synchronisation";
 
 const abo = (o: Partial<Stripe.Subscription> & { id: string; prix?: string }) =>
   ({
@@ -101,11 +101,23 @@ describe("premierEssai", () => {
   });
 });
 
+describe("premierPaiement", () => {
+  it("la plus ancienne facture payée d'un montant non nul ; rien tant qu'il n'y a que l'essai", async () => {
+    const avec = (factures: object[]) =>
+      ({ invoices: { list: vi.fn().mockReturnValue({ autoPagingToArray: vi.fn().mockResolvedValue(factures) }) } }) as unknown as Stripe;
+    const f = (paye: number | null, montant: number) => ({ amount_paid: montant, status_transitions: { paid_at: paye } });
+    expect(await premierPaiement(avec([f(900, 2900), f(700, 8900), f(100, 0)]), "cus_1")).toEqual(new Date(700_000));
+    expect(await premierPaiement(avec([f(100, 0)]), "cus_1")).toBeNull();
+    expect(await premierPaiement(avec([f(null, 2900)]), "cus_1")).toBeNull();
+  });
+});
+
 describe("synchroniserClientStripe — le compte vient de Stripe relu, jamais de la notification", () => {
   const stripeAvec = (client: object, abonnements: Stripe.Subscription[] = []) =>
     ({
       customers: { retrieve: vi.fn().mockResolvedValue(client) },
       subscriptions: { list: vi.fn().mockReturnValue({ autoPagingToArray: vi.fn().mockResolvedValue(abonnements) }) },
+      invoices: { list: vi.fn().mockReturnValue({ autoPagingToArray: vi.fn().mockResolvedValue([]) }) },
     }) as unknown as Stripe;
 
   it("sans compte, au compte mal formé, ou supprimé sans abonnement qui le nomme : sans effet, aucune écriture", async () => {

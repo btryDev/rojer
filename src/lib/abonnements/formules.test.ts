@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FORMULES, LOOKUP_KEYS, estLookupKey, formuleDeLookupKey, formuleDuPrix, libelleEtablissements, lookupKey, sousLeQuota } from "./formules";
+import { FORMULES, LOOKUP_KEYS, estLookupKey, formuleDeLookupKey, formuleDuPrix, lookupKey, pointsDeFormule } from "./formules";
 
 describe("formules", () => {
   it("une lookup_key par formule et par périodicité, relue à l'identique", () => {
@@ -15,12 +15,6 @@ describe("formules", () => {
     for (const cle of [null, undefined, "", "suivi_annuel", "rojer_surmesure_mensuel", "rojer_pro_trimestriel", "rojer_constructor_mensuel", "rojer_pro_annuel_x"]) {
       expect(formuleDeLookupKey(cle), String(cle)).toBeNull();
     }
-  });
-
-  it("au quota, la création suivante est refusée ; nul veut dire illimité", () => {
-    expect(sousLeQuota(1, 0)).toBe(true);
-    expect(sousLeQuota(1, 1)).toBe(false);
-    expect(sousLeQuota(null, 10_000)).toBe(true);
   });
 
   it("Pro va au moins aussi loin qu'Essentiel sur chaque quota", () => {
@@ -48,9 +42,8 @@ describe("formuleDuPrix, estLookupKey, libellés", () => {
     for (const v of ["", "rojer_surmesure_annuel", 12, null]) expect(estLookupKey(v)).toBe(false);
   });
 
-  it("le pluriel et l'illimité des établissements", () => {
-    expect(libelleEtablissements(1)).toBe("1 établissement");
-    expect(libelleEtablissements(5)).toBe("5 établissements");
-    expect(libelleEtablissements(null)).toMatch(/sans limite/);
+  it("les points d'une formule : établissements et utilisateurs au singulier comme au pluriel", () => {
+    expect(pointsDeFormule("essentiel").slice(0, 2)).toEqual(["1 établissement", "1 utilisateur"]);
+    expect(pointsDeFormule("pro").slice(0, 2)).toEqual(["5 établissements", "5 utilisateurs"]);
   });
 });

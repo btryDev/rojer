@@ -24,7 +24,7 @@ import { codePrisma, synchroniserClientStripe } from "@/lib/stripe/synchronisati
 import { VERSION_CONDITIONS } from "./conditions";
 import { empreinteConditions } from "./conditions-empreinte";
 import { essaiDisponible, gesteAbonnement, nomProvisoire } from "./droits";
-import { estLookupKey } from "./formules";
+import { CLES_FORMULES, lookupKey } from "./formules";
 import { PAGE_ABONNEMENT, PAGE_MEMBRES, abonnementDuCompte, contexteDroits, offreLancee } from "./saisie";
 
 export const PAGE_ESSAI = "/essai";
@@ -51,17 +51,25 @@ const erreur = (message: string): EtatEssai => ({ status: "error", message });
  * Démarre l'essai du compte de la personne connectée, puis l'envoie à
  * l'onboarding. Rend une erreur affichable, ou redirige.
  */
-export async function demarrerEssaiDuCompte(formule: string, accepte: boolean): Promise<EtatEssai> {
+/**
+ * L'essai se fait sur la plus petite formule (grille du 2026-11-05) : la
+ * formule et la périodicité se choisissent au moment de s'abonner. Le prix
+ * mensuel porte l'essai ; un client qui ajoute sa carte sans rien choisir
+ * paie ce prix à la fin.
+ */
+export const PRIX_D_ESSAI = lookupKey(CLES_FORMULES[0], "mensuel");
+
+export async function demarrerEssaiDuCompte(accepte: boolean): Promise<EtatEssai> {
+  const formule = PRIX_D_ESSAI;
   const config = configurationStripe();
   if (!config.active || !offreLancee(contexteDroits())) redirect("/onboarding");
-  if (!estLookupKey(formule)) return erreur("Choisissez une formule.");
   if (!accepte) return erreur("Cochez la case pour accepter les conditions générales.");
 
   // Le prix d'abord : une formule indisponible ne laisse derrière elle ni
   // compte, ni client, ni preuve.
   const stripe = clientStripe(config);
   const prix = await prixDesFormules(stripe).then((m) => m.get(formule), () => undefined);
-  if (!prix) return erreur("Cette formule n'est pas disponible pour le moment. Réessayez dans quelques minutes.");
+  if (!prix) return erreur("L'essai ne peut pas démarrer pour le moment. Réessayez dans quelques minutes.");
 
   const { user, compte, db } = await requireCompteDOnboarding();
   if (compte.role !== "owner") redirect(`${PAGE_MEMBRES}?reserve=proprietaire`);

@@ -1,6 +1,9 @@
 "use server";
 
+import type { Db } from "@/lib/auth/compte";
+import { deposerFichier, rendreReservations } from "@/lib/abonnements/stockage";
 import { creerEnLotVerifie } from "@/lib/auth/portee/lot-verifie";
+import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -28,6 +31,7 @@ import {
 import { estSiretEnDouble, MESSAGE_SIRET_EN_DOUBLE } from "./siret-en-double";
 import { piecesRemplacees } from "./pieces";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
+import { prendreQuota, refusQuota, RefusQuota } from "@/lib/abonnements/quotas";
 
 export type PrestataireActionState =
   | { status: "idle" }
@@ -90,6 +94,8 @@ type ColonnePiece =
  * l'appelant n'écrit rien en base.
  */
 async function deposerPieces(
+  db: Db,
+  compteId: string,
   etablissementId: string,
   prestataireId: string,
   formData: FormData,
@@ -113,10 +119,14 @@ async function deposerPieces(
       // Même règle que le dépôt d'un rapport (2026-09-27) : l'échec
       // d'écriture rend un message métier sur le champ.
       try {
-        await storage.put(cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
-        cles.push(cle);
-        colonnes[piece.cle] = cle;
-        colonnes[piece.nom] = fichier.name;
+        // Le plafond de stockage de la formule (ADR-053 § 14), avant d'écrire.
+        const refus = await deposerFichier(db, compteId, cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
+        if (refus) erreur = refus;
+        else {
+          cles.push(cle);
+          colonnes[piece.cle] = cle;
+          colonnes[piece.nom] = fichier.name;
+        }
       } catch (e) {
         console.error(`[prestataires/depot] écriture du fichier impossible (${cle})`, e);
         erreur = MESSAGE_ECHEC_ENREGISTREMENT;
@@ -124,6 +134,7 @@ async function deposerPieces(
     }
     if (erreur) {
       await Promise.all(cles.map((c) => storage?.delete(c).catch(() => {})));
+      await rendreReservations(db, cles);
       return { ok: false, champ: piece.champ, message: erreur };
     }
   }
@@ -166,7 +177,7 @@ export async function creerPrestataire(
   formData: FormData,
 ): Promise<PrestataireActionState> {
   await verifierSaisie();
-  const { db } = await assertEtablissementDuCompte(etablissementId);
+  const { compte, db } = await assertEtablissementDuCompte(etablissementId);
 
   const parsed = lireSaisie(formData);
   if (!parsed.success) {
@@ -177,8 +188,12 @@ export async function creerPrestataire(
     };
   }
 
+  // Plafond de la formule (ADR-053 § 14), avant de déposer les pièces.
+  const auPlafond = await refusQuota(db, compte.compteId, "prestataires");
+  if (auPlafond) return { status: "error", message: auPlafond };
+
   const prestataireId = `pre_${randomUUID()}`;
-  const depot = await deposerPieces(etablissementId, prestataireId, formData);
+  const depot = await deposerPieces(db, compte.compteId, etablissementId, prestataireId, formData);
   if (!depot.ok) {
     return {
       status: "error",
@@ -188,17 +203,22 @@ export async function creerPrestataire(
   }
 
   try {
-    await db.prestataire.create({
-      data: {
-        id: prestataireId,
-        etablissementId,
-        ...colonnesDeLaSaisie(parsed.data),
-        ...depot.colonnes,
-      },
+    await db.$transaction(async (tx) => {
+      await prendreQuota(tx, compte.compteId, "prestataires");
+      await tx.prestataire.create({
+        data: {
+          id: prestataireId,
+          etablissementId,
+          ...colonnesDeLaSaisie(parsed.data),
+          ...depot.colonnes,
+        },
+      });
     });
   } catch (err) {
     // Les fichiers écrits ne sont référencés par aucune ligne : on les reprend.
     await libererFichiers(depot.cles, "prestataires/creation");
+    await rendreReservations(db, depot.cles);
+    if (err instanceof RefusQuota) return { status: "error", message: err.motif };
     if (estSiretEnDouble(err)) return erreurSiret();
     throw err;
   }
@@ -248,7 +268,7 @@ export async function modifierPrestataire(
   formData: FormData,
 ): Promise<PrestataireActionState> {
   await verifierSaisie();
-  const { db } = await assertEtablissementDuCompte(etablissementId);
+  const { compte, db } = await assertEtablissementDuCompte(etablissementId);
 
   const existant = await db.prestataire.findFirst({
     where: { id: prestataireId, etablissementId },
@@ -277,7 +297,7 @@ export async function modifierPrestataire(
     };
   }
 
-  const depot = await deposerPieces(etablissementId, existant.id, formData);
+  const depot = await deposerPieces(db, compte.compteId, etablissementId, existant.id, formData);
   if (!depot.ok) {
     return {
       status: "error",
@@ -309,6 +329,7 @@ export async function modifierPrestataire(
     }
   } catch (err) {
     await libererFichiers(depot.cles, "prestataires/modification");
+    await rendreReservations(db, depot.cles);
     if (estSiretEnDouble(err)) return erreurSiret();
     throw err;
   }
@@ -376,6 +397,7 @@ export async function supprimerPrestataire(
   prestataireId: string,
 ): Promise<void> {
   await verifierSaisie();
+  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   const { db } = await assertEtablissementDuCompte(etablissementId);
 
   const prestataire = await db.prestataire.findFirst({

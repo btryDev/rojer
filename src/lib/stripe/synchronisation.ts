@@ -25,6 +25,9 @@ import { compteDontEstProprietaire } from "@/lib/auth/membres";
 import { OPTIONS_WEBHOOK } from "./client";
 import { formuleDuPrix } from "@/lib/abonnements/formules";
 
+/** L'identifiant d'une référence Stripe, développée ou non. */
+export const idStripe = (v: string | { id: string } | null | undefined) => (typeof v === "string" ? v : (v?.id ?? null));
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
@@ -73,6 +76,26 @@ export function colonnesDe(s: Stripe.Subscription | null) {
     resilieEnFinDePeriode: s?.cancel_at_period_end ?? false,
     finPrevueLe: date(s?.cancel_at),
   };
+}
+
+/**
+ * Le premier paiement CONFIRMÉ du client (ADR-053 § 14) : la date de la plus
+ * ancienne facture payée d'un montant non nul. Ni un état `active` (Stripe
+ * l'affiche environ une heure avant de prélever la fin d'un essai), ni une
+ * facture à zéro (celle de l'essai, ou couverte par un crédit ou une remise
+ * de 100 % : un abonnement gratuit n'est pas prévu). Lue seulement tant que
+ * le compte n'en a pas : une fois écrite, elle ne change plus. Limite
+ * assumée : un paiement remboursé ou contesté reste un paiement — la
+ * facture reste `paid` chez Stripe.
+ */
+export async function premierPaiement(stripe: Stripe, customerId: string): Promise<Date | null> {
+  const payees = await stripe.invoices
+    .list({ customer: customerId, status: "paid", limit: 100 }, OPTIONS_WEBHOOK)
+    .autoPagingToArray({ limit: 1000 });
+  const dates = payees
+    .filter((f) => f.amount_paid > 0 && f.status_transitions?.paid_at)
+    .map((f) => f.status_transitions.paid_at as number);
+  return dates.length ? date(Math.min(...dates)) : null;
 }
 
 /** Le premier essai pris par ce client, sur quelque abonnement que ce soit. */
@@ -166,7 +189,7 @@ async function mettreAJour(db: Db, compteId: string, customerId: string, donnees
 export async function synchroniserClientStripe(
   stripe: Stripe,
   customerId: string,
-  options: { abonnementLu?: Stripe.Subscription | null; maintenant?: () => Date } = {},
+  options: { abonnementLu?: Stripe.Subscription | null; maintenant?: () => Date; depuisWebhook?: boolean } = {},
 ): Promise<Synchronisation> {
   // L'heure de la relecture, prise AVANT les deux lectures, lancées ensemble.
   const relueLe = options.maintenant?.() ?? new Date();
@@ -198,7 +221,7 @@ export async function synchroniserClientStripe(
   const db = clientDuClientStripe(compteId);
   const ligne = await db.abonnement.findUnique({
     where: { compteId },
-    select: { stripeCustomerId: true, essaiUtiliseLe: true },
+    select: { stripeCustomerId: true, essaiUtiliseLe: true, debutPayantLe: true },
   });
   if (ligne && ligne.stripeCustomerId !== customerId) return AUTRE_CLIENT;
 
@@ -207,9 +230,32 @@ export async function synchroniserClientStripe(
     relueLe,
     essaiUtiliseLe: ligne?.essaiUtiliseLe ?? premierEssai(abonnements),
   };
-  if (!ligne) {
-    const issue = await creerLigne(db, compteId, customerId, donnees);
-    if (issue) return issue;
+  let issue: Synchronisation | null = null;
+  if (!ligne) issue = await creerLigne(db, compteId, customerId, donnees);
+  issue ??= await mettreAJour(db, compteId, customerId, donnees);
+  if (issue.issue !== "ignore" && !ligne?.debutPayantLe && !supprime) {
+    await noterPremierPaiement(stripe, db, compteId, customerId, options.depuisWebhook === true);
   }
-  return mettreAJour(db, compteId, customerId, donnees);
+  return issue;
+}
+
+/**
+ * Le premier paiement confirmé, écrit à part de l'instantané : seulement là
+ * où la ligne n'en a pas (`debutPayantLe: null` dans la clause), donc jamais
+ * écrasé ni effacé par une relecture plus tardive, quel que soit l'ordre des
+ * notifications. La liste des factures en échec (délai) : l'état est déjà
+ * écrit ; depuis le webhook, l'erreur remonte pour que Stripe relance la
+ * notification (sinon la date manquerait jusqu'à la facture suivante) ;
+ * depuis un geste de l'utilisateur, elle viendra à la notification suivante.
+ */
+async function noterPremierPaiement(stripe: Stripe, db: Db, compteId: string, customerId: string, strict: boolean) {
+  const debut = await premierPaiement(stripe, customerId).catch((e: unknown) => {
+    if (strict) throw e;
+    return null;
+  });
+  if (!debut) return;
+  await db.abonnement.updateMany({
+    where: { compteId, stripeCustomerId: customerId, debutPayantLe: null },
+    data: { debutPayantLe: debut },
+  });
 }

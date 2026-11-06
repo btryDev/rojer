@@ -1,5 +1,6 @@
 "use server";
 
+import { exigerUnPaiement } from "@/lib/abonnements/validation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireDuerp } from "@/lib/auth/scope";
@@ -50,7 +51,9 @@ export async function creerVersion(
   const cle = cleParsed.data;
   // Le formulaire ne propose le 1° qu'au-dessus du seuil ; l'action le
   // vérifie aussi, un formulaire se contourne. `requireDuerp` borne au user.
-  const { db, duerp } = await requireDuerp(duerpId);
+  const { compte, db, duerp } = await requireDuerp(duerpId);
+  // Valider une version demande un abonnement payé (ADR-053 § 15).
+  await exigerUnPaiement(db, compte.compteId);
   const soumis = seuilMajAnnuelle({
     entreprise: duerp.etablissement.entreprise.effectif,
     site: duerp.etablissement.effectifSurSite,

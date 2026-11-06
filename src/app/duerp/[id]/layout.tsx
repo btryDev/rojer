@@ -1,3 +1,4 @@
+import { SaisieDuSite } from "@/components/quotas/SaisieDuSite";
 import { Suspense } from "react";
 import { BandeauAbonnementDuCompte } from "@/components/abonnements/BandeauAbonnementDuCompte";
 import Link from "next/link";
@@ -132,7 +133,12 @@ export default async function DuerpLayout({
           />
         </div>
 
-        <div className="mx-auto w-full max-w-5xl px-6 py-12 sm:px-10 sm:py-14">
+        {/* La saisie fermée (lecture seule, abonnement, site gelé) s'annonce
+            dès l'ouverture, comme sur les autres pages du site (ADR-053 § 14). */}
+        <div data-zone-saisie className="mx-auto w-full max-w-5xl px-6 py-12 sm:px-10 sm:py-14">
+          <Suspense fallback={null}>
+            <SaisieDuSite etablissementId={etab.id} />
+          </Suspense>
           {children}
         </div>
       </div>

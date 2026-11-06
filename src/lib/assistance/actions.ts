@@ -1,6 +1,7 @@
 "use server";
 
 import { requireCompte } from "@/lib/auth/compte";
+import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { z } from "zod";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { decouperCheminInterne } from "@/lib/navigation/provenance";
@@ -53,6 +54,7 @@ export async function demanderAssistance(
   formData: FormData,
 ): Promise<DemandeAssistanceState> {
   const { user, compte, db } = await requireCompte();
+  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   const parsed = schema.safeParse({
     categorie: formData.get("categorie"),
     message: formData.get("message"),

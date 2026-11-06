@@ -1,6 +1,7 @@
 "use server";
 
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
+import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { verifierRole } from "@/lib/abonnements/saisie";
 
 /**
@@ -33,6 +34,7 @@ export async function revoquerAccessToken(
 ): Promise<void> {
   // Ouverte à un compte impayé, pas à la lecture seule (ADR-054 § 4).
   await verifierRole();
+  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   const { db } = await assertEtablissementDuCompte(etablissementId);
   await db.accessToken.updateMany({
     where: { id: accessTokenId, etablissementId },

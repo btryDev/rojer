@@ -1,11 +1,13 @@
 "use server";
 
 import { requireCompte } from "@/lib/auth/compte";
+import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { batimentSchema, MAX_ZONES, PLAFOND_ZONES } from "./schema";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
+import { creerSousPlafond } from "@/lib/abonnements/quotas";
 
 /**
  * Mutations des zones (ADR-029, qui remplace l'ADR-019). Une zone est un
@@ -63,7 +65,7 @@ export async function creerBatiment(
   formData: FormData,
 ): Promise<BatimentActionState> {
   await verifierSaisie();
-  const { db } = await assertEtablissementDuCompte(etablissementId);
+  const { compte, db } = await assertEtablissementDuCompte(etablissementId);
   const parsed = batimentSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     return {
@@ -93,17 +95,21 @@ export async function creerBatiment(
   }
 
   try {
-    const b = await db.batiment.create({
-      data: {
-        etablissementId,
-        nom: parsed.data.nom,
-        complementAdresse: parsed.data.complementAdresse ?? null,
-        ordre: (existant._max.ordre ?? -1) + 1,
-      },
-      select: { id: true },
-    });
+    // Limite de zones de l'essai gratuit (ADR-053 § 14).
+    const creation = await creerSousPlafond(db, compte.compteId, "zones", (tx) =>
+      tx.batiment.create({
+        data: {
+          etablissementId,
+          nom: parsed.data.nom,
+          complementAdresse: parsed.data.complementAdresse ?? null,
+          ordre: (existant._max.ordre ?? -1) + 1,
+        },
+        select: { id: true },
+      }),
+    );
+    if (!creation.ok) return { status: "error", message: creation.motif, fieldErrors: { nom: [creation.motif] } };
     revalider(etablissementId);
-    return { status: "success", id: b.id };
+    return { status: "success", id: creation.valeur.id };
   } catch (e) {
     if (estDoublonDeNom(e)) {
       return {
@@ -173,6 +179,7 @@ export async function supprimerBatiment(
   versBatimentId: string,
 ): Promise<BatimentActionState> {
   await verifierSaisie();
+  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   const b = await trouverBatimentDuUser(id);
   if (!b) return { status: "error", message: "Zone introuvable" };
 

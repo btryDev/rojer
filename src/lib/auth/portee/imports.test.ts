@@ -125,9 +125,16 @@ const NOMMES_ROUAGES: Record<string, Record<string, Nomme>> = {
       symboles: ["clientDuClientStripe"],
     },
   },
+  // Le gel (ADR-053 § 14) : refusé dans l'extension, calculé par les plafonds.
+  "src/lib/auth/portee/gel": {
+    "src/lib/auth/portee/client.ts": "l'extension : le refus avant l'écriture",
+    "src/lib/abonnements/quotas.ts": { motif: "le type des identifiants gelés", typesSeuls: true },
+    "src/lib/abonnements/gel-saisie.ts": { motif: "la page du refus, pour le SQL brut d'une saisie", symboles: ["PAGE_DU_GEL", "ouvrirAuGel"] },
+  },
   "src/lib/auth/portee/borne": {
     "src/lib/auth/portee/client.ts": "l'extension",
     "src/lib/auth/portee/lot-verifie.ts": "erreurs et classement des modèles",
+    "src/lib/auth/portee/gel.ts": "le chemin vers ce qui est gelé, les relations, la borne d'un where",
   },
 };
 
@@ -182,6 +189,8 @@ const SQL_BRUT_NOMMES: Record<string, string> = {
   "src/lib/salaries/suppression.ts": "verrou FOR UPDATE borné au salarié et à l'établissement gardés",
   "src/lib/calendrier/recalcul-ligne.ts": "verrou FOR UPDATE d'une ligne déjà lue par le client borné",
   "src/lib/entreprises/cycle-de-vie.ts": "verrou FOR UPDATE d'une entreprise déjà gardée",
+  "src/lib/abonnements/quotas.ts": "verrou FOR NO KEY UPDATE de la ligne du compte de la portée (plafonds, ADR-053 § 14)",
+  "src/lib/abonnements/stockage.ts": "somme des tailles des fichiers du compte de la portée (plafond de stockage, ADR-053 § 14)",
   "src/lib/registre/actions.ts": "UPDATE jsonb borné à l'établissement gardé",
   "src/lib/duerps/ecrire-reponse-fermee.ts": "UPDATE jsonb d'un DUERP déjà gardé",
   "src/lib/calendrier/faux-prisma.ts": "faux client des tests",

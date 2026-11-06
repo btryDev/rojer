@@ -1,3 +1,4 @@
+import { PlafondDeCreation } from "@/components/quotas/PlafondDeCreation";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowUpRight, ChevronDown, FileText, FileUp } from "lucide-react";
@@ -747,7 +748,9 @@ export default async function VerificationDetailPage({
                         l&apos;application.
                       </p>
                     ) : (
-                      <UploadRapportForm action={boundUpload} organismeParDefaut={v.prestataire?.raisonSociale} faitParDefaut={faitParDefaut} />
+                      <PlafondDeCreation etStockage className="mb-4">
+                <UploadRapportForm action={boundUpload} organismeParDefaut={v.prestataire?.raisonSociale} faitParDefaut={faitParDefaut} />
+              </PlafondDeCreation>
                     )}
                   </div>
                 </div>
@@ -760,7 +763,9 @@ export default async function VerificationDetailPage({
               s'ouvre en pleine largeur, pas dans la colonne du titre. */}
           {deposer === "1" && depotOuvert && !pieceMedicale ? (
             <CarteFiche id="depot" titre={mots.nouveau}>
-              <UploadRapportForm action={boundUpload} organismeParDefaut={v.prestataire?.raisonSociale} faitParDefaut={faitParDefaut} />
+              <PlafondDeCreation etStockage className="mb-4">
+                <UploadRapportForm action={boundUpload} organismeParDefaut={v.prestataire?.raisonSociale} faitParDefaut={faitParDefaut} />
+              </PlafondDeCreation>
             </CarteFiche>
           ) : null}
 

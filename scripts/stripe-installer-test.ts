@@ -13,9 +13,10 @@
 // (`sk_test_`, `rk_test_`) arrête le script avant le moindre appel. Une clé
 // restreinte doit pouvoir écrire les produits, les prix et le portail.
 //
-// MONTANTS PROVISOIRES : repris de la proposition du 2026-11-03
-// (`docs/marketing/benchmark-offres-abonnement-2026-11.md`, branche
-// `docs/offres-abonnement`), pas arrêtés par la propriétaire.
+// MONTANTS : grille arrêtée avec la propriétaire le 2026-11-05
+// (`docs/marketing/rojer-offres-abonnement-2026-11.pdf`, branche
+// `docs/offres-abonnement`). En production, les prix se créent dans le
+// tableau de bord ; ce script ne sert que le compte de test.
 
 import { existsSync } from "node:fs";
 import Stripe from "stripe";
@@ -23,10 +24,10 @@ import { CLES_FORMULES, FORMULES, INTERVALLE_STRIPE, PERIODICITES, lookupKey, LO
 
 type Env = Record<string, string | undefined>;
 
-/** Montants HT en centimes d'euro — PROVISOIRES (voir l'en-tête). */
-export const MONTANTS_PROVISOIRES_CENTIMES = {
+/** Montants HT en centimes d'euro (voir l'en-tête). */
+export const MONTANTS_CENTIMES = {
   essentiel: { mensuel: 2_900, annuel: 29_500 },
-  pro: { mensuel: 6_900, annuel: 69_900 },
+  pro: { mensuel: 8_900, annuel: 89_900 },
 } as const satisfies Record<CleFormule, Record<Periodicite, number>>;
 
 const DEVISE = "eur";
@@ -87,7 +88,7 @@ export async function installerPrix(stripe: Stripe, produits: Record<CleFormule,
   for (const formule of CLES_FORMULES) {
     for (const periodicite of PERIODICITES) {
       const cle = lookupKey(formule, periodicite);
-      const montant = MONTANTS_PROVISOIRES_CENTIMES[formule][periodicite];
+      const montant = MONTANTS_CENTIMES[formule][periodicite];
       const produitId = produits[formule].id;
       const existant = data.find((p) => p.lookup_key === cle);
       if (existant && prixConforme(existant, produitId, montant, periodicite)) {
@@ -102,7 +103,7 @@ export async function installerPrix(stripe: Stripe, produits: Record<CleFormule,
         tax_behavior: "exclusive",
         lookup_key: cle,
         transfer_lookup_key: true,
-        nickname: `${FORMULES[formule].libelle} ${periodicite} (provisoire)`,
+        nickname: `${FORMULES[formule].libelle} ${periodicite}`,
         metadata: { formule, periodicite },
       });
       installes.push({ lookupKey: cle, prix, cree: true });
@@ -119,32 +120,20 @@ export function urlConditions(env: Env): string | null {
 
 /**
  * Le portail (ADR-053 § 10) : factures, moyen de paiement, résiliation en fin
- * de période, changement de formule entre les prix installés SANS mettre fin
- * à l'essai, e-mail, adresse et numéro de TVA.
+ * de période, nom, e-mail, adresse et numéro de TVA. Pas de changement de
+ * formule : il se fait dans Rojer.
  */
-export function parametresPortail(
-  produits: Record<CleFormule, Stripe.Product>,
-  prix: PrixInstalle[],
-  conditions: string | null,
-): Stripe.BillingPortal.ConfigurationCreateParams {
+export function parametresPortail(conditions: string | null): Stripe.BillingPortal.ConfigurationCreateParams {
   return {
     ...(conditions ? { business_profile: { terms_of_service_url: conditions } } : {}),
     features: {
       invoice_history: { enabled: true },
       payment_method_update: { enabled: true },
       subscription_cancel: { enabled: true, mode: "at_period_end", proration_behavior: "none" },
-      subscription_update: {
-        enabled: true,
-        default_allowed_updates: ["price"],
-        products: CLES_FORMULES.map((f) => ({
-          product: produits[f].id,
-          prices: prix.filter((p) => idProduit(p.prix.product) === produits[f].id).map((p) => p.prix.id),
-        })),
-        // Pendant l'essai : la nouvelle formule, l'essai continue, rien n'est facturé.
-        trial_update_behavior: "continue_trial",
-        // Après l'essai : l'écart est porté sur la prochaine facture, pas prélevé sur-le-champ.
-        proration_behavior: "create_prorations",
-      },
+      // La formule se change dans Rojer, qui contrôle les plafonds (ADR-053 §§ 10
+      // et 14) : le portail ne sait ni refuser une baisse, ni la planifier
+      // entre deux produits — passer par lui rouvrirait « Pro une heure ».
+      subscription_update: { enabled: false },
       customer_update: { enabled: true, allowed_updates: ["name", "email", "address", "tax_id"] },
     },
   };
@@ -190,7 +179,7 @@ export async function installer(env: Env, creerClient: (cle: string) => Stripe):
   const produits = await installerProduits(stripe);
   const prix = await installerPrix(stripe, produits);
   const conditions = urlConditions(env);
-  const portail = await installerPortail(stripe, parametresPortail(produits, prix, conditions));
+  const portail = await installerPortail(stripe, parametresPortail(conditions));
   return { ok: true, produits, prix, portail, conditions };
 }
 
@@ -206,7 +195,7 @@ export const REGLAGES_MANUELS = [
 function recapitulatif(r: Extract<Installation, { ok: true }>): string {
   const lignes = ["Compte Stripe de test préparé.", "", "Produits :"];
   for (const f of CLES_FORMULES) lignes.push(`  ${r.produits[f].name.padEnd(10)} ${r.produits[f].id}`);
-  lignes.push("", "Prix (montants HT provisoires) :");
+  lignes.push("", "Prix (montants HT) :");
   for (const p of r.prix) {
     const montant = ((p.prix.unit_amount ?? 0) / 100).toFixed(2).replace(".", ",");
     const etat = p.cree ? "créé" : "gardé";

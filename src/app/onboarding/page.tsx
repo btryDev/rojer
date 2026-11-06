@@ -1,3 +1,4 @@
+import { PlafondDeCreation } from "@/components/quotas/PlafondDeCreation";
 import { WizardShell } from "@/components/onboarding/WizardShell";
 import { redirect } from "next/navigation";
 import { aiguillageSansCompte } from "@/lib/auth/compte";
@@ -37,5 +38,10 @@ export default async function OnboardingPage() {
   // plusieurs entreprises, une par SIREN ; un SIRET qui reprend le SIREN de
   // l'une d'elles y rattache le nouvel établissement (`finaliserOnboarding`).]
   const entreprisesConnues = await listerEntreprisesConnues();
-  return <WizardShell email={user.email} entreprisesConnues={entreprisesConnues} />;
+  // Le plafond d'établissements, annoncé avant le parcours (ADR-053 § 14).
+  return (
+    <PlafondDeCreation cle="etablissements" className="mx-auto mt-6 w-full max-w-3xl px-4">
+      <WizardShell email={user.email} entreprisesConnues={entreprisesConnues} />
+    </PlafondDeCreation>
+  );
 }

@@ -1,6 +1,8 @@
 "use server";
 
+import { deposerFichier, rendreReservations } from "@/lib/abonnements/stockage";
 import { requireCompte } from "@/lib/auth/compte";
+import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
@@ -262,7 +264,9 @@ export async function uploadRapport(
   if (piece !== null && storage !== null) {
     const buffer = Buffer.from(await piece.fichier.arrayBuffer());
     try {
-      await storage.put(piece.cle, buffer, piece.mime);
+      // Le plafond de stockage de la formule (ADR-053 § 14), avant d'écrire.
+      const refus = await deposerFichier(db, compte.compteId, piece.cle, buffer, piece.mime);
+      if (refus) return { status: "error", message: refus };
     } catch (e) {
       console.error(`[rapports/depot] écriture du fichier impossible (${piece.cle})`, e);
       return { status: "error", message: MESSAGE_ECHEC_ENREGISTREMENT };
@@ -352,6 +356,7 @@ export async function uploadRapport(
     // Nettoyage best-effort du fichier si la DB a échoué.
     if (piece !== null && storage !== null) {
       await storage.delete(piece.cle).catch(() => {});
+      await rendreReservations(db, [piece.cle]);
     }
     if (err instanceof LigneModifieeEntreTemps) {
       return { status: "error", message: err.message };
@@ -415,6 +420,7 @@ export async function uploadRapport(
  */
 export async function supprimerRapport(rapportId: string): Promise<void> {
   await verifierSaisie();
+  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   // Lu DANS le périmètre du compte, absent et étranger confondus dans le même
   // `notFound()` (audit du 2026-10-13, comme le dépôt ci-dessus).
   const { compte, db } = await requireCompte();

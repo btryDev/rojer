@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { z } from "zod";
 import { estJourCivilReel } from "@/lib/dates";
 import { ecrireFaitActivite } from "@/lib/etablissements/faits-activite-ecriture";
@@ -125,6 +126,7 @@ export async function ajouterRisqueCustom(
 
 export async function supprimerRisque(risqueId: string): Promise<void> {
   await verifierSaisie();
+  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   const { db, duerpId, uniteId } = await requireRisque(risqueId);
 
   await db.risque.delete({ where: { id: risqueId } });

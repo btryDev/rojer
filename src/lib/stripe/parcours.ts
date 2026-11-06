@@ -11,6 +11,7 @@ import "server-only";
 
 import type Stripe from "stripe";
 import { OPTIONS_RELECTURE } from "./client";
+import { idStripe } from "./synchronisation";
 import { INTERVALLE_STRIPE, LOOKUP_KEYS, formuleDeLookupKey } from "@/lib/abonnements/formules";
 
 export const DUREE_ESSAI_JOURS = 30;
@@ -122,6 +123,94 @@ export async function abonnementsDuClient(stripe: Stripe, customerId: string): P
 async function expirerSessionsOuvertes(stripe: Stripe, customerId: string) {
   const ouvertes = await stripe.checkout.sessions.list({ customer: customerId, status: "open", limit: 10 }, OPTIONS_RELECTURE);
   await Promise.all(ouvertes.data.map((s) => stripe.checkout.sessions.expire(s.id)));
+}
+
+/**
+ * La carte d'un client qui a déjà un abonnement (essai, en pause) : Checkout
+ * en mode « setup » — la page hébergée enregistre la carte sans rien
+ * prélever. La formule choisie voyage dans les métadonnées de la session,
+ * relue à son retour (`abonnements/souscription.ts`).
+ */
+export async function ouvrirCheckoutCarte(
+  stripe: Stripe,
+  { customerId, metadata, succes, annulation }: { customerId: string; metadata: Metadonnees; succes: string; annulation: string },
+) {
+  await expirerSessionsOuvertes(stripe, customerId);
+  const session = await stripe.checkout.sessions.create({
+    mode: "setup",
+    customer: customerId,
+    currency: "eur",
+    metadata,
+    setup_intent_data: { metadata },
+    success_url: succes,
+    cancel_url: annulation,
+  });
+  if (!session.url) throw new Error("session Checkout sans adresse");
+  return session.url;
+}
+
+/** L'adresse de la facture à régler d'un abonnement, si sa dernière facture attend un paiement (refus, 3DS). */
+async function factureARegler(stripe: Stripe, derniere: Stripe.Subscription["latest_invoice"]): Promise<string | null> {
+  if (!derniere) return null;
+  const facture = typeof derniere === "string" ? await stripe.invoices.retrieve(derniere) : derniere;
+  return facture.status === "open" ? (facture.hosted_invoice_url ?? null) : null;
+}
+
+/**
+ * Appliquer la formule choisie et la carte enregistrée à l'abonnement qui
+ * court encore sans payer : l'essai continue (`proration_behavior: none`,
+ * rien n'est facturé avant sa fin), sauf `immediat` — l'essai s'arrête et le
+ * premier mois est prélevé tout de suite (valider un document légal pendant
+ * l'essai, décision du 2026-11-05) ; un abonnement en pause reprend et paie.
+ *
+ * Rejouée (retour de Checkout, webhook, rechargement), elle ne refait rien :
+ * - même session : clés d'idempotence dérivées de la session ; un appel
+ *   concurrent reçoit un 409 de Stripe, rejoué plus tard sans effet ;
+ * - session plus ancienne que la dernière appliquée (`rojerChoixLe` posé sur
+ *   l'abonnement) : ignorée, le dernier choix l'emporte ;
+ * - pause dont la reprise attend déjà un paiement : on renvoie la facture en
+ *   attente au lieu d'en créer une autre.
+ * Rend l'adresse d'une facture à régler (paiement refusé, authentification
+ * demandée), ou `null`.
+ */
+export async function appliquerFormule(
+  stripe: Stripe,
+  abonnement: Stripe.Subscription,
+  choix: { priceId: string; paymentMethodId: string; immediat: boolean; choisiLe: number; idempotence?: string },
+): Promise<string | null> {
+  if (choix.choisiLe < Number(abonnement.metadata?.rojerChoixLe ?? 0)) return null;
+  const enPause = abonnement.status === "paused";
+  if (enPause) {
+    const enAttente = await factureARegler(stripe, abonnement.latest_invoice);
+    if (enAttente) return enAttente;
+  }
+  const item = abonnement.items.data[0];
+  const pmActuel = idStripe(abonnement.default_payment_method);
+  const finEssai = choix.immediat && abonnement.status === "trialing";
+  if (item?.price.id === choix.priceId && pmActuel === choix.paymentMethodId && !finEssai && !enPause) return null;
+
+  const cle = (etape: string) => (choix.idempotence ? { idempotencyKey: `${choix.idempotence}-${etape}` } : {});
+  const misAJour = await stripe.subscriptions.update(
+    abonnement.id,
+    {
+      items: item ? [{ id: item.id, price: choix.priceId }] : [{ price: choix.priceId }],
+      default_payment_method: choix.paymentMethodId,
+      proration_behavior: "none",
+      metadata: { rojerChoixLe: String(choix.choisiLe) },
+      expand: ["latest_invoice"],
+      ...(finEssai ? { trial_end: "now" as const } : {}),
+    },
+    cle("maj"),
+  );
+  if (!enPause) return finEssai ? factureARegler(stripe, misAJour.latest_invoice) : null;
+  // Reprise : la période repart à aujourd'hui (le défaut de l'API) et se paie ;
+  // l'abonnement reste en pause tant que cette facture n'est pas réglée.
+  const repris = await stripe.subscriptions.resume(
+    abonnement.id,
+    { proration_behavior: "none", expand: ["latest_invoice"] },
+    cle("reprise"),
+  );
+  return factureARegler(stripe, repris.latest_invoice);
 }
 
 export type PrixAffiche = { priceId: string; montantCentimes: number; devise: string };
