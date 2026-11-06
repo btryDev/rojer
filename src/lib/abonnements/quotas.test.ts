@@ -104,6 +104,10 @@ describe("debutDeLAnnee : l'année des plafonds annuels", () => {
   it("un essai lointain ne remonte pas au-delà d'un an avant l'ancre", () => {
     expect(debutDeLAnnee(ancre, new Date("2025-06-01T00:00:00Z"), new Date("2024-01-10T00:00:00Z"))).toEqual(new Date("2024-03-12T08:00:00Z"));
   });
+  it("jamais payé, avec un essai : depuis le début de l'essai, sans renouvellement au bout d'un an", () => {
+    const essai = new Date("2024-02-01T00:00:00Z");
+    expect(debutDeLAnnee(null, new Date("2026-11-05T10:00:00Z"), essai)).toEqual(essai);
+  });
   it("sans ancre (essai, jamais payé) : les douze derniers mois", () => {
     expect(debutDeLAnnee(null, new Date("2026-11-05T10:00:00Z"))).toEqual(new Date("2025-11-05T10:00:00Z"));
   });
