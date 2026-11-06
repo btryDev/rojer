@@ -3,7 +3,12 @@
 -- quand le titulaire a signé lui-même. Un lien dont l'e-mail n'est pas parti
 -- ne compte pas. Les imports de DUERP ne laissent pas de trace distincte :
 -- ils ne sont pas repris.
-
+--
+-- Borne en UTC (`createdAt` est un horodatage UTC sans fuseau, ADR-011 § 1),
+-- incluse comme le code (`gte`). Une seule instruction : ses deux branches
+-- lisent le même instantané, et le garde (rien n'est repris si le journal
+-- porte déjà des signatures, celles d'un nouveau code comprises) ne saute pas
+-- la seconde. Rejouable sans doubler.
 INSERT INTO "ConsommationQuota" ("compteId", "quota", "consommeLe")
 SELECT en."compteId", 'signaturesParAn', s."createdAt"
 FROM "Signature" s
@@ -11,9 +16,9 @@ JOIN "Etablissement" et ON et."id" = s."etablissementId"
 JOIN "Entreprise" en ON en."id" = et."entrepriseId"
 WHERE en."compteId" IS NOT NULL
   AND s."methode" = 'compte_connecte'
-  AND s."createdAt" > now() - interval '12 months';
-
-INSERT INTO "ConsommationQuota" ("compteId", "quota", "consommeLe")
+  AND s."createdAt" >= (now() AT TIME ZONE 'UTC') - interval '12 months'
+  AND NOT EXISTS (SELECT 1 FROM "ConsommationQuota" WHERE "quota" = 'signaturesParAn')
+UNION ALL
 SELECT en."compteId", 'signaturesParAn', a."createdAt"
 FROM "AccessToken" a
 JOIN "Etablissement" et ON et."id" = a."etablissementId"
@@ -21,4 +26,5 @@ JOIN "Entreprise" en ON en."id" = et."entrepriseId"
 WHERE en."compteId" IS NOT NULL
   AND a."scope" = 'signature'
   AND (a."revoqueMotif" IS NULL OR a."revoqueMotif" <> 'l''e-mail n''a pas pu être envoyé ; demandez un nouveau lien à votre interlocuteur')
-  AND a."createdAt" > now() - interval '12 months';
+  AND a."createdAt" >= (now() AT TIME ZONE 'UTC') - interval '12 months'
+  AND NOT EXISTS (SELECT 1 FROM "ConsommationQuota" WHERE "quota" = 'signaturesParAn');
