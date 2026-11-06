@@ -1,13 +1,12 @@
 "use server";
 
-import { deposerFichier } from "@/lib/abonnements/stockage";
+import { deposerFichier, rendreReservations } from "@/lib/abonnements/stockage";
 import { revalidatePath } from "next/cache";
 import { unstable_rethrow } from "next/navigation";
 import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { requireEtablissement } from "@/lib/auth/scope";
 import {
   clePhotoEtablissement,
-  getStorage,
   MESSAGE_DEPOT_NON_CONFIGURE,
   MESSAGE_ECHEC_ENREGISTREMENT,
   stockageEnService,
@@ -79,6 +78,7 @@ export async function deposerPhotoEtablissement(
   }
   if (!enregistree) {
     await libererFichiers([cle], "etablissements/photo");
+    await rendreReservations(db, [cle]);
     // Une redirection (site gelé, ADR-053 § 14) n'est pas un échec : elle suit son cours.
     unstable_rethrow(echec);
     if (echec) console.error("[etablissements/photo] enregistrement impossible", echec);

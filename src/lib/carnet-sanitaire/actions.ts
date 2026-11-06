@@ -465,7 +465,10 @@ export async function modifierAnalyseLegionelle(
       },
     });
   } catch (e) {
-    if (depot.rapport) await libererFichiers([depot.rapport.cle], "carnet-sanitaire/modification");
+    if (depot.rapport) {
+      await libererFichiers([depot.rapport.cle], "carnet-sanitaire/modification");
+      await rendreReservations(db, [depot.rapport.cle]);
+    }
     throw e;
   }
   if (depot.rapport && analyse.rapportCle) {

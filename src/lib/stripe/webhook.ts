@@ -139,7 +139,7 @@ export async function traiterNotificationStripe(
 
   try {
     const { customerId, abonnement } = await objetSuivi(stripe, n);
-    const r = customerId ? await synchroniserClientStripe(stripe, customerId, { abonnementLu: abonnement }) : SANS_CLIENT;
+    const r = customerId ? await synchroniserClientStripe(stripe, customerId, { abonnementLu: abonnement, depuisWebhook: true }) : SANS_CLIENT;
     const motif = r.issue === "ignore" ? r.motif : null;
     if (r.issue === "ignore") {
       if (r.alerte) console.error(`stripe : ${n.type} ${n.id} non enregistré — ${r.motif}`);

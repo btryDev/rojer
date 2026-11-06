@@ -33,8 +33,9 @@ export const metadata = {
 /**
  * L'abonnement du compte (ADR-053) : son état, et pourquoi une saisie a été
  * refusée (`verifierSaisie` y renvoie avec `?saisie=fermee`, le gel avec
- * `?saisie=gelee`). La lecture et
- * l'export ne sont jamais fermés — la page le dit. Le propriétaire y gère
+ * `?saisie=gelee`). La lecture n'est jamais fermée ; les documents
+ * officiels (validation, exports, publication) demandent un abonnement payé
+ * (§ 15). Le propriétaire y gère
  * l'abonnement (ADR-053 §§ 10, 12) : l'essai s'il est encore disponible ;
  * « s'abonner » (formule, rythme, puis carte chez Stripe) pendant l'essai ou
  * en pause, et après une résiliation ; le portail Stripe une fois payant. Un
@@ -140,12 +141,12 @@ export default async function AbonnementPage({
         )}
 
         {/* Un geste réservé aux abonnés y renvoie (`exigerUnPaiement`) : on dit pourquoi on est là. */}
-        {immediat === "1" && geste === "abonner" && (
+        {immediat === "1" && (geste === "abonner" || geste === "souscrire") && (
           <div className="mt-6">
             <MessageFormulaire ton="info">
-              Valider un document, exporter un dossier officiel, publier, signer ou envoyer un lien à un
-              prestataire est réservé aux abonnés. Abonnez-vous : le premier mois est prélevé aussitôt, et vous
-              pouvez le faire tout de suite.
+              Valider un document, exporter le registre ou le dossier de contrôle, publier le registre
+              d&apos;accessibilité ou demander une signature à un tiers est réservé aux abonnés. Abonnez-vous : le
+              premier mois est prélevé aussitôt, et vous pouvez le faire tout de suite.
             </MessageFormulaire>
           </div>
         )}

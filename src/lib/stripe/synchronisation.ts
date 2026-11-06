@@ -189,7 +189,7 @@ async function mettreAJour(db: Db, compteId: string, customerId: string, donnees
 export async function synchroniserClientStripe(
   stripe: Stripe,
   customerId: string,
-  options: { abonnementLu?: Stripe.Subscription | null; maintenant?: () => Date } = {},
+  options: { abonnementLu?: Stripe.Subscription | null; maintenant?: () => Date; depuisWebhook?: boolean } = {},
 ): Promise<Synchronisation> {
   // L'heure de la relecture, prise AVANT les deux lectures, lancées ensemble.
   const relueLe = options.maintenant?.() ?? new Date();
@@ -233,7 +233,9 @@ export async function synchroniserClientStripe(
   let issue: Synchronisation | null = null;
   if (!ligne) issue = await creerLigne(db, compteId, customerId, donnees);
   issue ??= await mettreAJour(db, compteId, customerId, donnees);
-  if (issue.issue !== "ignore" && !ligne?.debutPayantLe && !supprime) await noterPremierPaiement(stripe, db, compteId, customerId);
+  if (issue.issue !== "ignore" && !ligne?.debutPayantLe && !supprime) {
+    await noterPremierPaiement(stripe, db, compteId, customerId, options.depuisWebhook === true);
+  }
   return issue;
 }
 
@@ -241,11 +243,16 @@ export async function synchroniserClientStripe(
  * Le premier paiement confirmé, écrit à part de l'instantané : seulement là
  * où la ligne n'en a pas (`debutPayantLe: null` dans la clause), donc jamais
  * écrasé ni effacé par une relecture plus tardive, quel que soit l'ordre des
- * notifications. La liste des factures en échec (délai) ne bloque pas la
- * relecture : la date viendra à la suivante.
+ * notifications. La liste des factures en échec (délai) : l'état est déjà
+ * écrit ; depuis le webhook, l'erreur remonte pour que Stripe relance la
+ * notification (sinon la date manquerait jusqu'à la facture suivante) ;
+ * depuis un geste de l'utilisateur, elle viendra à la notification suivante.
  */
-async function noterPremierPaiement(stripe: Stripe, db: Db, compteId: string, customerId: string) {
-  const debut = await premierPaiement(stripe, customerId).catch(() => null);
+async function noterPremierPaiement(stripe: Stripe, db: Db, compteId: string, customerId: string, strict: boolean) {
+  const debut = await premierPaiement(stripe, customerId).catch((e: unknown) => {
+    if (strict) throw e;
+    return null;
+  });
   if (!debut) return;
   await db.abonnement.updateMany({
     where: { compteId, stripeCustomerId: customerId, debutPayantLe: null },

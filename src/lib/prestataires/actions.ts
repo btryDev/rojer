@@ -217,6 +217,7 @@ export async function creerPrestataire(
   } catch (err) {
     // Les fichiers écrits ne sont référencés par aucune ligne : on les reprend.
     await libererFichiers(depot.cles, "prestataires/creation");
+    await rendreReservations(db, depot.cles);
     if (err instanceof RefusQuota) return { status: "error", message: err.motif };
     if (estSiretEnDouble(err)) return erreurSiret();
     throw err;
@@ -328,6 +329,7 @@ export async function modifierPrestataire(
     }
   } catch (err) {
     await libererFichiers(depot.cles, "prestataires/modification");
+    await rendreReservations(db, depot.cles);
     if (estSiretEnDouble(err)) return erreurSiret();
     throw err;
   }

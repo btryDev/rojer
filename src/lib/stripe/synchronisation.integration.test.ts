@@ -121,6 +121,9 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
       });
       expect(await synchroniserClientStripe(s, "cus_B", { maintenant: () => new Date(1000) })).toEqual({ issue: "ecrit" });
       expect(await ligne(B)).toMatchObject({ statut: "active", debutPayantLe: null });
+      // Depuis le webhook, l'erreur remonte (Stripe relancera) — l'état est déjà écrit.
+      await expect(synchroniserClientStripe(s, "cus_B", { maintenant: () => new Date(2000), depuisWebhook: true })).rejects.toThrow("délai dépassé");
+      expect(await ligne(B)).toMatchObject({ statut: "active", debutPayantLe: null });
     });
 
     it("un client d'avant l'ADR-054 (metadata.userId) écrit au compte dont la personne est propriétaire", async () => {
