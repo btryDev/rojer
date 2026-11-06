@@ -422,6 +422,7 @@ describe("faitsDeLigne — ce que la stratégie apporte à la fonction", () => {
       premierPas: "annuelle",
       dateDuTitre: null,
       realisation: { date: d("2026-06-01"), resultat: "conforme" },
+      realisationEquivalente: null,
       realisationHeritee: d("2020-01-01"),
       miseEnService: d("2025-12-01"),
       origine: d("2025-12-01"),

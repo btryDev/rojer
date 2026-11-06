@@ -16,8 +16,12 @@ import {
   reconcilierCalendrier,
   type OccurrenceExistante,
 } from "@/lib/calendrier/generateur";
-import { determineObligationsApplicables, obligationsSuivies } from "./engine";
-import { appliquerPrescriptions } from "./prescriptions";
+import {
+  determineObligationsApplicables,
+  fusionnerGestes,
+  obligationsSuivies,
+} from "./engine";
+import { appliquerPrescriptions, prescriptionsSansEffet } from "./prescriptions";
 import type {
   EquipementMatching,
   EtablissementMatching,
@@ -123,10 +127,15 @@ describe("le geste — la structure du référentiel", () => {
 
   it("autresMembresDuGeste : les autres membres, jamais l'obligation elle-même", () => {
     const pe4 = obligationParId("incendie-erp-pe4-entretien-installations-techniques")!;
-    const autres = autresMembresDuGeste(pe4);
+    const autres = autresMembresDuGeste(pe4, "EXTINCTEUR");
     expect(autres).toContain("incendie-erp-extincteurs-annuelle");
     expect(autres).not.toContain(pe4.id);
-    expect(autresMembresDuGeste(obligationParId("elec-travail-periodique-annuelle")!)).toEqual([]);
+    // Filtrés sur la catégorie : sur un extincteur, ni l'alarme ni la VMC.
+    expect(autres).not.toContain("incendie-erp-ssi-annuelle");
+    expect(autres).not.toContain("aeration-controle-installations-r4222-20");
+    expect(
+      autresMembresDuGeste(obligationParId("elec-travail-periodique-annuelle")!, "INSTALLATION_ELECTRIQUE"),
+    ).toEqual([]);
   });
 });
 
@@ -213,7 +222,7 @@ describe("un geste, une ligne par appareil", () => {
   });
 });
 
-describe("prescription qui vise une obligation absorbée (ADR-035 × ADR-057)", () => {
+describe("prescriptions particulières : appliquées avant la fusion (ADR-035 × ADR-057)", () => {
   const prescription = (
     obligationId: string,
     periodicite: PrescriptionMatching["periodicite"],
@@ -235,35 +244,84 @@ describe("prescription qui vise une obligation absorbée (ADR-035 × ADR-057)", 
   });
   const MAINTENANT = new Date("2026-11-06T08:00:00Z");
   const parc = [appareil("EXTINCTEUR")];
-  const applicables = determineObligationsApplicables(ERP_N5, parc);
-
-  it("plus stricte que la ligne : elle s'applique à la ligne du titulaire", () => {
-    const r = appliquerPrescriptions(
-      applicables,
-      [prescription("incendie-erp-pe4-entretien-installations-techniques", "semestrielle")],
+  /** Le chemin de la passe : sans fusion, les prescriptions, puis la fusion. */
+  const passe = (p: PrescriptionMatching) => {
+    const avant = appliquerPrescriptions(
+      determineObligationsApplicables(ERP_N5, parc, { fusion: false }),
+      [p],
       parc,
       MAINTENANT,
     );
-    expect(r.ignorees).toEqual([]);
-    const titulaire = r.applicables.find(
-      (a) => a.obligation.id === "incendie-erp-extincteurs-annuelle",
-    )!;
-    expect(titulaire.surcharges?.eq?.periodicite).toBe("semestrielle");
+    return { avant, apres: fusionnerGestes(avant.applicables) };
+  };
+
+  it("sans fusion, chaque membre du geste est rendu sur l'appareil", () => {
+    const ids = determineObligationsApplicables(ERP_N5, parc, { fusion: false })
+      .filter((a) => a.equipementsConcernes.some((e) => e.id === "eq"))
+      .map((a) => a.obligation.id);
+    expect(ids).toEqual(
+      expect.arrayContaining([
+        "incendie-erp-pe4-entretien-installations-techniques",
+        "incendie-travail-moyens-lutte",
+        "incendie-erp-extincteurs-annuelle",
+      ]),
+    );
   });
 
-  it("plus stricte que l'obligation visée, mais pas que la ligne : ignorée, avec son motif", () => {
-    const r = appliquerPrescriptions(
-      applicables,
-      [prescription("incendie-erp-pe4-entretien-installations-techniques", "biennale")],
-      parc,
-      MAINTENANT,
+  it("plus stricte que la ligne : l'obligation visée devient titulaire, avec sa surcharge", () => {
+    const { apres } = passe(
+      prescription("incendie-erp-pe4-entretien-installations-techniques", "semestrielle"),
     );
-    expect(r.ignorees).toHaveLength(1);
-    expect(r.ignorees[0].raison).toContain("rythme au moins aussi strict");
-    expect(
-      r.applicables.find((a) => a.obligation.id === "incendie-erp-extincteurs-annuelle")!
-        .surcharges,
-    ).toBeUndefined();
+    const [ligne, ...reste] = genererProchainesVerifications(apres).filter(
+      (l) => l.equipementId === "eq",
+    );
+    expect(reste).toEqual([]);
+    expect(ligne.obligationId).toBe("incendie-erp-pe4-entretien-installations-techniques");
+    expect(ligne.periodicite).toBe("semestrielle");
+    expect(ligne.prescriptionId).toBe("p-1");
+    expect(ligne.fondeeAussiPar).toEqual([
+      "incendie-travail-moyens-lutte",
+      "incendie-erp-extincteurs-annuelle",
+    ]);
+  });
+
+  it("plus stricte que l'obligation visée mais pas que la ligne : sans effet, et dit", () => {
+    const { avant, apres } = passe(
+      prescription("incendie-erp-pe4-entretien-installations-techniques", "biennale"),
+    );
+    expect(avant.ignorees).toEqual([]);
+    expect([...prescriptionsSansEffet(avant.applicables, apres)]).toEqual(["p-1"]);
+    const [ligne] = genererProchainesVerifications(apres).filter((l) => l.equipementId === "eq");
+    expect(ligne.obligationId).toBe("incendie-erp-extincteurs-annuelle");
+    expect(ligne.periodicite).toBe("annuelle");
+  });
+});
+
+describe("garde : aucun membre d'un geste ne peut être retenu « à confirmer »", () => {
+  // La fusion choisit le titulaire sur le rythme, et la ligne ne garde que
+  // SES marques « à confirmer » (relecture du 2026-11-06, point 5). Tant
+  // qu'aucun membre ne dépend d'une question ou d'un seuil, le cas n'existe
+  // pas. Le jour où l'un en dépendra, ce test rougit : décider alors ce que la
+  // ligne fusionnée dit d'un membre établi et d'un membre à confirmer.
+  const CHAMPS_INCERTAINS = [
+    "effectifMin",
+    "effectifMax",
+    "personnesPresentesMin",
+    "champR422734",
+    "locauxSommeilPublic",
+    "ssiCategorieAouB",
+    "activite",
+  ];
+  it("les typologies des membres ne lisent aucune réponse ni aucun seuil", () => {
+    const fautifs = obligationsConformite
+      .filter((o) => gesteDe(o) !== null)
+      .filter(
+        (o) =>
+          CHAMPS_INCERTAINS.some((c) => c in o.typologies) ||
+          (estPorteeParEquipement(o) && (o.conditions?.length ?? 0) > 0),
+      )
+      .map((o) => o.id);
+    expect(fautifs).toEqual([]);
   });
 });
 
@@ -298,5 +356,43 @@ describe("le titulaire change : la rangée est reprise, pas barrée", () => {
     const maj = plan.aMettreAJour.find((m) => m.id === "v-ext")!;
     expect(maj.obligationId).toBe("incendie-erp-extincteurs-annuelle");
     expect(maj.fondeeAussiPar).toEqual(["incendie-travail-moyens-lutte"]);
+  });
+});
+
+describe("relecture du 2026-11-06 : un rapport fait sous un autre texte du geste date la ligne", () => {
+  it("redevenu ERP, l'établissement rouvre sa ligne ERP de 2024 sans oublier le rapport de 2026 du Code du travail", () => {
+    const NOW = new Date("2026-11-06T08:00:00Z");
+    const ligne = (
+      id: string,
+      obligationId: string,
+      realisation: string,
+      archiveLe: Date | null,
+    ): OccurrenceExistante => ({
+      id,
+      obligationId,
+      equipementId: "eq",
+      libelleObligation: obligationId,
+      periodicite: "annuelle",
+      realisateurRequis: ["personne_competente"],
+      datePrevue: new Date(realisation),
+      derniereRealisation: new Date(realisation),
+      dernierResultat: "conforme",
+      statut: "planifiee",
+      porteUnePreuve: true,
+      archiveLe,
+      suiviDepuis: new Date("2023-01-01T00:00:00Z"),
+    });
+    const applicables = determineObligationsApplicables(ERP_N3, [appareil("EXTINCTEUR")]);
+    const plan = reconcilierCalendrier(
+      [
+        ligne("v-erp", "incendie-erp-extincteurs-annuelle", "2024-03-01T00:00:00Z", new Date("2025-01-01T00:00:00Z")),
+        ligne("v-travail", "incendie-travail-moyens-lutte", "2026-10-01T00:00:00Z", null),
+      ],
+      genererProchainesVerifications(applicables, { autresMembresDuGeste }),
+      { now: NOW, obligationsEncoreApplicables: clesApplicabilite(applicables) },
+    );
+    const erp = plan.aMettreAJour.find((m) => m.id === "v-erp")!;
+    expect(erp.datePrevue.toISOString().slice(0, 10)).toBe("2027-10-01");
+    expect(plan.aArchiver).toEqual([{ id: "v-travail" }]);
   });
 });

@@ -65,6 +65,7 @@ import type { FaitsDeLigne } from "./echeance-de-ligne";
 import {
   cleDeLigne,
   heritageDesRetirees,
+  realisationsDuMemeActe,
   reconcilierCalendrier,
   type OccurrenceExistante,
   type PlanReconciliation,
@@ -279,6 +280,8 @@ export function comparerAuMoteur(lecture: LecturePasse, now: Date): Comparaison 
   // réconciliateur consulte, pour que les faits rassemblés ici soient ceux
   // qu'il a lus.
   const heritage = heritageDesRetirees(existantes, options.successions);
+  // Le même acte sur d'autres lignes (ADR-057), lu comme le réconciliateur.
+  const memeActe = realisationsDuMemeActe(existantes, options.appareilsDeclaresLe);
   const herediteDe = (g: VerificationGenere): Date | null =>
     heritage.parCle.get(g.cleUnique) ??
     (g.equipementId === null && g.salarieId === null
@@ -316,7 +319,7 @@ export function comparerAuMoteur(lecture: LecturePasse, now: Date): Comparaison 
             miseEnService: null,
             origine: ex.suiviDepuis,
           }
-        : faitsDeLigne(g, ex, herediteDe(g), now);
+        : faitsDeLigne(g, ex, herediteDe(g), now, memeActe(g, ex));
     const categorie = classerEcart({ avant, apres, faits });
     comptes[categorie] += 1;
     ecarts.push({

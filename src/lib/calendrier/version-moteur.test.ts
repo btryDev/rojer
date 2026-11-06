@@ -579,8 +579,11 @@ const RELEVE = {
   // la reprise dans le geste (`autresMembresDuGeste`). OUI : la régénération
   // écrit d'autres lignes — `VERSION_MOTEUR_CALENDRIER` 7 → 8. Puis, dans le même
   // lot, `obligationsSuivies` (lecture des absorbées, n'écrit rien) :
-  // ~~ba3f65059e47b2bb~~ recopiée.
-  empreinte: "02863b7fb9d90621",
+  // ~~ba3f65059e47b2bb~~ recopiée. Puis la relecture du même jour : la
+  // réalisation équivalente du même acte (`realisationsDuMemeActe`), la fusion
+  // après les prescriptions, la criticité la plus haute — toujours moteur 8,
+  // le lot n'est pas fusionné : ~~02863b7fb9d90621~~ recopiée.
+  empreinte: "0b32c48a2c7f3d82",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

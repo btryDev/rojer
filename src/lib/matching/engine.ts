@@ -1239,6 +1239,13 @@ function evaluerChamp(
 export type DetermineOptions = {
   /** Remplacement complet du référentiel par défaut — utile pour les tests. */
   obligations?: Obligation[];
+  /**
+   * `false` : rend les obligations du même geste SANS les réunir (ADR-057).
+   * Pour la seule voie qui applique les prescriptions particulières — elles
+   * s'appliquent à chaque obligation AVANT la fusion, qui les lit
+   * (`appliquerPrescriptions`, puis `fusionnerGestes`). Défaut : réunies.
+   */
+  fusion?: boolean;
 };
 
 export function determineObligationsApplicables(
@@ -1252,7 +1259,8 @@ export function determineObligationsApplicables(
     const res = evaluerObligation(o, etab, equipements);
     if (res) out.push(res);
   }
-  return fusionnerGestes(resoudreGroupesExclusifs(out));
+  const resolues = resoudreGroupesExclusifs(out);
+  return options?.fusion === false ? resolues : fusionnerGestes(resolues);
 }
 
 /** Jours d'un rythme, pour comparer deux membres d'un groupe ; sans rythme = le moins exigeant. */
@@ -1322,8 +1330,19 @@ function rangDuRythme(o: Obligation): number {
 }
 
 /**
+ * Le rythme d'un membre SUR CET APPAREIL : celui d'une prescription
+ * particulière qui l'y renforce (ADR-035), sinon le sien.
+ */
+function joursSurLAppareil(a: ObligationApplicable, appareil: string): number {
+  const surcharge = a.surcharges?.[appareil]?.periodicite;
+  return surcharge !== undefined
+    ? (PERIODICITE_EN_JOURS[surcharge] ?? Number.POSITIVE_INFINITY)
+    : joursDuRythme(a.obligation);
+}
+
+/**
  * `a` est-il le titulaire plutôt que `b` sur un appareil (ADR-057) ? Le rythme
- * le plus court ; à rythme égal, le rythme écrit par un texte sur celui d'une
+ * le plus court — prescription particulière comprise ; à rythme égal, le rythme écrit par un texte sur celui d'une
  * norme ou du défaut ; puis le membre ÉTABLI sur celui que retient le
  * silence (comme `lEmporte`) ; à égalité encore, le premier du référentiel,
  * que l'ordre d'appel garde. Le rang du rythme avant tout le reste garde la
@@ -1334,9 +1353,10 @@ function rangDuRythme(o: Obligation): number {
 function estTitulairePlutotQue(
   a: ObligationApplicable,
   b: ObligationApplicable,
+  appareil: string,
 ): boolean {
-  const ja = joursDuRythme(a.obligation);
-  const jb = joursDuRythme(b.obligation);
+  const ja = joursSurLAppareil(a, appareil);
+  const jb = joursSurLAppareil(b, appareil);
   if (ja !== jb) return ja < jb;
   const ra = rangDuRythme(a.obligation);
   const rb = rangDuRythme(b.obligation);
@@ -1357,11 +1377,15 @@ function estTitulairePlutotQue(
  * dans l'ordre du référentiel, celui de l'appel.
  *
  * Ce que la fusion ne fait pas : choisir un rythme. La ligne garde celui de
- * son titulaire, qui est par construction le plus court des membres ; une
- * prescription particulière s'applique ensuite (`appliquerPrescriptions`,
- * qui sait la retrouver quand elle vise un membre absorbé).
+ * son titulaire, qui est par construction le plus court des membres. Les
+ * prescriptions particulières s'appliquent AVANT (relecture du 2026-11-06,
+ * plan A3) : la passe appelle le moteur sans fusion, applique les
+ * prescriptions, puis appelle cette fonction — un membre qu'un acte
+ * d'autorité raccourcit devient titulaire sur son appareil, avec sa
+ * surcharge. La surcharge d'un membre absorbé, moins stricte que la ligne,
+ * tombe avec lui (`prescriptionsSansEffet`).
  */
-function fusionnerGestes(
+export function fusionnerGestes(
   applicables: ObligationApplicable[],
 ): ObligationApplicable[] {
   const membresParAppareil = new Map<string, ObligationApplicable[]>();
@@ -1381,7 +1405,7 @@ function fusionnerGestes(
       const duGeste = membres.filter((m) => gesteDe(m.obligation) === geste);
       if (duGeste.length < 2) continue;
       const titulaire = duGeste.reduce((t, m) =>
-        estTitulairePlutotQue(m, t) ? m : t,
+        estTitulairePlutotQue(m, t, appareil) ? m : t,
       );
       const table = absorbes.get(titulaire) ?? {};
       table[appareil] = duGeste

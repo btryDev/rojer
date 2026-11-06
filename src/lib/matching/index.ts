@@ -1,6 +1,7 @@
 export {
   determineObligationsApplicables,
   obligationsSuivies,
+  fusionnerGestes,
   determineObligationsNiveauAudit,
   evaluerObligation,
   matchTypologie,

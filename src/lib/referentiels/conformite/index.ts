@@ -22,6 +22,7 @@
 // props depuis un composant serveur.
 import "server-only";
 import {
+  estPorteeParEquipement,
   porteurDe,
   type DomaineObligation,
   type Obligation,
@@ -54,6 +55,7 @@ import { obligationsEtablissementSportif } from "./etablissement-sportif";
 import { obligationsScene } from "./scene";
 import { estNiveauAudit } from "./niveau-audit";
 import { gesteDe, referencesDuGeste } from "./geste";
+import type { CategorieEquipement } from "../types-communs";
 
 export {
   obligationsElectricite,
@@ -949,18 +951,38 @@ export function obligationParId(id: string): Obligation | undefined {
 }
 
 /**
- * Les AUTRES obligations du même geste (ADR-057). Ce sont celles dont la
- * ligne d'un appareil peut être reprise quand le titulaire du geste change —
- * l'établissement devient ERP, change de catégorie : la ligne reste la même
- * rangée, avec ses rapports (`VerificationGenere.succedeA`). Sans filtre de
- * catégorie, et c'est exact : une ligne n'existe sur un appareil que si son
- * obligation en visait la catégorie. Vide pour une obligation sans geste.
+ * Les membres de chaque geste, relevés une fois (ADR-057).
  */
-export function autresMembresDuGeste(o: Obligation): string[] {
+let _membresParGeste: Map<string, Obligation[]> | null = null;
+
+/**
+ * Les AUTRES obligations du même geste qu'un appareil de cette catégorie peut
+ * porter (ADR-057). Ce sont celles dont la ligne, sur cet appareil, peut être
+ * reprise quand le titulaire du geste change — l'établissement devient ERP,
+ * change de catégorie : la ligne reste la même rangée, avec ses rapports
+ * (`VerificationGenere.succedeA`). Vide pour une obligation sans geste.
+ */
+export function autresMembresDuGeste(
+  o: Obligation,
+  categorie: CategorieEquipement,
+): string[] {
   const geste = gesteDe(o);
   if (geste === null) return [];
-  return obligationsConformite
-    .filter((m) => m.id !== o.id && gesteDe(m) === geste)
+  if (_membresParGeste === null) {
+    _membresParGeste = new Map();
+    for (const m of obligationsConformite) {
+      const g = gesteDe(m);
+      if (g === null) continue;
+      _membresParGeste.set(g, [...(_membresParGeste.get(g) ?? []), m]);
+    }
+  }
+  return (_membresParGeste.get(geste) ?? [])
+    .filter(
+      (m) =>
+        m.id !== o.id &&
+        estPorteeParEquipement(m) &&
+        m.categoriesEquipement.includes(categorie),
+    )
     .map((m) => m.id);
 }
 

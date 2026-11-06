@@ -201,74 +201,6 @@ export function appliquerPrescriptions(
     });
   }
 
-  // ADR-057 : une obligation absorbée par le titulaire de son geste n'a plus
-  // de ligne sur cet appareil — sa prescription vise la ligne du titulaire.
-  // Obligation absorbée → les appareils où elle l'est, et par qui.
-  const absorbeesPar = new Map<
-    string,
-    { titulaireId: string; equipementId: string; membre: Obligation }[]
-  >();
-  for (const oa of applicables) {
-    for (const [equipementId, membres] of Object.entries(oa.aussiFondeePar ?? {})) {
-      for (const membre of membres) {
-        const liste = absorbeesPar.get(membre.id) ?? [];
-        liste.push({ titulaireId: oa.obligation.id, equipementId, membre });
-        absorbeesPar.set(membre.id, liste);
-      }
-    }
-  }
-
-  /**
-   * Applique une prescription qui vise une obligation ABSORBÉE (ADR-057) à la
-   * ligne du titulaire de son geste, appareil par appareil. Le rythme
-   * prescrit doit renforcer l'obligation visée (règle d'ADR-035 / ADR-039)
-   * ET la ligne fusionnée, dont le rythme est celui du titulaire : une
-   * prescription qui allonge la ligne n'est jamais appliquée.
-   * `silencieux` : appelée en complément d'une application propre, elle ne
-   * rend pas de motif d'ignorance en double.
-   */
-  function appliquerSurLignesDuGeste(
-    p: PrescriptionMatching,
-    absorbees: { titulaireId: string; equipementId: string; membre: Obligation }[],
-    silencieux = false,
-  ): void {
-    const periodicite = p.periodicite;
-    const visee = absorbees[0].membre;
-    if (!prescriptionRenforce(periodicite, visee)) {
-      if (!silencieux) {
-        ignorees.push({
-          prescription: p,
-          raison: `${motifPrescriptionNonRetenue(visee)} La prescription n'est pas appliquée.`,
-        });
-      }
-      return;
-    }
-    let appliquee = false;
-    for (const a of absorbees) {
-      const titulaire = parObligation.get(a.titulaireId);
-      if (!titulaire) continue;
-      const surcharges = { ...(titulaire.surcharges ?? {}) };
-      const enPlace =
-        surcharges[a.equipementId]?.periodicite ??
-        periodiciteEffective(titulaire.obligation);
-      if (!estPeriodicitePlusStricte(periodicite, enPlace)) continue;
-      surcharges[a.equipementId] = {
-        periodicite,
-        prescriptionId: p.id,
-        raison: `Périodicité portée à « ${LABEL_PERIODICITE[periodicite]} » par ${libelleSource(p)}.${suffixeMarquage(p)}`,
-      };
-      parObligation.set(a.titulaireId, { ...titulaire, surcharges });
-      appliquee = true;
-    }
-    if (!appliquee && !silencieux) {
-      ignorees.push({
-        prescription: p,
-        raison:
-          "Sur cet appareil, Rojer suit cette obligation sur une ligne qui a déjà un rythme au moins aussi strict : la prescription n'a rien à renforcer.",
-      });
-    }
-  }
-
   // Ordre stable : par date de document puis par id, pour que deux
   // exécutions produisent le même résultat quel que soit l'ordre de lecture.
   const triees = [...prescriptions].sort(
@@ -292,13 +224,6 @@ export function appliquerPrescriptions(
         continue;
       }
       const oa = parObligation.get(p.obligationId);
-      const absorbees = (absorbeesPar.get(p.obligationId) ?? []).filter(
-        (a) => !p.equipementId || a.equipementId === p.equipementId,
-      );
-      if (!oa && absorbees.length > 0) {
-        appliquerSurLignesDuGeste(p, absorbees);
-        continue;
-      }
       if (!oa) {
         ignorees.push({
           prescription: p,
@@ -320,10 +245,6 @@ export function appliquerPrescriptions(
       const cibles = p.equipementId
         ? oa.equipementsConcernes.filter((e) => e.id === p.equipementId)
         : oa.equipementsConcernes;
-      if (cibles.length === 0 && absorbees.length > 0) {
-        appliquerSurLignesDuGeste(p, absorbees);
-        continue;
-      }
       if (cibles.length === 0) {
         ignorees.push({
           prescription: p,
@@ -368,9 +289,6 @@ export function appliquerPrescriptions(
         continue;
       }
       parObligation.set(oa.obligation.id, { ...oa, surcharges });
-      // L'obligation visée a sa ligne sur certains appareils et est absorbée
-      // sur d'autres (ADR-057) : la prescription vaut sur tous.
-      if (absorbees.length > 0) appliquerSurLignesDuGeste(p, absorbees, true);
       continue;
     }
 
@@ -404,3 +322,29 @@ export function appliquerPrescriptions(
     ignorees,
   };
 }
+
+/**
+ * Les prescriptions qui renforçaient une obligation avant la fusion des gestes
+ * et n'ont plus de ligne après (ADR-057) : l'obligation visée a été absorbée,
+ * sur chaque appareil où l'acte la renforçait, par une ligne au rythme déjà
+ * plus strict. Rien n'est perdu — la ligne est plus exigeante que l'acte —,
+ * mais la page des prescriptions doit le dire au lieu d'annoncer un rythme
+ * qu'aucune ligne ne porte.
+ */
+export function prescriptionsSansEffet(
+  avantFusion: readonly ObligationApplicable[],
+  apresFusion: readonly ObligationApplicable[],
+): Set<string> {
+  const ids = (liste: readonly ObligationApplicable[]) =>
+    new Set(
+      liste.flatMap((a) =>
+        Object.values(a.surcharges ?? {}).map((s) => s.prescriptionId),
+      ),
+    );
+  const apres = ids(apresFusion);
+  return new Set([...ids(avantFusion)].filter((id) => !apres.has(id)));
+}
+
+/** Le motif affiché pour une prescription que `prescriptionsSansEffet` rend. */
+export const MOTIF_PRESCRIPTION_SANS_EFFET =
+  "Sur les appareils visés, Rojer suit cette obligation sur une ligne qui en réunit plusieurs, à un rythme déjà plus strict : la prescription n'a rien à renforcer.";

@@ -1,8 +1,9 @@
 # ADR-057 — Pas de chapeaux : une obligation qui concerne un appareil vit sur l'appareil, et un même geste n'y fait qu'une ligne
 
 - **Statut** : proposée, 2026-11-05 — décisions de la propriétaire, prises
-  point par point le même jour. **Rien n'est codé** : cet ADR fixe les règles
-  avant les lots A, B et C.
+  point par point le même jour. ~~**Rien n'est codé** : cet ADR fixe les règles
+  avant les lots A, B et C.~~ [2026-11-06 : lot A codé (`lot/adr-057-a`) ;
+  lots B et C à venir.]
 - **Amende** l'ADR-022 (porteur établissement « même si aucun équipement
   n'est déclaré » : ne vaut plus pour une obligation qui vérifie un appareil),
   l'ADR-045 (`groupeExclusif` réservé à l'établissement : un mécanisme voisin
@@ -158,6 +159,15 @@ membres écartés ne disparaissent pas, leurs références restent citées.
   établissement devient ERP, change de catégorie), la ligne de l'appareil est
   reprise sous le nouvel identifiant — même rangée, mêmes rapports — comme
   `succedeA` le fait pour une scission.
+- [2026-11-06, lot A] **Un rapport déposé sous un autre texte du geste vaut
+  pour la ligne** : sur un appareil, la plus récente des réalisations du même
+  acte — la ligne propre, celle d'un autre membre du geste, la ligne
+  d'établissement dispersée — date la ligne (`realisationsDuMemeActe`).
+- [2026-11-06, lot A] **Les prescriptions particulières s'appliquent avant la
+  fusion** : la passe appelle le moteur sans fusion, applique les
+  prescriptions, puis fusionne ; un membre qu'un acte raccourcit devient
+  titulaire sur son appareil. Une prescription que la fusion rend sans effet
+  (la ligne est déjà plus stricte) est dite ignorée, avec son motif.
 
 ### 4. Une obligation de présence est la tête de son groupe dans le parc
 

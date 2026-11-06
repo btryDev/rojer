@@ -2,8 +2,14 @@ import { MentionRythmeRetenu } from "@/components/referentiel/MentionRythmeReten
 import { suiviParPersonne } from "@/lib/referentiels/conformite/transmissions";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { mentionRythmeRetenu } from "@/lib/referentiels/conformite/mention-rythme";
-import { periodiciteEffective } from "@/lib/referentiels/conformite/rythme-retenu";
-import { intervenantsCommuns } from "@/lib/referentiels/conformite/geste";
+import {
+  periodiciteEffective,
+  referencesCitees,
+} from "@/lib/referentiels/conformite/rythme-retenu";
+import {
+  intervenantsCommuns,
+  referencesDuGeste,
+} from "@/lib/referentiels/conformite/geste";
 import Link from "next/link";
 import { FormulairePoint } from "@/components/points-a-corriger/FormulairePoint";
 import { ListePoints } from "@/components/points-a-corriger/ListePoints";
@@ -445,8 +451,12 @@ export default async function EquipementDetailPage({
                         {aussiFondeePar.length > 0 ? (
                           <p className="m-0 mt-1 text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
                             Aussi exigé par{" "}
-                            {aussiFondeePar
-                              .map((a) => a.referencesLegales[0].reference)
+                            {/* La lecture unique des références d'une ligne
+                                (`referencesDuGeste`), moins celles du titulaire :
+                                la même liste que la fiche de vérification. */}
+                            {referencesDuGeste(o, aussiFondeePar)
+                              .slice(referencesCitees(o).length)
+                              .map((r) => r.reference)
                               .join(" · ")}
                           </p>
                         ) : null}

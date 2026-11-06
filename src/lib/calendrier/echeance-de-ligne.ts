@@ -106,6 +106,15 @@ export type FaitsDeLigne = {
    *  PLUS ANCIENNE (`reprendreLaRealisation`). Une réalisation propre prime
    *  toujours sur elle. */
   realisationHeritee: Date | null;
+  /**
+   * La dernière réalisation du MÊME ACTE sur une autre ligne (ADR-057) : la
+   * ligne d'un autre texte du même geste sur cet appareil, ou la ligne
+   * d'établissement dont l'obligation est passée à l'appareil (dispersion).
+   * À la différence de l'héritage, ce n'est pas un legs prudent mais un
+   * contrôle fait : la PLUS RÉCENTE de celle-ci et de la réalisation propre
+   * date la ligne. Absent = aucune.
+   */
+  realisationEquivalente?: Date | null;
   /** `null` pour un porteur établissement ou salarié, pour une ligne sur mesure,
    *  et pour un appareil dont la date n'a pas été saisie. */
   miseEnService: Date | null;
@@ -241,7 +250,15 @@ export function echeanceDeLigne(f: FaitsDeLigne): EcheanceDeLigne {
   //    2024-01-10 ») étaient l'artefact d'un calcul à état. Le RYTHME, jamais le
   //    premier délai : sans quoi le premier cycle se rejouerait à chaque dépôt.
   //    « Planifiée », passée ou non : le retard se lit sur la date.
-  const dernier = realisee ?? f.realisationHeritee;
+  //    Une réalisation ÉQUIVALENTE (ADR-057 : le même acte, sur une autre
+  //    ligne) compte comme la propre, et la plus récente des deux l'emporte —
+  //    un contrôle fait sous un autre texte du geste remet le compteur à zéro.
+  const equivalente = f.realisationEquivalente ?? null;
+  const faite =
+    equivalente !== null && (realisee === null || equivalente > realisee)
+      ? equivalente
+      : realisee;
+  const dernier = faite ?? f.realisationHeritee;
   if (dernier !== null) {
     const prochaine = prochaineEcheance(dernier, f.periodicite);
     // `null` est inatteignable ici — le rythme est cyclique —, et retomber sur
@@ -250,7 +267,7 @@ export function echeanceDeLigne(f: FaitsDeLigne): EcheanceDeLigne {
       return {
         datePrevue: prochaine,
         statut: "planifiee",
-        source: realisee !== null ? "rapport" : "heritage",
+        source: realisee !== null && faite === realisee ? "rapport" : "heritage",
       };
     }
   }

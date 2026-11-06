@@ -173,3 +173,47 @@ describe("hôtel de 5ᵉ catégorie : la ligne PO 1 d'établissement se disperse
     expect(ligne.datePrevue.toISOString().slice(0, 10)).toBe("2028-03-10");
   });
 });
+
+describe("relecture du 2026-11-06 : le rapport le plus récent du même acte date la ligne", () => {
+  it("un fragment retiré adopté sur la VMC ne fait pas oublier le rapport plus récent de la ligne d'établissement", async () => {
+    // Le fragment « VMC/CTA » (`aeration-travail-entretien-annuel`, retiré au
+    // profit de R. 4222-20) a laissé une ligne archivée sur la VMC, rapport de
+    // 2025-09 ; la ligne d'établissement de R. 4222-20 a un rapport de
+    // 2026-10. La ligne de la VMC adopte la rangée du fragment — et se date du
+    // rapport de 2026-10, pas de celui de 2025-09.
+    const etab = poserEtablissement("N", []);
+    etab.estERP = false;
+    etab.typeErp = null;
+    etab.categorieErp = null;
+    etab.equipements = [
+      {
+        id: "vmc",
+        libelle: "VMC",
+        categorie: "VMC",
+        caracteristiques: null,
+        actif: true,
+        createdAt: new Date("2025-01-01T10:00:00Z"),
+      },
+    ];
+    db.verifications = [
+      ligneEtablissement("aeration-travail-entretien-annuel", {
+        id: "v-fragment",
+        equipementId: "vmc",
+        periodicite: "annuelle",
+        archiveLe: new Date("2026-08-27T00:00:00Z"),
+        rapports: [{ dateRapport: new Date("2025-09-01T00:00:00Z"), resultat: "conforme" }],
+      }),
+      ligneEtablissement("aeration-controle-installations-r4222-20", {
+        id: "v-r4222",
+        periodicite: "annuelle",
+        rapports: [{ dateRapport: new Date("2026-10-01T00:00:00Z"), resultat: "conforme" }],
+      }),
+    ];
+    const plan = planifier(await lireEntrees(client, ETAB_ID), MAINTENANT);
+    const ligne =
+      plan.aMettreAJour.find((m) => m.id === "v-fragment") ??
+      plan.aCreer.find((c) => c.equipementId === "vmc");
+    expect(ligne?.obligationId).toBe("aeration-controle-installations-r4222-20");
+    expect(ligne?.datePrevue.toISOString().slice(0, 10)).toBe("2027-10-01");
+  });
+});

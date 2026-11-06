@@ -773,7 +773,9 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     et ascenseur CCH / AS 9 restent distincts ; art. 15 de l'arrêté du
     4 novembre 1993, décennale de l'extincteur ERP et signalisation des
     extincteurs au niveau audit ; rien ne sort du référentiel (**proposée le
-    2026-11-05**, non codée)
+    2026-11-05**, ~~non codée~~ [2026-11-06 : lot A codé, `lot/adr-057-a` —
+    référentiel `2026-11-06.1`, moteur de calendrier 8 ; lots B (écrans) et C
+    (catégories) à venir, `docs/plan-adr-057.md`])
 
 [2026-10-15, ménage des ADR : 037, 038 et 043 manquaient à cette liste ;
 **il n'existe pas d'ADR-044** — annoncée dans
