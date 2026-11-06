@@ -1,4 +1,5 @@
-import { NOINDEX, OUVERT_AUX_MOTEURS } from "@/lib/indexation";
+// Chemin relatif : next.config.ts charge ce fichier, sans les alias « @/ ».
+import { NOINDEX, OUVERT_AUX_MOTEURS } from "../indexation";
 /**
  * En-têtes de sécurité HTTP.
  *
