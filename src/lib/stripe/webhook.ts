@@ -19,6 +19,7 @@ import { OPTIONS_WEBHOOK } from "./client";
 import { marquerEchec, marquerTraite, oublierLesAnciens, prendreEnCharge } from "./evenements";
 import { codePrisma, idStripe, synchroniserClientStripe, type Synchronisation } from "./synchronisation";
 import { finaliserCarte } from "@/lib/abonnements/souscription";
+import { rendrePlanningEchu } from "./parcours";
 
 /** Une notification légère pèse moins d'un kilo-octet. */
 export const TAILLE_MAX_NOTIFICATION = 64 * 1024;
@@ -94,6 +95,11 @@ async function objetSuivi(stripe: Stripe, n: NotificationStripe): Promise<ObjetS
     case "v1.customer.subscription.resumed":
     case "v1.customer.subscription.trial_will_end": {
       const abonnement = await stripe.subscriptions.retrieve(n.related_object.id, {}, OPTIONS_WEBHOOK);
+      // Une baisse vient de prendre effet : son planning est rendu (sinon le
+      // portail refuserait la résiliation pendant une période). Sans effet
+      // sur le reste du traitement s'il échoue : la prochaine notification
+      // le refera.
+      if (abonnement.schedule) await rendrePlanningEchu(stripe, abonnement).catch(() => {});
       return { customerId: idStripe(abonnement.customer), abonnement };
     }
     case "v1.checkout.session.completed": {

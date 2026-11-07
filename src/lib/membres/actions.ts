@@ -12,6 +12,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
+import { refusInvitationBaissePrevue } from "@/lib/abonnements/baisse";
 import { motifPlafondMembres } from "@/lib/abonnements/quotas";
 import { getOptionalCompte, requireCompte } from "@/lib/auth/compte";
 import { annulerInvitationsEnAttenteDe, comptesDeLaPersonne, invitationsDuCompte } from "@/lib/auth/membres";
@@ -80,6 +81,9 @@ export async function inviterMembre(_prev: EtatMembres, formData: FormData): Pro
   const { compte, db } = p;
   const lu = schemaInvitation.safeParse({ email: formData.get("email"), role: formData.get("role") });
   if (!lu.success) return { status: "error", message: lu.error.issues[0]?.message ?? "Formulaire invalide" };
+  // Une baisse de formule planifiée borne déjà les utilisateurs (ADR-053 § 10).
+  const baisse = await refusInvitationBaissePrevue(db, compte.compteId);
+  if (baisse) return { status: "error", message: baisse };
   // Sans pilote d'e-mail réel (ou sans adresse publique pour le lien), aucune
   // invitation ne partirait : on le dit avant d'en créer une (même règle que
   // l'inscription et les liens prestataires).
@@ -90,15 +94,27 @@ export async function inviterMembre(_prev: EtatMembres, formData: FormData): Pro
     { cle: cleLimite("invitation", "compte", compte.compteId), limite: LIMITES.invitationCompte },
   ]);
   if (!verdict.ok) return { status: "error", message: messageTropDeTentatives(verdict.reessayerDansSecondes) };
+  let invitationId: string | null = null;
   try {
-    await auth.api.createInvitation({
+    const creee = await auth.api.createInvitation({
       headers: await entetesDeSession(),
       body: { email: lu.data.email, role: lu.data.role, organizationId: compte.compteId },
     });
+    invitationId = (creee as { id?: string } | null)?.id ?? null;
   } catch (e) {
     // Plafond d'utilisateurs de la formule, invitations comprises (ADR-053 § 14).
     if (codeDe(e) === "INVITATION_LIMIT_REACHED") return { status: "error", message: await motifPlafondMembres(db, compte.compteId) };
     return refus(e, "inviter");
+  }
+  // Une baisse planifiée au même instant que cette invitation : la seconde
+  // vérification la voit, et l'invitation de trop est retirée.
+  const apres = await refusInvitationBaissePrevue(db, compte.compteId, { apresCreation: true });
+  if (apres && invitationId) {
+    const retirer = async () => auth.api.cancelInvitation({ headers: await entetesDeSession(), body: { invitationId } });
+    await retirer().catch(retirer).catch((e: unknown) =>
+      console.error(JSON.stringify({ type: "membres_invitation_non_retiree", invitationId, code: codeDe(e) })),
+    );
+    return { status: "error", message: apres };
   }
   revalidatePath(PAGE);
   return { status: "success", message: `Invitation envoyée à ${lu.data.email}.` };

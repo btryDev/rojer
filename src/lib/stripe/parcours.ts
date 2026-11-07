@@ -213,6 +213,139 @@ export async function appliquerFormule(
   return factureARegler(stripe, repris.latest_invoice);
 }
 
+/**
+ * Monter de formule (ADR-053 § 10, client qui paie) : tout de suite, la
+ * différence facturée au prorata et prélevée aussitôt. `pending_if_incomplete`
+ * : la nouvelle formule ne s'applique que si ce paiement passe — sinon
+ * l'abonnement garde l'ancienne, et la facture attend (rendue à régler). Une
+ * baisse déjà planifiée est abandonnée d'abord : le dernier choix l'emporte.
+ */
+export async function monterDeFormule(stripe: Stripe, abonnement: Stripe.Subscription, priceId: string): Promise<string | null> {
+  const item = abonnement.items.data[0];
+  if (!item || item.price.id === priceId) return null;
+  // La mise à jour d'abord : si elle échoue, la baisse prévue reste intacte.
+  const misAJour = await stripe.subscriptions.update(
+    abonnement.id,
+    {
+      items: [{ id: item.id, price: priceId }],
+      proration_behavior: "always_invoice",
+      payment_behavior: "pending_if_incomplete",
+      expand: ["latest_invoice"],
+    },
+    { idempotencyKey: `monter-${abonnement.id}-${item.price.id}-${priceId}` },
+  );
+  // La montée est faite : rendre la baisse prévue ne doit pas la faire passer
+  // pour un échec. Si Stripe refuse, la page montre encore la baisse et
+  // propose « Garder ma formule ».
+  const planning = idStripe(abonnement.schedule);
+  if (planning) {
+    try {
+      await stripe.subscriptionSchedules.release(planning);
+    } catch (e) {
+      console.error(`stripe : baisse prévue non rendue après une montée (${planning}) — ${e instanceof Error ? e.name : "erreur"}`);
+    }
+  }
+  return factureARegler(stripe, misAJour.latest_invoice);
+}
+
+/**
+ * Baisser de formule (client qui paie) : à la FIN de la période payée, sans
+ * crédit (pratique courante — Notion, Airtable, HubSpot). Un planning Stripe
+ * (« subscription schedule ») porte la période en cours, puis la nouvelle
+ * formule, et rend l'abonnement à lui-même ensuite (`release`).
+ */
+export async function planifierBaisse(
+  stripe: Stripe,
+  abonnement: Stripe.Subscription,
+  { priceId, intervalle }: { priceId: string; intervalle: "month" | "year" },
+): Promise<void> {
+  const item = abonnement.items.data[0];
+  if (!item) return;
+  // Stripe refuse un planning sur un abonnement réglé pour se mettre en pause à
+  // la fin de l'essai (réglage de l'essai, §§ 8-9) : une fois payant, il ne
+  // sert plus, on le rend à sa valeur par défaut.
+  if (abonnement.trial_settings?.end_behavior?.missing_payment_method === "pause") {
+    await stripe.subscriptions.update(abonnement.id, {
+      trial_settings: { end_behavior: { missing_payment_method: "create_invoice" } },
+    });
+  }
+  const existant = idStripe(abonnement.schedule);
+  const planning = existant
+    ? await stripe.subscriptionSchedules.retrieve(existant)
+    : await stripe.subscriptionSchedules.create({ from_subscription: abonnement.id });
+  const enCours = planning.current_phase ?? planning.phases[0];
+  try {
+    await stripe.subscriptionSchedules.update(planning.id, {
+    end_behavior: "release",
+    proration_behavior: "none",
+    phases: [
+      {
+        items: [{ price: item.price.id, quantity: item.quantity ?? 1 }],
+        start_date: enCours.start_date,
+        end_date: enCours.end_date,
+      },
+      // Une période dans la nouvelle formule, puis l'abonnement continue seul.
+      { items: [{ price: priceId, quantity: 1 }], duration: { interval: intervalle, interval_count: 1 } },
+    ],
+    });
+  } catch (e) {
+    // Un planning créé ici sans sa baisse bloquerait le portail sans rien
+    // afficher : on le rend avant de remonter l'erreur.
+    if (!existant) {
+      try {
+        await stripe.subscriptionSchedules.release(planning.id);
+      } catch {
+        // L'erreur d'origine est celle qui compte ; le planning seul se rendra à la notification suivante.
+      }
+    }
+    throw e;
+  }
+}
+
+/**
+ * Le planning d'une baisse a fait son office (la nouvelle formule court, plus
+ * de phase à venir) : on le rend, sinon il resterait attaché une période
+ * entière et le portail refuserait toute résiliation (doc du portail).
+ */
+export async function rendrePlanningEchu(stripe: Stripe, abonnement: Stripe.Subscription): Promise<void> {
+  const id = idStripe(abonnement.schedule);
+  if (!id) return;
+  const planning = await stripe.subscriptionSchedules.retrieve(id);
+  // L'heure est celle de Stripe (la phase en cours qu'il désigne), pas celle du
+  // serveur : une horloge de simulation la décale. Un planning tout juste créé
+  // n'a encore qu'une phase : `planifierBaisse` y ajoute la baisse dans la
+  // foulée ; ne rendre que ceux qui ont porté une baisse, ou un orphelin de
+  // plus de cinq minutes.
+  const enCours = planning.current_phase;
+  const derniere = planning.phases.at(-1);
+  if (!enCours || !derniere || planning.status !== "active") return;
+  const aPorteUneBaisse = planning.phases.length > 1 || planning.created < Math.floor(Date.now() / 1000) - 300;
+  if (aPorteUneBaisse && enCours.start_date >= derniere.start_date) await stripe.subscriptionSchedules.release(id);
+}
+
+/** Renoncer à une baisse planifiée : l'abonnement reste sur sa formule. */
+export async function annulerBaisse(stripe: Stripe, abonnement: Stripe.Subscription): Promise<void> {
+  const planning = idStripe(abonnement.schedule);
+  if (planning) await stripe.subscriptionSchedules.release(planning);
+}
+
+/** La baisse planifiée d'un abonnement, s'il y en a une : le prix visé et la date. */
+export async function baissePrevue(
+  stripe: Stripe,
+  abonnement: Stripe.Subscription,
+): Promise<{ priceId: string; lookupKey: string | null; le: Date } | null> {
+  const id = idStripe(abonnement.schedule);
+  if (!id) return null;
+  const planning = await stripe.subscriptionSchedules.retrieve(id, { expand: ["phases.items.price"] });
+  // La phase qui suit celle en cours, selon Stripe (voir `rendrePlanningEchu`).
+  const depuis = planning.current_phase?.start_date ?? Math.floor(Date.now() / 1000);
+  const suivante = planning.phases.find((p) => p.start_date > depuis);
+  const prix = suivante?.items[0]?.price;
+  if (!suivante || !prix) return null;
+  const lookupKey = typeof prix !== "string" && "lookup_key" in prix ? prix.lookup_key : null;
+  return { priceId: typeof prix === "string" ? prix : prix.id, lookupKey, le: new Date(suivante.start_date * 1000) };
+}
+
 export type PrixAffiche = { priceId: string; montantCentimes: number; devise: string };
 
 let cachePrix: { lu: number; prix: ReadonlyMap<string, PrixAffiche> } | undefined;

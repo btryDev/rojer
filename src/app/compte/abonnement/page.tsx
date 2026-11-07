@@ -10,6 +10,11 @@ import Link from "next/link";
 import { ouvrirPortailAction } from "@/lib/abonnements/actions";
 import { FormulaireAbonnement, type OffreAffichee } from "@/components/abonnements/FormulaireAbonnement";
 import { FinalisationCarte } from "@/components/abonnements/FinalisationCarte";
+import { ChangerDeFormule, type OptionDeFormule } from "@/components/abonnements/ChangerDeFormule";
+import { sensDuChangement } from "@/lib/abonnements/changement";
+import { depassements } from "@/lib/abonnements/quotas";
+import { eurosHT } from "@/lib/abonnements/affichage";
+import { baissePrevue } from "@/lib/stripe/parcours";
 import { carteParDefaut } from "@/lib/abonnements/souscription";
 import { clientStripe } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
@@ -52,6 +57,78 @@ async function carteDuCompte(db: Db, compteId: string): Promise<boolean> {
   return carteParDefaut(clientStripe(config), ligne.stripeCustomerId).then((c) => c !== null, () => false);
 }
 
+/** Ce que fait un changement de formule, dit avant le clic — le changement de rythme compris. */
+function effetDuChangement(sens: "montee" | "baisse", actuelle: string | null, visee: string, finPeriode: Date | null): string {
+  if (sens === "baisse") {
+    const fin = finPeriode ? `le ${formaterDateLongueFr(finPeriode)}` : "à la fin de la période payée";
+    return `À la fin de votre période payée, ${fin}, sans remboursement de la période en cours.`;
+  }
+  const de = formuleDeLookupKey(actuelle)?.periodicite;
+  const vers = formuleDeLookupKey(visee)?.periodicite;
+  if (de === "mensuel" && vers === "annuel") {
+    return "Tout de suite : l'année est prélevée maintenant, moins ce qui reste de votre mois en cours.";
+  }
+  if (de === "annuel" && vers === "mensuel") {
+    return "Tout de suite : votre période repart aujourd'hui ; ce qui reste de votre année est déduit du nouveau prix, et la différence éventuelle est prélevée maintenant.";
+  }
+  return "Tout de suite : la différence pour la période en cours est prélevée maintenant.";
+}
+
+/**
+ * Les formules vers lesquelles un abonnement qui paie peut aller, avec, pour
+ * chacune, son sens (montée tout de suite, baisse en fin de période) et ce qui
+ * dépasserait ; et la baisse déjà planifiée. Sans réponse de Stripe : rien.
+ */
+async function changementsPossibles(
+  db: Db,
+  compteId: string,
+  actuelle: string | null,
+  finPeriode: Date | null,
+): Promise<{ options: OptionDeFormule[]; baisse: { libelle: string; le: Date } | null }> {
+  const config = configurationStripe();
+  if (!config.active) return { options: [], baisse: null };
+  const stripe = clientStripe(config);
+  const [prix, ligne] = await Promise.all([
+    prixDesFormules(stripe).catch(() => new Map()),
+    db.abonnement.findUnique({ where: { compteId }, select: { stripeSubscriptionId: true } }),
+  ]);
+  const libelleDe = (cle: string) => {
+    const f = formuleDeLookupKey(cle);
+    return f ? `${FORMULES[f.formule].libelle}, ${LIBELLE_PERIODICITE[f.periodicite].adjectif}` : cle;
+  };
+  const options = await Promise.all(
+    CLES_FORMULES.flatMap((f) => PERIODICITES.map((p) => lookupKey(f, p)))
+      .map((cle) => ({ cle, sens: sensDuChangement(actuelle, cle) }))
+      .filter((o): o is { cle: string; sens: "montee" | "baisse" } => o.sens === "montee" || o.sens === "baisse")
+      .map(async ({ cle, sens }) => {
+        const f = formuleDeLookupKey(cle)!;
+        const montant = prix.get(cle)?.montantCentimes;
+        return {
+          cle,
+          sens,
+          effet: effetDuChangement(sens, actuelle, cle, finPeriode),
+          libelle: libelleDe(cle),
+          prix: montant ? `${eurosHT(montant)} HT par ${LIBELLE_PERIODICITE[f.periodicite].unite}` : null,
+          depassements: sens === "baisse" ? await depassements(db, compteId, cle) : [],
+        };
+      }),
+  );
+  let baisse: { libelle: string; le: Date } | null = null;
+  let baisseCle: string | null = null;
+  if (ligne?.stripeSubscriptionId) {
+    const prevue = await stripe.subscriptions
+      .retrieve(ligne.stripeSubscriptionId)
+      .then((s) => baissePrevue(stripe, s))
+      .catch(() => null);
+    if (prevue) {
+      baisse = { libelle: prevue.lookupKey ? libelleDe(prevue.lookupKey) : "une autre formule", le: prevue.le };
+      baisseCle = prevue.lookupKey;
+    }
+  }
+  // La formule déjà prévue ne se propose pas une seconde fois.
+  return { options: baisseCle ? options.filter((o) => o.cle !== baisseCle) : options, baisse };
+}
+
 /** Les formules et leurs prix lus chez Stripe ; sans réponse, les prix manquent et le bouton reste fermé. */
 async function offresAffichees(): Promise<OffreAffichee[]> {
   const config = configurationStripe();
@@ -68,6 +145,16 @@ async function offresAffichees(): Promise<OffreAffichee[]> {
 }
 
 
+/** Ce que la page dit après un changement de formule (`changerFormuleAction`). */
+const MESSAGES_FORMULE = {
+  changee: "C'est fait : votre nouvelle formule s'applique dès maintenant.",
+  prevue: "C'est noté : votre nouvelle formule s'appliquera à la fin de la période payée.",
+  gardee: "Vous gardez votre formule actuelle.",
+  impossible: "Le changement de formule n'est possible que pour un abonnement à jour de ses paiements.",
+  "resiliation-prevue": "Votre abonnement prend fin à la date prévue : reprenez-le d'abord depuis « Gérer mon abonnement » pour changer de formule.",
+  "trop-d-utilisateurs": "Cette formule permet moins d'utilisateurs que votre compte n'en a : retirez-en d'abord depuis Membres du compte.",
+} as const;
+
 export default async function AbonnementPage({
   searchParams,
 }: {
@@ -78,13 +165,15 @@ export default async function AbonnementPage({
     abonnement?: string;
     carte?: string;
     immediat?: string;
+    formule?: string;
   }>;
 }) {
   // Sans compte encore (rien créé), la page se lit quand même : aucun
   // abonnement (ADR-054). `requireCompte` renverrait à l'onboarding.
   await requireUser();
   const c = await getOptionalCompte();
-  const { saisie, stripe, paiement, abonnement, carte, immediat } = await searchParams;
+  const { saisie, stripe, paiement, abonnement, carte, immediat, formule: formuleChange0 } = await searchParams;
+  const formuleChange = formuleChange0 && formuleChange0 in MESSAGES_FORMULE ? (formuleChange0 as keyof typeof MESSAGES_FORMULE) : null;
   const ctx = contexteDroits();
   const ouvert = offreLancee(ctx);
   // Une seule lecture : la ligne sert à l'état affiché et aux droits.
@@ -102,6 +191,12 @@ export default async function AbonnementPage({
   // démarrera seul à la fin de l'essai ; on peut encore en changer.
   const carteEnregistree =
     geste === "abonner" && ligne?.statut === "trialing" && c ? await carteDuCompte(c.db, c.compte.compteId) : false;
+  // Changer de formule : un abonnement qui paie, pour son propriétaire.
+  const { options: optionsChangement, baisse } =
+    // Une résiliation prévue : on ne change pas une formule qui s'arrête.
+    geste === "portail" && ligne?.statut === "active" && !ligne.resilieEnFinDePeriode && !ligne.finPrevueLe && c
+      ? await changementsPossibles(c.db, c.compte.compteId, ligne.formule, ligne.finPeriode)
+      : { options: [], baisse: null };
   const finEssai = ligne?.finEssai ? `, le ${formaterDateLongueFr(ligne.finEssai)}` : "";
   const quand =
     geste === "souscrire"
@@ -204,7 +299,9 @@ export default async function AbonnementPage({
           <MessageFormulaire ton="info">
             {paiement === "termine"
               ? "Paiement terminé. Votre abonnement s'affiche ici dans quelques secondes : rechargez la page s'il n'apparaît pas."
-              : paiementEnConfirmation
+              : formuleChange
+                ? MESSAGES_FORMULE[formuleChange]
+                : paiementEnConfirmation
                 ? "Le premier paiement est en cours : les fonctions réservées aux abonnés s'ouvrent dès qu'il est confirmé. Inutile de payer de nouveau."
                 : abonnement === "en-cours"
                 ? "Un abonnement est déjà en cours pour ce compte : gérez-le ici plutôt que d'en souscrire un second."
@@ -234,11 +331,17 @@ export default async function AbonnementPage({
                 </Link>
               </>
             )}
+            {geste === "portail" && optionsChangement.length > 0 && (
+              <ChangerDeFormule options={optionsChangement} baisse={baisse} />
+            )}
             {geste === "portail" && (
-              <form action={ouvrirPortailAction}>
+              <form action={ouvrirPortailAction} className={optionsChangement.length > 0 ? "mt-6" : undefined}>
                 <p className="m-0 mt-2 mb-5 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                   Changer de carte, résilier, télécharger vos factures : sur la page sécurisée de Stripe, notre
                   prestataire de paiement.
+                  {baisse
+                    ? " Un changement de formule est prévu : pour résilier, choisissez d'abord « Garder ma formule »."
+                    : null}
                 </p>
                 <Button type="submit" variant="board" size="board">
                   Gérer mon abonnement
