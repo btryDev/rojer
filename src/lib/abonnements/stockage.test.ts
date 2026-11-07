@@ -4,9 +4,13 @@ vi.mock("server-only", () => ({}));
 const h = vi.hoisted(() => ({ etatStripe: vi.fn(), put: vi.fn(async () => {}) }));
 vi.mock("@/lib/stripe/config", () => ({ etatStripe: h.etatStripe }));
 vi.mock("@/lib/storage", () => ({ getStorage: () => ({ put: h.put }) }));
+vi.mock("@/lib/suppression/fichiers", async (original) => ({
+  ...(await original<typeof import("@/lib/suppression/fichiers")>()),
+  libererFichiers: vi.fn(async () => {}),
+}));
 
 import type { Db } from "@/lib/auth/compte";
-import { clesDeFichiers, deposerFichier, octetsUtilises, rendreReservations } from "./stockage";
+import { clesDeFichiers, deposerFichier, octetsUtilises, abandonnerFichiers } from "./stockage";
 
 const GO = 1e9;
 
@@ -79,7 +83,7 @@ describe("le plafond de stockage (ADR-053 § 14)", () => {
     expect(db.fichierStocke.upsert.mock.invocationCallOrder[0]).toBeLessThan(h.put.mock.invocationCallOrder[0]);
     h.put.mockRejectedValueOnce(new Error("stockage indisponible"));
     await expect(deposerFichier(db as unknown as Db, "c1", "autre", Buffer.alloc(11), "application/pdf")).rejects.toThrow("stockage indisponible");
-    expect(db.fichierStocke.deleteMany).toHaveBeenCalledWith({ where: { cle: "autre" } });
+    expect(db.fichierStocke.deleteMany).toHaveBeenCalledWith({ where: { cle: { in: ["autre"] } } });
   });
 
   it("avant le lancement : ni verrou ni refus ; le dépôt, puis la taille", async () => {
@@ -91,13 +95,13 @@ describe("le plafond de stockage (ADR-053 § 14)", () => {
   });
 });
 
-describe("rendreReservations", () => {
-  it("un dépôt abandonné rend sa réservation, et une erreur ne remonte pas", async () => {
+describe("abandonnerFichiers", () => {
+  it("un fichier abandonné rend sa réservation ; aucune clé, aucun appel ; une erreur ne remonte pas", async () => {
     const deleteMany = vi.fn().mockResolvedValue({ count: 2 });
-    await rendreReservations({ fichierStocke: { deleteMany } } as unknown as Db, ["a", "b"]);
+    await abandonnerFichiers({ fichierStocke: { deleteMany } } as unknown as Db, ["a", null, "b", ""], "test");
     expect(deleteMany).toHaveBeenCalledWith({ where: { cle: { in: ["a", "b"] } } });
-    await rendreReservations({ fichierStocke: { deleteMany } } as unknown as Db, []);
+    await abandonnerFichiers({ fichierStocke: { deleteMany } } as unknown as Db, [null], "test");
     expect(deleteMany).toHaveBeenCalledTimes(1);
-    await expect(rendreReservations({} as unknown as Db, ["a"])).resolves.toBeUndefined();
+    await expect(abandonnerFichiers({} as unknown as Db, ["a"], "test")).resolves.toBeUndefined();
   });
 });

@@ -30,7 +30,7 @@ import {
 import { estSiretEnDouble, MESSAGE_SIRET_EN_DOUBLE } from "./siret-en-double";
 import { piecesRemplacees } from "./pieces";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
-import { prendreQuota, refusQuota, RefusQuota } from "@/lib/abonnements/quotas";
+import { motifDuGel, prendreQuota, refusQuota, RefusQuota } from "@/lib/abonnements/quotas";
 
 export type PrestataireActionState =
   | { status: "idle" }
@@ -105,9 +105,18 @@ async function deposerPieces(
   const storage = stockageEnService() ? getStorage() : null;
   const colonnes: Partial<Record<ColonnePiece, string>> = {};
   const cles: string[] = [];
+  // Un prestataire gelé (au-delà du plafond, ADR-053 § 14) l'est indépendamment
+  // de son site : refusé avant tout téléversement, comme le site l'est par
+  // `deposerFichier`.
+  let gelVerifie = false;
   for (const piece of CHAMPS_PIECES) {
     const fichier = formData.get(piece.champ);
     if (!(fichier instanceof File) || fichier.size === 0) continue;
+    if (!gelVerifie) {
+      gelVerifie = true;
+      const gel = await motifDuGel(db, compteId, { prestataireId });
+      if (gel) return { ok: false, champ: piece.champ, message: gel };
+    }
 
     const val = await validerFichier(fichier);
     let erreur: string | null = null;

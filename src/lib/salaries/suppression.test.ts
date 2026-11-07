@@ -114,6 +114,8 @@ const h = vi.hoisted(() => {
     action: {
       count: async ({ where }: { where: { verification: L } }) =>
         db.actions.filter(surLigne(where)).length,
+      findMany: async ({ where }: { where: { verification: L; leveeFichierCle?: unknown } }) =>
+        db.actions.filter((a) => surLigne(where)(a) && (a as L).leveeFichierCle != null),
       deleteMany: async ({ where }: { where: { etablissementId: unknown; verification: L } }) => {
         db.actions = db.actions.filter(
           (a) => !(surLigne(where)(a) && eq(where.etablissementId, a.etablissementId)),
@@ -236,8 +238,8 @@ function semer() {
       { id: "r-etab", etablissementId: "etab-a", verificationId: "v-etab", fichierCle: "cle/r-etab.pdf" },
     ],
     actions: [
-      { id: "a-1a", etablissementId: "etab-a", verificationId: "v-1a" },
-      { id: "a-2a", etablissementId: "etab-a", verificationId: "v-2a" },
+      { id: "a-1a", etablissementId: "etab-a", verificationId: "v-1a", leveeFichierCle: "cle/levee-1a.pdf" },
+      { id: "a-2a", etablissementId: "etab-a", verificationId: "v-2a", leveeFichierCle: "cle/levee-2a.pdf" },
     ],
     signatures: [
       { id: "s-1a", etablissementId: "etab-a", objetType: "rapport_verification", objetId: "r-1a" },
@@ -267,7 +269,7 @@ describe("« Supprimer ce salarié » efface tout ce qui le vise, et rien d'autr
     expect(ids(h.db.rapports)).toEqual(["r-2a", "r-etab"]);
     expect(ids(h.db.actions)).toEqual(["a-2a"]);
     expect(ids(h.db.signatures)).toEqual(["s-2a", "s-autre"]);
-    expect(h.stockage.delete.mock.calls.map((c) => c[0])).toEqual(["cle/r-1a.pdf"]);
+    expect(h.stockage.delete.mock.calls.map((c) => c[0])).toEqual(["cle/r-1a.pdf", "cle/levee-1a.pdf"]);
   });
 
   it("verrouille ses lignes avant d'en effacer les preuves (2026-10-28)", async () => {

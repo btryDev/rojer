@@ -41,19 +41,24 @@ describe("deposerFichier sur un site gelé", () => {
 });
 
 describe("un seul chemin pour effacer un fichier", () => {
-  const racine = join(process.cwd(), "src/lib");
+  const racine = join(process.cwd(), "src");
   const fichiers = (dossier: string): string[] =>
     readdirSync(dossier).flatMap((n) => {
       const p = join(dossier, n);
       return statSync(p).isDirectory() ? fichiers(p) : /\.tsx?$/.test(n) && !/\.test\.tsx?$/.test(n) ? [p] : [];
     });
-  // La définition, et la seule fonction qui l'appelle.
-  const PERMIS = new Set(["suppression/fichiers.ts", "abonnements/stockage.ts"]);
+  // Le stockage lui-même, la définition de `libererFichiers`, et la seule
+  // fonction qui l'appelle.
+  const PERMIS = (r: string) =>
+    r.startsWith("lib/storage/") || r === "lib/suppression/fichiers.ts" || r === "lib/abonnements/stockage.ts";
+  // Effacer sans rendre la ligne du plafond : `libererFichiers`, ou le
+  // stockage en direct (`getStorage().delete(`, `storage?.delete(`).
+  const EFFACEMENT = /\b(libererFichiers|rendreReservations)\(|getStorage\(\)\s*\.delete\(|\bstorage\??\.delete\(/;
 
-  it("aucun module n'appelle `libererFichiers` en direct : il passe par `abandonnerFichiers`", () => {
+  it("aucun module n'efface un fichier en direct : il passe par `abandonnerFichiers`", () => {
     const fautifs = fichiers(racine)
       .map((p) => p.slice(racine.length + 1))
-      .filter((r) => !PERMIS.has(r) && /\blibererFichiers\(/.test(readFileSync(join(racine, r), "utf8")));
+      .filter((r) => !PERMIS(r) && EFFACEMENT.test(readFileSync(join(racine, r), "utf8")));
     expect(fautifs).toEqual([]);
   });
 });

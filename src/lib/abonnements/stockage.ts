@@ -88,7 +88,7 @@ export async function deposerFichier(
   try {
     await getStorage().put(cle, data, mime);
   } catch (e) {
-    await db.fichierStocke.deleteMany({ where: { cle } }).catch(() => {});
+    await rendreReservations(db, [cle]);
     throw e;
   }
   return null;
@@ -117,7 +117,7 @@ export async function abandonnerFichiers(db: Db, cles: (string | null | undefine
  * à tort. À appeler avec l'effacement des fichiers. Un échec ne fait que
  * compter trop, jamais trop peu.
  */
-export async function rendreReservations(db: Db, cles: string[]): Promise<void> {
+async function rendreReservations(db: Db, cles: string[]): Promise<void> {
   if (cles.length === 0) return;
   try {
     await db.fichierStocke.deleteMany({ where: { cle: { in: cles } } });

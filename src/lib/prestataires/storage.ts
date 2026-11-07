@@ -47,7 +47,7 @@ export async function deletePiecesPrestataire(db: Db, prestataire: {
       prestataire.assuranceRcProCle,
       prestataire.kbisCle,
       ...(prestataire.piecesPrecedentes ?? []).map((p) => p.fichierCle),
-    ].filter((c): c is string => typeof c === "string" && c.length > 0),
+    ],
     "prestataires/suppression",
   );
 }

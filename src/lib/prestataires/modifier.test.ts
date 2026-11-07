@@ -38,7 +38,7 @@ const h = vi.hoisted(() => {
     put: async (cle: string) => void stockage.ecrits.push(cle),
     delete: async (cle: string) => void stockage.liberes.push(cle),
   };
-  return { prisma, appels, reponses, stockage };
+  return { prisma, appels, reponses, stockage, prestataireGele: null as string | null };
 });
 
 vi.mock("@/lib/prisma", () => ({ prisma: h.prisma }));
@@ -50,6 +50,11 @@ vi.mock("@/lib/auth/scope", () => ({
     compte: { compteId: "c1", role: "owner" },
     db: await (await import("@/test/garde-simulee")).clientDuCompteSimule(),
   }),
+}));
+vi.mock("@/lib/abonnements/quotas", async (original) => ({
+  ...(await original<typeof import("@/lib/abonnements/quotas")>()),
+  motifDuGel: async (_db: unknown, _c: string, cible: { prestataireId?: string }) =>
+    cible.prestataireId === h.prestataireGele ? "Ce prestataire dépasse votre formule." : null,
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
@@ -101,6 +106,7 @@ const FICHE = {
 };
 
 beforeEach(() => {
+  h.prestataireGele = null;
   h.appels.length = 0;
   h.stockage.ecrits.length = 0;
   h.stockage.liberes.length = 0;
@@ -173,6 +179,14 @@ describe("modifierPrestataire", () => {
         valableJusquA: FICHE.attestationUrssafValableJusquA,
       },
     ]);
+  });
+
+  it("un prestataire gelé (ADR-053 § 14) : la pièce est refusée avant tout téléversement", async () => {
+    h.prestataireGele = "pre_1";
+    const r = await modifierPrestataire("e1", "pre_1", { status: "idle" }, saisie({ kbis: pdf() }));
+    expect(r.status).toBe("error");
+    expect(h.stockage.ecrits).toEqual([]);
+    expect(ecritures("prestataire.update")).toEqual([]);
   });
 
   it("une pièce jointe là où il n'y en avait pas n'inscrit rien", async () => {
