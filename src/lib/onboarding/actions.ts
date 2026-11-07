@@ -110,14 +110,19 @@ export async function finaliserOnboarding(
   const siren = sirenDuSiret(d.siret);
 
   // Un essai par entreprise (ADR-053 § 8) : pendant un essai, une entreprise
-  // déjà essayée par un autre compte ne se crée pas. Rien n'est créé.
+  // déjà essayée par un autre compte ne se CRÉE pas. Un site de plus d'une
+  // entreprise que le compte suit déjà n'est pas concerné. Le message seul,
+  // sans le champ : il ne s'agit pas de corriger le SIRET.
   const enEssai = await compteEnEssai(db, compte.compteId);
-  if (enEssai && (await sirenEssayeAilleurs(siren, compte.compteId))) {
-    return {
-      status: "error",
-      message: MESSAGE_ENTREPRISE_DEJA_ESSAYEE,
-      fieldErrors: { siret: [MESSAGE_ENTREPRISE_DEJA_ESSAYEE] },
-    };
+  if (
+    enEssai &&
+    !(await db.entreprise.findUnique({
+      where: { compteId_siren: { compteId: compte.compteId, siren } },
+      select: { id: true },
+    })) &&
+    (await sirenEssayeAilleurs(siren, compte.compteId))
+  ) {
+    return { status: "error", message: MESSAGE_ENTREPRISE_DEJA_ESSAYEE };
   }
 
   let result;

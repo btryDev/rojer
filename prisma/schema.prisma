@@ -2463,8 +2463,8 @@ model Abonnement {
 }
 
 // Un essai par entreprise (ADR-053 § 8) : le SIREN d'une entreprise créée
-// pendant un essai, et le compte qui l'a créée. Un autre compte qui crée la
-// même entreprise pendant son propre essai voit cet essai finir aussitôt.
+// pendant un essai, et le compte qui l'a créée. Un autre compte ne peut pas
+// la créer tant que son propre essai court (refus à l'onboarding).
 // Hors compte (ADR-051) : lue à travers les comptes, sans clé étrangère, et
 // gardée après la suppression d'un compte — sinon supprimer et recréer
 // rouvrirait un essai.

@@ -139,7 +139,11 @@ et sans croire une information qui ne vient pas de Stripe.
    juste suffit pour un second essai, faute d'intégration SIRENE) ; une
    entreprise sans SIREN qui le reçoit plus tard par la fiche établissement,
    ou un compte d'avant le lancement qui démarre son essai avec des
-   entreprises déjà créées, ne sont pas notés.]
+   entreprises déjà créées, ne sont pas notés ; un site de plus d'une
+   entreprise que le compte suit déjà n'est jamais refusé ; un compte en
+   essai peut apprendre, refus après refus, qu'un SIREN a déjà eu un essai
+   Rojer ailleurs — une information commerciale, pas personnelle, sans
+   aucun accès au dossier.]
 9. **L'essai est un abonnement Stripe créé par l'API** :
    `trial_period_days=30`, sans moyen de paiement,
    `trial_settings.end_behavior.missing_payment_method=pause`. Pendant

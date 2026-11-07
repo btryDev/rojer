@@ -83,6 +83,13 @@ vi.mock("@/lib/entreprises/effectif", () => ({
 }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
+    // L'entreprise déjà suivie par le compte (un essai par entreprise).
+    entreprise: {
+      findUnique: async (args: { where: { compteId_siren: { compteId: string; siren: string } } }) => {
+        const { compteId, siren } = args.where.compteId_siren;
+        return h.entreprises.get(`${compteId}|${siren}`) ?? null;
+      },
+    },
     // « commit » marque la fin de la transaction : la génération doit venir
     // APRÈS, sur des lignes validées — placée dans le callback, elle lirait un
     // établissement que la base ne voit pas encore.
@@ -191,7 +198,7 @@ describe("un essai par entreprise (ADR-053 § 8)", () => {
   it("pendant l'essai, un SIREN déjà essayé ailleurs : refusé, rien n'est créé ni noté", async () => {
     essai.ailleurs.mockResolvedValue(true);
     const r = await finaliserOnboarding({ status: "idle" }, formulaire());
-    expect(r).toMatchObject({ status: "error", fieldErrors: { siret: ["Cette entreprise a déjà bénéficié d'un essai."] } });
+    expect(r).toEqual({ status: "error", message: "Cette entreprise a déjà bénéficié d'un essai." });
     expect(essai.ailleurs).toHaveBeenCalledWith("120027016", expect.any(String));
     expect(h.tx.entreprise.upsert).not.toHaveBeenCalled();
     expect(essai.noter).not.toHaveBeenCalled();
@@ -201,6 +208,17 @@ describe("un essai par entreprise (ADR-053 § 8)", () => {
     await expect(finaliserOnboarding({ status: "idle" }, formulaire())).rejects.toThrow("NEXT_REDIRECT");
     expect(essai.noter).toHaveBeenCalledWith("120027016", expect.any(String));
     expect(essai.noter.mock.invocationCallOrder[0]).toBeGreaterThan(h.tx.etablissement.create.mock.invocationCallOrder[0]);
+  });
+
+  it("un site de plus d'une entreprise que le compte suit déjà : jamais refusé", async () => {
+    essai.ailleurs.mockResolvedValue(true);
+    essai.enEssai.mockResolvedValue(false);
+    await expect(finaliserOnboarding({ status: "idle" }, formulaire())).rejects.toThrow("NEXT_REDIRECT");
+    essai.enEssai.mockResolvedValue(true);
+    h.tx.etablissement.create.mockClear();
+    await expect(finaliserOnboarding({ status: "idle" }, formulaire())).rejects.toThrow("NEXT_REDIRECT");
+    expect(h.tx.etablissement.create).toHaveBeenCalled();
+    expect(essai.ailleurs).not.toHaveBeenCalled();
   });
 
   it("hors essai : ni contrôle ni note", async () => {
