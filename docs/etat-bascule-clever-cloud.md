@@ -85,6 +85,13 @@ connecteur MCP OAuth de Supabase n'existe plus — garder la suppression de
   renvoie elle-même à `/login` par `requireUser()`. Report de `main` du même
   jour : #182, #185 (la même limite, sans conflit), #186. À vérifier au
   premier déploiement : « Ce qui reste avant la bascule ».
+- **Report de `main`** (2026-11-06, #203) : écrits annexés au registre et à
+  l'export contrôle (#193), puis le référentiel `2026-11-06.1` (#200) et
+  `2026-11-06.2` (#201, plan d'intervention à l'entrée, PE 27 § 6). Sur `cc` :
+  dépôt d'une pièce par `deposerFichier` (plafond de stockage, ADR-053 § 14)
+  et `verifierSaisie()` en tête ; le registre et le ZIP se lisent avec le
+  compte qui les bâtit (`AccesCompte`), sans relire la session. Les cinq
+  points communs aux dépôts relevés à la relecture sont traités par #212.
 
 ### Multi-utilisateurs : ce qui reste (2026-11-03)
 
@@ -118,6 +125,9 @@ connecteur MCP OAuth de Supabase n'existe plus — garder la suppression de
 
 Gestes de la propriétaire (Clever Cloud) :
 1. Créer l'application et les add-ons : PostgreSQL, stockage Cellar (S3).
+   [2026-11-07 : pas encore fait — le compte Clever Cloud ne porte que
+   l'application « riskboard » ; `scripts/deployer-cc.sh` n'a donc rien à
+   déployer.]
 2. Poser les variables : `BETTER_AUTH_SECRET`, `PUBLIC_APP_URL`,
    `BASE_CA_PEM`, celles de Mailpace (nom exact à confirmer :
    `MAILPACE_API_TOKEN`), `STORAGE_DRIVER=s3` et celles du stockage. En
