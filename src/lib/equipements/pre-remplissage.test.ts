@@ -26,7 +26,7 @@ describe("suggererEquipements — secteurs cibles V2", () => {
     expect(cats).toContain("EXTINCTEUR");
     expect(cats).toContain("BAES");
     expect(cats).toContain("ALARME_INCENDIE");
-    expect(cats).toContain("VMC");
+    expect(cats).toContain("VENTILATION");
     expect(cats).toContain("INSTALLATION_FRIGORIFIQUE");
   });
 
@@ -126,7 +126,7 @@ describe("suggererEquipements — secteurs cibles V2", () => {
     expect(cats).toContain("INSTALLATION_ELECTRIQUE");
     expect(cats).toContain("BAES");
     expect(cats).toContain("ALARME_INCENDIE");
-    expect(cats).toContain("VMC");
+    expect(cats).toContain("VENTILATION");
     expect(cats).toContain("EXTINCTEUR");
     // pas d'équipement ERP propre (MS 73…) puisque estERP=false
     expect(cats).not.toContain("DESENFUMAGE");
@@ -169,7 +169,7 @@ describe("suggererEquipements — secteurs cibles V2", () => {
       estHabitation: true, categorieErp: null, typesErp: [],
     });
     const cats = categories(r);
-    expect(cats).toContain("VMC");
+    expect(cats).toContain("VENTILATION");
   });
 
   it("établissement sans aucun régime (cas improbable) — suggère rien", () => {
@@ -194,7 +194,7 @@ describe("suggererEquipements — secteurs cibles V2", () => {
     const cats = categories(r);
     // aucune règle sectorielle, mais règles travail → élec, VMC, extincteurs
     expect(cats).toContain("INSTALLATION_ELECTRIQUE");
-    expect(cats).toContain("VMC");
+    expect(cats).toContain("VENTILATION");
     expect(cats).toContain("EXTINCTEUR");
     // pas de hotte (pas de restauration)
     expect(cats).not.toContain("HOTTE_PRO");

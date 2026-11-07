@@ -72,7 +72,8 @@ import { questionsExigeesPour, REGIME_TRAVAIL } from "@/lib/equipements/reponses
 import { entrepriseSchema } from "@/lib/entreprises/schema";
 import { leverPrescription } from "@/lib/prescriptions/actions";
 import { ajouterMesureCustom, modifierMesure } from "@/lib/mesures/actions";
-import { CATEGORIES_EQUIPEMENT, estCategorieEpi, type CategorieEquipement } from "@/lib/referentiels/types-communs";
+import { CATEGORIES_EQUIPEMENT, type CategorieEquipement } from "@/lib/referentiels/types-communs";
+import { QUESTION_DE_TYPE } from "@/lib/equipements/type-appareil";
 import { prescriptionRenforceSchema } from "@/lib/prescriptions/schema";
 import { salarieSchema } from "@/lib/salaries/schema";
 import { equipementSchema } from "@/lib/equipements/schema";
@@ -128,7 +129,9 @@ describe("creerEquipementsDepuisPreRemplissage — une entrée par catégorie au
   // acceptés les fournissent, comme le panneau.
   const reponses = (c: CategorieEquipement) =>
     Object.fromEntries(questionsExigeesPour(c, REGIME_TRAVAIL).map((q) => [q, false]));
-  const nonEpi = CATEGORIES_EQUIPEMENT.filter((c) => !estCategorieEpi(c as CategorieEquipement));
+  // ~~`nonEpi`~~ [2026-11-07, ADR-057 § 5 : le pré-remplissage refuse toute
+  // catégorie qui pose une question de type — la porte comme l'EPI.]
+  const sansType = CATEGORIES_EQUIPEMENT.filter((c) => !QUESTION_DE_TYPE[c as CategorieEquipement]);
 
   it("refuse 5 000 appareils en un appel et n'écrit rien", async () => {
     const entrees = Array.from({ length: 5000 }, () => ({ categorie: "EXTINCTEUR" as CategorieEquipement, libelle: "x" }));
@@ -159,25 +162,25 @@ describe("creerEquipementsDepuisPreRemplissage — une entrée par catégorie au
   });
   it("refuse un libellé d'1 Mo", async () => {
     const r = await creerEquipementsDepuisPreRemplissage("etab1", [
-      { categorie: nonEpi[0] as CategorieEquipement, libelle: "L".repeat(1_000_000) },
+      { categorie: sansType[0] as CategorieEquipement, libelle: "L".repeat(1_000_000) },
     ]);
     expect(r.status).toBe("error");
     expect(ecrit("equipement")).toHaveLength(0);
   });
   it("refuse deux entrées de la même catégorie, et une catégorie inconnue", async () => {
-    const c = nonEpi[0] as CategorieEquipement;
+    const c = sansType[0] as CategorieEquipement;
     expect((await creerEquipementsDepuisPreRemplissage("etab1", [{ categorie: c, libelle: "a" }, { categorie: c, libelle: "b" }])).status).toBe("error");
     expect((await creerEquipementsDepuisPreRemplissage("etab1", [{ categorie: "INVENTEE" as CategorieEquipement, libelle: "a" }])).status).toBe("error");
     expect(ecrit("equipement")).toHaveLength(0);
   });
   it("accepte une entrée par catégorie, toutes catégories confondues", async () => {
-    const entrees = nonEpi.map((c) => ({
+    const entrees = sansType.map((c) => ({
       categorie: c as CategorieEquipement,
       libelle: `Appareil ${c}`,
       caracteristiques: reponses(c as CategorieEquipement),
     }));
     const r = await creerEquipementsDepuisPreRemplissage("etab1", entrees);
-    expect(r).toMatchObject({ status: "success", created: nonEpi.length });
+    expect(r).toMatchObject({ status: "success", created: sansType.length });
   });
   it("accepte tout ce que l'écran peut envoyer : les suggestions du pré-remplissage", async () => {
     for (const estERP of [true, false]) {
@@ -191,7 +194,7 @@ describe("creerEquipementsDepuisPreRemplissage — une entrée par catégorie au
         expect(suggestions.length).toBeGreaterThan(0);
         ecritures.length = 0;
         const entrees = suggestions
-          .filter((s) => !estCategorieEpi(s.categorie))
+          .filter((s) => !QUESTION_DE_TYPE[s.categorie])
           .map((s) => ({ categorie: s.categorie, libelle: s.libelle, caracteristiques: reponses(s.categorie) }));
         const r = await creerEquipementsDepuisPreRemplissage("etab1", entrees);
         expect(r, `${codeNaf} ERP=${estERP}`).toMatchObject({ status: "success", created: entrees.length });

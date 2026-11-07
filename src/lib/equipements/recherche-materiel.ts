@@ -53,7 +53,7 @@ import {
  * validé par la propriétaire ; décisions de c6 du même jour) :
  *  - climatisation, climatiseur, pompe à chaleur, split → installation
  *    frigorifique (contrôle d'étanchéité du fluide, CH 35 § 3 c) dans l'aide) ;
- *    « climatisation » reste aussi sur la CTA : la recherche propose les deux,
+ *    « climatisation » reste aussi sur la ~~CTA~~ ventilation [2026-11-07] : la recherche propose les deux,
  *    l'aide de chaque catégorie borne ;
  *  - réservoir d'air comprimé → équipement sous pression ;
  *  - plateforme élévatrice mobile, PEMP, table élévatrice, pont élévateur →
@@ -82,7 +82,8 @@ import {
  *    enroulement compris (AFNOR, guide de motorisation de la FFB) ; même appui
  *    pour le rideau. NF EN 13241 non lue, champ cité d'après l'OPPBTP et la
  *    FFB. L'aide
- *    de la catégorie le dit (`DESCRIPTION_CATEGORIE.PORTAIL_AUTO`). Le volet
+ *    ~~de la catégorie le dit (`DESCRIPTION_CATEGORIE.PORTAIL_AUTO`)~~ du type
+ *    « portail » le dit (`type-appareil.ts`, 2026-11-07). Le volet
  *    roulant motorisé n'est PAS un synonyme (décision de c6 du même jour) : il
  *    reste un matériel non couvert ~~, à confirmer avec le préventeur dans la
  *    même note~~ [2026-10-18 : il ferme une fenêtre ou une vitrine, ni porte ni
@@ -95,22 +96,20 @@ export const SYNONYMES_CATEGORIE: Readonly<Record<CategorieEquipement, readonly 
   BAES: ["éclairage de secours", "bloc de secours", "BAES"],
   ALARME_INCENDIE: ["alarme", "détecteur de fumée", "SSI", "déclencheur manuel"],
   DESENFUMAGE: ["exutoire", "trappe de désenfumage"],
-  VMC: ["ventilation", "VMC", "aération", "extracteur d'air"],
-  CTA: ["traitement d'air", "climatisation", "CTA"],
+  // 2026-11-07, ADR-057 § 5 : les synonymes de ~~`VMC`~~ et ~~`CTA`~~ réunis.
+  VENTILATION: ["ventilation", "VMC", "aération", "extracteur d'air", "traitement d'air", "climatisation", "CTA"],
   HOTTE_PRO: ["hotte", "extraction de cuisine"],
   APPAREIL_CUISSON_ERP: ["four", "friteuse", "fourneau", "piano de cuisson", "grill", "plancha", "cuisson"],
   ASCENSEUR: ["ascenseur"],
-  PORTE_AUTO: ["porte automatique", "porte coulissante", "porte motorisée"],
-  PORTAIL_AUTO: ["portail", "portail motorisé", "rideau métallique", "rideau métallique motorisé", "rideau de fer", "grille roulante", "barrière levante"],
+  // 2026-11-07, ADR-057 § 5 : ceux de ~~`PORTE_AUTO`~~ et ~~`PORTAIL_AUTO`~~.
+  PORTE_PORTAIL_MOTORISE: ["porte automatique", "porte coulissante", "porte motorisée", "portail", "portail motorisé", "rideau métallique", "rideau métallique motorisé", "rideau de fer", "grille roulante", "barrière levante"],
   EQUIPEMENT_SOUS_PRESSION: ["compresseur", "air comprimé", "réservoir d'air comprimé"],
   STOCKAGE_MATIERE_DANGEREUSE: ["produits chimiques", "liquides inflammables", "solvants"],
   EQUIPEMENT_LEVAGE: ["palan", "chariot élévateur", "gerbeur", "hayon élévateur", "nacelle", "treuil", "plateforme élévatrice mobile", "PEMP", "table élévatrice", "pont élévateur"],
   INSTALLATION_FRIGORIFIQUE: ["chambre froide", "réfrigérateur", "frigo", "congélateur", "vitrine réfrigérée", "groupe froid", "climatisation", "climatiseur", "pompe à chaleur", "split"],
   COMPACTEUR_PRESSE_DECHETS_MOTORISE: ["compacteur", "presse à cartons", "presse à balles"],
-  EPI: ["casque", "gants", "chaussures de sécurité", "lunettes de protection", "protection auditive"],
-  EPI_ANTICHUTE: ["harnais", "longe", "antichute"],
-  EPI_RESPIRATOIRE: ["masque à cartouche", "cartouche filtrante", "appareil respiratoire"],
-  EPI_GILET_SAUVETAGE: ["gilet de sauvetage"],
+  // 2026-11-07, ADR-057 § 5 : avec ceux des trois EPI vérifiables, réunis.
+  EPI: ["casque", "gants", "chaussures de sécurité", "lunettes de protection", "protection auditive", "harnais", "longe", "antichute", "masque à cartouche", "cartouche filtrante", "appareil respiratoire", "gilet de sauvetage"],
   INSTALLATION_GAZ: ["chaudière", "chauffage gaz", "chauffage au gaz", "gaz", "citerne de gaz", "cuve de propane", "chauffe-eau gaz"],
   DEFIBRILLATEUR: ["défibrillateur", "DAE", "défibrillateur automatisé externe"],
   EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC: ["douche", "douches", "eau chaude sanitaire", "ECS", "ballon d'eau chaude", "chauffe-eau collectif", "production d'eau chaude", "légionelles", "légionellose", "bain à remous", "jacuzzi", "spa"],

@@ -19,27 +19,28 @@ describe("la recherche de matériel (2026-10-14)", () => {
   });
 
   it("rideau métallique et barrière levante → portail automatique (décision de c6, 2026-10-17)", () => {
-    expect(cats("rideau métallique")).toContain("PORTAIL_AUTO");
-    expect(cats("barrière levante")).toContain("PORTAIL_AUTO");
-    expect(cats("rideau métallique")).not.toContain("PORTE_AUTO");
+    expect(cats("rideau métallique")).toContain("PORTE_PORTAIL_MOTORISE");
+    expect(cats("barrière levante")).toContain("PORTE_PORTAIL_MOTORISE");
+    // ~~`not.toContain("PORTE_AUTO")`~~ — 2026-11-07, ADR-057 § 5 : porte et
+    // portail ne font plus qu'une catégorie ; le type se choisit ensuite.
   });
 
   it("rideau de fer, rideau métallique motorisé, grille roulante → portail automatique (relecture du 2026-10-18)", () => {
     for (const t of ["rideau de fer", "rideau métallique motorisé", "grille roulante"]) {
-      expect(cats(t), t).toContain("PORTAIL_AUTO");
+      expect(cats(t), t).toContain("PORTE_PORTAIL_MOTORISE");
     }
     // Le volet d'une fenêtre ou d'une vitrine reste un matériel non couvert.
-    expect(cats("volet roulant")).not.toContain("PORTAIL_AUTO");
+    expect(cats("volet roulant")).not.toContain("PORTE_PORTAIL_MOTORISE");
   });
 
   it("« grille » seul ne mène pas au portail — une grille de ventilation non plus (revue de c6, 2026-10-18)", () => {
-    expect(cats("grille")).not.toContain("PORTAIL_AUTO");
-    expect(cats("grille de ventilation")).not.toContain("PORTAIL_AUTO");
+    expect(cats("grille")).not.toContain("PORTE_PORTAIL_MOTORISE");
+    expect(cats("grille de ventilation")).not.toContain("PORTE_PORTAIL_MOTORISE");
     // L'expression, elle, y mène, même commencée.
-    expect(cats("grille roulante")).toContain("PORTAIL_AUTO");
-    expect(cats("grille rou")).toContain("PORTAIL_AUTO");
+    expect(cats("grille roulante")).toContain("PORTE_PORTAIL_MOTORISE");
+    expect(cats("grille rou")).toContain("PORTE_PORTAIL_MOTORISE");
     // Et l'ordre de saisie n'y change rien.
-    expect(cats("roulante grille")).toContain("PORTAIL_AUTO");
+    expect(cats("roulante grille")).toContain("PORTE_PORTAIL_MOTORISE");
   });
 
   it("cassure : sans son synonyme, le rideau métallique ne trouve plus le portail", () => {
@@ -49,17 +50,17 @@ describe("la recherche de matériel (2026-10-14)", () => {
     // contient « rideau métallique », et retirer l'un sans l'autre laissait
     // la recherche trouver le portail.
     const sans = (retire: string) => ({
-      synonymes: { ...SYNONYMES_CATEGORIE, PORTAIL_AUTO: SYNONYMES_CATEGORIE.PORTAIL_AUTO.filter((t) => !t.startsWith(retire)) },
+      synonymes: { ...SYNONYMES_CATEGORIE, PORTE_PORTAIL_MOTORISE: SYNONYMES_CATEGORIE.PORTE_PORTAIL_MOTORISE.filter((t) => !t.startsWith(retire)) },
       materiels: MATERIELS_NON_COUVERTS,
     });
-    expect(rechercherMateriel("rideau métallique", sans("rideau métallique")).categories).not.toContain("PORTAIL_AUTO");
-    expect(rechercherMateriel("rideau de fer", sans("rideau de fer")).categories).not.toContain("PORTAIL_AUTO");
-    expect(rechercherMateriel("grille roulante", sans("grille roulante")).categories).not.toContain("PORTAIL_AUTO");
-    expect(rechercherMateriel("barrière levante", sans("barrière levante")).categories).not.toContain("PORTAIL_AUTO");
+    expect(rechercherMateriel("rideau métallique", sans("rideau métallique")).categories).not.toContain("PORTE_PORTAIL_MOTORISE");
+    expect(rechercherMateriel("rideau de fer", sans("rideau de fer")).categories).not.toContain("PORTE_PORTAIL_MOTORISE");
+    expect(rechercherMateriel("grille roulante", sans("grille roulante")).categories).not.toContain("PORTE_PORTAIL_MOTORISE");
+    expect(rechercherMateriel("barrière levante", sans("barrière levante")).categories).not.toContain("PORTE_PORTAIL_MOTORISE");
   });
 
   it("les synonymes du sous-lot B (inventaire validé le 2026-10-17)", () => {
-    expect(cats("climatisation")).toEqual(expect.arrayContaining(["INSTALLATION_FRIGORIFIQUE", "CTA"]));
+    expect(cats("climatisation")).toEqual(expect.arrayContaining(["INSTALLATION_FRIGORIFIQUE", "VENTILATION"]));
     expect(cats("pompe à chaleur")).toContain("INSTALLATION_FRIGORIFIQUE");
     expect(cats("réservoir d'air comprimé")).toContain("EQUIPEMENT_SOUS_PRESSION");
     expect(cats("PEMP")).toContain("EQUIPEMENT_LEVAGE");

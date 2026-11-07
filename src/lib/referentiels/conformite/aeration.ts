@@ -22,6 +22,16 @@
  *
  * Les seuils (capacité de parking, typologie) sont textuellement issus du
  * règlement ERP — pas d'interprétation interne.
+ *
+ * 2026-11-07, ADR-057 § 5 : `VMC` et `CTA` ne font plus qu'une catégorie,
+ * `VENTILATION`. Les lignes qui nommaient les deux n'en nomment plus qu'une,
+ * et leurs conditions en double (une par catégorie) n'en font plus qu'une.
+ * Celles qui ne visaient que la VMC — la VMC-gaz en habitation, la qualité de
+ * l'air des parcs de stationnement — passent par la question posée à
+ * l'appareil (`estVmcGaz`, `nbVehiculesParkingCouvert`) ; les anciennes CTA
+ * ont reçu `estVmcGaz: false` à la reprise (migration
+ * `20261107120100_categories_jumelles_reprise`). Les notes ci-dessous disent
+ * encore « VMC ou CTA » : c'est l'appareil, pas la catégorie.
  */
 
 import type { Obligation } from "./types";
@@ -80,7 +90,7 @@ export const obligationsAeration: Obligation[] = [
     // l'ancien contexte. La trace est d'ailleurs tenue par installation
     // (INRS ED 6008, « un dossier d'installation pour chaque installation »,
     // voir la veille du 2026-09-10 ci-dessous).
-    categoriesEquipement: ["VMC", "CTA", "HOTTE_PRO"],
+    categoriesEquipement: ["VENTILATION", "HOTTE_PRO"],
     geste: "verification_periodique",
     notesInternes:
       "PORTÉE PAR L'APPAREIL DEPUIS LE 2026-11-05 (ADR-057, décision de la propriétaire) : une ligne par VMC, CTA ou hotte déclarée ; un employeur qui n'a déclaré aucune installation n'a plus de ligne. En ERP, `aeration-erp-chauffage-ventilation-annuelle` (CH 58, annuelle) porte le même geste sur la VMC et la CTA : une seule ligne, qui cite les deux textes, par la personne qualifiée que les deux admettent. La ligne d'établissement d'avant est archivée par la passe de reprise ; chaque appareil reprend son dernier rapport s'il était déclaré à sa date.\n\n~~Porteur établissement (ADR-022).~~ [2026-11-05, ADR-057.] Verbatim relevé en première main le 2026-08-26, article relu le 2026-08-27 : « L'employeur maintient l'ensemble des installations mentionnées au présent chapitre en bon état de fonctionnement et en assure régulièrement le contrôle. » Le « présent chapitre » est le chapitre II « Aération, assainissement » (R. 4222-1 à R. 4222-26) — relevé sur le chemin hiérarchique affiché par Légifrance, et il borne la portée matérielle : ce sont les installations de ventilation et d'assainissement, pas toutes les installations techniques. Le champ personnel, lui, est bien « tout employeur ».\n\nLe rythme ne vient pas de l'article, qui dit « régulièrement » sans chiffre. Il vient de la chaîne R. 4222-22 → arrêté du 8 octobre 1987, dont l'article 3 impose « au minimum une fois par an » en local à pollution non spécifique. Les trois secteurs cibles y sont. L'article 4 (pollution spécifique) impose le même rythme annuel, et un contrôle semestriel supplémentaire aux seules installations avec recyclage. Ce dernier cas N'EST PORTÉ PAR AUCUNE OBLIGATION : une première rédaction de cette note le disait couvert par un `aeration-travail-recyclage-semestriel` qui N'EXISTE PAS — identifiant inventé, corrigé le 2026-08-27. Le semestriel de recyclage est décrit dans `aeration-travail-locaux-pollution-specifique` mais n'y est pas planifié, faute d'une propriété d'équipement « recyclage » que le formulaire ne pose pas : ses propres notes le disent. C'est un manque réel, et il n'est pas de mon fait — il précède ce chantier.\n\nCe qu'elle absorbe, et ce qu'elle n'absorbe pas. Cette note affirmait d'abord qu'aucune des obligations citant R. 4222-20 n'était retirée ; c'est devenu faux le jour même. `aeration-travail-entretien-annuel` A ÉTÉ RETIRÉE : elle décrivait le même acte, au même rythme annuel, sur le même arrêté du 8 octobre 1987 art. 3, et n'en projetait le tout que sur `VMC` et `CTA`. Aucun fondement propre, donc un fragment — et le garder aurait fait deux lignes annuelles pour un seul contrôle.\n\nCe qui RESTE, et pourquoi ce ne sont pas des fragments : `aeration-travail-mise-en-service` est un acte distinct — le contrôle initial, une seule fois, dans le mois qui suit la mise en service. `aeration-travail-locaux-pollution-specifique` et ~~`stockage-dangereux-ventilation-locaux`~~ [2026-10-07, C60 : retirée au lot 5 de la relecture du préventeur, `OBLIGATIONS_RETIREES` ; seule la première reste] relèvent de l'ARTICLE 4 du même arrêté, celui des locaux à pollution spécifique : autre régime. Réserve à ne pas perdre de vue : la première d'entre elles est conditionnée à `estLocalPollutionSpecifique` en propriété booléenne, donc en opt-in strict — elle ne se déclenche que si l'utilisateur a répondu « oui » explicitement, et ne rattrape donc rien par défaut.\n\nAutrement dit : un employeur qui a déclaré sa VMC voit désormais UNE ligne annuelle et non deux, plus son contrôle initial ; ~~un employeur qui n'a rien déclaré, qui ne voyait rien, voit cette ligne~~ [2026-11-05, ADR-057 : un employeur qui n'a rien déclaré ne voit plus de ligne].\nVEILLE DU 2026-09-10 — CE QU'AUCUNE SOURCE NE DIT, et c'est le résultat le plus utile de la passe. Trois questions posées aux sources primaires, deux sans réponse. (1) À PARTIR DE QUELLE DATE se compte l'intervalle annuel : NON TROUVÉ. R. 4222-20 ne porte aucun chiffre, l'article 3 de l'arrêté dit « au minimum une fois par an » sans ancrage, et le focus juridique INRS « Contrôle des installations de ventilation » le reprend sans le préciser. (2) CE QU'IL ADVIENT SI UNE PARTIE SEULEMENT de l'installation a été contrôlée dans l'année : NON TROUVÉ, aucune des trois sources ne traite le cas. (3) LA GRANULARITÉ DE LA PREUVE : trouvée, et elle vaut d'être connue — INRS ED 6008 (mars 2023), p. 5 : « Les exigences du Code du travail […] imposent au chef d'établissement la constitution et la tenue à jour d'un DOSSIER D'INSTALLATION POUR CHAQUE INSTALLATION de ventilation. » L'obligation est une, adressée à l'employeur sur l'ensemble ; la TRACE, elle, est plurielle et tenue par installation, et l'article 2 b) de l'arrêté y fait porter « les dates et les résultats des contrôles périodiques ».\n\nCE QUE ÇA ENGAGE POUR LE PRODUIT, écrit ici pour que la déduction ne se reprenne pas pour une lecture : la règle « une ligne unique repart de la date la PLUS ANCIENNE de celles qu'elle absorbe » est une DÉDUCTION, pas une phrase de texte. Elle suit de « au minimum une fois par an » appliqué à « tous les éléments de l'installation » — un élément contrôlé il y a plus d'un an rend l'obligation non satisfaite, quoi qu'aient dit les autres. Elle n'est écrite nulle part et ne doit jamais être présentée comme telle.\n\nVerbatims de R. 4222-20 et des articles 2 et 3 de l'arrêté RECONFIRMÉS à la source le 2026-09-10, identiques à ceux déjà portés au corpus. Les champs `luLe` et `lecture` n'ont pas été touchés : la lecture d'origine était de première main, celle-ci passe par un agent, et remplacer la première par la seconde ferait perdre un degré de confiance au lieu d'en gagner un.",
@@ -166,7 +176,7 @@ export const obligationsAeration: Obligation[] = [
     criticite: 4,
     transmet: [],
     typologies: { travail: true },
-    categoriesEquipement: ["VMC", "CTA"],
+    categoriesEquipement: ["VENTILATION"],
     notesInternes:
       "NATURE : PONCTUELLE (ADR-026). « Au plus tard un mois après la mise en service » : un seul titre, un seul acte, daté par un fait que le produit connaît. À distinguer des deux mises en service électriques, dont l'article vise aussi les modifications ultérieures.\n\nFONDEMENT RECALÉ LE 2026-09-01 (lot A). Deux défauts, tous deux relevés au corpus le même jour et corrigés ici.\n\n(1) R. 4222-21 était cité pour un contrôle : il n'en impose aucun. Son seul objet est une consigne d'utilisation écrite, soumise à l'avis du médecin du travail et du CSE. Ni « vérification », ni « contrôle », ni « mise en service » n'y figurent. La référence est retirée ; l'article passe `obligation_manquante` au corpus, la consigne n'étant portée nulle part.\n\n(2) L'ancre `article` pointait l'article 3 de l'arrêté du 8 octobre 1987 alors que le délai d'un mois est à l'article 2 a) — et il court non sur un contrôle mais sur l'établissement du DOSSIER DE VALEURS DE RÉFÉRENCE. La description a été recalée sur ce que le texte dit ; l'article 2 est entré au corpus à cette occasion.",
   },
@@ -214,17 +224,11 @@ export const obligationsAeration: Obligation[] = [
     // ~~"HOTTE_PRO"~~ — retirée des catégories le 2026-10-07 : relecture
     // préventeur du 30/09, p. 14 de la grille, « traité dans le VMC : à
     // supprimer dans les hottes » ; décision de la propriétaire du 07/10.
-    categoriesEquipement: ["VMC", "CTA"],
+    categoriesEquipement: ["VENTILATION"],
     conditions: [
       {
         type: "equipement_propriete_booleenne",
-        categorie: "VMC",
-        propriete: "estLocalPollutionSpecifique",
-        valeur: true,
-      },
-      {
-        type: "equipement_propriete_booleenne",
-        categorie: "CTA",
+        categorie: "VENTILATION",
         propriete: "estLocalPollutionSpecifique",
         valeur: true,
       },
@@ -258,29 +262,17 @@ export const obligationsAeration: Obligation[] = [
     criticite: 4,
     transmet: [],
     typologies: { travail: true },
-    categoriesEquipement: ["VMC", "CTA", "HOTTE_PRO"],
+    categoriesEquipement: ["VENTILATION", "HOTTE_PRO"],
     conditions: [
       {
         type: "equipement_propriete_booleenne",
-        categorie: "VMC",
+        categorie: "VENTILATION",
         propriete: "estLocalPollutionSpecifique",
         valeur: true,
       },
       {
         type: "equipement_propriete_booleenne",
-        categorie: "VMC",
-        propriete: "aSystemeDeRecyclage",
-        valeur: true,
-      },
-      {
-        type: "equipement_propriete_booleenne",
-        categorie: "CTA",
-        propriete: "estLocalPollutionSpecifique",
-        valeur: true,
-      },
-      {
-        type: "equipement_propriete_booleenne",
-        categorie: "CTA",
+        categorie: "VENTILATION",
         propriete: "aSystemeDeRecyclage",
         valeur: true,
       },
@@ -339,7 +331,7 @@ export const obligationsAeration: Obligation[] = [
     criticite: 4,
     transmet: [],
     typologies: { erp: true },
-    categoriesEquipement: ["VMC", "CTA"],
+    categoriesEquipement: ["VENTILATION"],
     geste: "verification_periodique",
     notesInternes:
       "CH 57 ET LES APPAREILS À COMBUSTION — 2026-10-17 (sous-lot C du plan « mise à jour du référentiel », décision Q4 de c6, sur la décision de la propriétaire du 2026-10-14 : « Ramonage (CH 57) : rien »). La scission proposée ci-dessous n'est pas faite : aucune ligne de ramonage, aucune catégorie d'équipement nouvelle. La ligne reste telle quelle — CH 58 § 2, sur `VMC` et `CTA`. CE QUE CELA LAISSE, ET QUI EST DIT : une chaudière au fioul ou au bois, un poêle ou une cuve de combustible, dans un ERP sans VMC ni CTA déclarée, ne reçoivent ni la vérification annuelle de CH 58 § 2 (qui vise pourtant la production de chaleur et le stockage des combustibles), ni le ramonage annuel de CH 57. L'annonce est dans les entrées « Chaudière » et « Cuve de fioul » des matériels non couverts (`materiels-non-couverts.ts`, fichier du sous-lot B, qui pose l'entrée « Cuve de fioul » ; la phrase de l'entrée « Chaudière » se pose au rebase sur B), et la description de cette ligne nomme désormais ce que CH 58 § 2 vérifie — production de chaleur ou de froid, stockage des combustibles, ventilation —, pour que le dirigeant la reconnaisse : la vérification de CH 58 § 2 n'y est suivie qu'avec une VMC ou une CTA déclarée, et le ramonage n'est pas suivi. À ne pas confondre avec l'entretien annuel des chaudières du code de l'environnement (R. 224-41-4), hors cadre pour une autre raison (notes-cadre, ligne de partage 4). TEMPORALITÉ : rythme écrit (CH 58 § 2, « tous les ans » ; CH 57, « une fois par an », relus le 2026-10-17 par l'API Légifrance, PISTE, bac à sable).\n\n" +
@@ -373,7 +365,7 @@ export const obligationsAeration: Obligation[] = [
     typologies: {
       erp: { categories: ["N1", "N2", "N3", "N4"] },
     },
-    categoriesEquipement: ["VMC", "CTA"],
+    categoriesEquipement: ["VENTILATION"],
     notesInternes:
       "CRÉÉE LE 2026-09-04. `CH 39` n'apparaissait nulle part dans `src/` : le corpus portait `CH 57` et `CH 58` — l'entretien et la vérification technique annuels de tout le chapitre — et ignorait le seul article du chapitre qui impose un rythme à l'UTILISATEUR lui-même.\n\nTRIMESTRIELLE ET NON ANNUELLE, ET C'EST LE POINT DE CETTE LIGNE. Le § 3 écrit deux nombres : un plafond d'un an, et « trois mois » en l'absence d'un système de mesure et d'alarme fonctionnant en permanence. Le produit ne détient aucun attribut disant qu'une installation en est pourvue. La règle du dépôt tranche seule : **un allègement ne se donne pas sur une absence supposée** — c'est mot pour mot ce que `locauxSommeilPublic` écrit pour le sens `false`, et ce que la sur-application saisonnière du compactage a déjà arbitré. Encoder l'annuelle aurait multiplié le délai par quatre chez tout le monde, y compris chez les trois quarts d'exploitants qui n'ont aucune mesure permanente, et personne n'aurait pu s'en apercevoir.\n\nCE QUE LA SUR-APPLICATION COÛTE ICI, ET POURQUOI ELLE EST ACCEPTABLE : trois visites de plus par an, faites par l'exploitant ou son représentant, sans tiers ni devis — le § 3 dit « l'utilisateur ou son représentant ». Un dirigeant équipé d'un système de mesure permanent verra quatre rendez-vous là où il en doit un, et il peut reporter les occurrences. L'inverse était muet.\n\nPÉRIMÈTRE : N1 À N4. `CH 39` est au Livre II, écarté en 5ᵉ catégorie par `PE 1 § 1` sans renvoi du Livre III. Comme `incendie-erp-alarme-verification-hebdomadaire`, c'est une ligne NEUVE : elle n'hérite d'aucune sur-application ancienne, et rien n'oblige à lui en donner une. Elle est l'une des deux premières lignes du référentiel à ne s'adresser qu'aux quatre premières catégories par LECTURE du champ.\n\nDEUX CATÉGORIES D'ÉQUIPEMENT, ET LA SECONDE EST DISCUTABLE. `CTA` est l'objet même de l'article — une centrale de traitement d'air EST une installation de filtration. `VMC` l'est moins : une ventilation simple flux n'a pas toujours de filtre, une double flux en a toujours. Les deux sont retenues, pour le même motif que la périodicité et dans le même sens : un exploitant de VMC double flux qui ne verrait rien ne saurait pas qu'il doit quelque chose, tandis qu'un exploitant de VMC simple flux voit une visite trimestrielle sans objet et peut la reporter. C'est aussi le couple que porte déjà `aeration-erp-chauffage-ventilation-annuelle`, fondée sur `CH 58 § 2`, dont l'assiette inclut « les installations de traitement d'air et de ventilation visées à la section VII » — la même section que `CH 39`.\n\nPAS DE DOUBLON AVEC `aeration-erp-chauffage-ventilation-annuelle`, ET LA DIFFÉRENCE EST DE FOND, PAS DE RYTHME. Celle-ci est une VÉRIFICATION TECHNIQUE annuelle par un technicien compétent au sens de GE 6, portant sur l'installation entière (`CH 58 § 2`). Celle-là est une VISITE de l'utilisateur portant sur le seul chargement en poussières des filtres (`CH 39 § 3`). Deux articles, deux actes, deux réalisateurs, deux preuves. Le test anti-doublon compare l'article fondateur : `CH 39` n'en fonde aucune autre.\n\nCriticité 3 : un filtre colmaté dégrade le débit d'air et finit par charger le conduit de graisses ou de poussières — un risque réel, mais indirect, et le nettoyage est une opération d'exploitation. La vérification technique annuelle, qui porte sur la sécurité de l'installation, reste à 4.\n\n~~CE QUI N'EST PAS ENCODÉ : le LIVRET D'ENTRETIEN de l'installation de filtration (§ 1, § 2 et § 4). C'est un écrit permanent, `pieceAttendue` naturelle, que rien ne bloque au modèle. Il fera une seconde ligne le jour où on aura décidé s'il est un écrit à part ou s'il rejoint le dossier de maintenance de `R. 4224-17` et le livret de `GC 18 h)`. La réserve du corpus le porte.~~ [2026-10-14 : décidé — un écrit à part, seconde ligne `aeration-erp-filtres-livret-entretien` (décision de la propriétaire, point 6).]",
   },
@@ -407,7 +399,7 @@ export const obligationsAeration: Obligation[] = [
     typologies: {
       erp: { categories: ["N1", "N2", "N3", "N4"] },
     },
-    categoriesEquipement: ["VMC", "CTA"],
+    categoriesEquipement: ["VENTILATION"],
     notesInternes:
       "CRÉÉE LE 2026-10-14, point 6 de la décision de la propriétaire. Le livret était la réserve (1) de CH 39 au corpus depuis le 2026-09-04 : « un état permanent avec `pieceAttendue`, de la même espèce que le carnet d'entretien d'ascenseur ». La question laissée ouverte — écrit à part, ou rapproché du livret de GC 18 h) et du dossier de R. 4224-17 — est tranchée : un écrit à part, porté par l'équipement, comme sa sœur.\n\nPATRON : `aeration-erp-filtres-visite-periodique` (CH 39 § 3) — mêmes catégories d'équipement (`VMC`, `CTA`), même borne N1–N4 (CH 39 est au livre II, titre Ier, écarté en 5ᵉ par PE 1 § 1 sans renvoi). PAS de restriction `types` : CH 39 est une disposition générale, qui vaut pour tous les types (`TypologieApplication`, « y ajouter une liste de types serait une restriction inventée »).\n\nÉTAT PERMANENT, `pieceAttendue` nommée : le livret est l'écrit dont l'existence est l'obligation (comme `ascenseur-carnet-entretien`, criticité 3). Aucun rythme propre — le § 4 fait noter les visites que la ligne sœur date.\n\nRÉALISATEUR `exploitant` : le texte dit « l'utilisateur » ; le § 2 fait écrire la perte de charge maximale par l'INSTALLATEUR, une donnée que l'exploitant obtient de lui, pas un acte à planifier.\n\nPAS DE GN 10 en description : le livret est une disposition d'ENTRETIEN, que GN 10 § 1 applique aux établissements existants.",
   },
@@ -435,11 +427,11 @@ export const obligationsAeration: Obligation[] = [
     criticite: 3,
     transmet: [],
     typologies: { erp: true },
-    categoriesEquipement: ["VMC"],
+    categoriesEquipement: ["VENTILATION"],
     conditions: [
       {
         type: "equipement_propriete_numerique",
-        categorie: "VMC",
+        categorie: "VENTILATION",
         propriete: "nbVehiculesParkingCouvert",
         operateur: "<=",
         valeur: 250,
@@ -472,11 +464,11 @@ export const obligationsAeration: Obligation[] = [
     criticite: 4,
     transmet: [],
     typologies: { erp: true },
-    categoriesEquipement: ["VMC"],
+    categoriesEquipement: ["VENTILATION"],
     conditions: [
       {
         type: "equipement_propriete_numerique",
-        categorie: "VMC",
+        categorie: "VENTILATION",
         propriete: "nbVehiculesParkingCouvert",
         operateur: ">",
         valeur: 250,
@@ -522,11 +514,11 @@ export const obligationsAeration: Obligation[] = [
     criticite: 5,
     transmet: [],
     typologies: { habitation: true },
-    categoriesEquipement: ["VMC"],
+    categoriesEquipement: ["VENTILATION"],
     conditions: [
       {
         type: "equipement_propriete_non_infirmee",
-        categorie: "VMC",
+        categorie: "VENTILATION",
         propriete: "estVmcGaz",
       },
     ],
@@ -559,11 +551,11 @@ export const obligationsAeration: Obligation[] = [
     criticite: 5,
     transmet: [],
     typologies: { habitation: true },
-    categoriesEquipement: ["VMC"],
+    categoriesEquipement: ["VENTILATION"],
     conditions: [
       {
         type: "equipement_propriete_non_infirmee",
-        categorie: "VMC",
+        categorie: "VENTILATION",
         propriete: "estVmcGaz",
       },
     ],

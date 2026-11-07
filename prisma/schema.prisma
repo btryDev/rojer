@@ -640,13 +640,15 @@ enum CategorieEquipement {
   BAES
   ALARME_INCENDIE
   DESENFUMAGE
-  VMC
-  CTA
+  // 2026-11-07, ADR-057 § 5 : VMC et CTA réunies dans VENTILATION, PORTE_AUTO
+  // et PORTAIL_AUTO dans PORTE_PORTAIL_MOTORISE, les trois EPI vérifiables
+  // dans EPI (avec un type déclaré) — migration
+  // 20261107120100_categories_jumelles_reprise.
+  VENTILATION
   HOTTE_PRO
   APPAREIL_CUISSON_ERP
   ASCENSEUR
-  PORTE_AUTO
-  PORTAIL_AUTO
+  PORTE_PORTAIL_MOTORISE
   EQUIPEMENT_SOUS_PRESSION
   STOCKAGE_MATIERE_DANGEREUSE
   EQUIPEMENT_LEVAGE
@@ -658,14 +660,6 @@ enum CategorieEquipement {
   // dépouillement dira peut-être de la scinder. Voir la migration
   // 20260904120000_categorie_epi.
   EPI
-  // Les trois catégories que l'arrêté du 19 mars 1993 soumet à vérification —
-  // douze mois, personne qualifiée, en service ou en stock. Séparées d'`EPI`
-  // parce que le casque et les gants, qui y restent, ne relèvent d'aucune
-  // vérification périodique. Les cartouches filtrantes antigaz sont rangées
-  // avec l'appareil respiratoire qu'elles alimentent.
-  EPI_ANTICHUTE
-  EPI_RESPIRATOIRE
-  EPI_GILET_SAUVETAGE
   // 2026-10-14 : les installations de gaz combustible que GZ 15 vérifie
   // (stockage, distribution, appareils) — pas seulement la cuisine.
   INSTALLATION_GAZ

@@ -587,7 +587,19 @@ export const obligationsConformite: Obligation[] = [
 // par porteur, 99 équipement, 92 + 1 = 93 établissement, 14 salarié ; 18 au
 // niveau audit, 188 suivies ; 23 domaines — remesuré en appelant `obligationsConformite`, `porteurDe`
 // et `estNiveauAudit`.
-export const REFERENTIEL_VERSION = "2026-11-06.2";
+// `2026-11-07.1` (`lot/adr-057-c`, ADR-057 § 5, décisions de la propriétaire
+// du 2026-11-05) : les catégories jumelles sont réunies — `VMC` et `CTA` dans
+// `VENTILATION`, `PORTE_AUTO` et `PORTAIL_AUTO` dans `PORTE_PORTAIL_MOTORISE`,
+// les trois EPI vérifiables dans `EPI`. Ce qui les distinguait passe par une
+// question à l'appareil : `typePorte` (le portail de véhicules de l'arrêté du
+// 21 décembre 1993 ; CO 48 § 3 e) pour les portes, désormais une condition
+// sur `siEquipementDeclare`), `typeEpi` (la vérification de douze mois de
+// l'arrêté du 19 mars 1993 ; le maintien de R. 4322-1 reste aux EPI
+// courants). `cuisson-gaz-installations-annuelle` (GZ 15) ne naît plus que de
+// `INSTALLATION_GAZ`. Aucune obligation n'entre ni ne sort : 206 + 0 − 0 =
+// 206 ; 99 / 93 / 14 ; 18 au niveau audit, 188 suivies — remesuré en appelant
+// `obligationsConformite`, `porteurDe` et `estNiveauAudit`.
+export const REFERENTIEL_VERSION = "2026-11-07.1";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

@@ -478,7 +478,7 @@ describe("genererCalendrier — continuité par-dessus un identifiant retiré", 
     // VMC déclarée ci-dessous]. Sa ligne doit donc être datée du 2026-06-01,
     // donc en retard, et NON « à planifier » comme si le contrôle n'avait pas
     // eu lieu.
-    poserEtablissement([{ id: "eq-vmc", categorie: "VMC" }]);
+    poserEtablissement([{ id: "eq-vmc", categorie: "VENTILATION" }]);
     db.verifications = [
       ligne({
         id: "v-fragment",
@@ -646,7 +646,7 @@ describe("genererCalendrier — le garde-fou d'applicabilité", () => {
     // est levé. L'obligation n'engendre plus de ligne. Sans la correction, la
     // ligne restait semestrielle, marquée de l'arrêté, en retard depuis 2021 —
     // et un nouveau dépôt la faisait rouler au semestre.
-    poserEtablissement([{ id: "eq-portail", categorie: "PORTAIL_AUTO" }]);
+    poserEtablissement([{ id: "eq-portail", categorie: "PORTE_PORTAIL_MOTORISE" }]);
     // Le magasin ne type que `{ id, actif }` ; la lecture rend l'objet entier,
     // et `appliquerPrescriptions` lit le reste.
     db.etablissements[0]!.prescriptionsParticulieres = [
@@ -685,7 +685,7 @@ describe("genererCalendrier — le garde-fou d'applicabilité", () => {
     // génération saute. Une prescription active génère sa ligne, qui passe par
     // la boucle principale et garde `prescriptionId` — c'est lui qui porte le
     // marquage contractuel d'une demande d'assureur.
-    poserEtablissement([{ id: "eq-portail", categorie: "PORTAIL_AUTO" }]);
+    poserEtablissement([{ id: "eq-portail", categorie: "PORTE_PORTAIL_MOTORISE" }]);
     db.etablissements[0]!.prescriptionsParticulieres = [
       { ...prescriptionPortail(), dateFin: null } as unknown as {
         id: string;
@@ -729,7 +729,7 @@ describe("genererCalendrier — le garde-fou d'applicabilité", () => {
     const scenario = async (
       lue: { periodicite: string; prescriptionId: string | null },
     ) => {
-      poserEtablissement([{ id: "eq-portail", categorie: "PORTAIL_AUTO" }]);
+      poserEtablissement([{ id: "eq-portail", categorie: "PORTE_PORTAIL_MOTORISE" }]);
       const presc = prescriptionPortail();
       db.etablissements[0]!.prescriptionsParticulieres = [
         presc as unknown as { id: string; actif: boolean },

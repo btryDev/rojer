@@ -586,7 +586,15 @@ const RELEVE = {
   // `/simplify` : le moteur rend ce qui s'applique, la fusion n'a lieu que
   // dans `lignesDuCalendrier` ; un seul comparateur (`plusExigeant`) ;
   // `memeActeQue` distinct de `succedeA` : ~~0b32c48a2c7f3d82~~ recopiée.
-  empreinte: "de10984fbe6999b3",
+  // 2026-11-07, ADR-057 § 5 (lot C) : `siEquipementDeclare` lit les
+  // conditions de la catégorie (la porte, pas le portail, pour CO 48). NON :
+  // sur un référentiel donné, la régénération écrit les mêmes lignes — seules
+  // les conditions neuves du référentiel en changent, et elles déplacent déjà
+  // son empreinte, donc le sceau : ~~de10984fbe6999b3~~ recopiée. Puis la
+  // revue : `equipementSatisfait`, une lecture pour les deux branches (NON,
+  // extraction) : ~~d0315317cafd64ab~~ recopiée. Puis `/simplify` (NON, la
+  // garde écrite une fois) : ~~c21e2a827cf06f35~~ recopiée.
+  empreinte: "0ac56c67a8e4d6b0",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

@@ -48,7 +48,7 @@ function etab(typeErp: TypeErp, categorieErp: CategorieErp): EtablissementMatchi
   };
 }
 
-const CTA = [{ id: "cta-1", libelle: "CTA", categorie: "CTA" as const, caracteristiques: null }];
+const CTA = [{ id: "cta-1", libelle: "CTA", categorie: "VENTILATION" as const, caracteristiques: null }];
 
 function recues(e: EtablissementMatching, equipements = CTA): string[] {
   const ids = new Set(determineObligationsApplicables(e, equipements).map((a) => a.obligation.id));
