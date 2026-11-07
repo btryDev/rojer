@@ -24,7 +24,7 @@ const PHOTO_HERO = {
   src: photoHero,
   alt: "Un restaurateur en tablier marine consulte son téléphone dans la salle de son bistrot avant le service",
   // Quand le cadre se resserre (écran en portrait), on garde son visage.
-  // Sur téléphone, le hero est moins haut (84svh) : la photo se recadre moins.
+  // Sur téléphone, le hero est moins haut (76svh, le titre suivant dépasse) : la photo se recadre moins.
   position: "68% 20%",
 };
 
@@ -38,7 +38,7 @@ export function Hero({
     <section
       // La photo remonte de la hauteur de l'en-tête (`--lp-entete`) pour
       // passer dessous ; le texte la redescend d'autant.
-      className="relative isolate -mt-[var(--lp-entete)] flex h-[84svh] max-h-[1000px] min-h-[560px] overflow-hidden bg-[color:var(--board-ink)] md:h-[100svh] md:min-h-[640px]"
+      className="relative isolate -mt-[var(--lp-entete)] flex h-[76svh] max-h-[1000px] min-h-[520px] overflow-hidden bg-[color:var(--board-ink)] md:h-[100svh] md:min-h-[640px]"
     >
       <Image
         src={PHOTO_HERO.src}
@@ -48,9 +48,9 @@ export function Hero({
         placeholder="blur"
         // En portrait, la photo 16/9 couvre la hauteur et déborde en largeur :
         // elle s'affiche sur environ 178 % de la hauteur d'écran (150 % sous
-        // md, où le hero ne fait que 84svh). Sous 666 px de haut (téléphone
-        // en paysage), le hero est tenu à 560 px : la photo fait 996 px de large.
-        sizes="(max-width: 767px) and (max-height: 666px) 996px, (max-width: 767px) 150vh, (max-aspect-ratio: 16/9) 178vh, 100vw"
+        // md, où le hero ne fait que 76svh). Sous 684 px de haut (téléphone
+        // en paysage), le hero est tenu à 520 px : la photo fait 925 px de large.
+        sizes="(max-width: 767px) and (max-height: 684px) 925px, (max-width: 767px) 150vh, (max-aspect-ratio: 16/9) 178vh, 100vw"
         className="-z-10 object-cover"
         style={{ objectPosition: PHOTO_HERO.position }}
       />
