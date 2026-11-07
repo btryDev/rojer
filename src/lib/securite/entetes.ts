@@ -1,3 +1,5 @@
+// Chemin relatif : next.config.ts charge ce fichier, sans les alias « @/ ».
+import { NOINDEX, OUVERT_AUX_MOTEURS } from "../indexation";
 /**
  * En-têtes de sécurité HTTP.
  *
@@ -131,6 +133,8 @@ export function reglesEntetes(): RegleEntetes[] {
 
 export function entetesSecurite(): Entete[] {
   return [
+    // Fermé aux moteurs tant que le site n'est pas ouvert (`lib/indexation.ts`).
+    ...(OUVERT_AUX_MOTEURS ? [] : [{ key: "X-Robots-Tag", value: NOINDEX }]),
     { key: "X-Frame-Options", value: "DENY" },
     // Le plancher : la CSP complète, à nonce, vient du proxy (voir en tête).
     { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },

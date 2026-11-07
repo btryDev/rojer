@@ -141,7 +141,8 @@ const QUEUE_VH = 60;
  *  faire couper par les bords arrondis. */
 const CARTE_REF_PX = 780;
 /** Hauteur de la barre de navigation, elle aussi collante en haut : le
- *  panneau du cadran se cale juste en dessous. Cf. `LandingHeader`. */
+ *  panneau du cadran se cale juste en dessous. Même valeur que
+ *  `--lp-entete` (globals.css) : le calcul de défilement en a besoin en JS. */
 const ENTETE_PX = 68;
 
 export function Cadran({ chiffres }: { chiffres: ChiffresReferentielSuivi }) {

@@ -137,9 +137,11 @@ est un entretien continu, pas un événement subi.
   retour nomment un écran de la même façon, sans table parallèle.
 - `deduireActif` garde sa signature d'origine : la query ne gouverne pas
   l'arborescence.
-- La maquette de la landing (`components/landing/TableauDeBord.tsx`) suit la
+- ~~La maquette de la landing (`components/landing/TableauDeBord.tsx`) suit la
   même arborescence : elle montre le produit, elle ne peut pas montrer un
-  autre produit.
+  autre produit.~~ [2026-11-06 : la maquette est retirée de la page publique,
+  remplacée par « Un outil simple et transparent » (`OutilSimple.tsx`), qui
+  montre une vraie visite de l'app.]
 
 ## Révision — le panneau ne décline pas le calendrier en filtres
 

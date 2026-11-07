@@ -7,7 +7,7 @@
  *  - `min-h-6` : la zone cliquable fait 24 px de haut (WCAG 2.5.8), sans
  *    grossir le texte — elle faisait 18,75 px ;
  *  - `[&::-webkit-details-marker]:hidden` : Safari ignore `list-none` et
- *    garde son triangle à côté du chevron. Même motif que `landing/Questions.tsx` ;
+ *    garde son triangle à côté du chevron ;
  *  - le chevron tourne dans une boîte carrée centrée : tourné autour du centre
  *    du seul glyphe, il débordait à gauche et chevauchait l'anneau de focus.
  */
