@@ -1181,10 +1181,15 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /* Mouvement réduit : plus de déplacement, mais un fondu reste — il ne
+     fait rien bouger, et sans lui la page paraissait figée (2026-11-07).
+     Un fondu n'est pas du mouvement au sens de WCAG 2.3.3. */
   .lp-reveal[data-vu] {
-    opacity: 1;
     transform: none;
-    transition: none;
+  }
+  .lp-reveal[data-vu="true"] {
+    transition: opacity 600ms ease-out;
+    transition-delay: var(--lp-delai, 0ms);
   }
   .lp-btn:hover .lp-fleche {
     transform: none;
