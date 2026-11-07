@@ -455,10 +455,10 @@ function CadranListe({ chiffres }: { chiffres: ChiffresReferentielSuivi }) {
   return (
     <section
       aria-labelledby="documents-titre-liste"
-      // pt-28 : sous le hero, une bande blanche et pas le titre — Chrome sur
-      // iPhone, dont les barres raccourcissent l'écran, le laissait voir
-      // avec pt-14 (2026-11-07).
-      className="bg-[color:var(--board-card)] pb-20 pt-28 sm:pb-24"
+      // ~~pt-28~~ (2026-11-07) : il cachait le titre sous Chrome iPhone, mais
+      // laissait trop de blanc sous Safari. Chrome a désormais son propre
+      // hero, plus haut (`barresFixes`, page.tsx) : pt-14 vaut pour les deux.
+      className="bg-[color:var(--board-card)] pb-20 pt-14 sm:pb-24 sm:pt-28"
     >
       <div className="lp-shell">
         <h2
