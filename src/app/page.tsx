@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { Cadran } from "@/components/landing/Cadran";
+import { DiagnosticAnimations } from "@/components/landing/DiagnosticAnimations";
 import { Hero } from "@/components/landing/Hero";
 import { compteDeLaSession } from "@/components/landing/compte-session";
 import { LandingHeader } from "@/components/landing/LandingHeader";
@@ -48,6 +49,7 @@ export default async function Home({
       <OutilSimple />
       <Tarif compte={compte} />
       <SiteFooter compte={compte} />
+      <DiagnosticAnimations />
     </main>
   );
 }
