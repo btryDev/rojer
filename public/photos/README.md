@@ -16,8 +16,12 @@ va dans `docs/illustrations/photos-reserve/`.
 **Origine** : générées avec Krea le 2026-11-06 (Krea 2 Large ; le
 restaurateur est une retouche Nano Banana Pro de la restauratrice, même
 scène). Direction photo : `docs/marketing/direction-photo.md` (branche
-`docs/communication`). `manifeste-boulangere.jpg` fait 928 px de large :
-**à agrandir** avant la mise en ligne.
+`docs/communication`). `manifeste-boulangere.jpg` a été agrandie ×2
+(1856 px, Topaz Standard « High Fidelity » via Krea, 2026-11-07) : la
+génération d'origine ne faisait que 928 px, trop peu pour un écran Retina.
+
+Le hero sert aussi d'aperçu de partage de lien : `src/app/opengraph-image.jpg`
+(1200 × 630, recadré au centre) — à refaire si la photo du hero change.
 
 **Licence à confirmer** avant la mise en ligne publique : vérifier les
 conditions d'usage commercial du plan Krea et les écrire ici.

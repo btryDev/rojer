@@ -4,12 +4,29 @@ import { variablesPolices } from "./polices";
 import "./globals.css";
 import { OUVERT_AUX_MOTEURS } from "@/lib/indexation";
 
+const TITRE = "Rojer — Conformité santé-sécurité TPE/PME";
+const DESCRIPTION =
+  "Plateforme continue d'accompagnement à la conformité santé-sécurité pour dirigeants de TPE/PME : DUERP, calendrier de vérifications, registre de sécurité, plan d'actions.";
+
 export const metadata: Metadata = {
+  // Les images de partage (`opengraph-image.jpg`) sont annoncées en adresse
+  // absolue : la base est l'adresse publique du déploiement. Sans elle, Next
+  // retombe sur l'URL de Vercel, ou sur localhost.
+  ...(process.env.PUBLIC_APP_URL ? { metadataBase: new URL(process.env.PUBLIC_APP_URL) } : {}),
   // Fermé aux moteurs tant que le site n'est pas ouvert (`lib/indexation.ts`).
   ...(OUVERT_AUX_MOTEURS ? {} : { robots: { index: false, follow: false } }),
-  title: "Rojer — Conformité santé-sécurité TPE/PME",
-  description:
-    "Plateforme continue d'accompagnement à la conformité santé-sécurité pour dirigeants de TPE/PME : DUERP, calendrier de vérifications, registre de sécurité, plan d'actions.",
+  title: TITRE,
+  description: DESCRIPTION,
+  // L'aperçu d'un lien partagé (LinkedIn, WhatsApp, mail) : l'image vient de
+  // `opengraph-image.jpg`, posée à côté de ce fichier.
+  openGraph: {
+    type: "website",
+    locale: "fr_FR",
+    siteName: "Rojer",
+    title: TITRE,
+    description: DESCRIPTION,
+  },
+  twitter: { card: "summary_large_image" },
 };
 
 /**

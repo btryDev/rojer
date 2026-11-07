@@ -60,16 +60,14 @@ export function LandingHeader({
     <header className="pointer-events-none sticky top-0 z-50 h-[var(--lp-entete)]">
       <div className={cn("lp-nav pointer-events-auto absolute inset-x-0 top-0", pose && "lp-nav--ilot")}>
         <div className="lp-nav-barre flex items-center justify-between gap-4 sm:gap-6">
+          {/* Provisoire, en attendant le logo : le nom sur une pastille
+              bleue, la même sur la photo et sur l'îlot. */}
           <Link
             href="/"
-            className={cn(
-              "flex items-baseline gap-[3px] text-[1.3rem] font-semibold tracking-[-0.03em] transition-colors",
-              blanc ? "text-white" : "text-[color:var(--board-ink)]",
-            )}
+            className="rounded-full bg-[color:var(--board-sky)] px-3 py-0.5 text-[1.075rem] font-semibold tracking-[-0.03em] text-[color:var(--board-ink)]"
             style={{ fontFamily: "var(--font-titre), sans-serif" }}
           >
             Rojer
-            <span className="size-[7px] rounded-full bg-[color:var(--board-sky)]" />
           </Link>
 
           <div className="flex items-center gap-8">

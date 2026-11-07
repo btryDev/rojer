@@ -786,9 +786,9 @@
     width: calc(100% - 2 * clamp(16px, 4vw, 40px));
     max-width: 1120px;
     margin-top: 10px;
-    /* Asymétrique : la marque a besoin d'air à gauche, le bouton-pilule
-       de droite apporte déjà le sien. */
-    padding-inline: 22px 8px;
+    /* La marque est une pastille, comme le bouton de droite : chacune
+       apporte son air, l'îlot ne garde que la même marge des deux côtés. */
+    padding-inline: 8px;
     /* Une pilule : la moitié de la hauteur de l'îlot. */
     border-radius: calc(var(--lp-ilot-h) / 2);
     /* 88 % et non 58 %. L'îlot traverse la bande noire du manifeste, et
