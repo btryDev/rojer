@@ -103,7 +103,8 @@ const DOCUMENTS: Document[] = [
     famille: "Évaluation",
     titre: "Le DUERP",
     corps: "L'inventaire des risques, unité de travail par unité de travail, coté et daté. Chaque validation fige une version — c'est celle-là qu'on vous demandera.",
-    reperes: ["Mise à jour annuelle", "Conservé 40 ans"],
+    // ~~« Conservé 40 ans »~~ retiré le 2026-11-07 (la propriétaire).
+    reperes: ["Mise à jour annuelle"],
   },
   {
     numero: "03",
