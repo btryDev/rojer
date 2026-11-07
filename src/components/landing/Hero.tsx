@@ -40,17 +40,12 @@ const MEDIA_PORTRAIT = "(max-width: 767px)";
 
 export function Hero({
   compte,
-  barresFixes = false,
+  nonce,
 }: {
   /** Le compte connecté, s'il y en a un : le hero ne lui propose pas de s'inscrire. */
   compte?: CompteLanding;
-  /**
-   * Navigateur à barres fixes sur iPhone (Chrome, Firefox, Edge) : l'écran
-   * utile y est plus court que sous Safari, dont la barre flotte par-dessus
-   * la page. 86svh y laissait trop de blanc ; le hero prend la hauteur moins
-   * une bande (2026-11-07). Lu côté serveur, sans saut au chargement.
-   */
-  barresFixes?: boolean;
+  /** Le nonce CSP de la requête, pour le script de mesure ci-dessous. */
+  nonce?: string;
 }) {
   // Deux cadrages, une image : `<picture>` choisit la source, l'`<img>`
   // reste unique (un seul téléchargement, un seul aperçu flou).
@@ -68,8 +63,23 @@ export function Hero({
     <section
       // La photo remonte de la hauteur de l'en-tête (`--lp-entete`) pour
       // passer dessous ; le texte la redescend d'autant.
-      className={`relative isolate -mt-[var(--lp-entete)] flex ${barresFixes ? "h-[calc(100svh-2.5rem)]" : "h-[86svh]"} max-h-[1000px] min-h-[560px] overflow-hidden bg-[color:var(--board-ink)] md:h-[100svh] md:min-h-[640px]`}
+      // Au téléphone : la hauteur réellement visible, moins une bande
+      // blanche. Safari et Chrome sur iPhone ne s'accordent pas sur 100svh
+      // (barre flottante d'un côté, barres fixes de l'autre, 2026-11-07) ;
+      // la mesure, prise avant le premier affichage, vaut pour les deux.
+      className="relative isolate -mt-[var(--lp-entete)] flex h-[calc(var(--hauteur-visible,100svh)-1.5rem)] max-h-[1000px] min-h-[560px] overflow-hidden bg-[color:var(--board-ink)] md:h-[100svh] md:min-h-[640px]"
     >
+      {/* Avant que le hero ne s'affiche : la hauteur visible de l'écran,
+          prise une fois au chargement (pas au défilement — la barre de
+          Safari qui se replie ne doit pas faire sauter la page). Script en
+          ligne et synchrone : le premier affichage est déjà le bon, sans
+          décalage de mise en page. */}
+      <script
+        nonce={nonce}
+        dangerouslySetInnerHTML={{
+          __html: "document.documentElement.style.setProperty('--hauteur-visible',innerHeight+'px')",
+        }}
+      />
       <picture>
         <source media={MEDIA_PORTRAIT} srcSet={portrait.srcSet} sizes={portrait.sizes} />
         <img

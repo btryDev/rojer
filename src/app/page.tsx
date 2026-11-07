@@ -1,4 +1,3 @@
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Cadran } from "@/components/landing/Cadran";
 import { MesuresEcran } from "@/components/landing/MesuresEcran";
@@ -9,6 +8,7 @@ import { Manifeste } from "@/components/landing/Manifeste";
 import { OutilSimple } from "@/components/landing/OutilSimple";
 import { SiteFooter } from "@/components/landing/SiteFooter";
 import { chiffresReferentielSuivi } from "@/lib/referentiels/conformite";
+import { nonceDeLaRequete } from "@/lib/securite/nonce";
 import { Tarif } from "@/components/landing/Tarif";
 import { RecoveryHashRedirect } from "./RecoveryHashRedirect";
 
@@ -28,9 +28,7 @@ export default async function Home({
   }
 
   const compte = await compteDeLaSession();
-  // Chrome, Firefox et Edge sur iPhone (`CriOS`, `FxiOS`, `EdgiOS`) gardent
-  // leurs barres fixes : le hero s'y ajuste (`Hero`, `barresFixes`).
-  const barresFixes = /CriOS|FxiOS|EdgiOS/.test((await headers()).get("user-agent") ?? "");
+  const nonce = await nonceDeLaRequete();
 
   // Les chiffres du référentiel, calculés ICI — côté serveur — et passés en
   // props : `Cadran` est un composant client, qui ne doit pas embarquer le
@@ -43,7 +41,7 @@ export default async function Home({
       <RecoveryHashRedirect />
       <LandingHeader compte={compte} surPhoto />
 
-      <Hero compte={compte} barresFixes={barresFixes} />
+      <Hero compte={compte} nonce={nonce} />
 
       {/* « Ce que Rojer tient à jour » passe avant « Concentrez-vous sur
           votre activité » (décision de la propriétaire du 2026-11-06) :

@@ -65,6 +65,11 @@ export default async function RootLayout({
     <html
       lang="fr"
       className={`${variablesPolices} h-full antialiased`}
+      // Le hero de la page publique pose `--hauteur-visible` sur cette
+      // balise avant l'hydratation (`Hero.tsx`) : la différence de `style`
+      // est voulue. N'agit que sur les attributs de <html>, pas sur ses
+      // enfants.
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
         {/* Plus d'en-tête ici (audit Next.js du 2026-10-14, M2) : il est
