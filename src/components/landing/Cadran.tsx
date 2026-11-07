@@ -472,7 +472,7 @@ function CadranListe({ chiffres }: { chiffres: ChiffresReferentielSuivi }) {
                   {reperesDe(d, chiffres).map((r) => (
                     <span
                       key={r}
-                      className="lp-pill bg-[color:var(--board-card)] text-[color:var(--board-blue-ink)]"
+                      className="lp-pill bg-[color:var(--board-blue-pale)] text-[color:var(--board-blue-ink)]"
                     >
                       {r}
                     </span>
