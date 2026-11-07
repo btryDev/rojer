@@ -42,8 +42,12 @@ export const config = {
      * Tout sauf :
      * - _next/static / _next/image (assets Next)
      * - favicon.ico
-     * - fichiers avec extension (.svg, .png, .jpg, .webp, .woff2, etc.)
+     * - fichiers avec extension (.svg, .png, .jpg, .webp, .woff2, .mp4…)
+     *   Les vidéos de `public/` (2026-11-07) : sans elles, la vidéo de la
+     *   page publique passait par le proxy et était redirigée vers /login
+     *   pour un visiteur sans session — elle ne se lisait qu'une fois
+     *   connecté. Les fichiers déposés passent par /api, jamais par ici.
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2?|ttf|otf)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2?|ttf|otf|mp4|webm)$).*)",
   ],
 };
