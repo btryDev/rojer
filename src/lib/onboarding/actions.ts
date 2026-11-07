@@ -9,6 +9,12 @@ import { NOM_BATIMENT_PRINCIPAL } from "@/lib/batiments/schema";
 import { poserEtablissementActif } from "@/lib/etablissements/etablissement-actif";
 import { sirenDuSiret } from "@/lib/etablissements/siret";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
+import {
+  compteEnEssai,
+  MESSAGE_ENTREPRISE_DEJA_ESSAYEE,
+  noterEssaiEntreprise,
+  sirenEssayeAilleurs,
+} from "@/lib/abonnements/essai-entreprise";
 import { onboardingSchema } from "./schema";
 import { MESSAGE_REFUS_EFFECTIF_ENTREPRISE } from "@/lib/entreprises/schema";
 import { MESSAGE_EFFECTIF_REPRIS } from "./rattachement";
@@ -102,6 +108,22 @@ export async function finaliserOnboarding(
   const { compte, db } = await requireCompteDOnboarding(d.raisonSociale);
 
   const siren = sirenDuSiret(d.siret);
+
+  // Un essai par entreprise (ADR-053 § 8) : pendant un essai, une entreprise
+  // déjà essayée par un autre compte ne se CRÉE pas. Un site de plus d'une
+  // entreprise que le compte suit déjà n'est pas concerné. Le message seul,
+  // sans le champ : il ne s'agit pas de corriger le SIRET.
+  const enEssai = await compteEnEssai(db, compte.compteId);
+  if (
+    enEssai &&
+    !(await db.entreprise.findUnique({
+      where: { compteId_siren: { compteId: compte.compteId, siren } },
+      select: { id: true },
+    })) &&
+    (await sirenEssayeAilleurs(siren, compte.compteId))
+  ) {
+    return { status: "error", message: MESSAGE_ENTREPRISE_DEJA_ESSAYEE };
+  }
 
   let result;
   try {
@@ -242,6 +264,13 @@ export async function finaliserOnboarding(
   // Sans ce trait, un second établissement se créerait puis l'accueil
   // renverrait au premier.
   await poserEtablissementActif(result.id);
+
+  // Le SIREN noté sous ce compte (un essai par entreprise). Un échec ne défait
+  // pas la création : il laisse seulement ce SIREN essayable une fois de plus.
+  if (enEssai)
+    await noterEssaiEntreprise(siren, compte.compteId).catch((e: unknown) =>
+      console.error(`essai : SIREN non noté — ${e instanceof Error ? e.name : "erreur"}`),
+    );
 
   revalidatePath("/");
   revalidatePath(`/entreprises/${result.entrepriseId}`);

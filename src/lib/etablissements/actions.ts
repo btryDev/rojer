@@ -1,5 +1,11 @@
 "use server";
 
+import {
+  compteEnEssai,
+  MESSAGE_ENTREPRISE_DEJA_ESSAYEE,
+  noterEssaiEntreprise,
+  sirenEssayeAilleurs,
+} from "@/lib/abonnements/essai-entreprise";
 import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import {
   clesDesEtablissements,
@@ -213,7 +219,7 @@ export async function modifierEtablissement(
   formData: FormData,
 ): Promise<EtablissementActionState> {
   await verifierSaisie();
-  const { db } = await assertEtablissementDuCompte(id);
+  const { db, compte } = await assertEtablissementDuCompte(id);
   const brut = normaliserFormData(formData);
   const parsed = etablissementSchema.safeParse(brut);
   if (!parsed.success) {
@@ -278,6 +284,14 @@ export async function modifierEtablissement(
   }
   const changeDEntreprise = entrepriseCible !== avant.entrepriseId;
 
+  // Un essai par entreprise (ADR-053 § 8) : poser un SIREN sur une entreprise
+  // ancienne qui n'en avait pas, c'est la déclarer — même règle qu'à
+  // l'onboarding, seule autre porte d'un SIREN.
+  const essaiANoter = sirenAPoser && (await compteEnEssai(db, compte.compteId));
+  if (essaiANoter && (await sirenEssayeAilleurs(siren, compte.compteId))) {
+    return { status: "error", message: MESSAGE_ENTREPRISE_DEJA_ESSAYEE };
+  }
+
   // Le premier type qui restera en base : le posté, sinon l'enregistré
   // (`|| undefined` en amont le laisse en place quand il n'est pas posté).
   const typeErpApres = parsed.data.typeErp ?? avant.typeErp;
@@ -325,6 +339,11 @@ export async function modifierEtablissement(
     }
     throw e;
   }
+
+  if (essaiANoter)
+    await noterEssaiEntreprise(siren, compte.compteId).catch((e: unknown) =>
+      console.error(`essai : SIREN non noté — ${e instanceof Error ? e.name : "erreur"}`),
+    );
 
   revalidatePath(`/entreprises/${etab.entrepriseId}`);
   revalidatePath(`/etablissements/${id}`);
