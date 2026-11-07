@@ -37,6 +37,9 @@ export function Reveal({
     // (très vieux navigateur), rien n'est caché.
     if (typeof IntersectionObserver === "undefined") return;
     if (el.getBoundingClientRect().top < window.innerHeight) return;
+    // Au téléphone, pas d'apparition : le contenu est simplement là
+    // (décision de la propriétaire, 2026-11-07). La vidéo, elle, se lit.
+    if (window.matchMedia("(max-width: 767px)").matches) return;
     el.dataset.vu = "false";
     const obs = new IntersectionObserver(
       (entrees) => {
