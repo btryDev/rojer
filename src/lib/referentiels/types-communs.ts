@@ -739,9 +739,9 @@ export type CategorieEquipement = (typeof CATEGORIES_EQUIPEMENT)[number];
  * Les catégories réunies par l'ADR-057 § 5 (2026-11-07), et celle qui les
  * reprend. Elles ont quitté l'enum Prisma : la migration
  * `20261107120100_categories_jumelles_reprise` reprend les rangées selon
- * cette table, puis recrée l'enum sans elles. Gardée pour la lecture des
- * traces anciennes (un export, un rapport qui nommerait « CTA ») et pour le
- * test qui lie la migration à la table.
+ * cette table, puis recrée l'enum sans elles. Aucun code de production ne la
+ * lit : elle n'existe que pour `categories-jumelles.test.ts`, qui lie la
+ * migration à elle.
  */
 export const CATEGORIES_REPRISES_ADR_057 = {
   VMC: "VENTILATION",

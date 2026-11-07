@@ -107,7 +107,7 @@ function parcAudit(): EquipementMatching[] {
   );
   // ADR-057 § 5 : une catégorie qui pose un type a un appareil PAR type — la
   // ligne du portail ou du masque lit le type déclaré.
-  return [...categories].flatMap((c) => {
+  return [...categories].flatMap((c): EquipementMatching[] => {
     const type = QUESTION_DE_TYPE[c];
     if (!type) return [{ id: `eq-${c}`, libelle: c, categorie: c, caracteristiques: null }];
     return type.options.map((o) => ({

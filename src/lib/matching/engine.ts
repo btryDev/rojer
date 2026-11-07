@@ -1036,6 +1036,18 @@ function conditionSatisfaite(
   return false;
 }
 
+/**
+ * L'équipement satisfait-il toutes les conditions posées sur sa catégorie ?
+ * LA lecture, pour la ligne d'appareil (`matchEquipements`) comme pour la
+ * ligne d'établissement que l'appareil fait naître (`siEquipementDeclare`).
+ */
+function equipementSatisfait(
+  conditions: Map<CategorieEquipement, ConditionApplication[]>,
+  eq: EquipementMatching,
+): boolean {
+  return (conditions.get(eq.categorie) ?? []).every((c) => conditionSatisfaite(c, eq));
+}
+
 function conditionsParCategorie(
   conditions: ConditionApplication[] | undefined,
 ): Map<CategorieEquipement, ConditionApplication[]> {
@@ -1067,9 +1079,7 @@ function matchEquipements(
   const declencheurs: EquipementMatching[] = [];
   for (const eq of equipements) {
     if (!categoriesAcceptees.has(eq.categorie)) continue;
-    const condsCategorie = conditions.get(eq.categorie) ?? [];
-    const toutes = condsCategorie.every((c) => conditionSatisfaite(c, eq));
-    if (toutes) declencheurs.push(eq);
+    if (equipementSatisfait(conditions, eq)) declencheurs.push(eq);
   }
 
   if (declencheurs.length === 0) {
@@ -1179,15 +1189,14 @@ function evaluerChamp(
     // Un équipement ne compte que s'il satisfait les conditions de sa
     // catégorie (2026-11-07, ADR-057 § 5 : la porte, pas le portail, pour
     // CO 48 § 3 e)).
-    const conditions = conditionsParCategorie(o.conditions);
-    const declencheurs =
+    const conditions =
       o.porteur === "etablissement" && o.siEquipementDeclare
+        ? conditionsParCategorie(o.conditions)
+        : null;
+    const declencheurs =
+      o.porteur === "etablissement" && o.siEquipementDeclare && conditions
         ? o.siEquipementDeclare.filter((c) =>
-            equipements.some(
-              (e) =>
-                e.categorie === c &&
-                (conditions.get(c) ?? []).every((cond) => conditionSatisfaite(cond, e)),
-            ),
+            equipements.some((e) => e.categorie === c && equipementSatisfait(conditions, e)),
           )
         : null;
     if (declencheurs !== null && declencheurs.length === 0) return null;

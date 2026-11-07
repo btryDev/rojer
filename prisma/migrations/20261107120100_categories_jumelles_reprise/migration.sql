@@ -23,18 +23,43 @@
 -- donnée n'est jamais écrasée.
 --
 -- Les prescriptions sur mesure (PrescriptionParticuliere) suivent la même
--- table, sans caractéristique : elles n'en portent pas.
+-- table, sans caractéristique : elles n'en portent pas. Une prescription
+-- active qui visait TOUTE une catégorie jumelle (sans appareil désigné)
+-- viserait après la reprise toute la catégorie réunie — celle d'un harnais
+-- tomberait sur chaque paire de gants. La migration S'ARRÊTE dans ce cas,
+-- avant toute écriture : un tel cas se règle à la main (désigner l'appareil),
+-- pas par une reprise qui élargit en silence ce qu'un acte d'autorité ou un
+-- assureur a prescrit.
 --
 -- La table de la reprise est `CATEGORIES_REPRISES_ADR_057`
 -- (src/lib/referentiels/types-communs.ts).
 --
 -- UN SEUL DÉPLOIEMENT, et non deux comme le prévoyait le plan : l'enum est
--- recréé sans les sept anciennes valeurs à la fin de ce fichier. Un second
--- déploiement n'aurait rien protégé — le code en service pendant la bascule
--- lit les nouvelles valeurs de la même façon dans les deux cas ; il ne
--- diffère que pour une ÉCRITURE d'ancienne valeur, qui échoue ici au lieu de
--- laisser une rangée orpheline que le nouveau code ne sait pas lire.
+-- recréé sans les sept anciennes valeurs à la fin de ce fichier.
+-- CE QUE LA BASCULE COÛTE, dans les deux schémas : entre `migrate deploy` et
+-- la promotion du nouveau déploiement (quelques secondes), le code encore en
+-- service ne sait pas lire une rangée reprise — son client Prisma refuse
+-- « VENTILATION » —, et les pages qui lisent ces appareils échouent. Le plan
+-- en deux temps reprenait les rangées au premier déploiement : il avait la
+-- même fenêtre. Seul un déploiement en trois temps, avec un code-pont qui lit
+-- les deux jeux de valeurs sur une quarantaine de lectures, l'aurait évitée ;
+-- écarté pour quelques secondes d'erreurs. À fusionner à une heure creuse.
+-- Ce que le second déploiement aurait changé : une ÉCRITURE d'ancienne valeur
+-- pendant la fenêtre, qui échoue ici au lieu de laisser une rangée que le
+-- nouveau code ne sait pas lire.
 -- ============================================================================
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM "PrescriptionParticuliere"
+    WHERE "actif" AND "equipementId" IS NULL
+      AND "categorieEquipement" IN ('VMC', 'CTA', 'PORTE_AUTO', 'PORTAIL_AUTO',
+        'EPI', 'EPI_ANTICHUTE', 'EPI_RESPIRATOIRE', 'EPI_GILET_SAUVETAGE')
+  ) THEN
+    RAISE EXCEPTION 'ADR-057 : une prescription sur mesure vise toute une catégorie réunie (VMC, CTA, porte, portail ou EPI) sans appareil désigné ; la désigner avant de reprendre les catégories.';
+  END IF;
+END $$;
 
 -- Le JSON peut être NULL ou un `null` JSON : on repart d'un objet vide.
 UPDATE "Equipement"

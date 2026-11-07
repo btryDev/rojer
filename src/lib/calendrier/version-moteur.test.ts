@@ -590,8 +590,10 @@ const RELEVE = {
   // conditions de la catégorie (la porte, pas le portail, pour CO 48). NON :
   // sur un référentiel donné, la régénération écrit les mêmes lignes — seules
   // les conditions neuves du référentiel en changent, et elles déplacent déjà
-  // son empreinte, donc le sceau : ~~de10984fbe6999b3~~ recopiée.
-  empreinte: "d0315317cafd64ab",
+  // son empreinte, donc le sceau : ~~de10984fbe6999b3~~ recopiée. Puis la
+  // revue : `equipementSatisfait`, une lecture pour les deux branches (NON,
+  // extraction) : ~~d0315317cafd64ab~~ recopiée.
+  empreinte: "c21e2a827cf06f35",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

@@ -4,6 +4,7 @@
 // page « Ce que Rojer ne couvre pas » (2026-10-18). Chaîne entière : le calcul
 // du dossier (`obligationsNiveauAuditDuDossier`), puis le rendu des cartes.
 
+import { libelleDuType } from "@/lib/equipements/type-appareil";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -109,7 +110,7 @@ describe("rubrique « hors du quotidien » — ce que la carte dit", () => {
       li.textContent?.includes(lignes.find((l) => l.id === EPI)!.libelle),
     )!;
     expect(carte.textContent).toContain(
-      `Vise les équipements déclarés : ${LABEL_CATEGORIE_EQUIPEMENT.EPI}.`,
+      `Vise les équipements déclarés : ${libelleDuType("EPI", "respiratoire")}.`,
     );
   });
 
