@@ -23,7 +23,12 @@ const PHOTO_HERO = {
   position: "68% 20%",
 };
 
-export function Hero({ connecte }: { connecte: boolean }) {
+export function Hero({
+  inscription,
+}: {
+  /** Le lien d'inscription, calculé par la page ; absent pour un compte connecté. */
+  inscription?: string;
+}) {
   return (
     <section
       // La photo remonte de la hauteur de l'en-tête (`--lp-entete`) pour
@@ -36,8 +41,9 @@ export function Hero({ connecte }: { connecte: boolean }) {
         fill
         preload
         // En portrait, la photo 16/9 couvre la hauteur et déborde en largeur :
-        // elle s'affiche sur environ 178 % de la hauteur d'écran.
-        sizes="(max-aspect-ratio: 16/9) 178vh, 100vw"
+        // elle s'affiche sur environ 178 % de la hauteur d'écran (149 % sous
+        // md, où le hero ne fait que 84svh, 560 px au moins).
+        sizes="(max-width: 767px) max(150vh, 996px), (max-aspect-ratio: 16/9) 178vh, 100vw"
         className="-z-10 object-cover"
         style={{ objectPosition: PHOTO_HERO.position }}
       />
@@ -74,8 +80,8 @@ export function Hero({ connecte }: { connecte: boolean }) {
           {/* Un compte connecté retrouve son dossier par la maison de
               l'en-tête : le hero ne le lui redemande pas. */}
           <div className="mt-10 flex flex-wrap items-center gap-4">
-            {!connecte ? (
-              <Link href="/signup" className="lp-btn lp-btn-blanc">
+            {inscription ? (
+              <Link href={inscription} className="lp-btn lp-btn-blanc">
                 Essayer 30 jours
                 <span className="lp-fleche" aria-hidden>
                   →

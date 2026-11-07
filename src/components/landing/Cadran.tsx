@@ -13,6 +13,7 @@
 // verticale sobre (petit écran ou `prefers-reduced-motion`). Le contenu
 // est le même, écrit une seule fois.
 
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 // Le TYPE seul : un composant client qui importerait le référentiel en
 // embarquerait le référentiel entier — notes internes comprises — dans le
@@ -23,6 +24,8 @@ import { Reveal } from "./Reveal";
 
 type Document = {
   numero: string;
+  /** Le picto de la liste du téléphone, dans public/illustrations/landing/documents. */
+  picto: string;
   famille: string;
   titre: string;
   corps: string;
@@ -50,6 +53,7 @@ function reperesDe(d: Document, c: ChiffresReferentielSuivi): string[] {
 const DOCUMENTS: Document[] = [
   {
     numero: "01",
+    picto: "calendrier",
     famille: "Échéances",
     titre: "Le calendrier des vérifications",
     corps: "Vous déclarez vos équipements une fois. Rojer en déduit les vérifications qui les concernent ; quand le texte fixe un rythme, il pose les dates et les repousse à mesure que les rapports arrivent.",
@@ -83,6 +87,7 @@ const DOCUMENTS: Document[] = [
   },
   {
     numero: "02",
+    picto: "duerp",
     famille: "Évaluation",
     titre: "Le DUERP",
     corps: "L'inventaire des risques, unité de travail par unité de travail, coté et daté. Chaque validation fige une version — c'est celle-là qu'on vous demandera.",
@@ -90,6 +95,7 @@ const DOCUMENTS: Document[] = [
   },
   {
     numero: "03",
+    picto: "registre",
     famille: "Preuve",
     titre: "Le registre de sécurité",
     corps: "Chaque rapport est horodaté et rangé à côté de l'échéance qu'il solde. Vous le déposez une fois : il reste retrouvable, et il part avec l'export.",
@@ -97,6 +103,7 @@ const DOCUMENTS: Document[] = [
   },
   {
     numero: "04",
+    picto: "plan",
     famille: "Suivi",
     titre: "Le plan d'actions",
     // ~~« Chaque écart ouvre une action »~~ : l'action se crée à la main depuis
@@ -106,6 +113,7 @@ const DOCUMENTS: Document[] = [
   },
   {
     numero: "05",
+    picto: "accessibilite",
     famille: "Public",
     titre: "Le registre d'accessibilité",
     // ~~« l'attestation… jamais périmée »~~ (contre-lecture du 2026-09-26) :
@@ -116,6 +124,7 @@ const DOCUMENTS: Document[] = [
   },
   {
     numero: "06",
+    picto: "dossier",
     famille: "Restitution",
     titre: "Le dossier de contrôle",
     corps: "Inspection, assurance, bailleur, acquéreur : une archive datée avec l'index des pièces. Un clic, pas une soirée.",
@@ -427,24 +436,28 @@ function CadranListe({ chiffres }: { chiffres: ChiffresReferentielSuivi }) {
         </p>
         <ol className="m-0 mt-12 flex list-none flex-col gap-10 rounded-[28px] bg-[color:var(--board-sky)] p-6 sm:mt-14 sm:gap-12 sm:p-10">
           {DOCUMENTS.map((d) => (
-            // Un seul observateur par document : le numéro et le texte
+            // Un seul observateur par document : le picto et le texte
             // montent ensemble. La liste est servie sur petit écran ET en
-            // mouvement réduit (`simple`) ; là, `.lp-reveal` ne bouge pas.
+            // mouvement réduit (`simple`) ; en mouvement réduit, `.lp-reveal`
+            // ne bouge pas.
             <Reveal
               as="li"
               ample="texte"
               key={d.numero}
               className="grid grid-cols-1 gap-3 border-t border-[rgba(10,10,10,.16)] pt-6 first:border-t-0 first:pt-0 sm:grid-cols-[88px_1fr] sm:gap-8"
             >
-              <span
-                className="text-[2.4rem] font-semibold leading-none tabular-nums text-[color:var(--board-ink)]"
-                style={{
-                  fontFamily: "var(--font-titre), sans-serif",
-                  letterSpacing: "-0.05em",
-                }}
-              >
-                {d.numero}
-              </span>
+              {/* Décoratif : le titre dit déjà de quel document il s'agit.
+                  Le cadran garde ses numéros ; la liste, sans roue pour
+                  enchaîner les crans, se repère au dessin. */}
+              <Image
+                src={`/illustrations/landing/documents/${d.picto}.webp`}
+                alt=""
+                aria-hidden
+                width={200}
+                height={200}
+                sizes="88px"
+                className="size-[72px] sm:size-[88px]"
+              />
               <div>
                 <p className="lp-eyebrow">{d.famille}</p>
                 <h3 className="lp-titre lp-h3 mt-2">{d.titre}</h3>

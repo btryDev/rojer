@@ -52,6 +52,7 @@ export default async function Home({
   // référentiel. Ce sont les obligations SUIVIES au quotidien (total − niveau
   // audit), décision de la propriétaire du 2026-10-08.
   const chiffres = chiffresReferentielSuivi();
+  const connecte = Boolean(user);
 
   return (
     <main className="bg-[color:var(--board-card)]">
@@ -59,11 +60,11 @@ export default async function Home({
       <LandingHeader
         ctaHref={ctaHref}
         ctaLabel={ctaLabel}
-        connecte={Boolean(user)}
+        connecte={connecte}
         surPhoto
       />
 
-      <Hero connecte={Boolean(user)} />
+      <Hero inscription={connecte ? undefined : ctaHref} />
 
       {/* « Ce que Rojer tient à jour » passe avant « Concentrez-vous sur
           votre activité » (décision de la propriétaire du 2026-11-06) :
@@ -71,7 +72,7 @@ export default async function Home({
       <Cadran chiffres={chiffres} />
       <Manifeste />
       <OutilSimple />
-      <Tarif ctaHref={ctaHref} ctaLabel={ctaLabel} connecte={Boolean(user)} />
+      <Tarif ctaHref={ctaHref} ctaLabel={ctaLabel} connecte={connecte} />
       <SiteFooter />
     </main>
   );
