@@ -74,6 +74,11 @@ const DOCUMENTS: Document[] = [
     // ~~« Sources Légifrance et INRS »~~ : huit références citent le
     // règlement (UE) 2024/573 (EUR-Lex), une seule l'INRS (compté en
     // appelant le référentiel, relecture du 2026-09-26).
+    // ~~« Sources Légifrance et EUR-Lex »~~ (2026-11-07, la propriétaire) :
+    // EUR-Lex ne porte qu'un texte (le 2024/573, contrôle d'étanchéité des
+    // gaz fluorés) contre des centaines d'articles Légifrance ; le nommer à
+    // égalité grossissait sa part. L'INRS ne revient pas : il ne fixe aucune
+    // vérification, il nourrit les risques du DUERP.
     // 173 → 171 le 2026-10-08 (C64) : 173 + 0 − 2 (AS 9 aux hôtels de 5ᵉ,
     // supprimées) = 171, compté en appelant le référentiel.
     // 171 → 172 le 2026-10-08 (C66) : 171 + 1 (appareils de cuisson hors
@@ -90,7 +95,7 @@ const DOCUMENTS: Document[] = [
     // est une question posée à la propriétaire, pas tranchée.~~ Tranchée le
     // 2026-10-08 : ce que la page annonce, ce sont les SUIVIES, 174 − 3 = 171.
     annonceLeReferentiel: true,
-    reperes: ["Sources Légifrance et EUR-Lex"],
+    reperes: ["Sources Légifrance"],
   },
   {
     numero: "02",
