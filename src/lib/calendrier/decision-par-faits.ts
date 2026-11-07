@@ -104,6 +104,8 @@ export function faitsDeLigne(
   ex: OccurrenceExistante | null,
   heritee: Date | null,
   now: Date,
+  /** Voir `FaitsDeLigne.realisationEquivalente` (ADR-057). */
+  equivalente: Date | null,
 ): FaitsDeLigne {
   // Le type le rend requis ; une fixture ou une donnée passée par un `as` peut
   // encore arriver sans. On refuse, en nommant la ligne.
@@ -121,6 +123,7 @@ export function faitsDeLigne(
     dateDuTitre: g.sources.dateDuTitre,
     realisation: ex === null ? null : realisationPropre(ex),
     realisationHeritee: heritee,
+    realisationEquivalente: equivalente,
     miseEnService: g.sources.miseEnService,
     origine: ex === null ? now : ex.suiviDepuis,
   };

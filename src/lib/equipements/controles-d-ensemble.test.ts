@@ -16,8 +16,10 @@ const { controlesDEnsemble } = await import("./controles-d-ensemble");
 
 const ligne = (over: Record<string, unknown>) => ({
   id: "v1",
-  obligationId: "aeration-controle-installations-r4222-20",
-  libelleObligation: "Contrôle annuel des installations d'aération",
+  // [2026-11-05, ADR-057 : ~~R. 4222-20~~ est porté par l'appareil ; le
+  // contrôle d'ensemble de ces tests est celui de l'habitation (art. 101).]
+  obligationId: "habitation-verification-annuelle-installations-securite",
+  libelleObligation: "Vérification annuelle des installations de sécurité (immeuble d'habitation)",
   statut: "planifiee",
   datePrevue: new Date("2027-03-01T00:00:00Z"),
   periodicite: "annuelle",
@@ -29,12 +31,12 @@ const ligne = (over: Record<string, unknown>) => ({
 });
 
 describe("controlesDEnsemble", () => {
-  it("range l'aération sous son domaine, et sous la cuisson en « aussi » (les hottes)", async () => {
+  it("range le contrôle de l'habitation sous l'incendie, et sous l'aération en « aussi » (la VMC)", async () => {
     h.lignes = [ligne({})];
     const [c] = await controlesDEnsemble("e1", new Date("2026-10-24T10:00:00Z"));
-    expect(c).toMatchObject({ domaine: "aeration", pointsOuverts: 2 });
-    expect(c.aussi).toContain("cuisson_hotte");
-    expect(c.aussi).not.toContain("aeration");
+    expect(c).toMatchObject({ domaine: "incendie", pointsOuverts: 2 });
+    expect(c.aussi).toContain("aeration");
+    expect(c.aussi).not.toContain("incendie");
   });
 
   it("écarte un état permanent (sans rendez-vous) : il se tient ailleurs", async () => {

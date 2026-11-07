@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
-    declarationEtatPermanent: { findMany: vi.fn(async () => []) },
+    declarationEtatPermanent: { findMany: vi.fn(async () => []) }, pieceEtatPermanent: { findMany: vi.fn(async () => []) },
   },
 }));
 vi.mock("@/lib/auth/require-user", () => ({

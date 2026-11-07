@@ -24,6 +24,7 @@ function faux(utilises: number, formule = "rojer_essentiel_mensuel") {
     prestataire: lignes([{ attestationUrssafCle: "urssaf", assuranceRcProCle: null, kbisCle: "photo" }]),
     piecePrestataire: lignes([{ fichierCle: "piece" }]),
     analyseLegionelle: lignes([]),
+    pieceEtatPermanent: lignes([]), // ADR-056, report main → cc du 2026-11-06
     abonnement: { findUnique: vi.fn(async () => ({ formule, statut: "active", debutPayantLe: new Date("2026-01-01"), essaiUtiliseLe: null })) },
     $queryRaw: vi.fn(async (q: TemplateStringsArray) => (q.join("?").includes("SUM") ? [{ total: BigInt(utilises) }] : [])),
     fichierStocke: { upsert: vi.fn(async () => ({})), deleteMany: vi.fn(async () => ({})) },

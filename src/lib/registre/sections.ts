@@ -509,7 +509,11 @@ export const SECTIONS_REGISTRE: readonly SectionRegistre[] = [
     id: "annexes",
     partie: "5",
     titre: "Annexes",
+    // [2026-11-05 : ~~« Plans d'évacuation, procès-verbaux, notices et
+    // pièces jointes libres. »~~ — la fiche n'avait aucun moyen d'en recevoir.
+    // Elle relit désormais les écrits que le texte fait annexer au registre
+    // (`annexes.ts`).]
     attendu:
-      "Plans d'évacuation, procès-verbaux, notices et pièces jointes libres.",
+      "Les écrits que le règlement de sécurité fait annexer au registre : schéma d'organisation de la sécurité, contrats d'entretien, notices.",
   },
 ] as const;

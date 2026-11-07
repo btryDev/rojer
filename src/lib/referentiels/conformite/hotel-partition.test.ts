@@ -21,6 +21,11 @@ import { CATEGORIES_ERP, TYPES_ERP } from "../types-communs";
  * Il rougit si l'exclusion du type O est retirée d'une ligne générale (deux
  * rendez-vous pour un acte), ou si la ligne de l'hôtel cesse de le viser
  * (aucun).
+ *
+ * [2026-11-05, ADR-057 : PE 4 § 2 et PO 1 § 3 sont portés par l'appareil.
+ * La paire se lit donc sur une installation déclarée — l'installation de
+ * gaz, que seuls ces deux textes visent en 5ᵉ catégorie : une ligne, et la
+ * bonne.]
  */
 
 const PAIRES = [
@@ -63,8 +68,15 @@ const etab = (o: Partial<EtablissementMatching>): EtablissementMatching => ({
   ...o,
 });
 
+// Une installation de gaz déclarée : les lignes de l'établissement, plus
+// celles qui portent sur elle (ADR-057).
+const GAZ = { id: "gaz", libelle: "Gaz", categorie: "INSTALLATION_GAZ" as const, caracteristiques: null };
 const ids = (e: EtablissementMatching) =>
-  new Set(determineObligationsApplicables(e, []).map((a) => a.obligation.id));
+  new Set(
+    determineObligationsApplicables(e, [GAZ])
+      .filter((a) => a.porteur !== "equipement" || a.equipementsConcernes.some((q) => q.id === "gaz"))
+      .map((a) => a.obligation.id),
+  );
 
 describe("ERP de 5ᵉ catégorie : une ligne par acte, l'hôtel à son rythme", () => {
   for (const typeErp of TYPES_ERP) {

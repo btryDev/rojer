@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { unstable_rethrow } from "next/navigation";
 import { compterActions } from "@/lib/actions/queries";
 import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import { LegalBadge, ReferenceSansLien, Textes, WhyCard, StatusPill } from "@/components/ui-kit";
@@ -22,6 +23,8 @@ import {
   pastilleDuFait,
 } from "@/lib/pdf/checklist-controle";
 import { composerRegistreDeLEtablissement } from "@/lib/registre/queries";
+import { lireAnnexesDuRegistre } from "@/lib/registre/contenu-ailleurs";
+import { phraseAnnexesDuDossier, piecesDesAnnexes } from "@/lib/registre/annexes";
 import { bilanDuRegistre, completudesDuRegistre } from "@/lib/registre/completude";
 import {
   NB_ANALYSES_DU_DOSSIER,
@@ -60,7 +63,7 @@ export default async function ControlePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { etablissement } = await requireEtablissement(id);
+  const { etablissement, db, compte } = await requireEtablissement(id);
   // Une horloge, lue une fois : l'âge du DUERP et la fenêtre de douze mois
   // décrivent le même instant.
   const maintenant = new Date();
@@ -82,6 +85,7 @@ export default async function ControlePage({
     couverture,
     registre,
     points,
+    annexes,
   ] = await Promise.all([
     getDashboardData(id),
     compterVigilanceParGravite(id),
@@ -101,6 +105,18 @@ export default async function ControlePage({
     // Les points à corriger, que le plan d'actions ne compte plus (ADR-048,
     // lot 3) : un écart électrique en retard doit se voir ici.
     compterActions(id, maintenant, { origine: "verification" }),
+    // Les écrits annexés au registre que le ZIP joint (ADR-056) : la même
+    // lecture que la fiche « Annexes » et que la route. Une lecture en échec
+    // ne fait pas tomber l'écran : la ligne le dit, comme le README du ZIP
+    // (relecture du 2026-11-05).
+    // `null` = lecture en échec ; un dossier introuvable rend aussi `null`,
+    // mais `requireEtablissement` l'a déjà écarté plus haut.
+    lireAnnexesDuRegistre({ compte, db }, id).catch((e: unknown) => {
+      // Une redirection n'est pas un échec de lecture : Next la reprend.
+      unstable_rethrow(e);
+      console.error("controle : lecture des annexes du registre en échec", e);
+      return null;
+    }),
   ]);
 
   // LE PATRON `etat-charge.ts` [2026-10-25 : fichier retiré avec la plaque
@@ -196,6 +212,12 @@ export default async function ControlePage({
       // Ce n'est PAS L. 4711-5, qui autorise seulement à réunir plusieurs
       // registres en un seul (verbatim relevé le 2026-08-28).
       reference: "Art. R. 4323-25 et R. 4323-26 CT",
+    },
+    annexes: {
+      description: phraseAnnexesDuDossier(
+        annexes && { aAnnexer: annexes.lignes.length, deposes: piecesDesAnnexes(annexes).length },
+      ),
+      present: piecesDesAnnexes(annexes).length > 0,
     },
     rapports: {
       description:

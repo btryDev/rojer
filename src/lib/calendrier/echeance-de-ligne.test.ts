@@ -82,6 +82,7 @@ function ligne(d: Declaration): FaitsDeLigne {
         }
       : null,
     realisationHeritee: d.heritee === undefined ? null : date(d.heritee),
+    realisationEquivalente: null,
     miseEnService: d.miseEnService === undefined ? null : date(d.miseEnService),
     origine: date(d.origine),
   };
@@ -1324,6 +1325,7 @@ describe("echeanceDeLigne — propriétés", () => {
             ...ailleurs,
             realisation: { date: date("2003-04-05"), resultat: "ecart_majeur" },
             realisationHeritee: date("2002-01-01"),
+            realisationEquivalente: null,
           }),
           r.cas,
         ).toEqual(rendu);

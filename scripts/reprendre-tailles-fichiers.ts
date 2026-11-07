@@ -32,6 +32,7 @@ const RATTACHEMENT: Record<keyof typeof CLES_STOCKEES, { compte: string[]; taill
   Prestataire: { compte: ["etablissement", "entreprise"] },
   PiecePrestataire: { compte: ["prestataire", "etablissement", "entreprise"] },
   AnalyseLegionelle: { compte: ["carnet", "etablissement", "entreprise"] },
+  PieceEtatPermanent: { compte: ["etablissement", "entreprise"], taille: { fichierCle: "fichierTaille" } },
 };
 
 type Lecteur = { findMany(a: object): Promise<Record<string, unknown>[]> };

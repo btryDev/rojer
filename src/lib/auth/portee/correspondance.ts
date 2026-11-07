@@ -57,6 +57,7 @@ export const CORRESPONDANCE = {
   FicheRegistre: { parent: "etablissement" },
   Salarie: { parent: "etablissement" },
   DeclarationEtatPermanent: { parent: "etablissement" },
+  PieceEtatPermanent: { parent: "etablissement" }, // ADR-056
   Intervention: { parent: "etablissement" }, // module retiré (ADR-018), table encore là
 
   // Un cran plus loin

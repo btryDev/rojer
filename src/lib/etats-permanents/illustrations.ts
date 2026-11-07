@@ -146,6 +146,7 @@ export const SUJET_PAR_OBLIGATION: Readonly<Record<string, SujetIllustration>> =
   "incendie-erp-hotel-consigne-chambres": "porte-chambre",
   "incendie-erp-hotel-plans-evacuation-niveaux": "plan-evacuation",
   "incendie-erp-plan-intervention-entrees": "plan-intervention",
+  "incendie-erp-5-plan-intervention-entree": "plan-intervention",
   "incendie-travail-instructions-evacuation": "porte-evacuation",
   "signalisation-etablissement-cheminements-evacuation": "balisage",
   // secourir

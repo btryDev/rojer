@@ -473,10 +473,12 @@ describe("genererCalendrier — continuité par-dessus un identifiant retiré", 
     // du générateur ne verraient rien.
     //
     // Le fragment « VMC/CTA » a été contrôlé le 2025-06-01. L'absorbante est
-    // annuelle et portée par l'établissement — due même sans le moindre
-    // appareil déclaré. Sa ligne doit donc naître datée du 2026-06-01, donc en
-    // retard, et NON « à planifier » comme si le contrôle n'avait pas eu lieu.
-    poserEtablissement([]);
+    // annuelle ~~et portée par l'établissement — due même sans le moindre
+    // appareil déclaré~~ [2026-11-05, ADR-057 : portée par l'appareil, la
+    // VMC déclarée ci-dessous]. Sa ligne doit donc être datée du 2026-06-01,
+    // donc en retard, et NON « à planifier » comme si le contrôle n'avait pas
+    // eu lieu.
+    poserEtablissement([{ id: "eq-vmc", categorie: "VMC" }]);
     db.verifications = [
       ligne({
         id: "v-fragment",
@@ -508,10 +510,12 @@ describe("genererCalendrier — continuité par-dessus un identifiant retiré", 
       "la ligne absorbante est repartie de zéro : la succession déclarée n'a pas été lue",
     ).toEqual(new Date("2026-06-01T00:00:00Z"));
 
-    // Le fragment garde sa preuve et son archivage — rien n'est détruit.
-    const fragment = db.verifications.find((v) => v.id === "v-fragment");
-    expect(fragment?.nbRapports).toBe(1);
-    expect(fragment?.archiveLe).toBeInstanceOf(Date);
+    // ~~Le fragment garde sa preuve et son archivage~~ [2026-11-05, ADR-057 :
+    // l'absorbante étant portée par le même appareil, la rangée du fragment
+    // est ADOPTÉE — même identifiant, sa preuve avec elle]. Rien n'est détruit.
+    expect(absorbante?.id).toBe("v-fragment");
+    expect(absorbante?.nbRapports).toBe(1);
+    expect(absorbante?.archiveLe ?? null).toBeNull();
   });
 });
 
@@ -1368,7 +1372,10 @@ describe("genererCalendrier — établissement d'un autre client", () => {
 
 describe("ADR-036 — S1 à S7, de la base à la base", () => {
   const d = (cle: string) => depuisCleJourCivil(cle);
-  const AERATION_ETAB = "aeration-controle-installations-r4222-20";
+  // [2026-11-05, ADR-057 : ~~R. 4222-20~~ passe à l'appareil ; l'obligation
+  // d'établissement annuelle, sans appareil, de ces tests est désormais la
+  // liste des postes à risques particuliers (R. 4624-23 III).]
+  const AERATION_ETAB = "sante-travail-etablissement-liste-postes-risques";
   const assureurSemestriel = () => ({
     id: "presc-assureur",
     actif: true,

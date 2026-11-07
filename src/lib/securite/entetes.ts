@@ -100,6 +100,8 @@ export const SOURCES_FICHIERS_DEPOSES = [
   "/api/points/:id/piece",
   // La photo du lieu, dans le hero du tableau de bord (2026-10-25).
   "/api/etablissements/:id/photo",
+  // Les écrits annexés au registre, déposés sur leur ligne (ADR-056).
+  "/api/etablissements/:id/pieces/:pieceId",
 ] as const;
 
 /** La CSP d'un fichier déposé : n'exécute rien dans notre origine, ne s'encadre pas. */

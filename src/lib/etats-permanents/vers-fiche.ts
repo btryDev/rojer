@@ -102,5 +102,19 @@ export function versFiche(
       : null,
     questionsSansReponse:
       l.questionsSansReponse.length > 0 ? ouRepondre(l.questionsSansReponse) : null,
+    fichier: l.accepteUnFichier
+      ? {
+          enCours: l.piece
+            ? { nom: l.piece.nom, deposeLe: l.piece.deposeLe.toISOString(), href: l.piece.href }
+            : null,
+          precedent: l.piecePrecedente
+            ? {
+                nom: l.piecePrecedente.nom,
+                remplaceeLe: l.piecePrecedente.remplaceeLe.toISOString(),
+                href: l.piecePrecedente.href,
+              }
+            : null,
+        }
+      : null,
   };
 }

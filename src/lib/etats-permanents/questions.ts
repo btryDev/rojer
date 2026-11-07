@@ -52,6 +52,8 @@ export const QUESTION_PAR_OBLIGATION: Readonly<Record<string, string>> = {
     "Un plan d'évacuation est-il affiché à chaque étage, près du passage habituel ?",
   "incendie-erp-plan-intervention-entrees":
     "Un plan d'intervention pour les pompiers est-il affiché à chaque entrée du bâtiment ?",
+  "incendie-erp-5-plan-intervention-entree":
+    "Un plan d'intervention pour les pompiers est-il affiché à l'entrée de l'établissement ?",
   "incendie-travail-instructions-evacuation":
     "Avez-vous établi les instructions d'évacuation : par où sortir, et où se retrouver ?",
   "signalisation-etablissement-cheminements-evacuation":

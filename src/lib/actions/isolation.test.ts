@@ -94,7 +94,10 @@ function formulaireActionVerif(echeance?: string, verificationId = "v1"): FormDa
 const LIGNE_ENSEMBLE = {
   id: "v1",
   etablissementId: "e1",
-  obligationId: "aeration-controle-installations-r4222-20",
+  // [2026-11-05, ADR-057 : ~~R. 4222-20~~ est porté par l'appareil ; le
+  // contrôle d'ensemble de ces tests est celui de l'habitation (art. 101),
+  // qui couvre la VMC.]
+  obligationId: "habitation-verification-annuelle-installations-securite",
   equipementId: null,
   salarieId: null,
   archiveLe: null,
@@ -322,14 +325,14 @@ describe("creerPointACorriger — ce qui vient du formulaire est revérifié (AD
 
   it("accepte un appareil couvert, et l'écrit avec le rapport d'origine", async () => {
     prismaMock.rapportVerification.findFirst.mockResolvedValue({ id: "r1" });
-    prismaMock.equipement.findFirst.mockResolvedValue({ categorie: "HOTTE_PRO", actif: true });
+    prismaMock.equipement.findFirst.mockResolvedValue({ categorie: "VMC", actif: true });
     const fd = formulaireActionVerif();
     fd.set("rapportOrigineId", "r1");
-    fd.set("equipementId", "eq-hotte");
+    fd.set("equipementId", "eq-vmc");
     const res = await creerPointACorriger({ status: "idle" }, fd);
     expect(res.status).toBe("success");
     const data = prismaMock.action.create.mock.calls[0][0].data;
-    expect(data).toMatchObject({ rapportOrigineId: "r1", equipementId: "eq-hotte" });
+    expect(data).toMatchObject({ rapportOrigineId: "r1", equipementId: "eq-vmc" });
   });
 
   it("refuse de désigner un appareil depuis le contrôle d'un appareil", async () => {
