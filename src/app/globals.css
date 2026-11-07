@@ -50,6 +50,8 @@
   /* Hauteur de l'en-tête de la page publique : la barre, et le hero qui
      passe dessous. Le cadran la reprend en JS (`ENTETE_PX`, Cadran.tsx). */
   --lp-entete: 68px;
+  /* Hauteur de la barre en îlot ; son rayon en découle (.lp-nav--ilot). */
+  --lp-ilot-h: 54px;
   /* Palette « Union » — blanc cassé quasi pur + navy d'impulsion */
   --paper: oklch(0.985 0.002 250); /* canvas extérieur, très clair */
   --paper-elevated: oklch(1 0 0); /* surface carte, blanc pur */
@@ -784,10 +786,11 @@
     width: calc(100% - 2 * clamp(16px, 4vw, 40px));
     max-width: 1120px;
     margin-top: 10px;
-    /* Asymétrique : la marque a besoin d'air à gauche, le bouton-pilule
-       de droite apporte déjà le sien. */
-    padding-inline: 22px 8px;
-    border-radius: 9999px;
+    /* La marque est une pastille, comme le bouton de droite : chacune
+       apporte son air, l'îlot ne garde que la même marge des deux côtés. */
+    padding-inline: 8px;
+    /* Une pilule : la moitié de la hauteur de l'îlot. */
+    border-radius: calc(var(--lp-ilot-h) / 2);
     /* 88 % et non 58 %. L'îlot traverse la bande noire du manifeste, et
        58 % de blanc par-dessus l'encre donne un gris à 2,2:1 sous les
        liens (--board-slate-mid) : « Comprendre » et « Tarif » s'y lisaient
@@ -843,7 +846,7 @@
     transition: height 620ms cubic-bezier(0.32, 0.72, 0, 1);
   }
   .lp-nav--ilot .lp-nav-barre {
-    height: 54px;
+    height: var(--lp-ilot-h);
   }
 
   /* La reprise d'opacité pour les navigateurs sans backdrop-filter a été
@@ -1123,23 +1126,25 @@
       transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
     transition-delay: var(--lp-delai, 0ms);
   }
-  /* L'apparition ample (Reveal `ample`) : plus de course, plus de durée,
-     une courbe qui freine longtemps — le mouvement se pose, il ne rebondit
-     pas. Le média monte en se dézoomant d'un cran. */
+  /* L'apparition ample (Reveal `ample`) : déclenchée plus tard, un peu plus
+     de course que .lp-reveal (24 et 32 px contre 12) et bien plus de durée,
+     sur une courbe qui freine longtemps — l'élément se pose, il ne surgit
+     pas (2026-11-07 : « trop brusque »). Le média monte en se dézoomant à
+     peine. */
   .lp-reveal-texte,
   .lp-reveal-media {
     transition:
-      opacity 1000ms cubic-bezier(0.22, 1, 0.36, 1),
-      transform 1400ms cubic-bezier(0.16, 1, 0.3, 1);
+      opacity 1400ms cubic-bezier(0.25, 0.1, 0.25, 1),
+      transform 1500ms cubic-bezier(0.19, 1, 0.22, 1);
     /* Après l'abrégée, qui remet le délai à zéro : sans cette ligne, la
        cascade de `delai` est perdue (revue de la PR #209). */
     transition-delay: var(--lp-delai, 0ms);
   }
   .lp-reveal-texte {
-    transform: translateY(48px);
+    transform: translateY(24px);
   }
   .lp-reveal-media {
-    transform: translateY(72px) scale(0.94);
+    transform: translateY(32px) scale(0.98);
   }
   .lp-reveal[data-vu="true"] {
     opacity: 1;

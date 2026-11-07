@@ -1,6 +1,7 @@
-// La grille complète des offres (volet « Voir le détail des offres ») :
-// grille tarifaire du 2026-11-05, colonne « Essai » comprise. Séparée des
-// cartes (`tarif-donnees.ts`) : seul le composant serveur `Tarif` la lit.
+// La grille complète des offres (« Voir le détail des offres ») : grille
+// tarifaire du 2026-11-05, colonne « Essai » comprise. Séparée des cartes
+// (`tarif-donnees.ts`). Le tableau (`Tarif`, serveur) la lit ; au téléphone,
+// la fenêtre `DetailOffresMobile` la reçoit en props.
 
 /** Ce qu'une case dit, hors valeur chiffrée : inclus, non inclus, abonnement requis. */
 export const INCLUS = "✓";
@@ -10,6 +11,28 @@ export const ABONNEMENT = "s'abonner";
 /** Une ligne de la grille : un libellé et quatre cases (Essai, Essentiel, Pro, Sur mesure). */
 export type LigneGrille = { libelle: string; cases: [string, string, string, string] };
 export type GroupeGrille = { titre: string; lignes: LigneGrille[] };
+
+/** Les quatre colonnes de la grille, dans l'ordre des cases. */
+export const COLONNES_GRILLE: readonly { nom: string; detail?: string }[] = [
+  { nom: "Essai", detail: "30 jours, sur Essentiel" },
+  { nom: "Essentiel" },
+  { nom: "Pro" },
+  { nom: "Sur mesure" },
+];
+
+/** Lue à voix haute, une coche ne dit rien : son sens en toutes lettres. */
+export const SENS_CASE: Record<string, string> = { [INCLUS]: "Inclus", [NON_INCLUS]: "Non inclus" };
+
+/** Le ton d'une case qui ne porte pas un chiffre. */
+export const TON_CASE: Record<string, string> = {
+  [INCLUS]: "font-semibold text-[color:var(--board-blue-ink)]",
+  [NON_INCLUS]: "text-[color:var(--board-slate)]",
+  [ABONNEMENT]: "font-mono text-[0.66rem] tracking-[0.06em] text-[color:var(--board-amber-ink)]",
+};
+
+/** Ce que l'essai et la fin d'essai changent, sous la grille. */
+export const NOTE_GRILLE =
+  "Pendant l'essai, tout s'essaie ; valider, signer ou envoyer un document demande de s'abonner. Au jour 30 sans abonnement, le compte passe en veille : lecture, export et alertes, plus de saisie. Au quota, seule la création est bloquée.";
 
 export const GRILLE: GroupeGrille[] = [
   {

@@ -9,6 +9,7 @@
 // Chaque apport dit ce que Rojer fait, sans accroche et sans automatisme :
 // on ne dit pas qu'un rapport « se range tout seul », ni qu'un rappel part.
 
+import photoManifeste from "@/assets/landing/manifeste-boulangere.jpg";
 import { PhotoCadre, type PhotoLanding } from "./PhotoCadre";
 import { Reveal } from "./Reveal";
 
@@ -17,7 +18,7 @@ import { Reveal } from "./Reveal";
  * travail, pas devant un écran. Cf. `public/photos/README.md`.
  */
 const PHOTO_MANIFESTE: PhotoLanding = {
-  src: "/photos/manifeste-boulangere.jpg",
+  src: photoManifeste,
   alt: "Une boulangère en tablier marine tend un pain à une cliente par-dessus le comptoir",
   position: "55% 40%",
 };
@@ -51,7 +52,7 @@ const APPORTS = [
 
 export function Manifeste() {
   return (
-    <section className="bg-[color:var(--board-ink)] py-24 text-white sm:py-32">
+    <section id="avantages" className="bg-[color:var(--board-ink)] py-24 text-white sm:py-32">
       <div className="lp-shell">
         <Reveal>
           <p className="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-white/45">
