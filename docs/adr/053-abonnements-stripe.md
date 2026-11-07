@@ -127,18 +127,19 @@ et sans croire une information qui ne vient pas de Stripe.
    [2026-11-07, grille du 2026-11-05 : **un essai par compte ET par
    entreprise (SIREN)**. Le SIREN n'est connu qu'à l'onboarding, après le
    début de l'essai : la règle se tient à la création de l'entreprise
-   (`abonnements/essai-entreprise.ts`). Pendant un essai, le SIREN est noté
-   (`EssaiEntreprise`, hors compte, gardé après la suppression d'un compte) ;
-   s'il a déjà servi l'essai d'un autre compte, l'essai finit aussitôt
-   (`trial_end: now`, en pause, rien n'est prélevé). Le SIREN n'étant pas
-   vérifié (public, un tiers peut le déclarer le premier — revue de sécurité
-   du même jour) : avec une carte enregistrée l'essai continue (un tiers ne
-   déclenche jamais un paiement chez autrui), et le message renvoie à
-   l'assistance, qui efface la ligne d'une entreprise qui n'avait jamais
-   essayé. L'établissement reste, en lecture ; la page de l'abonnement le dit.
-   Stripe injoignable : l'essai continue, journalisé. Limite connue : un
-   compte d'avant le lancement qui démarre son essai avec des entreprises
-   déjà créées ne les note pas.]
+   (`abonnements/essai-entreprise.ts`). Pendant un essai, le SIREN créé est
+   noté (`EssaiEntreprise`, hors compte, gardé après la suppression d'un
+   compte) ; une entreprise dont le SIREN a déjà servi l'essai d'un AUTRE
+   compte ne se crée pas — elle se créera une fois l'abonnement payé. Refuser
+   plutôt que finir l'essai (relecture du même jour) : rien n'est créé, rien
+   n'est touché chez Stripe, les autres entreprises du compte gardent leur
+   essai. Limites assumées : le SIREN n'est pas vérifié (public, un tiers
+   peut le déclarer le premier ; le vrai dirigeant garde alors son essai et
+   écrit à l'assistance, qui efface la ligne ; un SIRET inventé à la clé
+   juste suffit pour un second essai, faute d'intégration SIRENE) ; une
+   entreprise sans SIREN qui le reçoit plus tard par la fiche établissement,
+   ou un compte d'avant le lancement qui démarre son essai avec des
+   entreprises déjà créées, ne sont pas notés.]
 9. **L'essai est un abonnement Stripe créé par l'API** :
    `trial_period_days=30`, sans moyen de paiement,
    `trial_settings.end_behavior.missing_payment_method=pause`. Pendant
@@ -453,7 +454,7 @@ et sans croire une information qui ne vient pas de Stripe.
   par élément « par an » créé, jamais modifiée ni effacée par Rojer.
 - `EssaiEntreprise` (§ 8) : hors compte (ADR-051), `siren` en clé
   primaire, `compteId` (sans clé étrangère : la ligne survit au compte),
-  `noteLe` ; écrite une fois, jamais modifiée.
+  `noteLe` ; écrite une fois, jamais modifiée (l'assistance peut l'effacer).
 - `EvenementStripe` : hors compte (ADR-051), écrit avant toute identité :
   `id` (l'identifiant Stripe `evt_…`), `type`, `recuLe` (indexé, pour le
   ménage), `traitementDebuteLe`, `traiteLe`, `derniereErreur` (un motif,

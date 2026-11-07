@@ -118,6 +118,20 @@ vi.mock("@/lib/abonnements/quotas", async (original) => ({
   prendreQuota: q.prendreQuota,
 }));
 
+// Un essai par entreprise (ADR-053 § 8) : la règle a ses tests
+// (`abonnements/essai-entreprise.test.ts`) ; ici, le refus avant de créer.
+const essai = vi.hoisted(() => ({
+  enEssai: vi.fn(async () => false),
+  ailleurs: vi.fn(async () => false),
+  noter: vi.fn(async () => {}),
+}));
+vi.mock("@/lib/abonnements/essai-entreprise", () => ({
+  MESSAGE_ENTREPRISE_DEJA_ESSAYEE: "Cette entreprise a déjà bénéficié d'un essai.",
+  compteEnEssai: essai.enEssai,
+  sirenEssayeAilleurs: essai.ailleurs,
+  noterEssaiEntreprise: essai.noter,
+}));
+
 const { finaliserOnboarding } = await import("./actions");
 const { RefusQuota } = await import("@/lib/abonnements/quotas");
 
@@ -164,6 +178,36 @@ describe("plafond d'établissements de la formule (ADR-053 § 14)", () => {
     });
     expect(h.tx.etablissement.create).not.toHaveBeenCalled();
     expect(h.regenererApresMutation).not.toHaveBeenCalled();
+  });
+});
+
+describe("un essai par entreprise (ADR-053 § 8)", () => {
+  beforeEach(() => {
+    essai.enEssai.mockReset().mockResolvedValue(true);
+    essai.ailleurs.mockReset().mockResolvedValue(false);
+    essai.noter.mockClear();
+  });
+
+  it("pendant l'essai, un SIREN déjà essayé ailleurs : refusé, rien n'est créé ni noté", async () => {
+    essai.ailleurs.mockResolvedValue(true);
+    const r = await finaliserOnboarding({ status: "idle" }, formulaire());
+    expect(r).toMatchObject({ status: "error", fieldErrors: { siret: ["Cette entreprise a déjà bénéficié d'un essai."] } });
+    expect(essai.ailleurs).toHaveBeenCalledWith("120027016", expect.any(String));
+    expect(h.tx.entreprise.upsert).not.toHaveBeenCalled();
+    expect(essai.noter).not.toHaveBeenCalled();
+  });
+
+  it("pendant l'essai, un SIREN neuf : créé, puis noté", async () => {
+    await expect(finaliserOnboarding({ status: "idle" }, formulaire())).rejects.toThrow("NEXT_REDIRECT");
+    expect(essai.noter).toHaveBeenCalledWith("120027016", expect.any(String));
+    expect(essai.noter.mock.invocationCallOrder[0]).toBeGreaterThan(h.tx.etablissement.create.mock.invocationCallOrder[0]);
+  });
+
+  it("hors essai : ni contrôle ni note", async () => {
+    essai.enEssai.mockResolvedValue(false);
+    await expect(finaliserOnboarding({ status: "idle" }, formulaire())).rejects.toThrow("NEXT_REDIRECT");
+    expect(essai.ailleurs).not.toHaveBeenCalled();
+    expect(essai.noter).not.toHaveBeenCalled();
   });
 });
 

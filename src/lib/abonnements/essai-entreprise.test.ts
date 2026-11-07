@@ -1,17 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Un essai par entreprise (ADR-053 § 8) : un SIREN déjà essayé par un autre
-// compte finit l'essai en cours ; rien d'autre ne bouge.
+// Un essai par entreprise (ADR-053 § 8) : le SIREN se lit avant de créer, se
+// note après ; le premier compte qui le note le garde.
 
 vi.mock("server-only", () => ({}));
-const h = vi.hoisted(() => ({
-  table: new Map<string, string>(),
-  update: vi.fn(async () => ({})),
-  retrieve: vi.fn(async () => ({ default_payment_method: null as string | null })),
-  carte: vi.fn(async () => null as string | null),
-  synchroniser: vi.fn(async () => ({})),
-  active: true,
-}));
+const h = vi.hoisted(() => ({ table: new Map<string, string>() }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     essaiEntreprise: {
@@ -25,65 +18,30 @@ vi.mock("@/lib/prisma", () => ({
     },
   },
 }));
-vi.mock("@/lib/stripe/config", () => ({ configurationStripe: () => ({ active: h.active }) }));
-vi.mock("@/lib/stripe/client", () => ({ clientStripe: () => ({ subscriptions: { update: h.update, retrieve: h.retrieve } }) }));
-vi.mock("@/lib/stripe/synchronisation", () => ({ synchroniserClientStripe: h.synchroniser }));
-vi.mock("./souscription", () => ({ carteParDefaut: h.carte }));
 
 import type { Db } from "@/lib/auth/compte";
-import { finirLEssaiSiEntrepriseDejaEssayee } from "./essai-entreprise";
+import { compteEnEssai, noterEssaiEntreprise, sirenEssayeAilleurs } from "./essai-entreprise";
 
-const db = (statut: string | null) =>
-  ({
-    abonnement: {
-      findUnique: async () => ({ statut, stripeCustomerId: "cus_1", stripeSubscriptionId: "sub_1" }),
-    },
-  }) as unknown as Db;
-
-beforeEach(() => {
-  h.table.clear();
-  h.active = true;
-  vi.clearAllMocks();
-});
+beforeEach(() => h.table.clear());
 
 describe("un essai par entreprise", () => {
-  it("hors d'un essai, rien n'est noté ni touché", async () => {
-    expect(await finirLEssaiSiEntrepriseDejaEssayee(db("active"), "c1", "123456789")).toBe(false);
-    expect(h.table.size).toBe(0);
-    expect(h.update).not.toHaveBeenCalled();
+  it("seul un compte en essai est concerné", async () => {
+    const db = (statut: string | null) =>
+      ({ abonnement: { findUnique: async () => (statut ? { statut } : null) } }) as unknown as Db;
+    expect(await compteEnEssai(db("trialing"), "c1")).toBe(true);
+    for (const s of ["active", "paused", "past_due", null]) expect(await compteEnEssai(db(s), "c1")).toBe(false);
   });
 
-  it("pendant un essai, un SIREN neuf est noté sous ce compte, et l'essai continue", async () => {
-    expect(await finirLEssaiSiEntrepriseDejaEssayee(db("trialing"), "c1", "123456789")).toBe(false);
-    expect(h.table.get("123456789")).toBe("c1");
-    // Le même compte, la même entreprise : toujours son essai.
-    expect(await finirLEssaiSiEntrepriseDejaEssayee(db("trialing"), "c1", "123456789")).toBe(false);
-    expect(h.update).not.toHaveBeenCalled();
+  it("un SIREN neuf, ou noté par ce même compte, reste essayable", async () => {
+    expect(await sirenEssayeAilleurs("123456789", "c1")).toBe(false);
+    await noterEssaiEntreprise("123456789", "c1");
+    expect(await sirenEssayeAilleurs("123456789", "c1")).toBe(false);
   });
 
-  it("un SIREN déjà essayé par un autre compte finit l'essai tout de suite, puis relit Stripe", async () => {
-    h.table.set("123456789", "c-autre");
-    expect(await finirLEssaiSiEntrepriseDejaEssayee(db("trialing"), "c1", "123456789")).toBe(true);
-    expect(h.update).toHaveBeenCalledWith("sub_1", { trial_end: "now" }, { idempotencyKey: "essai-entreprise-sub_1" });
-    expect(h.synchroniser).toHaveBeenCalledWith(expect.anything(), "cus_1");
-    // La première trace ne change pas de compte.
+  it("un SIREN noté par un autre compte ne l'est plus, et la première trace ne change pas de compte", async () => {
+    await noterEssaiEntreprise("123456789", "c-autre");
+    await noterEssaiEntreprise("123456789", "c1");
+    expect(await sirenEssayeAilleurs("123456789", "c1")).toBe(true);
     expect(h.table.get("123456789")).toBe("c-autre");
-  });
-
-  it("avec une carte enregistrée (abonnement ou client), l'essai continue : un tiers ne déclenche aucun prélèvement", async () => {
-    h.table.set("123456789", "c-autre");
-    h.retrieve.mockResolvedValueOnce({ default_payment_method: "pm_1" });
-    expect(await finirLEssaiSiEntrepriseDejaEssayee(db("trialing"), "c1", "123456789")).toBe(false);
-    h.carte.mockResolvedValueOnce("pm_2");
-    expect(await finirLEssaiSiEntrepriseDejaEssayee(db("trialing"), "c1", "123456789")).toBe(false);
-    expect(h.update).not.toHaveBeenCalled();
-  });
-
-  it("Stripe injoignable : l'essai continue, sans erreur", async () => {
-    h.table.set("123456789", "c-autre");
-    h.update.mockRejectedValueOnce(new Error("réseau"));
-    vi.spyOn(console, "error").mockImplementation(() => {});
-    expect(await finirLEssaiSiEntrepriseDejaEssayee(db("trialing"), "c1", "123456789")).toBe(false);
-    expect(h.synchroniser).not.toHaveBeenCalled();
   });
 });
