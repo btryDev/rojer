@@ -1,6 +1,6 @@
 "use server";
 
-import { deposerFichier, rendreReservations } from "@/lib/abonnements/stockage";
+import { abandonnerFichiers, deposerFichier } from "@/lib/abonnements/stockage";
 import { requireCompte } from "@/lib/auth/compte";
 import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { randomUUID } from "node:crypto";
@@ -17,7 +17,6 @@ import {
   MESSAGE_ECHEC_ENREGISTREMENT,
   stockageEnService,
 } from "@/lib/storage";
-import { libererFichiers } from "@/lib/suppression/fichiers";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import {
   LigneModifieeEntreTemps,
@@ -265,7 +264,7 @@ export async function uploadRapport(
     const buffer = Buffer.from(await piece.fichier.arrayBuffer());
     try {
       // Le plafond de stockage de la formule (ADR-053 § 14), avant d'écrire.
-      const refus = await deposerFichier(db, compte.compteId, piece.cle, buffer, piece.mime);
+      const refus = await deposerFichier(db, compte.compteId, piece.cle, buffer, piece.mime, { etablissementId: verif.etablissementId });
       if (refus) return { status: "error", message: refus };
     } catch (e) {
       console.error(`[rapports/depot] écriture du fichier impossible (${piece.cle})`, e);
@@ -354,10 +353,7 @@ export async function uploadRapport(
     });
   } catch (err) {
     // Nettoyage best-effort du fichier si la DB a échoué.
-    if (piece !== null && storage !== null) {
-      await storage.delete(piece.cle).catch(() => {});
-      await rendreReservations(db, [piece.cle]);
-    }
+    if (piece !== null) await abandonnerFichiers(db, [piece.cle], "rapports/depot-refuse");
     if (err instanceof LigneModifieeEntreTemps) {
       return { status: "error", message: err.message };
     }
@@ -478,7 +474,7 @@ export async function supprimerRapport(rapportId: string): Promise<void> {
   // Par `libererFichiers` : un stockage indisponible ne fait pas échouer une
   // suppression commitée, et l'échec est journalisé (2026-09-27).
   if (rap.fichierCle !== null) {
-    await libererFichiers([rap.fichierCle], "rapports/suppression");
+    await abandonnerFichiers(db, [rap.fichierCle], "rapports/suppression");
   }
   // La suppression est commitée et le fichier libéré : le recalage ne peut
   // plus, en échouant, faire remonter une erreur sur une opération faite.

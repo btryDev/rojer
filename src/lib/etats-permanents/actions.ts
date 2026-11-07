@@ -1,7 +1,7 @@
 "use server";
 
 import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
-import { deposerFichier, rendreReservations } from "@/lib/abonnements/stockage";
+import { abandonnerFichiers, deposerFichier } from "@/lib/abonnements/stockage";
 import { revalidatePath } from "next/cache";
 import { unstable_rethrow } from "next/navigation";
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
@@ -14,7 +14,6 @@ import {
   MESSAGE_ECHEC_ENREGISTREMENT,
 } from "@/lib/storage/erreurs";
 import { validerFichier } from "@/lib/rapports/validator";
-import { libererFichiers } from "@/lib/suppression/fichiers";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 /**
@@ -142,7 +141,7 @@ export async function retirerDeclaration(
       });
       return retirerLeFichierEnCours(tx, etablissementId, obligationId, new Date());
     });
-    await libererFichiers(aLiberer, "etats-permanents/retrait");
+    await abandonnerFichiers(db, aLiberer, "etats-permanents/retrait");
   } else {
     await db.declarationEtatPermanent.deleteMany({
       where: { etablissementId, obligationId },
@@ -209,7 +208,7 @@ export async function deposerFichierEnPlace(
   const cle = clePieceEtatPermanent(etablissementId, obligationId, fichier.name);
   try {
     // Le plafond de stockage de la formule (ADR-053 § 14), avant d'écrire.
-    const refus = await deposerFichier(db, compte.compteId, cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
+    const refus = await deposerFichier(db, compte.compteId, cle, Buffer.from(await fichier.arrayBuffer()), val.mime, { etablissementId });
     if (refus) return { status: "error", message: refus };
   } catch (e) {
     // Une redirection (site gelé, rôle) n'est pas un échec : Next la reprend.
@@ -245,14 +244,13 @@ export async function deposerFichierEnPlace(
     // Deux dépôts simultanés sur la même ligne : l'index unique partiel
     // refuse le second, dont le fichier ne serait plus référencé.
     console.error(`[etats-permanents/depot] enregistrement refusé (${cle})`, e);
-    await libererFichiers([cle], "etats-permanents/depot-refuse");
-    await rendreReservations(db, [cle]);
+    await abandonnerFichiers(db, [cle], "etats-permanents/depot-refuse");
     // Le site gelé refuse l'écriture par une redirection (ADR-053 § 14) : le
     // fichier est rendu, puis la redirection repart, comme pour la photo.
     unstable_rethrow(e);
     return { status: "error", message: MESSAGE_ECHEC_ENREGISTREMENT };
   }
-  await libererFichiers(aLiberer, "etats-permanents/depot");
+  await abandonnerFichiers(db, aLiberer, "etats-permanents/depot");
 
   revalidatePath(`/etablissements/${etablissementId}/etats-permanents`);
   // Déposer vaut déclarer : les mêmes surfaces que « Oui, c'est en place »

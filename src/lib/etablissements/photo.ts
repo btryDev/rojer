@@ -1,6 +1,6 @@
 "use server";
 
-import { deposerFichier, rendreReservations } from "@/lib/abonnements/stockage";
+import { abandonnerFichiers, deposerFichier } from "@/lib/abonnements/stockage";
 import { revalidatePath } from "next/cache";
 import { unstable_rethrow } from "next/navigation";
 import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
@@ -12,7 +12,6 @@ import {
   stockageEnService,
 } from "@/lib/storage";
 import { validerFichier } from "@/lib/rapports/validator";
-import { libererFichiers } from "@/lib/suppression/fichiers";
 import { REGLE_PHOTO } from "./photo-regle";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
 
@@ -54,7 +53,7 @@ export async function deposerPhotoEtablissement(
   const cle = clePhotoEtablissement(etablissement.id, fichier.name);
   try {
     // Le plafond de stockage de la formule (ADR-053 § 14), avant d'écrire.
-    const refus = await deposerFichier(db, compte.compteId, cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
+    const refus = await deposerFichier(db, compte.compteId, cle, Buffer.from(await fichier.arrayBuffer()), val.mime, { etablissementId: etablissement.id });
     if (refus) return { status: "error", message: refus };
   } catch (e) {
     console.error(`[etablissements/photo] écriture impossible (${cle})`, e);
@@ -77,14 +76,13 @@ export async function deposerPhotoEtablissement(
     echec = err;
   }
   if (!enregistree) {
-    await libererFichiers([cle], "etablissements/photo");
-    await rendreReservations(db, [cle]);
+    await abandonnerFichiers(db, [cle], "etablissements/photo");
     // Une redirection (site gelé, ADR-053 § 14) n'est pas un échec : elle suit son cours.
     unstable_rethrow(echec);
     if (echec) console.error("[etablissements/photo] enregistrement impossible", echec);
     return { status: "error", message: MESSAGE_ECHEC_ENREGISTREMENT };
   }
-  if (ancienne) await libererFichiers([ancienne], "etablissements/photo-remplacee");
+  if (ancienne) await abandonnerFichiers(db, [ancienne], "etablissements/photo-remplacee");
 
   revalidatePath(`/etablissements/${etablissement.id}`);
   return { status: "ok" };
@@ -107,7 +105,7 @@ export async function retirerPhotoEtablissement(
       },
       data: { photoCle: null, photoMime: null, photoDeposeeLe: null },
     });
-    if (count > 0) await libererFichiers([etablissement.photoCle], "etablissements/photo-retiree");
+    if (count > 0) await abandonnerFichiers(db, [etablissement.photoCle], "etablissements/photo-retiree");
   } catch (err) {
     unstable_rethrow(err);
     console.error("[etablissements/photo] retrait impossible", err);

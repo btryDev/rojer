@@ -1,7 +1,7 @@
 "use server";
 
 import type { Db } from "@/lib/auth/compte";
-import { deposerFichier, rendreReservations } from "@/lib/abonnements/stockage";
+import { abandonnerFichiers, deposerFichier } from "@/lib/abonnements/stockage";
 import { revalidatePath } from "next/cache";
 import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { redirect } from "next/navigation";
@@ -18,7 +18,6 @@ import {
   stockageEnService,
 } from "@/lib/storage";
 import { validerFichier } from "@/lib/rapports/validator";
-import { libererFichiers } from "@/lib/suppression/fichiers";
 import {
   appareilDesignable,
   estControleDEnsemble,
@@ -333,15 +332,13 @@ export async function cloturerAction(
     }));
   } catch (err) {
     if (piece.status === "piece") {
-      await libererFichiers([piece.cle], "points/correction");
-      await rendreReservations(db, [piece.cle]);
+      await abandonnerFichiers(db, [piece.cle], "points/correction");
     }
     throw err;
   }
   if (ecrites === 0) {
     if (piece.status === "piece") {
-      await libererFichiers([piece.cle], "points/correction");
-      await rendreReservations(db, [piece.cle]);
+      await abandonnerFichiers(db, [piece.cle], "points/correction");
     }
     return { status: "error", message: "Déjà corrigée" };
   }
@@ -379,7 +376,7 @@ async function lirePiece(
   const cle = clePieceDePoint(action.etablissementId, action.id, fichier.name);
   try {
     // Le plafond de stockage de la formule (ADR-053 § 14), avant d'écrire.
-    const refus = await deposerFichier(db, compteId, cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
+    const refus = await deposerFichier(db, compteId, cle, Buffer.from(await fichier.arrayBuffer()), val.mime, { etablissementId: action.etablissementId });
     if (refus) return { status: "error", message: refus, fieldErrors: { piece: [refus] } };
   } catch (e) {
     console.error(`[points/correction] écriture de la pièce impossible (${cle})`, e);
@@ -419,7 +416,7 @@ export async function rouvrirAction(actionId: string): Promise<void> {
   // La pièce de la correction défaite part avec elle — après la base
   // (`suppression/fichiers.ts`).
   if (count > 0 && action.leveeFichierCle) {
-    await libererFichiers([action.leveeFichierCle], "points/reouverture");
+    await abandonnerFichiers(db, [action.leveeFichierCle], "points/reouverture");
   }
   revalidateAction(etablissementId);
 }
@@ -456,7 +453,7 @@ export async function supprimerActionPlan(actionId: string): Promise<void> {
 
   await db.action.delete({ where: { id: actionId } });
   if (action.leveeFichierCle) {
-    await libererFichiers([action.leveeFichierCle], "points/suppression");
+    await abandonnerFichiers(db, [action.leveeFichierCle], "points/suppression");
   }
   revalidateAction(etablissementId);
 }

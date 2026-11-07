@@ -1,10 +1,8 @@
 "use server";
 
 import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
-import {
-  clesDesEtablissements,
-  libererFichiers,
-} from "@/lib/suppression/fichiers";
+import { abandonnerFichiers } from "@/lib/abonnements/stockage";
+import { clesDesEtablissements } from "@/lib/suppression/fichiers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { assertEntrepriseDuCompte } from "@/lib/auth/scope";
@@ -170,7 +168,7 @@ export async function supprimerEntreprise(
     };
   }
 
-  await libererFichiers(cles, "entreprises/suppression");
+  await abandonnerFichiers(db, cles, "entreprises/suppression");
 
   revalidatePath("/entreprises");
   redirect("/entreprises");
