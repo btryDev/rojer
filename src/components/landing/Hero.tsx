@@ -73,12 +73,11 @@ export function Hero({
                 début de ligne. */}
             Rojer coordonne la prévention des risques de votre
             structure&nbsp;: vérifications, rapports, registres, plan
-            d&apos;actions. Vous gardez la main sur votre dossier — vous
-            n&apos;en gardez plus la charge.
+            d&apos;actions.
           </p>
 
-          {/* Un compte connecté retrouve son dossier par la maison de
-              l'en-tête : le hero ne le lui redemande pas. */}
+          {/* Un compte connecté retrouve son dossier par « Mon espace »,
+              dans l'en-tête : le hero ne le lui redemande pas. */}
           <div className="mt-10 flex flex-wrap items-center gap-4">
             {inscription ? (
               <Link href={inscription} className="lp-btn lp-btn-blanc">
