@@ -3,7 +3,9 @@
 // Le bouton « Nous contacter » et son formulaire, en fenêtre. Posé dans le
 // pied de page et dans le tarif (« Sur mesure », mise en route accompagnée),
 // chacun avec son sujet déjà choisi. L'envoi ouvre la messagerie du
-// visiteur, message rédigé (`mailtoContact`, provisoire).
+// visiteur, message rédigé (`mailtoContact`, provisoire) : l'interface est
+// celle d'un formulaire ordinaire, et le jour du service d'e-mail, seul
+// `envoyer` change (une action serveur à la place du mailto).
 
 import { useEffect, useId, useRef, useState } from "react";
 import { PanneauModal } from "@/components/ui-kit/PanneauModal";
@@ -57,9 +59,11 @@ export function BoutonContact({
         {parti ? (
           <>
             <p ref={confirmation} role="status" tabIndex={-1} className="m-0 outline-none">
-              Votre messagerie s&apos;ouvre avec le message prêt : il ne reste
-              qu&apos;à l&apos;envoyer. Si rien ne s&apos;ouvre, aucune messagerie
-              n&apos;est réglée sur cet appareil : réessayez depuis un autre.
+              {/* Tant que l'envoi ne passe pas par un service d'e-mail, la
+                  confirmation ne dit pas « envoyé » : le message part de la
+                  messagerie du visiteur, qui vient de s'ouvrir. */}
+              Votre messagerie s&apos;est ouverte avec votre message : envoyez-le
+              pour qu&apos;il nous parvienne.
             </p>
             <div>
               <button type="button" onClick={fermer} className="lp-btn lp-btn-ink">
@@ -107,13 +111,9 @@ export function BoutonContact({
               </label>
               <textarea id={`${id}-message`} name="message" rows={5} required maxLength={MESSAGE_MAX} className="champ-board" />
             </div>
-            <p className="m-0 text-[12px] text-[color:var(--board-slate-mid)]">
-              L&apos;envoi ouvre votre messagerie, message rédigé. Rien n&apos;est
-              enregistré par Rojer.
-            </p>
             <div className="flex flex-wrap items-center gap-3">
               <button type="submit" className="lp-btn lp-btn-ink">
-                Préparer le message
+                Envoyer
               </button>
               <button type="button" onClick={fermer} className="lp-btn lp-btn-clair">
                 Annuler
