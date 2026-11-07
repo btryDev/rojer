@@ -448,7 +448,9 @@ function CadranListe({ chiffres }: { chiffres: ChiffresReferentielSuivi }) {
             >
               {/* Décoratif : le titre dit déjà de quel document il s'agit.
                   Le cadran garde ses numéros ; la liste, sans roue pour
-                  enchaîner les crans, se repère au dessin. */}
+                  enchaîner les crans, se repère au dessin. La pastille
+                  blanche le détache du bleu de la liste, dont ses aplats
+                  sont trop proches. */}
               <Image
                 src={`/illustrations/landing/documents/${d.picto}.webp`}
                 alt=""
@@ -456,7 +458,7 @@ function CadranListe({ chiffres }: { chiffres: ChiffresReferentielSuivi }) {
                 width={200}
                 height={200}
                 sizes="88px"
-                className="size-[72px] sm:size-[88px]"
+                className="size-[72px] rounded-[18px] bg-[color:var(--board-card)] p-2 sm:size-[88px] sm:rounded-[22px]"
               />
               <div>
                 <p className="lp-eyebrow">{d.famille}</p>
