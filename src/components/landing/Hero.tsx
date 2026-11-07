@@ -78,16 +78,17 @@ export function Hero({
         />
       </picture>
       {/* Le voile : de bas en haut en portrait, où le texte passe sous son
-          visage ; de gauche à droite dès que la salle vide laisse la place
+          visage — jusqu'aux 60 % du bas seulement, le haut de la photo
+          reste clair (2026-11-07) ; de gauche à droite dès que la salle vide laisse la place
           au texte. Le haut reste assombri pour l'en-tête blanc. */}
       <div
         aria-hidden
-        className="absolute inset-0 -z-10 bg-linear-to-t from-[rgba(8,12,20,0.85)] via-[rgba(8,12,20,0.55)] via-55% to-transparent lg:bg-linear-to-r lg:from-[rgba(8,12,20,0.82)] lg:via-[rgba(8,12,20,0.62)] lg:via-38% lg:to-62%"
+        className="absolute inset-0 -z-10 bg-linear-to-t from-[rgba(8,12,20,0.85)] via-[rgba(8,12,20,0.5)] via-30% to-transparent to-60% lg:bg-linear-to-r lg:from-[rgba(8,12,20,0.82)] lg:via-[rgba(8,12,20,0.62)] lg:via-38% lg:to-62%"
       />
       {/* Une bande sombre en haut, pour l'en-tête blanc. */}
       <div
         aria-hidden
-        className="absolute inset-x-0 top-0 -z-10 h-40 bg-linear-to-b from-[rgba(8,12,20,0.55)] to-transparent"
+        className="absolute inset-x-0 top-0 -z-10 h-28 bg-linear-to-b from-[rgba(8,12,20,0.4)] to-transparent lg:h-40 lg:from-[rgba(8,12,20,0.55)]"
       />
 
       <div className="lp-shell flex flex-col justify-end pt-[var(--lp-entete)] pb-12 sm:pb-16 lg:justify-center lg:pb-0">
