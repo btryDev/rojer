@@ -219,6 +219,15 @@ export type ObligationApplicable = {
    * l'affichent « à confirmer », avec la phrase de `PHRASE_SANS_REPONSE`.
    */
   sansReponse?: QuestionSansReponse[];
+  /**
+   * Les obligations du même geste que celle-ci a absorbées, par identifiant
+   * d'appareil (ADR-057, `fusionnerGestes`). Sur ces appareils, la ligne de
+   * cette obligation est aussi celle des absorbées : elle cite leurs
+   * références et n'exige que les intervenants que tous les textes admettent.
+   * Absent, ou appareil absent de la table = la ligne ne fonde que sur
+   * elle-même.
+   */
+  aussiFondeePar?: Record<string, Obligation[]>;
 };
 
 /**

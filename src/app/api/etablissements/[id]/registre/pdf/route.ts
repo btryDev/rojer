@@ -22,7 +22,7 @@ export async function GET(
   // abonné le garde, une fois l'abonnement fini.
   await exigerUnPaiement(db, compte.compteId);
 
-  const data = await construireRegistreData(db, id);
+  const data = await construireRegistreData({ compte, db }, id);
   if (!data) return new Response("Établissement introuvable", { status: 404 });
 
   return reponsePdf(

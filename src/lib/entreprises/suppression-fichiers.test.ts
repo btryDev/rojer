@@ -30,6 +30,8 @@ const h = vi.hoisted(() => {
     piecePrestataire: { findMany: async () => [{ fichierCle: "presta/urssaf-ancienne.pdf" }] },
     // La pièce d'un point corrigé (ADR-048) : elle part aussi.
     action: { findMany: async () => [{ leveeFichierCle: "points/piece.pdf" }] },
+    // Un écrit annexé au registre (ADR-056) : il part aussi.
+    pieceEtatPermanent: { findMany: async () => [{ fichierCle: "etats-permanents/schema.pdf" }] },
     $transaction: async <T,>(fn: (tx: unknown) => Promise<T>) => fn(prisma),
   };
   const stockage = { delete: vi.fn<(cle: string) => Promise<void>>(async () => {}) };
@@ -78,6 +80,7 @@ describe("supprimerEntreprise — les fichiers de tous ses établissements", () 
       { where: { etablissementId: { in: ["etab-1", "etab-2"] } }, select: { fichierCle: true } },
     ]);
     expect(h.stockage.delete.mock.calls.map((c) => c[0]).sort()).toEqual([
+      "etats-permanents/schema.pdf",
       "leg/1.pdf",
       "points/piece.pdf",
       "presta/rc.pdf",
@@ -102,7 +105,7 @@ describe("supprimerEntreprise — les fichiers de tous ses établissements", () 
     const erreur = vi.spyOn(console, "error").mockImplementation(() => {});
     await expect(supprimerEntreprise("ent-1")).rejects.toThrow("NEXT_REDIRECT");
     expect(h.db.supprimees).toEqual(["ent-1"]);
-    expect(erreur.mock.calls.filter((c) => String(c[0]).includes("fichier non libéré"))).toHaveLength(5);
+    expect(erreur.mock.calls.filter((c) => String(c[0]).includes("fichier non libéré"))).toHaveLength(6);
     erreur.mockRestore();
   });
 });

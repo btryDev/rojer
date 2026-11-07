@@ -26,7 +26,6 @@ import {
 } from "@/lib/referentiels/conformite/initiative";
 import { MentionPourInformation } from "@/components/calendrier/MentionPourInformation";
 import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
-import { referencesCitees } from "@/lib/referentiels/conformite/rythme-retenu";
 import { MentionAConfirmer } from "@/components/calendrier/MentionAConfirmer";
 import { BlocAConfirmer } from "@/components/calendrier/BlocAConfirmer";
 import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
@@ -68,7 +67,7 @@ import {
 } from "@/lib/calendrier/labels";
 import { estAppareilRetire } from "@/lib/equipements/retrait";
 import { LABEL_CATEGORIE_EQUIPEMENT } from "@/lib/equipements/labels";
-import { obligationParId } from "@/lib/referentiels/conformite";
+import { obligationParId, referencesDeLigne } from "@/lib/referentiels/conformite";
 import { modeSurLEcranEnPlace } from "@/lib/etats-permanents/regle";
 import {
   estPorteeParEquipement,
@@ -165,6 +164,9 @@ export default async function VerificationDetailPage({
     : calendrier;
 
   const obligation = obligationParId(v.obligationId);
+  // Les références de la LIGNE : son obligation, et celles du même geste
+  // qu'elle suit aussi sur son appareil (ADR-057).
+  const references = referencesDeLigne(v);
   // La ligne est-elle retenue par prudence ? Même calcul que le calendrier
   // (`matching/marques.ts`) : la fiche d'une ligne ne peut pas taire ce que
   // la liste dit.
@@ -573,7 +575,7 @@ export default async function VerificationDetailPage({
 
       {/* Ce qui fonde l'obligation — replié : on le consulte une fois, on
           ne le relit pas à chaque visite. */}
-      {obligation && obligation.referencesLegales.length > 0 ? (
+      {references.length > 0 ? (
         <details className="carte-board group overflow-hidden">
           <summary className="flex cursor-pointer select-none items-center justify-between gap-4 px-7 py-5 sm:px-8">
             <span className="board-eyebrow text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
@@ -581,8 +583,8 @@ export default async function VerificationDetailPage({
             </span>
             <span className="flex items-center gap-3">
               <span className="pastille-board bg-[color:var(--board-slate-pale)] text-[color:var(--board-slate-mid)]">
-                {referencesCitees(obligation).length} référence
-                {referencesCitees(obligation).length > 1 ? "s" : ""}
+                {references.length} référence
+                {references.length > 1 ? "s" : ""}
               </span>
               <span
                 aria-hidden
@@ -594,8 +596,10 @@ export default async function VerificationDetailPage({
           </summary>
           <ul className="m-0 list-none border-t border-[color:var(--board-slate-line)] p-0">
             {/* La norme d'un rythme retenu y figure, sous son libellé
-                « Norme » (ADR-039) : citée comme norme, jamais comme un article. */}
-            {referencesCitees(obligation).map((ref, idx) => (
+                « Norme » (ADR-039) : citée comme norme, jamais comme un article.
+                Une ligne qui suit plusieurs textes du même geste les cite tous
+                (ADR-057, `referencesDeLigne`). */}
+            {references.map((ref, idx) => (
               <li
                 key={idx}
                 className="flex flex-wrap items-center justify-between gap-3 border-t border-[color:var(--board-slate-line)] px-7 py-4 first:border-t-0 sm:px-8"
@@ -650,24 +654,14 @@ export default async function VerificationDetailPage({
                 </li>
               ))}
             </ul>
-            {obligation.id === "incendie-erp-pe4-entretien-installations-techniques" ? (
-              // Écrit pour PE 4 § 2, dont la liste finit par « etc. ». Il
-              // s'affichait pour toute obligation d'établissement qui nomme des
-              // équipements — la consigne de R. 4227-37 n'a ni « etc. » ni
-              // échéance (relecture du 2026-09-26).
-              <p className="m-0 mt-4 text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-                Les installations que le texte nomme. La liste n&apos;est{" "}
-                <strong className="font-semibold">pas limitative</strong>{" "}
-                : elle se termine par « etc. » et vise l&apos;ensemble de vos
-                installations techniques, y compris celles que vous n&apos;avez
-                pas déclarées ici. L&apos;échéance vous est due même si vous
-                n&apos;avez déclaré aucun appareil.
-              </p>
-            ) : (
-              <p className="m-0 mt-4 text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-                Les équipements que le texte nomme.
-              </p>
-            )}
+            {/* ~~Une phrase propre à PE 4 § 2 (« la liste n'est pas
+                limitative […] l'échéance vous est due même si vous n'avez
+                déclaré aucun appareil »)~~ — retirée le 2026-11-06 (ADR-057) :
+                PE 4 § 2 est porté par l'appareil, n'a plus d'équipements en
+                contexte, et la phrase était devenue fausse. */}
+            <p className="m-0 mt-4 text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+              Les équipements que le texte nomme.
+            </p>
           </div>
         </section>
       ) : null}

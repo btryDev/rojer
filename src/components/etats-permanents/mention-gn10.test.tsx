@@ -11,7 +11,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent } from "@testing-library/react";
 
 vi.mock("@/lib/prisma", () => ({
-  prisma: { declarationEtatPermanent: { findMany: vi.fn(async () => []) } },
+  prisma: {
+    declarationEtatPermanent: { findMany: vi.fn(async () => []) },
+    pieceEtatPermanent: { findMany: vi.fn(async () => []) },
+  },
 }));
 vi.mock("@/lib/auth/require-user", () => ({
   requireUser: vi.fn(async () => ({ id: "user-1" })),

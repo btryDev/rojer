@@ -71,6 +71,14 @@ const PAR_PARTIE: Readonly<
     chemin: "/calendrier",
     unite: { singulier: "rapport archivé", pluriel: "rapports archivés" },
   },
+  // Les annexes (2026-11-05) : les écrits que le texte fait annexer au
+  // registre sont des lignes de « Ce qui doit être en place », où le
+  // dirigeant les déclare (`annexes.ts`). La fiche les relit.
+  "5": {
+    libelle: "« Ce qui doit être en place »",
+    chemin: "/etats-permanents",
+    unite: { singulier: "écrit déclaré en place", pluriel: "écrits déclarés en place" },
+  },
 };
 
 /**

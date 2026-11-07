@@ -126,12 +126,23 @@ describe("preuves faites sous l'acte (2026-09-15)", () => {
   it("les lignes visées : obligation × appareil, toutes les lignes de l'obligation sans appareil, ses propres lignes sur mesure", () => {
     expect(lignesVisees("etab-1", renforcement("2026-01-10"))).toEqual({
       etablissementId: "etab-1",
-      obligationId: "porte-auto-maintien-en-etat",
+      OR: [
+        { obligationId: "porte-auto-maintien-en-etat" },
+        // ADR-057 : la ligne du geste qui la suit aussi.
+        { fondeeAussiPar: { has: "porte-auto-maintien-en-etat" } },
+      ],
       equipementId: "eq-portail",
     });
     expect(
       lignesVisees("etab-1", { ...renforcement("2026-01-10"), equipementId: null }),
-    ).toEqual({ etablissementId: "etab-1", obligationId: "porte-auto-maintien-en-etat" });
+    ).toEqual({
+      etablissementId: "etab-1",
+      OR: [
+        { obligationId: "porte-auto-maintien-en-etat" },
+        // ADR-057 : la ligne du geste qui la suit aussi.
+        { fondeeAussiPar: { has: "porte-auto-maintien-en-etat" } },
+      ],
+    });
     expect(
       lignesVisees("etab-1", {
         ...renforcement("2026-01-10"),
@@ -368,7 +379,10 @@ describe("supprimerPrescription", () => {
       expect.objectContaining({
         where: {
           etablissementId: "etab-1",
-          obligationId: "porte-auto-maintien-en-etat",
+          OR: [
+            { obligationId: "porte-auto-maintien-en-etat" },
+            { fondeeAussiPar: { has: "porte-auto-maintien-en-etat" } },
+          ],
           equipementId: "eq-portail",
         },
       }),

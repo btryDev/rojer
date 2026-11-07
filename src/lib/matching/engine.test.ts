@@ -10,6 +10,7 @@ import { FAMILLES_ESP } from "@/lib/equipements/esp";
 import {
   determineObligationsApplicables,
   evaluerObligation,
+  fusionnerGestes,
   type EquipementMatching,
   type EtablissementMatching,
 } from "./index";
@@ -274,13 +275,17 @@ describe("moteur matching — typologie Travail seule", () => {
   it("bureau sans équipement → les obligations d'établissement s'appliquent quand même", () => {
     // Le faux négatif que l'ADR-022 supprime, et que ce test asseyait
     // jusqu'au 2026-08-27 : un employeur sans aucun appareil déclaré ne
-    // voyait rien, alors que R. 4222-20 lui impose d'entretenir et de
-    // contrôler l'ensemble de ses installations d'aération. Rendre zéro
-    // n'était pas « rien à faire », c'était « on ne sait pas le dire ».
+    // voyait rien. Rendre zéro n'était pas « rien à faire », c'était « on ne
+    // sait pas le dire ». ~~R. 4222-20~~ [2026-11-05, ADR-057 : le contrôle de
+    // l'aération est porté par l'appareil ; la garde se pose sur
+    // l'organisation de la formation à la sécurité, due à tout employeur.]
     const res = determineObligationsApplicables(etabBureau(), []);
     const parEtablissement = res.filter((r) => r.porteur === "etablissement");
 
     expect(idsObligations(res)).toContain(
+      "formation-securite-etablissement-organisation",
+    );
+    expect(idsObligations(res)).not.toContain(
       "aeration-controle-installations-r4222-20",
     );
     // Une ligne, pas N : le porteur établissement ne se démultiplie pas.
@@ -294,7 +299,7 @@ describe("moteur matching — typologie Travail seule", () => {
     // déclenche : sans raison, la ligne apparaît sans que rien ne la motive.
     const res = determineObligationsApplicables(etabBureau(), []);
     const oa = res.find(
-      (r) => r.obligation.id === "aeration-controle-installations-r4222-20",
+      (r) => r.obligation.id === "formation-securite-etablissement-organisation",
     );
     expect(oa).toBeDefined();
     expect(oa!.raisons.join(" ")).toContain("porte sur l'établissement");
@@ -758,6 +763,8 @@ describe("moteur matching — scénarios intégrés", () => {
       cuissonErp(),
     ]);
     const ids = idsObligations(res);
+    // Les LIGNES, réunies par geste (ADR-057) : ce que le calendrier sert.
+    const lignes = idsObligations(fusionnerGestes(res));
     // Élec — cat 5 : quinquennale + mise en service + travail annuelle + initiale + reg sécurité élec
     expect(ids).toContain("elec-travail-periodique-annuelle");
     expect(ids).toContain("elec-travail-mise-en-service");
@@ -769,15 +776,22 @@ describe("moteur matching — scénarios intégrés", () => {
     // ne vise plus que le lieu de travail HORS ERP — l'annuelle de MS 38 § 4,
     // écrite par le texte, l'emporte chez un ERP (une seule annuelle par
     // extincteur, `extincteurs-partition.test.ts`).
-    expect(ids).not.toContain("incendie-travail-moyens-lutte");
+    // [2026-11-05, ADR-057 : ~~`erp: false`~~ — elle s'applique en ERP comme
+    // ailleurs, et c'est le geste qui la réunit à l'annuelle ERP : pas de
+    // ligne à elle, l'annuelle ERP la cite.]
+    expect(ids).toContain("incendie-travail-moyens-lutte");
+    expect(lignes).not.toContain("incendie-travail-moyens-lutte");
     expect(ids).toContain("incendie-travail-extincteurs-dotation");
     expect(ids).toContain("incendie-erp-extincteurs-annuelle");
     expect(ids).toContain("incendie-erp-ssi-annuelle");
     expect(ids).toContain("incendie-erp-baes-annuelle");
     expect(ids).toContain("incendie-registre-securite");
-    // Aération
+    // Aération — 2026-11-05 (ADR-057) : un seul contrôle annuel par VMC, qui
+    // suit R. 4222-20 et CH 58 ; la seconde est citée, pas servie à part.
     expect(ids).toContain("aeration-controle-installations-r4222-20");
     expect(ids).toContain("aeration-erp-chauffage-ventilation-annuelle");
+    expect(lignes).toContain("aeration-controle-installations-r4222-20");
+    expect(lignes).not.toContain("aeration-erp-chauffage-ventilation-annuelle");
     // Ramonage annuel des circuits d'extraction (GC 20) : une seule entrée
     // depuis la fusion du doublon `aeration-hotte-pro-annuelle`.
     expect(ids).toContain("cuisson-erp-circuits-extraction-nettoyage");
@@ -1287,7 +1301,8 @@ describe("moteur matching — cartographie des catégories sans obligation", () 
         // la page « Ce que Rojer ne couvre pas » nomme l'obligation.
         "EPI_GILET_SAUVETAGE",
         "EPI_RESPIRATOIRE",
-        "HOTTE_PRO",
+        // ~~"HOTTE_PRO"~~ — sortie le 2026-11-05 (ADR-057) : R. 4222-20 est
+        // porté par l'appareil, la hotte comprise.
         // RIA A QUITTÉ CETTE LISTE LE 2026-09-02, et le trou qu'elle notait
         // est comblé, pas contourné. La note disait : « la seule obligation
         // qui vise la catégorie est `incendie-erp-ria-annuelle`, fondée sur
@@ -1380,7 +1395,8 @@ describe("moteur matching — cartographie des catégories sans obligation", () 
         // En 5ᵉ, PE 4 § 2 porte déjà les installations de gaz, à
         // l'établissement (`incendie-erp-pe4-entretien-installations-techniques`).
         // L'appareil porte « aucune échéance calculée », ce qui est vrai.
-        "INSTALLATION_GAZ",
+        // ~~"INSTALLATION_GAZ"~~ — sortie le 2026-11-05 (ADR-057) : PE 4 § 2
+        // est porté par l'appareil, l'installation de gaz comprise.
         // SCENE, entrée le 2026-10-17 (sous-lot G) : le chapitre L ne vaut
         // qu'en catégories 1 à 4 (PE 1 § 1 écarte le livre II en 5ᵉ, et le
         // livre III n'y renvoie pas), et pour les types L et P seulement.

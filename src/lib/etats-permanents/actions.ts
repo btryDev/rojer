@@ -1,16 +1,20 @@
 "use server";
 
-import type { Db } from "@/lib/auth/compte";
 import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
-import { etabliParLesTitres } from "./par-les-titres";
+import { deposerFichier, rendreReservations } from "@/lib/abonnements/stockage";
 import { revalidatePath } from "next/cache";
+import { unstable_rethrow } from "next/navigation";
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
-import { obligationParId } from "@/lib/referentiels/conformite";
-import { modeDeclarationApplique } from "./regle";
+import { obligationDeclarable } from "./garde";
+import { preparerUnDepot, retirerLeFichierEnCours } from "./pieces";
+import { annexeDeLaLigne } from "@/lib/registre/annexes";
+import { clePieceEtatPermanent, stockageEnService } from "@/lib/storage";
 import {
-  determineObligationsApplicables,
-  projeterEtablissement,
-} from "@/lib/matching";
+  MESSAGE_DEPOT_NON_CONFIGURE,
+  MESSAGE_ECHEC_ENREGISTREMENT,
+} from "@/lib/storage/erreurs";
+import { validerFichier } from "@/lib/rapports/validator";
+import { libererFichiers } from "@/lib/suppression/fichiers";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
 
 /**
@@ -33,80 +37,6 @@ export type DeclarationActionState =
   | { status: "idle" }
   | { status: "error"; message: string }
   | { status: "success" };
-
-/**
- * Vérifie que l'obligation existe ET qu'elle relève bien de cet écran, **pour
- * cet établissement-là**.
- *
- * Sans ce contrôle, un formulaire trafiqué pourrait déclarer « en place » une
- * échéance récurrente ou une obligation événementielle — c'est-à-dire écrire en
- * base une affirmation que l'écran n'a jamais proposée, et que rien ensuite ne
- * viendrait contredire. Le garde-fou est ici et non dans le composant : une
- * validation qui vit dans le rendu n'est pas une validation.
- *
- * ## Pourquoi la garde a dû devenir asynchrone
- *
- * Sa première version appelait `modeDeclaration(o)` sur la seule obligation du
- * référentiel, sans l'établissement. Elle ignorait donc les **surcharges de
- * prescription** : une obligation `etat_permanent` à qui un arrêté préfectoral
- * donne un rythme quitte cet écran pour le calendrier, mais un POST forgé
- * passait la garde et écrivait une ligne que l'écran n'affichera jamais.
- *
- * Aucun franchissement de compte — `assertEtablissementOwnership` tient ce
- * plan-là. Mais c'était **la double surface que le commentaire de ce module
- * prétend empêcher**, atteignable par requête directe. Une garde qui protège
- * d'un formulaire trafiqué et cède à une requête forgée ne garde rien : les
- * deux sont le même geste.
- *
- * Le coût est une passe de matching par déclaration. C'est une action
- * utilisateur, pas une boucle de rendu, et la garde ne peut pas être juste sans
- * connaître le dossier.
- */
-async function obligationDeclarable(
-  db: Db,
-  etablissementId: string,
-  obligationId: string,
-): Promise<boolean | "etabli_par_les_titres"> {
-  if (!obligationParId(obligationId)) return false;
-
-  const etablissement = await db.etablissement.findUnique({
-    where: { id: etablissementId },
-    include: { entreprise: { select: { effectif: true } } },
-  });
-  if (!etablissement) return false;
-
-  const equipements = await db.equipement.findMany({
-    where: { etablissementId, actif: true },
-    select: { id: true, libelle: true, categorie: true, caracteristiques: true },
-  });
-
-  const applicables = determineObligationsApplicables(
-    projeterEtablissement(etablissement),
-    equipements.map((eq) => ({
-      id: eq.id,
-      libelle: eq.libelle,
-      categorie: eq.categorie,
-      caracteristiques: (eq.caracteristiques ?? null) as Record<
-        string,
-        unknown
-      > | null,
-    })),
-  );
-
-  const app = applicables.find((a) => a.obligation.id === obligationId);
-  // Non applicable à ce dossier : la déclarer n'aurait aucun sens, et l'écran
-  // ne l'a jamais montrée. C'est un second cas que l'ancienne garde laissait
-  // passer, celui-là sans même invoquer une surcharge.
-  if (!app) return false;
-
-  const mode = modeDeclarationApplique(app);
-  if (mode === null) return false;
-  // Établie d'après les titres déclarés : elle ne se coche pas, une case à
-  // côté des titres referait deux vérités. LE prédicat de la lecture
-  // (`etabliParLesTitres`), pas un voisin (revue du 2026-10-16).
-  if (etabliParLesTitres(app.obligation, mode.mode)) return "etabli_par_les_titres";
-  return true;
-}
 
 /**
  * La borne de la note libre.
@@ -134,7 +64,11 @@ export async function declarerEnPlace(
   await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
 
-  const declarable = await obligationDeclarable(db, etablissementId, obligationId);
+  const { statut: declarable } = await obligationDeclarable(
+    db,
+    etablissementId,
+    obligationId,
+  );
   if (declarable === "etabli_par_les_titres") {
     return {
       status: "error",
@@ -173,6 +107,7 @@ export async function declarerEnPlace(
   // (2026-10-21).~~ [2026-10-24, ADR-047 : les formations se déclarent dans
   // ~~Équipe › Formations~~ [2026-10-24 : section « Formations à organiser » d'Équipe], et leur nombre s'affiche ~~sur l'onglet d'Équipe~~ [2026-10-24 : sur la section].]
   revalidatePath(`/etablissements/${etablissementId}/equipe`, "layout");
+  revalidatePath(`/etablissements/${etablissementId}/registre`, "layout");
   return { status: "success" };
 }
 
@@ -188,14 +123,141 @@ export async function retirerDeclaration(
   // pas lever. L'écran est optimiste, deux clics rapides peuvent arriver dans
   // l'ordre inverse, et un `P2025` affiché au dirigeant ne lui apprendrait
   // rien.
-  await db.declarationEtatPermanent.deleteMany({
-    where: { etablissementId, obligationId },
+  //
+  // Le fichier en cours d'un écrit annexé au registre devient le précédent
+  // (ADR-056 § 4) : « Pas encore » ne laisse pas au registre un fichier que le
+  // dirigeant vient de dire absent. L'ancien précédent part, après la base.
+  // Décidé sur le FICHIER, pas sur la table des annexes : une ligne sortie de
+  // la table garde le fichier qu'on y avait déposé, et il doit pouvoir être
+  // retiré (seconde relecture du 2026-11-05). Une ligne sans fichier garde la
+  // seule suppression d'avant.
+  const aUnFichierEnCours = await db.pieceEtatPermanent.findFirst({
+    where: { etablissementId, obligationId, enCours: true },
+    select: { id: true },
   });
+  if (aUnFichierEnCours) {
+    const aLiberer = await db.$transaction(async (tx) => {
+      await tx.declarationEtatPermanent.deleteMany({
+        where: { etablissementId, obligationId },
+      });
+      return retirerLeFichierEnCours(tx, etablissementId, obligationId, new Date());
+    });
+    await libererFichiers(aLiberer, "etats-permanents/retrait");
+  } else {
+    await db.declarationEtatPermanent.deleteMany({
+      where: { etablissementId, obligationId },
+    });
+  }
 
   revalidatePath(`/etablissements/${etablissementId}/etats-permanents`);
   // ~~Les lignes nées d'un fait d'activité se déclarent sous leur question
   // (2026-10-21).~~ [2026-10-24, ADR-047 : les formations se déclarent dans
   // ~~Équipe › Formations~~ [2026-10-24 : section « Formations à organiser » d'Équipe], et leur nombre s'affiche ~~sur l'onglet d'Équipe~~ [2026-10-24 : sur la section].]
   revalidatePath(`/etablissements/${etablissementId}/equipe`, "layout");
+  revalidatePath(`/etablissements/${etablissementId}/registre`, "layout");
+  return { status: "success" };
+}
+
+/** La borne du nom d'un fichier, comme la base (`PieceEtatPermanent_bornes`). */
+const NOM_FICHIER_MAX = 255;
+
+/**
+ * Déposer le fichier d'un écrit que le règlement fait annexer au registre
+ * (ADR-056) : le schéma d'organisation de la sécurité, un contrat, une notice.
+ *
+ * DÉPOSER VAUT DÉCLARER (§ 3) : la déclaration « en place » est créée ou
+ * redatée, sa note gardée. Rojer ne lit pas le fichier — la phrase sous les
+ * réponses le dit toujours.
+ *
+ * L'ancien précédent part, le fichier en cours devient le précédent (§ 4,
+ * `preparerUnDepot`).
+ * Le fichier neuf est écrit AVANT la base et effacé si la base refuse ; les
+ * anciens sont libérés APRÈS, comme partout (`suppression/fichiers.ts`).
+ */
+export async function deposerFichierEnPlace(
+  etablissementId: string,
+  obligationId: string,
+  formData: FormData,
+): Promise<DeclarationActionState> {
+  await verifierSaisie();
+  const { compte, db } = await assertEtablissementDuCompte(etablissementId);
+
+  const garde = await obligationDeclarable(db, etablissementId, obligationId);
+  if (garde.statut !== true || !annexeDeLaLigne(obligationId, garde.projete)) {
+    return {
+      status: "error",
+      message: "Cette ligne ne reçoit pas de fichier : seuls les écrits que le règlement fait annexer au registre de sécurité en reçoivent.",
+    };
+  }
+
+  const fichier = formData.get("fichier");
+  if (!(fichier instanceof File) || fichier.size === 0) {
+    return { status: "error", message: "Choisissez un fichier à déposer." };
+  }
+  if (fichier.name.length > NOM_FICHIER_MAX) {
+    return {
+      status: "error",
+      message: `Le nom du fichier ne peut pas dépasser ${NOM_FICHIER_MAX} caractères. Renommez-le, puis réessayez.`,
+    };
+  }
+  if (!stockageEnService()) {
+    return { status: "error", message: MESSAGE_DEPOT_NON_CONFIGURE };
+  }
+  const val = await validerFichier(fichier);
+  if (!val.ok) return { status: "error", message: val.erreur };
+
+  const cle = clePieceEtatPermanent(etablissementId, obligationId, fichier.name);
+  try {
+    // Le plafond de stockage de la formule (ADR-053 § 14), avant d'écrire.
+    const refus = await deposerFichier(db, compte.compteId, cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
+    if (refus) return { status: "error", message: refus };
+  } catch (e) {
+    // Une redirection (site gelé, rôle) n'est pas un échec : Next la reprend.
+    unstable_rethrow(e);
+    console.error(`[etats-permanents/depot] écriture du fichier impossible (${cle})`, e);
+    return { status: "error", message: MESSAGE_ECHEC_ENREGISTREMENT };
+  }
+
+  const maintenant = new Date();
+  let aLiberer: string[];
+  try {
+    aLiberer = await db.$transaction(async (tx) => {
+      const anciens = await preparerUnDepot(tx, etablissementId, obligationId, maintenant);
+      await tx.pieceEtatPermanent.create({
+        data: {
+          etablissementId,
+          obligationId,
+          fichierCle: cle,
+          fichierNom: fichier.name,
+          fichierMime: val.mime,
+          fichierTaille: val.taille,
+          deposeLe: maintenant,
+        },
+      });
+      await tx.declarationEtatPermanent.upsert({
+        where: { etablissementId_obligationId: { etablissementId, obligationId } },
+        update: { declareLe: maintenant },
+        create: { etablissementId, obligationId, declareLe: maintenant },
+      });
+      return anciens;
+    });
+  } catch (e) {
+    // Deux dépôts simultanés sur la même ligne : l'index unique partiel
+    // refuse le second, dont le fichier ne serait plus référencé.
+    console.error(`[etats-permanents/depot] enregistrement refusé (${cle})`, e);
+    await libererFichiers([cle], "etats-permanents/depot-refuse");
+    await rendreReservations(db, [cle]);
+    // Le site gelé refuse l'écriture par une redirection (ADR-053 § 14) : le
+    // fichier est rendu, puis la redirection repart, comme pour la photo.
+    unstable_rethrow(e);
+    return { status: "error", message: MESSAGE_ECHEC_ENREGISTREMENT };
+  }
+  await libererFichiers(aLiberer, "etats-permanents/depot");
+
+  revalidatePath(`/etablissements/${etablissementId}/etats-permanents`);
+  // Déposer vaut déclarer : les mêmes surfaces que « Oui, c'est en place »
+  // (relecture du 2026-11-05).
+  revalidatePath(`/etablissements/${etablissementId}/equipe`, "layout");
+  revalidatePath(`/etablissements/${etablissementId}/registre`, "layout");
   return { status: "success" };
 }

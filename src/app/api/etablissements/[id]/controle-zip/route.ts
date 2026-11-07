@@ -5,7 +5,7 @@ import { dureeHhMm } from "@/lib/permis-feu/duree";
 import JSZip from "jszip";
 import { NextResponse } from "next/server";
 import { requireEtablissement } from "@/lib/auth/scope";
-import type { Db } from "@/lib/auth/compte";
+import type { AccesCompte, Db } from "@/lib/auth/compte";
 import { getStorage, type FileStorage } from "@/lib/storage";
 import { publicAppUrl, refusUrlPublique } from "@/lib/email";
 import {
@@ -14,12 +14,15 @@ import {
   formaterDateHeureFr,
 } from "@/lib/dates";
 import { PIECES_ZIP, fichierDuerp, nomDeDossier } from "@/lib/controle/pieces-zip";
+import { lireAnnexesDuRegistre } from "@/lib/registre/contenu-ailleurs";
+import { piecesDesAnnexes } from "@/lib/registre/annexes";
 import {
   carnetSanitaireDuDossier,
   compterRapportsSalariesEcartes,
   permisFeuDuDossier,
   plansPreventionDuDossier,
   prestatairesDuDossier,
+  annexesDeposeesDuDossier,
   rapportsDeposesDuDossier,
   registreAccessibiliteDuDossier,
   versionsDuDuerpDuDossier,
@@ -117,8 +120,8 @@ export async function GET(
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
-  // L'utilisateur, lu une fois ici, est passé aux builders (M7) : hors rendu,
-  // chaque `requireUser()` est un `getUser()` réseau.
+  // Le compte, lu une fois ici, est passé aux builders (M7) : hors rendu,
+  // chaque garde relit la session.
   const { compte, db, etablissement } = await requireEtablissement(id);
   // Exporter le dossier de contrôle demande d'avoir payé (ADR-053 § 15) ;
   // un ancien abonné le garde, une fois l'abonnement fini.
@@ -133,7 +136,7 @@ export async function GET(
   if (liberer instanceof Response) return liberer;
   let archive: Awaited<ReturnType<typeof construireArchive>>;
   try {
-    archive = await construireArchive(db, id, etablissement);
+    archive = await construireArchive({ compte, db }, id, etablissement);
   } finally {
     liberer();
   }
@@ -148,10 +151,13 @@ export async function GET(
 }
 
 async function construireArchive(
-  db: Db,
+  /** Le compte de la session et son client : le registre et ses annexes se
+   *  lisent avec eux (ADR-054). */
+  acces: AccesCompte,
   id: string,
   etablissement: Awaited<ReturnType<typeof requireEtablissement>>["etablissement"],
 ) {
+  const { db } = acces;
   // LA FRAÎCHEUR SE LIT AVANT TOUT LE RESTE, et elle ne répare rien.
   // Ce dossier part chez un tiers qui n'a aucun moyen de recouper ce
   // qu'il lit : s'il est bâti sur un calendrier jamais calculé, ses
@@ -327,20 +333,59 @@ async function construireArchive(
   }
 
   // ── 03 Registre de sécurité ─────────────────────────────────────────
+  // `null` tant que le registre n'a pas été lu (ADR-056) : 03_Registre_annexes/
+  // ne se compose qu'à partir de ce qu'il porte.
+  let annexesListees: { pieceId: string; titre: string }[] | null = null;
   try {
-    const data = await construireRegistreData(db, id);
+    const data = await construireRegistreData(acces, id);
     if (data) {
       for (const v of data.verifsEnAttente) {
         if (v.contractuelle) echeancesContractuelles.add(v.id);
         if (v.rythmeRetenu) rythmesRetenus.set(v.id, v.rythmeRetenu);
         if (v.pourInformation) visitesPourInformation.add(v.id);
       }
+      // Les annexes, lues avec le registre : une seule lecture pour le PDF
+      // et pour 03_Registre_annexes/ (relecture du 2026-11-05).
+      annexesListees = data.annexes ?? [];
       const buf = await renderToBuffer(RegistreDocument({ data }));
       zip.file(PIECES_ZIP.registre, new Uint8Array(buf));
     }
   } catch (e) {
     noterEchec(PIECES_ZIP.registre, e);
   }
+  // Le registre n'a pas abouti (échec ou établissement introuvable) : les
+  // annexes se lisent seules, avec leur propre repli — une brique en panne
+  // ne prive pas l'autre (seconde relecture du 2026-11-05).
+  if (annexesListees === null) {
+    annexesListees = await lire(PIECES_ZIP.annexes, [], async () =>
+      piecesDesAnnexes(await lireAnnexesDuRegistre(acces, id)),
+    );
+  }
+
+  // ── 03_Registre_annexes/ — les écrits annexés au registre ───────────
+  // Ceux que la fiche « Annexes » liste (ADR-056), fichier en cours seul : le
+  // PDF du registre les nomme, le tiers les lit ici.
+  // Un objet et non une `Map` : la garde H3 (`branchements.test.ts`) compte
+  // chaque appel de lecture du fichier comme une lecture du stockage.
+  const titreAnnexe: Record<string, string> = Object.fromEntries(
+    annexesListees.map((a) => [a.pieceId, a.titre]),
+  );
+  const annexesDeposees = await lire(PIECES_ZIP.annexes, [], () =>
+    annexesDeposeesDuDossier(db, id, Object.keys(titreAnnexe)),
+  );
+  const annexesZip = await joindreFichiers(
+    zip,
+    nomDeDossier(PIECES_ZIP.annexes),
+    annexesDeposees.map((p) => ({
+      id: p.id,
+      cle: p.fichierCle,
+      nomOriginal: p.fichierNom,
+      date: p.deposeLe,
+      etiquette: titreAnnexe[p.id] ?? null,
+    })),
+    annexesDeposees.length > 0 ? stockage() : null,
+    "annexe.pdf",
+  );
 
   // ── 04 Plan d'actions ───────────────────────────────────────────────
   try {
@@ -666,6 +711,7 @@ async function construireArchive(
     rapportsZip,
     rapportsSalariesEcartes,
     analysesZip,
+    annexesZip,
     aRegistreAccessibilite: Boolean(registreAccess?.publie),
     nbPrestataires: prestataires.length,
     datesAttestations: echecs.has(PIECES_ZIP.prestataires)

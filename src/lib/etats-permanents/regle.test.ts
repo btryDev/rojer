@@ -449,18 +449,46 @@ describe("aucune surface de dépôt sur cet écran", () => {
     return acc;
   }
 
+  /**
+   * LA SEULE DÉROGATION, décidée par la propriétaire (ADR-056, 2026-11-05) :
+   * le fichier d'un écrit que le règlement fait annexer au registre se dépose
+   * sur sa ligne. Un seul composant, monté par la fiche pour ces seules lignes
+   * (`FicheLigne.fichier`, posé par `annexeDeLaLigne`). Ajouter une entrée ici
+   * est une décision, pas une commodité.
+   */
+  const DEROGATIONS: Record<string, string> = {
+    "components/etats-permanents/DepotEcritAnnexe.tsx":
+      "ADR-056 — écrits annexés au registre (M 31, MS 58 § 4, EC 13, AS 11)",
+  };
+
   it("aucun fichier de l'écran ne monte de dépôt de fichier", () => {
     const racine = join(process.cwd(), "src");
     const fautifs = sources(racine)
       .map((f) => ({ rel: relative(racine, f).replace(/\\/g, "/"), f }))
       .filter(({ rel }) => CHEMINS_DE_L_ECRAN.some((r) => r.test(rel)))
+      .filter(({ rel }) => !(rel in DEROGATIONS))
       .filter(({ f }) => MOTIF_DEPOT.test(readFileSync(f, "utf8")))
       .map(({ rel }) => rel);
 
     expect(
       fautifs,
-      "Cet écran recueille une DÉCLARATION, jamais une pièce (ADR-027). Une case cochée à côté d'un dépôt se lit comme une preuve, sur l'écran dont tout le propos est qu'elle n'en est pas une. Retirez le dépôt — il n'y a pas de dérogation à demander ici.",
+      // ~~« il n'y a pas de dérogation à demander ici »~~ [2026-11-05 : une
+      // seule, ADR-056, nommée dans `DEROGATIONS`.]
+      "Cet écran recueille une DÉCLARATION, jamais une pièce (ADR-027). Une case cochée à côté d'un dépôt se lit comme une preuve, sur l'écran dont tout le propos est qu'elle n'en est pas une. Retirez le dépôt — la seule dérogation est celle de l'ADR-056 (`DEROGATIONS`).",
     ).toEqual([]);
+  });
+
+  it("la dérogation existe, porte bien un dépôt, et la fiche ne la monte que sous `fichier`", () => {
+    // Sans ce témoin, un composant renommé laisserait la dérogation pointer
+    // dans le vide — et un dépôt monté sans condition passerait.
+    const racine = join(process.cwd(), "src");
+    for (const rel of Object.keys(DEROGATIONS)) {
+      expect(MOTIF_DEPOT.test(readFileSync(join(racine, rel), "utf8")), rel).toBe(true);
+    }
+    const revue = readFileSync(join(racine, "components/etats-permanents/RevueEnPlace.tsx"), "utf8");
+    const montages = revue.match(/<DepotEcritAnnexe\b/g) ?? [];
+    expect(montages).toHaveLength(1);
+    expect(revue).toMatch(/\{l\.fichier && \(\s*<DepotEcritAnnexe\b/);
   });
 
   it("le témoin : la liste des surfaces gardées n'est pas vide", () => {

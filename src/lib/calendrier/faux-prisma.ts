@@ -31,6 +31,8 @@ export type EquipementFaux = {
   caracteristiques?: Record<string, unknown> | null;
   actif: boolean;
   dateMiseEnService?: Date | null;
+  /** La déclaration dans Rojer, lue par la dispersion (ADR-057). */
+  createdAt?: Date;
 };
 
 export type EtablissementFaux = {
@@ -127,6 +129,8 @@ export type LigneFausse = {
   libelleObligation: string;
   periodicite: string;
   realisateurRequis: string[];
+  /** ADR-057 ; `undefined` ici = fixture d'avant la colonne, lue comme vide. */
+  fondeeAussiPar?: string[];
   datePrevue: Date;
   statut: string;
   prescriptionId?: string | null;
@@ -160,6 +164,7 @@ const COLONNES_LIGNE: ReadonlySet<string> = new Set([
   "libelleObligation",
   "periodicite",
   "realisateurRequis",
+  "fondeeAussiPar",
   "datePrevue",
   "statut",
   "prescriptionId",

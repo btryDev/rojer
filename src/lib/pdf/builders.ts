@@ -4,7 +4,7 @@ import { libelleRealisePar } from "@/lib/rapports/interne";
 import { estLignePourInformation } from "@/lib/referentiels/conformite/initiative";
 import { libelleTypesErp, numeroCategorie } from "@/lib/etablissements/types-erp-affiches";
 import { mentionRythmeDeVerification } from "@/lib/referentiels/conformite/mention-de-ligne";
-import type { Db } from "@/lib/auth/compte";
+import type { AccesCompte, Db } from "@/lib/auth/compte";
 import {
   compterActions,
   compterActionsParOrigine,
@@ -77,7 +77,11 @@ import type {
 } from "./RegistreDocument";
 import { composerRegistreDeLEtablissement } from "@/lib/registre/queries";
 import { saisiePourSection } from "@/lib/registre/champs";
-import { contenuTenuAilleursDepuis } from "@/lib/registre/contenu-ailleurs";
+import {
+  contenuTenuAilleursDepuis,
+  lireAnnexesDuRegistre,
+} from "@/lib/registre/contenu-ailleurs";
+import { ID_FICHE_ANNEXES, piecesDesAnnexes } from "@/lib/registre/annexes";
 import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
 import {
   bilanDuRegistre,
@@ -130,7 +134,7 @@ import {
  * reçu (ADR-051). Retourne `null` aussi bien pour un établissement inexistant que
  * pour celui d'un tiers : l'appelant ne doit pas pouvoir les distinguer.
  *
- * L'utilisateur est REÇU, pas relu (audit Next.js du 2026-10-14, M7) : hors
+ * ~~L'utilisateur~~ Le compte est REÇU, pas relu (audit Next.js du 2026-10-14, M7) : hors
  * rendu, `requireUser()` refait un `getUser()` réseau à chaque appel, et le
  * ZIP de contrôle en faisait vingt-trois. Les builders le reçoivent de la
  * route, qui le tient de `requireEtablissement`. Le client borné au compte
@@ -401,9 +405,12 @@ export async function construirePointsEquipementData(
 }
 
 export async function construireRegistreData(
-  db: Db,
+  /** Le compte et son client, tels que la route les tient de sa garde : les
+   *  annexes se lisent avec eux, comme « Préparer un contrôle » (ADR-054). */
+  acces: AccesCompte,
   etablissementId: string,
 ): Promise<RegistreData | null> {
+  const { db } = acces;
   const etab = await chargerEtablissementDuUser(db, etablissementId);
   if (!etab) return null;
   const multiBatiments = etab._count.batiments > 1;
@@ -450,9 +457,13 @@ export async function construireRegistreData(
   // ferait exactement ce que l'écran a cessé de faire — laisser croire le
   // document complet.
   const registre = await composerRegistreDeLEtablissement(etablissementId);
-  const equipements = registre
-    ? await listerEquipementsDeLEtablissement(etablissementId)
-    : [];
+  const [equipements, annexes] = registre
+    ? await Promise.all([
+        listerEquipementsDeLEtablissement(etablissementId),
+        // La fiche « Annexes » relit « Ce qui doit être en place » (2026-11-05).
+        lireAnnexesDuRegistre(acces, etablissementId),
+      ])
+    : [[], null];
 
   // Le calcul de l'écran du registre et de « Préparer un contrôle »
   // (`completudesDuRegistre`, 2026-10-12) : le PDF n'en tient plus un second.
@@ -470,7 +481,10 @@ export async function construireRegistreData(
       // Le parc et le calendrier sont lus une seule fois pour les
       // quarante-neuf fiches : une lecture par fiche ferait soixante-deux
       // requêtes pour un document.
-      const ailleurs = contenuTenuAilleursDepuis(
+      const ailleurs =
+        due.section.id === ID_FICHE_ANNEXES
+          ? annexes
+          : contenuTenuAilleursDepuis(
         etablissementId,
         partie.id,
         due.section,
@@ -505,6 +519,9 @@ export async function construireRegistreData(
     bilan: bilanDuRegistre([...completudes.values()]),
     rapports: lignesRapports,
     verifsEnAttente,
+    // Les fichiers que la fiche « Annexes » porte : le ZIP les joint sans
+    // refaire la lecture (relecture du 2026-11-05).
+    annexes: piecesDesAnnexes(annexes),
   };
 }
 
@@ -558,7 +575,11 @@ function ficheDuPdf(
       source: ailleurs.source.libelle,
       tenues: ailleurs.lignes.map((l) => ({
         titre: l.titre,
-        meta: l.meta ?? "",
+        // Le nom du fichier annexé (ADR-056) : l'écran le donne en lien, le
+        // papier le nomme — le fichier lui-même part dans le ZIP de contrôle.
+        meta: [l.meta, l.fichier ? `fichier : ${l.fichier.nom}` : null]
+          .filter(Boolean)
+          .join(" · "),
       })),
     };
   }

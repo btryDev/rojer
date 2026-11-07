@@ -192,6 +192,7 @@ describe("la consigne « fiche de l'entreprise » porte son lien", () => {
         entrepriseId: ENTREPRISE,
       },
       questionsSansReponse: null,
+      fichier: null,
     });
     exigerLeLien(boite.outerHTML);
     cleanup();

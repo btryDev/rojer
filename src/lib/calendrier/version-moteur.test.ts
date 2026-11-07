@@ -126,7 +126,7 @@ function estHorsReleve(chemin: string): boolean {
  * message du test dit quand en faire un.
  */
 const RELEVE = {
-  version: 7,
+  version: 8,
   // Recopiée SANS incrément le 2026-10-17 (ADR-045, lot 1, plusieurs types
   // d'ERP) : `matchTypologie` évalue la typologie type par type et
   // `determineObligationsApplicables` résout les groupes exclusifs. Ce que la
@@ -574,7 +574,14 @@ const RELEVE = {
   // (main, #165) : seule la phrase de `phraseEffectifAConfirmer` change
   // (« dans la page Équipe »). NON, affichage : empreinte recopiée, version
   // inchangée.
-  empreinte: "2aeb9e37b187442f",
+  // ~~2aeb9e37b187442f~~ (cc) — 2026-11-06, report de l'ADR-057 (main, #200 :
+  // fusion des gestes, dispersion, `fondeeAussiPar` — moteur 7 → 8, voir le
+  // relevé de main ci-dessous) avec #193 et #201. OUI, version 8 reprise de
+  // main ; empreinte de la fusion relevée en appelant.
+  // [main] ~~befd7d3f01d4b946~~ — 2026-11-03, effectif dans Équipe.
+  // [main] ~~5d865125dbd34224~~ … ~~0b32c48a2c7f3d82~~ — 2026-11-06, ADR-057,
+  // moteur 8 ; sur main : de10984fbe6999b3.
+  empreinte: "f390376323530f97",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

@@ -1,4 +1,5 @@
 import type { InitiativeObligation } from "./initiative";
+import type { GesteObligation } from "./geste";
 import type { NiveauObligation } from "./niveau-audit";
 import type { ReleveParPreventeur } from "../corpus/types";
 import type {
@@ -1349,6 +1350,17 @@ export type ObligationPorteeParEquipement = ObligationCommune & {
   equipementsEnContexte?: never;
   /** Interdit ici : un équipement déclenche déjà, une ligne par équipement. */
   siEquipementDeclare?: never;
+  /**
+   * Le geste de l'obligation (ADR-057) : sur un même appareil, les
+   * obligations applicables qui portent le même geste ne font qu'une ligne —
+   * le rythme le plus court, toutes les références, l'intervenant que tous
+   * les textes admettent. Absent = l'obligation fait sa propre ligne. Lu par
+   * la seule `gesteDe` (`geste.ts`).
+   *
+   * **Entre dans `empreinteReferentiel()`** : il décide du nombre de lignes
+   * d'un appareil. En segment ajouté, et seulement quand il est présent.
+   */
+  geste?: GesteObligation;
 };
 
 /**
@@ -1398,6 +1410,8 @@ export type ObligationPorteeParEtablissement = ObligationCommune & {
    * chaîne.
    */
   siEquipementDeclare?: [CategorieEquipement, ...CategorieEquipement[]];
+  /** Interdit : un geste se fusionne par appareil (ADR-057). */
+  geste?: never;
 };
 
 /**
@@ -1422,6 +1436,8 @@ export type ObligationPorteeParSalarie = ObligationCommune & {
   equipementsEnContexte?: never;
   /** Interdit : un titre naît d'une déclaration de l'employeur (ADR-023). */
   siEquipementDeclare?: never;
+  /** Interdit : un geste se fusionne par appareil (ADR-057). */
+  geste?: never;
   /**
    * Les titres que le droit interdit de cumuler avec celui-ci. **Requis, et
    * c'est le point** — troisième champ de ce type après `transmet` et

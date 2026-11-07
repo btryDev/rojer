@@ -125,8 +125,17 @@ import {
  * ou PA perdent leur « à confirmer » ; ceux d'une 5ᵉ dont public admis + salariés
  * reste à 50 ou moins SORTENT (archivées si elles portent une trace). Sans
  * l'incrément, ces dossiers ne changeraient qu'à leur prochaine mutation.
+ *
+ * `8` (2026-11-06, ADR-057, décisions de la propriétaire du 2026-11-05) : UN
+ * GESTE, UNE LIGNE PAR APPAREIL. Le moteur réunit sur chaque appareil les
+ * obligations du même geste (`fusionnerGestes`) ; la ligne écrit les
+ * absorbées (`Verification.fondeeAussiPar`) et l'intervenant commun ; une
+ * ligne d'établissement passée à l'appareil se DISPERSE — chaque appareil
+ * déclaré à la date de son dernier rapport le reprend (`realisationDispersee`).
+ * Le référentiel `2026-11-06.1` déplace déjà le sceau ; l'incrément dit que
+ * le code aussi a changé ce que la régénération écrit.
  */
-export const VERSION_MOTEUR_CALENDRIER = 7;
+export const VERSION_MOTEUR_CALENDRIER = 8;
 
 /**
  * La forme du sceau. Le moteur `0` n'y paraît pas : c'est le moteur d'avant la

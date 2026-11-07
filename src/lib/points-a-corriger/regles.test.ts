@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import { appareilDesignable, categoriesCouvertes, estControleDEnsemble, recoitDesPoints } from "./regles";
 
-const aeration = obligationParId("aeration-controle-installations-r4222-20")!;
+// [2026-11-05, ADR-057 : ~~R. 4222-20~~ est porté par l'appareil ; le
+// contrôle d'ensemble de ces tests est celui de l'habitation (art. 101).]
+const habitation = obligationParId("habitation-verification-annuelle-installations-securite")!;
 const ligne = { equipementId: null, salarieId: null, archiveLe: null, appareilActif: null };
 
 describe("règles d'un point à corriger (ADR-048)", () => {
@@ -20,14 +22,14 @@ describe("règles d'un point à corriger (ADR-048)", () => {
     expect(recoitDesPoints({ ...ligne, equipementId: "eq", appareilActif: false })).toBe(false);
   });
 
-  it("le contrôle de l'aération couvre les hottes, pas les extincteurs", () => {
-    expect(categoriesCouvertes(aeration)).toContain("HOTTE_PRO");
-    expect(appareilDesignable(aeration, { categorie: "HOTTE_PRO", actif: true })).toBe(true);
-    expect(appareilDesignable(aeration, { categorie: "EXTINCTEUR", actif: true })).toBe(false);
+  it("le contrôle de l'habitation couvre la VMC, pas les extincteurs", () => {
+    expect(categoriesCouvertes(habitation)).toContain("VMC");
+    expect(appareilDesignable(habitation, { categorie: "VMC", actif: true })).toBe(true);
+    expect(appareilDesignable(habitation, { categorie: "EXTINCTEUR", actif: true })).toBe(false);
   });
 
   it("un appareil retiré du parc ne se désigne pas", () => {
-    expect(appareilDesignable(aeration, { categorie: "HOTTE_PRO", actif: false })).toBe(false);
+    expect(appareilDesignable(habitation, { categorie: "VMC", actif: false })).toBe(false);
   });
 
   it("un contrôle qui ne cite aucun appareil n'en couvre aucun", () => {

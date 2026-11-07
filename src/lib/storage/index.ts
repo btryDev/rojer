@@ -208,6 +208,19 @@ export function clePieceDePoint(
 }
 
 /**
+ * La clé d'un écrit annexé au registre, déposé sur sa ligne de « Ce qui doit
+ * être en place » (ADR-056). Le suffixe aléatoire distingue deux versions
+ * successives : la clé n'est jamais réécrite.
+ */
+export function clePieceEtatPermanent(
+  etablissementId: string,
+  obligationId: string,
+  nomFichier: string,
+): string {
+  return `etats-permanents/${etablissementId}/${segmentCleStockage(obligationId)}-${randomUUID()}-${segmentCleStockage(nomFichier)}`;
+}
+
+/**
  * La clé de la photo d'un établissement (2026-10-25). Le suffixe aléatoire
  * distingue deux photos successives : la clé n'est jamais réécrite, l'ancienne
  * est libérée une fois la nouvelle enregistrée en base.
