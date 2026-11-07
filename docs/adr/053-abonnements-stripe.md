@@ -136,10 +136,11 @@ et sans croire une information qui ne vient pas de Stripe.
    essai. Limites assumées : le SIREN n'est pas vérifié (public, un tiers
    peut le déclarer le premier ; le vrai dirigeant garde alors son essai et
    écrit à l'assistance, qui efface la ligne ; un SIRET inventé à la clé
-   juste suffit pour un second essai, faute d'intégration SIRENE) ; une
-   entreprise sans SIREN qui le reçoit plus tard par la fiche établissement,
-   ou un compte d'avant le lancement qui démarre son essai avec des
-   entreprises déjà créées, ne sont pas notés ; un site de plus d'une
+   juste suffit pour un second essai, faute d'intégration SIRENE) ; un
+   compte d'avant le lancement qui démarre son essai avec des entreprises
+   déjà créées ne les note pas. Le SIREN posé plus tard sur une entreprise
+   ancienne par la fiche établissement suit la même règle (seule autre porte
+   d'un SIREN : il ne se modifie nulle part ailleurs) ; un site de plus d'une
    entreprise que le compte suit déjà n'est jamais refusé ; un compte en
    essai peut apprendre, refus après refus, qu'un SIREN a déjà eu un essai
    Rojer ailleurs — une information commerciale, pas personnelle, sans

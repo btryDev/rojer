@@ -187,11 +187,25 @@ vi.mock("@/lib/abonnements/saisie", () => ({
   verifierRole: async () => {},
   verifierProprietaire: async () => {},
 }));
+// Un essai par entreprise (ADR-053 § 8) : la règle a ses tests ; ici, la
+// porte du SIREN posé par la fiche.
+const essai = vi.hoisted(() => ({
+  enEssai: vi.fn().mockResolvedValue(false),
+  ailleurs: vi.fn().mockResolvedValue(false),
+  noter: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock("@/lib/abonnements/essai-entreprise", () => ({
+  MESSAGE_ENTREPRISE_DEJA_ESSAYEE: "Cette entreprise a déjà bénéficié d'un essai.",
+  compteEnEssai: essai.enEssai,
+  sirenEssayeAilleurs: essai.ailleurs,
+  noterEssaiEntreprise: essai.noter,
+}));
 vi.mock("@/lib/auth/scope", () => ({
   assertEtablissementOwnership: vi.fn(async () => ({ id: "user-1" })),
   // La garde rend aussi le client borné (ADR-051) : ici, le client simulé.
   assertEtablissementDuCompte: async (...a: unknown[]) => ({
     user: (await (vi.fn(async () => ({ id: "user-1" })) as (...x: unknown[]) => unknown)(...a)) ?? { id: "u1" },
+    compte: { compteId: "c1", role: "owner" },
     db: await (await import("@/test/garde-simulee")).clientDuCompteSimule(),
   }),
   // La garde rend aussi le client borné (ADR-051) : ici, le client simulé.
@@ -230,6 +244,7 @@ function formulaire(over: Record<string, string> = {}): FormData {
 }
 
 beforeEach(() => {
+  essai.noter.mockClear();
   h.db.etablissement.estERP = false;
   h.db.etablissement.typeErp = null;
   h.db.etablissement.typesErpAutres = [];
@@ -791,6 +806,24 @@ describe("modifierEtablissement — le SIRET reste dans son entreprise (2026-10-
     const res = await modifierEtablissement("etab-1", { status: "idle" }, formulaire());
     expect(res.status).toBe("success");
     expect(h.db.sirensPoses).toEqual(["120027016"]);
+  });
+
+  it("un essai par entreprise (ADR-053 § 8) : pendant l'essai, un SIREN déjà essayé ailleurs ne se pose pas", async () => {
+    h.db.etablissement.entreprise = { siren: null };
+    essai.enEssai.mockResolvedValueOnce(true);
+    essai.ailleurs.mockResolvedValueOnce(true);
+    const res = await modifierEtablissement("etab-1", { status: "idle" }, formulaire());
+    expect(res).toEqual({ status: "error", message: "Cette entreprise a déjà bénéficié d'un essai." });
+    expect(h.db.sirensPoses).toEqual([]);
+    expect(essai.noter).not.toHaveBeenCalled();
+  });
+
+  it("pendant l'essai, un SIREN neuf se pose, puis se note", async () => {
+    h.db.etablissement.entreprise = { siren: null };
+    essai.enEssai.mockResolvedValueOnce(true);
+    const res = await modifierEtablissement("etab-1", { status: "idle" }, formulaire());
+    expect(res.status).toBe("success");
+    expect(essai.noter).toHaveBeenCalledWith("120027016", "c1");
   });
 
   it("rejoint l'entreprise du compte qui porte ce SIREN, et retire celle qu'il quitte si elle est vide", async () => {
