@@ -1,5 +1,6 @@
-import { libererFichiers } from "@/lib/suppression/fichiers";
 import { segmentCleStockage } from "@/lib/storage/noms";
+import { abandonnerFichiers } from "@/lib/abonnements/stockage";
+import type { Db } from "@/lib/auth/compte";
 
 /**
  * Organisation des clés de stockage pour les pièces justificatives d'un
@@ -30,7 +31,7 @@ export function clePiecePrestataire(
  * ses pièces précédentes (`PiecePrestataire`, 2026-10-12). Appelée quand on
  * supprime le prestataire lui-même.
  */
-export async function deletePiecesPrestataire(prestataire: {
+export async function deletePiecesPrestataire(db: Db, prestataire: {
   attestationUrssafCle?: string | null;
   assuranceRcProCle?: string | null;
   kbisCle?: string | null;
@@ -39,7 +40,8 @@ export async function deletePiecesPrestataire(prestataire: {
   // Par `libererFichiers` : aucune clé, aucun appel ; un stockage non
   // configuré ou en panne est journalisé sans faire échouer la suppression du
   // prestataire, déjà faite en base (2026-09-27).
-  await libererFichiers(
+  await abandonnerFichiers(
+    db,
     [
       prestataire.attestationUrssafCle,
       prestataire.assuranceRcProCle,

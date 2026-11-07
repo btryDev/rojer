@@ -1,9 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { abandonnerFichiers } from "@/lib/abonnements/stockage";
 import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { redirect } from "next/navigation";
-import { libererFichiers } from "@/lib/suppression/fichiers";
 import { effacerSalarie } from "./suppression";
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
@@ -331,7 +331,7 @@ export async function supprimerSalarie(
   const { db } = await assertEtablissementDuCompte(etablissementId);
   const efface = await effacerSalarie(db, etablissementId, salarieId);
   if (efface) {
-    await libererFichiers(efface.cles, "salaries/suppression");
+    await abandonnerFichiers(db, efface.cles, "salaries/suppression");
     await regenererEtRafraichir(etablissementId);
   }
   redirect(`/etablissements/${etablissementId}/equipe`);

@@ -1,6 +1,6 @@
 "use server";
 
-import { deposerFichier, rendreReservations } from "@/lib/abonnements/stockage";
+import { abandonnerFichiers, deposerFichier } from "@/lib/abonnements/stockage";
 import { randomUUID } from "node:crypto";
 import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { revalidatePath } from "next/cache";
@@ -9,14 +9,12 @@ import type { Db } from "@/lib/auth/compte";
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { resoudreBatimentOptionnel } from "@/lib/batiments/queries";
 import {
-  getStorage,
   cleRapport,
   MESSAGE_DEPOT_NON_CONFIGURE,
   MESSAGE_ECHEC_ENREGISTREMENT,
   stockageEnService,
 } from "@/lib/storage";
 import { validerFichier } from "@/lib/rapports/validator";
-import { libererFichiers } from "@/lib/suppression/fichiers";
 import {
   analyseLegionelleSchema,
   estReleveConforme,
@@ -360,7 +358,7 @@ async function deposerRapportLabo(
   // rien d'écrit en base.
   try {
     // Le plafond de stockage de la formule (ADR-053 § 14), avant d'écrire.
-    const refus = await deposerFichier(db, compteId, cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
+    const refus = await deposerFichier(db, compteId, cle, Buffer.from(await fichier.arrayBuffer()), val.mime, { etablissementId });
     if (refus) return { ok: false, message: refus };
   } catch (e) {
     console.error(`[carnet-sanitaire/depot] écriture du fichier impossible (${cle})`, e);
@@ -409,10 +407,7 @@ export async function ajouterAnalyseLegionelle(
       },
     });
   } catch (e) {
-    if (depot.rapport) {
-      await getStorage().delete(depot.rapport.cle).catch(() => {});
-      await rendreReservations(db, [depot.rapport.cle]);
-    }
+    if (depot.rapport) await abandonnerFichiers(db, [depot.rapport.cle], "carnet-sanitaire/depot-refuse");
     throw e;
   }
   revaliderCarnet(etablissementId);
@@ -466,13 +461,12 @@ export async function modifierAnalyseLegionelle(
     });
   } catch (e) {
     if (depot.rapport) {
-      await libererFichiers([depot.rapport.cle], "carnet-sanitaire/modification");
-      await rendreReservations(db, [depot.rapport.cle]);
+      await abandonnerFichiers(db, [depot.rapport.cle], "carnet-sanitaire/modification");
     }
     throw e;
   }
   if (depot.rapport && analyse.rapportCle) {
-    await libererFichiers([analyse.rapportCle], "carnet-sanitaire/remplacement");
+    await abandonnerFichiers(db, [analyse.rapportCle], "carnet-sanitaire/remplacement");
   }
   revaliderCarnet(etablissementId);
   return { status: "success" };
@@ -491,7 +485,7 @@ export async function supprimerAnalyseLegionelle(
   if (!analyse) notFound();
   await db.analyseLegionelle.delete({ where: { id: analyse.id } });
   if (analyse.rapportCle) {
-    await libererFichiers([analyse.rapportCle], "carnet-sanitaire/suppression");
+    await abandonnerFichiers(db, [analyse.rapportCle], "carnet-sanitaire/suppression");
   }
   revaliderCarnet(etablissementId);
 }

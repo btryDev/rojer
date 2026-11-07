@@ -1,7 +1,7 @@
 "use server";
 
 import type { Db } from "@/lib/auth/compte";
-import { deposerFichier, rendreReservations } from "@/lib/abonnements/stockage";
+import { abandonnerFichiers, deposerFichier } from "@/lib/abonnements/stockage";
 import { creerEnLotVerifie } from "@/lib/auth/portee/lot-verifie";
 import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { randomUUID } from "node:crypto";
@@ -15,7 +15,6 @@ import {
   stockageEnService,
 } from "@/lib/storage";
 import { validerFichier } from "@/lib/rapports/validator";
-import { libererFichiers } from "@/lib/suppression/fichiers";
 import type { DomainePrestataire } from "@prisma/client";
 import {
   prestataireSchema,
@@ -120,7 +119,7 @@ async function deposerPieces(
       // d'écriture rend un message métier sur le champ.
       try {
         // Le plafond de stockage de la formule (ADR-053 § 14), avant d'écrire.
-        const refus = await deposerFichier(db, compteId, cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
+        const refus = await deposerFichier(db, compteId, cle, Buffer.from(await fichier.arrayBuffer()), val.mime, { etablissementId });
         if (refus) erreur = refus;
         else {
           cles.push(cle);
@@ -133,8 +132,7 @@ async function deposerPieces(
       }
     }
     if (erreur) {
-      await Promise.all(cles.map((c) => storage?.delete(c).catch(() => {})));
-      await rendreReservations(db, cles);
+      await abandonnerFichiers(db, cles, "prestataires/depot-refuse");
       return { ok: false, champ: piece.champ, message: erreur };
     }
   }
@@ -216,8 +214,7 @@ export async function creerPrestataire(
     });
   } catch (err) {
     // Les fichiers écrits ne sont référencés par aucune ligne : on les reprend.
-    await libererFichiers(depot.cles, "prestataires/creation");
-    await rendreReservations(db, depot.cles);
+    await abandonnerFichiers(db, depot.cles, "prestataires/creation");
     if (err instanceof RefusQuota) return { status: "error", message: err.motif };
     if (estSiretEnDouble(err)) return erreurSiret();
     throw err;
@@ -328,8 +325,7 @@ export async function modifierPrestataire(
       });
     }
   } catch (err) {
-    await libererFichiers(depot.cles, "prestataires/modification");
-    await rendreReservations(db, depot.cles);
+    await abandonnerFichiers(db, depot.cles, "prestataires/modification");
     if (estSiretEnDouble(err)) return erreurSiret();
     throw err;
   }
@@ -415,7 +411,7 @@ export async function supprimerPrestataire(
   if (!prestataire) return;
 
   await db.prestataire.delete({ where: { id: prestataire.id } });
-  await deletePiecesPrestataire(prestataire);
+  await deletePiecesPrestataire(db, prestataire);
 
   revalidatePath(`/etablissements/${etablissementId}/prestataires`);
   revalidatePath(`/etablissements/${etablissementId}`);

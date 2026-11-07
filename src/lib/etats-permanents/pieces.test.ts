@@ -144,8 +144,13 @@ vi.mock("@/lib/abonnements/stockage", () => ({
     h.etat.stockage.ecrits.push(cle);
     return null;
   },
-  rendreReservations: async (_db: unknown, cles: string[]) => {
-    h.etat.plafond.rendues.push(...cles);
+  // L'effacement d'un fichier ET de sa ligne du plafond, en un geste.
+  abandonnerFichiers: async (_db: unknown, cles: (string | null | undefined)[]) => {
+    for (const c of cles) {
+      if (!c) continue;
+      h.etat.stockage.effaces.push(c);
+      h.etat.plafond.rendues.push(c);
+    }
   },
 }));
 
