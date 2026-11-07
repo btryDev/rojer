@@ -365,7 +365,7 @@ describe("uploadRapport — un rapport réalisé : la ligne se recalcule sur lui
     // Le cas qui existe : une prescription donnait un rythme à une obligation
     // `autre` sur un portail, puis a été levée. La ligne reste — elle porte une
     // action —, sous un rythme sans rendez-vous, et on peut encore y déposer.
-    poserEtablissement([{ id: "eq-portail", categorie: "PORTAIL_AUTO" }]);
+    poserEtablissement([{ id: "eq-portail", categorie: "PORTE_PORTAIL_MOTORISE" }]);
     poserLigne({
       id: "v-portail",
       obligationId: PORTAIL_MAINTIEN,
@@ -796,7 +796,7 @@ describe("supprimerRapport — la ligne se recalcule sur ce qui reste (ADR-036)"
     // NB4 la met donc à jour pour une autre raison que le statut, et c'est
     // SA décision qui doit rouvrir la ligne — pas le repli de
     // `recalculerLigne` pour une ligne hors du plan, qui masquerait NB4.
-    poserEtablissement([{ id: "eq-portail", categorie: "PORTAIL_AUTO" }]);
+    poserEtablissement([{ id: "eq-portail", categorie: "PORTE_PORTAIL_MOTORISE" }]);
     poserLigne({
       id: "v-portail",
       obligationId: PORTAIL_MAINTIEN,

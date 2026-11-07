@@ -1375,8 +1375,19 @@ export type ObligationPorteeParEtablissement = ObligationCommune & {
    * lui, TypeScript ne signalerait qu'une propriété « inconnue ».
    */
   categoriesEquipement?: never;
-  /** Interdit : les conditions portent sur des propriétés d'équipement. */
-  conditions?: never;
+  /**
+   * ~~Interdit : les conditions portent sur des propriétés d'équipement.~~
+   * [2026-11-07, ADR-057 § 5 : admises AVEC `siEquipementDeclare`, et
+   * seulement avec lui — un équipement de la catégorie ne déclenche la ligne
+   * que s'il satisfait les conditions de sa catégorie, lues comme pour un
+   * porteur équipement (`conditionSatisfaite`). Né de la fusion de
+   * `PORTE_AUTO` et `PORTAIL_AUTO` : le contrat d'entretien de CO 48 § 3 e)
+   * vise les portes, pas les portails, et la différence est désormais une
+   * caractéristique de l'appareil (`typePorte`). Sans `siEquipementDeclare`
+   * aucun équipement ne déclenche, et une condition y serait morte
+   * (`conformite.test.ts`).]
+   */
+  conditions?: ConditionApplication[];
   /**
    * Catégories affichées **à titre indicatif** sous l'obligation, pour que le
    * dirigeant voie lesquels de ses équipements sont concernés. Ce n'est pas un

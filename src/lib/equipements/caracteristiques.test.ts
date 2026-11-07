@@ -16,7 +16,7 @@ describe("caracteristiquesLisibles", () => {
   it("pose les questions de la catégorie même sans aucune donnée", () => {
     // Une VMC sans caractéristiques enregistrées porte quand même la question
     // VMC-Gaz : c'est elle qui explique l'échéance au calendrier.
-    const c = caracteristiquesLisibles("VMC", null);
+    const c = caracteristiquesLisibles("VENTILATION", null);
     expect(c.map((x) => x.cle)).toContain("estVmcGaz");
     expect(c.find((x) => x.cle === "estVmcGaz")?.enAttente).toBe(true);
   });
@@ -24,7 +24,7 @@ describe("caracteristiquesLisibles", () => {
   it("annonce une question sans réponse plutôt que de la taire", () => {
     // C'est le point : l'obligation reste au calendrier tant que la
     // réponse manque, et la fiche est le seul endroit qui l'explique.
-    const c = caracteristiquesLisibles("VMC", { nombre: 3 });
+    const c = caracteristiquesLisibles("VENTILATION", { nombre: 3 });
     const gaz = c.find((x) => x.cle === "estVmcGaz");
     expect(gaz).toMatchObject({
       valeur: "Pas encore répondu",
@@ -33,13 +33,13 @@ describe("caracteristiquesLisibles", () => {
   });
 
   it("rend « oui » et « non » sans les confondre avec l'absence de réponse", () => {
-    const oui = caracteristiquesLisibles("VMC", { estVmcGaz: true });
+    const oui = caracteristiquesLisibles("VENTILATION", { estVmcGaz: true });
     expect(oui.find((x) => x.cle === "estVmcGaz")).toMatchObject({
       valeur: "Oui",
       enAttente: false,
     });
 
-    const non = caracteristiquesLisibles("VMC", { estVmcGaz: false });
+    const non = caracteristiquesLisibles("VENTILATION", { estVmcGaz: false });
     expect(non.find((x) => x.cle === "estVmcGaz")).toMatchObject({
       valeur: "Non",
       enAttente: false,
@@ -63,7 +63,7 @@ describe("caracteristiquesLisibles", () => {
   it("n'affiche que les questions de la catégorie", () => {
     // « Sert au levage de personnes » sur une VMC ferait douter du
     // reste de la fiche.
-    const cles = caracteristiquesLisibles("VMC", {}).map((x) => x.cle);
+    const cles = caracteristiquesLisibles("VENTILATION", {}).map((x) => x.cle);
     expect(cles).toContain("estVmcGaz");
     expect(cles).not.toContain("sertAuLevageDePersonnes");
 
@@ -114,7 +114,7 @@ describe("caracteristiquesLisibles", () => {
     // case décochée et une case jamais posée sont indistinguables dans un
     // `FormData`. Un extincteur affichait donc « Non » à une question
     // qu'on ne lui a jamais posée.
-    const vmc = caracteristiquesLisibles("VMC", {
+    const vmc = caracteristiquesLisibles("VENTILATION", {
       estLocalPollutionSpecifique: false,
     });
     expect(vmc.map((x) => x.cle)).toContain("estLocalPollutionSpecifique");

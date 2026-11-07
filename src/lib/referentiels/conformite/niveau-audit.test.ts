@@ -24,6 +24,7 @@ import type {
   EtablissementMatching,
 } from "@/lib/matching";
 import { genererVerificationsDepuisTitres } from "@/lib/calendrier/generateur";
+import { QUESTION_DE_TYPE } from "@/lib/equipements/type-appareil";
 import { obligationsNiveauAuditDuDossier } from "@/lib/perimetre/niveau-audit";
 import { surfacesDe } from "@/lib/surfaces/obligations-sans-surface";
 import { cataloguerTitres } from "@/lib/salaries/catalogue";
@@ -104,12 +105,18 @@ function parcAudit(): EquipementMatching[] {
       estPorteeParEquipement(o) ? o.categoriesEquipement : (o.siEquipementDeclare ?? []),
     ),
   );
-  return [...categories].map((c) => ({
-    id: `eq-${c}`,
-    libelle: c,
-    categorie: c,
-    caracteristiques: null,
-  }));
+  // ADR-057 § 5 : une catégorie qui pose un type a un appareil PAR type — la
+  // ligne du portail ou du masque lit le type déclaré.
+  return [...categories].flatMap((c): EquipementMatching[] => {
+    const type = QUESTION_DE_TYPE[c];
+    if (!type) return [{ id: `eq-${c}`, libelle: c, categorie: c, caracteristiques: null }];
+    return type.options.map((o) => ({
+      id: `eq-${c}-${o.valeur}`,
+      libelle: `${c} ${o.valeur}`,
+      categorie: c,
+      caracteristiques: { [type.propriete]: o.valeur },
+    }));
+  });
 }
 
 describe("niveau audit — (d) borne basse, jamais la liste exacte", () => {
@@ -148,7 +155,7 @@ describe("niveau audit — (d) borne basse, jamais la liste exacte", () => {
     expect(antichute).toBeDefined();
     expect(estNiveauAudit(antichute!)).toBe(false);
     const res = determineObligationsApplicables(etabLarge(), [
-      { id: "h", libelle: "harnais", categorie: "EPI_ANTICHUTE", caracteristiques: null },
+      { id: "h", libelle: "harnais", categorie: "EPI", caracteristiques: { typeEpi: "antichute" } },
     ]);
     expect(res.map((r) => r.obligation.id)).toContain(
       "epi-verification-generale-periodique",

@@ -29,6 +29,7 @@ import type {
   EtablissementMatching,
 } from "@/lib/matching/types";
 import { LABEL_CATEGORIE_EQUIPEMENT } from "@/lib/equipements/labels";
+import { libelleDuType } from "@/lib/equipements/type-appareil";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
 import {
@@ -140,7 +141,7 @@ export function gesteHorsQuotidien(o: Obligation): string {
 
 function porteePar(
   o: Obligation,
-  equipements: readonly Pick<EquipementMatching, "categorie">[],
+  equipements: readonly Pick<EquipementMatching, "categorie" | "caracteristiques">[],
 ): string | null {
   if (estPorteeParSalarie(o)) {
     return "Concerne chaque personne qui détiendrait ce titre.";
@@ -148,9 +149,15 @@ function porteePar(
   if (equipements.length > 0) {
     // Le LIBELLÉ de la catégorie, jamais le code de l'enum : « EPI_RESPIRATOIRE »
     // n'est pas un mot que le dirigeant a déclaré. Une catégorie nommée une
-    // fois, même pour trois appareils.
+    // fois, même pour trois appareils. [2026-11-07, ADR-057 § 5 : le TYPE
+    // déclaré quand la catégorie en pose un — « Équipement de protection
+    // individuelle » ne dirait pas lequel des EPI la ligne vise.]
     const categories = [
-      ...new Set(equipements.map((e) => LABEL_CATEGORIE_EQUIPEMENT[e.categorie])),
+      ...new Set(
+        equipements.map(
+          (e) => libelleDuType(e.categorie, e.caracteristiques) ?? LABEL_CATEGORIE_EQUIPEMENT[e.categorie],
+        ),
+      ),
     ];
     return `Vise ${equipements.length > 1 ? "les équipements déclarés" : "l'équipement déclaré"} : ${categories.join(", ")}.`;
   }

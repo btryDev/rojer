@@ -822,7 +822,8 @@ describe("obligationsApplicablesALAppareil — ce que comptent la pastille et le
   // ligne, ni fait déclencheur. Une porte automatique en ERP en annonçait 2
   // sur 4.
   const porteEnErp = ficheAuMoteur({
-    categorie: "PORTE_AUTO",
+    categorie: "PORTE_PORTAIL_MOTORISE",
+    caracteristiques: { typePorte: "porte" },
     etablissement: { estERP: true, typeErp: "N", typesErpAutres: [], categorieErp: "N5" },
   });
 

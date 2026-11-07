@@ -331,7 +331,10 @@ export const DOCUMENTS_OBLIGATOIRES: readonly DocumentObligatoire[] = [
       // générale devient « aucune échéance de vérification générale
       // périodique » : depuis le 2026-10-07, elle porte le maintien en état de
       // R. 4322-1, au rythme retenu par défaut.
-      "Déclarez un harnais dans votre parc sous la catégorie « Harnais antichute et systèmes d'arrêt de chute », et Rojer pose l'échéance des douze mois. Elle apparaît dans votre calendrier comme les autres, et les rapports du vérificateur s'annexent au registre de sécurité. Les appareils de protection respiratoire et les gilets de sauvetage gonflables se déclarent sous leur propre catégorie, mais Rojer ne suit pas leur vérification au quotidien : elle est nommée, pour votre dossier, sur la page « Ce que Rojer ne couvre pas », et se tient hors de l'outil. Un équipement de protection déclaré sous la catégorie générale « Équipement de protection individuelle » ne reçoit aucune échéance de vérification générale périodique : c'est celle du casque, des gants et des chaussures, que l'arrêté ne soumet à aucune vérification.",
+      // 2026-11-07, ADR-057 § 5 : ~~« sous la catégorie « Harnais antichute et
+      // systèmes d'arrêt de chute » »~~, ~~« sous leur propre catégorie »~~ —
+      // une catégorie, un type déclaré.
+      "Déclarez un harnais dans votre parc, catégorie « Équipement de protection individuelle », en précisant qu'il s'agit d'un harnais antichute, et Rojer pose l'échéance des douze mois. Elle apparaît dans votre calendrier comme les autres, et les rapports du vérificateur s'annexent au registre de sécurité. Les appareils de protection respiratoire et les gilets de sauvetage gonflables se déclarent dans la même catégorie, avec leur type, mais Rojer ne suit pas leur vérification au quotidien : elle est nommée, pour votre dossier, sur la page « Ce que Rojer ne couvre pas », et se tient hors de l'outil. Un équipement de protection déclaré sous la catégorie générale « Équipement de protection individuelle » ne reçoit aucune échéance de vérification générale périodique : c'est celle du casque, des gants et des chaussures, que l'arrêté ne soumet à aucune vérification.",
     fondements: [
       {
         source: "CODE_TRAVAIL",
