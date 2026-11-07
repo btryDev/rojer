@@ -13,6 +13,7 @@ va dans `docs/illustrations/photos-reserve/`.
 | Fichier | Emplacement | Cadrage | Constante |
 | --- | --- | --- | --- |
 | `hero-restaurateur.jpg` | Hero, bord à bord | 16/9 paysage | `PHOTO_HERO` (`Hero.tsx`) |
+| `hero-restaurateur-portrait.jpg` | Hero, au téléphone (< md) | 9/16 vertical | `PHOTO_HERO.portrait` (`Hero.tsx`) |
 | `manifeste-boulangere.jpg` | « Concentrez-vous », gauche | 4/5 vertical | `PHOTO_MANIFESTE` (`Manifeste.tsx`) |
 | `transparence-sources.jpg` | « Transparent sur ses sources » | 4/3 | `OutilSimple.tsx` |
 | `documents/*.webp` | Liste « Ce que Rojer tient à jour » (téléphone) | 1/1, 264 px | `PICTOS` (`Cadran.tsx`) |
@@ -33,6 +34,10 @@ bleus, puis découpés et détourés. Décoratifs (`alt=""`) ; servis tels quels
 
 La mention des modèles, en pied de page, vient de `src/components/landing/`
 — à tenir à jour si une image change d'origine.
+
+`hero-restaurateur-portrait.jpg` : la photo du hero prolongée en haut et en
+bas (Nano Banana Pro, 2026-11-07), légèrement réchauffée pour suivre
+l'originale ; à refaire si la photo du hero change.
 
 Le hero sert aussi d'aperçu de partage de lien : `src/app/opengraph-image.jpg`
 (1200 × 630, recadré au centre) — à refaire si la photo du hero change.
