@@ -789,10 +789,7 @@
     /* Asymétrique : la marque a besoin d'air à gauche, le bouton-pilule
        de droite apporte déjà le sien. */
     padding-inline: 22px 8px;
-    /* Une pilule : la moitié de la hauteur de l'îlot, un rayon fini —
-       9999px faisait sauter les coins à l'ouverture du menu (la transition
-       passait par des rayons plafonnés). Menu ouvert, l'îlot s'allonge et
-       garde ce rayon : une carte. */
+    /* Une pilule : la moitié de la hauteur de l'îlot. */
     border-radius: calc(var(--lp-ilot-h) / 2);
     /* 88 % et non 58 %. L'îlot traverse la bande noire du manifeste, et
        58 % de blanc par-dessus l'encre donne un gris à 2,2:1 sous les

@@ -57,12 +57,7 @@ export default async function Home({
   return (
     <main className="bg-[color:var(--board-card)]">
       <RecoveryHashRedirect />
-      <LandingHeader
-        ctaHref={ctaHref}
-        ctaLabel={ctaLabel}
-        connecte={connecte}
-        surPhoto
-      />
+      <LandingHeader espace={connecte ? ctaHref : undefined} surPhoto />
 
       <Hero inscription={connecte ? undefined : ctaHref} />
 
