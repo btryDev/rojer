@@ -4,10 +4,11 @@
 // suivantes. Tant que la page n'a pas défilé, l'en-tête est transparent et
 // passe en blanc (`LandingHeader`, `surPhoto`).
 
-import Image from "next/image";
+import { getImageProps } from "next/image";
 import Link from "next/link";
 import type { CompteLanding } from "./compte";
 import photoHero from "@/assets/landing/hero-restaurateur.jpg";
+import photoHeroPortrait from "@/assets/landing/hero-restaurateur-portrait.jpg";
 
 /**
  * La photo du hero. Un seul endroit à changer pour la remplacer.
@@ -24,9 +25,16 @@ const PHOTO_HERO = {
   src: photoHero,
   alt: "Un restaurateur en tablier marine consulte son téléphone dans la salle de son bistrot avant le service",
   // Quand le cadre se resserre (écran en portrait), on garde son visage.
-  // Sur téléphone, le hero est moins haut (76svh, le titre suivant dépasse) : la photo se recadre moins.
   position: "68% 20%",
+  // Au téléphone, la même scène prolongée en haut et en bas (9/16, Krea,
+  // 2026-11-07) : la 16/9 couvrait la hauteur en grossissant, d'autant plus
+  // que le hero est haut. La verticale tient la hauteur sans zoomer.
+  portrait: photoHeroPortrait,
+  positionPortrait: "60% 30%",
 };
+
+/** Le point de bascule entre la photo verticale et la paysage (`md`). */
+const MEDIA_PORTRAIT = "(max-width: 767px)";
 
 export function Hero({
   compte,
@@ -34,26 +42,39 @@ export function Hero({
   /** Le compte connecté, s'il y en a un : le hero ne lui propose pas de s'inscrire. */
   compte?: CompteLanding;
 }) {
+  // Deux cadrages, une image : `<picture>` choisit la source, l'`<img>`
+  // reste unique (un seul téléchargement, un seul aperçu flou).
+  const commun = { alt: PHOTO_HERO.alt, fill: true, preload: true, placeholder: "blur" as const };
+  const portrait = getImageProps({ ...commun, src: PHOTO_HERO.portrait, sizes: "100vw" }).props;
+  const paysage = getImageProps({
+    ...commun,
+    src: PHOTO_HERO.src,
+    // En portrait au-dessus de md, la photo 16/9 couvre la hauteur et
+    // déborde en largeur : elle s'affiche sur environ 178 % de la hauteur.
+    sizes: "(max-aspect-ratio: 16/9) 178vh, 100vw",
+  }).props;
+
   return (
     <section
       // La photo remonte de la hauteur de l'en-tête (`--lp-entete`) pour
       // passer dessous ; le texte la redescend d'autant.
-      className="relative isolate -mt-[var(--lp-entete)] flex h-[76svh] max-h-[1000px] min-h-[520px] overflow-hidden bg-[color:var(--board-ink)] md:h-[100svh] md:min-h-[640px]"
+      className="relative isolate -mt-[var(--lp-entete)] flex h-[86svh] max-h-[1000px] min-h-[560px] overflow-hidden bg-[color:var(--board-ink)] md:h-[100svh] md:min-h-[640px]"
     >
-      <Image
-        src={PHOTO_HERO.src}
-        alt={PHOTO_HERO.alt}
-        fill
-        preload
-        placeholder="blur"
-        // En portrait, la photo 16/9 couvre la hauteur et déborde en largeur :
-        // elle s'affiche sur environ 178 % de la hauteur d'écran (150 % sous
-        // md, où le hero ne fait que 76svh). Sous 684 px de haut (téléphone
-        // en paysage), le hero est tenu à 520 px : la photo fait 925 px de large.
-        sizes="(max-width: 767px) and (max-height: 684px) 925px, (max-width: 767px) 150vh, (max-aspect-ratio: 16/9) 178vh, 100vw"
-        className="-z-10 object-cover"
-        style={{ objectPosition: PHOTO_HERO.position }}
-      />
+      <picture>
+        <source media={MEDIA_PORTRAIT} srcSet={portrait.srcSet} sizes={portrait.sizes} />
+        <img
+          {...paysage}
+          alt={PHOTO_HERO.alt}
+          className="-z-10 object-cover [object-position:var(--pos)] max-md:[object-position:var(--pos-portrait)]"
+          style={
+            {
+              ...paysage.style,
+              "--pos": PHOTO_HERO.position,
+              "--pos-portrait": PHOTO_HERO.positionPortrait,
+            } as React.CSSProperties
+          }
+        />
+      </picture>
       {/* Le voile : de bas en haut en portrait, où le texte passe sous son
           visage ; de gauche à droite dès que la salle vide laisse la place
           au texte. Le haut reste assombri pour l'en-tête blanc. */}
