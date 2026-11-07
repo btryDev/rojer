@@ -299,7 +299,7 @@ export default async function AbonnementPage({
           </MessageFormulaire>
           <MessageFormulaire ton="info">
             {essai === "entreprise-deja-essayee"
-              ? "Cette entreprise a déjà bénéficié d'un essai gratuit avec un autre compte : votre essai s'arrête ici. Votre établissement est créé et reste consultable ; abonnez-vous pour continuer à le compléter."
+              ? "Cette entreprise a déjà bénéficié d'un essai gratuit avec un autre compte : votre essai s'arrête ici. Votre établissement est créé et reste consultable ; abonnez-vous pour continuer à le compléter. Si votre entreprise n'a jamais utilisé Rojer, écrivez à l'assistance : nous rétablirons votre essai."
               : paiement === "termine"
               ? "Paiement terminé. Votre abonnement s'affiche ici dans quelques secondes : rechargez la page s'il n'apparaît pas."
               : formuleChange

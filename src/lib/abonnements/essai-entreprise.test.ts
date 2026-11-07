@@ -7,6 +7,8 @@ vi.mock("server-only", () => ({}));
 const h = vi.hoisted(() => ({
   table: new Map<string, string>(),
   update: vi.fn(async () => ({})),
+  retrieve: vi.fn(async () => ({ default_payment_method: null as string | null })),
+  carte: vi.fn(async () => null as string | null),
   synchroniser: vi.fn(async () => ({})),
   active: true,
 }));
@@ -24,8 +26,9 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 vi.mock("@/lib/stripe/config", () => ({ configurationStripe: () => ({ active: h.active }) }));
-vi.mock("@/lib/stripe/client", () => ({ clientStripe: () => ({ subscriptions: { update: h.update } }) }));
+vi.mock("@/lib/stripe/client", () => ({ clientStripe: () => ({ subscriptions: { update: h.update, retrieve: h.retrieve } }) }));
 vi.mock("@/lib/stripe/synchronisation", () => ({ synchroniserClientStripe: h.synchroniser }));
+vi.mock("./souscription", () => ({ carteParDefaut: h.carte }));
 
 import type { Db } from "@/lib/auth/compte";
 import { finirLEssaiSiEntrepriseDejaEssayee } from "./essai-entreprise";
@@ -65,6 +68,15 @@ describe("un essai par entreprise", () => {
     expect(h.synchroniser).toHaveBeenCalledWith(expect.anything(), "cus_1");
     // La première trace ne change pas de compte.
     expect(h.table.get("123456789")).toBe("c-autre");
+  });
+
+  it("avec une carte enregistrée (abonnement ou client), l'essai continue : un tiers ne déclenche aucun prélèvement", async () => {
+    h.table.set("123456789", "c-autre");
+    h.retrieve.mockResolvedValueOnce({ default_payment_method: "pm_1" });
+    expect(await finirLEssaiSiEntrepriseDejaEssayee(db("trialing"), "c1", "123456789")).toBe(false);
+    h.carte.mockResolvedValueOnce("pm_2");
+    expect(await finirLEssaiSiEntrepriseDejaEssayee(db("trialing"), "c1", "123456789")).toBe(false);
+    expect(h.update).not.toHaveBeenCalled();
   });
 
   it("Stripe injoignable : l'essai continue, sans erreur", async () => {

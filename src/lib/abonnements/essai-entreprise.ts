@@ -11,6 +11,7 @@ import type { Db } from "@/lib/auth/compte";
 import { clientStripe } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
 import { synchroniserClientStripe } from "@/lib/stripe/synchronisation";
+import { carteParDefaut } from "./souscription";
 
 /**
  * Note le SIREN sous ce compte s'il est neuf, puis rend vrai s'il appartient
@@ -26,10 +27,17 @@ export async function sirenEssayeAilleurs(siren: string, compteId: string): Prom
 /**
  * À la création d'une entreprise : rien hors d'un essai en cours. Pendant un
  * essai, note le SIREN ; s'il a déjà servi un autre compte, finit l'essai
- * chez Stripe (`trial_end: now` : sans carte, l'abonnement se met en pause ;
- * avec une carte, la première facture part) et rend vrai. Stripe injoignable :
- * l'essai continue, journalisé — refuser la création pour un défaut réseau
- * punirait le client d'une panne.
+ * chez Stripe (`trial_end: now`, l'abonnement se met en pause) et rend vrai.
+ *
+ * LE SIREN N'EST PAS VÉRIFIÉ (revue de sécurité du 2026-11-07) : il est
+ * public, un tiers peut le déclarer le premier. D'où deux bornes :
+ * - avec une carte enregistrée, l'essai continue — finir l'essai prélèverait
+ *   tout de suite, et un tiers n'a pas à déclencher un paiement chez autrui ;
+ *   ce client paiera de toute façon à la fin ;
+ * - sans carte, l'essai finit SANS prélèvement, et le message renvoie à
+ *   l'assistance, qui efface la ligne si l'entreprise n'avait jamais essayé.
+ * Stripe injoignable : l'essai continue, journalisé — refuser pour un défaut
+ * réseau punirait le client d'une panne.
  */
 export async function finirLEssaiSiEntrepriseDejaEssayee(db: Db, compteId: string, siren: string): Promise<boolean> {
   const ligne = await db.abonnement.findUnique({
@@ -43,6 +51,8 @@ export async function finirLEssaiSiEntrepriseDejaEssayee(db: Db, compteId: strin
   if (!config.active) return false;
   const stripe = clientStripe(config);
   try {
+    const abonnement = await stripe.subscriptions.retrieve(ligne.stripeSubscriptionId);
+    if (abonnement.default_payment_method || (await carteParDefaut(stripe, ligne.stripeCustomerId))) return false;
     await stripe.subscriptions.update(
       ligne.stripeSubscriptionId,
       { trial_end: "now" },

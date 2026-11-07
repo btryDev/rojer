@@ -130,8 +130,12 @@ et sans croire une information qui ne vient pas de Stripe.
    (`abonnements/essai-entreprise.ts`). Pendant un essai, le SIREN est noté
    (`EssaiEntreprise`, hors compte, gardé après la suppression d'un compte) ;
    s'il a déjà servi l'essai d'un autre compte, l'essai finit aussitôt
-   (`trial_end: now` : en pause sans carte, première facture avec une carte).
-   L'établissement reste, en lecture ; la page de l'abonnement le dit.
+   (`trial_end: now`, en pause, rien n'est prélevé). Le SIREN n'étant pas
+   vérifié (public, un tiers peut le déclarer le premier — revue de sécurité
+   du même jour) : avec une carte enregistrée l'essai continue (un tiers ne
+   déclenche jamais un paiement chez autrui), et le message renvoie à
+   l'assistance, qui efface la ligne d'une entreprise qui n'avait jamais
+   essayé. L'établissement reste, en lecture ; la page de l'abonnement le dit.
    Stripe injoignable : l'essai continue, journalisé. Limite connue : un
    compte d'avant le lancement qui démarre son essai avec des entreprises
    déjà créées ne les note pas.]
