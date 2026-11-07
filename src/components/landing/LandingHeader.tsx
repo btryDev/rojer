@@ -15,7 +15,7 @@
 
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { signOutAction } from "@/lib/auth/actions";
 
 // « Tarif » mène à la section du même nom (`#tarif`). « Comprendre » n'a
@@ -27,14 +27,42 @@ const LIENS = [
   { href: "#tarif", label: "Tarif" },
 ];
 
+/** Une entrée du menu du téléphone : cible de 48 px. */
+const ENTREE_MENU = "flex min-h-12 w-full items-center text-left text-[1rem] font-medium text-[color:var(--board-ink)]";
+
+/** Se connecter, ou se déconnecter : dans la barre (`md` et plus) comme dans le menu. */
+function EntreeSession({ connecte, className }: { connecte: boolean; className: string }) {
+  // L'accueil est la destination du « Quitter » de la mise en place, et il
+  // n'y porte pas le header d'application (`LayoutAvecEnTete` n'est pas
+  // monté sur `/`). Sans cette sortie, un compte connecté sans dossier
+  // arrivait ici sur un seul bouton, qui le renvoyait à l'écran qu'il venait
+  // de quitter.
+  if (!connecte)
+    return (
+      <Link href="/login" className={className}>
+        Se connecter
+      </Link>
+    );
+  return (
+    <form action={signOutAction}>
+      <button type="submit" className={className}>
+        Déconnexion
+      </button>
+    </form>
+  );
+}
+
 export function LandingHeader({
   ctaHref,
   ctaLabel,
+  ctaLabelCourt = ctaLabel,
   connecte,
   surPhoto = false,
 }: {
   ctaHref: string;
   ctaLabel: string;
+  /** Le libellé du bouton sur téléphone, où la barre n'a pas la place des longs. */
+  ctaLabelCourt?: string;
   connecte: boolean;
   surPhoto?: boolean;
 }) {
@@ -43,6 +71,8 @@ export function LandingHeader({
   // barre ne garde que la marque, le bouton principal et ce bouton.
   const [menuOuvert, setMenuOuvert] = useState(false);
   const idMenu = useId();
+  const ilot = useRef<HTMLDivElement | null>(null);
+  const bouton = useRef<HTMLButtonElement | null>(null);
   const blanc = surPhoto && !pose && !menuOuvert;
   const lien =
     "text-[0.875rem] transition-colors " +
@@ -60,18 +90,32 @@ export function LandingHeader({
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Échap referme le menu ; passer en largeur `md` aussi (il n'y a plus de
-  // bouton pour le fermer).
+  // Le menu se referme : Échap (le focus revient au bouton), un toucher hors
+  // de l'îlot, un défilement, ou un élargissement qui cache le bouton — le
+  // seuil est lu sur le bouton lui-même (`md:hidden`), pas recopié ici.
   useEffect(() => {
     if (!menuOuvert) return;
-    const surTouche = (e: KeyboardEvent) => e.key === "Escape" && setMenuOuvert(false);
-    const mq = window.matchMedia("(min-width: 48rem)");
-    const surLargeur = () => mq.matches && setMenuOuvert(false);
+    const fermer = () => setMenuOuvert(false);
+    const surTouche = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      fermer();
+      bouton.current?.focus();
+    };
+    const surPointeur = (e: PointerEvent) => {
+      if (!ilot.current?.contains(e.target as Node)) fermer();
+    };
+    const departY = window.scrollY;
+    const surDefilement = () => Math.abs(window.scrollY - departY) > 40 && fermer();
+    const surLargeur = () => bouton.current && getComputedStyle(bouton.current).display === "none" && fermer();
     window.addEventListener("keydown", surTouche);
-    mq.addEventListener("change", surLargeur);
+    document.addEventListener("pointerdown", surPointeur);
+    window.addEventListener("scroll", surDefilement, { passive: true });
+    window.addEventListener("resize", surLargeur);
     return () => {
       window.removeEventListener("keydown", surTouche);
-      mq.removeEventListener("change", surLargeur);
+      document.removeEventListener("pointerdown", surPointeur);
+      window.removeEventListener("scroll", surDefilement);
+      window.removeEventListener("resize", surLargeur);
     };
   }, [menuOuvert]);
 
@@ -81,13 +125,14 @@ export function LandingHeader({
     // d'autre avaleraient ceux destinés à la page.
     <header className="pointer-events-none sticky top-0 z-50 h-[var(--lp-entete)]">
       <div
+        ref={ilot}
         className={
           "lp-nav pointer-events-auto absolute inset-x-0 top-0" +
           (pose || menuOuvert ? " lp-nav--ilot" : "") +
           (menuOuvert ? " lp-nav--menu" : "")
         }
       >
-        <div className="lp-nav-barre flex items-center justify-between gap-6">
+        <div className="lp-nav-barre flex items-center justify-between gap-4 sm:gap-6">
           <Link
             href="/"
             className={
@@ -102,57 +147,35 @@ export function LandingHeader({
 
           <nav className="hidden items-center gap-8 md:flex">
             {LIENS.map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
-                className={lien}
-              >
+              <a key={l.href} href={l.href} className={lien}>
                 {l.label}
               </a>
             ))}
           </nav>
 
           <div className="flex items-center gap-2 sm:gap-5">
-            {!connecte ? (
-              <Link
-                href="/login"
-                className={lien + " hidden md:inline"}
-              >
-                Se connecter
-              </Link>
-            ) : (
-              // L'accueil est la destination du « Quitter » de la mise en
-              // place, et il n'y porte pas le header d'application
-              // (`LayoutAvecEnTete` n'est pas monté sur `/`). Sans cette
-              // sortie, un compte connecté sans dossier arrivait ici sur un
-              // seul bouton, qui le renvoyait à l'écran qu'il venait de
-              // quitter.
-              <form action={signOutAction} className="hidden md:block">
-                <button
-                  type="submit"
-                  className={lien}
-                >
-                  Déconnexion
-                </button>
-              </form>
-            )}
+            <div className="hidden md:block">
+              <EntreeSession connecte={connecte} className={lien} />
+            </div>
             <Link
               href={ctaHref}
               className={
-                "lp-btn px-3.5 py-[9px] text-[0.8125rem] sm:px-[18px] sm:py-[10px] sm:text-[0.875rem] " +
+                "lp-btn whitespace-nowrap px-3.5 py-[9px] text-[0.8125rem] sm:px-[18px] sm:py-[10px] sm:text-[0.875rem] " +
                 (blanc ? "lp-btn-blanc" : "lp-btn-ink")
               }
             >
-              {ctaLabel}
+              <span className="sm:hidden">{ctaLabelCourt}</span>
+              <span className="hidden sm:inline">{ctaLabel}</span>
             </Link>
             <button
+              ref={bouton}
               type="button"
               aria-expanded={menuOuvert}
               aria-controls={idMenu}
               aria-label={menuOuvert ? "Fermer le menu" : "Ouvrir le menu"}
               onClick={() => setMenuOuvert((o) => !o)}
               className={
-                "flex size-10 items-center justify-center rounded-full transition-colors md:hidden focus-visible:outline-2 focus-visible:outline-offset-2 " +
+                "flex size-10 flex-none items-center justify-center rounded-full transition-colors md:hidden focus-visible:outline-2 focus-visible:outline-offset-2 " +
                 (blanc
                   ? "text-white hover:bg-white/10 focus-visible:outline-white"
                   : "text-[color:var(--board-ink)] hover:bg-[color:var(--board-slate-pale)] focus-visible:outline-[color:var(--board-ink)]")
@@ -163,37 +186,28 @@ export function LandingHeader({
           </div>
         </div>
 
-        {/* Le menu du téléphone, déplié sous la barre dans le même îlot. */}
-        {menuOuvert ? (
-          <nav id={idMenu} aria-label="Menu" className="relative z-[1] border-t border-[rgba(10,10,10,0.06)] pb-3 pt-2 md:hidden">
-            <ul className="m-0 flex list-none flex-col p-0">
-              {LIENS.map((l) => (
-                <li key={l.href}>
-                  <a
-                    href={l.href}
-                    onClick={() => setMenuOuvert(false)}
-                    className="flex min-h-12 items-center text-[1rem] font-medium text-[color:var(--board-ink)]"
-                  >
-                    {l.label}
-                  </a>
-                </li>
-              ))}
-              <li>
-                {!connecte ? (
-                  <Link href="/login" className="flex min-h-12 items-center text-[1rem] font-medium text-[color:var(--board-ink)]">
-                    Se connecter
-                  </Link>
-                ) : (
-                  <form action={signOutAction}>
-                    <button type="submit" className="flex min-h-12 w-full items-center text-left text-[1rem] font-medium text-[color:var(--board-ink)]">
-                      Déconnexion
-                    </button>
-                  </form>
-                )}
+        {/* Le menu du téléphone, déplié sous la barre dans le même îlot.
+            Toujours monté (`hidden` quand il est fermé) : `aria-controls`
+            pointe vers un élément qui existe. */}
+        <nav
+          id={idMenu}
+          aria-label="Menu"
+          hidden={!menuOuvert}
+          className="relative z-[1] border-t border-[rgba(10,10,10,0.06)] pb-3 pt-2 md:hidden"
+        >
+          <ul className="m-0 flex list-none flex-col p-0">
+            {LIENS.map((l) => (
+              <li key={l.href}>
+                <a href={l.href} onClick={() => setMenuOuvert(false)} className={ENTREE_MENU}>
+                  {l.label}
+                </a>
               </li>
-            </ul>
-          </nav>
-        ) : null}
+            ))}
+            <li>
+              <EntreeSession connecte={connecte} className={ENTREE_MENU} />
+            </li>
+          </ul>
+        </nav>
       </div>
     </header>
   );

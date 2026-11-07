@@ -46,6 +46,8 @@ export default async function Home({
     : etab
       ? "Reprendre mon dossier"
       : "Terminer la mise en place";
+  // La barre du téléphone n'a pas la place des libellés longs.
+  const ctaLabelCourt = !user ? "Créer mon compte" : etab ? "Mon dossier" : "Continuer";
 
   // Les chiffres du référentiel, calculés ICI — côté serveur — et passés en
   // props : `Cadran` est un composant client, qui ne doit pas embarquer le
@@ -59,6 +61,7 @@ export default async function Home({
       <LandingHeader
         ctaHref={ctaHref}
         ctaLabel={ctaLabel}
+        ctaLabelCourt={ctaLabelCourt}
         connecte={Boolean(user)}
         surPhoto
       />

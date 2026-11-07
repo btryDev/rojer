@@ -787,7 +787,10 @@
     /* Asymétrique : la marque a besoin d'air à gauche, le bouton-pilule
        de droite apporte déjà le sien. */
     padding-inline: 22px 8px;
-    border-radius: 9999px;
+    /* La moitié de la hauteur de la barre (54 px) : une pilule, avec un
+       rayon fini — 9999px faisait sauter les coins vers la carte du menu
+       (la transition passait par des rayons plafonnés). */
+    border-radius: 27px;
     /* 88 % et non 58 %. L'îlot traverse la bande noire du manifeste, et
        58 % de blanc par-dessus l'encre donne un gris à 2,2:1 sous les
        liens (--board-slate-mid) : « Comprendre » et « Tarif » s'y lisaient

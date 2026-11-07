@@ -427,24 +427,25 @@ function CadranListe({ chiffres }: { chiffres: ChiffresReferentielSuivi }) {
         </p>
         <ol className="m-0 mt-12 flex list-none flex-col gap-10 rounded-[28px] bg-[color:var(--board-sky)] p-6 sm:mt-14 sm:gap-12 sm:p-10">
           {DOCUMENTS.map((d) => (
-            <li
+            // Un seul observateur par document : le numéro et le texte
+            // montent ensemble. La liste est servie sur petit écran ET en
+            // mouvement réduit (`simple`) ; là, `.lp-reveal` ne bouge pas.
+            <Reveal
+              as="li"
+              ample="texte"
               key={d.numero}
               className="grid grid-cols-1 gap-3 border-t border-[rgba(10,10,10,.16)] pt-6 first:border-t-0 first:pt-0 sm:grid-cols-[88px_1fr] sm:gap-8"
             >
-              {/* La roue ne tient pas sur petit écran : chaque document se
-                  découvre au défilement, le numéro d'abord, puis le texte. */}
-              <Reveal ample="media">
-                <span
-                  className="block text-[2.4rem] font-semibold leading-none tabular-nums text-[color:var(--board-ink)]"
-                  style={{
-                    fontFamily: "var(--font-titre), sans-serif",
-                    letterSpacing: "-0.05em",
-                  }}
-                >
-                  {d.numero}
-                </span>
-              </Reveal>
-              <Reveal ample="texte" delai={140}>
+              <span
+                className="text-[2.4rem] font-semibold leading-none tabular-nums text-[color:var(--board-ink)]"
+                style={{
+                  fontFamily: "var(--font-titre), sans-serif",
+                  letterSpacing: "-0.05em",
+                }}
+              >
+                {d.numero}
+              </span>
+              <div>
                 <p className="lp-eyebrow">{d.famille}</p>
                 <h3 className="lp-titre lp-h3 mt-2">{d.titre}</h3>
                 <p className="lp-texte mt-2 max-w-[52ch]">{d.corps}</p>
@@ -458,8 +459,8 @@ function CadranListe({ chiffres }: { chiffres: ChiffresReferentielSuivi }) {
                     </span>
                   ))}
                 </div>
-              </Reveal>
-            </li>
+              </div>
+            </Reveal>
           ))}
         </ol>
       </div>
