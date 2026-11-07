@@ -21,7 +21,6 @@ import {
   SectionsParUsage,
 } from "@/components/etats-permanents/SectionsParUsage";
 import { compteDeLaPage } from "@/lib/etats-permanents/compte";
-import { getOptionalCompte } from "@/lib/auth/compte";
 import { stockagePlein } from "@/lib/abonnements/stockage";
 import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import { OngletsEnPlace } from "@/components/etats-permanents/OngletsEnPlace";
@@ -110,10 +109,9 @@ export default async function EtatsPermanentsPage({
   // geste (`gestes.ts`). Dans l'adresse plutôt qu'en état local, pour que
   // chaque version ait son lien et se montre telle quelle à l'équipe.
   const parGeste = (await searchParams)?.decoupe === "geste";
-  const { etablissement } = await requireEtablissement(id);
+  const { etablissement, compte, db } = await requireEtablissement(id);
   // Le stockage plein s'annonce sur le dépôt d'un écrit annexé (ADR-053 § 14).
-  const c = await getOptionalCompte();
-  const stockage = c && c.compte.role !== "lecture" ? await stockagePlein(c.db, c.compte.compteId) : null;
+  const stockage = compte.role !== "lecture" ? await stockagePlein(db, compte.compteId) : null;
   const equipements = await listerEquipementsDeLEtablissement(id);
 
   const dossier = await listerEtatsPermanents(
