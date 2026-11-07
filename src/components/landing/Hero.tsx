@@ -15,7 +15,7 @@ import photoHero from "@/assets/landing/hero-restaurateur.jpg";
  * Un patron de bistrot, dans sa salle avant le service, qui lit son
  * téléphone ; la hotte de la cuisine au fond. Cadrage attendu : 16/9, sujet
  * dans le tiers droit, la salle vide à gauche pour le texte. Cf.
- * `public/photos/README.md`.
+ * `src/assets/landing/README.md`.
  */
 const PHOTO_HERO = {
   // Importée plutôt que nommée par son chemin : Next en tire un aperçu
