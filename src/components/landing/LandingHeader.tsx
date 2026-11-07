@@ -2,8 +2,13 @@
 
 // En-tête de la page publique. Volontairement pas de bandeau bleu : le
 // ciel est réservé aux grands aplats du milieu et du pied de page. En
-// tête de page la barre ne se voit pas ; au défilement, elle se resserre
-// en un îlot flottant en verre (voir .lp-nav dans globals.css).
+// tête de page la barre ne se voit pas ; au défilement, elle se resserre en
+// un îlot flottant en verre (voir .lp-nav dans globals.css).
+//
+// Un seul bouton de compte, au téléphone comme au bureau (décision de la
+// propriétaire, 2026-11-07) : « Se connecter », ou « Mon espace » une fois
+// connecté. L'inscription reste portée par le hero et le tarif ; la
+// déconnexion, par l'application et la mise en place (`WizardShell`).
 //
 // `surPhoto` : la page s'ouvre sur une photo sombre qui passe sous la
 // barre (`Hero`). Tant qu'elle n'a pas défilé, la barre passe en blanc ;
@@ -15,35 +20,31 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { signOutAction } from "@/lib/auth/actions";
+import { cn } from "@/lib/utils";
+import type { CompteLanding } from "./compte";
+import { Marque } from "./Marque";
 
-// « Tarif » mène à la section du même nom (`#tarif`). « Comprendre » n'a
+// « Tarif » mène à la section du même nom (`/#tarif` : depuis la racine,
+// l'en-tête sert aussi aux pages légales). « Comprendre » n'a
 // pas encore de destination : `#comprendre` ne correspond à aucune ancre,
-// le clic ne fait rien et ne casse rien. À rebrancher sur /comprendre le
-// jour où la page existe.
+// le clic mène en haut de l'accueil, sans rien casser. À rebrancher sur /comprendre le
+// jour où la page existe. Sous `md`, la barre ne garde que la marque et le
+// bouton : la page se parcourt en défilant.
 const LIENS = [
-  { href: "#comprendre", label: "Comprendre" },
-  { href: "#tarif", label: "Tarif" },
+  { href: "/#comprendre", label: "Comprendre" },
+  { href: "/#tarif", label: "Tarif" },
 ];
 
 export function LandingHeader({
-  ctaHref,
-  ctaLabel,
-  connecte,
+  compte,
   surPhoto = false,
 }: {
-  ctaHref: string;
-  ctaLabel: string;
-  connecte: boolean;
+  /** Le compte connecté : « Mon espace » mène à son dossier. */
+  compte?: CompteLanding;
   surPhoto?: boolean;
 }) {
   const [pose, setPose] = useState(false);
   const blanc = surPhoto && !pose;
-  const lien =
-    "text-[0.875rem] transition-colors " +
-    (blanc
-      ? "text-white/80 hover:text-white"
-      : "text-[color:var(--board-slate-mid)] hover:text-[color:var(--board-ink)]");
 
   useEffect(() => {
     // Deux seuils plutôt qu'un : sans cette hystérésis, un défilement qui
@@ -60,69 +61,35 @@ export function LandingHeader({
     // l'îlot doit intercepter les clics — sinon les gouttières de part et
     // d'autre avaleraient ceux destinés à la page.
     <header className="pointer-events-none sticky top-0 z-50 h-[var(--lp-entete)]">
-      <div
-        className={
-          "lp-nav pointer-events-auto absolute inset-x-0 top-0" +
-          (pose ? " lp-nav--ilot" : "")
-        }
-      >
-        <div className="lp-nav-barre flex items-center justify-between gap-6">
-          <Link
-            href="/"
-            className={
-              "flex items-baseline gap-[3px] text-[1.3rem] font-semibold tracking-[-0.03em] transition-colors " +
-              (blanc ? "text-white" : "text-[color:var(--board-ink)]")
-            }
-            style={{ fontFamily: "var(--font-titre), sans-serif" }}
-          >
-            Rojer
-            <span className="size-[7px] rounded-full bg-[color:var(--board-sky)]" />
-          </Link>
+      <div className={cn("lp-nav pointer-events-auto absolute inset-x-0 top-0", pose && "lp-nav--ilot")}>
+        <div className="lp-nav-barre flex items-center justify-between gap-4 sm:gap-6">
+          <Marque />
 
-          <nav className="hidden items-center gap-8 md:flex">
-            {LIENS.map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
-                className={lien}
-              >
-                {l.label}
-              </a>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-3 sm:gap-5">
-            {!connecte ? (
-              <Link
-                href="/login"
-                className={lien}
-              >
-                Se connecter
-              </Link>
-            ) : (
-              // L'accueil est la destination du « Quitter » de la mise en
-              // place, et il n'y porte pas le header d'application
-              // (`LayoutAvecEnTete` n'est pas monté sur `/`). Sans cette
-              // sortie, un compte connecté sans dossier arrivait ici sur un
-              // seul bouton, qui le renvoyait à l'écran qu'il venait de
-              // quitter.
-              <form action={signOutAction}>
-                <button
-                  type="submit"
-                  className={lien}
+          <div className="flex items-center gap-8">
+            <nav className="hidden items-center gap-8 md:flex">
+              {LIENS.map((l) => (
+                <a
+                  key={l.href}
+                  href={l.href}
+                  className={cn(
+                    "text-[0.875rem] transition-colors",
+                    blanc
+                      ? "text-white/80 hover:text-white"
+                      : "text-[color:var(--board-slate-mid)] hover:text-[color:var(--board-ink)]",
+                  )}
                 >
-                  Déconnexion
-                </button>
-              </form>
-            )}
+                  {l.label}
+                </a>
+              ))}
+            </nav>
             <Link
-              href={ctaHref}
-              className={
-                "lp-btn px-[18px] py-[10px] text-[0.875rem] " +
-                (blanc ? "lp-btn-blanc" : "lp-btn-ink")
-              }
+              href={compte?.href ?? "/login"}
+              className={cn(
+                "lp-btn whitespace-nowrap px-4 py-[9px] text-[0.8125rem] sm:px-[18px] sm:py-[10px] sm:text-[0.875rem]",
+                blanc ? "lp-btn-blanc" : "lp-btn-ink",
+              )}
             >
-              {ctaLabel}
+              {compte ? "Mon espace" : "Se connecter"}
             </Link>
           </div>
         </div>

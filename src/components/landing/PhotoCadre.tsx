@@ -3,11 +3,15 @@
 // l'illustration de « Un outil simple et transparent » le prend en 4/3. Un
 // seul endroit pour les rayons.
 
-import Image from "next/image";
+import Image, { type StaticImageData } from "next/image";
 
-/** Une photo de la page publique : chemin, texte alternatif, point focal. */
+/**
+ * Une photo de la page publique : fichier importé, texte alternatif, point
+ * focal. Importé (et non un chemin) : Next en tire l'aperçu flou affiché
+ * pendant le chargement.
+ */
 export type PhotoLanding = {
-  src: string;
+  src: StaticImageData;
   alt: string;
   /** `object-position` : ce qu'on garde quand le cadre recadre. */
   position?: string;
@@ -20,7 +24,7 @@ export function PhotoCadre({
   sizes = "(max-width: 1023px) 92vw, 34vw",
 }: {
   photo: PhotoLanding;
-  /** Couleur du cadre pendant le chargement. */
+  /** Couleur du cadre, sous l'aperçu flou. */
   fond: string;
   ratio?: string;
   sizes?: string;
@@ -35,6 +39,7 @@ export function PhotoCadre({
         alt={photo.alt}
         fill
         sizes={sizes}
+        placeholder="blur"
         className="object-cover"
         style={{ objectPosition: photo.position }}
       />

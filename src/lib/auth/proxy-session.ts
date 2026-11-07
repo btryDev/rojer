@@ -35,6 +35,8 @@ const PUBLIC_PREFIXES = [
   "/api/mcp",
   // ADR-053 § 8 : les conditions générales, lues avant l'essai et au paiement.
   "/conditions",
+  // Mentions légales, confidentialité, cookies : lues avant tout compte.
+  "/legal",
   // ADR-053 : le webhook Stripe, sans session ; la signature est sa garde.
   "/api/stripe/webhook",
   "/robots.txt",

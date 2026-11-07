@@ -6,6 +6,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import type { CompteLanding } from "./compte";
+import photoHero from "@/assets/landing/hero-restaurateur.jpg";
 
 /**
  * La photo du hero. Un seul endroit à changer pour la remplacer.
@@ -13,36 +15,42 @@ import Link from "next/link";
  * Un patron de bistrot, dans sa salle avant le service, qui lit son
  * téléphone ; la hotte de la cuisine au fond. Cadrage attendu : 16/9, sujet
  * dans le tiers droit, la salle vide à gauche pour le texte. Cf.
- * `public/photos/README.md`.
+ * `src/assets/landing/README.md`.
  */
 const PHOTO_HERO = {
-  src: "/photos/hero-restaurateur.jpg",
+  // Importée plutôt que nommée par son chemin : Next en tire un aperçu
+  // flou glissé dans le HTML, affiché tant que la photo charge — sinon le
+  // hero restait noir puis la photo tombait d'un coup.
+  src: photoHero,
   alt: "Un restaurateur en tablier marine consulte son téléphone dans la salle de son bistrot avant le service",
   // Quand le cadre se resserre (écran en portrait), on garde son visage.
+  // Sur téléphone, le hero est moins haut (84svh) : la photo se recadre moins.
   position: "68% 20%",
 };
 
 export function Hero({
-  ctaHref,
-  ctaLabel,
+  compte,
 }: {
-  ctaHref: string;
-  ctaLabel: string;
+  /** Le compte connecté, s'il y en a un : le hero ne lui propose pas de s'inscrire. */
+  compte?: CompteLanding;
 }) {
   return (
     <section
       // La photo remonte de la hauteur de l'en-tête (`--lp-entete`) pour
       // passer dessous ; le texte la redescend d'autant.
-      className="relative isolate -mt-[var(--lp-entete)] flex h-[100svh] max-h-[1000px] min-h-[640px] overflow-hidden bg-[color:var(--board-ink)]"
+      className="relative isolate -mt-[var(--lp-entete)] flex h-[84svh] max-h-[1000px] min-h-[560px] overflow-hidden bg-[color:var(--board-ink)] md:h-[100svh] md:min-h-[640px]"
     >
       <Image
         src={PHOTO_HERO.src}
         alt={PHOTO_HERO.alt}
         fill
         preload
+        placeholder="blur"
         // En portrait, la photo 16/9 couvre la hauteur et déborde en largeur :
-        // elle s'affiche sur environ 178 % de la hauteur d'écran.
-        sizes="(max-aspect-ratio: 16/9) 178vh, 100vw"
+        // elle s'affiche sur environ 178 % de la hauteur d'écran (150 % sous
+        // md, où le hero ne fait que 84svh). Sous 666 px de haut (téléphone
+        // en paysage), le hero est tenu à 560 px : la photo fait 996 px de large.
+        sizes="(max-width: 767px) and (max-height: 666px) 996px, (max-width: 767px) 150vh, (max-aspect-ratio: 16/9) 178vh, 100vw"
         className="-z-10 object-cover"
         style={{ objectPosition: PHOTO_HERO.position }}
       />
@@ -72,19 +80,22 @@ export function Hero({
                 début de ligne. */}
             Rojer coordonne la prévention des risques de votre
             structure&nbsp;: vérifications, rapports, registres, plan
-            d&apos;actions. Vous gardez la main sur votre dossier — vous
-            n&apos;en gardez plus la charge.
+            d&apos;actions.
           </p>
 
+          {/* Un compte connecté retrouve son dossier par « Mon espace »,
+              dans l'en-tête : le hero ne le lui redemande pas. */}
           <div className="mt-10 flex flex-wrap items-center gap-4">
-            <Link href={ctaHref} className="lp-btn lp-btn-blanc">
-              {ctaLabel}
-              <span className="lp-fleche" aria-hidden>
-                →
-              </span>
-            </Link>
-            <a href="#documents" className="lp-btn lp-btn-verre">
-              Voir les documents
+            {!compte ? (
+              <Link href="/signup" className="lp-btn lp-btn-blanc">
+                Essayer 30 jours
+                <span className="lp-fleche" aria-hidden>
+                  →
+                </span>
+              </Link>
+            ) : null}
+            <a href="#tarif" className="lp-btn lp-btn-verre">
+              Voir les offres
             </a>
           </div>
         </div>

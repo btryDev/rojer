@@ -43,13 +43,8 @@ terrasse », aux couleurs des sections.]
   l'ajouter à `ILLUSTRATIONS_BATIMENT` et à la règle de choix ; un test
   vérifie que chaque planche déclarée existe.
 
-## Page publique — `landing/`
+## Page publique
 
-`landing/transparence-sources.jpg` : le livre de loi ouvert, le « § » et la
-loupe, dans la section « Un outil simple et transparent »
-(`src/components/landing/OutilSimple.tsx`). Générée avec Krea (Nano Banana
-Pro) le 2026-11-06, sur la piste notée dans
-`docs/marketing/direction-illustration.md` (branche `docs/communication`) —
-isométrie au trait fin, bleu pâle ; une autre famille que les illustrations
-de l'app ci-dessus. Décorative (`alt=""`). **Licence à confirmer** comme les
-photos Krea de `public/photos/`.
+Les images de la page publique (photos, illustration « Transparent »,
+pictos des documents) ne sont plus ici : elles sont importées depuis
+`src/assets/landing/`, qui a son propre README.

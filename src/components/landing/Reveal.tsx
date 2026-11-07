@@ -22,7 +22,7 @@ export function Reveal({
   delai?: number;
   className?: string;
   as?: "div" | "li" | "section" | "header";
-  /** Apparition plus ample, déclenchée plus tard : « texte » monte de plus
+  /** Apparition plus lente, déclenchée plus tard : « texte » monte de plus
    *  loin, « media » monte et se dézoome. Pour les sections qu'on découvre. */
   ample?: "texte" | "media";
 }) {
