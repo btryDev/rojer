@@ -44,6 +44,10 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous" }
       "prisma.verification.updateMany",
     ],
   },
+  "src/lib/abonnements/essai-entreprise.ts": {
+    motif: "un essai par entreprise (ADR-053 § 8) : le SIREN déjà essayé, lu à travers les comptes (table hors compte `EssaiEntreprise`)",
+    usages: ["prisma.essaiEntreprise.createMany", "prisma.essaiEntreprise.findUnique"],
+  },
   "src/lib/securite/limite-debit.ts": {
     motif: "compteurs techniques, hors de tout compte",
     usages: ["prisma.$executeRaw", "prisma.$queryRaw"],

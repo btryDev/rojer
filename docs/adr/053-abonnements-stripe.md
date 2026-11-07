@@ -124,6 +124,17 @@ et sans croire une information qui ne vient pas de Stripe.
    (`essaiUtiliseLe`). Une case non cochée d'avance fait accepter les
    conditions générales ; Rojer garde la preuve (personne, version, empreinte,
    date, contexte). Texte provisoire tant qu'un juriste ne l'a pas relu.
+   [2026-11-07, grille du 2026-11-05 : **un essai par compte ET par
+   entreprise (SIREN)**. Le SIREN n'est connu qu'à l'onboarding, après le
+   début de l'essai : la règle se tient à la création de l'entreprise
+   (`abonnements/essai-entreprise.ts`). Pendant un essai, le SIREN est noté
+   (`EssaiEntreprise`, hors compte, gardé après la suppression d'un compte) ;
+   s'il a déjà servi l'essai d'un autre compte, l'essai finit aussitôt
+   (`trial_end: now` : en pause sans carte, première facture avec une carte).
+   L'établissement reste, en lecture ; la page de l'abonnement le dit.
+   Stripe injoignable : l'essai continue, journalisé. Limite connue : un
+   compte d'avant le lancement qui démarre son essai avec des entreprises
+   déjà créées ne les note pas.]
 9. **L'essai est un abonnement Stripe créé par l'API** :
    `trial_period_days=30`, sans moyen de paiement,
    `trial_settings.end_behavior.missing_payment_method=pause`. Pendant
@@ -436,6 +447,9 @@ et sans croire une information qui ne vient pas de Stripe.
 - `ConsommationQuota` (§ 14) : racine `compteId` (suppression en cascade
   avec le compte), `quota` (la clé de `Quotas`), `consommeLe` ; une ligne
   par élément « par an » créé, jamais modifiée ni effacée par Rojer.
+- `EssaiEntreprise` (§ 8) : hors compte (ADR-051), `siren` en clé
+  primaire, `compteId` (sans clé étrangère : la ligne survit au compte),
+  `noteLe` ; écrite une fois, jamais modifiée.
 - `EvenementStripe` : hors compte (ADR-051), écrit avant toute identité :
   `id` (l'identifiant Stripe `evt_…`), `type`, `recuLe` (indexé, pour le
   ménage), `traitementDebuteLe`, `traiteLe`, `derniereErreur` (un motif,

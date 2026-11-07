@@ -2462,6 +2462,18 @@ model Abonnement {
   updatedAt             DateTime  @updatedAt
 }
 
+// Un essai par entreprise (ADR-053 § 8) : le SIREN d'une entreprise créée
+// pendant un essai, et le compte qui l'a créée. Un autre compte qui crée la
+// même entreprise pendant son propre essai voit cet essai finir aussitôt.
+// Hors compte (ADR-051) : lue à travers les comptes, sans clé étrangère, et
+// gardée après la suppression d'un compte — sinon supprimer et recréer
+// rouvrirait un essai.
+model EssaiEntreprise {
+  siren    String   @id
+  compteId String   @db.Uuid
+  noteLe   DateTime @default(now())
+}
+
 // Les événements Stripe reçus (ADR-053 § 5) : l'identifiant `evt_…` en clé
 // primaire dédoublonne les livraisons répétées ; `traiteLe` nul après une
 // réception marque un traitement à rejouer à la relance suivante de Stripe.

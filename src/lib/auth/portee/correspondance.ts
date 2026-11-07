@@ -80,6 +80,9 @@ export const CORRESPONDANCE = {
   LimiteDebit: {
     horsCompte: "limitation de débit par clé (IP, jeton) : compteur technique, lu avant toute identité",
   },
+  EssaiEntreprise: {
+    horsCompte: "un essai par entreprise (ADR-053 § 8) : le SIREN déjà essayé, lu à travers les comptes par `abonnements/essai-entreprise.ts`",
+  },
   EvenementStripe: {
     horsCompte: "événement Stripe reçu (ADR-053) : dédoublonnage des livraisons, écrit avant toute identité",
   },

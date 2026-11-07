@@ -9,13 +9,14 @@ import { NOM_BATIMENT_PRINCIPAL } from "@/lib/batiments/schema";
 import { poserEtablissementActif } from "@/lib/etablissements/etablissement-actif";
 import { sirenDuSiret } from "@/lib/etablissements/siret";
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
+import { finirLEssaiSiEntrepriseDejaEssayee } from "@/lib/abonnements/essai-entreprise";
 import { onboardingSchema } from "./schema";
 import { MESSAGE_REFUS_EFFECTIF_ENTREPRISE } from "@/lib/entreprises/schema";
 import { MESSAGE_EFFECTIF_REPRIS } from "./rattachement";
 import { EFFECTIF_MAX } from "@/lib/etablissements/schema";
 import { typesErpAutresCoherents } from "@/lib/etablissements/schema";
 import { saisieOnboardingDepuisFormData } from "./saisie";
-import { verifierSaisie } from "@/lib/abonnements/saisie";
+import { PAGE_ABONNEMENT, verifierSaisie } from "@/lib/abonnements/saisie";
 import { prendreQuota, RefusQuota } from "@/lib/abonnements/quotas";
 import { accueillirSite, RefusBorneEffectif } from "@/lib/entreprises/effectif";
 
@@ -243,8 +244,16 @@ export async function finaliserOnboarding(
   // renverrait au premier.
   await poserEtablissementActif(result.id);
 
+  // Un essai par entreprise (ADR-053 § 8) : un SIREN qui a déjà servi l'essai
+  // d'un autre compte finit le sien. L'établissement reste ; la page de
+  // l'abonnement dit pourquoi. Un échec ici ne défait pas la création.
+  const essaiFini = await finirLEssaiSiEntrepriseDejaEssayee(db, compte.compteId, siren).catch((e: unknown) => {
+    console.error(`essai : contrôle du SIREN impossible — ${e instanceof Error ? e.name : "erreur"}`);
+    return false;
+  });
+
   revalidatePath("/");
   revalidatePath(`/entreprises/${result.entrepriseId}`);
-  redirect(`/etablissements/${result.id}/equipements?bienvenue=1`);
+  redirect(essaiFini ? `${PAGE_ABONNEMENT}?essai=entreprise-deja-essayee` : `/etablissements/${result.id}/equipements?bienvenue=1`);
 }
 

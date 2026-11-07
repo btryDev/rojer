@@ -166,13 +166,14 @@ export default async function AbonnementPage({
     carte?: string;
     immediat?: string;
     formule?: string;
+    essai?: string;
   }>;
 }) {
   // Sans compte encore (rien créé), la page se lit quand même : aucun
   // abonnement (ADR-054). `requireCompte` renverrait à l'onboarding.
   await requireUser();
   const c = await getOptionalCompte();
-  const { saisie, stripe, paiement, abonnement, carte, immediat, formule: formuleChange0 } = await searchParams;
+  const { saisie, stripe, paiement, abonnement, carte, immediat, essai, formule: formuleChange0 } = await searchParams;
   const formuleChange = formuleChange0 && formuleChange0 in MESSAGES_FORMULE ? (formuleChange0 as keyof typeof MESSAGES_FORMULE) : null;
   const ctx = contexteDroits();
   const ouvert = offreLancee(ctx);
@@ -297,7 +298,9 @@ export default async function AbonnementPage({
             {stripe === "indisponible" ? "L'opération n'a pas abouti. Réessayez un peu plus tard ; rien ne vous a été facturé." : null}
           </MessageFormulaire>
           <MessageFormulaire ton="info">
-            {paiement === "termine"
+            {essai === "entreprise-deja-essayee"
+              ? "Cette entreprise a déjà bénéficié d'un essai gratuit avec un autre compte : votre essai s'arrête ici. Votre établissement est créé et reste consultable ; abonnez-vous pour continuer à le compléter."
+              : paiement === "termine"
               ? "Paiement terminé. Votre abonnement s'affiche ici dans quelques secondes : rechargez la page s'il n'apparaît pas."
               : formuleChange
                 ? MESSAGES_FORMULE[formuleChange]
