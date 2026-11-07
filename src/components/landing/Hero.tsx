@@ -6,7 +6,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import photoHero from "../../../public/photos/hero-restaurateur.jpg";
+import type { CompteLanding } from "./compte";
+import photoHero from "@/assets/landing/hero-restaurateur.jpg";
 
 /**
  * La photo du hero. Un seul endroit à changer pour la remplacer.
@@ -28,10 +29,10 @@ const PHOTO_HERO = {
 };
 
 export function Hero({
-  inscription,
+  compte,
 }: {
-  /** Le lien d'inscription, calculé par la page ; absent pour un compte connecté. */
-  inscription?: string;
+  /** Le compte connecté, s'il y en a un : le hero ne lui propose pas de s'inscrire. */
+  compte?: CompteLanding;
 }) {
   return (
     <section
@@ -84,8 +85,8 @@ export function Hero({
           {/* Un compte connecté retrouve son dossier par « Mon espace »,
               dans l'en-tête : le hero ne le lui redemande pas. */}
           <div className="mt-10 flex flex-wrap items-center gap-4">
-            {inscription ? (
-              <Link href={inscription} className="lp-btn lp-btn-blanc">
+            {!compte ? (
+              <Link href="/signup" className="lp-btn lp-btn-blanc">
                 Essayer 30 jours
                 <span className="lp-fleche" aria-hidden>
                   →

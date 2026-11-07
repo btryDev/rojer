@@ -12,7 +12,7 @@
 
 import { fichiersVisite } from "@/lib/visite/visites";
 import { ExtraitVideo } from "./ExtraitVideo";
-import illustrationSources from "../../../public/illustrations/landing/transparence-sources.jpg";
+import illustrationSources from "@/assets/landing/transparence-sources.jpg";
 import { PhotoCadre } from "./PhotoCadre";
 import { Reveal } from "./Reveal";
 

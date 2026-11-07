@@ -43,10 +43,6 @@ const nextConfig: NextConfig = {
   // Pas d'en-tête `x-powered-by: Next.js` : il n'apprend rien à l'utilisateur
   // et désigne le cadre à viser (audit du 2026-10-13).
   poweredByHeader: false,
-  // AVIF d'abord : à qualité égale, la photo du hero pèse nettement moins
-  // qu'en WebP — c'est l'image la plus lourde de la page publique et celle
-  // qui compte pour le LCP. Les navigateurs sans AVIF reçoivent du WebP.
-  images: { formats: ["image/avif", "image/webp"] },
   experimental: {
     serverActions: { bodySizeLimit: LIMITE_CORPS_REQUETE },
     proxyClientMaxBodySize: LIMITE_CORPS_REQUETE,

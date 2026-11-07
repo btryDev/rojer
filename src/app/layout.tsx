@@ -3,6 +3,7 @@ import { connection } from "next/server";
 import { variablesPolices } from "./polices";
 import "./globals.css";
 import { OUVERT_AUX_MOTEURS } from "@/lib/indexation";
+import { publicAppUrl, refusUrlPublique } from "@/lib/url-publique";
 
 const TITRE = "Rojer — Conformité santé-sécurité TPE/PME";
 const DESCRIPTION =
@@ -10,9 +11,11 @@ const DESCRIPTION =
 
 export const metadata: Metadata = {
   // Les images de partage (`opengraph-image.jpg`) sont annoncées en adresse
-  // absolue : la base est l'adresse publique du déploiement. Sans elle, Next
-  // retombe sur l'URL de Vercel, ou sur localhost.
-  ...(process.env.PUBLIC_APP_URL ? { metadataBase: new URL(process.env.PUBLIC_APP_URL) } : {}),
+  // absolue : la base est l'adresse publique du déploiement, lue par la même
+  // règle que les liens et QR codes (`publicAppUrl`). Inconnue en production,
+  // on ne lève pas ici — ce serait faire tomber toutes les pages : Next
+  // retombe alors sur l'URL de Vercel.
+  ...(refusUrlPublique() ? {} : { metadataBase: new URL(publicAppUrl()) }),
   // Fermé aux moteurs tant que le site n'est pas ouvert (`lib/indexation.ts`).
   ...(OUVERT_AUX_MOTEURS ? {} : { robots: { index: false, follow: false } }),
   title: TITRE,

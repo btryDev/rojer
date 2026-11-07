@@ -21,6 +21,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import type { CompteLanding } from "./compte";
 
 // « Tarif » mène à la section du même nom (`#tarif`). « Comprendre » n'a
 // pas encore de destination : `#comprendre` ne correspond à aucune ancre,
@@ -33,11 +34,11 @@ const LIENS = [
 ];
 
 export function LandingHeader({
-  espace,
+  compte,
   surPhoto = false,
 }: {
-  /** Où mène « Mon espace » ; absent tant que personne n'est connecté. */
-  espace?: string;
+  /** Le compte connecté : « Mon espace » mène à son dossier. */
+  compte?: CompteLanding;
   surPhoto?: boolean;
 }) {
   const [pose, setPose] = useState(false);
@@ -88,13 +89,13 @@ export function LandingHeader({
               ))}
             </nav>
             <Link
-              href={espace ?? "/login"}
+              href={compte?.href ?? "/login"}
               className={cn(
                 "lp-btn whitespace-nowrap px-4 py-[9px] text-[0.8125rem] sm:px-[18px] sm:py-[10px] sm:text-[0.875rem]",
                 blanc ? "lp-btn-blanc" : "lp-btn-ink",
               )}
             >
-              {espace ? "Mon espace" : "Se connecter"}
+              {compte ? "Mon espace" : "Se connecter"}
             </Link>
           </div>
         </div>

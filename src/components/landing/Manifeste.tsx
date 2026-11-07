@@ -9,7 +9,7 @@
 // Chaque apport dit ce que Rojer fait, sans accroche et sans automatisme :
 // on ne dit pas qu'un rapport « se range tout seul », ni qu'un rappel part.
 
-import photoManifeste from "../../../public/photos/manifeste-boulangere.jpg";
+import photoManifeste from "@/assets/landing/manifeste-boulangere.jpg";
 import { PhotoCadre, type PhotoLanding } from "./PhotoCadre";
 import { Reveal } from "./Reveal";
 

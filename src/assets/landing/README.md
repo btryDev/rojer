@@ -1,9 +1,11 @@
-# Photos de la page publique
+# Images de la page publique
 
-Chaque photo est référencée par une constante `PHOTO_*` en tête du composant
-qui l'affiche, dans `src/components/landing/`. Déposer un fichier ici ne
-l'affiche pas : il faut changer la constante (chemin et texte alternatif).
-Tout ce qui est ici part dans chaque déploiement — une photo qui ne sert pas
+Importées par les composants de `src/components/landing/` (`import photo from
+"@/assets/landing/…"`), jamais appelées par une URL : Next en tire les
+dimensions, un aperçu flou glissé dans le HTML et une adresse à empreinte,
+mise en cache pour de bon. C'est pourquoi elles ne sont pas dans `public/` —
+elles y seraient copiées une seconde fois à chaque déploiement. Déposer un
+fichier ici ne l'affiche pas : il faut l'importer. Une photo qui ne sert pas
 va dans `docs/illustrations/photos-reserve/`.
 
 ## Ce qui est en place
@@ -12,6 +14,8 @@ va dans `docs/illustrations/photos-reserve/`.
 | --- | --- | --- | --- |
 | `hero-restaurateur.jpg` | Hero, bord à bord | 16/9 paysage | `PHOTO_HERO` (`Hero.tsx`) |
 | `manifeste-boulangere.jpg` | « Concentrez-vous », gauche | 4/5 vertical | `PHOTO_MANIFESTE` (`Manifeste.tsx`) |
+| `transparence-sources.jpg` | « Transparent sur ses sources » | 4/3 | `OutilSimple.tsx` |
+| `documents/*.webp` | Liste « Ce que Rojer tient à jour » (téléphone) | 1/1, 264 px | `PICTOS` (`Cadran.tsx`) |
 
 **Origine** : générées avec Krea le 2026-11-06 (Krea 2 Large ; le
 restaurateur est une retouche Nano Banana Pro de la restauratrice, même
@@ -19,6 +23,16 @@ scène). Direction photo : `docs/marketing/direction-photo.md` (branche
 `docs/communication`). `manifeste-boulangere.jpg` a été agrandie ×2
 (1856 px, Topaz Standard « High Fidelity » via Krea, 2026-11-07) : la
 génération d'origine ne faisait que 928 px, trop peu pour un écran Retina.
+
+`transparence-sources.jpg` : Nano Banana Pro, 2026-11-06, piste de
+`docs/marketing/direction-illustration.md` (branche `docs/communication`).
+`documents/` : six pictos générés en une planche avec Nano Banana Pro
+(2026-11-07) d'après cette illustration, pour en garder le trait noir et les
+bleus, puis découpés et détourés. Décoratifs (`alt=""`) ; servis tels quels
+(`unoptimized`), ils sont déjà à leur taille.
+
+La mention des modèles, en pied de page, vient de `src/components/landing/`
+— à tenir à jour si une image change d'origine.
 
 Le hero sert aussi d'aperçu de partage de lien : `src/app/opengraph-image.jpg`
 (1200 × 630, recadré au centre) — à refaire si la photo du hero change.

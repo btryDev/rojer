@@ -7,6 +7,7 @@
 
 import { ChevronRepli, LIEN_REPLI } from "@/components/ui/repli";
 import { cn } from "@/lib/utils";
+import type { CompteLanding } from "./compte";
 import { lienContact } from "./contact";
 import { Reveal } from "./Reveal";
 import { ABONNEMENT, GRILLE, INCLUS, NON_INCLUS } from "./tarif-grille";
@@ -29,15 +30,7 @@ const TON: Record<string, string> = {
   [ABONNEMENT]: "font-mono text-[0.66rem] tracking-[0.06em] text-[color:var(--board-amber-ink)]",
 };
 
-export function Tarif({
-  ctaHref,
-  ctaLabel,
-  connecte,
-}: {
-  ctaHref: string;
-  ctaLabel: string;
-  connecte: boolean;
-}) {
+export function Tarif({ compte }: { compte?: CompteLanding }) {
   return (
     <section id="tarif" className="bg-[color:var(--board-card)] py-24 sm:py-32">
       <div className="lp-shell">
@@ -51,7 +44,7 @@ export function Tarif({
         </Reveal>
 
         <Reveal delai={120}>
-          <TarifOffres ctaHref={ctaHref} ctaLabel={ctaLabel} connecte={connecte} />
+          <TarifOffres compte={compte} />
         </Reveal>
 
         {/* La mise en route accompagnée : pas de prix pour l'instant. */}

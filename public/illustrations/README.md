@@ -53,15 +53,3 @@ Pro) le 2026-11-06, sur la piste notée dans
 isométrie au trait fin, bleu pâle ; une autre famille que les illustrations
 de l'app ci-dessus. Décorative (`alt=""`). **Licence à confirmer** comme les
 photos Krea de `public/photos/`.
-
-# Pictos des documents (landing)
-
-`landing/documents/` : les six pictos de la liste « Ce que Rojer tient à jour »
-servie au téléphone (et en mouvement réduit), à la place des numéros du cadran.
-Un fichier par document, nommé par le champ `picto` de `DOCUMENTS`
-(`src/components/landing/Cadran.tsx`). Décoratifs (`alt=""`).
-
-Générés avec Krea (nano-banana-pro, 2026-11-07) d'après l'illustration
-« Transparent » (`landing/transparence-sources.jpg`) pour en garder le trait
-noir et les bleus ; une seule planche, découpée et détourée. Licence Krea à
-confirmer.

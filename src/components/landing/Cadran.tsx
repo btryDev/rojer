@@ -13,7 +13,7 @@
 // verticale sobre (petit écran ou `prefers-reduced-motion`). Le contenu
 // est le même, écrit une seule fois.
 
-import Image from "next/image";
+import Image, { type StaticImageData } from "next/image";
 import { useEffect, useRef, useState } from "react";
 // Le TYPE seul : un composant client qui importerait le référentiel en
 // embarquerait le référentiel entier — notes internes comprises — dans le
@@ -21,11 +21,18 @@ import { useEffect, useRef, useState } from "react";
 // (`app/page.tsx`, `chiffresReferentielSuivi`) et arrivent ici en props.
 import type { ChiffresReferentielSuivi } from "@/lib/referentiels/conformite";
 import { Reveal } from "./Reveal";
+import pictoCalendrier from "@/assets/landing/documents/calendrier.webp";
+import pictoDuerp from "@/assets/landing/documents/duerp.webp";
+import pictoRegistre from "@/assets/landing/documents/registre.webp";
+import pictoPlan from "@/assets/landing/documents/plan.webp";
+import pictoAccessibilite from "@/assets/landing/documents/accessibilite.webp";
+import pictoDossier from "@/assets/landing/documents/dossier.webp";
+
 
 type Document = {
   numero: string;
-  /** Le picto de la liste du téléphone, dans public/illustrations/landing/documents. */
-  picto: string;
+  /** Le picto de la liste du téléphone (`src/assets/landing/documents`). */
+  picto: StaticImageData;
   famille: string;
   titre: string;
   corps: string;
@@ -53,7 +60,7 @@ function reperesDe(d: Document, c: ChiffresReferentielSuivi): string[] {
 const DOCUMENTS: Document[] = [
   {
     numero: "01",
-    picto: "calendrier",
+    picto: pictoCalendrier,
     famille: "Échéances",
     titre: "Le calendrier des vérifications",
     corps: "Vous déclarez vos équipements une fois. Rojer en déduit les vérifications qui les concernent ; quand le texte fixe un rythme, il pose les dates et les repousse à mesure que les rapports arrivent.",
@@ -87,7 +94,7 @@ const DOCUMENTS: Document[] = [
   },
   {
     numero: "02",
-    picto: "duerp",
+    picto: pictoDuerp,
     famille: "Évaluation",
     titre: "Le DUERP",
     corps: "L'inventaire des risques, unité de travail par unité de travail, coté et daté. Chaque validation fige une version — c'est celle-là qu'on vous demandera.",
@@ -95,7 +102,7 @@ const DOCUMENTS: Document[] = [
   },
   {
     numero: "03",
-    picto: "registre",
+    picto: pictoRegistre,
     famille: "Preuve",
     titre: "Le registre de sécurité",
     corps: "Chaque rapport est horodaté et rangé à côté de l'échéance qu'il solde. Vous le déposez une fois : il reste retrouvable, et il part avec l'export.",
@@ -103,7 +110,7 @@ const DOCUMENTS: Document[] = [
   },
   {
     numero: "04",
-    picto: "plan",
+    picto: pictoPlan,
     famille: "Suivi",
     titre: "Le plan d'actions",
     // ~~« Chaque écart ouvre une action »~~ : l'action se crée à la main depuis
@@ -113,7 +120,7 @@ const DOCUMENTS: Document[] = [
   },
   {
     numero: "05",
-    picto: "accessibilite",
+    picto: pictoAccessibilite,
     famille: "Public",
     titre: "Le registre d'accessibilité",
     // ~~« l'attestation… jamais périmée »~~ (contre-lecture du 2026-09-26) :
@@ -124,7 +131,7 @@ const DOCUMENTS: Document[] = [
   },
   {
     numero: "06",
-    picto: "dossier",
+    picto: pictoDossier,
     famille: "Restitution",
     titre: "Le dossier de contrôle",
     corps: "Inspection, assurance, bailleur, acquéreur : une archive datée avec l'index des pièces. Un clic, pas une soirée.",
@@ -453,13 +460,13 @@ function CadranListe({ chiffres }: { chiffres: ChiffresReferentielSuivi }) {
                   sont trop proches. Au téléphone, il se range à gauche du
                   titre : le texte reste aligné à gauche, il se lit mieux
                   ainsi sur quatre ou cinq lignes. */}
+              {/* `unoptimized` : le fichier est déjà à sa taille (264 px
+                  couvrent 88 px en densité 3) ; le repasser par l'optimiseur
+                  coûterait un encodage par largeur pour quelques octets. */}
               <Image
-                src={`/illustrations/landing/documents/${d.picto}.webp`}
+                src={d.picto}
                 alt=""
-                aria-hidden
-                width={264}
-                height={264}
-                sizes="88px"
+                unoptimized
                 className="size-16 rounded-[16px] bg-[color:var(--board-card)] p-1.5 sm:row-span-2 sm:size-[88px] sm:rounded-[22px] sm:p-2"
               />
               <div>

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { Cadran } from "@/components/landing/Cadran";
 import { Hero } from "@/components/landing/Hero";
+import type { CompteLanding } from "@/components/landing/compte";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { Manifeste } from "@/components/landing/Manifeste";
 import { OutilSimple } from "@/components/landing/OutilSimple";
@@ -28,38 +29,32 @@ export default async function Home({
 
   const user = await getOptionalUser();
   const etab = user ? await getOptionalUserEtablissement() : null;
-  // Quand l'utilisateur n'est pas connecté, le CTA principal l'envoie sur
-  // /signup : la création d'un dossier nécessite un compte (ADR-005), le
-  // proxy redirigerait de toute façon /onboarding vers /login.
-  // Un compte peut porter plusieurs dossiers depuis l'ADR-028 : ce n'est plus
-  // « son » établissement qu'on pointe, mais l'ACTIF — le dernier commuté, à
-  // défaut le plus ancien. La page d'accueil n'a pas à choisir : c'est
-  // `getOptionalUserEtablissement` qui porte le défaut, une fois pour tout le
-  // produit. Sans aucun dossier, on aiguille vers /onboarding.
-  const ctaHref = !user
-    ? "/signup"
+  // Le compte connecté, s'il y en a un : où il reprend, et comment le bouton
+  // le dit. Un compte peut porter plusieurs dossiers depuis l'ADR-028 : ce
+  // n'est plus « son » établissement qu'on pointe, mais l'ACTIF — le dernier
+  // commuté, à défaut le plus ancien. La page d'accueil n'a pas à choisir :
+  // c'est `getOptionalUserEtablissement` qui porte le défaut, une fois pour
+  // tout le produit. Sans aucun dossier, on aiguille vers /onboarding.
+  // Personne de connecté : les sections mènent à /signup (la création d'un
+  // dossier nécessite un compte, ADR-005) et à /login.
+  const compte: CompteLanding | undefined = !user
+    ? undefined
     : etab
-      ? `/etablissements/${etab.id}`
-      : "/onboarding";
-  const ctaLabel = !user
-    ? "Créer mon compte"
-    : etab
-      ? "Reprendre mon dossier"
-      : "Terminer la mise en place";
+      ? { href: `/etablissements/${etab.id}`, label: "Reprendre mon dossier" }
+      : { href: "/onboarding", label: "Terminer la mise en place" };
 
   // Les chiffres du référentiel, calculés ICI — côté serveur — et passés en
   // props : `Cadran` est un composant client, qui ne doit pas embarquer le
   // référentiel. Ce sont les obligations SUIVIES au quotidien (total − niveau
   // audit), décision de la propriétaire du 2026-10-08.
   const chiffres = chiffresReferentielSuivi();
-  const connecte = Boolean(user);
 
   return (
     <main className="bg-[color:var(--board-card)]">
       <RecoveryHashRedirect />
-      <LandingHeader espace={connecte ? ctaHref : undefined} surPhoto />
+      <LandingHeader compte={compte} surPhoto />
 
-      <Hero inscription={connecte ? undefined : ctaHref} />
+      <Hero compte={compte} />
 
       {/* « Ce que Rojer tient à jour » passe avant « Concentrez-vous sur
           votre activité » (décision de la propriétaire du 2026-11-06) :
@@ -67,7 +62,7 @@ export default async function Home({
       <Cadran chiffres={chiffres} />
       <Manifeste />
       <OutilSimple />
-      <Tarif ctaHref={ctaHref} ctaLabel={ctaLabel} connecte={connecte} />
+      <Tarif compte={compte} />
       <SiteFooter />
     </main>
   );

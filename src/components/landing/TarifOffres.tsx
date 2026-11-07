@@ -7,6 +7,7 @@ import { Check } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import type { CompteLanding } from "./compte";
 import { lienContact } from "./contact";
 import { enEuros, OFFRES, parMoisSurUnAn, type Offre, type Periode } from "./tarif-donnees";
 
@@ -54,14 +55,10 @@ function Prix({ offre, periode, t }: { offre: Offre; periode: Periode; t: (typeo
 }
 
 export function TarifOffres({
-  ctaHref,
-  ctaLabel,
-  connecte,
+  compte,
 }: {
-  ctaHref: string;
-  ctaLabel: string;
-  /** Connecté, le bouton mène au dossier : il dit « Reprendre mon dossier », pas l'offre. */
-  connecte: boolean;
+  /** Connecté, le bouton mène au dossier et le dit (« Reprendre mon dossier »), pas l'offre. */
+  compte?: CompteLanding;
 }) {
   const [periode, setPeriode] = useState<Periode>("mois");
 
@@ -123,8 +120,8 @@ export function TarifOffres({
               </ul>
 
               {o.prix ? (
-                <Link href={ctaHref} className={cn("lp-btn mt-auto justify-center", t.bouton)}>
-                  {connecte ? ctaLabel : o.cta}
+                <Link href={compte?.href ?? "/signup"} className={cn("lp-btn mt-auto justify-center", t.bouton)}>
+                  {compte?.label ?? o.cta}
                 </Link>
               ) : (
                 <a href={lienContact("Rojer sur mesure")} className="lp-btn lp-btn-clair mt-auto justify-center">
