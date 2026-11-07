@@ -83,7 +83,7 @@ export function SiteFooter({ compte }: { compte?: CompteLanding }) {
         </div>
 
         <div className="mt-14 flex flex-col gap-3 border-t border-white/15 pt-6 text-[0.78rem] leading-[1.6] text-white/50 md:flex-row md:items-start md:justify-between md:gap-10">
-          <p className="m-0">© {new Date().getFullYear()} Rojer. Hébergement dans l&apos;Union européenne.</p>
+          <p className="m-0">{`© ${new Date().getFullYear()} Rojer. Hébergement dans l'Union européenne.`}</p>
           <p className="m-0 md:text-right">
             {/* Légifrance pour les obligations, l'INRS pour les risques du
                 DUERP. EUR-Lex (un seul texte) n'est pas nommé : 2026-11-07. */}
