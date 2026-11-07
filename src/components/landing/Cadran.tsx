@@ -174,21 +174,33 @@ export function Cadran({ chiffres }: { chiffres: ChiffresReferentielSuivi }) {
   const [pos, setPos] = useState(0);
   // Facteur d'échelle de la roue, déduit de la hauteur réelle de la carte.
   const [echelleRoue, setEchelleRoue] = useState(1);
-  // `simple` : petit écran ou mouvement réduit — on sert la liste.
-  const [simple, setSimple] = useState(false);
+  // Petit écran : la liste, choisie par le CSS (`lg:hidden`), dès le HTML
+  // du serveur. Choisie en JS, elle n'arrivait qu'après le chargement : le
+  // téléphone recevait d'abord la piste de la roue, haute de plusieurs
+  // écrans, et montrait un grand blanc sous le hero (2026-11-07).
+  // `reduit` : mouvement réduit, la liste partout. `grand` : la roue est à
+  // l'écran, et elle seule écoute le défilement.
+  const [reduit, setReduit] = useState(false);
+  const [grand, setGrand] = useState(false);
 
   useEffect(() => {
-    const mq = window.matchMedia(
-      "(prefers-reduced-motion: reduce), (max-width: 1023px)",
-    );
-    const sync = () => setSimple(mq.matches);
+    const mqReduit = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const mqGrand = window.matchMedia("(min-width: 1024px)");
+    const sync = () => {
+      setReduit(mqReduit.matches);
+      setGrand(mqGrand.matches);
+    };
     sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
+    mqReduit.addEventListener("change", sync);
+    mqGrand.addEventListener("change", sync);
+    return () => {
+      mqReduit.removeEventListener("change", sync);
+      mqGrand.removeEventListener("change", sync);
+    };
   }, []);
 
   useEffect(() => {
-    if (simple) return;
+    if (reduit || !grand) return;
     let frame = 0;
     const mesurer = () => {
       frame = 0;
@@ -223,18 +235,27 @@ export function Cadran({ chiffres }: { chiffres: ChiffresReferentielSuivi }) {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
-  }, [simple]);
+  }, [reduit, grand]);
 
-  if (simple) return <CadranListe chiffres={chiffres} />;
+  // L'ancre `#documents` est sur l'enveloppe : elle vaut pour la vue montrée.
+  if (reduit)
+    return (
+      <div id="documents">
+        <CadranListe chiffres={chiffres} />
+      </div>
+    );
 
   const actif = Math.round(pos);
   const avancement = pos / (DOCUMENTS.length - 1);
 
   return (
+    <div id="documents">
+    <div className="lg:hidden">
+      <CadranListe chiffres={chiffres} />
+    </div>
     <section
-      id="documents"
       aria-labelledby="documents-titre"
-      className="bg-[color:var(--board-card)]"
+      className="hidden bg-[color:var(--board-card)] lg:block"
     >
       <div
         ref={piste}
@@ -423,6 +444,7 @@ export function Cadran({ chiffres }: { chiffres: ChiffresReferentielSuivi }) {
         </div>
       </div>
     </section>
+    </div>
   );
 }
 
@@ -431,13 +453,12 @@ export function Cadran({ chiffres }: { chiffres: ChiffresReferentielSuivi }) {
 function CadranListe({ chiffres }: { chiffres: ChiffresReferentielSuivi }) {
   return (
     <section
-      id="documents"
-      aria-labelledby="documents-titre"
-      className="bg-[color:var(--board-card)] pb-20 pt-24 sm:pb-24 sm:pt-28"
+      aria-labelledby="documents-titre-liste"
+      className="bg-[color:var(--board-card)] pb-20 pt-14 sm:pb-24 sm:pt-28"
     >
       <div className="lp-shell">
         <h2
-          id="documents-titre"
+          id="documents-titre-liste"
           className="lp-titre lp-h2 sm:whitespace-nowrap"
         >
           Ce que Rojer tient à jour
@@ -471,6 +492,10 @@ function CadranListe({ chiffres }: { chiffres: ChiffresReferentielSuivi }) {
               <Image
                 src={d.picto}
                 alt=""
+                // Écrites aussi ici : sous vitest, un import d'image n'est
+                // qu'un chemin, sans dimensions.
+                width={264}
+                height={264}
                 unoptimized
                 className="size-16 rounded-[16px] bg-[color:var(--board-card)] p-1.5 sm:row-span-2 sm:size-[88px] sm:rounded-[22px] sm:p-2"
               />
