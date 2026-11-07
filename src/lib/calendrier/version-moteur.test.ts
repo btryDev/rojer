@@ -592,8 +592,9 @@ const RELEVE = {
   // les conditions neuves du référentiel en changent, et elles déplacent déjà
   // son empreinte, donc le sceau : ~~de10984fbe6999b3~~ recopiée. Puis la
   // revue : `equipementSatisfait`, une lecture pour les deux branches (NON,
-  // extraction) : ~~d0315317cafd64ab~~ recopiée.
-  empreinte: "c21e2a827cf06f35",
+  // extraction) : ~~d0315317cafd64ab~~ recopiée. Puis `/simplify` (NON, la
+  // garde écrite une fois) : ~~c21e2a827cf06f35~~ recopiée.
+  empreinte: "0ac56c67a8e4d6b0",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

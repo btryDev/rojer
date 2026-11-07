@@ -3,7 +3,7 @@ import { z } from "zod";
 import { CATEGORIES_EQUIPEMENT } from "@/lib/referentiels/types-communs";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
 import { FAMILLES_ESP } from "./esp";
-import { QUESTION_DE_TYPE, TYPES_EPI, TYPES_PORTE } from "./type-appareil";
+import { PROPRIETES_DE_TYPE, QUESTION_DE_TYPE, TYPES_EPI, TYPES_PORTE } from "./type-appareil";
 import { CLES_MATERIELS_NON_COUVERTS } from "./materiels-non-couverts";
 
 /**
@@ -481,10 +481,9 @@ export const equipementSchema = z
     // pas être positionnée pour une catégorie incompatible.
     // (`aGroupeElectrogene` est contrôlé plus bas, avec les autres questions
     // à trois états, par `CATEGORIES_TRI_ETAT`.)
-    const categoriesPollutionOk = CATEGORIES_AERATION;
     if (
       val.estLocalPollutionSpecifique &&
-      !categoriesPollutionOk.includes(val.categorie)
+      !CATEGORIES_AERATION.includes(val.categorie)
     ) {
       ctx.addIssue({
         code: "custom",
@@ -493,7 +492,7 @@ export const equipementSchema = z
       });
     }
 
-    if (val.aSystemeDeRecyclage && !categoriesPollutionOk.includes(val.categorie)) {
+    if (val.aSystemeDeRecyclage && !CATEGORIES_AERATION.includes(val.categorie)) {
       ctx.addIssue({
         code: "custom",
         path: ["aSystemeDeRecyclage"],
@@ -514,8 +513,9 @@ export const equipementSchema = z
 
     // Le type (ADR-057 § 5) : exigé pour la catégorie qui le pose — deux
     // lignes du référentiel le lisent —, refusé pour toute autre.
-    for (const propriete of ["typePorte", "typeEpi"] as const) {
-      const posee = QUESTION_DE_TYPE[val.categorie]?.propriete === propriete;
+    const proprieteDeType = QUESTION_DE_TYPE[val.categorie]?.propriete;
+    for (const propriete of PROPRIETES_DE_TYPE) {
+      const posee = proprieteDeType === propriete;
       if (posee && val[propriete] === undefined) {
         ctx.addIssue({ code: "custom", path: [propriete], message: "Précisez le type" });
       }
@@ -596,8 +596,6 @@ export function normaliserFormDataEquipement(
     nbVehiculesParkingCouvert: raw.nbVehiculesParkingCouvert,
     // Plaque constructeur d'un équipement sous pression (cf. `esp.ts`).
     familleEsp: raw.familleEsp,
-    typePorte: raw.typePorte,
-    typeEpi: raw.typeEpi,
     pressionMaxAdmissibleBar: raw.pressionMaxAdmissibleBar,
     volumeLitres: raw.volumeLitres,
     notes: raw.notes,
@@ -606,6 +604,7 @@ export function normaliserFormDataEquipement(
   for (const champ of CHAMPS_TRI_ETAT) {
     out[champ] = normaliserTriEtat(raw[champ]);
   }
+  for (const p of PROPRIETES_DE_TYPE) out[p] = raw[p];
   return out;
 }
 
@@ -627,8 +626,7 @@ export function serialiserCaracteristiques(
   if (val.nbVehiculesParkingCouvert !== undefined)
     out.nbVehiculesParkingCouvert = val.nbVehiculesParkingCouvert;
   if (val.familleEsp !== undefined) out.familleEsp = val.familleEsp;
-  if (val.typePorte !== undefined) out.typePorte = val.typePorte;
-  if (val.typeEpi !== undefined) out.typeEpi = val.typeEpi;
+  for (const p of PROPRIETES_DE_TYPE) if (val[p] !== undefined) out[p] = val[p];
   if (val.pressionMaxAdmissibleBar !== undefined)
     out.pressionMaxAdmissibleBar = val.pressionMaxAdmissibleBar;
   if (val.volumeLitres !== undefined) out.volumeLitres = val.volumeLitres;

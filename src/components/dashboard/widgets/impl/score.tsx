@@ -11,6 +11,7 @@
 // locales uniquement : aucune query supplémentaire.
 
 import { LABEL_ITEM } from "@/components/layout/sidebar-nav";
+import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
 import { BentoCell } from "@/components/dashboard/BentoCell";
 import { CarteBoard } from "@/components/dashboard/CarteBoard";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
@@ -91,7 +92,8 @@ const PILL_PAR_NIVEAU: Record<
  *  n'était compté dans aucune famille. `calculerFamilles` traite donc désormais
  *  « Autres » comme un vrai reliquat : ce qu'aucune famille nommée ne réclame y
  *  atterrit, et une catégorie neuve ne peut plus s'évaporer en silence. */
-const FAMILLES: { nom: string; categories: string[] }[] = [
+// 2026-11-07 (ADR-057 § 5) : typé, pour qu'une catégorie retirée ne compile plus.
+const FAMILLES: { nom: string; categories: readonly CategorieEquipement[] }[] = [
   {
     nom: "Incendie",
     categories: ["EXTINCTEUR", "RIA", "BAES", "ALARME_INCENDIE", "DESENFUMAGE"],
@@ -412,13 +414,13 @@ function calculerFamilles(
   // Les catégories que les familles nommées revendiquent. « Autres » prend tout
   // le reste, y compris ce que sa propre liste ne cite pas : c'est ce qui
   // empêche une catégorie neuve de sortir du score sans bruit.
-  const revendiquees = new Set(
+  const revendiquees = new Set<string>(
     FAMILLES.filter((f) => f.nom !== "Autres").flatMap((f) => f.categories),
   );
   const appartient = (fam: (typeof FAMILLES)[number], categorie: string) =>
     fam.nom === "Autres"
       ? !revendiquees.has(categorie)
-      : fam.categories.includes(categorie);
+      : (fam.categories as readonly string[]).includes(categorie);
 
   for (const fam of FAMILLES) {
     let totalVerifs = 0;

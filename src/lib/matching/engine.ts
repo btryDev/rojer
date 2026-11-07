@@ -1189,12 +1189,9 @@ function evaluerChamp(
     // Un équipement ne compte que s'il satisfait les conditions de sa
     // catégorie (2026-11-07, ADR-057 § 5 : la porte, pas le portail, pour
     // CO 48 § 3 e)).
-    const conditions =
-      o.porteur === "etablissement" && o.siEquipementDeclare
-        ? conditionsParCategorie(o.conditions)
-        : null;
+    const conditions = conditionsParCategorie(o.conditions);
     const declencheurs =
-      o.porteur === "etablissement" && o.siEquipementDeclare && conditions
+      o.porteur === "etablissement" && o.siEquipementDeclare
         ? o.siEquipementDeclare.filter((c) =>
             equipements.some((e) => e.categorie === c && equipementSatisfait(conditions, e)),
           )

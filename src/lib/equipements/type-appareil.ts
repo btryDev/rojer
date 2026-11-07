@@ -32,11 +32,19 @@ export type TypeEpi = (typeof TYPES_EPI)[number];
 type Option = { libelle: string; aide: string };
 
 /**
+ * Les propriétés de type, une par catégorie qui en pose un. La validation,
+ * la normalisation, la sérialisation et la page de modification bouclent
+ * dessus ; `categories-jumelles.test.ts` la lie à `QUESTION_DE_TYPE`.
+ */
+export const PROPRIETES_DE_TYPE = ["typePorte", "typeEpi"] as const;
+export type ProprieteDeType = (typeof PROPRIETES_DE_TYPE)[number];
+
+/**
  * La question de type d'une catégorie : la propriété écrite dans
  * `caracteristiques`, la question posée, et chaque réponse avec son aide.
  */
 export type QuestionDeType = {
-  propriete: "typePorte" | "typeEpi";
+  propriete: ProprieteDeType;
   question: string;
   options: readonly (Option & { valeur: string })[];
 };
@@ -91,8 +99,16 @@ export const QUESTION_DE_TYPE: Partial<Record<CategorieEquipement, QuestionDeTyp
   },
 };
 
-/** Le libellé court d'un type déclaré, pour la fiche ; `null` s'il est inconnu. */
-export function libelleDuType(categorie: CategorieEquipement, valeur: unknown): string | null {
+/**
+ * Le libellé court du type déclaré d'un appareil, lu dans ses
+ * caractéristiques ; `null` si la catégorie n'en pose pas ou s'il manque.
+ */
+export function libelleDuType(
+  categorie: CategorieEquipement,
+  caracteristiques: Readonly<Record<string, unknown>> | null | undefined,
+): string | null {
   const q = QUESTION_DE_TYPE[categorie];
-  return q?.options.find((o) => o.valeur === valeur)?.libelle ?? null;
+  if (!q || !caracteristiques) return null;
+  const valeur = caracteristiques[q.propriete];
+  return q.options.find((o) => o.valeur === valeur)?.libelle ?? null;
 }

@@ -24,7 +24,7 @@
 import { clientMcp } from "./db";
 import { LABEL_PERIODICITE } from "@/lib/calendrier/labels";
 import { numeroCategorie, typesErpDe } from "@/lib/etablissements/types-erp-affiches";
-import type { Periodicite } from "@/lib/referentiels/types-communs";
+import type { CategorieEquipement, Periodicite } from "@/lib/referentiels/types-communs";
 import { z } from "zod";
 import type { Prisma, StatutAction } from "@prisma/client";
 import { formaterDateFr } from "@/lib/dates";
@@ -419,8 +419,10 @@ const outilActions: OutilMcp<typeof schemaActions> = {
 // ---------------------------------------------------------------------
 
 /** Catégories du référentiel, rendues lisibles sans les traduire. */
-// LA SEULE TABLE DU DÉPÔT INDEXÉE PAR `string` ET NON PAR `CategorieEquipement`,
-// et c'est ce qui l'a fait manquer quatre fois de suite : `tsc` ne peut pas
+// ~~LA SEULE TABLE DU DÉPÔT INDEXÉE PAR `string` ET NON PAR `CategorieEquipement`,~~
+// [2026-11-07 : toujours indexée par `string` pour le repli, mais vérifiée
+// par `satisfies Record<CategorieEquipement, string>` — un oubli ne compile
+// plus.] C'est ce qui l'a fait manquer quatre fois de suite : `tsc` ne peut pas
 // signaler une clé absente d'un `Record<string, …>`. Les quatre catégories de
 // protection individuelle ouvertes le 2026-09-04 sortaient donc en
 // « epi_antichute » au client MCP, par le repli `?? c.toLowerCase()`.
@@ -455,7 +457,7 @@ export const LIBELLE_CATEGORIE: Record<string, string> = {
   BUT_PANIER_SPORTIF: "but ou panier de sport de 10 kg ou plus",
   SCENE: "scène / installations scéniques",
   AUTRE: "autre",
-};
+} satisfies Record<CategorieEquipement, string>;
 
 const categorieLisible = (c: string) => LIBELLE_CATEGORIE[c] ?? c.toLowerCase();
 

@@ -110,7 +110,7 @@ describe("rubrique « hors du quotidien » — ce que la carte dit", () => {
       li.textContent?.includes(lignes.find((l) => l.id === EPI)!.libelle),
     )!;
     expect(carte.textContent).toContain(
-      `Vise les équipements déclarés : ${libelleDuType("EPI", "respiratoire")}.`,
+      `Vise les équipements déclarés : ${libelleDuType("EPI", { typeEpi: "respiratoire" })}.`,
     );
   });
 

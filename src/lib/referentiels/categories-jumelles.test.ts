@@ -13,7 +13,7 @@ import {
   CATEGORIES_EQUIPEMENT,
   CATEGORIES_REPRISES_ADR_057,
 } from "./types-communs";
-import { QUESTION_DE_TYPE } from "@/lib/equipements/type-appareil";
+import { PROPRIETES_DE_TYPE, QUESTION_DE_TYPE } from "@/lib/equipements/type-appareil";
 import { equipementSchema } from "@/lib/equipements/schema";
 
 const RACINE = join(__dirname, "..", "..", "..");
@@ -73,6 +73,12 @@ describe("catégories jumelles — ADR-057 § 5", () => {
     for (const v of ["'porte'", "'portail'"]) {
       expect(valeurs("PORTE_PORTAIL_MOTORISE")).toContain(v);
     }
+  });
+
+  it("les propriétés de type sont exactement celles des questions de type", () => {
+    expect(Object.values(QUESTION_DE_TYPE).map((q) => q!.propriete).sort()).toEqual(
+      [...PROPRIETES_DE_TYPE].sort(),
+    );
   });
 
   it("le type est exigé à la saisie, et refusé hors de sa catégorie", () => {

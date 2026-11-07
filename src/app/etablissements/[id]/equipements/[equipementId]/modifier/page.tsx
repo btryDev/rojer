@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { PROPRIETES_DE_TYPE } from "@/lib/equipements/type-appareil";
 import { FilRetour } from "@/components/ui-kit";
 import {
   CHAMPS_TRI_ETAT,
@@ -158,8 +159,7 @@ export default async function ModifierEquipementPage({
               familleEsp: caracs.familleEsp ?? null,
               // ADR-057 § 5 : sans lui, enregistrer la fiche exigerait de
               // redire le type, ou l'effacerait.
-              typePorte: caracs.typePorte ?? null,
-              typeEpi: caracs.typeEpi ?? null,
+              ...Object.fromEntries(PROPRIETES_DE_TYPE.map((p) => [p, caracs[p] ?? null])),
               pressionMaxAdmissibleBar: caracs.pressionMaxAdmissibleBar ?? null,
               volumeLitres: caracs.volumeLitres ?? null,
               // Les questions à trois états (`CHAMPS_TRI_ETAT`) doivent être repassées au

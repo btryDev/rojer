@@ -29,7 +29,7 @@ import type {
   EtablissementMatching,
 } from "@/lib/matching/types";
 import { LABEL_CATEGORIE_EQUIPEMENT } from "@/lib/equipements/labels";
-import { QUESTION_DE_TYPE, libelleDuType } from "@/lib/equipements/type-appareil";
+import { libelleDuType } from "@/lib/equipements/type-appareil";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
 import {
@@ -154,11 +154,9 @@ function porteePar(
     // individuelle » ne dirait pas lequel des EPI la ligne vise.]
     const categories = [
       ...new Set(
-        equipements.map((e) => {
-          const q = QUESTION_DE_TYPE[e.categorie];
-          const type = q ? libelleDuType(e.categorie, e.caracteristiques?.[q.propriete]) : null;
-          return type ?? LABEL_CATEGORIE_EQUIPEMENT[e.categorie];
-        }),
+        equipements.map(
+          (e) => libelleDuType(e.categorie, e.caracteristiques) ?? LABEL_CATEGORIE_EQUIPEMENT[e.categorie],
+        ),
       ),
     ];
     return `Vise ${equipements.length > 1 ? "les équipements déclarés" : "l'équipement déclaré"} : ${categories.join(", ")}.`;

@@ -83,7 +83,7 @@ export function caracteristiquesLisibles(
   // Le type, en tête : il décide des lignes de l'appareil (ADR-057 § 5).
   const questionDeType = QUESTION_DE_TYPE[categorie];
   if (questionDeType) {
-    const libelle = libelleDuType(categorie, c[questionDeType.propriete]);
+    const libelle = libelleDuType(categorie, c);
     out.push({
       cle: questionDeType.propriete,
       libelle: "Type",
