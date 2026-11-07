@@ -22,6 +22,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { CompteLanding } from "./compte";
+import { Marque } from "./Marque";
 
 // « Tarif » mène à la section du même nom (`#tarif`). « Comprendre » n'a
 // pas encore de destination : `#comprendre` ne correspond à aucune ancre,
@@ -61,15 +62,7 @@ export function LandingHeader({
     <header className="pointer-events-none sticky top-0 z-50 h-[var(--lp-entete)]">
       <div className={cn("lp-nav pointer-events-auto absolute inset-x-0 top-0", pose && "lp-nav--ilot")}>
         <div className="lp-nav-barre flex items-center justify-between gap-4 sm:gap-6">
-          {/* Provisoire, en attendant le logo : le nom sur une pastille
-              bleue, la même sur la photo et sur l'îlot. */}
-          <Link
-            href="/"
-            className="rounded-full bg-[color:var(--board-sky)] px-3 py-0.5 text-[1.075rem] font-semibold tracking-[-0.03em] text-[color:var(--board-ink)]"
-            style={{ fontFamily: "var(--font-titre), sans-serif" }}
-          >
-            Rojer
-          </Link>
+          <Marque />
 
           <div className="flex items-center gap-8">
             <nav className="hidden items-center gap-8 md:flex">

@@ -36,6 +36,8 @@ const PUBLIC_PREFIXES = [
   "/signe",
   // Registre d'accessibilité ERP (arrêté 19-04-2017) — consultation publique.
   "/accessibilite",
+  // Mentions légales, confidentialité, conditions : lues avant tout compte.
+  "/legal",
   // Route API qui sert l'affiche A4 du registre (QR + URL).
   "/api/accessibilite",
   // ADR-013 : serveur MCP distant. Ces routes portent leur propre

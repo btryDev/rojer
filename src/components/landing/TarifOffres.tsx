@@ -8,7 +8,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import type { CompteLanding } from "./compte";
-import { lienContact } from "./contact";
+import { BoutonContact } from "./BoutonContact";
 import { enEuros, OFFRES, parMoisSurUnAn, type Offre, type Periode } from "./tarif-donnees";
 
 /** Les deux teintes d'une carte : claire, ou d'encre pour l'offre mise en avant. */
@@ -124,9 +124,9 @@ export function TarifOffres({
                   {compte?.label ?? o.cta}
                 </Link>
               ) : (
-                <a href={lienContact("Rojer sur mesure")} className="lp-btn lp-btn-clair mt-auto justify-center">
+                <BoutonContact sujet="Rojer sur mesure" className="lp-btn-clair mt-auto justify-center">
                   {o.cta}
-                </a>
+                </BoutonContact>
               )}
             </article>
           );

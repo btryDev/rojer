@@ -52,7 +52,7 @@ const APPORTS = [
 
 export function Manifeste() {
   return (
-    <section className="bg-[color:var(--board-ink)] py-24 text-white sm:py-32">
+    <section id="avantages" className="bg-[color:var(--board-ink)] py-24 text-white sm:py-32">
       <div className="lp-shell">
         <Reveal>
           <p className="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-white/45">

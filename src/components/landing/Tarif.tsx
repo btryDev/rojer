@@ -8,7 +8,7 @@
 import { ChevronRepli, LIEN_REPLI } from "@/components/ui/repli";
 import { cn } from "@/lib/utils";
 import type { CompteLanding } from "./compte";
-import { lienContact } from "./contact";
+import { BoutonContact } from "./BoutonContact";
 import { Reveal } from "./Reveal";
 import { ABONNEMENT, GRILLE, INCLUS, NON_INCLUS } from "./tarif-grille";
 import { TarifOffres } from "./TarifOffres";
@@ -58,9 +58,7 @@ export function Tarif({ compte }: { compte?: CompteLanding }) {
                 Vous repartez avec un dossier rempli.
               </p>
             </div>
-            <a href={lienContact("Mise en route accompagnée")} className="lp-btn lp-btn-ink flex-none">
-              Nous contacter
-            </a>
+            <BoutonContact sujet="Mise en route accompagnée" className="lp-btn-ink flex-none" />
           </div>
         </Reveal>
 

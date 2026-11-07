@@ -43,7 +43,7 @@ function Temps({
 
 export function OutilSimple() {
   return (
-    <section className="bg-[color:var(--board-canvas)] py-24 sm:py-32">
+    <section id="outil" className="bg-[color:var(--board-canvas)] py-24 sm:py-32">
       <div className="lp-shell">
         <Reveal as="header">
           <h2 className="lp-titre lp-h2 text-center">

@@ -36,6 +36,7 @@ describe("chemins publics", () => {
       "/signe/sig_1",
       "/accessibilite/mon-erp",
       "/api/accessibilite/mon-erp/affiche",
+      "/legal/mentions-legales",
     ]) {
       expect(cheminPublic(p)).toBe(true);
     }

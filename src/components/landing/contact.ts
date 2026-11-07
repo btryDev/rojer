@@ -1,6 +1,7 @@
 /**
- * Adresse de contact de la page publique (tarif : Sur mesure et mise en
- * route accompagnée).
+ * Le contact de la page publique : l'adresse, et les sujets que le
+ * formulaire propose (pied de page, tarif « Sur mesure », mise en route
+ * accompagnée).
  *
  * ⚠︎ À confirmer avant la mise en ligne : c'est l'adresse du compte, pas
  * forcément celle qu'on veut exposer publiquement. La même adresse est le
@@ -9,7 +10,31 @@
  */
 export const CONTACT = "contact@btry.fr";
 
-/** Le lien `mailto:` vers cette adresse, avec un objet. */
-export function lienContact(objet: string) {
-  return `mailto:${CONTACT}?subject=${encodeURIComponent(objet)}`;
+export const SUJETS_CONTACT = [
+  "Une question sur Rojer",
+  "Mise en route accompagnée",
+  "Rojer sur mesure",
+  "Autre",
+] as const;
+
+export type SujetContact = (typeof SUJETS_CONTACT)[number];
+
+/**
+ * Le message du formulaire, prêt à partir de la messagerie du visiteur.
+ *
+ * Provisoire : aucun e-mail ne part encore du serveur en production. Le
+ * formulaire ouvre donc la messagerie du visiteur, message rédigé — rien
+ * n'est enregistré, rien ne transite par Rojer. Le jour où l'envoi existe,
+ * le formulaire poste vers une action serveur et cette fonction disparaît.
+ */
+export function mailtoContact(m: {
+  sujet: SujetContact;
+  nom: string;
+  email: string;
+  structure: string;
+  message: string;
+}): string {
+  const signature = [m.nom, m.structure, m.email].map((t) => t.trim()).filter(Boolean);
+  const corps = [m.message.trim(), "", "—", ...signature].join("\n");
+  return `mailto:${CONTACT}?subject=${encodeURIComponent(m.sujet)}&body=${encodeURIComponent(corps)}`;
 }
