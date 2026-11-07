@@ -15,7 +15,7 @@ import { Reveal } from "./Reveal";
 
 /**
  * La photo de la section. Une commerçante avec une cliente : la cible au
- * travail, pas devant un écran. Cf. `public/photos/README.md`.
+ * travail, pas devant un écran. Cf. `src/assets/landing/README.md`.
  */
 const PHOTO_MANIFESTE: PhotoLanding = {
   src: photoManifeste,
