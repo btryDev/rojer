@@ -40,9 +40,17 @@ const MEDIA_PORTRAIT = "(max-width: 767px)";
 
 export function Hero({
   compte,
+  barresFixes = false,
 }: {
   /** Le compte connecté, s'il y en a un : le hero ne lui propose pas de s'inscrire. */
   compte?: CompteLanding;
+  /**
+   * Navigateur à barres fixes sur iPhone (Chrome, Firefox, Edge) : l'écran
+   * utile y est plus court que sous Safari, dont la barre flotte par-dessus
+   * la page. 86svh y laissait trop de blanc ; le hero prend la hauteur moins
+   * une bande (2026-11-07). Lu côté serveur, sans saut au chargement.
+   */
+  barresFixes?: boolean;
 }) {
   // Deux cadrages, une image : `<picture>` choisit la source, l'`<img>`
   // reste unique (un seul téléchargement, un seul aperçu flou).
@@ -60,7 +68,7 @@ export function Hero({
     <section
       // La photo remonte de la hauteur de l'en-tête (`--lp-entete`) pour
       // passer dessous ; le texte la redescend d'autant.
-      className="relative isolate -mt-[var(--lp-entete)] flex h-[86svh] max-h-[1000px] min-h-[560px] overflow-hidden bg-[color:var(--board-ink)] md:h-[100svh] md:min-h-[640px]"
+      className={`relative isolate -mt-[var(--lp-entete)] flex ${barresFixes ? "h-[calc(100svh-2.5rem)]" : "h-[86svh]"} max-h-[1000px] min-h-[560px] overflow-hidden bg-[color:var(--board-ink)] md:h-[100svh] md:min-h-[640px]`}
     >
       <picture>
         <source media={MEDIA_PORTRAIT} srcSet={portrait.srcSet} sizes={portrait.sizes} />
