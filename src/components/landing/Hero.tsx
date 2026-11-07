@@ -31,6 +31,8 @@ const PHOTO_HERO = {
   // que le hero est haut. La verticale tient la hauteur sans zoomer.
   portrait: photoHeroPortrait,
   positionPortrait: "60% 30%",
+  // Au téléphone, zoomée de 15 % vers lui (`scale`, centré sur son visage) :
+  // la hauteur du hero ne change pas, l'homme paraît plus grand.
 };
 
 /** Le point de bascule entre la photo verticale et la paysage (`md`). */
@@ -65,7 +67,7 @@ export function Hero({
         <img
           {...paysage}
           alt={PHOTO_HERO.alt}
-          className="-z-10 object-cover [object-position:var(--pos)] max-md:[object-position:var(--pos-portrait)]"
+          className="-z-10 object-cover [object-position:var(--pos)] max-md:origin-[60%_35%] max-md:scale-[1.15] max-md:[object-position:var(--pos-portrait)]"
           style={
             {
               ...paysage.style,
