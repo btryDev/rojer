@@ -62,12 +62,13 @@ describe("Installation de gaz (2026-10-14) : GZ 15 sans cuisine", () => {
     expect(ids(commerce(null))).not.toContain(GZ15);
   });
 
-  it("l'appareil de cuisson garde sa ligne : la catégorie s'ajoute, elle ne remplace pas", () => {
+  // ~~« l'appareil de cuisson garde sa ligne : la catégorie s'ajoute, elle ne
+  // remplace pas »~~ — 2026-11-07, ADR-057 § 5, décision de la propriétaire :
+  // GZ 15 ne naît plus que de l'installation de gaz. Un piano au gaz déclaré
+  // dans les deux catégories portait deux fois la même vérification.
+  it("GZ 15 ne naît que de l'installation de gaz (ADR-057 § 5)", () => {
     const o = obligationParId(GZ15)!;
-    expect(estPorteeParEquipement(o) ? o.categoriesEquipement : null).toEqual([
-      "APPAREIL_CUISSON_ERP",
-      "INSTALLATION_GAZ",
-    ]);
+    expect(estPorteeParEquipement(o) ? o.categoriesEquipement : null).toEqual(["INSTALLATION_GAZ"]);
   });
 
   it("le libellé ne parle pas de cuisson : GZ 15 vise toutes les installations de gaz", () => {

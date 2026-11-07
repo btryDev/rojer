@@ -15,13 +15,10 @@
 // `pictos-categorie.tsx` plutôt que rapprochées d'une icône voisine.
 
 import {
-  AirVent,
-  Anchor,
   Barrel,
   BellElectric,
   CloudFog,
   CookingPot,
-  DoorOpen,
   Droplets,
   Fan,
   FireExtinguisher,
@@ -32,13 +29,11 @@ import {
   Heater,
   HeartPulse,
   Lightbulb,
-  LifeBuoy,
   Package,
   Refrigerator,
   ShowerHead,
   Theater,
   Shredder,
-  Wind,
   Zap,
 } from "lucide-react";
 import type { ComponentType } from "react";
@@ -78,11 +73,8 @@ export const ICONE_CATEGORIE: Record<CategorieEquipement, Picto> = {
   // loin. Il dit « ce qu'on porte », ce qui est exactement la ligne de partage
   // de cette catégorie — la protection collective reste à l'ouvrage.
   EPI: HardHat,
-  // L'ancre pour l'antichute : ce qui retient une chute. Le casque reste à la
-  // famille voisine, celle qui ne se vérifie pas.
-  EPI_ANTICHUTE: Anchor,
-  EPI_RESPIRATOIRE: Wind,
-  EPI_GILET_SAUVETAGE: LifeBuoy,
+  // ~~L'ancre pour l'antichute, le vent pour le respiratoire, la bouée pour
+  // le gilet~~ — 2026-11-07, ADR-057 § 5 : réunis dans `EPI`.
   INSTALLATION_ELECTRIQUE: Zap,
   INSTALLATION_FRIGORIFIQUE: Refrigerator,
   EXTINCTEUR: FireExtinguisher,
@@ -97,15 +89,15 @@ export const ICONE_CATEGORIE: Record<CategorieEquipement, Picto> = {
   // Le désenfumage évacue la fumée : c'est elle qu'on dessine. Le détecteur
   // (`AlarmSmoke`) dirait la détection, qui appartient à l'alarme.
   DESENFUMAGE: CloudFog,
-  // Ventilation : l'hélice pour la VMC, la bouche pour la CTA. Les deux
-  // brassent de l'air, seule la forme du terminal les sépare à l'œil.
-  VMC: Fan,
-  CTA: AirVent,
+  // Ventilation : l'hélice. ~~La bouche (`AirVent`) pour la CTA~~ —
+  // 2026-11-07, ADR-057 § 5 : VMC et CTA ne font plus qu'une catégorie.
+  VENTILATION: Fan,
   HOTTE_PRO: PictoHottePro,
   APPAREIL_CUISSON_ERP: CookingPot,
   ASCENSEUR: PictoAscenseur,
-  PORTE_AUTO: DoorOpen,
-  PORTAIL_AUTO: PictoPortailAuto,
+  // 2026-11-07, ADR-057 § 5 : ~~`DoorOpen` pour la porte~~ — porte et
+  // portail réunis ; le portail, le plus distinct des deux dessins.
+  PORTE_PORTAIL_MOTORISE: PictoPortailAuto,
   EQUIPEMENT_SOUS_PRESSION: Gauge,
   STOCKAGE_MATIERE_DANGEREUSE: Barrel,
   EQUIPEMENT_LEVAGE: Forklift,
@@ -121,7 +113,8 @@ export const ICONE_CATEGORIE: Record<CategorieEquipement, Picto> = {
   // pompe à carburant, autre chose.
   INSTALLATION_GAZ: Heater,
   // Le défibrillateur (2026-10-15) : le cœur et le tracé, ce que porte la
-  // signalétique de l'arrêté du 29 octobre 2019. `LifeBuoy` est déjà pris.
+  // signalétique de l'arrêté du 29 octobre 2019. ~~`LifeBuoy` est déjà pris.~~
+  // [2026-11-07 : libre depuis la fusion des EPI ; le cœur reste le dessin juste.]
   DEFIBRILLATEUR: HeartPulse,
   // L'eau chaude collective (2026-10-17) : la pomme de douche, le point d'usage
   // que nomme le libellé. `Droplets` est déjà le RIA, `Heater` le gaz.

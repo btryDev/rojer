@@ -49,12 +49,19 @@
 // à part : ~~aucune obligation portée par équipement ne cite `EPI`~~ aucune
 // obligation à rythme ÉCRIT ne cite `EPI` — depuis le 2026-10-07 (C59 lot 3),
 // le seul défaut annuel de `R. 4322-1` la vise, par décision de la propriétaire.
+//
+// [2026-11-07, ADR-057 § 5 : les trois catégories vérifiables sont réunies
+// dans `EPI`, avec un type déclaré (`typeEpi`). Le rangement se fait désormais
+// vers un TYPE, et « `EPI` n'en est jamais une » devient « `autre` n'en est
+// jamais un ». Les deux propriétés tiennent, lues sur les conditions
+// `enum_egale` / `enum_differente` du type au lieu des catégories.]
 
 import { describe, expect, it } from "vitest";
 import { CORPUS } from "./index";
 import { obligationsConformite } from "../conformite";
 import { estPorteeParEquipement } from "../conformite/types";
-import type { CategorieEquipement } from "../types-communs";
+import type { Obligation } from "../conformite/types";
+import { TYPES_EPI, type TypeEpi } from "@/lib/equipements/type-appareil";
 
 /** La ref de l'article qui porte la liste et les douze mois. */
 const ARTICLE_DE_LA_LISTE = "Arrêté 1993-03-19 (EPI) art. 1er";
@@ -70,7 +77,26 @@ const OBLIGATION = "epi-verification-generale-periodique";
  * doit être rouverte par quelqu'un qui sait ce qu'il fait, pas contournée par
  * un `filter` qui ne trouve plus rien.
  */
-const FAMILLE_NON_VERIFIABLE: CategorieEquipement = "EPI";
+const FAMILLE_NON_VERIFIABLE: TypeEpi = "autre";
+
+/**
+ * Les types d'EPI qu'une obligation portée par `EPI` atteint, lus sur ses
+ * conditions `typeEpi` (ADR-057 § 5) — la même lecture que le moteur, sur
+ * une valeur déclarée.
+ */
+function typesVises(o: Obligation): TypeEpi[] {
+  if (!estPorteeParEquipement(o) || !o.categoriesEquipement.includes("EPI")) return [];
+  const conds = (o.conditions ?? []).filter((c) => c.categorie === "EPI" && c.propriete === "typeEpi");
+  return TYPES_EPI.filter((t) =>
+    conds.every((c) =>
+      c.type === "equipement_propriete_enum_egale"
+        ? t === c.valeur
+        : c.type === "equipement_propriete_enum_differente"
+          ? t !== c.valeur
+          : true,
+    ),
+  );
+}
 
 /**
  * Où se range chacune des cinq entrées de l'arrêté.
@@ -81,16 +107,16 @@ const FAMILLE_NON_VERIFIABLE: CategorieEquipement = "EPI";
  * appareils respiratoires et les cartouches qui les alimentent partagent acte,
  * rythme, réalisateur et détenteur.
  */
-const RANGEMENT: Record<string, CategorieEquipement> = {
+const RANGEMENT: Record<string, TypeEpi> = {
   "appareils de protection respiratoire autonomes destinés à l'évacuation":
-    "EPI_RESPIRATOIRE",
+    "respiratoire",
   "appareils de protection respiratoire et équipements complets destinés à des interventions accidentelles en milieu hostile":
-    "EPI_RESPIRATOIRE",
-  "gilets de sauvetage gonflables": "EPI_GILET_SAUVETAGE",
+    "respiratoire",
+  "gilets de sauvetage gonflables": "gilet_sauvetage",
   "systèmes de protection individuelle contre les chutes de hauteur":
-    "EPI_ANTICHUTE",
+    "antichute",
   "stocks de cartouches filtrantes antigaz pour appareils de protection respiratoire":
-    "EPI_RESPIRATOIRE",
+    "respiratoire",
 };
 
 function articleDeLaListe() {
@@ -164,7 +190,7 @@ describe("EPI — une famille, pas un régime", () => {
       if (!estPorteeParEquipement(o)) {
         throw new Error(`${o.id} n'est plus portée par un équipement.`);
       }
-      return [...o.categoriesEquipement];
+      return typesVises(o);
     });
     const attendues = [...new Set(Object.values(RANGEMENT))].sort();
     expect(
@@ -185,13 +211,9 @@ describe("EPI — une famille, pas un régime", () => {
     // DÉFAUT (ADR-039 (b)), fondé sur `R. 4322-1`, que chaque surface affiche
     // comme un défaut. Un rythme écrit — celui de l'arrêté —, ou une norme, sur
     // cette catégorie, reste la faute que cette garde existe pour empêcher.
-    const visant = obligationsConformite
-      .filter(estPorteeParEquipement)
-      .filter((o) =>
-        (o.categoriesEquipement as readonly string[]).includes(
-          FAMILLE_NON_VERIFIABLE,
-        ),
-      );
+    const visant = obligationsConformite.filter((o) =>
+      typesVises(o).includes(FAMILLE_NON_VERIFIABLE),
+    );
     const fautives = visant
       .filter(
         (o) =>

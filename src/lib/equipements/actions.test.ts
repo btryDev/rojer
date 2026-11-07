@@ -481,6 +481,8 @@ describe("une écriture d'équipement fait constater les EPI, avant la régéné
     const fd = new FormData();
     fd.set("libelle", "Harnais");
     fd.set("categorie", categorie);
+    // ADR-057 § 5 : le type d'EPI est exigé.
+    fd.set("typeEpi", "antichute");
     return fd;
   }
 

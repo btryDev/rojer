@@ -637,13 +637,19 @@ export const CATEGORIES_EQUIPEMENT = [
   "BAES",
   "ALARME_INCENDIE",
   "DESENFUMAGE",
-  "VMC",
-  "CTA",
+  // 2026-11-07, ADR-057 § 5 : `VMC` et `CTA` ne font plus qu'une catégorie.
+  // Ce qui les distinguait au regard d'un texte — la VMC raccordée au gaz en
+  // habitation, le parc de stationnement couvert — est une question posée à
+  // l'appareil (`estVmcGaz`, `nbVehiculesParkingCouvert`).
+  "VENTILATION",
   "HOTTE_PRO",
   "APPAREIL_CUISSON_ERP",
   "ASCENSEUR",
-  "PORTE_AUTO",
-  "PORTAIL_AUTO",
+  // 2026-11-07, ADR-057 § 5 : `PORTE_AUTO` et `PORTAIL_AUTO` ne font plus
+  // qu'une catégorie. Les deux lignes qui les distinguent (CO 48 § 3 e) pour
+  // les portes, l'arrêté du 21 décembre 1993 art. 2 pour les portails) lisent
+  // le type déclaré de l'appareil, `typePorte` (`equipements/schema.ts`).
+  "PORTE_PORTAIL_MOTORISE",
   "EQUIPEMENT_SOUS_PRESSION",
   "STOCKAGE_MATIERE_DANGEREUSE",
   "EQUIPEMENT_LEVAGE",
@@ -688,15 +694,13 @@ export const CATEGORIES_EQUIPEMENT = [
   // retenu PAR DÉFAUT (ADR-039), affiché comme tel. Le rendez-vous annuel à
   // qui a déclaré des gants est désormais voulu, et dit comme un défaut.]
   "EPI",
-  // Les trois catégories vérifiables, scindées le 2026-09-04 après lecture de
-  // l'arrêté du 19 mars 1993 : lui seul nomme les EPI soumis à vérification, et
-  // il le fait par des NOMS D'OBJETS, jamais par un critère technique — d'où
-  // des catégories et non une propriété. Ses cinq entrées se rangent en trois
-  // valeurs : les deux appareils respiratoires et leurs cartouches partagent
-  // acte, rythme, réalisateur et détenteur.
-  "EPI_ANTICHUTE",
-  "EPI_RESPIRATOIRE",
-  "EPI_GILET_SAUVETAGE",
+  // ~~Les trois catégories vérifiables, scindées le 2026-09-04 […] :
+  // `EPI_ANTICHUTE`, `EPI_RESPIRATOIRE`, `EPI_GILET_SAUVETAGE`.~~
+  // [2026-11-07, ADR-057 § 5 : réunies dans `EPI`, avec un type déclaré
+  // (`typeEpi` : antichute, respiratoire, gilet de sauvetage, autre). Le
+  // motif de la scission tient toujours — l'arrêté du 19 mars 1993 nomme des
+  // OBJETS, pas un critère technique — et le type nomme ces mêmes objets : le
+  // dirigeant dit ce qu'il a, jamais s'il est « soumis à vérification ».]
   // 2026-10-14, décision de la propriétaire : les installations de gaz
   // combustible (stockage, distribution, appareils) que GZ 15 vérifie chaque
   // année en ERP des quatre premières catégories. Le nom n'est pas
@@ -732,18 +736,32 @@ export const CATEGORIES_EQUIPEMENT = [
 export type CategorieEquipement = (typeof CATEGORIES_EQUIPEMENT)[number];
 
 /**
- * Les catégories d'équipements de protection individuelle : la famille `EPI`
- * et les trois catégories vérifiables qui en ont été scindées (2026-09-04).
+ * Les catégories réunies par l'ADR-057 § 5 (2026-11-07), et celle qui les
+ * reprend. Elles ont quitté l'enum Prisma : la migration
+ * `20261107120100_categories_jumelles_reprise` reprend les rangées selon
+ * cette table, puis recrée l'enum sans elles. Gardée pour la lecture des
+ * traces anciennes (un export, un rapport qui nommerait « CTA ») et pour le
+ * test qui lie la migration à la table.
+ */
+export const CATEGORIES_REPRISES_ADR_057 = {
+  VMC: "VENTILATION",
+  CTA: "VENTILATION",
+  PORTE_AUTO: "PORTE_PORTAIL_MOTORISE",
+  PORTAIL_AUTO: "PORTE_PORTAIL_MOTORISE",
+  EPI_ANTICHUTE: "EPI",
+  EPI_RESPIRATOIRE: "EPI",
+  EPI_GILET_SAUVETAGE: "EPI",
+} as const satisfies Record<string, CategorieEquipement>;
+
+/**
+ * Les catégories d'équipements de protection individuelle. ~~La famille `EPI`
+ * et les trois catégories vérifiables qui en ont été scindées (2026-09-04).~~
+ * [2026-11-07, ADR-057 § 5 : `EPI` seule, le type se déclare à l'appareil.]
  * Déclarer un équipement de l'une d'elles, c'est déclarer qu'on fournit des
  * EPI — la réponse à `epiPresents` (relecture indépendante du 2026-10-12,
  * `equipements/actions.ts`).
  */
-export const CATEGORIES_EPI = [
-  "EPI",
-  "EPI_ANTICHUTE",
-  "EPI_RESPIRATOIRE",
-  "EPI_GILET_SAUVETAGE",
-] as const satisfies readonly CategorieEquipement[];
+export const CATEGORIES_EPI = ["EPI"] as const satisfies readonly CategorieEquipement[];
 
 export function estCategorieEpi(c: string): boolean {
   return (CATEGORIES_EPI as readonly string[]).includes(c);

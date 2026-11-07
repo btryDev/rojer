@@ -97,14 +97,13 @@ const FAMILLES: { nom: string; categories: string[] }[] = [
     categories: ["EXTINCTEUR", "RIA", "BAES", "ALARME_INCENDIE", "DESENFUMAGE"],
   },
   { nom: "Électricité", categories: ["INSTALLATION_ELECTRIQUE"] },
-  { nom: "Aération", categories: ["VMC", "CTA", "HOTTE_PRO"] },
+  { nom: "Aération", categories: ["VENTILATION", "HOTTE_PRO"] },
   { nom: "Levage", categories: ["ASCENSEUR", "EQUIPEMENT_LEVAGE"] },
   {
     nom: "Autres",
     categories: [
       "APPAREIL_CUISSON_ERP",
-      "PORTE_AUTO",
-      "PORTAIL_AUTO",
+      "PORTE_PORTAIL_MOTORISE",
       "EQUIPEMENT_SOUS_PRESSION",
       "STOCKAGE_MATIERE_DANGEREUSE",
     ],

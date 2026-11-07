@@ -1176,10 +1176,18 @@ function evaluerChamp(
     // l'établissement, qui n'existe que si au moins un équipement de ces
     // catégories est déclaré. Le porteur reste l'établissement — une ligne,
     // jamais une par équipement.
+    // Un équipement ne compte que s'il satisfait les conditions de sa
+    // catégorie (2026-11-07, ADR-057 § 5 : la porte, pas le portail, pour
+    // CO 48 § 3 e)).
+    const conditions = conditionsParCategorie(o.conditions);
     const declencheurs =
       o.porteur === "etablissement" && o.siEquipementDeclare
         ? o.siEquipementDeclare.filter((c) =>
-            equipements.some((e) => e.categorie === c),
+            equipements.some(
+              (e) =>
+                e.categorie === c &&
+                (conditions.get(c) ?? []).every((cond) => conditionSatisfaite(cond, e)),
+            ),
           )
         : null;
     if (declencheurs !== null && declencheurs.length === 0) return null;

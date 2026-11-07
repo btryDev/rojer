@@ -189,7 +189,7 @@ describe("relecture du 2026-11-06 : le rapport le plus récent du même acte dat
       {
         id: "vmc",
         libelle: "VMC",
-        categorie: "VMC",
+        categorie: "VENTILATION",
         caracteristiques: null,
         actif: true,
         createdAt: new Date("2025-01-01T10:00:00Z"),

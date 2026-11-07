@@ -20,6 +20,7 @@ import {
   questionsTriEtatPour,
   type ChampTriEtat,
 } from "./schema";
+import { QUESTION_DE_TYPE, libelleDuType } from "./type-appareil";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
 
 /**
@@ -78,6 +79,18 @@ export function caracteristiquesLisibles(
       ? (brut as Record<string, unknown>)
       : {};
   const out: CaracteristiqueLisible[] = [];
+
+  // Le type, en tête : il décide des lignes de l'appareil (ADR-057 § 5).
+  const questionDeType = QUESTION_DE_TYPE[categorie];
+  if (questionDeType) {
+    const libelle = libelleDuType(categorie, c[questionDeType.propriete]);
+    out.push({
+      cle: questionDeType.propriete,
+      libelle: "Type",
+      valeur: libelle ?? "Pas encore précisé",
+      enAttente: libelle === null,
+    });
+  }
 
   if (typeof c.nombre === "number" && c.nombre > 0) {
     out.push({

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { CATEGORIES_EQUIPEMENT } from "@/lib/referentiels/types-communs";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
 import { FAMILLES_ESP } from "./esp";
+import { QUESTION_DE_TYPE, TYPES_EPI, TYPES_PORTE } from "./type-appareil";
 import { CLES_MATERIELS_NON_COUVERTS } from "./materiels-non-couverts";
 
 /**
@@ -20,6 +21,11 @@ import { CLES_MATERIELS_NON_COUVERTS } from "./materiels-non-couverts";
  *     (contrôle semestriel des gaines de recyclage, en SUS de l'annuel)
  *   - `nbVehiculesParkingCouvert`   → ERP, art. PS 32 (biennale ou annuelle)
  *   - `estVmcGaz`                   → habitation, arrêté 25-04-1985
+ *   - `typePorte`                   → CO 48 § 3 e) (portes) et arrêté du
+ *     21 décembre 1993, art. 2 (portails de véhicules) — ADR-057 § 5, EXIGÉ
+ *   - `typeEpi`                     → arrêté du 19 mars 1993 (antichute,
+ *     respiratoire, gilet gonflable) et R. 4322-1 (les autres) — ADR-057 § 5,
+ *     EXIGÉ
  *   - `aExtinctionAutomatique`      → ERP, extinction automatique en cuisine
  *   - `sertAuLevageDePersonnes`     → travail, VGP semestrielle (arrêté 02-03-2004)
  *   - `estChariotOuGerbeur`         → travail, VGP semestrielle (arrêté 01-03-2004, art. 20-II et 23)
@@ -162,8 +168,8 @@ const triEtat = z.preprocess(
  * relire la réponse, et une seconde liste dériverait.
  */
 export const CATEGORIES_AERATION: readonly CategorieEquipement[] = [
-  "VMC",
-  "CTA",
+  // 2026-11-07, ADR-057 § 5 : ~~"VMC", "CTA"~~ réunies.
+  "VENTILATION",
   "HOTTE_PRO",
 ];
 
@@ -223,7 +229,9 @@ export const CATEGORIES_TRI_ETAT: readonly {
   },
   {
     champ: "estVmcGaz",
-    categories: ["VMC"],
+    // 2026-11-07, ADR-057 § 5 : ~~["VMC"]~~ — posée à toute ventilation ; les
+    // anciennes CTA ont reçu « non » à la reprise.
+    categories: ["VENTILATION"],
     message: "Spécifique aux VMC raccordées à des appareils à gaz",
   },
   {
@@ -410,6 +418,17 @@ export const equipementSchema = z
       z.enum(FAMILLES_ESP).optional(),
     ),
     // ~~`typeExtincteur`~~ — retiré le 2026-10-08 (C66, cf. en tête).
+    // Le type d'un appareil dont la catégorie en réunit plusieurs (ADR-057
+    // § 5, `type-appareil.ts`) : EXIGÉ pour sa catégorie, refusé ailleurs —
+    // contrôlé plus bas. Lus par le moteur (`enum_egale`, `enum_differente`).
+    typePorte: z.preprocess(
+      (v) => (v === "" || v === null || v === undefined ? undefined : v),
+      z.enum(TYPES_PORTE).optional(),
+    ),
+    typeEpi: z.preprocess(
+      (v) => (v === "" || v === null || v === undefined ? undefined : v),
+      z.enum(TYPES_EPI).optional(),
+    ),
     pressionMaxAdmissibleBar: z.preprocess(
       (v) => (v === "" || v === null || v === undefined ? undefined : v),
       z.coerce.number().min(0).max(10000).optional(),
@@ -462,11 +481,7 @@ export const equipementSchema = z
     // pas être positionnée pour une catégorie incompatible.
     // (`aGroupeElectrogene` est contrôlé plus bas, avec les autres questions
     // à trois états, par `CATEGORIES_TRI_ETAT`.)
-    const categoriesPollutionOk: readonly (typeof val.categorie)[] = [
-      "VMC",
-      "CTA",
-      "HOTTE_PRO",
-    ] as const;
+    const categoriesPollutionOk = CATEGORIES_AERATION;
     if (
       val.estLocalPollutionSpecifique &&
       !categoriesPollutionOk.includes(val.categorie)
@@ -488,13 +503,29 @@ export const equipementSchema = z
 
     if (
       val.nbVehiculesParkingCouvert !== undefined &&
-      val.categorie !== "VMC"
+      val.categorie !== "VENTILATION"
     ) {
       ctx.addIssue({
         code: "custom",
         path: ["nbVehiculesParkingCouvert"],
-        message: "Applicable uniquement à une VMC de parking couvert",
+        message: "Applicable uniquement à la ventilation d'un parking couvert",
       });
+    }
+
+    // Le type (ADR-057 § 5) : exigé pour la catégorie qui le pose — deux
+    // lignes du référentiel le lisent —, refusé pour toute autre.
+    for (const propriete of ["typePorte", "typeEpi"] as const) {
+      const posee = QUESTION_DE_TYPE[val.categorie]?.propriete === propriete;
+      if (posee && val[propriete] === undefined) {
+        ctx.addIssue({ code: "custom", path: [propriete], message: "Précisez le type" });
+      }
+      if (!posee && val[propriete] !== undefined) {
+        ctx.addIssue({
+          code: "custom",
+          path: [propriete],
+          message: "Ce type ne s'applique pas à cette catégorie",
+        });
+      }
     }
 
     // Questions à trois états : même contrôle de cohérence. On rejette dès
@@ -565,6 +596,8 @@ export function normaliserFormDataEquipement(
     nbVehiculesParkingCouvert: raw.nbVehiculesParkingCouvert,
     // Plaque constructeur d'un équipement sous pression (cf. `esp.ts`).
     familleEsp: raw.familleEsp,
+    typePorte: raw.typePorte,
+    typeEpi: raw.typeEpi,
     pressionMaxAdmissibleBar: raw.pressionMaxAdmissibleBar,
     volumeLitres: raw.volumeLitres,
     notes: raw.notes,
@@ -594,6 +627,8 @@ export function serialiserCaracteristiques(
   if (val.nbVehiculesParkingCouvert !== undefined)
     out.nbVehiculesParkingCouvert = val.nbVehiculesParkingCouvert;
   if (val.familleEsp !== undefined) out.familleEsp = val.familleEsp;
+  if (val.typePorte !== undefined) out.typePorte = val.typePorte;
+  if (val.typeEpi !== undefined) out.typeEpi = val.typeEpi;
   if (val.pressionMaxAdmissibleBar !== undefined)
     out.pressionMaxAdmissibleBar = val.pressionMaxAdmissibleBar;
   if (val.volumeLitres !== undefined) out.volumeLitres = val.volumeLitres;

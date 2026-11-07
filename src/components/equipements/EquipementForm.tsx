@@ -34,6 +34,7 @@ import {
   verdictSuiviEnService,
   type FamilleEsp,
 } from "@/lib/equipements/esp";
+import { QUESTION_DE_TYPE } from "@/lib/equipements/type-appareil";
 import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
 import { nomDeZone } from "@/lib/batiments/nom-zone";
 import type { EquipementActionState } from "@/lib/equipements/actions";
@@ -74,6 +75,9 @@ type Valeurs = {
   datePeremption?: Date | null;
   nombre?: number | null;
   familleEsp?: string | null;
+  /** ADR-057 § 5 : le type, pour une catégorie qui en réunit plusieurs. */
+  typePorte?: string | null;
+  typeEpi?: string | null;
   pressionMaxAdmissibleBar?: number | null;
   volumeLitres?: number | null;
   estLocalPollutionSpecifique?: boolean;
@@ -116,7 +120,9 @@ const QUESTIONS_TRI_ETAT: Record<
     aide: AIDE_GROUPE_ELECTROGENE,
   },
   estVmcGaz: {
-    question: "Cette VMC est-elle raccordée à des appareils à gaz ?",
+    // 2026-11-07, ADR-057 § 5 : ~~« Cette VMC est-elle… »~~ — posée à toute
+    // ventilation, CTA comprise.
+    question: "Est-ce une VMC raccordée à des appareils à gaz ?",
     aide: "On parle de « VMC-Gaz » : la ventilation évacue aussi les produits de combustion de chaudières ou de chauffe-eau au gaz. Si oui, entretien et vérification annuels donnant lieu à un certificat remis au propriétaire ou au syndic (arrêté du 23 février 2018, art. 26 § 5°)."
     // DEUX CORRECTIONS, LE 2026-09-20, ET LA SECONDE EST LA PLUS INSTRUCTIVE.
     //
@@ -315,7 +321,9 @@ export function EquipementForm({
   const erreurCategorie = err("categorie") ?? err("materielNonCouvert");
 
   const estAeration = CATEGORIES_AERATION.includes(categorie);
-  const estVmc = categorie === "VMC";
+  // 2026-11-07, ADR-057 § 5 : ~~`categorie === "VMC"`~~ — toute ventilation.
+  const estVentilation = categorie === "VENTILATION";
+  const questionDeType = QUESTION_DE_TYPE[categorie];
   const estEsp = categorie === "EQUIPEMENT_SOUS_PRESSION";
 
   // Questions à trois états applicables à la catégorie sélectionnée.
@@ -423,6 +431,47 @@ export function EquipementForm({
           )}
           <Erreur id="categorie-erreur" message={erreurCategorie} />
         </div>
+
+        {/* ADR-057 § 5 : le type, quand la catégorie en réunit plusieurs. Exigé
+            — deux lignes du référentiel le lisent ; la clé remet la réponse à
+            zéro quand la catégorie change. */}
+        {questionDeType && (
+          <div key={categorie}>
+            <label className="label-board" htmlFor={questionDeType.propriete}>
+              {questionDeType.question} *
+            </label>
+            <select
+              id={questionDeType.propriete}
+              name={questionDeType.propriete}
+              defaultValue={
+                valeursInitiales?.categorie === categorie
+                  ? (valeursInitiales?.[questionDeType.propriete] ?? "")
+                  : ""
+              }
+              required
+              className="champ-board"
+              aria-invalid={Boolean(err(questionDeType.propriete))}
+              aria-describedby={`${questionDeType.propriete}-aide`}
+            >
+              <option value="" disabled>
+                Choisir…
+              </option>
+              {questionDeType.options.map((o) => (
+                <option key={o.valeur} value={o.valeur}>
+                  {o.libelle}
+                </option>
+              ))}
+            </select>
+            <ul id={`${questionDeType.propriete}-aide`} className={`${CLASSE_AIDE} list-none pl-0`}>
+              {questionDeType.options.map((o) => (
+                <li key={o.valeur} className="mt-1">
+                  <span className="font-semibold">{o.libelle}</span> — {o.aide}
+                </li>
+              ))}
+            </ul>
+            <Erreur message={err(questionDeType.propriete)} />
+          </div>
+        )}
 
         <ChampBoard
           id="libelle"
@@ -580,7 +629,7 @@ export function EquipementForm({
               </label>
             )}
 
-            {estVmc && (
+            {estVentilation && (
               /* La règle et son article se lisent sous le champ : une
                  infobulle n'existe pas au doigt. */
               <ChampBoard
@@ -591,7 +640,7 @@ export function EquipementForm({
                 type="text"
                 inputMode="numeric"
                 defaultValue={valeursInitiales?.nbVehiculesParkingCouvert ?? ""}
-                aide="Art. PS 32 du règlement ERP — à renseigner uniquement si la VMC ventile un parc de stationnement couvert d'un ERP. Au-dessus de 250 véhicules, contrôle annuel ; sinon biennal."
+                aide="Art. PS 32 du règlement ERP — à renseigner uniquement si cette ventilation dessert un parc de stationnement couvert d'un ERP. Au-dessus de 250 véhicules, contrôle annuel ; sinon biennal."
                 erreur={err("nbVehiculesParkingCouvert")}
               />
             )}

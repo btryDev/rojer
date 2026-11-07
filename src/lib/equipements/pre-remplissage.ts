@@ -540,7 +540,7 @@ export function suggererEquipements(ctx: ContexteEtablissement): Entree[] {
   // ---------------------------------------------------------------------------
   if (ctx.estEtablissementTravail) {
     ajoute({
-      categorie: "VMC",
+      categorie: "VENTILATION",
       libelle: "Ventilation des locaux de travail",
       motif: "Entretien et contrôle périodiques des installations d'aération",
       fondements: [
@@ -633,7 +633,7 @@ export function suggererEquipements(ctx: ContexteEtablissement): Entree[] {
   // ---------------------------------------------------------------------------
   if (ctx.estHabitation) {
     ajoute({
-      categorie: "VMC",
+      categorie: "VENTILATION",
       libelle: "VMC de l'immeuble d'habitation",
       motif: "Si VMC-Gaz : entretien annuel obligatoire",
       fondements: [{ obligationId: "aeration-habitation-vmc-gaz-annuelle" }],

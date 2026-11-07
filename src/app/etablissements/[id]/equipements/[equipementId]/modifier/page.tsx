@@ -32,6 +32,8 @@ type Caracteristiques = Partial<
     | "aSystemeDeRecyclage"
     | "nbVehiculesParkingCouvert"
     | "familleEsp"
+    | "typePorte"
+    | "typeEpi"
     | "pressionMaxAdmissibleBar"
     | "volumeLitres"
     | "notes"
@@ -154,6 +156,10 @@ export default async function ModifierEquipementPage({
               nbVehiculesParkingCouvert:
                 caracs.nbVehiculesParkingCouvert ?? null,
               familleEsp: caracs.familleEsp ?? null,
+              // ADR-057 § 5 : sans lui, enregistrer la fiche exigerait de
+              // redire le type, ou l'effacerait.
+              typePorte: caracs.typePorte ?? null,
+              typeEpi: caracs.typeEpi ?? null,
               pressionMaxAdmissibleBar: caracs.pressionMaxAdmissibleBar ?? null,
               volumeLitres: caracs.volumeLitres ?? null,
               // Les questions à trois états (`CHAMPS_TRI_ETAT`) doivent être repassées au

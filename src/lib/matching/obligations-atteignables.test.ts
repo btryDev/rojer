@@ -22,6 +22,7 @@ import {
   matchTypologie,
 } from "@/lib/matching";
 import { estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
+import { QUESTION_DE_TYPE } from "@/lib/equipements/type-appareil";
 import type { EquipementMatching, EtablissementMatching } from "@/lib/matching";
 import { onboardingSchema } from "@/lib/onboarding/schema";
 import { CATEGORIES_ERP, EFFECTIF_MAX, TYPE_ERP } from "@/lib/etablissements/schema";
@@ -125,7 +126,10 @@ function equipementsDuFormulaire(estERP: boolean): EquipementMatching[] {
     const aer = CATEGORIES_AERATION.includes(cat);
     mult("estLocalPollutionSpecifique", aer ? [true, false] : [false]);
     mult("aSystemeDeRecyclage", aer ? [true, false] : [false]);
-    if (cat === "VMC") mult("nbVehiculesParkingCouvert", [undefined, 0, 250, 251]);
+    if (cat === "VENTILATION") mult("nbVehiculesParkingCouvert", [undefined, 0, 250, 251]);
+    // ADR-057 § 5 : le type est exigé — chaque valeur, sans silence.
+    const type = QUESTION_DE_TYPE[cat];
+    if (type) mult(type.propriete, type.options.map((o) => o.valeur));
     if (cat === "EQUIPEMENT_SOUS_PRESSION") mult("familleEsp", [undefined, ...FAMILLES_ESP]);
     for (const c of combos) {
       const r = equipementSchema.safeParse({ libelle: "x", categorie: cat, ...c });
