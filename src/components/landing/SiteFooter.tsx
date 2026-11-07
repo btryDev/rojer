@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { BoutonContact } from "./BoutonContact";
-import { CONTACT } from "./contact";
 import { Marque } from "./Marque";
 import { PAGES_LEGALES } from "./pages-legales";
 
@@ -51,12 +50,9 @@ export function SiteFooter() {
               des risques de votre structure.
             </p>
             <p className="mt-8 text-[0.95rem] font-medium">Une question, un besoin particulier ?</p>
-            <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3">
-              <BoutonContact className="lp-btn-blanc" />
-              <a href={`mailto:${CONTACT}`} className="text-[0.88rem] text-white/70 transition-colors hover:text-white">
-                {CONTACT}
-              </a>
-            </div>
+            {/* Pas d'adresse affichée (décision de la propriétaire,
+                2026-11-07) : on écrit par le formulaire. */}
+            <BoutonContact className="lp-btn-blanc mt-4" />
           </div>
 
           <nav aria-label="Pied de page" className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3">

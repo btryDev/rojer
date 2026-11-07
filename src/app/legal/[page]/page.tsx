@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { SiteFooter } from "@/components/landing/SiteFooter";
-import { CONTACT } from "@/components/landing/contact";
+import { BoutonContact } from "@/components/landing/BoutonContact";
 import { PAGES_LEGALES } from "@/components/landing/pages-legales";
 
 // Les pages d'information (mentions légales, confidentialité…). Publiques
@@ -32,12 +32,9 @@ export default async function PageLegale({ params }: Props) {
         <h1 className="lp-titre lp-h2">{page.titre}</h1>
         <p className="lp-lede mt-6 max-w-[var(--board-mesure)]">
           Cette page est en cours de rédaction. Pour toute question d&apos;ici
-          là, écrivez-nous à{" "}
-          <a className="underline" href={`mailto:${CONTACT}`}>
-            {CONTACT}
-          </a>
-          .
+          là, écrivez-nous.
         </p>
+        <BoutonContact className="lp-btn-ink mt-8" />
       </section>
       <SiteFooter />
     </main>

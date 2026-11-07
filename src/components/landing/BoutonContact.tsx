@@ -8,7 +8,7 @@
 import { useId, useState } from "react";
 import { PanneauModal } from "@/components/ui-kit/PanneauModal";
 import { cn } from "@/lib/utils";
-import { CONTACT, mailtoContact, SUJETS_CONTACT, type SujetContact } from "./contact";
+import { mailtoContact, SUJETS_CONTACT, type SujetContact } from "./contact";
 
 export function BoutonContact({
   sujet = "Une question sur Rojer",
@@ -52,11 +52,8 @@ export function BoutonContact({
           <>
             <p className="m-0">
               Votre messagerie s&apos;ouvre avec le message prêt : il ne reste
-              qu&apos;à l&apos;envoyer. Si rien ne s&apos;ouvre, écrivez-nous à{" "}
-              <a className="underline" href={`mailto:${CONTACT}`}>
-                {CONTACT}
-              </a>
-              .
+              qu&apos;à l&apos;envoyer. Si rien ne s&apos;ouvre, aucune messagerie
+              n&apos;est réglée sur cet appareil : réessayez depuis un autre.
             </p>
             <div>
               <button type="button" onClick={fermer} className="lp-btn lp-btn-ink">

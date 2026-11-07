@@ -3,6 +3,9 @@
  * formulaire propose (pied de page, tarif « Sur mesure », mise en route
  * accompagnée).
  *
+ * L'adresse n'est pas affichée sur la page (décision de la propriétaire,
+ * 2026-11-07) : elle ne sert que de destinataire au formulaire.
+ *
  * ⚠︎ À confirmer avant la mise en ligne : c'est l'adresse du compte, pas
  * forcément celle qu'on veut exposer publiquement. La même adresse est le
  * point d'entrée RGPD (`docs/rgpd.md`) : si elle change, vérifier si celle-ci
