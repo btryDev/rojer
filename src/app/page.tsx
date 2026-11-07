@@ -47,7 +47,7 @@ export default async function Home({
       <Manifeste />
       <OutilSimple />
       <Tarif compte={compte} />
-      <SiteFooter />
+      <SiteFooter compte={compte} />
     </main>
   );
 }

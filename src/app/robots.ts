@@ -4,8 +4,8 @@ import { OUVERT_AUX_MOTEURS } from "@/lib/indexation";
 /**
  * `robots.txt` (audit Next.js du 2026-10-14, B11).
  *
- * Seules la page d'accueil et les pages d'entrée (`/login`, `/signup`) sont
- * offertes aux moteurs. Tout le reste est exclu :
+ * Seules la page d'accueil, les pages d'entrée (`/login`, `/signup`) et les
+ * pages légales (`/legal/…`) sont offertes aux moteurs. Tout le reste est exclu :
  * - **les pages publiques à lien** — `/acces/[jeton]`, `/signe/[id]`,
  *   `/verifier/[id]` : elles ne valent que pour qui a reçu le lien, et un robot
  *   qui suivrait un jeton n'a rien à y faire ;

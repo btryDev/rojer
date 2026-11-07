@@ -27,7 +27,7 @@ import { Marque } from "./Marque";
 // « Tarif » mène à la section du même nom (`/#tarif` : depuis la racine,
 // l'en-tête sert aussi aux pages légales). « Comprendre » n'a
 // pas encore de destination : `#comprendre` ne correspond à aucune ancre,
-// le clic ne fait rien et ne casse rien. À rebrancher sur /comprendre le
+// le clic mène en haut de l'accueil, sans rien casser. À rebrancher sur /comprendre le
 // jour où la page existe. Sous `md`, la barre ne garde que la marque et le
 // bouton : la page se parcourt en défilant.
 const LIENS = [

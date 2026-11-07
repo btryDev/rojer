@@ -48,8 +48,9 @@ export function Hero({
         placeholder="blur"
         // En portrait, la photo 16/9 couvre la hauteur et déborde en largeur :
         // elle s'affiche sur environ 178 % de la hauteur d'écran (150 % sous
-        // md, où le hero ne fait que 84svh).
-        sizes="(max-width: 767px) 150vh, (max-aspect-ratio: 16/9) 178vh, 100vw"
+        // md, où le hero ne fait que 84svh). Sous 666 px de haut (téléphone
+        // en paysage), le hero est tenu à 560 px : la photo fait 996 px de large.
+        sizes="(max-width: 767px) and (max-height: 666px) 996px, (max-width: 767px) 150vh, (max-aspect-ratio: 16/9) 178vh, 100vw"
         className="-z-10 object-cover"
         style={{ objectPosition: PHOTO_HERO.position }}
       />

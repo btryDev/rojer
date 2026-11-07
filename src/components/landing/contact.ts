@@ -27,6 +27,9 @@ export const SUJETS_CONTACT = [
  */
 export const MESSAGE_MAX = 1000;
 
+/** La longueur du lien `mailto:` au-delà de laquelle le formulaire refuse d'ouvrir. */
+export const MAILTO_MAX = 1900;
+
 export type SujetContact = (typeof SUJETS_CONTACT)[number];
 
 /**

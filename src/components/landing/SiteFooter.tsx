@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BoutonContact } from "./BoutonContact";
+import type { CompteLanding } from "./compte";
 import { Marque } from "./Marque";
 import { PAGES_LEGALES } from "./pages-legales";
 
@@ -8,7 +9,7 @@ import { PAGES_LEGALES } from "./pages-legales";
 // sont écrites depuis la racine (`/#tarif`) : le même pied sert aux pages
 // légales.
 
-const COLONNES = [
+const COLONNES_FIXES = [
   {
     titre: "Rojer",
     liens: [
@@ -16,13 +17,6 @@ const COLONNES = [
       { href: "/#avantages", label: "Ce que Rojer apporte" },
       { href: "/#outil", label: "Un outil simple" },
       { href: "/#tarif", label: "Tarif" },
-    ],
-  },
-  {
-    titre: "Compte",
-    liens: [
-      { href: "/signup", label: "Créer un compte" },
-      { href: "/login", label: "Se connecter" },
     ],
   },
   {
@@ -38,7 +32,22 @@ const COLONNES = [
  */
 const ORIGINE_IMAGES = "Photos et illustrations générées avec Krea 2 et Nano Banana Pro.";
 
-export function SiteFooter() {
+/** La colonne « Compte » suit la session, comme le bouton de l'en-tête. */
+function colonneCompte(compte?: CompteLanding) {
+  return {
+    titre: "Compte",
+    liens: compte
+      ? [{ href: compte.href, label: "Mon espace" }]
+      : [
+          { href: "/signup", label: "Créer un compte" },
+          { href: "/login", label: "Se connecter" },
+        ],
+  };
+}
+
+export function SiteFooter({ compte }: { compte?: CompteLanding }) {
+  const [rojer, informations] = COLONNES_FIXES;
+  const colonnes = [rojer, colonneCompte(compte), informations];
   return (
     <footer className="bg-[color:var(--board-ink)] pb-10 pt-16 text-white sm:pt-20">
       <div className="lp-shell">
@@ -56,7 +65,7 @@ export function SiteFooter() {
           </div>
 
           <nav aria-label="Pied de page" className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3">
-            {COLONNES.map((c) => (
+            {colonnes.map((c) => (
               <div key={c.titre}>
                 <p className="text-[0.82rem] font-semibold text-white">{c.titre}</p>
                 <ul className="m-0 mt-4 flex list-none flex-col gap-3 p-0">

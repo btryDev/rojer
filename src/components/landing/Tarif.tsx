@@ -11,7 +11,7 @@ import type { CompteLanding } from "./compte";
 import { BoutonContact } from "./BoutonContact";
 import { Reveal } from "./Reveal";
 import { DetailOffresMobile } from "./DetailOffresMobile";
-import { COLONNES_GRILLE as COLONNES, GRILLE, NOTE_GRILLE, TON_CASE as TON } from "./tarif-grille";
+import { COLONNES_GRILLE, GRILLE, NOTE_GRILLE, SENS_CASE, TON_CASE } from "./tarif-grille";
 import { TarifOffres } from "./TarifOffres";
 
 /** Le fond de la colonne « Essai ». */
@@ -69,10 +69,10 @@ export function Tarif({ compte }: { compte?: CompteLanding }) {
               <thead>
                 <tr className="border-b border-[color:var(--board-slate-pale)]">
                   <th scope="col" className="px-4 py-3 text-left font-semibold">Module</th>
-                  {COLONNES.map((c, i) => (
+                  {COLONNES_GRILLE.map((c, i) => (
                     <th key={c.nom} scope="col" className={cn("w-[15%] px-4 py-3 text-center font-semibold", i === 0 && FOND_ESSAI)}>
                       {c.nom}
-                      {"detail" in c ? (
+                      {c.detail ? (
                         <span className="block text-[0.72rem] font-normal text-[color:var(--board-slate-soft)]">{c.detail}</span>
                       ) : null}
                     </th>
@@ -94,8 +94,15 @@ export function Tarif({ compte }: { compte?: CompteLanding }) {
                     <tr key={l.libelle} className="border-b border-[color:var(--board-slate-pale)] last:border-b-0">
                       <th scope="row" className="px-4 py-3 text-left font-normal">{l.libelle}</th>
                       {l.cases.map((v, i) => (
-                        <td key={COLONNES[i].nom} className={cn("px-4 py-3 text-center", TON[v], i === 0 && FOND_ESSAI)}>
-                          {v}
+                        <td key={COLONNES_GRILLE[i].nom} className={cn("px-4 py-3 text-center", TON_CASE[v], i === 0 && FOND_ESSAI)}>
+                          {SENS_CASE[v] ? (
+                            <>
+                              <span aria-hidden>{v}</span>
+                              <span className="sr-only">{SENS_CASE[v]}</span>
+                            </>
+                          ) : (
+                            v
+                          )}
                         </td>
                       ))}
                     </tr>

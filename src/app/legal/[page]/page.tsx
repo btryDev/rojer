@@ -25,10 +25,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function PageLegale({ params }: Props) {
   const page = pageDe((await params).page);
   if (!page) notFound();
+  const compte = await compteDeLaSession();
 
   return (
     <main className="flex min-h-svh flex-col bg-[color:var(--board-card)]">
-      <LandingHeader compte={await compteDeLaSession()} />
+      <LandingHeader compte={compte} />
       <section className="lp-shell flex-1 py-20 sm:py-28">
         <h1 className="lp-titre lp-h2">{page.titre}</h1>
         <p className="lp-lede mt-6 max-w-[var(--board-mesure)]">
@@ -37,7 +38,7 @@ export default async function PageLegale({ params }: Props) {
         </p>
         <BoutonContact className="lp-btn-ink mt-8" />
       </section>
-      <SiteFooter />
+      <SiteFooter compte={compte} />
     </main>
   );
 }

@@ -9,6 +9,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import type { CompteLanding } from "./compte";
 import { BoutonContact } from "./BoutonContact";
+import { SEGMENT, SEGMENTS } from "./segment";
 import { enEuros, OFFRES, parMoisSurUnAn, type Offre, type Periode } from "./tarif-donnees";
 
 /** Les deux teintes d'une carte : claire, ou d'encre pour l'offre mise en avant. */
@@ -64,14 +65,14 @@ export function TarifOffres({
 
   return (
     <>
-      <div role="group" aria-label="Période de facturation" className="mx-auto mt-9 flex w-max gap-1 rounded-full bg-[color:var(--board-slate-pale)] p-1">
+      <div role="group" aria-label="Période de facturation" className={cn(SEGMENTS, "mx-auto mt-9 flex w-max gap-1")}>
         {(["mois", "an"] as const).map((p) => (
           <button
             key={p}
             type="button"
             aria-pressed={periode === p}
             onClick={() => setPeriode(p)}
-            className="inline-flex items-center gap-2 rounded-full px-[18px] py-[9px] text-[0.85rem] font-semibold text-[color:var(--board-slate-mid)] transition-colors aria-pressed:bg-[color:var(--board-card)] aria-pressed:text-[color:var(--board-ink)] aria-pressed:shadow-[0_1px_2px_rgba(13,18,36,0.08),0_0_0_1px_rgba(13,18,36,0.04)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--board-ink)]"
+            className={cn(SEGMENT, "inline-flex items-center gap-2 px-[18px] py-[9px] text-[0.85rem]")}
           >
             {p === "mois" ? "Mensuel" : "Annuel"}
             {p === "an" ? (

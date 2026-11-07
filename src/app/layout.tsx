@@ -14,7 +14,9 @@ export const metadata: Metadata = {
   // absolue : la base est l'adresse publique du déploiement, lue par la même
   // règle que les liens et QR codes (`publicAppUrl`). Inconnue en production,
   // on ne lève pas ici — ce serait faire tomber toutes les pages : Next
-  // retombe alors sur l'URL de Vercel.
+  // retombe alors sur l'URL de Vercel, ou sur localhost hors Vercel (Clever
+  // Cloud) — d'où PUBLIC_APP_URL à poser sur chaque déploiement. Sa forme
+  // est validée au démarrage (`env.ts`).
   ...(refusUrlPublique() ? {} : { metadataBase: new URL(publicAppUrl()) }),
   // Fermé aux moteurs tant que le site n'est pas ouvert (`lib/indexation.ts`).
   ...(OUVERT_AUX_MOTEURS ? {} : { robots: { index: false, follow: false } }),

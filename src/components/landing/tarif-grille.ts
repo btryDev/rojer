@@ -13,12 +13,15 @@ export type LigneGrille = { libelle: string; cases: [string, string, string, str
 export type GroupeGrille = { titre: string; lignes: LigneGrille[] };
 
 /** Les quatre colonnes de la grille, dans l'ordre des cases. */
-export const COLONNES_GRILLE = [
+export const COLONNES_GRILLE: readonly { nom: string; detail?: string }[] = [
   { nom: "Essai", detail: "30 jours, sur Essentiel" },
   { nom: "Essentiel" },
   { nom: "Pro" },
   { nom: "Sur mesure" },
-] as const;
+];
+
+/** Lue à voix haute, une coche ne dit rien : son sens en toutes lettres. */
+export const SENS_CASE: Record<string, string> = { [INCLUS]: "Inclus", [NON_INCLUS]: "Non inclus" };
 
 /** Le ton d'une case qui ne porte pas un chiffre. */
 export const TON_CASE: Record<string, string> = {

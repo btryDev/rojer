@@ -8,9 +8,10 @@
 // `envoyer` change (une action serveur à la place du mailto).
 
 import { useEffect, useId, useRef, useState } from "react";
+import { ChampBoard } from "@/components/ui-kit/ChampBoard";
 import { PanneauModal } from "@/components/ui-kit/PanneauModal";
 import { cn } from "@/lib/utils";
-import { mailtoContact, MESSAGE_MAX, SUJETS_CONTACT, type SujetContact } from "./contact";
+import { MAILTO_MAX, mailtoContact, MESSAGE_MAX, SUJETS_CONTACT, type SujetContact } from "./contact";
 
 export function BoutonContact({
   sujet = "Une question sur Rojer",
@@ -22,32 +23,40 @@ export function BoutonContact({
   children?: React.ReactNode;
 }) {
   const [ouvert, setOuvert] = useState(false);
-  const [parti, setParti] = useState(false);
+  // Après l'envoi, le formulaire reste là, rempli : rien ne dit que la
+  // messagerie s'est vraiment ouverte (aucune n'est réglée sur certains
+  // ordinateurs), et ce qui a été écrit ne doit pas se perdre.
+  const [etat, setEtat] = useState<"saisie" | "parti" | "trop-long">("saisie");
   const id = useId();
-  // Le bouton d'envoi disparaît avec le formulaire : le focus passe à la
-  // confirmation, annoncée (`role="status"`), plutôt que de tomber sur body.
-  const confirmation = useRef<HTMLParagraphElement>(null);
+  const statut = useRef<HTMLParagraphElement>(null);
   useEffect(() => {
-    if (parti) confirmation.current?.focus();
-  }, [parti]);
+    if (etat !== "saisie") statut.current?.focus();
+  }, [etat]);
 
   const fermer = () => {
     setOuvert(false);
-    setParti(false);
+    setEtat("saisie");
   };
 
   function envoyer(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     const champ = (nom: string) => String(f.get(nom) ?? "");
-    window.location.href = mailtoContact({
+    const lien = mailtoContact({
       sujet: champ("sujet") as SujetContact,
       nom: champ("nom"),
       email: champ("email"),
       structure: champ("structure"),
       message: champ("message"),
     });
-    setParti(true);
+    // Encodé, le message s'allonge (un « é » vaut 6 caractères) : au-delà,
+    // certaines messageries tronquent ou n'ouvrent rien.
+    if (lien.length > MAILTO_MAX) {
+      setEtat("trop-long");
+      return;
+    }
+    window.location.href = lien;
+    setEtat("parti");
   }
 
   return (
@@ -56,23 +65,21 @@ export function BoutonContact({
         {children}
       </button>
       <PanneauModal ouvert={ouvert} surFermer={fermer} surtitre="Contact" titre="Écrivez-nous">
-        {parti ? (
-          <>
-            <p ref={confirmation} role="status" tabIndex={-1} className="m-0 outline-none">
-              {/* Tant que l'envoi ne passe pas par un service d'e-mail, la
-                  confirmation ne dit pas « envoyé » : le message part de la
-                  messagerie du visiteur, qui vient de s'ouvrir. */}
-              Votre messagerie s&apos;est ouverte avec votre message : envoyez-le
-              pour qu&apos;il nous parvienne.
-            </p>
-            <div>
-              <button type="button" onClick={fermer} className="lp-btn lp-btn-ink">
-                Fermer
-              </button>
-            </div>
-          </>
-        ) : (
-          <form onSubmit={envoyer} className="space-y-4">
+        {etat !== "saisie" ? (
+          // Tant que l'envoi ne passe pas par un service d'e-mail, rien ne
+          // dit « envoyé » : le message part de la messagerie du visiteur.
+          <p
+            ref={statut}
+            role="status"
+            tabIndex={-1}
+            className="m-0 rounded-[14px] bg-[color:var(--board-blue-pale)] px-4 py-3 text-[color:var(--board-ink)] outline-none"
+          >
+            {etat === "parti"
+              ? "Votre messagerie s'ouvre avec votre message : envoyez-le pour qu'il nous parvienne. Si rien ne s'ouvre, aucune messagerie n'est réglée sur cet appareil."
+              : "Votre message est trop long pour partir d'un seul envoi : raccourcissez-le un peu."}
+          </p>
+        ) : null}
+        <form onSubmit={envoyer} className="space-y-4">
             <div>
               <label className="label-board" htmlFor={`${id}-sujet`}>
                 Sujet
@@ -86,25 +93,10 @@ export function BoutonContact({
               </select>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="label-board" htmlFor={`${id}-nom`}>
-                  Nom *
-                </label>
-                <input id={`${id}-nom`} name="nom" required autoComplete="name" maxLength={120} className="champ-board" />
-              </div>
-              <div>
-                <label className="label-board" htmlFor={`${id}-email`}>
-                  E-mail *
-                </label>
-                <input id={`${id}-email`} name="email" type="email" required autoComplete="email" maxLength={200} className="champ-board" />
-              </div>
+              <ChampBoard id={`${id}-nom`} label="Nom" requis name="nom" autoComplete="name" maxLength={120} />
+              <ChampBoard id={`${id}-email`} label="E-mail" requis name="email" type="email" autoComplete="email" maxLength={200} />
             </div>
-            <div>
-              <label className="label-board" htmlFor={`${id}-structure`}>
-                Structure (facultatif)
-              </label>
-              <input id={`${id}-structure`} name="structure" autoComplete="organization" maxLength={160} className="champ-board" />
-            </div>
+            <ChampBoard id={`${id}-structure`} label="Structure (facultatif)" name="structure" autoComplete="organization" maxLength={160} />
             <div>
               <label className="label-board" htmlFor={`${id}-message`}>
                 Message *
@@ -116,11 +108,10 @@ export function BoutonContact({
                 Envoyer
               </button>
               <button type="button" onClick={fermer} className="lp-btn lp-btn-clair">
-                Annuler
+                {etat === "parti" ? "Fermer" : "Annuler"}
               </button>
             </div>
           </form>
-        )}
       </PanneauModal>
     </>
   );
