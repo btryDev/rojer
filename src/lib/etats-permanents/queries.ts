@@ -52,6 +52,13 @@ import {
   type EtatParLesTitres,
   type TitreDeclare,
 } from "./par-les-titres";
+import { estEnPlace } from "./en-place";
+import {
+  etabliParLeParc,
+  etatsParLeParc,
+  type DeclarationLue,
+  type EtatParLeParc,
+} from "./par-le-parc";
 
 export type LigneEtatPermanent = {
   obligation: Obligation;
@@ -89,6 +96,13 @@ export type LigneEtatPermanent = {
    * déclaration est ignorée. `null` pour toute autre ligne.
    */
   parLesTitres: EtatParLesTitres | null;
+  /**
+   * L'état ÉTABLI D'APRÈS LE PARC déclaré (`par-le-parc.ts`, ADR-057 § 4) :
+   * en place dès qu'un appareil de la catégorie est déclaré. Elle ne se coche
+   * pas, comme une ligne établie d'après les titres. `null` pour toute autre
+   * ligne.
+   */
+  parLeParc: EtatParLeParc | null;
   /**
    * La ligne reçoit-elle un fichier ? Vrai pour les seuls écrits que le
    * règlement fait annexer au registre, là où l'annexion vaut
@@ -166,6 +180,14 @@ export type EtatsPermanentsDuDossier = {
    * document les portent. Seul l'endroit où on les déclare change.
    */
   parLEquipe: LigneEtatPermanent[];
+  /**
+   * Les obligations de présence établies d'après le parc (`par-le-parc.ts`,
+   * ADR-057 § 4) : elles s'affichent en tête de leur groupe sur la page
+   * Équipements, et ne figurent ni dans `familles` ni dans `faits`. Elles
+   * restent COMPTÉES dans `enPlace` et `total` : le score et le document les
+   * portent. Comme `parLEquipe`, seul l'endroit où on les voit change.
+   */
+  parLeParc: LigneEtatPermanent[];
   /**
    * Le compteur d'en-tête. **Mesuré, jamais écrit à la main** : le brief le
    * demande, et ce dépôt s'est fait prendre plusieurs fois par des comptes
@@ -336,6 +358,13 @@ export async function listerEtatsPermanents(
   const parBloc = new Map<string, LigneEtatPermanent[]>();
   const faits: LigneEtatPermanent[] = [];
   const parLEquipe: LigneEtatPermanent[] = [];
+  const parLeParc: LigneEtatPermanent[] = [];
+  // L'état des obligations de présence, d'après le parc et les déclarations
+  // (`etatsParLeParc`, le rassemblement que la page Équipements appelle aussi).
+  const parLeParcParObligation = etatsParLeParc(
+    equipements,
+    new Map(declarations.map((d) => [d.obligationId, d])),
+  );
   let enPlace = 0;
   let total = 0;
   const parLesTitresCompte = { total: 0, enPlace: 0 };
@@ -354,7 +383,14 @@ export async function listerEtatsPermanents(
     const parLesTitres = titre
       ? etatParLesTitres(titre, titresParObligation.get(titre.id) ?? [], now)
       : null;
+    // Une ligne établie d'après les titres ne se coche pas : une ancienne
+    // déclaration y est ignorée. D'après le parc, elle compte encore — un DAE
+    // partagé, ou une ancienne case gardée avec un rappel (`par-le-parc.ts`).
     const d = parLesTitres ? null : (parObligation.get(o.id) ?? null);
+    const etatDuParc =
+      !parLesTitres && etabliParLeParc(o, mode.mode)
+        ? (parLeParcParObligation.get(o.id) ?? null)
+        : null;
     const ligne: LigneEtatPermanent = {
       obligation: o,
       mode: mode.mode,
@@ -373,16 +409,18 @@ export async function listerEtatsPermanents(
       ),
       fondement: fondementDe(o, contexteFondement),
       parLesTitres,
-      // Une ligne établie d'après les titres ne se coche pas : elle ne reçoit
-      // pas non plus de fichier, déposer y vaudrait déclarer.
-      accepteUnFichier: !parLesTitres && annexeDeLaLigne(o.id, projete) !== null,
+      parLeParc: etatDuParc,
+      // Une ligne établie d'après les titres ou le parc ne se coche pas : elle
+      // ne reçoit pas non plus de fichier, déposer y vaudrait déclarer.
+      accepteUnFichier:
+        !parLesTitres && !etatDuParc && annexeDeLaLigne(o.id, projete) !== null,
       piece: piecesParObligation.get(o.id) ?? null,
       piecePrecedente: precedentesParObligation.get(o.id) ?? null,
     };
 
     if (mode.compteDansLEnTete) {
       total += 1;
-      if (parLesTitres ? parLesTitres.enPlace : ligne.declareLe) enPlace += 1;
+      if (estEnPlace(ligne)) enPlace += 1;
       if (parLesTitres) {
         parLesTitresCompte.total += 1;
         if (parLesTitres.enPlace) parLesTitresCompte.enPlace += 1;
@@ -392,6 +430,12 @@ export async function listerEtatsPermanents(
       if (ligne.declareLe) faitsDatesRenseignes += 1;
     }
 
+    // ADR-057 § 4 : une obligation de présence se voit sur la page
+    // Équipements, en tête de son groupe.
+    if (etatDuParc) {
+      parLeParc.push(ligne);
+      continue;
+    }
     // ADR-047 : une formation se suit dans ~~Équipe › Formations~~ [2026-10-24 : section « Formations à organiser » d'Équipe].
     if (estFormation(o)) {
       parLEquipe.push(ligne);
@@ -424,9 +468,7 @@ export async function listerEtatsPermanents(
   // descendre au bas de son groupe et remonter toutes les suivantes. Deux
   // clics au même pixel déclaraient deux obligations différentes.
   const compter = (lignes: LigneEtatPermanent[]) => ({
-    enPlace: lignes.filter((l) =>
-      l.parLesTitres ? l.parLesTitres.enPlace : l.declareLe !== null,
-    ).length,
+    enPlace: lignes.filter(estEnPlace).length,
     total: lignes.length,
   });
   const famille = (
@@ -499,6 +541,7 @@ export async function listerEtatsPermanents(
     familles,
     faits,
     parLEquipe,
+    parLeParc,
     enPlace,
     total,
     parLesTitres: parLesTitresCompte,
@@ -569,6 +612,7 @@ export async function etatsPermanentsDuDossier(
       familles: [],
       faits: [],
       parLEquipe: [],
+      parLeParc: [],
       enPlace: 0,
       total: 0,
       parLesTitres: { total: 0, enPlace: 0 },
@@ -604,4 +648,26 @@ export async function compterEtatsPermanents(
     userId,
   );
   return { total, enPlace };
+}
+
+/**
+ * Les déclarations « en place » des lignes de présence de la page
+ * Équipements (ADR-057 § 4) : le matériel de premiers secours, le DAE
+ * partagé, les anciennes cases des extincteurs et de l'alarme. Bornée au
+ * compte comme la lecture de l'écran (`listerEtatsPermanents`).
+ */
+export async function declarationsDePresence(
+  etablissementId: string,
+  obligationIds: readonly string[],
+): Promise<Map<string, DeclarationLue>> {
+  const { user, db } = await requireCompte();
+  const lignes = await db.declarationEtatPermanent.findMany({
+    where: {
+      etablissementId,
+      etablissement: { entreprise: { userId: user.id } },
+      obligationId: { in: [...obligationIds] },
+    },
+    select: { obligationId: true, declareLe: true, note: true },
+  });
+  return new Map(lignes.map((l) => [l.obligationId, { declareLe: l.declareLe, note: l.note }]));
 }

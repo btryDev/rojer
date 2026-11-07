@@ -774,7 +774,9 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     4 novembre 1993, décennale de l'extincteur ERP et signalisation des
     extincteurs au niveau audit ; rien ne sort du référentiel (**proposée le
     2026-11-05**, ~~non codée~~ [2026-11-06 : lot A codé, `lot/adr-057-a` —
-    référentiel `2026-11-06.1`, moteur de calendrier 8 ; lots B (écrans) et C
+    référentiel `2026-11-06.1`, moteur de calendrier 8 ; lot B codé,
+    `lot/adr-057-b` — les présences DAE, extincteurs, alarme sonore en tête de
+    leur groupe sur Équipements, en place d'après le parc ; lot C
     (catégories) à venir, `docs/plan-adr-057.md`])
 
 [2026-10-15, ménage des ADR : 037, 038 et 043 manquaient à cette liste ;

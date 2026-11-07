@@ -273,6 +273,7 @@ function ligne(l: {
   aConfirmer: string | null;
   questionsSansReponse: readonly string[];
   parLesTitres: { phraseSansNom: string } | null;
+  parLeParc: { phrase: string } | null;
 }): LigneEtatPermanentPdf {
   return {
     libelle: l.obligation.libelle,
@@ -283,7 +284,9 @@ function ligne(l: {
     // (`docs/rgpd.md` § 6) — l'écran nomme, le PDF date.
     declaration: l.parLesTitres
       ? l.parLesTitres.phraseSansNom
-      : l.declareLe
+      : l.parLeParc
+        ? l.parLeParc.phrase
+        : l.declareLe
         ? phraseDeclaration(l.mode, formatDateCourte(l.declareLe))
         : sansDeclaration(l.mode),
     aConfirmer: [
@@ -313,6 +316,9 @@ export function blocEtatsPermanents(
   const etats = [
     ...d.familles.flatMap((f) => f.blocs.flatMap((b) => b.lignes)),
     ...d.parLEquipe.filter((l) => l.mode !== "fait"),
+    // Établies d'après le parc (ADR-057 § 4) : quittent l'écran, pas le
+    // document.
+    ...d.parLeParc,
   ]
     .sort(
       (a, b) =>
