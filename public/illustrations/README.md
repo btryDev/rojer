@@ -42,3 +42,9 @@ terrasse », aux couleurs des sections.]
 - **Ajouter une planche** : déposer le fichier ici ne l'affiche pas. Il faut
   l'ajouter à `ILLUSTRATIONS_BATIMENT` et à la règle de choix ; un test
   vérifie que chaque planche déclarée existe.
+
+## Page publique
+
+Les images de la page publique (photos, illustration « Transparent »,
+pictos des documents) ne sont plus ici : elles sont importées depuis
+`src/assets/landing/`, qui a son propre README.

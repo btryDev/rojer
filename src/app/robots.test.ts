@@ -1,6 +1,7 @@
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { OUVERT_AUX_MOTEURS } from "@/lib/indexation";
 import robots, { RACINES_EXCLUES, RACINES_INDEXABLES } from "./robots";
 
 /**
@@ -10,7 +11,13 @@ import robots, { RACINES_EXCLUES, RACINES_INDEXABLES } from "./robots";
 describe("robots.txt", () => {
   const disallow = [robots().rules].flat().flatMap((r) => [r.disallow ?? []].flat());
 
+  it("fermé aux moteurs, interdit tout, accueil compris", () => {
+    if (OUVERT_AUX_MOTEURS) return;
+    expect(disallow).toEqual(["/"]);
+  });
+
   it("exclut les pages publiques, l'application et /api", () => {
+    if (!OUVERT_AUX_MOTEURS) return; // tout est déjà interdit
     for (const p of [
       "/acces/",
       "/accessibilite/",
@@ -25,7 +32,8 @@ describe("robots.txt", () => {
     }
   });
 
-  it("n'exclut pas l'accueil", () => {
+  it("ouvert aux moteurs, n'exclut pas l'accueil", () => {
+    if (!OUVERT_AUX_MOTEURS) return;
     expect(disallow).not.toContain("/");
   });
 

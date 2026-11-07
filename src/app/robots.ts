@@ -1,10 +1,11 @@
 import type { MetadataRoute } from "next";
+import { OUVERT_AUX_MOTEURS } from "@/lib/indexation";
 
 /**
  * `robots.txt` (audit Next.js du 2026-10-14, B11).
  *
- * Seules la page d'accueil et les pages d'entrée (`/login`, `/signup`) sont
- * offertes aux moteurs. Tout le reste est exclu :
+ * Seules la page d'accueil, les pages d'entrée (`/login`, `/signup`) et les
+ * pages légales (`/legal/…`) sont offertes aux moteurs. Tout le reste est exclu :
  * - **les pages publiques à lien** — `/acces/[jeton]`, `/signe/[id]`,
  *   `/verifier/[id]` : elles ne valent que pour qui a reçu le lien, et un robot
  *   qui suivrait un jeton n'a rien à y faire ;
@@ -25,8 +26,11 @@ import type { MetadataRoute } from "next";
  *
  * Toute nouvelle racine de `src/app` doit être rangée ici, d'un côté ou de
  * l'autre : `robots.test.ts` le vérifie.
+ *
+ * Tant que le site n'est pas ouvert aux moteurs (`OUVERT_AUX_MOTEURS`,
+ * `lib/indexation.ts`), tout est interdit, accueil compris.
  */
-export const RACINES_INDEXABLES = ["/", "/login", "/signup"] as const;
+export const RACINES_INDEXABLES = ["/", "/login", "/signup", "/legal/"] as const;
 
 export const RACINES_EXCLUES = [
   // Pages publiques, à lien ou par slug.
@@ -47,6 +51,7 @@ export const RACINES_EXCLUES = [
 ] as const;
 
 export default function robots(): MetadataRoute.Robots {
+  if (!OUVERT_AUX_MOTEURS) return { rules: { userAgent: "*", disallow: "/" } };
   return {
     rules: {
       userAgent: "*",

@@ -2,11 +2,36 @@ import type { Metadata, Viewport } from "next";
 import { connection } from "next/server";
 import { variablesPolices } from "./polices";
 import "./globals.css";
+import { OUVERT_AUX_MOTEURS } from "@/lib/indexation";
+import { publicAppUrl, refusUrlPublique } from "@/lib/url-publique";
+
+const TITRE = "Rojer — Conformité santé-sécurité TPE/PME";
+const DESCRIPTION =
+  "Plateforme continue d'accompagnement à la conformité santé-sécurité pour dirigeants de TPE/PME : DUERP, calendrier de vérifications, registre de sécurité, plan d'actions.";
 
 export const metadata: Metadata = {
-  title: "Rojer — Conformité santé-sécurité TPE/PME",
-  description:
-    "Plateforme continue d'accompagnement à la conformité santé-sécurité pour dirigeants de TPE/PME : DUERP, calendrier de vérifications, registre de sécurité, plan d'actions.",
+  // Les images de partage (`opengraph-image.jpg`) sont annoncées en adresse
+  // absolue : la base est l'adresse publique du déploiement, lue par la même
+  // règle que les liens et QR codes (`publicAppUrl`). Inconnue en production,
+  // on ne lève pas ici — ce serait faire tomber toutes les pages : Next
+  // retombe alors sur l'URL de Vercel, ou sur localhost hors Vercel (Clever
+  // Cloud) — d'où PUBLIC_APP_URL à poser sur chaque déploiement. Sa forme
+  // est validée au démarrage (`env.ts`).
+  ...(refusUrlPublique() ? {} : { metadataBase: new URL(publicAppUrl()) }),
+  // Fermé aux moteurs tant que le site n'est pas ouvert (`lib/indexation.ts`).
+  ...(OUVERT_AUX_MOTEURS ? {} : { robots: { index: false, follow: false } }),
+  title: TITRE,
+  description: DESCRIPTION,
+  // L'aperçu d'un lien partagé (LinkedIn, WhatsApp, mail) : l'image vient de
+  // `opengraph-image.jpg`, posée à côté de ce fichier.
+  openGraph: {
+    type: "website",
+    locale: "fr_FR",
+    siteName: "Rojer",
+    title: TITRE,
+    description: DESCRIPTION,
+  },
+  twitter: { card: "summary_large_image" },
 };
 
 /**

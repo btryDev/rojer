@@ -51,7 +51,9 @@ jobs:
       # types, et rien d'autre ne les contrôlait avant `next build`. Le
       # client Prisma qu'ils lisent est généré au postinstall, juste au-dessus.
       - name: Vérifier les types
-        run: pnpm exec tsc --noEmit
+        # `next typegen` écrit next-env.d.ts (types des imports d'images) et
+        # les types de routes, que le dépôt ignore : sans lui, tsc ne les a pas.
+        run: pnpm exec next typegen && pnpm exec tsc --noEmit
 
       # Le lint (même audit) : entré quand les 3 erreurs
       # react-hooks/set-state-in-effect du carnet sanitaire ont été corrigées.

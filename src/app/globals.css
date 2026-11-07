@@ -47,6 +47,11 @@
 }
 
 :root {
+  /* Hauteur de l'en-tête de la page publique : la barre, et le hero qui
+     passe dessous. Le cadran la reprend en JS (`ENTETE_PX`, Cadran.tsx). */
+  --lp-entete: 68px;
+  /* Hauteur de la barre en îlot ; son rayon en découle (.lp-nav--ilot). */
+  --lp-ilot-h: 54px;
   /* Palette « Union » — blanc cassé quasi pur + navy d'impulsion */
   --paper: oklch(0.985 0.002 250); /* canvas extérieur, très clair */
   --paper-elevated: oklch(1 0 0); /* surface carte, blanc pur */
@@ -727,10 +732,8 @@
   .lp-shell {
     margin-inline: auto;
     width: 100%;
-    /* 1600 et non 1240 : la scène du hero (texte + photo + fiches) a
-       besoin de cette largeur pour que rien ne se touche, et tout le
-       reste de la page s'aligne dessus — en-tête compris. Sur un écran
-       large, 1400 laissait des gouttières trop grasses de chaque côté. */
+    /* 1600 : toute la page s'aligne dessus, en-tête compris. Sur un
+       écran large, 1400 laissait des gouttières trop grasses. */
     max-width: 1600px;
     padding-inline: clamp(20px, 5vw, 64px);
   }
@@ -783,10 +786,11 @@
     width: calc(100% - 2 * clamp(16px, 4vw, 40px));
     max-width: 1120px;
     margin-top: 10px;
-    /* Asymétrique : la marque a besoin d'air à gauche, le bouton-pilule
-       de droite apporte déjà le sien. */
-    padding-inline: 22px 8px;
-    border-radius: 9999px;
+    /* La marque est une pastille, comme le bouton de droite : chacune
+       apporte son air, l'îlot ne garde que la même marge des deux côtés. */
+    padding-inline: 8px;
+    /* Une pilule : la moitié de la hauteur de l'îlot. */
+    border-radius: calc(var(--lp-ilot-h) / 2);
     /* 88 % et non 58 %. L'îlot traverse la bande noire du manifeste, et
        58 % de blanc par-dessus l'encre donne un gris à 2,2:1 sous les
        liens (--board-slate-mid) : « Comprendre » et « Tarif » s'y lisaient
@@ -838,11 +842,11 @@
   .lp-nav-barre {
     position: relative;
     z-index: 1;
-    height: 68px;
+    height: var(--lp-entete);
     transition: height 620ms cubic-bezier(0.32, 0.72, 0, 1);
   }
   .lp-nav--ilot .lp-nav-barre {
-    height: 54px;
+    height: var(--lp-ilot-h);
   }
 
   /* La reprise d'opacité pour les navigateurs sans backdrop-filter a été
@@ -869,11 +873,31 @@
     text-wrap: balance;
     color: var(--board-ink);
   }
+  /* Le titre du hero et la phrase de marque : sur une ligne dès `lg`, la
+     taille est bornée pour qu'ils ne débordent pas sur la photo. */
   .lp-h1 {
-    font-size: clamp(2.6rem, 5.6vw, 4.5rem);
+    font-size: clamp(2.4rem, 6vw, 3.6rem);
+  }
+  @media (width >= 64rem) {
+    .lp-h1 {
+      font-size: clamp(2.6rem, 3.9vw, 4rem);
+    }
+  }
+  /* Grand écran : la photo du hero fait 2 560 px, le titre suit d'un cran. */
+  @media (width >= 120rem) {
+    .lp-h1 {
+      font-size: clamp(4rem, 3.1vw, 5rem);
+    }
   }
   .lp-h2 {
     font-size: clamp(1.9rem, 3.6vw, 3.1rem);
+  }
+  /* Le titre d'un temps dans une section (« Simple à utiliser ») : un cran
+     au-dessus de .lp-h3, sous .lp-h2. */
+  .lp-h3-temps {
+    font-size: clamp(1.5rem, 2.2vw, 1.9rem);
+    letter-spacing: -0.03em;
+    line-height: 1.12;
   }
   .lp-h3 {
     font-size: clamp(1.15rem, 1.5vw, 1.35rem);
@@ -1057,6 +1081,22 @@
     background: var(--board-card);
     box-shadow: inset 0 0 0 1px rgba(10, 10, 10, 0.32);
   }
+  /* Les deux mêmes, posés sur un fond sombre (photo du hero, en-tête). */
+  .lp-btn-blanc {
+    background: #fff;
+    color: var(--board-ink);
+  }
+  .lp-btn-blanc:hover {
+    background: var(--board-slate-pale);
+  }
+  .lp-btn-verre {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+  }
+  .lp-btn-verre:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
   .lp-btn .lp-fleche {
     transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
   }
@@ -1064,7 +1104,7 @@
     transform: translateX(3px);
   }
 
-  /* Pilules de statut — mêmes champs que la frise du board. */
+  /* Pilule — la forme seule ; la couleur vient de l'appelant. */
   .lp-pill {
     display: inline-flex;
     align-items: center;
@@ -1076,317 +1116,80 @@
     line-height: 1;
     white-space: nowrap;
   }
-  .lp-pill-retard {
-    background: var(--board-signal);
-    color: var(--board-signal-ink);
-  }
-  .lp-pill-proche {
-    background: var(--board-amber);
-    color: var(--board-amber-ink);
-  }
-  .lp-pill-fait {
-    background: var(--board-green);
-    color: var(--board-green-ink);
-  }
-  .lp-pill-bleu {
-    background: var(--board-blue-pale);
-    color: var(--board-blue-ink);
-  }
-  .lp-pill-neutre {
-    background: var(--board-slate-pale);
-    color: var(--board-slate-mid);
-  }
 
-  /* Apparition au défilement — 12 px et une seule fois. */
-  .lp-reveal {
+  /* Apparition au défilement — une seule fois.
+     Le contenu est VISIBLE par défaut : seul `Reveal`, une fois le
+     JavaScript chargé, cache ce qui est encore sous l'écran
+     (`data-vu="false"`), puis le montre (`"true"`). Caché d'emblée dans le
+     CSS, un bloc restait invisible tant que le JS n'avait pas tourné — sur
+     un téléphone lent ou si le JS échoue, un grand blanc à la place du
+     contenu (2026-11-07). Le masquage est instantané ; seule l'apparition
+     est animée. */
+  .lp-reveal[data-vu="false"] {
     opacity: 0;
     transform: translateY(12px);
+  }
+  .lp-reveal[data-vu="true"] {
     transition:
       opacity 700ms cubic-bezier(0.16, 1, 0.3, 1),
       transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
     transition-delay: var(--lp-delai, 0ms);
   }
+  /* L'apparition ample (Reveal `ample`) : déclenchée plus tard, un peu plus
+     de course (24 et 32 px contre 12) et bien plus de durée, sur une courbe
+     qui freine longtemps — l'élément se pose, il ne surgit pas
+     (2026-11-07 : « trop brusque »). Le média monte en se dézoomant à
+     peine. */
+  .lp-reveal-texte[data-vu="false"] {
+    transform: translateY(24px);
+  }
+  .lp-reveal-media[data-vu="false"] {
+    transform: translateY(32px) scale(0.98);
+  }
+  .lp-reveal-texte[data-vu="true"],
+  .lp-reveal-media[data-vu="true"] {
+    transition:
+      opacity 1400ms cubic-bezier(0.25, 0.1, 0.25, 1),
+      transform 1500ms cubic-bezier(0.19, 1, 0.22, 1);
+    /* Après l'abrégée, qui remet le délai à zéro : sans cette ligne, la
+       cascade de `delai` est perdue (revue de la PR #209). */
+    transition-delay: var(--lp-delai, 0ms);
+  }
+
+  /* La fiche détachée — matière des cartes mises en avant de la page
+     publique (la vidéo de « Un outil simple », l'offre Pro) : des ombres
+     empilées, toutes issues d'une même lumière haute (un contact net, une
+     diffusion moyenne, une longue portée), aucune perspective. Dans la
+     couche `components`, pour qu'un utilitaire (`bg-*`) la surcharge. */
+  .lp-fiche-carte {
+    background: var(--board-card);
+    border-radius: 26px;
+    box-shadow:
+      0 0 0 1px rgba(13, 18, 36, 0.05),
+      0 2px 4px rgba(13, 18, 36, 0.04),
+      0 16px 32px -18px rgba(13, 18, 36, 0.18),
+      0 56px 90px -56px rgba(13, 18, 36, 0.42);
+  }
+  /* Sur fond d'encre, la même lumière porte plus loin. */
+  .lp-fiche-carte-encre {
+    background: var(--board-ink);
+    color: #fff;
+    box-shadow:
+      0 16px 32px -18px rgba(13, 18, 36, 0.3),
+      0 56px 90px -56px rgba(13, 18, 36, 0.5);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Mouvement réduit : plus de déplacement, mais un fondu reste — il ne
+     fait rien bouger, et sans lui la page paraissait figée (2026-11-07).
+     Un fondu n'est pas du mouvement au sens de WCAG 2.3.3. */
+  .lp-reveal[data-vu] {
+    transform: none;
+  }
   .lp-reveal[data-vu="true"] {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-/* Les lignes du brief tombent une à une à l'ouverture. En CSS, pour que
-   `prefers-reduced-motion` les serve immédiatement sans détour par JS. */
-@keyframes lp-tombe {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-.lp-tombe {
-  animation: lp-tombe 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-@media (prefers-reduced-motion: reduce) {
-  .lp-tombe {
-    animation: none;
-  }
-}
-
-/* =============================================================
-   La scène du hero — plusieurs fiches détachées, posées à plat
-   -------------------------------------------------------------
-   La perspective a été retirée : à ces angles-là, l'œil lisait des
-   cartes de travers plutôt qu'une profondeur. Ce qui reste fait le
-   même travail sans tordre une seule ligne — décalages latéraux,
-   chevauchements, et surtout des ombres empilées qui écartent les
-   fiches les unes des autres.
-   Pas de neumorphisme au sens strict non plus (relief embossé,
-   contrastes trop faibles pour un texte réglementaire) : ce qu'on
-   garde de cette famille, c'est la matière.
-   ============================================================= */
-/* Ombres empilées, toutes issues d'une même lumière haute : un contact
-   net, une diffusion moyenne, une longue portée. Aucune n'est décalée
-   latéralement — la lumière ne vient pas de côté. */
-.lp-fiche-carte {
-  background: var(--board-card);
-  border-radius: 24px;
-  box-shadow:
-    0 0 0 1px rgba(13, 18, 36, 0.05),
-    0 2px 4px rgba(13, 18, 36, 0.04),
-    0 16px 32px -18px rgba(13, 18, 36, 0.18),
-    0 56px 90px -56px rgba(13, 18, 36, 0.42);
-  transition:
-    transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 260ms ease;
-}
-/* Deux variantes de la même matière. Elles vivent ici plutôt qu'en
-   utilitaires Tailwind parce que `.lp-fiche-carte` n'est pas dans une
-   couche : en CSS cascade layers, une règle hors couche l'emporte sur
-   tout `@layer utilities`, donc un `bg-[…]` ou un `rounded-full` posé
-   sur la fiche serait silencieusement ignoré. */
-.lp-fiche-encre {
-  background: var(--board-ink);
-}
-.lp-fiche-pastille {
-  border-radius: 999px;
-}
-
-/* Sous le doigt : la fiche s'enfonce d'un cheveu et son ombre se
-   resserre. C'est tout ce qu'il faut pour lire « on a cliqué ». */
-.lp-fiche-carte[data-presse="true"] {
-  transform: scale(0.984);
-  box-shadow:
-    0 0 0 1px rgba(13, 18, 36, 0.06),
-    0 1px 2px rgba(13, 18, 36, 0.05),
-    0 6px 14px -8px rgba(13, 18, 36, 0.18),
-    0 20px 40px -28px rgba(13, 18, 36, 0.35);
-}
-
-/* Chaque fiche surgit de son ombre. Peu de course, beaucoup de durée :
-   c'est ce rapport-là qui fait un mouvement calme plutôt qu'un ressort. */
-@keyframes lp-surgit {
-  from {
-    opacity: 0;
-    transform: translateY(14px) scale(0.985);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-.lp-surgit {
-  animation: lp-surgit 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .lp-surgit {
-    animation: none;
-  }
-}
-
-/* Les barres du graphe montent de leur socle. */
-@keyframes lp-barre {
-  from {
-    transform: scaleY(0.04);
-    opacity: 0.3;
-  }
-  to {
-    transform: none;
-    opacity: 1;
-  }
-}
-.lp-barre {
-  transform-origin: bottom;
-  animation: lp-barre 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-@media (prefers-reduced-motion: reduce) {
-  .lp-barre {
-    animation: none;
-  }
-}
-
-/* Les jours de la semaine se posent un à un. */
-@keyframes lp-pop {
-  from {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-.lp-pop {
-  animation: lp-pop 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-/* L'onde du clic simulé : un rond qui s'ouvre sous le doigt. */
-@keyframes lp-onde {
-  from {
-    opacity: 0.5;
-    transform: scale(0.3);
-  }
-  to {
-    opacity: 0;
-    transform: scale(2.8);
-  }
-}
-.lp-onde {
-  animation: lp-onde 620ms ease-out forwards;
-}
-
-/* Le halo de l'alerte — deux battements, puis plus rien. */
-@keyframes lp-halo {
-  0% {
-    box-shadow: 0 0 0 0 var(--board-signal-line);
-  }
-  70% {
-    box-shadow: 0 0 0 9px rgba(242, 126, 128, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(242, 126, 128, 0);
-  }
-}
-.lp-halo {
-  animation: lp-halo 1800ms ease-out 1200ms 2;
-}
-
-/* LES MODULES QU'ON RÉORDONNE — section « tableau de bord » de la page
-   publique. Deux voisins échangent leur place, en boucle lente : c'est la
-   façon la plus courte de montrer que le board est personnalisable sans
-   écrire « glisser-déposer ».
-   Le pas d'une colonne est passé en variable (`--lp-pas`) : la largeur de
-   tuile et la gouttière ne se règlent qu'à un seul endroit, dans le
-   composant. La tuile qui se déplace reste au-dessus de l'autre pendant
-   le croisement. */
-@keyframes lp-module-mene {
-  0%,
-  16% {
-    transform: none;
-    box-shadow:
-      0 0 0 1px rgba(13, 18, 36, 0.05),
-      0 1px 2px rgba(13, 18, 36, 0.04);
-  }
-  22%,
-  42% {
-    box-shadow:
-      0 0 0 1px rgba(13, 18, 36, 0.06),
-      0 10px 22px -10px rgba(13, 18, 36, 0.3),
-      0 30px 50px -30px rgba(13, 18, 36, 0.38);
-  }
-  22% {
-    transform: translateY(-8px) scale(1.03);
-  }
-  42%,
-  62% {
-    transform: translate(var(--lp-pas), -8px) scale(1.03);
-    box-shadow:
-      0 0 0 1px rgba(13, 18, 36, 0.06),
-      0 10px 22px -10px rgba(13, 18, 36, 0.3),
-      0 30px 50px -30px rgba(13, 18, 36, 0.38);
-  }
-  82% {
-    transform: translateY(-8px) scale(1.03);
-    box-shadow:
-      0 0 0 1px rgba(13, 18, 36, 0.06),
-      0 10px 22px -10px rgba(13, 18, 36, 0.3),
-      0 30px 50px -30px rgba(13, 18, 36, 0.38);
-  }
-  90%,
-  100% {
-    transform: none;
-    box-shadow:
-      0 0 0 1px rgba(13, 18, 36, 0.05),
-      0 1px 2px rgba(13, 18, 36, 0.04);
-  }
-}
-@keyframes lp-module-cede {
-  0%,
-  22% {
-    transform: none;
-  }
-  42%,
-  62% {
-    transform: translateX(calc(var(--lp-pas) * -1));
-  }
-  84%,
-  100% {
-    transform: none;
-  }
-}
-/* La tuile qui mène reste au-dessus de sa voisine pendant le croisement.
-   L'échange ne joue qu'à partir de `sm` : en dessous la grille passe à
-   deux colonnes, et les deux tuiles concernées ne sont plus voisines sur
-   la même rangée — le pas d'une colonne pousserait la première hors de
-   la grille et ouvrirait un défilement horizontal. */
-.lp-module-mene {
-  position: relative;
-  z-index: 2;
-}
-@media (min-width: 640px) {
-  .lp-module-mene {
-    will-change: transform;
-    animation: lp-module-mene 7500ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
-  }
-  .lp-module-cede {
-    will-change: transform;
-    animation: lp-module-cede 7500ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .lp-module-mene,
-  .lp-module-cede {
-    animation: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .lp-pop,
-  .lp-halo,
-  .lp-onde {
-    animation: none;
-  }
-}
-
-/* Le compteur du brief : le chiffre remplacé monte d'un cran. */
-@keyframes lp-monte {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .lp-reveal {
-    opacity: 1;
-    transform: none;
-    transition: none;
+    transition: opacity 600ms ease-out;
+    transition-delay: var(--lp-delai, 0ms);
   }
   .lp-btn:hover .lp-fleche {
     transform: none;
