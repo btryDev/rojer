@@ -53,7 +53,10 @@ describe("un seul chemin pour effacer un fichier", () => {
     r.startsWith("lib/storage/") || r === "lib/suppression/fichiers.ts" || r === "lib/abonnements/stockage.ts";
   // Effacer sans rendre la ligne du plafond : `libererFichiers`, ou le
   // stockage en direct (`getStorage().delete(`, `storage?.delete(`).
-  const EFFACEMENT = /\b(libererFichiers|rendreReservations)\(|getStorage\(\)\s*\.delete\(|\bstorage\??\.delete\(/;
+  // Et rendre une ligne sans effacer le fichier (`fichierStocke.delete…`) :
+  // compter trop peu. Un alias (`const s = getStorage()`) reste hors d'atteinte.
+  const EFFACEMENT =
+    /\b(libererFichiers|rendreReservations)\(|getStorage\(\)\s*\.delete\(|\b(storage|stockage)[?!]?\.delete\(|\bfichierStocke\.delete/;
 
   it("aucun module n'efface un fichier en direct : il passe par `abandonnerFichiers`", () => {
     const fautifs = fichiers(racine)
