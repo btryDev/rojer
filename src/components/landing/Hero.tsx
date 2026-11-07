@@ -58,7 +58,7 @@ export function Hero({
     <section
       // La photo remonte de la hauteur de l'en-tête (`--lp-entete`) pour
       // passer dessous ; le texte la redescend d'autant.
-      className="relative isolate -mt-[var(--lp-entete)] flex h-[86svh] max-h-[1000px] min-h-[560px] overflow-hidden bg-[color:var(--board-ink)] md:h-[100svh] md:min-h-[640px]"
+      className="relative isolate -mt-[var(--lp-entete)] flex h-[calc(100svh-2.5rem)] max-h-[1000px] min-h-[560px] overflow-hidden bg-[color:var(--board-ink)] md:h-[100svh] md:min-h-[640px]"
     >
       <picture>
         <source media={MEDIA_PORTRAIT} srcSet={portrait.srcSet} sizes={portrait.sizes} />
