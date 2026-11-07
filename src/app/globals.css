@@ -1117,38 +1117,43 @@
     white-space: nowrap;
   }
 
-  /* Apparition au défilement — 12 px et une seule fois. */
-  .lp-reveal {
+  /* Apparition au défilement — une seule fois.
+     Le contenu est VISIBLE par défaut : seul `Reveal`, une fois le
+     JavaScript chargé, cache ce qui est encore sous l'écran
+     (`data-vu="false"`), puis le montre (`"true"`). Caché d'emblée dans le
+     CSS, un bloc restait invisible tant que le JS n'avait pas tourné — sur
+     un téléphone lent ou si le JS échoue, un grand blanc à la place du
+     contenu (2026-11-07). Le masquage est instantané ; seule l'apparition
+     est animée. */
+  .lp-reveal[data-vu="false"] {
     opacity: 0;
     transform: translateY(12px);
+  }
+  .lp-reveal[data-vu="true"] {
     transition:
       opacity 700ms cubic-bezier(0.16, 1, 0.3, 1),
       transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
     transition-delay: var(--lp-delai, 0ms);
   }
   /* L'apparition ample (Reveal `ample`) : déclenchée plus tard, un peu plus
-     de course que .lp-reveal (24 et 32 px contre 12) et bien plus de durée,
-     sur une courbe qui freine longtemps — l'élément se pose, il ne surgit
-     pas (2026-11-07 : « trop brusque »). Le média monte en se dézoomant à
+     de course (24 et 32 px contre 12) et bien plus de durée, sur une courbe
+     qui freine longtemps — l'élément se pose, il ne surgit pas
+     (2026-11-07 : « trop brusque »). Le média monte en se dézoomant à
      peine. */
-  .lp-reveal-texte,
-  .lp-reveal-media {
+  .lp-reveal-texte[data-vu="false"] {
+    transform: translateY(24px);
+  }
+  .lp-reveal-media[data-vu="false"] {
+    transform: translateY(32px) scale(0.98);
+  }
+  .lp-reveal-texte[data-vu="true"],
+  .lp-reveal-media[data-vu="true"] {
     transition:
       opacity 1400ms cubic-bezier(0.25, 0.1, 0.25, 1),
       transform 1500ms cubic-bezier(0.19, 1, 0.22, 1);
     /* Après l'abrégée, qui remet le délai à zéro : sans cette ligne, la
        cascade de `delai` est perdue (revue de la PR #209). */
     transition-delay: var(--lp-delai, 0ms);
-  }
-  .lp-reveal-texte {
-    transform: translateY(24px);
-  }
-  .lp-reveal-media {
-    transform: translateY(32px) scale(0.98);
-  }
-  .lp-reveal[data-vu="true"] {
-    opacity: 1;
-    transform: none;
   }
 
   /* La fiche détachée — matière des cartes mises en avant de la page
@@ -1176,7 +1181,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lp-reveal {
+  .lp-reveal[data-vu] {
     opacity: 1;
     transform: none;
     transition: none;
