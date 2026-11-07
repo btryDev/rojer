@@ -81,7 +81,6 @@ export const GRILLE: GroupeGrille[] = [
   {
     titre: "Humain : l'expert en sécurité",
     lignes: [
-      { libelle: "Aide en ligne, contact pour un problème technique", cases: [INCLUS, INCLUS, INCLUS, INCLUS] },
       { libelle: "Poser une question technique à l'expert", cases: [NON_INCLUS, NON_INCLUS, INCLUS, INCLUS] },
       { libelle: "Rendez-vous avec l'expert", cases: [NON_INCLUS, NON_INCLUS, "1 h par an", "à la demande"] },
       { libelle: "Formation, reprise de l'historique, déploiement accompagné", cases: [NON_INCLUS, NON_INCLUS, NON_INCLUS, INCLUS] },
