@@ -845,6 +845,11 @@
   .lp-nav--ilot .lp-nav-barre {
     height: 54px;
   }
+  /* Menu du téléphone ouvert : l'îlot s'allonge en carte, la pilule ne
+     tiendrait pas une liste. */
+  .lp-nav--menu {
+    border-radius: 26px;
+  }
 
   /* La reprise d'opacité pour les navigateurs sans backdrop-filter a été
      retirée : elle posait 92 % là où le cas courant en posait 58, c'est-à-

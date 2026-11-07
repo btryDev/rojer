@@ -19,6 +19,7 @@ import { useEffect, useRef, useState } from "react";
 // paquet envoyé au navigateur. Les chiffres sont calculés côté serveur
 // (`app/page.tsx`, `chiffresReferentielSuivi`) et arrivent ici en props.
 import type { ChiffresReferentielSuivi } from "@/lib/referentiels/conformite";
+import { Reveal } from "./Reveal";
 
 type Document = {
   numero: string;
@@ -430,16 +431,20 @@ function CadranListe({ chiffres }: { chiffres: ChiffresReferentielSuivi }) {
               key={d.numero}
               className="grid grid-cols-1 gap-3 border-t border-[rgba(10,10,10,.16)] pt-6 first:border-t-0 first:pt-0 sm:grid-cols-[88px_1fr] sm:gap-8"
             >
-              <span
-                className="text-[2.4rem] font-semibold leading-none tabular-nums text-[color:var(--board-ink)]"
-                style={{
-                  fontFamily: "var(--font-titre), sans-serif",
-                  letterSpacing: "-0.05em",
-                }}
-              >
-                {d.numero}
-              </span>
-              <div>
+              {/* La roue ne tient pas sur petit écran : chaque document se
+                  découvre au défilement, le numéro d'abord, puis le texte. */}
+              <Reveal ample="media">
+                <span
+                  className="block text-[2.4rem] font-semibold leading-none tabular-nums text-[color:var(--board-ink)]"
+                  style={{
+                    fontFamily: "var(--font-titre), sans-serif",
+                    letterSpacing: "-0.05em",
+                  }}
+                >
+                  {d.numero}
+                </span>
+              </Reveal>
+              <Reveal ample="texte" delai={140}>
                 <p className="lp-eyebrow">{d.famille}</p>
                 <h3 className="lp-titre lp-h3 mt-2">{d.titre}</h3>
                 <p className="lp-texte mt-2 max-w-[52ch]">{d.corps}</p>
@@ -453,7 +458,7 @@ function CadranListe({ chiffres }: { chiffres: ChiffresReferentielSuivi }) {
                     </span>
                   ))}
                 </div>
-              </div>
+              </Reveal>
             </li>
           ))}
         </ol>
