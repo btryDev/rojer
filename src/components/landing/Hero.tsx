@@ -19,21 +19,16 @@ const PHOTO_HERO = {
   src: "/photos/hero-restaurateur.jpg",
   alt: "Un restaurateur en tablier marine consulte son téléphone dans la salle de son bistrot avant le service",
   // Quand le cadre se resserre (écran en portrait), on garde son visage.
+  // Sur téléphone, le hero est moins haut (84svh) : la photo se recadre moins.
   position: "68% 20%",
 };
 
-export function Hero({
-  ctaHref,
-  ctaLabel,
-}: {
-  ctaHref: string;
-  ctaLabel: string;
-}) {
+export function Hero({ connecte }: { connecte: boolean }) {
   return (
     <section
       // La photo remonte de la hauteur de l'en-tête (`--lp-entete`) pour
       // passer dessous ; le texte la redescend d'autant.
-      className="relative isolate -mt-[var(--lp-entete)] flex h-[100svh] max-h-[1000px] min-h-[640px] overflow-hidden bg-[color:var(--board-ink)]"
+      className="relative isolate -mt-[var(--lp-entete)] flex h-[84svh] max-h-[1000px] min-h-[560px] overflow-hidden bg-[color:var(--board-ink)] md:h-[100svh] md:min-h-[640px]"
     >
       <Image
         src={PHOTO_HERO.src}
@@ -76,15 +71,19 @@ export function Hero({
             n&apos;en gardez plus la charge.
           </p>
 
+          {/* Un compte connecté retrouve son dossier par la maison de
+              l'en-tête : le hero ne le lui redemande pas. */}
           <div className="mt-10 flex flex-wrap items-center gap-4">
-            <Link href={ctaHref} className="lp-btn lp-btn-blanc">
-              {ctaLabel}
-              <span className="lp-fleche" aria-hidden>
-                →
-              </span>
-            </Link>
-            <a href="#documents" className="lp-btn lp-btn-verre">
-              Voir les documents
+            {!connecte ? (
+              <Link href="/signup" className="lp-btn lp-btn-blanc">
+                Essayer 30 jours
+                <span className="lp-fleche" aria-hidden>
+                  →
+                </span>
+              </Link>
+            ) : null}
+            <a href="#tarif" className="lp-btn lp-btn-verre">
+              Voir les offres
             </a>
           </div>
         </div>

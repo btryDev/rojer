@@ -13,7 +13,7 @@
 // absolu dedans : si l'en-tête lui-même rétrécissait, il entraînerait
 // toute la page de quelques pixels vers le haut pendant l'animation.
 
-import { Menu, X } from "lucide-react";
+import { House, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { signOutAction } from "@/lib/auth/actions";
@@ -55,14 +55,12 @@ function EntreeSession({ connecte, className }: { connecte: boolean; className: 
 export function LandingHeader({
   ctaHref,
   ctaLabel,
-  ctaLabelCourt = ctaLabel,
   connecte,
   surPhoto = false,
 }: {
   ctaHref: string;
+  /** Le libellé du bouton ; connecté, c'est le nom accessible de la maison. */
   ctaLabel: string;
-  /** Le libellé du bouton sur téléphone, où la barre n'a pas la place des longs. */
-  ctaLabelCourt?: string;
   connecte: boolean;
   surPhoto?: boolean;
 }) {
@@ -157,16 +155,32 @@ export function LandingHeader({
             <div className="hidden md:block">
               <EntreeSession connecte={connecte} className={lien} />
             </div>
-            <Link
-              href={ctaHref}
-              className={
-                "lp-btn whitespace-nowrap px-3.5 py-[9px] text-[0.8125rem] sm:px-[18px] sm:py-[10px] sm:text-[0.875rem] " +
-                (blanc ? "lp-btn-blanc" : "lp-btn-ink")
-              }
-            >
-              <span className="sm:hidden">{ctaLabelCourt}</span>
-              <span className="hidden sm:inline">{ctaLabel}</span>
-            </Link>
+            {/* Connecté : une maison, comme l'accès au compte des autres sites
+                — elle mène au dossier (ou à la mise en place). Sinon, le
+                bouton d'inscription. */}
+            {connecte ? (
+              <Link
+                href={ctaHref}
+                aria-label={ctaLabel}
+                title={ctaLabel}
+                className={
+                  "lp-btn size-10 flex-none justify-center p-0 " +
+                  (blanc ? "lp-btn-blanc" : "lp-btn-ink")
+                }
+              >
+                <House aria-hidden size={18} strokeWidth={2.2} />
+              </Link>
+            ) : (
+              <Link
+                href={ctaHref}
+                className={
+                  "lp-btn whitespace-nowrap px-3.5 py-[9px] text-[0.8125rem] sm:px-[18px] sm:py-[10px] sm:text-[0.875rem] " +
+                  (blanc ? "lp-btn-blanc" : "lp-btn-ink")
+                }
+              >
+                {ctaLabel}
+              </Link>
+            )}
             <button
               ref={bouton}
               type="button"

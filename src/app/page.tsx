@@ -46,8 +46,6 @@ export default async function Home({
     : etab
       ? "Reprendre mon dossier"
       : "Terminer la mise en place";
-  // La barre du téléphone n'a pas la place des libellés longs.
-  const ctaLabelCourt = !user ? "Créer mon compte" : etab ? "Mon dossier" : "Continuer";
 
   // Les chiffres du référentiel, calculés ICI — côté serveur — et passés en
   // props : `Cadran` est un composant client, qui ne doit pas embarquer le
@@ -61,12 +59,11 @@ export default async function Home({
       <LandingHeader
         ctaHref={ctaHref}
         ctaLabel={ctaLabel}
-        ctaLabelCourt={ctaLabelCourt}
         connecte={Boolean(user)}
         surPhoto
       />
 
-      <Hero ctaHref={ctaHref} ctaLabel={ctaLabel} />
+      <Hero connecte={Boolean(user)} />
 
       {/* « Ce que Rojer tient à jour » passe avant « Concentrez-vous sur
           votre activité » (décision de la propriétaire du 2026-11-06) :

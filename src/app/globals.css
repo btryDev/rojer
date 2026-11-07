@@ -1136,18 +1136,20 @@
      pas. Le média monte en se dézoomant d'un cran. */
   .lp-reveal-texte,
   .lp-reveal-media {
+    /* Peu de course, beaucoup de durée : l'élément se pose plutôt qu'il
+       ne surgit (retour de la propriétaire, 2026-11-07 : « trop brusque »). */
     transition:
-      opacity 1000ms cubic-bezier(0.22, 1, 0.36, 1),
-      transform 1400ms cubic-bezier(0.16, 1, 0.3, 1);
+      opacity 1400ms cubic-bezier(0.25, 0.1, 0.25, 1),
+      transform 1800ms cubic-bezier(0.19, 1, 0.22, 1);
     /* Après l'abrégée, qui remet le délai à zéro : sans cette ligne, la
        cascade de `delai` est perdue (revue de la PR #209). */
     transition-delay: var(--lp-delai, 0ms);
   }
   .lp-reveal-texte {
-    transform: translateY(48px);
+    transform: translateY(24px);
   }
   .lp-reveal-media {
-    transform: translateY(72px) scale(0.94);
+    transform: translateY(32px) scale(0.98);
   }
   .lp-reveal[data-vu="true"] {
     opacity: 1;
