@@ -444,13 +444,15 @@ function CadranListe({ chiffres }: { chiffres: ChiffresReferentielSuivi }) {
               as="li"
               ample="texte"
               key={d.numero}
-              className="grid grid-cols-1 gap-3 border-t border-[rgba(10,10,10,.16)] pt-6 first:border-t-0 first:pt-0 sm:grid-cols-[88px_1fr] sm:gap-8"
+              className="grid grid-cols-[64px_1fr] items-center gap-x-4 gap-y-4 border-t border-[rgba(10,10,10,.16)] pt-6 first:border-t-0 first:pt-0 sm:grid-cols-[88px_1fr] sm:items-start sm:gap-x-8 sm:gap-y-2"
             >
               {/* Décoratif : le titre dit déjà de quel document il s'agit.
                   Le cadran garde ses numéros ; la liste, sans roue pour
                   enchaîner les crans, se repère au dessin. La pastille
                   blanche le détache du bleu de la liste, dont ses aplats
-                  sont trop proches. */}
+                  sont trop proches. Au téléphone, il se range à gauche du
+                  titre : le texte reste aligné à gauche, il se lit mieux
+                  ainsi sur quatre ou cinq lignes. */}
               <Image
                 src={`/illustrations/landing/documents/${d.picto}.webp`}
                 alt=""
@@ -458,12 +460,14 @@ function CadranListe({ chiffres }: { chiffres: ChiffresReferentielSuivi }) {
                 width={200}
                 height={200}
                 sizes="88px"
-                className="size-[72px] rounded-[18px] bg-[color:var(--board-card)] p-2 sm:size-[88px] sm:rounded-[22px]"
+                className="size-16 rounded-[16px] bg-[color:var(--board-card)] p-1.5 sm:row-span-2 sm:size-[88px] sm:rounded-[22px] sm:p-2"
               />
               <div>
                 <p className="lp-eyebrow">{d.famille}</p>
                 <h3 className="lp-titre lp-h3 mt-2">{d.titre}</h3>
-                <p className="lp-texte mt-2 max-w-[52ch]">{d.corps}</p>
+              </div>
+              <div className="col-span-2 sm:col-span-1 sm:col-start-2">
+                <p className="lp-texte max-w-[52ch]">{d.corps}</p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {reperesDe(d, chiffres).map((r) => (
                     <span
