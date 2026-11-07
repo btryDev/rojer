@@ -7,37 +7,17 @@
 
 import { ChevronRepli, LIEN_REPLI } from "@/components/ui/repli";
 import { cn } from "@/lib/utils";
-import { lienContact } from "./contact";
+import type { CompteLanding } from "./compte";
+import { BoutonContact } from "./BoutonContact";
 import { Reveal } from "./Reveal";
-import { ABONNEMENT, GRILLE, INCLUS, NON_INCLUS } from "./tarif-grille";
+import { DetailOffresMobile } from "./DetailOffresMobile";
+import { COLONNES_GRILLE, GRILLE, NOTE_GRILLE, SENS_CASE, TON_CASE } from "./tarif-grille";
 import { TarifOffres } from "./TarifOffres";
-
-const COLONNES = [
-  { nom: "Essai", detail: "30 jours, sur Essentiel" },
-  { nom: "Essentiel" },
-  { nom: "Pro" },
-  { nom: "Sur mesure" },
-] as const;
 
 /** Le fond de la colonne « Essai ». */
 const FOND_ESSAI = "bg-[color:var(--board-amber-wash)]";
 
-/** Le ton d'une case qui ne porte pas un chiffre. */
-const TON: Record<string, string> = {
-  [INCLUS]: "font-semibold text-[color:var(--board-blue-ink)]",
-  [NON_INCLUS]: "text-[color:var(--board-slate)]",
-  [ABONNEMENT]: "font-mono text-[0.66rem] tracking-[0.06em] text-[color:var(--board-amber-ink)]",
-};
-
-export function Tarif({
-  ctaHref,
-  ctaLabel,
-  connecte,
-}: {
-  ctaHref: string;
-  ctaLabel: string;
-  connecte: boolean;
-}) {
+export function Tarif({ compte }: { compte?: CompteLanding }) {
   return (
     <section id="tarif" className="bg-[color:var(--board-card)] py-24 sm:py-32">
       <div className="lp-shell">
@@ -51,7 +31,7 @@ export function Tarif({
         </Reveal>
 
         <Reveal delai={120}>
-          <TarifOffres ctaHref={ctaHref} ctaLabel={ctaLabel} connecte={connecte} />
+          <TarifOffres compte={compte} />
         </Reveal>
 
         {/* La mise en route accompagnée : pas de prix pour l'instant. */}
@@ -65,9 +45,7 @@ export function Tarif({
                 Vous repartez avec un dossier rempli.
               </p>
             </div>
-            <a href={lienContact("Mise en route accompagnée")} className="lp-btn lp-btn-ink flex-none">
-              Nous contacter
-            </a>
+            <BoutonContact sujet="Mise en route accompagnée" className="lp-btn-ink flex-none" />
           </div>
         </Reveal>
 
@@ -76,8 +54,11 @@ export function Tarif({
           conseil technique de prévention, jamais un avis juridique.
         </p>
 
-        {/* La grille complète, repliée : la page reste lisible. */}
-        <details className="group mt-10">
+        {/* La grille complète, repliée : la page reste lisible. Au
+            téléphone, cinq colonnes ne tiennent pas : le détail s'ouvre en
+            fenêtre, une offre à la fois. */}
+        <DetailOffresMobile grille={GRILLE} />
+        <details className="group mt-10 hidden md:block">
           <summary className={cn(LIEN_REPLI, "mx-auto flex w-max text-[0.92rem] text-[color:var(--board-ink)]")}>
             <ChevronRepli />
             Voir le détail des offres
@@ -88,10 +69,10 @@ export function Tarif({
               <thead>
                 <tr className="border-b border-[color:var(--board-slate-pale)]">
                   <th scope="col" className="px-4 py-3 text-left font-semibold">Module</th>
-                  {COLONNES.map((c, i) => (
+                  {COLONNES_GRILLE.map((c, i) => (
                     <th key={c.nom} scope="col" className={cn("w-[15%] px-4 py-3 text-center font-semibold", i === 0 && FOND_ESSAI)}>
                       {c.nom}
-                      {"detail" in c ? (
+                      {c.detail ? (
                         <span className="block text-[0.72rem] font-normal text-[color:var(--board-slate-soft)]">{c.detail}</span>
                       ) : null}
                     </th>
@@ -113,8 +94,15 @@ export function Tarif({
                     <tr key={l.libelle} className="border-b border-[color:var(--board-slate-pale)] last:border-b-0">
                       <th scope="row" className="px-4 py-3 text-left font-normal">{l.libelle}</th>
                       {l.cases.map((v, i) => (
-                        <td key={COLONNES[i].nom} className={cn("px-4 py-3 text-center", TON[v], i === 0 && FOND_ESSAI)}>
-                          {v}
+                        <td key={COLONNES_GRILLE[i].nom} className={cn("px-4 py-3 text-center", TON_CASE[v], i === 0 && FOND_ESSAI)}>
+                          {SENS_CASE[v] ? (
+                            <>
+                              <span aria-hidden>{v}</span>
+                              <span className="sr-only">{SENS_CASE[v]}</span>
+                            </>
+                          ) : (
+                            v
+                          )}
                         </td>
                       ))}
                     </tr>
@@ -123,12 +111,7 @@ export function Tarif({
               ))}
             </table>
           </div>
-          <p className="mt-4 text-center text-[0.78rem] leading-[1.55] text-[color:var(--board-slate-soft)]">
-            Pendant l&apos;essai, tout s&apos;essaie ; valider, signer ou envoyer un
-            document demande de s&apos;abonner. Au jour 30 sans abonnement, le
-            compte passe en veille : lecture, export et alertes, plus de saisie.
-            Au quota, seule la création est bloquée.
-          </p>
+          <p className="mt-4 text-center text-[0.78rem] leading-[1.55] text-[color:var(--board-slate-soft)]">{NOTE_GRILLE}</p>
         </details>
       </div>
     </section>

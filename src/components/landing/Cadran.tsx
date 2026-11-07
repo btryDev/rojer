@@ -13,15 +13,26 @@
 // verticale sobre (petit écran ou `prefers-reduced-motion`). Le contenu
 // est le même, écrit une seule fois.
 
+import Image, { type StaticImageData } from "next/image";
 import { useEffect, useRef, useState } from "react";
 // Le TYPE seul : un composant client qui importerait le référentiel en
 // embarquerait le référentiel entier — notes internes comprises — dans le
 // paquet envoyé au navigateur. Les chiffres sont calculés côté serveur
 // (`app/page.tsx`, `chiffresReferentielSuivi`) et arrivent ici en props.
 import type { ChiffresReferentielSuivi } from "@/lib/referentiels/conformite";
+import { Reveal } from "./Reveal";
+import pictoCalendrier from "@/assets/landing/documents/calendrier.webp";
+import pictoDuerp from "@/assets/landing/documents/duerp.webp";
+import pictoRegistre from "@/assets/landing/documents/registre.webp";
+import pictoPlan from "@/assets/landing/documents/plan.webp";
+import pictoAccessibilite from "@/assets/landing/documents/accessibilite.webp";
+import pictoDossier from "@/assets/landing/documents/dossier.webp";
+
 
 type Document = {
   numero: string;
+  /** Le picto de la liste du téléphone (`src/assets/landing/documents`). */
+  picto: StaticImageData;
   famille: string;
   titre: string;
   corps: string;
@@ -49,6 +60,7 @@ function reperesDe(d: Document, c: ChiffresReferentielSuivi): string[] {
 const DOCUMENTS: Document[] = [
   {
     numero: "01",
+    picto: pictoCalendrier,
     famille: "Échéances",
     titre: "Le calendrier des vérifications",
     corps: "Vous déclarez vos équipements une fois. Rojer en déduit les vérifications qui les concernent ; quand le texte fixe un rythme, il pose les dates et les repousse à mesure que les rapports arrivent.",
@@ -62,6 +74,11 @@ const DOCUMENTS: Document[] = [
     // ~~« Sources Légifrance et INRS »~~ : huit références citent le
     // règlement (UE) 2024/573 (EUR-Lex), une seule l'INRS (compté en
     // appelant le référentiel, relecture du 2026-09-26).
+    // ~~« Sources Légifrance et EUR-Lex »~~ (2026-11-07, la propriétaire) :
+    // EUR-Lex ne porte qu'un texte (le 2024/573, contrôle d'étanchéité des
+    // gaz fluorés) contre des centaines d'articles Légifrance ; le nommer à
+    // égalité grossissait sa part. L'INRS ne revient pas : il ne fixe aucune
+    // vérification, il nourrit les risques du DUERP.
     // 173 → 171 le 2026-10-08 (C64) : 173 + 0 − 2 (AS 9 aux hôtels de 5ᵉ,
     // supprimées) = 171, compté en appelant le référentiel.
     // 171 → 172 le 2026-10-08 (C66) : 171 + 1 (appareils de cuisson hors
@@ -78,10 +95,11 @@ const DOCUMENTS: Document[] = [
     // est une question posée à la propriétaire, pas tranchée.~~ Tranchée le
     // 2026-10-08 : ce que la page annonce, ce sont les SUIVIES, 174 − 3 = 171.
     annonceLeReferentiel: true,
-    reperes: ["Sources Légifrance et EUR-Lex"],
+    reperes: ["Sources Légifrance"],
   },
   {
     numero: "02",
+    picto: pictoDuerp,
     famille: "Évaluation",
     titre: "Le DUERP",
     corps: "L'inventaire des risques, unité de travail par unité de travail, coté et daté. Chaque validation fige une version — c'est celle-là qu'on vous demandera.",
@@ -89,6 +107,7 @@ const DOCUMENTS: Document[] = [
   },
   {
     numero: "03",
+    picto: pictoRegistre,
     famille: "Preuve",
     titre: "Le registre de sécurité",
     corps: "Chaque rapport est horodaté et rangé à côté de l'échéance qu'il solde. Vous le déposez une fois : il reste retrouvable, et il part avec l'export.",
@@ -96,6 +115,7 @@ const DOCUMENTS: Document[] = [
   },
   {
     numero: "04",
+    picto: pictoPlan,
     famille: "Suivi",
     titre: "Le plan d'actions",
     // ~~« Chaque écart ouvre une action »~~ : l'action se crée à la main depuis
@@ -105,6 +125,7 @@ const DOCUMENTS: Document[] = [
   },
   {
     numero: "05",
+    picto: pictoAccessibilite,
     famille: "Public",
     titre: "Le registre d'accessibilité",
     // ~~« l'attestation… jamais périmée »~~ (contre-lecture du 2026-09-26) :
@@ -115,6 +136,7 @@ const DOCUMENTS: Document[] = [
   },
   {
     numero: "06",
+    picto: pictoDossier,
     famille: "Restitution",
     titre: "Le dossier de contrôle",
     corps: "Inspection, assurance, bailleur, acquéreur : une archive datée avec l'index des pièces. Un clic, pas une soirée.",
@@ -426,35 +448,50 @@ function CadranListe({ chiffres }: { chiffres: ChiffresReferentielSuivi }) {
         </p>
         <ol className="m-0 mt-12 flex list-none flex-col gap-10 rounded-[28px] bg-[color:var(--board-sky)] p-6 sm:mt-14 sm:gap-12 sm:p-10">
           {DOCUMENTS.map((d) => (
-            <li
+            // Un seul observateur par document : le picto et le texte
+            // montent ensemble. La liste est servie sur petit écran ET en
+            // mouvement réduit (`simple`) ; en mouvement réduit, `.lp-reveal`
+            // ne bouge pas.
+            <Reveal
+              as="li"
+              ample="texte"
               key={d.numero}
-              className="grid grid-cols-1 gap-3 border-t border-[rgba(10,10,10,.16)] pt-6 first:border-t-0 first:pt-0 sm:grid-cols-[88px_1fr] sm:gap-8"
+              className="grid grid-cols-[64px_1fr] items-center gap-x-4 gap-y-4 border-t border-[rgba(10,10,10,.16)] pt-6 first:border-t-0 first:pt-0 sm:grid-cols-[88px_1fr] sm:items-start sm:gap-x-8 sm:gap-y-2"
             >
-              <span
-                className="text-[2.4rem] font-semibold leading-none tabular-nums text-[color:var(--board-ink)]"
-                style={{
-                  fontFamily: "var(--font-titre), sans-serif",
-                  letterSpacing: "-0.05em",
-                }}
-              >
-                {d.numero}
-              </span>
+              {/* Décoratif : le titre dit déjà de quel document il s'agit.
+                  Le cadran garde ses numéros ; la liste, sans roue pour
+                  enchaîner les crans, se repère au dessin. La pastille
+                  blanche le détache du bleu de la liste, dont ses aplats
+                  sont trop proches. Au téléphone, il se range à gauche du
+                  titre : le texte reste aligné à gauche, il se lit mieux
+                  ainsi sur quatre ou cinq lignes. */}
+              {/* `unoptimized` : le fichier est déjà à sa taille (264 px
+                  couvrent 88 px en densité 3) ; le repasser par l'optimiseur
+                  coûterait un encodage par largeur pour quelques octets. */}
+              <Image
+                src={d.picto}
+                alt=""
+                unoptimized
+                className="size-16 rounded-[16px] bg-[color:var(--board-card)] p-1.5 sm:row-span-2 sm:size-[88px] sm:rounded-[22px] sm:p-2"
+              />
               <div>
                 <p className="lp-eyebrow">{d.famille}</p>
                 <h3 className="lp-titre lp-h3 mt-2">{d.titre}</h3>
-                <p className="lp-texte mt-2 max-w-[52ch]">{d.corps}</p>
+              </div>
+              <div className="col-span-2 sm:col-span-1 sm:col-start-2">
+                <p className="lp-texte max-w-[52ch]">{d.corps}</p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {reperesDe(d, chiffres).map((r) => (
                     <span
                       key={r}
-                      className="lp-pill bg-[color:var(--board-card)] text-[color:var(--board-blue-ink)]"
+                      className="lp-pill bg-[color:var(--board-blue-pale)] text-[color:var(--board-blue-ink)]"
                     >
                       {r}
                     </span>
                   ))}
                 </div>
               </div>
-            </li>
+            </Reveal>
           ))}
         </ol>
       </div>
