@@ -70,7 +70,7 @@ export function ChangerDeFormule({
                     {enLecture
                       .map((d) => LIBELLES_PLAFONDS[d.quota as keyof typeof LIBELLES_PLAFONDS]?.(d.utilise - d.plafond) ?? `${d.utilise - d.plafond}`)
                       .join(", ")}
-                    , les plus récents.
+                    , {enLecture.length === 1 && enLecture[0].utilise - enLecture[0].plafond === 1 ? "le plus récent" : "les plus récents"}.
                   </p>
                 )}
               </div>

@@ -194,23 +194,24 @@ describe("parcours Stripe", () => {
     expect(api.subscriptionSchedules.release).toHaveBeenCalledWith("sub_sched_2");
 
     const passe = Math.floor(Date.now() / 1000) - 86_400;
-    api.subscriptionSchedules.retrieve.mockResolvedValue({ status: "active", created: passe, phases: [{ start_date: passe - 10 }, { start_date: passe }] });
+    api.subscriptionSchedules.retrieve.mockResolvedValue({ status: "active", created: passe, current_phase: { start_date: passe }, phases: [{ start_date: passe - 10 }, { start_date: passe }] });
     api.subscriptionSchedules.release.mockClear();
     await rendrePlanningEchu(stripe, { schedule: "sub_sched_3" } as unknown as Stripe.Subscription);
     expect(api.subscriptionSchedules.release).toHaveBeenCalledWith("sub_sched_3");
-    api.subscriptionSchedules.retrieve.mockResolvedValue({ status: "active", phases: [{ start_date: passe }, { start_date: passe + 10 * 86_400 }] });
+    api.subscriptionSchedules.retrieve.mockResolvedValue({ status: "active", created: passe, current_phase: { start_date: passe }, phases: [{ start_date: passe }, { start_date: passe + 10 * 86_400 }] });
     api.subscriptionSchedules.release.mockClear();
     await rendrePlanningEchu(stripe, { schedule: "sub_sched_3" } as unknown as Stripe.Subscription);
     expect(api.subscriptionSchedules.release).not.toHaveBeenCalled();
     // Tout juste créé (une seule phase, quelques secondes) : la baisse va y être ajoutée, on n'y touche pas.
-    api.subscriptionSchedules.retrieve.mockResolvedValue({ status: "active", created: Math.floor(Date.now() / 1000) - 5, phases: [{ start_date: passe }] });
+    api.subscriptionSchedules.retrieve.mockResolvedValue({ status: "active", created: Math.floor(Date.now() / 1000) - 5, current_phase: { start_date: passe }, phases: [{ start_date: passe }] });
     await rendrePlanningEchu(stripe, { schedule: "sub_sched_4" } as unknown as Stripe.Subscription);
     expect(api.subscriptionSchedules.release).not.toHaveBeenCalled();
   });
 
-  it("la baisse prévue : la phase suivante, son prix et sa date ; sans planning, rien", async () => {
+  it("la baisse prévue : la phase qui suit celle en cours SELON STRIPE (horloge de simulation comprise) ; sans planning, rien", async () => {
     const dans = Math.floor(Date.now() / 1000) + 86_400;
     api.subscriptionSchedules.retrieve.mockResolvedValue({
+      current_phase: { start_date: 1 },
       phases: [
         { start_date: 1, items: [{ price: { id: "price_pm", lookup_key: "rojer_pro_mensuel" } }] },
         { start_date: dans, items: [{ price: { id: "price_em", lookup_key: "rojer_essentiel_mensuel" } }] },

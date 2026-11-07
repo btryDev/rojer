@@ -311,14 +311,16 @@ export async function rendrePlanningEchu(stripe: Stripe, abonnement: Stripe.Subs
   const id = idStripe(abonnement.schedule);
   if (!id) return;
   const planning = await stripe.subscriptionSchedules.retrieve(id);
-  const maintenant = Math.floor(Date.now() / 1000);
-  // Un planning tout juste créé n'a encore qu'une phase (celle en cours) :
-  // `planifierBaisse` y ajoute la baisse dans la foulée. Ne rendre que ceux
-  // qui ont porté une baisse, ou un orphelin de plus de cinq minutes.
-  const aPorteUneBaisse = planning.phases.length > 1 || planning.created < maintenant - 300;
-  if (planning.status === "active" && aPorteUneBaisse && !planning.phases.some((p) => p.start_date > maintenant)) {
-    await stripe.subscriptionSchedules.release(id);
-  }
+  // L'heure est celle de Stripe (la phase en cours qu'il désigne), pas celle du
+  // serveur : une horloge de simulation la décale. Un planning tout juste créé
+  // n'a encore qu'une phase : `planifierBaisse` y ajoute la baisse dans la
+  // foulée ; ne rendre que ceux qui ont porté une baisse, ou un orphelin de
+  // plus de cinq minutes.
+  const enCours = planning.current_phase;
+  const derniere = planning.phases.at(-1);
+  if (!enCours || !derniere || planning.status !== "active") return;
+  const aPorteUneBaisse = planning.phases.length > 1 || planning.created < Math.floor(Date.now() / 1000) - 300;
+  if (aPorteUneBaisse && enCours.start_date >= derniere.start_date) await stripe.subscriptionSchedules.release(id);
 }
 
 /** Renoncer à une baisse planifiée : l'abonnement reste sur sa formule. */
@@ -335,8 +337,9 @@ export async function baissePrevue(
   const id = idStripe(abonnement.schedule);
   if (!id) return null;
   const planning = await stripe.subscriptionSchedules.retrieve(id, { expand: ["phases.items.price"] });
-  const maintenant = Math.floor(Date.now() / 1000);
-  const suivante = planning.phases.find((p) => p.start_date > maintenant);
+  // La phase qui suit celle en cours, selon Stripe (voir `rendrePlanningEchu`).
+  const depuis = planning.current_phase?.start_date ?? Math.floor(Date.now() / 1000);
+  const suivante = planning.phases.find((p) => p.start_date > depuis);
   const prix = suivante?.items[0]?.price;
   if (!suivante || !prix) return null;
   const lookupKey = typeof prix !== "string" && "lookup_key" in prix ? prix.lookup_key : null;
