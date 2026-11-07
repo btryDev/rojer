@@ -238,8 +238,10 @@ describe("niveau audit — (a) aucune ligne", () => {
 
 describe("niveau audit — (b) nommée dans la rubrique « Niveau audit »", () => {
   it("chaque obligation audit atteinte figure dans la rubrique du dossier", () => {
+    // Par les obligations que chaque ligne nomme : la signalisation des
+    // extincteurs et des RIA est réunie par appareil (ADR-057).
     const rubrique = surLesProfils((e) =>
-      obligationsNiveauAuditDuDossier(e, parcAudit()).map((l) => l.id),
+      obligationsNiveauAuditDuDossier(e, parcAudit()).flatMap((l) => l.obligations),
     );
     for (const o of AUDIT) expect(rubrique, o.id).toContain(o.id);
   });
@@ -313,7 +315,41 @@ describe("niveau audit — (c) la référence légale reste", () => {
   it("la rubrique imprime cette référence, pas un résumé", () => {
     const rubrique = obligationsNiveauAuditDuDossier(etabLarge(), parcAudit());
     for (const l of rubrique) {
-      expect(l.reference).toBe(obligationParId(l.id)!.referencesLegales[0].reference);
+      expect(l.reference).toBe(obligationParId(l.obligations[0])!.referencesLegales[0].reference);
     }
+  });
+});
+
+describe("niveau audit — la signalisation réunie par appareil (ADR-057)", () => {
+  it("une ligne pour les extincteurs, une pour les RIA, qui nomment les textes réunis", () => {
+    const erpN3 = { ...etabLarge(), estERP: true, typeErp: "M", categorieErp: "N3" } as EtablissementMatching;
+    const parc = [
+      { id: "ext-1", libelle: "Extincteur hall", categorie: "EXTINCTEUR", caracteristiques: null },
+      { id: "ext-2", libelle: "Extincteur cuisine", categorie: "EXTINCTEUR", caracteristiques: null },
+      { id: "ria-1", libelle: "RIA", categorie: "RIA", caracteristiques: null },
+    ] as EquipementMatching[];
+    const rubrique = obligationsNiveauAuditDuDossier(erpN3, parc);
+    const signalisation = rubrique.filter((l) => l.id.startsWith("signalisation-par-appareil:"));
+    expect(signalisation.map((l) => l.libelle)).toEqual([
+      "Signalisation des extincteurs",
+      "Signalisation des robinets d'incendie armés",
+    ]);
+    // Le Code du travail et MS 39, réunis ; aucune ligne d'origine en double.
+    for (const l of signalisation) {
+      expect(l.obligations.sort()).toEqual([
+        "signalisation-erp-extincteurs-identification",
+        "signalisation-incendie-moyens-lutte",
+      ]);
+    }
+    expect(rubrique.some((l) => l.id === "signalisation-incendie-moyens-lutte")).toBe(false);
+  });
+
+  it("sans RIA déclaré, pas de ligne RIA", () => {
+    const parc = [
+      { id: "ext-1", libelle: "Extincteur", categorie: "EXTINCTEUR", caracteristiques: null },
+    ] as EquipementMatching[];
+    const ids = obligationsNiveauAuditDuDossier(etabLarge(), parc).map((l) => l.id);
+    expect(ids).toContain("signalisation-par-appareil:EXTINCTEUR");
+    expect(ids).not.toContain("signalisation-par-appareil:RIA");
   });
 });

@@ -80,6 +80,7 @@ export function CarteCategorie({
   hrefAjouter,
   titre,
   mention,
+  sousLEnTete,
 }: {
   categorie: CategorieEquipement;
   /** Le titre, s'il n'est pas celui de la catégorie (« Équipements de
@@ -87,6 +88,9 @@ export function CarteCategorie({
   titre?: string;
   /** À côté du titre : le fondement du texte, une marque. */
   mention?: ReactNode;
+  /** Sous l'en-tête, avant les appareils : un rappel ou un geste qui ne peut
+   *  pas vivre dans le titre (ADR-057 § 4 — le DAE partagé). */
+  sousLEnTete?: ReactNode;
   appareils: AppareilListe[];
   /** Les rythmes réellement portés par les lignes de suivi générées. */
   periodicites: Periodicite[];
@@ -129,6 +133,7 @@ export function CarteCategorie({
             .map((a) => a.resume.etat)}
         />
       </div>
+      {sousLEnTete}
 
       <div className="mt-[18px] grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {appareils.map((a) => (

@@ -19,6 +19,7 @@ import type {
   FamilleEtatsPermanents,
   LigneEtatPermanent,
 } from "@/lib/etats-permanents/queries";
+import { estEnPlace } from "@/lib/etats-permanents/en-place";
 import { ancreFamille } from "@/lib/etats-permanents/ancre";
 import { BandeauRepliable } from "./BandeauRepliable";
 import { phraseCompteur } from "@/lib/etats-permanents/phrases";
@@ -87,10 +88,8 @@ const CLASSES_SECTION =
 const EYEBROW =
   "board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]";
 
-/** Une ligne est-elle en place ? La règle du compteur (`queries.ts`). */
-function estEnPlace(l: LigneEtatPermanent): boolean {
-  return l.parLesTitres ? l.parLesTitres.enPlace : l.declareLe !== null;
-}
+// ~~`estEnPlace`, une copie de la règle du compteur~~ (2026-11-06) : la
+// lecture unique, `etats-permanents/en-place.ts`.
 
 /**
  * Une famille hors frise (2026-10-20) : un bandeau repliable pleine largeur —
