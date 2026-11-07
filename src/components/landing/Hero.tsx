@@ -41,9 +41,9 @@ export function Hero({
         fill
         preload
         // En portrait, la photo 16/9 couvre la hauteur et déborde en largeur :
-        // elle s'affiche sur environ 178 % de la hauteur d'écran (149 % sous
-        // md, où le hero ne fait que 84svh, 560 px au moins).
-        sizes="(max-width: 767px) max(150vh, 996px), (max-aspect-ratio: 16/9) 178vh, 100vw"
+        // elle s'affiche sur environ 178 % de la hauteur d'écran (150 % sous
+        // md, où le hero ne fait que 84svh).
+        sizes="(max-width: 767px) 150vh, (max-aspect-ratio: 16/9) 178vh, 100vw"
         className="-z-10 object-cover"
         style={{ objectPosition: PHOTO_HERO.position }}
       />

@@ -457,8 +457,8 @@ function CadranListe({ chiffres }: { chiffres: ChiffresReferentielSuivi }) {
                 src={`/illustrations/landing/documents/${d.picto}.webp`}
                 alt=""
                 aria-hidden
-                width={200}
-                height={200}
+                width={264}
+                height={264}
                 sizes="88px"
                 className="size-16 rounded-[16px] bg-[color:var(--board-card)] p-1.5 sm:row-span-2 sm:size-[88px] sm:rounded-[22px] sm:p-2"
               />
