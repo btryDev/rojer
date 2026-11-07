@@ -24,14 +24,15 @@ import { cn } from "@/lib/utils";
 import type { CompteLanding } from "./compte";
 import { Marque } from "./Marque";
 
-// « Tarif » mène à la section du même nom (`#tarif`). « Comprendre » n'a
+// « Tarif » mène à la section du même nom (`/#tarif` : depuis la racine,
+// l'en-tête sert aussi aux pages légales). « Comprendre » n'a
 // pas encore de destination : `#comprendre` ne correspond à aucune ancre,
 // le clic ne fait rien et ne casse rien. À rebrancher sur /comprendre le
 // jour où la page existe. Sous `md`, la barre ne garde que la marque et le
 // bouton : la page se parcourt en défilant.
 const LIENS = [
-  { href: "#comprendre", label: "Comprendre" },
-  { href: "#tarif", label: "Tarif" },
+  { href: "/#comprendre", label: "Comprendre" },
+  { href: "/#tarif", label: "Tarif" },
 ];
 
 export function LandingHeader({

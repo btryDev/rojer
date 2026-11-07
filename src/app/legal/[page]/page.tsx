@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { compteDeLaSession } from "@/components/landing/compte-session";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { SiteFooter } from "@/components/landing/SiteFooter";
 import { BoutonContact } from "@/components/landing/BoutonContact";
@@ -27,7 +28,7 @@ export default async function PageLegale({ params }: Props) {
 
   return (
     <main className="flex min-h-svh flex-col bg-[color:var(--board-card)]">
-      <LandingHeader />
+      <LandingHeader compte={await compteDeLaSession()} />
       <section className="lp-shell flex-1 py-20 sm:py-28">
         <h1 className="lp-titre lp-h2">{page.titre}</h1>
         <p className="lp-lede mt-6 max-w-[var(--board-mesure)]">

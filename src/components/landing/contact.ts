@@ -20,6 +20,13 @@ export const SUJETS_CONTACT = [
   "Autre",
 ] as const;
 
+/**
+ * Le message tient dans un lien `mailto:` : encodé, il triple ou presque, et
+ * au-delà d'environ 2 000 caractères d'adresse certaines messageries
+ * (Outlook sous Windows) tronquent ou n'ouvrent rien.
+ */
+export const MESSAGE_MAX = 1000;
+
 export type SujetContact = (typeof SUJETS_CONTACT)[number];
 
 /**
@@ -38,6 +45,7 @@ export function mailtoContact(m: {
   message: string;
 }): string {
   const signature = [m.nom, m.structure, m.email].map((t) => t.trim()).filter(Boolean);
-  const corps = [m.message.trim(), "", "—", ...signature].join("\n");
+  // CRLF : la forme que la RFC 6068 demande dans un corps de `mailto:`.
+  const corps = [m.message.trim(), "", "—", ...signature].join("\r\n");
   return `mailto:${CONTACT}?subject=${encodeURIComponent(m.sujet)}&body=${encodeURIComponent(corps)}`;
 }

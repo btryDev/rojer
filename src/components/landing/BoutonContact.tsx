@@ -5,10 +5,10 @@
 // chacun avec son sujet déjà choisi. L'envoi ouvre la messagerie du
 // visiteur, message rédigé (`mailtoContact`, provisoire).
 
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { PanneauModal } from "@/components/ui-kit/PanneauModal";
 import { cn } from "@/lib/utils";
-import { mailtoContact, SUJETS_CONTACT, type SujetContact } from "./contact";
+import { mailtoContact, MESSAGE_MAX, SUJETS_CONTACT, type SujetContact } from "./contact";
 
 export function BoutonContact({
   sujet = "Une question sur Rojer",
@@ -22,6 +22,12 @@ export function BoutonContact({
   const [ouvert, setOuvert] = useState(false);
   const [parti, setParti] = useState(false);
   const id = useId();
+  // Le bouton d'envoi disparaît avec le formulaire : le focus passe à la
+  // confirmation, annoncée (`role="status"`), plutôt que de tomber sur body.
+  const confirmation = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (parti) confirmation.current?.focus();
+  }, [parti]);
 
   const fermer = () => {
     setOuvert(false);
@@ -50,7 +56,7 @@ export function BoutonContact({
       <PanneauModal ouvert={ouvert} surFermer={fermer} surtitre="Contact" titre="Écrivez-nous">
         {parti ? (
           <>
-            <p className="m-0">
+            <p ref={confirmation} role="status" tabIndex={-1} className="m-0 outline-none">
               Votre messagerie s&apos;ouvre avec le message prêt : il ne reste
               qu&apos;à l&apos;envoyer. Si rien ne s&apos;ouvre, aucune messagerie
               n&apos;est réglée sur cet appareil : réessayez depuis un autre.
@@ -99,7 +105,7 @@ export function BoutonContact({
               <label className="label-board" htmlFor={`${id}-message`}>
                 Message *
               </label>
-              <textarea id={`${id}-message`} name="message" rows={5} required maxLength={2000} className="champ-board" />
+              <textarea id={`${id}-message`} name="message" rows={5} required maxLength={MESSAGE_MAX} className="champ-board" />
             </div>
             <p className="m-0 text-[12px] text-[color:var(--board-slate-mid)]">
               L&apos;envoi ouvre votre messagerie, message rédigé. Rien n&apos;est

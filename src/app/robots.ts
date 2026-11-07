@@ -30,7 +30,7 @@ import { OUVERT_AUX_MOTEURS } from "@/lib/indexation";
  * Tant que le site n'est pas ouvert aux moteurs (`OUVERT_AUX_MOTEURS`,
  * `lib/indexation.ts`), tout est interdit, accueil compris.
  */
-export const RACINES_INDEXABLES = ["/", "/login", "/signup"] as const;
+export const RACINES_INDEXABLES = ["/", "/login", "/signup", "/legal/"] as const;
 
 export const RACINES_EXCLUES = [
   // Pages publiques, à lien ou par slug.
