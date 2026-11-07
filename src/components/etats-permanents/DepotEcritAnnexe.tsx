@@ -22,9 +22,12 @@ export function DepotEcritAnnexe({
   fichier,
   pending,
   onDeposer,
+  stockagePlein = null,
 }: {
   fichier: NonNullable<FicheLigne["fichier"]>;
   pending: boolean;
+  /** Le motif du stockage plein, annoncé avant le choix du fichier. */
+  stockagePlein?: string | null;
   onDeposer: (fichier: File | undefined, champ: HTMLInputElement) => void;
 }) {
   return (
@@ -56,13 +59,19 @@ export function DepotEcritAnnexe({
           au prochain dépôt.
         </p>
       )}
+      {stockagePlein && (
+        <p id="stockage-plein-ecrit" role="status" className="m-0 font-semibold text-[color:var(--board-signal-ink)]">
+          {stockagePlein}
+        </p>
+      )}
       <label className={BOUTON}>
         {libelleDepot(fichier.enCours !== null)}
         <input
           type="file"
           className="sr-only"
           accept={MIME_AUTORISES.join(",")}
-          disabled={pending}
+          disabled={pending || stockagePlein !== null}
+          aria-describedby={stockagePlein ? "stockage-plein-ecrit" : undefined}
           onChange={(e) => onDeposer(e.currentTarget.files?.[0], e.currentTarget)}
         />
       </label>

@@ -1,7 +1,7 @@
 "use server";
 
 import type { Db } from "@/lib/auth/compte";
-import { deposerFichier, rendreReservations } from "@/lib/abonnements/stockage";
+import { abandonnerFichiers, deposerFichier } from "@/lib/abonnements/stockage";
 import { creerEnLotVerifie } from "@/lib/auth/portee/lot-verifie";
 import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { randomUUID } from "node:crypto";
@@ -15,7 +15,6 @@ import {
   stockageEnService,
 } from "@/lib/storage";
 import { validerFichier } from "@/lib/rapports/validator";
-import { libererFichiers } from "@/lib/suppression/fichiers";
 import type { DomainePrestataire } from "@prisma/client";
 import {
   prestataireSchema,
@@ -31,7 +30,7 @@ import {
 import { estSiretEnDouble, MESSAGE_SIRET_EN_DOUBLE } from "./siret-en-double";
 import { piecesRemplacees } from "./pieces";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
-import { prendreQuota, refusQuota, RefusQuota } from "@/lib/abonnements/quotas";
+import { motifDuGel, prendreQuota, refusQuota, RefusQuota } from "@/lib/abonnements/quotas";
 
 export type PrestataireActionState =
   | { status: "idle" }
@@ -106,9 +105,18 @@ async function deposerPieces(
   const storage = stockageEnService() ? getStorage() : null;
   const colonnes: Partial<Record<ColonnePiece, string>> = {};
   const cles: string[] = [];
+  // Un prestataire gelé (au-delà du plafond, ADR-053 § 14) l'est indépendamment
+  // de son site : refusé avant tout téléversement, comme le site l'est par
+  // `deposerFichier`.
+  let gelVerifie = false;
   for (const piece of CHAMPS_PIECES) {
     const fichier = formData.get(piece.champ);
     if (!(fichier instanceof File) || fichier.size === 0) continue;
+    if (!gelVerifie) {
+      gelVerifie = true;
+      const gel = await motifDuGel(db, compteId, { prestataireId });
+      if (gel) return { ok: false, champ: piece.champ, message: gel };
+    }
 
     const val = await validerFichier(fichier);
     let erreur: string | null = null;
@@ -120,7 +128,7 @@ async function deposerPieces(
       // d'écriture rend un message métier sur le champ.
       try {
         // Le plafond de stockage de la formule (ADR-053 § 14), avant d'écrire.
-        const refus = await deposerFichier(db, compteId, cle, Buffer.from(await fichier.arrayBuffer()), val.mime);
+        const refus = await deposerFichier(db, compteId, cle, Buffer.from(await fichier.arrayBuffer()), val.mime, { etablissementId });
         if (refus) erreur = refus;
         else {
           cles.push(cle);
@@ -133,8 +141,7 @@ async function deposerPieces(
       }
     }
     if (erreur) {
-      await Promise.all(cles.map((c) => storage?.delete(c).catch(() => {})));
-      await rendreReservations(db, cles);
+      await abandonnerFichiers(db, cles, "prestataires/depot-refuse");
       return { ok: false, champ: piece.champ, message: erreur };
     }
   }
@@ -216,8 +223,7 @@ export async function creerPrestataire(
     });
   } catch (err) {
     // Les fichiers écrits ne sont référencés par aucune ligne : on les reprend.
-    await libererFichiers(depot.cles, "prestataires/creation");
-    await rendreReservations(db, depot.cles);
+    await abandonnerFichiers(db, depot.cles, "prestataires/creation");
     if (err instanceof RefusQuota) return { status: "error", message: err.motif };
     if (estSiretEnDouble(err)) return erreurSiret();
     throw err;
@@ -328,8 +334,7 @@ export async function modifierPrestataire(
       });
     }
   } catch (err) {
-    await libererFichiers(depot.cles, "prestataires/modification");
-    await rendreReservations(db, depot.cles);
+    await abandonnerFichiers(db, depot.cles, "prestataires/modification");
     if (estSiretEnDouble(err)) return erreurSiret();
     throw err;
   }
@@ -415,7 +420,7 @@ export async function supprimerPrestataire(
   if (!prestataire) return;
 
   await db.prestataire.delete({ where: { id: prestataire.id } });
-  await deletePiecesPrestataire(prestataire);
+  await deletePiecesPrestataire(db, prestataire);
 
   revalidatePath(`/etablissements/${etablissementId}/prestataires`);
   revalidatePath(`/etablissements/${etablissementId}`);

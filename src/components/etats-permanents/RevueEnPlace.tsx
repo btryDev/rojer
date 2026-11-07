@@ -97,10 +97,13 @@ export function RevueEnPlace({
   etablissementId,
   lignes,
   parcours = true,
+  stockagePlein = null,
   children,
 }: {
   etablissementId: string;
   lignes: FicheLigne[];
+  /** Le stockage de la formule est plein (ADR-053 § 14) : le dépôt d'un écrit le dit dès l'ouverture, et ne part pas. */
+  stockagePlein?: string | null;
   /**
    * Précédente, Suivante, le « n / N » et les flèches : une REVUE qui passe
    * les lignes l'une après l'autre (« en place »). Faux sur « Évaluer les
@@ -374,7 +377,7 @@ export function RevueEnPlace({
                   règlement fait annexer au registre. `fichier` n'est posé que
                   pour ces lignes (`annexeDeLaLigne`). */}
               {l.fichier && (
-                <DepotEcritAnnexe fichier={l.fichier} pending={pending} onDeposer={deposer} />
+                <DepotEcritAnnexe fichier={l.fichier} pending={pending} onDeposer={deposer} stockagePlein={stockagePlein} />
               )}
 
               {l.parLesTitres ? (

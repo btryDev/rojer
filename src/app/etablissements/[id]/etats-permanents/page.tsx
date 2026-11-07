@@ -21,6 +21,7 @@ import {
   SectionsParUsage,
 } from "@/components/etats-permanents/SectionsParUsage";
 import { compteDeLaPage } from "@/lib/etats-permanents/compte";
+import { stockagePlein } from "@/lib/abonnements/stockage";
 import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import { OngletsEnPlace } from "@/components/etats-permanents/OngletsEnPlace";
 import { OngletsPage } from "@/components/ui-kit/OngletsPage";
@@ -108,7 +109,9 @@ export default async function EtatsPermanentsPage({
   // geste (`gestes.ts`). Dans l'adresse plutôt qu'en état local, pour que
   // chaque version ait son lien et se montre telle quelle à l'équipe.
   const parGeste = (await searchParams)?.decoupe === "geste";
-  const { etablissement } = await requireEtablissement(id);
+  const { etablissement, compte, db } = await requireEtablissement(id);
+  // Le stockage plein s'annonce sur le dépôt d'un écrit annexé (ADR-053 § 14).
+  const stockage = compte.role !== "lecture" ? await stockagePlein(db, compte.compteId) : null;
   const equipements = await listerEquipementsDeLEtablissement(id);
 
   const dossier = await listerEtatsPermanents(
@@ -190,7 +193,7 @@ export default async function EtatsPermanentsPage({
   // ici (`compteDeLaPage`), la phrase et son lien sont retirés.]
 
   return (
-    <RevueEnPlace etablissementId={id} lignes={lignesFiche}>
+    <RevueEnPlace etablissementId={id} lignes={lignesFiche} stockagePlein={stockage}>
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
       {/* Le même en-tête sur les deux onglets — le titre, l'illustration, les
           onglets au même endroit : changer d'onglet ne se lit pas comme

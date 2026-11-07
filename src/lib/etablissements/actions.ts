@@ -1,10 +1,8 @@
 "use server";
 
 import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
-import {
-  clesDesEtablissements,
-  libererFichiers,
-} from "@/lib/suppression/fichiers";
+import { abandonnerFichiers } from "@/lib/abonnements/stockage";
+import { clesDesEtablissements } from "@/lib/suppression/fichiers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
@@ -467,7 +465,7 @@ export async function supprimerEtablissement(
 
   // La base a tranché : les fichiers se libèrent. Un échec est journalisé et
   // n'annule rien — l'établissement est supprimé.
-  await libererFichiers(cles, "etablissements/suppression");
+  await abandonnerFichiers(db, cles, "etablissements/suppression");
 
   revalidatePath(`/entreprises/${etab.entrepriseId}`);
   // L'aiguilleur : l'établissement actif s'il en reste un, sinon l'onboarding.

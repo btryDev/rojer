@@ -10,9 +10,9 @@ import "server-only";
 
 import type { Prisma } from "@prisma/client";
 import type { Db } from "@/lib/auth/compte";
-import { CLES_STOCKEES } from "@/lib/suppression/fichiers";
+import { CLES_STOCKEES, libererFichiers } from "@/lib/suppression/fichiers";
 import { getStorage } from "@/lib/storage";
-import { refusStockage } from "./quotas";
+import { motifDuGel, refusStockage } from "./quotas";
 import { contexteDroits, offreLancee } from "./lancement";
 
 type Lecteur = Db | Prisma.TransactionClient;
@@ -55,7 +55,19 @@ export async function octetsUtilises(db: Lecteur, compteId: string, maintenant =
  * peut lever, comme `put`, et rend alors sa réservation. Avant le lancement :
  * le dépôt, puis la taille enregistrée.
  */
-export async function deposerFichier(db: Db, compteId: string, cle: string, data: Buffer, mime: string): Promise<string | null> {
+export async function deposerFichier(
+  db: Db,
+  compteId: string,
+  cle: string,
+  data: Buffer,
+  mime: string,
+  /** Le site du dépôt : gelé (§ 14), refusé AVANT de réserver et de téléverser. */
+  cible?: { etablissementId: string },
+): Promise<string | null> {
+  if (cible) {
+    const gel = await motifDuGel(db, compteId, cible);
+    if (gel) return gel;
+  }
   const ligne = { cle, compteId, octets: data.length };
   if (!offreLancee(contexteDroits())) {
     await getStorage().put(cle, data, mime);
@@ -76,10 +88,26 @@ export async function deposerFichier(db: Db, compteId: string, cle: string, data
   try {
     await getStorage().put(cle, data, mime);
   } catch (e) {
-    await db.fichierStocke.deleteMany({ where: { cle } }).catch(() => {});
+    await rendreReservations(db, [cle]);
     throw e;
   }
   return null;
+}
+
+/**
+ * Effacer des fichiers ET leurs lignes du plafond de stockage, en un geste :
+ * un dépôt abandonné (écriture refusée après le dépôt), une pièce remplacée,
+ * un objet supprimé. Le seul chemin des modules qui déposent (garde :
+ * `stockage-abandon.test.ts`) — sinon la ligne comptait encore et pouvait
+ * refuser à tort un dépôt près du plafond. Ne lève jamais : un échec
+ * d'effacement se journalise (`libererFichiers`), une ligne restée compte
+ * trop, jamais trop peu.
+ */
+export async function abandonnerFichiers(db: Db, cles: (string | null | undefined)[], contexte: string): Promise<void> {
+  const reelles = cles.filter((c): c is string => typeof c === "string" && c.length > 0);
+  if (reelles.length === 0) return;
+  await libererFichiers(reelles, contexte);
+  await rendreReservations(db, reelles);
 }
 
 /**
@@ -89,7 +117,7 @@ export async function deposerFichier(db: Db, compteId: string, cle: string, data
  * à tort. À appeler avec l'effacement des fichiers. Un échec ne fait que
  * compter trop, jamais trop peu.
  */
-export async function rendreReservations(db: Db, cles: string[]): Promise<void> {
+async function rendreReservations(db: Db, cles: string[]): Promise<void> {
   if (cles.length === 0) return;
   try {
     await db.fichierStocke.deleteMany({ where: { cle: { in: cles } } });

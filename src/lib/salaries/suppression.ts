@@ -123,6 +123,12 @@ export async function effacerSalarie(
     // qui porte encore un rapport ou une action (migration
     // `20261030100000_preuves_protegees_en_base`). L'effacement est voulu
     // ici (RGPD) : les preuves partent d'abord, nommément, puis les lignes.]
+    // La pièce qui prouve la levée d'un point part avec lui : le dossier est
+    // dit effacé (RGPD).
+    const pieces = await tx.action.findMany({
+      where: { etablissementId, ...surSesLignes(etablissementId, salarieId), leveeFichierCle: { not: null } },
+      select: { leveeFichierCle: true },
+    });
     await tx.action.deleteMany({
       where: { etablissementId, ...surSesLignes(etablissementId, salarieId) },
     });
@@ -141,6 +147,10 @@ export async function effacerSalarie(
     // La fiche : ses titres suivent en cascade (`TitreSalarie.salarie`).
     await tx.salarie.deleteMany({ where: { id: salarieId, etablissementId } });
 
-    return { cles: rapports.flatMap((r) => (r.fichierCle !== null ? [r.fichierCle] : [])) };
+    return {
+      cles: [...rapports.map((r) => r.fichierCle), ...pieces.map((a) => a.leveeFichierCle)].filter(
+        (c): c is string => c !== null,
+      ),
+    };
   });
 }

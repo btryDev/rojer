@@ -164,8 +164,12 @@ vi.mock("@/lib/auth/require-user", () => ({
 vi.mock("@/lib/auth/scope", () => ({
   requireEtablissement: async () => ({
     etablissement: { id: "etab-1", raisonDisplay: "Témoin", entrepriseId: "ent-1" },
+    compte: { compteId: "c1", role: "owner" },
+    db: {},
   }),
 }));
+// Le stockage plein (ADR-053 § 14) a ses tests : ici, jamais plein.
+vi.mock("@/lib/abonnements/stockage", () => ({ stockagePlein: async () => null }));
 vi.mock("@/lib/equipements/queries", () => ({
   listerEquipementsDeLEtablissement: async () => [],
 }));
