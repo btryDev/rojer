@@ -10,25 +10,12 @@ import { cn } from "@/lib/utils";
 import type { CompteLanding } from "./compte";
 import { BoutonContact } from "./BoutonContact";
 import { Reveal } from "./Reveal";
-import { ABONNEMENT, GRILLE, INCLUS, NON_INCLUS } from "./tarif-grille";
+import { DetailOffresMobile } from "./DetailOffresMobile";
+import { COLONNES_GRILLE as COLONNES, GRILLE, NOTE_GRILLE, TON_CASE as TON } from "./tarif-grille";
 import { TarifOffres } from "./TarifOffres";
-
-const COLONNES = [
-  { nom: "Essai", detail: "30 jours, sur Essentiel" },
-  { nom: "Essentiel" },
-  { nom: "Pro" },
-  { nom: "Sur mesure" },
-] as const;
 
 /** Le fond de la colonne « Essai ». */
 const FOND_ESSAI = "bg-[color:var(--board-amber-wash)]";
-
-/** Le ton d'une case qui ne porte pas un chiffre. */
-const TON: Record<string, string> = {
-  [INCLUS]: "font-semibold text-[color:var(--board-blue-ink)]",
-  [NON_INCLUS]: "text-[color:var(--board-slate)]",
-  [ABONNEMENT]: "font-mono text-[0.66rem] tracking-[0.06em] text-[color:var(--board-amber-ink)]",
-};
 
 export function Tarif({ compte }: { compte?: CompteLanding }) {
   return (
@@ -67,8 +54,11 @@ export function Tarif({ compte }: { compte?: CompteLanding }) {
           conseil technique de prévention, jamais un avis juridique.
         </p>
 
-        {/* La grille complète, repliée : la page reste lisible. */}
-        <details className="group mt-10">
+        {/* La grille complète, repliée : la page reste lisible. Au
+            téléphone, cinq colonnes ne tiennent pas : le détail s'ouvre en
+            fenêtre, une offre à la fois. */}
+        <DetailOffresMobile grille={GRILLE} />
+        <details className="group mt-10 hidden md:block">
           <summary className={cn(LIEN_REPLI, "mx-auto flex w-max text-[0.92rem] text-[color:var(--board-ink)]")}>
             <ChevronRepli />
             Voir le détail des offres
@@ -114,12 +104,7 @@ export function Tarif({ compte }: { compte?: CompteLanding }) {
               ))}
             </table>
           </div>
-          <p className="mt-4 text-center text-[0.78rem] leading-[1.55] text-[color:var(--board-slate-soft)]">
-            Pendant l&apos;essai, tout s&apos;essaie ; valider, signer ou envoyer un
-            document demande de s&apos;abonner. Au jour 30 sans abonnement, le
-            compte passe en veille : lecture, export et alertes, plus de saisie.
-            Au quota, seule la création est bloquée.
-          </p>
+          <p className="mt-4 text-center text-[0.78rem] leading-[1.55] text-[color:var(--board-slate-soft)]">{NOTE_GRILLE}</p>
         </details>
       </div>
     </section>
