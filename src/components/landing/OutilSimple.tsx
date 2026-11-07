@@ -12,6 +12,7 @@
 
 import { fichiersVisite } from "@/lib/visite/visites";
 import { ExtraitVideo } from "./ExtraitVideo";
+import illustrationSources from "../../../public/illustrations/landing/transparence-sources.jpg";
 import { PhotoCadre } from "./PhotoCadre";
 import { Reveal } from "./Reveal";
 
@@ -81,7 +82,7 @@ export function OutilSimple() {
           />
           <Reveal ample="media" className="lg:order-1">
             <PhotoCadre
-              photo={{ src: "/illustrations/landing/transparence-sources.jpg", alt: "" }}
+              photo={{ src: illustrationSources, alt: "" }}
               fond="var(--board-blue-pale)"
               ratio="4 / 3"
               sizes="(max-width: 1023px) 92vw, (max-width: 1600px) 50vw, 800px"

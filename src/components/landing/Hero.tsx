@@ -6,6 +6,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import photoHero from "../../../public/photos/hero-restaurateur.jpg";
 
 /**
  * La photo du hero. Un seul endroit à changer pour la remplacer.
@@ -16,7 +17,10 @@ import Link from "next/link";
  * `public/photos/README.md`.
  */
 const PHOTO_HERO = {
-  src: "/photos/hero-restaurateur.jpg",
+  // Importée plutôt que nommée par son chemin : Next en tire un aperçu
+  // flou glissé dans le HTML, affiché tant que la photo charge — sinon le
+  // hero restait noir puis la photo tombait d'un coup.
+  src: photoHero,
   alt: "Un restaurateur en tablier marine consulte son téléphone dans la salle de son bistrot avant le service",
   // Quand le cadre se resserre (écran en portrait), on garde son visage.
   // Sur téléphone, le hero est moins haut (84svh) : la photo se recadre moins.
@@ -40,6 +44,7 @@ export function Hero({
         alt={PHOTO_HERO.alt}
         fill
         preload
+        placeholder="blur"
         // En portrait, la photo 16/9 couvre la hauteur et déborde en largeur :
         // elle s'affiche sur environ 178 % de la hauteur d'écran (150 % sous
         // md, où le hero ne fait que 84svh).
