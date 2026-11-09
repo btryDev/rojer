@@ -122,38 +122,43 @@ function enPreuve(signature: PreuveSignature): PreuveSignature {
   };
 }
 
+/** Le refus de la limite par IP, commun aux deux pages publiques d'une signature. */
+export type TropDeDemandes = { ok: false; raison: "trop_de_demandes"; reessayerDansSecondes: number };
+
 /**
- * Ce que la page appelle : la limite par IP d'abord, la vérification ensuite.
- * Le refus ne dit rien de la signature demandée — il tombe avant toute lecture.
+ * La limite par IP des deux pages publiques d'une signature (`/verifier` et
+ * `/signe`), un seul compteur : elles prennent le même identifiant, et l'une
+ * sans limite servait de détour à l'autre (2026-11-09). `null` : la requête
+ * passe. Le refus tombe avant toute lecture et ne dit rien de la signature.
  */
+async function limiteParIp(): Promise<TropDeDemandes | null> {
+  const ip = ipClient(await headers());
+  if (!ip) return null;
+  const verdict = await consommer([{ cle: cleLimite("verification", "ip", ip), limite: LIMITES.verificationIp }]);
+  return verdict.ok ? null : { ok: false, raison: "trop_de_demandes", reessayerDansSecondes: verdict.reessayerDansSecondes };
+}
+
+/** Ce que `/verifier` appelle : la limite par IP d'abord, la vérification ensuite. */
 export async function verifierSousLimite(
   signatureId: string,
-): Promise<
-  | Awaited<ReturnType<typeof verifierIntegriteSignature>>
-  | { ok: false; raison: "trop_de_demandes"; reessayerDansSecondes: number }
-> {
-  const ip = ipClient(await headers());
-  if (ip) {
-    const verdict = await consommer([
-      { cle: cleLimite("verification", "ip", ip), limite: LIMITES.verificationIp },
-    ]);
-    if (!verdict.ok) {
-      return {
-        ok: false,
-        raison: "trop_de_demandes",
-        reessayerDansSecondes: verdict.reessayerDansSecondes,
-      };
-    }
-  }
-  return verifierIntegriteSignature(signatureId);
+): Promise<Awaited<ReturnType<typeof verifierIntegriteSignature>> | TropDeDemandes> {
+  return (await limiteParIp()) ?? verifierIntegriteSignature(signatureId);
+}
+
+/** Ce que `/signe` appelle : la même limite par IP, puis la signature (`null` si elle n'existe pas). */
+export async function lireSignatureSousLimite(
+  signatureId: string,
+): Promise<TropDeDemandes | { ok: true; signature: Awaited<ReturnType<typeof getSignature>> }> {
+  return (await limiteParIp()) ?? { ok: true, signature: await getSignature(signatureId) };
 }
 
 /**
  * Lit une signature par son identifiant, **sans authentification**.
  *
- * Seul appelant : la page de confirmation `/signe/[signatureId]`, que voit
- * le signataire juste après avoir signé. La page publique de vérification
- * `/verifier/[signatureId]`, sa sœur, passe par `verifierSousLimite`.
+ * Seul appelant : `lireSignatureSousLimite`, pour la page de confirmation
+ * `/signe/[signatureId]`, que voit le signataire juste après avoir signé. La
+ * page publique de vérification `/verifier/[signatureId]`, sa sœur, passe par
+ * `verifierSousLimite` ; les deux partagent la limite par IP.
  * L'identifiant `sig_…` est un UUID aléatoire, donc non énumérable.
  *
  * En contrepartie, la projection est limitée à ce qui sert la preuve.

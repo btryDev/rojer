@@ -32,7 +32,7 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
-const { verifierSousLimite } = await import("./verification-publique");
+const { verifierSousLimite, lireSignatureSousLimite } = await import("./verification-publique");
 
 beforeEach(() => {
   h.verdict = { ok: true };
@@ -53,6 +53,30 @@ describe("vérification publique sous limite", () => {
   it("sous la limite, vérifie", async () => {
     expect(await verifierSousLimite("sig_1")).toEqual({ ok: false, raison: "inexistante" });
     expect(h.lue).toBe(1);
+  });
+
+  it("/signe passe par la même limite : au-delà, refuse sans lire la signature", async () => {
+    h.verdict = { ok: false, reessayerDansSecondes: 120 };
+    expect(await lireSignatureSousLimite("sig_1")).toEqual({
+      ok: false,
+      raison: "trop_de_demandes",
+      reessayerDansSecondes: 120,
+    });
+    expect(h.lue).toBe(0);
+  });
+
+  it("/signe sous la limite lit la signature", async () => {
+    expect(await lireSignatureSousLimite("sig_1")).toEqual({ ok: true, signature: null });
+    expect(h.lue).toBe(1);
+  });
+
+  it("la page /signe ne lit la signature que par la limite", () => {
+    // Commentaires retirés : la page raconte encore l'ancienne lecture.
+    const page = readFileSync(join(process.cwd(), "src/app/signe/[signatureId]/page.tsx"), "utf8")
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/^\s*\/\/.*$/gm, "");
+    expect(page).toMatch(/\blireSignatureSousLimite\(/);
+    expect(page).not.toMatch(/\bgetSignature\b/);
   });
 
   it("n'est exportée d'aucun module \"use server\"", () => {
