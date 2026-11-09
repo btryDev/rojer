@@ -136,6 +136,7 @@ export default async function EquipementsPage({
       declarationsDePresence(
         id,
         EQUIPEMENTS_DE_SECURITE.map((e) => e.obligationId),
+        { compte, db },
       ),
     ]);
   const multiBatiments = estMultiBatiments(batiments);

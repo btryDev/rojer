@@ -665,8 +665,10 @@ export async function compterEtatsPermanents(
 export async function declarationsDePresence(
   etablissementId: string,
   obligationIds: readonly string[],
+  // L'accès de la page qui a déjà lu la session, comme `listerEtatsPermanents`.
+  acces?: AccesCompte,
 ): Promise<Map<string, DeclarationLue>> {
-  const { compte, db } = await requireCompte();
+  const { compte, db } = acces ?? (await requireCompte());
   const lignes = await db.declarationEtatPermanent.findMany({
     where: {
       etablissementId,
