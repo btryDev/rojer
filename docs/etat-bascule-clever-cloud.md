@@ -156,8 +156,8 @@ audit du proxy de `cc` ; le code est fusionné, il n'a jamais tourné là-bas) :
    tête et vérifier que l'IP lue est la dernière entrée, celle du répartiteur
    (`src/lib/securite/ip-client.ts`, « À VÉRIFIER au premier déploiement
    CC ») — elle sert à la limitation de débit et à la preuve de signature.
-4. **Le rôle de la base** (ajouté le 2026-11-09, ADR-051 reconfirmée sous
-   cette réserve) : sur l'add-on de Rojer, lancer
+4. **Le rôle de la base** (ajouté le 2026-11-09, ADR-051 : RLS écartée,
+   décision de la propriétaire) : sur l'add-on de Rojer, lancer
    `SELECT rolname, rolsuper, rolcreaterole, rolbypassrls FROM pg_roles WHERE rolname = current_user;`
    Attendu : propriétaire des tables, `false` partout (relevé sur un add-on
    XXS 15.17 le même jour). Autre chose : le dire, l'ADR-051 se relit.

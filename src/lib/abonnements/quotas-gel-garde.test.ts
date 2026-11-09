@@ -75,7 +75,7 @@ function corps(f: string, nom: string): string {
 describe("le gel (ADR-053 § 14)", () => {
   it("l'extension vérifie le gel avant chaque opération, avec la portée", () => {
     expect(code("src/lib/auth/portee/client.ts")).toMatch(
-      /\$allOperations\(\{[^}]*\}\)\s*\{\s*if \(portee\.geles\) await verifierGel\(base, model, operation, args, portee\.geles\);/,
+      /\$allOperations\(\{[^}]*\}\)\s*\{\s*if \(portee\.geles\) await verifierGel\(base, model, operation, args, portee\.geles, \(nom\) => borne\(nom, portee\)\);/,
     );
   });
 
