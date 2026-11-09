@@ -313,7 +313,7 @@ describe.skipIf(!URL_BASE || !local)("matrice d'isolation, générée — Postgr
       // modèles qui n'admettent qu'une ligne par établissement (DUERP, carnet,
       // registre public).
       if (nom === "Etablissement") {
-        const etab2 = (await prisma.etablissement.create({ data: { ...FABRIQUES.Etablissement[0](g, ++n) } })) as Ligne;
+        const etab2 = (await delegue(prisma, "Etablissement").create({ data: FABRIQUES.Etablissement[0](g, ++n) })) as Ligne;
         g.etab2 = etab2.id as string;
       }
     }
@@ -352,9 +352,9 @@ describe.skipIf(!URL_BASE || !local)("matrice d'isolation, générée — Postgr
   }
 
   /** Un refus de la borne : `ErreurPortee`, ou la cible bornée introuvable (P2025, P2018) — jamais une autre erreur. */
-  async function refuse(operation: () => Promise<unknown>) {
+  async function refuse(operation: (tx: unknown) => Promise<unknown>) {
     const erreur = await puisAnnuler(async (tx) => {
-      await operation.call(null, tx);
+      await operation(tx);
       return null;
     }).then(
       () => null,

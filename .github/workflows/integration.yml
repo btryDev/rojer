@@ -5,6 +5,9 @@
 # demandent qu'une base migrée et jetable :
 # - `auth/portee/client.integration` (ADR-051) : la matrice d'autorisation du
 #   client borné, d'un compte à l'autre ; il VIDE la base (`TRUNCATE`) ;
+# - `auth/portee/matrice-isolation.integration` (2026-11-09) : la même matrice,
+#   générée pour chaque modèle de compte et chaque clé du schéma ; il VIDE la
+#   base, comme le précédent ;
 # - `accessibilite/registre-vierge.integration` : le registre public créé sur
 #   un établissement vierge, sans seed.
 # - `stripe/synchronisation.integration` (ADR-053) : la prise en charge des
@@ -94,6 +97,7 @@ jobs:
         run: >-
           pnpm exec vitest run
           src/lib/auth/portee/client.integration
+          src/lib/auth/portee/matrice-isolation.integration
           src/lib/mcp/etablissements-du-compte.integration
           src/lib/accessibilite/registre-vierge.integration
           src/lib/securite/limite-debit.integration
