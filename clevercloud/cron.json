@@ -1,0 +1,4 @@
+[
+  "CRON_TZ=Europe/Paris",
+  "0 9 * * * $ROOT/clevercloud/taches-quotidiennes.sh"
+]

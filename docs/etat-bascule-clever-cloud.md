@@ -194,6 +194,13 @@ sont pas ouverts) :
 - **TVA** (2026-11-09) : créer dans le tableau de bord de production un taux
   de TVA de 20 %, pays France, type TVA, « en sus du prix » (exclusif). Sans
   lui, aucun essai ni abonnement ne se crée (notes du chantier, § 12).
+- **Tâche quotidienne** (2026-11-09) : poser `TACHES_SECRET`
+  (`openssl rand -base64 32`) sur l'application. La crontab
+  (`clevercloud/cron.json`, 9 h heure de Paris) appelle
+  `/api/taches/quotidiennes` avec ce secret : rappel de la veille de la fin
+  de l'essai. Sans lui, elle s'arrête en le disant dans les journaux, et la
+  route répond 404. Le rappel des 7 jours est un réglage du tableau de bord
+  Stripe (notes du chantier, § 13).
 - **Accès au tableau de bord Stripe** (2026-11-09) : il fait partie du
   périmètre de confiance — on y change le compte Rojer d'un client
   (`metadata.compteId`), on y offre une formule, on y rembourse. Double

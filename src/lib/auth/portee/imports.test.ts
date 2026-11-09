@@ -62,6 +62,11 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous"; 
     motif: "un essai par entreprise (ADR-053 § 8) : le SIREN déjà essayé, lu à travers les comptes (table hors compte `EssaiEntreprise`)",
     usages: ["prisma.essaiEntreprise.createMany", "prisma.essaiEntreprise.findUnique"],
   },
+  "src/lib/abonnements/rappels.ts": {
+    motif:
+      "rappel de la veille de la fin de l'essai (ADR-053), joué par la tâche quotidienne hors session : les essais de tous les comptes, l'adresse de leurs propriétaires, et sa seule marque d'envoi",
+    usages: ["prisma.abonnement.findMany", "prisma.abonnement.updateMany", "prisma.membre.findMany"],
+  },
   "src/lib/securite/limite-debit.ts": {
     motif: "compteurs techniques, hors de tout compte",
     usages: ["prisma.$executeRaw", "prisma.$queryRaw"],

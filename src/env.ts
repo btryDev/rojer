@@ -146,6 +146,10 @@ const schema = z
       (v) => (typeof v === "string" ? v.trim().toLowerCase() || undefined : v),
       z.enum(["oui", "non"]).optional(),
     ),
+
+    // Les tâches quotidiennes (`taches/quotidiennes.ts`, `clevercloud/cron.json`) :
+    // le secret que la crontab présente. Absente, la route répond 404.
+    TACHES_SECRET: z.preprocess(vide, z.string().min(32, "doit faire au moins 32 caractères").optional()),
   });
 
 /**
