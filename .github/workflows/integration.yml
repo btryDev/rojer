@@ -105,9 +105,12 @@ jobs:
           --reporter=default --reporter=json --outputFile.json=integration.json
 
       # Le contrôle de santé de la base (scripts/sante-base.sql) rejoué sur la
-      # base migrée : une colonne renommée ou retirée l'aurait cassé sans que
-      # personne le voie avant la bascule (section F, 2026-11-09). Il ne lit
-      # que : transaction READ ONLY, close par ROLLBACK.
+      # base migrée : il doit S'EXÉCUTER — une colonne renommée ou retirée
+      # l'aurait cassé sans que personne le voie avant la bascule (section F,
+      # 2026-11-09). Ses COMPTES ne sont pas vérifiés ici (sortie jetée) :
+      # l'invariant des clés croisées l'est par `client.integration`
+      # (`sondeClesCroisees` → []). Il ne lit que : transaction READ ONLY,
+      # close par ROLLBACK.
       - name: Rejouer sante-base.sql
         run: psql "postgresql://duerp:duerp@localhost:5432/rojer_integration_ci" -v ON_ERROR_STOP=1 -q -f scripts/sante-base.sql > /dev/null
 

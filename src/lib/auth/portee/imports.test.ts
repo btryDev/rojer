@@ -52,7 +52,11 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous"; 
     ],
     // Le script de maintenance (`regenererSansControleDeSession`) et le repère
     // effacé d'une passe qui n'a pas convergé (ADR-054 § 4).
-    valeur: ["regenerer", "marquerCalendrierPerime"],
+    // `$transaction(operations)` : la forme séquentielle, `operations` est un
+    // tableau de requêtes. Nommée plutôt que réécrite en `[...operations]` :
+    // le code de ce module scelle le calendrier (`version-moteur.test.ts`), et
+    // le toucher ferait recalculer tous les dossiers pour une forme.
+    valeur: ["regenerer", "marquerCalendrierPerime", "$transaction(hors tableau)"],
   },
   "src/lib/abonnements/essai-entreprise.ts": {
     motif: "un essai par entreprise (ADR-053 § 8) : le SIREN déjà essayé, lu à travers les comptes (table hors compte `EssaiEntreprise`)",
@@ -199,8 +203,9 @@ describe("client Prisma brut", () => {
  * appelée reçoit tout le client, sans borne, et ne le dit pas.
  * Lu sur le texte sans commentaires ni chaînes (`sansCommentairesNiChaines`) :
  * un `f(prisma)` en commentaire ne compte pas. Relevés aussi comme valeurs :
- * `prisma.$extends(…)`, `prisma.$transaction(rappel)` (le `tx` du rappel est le
- * client brut) et tout accès par crochets (revue de #253).
+ * `prisma.$extends(…)`, `prisma.$transaction(…)` sous toute forme autre qu'un
+ * tableau de requêtes (le `tx` d'un rappel, en ligne ou nommé, est le client
+ * brut), `() => prisma`, et tout accès par crochets (revues de #253).
  * Échappent, connus (seconde lecture de #253) :
  * - la confiance est TRANSITIVE et par NOM : la fonction nommée reçoit le
  *   client entier, et ce qu'elle en fait n'est gardé par rien ici ; une
@@ -224,8 +229,10 @@ export function valeursDuClient(code: string, nom = "prisma"): string[] {
       appels.push("$extends");
       continue;
     }
-    if (/^\s*\??\.\s*\$transaction\s*\(\s*(?:async\b|function\b|\(|[\w$]+\s*=>)/.test(apres)) {
-      appels.push("$transaction(rappel)");
+    // Toute forme qui n'est pas un tableau de requêtes : un rappel en ligne
+    // comme une fonction nommée reçoit le `tx` brut (revue medium de #253).
+    if (/^\s*\??\.\s*\$transaction\s*\(\s*(?!\[)/.test(apres)) {
+      appels.push("$transaction(hors tableau)");
       continue;
     }
     if (/^\s*(?:\?\.)?\s*\[/.test(apres)) {
@@ -234,6 +241,11 @@ export function valeursDuClient(code: string, nom = "prisma"): string[] {
     }
     if (/^\s*\??\.\s*[\w$]/.test(apres)) continue; // prisma.x, prisma?.x : un emploi, pas une valeur
     if (/\btypeof\s*$/.test(sansImports.slice(0, i))) continue; // un type
+    // Rendu par une fonction fléchée (`() => prisma`) : une valeur, pas un argument.
+    if (/=>\s*$/.test(sansImports.slice(0, i))) {
+      appels.push("<valeur>");
+      continue;
+    }
     appels.push(appelantDe(sansImports, i));
   }
   return appels;
@@ -318,7 +330,8 @@ describe("client Prisma brut : la valeur", () => {
     ["await (await import(\"x\")).limitesMembresDuPlugin(prisma, compteId);", ["limitesMembresDuPlugin"]],
     ["database: prismaAdapter(prisma, { provider: 1 }),", ["prismaAdapter"]],
     ["f(a, g(b), prisma)", ["f"]],
-    ["prisma.equipement.findMany(); prisma?.x; prisma . $transaction(x)", []],
+    ["prisma.equipement.findMany(); prisma?.x; prisma . $transaction([x])", []],
+    ["prisma.$transaction(operations)", ["$transaction(hors tableau)"]],
     ["const p = prisma;", ["<valeur>"]],
     ["export { prisma };", ["<valeur>"]],
     ["f({ db: prisma })", ["<valeur>"]],
@@ -328,9 +341,13 @@ describe("client Prisma brut : la valeur", () => {
     ["import { prisma } from \"@/lib/prisma\";\nf(prisma)", ["f"]],
     ["const prismaAdapter = 1; xprisma(); prisma2", []],
     ["await fuite(prisma.$extends({}))", ["$extends"]],
-    ["prisma.$transaction(async (tx) => fuite(tx))", ["$transaction(rappel)"]],
-    ["prisma.$transaction((tx) => f(tx))", ["$transaction(rappel)"]],
-    ["prisma.$transaction(fn => f(fn))", ["$transaction(rappel)"]],
+    ["prisma.$transaction(async (tx) => fuite(tx))", ["$transaction(hors tableau)"]],
+    ["prisma.$transaction((tx) => f(tx))", ["$transaction(hors tableau)"]],
+    ["prisma.$transaction(fn => f(fn))", ["$transaction(hors tableau)"]],
+    ["prisma.$transaction(faireLeTravail)", ["$transaction(hors tableau)"]],
+    ["prisma.$transaction(faireLeTravail, { timeout: 1 })", ["$transaction(hors tableau)"]],
+    ["run(() => prisma)", ["<valeur>"]],
+    ["run(async () => prisma)", ["<valeur>"]],
     ["prisma.$transaction([prisma.a.b()])", []],
     ['prisma?.["equipement"].deleteMany({})', ["<crochets>"]],
     ['prisma["x"]', ["<crochets>"]],

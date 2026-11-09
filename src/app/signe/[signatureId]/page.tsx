@@ -34,8 +34,8 @@ export default async function ConfirmationSignaturePage({
   params: Promise<{ signatureId: string }>;
 }) {
   const { signatureId } = await params;
-  // La limite par IP de `/verifier`, partagée (2026-11-09) : les deux pages
-  // prennent le même identifiant, l'une ne doit pas servir de détour à l'autre.
+  // Une limite par IP au plafond de `/verifier`, sur son propre compteur
+  // (`lireSignatureSousLimite`, pourquoi deux compteurs et pas un).
   const lue = await lireSignatureSousLimite(signatureId);
   if (lue.ok === false) {
     return (

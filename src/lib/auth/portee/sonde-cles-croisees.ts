@@ -79,8 +79,14 @@ function chemin(nom: string, alias: string, prefixe: string, niveau: Niveau): { 
     // Une racine sans compte (`Entreprise.compteId` est encore nullable) vaut
     // pour elle seule : deux lignes rattachées à deux entreprises orphelines
     // distinctes sont croisées, alors que NULL contre NULL ne serait pas
-    // « distinct » (seconde lecture de #253).
-    return { jointures: [], valeur: `COALESCE(${alias}.${colonne(m, c.racine)}::text, '${nom}:' || ${alias}.${identifiant(m)})` };
+    // « distinct » (seconde lecture de #253). Seulement là où la colonne est
+    // nullable : ailleurs, la colonne suffit (revue medium de #253).
+    const racine = `${alias}.${colonne(m, c.racine)}`;
+    const nullable = !m.fields.find((x) => x.name === c.racine)!.isRequired;
+    return {
+      jointures: [],
+      valeur: nullable ? `COALESCE(${racine}::text, '${nom}:' || ${alias}.${identifiant(m)})` : `${racine}::text`,
+    };
   }
   if (!("parent" in c)) throw new Error(`sonde : ${nom} n'est pas un modèle de compte`);
   const f = m.fields.find((x) => x.name === c.parent)!;
@@ -218,12 +224,20 @@ function liens(): Lien[] {
  * lecture de #253).
  */
 export function requetesSonde(): RequeteSonde[] {
+  const tous = liens();
   return (["compte", "etablissement"] as const).flatMap((niveau) =>
-    liens().flatMap(({ lien, source, cible, jointure: j, filtre }) => {
+    tous.flatMap(({ lien, source, cible, jointure: j, filtre }) => {
       const sql = requete(source, j, cible, niveau, filtre);
       return sql ? [{ lien: niveau === "compte" ? lien : `${lien} (établissement)`, sql }] : [];
     }),
   );
+}
+
+/** Toutes les requêtes en une seule : une ligne par lien, avec son compte de lignes croisées. */
+function requeteUnique(): string {
+  return requetesSonde()
+    .map(({ lien, sql }, i) => `${i === 0 ? "SELECT" : "UNION ALL SELECT"} '${lien.replace(/'/g, "''")}' AS lien, (${sql}) AS lignes_croisees`)
+    .join("\n");
 }
 
 /** Un lien croisé trouvé : le lien et le nombre de lignes qui pointent vers un autre compte. */
@@ -238,12 +252,15 @@ type Lecteur = { $queryRaw<T>(requete: Prisma.Sql): Promise<T> };
  * entrée : d'où `Prisma.raw`.
  */
 export async function sondeClesCroisees(client: Lecteur): Promise<LienCroise[]> {
-  const trouves: LienCroise[] = [];
-  for (const { lien, sql } of requetesSonde()) {
-    const [{ n }] = await client.$queryRaw<{ n: number }[]>(Prisma.raw(sql));
-    if (n > 0) trouves.push({ lien, lignes: n });
-  }
-  return trouves;
+  // Une seule requête, comme la section de `sante-base.sql` : un aller-retour
+  // au lieu d'un par lien (revue medium de #253). L'ordre des lignes d'un
+  // UNION ALL n'est pas garanti : on retrie dans l'ordre des liens.
+  const lignes = await client.$queryRaw<{ lien: string; lignes_croisees: number }[]>(Prisma.raw(requeteUnique()));
+  const ordre = requetesSonde().map((r) => r.lien);
+  return lignes
+    .filter((l) => l.lignes_croisees > 0)
+    .sort((a, b) => ordre.indexOf(a.lien) - ordre.indexOf(b.lien))
+    .map((l) => ({ lien: l.lien, lignes: l.lignes_croisees }));
 }
 
 export const DEBUT_SECTION = "-- SONDE:DEBUT (générée par scripts/sonde-cles-croisees.ts — ne pas modifier à la main)";
@@ -251,14 +268,10 @@ export const FIN_SECTION = "-- SONDE:FIN";
 
 /** La section de `scripts/sante-base.sql` : une ligne par lien, attendu 0 partout. */
 export function sectionSanteBase(): string {
-  const lignes = requetesSonde().map(
-    ({ lien, sql }, i) =>
-      `${i === 0 ? "SELECT" : "UNION ALL SELECT"} '${lien.replace(/'/g, "''")}' AS lien, (${sql}) AS lignes_croisees`,
-  );
   return [
     DEBUT_SECTION,
     "\\echo '=== D bis. Clés croisées entre comptes, générée depuis le schéma (attendu : 0 partout)'",
-    `${lignes.join("\n")};`,
+    `${requeteUnique()};`,
     FIN_SECTION,
   ].join("\n");
 }
