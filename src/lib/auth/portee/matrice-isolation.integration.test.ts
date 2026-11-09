@@ -3,24 +3,31 @@
 // Pour CHAQUE modèle d'un compte de `CORRESPONDANCE` — pas une liste recopiée —,
 // deux comptes A et B portent chacun leurs lignes, et le client borné à A est
 // éprouvé contre celles de B, sur un vrai PostgreSQL :
-//   - lectures par identifiant (`findUnique`, `findFirst`, `findMany`, `count`) :
-//     rien ;
-//   - écritures par identifiant (`update`, `updateMany`, `delete`, `deleteMany`) :
-//     refusées ou sans effet, la ligne de B intacte ;
-//   - `upsert` sur l'identifiant de B : crée chez A, B intact ;
-//   - création, et mise à jour, dont UNE clé (de rattachement, secondaire, de
-//     racine ou d'identité) désigne la ligne de B : refusées — chaque clé du
-//     schéma, une à une ;
-//   - `createMany` et `creerEnLotVerifie` rattachés au parent de B : refusés.
-// Chaque refus a son témoin : la même opération sur les lignes de A réussit
-// (dans une transaction annulée). Sans témoin, une fabrique cassée passerait
-// pour une borne qui tient.
+//   - lectures par identifiant (`findUnique`, `findFirst`, leurs `OrThrow`,
+//     `findMany`, `count`, `aggregate`, `groupBy`) : rien ;
+//   - écritures par identifiant (`update`, `updateMany`, `delete`, `deleteMany`,
+//     `upsert`) : refusées ou sans effet, la ligne de B relue intacte ;
+//   - création, et mise à jour, dont UNE clé désigne la ligne de B : refusées.
+//     Chaque clé que la borne connaît, une à une : celles des relations du
+//     schéma (rattachement, secondaires, racine, identité) et les identités
+//     scalaires (`IDENTITES_SCALAIRES`) ;
+//   - `createMany` et `creerEnLotVerifie` rattachés au parent de B : refusés,
+//     pour la raison du rattachement (le message le dit).
+// Les écritures visant B sont VALIDÉES, jamais annulées : si la borne les
+// laissait passer, B relu le montrerait. Chaque refus a son témoin — la même
+// opération sur A réussit, elle dans une transaction annulée. Sans témoin, une
+// fabrique cassée passerait pour une borne qui tient.
+//
+// HORS DE LA BORNE, donc hors de cette matrice : les identifiants sans relation
+// au schéma (`CLES_SANS_RELATION` de la sonde — objet signé polymorphe,
+// rapport de levée, identifiants du module Interventions retiré). Le client
+// borné ne les voit pas ; ils sont gardés par leur code nommé
+// (`objetAppartientAEtablissement`, `objetEstSignable`, lecture bornée du
+// rapport) et vérifiés sur les données par la sonde des clés croisées. Un test
+// plus bas les nomme, pour que la frontière se lise.
 //
 // Ce que ce fichier ne refait pas : les formes servies ou refusées par la borne
-// (`client.integration.test.ts`), et les liens croisés déjà en base (la sonde,
-// `sonde-cles-croisees.ts`). Ce qu'il ajoute : la couverture de TOUS les
-// modèles et de TOUTES leurs clés, et un modèle ajouté demain sans fabrique
-// fait tomber le fichier.
+// (`client.integration.test.ts`), et les liens croisés déjà en base (la sonde).
 //
 // SAUTÉ PAR DÉFAUT : il ne tourne que si `ISOLATION_INTEGRATION_URL` pointe une
 // base LOCALE migrée. Il VIDE les comptes (TRUNCATE), comme
@@ -36,7 +43,8 @@ vi.unmock("@/lib/auth/portee/client");
 vi.unmock("@/lib/auth/portee/lot-verifie");
 
 const URL_BASE = process.env.ISOLATION_INTEGRATION_URL;
-const local = URL_BASE ? /@(localhost|127\.0\.0\.1)[:/]/.test(URL_BASE) : false;
+// L'hôte, avec ou sans identifiants : `postgresql://localhost:5433/…` compte.
+const local = URL_BASE ? /^postgres(?:ql)?:\/\/(?:[^@/]*@)?(?:localhost|127\.0\.0\.1|\[::1\])[:/]/.test(URL_BASE) : false;
 
 type Ligne = Record<string, unknown>;
 /** Les identifiants d'un compte semé, par nom de modèle (sa première ligne), plus `compte`, `user` et `etab2`. */
@@ -234,22 +242,16 @@ const FABRIQUES: Record<string, Fabrique[]> = {
   Abonnement: [(g) => ({ compteId: g.compte, stripeCustomerId: `cus_${randomUUID()}` })],
 };
 
-/**
- * Les témoins de création qui ne peuvent pas réussir, et pourquoi. Le refus,
- * lui, est éprouvé quand même.
- */
-const SANS_TEMOIN_DE_CREATION: Record<string, string> = {
-  Abonnement: "un abonnement par compte (`compteId` unique) : A a déjà le sien",
-};
-
 describe.skipIf(!URL_BASE || !local)("matrice d'isolation, générée — PostgreSQL réel", async () => {
-  if (URL_BASE) process.env.DATABASE_URL = URL_BASE;
+  // Jamais une base qui n'est pas locale : le describe est sauté, et rien n'est posé.
+  if (URL_BASE && local) process.env.DATABASE_URL = URL_BASE;
   const { prisma } = await import("@/lib/prisma");
   const { Prisma } = await import("@prisma/client");
-  const { CORRESPONDANCE } = await import("./correspondance");
+  const { CORRESPONDANCE, IDENTITES_SCALAIRES } = await import("./correspondance");
   const { relations, ErreurPortee } = await import("./borne");
   const { clientBorne } = await import("./client");
-  const { creerEnLotVerifie } = await import("./lot-verifie");
+  const { creerEnLotVerifie, nomDuDelegue } = await import("./lot-verifie");
+  const { CLES_SANS_RELATION } = await import("./sonde-cles-croisees");
 
   const A = randomUUID();
   const B = randomUUID();
@@ -258,19 +260,24 @@ describe.skipIf(!URL_BASE || !local)("matrice d'isolation, générée — Postgr
   const dbA = clientBorne({ type: "compte", compteId: A, userId: UA });
 
   const MODELES = new Map(Prisma.dmmf.datamodel.models.map((m) => [m.name, m]));
-  const DU_COMPTE = Object.entries(CORRESPONDANCE as Record<string, object>)
-    .filter(([, c]) => "racine" in c || "parent" in c)
+  const CLASSEMENT = CORRESPONDANCE as Record<string, { racine?: string; parent?: string }>;
+  const DU_COMPTE = Object.entries(CLASSEMENT)
+    .filter(([, c]) => c.racine !== undefined || c.parent !== undefined)
     .map(([nom]) => nom);
 
-  const cleDelegue = (nom: string) => nom.charAt(0).toLowerCase() + nom.slice(1);
   type Delegue = Record<string, (a: object) => Promise<unknown>>;
-  const delegue = (client: unknown, nom: string) => (client as Record<string, Delegue>)[cleDelegue(nom)];
+  const delegue = (client: unknown, nom: string) => (client as Record<string, Delegue>)[nomDuDelegue(nom)];
   const identifiant = (nom: string) => MODELES.get(nom)!.fields.find((f) => f.isId)!.name;
+  /** La racine d'un modèle, si elle est unique (un abonnement par compte) : le témoin libère la place d'abord. */
+  const racineUnique = (nom: string) => {
+    const r = CLASSEMENT[nom].racine;
+    return r !== undefined && MODELES.get(nom)!.fields.some((f) => f.name === r && f.isUnique) ? r : null;
+  };
 
   /**
    * Le champ qu'une mise à jour modifie pour se voir : un scalaire libre — ni
    * identifiant, ni clé, ni membre d'une contrainte d'unicité, ni liste, ni
-   * énumération. Une chaîne de préférence, sinon un entier.
+   * énumération. Une chaîne de préférence, sinon un entier, sinon du JSON.
    */
   function champLibre(nom: string): { champ: string; valeur: unknown } {
     const m = MODELES.get(nom)!;
@@ -288,9 +295,13 @@ describe.skipIf(!URL_BASE || !local)("matrice d'isolation, générée — Postgr
     throw new Error(`matrice : aucun champ libre pour ${nom}`);
   }
 
-  /** Les clés d'un modèle vers une ligne d'un compte ou vers l'identité : chacune est éprouvée. */
-  const clesEprouvees = (nom: string) =>
-    relations(nom).filter((r) => r.cle !== undefined && r.genre !== "hors").map((r) => ({ cle: r.cle!, cible: r.cible }));
+  /** Les clés que la borne connaît : relations vers un compte ou l'identité, et identités scalaires. */
+  const clesEprouvees = (nom: string) => [
+    ...relations(nom)
+      .filter((r) => r.cle !== undefined && r.genre !== "hors")
+      .map((r) => ({ cle: r.cle!, identite: r.genre === "identite" })),
+    ...(IDENTITES_SCALAIRES[nom as keyof typeof IDENTITES_SCALAIRES] ?? []).map((cle) => ({ cle, identite: true })),
+  ];
 
   const lignes: Record<"A" | "B", Record<string, Ligne[]>> = { A: {}, B: {} };
   const graines: Record<"A" | "B", Graine> = { A: {}, B: {} };
@@ -351,12 +362,14 @@ describe.skipIf(!URL_BASE || !local)("matrice d'isolation, générée — Postgr
     return rendu as T;
   }
 
-  /** Un refus de la borne : `ErreurPortee`, ou la cible bornée introuvable (P2025, P2018) — jamais une autre erreur. */
-  async function refuse(operation: (tx: unknown) => Promise<unknown>) {
-    const erreur = await puisAnnuler(async (tx) => {
-      await operation(tx);
-      return null;
-    }).then(
+  /**
+   * Un refus de la borne, sur une écriture VALIDÉE (hors transaction) :
+   * `ErreurPortee`, ou la cible bornée introuvable (P2025, P2018) — jamais une
+   * autre erreur. `motif` : ce que le message doit dire, quand plusieurs
+   * refus sont possibles et qu'un seul prouve quelque chose.
+   */
+  async function refuse(operation: () => Promise<unknown>, motif?: RegExp) {
+    const erreur = await operation().then(
       () => null,
       (e: unknown) => e,
     );
@@ -365,20 +378,26 @@ describe.skipIf(!URL_BASE || !local)("matrice d'isolation, générée — Postgr
       erreur instanceof ErreurPortee ||
       (erreur instanceof Prisma.PrismaClientKnownRequestError && ["P2025", "P2018"].includes(erreur.code));
     expect(bornee, `refus attendu de la borne, reçu : ${(erreur as Error).message}`).toBe(true);
+    if (motif) expect((erreur as Error).message).toMatch(motif);
   }
 
-  /** La ligne de B, relue par le client brut : présente et telle que semée. */
-  async function bIntacte(nom: string, ligneB: Ligne) {
+  /** La ligne, relue par le client brut : présente et telle que semée (son champ libre, ses clés). */
+  async function intacte(nom: string, ligne: Ligne) {
     const id = identifiant(nom);
-    const relue = (await delegue(prisma, nom).findUnique({ where: { [id]: ligneB[id] } })) as Ligne | null;
-    expect(relue).not.toBeNull();
-    const { champ } = champLibre(nom);
-    expect(relue![champ]).toEqual(ligneB[champ]);
+    const relue = (await delegue(prisma, nom).findUnique({ where: { [id]: ligne[id] } })) as Ligne | null;
+    expect(relue, `${nom} ${String(ligne[id])} a disparu`).not.toBeNull();
+    expect(relue![champLibre(nom).champ]).toEqual(ligne[champLibre(nom).champ]);
+    for (const { cle } of clesEprouvees(nom)) expect(relue![cle]).toEqual(ligne[cle]);
   }
 
   /** Une ligne neuve de A pour `nom`, rattachée au second établissement (unicité par établissement). */
   const donneesA = (nom: string, variante = 0) =>
     FABRIQUES[nom][variante]({ ...graines.A, Etablissement: graines.A.etab2 }, ++n);
+
+  /** Dans un témoin : libère la place d'une racine unique (l'abonnement de A), par le client borné. */
+  async function liberer(tx: unknown, nom: string) {
+    if (racineUnique(nom)) await delegue(tx, nom).deleteMany({});
+  }
 
   // --- Ce que couvre la matrice ------------------------------------------------
 
@@ -388,7 +407,7 @@ describe.skipIf(!URL_BASE || !local)("matrice d'isolation, générée — Postgr
       expect([...DU_COMPTE].sort()).toEqual(Object.keys(FABRIQUES).sort());
     });
 
-    it("chaque clé vers un compte ou l'identité est remplie chez B par au moins une variante", () => {
+    it("chaque clé que la borne connaît est remplie chez B par au moins une variante", () => {
       const vides = DU_COMPTE.flatMap((nom) =>
         clesEprouvees(nom)
           .filter(({ cle }) => !lignes.B[nom].some((l) => l[cle] != null))
@@ -397,8 +416,13 @@ describe.skipIf(!URL_BASE || !local)("matrice d'isolation, générée — Postgr
       expect(vides).toEqual([]);
     });
 
-    it("les exemptions de témoin nomment des modèles de la matrice", () => {
-      expect(Object.keys(SANS_TEMOIN_DE_CREATION).filter((m) => !(m in FABRIQUES))).toEqual([]);
+    it("la frontière : les identifiants sans relation sont hors de la borne, donc hors de la matrice", () => {
+      // Gardés par leur code nommé et par la sonde (en-tête du fichier).
+      expect(CLES_SANS_RELATION.length).toBeGreaterThan(0);
+      const dansLaMatrice = CLES_SANS_RELATION.filter(({ modele, cle }) =>
+        clesEprouvees(modele).some((c) => c.cle === cle),
+      ).map(({ modele, cle }) => `${modele}.${cle}`);
+      expect(dansLaMatrice).toEqual([]);
     });
   });
 
@@ -408,28 +432,29 @@ describe.skipIf(!URL_BASE || !local)("matrice d'isolation, générée — Postgr
     const ligneA = () => lignes.A[nom][0];
     const ligneB = () => lignes.B[nom][0];
     const id = () => identifiant(nom);
+    const whereB = () => ({ [id()]: ligneB()[id()] });
 
     it("lectures : la ligne de B est absente, celle de A présente", async () => {
       const d = delegue(dbA, nom);
-      const whereB = { [id()]: ligneB()[id()] };
-      expect(await d.findUnique({ where: whereB })).toBeNull();
-      expect(await d.findFirst({ where: whereB })).toBeNull();
-      expect(await d.findMany({ where: whereB })).toEqual([]);
-      expect(await d.count({ where: whereB })).toBe(0);
+      expect(await d.findUnique({ where: whereB() })).toBeNull();
+      expect(await d.findFirst({ where: whereB() })).toBeNull();
+      expect(await d.findMany({ where: whereB() })).toEqual([]);
+      expect(await d.count({ where: whereB() })).toBe(0);
+      expect(await d.aggregate({ where: whereB(), _count: { _all: true } })).toEqual({ _count: { _all: 0 } });
+      expect(await d.groupBy({ by: [id()], where: whereB() })).toEqual([]);
+      await refuse(() => d.findUniqueOrThrow({ where: whereB() }));
+      await refuse(() => d.findFirstOrThrow({ where: whereB() }));
       expect(await d.findUnique({ where: { [id()]: ligneA()[id()] } })).not.toBeNull();
     });
 
-    it("écritures par identifiant : refusées ou sans effet sur B ; le témoin sur A écrit", async () => {
+    it("écritures par identifiant sur B : refusées ou sans effet, B relue intacte ; le témoin sur A écrit", async () => {
       const { champ, valeur } = champLibre(nom);
-      const whereB = { [id()]: ligneB()[id()] };
-      await refuse((tx) => delegue(tx, nom).update({ where: whereB, data: { [champ]: valeur } }));
-      await refuse((tx) => delegue(tx, nom).delete({ where: whereB }));
-      const sansEffet = await puisAnnuler(async (tx) => [
-        await delegue(tx, nom).updateMany({ where: whereB, data: { [champ]: valeur } }),
-        await delegue(tx, nom).deleteMany({ where: whereB }),
-      ]);
-      expect(sansEffet).toEqual([{ count: 0 }, { count: 0 }]);
-      await bIntacte(nom, ligneB());
+      const d = delegue(dbA, nom);
+      await refuse(() => d.update({ where: whereB(), data: { [champ]: valeur } }));
+      await refuse(() => d.delete({ where: whereB() }));
+      expect(await d.updateMany({ where: whereB(), data: { [champ]: valeur } })).toEqual({ count: 0 });
+      expect(await d.deleteMany({ where: whereB() })).toEqual({ count: 0 });
+      await intacte(nom, ligneB());
 
       const temoin = await puisAnnuler((tx) =>
         delegue(tx, nom).update({ where: { [id()]: ligneA()[id()] }, data: { [champ]: valeur } }),
@@ -437,61 +462,86 @@ describe.skipIf(!URL_BASE || !local)("matrice d'isolation, générée — Postgr
       expect((temoin as Ligne)[champ]).toEqual(valeur);
     });
 
-    it("upsert sur l'identifiant de B : ne touche pas B", async () => {
-      if (nom in SANS_TEMOIN_DE_CREATION) return;
+    it("upsert sur l'identifiant de B : crée chez A, ne touche pas B", async () => {
       const { champ, valeur } = champLibre(nom);
-      const cree = (await puisAnnuler((tx) =>
-        delegue(tx, nom).upsert({ where: { [id()]: ligneB()[id()] }, create: donneesA(nom), update: { [champ]: valeur } }),
-      )) as Ligne;
-      expect(cree[id()]).not.toEqual(ligneB()[id()]);
-      await bIntacte(nom, ligneB());
+      // Une racine unique (l'abonnement) : la place de A est libérée, puis rendue.
+      const unique = racineUnique(nom);
+      if (unique) await delegue(prisma, nom).delete({ where: { [id()]: ligneA()[id()] } });
+      try {
+        const cree = (await delegue(dbA, nom).upsert({
+          where: whereB(),
+          create: donneesA(nom),
+          update: { [champ]: valeur },
+        })) as Ligne;
+        expect(cree[id()]).not.toEqual(ligneB()[id()]);
+        expect(await delegue(dbA, nom).findUnique({ where: { [id()]: cree[id()] } })).not.toBeNull();
+        await delegue(prisma, nom).delete({ where: { [id()]: cree[id()] } });
+        await intacte(nom, ligneB());
+      } finally {
+        if (unique) await delegue(prisma, nom).create({ data: ligneA() });
+      }
     });
 
-    it("création : le témoin, rattaché à A, réussit", async () => {
-      if (nom in SANS_TEMOIN_DE_CREATION) return;
+    it("création : le témoin de chaque variante, rattaché à A, réussit", async () => {
       for (const v of FABRIQUES[nom].keys()) {
-        const cree = (await puisAnnuler((tx) => delegue(tx, nom).create({ data: donneesA(nom, v) }))) as Ligne;
+        const cree = (await puisAnnuler(async (tx) => {
+          await liberer(tx, nom);
+          return delegue(tx, nom).create({ data: donneesA(nom, v) });
+        })) as Ligne;
         expect(cree[id()]).toBeTruthy();
       }
     });
 
-    it.each(clesEprouvees(nom).map((c) => [c.cle, c] as const))(
-      "clé %s vers la ligne de B : création et mise à jour refusées, témoin sur A",
+    it.each(clesEprouvees(nom).map((c) => [c.cle] as const))(
+      "clé %s vers la ligne de B : création et mise à jour refusées ; les mêmes, vers A, passent",
       async (cle) => {
         const v = lignes.B[nom].findIndex((l) => l[cle] != null);
         const valeurB = lignes.B[nom][v][cle];
-        await refuse((tx) => delegue(tx, nom).create({ data: { ...donneesA(nom, v), [cle]: valeurB } }));
         const ligneDeA = lignes.A[nom][v];
-        await refuse((tx) => delegue(tx, nom).update({ where: { [id()]: ligneDeA[id()] }, data: { [cle]: valeurB } }));
-        // Témoin : la même mise à jour, avec la valeur de A, passe.
+        // Témoin d'abord : les mêmes données, la clé de A, passent — le refus
+        // qui suit ne tient donc qu'à la clé éprouvée.
+        const donnees = donneesA(nom, v);
+        await puisAnnuler(async (tx) => {
+          await liberer(tx, nom);
+          return delegue(tx, nom).create({ data: donnees });
+        });
+        await refuse(() => delegue(dbA, nom).create({ data: { ...donnees, [cle]: valeurB } }));
+        await refuse(() => delegue(dbA, nom).update({ where: { [id()]: ligneDeA[id()] }, data: { [cle]: valeurB } }));
+        // La ligne de A n'a pas été déplacée vers B.
+        await intacte(nom, ligneDeA);
         const temoin = (await puisAnnuler((tx) =>
           delegue(tx, nom).update({ where: { [id()]: ligneDeA[id()] }, data: { [cle]: ligneDeA[cle] } }),
         )) as Ligne;
         expect(temoin[cle]).toEqual(ligneDeA[cle]);
-        await bIntacte(nom, ligneB());
       },
     );
 
-    it("createMany et creerEnLotVerifie rattachés à B : refusés ; le lot vérifié de A passe", async () => {
-      const [rattachement] = clesEprouvees(nom).filter(({ cle }) => {
-        const c = (CORRESPONDANCE as Record<string, { parent?: string; racine?: string }>)[nom];
-        return c.racine === cle || relations(nom).find((r) => r.nom === c.parent)?.cle === cle;
-      });
-      expect(rattachement, "la clé de rattachement du modèle").toBeDefined();
-      const ligneDeB = { ...donneesA(nom), [rattachement.cle]: ligneB()[rattachement.cle] };
-      await refuse((tx) => delegue(tx, nom).createMany({ data: [ligneDeB] }));
-      await refuse((tx) => creerEnLotVerifie(tx as never, nom as never, [ligneDeB]));
-      // `createMany` n'accepte pas de `connect` : une clé vers l'identité (une
-      // personne, `User`) n'y est pas bornable, la borne refuse le lot entier,
-      // même de A. Forme non servie — dite ici, pour qu'un lot de ces modèles
-      // ne passe pas un jour pour un oubli.
-      const identite = relations(nom).some((r) => r.genre === "identite" && r.porteePar === "userId" && r.cle && donneesA(nom)[r.cle] != null);
-      if (identite) {
-        await refuse((tx) => creerEnLotVerifie(tx as never, nom as never, [donneesA(nom)]));
+    it("createMany et creerEnLotVerifie rattachés à B : refusés pour le rattachement ; le lot vérifié de A passe", async () => {
+      const c = CLASSEMENT[nom];
+      const rattachement = c.racine ?? relations(nom).find((r) => r.nom === c.parent)!.cle!;
+      const donnees = donneesA(nom);
+      // Les clés d'identité retirées : `createMany` les refuse toutes (pas de
+      // `connect`), et ce refus-là ne dirait rien du rattachement.
+      const personnes = relations(nom)
+        .filter((r) => r.genre === "identite" && r.porteePar === "userId" && r.cle)
+        .map((r) => r.cle!);
+      const sansIdentite = Object.fromEntries(Object.entries(donnees).filter(([k]) => !personnes.includes(k)));
+      const ligneDeB = { ...sansIdentite, [rattachement]: ligneB()[rattachement] };
+      const motif = c.racine ? /différent du compte/ : /parents non vérifiés|hors du compte/;
+      await refuse(() => delegue(dbA, nom).createMany({ data: [ligneDeB] }), motif);
+      await refuse(() => creerEnLotVerifie(dbA, nom as never, [ligneDeB]), motif);
+
+      // Une clé vers une personne n'est pas bornable dans `createMany` : la
+      // borne refuse le lot entier, même de A. Forme non servie — dite ici,
+      // pour qu'un lot de ces modèles ne passe pas un jour pour un oubli.
+      if (Object.keys(sansIdentite).length !== Object.keys(donnees).length) {
+        await refuse(() => creerEnLotVerifie(dbA, nom as never, [donnees]), /hors compte/);
         return;
       }
-      if (nom in SANS_TEMOIN_DE_CREATION) return;
-      const temoin = await puisAnnuler((tx) => creerEnLotVerifie(tx as never, nom as never, [donneesA(nom)]));
+      const temoin = await puisAnnuler(async (tx) => {
+        await liberer(tx, nom);
+        return creerEnLotVerifie(tx as never, nom as never, [donnees]);
+      });
       expect(temoin).toEqual({ count: 1 });
     });
   });

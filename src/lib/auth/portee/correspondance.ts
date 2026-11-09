@@ -119,8 +119,12 @@ export function estRacine(c: Classement): c is Racine {
  * Les clés d'identité SANS relation au schéma. Sur `main` (pas de modèle
  * `User`), `Signature.userId` et `AccessToken.createdByUserId` y figurent :
  * leur valeur ne peut être que l'utilisateur du compte, ou `null`. Sur `cc`,
- * ce sont des relations vers `User`, bornées comme l'identité : la table est
- * vide (`borne.ts` refuse au chargement une entrée qui serait la clé d'une
- * relation).
+ * ce sont des relations vers `User`, bornées comme l'identité (`borne.ts`
+ * refuse au chargement une entrée qui serait la clé d'une relation).
+ * [2026-11-09, matrice d'isolation : `Intervention.creeParUserId` est resté
+ * une colonne sans relation sur cc — le module est retiré (ADR-018), la table
+ * est là. Bornée ici, elle ne peut plus désigner une autre personne.]
  */
-export const IDENTITES_SCALAIRES: Partial<Record<Prisma.ModelName, readonly string[]>> = {};
+export const IDENTITES_SCALAIRES: Partial<Record<Prisma.ModelName, readonly string[]>> = {
+  Intervention: ["creeParUserId"],
+};

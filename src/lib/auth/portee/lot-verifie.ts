@@ -19,9 +19,13 @@ type Delegue = {
   createMany(a: Ligne): Promise<{ count: number }>;
 };
 
+/** Le nom du délégué Prisma d'un modèle (`PermisFeu` → `permisFeu`). */
+export function nomDuDelegue(nom: string): string {
+  return nom.charAt(0).toLowerCase() + nom.slice(1);
+}
+
 function delegue(client: ClientBorne | TransactionBornee, nom: string): Delegue {
-  const cle = nom.charAt(0).toLowerCase() + nom.slice(1);
-  return (client as unknown as Record<string, Delegue>)[cle];
+  return (client as unknown as Record<string, Delegue>)[nomDuDelegue(nom)];
 }
 
 export async function creerEnLotVerifie(
