@@ -103,6 +103,7 @@ function BoutonGuide({ guide }: { guide: GuideFiche }) {
       <button
         type="button"
         onClick={() => setOuvert(true)}
+        data-ecriture
         // La flèche et le curseur disent que c'est un bouton : l'ambre seul se
         // confondait avec les pastilles de la même couleur (2026-10-27).
         className={buttonVariants({ variant: "boardAttention", size: "board" }) + " flex-none cursor-pointer"}

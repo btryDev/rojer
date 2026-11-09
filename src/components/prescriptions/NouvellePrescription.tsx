@@ -37,6 +37,7 @@ export function NouvellePrescription({
     <>
       <MessageFait>{enregistree ? "Prescription enregistrée." : null}</MessageFait>
       <Button
+        data-ecriture
         type="button"
         variant="board"
         size="board"

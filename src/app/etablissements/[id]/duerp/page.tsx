@@ -97,13 +97,14 @@ export default async function EtablissementDuerpPage({
           </p>
           {duerp ? (
             <Link
+              data-ecriture
               href={`/duerp/${duerp.id}/secteur`}
               className={buttonVariants({ variant: "board", size: "board" })}
             >
               Commencer mon DUERP →
             </Link>
           ) : (
-            <form action={creerAction}>
+            <form action={creerAction} data-ecriture>
               <button
                 type="submit"
                 className={buttonVariants({ variant: "board", size: "board" })}

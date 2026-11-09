@@ -31,6 +31,7 @@ export function BoutonRetirer({
       <button
         type="button"
         disabled={pending}
+        data-ecriture
         onClick={() =>
           demander({
             titre,

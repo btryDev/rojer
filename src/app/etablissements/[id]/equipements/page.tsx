@@ -436,6 +436,7 @@ export default async function EquipementsPage({
             }
             cta="Ajouter un équipement"
             ctaHref={hrefAjouter}
+            ecriture
           />
         ) : equipementsAffiches.length === 0 ? (
           /* Le parc n'est pas vide, ce bâtiment l'est : deux situations

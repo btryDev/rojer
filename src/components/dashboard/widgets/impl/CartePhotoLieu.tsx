@@ -160,6 +160,7 @@ export function CartePhotoLieu({
           title="Une vue du lieu, sans personne reconnaissable"
           aria-label={photo ? "Changer la photo" : "Ajouter une photo"}
           aria-describedby={idConseil}
+          data-ecriture
           onClick={() => champ.current?.click()}
         >
           <Camera aria-hidden className="size-3.5" />
@@ -171,6 +172,7 @@ export function CartePhotoLieu({
             className={BOUTON}
             disabled={occupe}
             aria-label="Retirer la photo"
+            data-ecriture
             onClick={retirer}
           >
             <Trash2 aria-hidden className="size-3.5" />

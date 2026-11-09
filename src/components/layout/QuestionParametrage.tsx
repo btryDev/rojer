@@ -53,6 +53,7 @@ export function QuestionParametrage({
         {choix === "oui" && suite && (
           <Link
             href={suite.href}
+            data-ecriture
             className={buttonVariants({ variant: "board", size: "boardSm" })}
           >
             {suite.libelle} →
@@ -75,6 +76,7 @@ export function QuestionParametrage({
           name="reponse"
           value="oui"
           disabled={pending}
+          data-ecriture
           onClick={() => setChoix("oui")}
           className={buttonVariants({
             variant: "boardClair",
@@ -88,6 +90,7 @@ export function QuestionParametrage({
           name="reponse"
           value="non"
           disabled={pending}
+          data-ecriture
           onClick={() => setChoix("non")}
           className={buttonVariants({
             variant: "boardClair",

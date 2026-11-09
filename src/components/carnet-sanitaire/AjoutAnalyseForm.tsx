@@ -60,6 +60,7 @@ export function AjoutAnalyseForm({
       <button
         type="button"
         onClick={() => setOuvert(true)}
+        data-ecriture
         className="text-[12px] font-medium text-[color:var(--board-slate-mid)] underline-offset-2 transition-colors hover:text-[color:var(--board-ink)] hover:underline"
       >
         Modifier
@@ -68,6 +69,7 @@ export function AjoutAnalyseForm({
       <button
         type="button"
         onClick={() => setOuvert(true)}
+        data-ecriture
         className={buttonVariants({ variant: "boardClair", size: "boardSm" })}
       >
         + Enregistrer une analyse

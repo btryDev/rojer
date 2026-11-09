@@ -262,6 +262,7 @@ export function ChezVous({
                       );
                       return (
                         <Link
+                          data-ecriture
                           href={lien.href}
                           className="mt-1 inline-block font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
                         >

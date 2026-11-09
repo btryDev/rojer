@@ -54,6 +54,7 @@ import {
 } from "@/lib/etats-permanents/phrases";
 import { LienEffectifEntreprise } from "@/components/entreprises/LienEffectifEntreprise";
 import { PastilleFondement } from "./PastilleFondement";
+import { estEnLectureSeule } from "@/components/quotas/lecture-seule";
 
 export type FicheLigne = {
   obligationId: string;
@@ -237,6 +238,8 @@ export function RevueEnPlace({
       // Ni dans un champ, ni dans un panneau ouvert par-dessus (« Besoin
       // d'aide ? ») : la touche ne répond pas à la question d'en dessous.
       if (e.target instanceof HTMLElement && e.target.closest("input,textarea,select,[data-panneau-modal]")) return;
+      // Masqué en lecture seule (ADR-054 § 4) : les touches qui déclarent ne répondent pas.
+      if ((e.key === "1" || e.key === "2") && estEnLectureSeule()) return;
       if (e.key === "1") repondre("oui");
       else if (e.key === "2") repondre("non");
       else if (e.key === "3") repondre("nsp");
@@ -367,7 +370,7 @@ export function RevueEnPlace({
                       <strong className="font-semibold text-[color:var(--board-ink)]">À confirmer.</strong> {p}
                     </p>
                   ))}
-                  <Link href={l.questionsSansReponse.href} className={CLASSE_LIEN}>
+                  <Link data-ecriture href={l.questionsSansReponse.href} className={CLASSE_LIEN}>
                     {l.questionsSansReponse.lien}
                   </Link>
                 </div>
@@ -389,10 +392,10 @@ export function RevueEnPlace({
                 </div>
               ) : (
                 <div className="mt-auto flex flex-wrap gap-2 pt-2">
-                  <button type="button" disabled={pending} onClick={() => repondre("oui")} className={BOUTON + " bg-[color:var(--board-ink)] text-[color:var(--board-card)]"}>
+                  <button data-ecriture type="button" disabled={pending} onClick={() => repondre("oui")} className={BOUTON + " bg-[color:var(--board-ink)] text-[color:var(--board-card)]"}>
                     {libelleReponseOui(l.mode)} <span className={KBD}>1</span>
                   </button>
-                  <button type="button" disabled={pending} onClick={() => repondre("non")} className={BOUTON + " border-[color:var(--board-blue-soft)] bg-[color:var(--board-blue-pale)] text-[color:var(--board-blue-ink)]"}>
+                  <button data-ecriture type="button" disabled={pending} onClick={() => repondre("non")} className={BOUTON + " border-[color:var(--board-blue-soft)] bg-[color:var(--board-blue-pale)] text-[color:var(--board-blue-ink)]"}>
                     Pas encore <span className={KBD}>2</span>
                   </button>
                   <button type="button" disabled={pending} onClick={() => repondre("nsp")} className={BOUTON + " border-[color:var(--board-slate-line)] bg-[color:var(--board-slate-pale)] text-[color:var(--board-slate-mid)]"}>

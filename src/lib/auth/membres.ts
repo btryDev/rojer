@@ -20,6 +20,24 @@ export type Appartenance = { compteId: string; role: Role };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/** Les comptes dont la personne est membre, le plus ancien d'abord ; un rôle inconnu est écarté. */
+export async function appartenancesDe(userId: string): Promise<Appartenance[]> {
+  const lignes = await prisma.membre.findMany({
+    where: { userId },
+    select: { compteId: true, role: true },
+    // Le plus ancien d'abord, à égalité départagé par l'identifiant : deux
+    // lectures concurrentes désignent le même (`compteDOnboarding`).
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+  });
+  return lignes.filter((l): l is Appartenance => estRole(l.role));
+}
+
+/** Parmi les appartenances, celle du compte actif si la personne en est membre, sinon la plus ancienne. */
+function appartenanceRetenue(toutes: Appartenance[], compteActifId: string | null | undefined): Appartenance | null {
+  const active = compteActifId ? toutes.find((l) => l.compteId === compteActifId) : undefined;
+  return active ?? toutes[0] ?? null;
+}
+
 /**
  * Le compte où la personne travaille : le compte actif de sa session si elle
  * en est membre, sinon le plus ancien de ses comptes (défaut raisonnable, comme
@@ -30,22 +48,19 @@ export async function appartenanceCourante(
   userId: string,
   compteActifId: string | null | undefined,
 ): Promise<Appartenance | null> {
-  const lignes = await prisma.membre.findMany({
-    where: { userId },
-    select: { compteId: true, role: true },
-    // Le plus ancien d'abord, à égalité départagé par l'identifiant : deux
-    // lectures concurrentes désignent le même (`compteDOnboarding`).
-    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-  });
-  const valides = lignes.filter((l): l is Appartenance => estRole(l.role));
-  const active = compteActifId ? valides.find((l) => l.compteId === compteActifId) : undefined;
-  return active ?? valides[0] ?? null;
+  return appartenanceRetenue(await appartenancesDe(userId), compteActifId);
 }
 
-/** L'appartenance de la personne de la session courante (`compteActifId` lu dans la session). */
-export async function appartenanceDeLaSession(userId: string): Promise<Appartenance | null> {
-  const session = await lireSessionCourante();
-  return appartenanceCourante(userId, session?.session.activeOrganizationId);
+/**
+ * Les appartenances de la personne de la session courante (`compteActifId` lu
+ * dans la session) : celle retenue, et toutes — le choix du compte dans la
+ * gélule les lit sans relire `Membre` (ADR-054 § 7).
+ */
+export async function appartenanceDeLaSession(
+  userId: string,
+): Promise<{ retenue: Appartenance | null; toutes: Appartenance[] }> {
+  const [session, toutes] = await Promise.all([lireSessionCourante(), appartenancesDe(userId)]);
+  return { retenue: appartenanceRetenue(toutes, session?.session.activeOrganizationId), toutes };
 }
 
 /**

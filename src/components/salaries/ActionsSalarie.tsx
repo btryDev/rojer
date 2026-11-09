@@ -39,7 +39,7 @@ export function BasculerEffectif({
   const [refus, setRefus] = useState<string | null>(null);
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div data-ecriture className="flex flex-col gap-1.5">
       <Button
         variant="boardClair"
         size="boardSm"
@@ -90,6 +90,7 @@ export function RetirerTitreButton({
   return (
     <>
       <button
+        data-ecriture
         type="button"
         disabled={pending}
         className="text-[11.5px] text-[color:var(--board-slate-soft)] underline-offset-2 transition-colors hover:text-[color:var(--board-signal-ink)] hover:underline disabled:opacity-50"
@@ -145,6 +146,7 @@ export function SupprimerSalarieButton({
   return (
     <>
       <Button
+        data-ecriture
         variant="boardClair"
         size="boardSm"
         disabled={pending}

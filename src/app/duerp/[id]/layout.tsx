@@ -1,4 +1,5 @@
 import { SaisieDuSite } from "@/components/quotas/SaisieDuSite";
+import { MarqueLectureSeule } from "@/components/quotas/MarqueLectureSeule";
 import { Suspense } from "react";
 import { BandeauAbonnementDuCompte } from "@/components/abonnements/BandeauAbonnementDuCompte";
 import Link from "next/link";
@@ -8,6 +9,7 @@ import { AppSidebar } from "@/components/layout/AppSidebar";
 import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import { BarreDeListe } from "@/components/ui-kit/BarreDeListe";
 import { BarreCompte } from "@/components/layout/BarreCompte";
+import { comptesDeLaSession } from "@/lib/auth/compte";
 import { getDuerp } from "@/lib/duerps/queries";
 import { getOptionalUser } from "@/lib/auth/require-user";
 import { getEtatModules } from "@/lib/etablissements/modules";
@@ -54,10 +56,11 @@ export default async function DuerpLayout({
   // disparaître les retards (ADR-015).
   // La fratrie vient avec, pour le sélecteur de la barre haute : le shell DUERP
   // partage la même barre, donc la même règle (ADR-028).
-  const [modules, counts, fratrie] = await Promise.all([
+  const [modules, counts, fratrie, comptes] = await Promise.all([
     getEtatModules(etab.id, etab.estERP),
     chargerSidebarCounts(etab.id),
     listerEtablissementsDuCompte(),
+    comptesDeLaSession(),
   ]);
   // Secteur affiché dans le contexte : celui choisi dans le wizard en priorité,
   // sinon suggestion par NAF (même règle que la page secteur elle-même).
@@ -96,10 +99,14 @@ export default async function DuerpLayout({
       <div className="relative flex min-w-0 flex-col bg-[color:var(--board-canvas)] pt-[var(--reserve-gelule)] pb-[var(--reserve-nav-bas)] md:overflow-y-auto">
         {/* Le compte se tient en haut à droite ici aussi : le shell DUERP
             partage la même sidebar, donc la même règle. */}
+        {/* Lecture seule : masque ce qui mène à une écriture (`data-ecriture`). */}
+        <MarqueLectureSeule />
         <BarreCompte
           etablissementId={etab.id}
           email={user?.email ?? null}
           etablissements={fratrie}
+          comptes={comptes.comptes}
+          compteActif={comptes.actif}
         />
         {/* L'état de l'abonnement (ADR-053 § 3), comme dans le dossier. */}
         <Suspense fallback={null}>

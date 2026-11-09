@@ -89,6 +89,7 @@ export function UniteRow({ id, nom, description, nombreRisques }: Props) {
         {!editing && (
           <div className="flex shrink-0 gap-1.5">
             <Button
+              data-ecriture
               variant="boardClair"
               size="boardSm"
               onClick={() => setEditing(true)}
@@ -96,6 +97,7 @@ export function UniteRow({ id, nom, description, nombreRisques }: Props) {
               Renommer
             </Button>
             <Button
+              data-ecriture
               variant="boardClair"
               size="boardSm"
               disabled={pending}

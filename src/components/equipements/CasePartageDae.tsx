@@ -43,7 +43,9 @@ export function CasePartageDae({
   const note = !fermeture ? null : !fermeture.gel ? fermeture.motif : partage ? SITE_GELE_DECOCHER : SITE_GELE_COCHER;
   return (
     <div className="mt-3">
-      <label className="flex items-center gap-2.5 text-[13px] leading-[1.5] text-[color:var(--board-slate-ink)]">
+      <label
+        data-ecriture-inerte
+        className="flex items-center gap-2.5 text-[13px] leading-[1.5] text-[color:var(--board-slate-ink)]">
         <input
           type="checkbox"
           checked={partage}

@@ -235,13 +235,17 @@ function libelleVentilation(ventilation: VentilationEcheances): string {
 function Lien({
   href,
   children,
+  ecriture,
 }: {
   href: string;
   children: React.ReactNode;
+  /** Masqué en lecture seule (ADR-054 § 4). */
+  ecriture?: boolean;
 }) {
   return (
     <Link
       href={href}
+      data-ecriture={ecriture ? "" : undefined}
       className="mt-1 inline-flex items-center gap-2 rounded-full bg-[color:var(--board-ink)] px-4 py-2.5 text-[12.5px] font-semibold text-white transition-opacity hover:opacity-85"
     >
       {children}
@@ -1037,6 +1041,7 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
               </p>
               <Lien
                 href={`/etablissements/${bundle.etablissementId}/equipements/nouveau`}
+                ecriture
               >
                 Déclarer un équipement
               </Lien>

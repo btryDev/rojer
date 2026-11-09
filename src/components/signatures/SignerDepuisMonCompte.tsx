@@ -66,7 +66,7 @@ export function SignerDepuisMonCompte({
 
   if (!ouvert) {
     return (
-      <Button type="button" variant="board" size="boardSm" onClick={() => setOuvert(true)}>
+      <Button data-ecriture type="button" variant="board" size="boardSm" onClick={() => setOuvert(true)}>
         Signer depuis mon compte
       </Button>
     );

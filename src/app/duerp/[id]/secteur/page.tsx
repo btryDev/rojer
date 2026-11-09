@@ -47,6 +47,7 @@ export default async function SecteurPage({
           que de repartir de zéro.
         </span>
         <Link
+          data-ecriture
           href={`/etablissements/${duerp.etablissementId}/duerp/import`}
           className="board-eyebrow text-[10px] tracking-[0.16em] text-[color:var(--board-blue-ink)] hover:underline"
         >

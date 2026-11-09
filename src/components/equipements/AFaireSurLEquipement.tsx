@@ -49,7 +49,7 @@ export function AFaireSurLEquipement({
                 ))}
               </ul>
             </div>
-            <Link href={hrefModifier} className={buttonVariants({ variant: "board", size: "boardSm" })}>
+            <Link href={hrefModifier} data-ecriture className={buttonVariants({ variant: "board", size: "boardSm" })}>
               Répondre
             </Link>
           </div>
@@ -65,7 +65,7 @@ export function AFaireSurLEquipement({
               {aDater.map((c) => (
                 <li key={c.id} className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
                   <span className="text-[13px] leading-[1.4] text-[color:var(--board-slate-ink)]">{c.libelle}</span>
-                  <Link href={c.hrefDepot} className={buttonVariants({ variant: "boardClair", size: "boardSm" })}>
+                  <Link href={c.hrefDepot} data-ecriture className={buttonVariants({ variant: "boardClair", size: "boardSm" })}>
                     Déposer le rapport
                   </Link>
                 </li>
@@ -74,7 +74,7 @@ export function AFaireSurLEquipement({
             {miseEnService && "inconnue" in miseEnService ? (
               <p className="m-0 mt-3 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-ink)]">
                 Appareil neuf, jamais contrôlé&nbsp;?{" "}
-                <Link href={hrefModifier} className={LIEN}>
+                <Link href={hrefModifier} data-ecriture className={LIEN}>
                   Renseignez plutôt sa date de mise en service
                 </Link>
                 &nbsp;: le premier contrôle se calcule à partir d&apos;elle.

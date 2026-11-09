@@ -336,7 +336,7 @@ export default async function PermisFeuDetailPage({
               {/* Corriger la saisie (2026-10-12) : tant que le permis vit.
                   Signé, l'écran de modification dit ce qui reste ouvert. */}
               {permisSignable && (
-                <Link
+                <Link data-ecriture
                   href={`/etablissements/${id}/permis-feu/${permis.id}/modifier`}
                   className={buttonVariants({ variant: "boardClair", size: "board" })}
                 >

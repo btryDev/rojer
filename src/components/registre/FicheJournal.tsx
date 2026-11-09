@@ -129,7 +129,7 @@ export function FicheJournal({
       {/* L'ajout, replié quand le journal est déjà tenu — une fiche se lit
           plus souvent qu'elle ne s'écrit ; ouvert quand il est vide, où le
           geste attendu est justement d'écrire la première ligne. */}
-      <details open={lignes.length === 0} className="group">
+      <details open={lignes.length === 0} className="group" data-ecriture>
         <summary className={LIEN_REPLI}>
           <ChevronRepli />
           Ajouter une ligne

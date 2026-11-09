@@ -71,7 +71,7 @@ export default async function PrestatairesPage({
             ) : null
           }
           action={
-            <Link
+            <Link data-ecriture
               href={`/etablissements/${id}/prestataires/nouveau`}
               className={buttonVariants({ variant: "board", size: "board" })}
             >
@@ -99,7 +99,7 @@ export default async function PrestatairesPage({
                 vous dira lesquelles arrivent à échéance, et quand.
               </p>
               <div className="mt-2">
-                <Link
+                <Link data-ecriture
                   href={`/etablissements/${id}/prestataires/nouveau`}
                   className={buttonVariants({
                     variant: "board",

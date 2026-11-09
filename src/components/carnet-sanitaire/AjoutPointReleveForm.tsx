@@ -114,6 +114,7 @@ export function AjoutPointReleveForm({
       <button
         type="button"
         onClick={() => setOuvert(true)}
+        data-ecriture
         className="text-[12px] font-medium text-[color:var(--board-slate-mid)] underline-offset-2 transition-colors hover:text-[color:var(--board-ink)] hover:underline"
       >
         Modifier le point
@@ -122,6 +123,7 @@ export function AjoutPointReleveForm({
       <button
         type="button"
         onClick={() => setOuvert(true)}
+        data-ecriture
         className={buttonVariants({ variant: "boardClair", size: "boardSm" })}
       >
         + Ajouter un point de relevé

@@ -148,6 +148,7 @@ export default async function EquipePage({
           }
           action={
             <Link
+              data-ecriture
               href={`/etablissements/${id}/equipe/nouveau`}
               className={buttonVariants({ variant: "board", size: "board" })}
             >
@@ -196,6 +197,7 @@ export default async function EquipePage({
               </p>
               <div className="mt-2">
                 <Link
+                  data-ecriture
                   href={`/etablissements/${id}/equipe/nouveau`}
                   className={buttonVariants({ variant: "board", size: "board" })}
                 >
@@ -210,7 +212,7 @@ export default async function EquipePage({
             {equipe.map((s) => (
               <SalarieCard key={s.id} etablissementId={id} salarie={s} />
             ))}
-            <PlacesARenseigner nombre={aRenseigner} href={`/etablissements/${id}/equipe/nouveau`} />
+            <PlacesARenseigner nombre={aRenseigner} href={`/etablissements/${id}/equipe/nouveau`} ecriture />
           </div>
         )}
 

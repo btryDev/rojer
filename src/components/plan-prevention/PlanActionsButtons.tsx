@@ -11,7 +11,7 @@ export function BoutonCloturer({ planId }: { planId: string }) {
 
   return (
     <>
-      <Button
+      <Button data-ecriture
         type="button"
         variant="board"
         size="board"
@@ -45,7 +45,7 @@ export function BoutonSupprimerPlan({ planId }: { planId: string }) {
 
   return (
     <>
-      <Button
+      <Button data-ecriture
         type="button"
         variant="boardClair"
         size="boardSm"

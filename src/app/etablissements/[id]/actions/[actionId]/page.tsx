@@ -159,7 +159,7 @@ export default async function ActionDetailPage({
                 remonte en tête (2026-10-29, même motif que le dépôt d'un
                 rapport). */}
             {estOuverte ? (
-              <a
+              <a data-ecriture
                 href="#cloturer"
                 className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[color:var(--board-ink)] px-5 text-[13.5px] font-semibold text-white md:hidden"
               >
@@ -169,7 +169,7 @@ export default async function ActionDetailPage({
             ) : null}
             {corrigeableIci ? (
               <>
-                <Link
+                <Link data-ecriture
                   href={`${depuisCetteFiche}/modifier`}
                   className={buttonVariants({
                     variant: "boardClair",

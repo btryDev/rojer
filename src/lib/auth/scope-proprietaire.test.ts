@@ -99,7 +99,7 @@ vi.mock("@/lib/prisma", () => ({ prisma: h.prisma }));
 // L'invitation n'existe que pour l'adresse a@exemple.fr (ADR-054 § 5).
 vi.mock("./membres", () => ({
   // Comme `vitest.setup.ts` : la personne simulée est propriétaire du compte qui porte son identifiant.
-  appartenanceDeLaSession: async (userId: string) => ({ compteId: userId, role: "owner" }),
+  appartenanceDeLaSession: async (userId: string) => ({ retenue: { compteId: userId, role: "owner" }, toutes: [{ compteId: userId, role: "owner" }] }),
   invitationAdresseeA: async (id: string, email: string) =>
     id === "inv-1" && email === "a@exemple.fr" ? { id, compte: "A", role: "member", invitePar: "x" } : null,
 }));

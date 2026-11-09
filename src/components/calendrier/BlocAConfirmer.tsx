@@ -46,6 +46,7 @@ export function BlocAConfirmer({
       )}
       {phrasesDeQuestion.length > 0 && (
         <Link
+          data-ecriture
           href={lien.href}
           className="mt-1 inline-block text-[12.5px] font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
         >
