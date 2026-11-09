@@ -5,7 +5,7 @@
  * → « ventilation (VMC, CTA) », pas « ventilation (vmc, cta) ».
  */
 export function enCoursDePhrase(libelle: string): string {
-  const premierMot = libelle.split(/[\s'’(/,-]/, 1)[0];
-  if (premierMot.length > 1 && premierMot === premierMot.toUpperCase()) return libelle;
+  // Deux capitales en tête, sans minuscule à la suite : un sigle.
+  if (/^\p{Lu}{2,}(?!\p{Ll})/u.test(libelle)) return libelle;
   return libelle.charAt(0).toLowerCase() + libelle.slice(1);
 }
