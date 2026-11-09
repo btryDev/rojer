@@ -91,11 +91,11 @@ export const QUESTION_PAR_OBLIGATION: Readonly<Record<string, string>> = {
   "levage-registre-securite-consignation":
     "Les vérifications des appareils de levage sont-elles consignées au registre de sécurité ?",
   "porte-auto-dossier-maintenance":
-    "Tenez-vous le dossier de maintenance de la porte automatique ?",
+    "Tenez-vous le dossier de maintenance de la porte ou du portail automatique ?",
   "porte-auto-erp-contrat-entretien":
     "Avez-vous un contrat d'entretien pour les portes automatiques ?",
   "porte-auto-maintien-en-etat":
-    "La porte automatique est-elle maintenue en état et réparée sans attendre ?",
+    "La porte ou le portail automatique est-il maintenu en état et réparé sans attendre ?",
   "sport-etablissement-buts-plan-verification":
     "Avez-vous un plan de vérification des buts et paniers, et un registre de leurs contrôles ?",
   // Qui s'occupe de quoi

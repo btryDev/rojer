@@ -28,7 +28,7 @@ export const obligationsPortesPortails: Obligation[] = [
   {
     id: "porte-auto-verification-initiale",
     domaine: "porte_portail",
-    libelle: "Examen de sécurité à la mise en service (porte automatique)",
+    libelle: "Examen de sécurité à la mise en service (porte ou portail automatique)",
     description:
       "À la mise en service ou après modification, un examen de sécurité est réalisé pour vérifier la conformité aux prescriptions de l'arrêté du 21 décembre 1993 : détection d'obstacle, vitesse, dispositifs d'arrêt d'urgence, signalisation.",
     referencesLegales: [
@@ -64,7 +64,7 @@ export const obligationsPortesPortails: Obligation[] = [
   {
     id: "porte-auto-verification-semestrielle",
     domaine: "porte_portail",
-    libelle: "Vérification semestrielle du bon fonctionnement (porte automatique)",
+    libelle: "Vérification semestrielle du bon fonctionnement (porte ou portail automatique)",
     description:
       "Les portes et portails automatiques ou semi-automatiques sont entretenus et vérifiés périodiquement, et à la suite de toute défaillance. La périodicité des visites est « au minimum semestrielle et adaptée à la fréquence de l'utilisation et à la nature de la porte ou du portail » : six mois est le délai à ne pas dépasser, pas le rythme à tenir — une porte très sollicitée se vérifie plus souvent. La vérification porte sur les éléments de guidage, les articulations, les fixations, les systèmes d'équilibrage et tous les équipements concourant à la sécurité de fonctionnement. Toutes les interventions sont consignées dans un livret d'entretien, joint au dossier de l'article R. 4224-17.",
     referencesLegales: [
@@ -92,7 +92,7 @@ export const obligationsPortesPortails: Obligation[] = [
   {
     id: "porte-auto-dossier-maintenance",
     domaine: "porte_portail",
-    libelle: "Tenue du dossier de maintenance (porte automatique)",
+    libelle: "Tenue du dossier de maintenance (porte ou portail automatique)",
     description:
       "Un dossier de maintenance est constitué et tenu à jour : notice d'instructions, preuves de conformité, résultats des vérifications, interventions correctives. Il est conservé pendant toute la durée d'exploitation.",
     referencesLegales: [
@@ -128,7 +128,7 @@ export const obligationsPortesPortails: Obligation[] = [
   {
     id: "porte-auto-maintien-en-etat",
     domaine: "porte_portail",
-    libelle: "Maintien en état et réparation sans délai (porte automatique)",
+    libelle: "Maintien en état et réparation sans délai (porte ou portail automatique)",
     description:
       "Les portes et portails sont « entretenus et contrôlés régulièrement » (R. 4224-12), et les portes et portails automatiques « fonctionnent sans risque d'accident pour les travailleurs » (R. 4224-13). Toute défectuosité susceptible d'affecter la santé et la sécurité des travailleurs est éliminée le plus rapidement possible (R. 4224-17). Lorsque la chute d'une porte peut présenter un danger, la périodicité des contrôles et les interventions sont consignées dans le dossier prévu à l'article R. 4224-17.",
     referencesLegales: [
