@@ -42,8 +42,8 @@ export default async function VerificationEnAttentePage({
                 .
               </p>
               <p className="m-0 mt-2.5 text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                Cliquez dessus pour activer votre compte, puis revenez vous
-                connecter.
+                Ouvrez-le pour activer votre compte : vous y choisirez votre
+                mot de passe, puis vous vous connecterez avec.
               </p>
             </div>
           </div>

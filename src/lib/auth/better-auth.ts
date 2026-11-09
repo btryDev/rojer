@@ -8,11 +8,12 @@ import { organization } from "better-auth/plugins/organization";
 import { estRole, libelleRole, ROLES_DU_PLUGIN } from "./roles";
 import { createAuthMiddleware, isAPIError } from "better-auth/api";
 import { oublierAppareilsDeConfiance } from "./appareils-de-confiance";
+import { poserMotDePasseAvantConfirmation } from "./activation";
 import { prisma } from "@/lib/prisma";
 import { motifErreur, publicAppUrl, refusUrlPublique, sendMail } from "@/lib/email";
 import { ENTETE_IP_CLIENT } from "./entete-ip";
 import { lienInvitation, lienReinitialisation, lienVerification } from "./liens-compte";
-import { LONGUEUR_MIN_MOT_DE_PASSE } from "./mot-de-passe";
+import { LONGUEUR_MAX_MOT_DE_PASSE, LONGUEUR_MIN_MOT_DE_PASSE } from "./mot-de-passe";
 
 /**
  * L'authentification (ADR-052) : Better Auth, ses tables dans notre base.
@@ -113,7 +114,7 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: true,
     minPasswordLength: LONGUEUR_MIN_MOT_DE_PASSE,
-    maxPasswordLength: 128,
+    maxPasswordLength: LONGUEUR_MAX_MOT_DE_PASSE,
     // Un mot de passe réinitialisé ferme toutes les sessions ouvertes.
     revokeSessionsOnPasswordReset: true,
     resetPasswordTokenExpiresIn: 60 * 60,
@@ -141,11 +142,17 @@ export const auth = betterAuth({
     sendOnSignIn: true,
     autoSignInAfterVerification: false,
     expiresIn: UN_JOUR,
+    // Qui confirme l'adresse choisit le mot de passe, posé AVANT la
+    // confirmation ; hors de la page d'activation, la confirmation est
+    // refusée (`activation.ts`, audit du 2026-11-10).
+    beforeEmailVerification: async (user) => {
+      await poserMotDePasseAvantConfirmation(user, await auth.$context);
+    },
     sendVerificationEmail: ({ user, token }) =>
       envoyer(user.email, "Rojer — confirmez votre adresse", [
         "Bonjour,",
         "",
-        "Pour confirmer votre adresse et activer votre compte Rojer, ouvrez ce lien (valable 24 heures) :",
+        "Pour confirmer votre adresse et activer votre compte Rojer, ouvrez ce lien (valable 24 heures) ; vous y choisirez votre mot de passe :",
         lienVerification(token),
         "",
         "Si vous n'avez pas créé de compte, ignorez ce message.",
