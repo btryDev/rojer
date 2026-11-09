@@ -91,6 +91,7 @@ jobs:
         run: >-
           pnpm exec vitest run
           src/lib/auth/portee/client.integration
+          src/lib/mcp/etablissements-du-compte.integration
           src/lib/accessibilite/registre-vierge.integration
           src/lib/securite/limite-debit.integration
           src/lib/calendrier/regeneration-bornee.integration

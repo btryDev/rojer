@@ -318,6 +318,7 @@ const SQL_BRUT_NOMMES: Record<string, string> = {
   "src/lib/auth/tenancy-portee.ts": "sonde : le motif de détection du SQL brut, aucune requête",
   "src/lib/auth/tenancy-sonde.ts": "sonde : le motif de détection du SQL brut, aucune requête",
   "src/lib/auth/portee/client.ts": "commentaire seul : l'extension ne borne pas le SQL brut",
+  "src/lib/auth/portee/sonde-cles-croisees.ts": "sonde des clés croisées : lecture seule à travers les comptes, par le client que l'appelant passe",
 };
 /**
  * `Prisma.raw` insère du texte SQL tel quel, sans paramètre : il échappe à la
@@ -329,6 +330,7 @@ const PRISMA_RAW_NOMMES: Record<string, string> = {
   "src/lib/auth/scope.ts": "requireLectureSqlProprietaire : nom de colonne vérifié par une expression régulière fermée",
   "src/lib/duerps/ecrire-reponse-fermee.ts": "nom de colonne pris dans une liste fermée",
   "src/lib/rapports/joindre-realisations.ts": "fragment SQL constant, sans entrée",
+  "src/lib/auth/portee/sonde-cles-croisees.ts": "identifiants tirés du schéma (Prisma.dmmf) et constantes, aucune entrée",
 };
 const PRISMA_RAW = /\bPrisma\s*(?:\.\s*raw\b|\[\s*["'`]raw["'`]\s*\])/;
 /**

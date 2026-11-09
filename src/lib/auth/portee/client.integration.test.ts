@@ -26,6 +26,7 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
   const { Prisma } = await import("@prisma/client");
   const { clientBorne } = await import("./client");
   const { creerEnLotVerifie } = await import("./lot-verifie");
+  const { sondeClesCroisees } = await import("./sonde-cles-croisees");
 
   // Les comptes A et B, et les personnes qui y travaillent (ADR-054) :
   // identifiants distincts, pour qu'une borne qui prendrait l'un pour l'autre
@@ -440,6 +441,27 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
       });
       expect(n).toBe(1);
       await prisma.entreprise.deleteMany({ where: { raisonSociale: "A3" } });
+    });
+  });
+
+  // En dernier : après toutes les tentatives croisées ci-dessus, aucune ligne
+  // d'un compte ne pointe vers une ligne de l'autre — même par une écriture qui
+  // aurait « réussi » sans qu'un test le voie (plan d'isolation, lot 5).
+  describe("sonde des clés croisées", () => {
+    it("après la matrice, aucun lien croisé ; chaque requête générée s'exécute sur le schéma réel", async () => {
+      expect(await sondeClesCroisees(prisma)).toEqual([]);
+    });
+
+    it("un lien croisé posé par le client brut est trouvé et nommé", async () => {
+      // L'appareil de A rangé dans la zone de B : ce que le client borné refuse,
+      // le client brut l'écrit sans broncher.
+      await prisma.equipement.update({ where: { id: a.equip.id }, data: { batimentId: b.bat.id } });
+      try {
+        expect(await sondeClesCroisees(prisma)).toEqual([{ lien: "Equipement.batiment → Batiment", lignes: 1 }]);
+      } finally {
+        await prisma.equipement.update({ where: { id: a.equip.id }, data: { batimentId: a.bat.id } });
+      }
+      expect(await sondeClesCroisees(prisma)).toEqual([]);
     });
   });
 });
