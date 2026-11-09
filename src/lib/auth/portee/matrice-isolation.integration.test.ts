@@ -416,6 +416,21 @@ describe.skipIf(!URL_BASE || !local)("matrice d'isolation, générée — Postgr
       expect(vides).toEqual([]);
     });
 
+    it("toute colonne UUID sans relation d'un modèle de compte est une identité bornée", () => {
+      // Ancrage lu dans le schéma, indépendant d'IDENTITES_SCALAIRES : sans
+      // lui, retirer une entrée de cette table retirait aussi son test, et la
+      // matrice restait verte (mutation éprouvée le 2026-11-09).
+      const nonBornees = DU_COMPTE.flatMap((nom) => {
+        const m = MODELES.get(nom)!;
+        const cles = new Set(m.fields.flatMap((f) => f.relationFromFields ?? []));
+        return m.fields
+          .filter((f) => f.kind === "scalar" && !f.isId && !cles.has(f.name) && f.nativeType?.[0] === "Uuid")
+          .filter((f) => !clesEprouvees(nom).some((c) => c.cle === f.name))
+          .map((f) => `${nom}.${f.name}`);
+      });
+      expect(nonBornees).toEqual([]);
+    });
+
     it("la frontière : les identifiants sans relation sont hors de la borne, donc hors de la matrice", () => {
       // Gardés par leur code nommé et par la sonde (en-tête du fichier).
       expect(CLES_SANS_RELATION.length).toBeGreaterThan(0);
