@@ -13,11 +13,26 @@
 import { useEffect } from "react";
 
 const INERTE = "[data-ecriture-inerte]";
-const CONTROLES = `${INERTE} :is(button, input, select, textarea, a[href], [role="button"], [role="radio"], [role="checkbox"])`;
+const SAISIES = `:is(button, input, select, textarea, a[href], [role="button"], [role="radio"], [role="checkbox"])`;
+/** Le contrôle marqué lui-même (bouton Oui / Non), ou contenu dans un bloc marqué. */
+const CONTROLES = `${INERTE}${SAISIES}, ${INERTE} ${SAISIES}`;
+/** Ce que ce composant a posé, et lui seul retire. */
+const POSE = "data-inerte-annonce";
 
 function annoncerIndisponibles() {
   for (const el of document.querySelectorAll(CONTROLES))
-    if (el.getAttribute("aria-disabled") !== "true") el.setAttribute("aria-disabled", "true");
+    if (el.getAttribute("aria-disabled") !== "true") {
+      el.setAttribute("aria-disabled", "true");
+      el.setAttribute(POSE, "");
+    }
+}
+
+/** Au démontage (le rôle a changé sans recharger la page) : les contrôles ne sont plus annoncés indisponibles. */
+function retirerLesAnnonces() {
+  for (const el of document.querySelectorAll(`[${POSE}]`)) {
+    el.removeAttribute("aria-disabled");
+    el.removeAttribute(POSE);
+  }
 }
 
 export function InerteAuClavier() {
@@ -38,6 +53,7 @@ export function InerteAuClavier() {
     document.addEventListener("click", arreter, true);
     return () => {
       observateur.disconnect();
+      retirerLesAnnonces();
       document.removeEventListener("focusin", quitter, true);
       document.removeEventListener("click", arreter, true);
     };

@@ -76,6 +76,22 @@ describe("InerteAuClavier", () => {
     expect(screen.getByText("Non").getAttribute("aria-disabled")).toBe("true");
   });
 
+  it("un contrôle qui porte lui-même la marque (Oui / Non) est annoncé ; le composant retiré, l'annonce part", () => {
+    const page = (lectureSeule: boolean) => (
+      <>
+        {lectureSeule && <InerteAuClavier />}
+        <button data-ecriture-inerte>Oui</button>
+        <button aria-disabled="true">Déjà indisponible</button>
+      </>
+    );
+    const { rerender } = render(page(true));
+    expect(screen.getByText("Oui").getAttribute("aria-disabled")).toBe("true");
+    rerender(page(false)); // le rôle a changé, la page reste
+    expect(screen.getByText("Oui").hasAttribute("aria-disabled")).toBe(false);
+    // Ce que le composant n'a pas posé reste.
+    expect(screen.getByText("Déjà indisponible").getAttribute("aria-disabled")).toBe("true");
+  });
+
   it("le focus ne reste pas dans l'inerte", () => {
     render(
       <>
