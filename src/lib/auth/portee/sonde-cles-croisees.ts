@@ -211,6 +211,11 @@ function liens(): Lien[] {
  * lignes qui en ont un des deux côtés : une écriture par le client brut
  * (calendrier, ADR-054 § 4) qui rattacherait une ligne à l'appareil d'un autre
  * établissement du même compte ne se voit qu'ici (revue de #253).
+ * Ce niveau suppose qu'aucune relation LÉGITIME ne relie deux établissements
+ * d'un même compte : vrai sur le schéma du 2026-11-09. Le jour où un partage
+ * entre établissements naît (un prestataire commun, par exemple), exempter ce
+ * lien-là nommément, avec son motif — ne pas retirer le niveau (seconde
+ * lecture de #253).
  */
 export function requetesSonde(): RequeteSonde[] {
   return (["compte", "etablissement"] as const).flatMap((niveau) =>
