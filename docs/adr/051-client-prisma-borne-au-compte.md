@@ -114,6 +114,25 @@ autre compte.
    prédicats écrits à la main et les gardes `tenancy-lectures`, `-ecritures`,
    `-enfants` deviennent redondants en partie ; leur sort se décide après
    l'épreuve de l'extension, pas avant.
+   [2026-11-09, décision de la propriétaire, après l'épreuve (matrice
+   d'isolation générée, PR #255 : 37 modèles, chaque clé, six mutations de
+   la borne toutes tombées) : **tout reste.**
+   - Les **prédicats de compte écrits à la main** (une cinquantaine, 28
+     fichiers) restent comme **seconde ceinture**. Retirés, ils faisaient
+     tomber 127 tests unitaires dans 23 fichiers : le faux client
+     (`calendrier/faux-prisma.ts`) exige une clause de portée, et les tests
+     d'isolation unitaires simulent la base sans poser la borne (mode
+     `verifier`). Ces tests vérifient donc le prédicat à chaque PR, sans
+     base ; la matrice vérifie la borne en intégration. Coût mesuré du
+     doublon : une jointure, dans le bruit (§ « Constats du lot 1 »). Retrait
+     possible plus tard en passant ces tests au mode `borner` du client
+     simulé — pas avant qu'ils gênent.
+   - Les gardes **`tenancy-lectures`, `-enfants`, `-ecritures`, `-oracle`,
+     `-routes`** restent : elles gardent ce que la borne ne voit pas — le
+     cloisonnement entre établissements d'un même compte (filtres
+     `etablissementId`, dont dépendent les accès sans session bornés au
+     compte entier), les gestionnaires de routes, et les modules nommés qui
+     tiennent le client brut.]
 
 ## Ce que cette décision ne protège pas
 
