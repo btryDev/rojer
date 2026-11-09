@@ -512,6 +512,14 @@ describe.skipIf(!URL_BASE || !local)("matrice d'isolation, générée — Postgr
       const motif = c.racine ? /différent du compte/ : /parents non vérifiés|hors du compte/;
       await refuse(() => delegue(dbA, nom).createMany({ data: [ligneDeB] }), motif);
       await refuse(() => creerEnLotVerifie(dbA, nom as never, [ligneDeB]), motif);
+      // Indépendamment de la règle ci-dessus (que ce test lit dans la borne) :
+      // un lot de A dont une clé d'identité désigne celle de B est refusé.
+      // Sans cette attaque, une borne qui accepterait les identités en lot
+      // laissait la matrice verte (mutation éprouvée le 2026-11-09).
+      for (const { cle } of clesBornees(nom).filter((x) => x.identite && x.cle !== c.racine)) {
+        const valeurB = lignes.B[nom].find((l) => l[cle] != null)?.[cle];
+        await refuse(() => creerEnLotVerifie(dbA, nom as never, [{ ...donnees, [cle]: valeurB }]));
+      }
 
       // Une clé vers une personne n'est pas bornable dans `createMany` : la
       // borne refuse le lot entier, même de A. Forme non servie — dite ici,
