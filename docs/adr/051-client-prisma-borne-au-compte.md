@@ -126,6 +126,12 @@ autre compte.
 - Le croisement de deux établissements **du même compte** (une action qui
   pointerait l'équipement d'un autre établissement du même dirigeant) : ce
   n'est pas une fuite entre comptes. À instruire à part si on le veut.
+  [2026-11-09 : pour les accès SANS SESSION, une lecture ou une écriture
+  dans un autre établissement du même compte est désormais refusée par la
+  borne (section « Portée d'un établissement »). Pour une session, rien ne
+  change : un membre travaille sur tous les établissements de son compte
+  (ADR-054 § 2). Les liens croisés déjà en base, la sonde les relève
+  (niveau « établissement »).]
 
 ## Questions ouvertes
 
@@ -359,10 +365,62 @@ pas construite maintenant.
   les filtres par établissement déjà écrits dans le code restent ; le moindre
   privilège entre établissements d'un même compte reste une amélioration
   possible (portée « établissement », avec `include` et `select` bornés).
+  [2026-11-09 : **construite**, voir la section « Portée d'un établissement ».]
 - **Accès publics** (registre d'accessibilité par slug, vérification publique
   d'une signature), **compteurs techniques** (limite de débit, quotas d'OTP) et
   **recherche d'un jeton par son empreinte** : modules NOMMÉS hors compte, avec
   leur motif (`imports.test.ts`).
+
+## Portée d'un établissement (2026-11-09, chantier 3 du renforcement)
+
+Décision de la propriétaire du 2026-11-09, sur l'inventaire des accès sans
+session (lien de prestataire, page et pose de signature par jeton,
+vérification publique d'une signature, MCP par clé et stdio).
+
+- **Le client d'un accès sans session est borné au compte ET à
+  l'établissement de sa preuve** (`Portee.etablissementId`,
+  `clientDuProprietaire`, `sessionStdio`). La portée s'AJOUTE à celle du
+  compte : `borne("Etablissement")` vaut `{ id, entreprise: { compteId } }`,
+  et toute table rattachée y remonte par la récursion. Une ligne d'un autre
+  établissement du même compte est absente, comme celle d'un autre compte.
+- **L'entreprise parente se lit en champs simples seulement** (raison
+  sociale, adresse, effectif : la page de signature et le MCP les
+  affichent). Toute relation qui en part — `etablissements` d'abord — est
+  refusée, à toute profondeur, dans `include`, `select`, `where` et `orderBy`
+  (`verifierRemontee`, `scalairesSeuls`) : c'est la redescente vers les
+  établissements frères qui avait fait retirer cette portée le 2026-10-30.
+  Limite acceptée : `Entreprise.effectif` est la somme de tous les sites —
+  il dit combien de salariés comptent les autres établissements, rien
+  d'autre.
+- **Les autres racines du compte sont refusées** à cette portée
+  (abonnement, quotas, fichiers stockés, demandes d'assistance, acceptation
+  des conditions). Aucun accès sans session ne s'en sert.
+- **L'établissement et l'entreprise ne s'écrivent pas** à cette portée : un
+  accès sans session n'en a pas besoin, et une création y ouvrirait un
+  établissement hors de la portée.
+  [Revue de code de #264 : ni en tête, ni IMBRIQUÉS sous une relation —
+  `reecrireDonnees` refuse l'établissement et toute racine du compte à
+  cette portée.]
+- **Limite : les lectures imbriquées suivent les clés telles qu'elles sont
+  en base.** Une session est bornée au compte, pas à l'établissement : elle
+  peut rattacher une ligne d'un établissement à une ligne d'un autre du
+  même compte (une vérification au prestataire d'un autre site). Un
+  `include` de cette clé, sous la portée d'un établissement, rendrait alors
+  la ligne de l'autre site. Le code ne crée pas de tels liens (chaque écran
+  filtre par établissement) ; la sonde des clés croisées les relève au
+  niveau « établissement » (`scripts/sante-base.sql`, section D bis). Les
+  interdire à l'écriture, pour toute portée, est l'étape suivante si la
+  sonde en trouve un jour.
+- **Inchangé** : une signature posée par un jeton ne passe ni par le gel, ni
+  par les quotas, ni par le contrôle de l'essai (choix antérieur) ; les
+  `where: { etablissementId }` écrits restent, en seconde ceinture (§ 7).
+- **Épreuve** : `portee-etablissement.integration.test.ts` (job
+  d'intégration de la CI) sème deux établissements complets d'un même compte
+  et éprouve le client du premier contre chaque modèle du second ; trois
+  mutations de `borne.ts` le font tomber (filtre d'établissement retiré :
+  89 échecs ; remontée vers l'entreprise non vérifiée : 1 ; autres racines
+  bornées au compte : 5). Sans base : `borne.test.ts`, « portée d'un
+  établissement ».
 
 ## Relecture par la session GestBAT (2026-10-30)
 

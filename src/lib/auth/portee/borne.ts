@@ -33,6 +33,16 @@ export type Portee = {
   lectureSeule?: boolean;
   /** Le gel du compte (ADR-053 § 14), posé par la session seule. */
   geles?: Geles;
+  /**
+   * La portée « établissement » (chantier 3 du renforcement, 2026-11-09) :
+   * un accès sans session (jeton de prestataire, signature publique, MCP)
+   * ne voit que SON établissement. S'ajoute à la borne du compte, ne la
+   * remplace pas. L'entreprise parente se lit en champs simples seulement
+   * (aucune relation ne redescend vers les autres établissements) ; les
+   * autres racines du compte sont refusées ; l'établissement et
+   * l'entreprise ne s'écrivent pas.
+   */
+  etablissementId?: string;
 };
 
 /** Refus du client borné : opération ou modèle qu'il ne sait pas borner. */
@@ -147,8 +157,12 @@ export function relations(nom: string): Relation[] {
   return r;
 }
 
+/** Les mêmes relations, indexées par nom : `relation()` est appelée pour chaque clé de chaque requête. */
+const PAR_NOM = new Map([...RELATIONS].map(([m, rs]) => [m, new Map(rs.map((r) => [r.nom, r]))]));
+
 function relation(nom: string, champ: string): Relation | undefined {
-  return relations(nom).find((r) => r.nom === champ);
+  relations(nom);
+  return PAR_NOM.get(nom)!.get(champ);
 }
 
 /** Les relations d'un modèle vers une ligne d'un compte, par leur clé. */
@@ -185,7 +199,15 @@ export function delegueDe<T>(client: unknown, nom: string): T {
 /** Le filtre `where` qui borne un modèle à la portée. */
 export function borne(nom: string, portee: Portee): Objet {
   const c = classement(nom);
-  if ("racine" in c) return { [c.racine]: portee.compteId };
+  const etab = portee.etablissementId;
+  // Sous la portée d'un établissement, toute table qui y est rattachée remonte
+  // ici par la récursion : le filtre de l'établissement s'y pose une fois.
+  if (etab !== undefined && nom === "Etablissement") return { id: etab, entreprise: { compteId: portee.compteId } };
+  if (etab !== undefined && nom === "Entreprise") return { compteId: portee.compteId, etablissements: { some: { id: etab } } };
+  if ("racine" in c) {
+    if (etab !== undefined) throw new ErreurPortee(`${nom} : hors de la portée d'un établissement`);
+    return { [c.racine]: portee.compteId };
+  }
   if ("parent" in c) return { [c.parent]: borne(relation(nom, c.parent)!.cible, portee) };
   throw new ErreurPortee(`modèle hors compte : ${nom}`);
 }
@@ -256,6 +278,12 @@ function racineDe(nom: string, data: Objet, portee: Portee, creation: boolean): 
  */
 export function reecrireDonnees(nom: string, data: unknown, portee: Portee, creation: boolean): Objet {
   if (!estObjet(data)) throw new ErreurPortee(`données inattendues pour ${nom}`);
+  // Sous la portée d'un établissement, rien ne s'écrit au-dessus de lui — ni en
+  // tête (`argumentsBornes`), ni imbriqué : un `create` sous une relation
+  // ouvrirait un établissement, ou une racine du compte, hors de la portée
+  // (revue de code de #264).
+  if (portee.etablissementId !== undefined && auDessusDeLEtablissement(nom))
+    throw new ErreurPortee(`${nom} : écriture hors de la portée d'un établissement`);
   const d: Objet = { ...data };
   racineDe(nom, d, portee, creation);
   identitesScalaires(nom, d, portee);
@@ -301,6 +329,7 @@ function cible(r: Relation, where: unknown, portee: Portee): Objet {
   // La condition d'un `connect` est un filtre comme un autre : elle ne remonte
   // pas vers un modèle hors compte ni vers l'identité (seconde lecture de #142).
   verifierFiltre(r.cible, where);
+  if (portee.etablissementId !== undefined) verifierRemontee(r.cible, where);
   return avecBorne(where, borne(r.cible, portee));
 }
 
@@ -324,7 +353,10 @@ function reecrireImbrique(nom: string, r: Relation, n: Objet, portee: Portee): O
         // Lignes déjà rattachées au parent borné : Prisma limite la suppression
         // à cette relation (lignes d'un plan de prévention). Sa condition reste
         // un filtre : ni hors compte, ni identité.
-        for (const w of lister(val)) verifierFiltre(r.cible, w);
+        for (const w of lister(val)) {
+          verifierFiltre(r.cible, w);
+          if (portee.etablissementId !== undefined) verifierRemontee(r.cible, w);
+        }
         sortie[op] = val;
         break;
       default:
@@ -396,6 +428,59 @@ function verifierFiltre(nom: string, f: unknown): void {
   }
 }
 
+// --- Portée d'un établissement : rien ne remonte au-delà de l'entreprise ---------
+
+/** Ce qui ne s'écrit pas sous la portée d'un établissement : lui-même, et toute racine du compte (l'entreprise comprise). */
+function auDessusDeLEtablissement(nom: string): boolean {
+  return nom === "Etablissement" || "racine" in classement(nom);
+}
+
+/** Les clés d'arguments que les deux parcours ci-dessous traversent sans changer de modèle. */
+const TRAVERSES_ENTREPRISE = new Set(["select", "where", "orderBy"]);
+const TRAVERSES_REMONTEE = new Set(["include", "select", "where", "orderBy", "_count"]);
+
+/**
+ * Sous la portée d'un établissement, l'entreprise parente se lit en champs
+ * simples seulement : une relation qui en part (`etablissements`, ses
+ * relations vers le compte) redescendrait vers les AUTRES établissements du
+ * compte — la fuite qui avait fait retirer cette portée le 2026-10-30. Refusé
+ * à toute profondeur, dans `include`, `select`, `where` et `orderBy`.
+ */
+function scalairesSeuls(nom: string, v: unknown, chemin: string): void {
+  if (Array.isArray(v)) {
+    for (const x of v) scalairesSeuls(nom, x, chemin);
+    return;
+  }
+  if (!estObjet(v)) return;
+  for (const [cle, x] of Object.entries(v)) {
+    if (x === undefined || x === false) continue;
+    if (LOGIQUES.has(cle) || OPERATEURS_RELATION.has(cle) || TRAVERSES_ENTREPRISE.has(cle)) {
+      scalairesSeuls(nom, x, chemin);
+      continue;
+    }
+    if (cle === "include" || cle === "_count" || relation(nom, cle))
+      throw new ErreurPortee(`${chemin}.${cle} : hors de l'établissement de la portée`);
+  }
+}
+
+/** Parcourt une lecture ou un filtre ; toute traversée vers l'entreprise n'y garde que des champs simples. */
+function verifierRemontee(nom: string, args: unknown, chemin = nom): void {
+  if (Array.isArray(args)) {
+    for (const x of args) verifierRemontee(nom, x, chemin);
+    return;
+  }
+  if (!estObjet(args)) return;
+  if (nom === "Entreprise") return scalairesSeuls(nom, args, chemin);
+  for (const [cle, v] of Object.entries(args)) {
+    if (TRAVERSES_REMONTEE.has(cle) || LOGIQUES.has(cle) || OPERATEURS_RELATION.has(cle)) {
+      verifierRemontee(nom, v, chemin);
+      continue;
+    }
+    const r = relation(nom, cle);
+    if (r) verifierRemontee(r.cible, v, `${chemin}.${cle}`);
+  }
+}
+
 // --- Lot vérifié (createMany) ----------------------------------------------------
 //
 // Prisma recopie les arguments en profondeur avant l'extension : aucun marqueur
@@ -405,6 +490,8 @@ function verifierFiltre(nom: string, f: unknown): void {
 // partie. Le relevé ne vit que le temps de `dansUnLot` (`creerEnLotVerifie`).
 
 const LOT = new AsyncLocalStorage<Set<string>>();
+/** Le relevé d'un lot porte la portée entière : compte, et établissement s'il y en a un. */
+const clefDuLot = (p: Portee) => `${p.compteId}|${p.etablissementId ?? ""}`;
 
 /** Exécute `fn` dans un lot : les identifiants lus pendant l'appel y sont retenus. */
 export function dansUnLot<T>(fn: () => Promise<T>): Promise<T> {
@@ -422,19 +509,21 @@ export function estLectureDIdentifiants(operation: string, args: unknown): boole
 export function noterVus(nom: string, portee: Portee, resultat: unknown): void {
   const vus = LOT.getStore();
   if (!vus || !Array.isArray(resultat)) return;
+  const k = clefDuLot(portee);
   for (const ligne of resultat) {
     const id = (ligne as Objet | null)?.id;
-    if (typeof id === "string") vus.add(`${portee.compteId}|${nom}:${id}`);
+    if (typeof id === "string") vus.add(`${k}|${nom}:${id}`);
   }
 }
 
 /** Les clés d'une ligne vers une ligne d'un compte qui n'ont pas été vues dans le lot. */
 function clesNonVues(nom: string, ligne: Objet, portee: Portee): string[] {
   const vus = LOT.getStore() ?? new Set<string>();
+  const k = clefDuLot(portee);
   return clesDuCompte(nom).flatMap(({ cle, cible: c }) => {
     const v = ligne[cle];
     if (v === undefined || v === null) return [];
-    return vus.has(`${portee.compteId}|${c}:${String(v)}`) ? [] : [`${c}:${String(v)}`];
+    return vus.has(`${k}|${c}:${String(v)}`) ? [] : [`${c}:${String(v)}`];
   });
 }
 
@@ -456,6 +545,14 @@ export function argumentsBornes(nom: string, operation: string, args: unknown, p
   const a: Objet = estObjet(args) ? { ...args } : {};
   const b = borne(nom, portee);
   verifierLecture(nom, a);
+  if (portee.etablissementId !== undefined) {
+    verifierRemontee(nom, { where: a.where, include: a.include, select: a.select, orderBy: a.orderBy });
+    // L'établissement et son entreprise ne s'écrivent pas sous cette portée :
+    // un accès sans session n'en a pas besoin, et une création y ouvrirait
+    // un établissement hors de la portée.
+    if (!LECTURES.has(operation) && auDessusDeLEtablissement(nom))
+      throw new ErreurPortee(`${nom}.${operation} : hors de la portée d'un établissement`);
+  }
 
   if (LECTURES.has(operation)) {
     // `cursor` n'est employé nulle part : refusé plutôt que raisonné.

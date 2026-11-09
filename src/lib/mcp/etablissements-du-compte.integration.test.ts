@@ -1,8 +1,10 @@
-// Le MCP contre un VRAI PostgreSQL : une clé vaut pour UN établissement, et le
+// Le MCP contre un VRAI PostgreSQL : une clé vaut pour UN établissement. ~~Le
 // client qu'il reçoit est borné au COMPTE entier (`clientDuProprietaire`,
 // ADR-051). Entre deux établissements du même compte, la seule barrière est le
 // `where: { etablissementId }` de chaque lecture de `./queries.ts`
-// (vérification du 2026-11-09, audit rls_audit). `tools.test.ts` le vérifie
+// (vérification du 2026-11-09, audit rls_audit).~~ [2026-11-09, plus tard : le
+// client est borné à l'établissement de la clé (portée d'un établissement) ;
+// le `where` écrit reste en seconde ceinture, et ce test garde les deux.] `tools.test.ts` le vérifie
 // sur un client simulé ; ici, chaque outil est appelé sur une base qui porte
 // un second établissement aux données marquées, et aucune ne doit sortir.
 //

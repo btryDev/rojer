@@ -26,7 +26,7 @@ describe("clientDuProprietaire", () => {
   it("rend le client borné au compte propriétaire de l'établissement", async () => {
     lignes.set("etab-1", { entreprise: { compteId: "compte-1" } });
     const db = (await clientDuProprietaire("etab-1")) as unknown as Record<symbol, unknown>;
-    expect(db[PORTEE_SIMULEE]).toEqual({ type: "compte", compteId: "compte-1", userId: null });
+    expect(db[PORTEE_SIMULEE]).toEqual({ type: "compte", compteId: "compte-1", userId: null, etablissementId: "etab-1" });
   });
 
   it("rend null pour un établissement disparu ou sans propriétaire", async () => {
@@ -57,7 +57,7 @@ describe("sessionStdio (serveur MCP stdio)", () => {
     appelsApp.n = 0;
     const s = await sessionStdio(base as never, "etab-1");
     expect(s?.nom).toBe("Café du Port");
-    expect((s!.db as unknown as Record<symbol, unknown>)[PORTEE_SIMULEE]).toEqual({ type: "compte", compteId: "compte-9", userId: null });
+    expect((s!.db as unknown as Record<symbol, unknown>)[PORTEE_SIMULEE]).toEqual({ type: "compte", compteId: "compte-9", userId: null, etablissementId: "etab-1" });
     expect(await s!.db.verification.count({ where: { etablissementId: "etab-1" } })).toBe(3);
     expect(lus).toEqual(["etab-1"]);
     expect(lecturesEtab).toBe(1);

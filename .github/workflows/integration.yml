@@ -8,6 +8,9 @@
 # - `auth/portee/matrice-isolation.integration` (2026-11-09) : la même matrice,
 #   générée pour chaque modèle de compte et chaque clé du schéma ; il VIDE la
 #   base, comme le précédent ;
+# - `auth/portee/portee-etablissement.integration` (2026-11-09) : la portée d'un
+#   établissement des accès sans session, contre deux établissements d'un même
+#   compte ; il VIDE la base ;
 # - `accessibilite/registre-vierge.integration` : le registre public créé sur
 #   un établissement vierge, sans seed.
 # - `stripe/synchronisation.integration` (ADR-053) : la prise en charge des
@@ -93,12 +96,13 @@ jobs:
           STRIPE_INTEGRATION_URL: postgresql://duerp:duerp@localhost:5432/rojer_integration_ci
           EFFECTIF_INTEGRATION_URL: postgresql://duerp:duerp@localhost:5432/rojer_integration_ci
         # Un fichier après l'autre : ils partagent la base, et
-        # client.integration et matrice-isolation.integration la vident (TRUNCATE
+        # client.integration, matrice-isolation et portee-etablissement la vident (TRUNCATE
         # "Entreprise", "Compte" et "User" CASCADE) : jamais en parallèle.
         run: >-
           pnpm exec vitest run
           src/lib/auth/portee/client.integration
           src/lib/auth/portee/matrice-isolation.integration
+          src/lib/auth/portee/portee-etablissement.integration
           src/lib/mcp/etablissements-du-compte.integration
           src/lib/accessibilite/registre-vierge.integration
           src/lib/securite/limite-debit.integration
