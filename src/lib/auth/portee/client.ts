@@ -105,18 +105,21 @@ export type ClientBorne = PrismaClient;
 const CLIENTS = new Map<string, ClientBorne>();
 const MAX_CLIENTS = 500;
 
+/** Un identifiant : une chaîne non vide. */
+const nonVide = (v: unknown): v is string => typeof v === "string" && v.length > 0;
+
 /** Une portée valide, lue UNE fois (un objet à accesseur ne peut pas en rendre deux). */
 function lirePortee(portee: Portee): Portee {
   if (portee?.type !== "compte")
     throw new ErreurPortee("seule la portée de compte existe (un établissement s'y ajoute) : client refusé");
   const compteId = portee.compteId;
   const userId = portee.userId;
-  if (typeof compteId !== "string" || compteId.length === 0)
+  if (!nonVide(compteId))
     throw new ErreurPortee("portée sans compte : client refusé");
-  if (userId !== null && (typeof userId !== "string" || userId.length === 0))
+  if (userId !== null && !nonVide(userId))
     throw new ErreurPortee("portée à la personne invalide : client refusé");
   const etablissementId = portee.etablissementId;
-  if (etablissementId !== undefined && (typeof etablissementId !== "string" || etablissementId.length === 0))
+  if (etablissementId !== undefined && !nonVide(etablissementId))
     throw new ErreurPortee("portée d'établissement invalide : client refusé");
   // Le gel, figé (`gelesDuCompte` ne rend jamais un gel vide).
   const g = portee.geles;

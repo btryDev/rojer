@@ -157,8 +157,12 @@ export function relations(nom: string): Relation[] {
   return r;
 }
 
+/** Les mêmes relations, indexées par nom : `relation()` est appelée pour chaque clé de chaque requête. */
+const PAR_NOM = new Map([...RELATIONS].map(([m, rs]) => [m, new Map(rs.map((r) => [r.nom, r]))]));
+
 function relation(nom: string, champ: string): Relation | undefined {
-  return relations(nom).find((r) => r.nom === champ);
+  relations(nom);
+  return PAR_NOM.get(nom)!.get(champ);
 }
 
 /** Les relations d'un modèle vers une ligne d'un compte, par leur clé. */
@@ -196,14 +200,14 @@ export function delegueDe<T>(client: unknown, nom: string): T {
 export function borne(nom: string, portee: Portee): Objet {
   const c = classement(nom);
   const etab = portee.etablissementId;
-  if (etab !== undefined) {
-    // Toute table rattachée à un établissement remonte ici par la récursion :
-    // le filtre de l'établissement s'y pose une fois pour toutes.
-    if (nom === "Etablissement") return { id: etab, entreprise: { compteId: portee.compteId } };
-    if (nom === "Entreprise") return { compteId: portee.compteId, etablissements: { some: { id: etab } } };
-    if ("racine" in c) throw new ErreurPortee(`${nom} : hors de la portée d'un établissement`);
+  // Sous la portée d'un établissement, toute table qui y est rattachée remonte
+  // ici par la récursion : le filtre de l'établissement s'y pose une fois.
+  if (etab !== undefined && nom === "Etablissement") return { id: etab, entreprise: { compteId: portee.compteId } };
+  if (etab !== undefined && nom === "Entreprise") return { compteId: portee.compteId, etablissements: { some: { id: etab } } };
+  if ("racine" in c) {
+    if (etab !== undefined) throw new ErreurPortee(`${nom} : hors de la portée d'un établissement`);
+    return { [c.racine]: portee.compteId };
   }
-  if ("racine" in c) return { [c.racine]: portee.compteId };
   if ("parent" in c) return { [c.parent]: borne(relation(nom, c.parent)!.cible, portee) };
   throw new ErreurPortee(`modèle hors compte : ${nom}`);
 }
@@ -278,7 +282,7 @@ export function reecrireDonnees(nom: string, data: unknown, portee: Portee, crea
   // tête (`argumentsBornes`), ni imbriqué : un `create` sous une relation
   // ouvrirait un établissement, ou une racine du compte, hors de la portée
   // (revue de code de #264).
-  if (portee.etablissementId !== undefined && (nom === "Etablissement" || "racine" in classement(nom)))
+  if (portee.etablissementId !== undefined && auDessusDeLEtablissement(nom))
     throw new ErreurPortee(`${nom} : écriture hors de la portée d'un établissement`);
   const d: Objet = { ...data };
   racineDe(nom, d, portee, creation);
@@ -422,6 +426,15 @@ function verifierFiltre(nom: string, f: unknown): void {
 
 // --- Portée d'un établissement : rien ne remonte au-delà de l'entreprise ---------
 
+/** Ce qui ne s'écrit pas sous la portée d'un établissement : lui-même, et toute racine du compte (l'entreprise comprise). */
+function auDessusDeLEtablissement(nom: string): boolean {
+  return nom === "Etablissement" || "racine" in classement(nom);
+}
+
+/** Les clés d'arguments que les deux parcours ci-dessous traversent sans changer de modèle. */
+const TRAVERSES_ENTREPRISE = new Set(["select", "where", "orderBy"]);
+const TRAVERSES_REMONTEE = new Set(["include", "select", "where", "orderBy", "_count"]);
+
 /**
  * Sous la portée d'un établissement, l'entreprise parente se lit en champs
  * simples seulement : une relation qui en part (`etablissements`, ses
@@ -437,7 +450,7 @@ function scalairesSeuls(nom: string, v: unknown, chemin: string): void {
   if (!estObjet(v)) return;
   for (const [cle, x] of Object.entries(v)) {
     if (x === undefined || x === false) continue;
-    if (LOGIQUES.has(cle) || OPERATEURS_RELATION.has(cle) || ["select", "where", "orderBy"].includes(cle)) {
+    if (LOGIQUES.has(cle) || OPERATEURS_RELATION.has(cle) || TRAVERSES_ENTREPRISE.has(cle)) {
       scalairesSeuls(nom, x, chemin);
       continue;
     }
@@ -455,7 +468,7 @@ function verifierRemontee(nom: string, args: unknown, chemin = nom): void {
   if (!estObjet(args)) return;
   if (nom === "Entreprise") return scalairesSeuls(nom, args, chemin);
   for (const [cle, v] of Object.entries(args)) {
-    if (["include", "select", "where", "orderBy", "_count"].includes(cle) || LOGIQUES.has(cle) || OPERATEURS_RELATION.has(cle)) {
+    if (TRAVERSES_REMONTEE.has(cle) || LOGIQUES.has(cle) || OPERATEURS_RELATION.has(cle)) {
       verifierRemontee(nom, v, chemin);
       continue;
     }
@@ -492,19 +505,21 @@ export function estLectureDIdentifiants(operation: string, args: unknown): boole
 export function noterVus(nom: string, portee: Portee, resultat: unknown): void {
   const vus = LOT.getStore();
   if (!vus || !Array.isArray(resultat)) return;
+  const k = clefDuLot(portee);
   for (const ligne of resultat) {
     const id = (ligne as Objet | null)?.id;
-    if (typeof id === "string") vus.add(`${clefDuLot(portee)}|${nom}:${id}`);
+    if (typeof id === "string") vus.add(`${k}|${nom}:${id}`);
   }
 }
 
 /** Les clés d'une ligne vers une ligne d'un compte qui n'ont pas été vues dans le lot. */
 function clesNonVues(nom: string, ligne: Objet, portee: Portee): string[] {
   const vus = LOT.getStore() ?? new Set<string>();
+  const k = clefDuLot(portee);
   return clesDuCompte(nom).flatMap(({ cle, cible: c }) => {
     const v = ligne[cle];
     if (v === undefined || v === null) return [];
-    return vus.has(`${clefDuLot(portee)}|${c}:${String(v)}`) ? [] : [`${c}:${String(v)}`];
+    return vus.has(`${k}|${c}:${String(v)}`) ? [] : [`${c}:${String(v)}`];
   });
 }
 
@@ -531,7 +546,7 @@ export function argumentsBornes(nom: string, operation: string, args: unknown, p
     // L'établissement et son entreprise ne s'écrivent pas sous cette portée :
     // un accès sans session n'en a pas besoin, et une création y ouvrirait
     // un établissement hors de la portée.
-    if (!LECTURES.has(operation) && (nom === "Etablissement" || nom === "Entreprise"))
+    if (!LECTURES.has(operation) && auDessusDeLEtablissement(nom))
       throw new ErreurPortee(`${nom}.${operation} : hors de la portée d'un établissement`);
   }
 
