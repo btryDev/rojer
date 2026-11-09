@@ -67,8 +67,10 @@ connecteur MCP OAuth de Supabase n'existe plus — garder la suppression de
   l'ADR). [2026-11-03 : sans objet, fusionné avant la bascule.] ~~Pas encore d'écran : invitation, lecture seule et membres viennent
   aux lots suivants.~~ [2026-11-03 : lots 3 et 4 sur la même PR — lecture
   seule (client borné et `verifierSaisie`), écran « Membres », invitation par
-  e-mail, choix du compte. Reste : masquer les boutons de saisie pour la
-  lecture seule, plafond de membres par formule.]
+  e-mail, choix du compte. ~~Reste : masquer les boutons de saisie pour la
+  lecture seule, plafond de membres par formule.~~ [2026-11-09 : le plafond
+  de membres est posé (5a7ca218, lot A des plafonds) ; le masquage en lecture
+  seule et le choix du compte dans la gélule sont livrés par #262.]]
 
 - **Reports de `main`** (2026-11-03) : borne d'effectif à 49 (#161, #163) ;
   effectif de la société = somme de ses sites, apprentis, effectif hors
