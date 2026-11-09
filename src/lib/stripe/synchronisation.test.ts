@@ -5,7 +5,7 @@ vi.mock("server-only", () => ({}));
 const { clientDuClientStripe } = vi.hoisted(() => ({ clientDuClientStripe: vi.fn() }));
 vi.mock("@/lib/auth/compte-hors-session", () => ({ clientDuClientStripe }));
 
-import { abonnementCourant, colonnesDe, premierEssai, premierPaiement, synchroniserClientStripe } from "./synchronisation";
+import { abonnementCourant, colonnesDe, horlogeDeSuppression, premierEssai, premierPaiement, synchroniserClientStripe } from "./synchronisation";
 
 const abo = (o: Partial<Stripe.Subscription> & { id: string; prix?: string }) =>
   ({
@@ -132,5 +132,34 @@ describe("synchroniserClientStripe — le compte vient de Stripe relu, jamais de
       expect(await synchroniserClientStripe(s, "cus_1")).toMatchObject({ issue: "ignore" });
     }
     expect(clientDuClientStripe).not.toHaveBeenCalled();
+  });
+});
+
+describe("horloge de la suppression (ADR-058)", () => {
+  const relue = new Date("2027-01-10T00:00:00Z");
+  const notee = new Date("2026-12-01T00:00:00Z");
+  const sub = (o: object) => o as unknown as Stripe.Subscription;
+
+  it("ouvert : vide, avertissements et date de suppression avec — un réabonnement repart de zéro", () => {
+    for (const status of ["trialing", "active", "past_due"]) {
+      expect(horlogeDeSuppression(sub({ status }), notee, relue)).toEqual({
+        sansAbonnementDepuis: null,
+        suppressionPrevueLe: null,
+        avertiSuppression30Le: null,
+        avertiSuppression7Le: null,
+      });
+    }
+  });
+
+  it("fermé : la fin chez Stripe, sinon la fin d'essai d'une pause, sinon la date notée, sinon la relecture ; les avertissements ne sont pas touchés", () => {
+    expect(horlogeDeSuppression(sub({ status: "canceled", ended_at: 1_790_000_000 }), notee, relue)).toEqual({
+      sansAbonnementDepuis: new Date(1_790_000_000 * 1000),
+    });
+    expect(horlogeDeSuppression(sub({ status: "paused", ended_at: null, trial_end: 1_780_000_000 }), null, relue)).toEqual({
+      sansAbonnementDepuis: new Date(1_780_000_000 * 1000),
+    });
+    expect(horlogeDeSuppression(sub({ status: "unpaid", ended_at: null }), notee, relue)).toEqual({ sansAbonnementDepuis: notee });
+    expect(horlogeDeSuppression(sub({ status: "unpaid", ended_at: null }), null, relue)).toEqual({ sansAbonnementDepuis: relue });
+    expect(horlogeDeSuppression(null, null, relue)).toEqual({ sansAbonnementDepuis: relue });
   });
 });

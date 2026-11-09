@@ -1,8 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
-const m = vi.hoisted(() => ({ rappels: vi.fn() }));
+const m = vi.hoisted(() => ({ rappels: vi.fn(), avertir: vi.fn(), supprimer: vi.fn() }));
 vi.mock("@/lib/abonnements/rappels", () => ({ rappelerLaVeilleDeLaFinDEssai: m.rappels }));
+vi.mock("@/lib/abonnements/suppression", () => ({ avertirAvantSuppression: m.avertir, supprimerComptesEchus: m.supprimer }));
+vi.mock("@/lib/stripe/config", () => ({ configurationStripe: () => ({ active: false }) }));
+vi.mock("@/lib/stripe/client", () => ({ clientStripe: vi.fn() }));
 
 import { appelAutorise, secretDesTaches } from "./quotidiennes";
 import { POST } from "@/app/api/taches/quotidiennes/route";
@@ -15,6 +18,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.unstubAllEnvs();
   m.rappels.mockResolvedValue({ envoyes: 2, echecs: 0 });
+  m.avertir.mockResolvedValue({ j30: { envoyes: 0, echecs: 0 }, j7: { envoyes: 0, echecs: 0 } });
+  m.supprimer.mockResolvedValue({ supprimes: 0, reportes: 0, fichiers: { liberes: 0, echecs: 0 } });
 });
 
 describe("tâches quotidiennes", () => {
@@ -44,6 +49,22 @@ describe("tâches quotidiennes", () => {
     const ok = await appel(`Bearer ${SECRET}`);
     expect(ok.status).toBe(200);
     expect(ok.headers.get("cache-control")).toBe("no-store");
-    expect(await ok.json()).toEqual({ rappelsVeilleFinEssai: { envoyes: 2, echecs: 0 } });
+    expect(await ok.json()).toEqual({
+      rappelsVeilleFinEssai: { envoyes: 2, echecs: 0 },
+      avertissementsAvantSuppression: { j30: { envoyes: 0, echecs: 0 }, j7: { envoyes: 0, echecs: 0 } },
+      suppressions: { supprimes: 0, reportes: 0, fichiers: { liberes: 0, echecs: 0 } },
+    });
+    // Sans Stripe actif, la suppression reçoit `null` (elle ne supprime rien).
+    expect(m.supprimer).toHaveBeenCalledWith(expect.any(Date), null);
+  });
+
+  it("une tâche qui échoue n'empêche pas les suivantes", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.stubEnv("TACHES_SECRET", SECRET);
+    m.rappels.mockRejectedValue(new Error("panne"));
+    const corps = await (await appel(`Bearer ${SECRET}`)).json();
+    expect(corps.rappelsVeilleFinEssai).toEqual({ erreur: true });
+    expect(m.avertir).toHaveBeenCalled();
+    expect(m.supprimer).toHaveBeenCalled();
   });
 });

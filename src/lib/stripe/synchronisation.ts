@@ -24,6 +24,7 @@ import { clientDuClientStripe } from "@/lib/auth/compte-hors-session";
 import { compteDontEstProprietaire } from "@/lib/auth/membres";
 import { OPTIONS_WEBHOOK } from "./client";
 import { formuleDuPrix } from "@/lib/abonnements/formules";
+import { OUVRENT } from "@/lib/abonnements/droits";
 
 /** L'identifiant d'une référence Stripe, développée ou non. */
 export const idStripe = (v: string | { id: string } | null | undefined) => (typeof v === "string" ? v : (v?.id ?? null));
@@ -76,6 +77,28 @@ export function colonnesDe(s: Stripe.Subscription | null) {
     resilieEnFinDePeriode: s?.cancel_at_period_end ?? false,
     finPrevueLe: date(s?.cancel_at),
   };
+}
+
+/**
+ * Depuis quand le compte est sans abonnement ouvert (ADR-058) : la fin chez
+ * Stripe (`ended_at` ; une pause de fin d'essai n'en a pas, c'est
+ * `trial_end`), sinon la date déjà notée, sinon `relueLe` (un impayé
+ * définitif n'a pas de date chez Stripe). Ouvert : vide, et les
+ * avertissements avant suppression avec — un compte qui se réabonne repart
+ * de zéro. Fermé : les avertissements ne sont pas touchés.
+ */
+export function horlogeDeSuppression(
+  s: Stripe.Subscription | null,
+  dejaNotee: Date | null,
+  relueLe: Date,
+):
+  | { sansAbonnementDepuis: Date }
+  | { sansAbonnementDepuis: null; suppressionPrevueLe: null; avertiSuppression30Le: null; avertiSuppression7Le: null } {
+  if (s && OUVRENT.has(s.status)) {
+    return { sansAbonnementDepuis: null, suppressionPrevueLe: null, avertiSuppression30Le: null, avertiSuppression7Le: null };
+  }
+  const fin = date(s?.ended_at) ?? (s?.status === "paused" ? date(s.trial_end) : null);
+  return { sansAbonnementDepuis: fin ?? dejaNotee ?? relueLe };
 }
 
 /**
@@ -145,7 +168,8 @@ const DEJA_LIE = { issue: "ignore", motif: "client ou abonnement Stripe déjà l
 const AUTRE_CLIENT = { issue: "ignore", motif: "le compte est lié à un autre client Stripe", alerte: true } as const;
 
 type Db = ReturnType<typeof clientDuClientStripe>;
-type Donnees = ReturnType<typeof colonnesDe> & { relueLe: Date; essaiUtiliseLe: Date | null };
+type Donnees = ReturnType<typeof colonnesDe> &
+  ReturnType<typeof horlogeDeSuppression> & { relueLe: Date; essaiUtiliseLe: Date | null };
 
 /** `null` : une livraison simultanée a créé la ligne du compte — passer à la mise à jour. */
 async function creerLigne(db: Db, compteId: string, customerId: string, donnees: Donnees) {
@@ -221,12 +245,13 @@ export async function synchroniserClientStripe(
   const db = clientDuClientStripe(compteId);
   const ligne = await db.abonnement.findUnique({
     where: { compteId },
-    select: { stripeCustomerId: true, essaiUtiliseLe: true, debutPayantLe: true },
+    select: { stripeCustomerId: true, essaiUtiliseLe: true, debutPayantLe: true, sansAbonnementDepuis: true },
   });
   if (ligne && ligne.stripeCustomerId !== customerId) return AUTRE_CLIENT;
 
   const donnees: Donnees = {
     ...colonnesDe(courant),
+    ...horlogeDeSuppression(courant, ligne?.sansAbonnementDepuis ?? null, relueLe),
     relueLe,
     essaiUtiliseLe: ligne?.essaiUtiliseLe ?? premierEssai(abonnements),
   };

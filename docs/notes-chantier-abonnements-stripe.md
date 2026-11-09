@@ -861,6 +861,55 @@ l'essai.
   lue le 2026-11-09). Elle accueillera les avertissements avant suppression
   (J-30, J-7) quand la suppression à 12 mois sera écrite.
 
+## 14. Suppression du compte sans abonnement (2026-11-09)
+
+Décision et règles : **ADR-058**. En bref : horloge
+`Abonnement.sansAbonnementDepuis` écrite par la synchronisation ; e-mails à
+J-30 (la date de suppression se pose, au moins 30 jours plus tard) et à J-7
+(la date repoussée si le rappel part en retard) ; suppression par la tâche
+quotidienne, 20 comptes au plus par passe, Stripe d'abord (abonnements non
+terminés résiliés ; Stripe injoignable → le compte attend), puis la base
+dans une transaction qui relit la condition sous verrou, puis les fichiers.
+Les versions de DUERP partent avec le compte : la conservation quarante ans
+est à l'employeur (règle 10 de CLAUDE.md, rayée le 2026-11-09). La page
+Abonnement donne la date. Test sur un vrai PostgreSQL :
+`abonnements/suppression.integration.test.ts` (CI, `integration.yml`).
+
+Hors de la règle : les comptes sans ligne d'abonnement (d'avant le
+lancement) — date de départ à décider au lancement. Les lignes déjà
+fermées avant ce lot n'ont pas d'horloge tant qu'aucune relecture ne passe :
+aucune n'existe en production (offre pas lancée) ; en test, sans importance. Pas encore d'écran
+« supprimer mon compte » : la même fonction le permettra.
+
+## 15. Facturation électronique — options (recherche du 2026-11-09)
+
+- **Calendrier** ([impots.gouv.fr](https://www.impots.gouv.fr/professionnel/je-decouvre-la-facturation-electronique),
+  mise à jour du 26/05/2026) : réception obligatoire pour toutes les
+  entreprises depuis le 1er septembre 2026 — **Rojer doit déjà avoir choisi
+  une plateforme agréée pour recevoir** ; émission et e-reporting pour les
+  TPE/PME le 1er septembre 2027. Formats : UBL, CII ou Factur-X.
+- **Données nouvelles** ([tableau DGFiP](https://www.impots.gouv.fr/facturation-electronique-donnees-de-facture),
+  août 2026) : SIREN du client, catégorie de l'opération (Rojer : prestation
+  de services), option pour la TVA d'après les débits ; en 2027, lignes
+  détaillées. Leur présence sur la facture PDF avant 2027 n'est pas tranchée
+  par une source officielle trouvée : les ajouter tôt ne coûte rien (à
+  valider avec l'expert-comptable).
+- **Stripe** n'est pas plateforme agréée et ne produit pas de facture
+  électronique lui-même ([docs Stripe](https://docs.stripe.com/invoicing/e-invoicing)) :
+  il renvoie à une application de sa place de marché (partenaire mis en
+  avant : **Billit**) ou à un webhook vers un prestataire.
+- **Plateformes vérifiées sur la [liste officielle](https://www.impots.gouv.fr/node/27127)** :
+  Billit (application Stripe, prix sur devis), Pennylane (comptabilité ;
+  reprise des factures Stripe en e-factures à confirmer par écrit), Invopop
+  (API, ~400 €/mois), Iopole (API pour éditeurs), Indy/Tiime (gratuits, sans
+  reprise Stripe documentée).
+- **Recommandation** : Stripe → application Billit → transmission
+  automatique, sans code ; ou Pennylane si la propriétaire veut tout avec
+  la comptabilité, après confirmation écrite. Côté Rojer, à prévoir avant
+  2027 : le SIREN du client sur le client Stripe (il est connu à
+  l'onboarding) et la mention « prestations de services ». Choix à faire
+  par la propriétaire, avec l'expert-comptable.
+
 ## Sources lues
 
 - Stripe : [webhooks](https://docs.stripe.com/webhooks.md) ·

@@ -2457,6 +2457,19 @@ model Abonnement {
   /// conditionnelle — deux instances ou deux passes n'envoient qu'une fois ;
   /// rendu à vide si aucun e-mail n'est parti (`abonnements/rappels.ts`).
   rappelVeilleEssaiLe   DateTime?
+  /// Depuis quand le compte est sans abonnement ouvert (ADR-058) : la fin
+  /// chez Stripe (`ended_at`, `trial_end` d'une pause), sinon la première
+  /// relecture qui l'a vu fermé. Vide dès qu'un abonnement s'ouvre — et les
+  /// trois colonnes suivantes avec. Écrite par la synchronisation seule.
+  sansAbonnementDepuis  DateTime?
+  /// La date de suppression du compte, posée au premier avertissement :
+  /// douze mois après `sansAbonnementDepuis`, au moins 30 jours après le
+  /// premier e-mail et 7 jours après le second ; jamais avancée.
+  suppressionPrevueLe   DateTime?
+  /// Avertissements avant suppression envoyés (J-30, J-7) : posés avant
+  /// l'envoi, rendus à vide si aucun e-mail n'est parti.
+  avertiSuppression30Le DateTime?
+  avertiSuppression7Le  DateTime?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 }

@@ -10,6 +10,9 @@
 #   base, comme le précédent ;
 # - `accessibilite/registre-vierge.integration` : le registre public créé sur
 #   un établissement vierge, sans seed.
+# - `abonnements/suppression.integration` (ADR-058) : la suppression d'un
+#   compte sans abonnement depuis douze mois efface tout ce qu'il porte, et
+#   rien d'un autre compte ;
 # - `stripe/synchronisation.integration` (ADR-053) : la prise en charge des
 #   événements Stripe et l'écriture conditionnelle de l'abonnement ; Stripe
 #   simulé, n'efface que ses propres lignes.
@@ -109,6 +112,7 @@ jobs:
           src/lib/auth/creer-compte.integration
           src/lib/membres/invitation.integration
           src/lib/stripe/synchronisation.integration
+          src/lib/abonnements/suppression.integration
           src/lib/entreprises/effectif-migration.integration
           --no-file-parallelism
           --reporter=default --reporter=json --outputFile.json=integration.json

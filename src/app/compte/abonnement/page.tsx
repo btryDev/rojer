@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/auth/require-user";
 import { abonnementDuCompte, contexteDroits, offreLancee } from "@/lib/abonnements/saisie";
 import { droitsDe, gesteAbonnement, libelleStatut, OUVRENT } from "@/lib/abonnements/droits";
 import { formaterDateLongueFr } from "@/lib/dates";
+import { finDuDelai } from "@/lib/abonnements/suppression";
 import { Button, buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
 import { ouvrirPortailAction } from "@/lib/abonnements/actions";
@@ -282,6 +283,17 @@ export default async function AbonnementPage({
                 <>
                   <dt className="text-[color:var(--board-slate-mid)]">Période en cours jusqu&apos;au</dt>
                   <dd className="m-0">{formaterDateLongueFr(ligne.finPeriode)}</dd>
+                </>
+              )}
+              {/* Sans abonnement depuis douze mois, le compte est supprimé (ADR-058) :
+                  la date posée au premier avertissement, sinon la fin du délai. */}
+              {ligne?.sansAbonnementDepuis && !OUVRENT.has(ligne.statut ?? "") && (
+                <>
+                  <dt className="text-[color:var(--board-slate-mid)]">Données supprimées le</dt>
+                  <dd className="m-0">
+                    {formaterDateLongueFr(ligne.suppressionPrevueLe ?? finDuDelai(ligne.sansAbonnementDepuis))}, sauf
+                    abonnement d&apos;ici là
+                  </dd>
                 </>
               )}
             </dl>

@@ -183,8 +183,13 @@ NODE_ENV=production sh scripts/demarrer-cc.sh lancer pnpm tsx --import ./scripts
 
 ## Après le lancement (sans urgence)
 
-- Suppression des données 12 mois après la fin de l'essai ou de
+- ~~Suppression des données 12 mois après la fin de l'essai ou de
   l'abonnement, avec ses e-mails J-30 et J-7 (la tâche quotidienne les
-  accueillera) : aucune ne peut arriver avant fin 2027.
-- Facturation électronique (émission obligatoire en septembre 2027) : Stripe
-  n'est pas plateforme agréée ; choisir comment les factures y passeront.
+  accueillera) : aucune ne peut arriver avant fin 2027.~~ [2026-11-09 :
+  faite, ADR-058, jouée par la tâche quotidienne. Reste à décider au
+  lancement : la date de départ des comptes d'avant le lancement, qui n'ont
+  pas de ligne d'abonnement et ne sont donc jamais supprimés.]
+- Facturation électronique (émission obligatoire pour les TPE/PME le
+  1er septembre 2027 ; réception obligatoire depuis le 1er septembre 2026) :
+  Stripe n'est pas plateforme agréée — choisir une plateforme (notes du
+  chantier, § 15).
