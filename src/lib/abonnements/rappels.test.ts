@@ -80,10 +80,23 @@ describe("rappel de la veille de la fin de l'essai", () => {
     expect(m.updateMany).not.toHaveBeenCalled();
   });
 
-  it("le message ne nomme pas Stripe, et rappelle que la conservation des documents revient à l'employeur", () => {
+  it("plusieurs propriétaires, un envoi échoue : la marque reste (pas de doublon pour qui l'a reçu), l'échec est compté", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    m.membres.mockResolvedValue([{ user: { email: "a@exemple.fr" } }, { user: { email: "b@exemple.fr" } }]);
+    m.sendMail.mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error("refusé"));
+    expect(await rappelerLaVeilleDeLaFinDEssai(MAINTENANT)).toEqual({ envoyes: 1, echecs: 1 });
+    expect(m.updateMany).toHaveBeenCalledTimes(1);
+  });
+
+  it("aucune adresse de propriétaire : rien n'est compté comme envoyé", async () => {
+    m.membres.mockResolvedValue([]);
+    expect(await rappelerLaVeilleDeLaFinDEssai(MAINTENANT)).toEqual({ envoyes: 0, echecs: 0 });
+  });
+
+  it("le message ne nomme pas Stripe, et ne promet pas l'export (un compte qui n'a jamais payé n'y a pas droit)", () => {
     const { text } = messageVeilleFinEssai(FIN, "https://rojer.test/compte/abonnement");
     expect(text).not.toMatch(/stripe/i);
-    expect(text).toMatch(/DUERP/);
-    expect(text).toMatch(/12 mois/);
+    expect(text).not.toMatch(/export/i);
+    expect(text).toMatch(/consultables pendant 12 mois/);
   });
 });

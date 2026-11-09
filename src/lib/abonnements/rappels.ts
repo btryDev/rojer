@@ -8,10 +8,12 @@ import "server-only";
 // session : il lit les abonnements de TOUS les comptes, d'où le client brut
 // (`portee/imports.test.ts`). Il n'écrit que sa propre marque.
 //
-// Une fois par essai : la marque `rappelVeilleEssaiLe` est posée AVANT
-// l'envoi par une écriture conditionnelle (deux instances, une passe rejouée
-// pendant un déploiement : une seule gagne), et rendue à vide si l'envoi
-// échoue, pour que la passe suivante réessaie.
+// AU PLUS une fois par essai : la marque `rappelVeilleEssaiLe` est posée
+// AVANT l'envoi par une écriture conditionnelle (deux instances, une passe
+// rejouée pendant un déploiement : une seule gagne). Si aucun e-mail ne part,
+// elle est rendue à vide et la passe suivante réessaie — si l'essai n'est pas
+// fini d'ici là ; une instance arrêtée entre la marque et l'envoi perd le
+// rappel. Un rappel perdu vaut mieux qu'un rappel en double.
 
 import { prisma } from "@/lib/prisma";
 import { envoiEnService, motifErreur, publicAppUrl, sendMail } from "@/lib/email";
@@ -41,7 +43,9 @@ export function messageVeilleFinEssai(finEssai: Date, url: string): { subject: s
       "",
       `Sinon, choisissez votre formule pour continuer sans interruption : ${url}`,
       "",
-      "Sans abonnement, la saisie se fermera à la fin de l'essai. Vos données resteront consultables et exportables pendant 12 mois. La conservation de vos documents officiels, comme votre DUERP, reste à votre charge : pensez à les exporter.",
+      // La règle du bandeau (`droits.ts`) : un compte qui n'a jamais payé garde
+      // la lecture, pas l'export officiel (ADR-053 § 15).
+      "Sans abonnement, la saisie se fermera à la fin de l'essai. Vos dossiers resteront consultables pendant 12 mois.",
       "",
       "— Rojer",
     ].join("\n"),
@@ -82,13 +86,28 @@ export async function rappelerLaVeilleDeLaFinDEssai(maintenant: Date): Promise<B
       data: { rappelVeilleEssaiLe: maintenant },
     });
     if (prise.count !== 1) continue;
+    const message = messageVeilleFinEssai(ligne.finEssai, url);
+    let partis = 0;
+    let echec = false;
     try {
-      const message = messageVeilleFinEssai(ligne.finEssai, url);
-      for (const to of await adressesDesProprietaires(ligne.compteId)) await sendMail({ to, ...message });
-      bilan.envoyes++;
+      for (const to of await adressesDesProprietaires(ligne.compteId)) {
+        try {
+          await sendMail({ to, ...message });
+          partis++;
+        } catch (e) {
+          echec = true;
+          console.error(`rappel de fin d'essai non envoyé (abonnement ${ligne.id}) — ${motifErreur(e)}`);
+        }
+      }
     } catch (e) {
-      bilan.echecs++;
-      console.error(`rappel de fin d'essai non envoyé (abonnement ${ligne.id}) — ${motifErreur(e)}`);
+      echec = true;
+      console.error(`rappel de fin d'essai : propriétaires illisibles (abonnement ${ligne.id}) — ${motifErreur(e)}`);
+    }
+    if (partis > 0) bilan.envoyes++;
+    if (echec) bilan.echecs++;
+    // Rien n'est parti à cause d'un échec : la marque est rendue. Un e-mail
+    // parti la garde — réessayer enverrait un doublon à qui l'a reçu.
+    if (partis === 0 && echec) {
       await prisma.abonnement
         .updateMany({ where: { id: ligne.id, rappelVeilleEssaiLe: maintenant }, data: { rappelVeilleEssaiLe: null } })
         .catch(() => {});

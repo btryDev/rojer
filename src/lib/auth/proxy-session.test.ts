@@ -59,7 +59,7 @@ describe("chemins publics", () => {
     expect(cheminPublic("/api/stripe")).toBe(false);
     expect(cheminPublic("/api/stripe/webhookx")).toBe(false);
     expect(cheminPublic("/api/taches/quotidiennes")).toBe(true);
-    expect(cheminPublic("/api/tachesx")).toBe(false);
+    expect(cheminPublic("/api/taches/autre")).toBe(false);
   });
 
   it("garde le dossier derrière la session", () => {

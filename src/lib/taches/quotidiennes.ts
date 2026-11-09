@@ -2,8 +2,8 @@ import "server-only";
 // Les tâches quotidiennes de Rojer, appelées une fois par jour par la
 // crontab de Clever Cloud (`clevercloud/cron.json`) au travers de
 // `/api/taches/quotidiennes`. La garde est un secret partagé
-// (`TACHES_SECRET`) : sans lui, la route n'existe pas. Chaque tâche est
-// idempotente — la crontab tourne sur chaque instance, et un déploiement
+// (`TACHES_SECRET`) : sans lui, la route n'existe pas. Chaque tâche se joue
+// sans doublon — la crontab tourne sur chaque instance, et un déploiement
 // peut la jouer deux fois.
 
 import { createHash, timingSafeEqual } from "node:crypto";

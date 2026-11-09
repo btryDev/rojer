@@ -30,8 +30,8 @@ import { borneeParConstruction, decoupe, etablitSaPorteeLocale, LECTURE } from "
  *  - `verifierAccessToken` (accès externe par jeton, ADR-007) ;
  *  - `verifierNotificationStripe` (webhook Stripe, ADR-053 : la signature est
  *    vérifiée avant toute lecture ; le compte vient du client Stripe relu) ;
- *  - `appelAutorise` (tâches quotidiennes, appelées par la crontab : le
- *    secret partagé est vérifié avant toute tâche) ;
+ *  - `appelAutorise` contre `secretDesTaches` (tâches quotidiennes, appelées
+ *    par la crontab : le secret partagé est vérifié avant toute tâche) ;
  *  - pour le MCP, `handler.servir` d'un gestionnaire construit par
  *    `creerHandlerMcpHttp` dont la portée sort de `resoudreScopeDepuisCle` ou
  *    `resoudreScopeDepuisJeton` (ADR-013).
@@ -133,7 +133,7 @@ function controle(m: Methode): string | null {
   for (const h of helpersDAppartenance()) if (appelle(h, m.corps)) return h;
   if (appelle("verifierAccessToken", m.corps)) return "verifierAccessToken";
   if (appelle("verifierNotificationStripe", m.corps)) return "signature Stripe";
-  if (appelle("appelAutorise", m.corps)) return "secret des tâches";
+  if (appelle("appelAutorise", m.corps) && appelle("secretDesTaches", m.corps)) return "secret des tâches";
   // ~~« requireUser + userId »~~ [2026-11-03, ADR-054 : `userId` ne désigne
   // plus un compte, et `requireUser` ne prouve pas l'appartenance (`Membre`).
   // Une route du compte passe par un helper de `scope.ts` ou `requireCompte`.]

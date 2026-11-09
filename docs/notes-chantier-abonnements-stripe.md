@@ -840,11 +840,16 @@ l'essai.
   lue le 2026-11-09). Le délai n'est pas réglable, et rien ne part la veille.
 - **La veille : Rojer** (`abonnements/rappels.ts`). Essais en cours sans
   résiliation prévue qui finissent dans les 36 heures ; e-mail aux
-  propriétaires du compte, avec la date, le lien vers la page Abonnement,
-  et le rappel que la conservation des documents officiels (le DUERP)
-  revient à l'employeur. Une fois par essai : la marque
+  propriétaires du compte, avec la date et le lien vers la page
+  Abonnement (un compte en essai n'a validé aucun DUERP : la conservation à
+  la charge de l'employeur se dira dans les e-mails avant suppression).
+  **Au plus** une fois par essai : la marque
   `Abonnement.rappelVeilleEssaiLe` est posée avant l'envoi par une écriture
-  conditionnelle, et rendue à vide si l'envoi échoue.
+  conditionnelle, et rendue à vide seulement si aucun e-mail n'est parti
+  (la passe suivante réessaie si l'essai court encore). Un rappel perdu
+  vaut mieux qu'un doublon. Le texte reprend la règle du bandeau : un compte
+  qui n'a jamais payé garde la lecture 12 mois, pas l'export officiel
+  (§ 15 de l'ADR) — il ne promet donc pas l'export.
 - **La tâche quotidienne** : `clevercloud/cron.json` lance chaque jour à 9 h
   (heure de Paris) `clevercloud/taches-quotidiennes.sh`, qui appelle
   `POST /api/taches/quotidiennes` avec le secret `TACHES_SECRET`. Sans

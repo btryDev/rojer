@@ -2455,7 +2455,7 @@ model Abonnement {
   /// Rappel de la veille de la fin de l'essai envoyé par Rojer (celui des
   /// 7 jours est envoyé par Stripe) : posé AVANT l'envoi, par une écriture
   /// conditionnelle — deux instances ou deux passes n'envoient qu'une fois ;
-  /// rendu à vide si l'envoi échoue (`abonnements/rappels.ts`).
+  /// rendu à vide si aucun e-mail n'est parti (`abonnements/rappels.ts`).
   rappelVeilleEssaiLe   DateTime?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
