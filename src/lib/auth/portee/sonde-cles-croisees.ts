@@ -20,18 +20,13 @@
 
 import { Prisma } from "@prisma/client";
 import { CLES_STOCKEES } from "@/lib/suppression/cles-stockees";
-import { CORRESPONDANCE, type Classement } from "./correspondance";
+import { relations } from "./borne";
+import { CORRESPONDANCE, estHorsCompte, type Classement } from "./correspondance";
 
 type Modele = (typeof Prisma.dmmf.datamodel.models)[number];
-type Champ = Modele["fields"][number];
 
 const MODELES = new Map(Prisma.dmmf.datamodel.models.map((m) => [m.name, m]));
 const classement = (nom: string): Classement => (CORRESPONDANCE as Record<string, Classement>)[nom];
-/** Un modèle d'un compte : une racine, ou rattaché à un parent. */
-const duCompte = (nom: string) => {
-  const c = classement(nom);
-  return c !== undefined && ("racine" in c || "parent" in c);
-};
 
 const table = (m: Modele) => `"${m.dbName ?? m.name}"`;
 const colonne = (m: Modele, champ: string) => {
@@ -44,16 +39,6 @@ const modele = (nom: string): Modele => {
   if (!m) throw new Error(`sonde : modèle ${nom} absent du schéma`);
   return m;
 };
-
-/** La jointure d'une relation qui porte la clé (`relationFromFields`) vers sa cible. */
-function jointure(m: Modele, f: Champ, de: string, vers: string): string {
-  const cible = modele(f.type);
-  const egalites = (f.relationFromFields ?? []).map(
-    (cle, i) => `${vers}.${colonne(cible, f.relationToFields![i])} = ${de}.${colonne(m, cle)}`,
-  );
-  return `JOIN ${table(cible)} ${vers} ON ${egalites.join(" AND ")}`;
-}
-
 /** La colonne identifiante d'un modèle (`@id`, qui n'est pas toujours `id` : `FichierStocke.cle`). */
 const identifiant = (m: Modele) => {
   const f = m.fields.find((x) => x.isId);
@@ -62,31 +47,42 @@ const identifiant = (m: Modele) => {
 };
 
 /** Ce que la sonde compare : le compte d'une ligne, ou l'établissement d'une ligne qui en a un. */
-export type Niveau = "compte" | "etablissement";
+type Niveau = "compte" | "etablissement";
 
 /**
- * L'expression qui porte le compte (ou l'établissement) d'une ligne de `nom`
- * aliasée `alias`, et les jointures pour y arriver ; `null` si la ligne n'a
- * pas d'établissement. Les alias sont préfixés (`prefixe`) pour que deux
- * chemins tiennent dans une même requête.
+ * L'expression qui porte le compte (ou l'établissement) d'une ligne de `nom`,
+ * et les jointures pour y arriver ; `null` si la ligne n'a pas
+ * d'établissement. Les alias se numérotent par profondeur sur le côté
+ * (`s0`, `s1`… pour la source, `c0`, `c1`… pour la cible).
  */
-function chemin(nom: string, alias: string, prefixe: string, niveau: Niveau): { jointures: string[]; valeur: string } | null {
+function chemin(nom: string, cote: string, profondeur: number, niveau: Niveau): { jointures: string[]; valeur: string } | null {
   const c = classement(nom);
   const m = modele(nom);
+  const alias = `${cote}${profondeur}`;
   if (niveau === "etablissement" && nom === "Etablissement") return { jointures: [], valeur: `${alias}.${identifiant(m)}` };
   if ("racine" in c) {
     if (niveau === "etablissement") return null;
     // Une racine sans compte (`Entreprise.compteId` est encore nullable) vaut
     // pour elle seule : deux lignes rattachées à deux entreprises orphelines
     // distinctes sont croisées, alors que NULL contre NULL ne serait pas
-    // « distinct » (seconde lecture de #253).
-    return { jointures: [], valeur: `COALESCE(${alias}.${colonne(m, c.racine)}::text, '${nom}:' || ${alias}.${identifiant(m)})` };
+    // « distinct » (seconde lecture de #253). Seulement là où la colonne est
+    // nullable : ailleurs, la colonne suffit (revue medium de #253).
+    const racine = `${alias}.${colonne(m, c.racine)}`;
+    const nullable = !m.fields.find((x) => x.name === c.racine)!.isRequired;
+    return {
+      jointures: [],
+      valeur: nullable ? `COALESCE(${racine}::text, '${nom}:' || ${alias}.${identifiant(m)})` : `${racine}::text`,
+    };
   }
   if (!("parent" in c)) throw new Error(`sonde : ${nom} n'est pas un modèle de compte`);
-  const f = m.fields.find((x) => x.name === c.parent)!;
-  const suivant = `${prefixe}${alias.length}`;
-  const suite = chemin(f.type, suivant, prefixe + "_", niveau);
-  return suite && { jointures: [jointure(m, f, alias, suivant), ...suite.jointures], valeur: suite.valeur };
+  const r = relations(nom).find((x) => x.nom === c.parent)!;
+  const suite = chemin(r.cible, cote, profondeur + 1, niveau);
+  return (
+    suite && {
+      jointures: [`JOIN ${table(modele(r.cible))} ${cote}${profondeur + 1} ON ${cote}${profondeur + 1}.${identifiant(modele(r.cible))} = ${alias}.${colonne(m, r.cle!)}`, ...suite.jointures],
+      valeur: suite.valeur,
+    }
+  );
 }
 
 /**
@@ -97,12 +93,13 @@ function chemin(nom: string, alias: string, prefixe: string, niveau: Niveau): { 
 export const CLES_SANS_RELATION: readonly {
   modele: string;
   cle: string;
-  cibles: Readonly<Record<string, string>> | string;
+  /** Polymorphe : la valeur de `parType` → le modèle visé ; sinon une seule entrée, de clé vide. */
+  cibles: Readonly<Record<string, string>>;
   parType?: string;
 }[] = [
   // Le rapport qui a levé l'action (ADR-048) : sans clé étrangère, la ligne
   // survit à la suppression du rapport.
-  { modele: "Action", cle: "leveeRapportId", cibles: "RapportVerification" },
+  { modele: "Action", cle: "leveeRapportId", cibles: { "": "RapportVerification" } },
   // L'objet signé, polymorphe (ADR-008) ; le jeton d'une signature désigne le même.
   ...(["Signature", "AccessToken"] as const).map((modele) => ({
     modele,
@@ -117,8 +114,8 @@ export const CLES_SANS_RELATION: readonly {
     },
   })),
   // Module retiré (ADR-018), table encore là : ses identifiants restent sondés.
-  { modele: "Intervention", cle: "uniteTravailId", cibles: "UniteTravail" },
-  { modele: "Intervention", cle: "prestataireId", cibles: "Prestataire" },
+  { modele: "Intervention", cle: "uniteTravailId", cibles: { "": "UniteTravail" } },
+  { modele: "Intervention", cle: "prestataireId", cibles: { "": "Prestataire" } },
 ];
 
 /**
@@ -143,52 +140,34 @@ export const PAS_UNE_CLE_DE_COMPTE: Readonly<Record<string, string>> = {
   "Abonnement.stripePriceId": "identifiant chez Stripe",
 };
 
-/** Une requête de la sonde : le lien qu'elle éprouve, et le SQL qui compte ses lignes croisées. */
-export type RequeteSonde = { lien: string; sql: string };
+/** Un lien à sonder : la cible est jointe à la source `s0` sous l'alias `c0`. */
+type Lien = { lien: string; source: string; cible: string; jointure: string; filtre?: string };
 
-/** La requête qui compte les lignes de `nom` dont la cible n'est pas du même compte (ou établissement) ; `null` sans objet. */
-function requete(
-  nom: string,
-  jointureCible: (alias: string) => string,
-  cible: string,
-  niveau: Niveau,
-  filtre?: string,
-): string | null {
-  const source = chemin(nom, "s", "s", niveau);
-  const visee = chemin(cible, "c", "c", niveau);
-  if (!source || !visee) return null;
-  return [
-    `SELECT count(*)::int AS n FROM ${table(modele(nom))} s`,
-    ...source.jointures,
-    jointureCible("c"),
-    ...visee.jointures,
-    `WHERE ${filtre ? `${filtre} AND ` : ""}${source.valeur} IS DISTINCT FROM ${visee.valeur}`,
-  ].join(" ");
-}
-
-/** Un lien à sonder, avant d'en tirer la requête d'un niveau. */
-type Lien = { lien: string; source: string; cible: string; jointure: (alias: string) => string; filtre?: string };
+/** La jointure de la colonne `cle` de la source vers l'`@id` de `cible`. */
+const versCible = (source: string, cle: string, cible: string, colonneCible = identifiant(modele(cible))) =>
+  `JOIN ${table(modele(cible))} c0 ON c0.${colonneCible} = s0.${colonne(modele(source), cle)}`;
 
 function liens(): Lien[] {
-  const parRelation = Prisma.dmmf.datamodel.models.filter((m) => duCompte(m.name)).flatMap((m) => {
-    const c = classement(m.name);
-    return m.fields
-      .filter((f) => f.kind === "object" && (f.relationFromFields?.length ?? 0) > 0 && duCompte(f.type))
-      // Le parent DÉFINIT le compte de la ligne : rien à comparer.
-      .filter((f) => !("parent" in c && c.parent === f.name))
-      .map((f) => ({ lien: `${m.name}.${f.name} → ${f.type}`, source: m.name, cible: f.type, jointure: (p: string) => jointure(m, f, "s", p) }));
-  });
-  const sansRelation = CLES_SANS_RELATION.flatMap(({ modele: nom, cle, cibles, parType }) => {
-    const m = modele(nom);
-    const paires = typeof cibles === "string" ? [[undefined, cibles] as const] : Object.entries(cibles);
-    return paires.map(([type, cible]) => ({
-      lien: `${nom}.${cle}${type ? ` (${type})` : ""} → ${cible}`,
+  // Les clés étrangères vers une ligne d'un compte, telles que le client borné
+  // les lit (`relations`, `borne.ts`) : une seule définition de « clé de compte ».
+  const parRelation = Prisma.dmmf.datamodel.models
+    .filter((m) => !estHorsCompte(classement(m.name)))
+    .flatMap((m) => {
+      const c = classement(m.name);
+      return relations(m.name)
+        // Le parent DÉFINIT le compte de la ligne : rien à comparer.
+        .filter((r) => r.genre === "compte" && r.cle && !("parent" in c && c.parent === r.nom))
+        .map((r) => ({ lien: `${m.name}.${r.nom} → ${r.cible}`, source: m.name, cible: r.cible, jointure: versCible(m.name, r.cle!, r.cible) }));
+    });
+  const sansRelation = CLES_SANS_RELATION.flatMap(({ modele: nom, cle, cibles, parType }) =>
+    Object.entries(cibles).map(([type, cible]) => ({
+      lien: `${nom}.${cle}${parType ? ` (${type})` : ""} → ${cible}`,
       source: nom,
       cible,
-      jointure: (p: string) => `JOIN ${table(modele(cible))} ${p} ON ${p}.${identifiant(modele(cible))} = s.${colonne(m, cle)}`,
-      filtre: type && parType ? `s.${colonne(m, parType)}::text = '${type}'` : undefined,
-    }));
-  });
+      jointure: versCible(nom, cle, cible),
+      filtre: parType ? `s0.${colonne(modele(nom), parType)}::text = '${type}'` : undefined,
+    })),
+  );
   // Les clés de stockage (revue de #253) : le fichier qu'une ligne désigne est
   // tenu au compte de la ligne par le registre des dépôts (`FichierStocke`,
   // ADR-053 § 14). Une clé d'un autre compte servirait son fichier, et pèserait
@@ -199,10 +178,24 @@ function liens(): Lien[] {
       lien: `${nom}.${col} → FichierStocke`,
       source: nom,
       cible: "FichierStocke",
-      jointure: (p: string) => `JOIN "FichierStocke" ${p} ON ${p}."cle" = s.${colonne(modele(nom), col)}`,
+      jointure: versCible(nom, col, "FichierStocke"),
     })),
   );
   return [...parRelation, ...sansRelation, ...fichiers];
+}
+
+/** La requête qui compte les lignes de `source` dont la cible n'est pas du même compte (ou établissement) ; `null` sans objet. */
+function requete({ source, cible, jointure, filtre }: Lien, niveau: Niveau): string | null {
+  const s = chemin(source, "s", 0, niveau);
+  const c = chemin(cible, "c", 0, niveau);
+  if (!s || !c) return null;
+  return [
+    `SELECT count(*)::int FROM ${table(modele(source))} s0`,
+    ...s.jointures,
+    jointure,
+    ...c.jointures,
+    `WHERE ${filtre ? `${filtre} AND ` : ""}${s.valeur} IS DISTINCT FROM ${c.valeur}`,
+  ].join(" ");
 }
 
 /**
@@ -217,19 +210,29 @@ function liens(): Lien[] {
  * lien-là nommément, avec son motif — ne pas retirer le niveau (seconde
  * lecture de #253).
  */
-export function requetesSonde(): RequeteSonde[] {
+export function requetesSonde(): { lien: string; sql: string }[] {
+  const tous = liens();
   return (["compte", "etablissement"] as const).flatMap((niveau) =>
-    liens().flatMap(({ lien, source, cible, jointure: j, filtre }) => {
-      const sql = requete(source, j, cible, niveau, filtre);
-      return sql ? [{ lien: niveau === "compte" ? lien : `${lien} (établissement)`, sql }] : [];
+    tous.flatMap((l) => {
+      const sql = requete(l, niveau);
+      return sql ? [{ lien: niveau === "compte" ? l.lien : `${l.lien} (établissement)`, sql }] : [];
     }),
   );
 }
 
+/**
+ * Toutes les requêtes en une seule, dans l'ordre des liens (`rang`) : un
+ * aller-retour au lieu d'un par lien (revue medium de #253).
+ */
+function requeteUnique(): string {
+  const union = requetesSonde()
+    .map(({ lien, sql }, i) => `SELECT ${i} AS rang, '${lien.replace(/'/g, "''")}' AS lien, (${sql}) AS lignes_croisees`)
+    .join("\nUNION ALL ");
+  return `SELECT lien, lignes_croisees FROM (\n${union}\n) AS sonde ORDER BY rang`;
+}
+
 /** Un lien croisé trouvé : le lien et le nombre de lignes qui pointent vers un autre compte. */
 export type LienCroise = { lien: string; lignes: number };
-
-type Lecteur = { $queryRaw<T>(requete: Prisma.Sql): Promise<T> };
 
 /**
  * Lance la sonde sur `client` (le client brut : elle lit à travers les
@@ -237,28 +240,31 @@ type Lecteur = { $queryRaw<T>(requete: Prisma.Sql): Promise<T> };
  * Le SQL est fait d'identifiants tirés du schéma et de constantes, aucune
  * entrée : d'où `Prisma.raw`.
  */
-export async function sondeClesCroisees(client: Lecteur): Promise<LienCroise[]> {
-  const trouves: LienCroise[] = [];
-  for (const { lien, sql } of requetesSonde()) {
-    const [{ n }] = await client.$queryRaw<{ n: number }[]>(Prisma.raw(sql));
-    if (n > 0) trouves.push({ lien, lignes: n });
-  }
-  return trouves;
+export async function sondeClesCroisees(client: { $queryRaw<T>(requete: Prisma.Sql): Promise<T> }): Promise<LienCroise[]> {
+  const lignes = await client.$queryRaw<{ lien: string; lignes_croisees: number }[]>(Prisma.raw(requeteUnique()));
+  return lignes.filter((l) => l.lignes_croisees > 0).map((l) => ({ lien: l.lien, lignes: l.lignes_croisees }));
 }
 
-export const DEBUT_SECTION = "-- SONDE:DEBUT (générée par scripts/sonde-cles-croisees.ts — ne pas modifier à la main)";
-export const FIN_SECTION = "-- SONDE:FIN";
+const DEBUT_SECTION = "-- SONDE:DEBUT (générée par scripts/sonde-cles-croisees.ts — ne pas modifier à la main)";
+const FIN_SECTION = "-- SONDE:FIN";
 
 /** La section de `scripts/sante-base.sql` : une ligne par lien, attendu 0 partout. */
-export function sectionSanteBase(): string {
-  const lignes = requetesSonde().map(
-    ({ lien, sql }, i) =>
-      `${i === 0 ? "SELECT" : "UNION ALL SELECT"} '${lien.replace(/'/g, "''")}' AS lien, (${sql}) AS lignes_croisees`,
-  );
+function sectionSanteBase(): string {
   return [
     DEBUT_SECTION,
     "\\echo '=== D bis. Clés croisées entre comptes, générée depuis le schéma (attendu : 0 partout)'",
-    `${lignes.join("\n")};`,
+    `${requeteUnique()};`,
     FIN_SECTION,
   ].join("\n");
+}
+
+/**
+ * `texte` (le contenu de `sante-base.sql`) avec la section de la sonde
+ * régénérée. Le script l'écrit ; le test vérifie qu'elle ne change rien.
+ */
+export function remplacerSection(texte: string): string {
+  const debut = texte.indexOf(DEBUT_SECTION);
+  const fin = texte.indexOf(FIN_SECTION);
+  if (debut < 0 || fin < debut) throw new Error("sante-base.sql : marqueurs de la sonde introuvables");
+  return texte.slice(0, debut) + sectionSanteBase() + texte.slice(fin + FIN_SECTION.length);
 }

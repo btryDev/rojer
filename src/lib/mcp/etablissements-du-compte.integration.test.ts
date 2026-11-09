@@ -25,9 +25,10 @@ describe.skipIf(!URL_BASE || !local)("MCP — deux établissements d'un même co
   if (URL_BASE) process.env.DATABASE_URL = URL_BASE;
   const { prisma } = await import("@/lib/prisma");
   const { OUTILS_MCP, contexteMcp } = await import("./tools");
+  const { creerCompteDeTest, effacerUtilisateursDeTest } = await import("@/test/utilisateur-de-test");
 
-  const compteId = randomUUID();
   const userId = randomUUID();
+  let compteId = "";
   // La marque de l'établissement voisin : aucun texte rendu par un outil
   // portant sur l'établissement servi ne doit la contenir.
   const MARQUE = `VOISIN-${randomUUID().slice(0, 8)}`;
@@ -71,10 +72,7 @@ describe.skipIf(!URL_BASE || !local)("MCP — deux établissements d'un même co
   }
 
   beforeAll(async () => {
-    await prisma.user.create({ data: { id: userId, name: "mcp", email: `${userId}@exemple.invalid` } });
-    await prisma.compte.create({
-      data: { id: compteId, name: "mcp", slug: compteId, membres: { create: { userId, role: "owner" } } },
-    });
+    compteId = await creerCompteDeTest(prisma, userId);
     const ent = await prisma.entreprise.create({ data: { compteId, raisonSociale: "Société servie", effectif: 10, adresse: "x" } });
     servi = await etablissement(ent.id, "Servi", "SERVI");
     // Même compte, même entreprise : seul l'identifiant d'établissement sépare.
@@ -83,7 +81,7 @@ describe.skipIf(!URL_BASE || !local)("MCP — deux établissements d'un même co
   afterAll(async () => {
     await prisma.entreprise.deleteMany({ where: { compteId } });
     await prisma.compte.deleteMany({ where: { id: compteId } });
-    await prisma.user.deleteMany({ where: { id: userId } });
+    await effacerUtilisateursDeTest(prisma, [userId]);
     await prisma.$disconnect();
   });
 

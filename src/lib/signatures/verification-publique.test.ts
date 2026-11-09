@@ -12,6 +12,7 @@ import { join } from "node:path";
 const h = vi.hoisted(() => ({
   verdict: { ok: true } as { ok: true } | { ok: false; reessayerDansSecondes: number },
   lue: 0,
+  cles: [] as string[],
 }));
 
 vi.mock("next/headers", () => ({
@@ -19,7 +20,10 @@ vi.mock("next/headers", () => ({
 }));
 vi.mock("@/lib/securite/limite-debit", async (original) => ({
   ...(await original<typeof import("@/lib/securite/limite-debit")>()),
-  consommer: async () => h.verdict,
+  consommer: async (demandes: { cle: string }[]) => {
+    h.cles.push(...demandes.map((d) => d.cle));
+    return h.verdict;
+  },
 }));
 vi.mock("@/lib/prisma", () => ({
   prisma: {
@@ -37,6 +41,7 @@ const { verifierSousLimite, lireSignatureSousLimite } = await import("./verifica
 beforeEach(() => {
   h.verdict = { ok: true };
   h.lue = 0;
+  h.cles = [];
 });
 
 describe("vérification publique sous limite", () => {
@@ -70,13 +75,11 @@ describe("vérification publique sous limite", () => {
     expect(h.lue).toBe(1);
   });
 
-  it("la page /signe ne lit la signature que par la limite", () => {
-    // Commentaires retirés : la page raconte encore l'ancienne lecture.
-    const page = readFileSync(join(process.cwd(), "src/app/signe/[signatureId]/page.tsx"), "utf8")
-      .replace(/\/\*[\s\S]*?\*\//g, "")
-      .replace(/^\s*\/\/.*$/gm, "");
-    expect(page).toMatch(/\blireSignatureSousLimite\(/);
-    expect(page).not.toMatch(/\bgetSignature\b/);
+  it("chaque page a son compteur, au même plafond", async () => {
+    await verifierSousLimite("sig_1");
+    await lireSignatureSousLimite("sig_1");
+    expect(h.cles).toHaveLength(2);
+    expect(h.cles[0]).not.toBe(h.cles[1]);
   });
 
   it("n'est exportée d'aucun module \"use server\"", () => {
