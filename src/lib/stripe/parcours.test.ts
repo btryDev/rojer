@@ -48,8 +48,8 @@ describe("parcours Stripe", () => {
     api.subscriptions.create.mockResolvedValue({ id: "sub_1" });
     await demarrerEssai(stripe, { customerId: "cus_1", priceId: "price_e", tauxTva: "txr_tva", metadata: { compteId: "c1" }, idempotence: "c1" });
     const [params, options] = api.subscriptions.create.mock.calls[0];
-    // La formule est dans la clé : revenir en arrière pour en choisir une autre n'est pas refusé.
-    expect(options).toEqual({ idempotencyKey: "essai-c1-price_e" });
+    // La formule et le taux sont dans la clé : revenir en arrière pour choisir une autre formule n'est pas refusé.
+    expect(options).toEqual({ idempotencyKey: "essai-c1-price_e-txr_tva" });
     expect(params).toMatchObject({
       customer: "cus_1",
       items: [{ price: "price_e" }],

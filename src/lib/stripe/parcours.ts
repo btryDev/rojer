@@ -45,8 +45,9 @@ export async function creerClientStripe(
  * L'essai gratuit (§ 9) : 30 jours, sans moyen de paiement ; à la fin sans
  * carte, l'abonnement se met en pause (saisie fermée, lecture ouverte). La
  * carte se pose dans le portail (moyen de paiement par défaut du client).
- * La formule entre dans la clé : un retour en arrière pour en choisir une
- * autre n'est pas refusé par Stripe comme une requête rejouée différemment.
+ * La formule et le taux de TVA entrent dans la clé : un retour en arrière
+ * pour choisir une autre formule, ou un taux changé entre deux essais, n'est
+ * pas refusé par Stripe comme une requête rejouée différemment.
  */
 export async function demarrerEssai(
   stripe: Stripe,
@@ -68,7 +69,7 @@ export async function demarrerEssai(
       trial_settings: { end_behavior: { missing_payment_method: "pause" } },
       metadata,
     },
-    { idempotencyKey: `essai-${idempotence}-${priceId}` },
+    { idempotencyKey: `essai-${idempotence}-${priceId}-${tauxTva}` },
   );
 }
 
