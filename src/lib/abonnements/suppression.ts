@@ -15,7 +15,8 @@ import { prisma } from "@/lib/prisma";
 import { envoiEnService, motifErreur, publicAppUrl, sendMail } from "@/lib/email";
 import { formaterDateLongueFr } from "@/lib/dates";
 import { clesDesEtablissements, libererFichiers } from "@/lib/suppression/fichiers";
-import { abonnementsDuClient } from "@/lib/stripe/parcours";
+import { OPTIONS_WEBHOOK } from "@/lib/stripe/client";
+import { synchroniserClientStripe } from "@/lib/stripe/synchronisation";
 import { OUVRENT } from "./droits";
 import { adressesDesProprietaires } from "./rappels";
 import { PAGE_ABONNEMENT } from "./saisie";
@@ -202,9 +203,21 @@ export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | n
   });
   for (const { compteId, stripeCustomerId } of echus) {
     try {
-      // Chez Stripe d'abord : un abonnement en pause ou impayé pourrait encore
-      // facturer. Le client et ses factures restent (comptabilité de Rojer).
-      for (const s of await abonnementsDuClient(stripe, stripeCustomerId)) {
+      // Stripe fait foi, pas notre copie : un webhook perdu peut cacher un
+      // réabonnement. Un abonnement ouvert chez Stripe : rien n'est résilié
+      // ni effacé, la copie est relue (son horloge se vide) et le compte
+      // attend. Sinon, ce qui pourrait encore facturer (pause, impayé, premier
+      // paiement en attente) est résilié ; le client et ses factures restent.
+      const abonnements = await stripe.subscriptions
+        .list({ customer: stripeCustomerId, status: "all", limit: 100 }, OPTIONS_WEBHOOK)
+        .autoPagingToArray({ limit: 10_000 });
+      if (abonnements.some((s) => OUVRENT.has(s.status))) {
+        bilan.reportes++;
+        console.error(`suppression du compte ${compteId} annulée : un abonnement est ouvert chez Stripe, copie relue`);
+        await synchroniserClientStripe(stripe, stripeCustomerId).catch(() => {});
+        continue;
+      }
+      for (const s of abonnements) {
         if (s.status !== "canceled" && s.status !== "incomplete_expired") await stripe.subscriptions.cancel(s.id);
       }
     } catch (e) {

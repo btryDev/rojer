@@ -8,6 +8,7 @@ const m = vi.hoisted(() => ({
   sendMail: vi.fn(),
   enService: vi.fn(() => true),
   abonnements: vi.fn(),
+  synchroniser: vi.fn(),
 }));
 vi.mock("@/lib/prisma", () => ({ prisma: { abonnement: { findMany: m.findMany, updateMany: m.updateMany } } }));
 vi.mock("@/lib/email", () => ({
@@ -18,7 +19,8 @@ vi.mock("@/lib/email", () => ({
 }));
 vi.mock("./rappels", () => ({ adressesDesProprietaires: m.adresses }));
 vi.mock("./saisie", () => ({ PAGE_ABONNEMENT: "/compte/abonnement" }));
-vi.mock("@/lib/stripe/parcours", () => ({ abonnementsDuClient: m.abonnements }));
+vi.mock("@/lib/stripe/client", () => ({ OPTIONS_WEBHOOK: {} }));
+vi.mock("@/lib/stripe/synchronisation", () => ({ synchroniserClientStripe: m.synchroniser }));
 vi.mock("@/lib/suppression/fichiers", () => ({ clesDesEtablissements: vi.fn(), libererFichiers: vi.fn() }));
 
 import { avertirAvantSuppression, finDuDelai, messageAvantSuppression, supprimerComptesEchus } from "./suppression";
@@ -33,6 +35,7 @@ beforeEach(() => {
   m.updateMany.mockResolvedValue({ count: 1 });
   m.adresses.mockResolvedValue(["dirigeant@exemple.fr"]);
   m.sendMail.mockResolvedValue(undefined);
+  m.synchroniser.mockResolvedValue({ issue: "ecrit" });
 });
 
 describe("suppression d'un compte sans abonnement (ADR-058)", () => {
@@ -112,12 +115,32 @@ describe("suppression d'un compte sans abonnement (ADR-058)", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     m.findMany.mockResolvedValue([{ compteId: "c1", stripeCustomerId: "cus_1" }]);
     m.abonnements.mockRejectedValue(new Error("injoignable"));
-    const stripe = { subscriptions: { cancel: vi.fn() } } as never;
+    const stripe = {
+      subscriptions: { cancel: vi.fn(), list: () => ({ autoPagingToArray: m.abonnements }) },
+    } as unknown as Parameters<typeof supprimerComptesEchus>[1];
     expect(await supprimerComptesEchus(MAINTENANT, stripe)).toMatchObject({ supprimes: 0, reportes: 1 });
     // La sélection : date atteinte et les deux avertissements partis.
     const where = m.findMany.mock.calls[0][0].where;
     expect(where.suppressionPrevueLe).toEqual({ lte: MAINTENANT });
     expect(where.avertiSuppression30Le).toEqual({ not: null });
     expect(where.avertiSuppression7Le).toEqual({ not: null });
+  });
+
+  it("notre copie est en retard (webhook perdu) : un abonnement ouvert chez Stripe → rien n'est résilié ni effacé, la copie est relue", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    m.findMany.mockResolvedValue([{ compteId: "c1", stripeCustomerId: "cus_1" }]);
+    const cancel = vi.fn();
+    const stripe = {
+      subscriptions: { cancel, list: () => ({ autoPagingToArray: m.abonnements }) },
+    } as unknown as Parameters<typeof supprimerComptesEchus>[1];
+    for (const ouvert of ["active", "trialing", "past_due"]) {
+      m.abonnements.mockResolvedValue([
+        { id: "sub_vieux", status: "paused" },
+        { id: "sub_neuf", status: ouvert },
+      ]);
+      expect(await supprimerComptesEchus(MAINTENANT, stripe)).toMatchObject({ supprimes: 0, reportes: 1 });
+    }
+    expect(cancel).not.toHaveBeenCalled();
+    expect(m.synchroniser).toHaveBeenCalledWith(stripe, "cus_1");
   });
 });
