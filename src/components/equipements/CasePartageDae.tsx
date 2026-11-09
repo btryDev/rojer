@@ -7,6 +7,7 @@
 // naît chez soi. Une déclaration, pas une preuve (ADR-027). Le repère est posé
 // par l'action (`basculerDaePartage`), jamais par le navigateur.
 
+import { unstable_rethrow } from "next/navigation";
 import { useState, useTransition } from "react";
 import { basculerDaePartage } from "@/lib/etats-permanents/actions";
 
@@ -39,7 +40,9 @@ export function CasePartageDae({
               try {
                 const res = await basculerDaePartage(etablissementId, coche);
                 if (res.status === "error") setErreur(res.message);
-              } catch {
+              } catch (err) {
+                // Une redirection (saisie fermée, ADR-053) n'est pas un échec : Next la reprend.
+                unstable_rethrow(err);
                 setErreur(ERREUR_ENREGISTREMENT);
               }
             });

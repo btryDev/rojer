@@ -180,6 +180,8 @@ export async function basculerDaePartage(
   etablissementId: string,
   partage: boolean,
 ): Promise<DeclarationActionState> {
+  // cc, report de l'ADR-057 lot B : la saisie fermée (ADR-053 § 3).
+  await verifierSaisie();
   const { db } = await assertEtablissementDuCompte(etablissementId);
   const { statut } = await obligationDeclarable(db, etablissementId, DAE_DETENTION);
   if (

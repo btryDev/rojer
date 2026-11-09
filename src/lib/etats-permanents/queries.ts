@@ -666,11 +666,11 @@ export async function declarationsDePresence(
   etablissementId: string,
   obligationIds: readonly string[],
 ): Promise<Map<string, DeclarationLue>> {
-  const { user, db } = await requireCompte();
+  const { compte, db } = await requireCompte();
   const lignes = await db.declarationEtatPermanent.findMany({
     where: {
       etablissementId,
-      etablissement: { entreprise: { userId: user.id } },
+      etablissement: { entreprise: { compteId: compte.compteId } },
       obligationId: { in: [...obligationIds] },
     },
     select: { obligationId: true, declareLe: true, note: true },
