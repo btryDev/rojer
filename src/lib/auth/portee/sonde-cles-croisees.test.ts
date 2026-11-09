@@ -8,7 +8,7 @@ import { join } from "node:path";
 import { Prisma } from "@prisma/client";
 import { describe, expect, it } from "vitest";
 import { CLES_STOCKEES } from "@/lib/suppression/cles-stockees";
-import { CORRESPONDANCE, type Classement } from "./correspondance";
+import { CORRESPONDANCE, IDENTITES_SCALAIRES, type Classement } from "./correspondance";
 import { CLES_SANS_RELATION, PAS_UNE_CLE_DE_COMPTE, remplacerSection, requetesSonde } from "./sonde-cles-croisees";
 
 const classement = (nom: string): Classement | undefined => (CORRESPONDANCE as Record<string, Classement>)[nom];
@@ -62,8 +62,10 @@ describe("sonde des clés croisées : ce qu'elle couvre", () => {
     expect(cibles.filter((c) => !duCompte(c))).toEqual([]);
   });
 
-  it("chaque identifiant sans relation d'un modèle de compte est classé : sondé, ou écarté avec son motif", () => {
+  it("chaque identifiant sans relation d'un modèle de compte est classé : sondé, borné comme identité, ou écarté avec son motif", () => {
     const sondes = new Set(CLES_SANS_RELATION.map((c) => `${c.modele}.${c.cle}`));
+    // Une identité scalaire (`IDENTITES_SCALAIRES`) est bornée par le client : hors de la sonde, classée par sa table.
+    for (const [m, cles] of Object.entries(IDENTITES_SCALAIRES)) for (const c of cles ?? []) sondes.add(`${m}.${c}`);
     const nonClasses = MODELES.filter((m) => duCompte(m.name)).flatMap((m) => {
       const fk = new Set(m.fields.flatMap((f) => f.relationFromFields ?? []));
       return m.fields

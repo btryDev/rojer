@@ -134,7 +134,6 @@ export const PAS_UNE_CLE_DE_COMPTE: Readonly<Record<string, string>> = {
   "DeclarationEtatPermanent.obligationId": "référentiel de conformité, en TypeScript (ADR-003)",
   "PieceEtatPermanent.obligationId": "référentiel de conformité, en TypeScript (ADR-003)",
   "FicheRegistre.sectionId": "section du registre, en TypeScript",
-  "Intervention.creeParUserId": "auteur : l'identité, hors de la sonde",
   "Abonnement.stripeCustomerId": "identifiant chez Stripe",
   "Abonnement.stripeSubscriptionId": "identifiant chez Stripe",
   "Abonnement.stripePriceId": "identifiant chez Stripe",
