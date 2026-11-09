@@ -31,6 +31,7 @@ function etendre(base: PrismaClient, p: Portee) {
     userId: p.userId,
     lectureSeule: p.lectureSeule === true,
     geles: p.geles,
+    etablissementId: p.etablissementId,
   });
   // Le SQL brut d'écriture n'est pas borné par l'extension (ADR-051 § 5) ; en
   // lecture seule, il est refusé ici (ADR-054 § 4). La forme non paramétrée
@@ -112,16 +113,20 @@ function lirePortee(portee: Portee): Portee {
     throw new ErreurPortee("portée sans compte : client refusé");
   if (userId !== null && (typeof userId !== "string" || userId.length === 0))
     throw new ErreurPortee("portée à la personne invalide : client refusé");
+  const etablissementId = portee.etablissementId;
+  if (etablissementId !== undefined && (typeof etablissementId !== "string" || etablissementId.length === 0))
+    throw new ErreurPortee("portée d'établissement invalide : client refusé");
   // Le gel, figé (`gelesDuCompte` ne rend jamais un gel vide).
   const g = portee.geles;
   const geles = g && Object.freeze({ etablissements: Object.freeze([...g.etablissements]), prestataires: Object.freeze([...g.prestataires]) });
-  return { type: "compte", compteId, userId, lectureSeule: portee.lectureSeule === true, geles };
+  return { type: "compte", compteId, userId, lectureSeule: portee.lectureSeule === true, geles, etablissementId };
 }
 
 export function clientBorne(portee: Portee): ClientBorne {
   const lue = lirePortee(portee);
   const gel = lue.geles ? `|gel:${lue.geles.etablissements.join(",")};${lue.geles.prestataires.join(",")}` : "";
-  const cle = `compte:${lue.compteId}|${lue.userId ?? "-"}|${lue.lectureSeule ? "lecture" : "saisie"}${gel}`;
+  const etab = lue.etablissementId === undefined ? "" : `|etab:${lue.etablissementId}`;
+  const cle = `compte:${lue.compteId}|${lue.userId ?? "-"}|${lue.lectureSeule ? "lecture" : "saisie"}${gel}${etab}`;
   let client = CLIENTS.get(cle);
   if (client) {
     // Le plus récemment servi passe en queue : l'éviction vise le moins
