@@ -1,7 +1,7 @@
 # Lancement des abonnements payants — la liste, dans l'ordre
 
 > 2026-11-09. Ce qui reste à BRANCHER pour faire payer pour de vrai : le code
-> est sur `cc` (rappel de la veille de la fin d'essai : PR #257). Chaque étape dit qui la fait. On ne passe à l'étape suivante
+> est sur `cc` (le rappel de la veille de la fin d'essai, PR #257, depuis le 2026-11-09). Chaque étape dit qui la fait. On ne passe à l'étape suivante
 > que la précédente faite et vérifiée. L'ordre compte : la dernière étape
 > (`ABONNEMENT_EXIGE=oui`) ferme la saisie de tous les comptes sans
 > abonnement, elle ne se joue qu'une fois tout le reste prêt.
@@ -15,7 +15,7 @@
 | | Quoi | Qui |
 |---|---|---|
 | 0.1 | L'application Clever Cloud existe et `cc` y tourne (préproduction, puis production) — étape 1 du document de bascule | propriétaire |
-| 0.1 bis | PR #257 (tâche quotidienne, `TACHES_SECRET`) fusionnée et déployée | Claude |
+| 0.1 bis | `cc` déployé avec la PR #257 (tâche quotidienne, `TACHES_SECRET`), fusionnée le 2026-11-09 | Claude |
 | 0.2 | Conditions générales de vente rédigées (durée, résiliation, impayé, sort des données après 12 mois, conservation du DUERP à la charge de l'employeur) et publiées à la place du texte actuel de `/conditions` ; `VERSION_CONDITIONS` changée (nouvelle date, `src/lib/abonnements/conditions.ts`) | avocat → Claude pour l'intégration |
 | 0.3 | Régime de TVA confirmé (20 % retenu ; en franchise : retirer le taux et porter « TVA non applicable, art. 293 B du CGI ») et mentions de la facture validées | expert-comptable |
 
@@ -169,7 +169,8 @@ NODE_ENV=production sh scripts/demarrer-cc.sh lancer pnpm tsx --import ./scripts
 ## 9. Ouvrir — propriétaire, avec Claude
 
 1. Poser `ABONNEMENT_EXIGE=oui`, redémarrer. Dès lors, un compte sans essai
-   ni abonnement ne saisit plus (lecture et export restent) : les comptes
+   ni abonnement ne saisit plus (lecture seule ; l'export aussi pour un compte
+   qui a déjà payé, ADR-053 § 15) : les comptes
    existants voient « Choisissez une formule ».
 2. Relancer `reprendre-tailles-fichiers.ts --appliquer` (un dépôt fait
    entre-temps sans session lisible n'a pas laissé sa taille).
