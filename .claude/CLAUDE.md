@@ -933,7 +933,14 @@ Les étapes 0 à 11 de `spec/PLAN.md` sont livrées. Le travail actuel dépasse 
 7. **Pas de LLM** pour traiter, reformuler, classer ou analyser du contenu utilisateur.
 8. **Pas de conseil juridique automatisé.** L'outil aide à structurer et rappelle les obligations, il ne dit jamais « vous êtes conforme ».
 9. **RGPD** : hébergement UE, politique de rétention explicite, export et suppression possibles à tout moment.
-10. **Conservation 40 ans** pour les versions de DUERP (obligation légale).
+10. ~~**Conservation 40 ans** pour les versions de DUERP (obligation légale).~~
+    [2026-11-09, décision de la propriétaire du 2026-11-05 et 06 : **la
+    conservation 40 ans est l'obligation de l'EMPLOYEUR** (L. 4121-3-1 V,
+    R. 4121-4), pas celle de Rojer. Rojer ne supprime jamais une version de
+    DUERP tant que le compte vit, et l'export permet à l'employeur de les
+    garder lui-même. Sans abonnement, la lecture et l'export restent ouverts
+    12 mois, puis les données sont supprimées ; les conditions générales et
+    les e-mails d'avertissement le disent (ADR-053 sur `cc`).]
 11. **Une tâche faite se RAYE, dans le même geste que la correction.** Toute
     entrée de `docs/chantiers-ouverts.md`, de `notesInternes` ou d'un motif de
     corpus qui cesse d'être vraie se barre (`~~…~~`) **et se date**, avec le
