@@ -240,6 +240,7 @@ export async function lireAnnexesDuRegistre(
     ...etats.familles.flatMap((f) => f.blocs.flatMap((b) => b.lignes)),
     ...etats.faits,
     ...etats.parLEquipe,
+    ...etats.parLeParc,
   ];
   return annexesDuRegistre(
     etablissementId,

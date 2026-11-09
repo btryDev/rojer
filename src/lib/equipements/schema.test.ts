@@ -70,7 +70,7 @@ describe("equipementSchema — cohérence catégorie / propriétés (superRefine
   it("refuse aGroupeElectrogene=true hors installation électrique", () => {
     const res = equipementSchema.safeParse({
       ...base,
-      categorie: "VMC",
+      categorie: "VENTILATION",
       aGroupeElectrogene: true,
     });
     expect(res.success).toBe(false);
@@ -97,7 +97,7 @@ describe("equipementSchema — cohérence catégorie / propriétés (superRefine
   it("accepte nbVehiculesParkingCouvert sur une VMC", () => {
     const res = equipementSchema.safeParse({
       libelle: "VMC parking souterrain",
-      categorie: "VMC",
+      categorie: "VENTILATION",
       nbVehiculesParkingCouvert: 420,
     });
     expect(res.success).toBe(true);
@@ -113,7 +113,7 @@ describe("equipementSchema — cohérence catégorie / propriétés (superRefine
   });
 
   it("accepte estLocalPollutionSpecifique sur une VMC / CTA / Hotte", () => {
-    for (const c of ["VMC", "CTA", "HOTTE_PRO"] as const) {
+    for (const c of ["VENTILATION", "HOTTE_PRO"] as const) {
       const res = equipementSchema.safeParse({
         libelle: "Aération",
         categorie: c,
@@ -218,7 +218,7 @@ describe("equipementSchema — questions à trois états", () => {
     ] as const) {
       const res = equipementSchema.safeParse({
         libelle: "VMC du sous-sol",
-        categorie: "VMC",
+        categorie: "VENTILATION",
         estVmcGaz: valeur,
       });
       expect(res.success).toBe(true);
@@ -372,7 +372,7 @@ describe("aller-retour édition — aucune réponse ne se perd", () => {
     // le dériver de `CHAMPS_TRI_ETAT` plutôt que d'y nommer un champ.
     const saisie = {
       libelle: "VMC du logement",
-      categorie: "VMC" as const,
+      categorie: "VENTILATION" as const,
       estVmcGaz: "non",
     };
     const res = equipementSchema.safeParse(saisie);
@@ -421,6 +421,10 @@ describe("cohérence schéma ↔ référentiel d'obligations", () => {
       // condition ne s'en servait ; elle entre ici parce qu'elle en porte une
       // désormais, pas parce que la collecte aurait changé.
       "familleEsp",
+      // 2026-11-07, ADR-057 § 5 : le type déclaré, `<select name="typePorte">`
+      // ou `<select name="typeEpi">` dans `EquipementForm`.
+      "typePorte",
+      "typeEpi",
       // ~~Ajoutée le 2026-10-07 (C59 lot 3) : `<select name="typeExtincteur">`~~
       // — retirée le 2026-10-08 (C66) avec la question et ses conditions.
     ]);
@@ -497,7 +501,9 @@ describe("du formulaire au schéma, sans perte", () => {
     const fd = new FormData();
     for (const c of champs) fd.set(c, "2024-03-15");
     fd.set("libelle", "Harnais du quai");
-    fd.set("categorie", "EPI_ANTICHUTE");
+    // 2026-11-07, ADR-057 § 5 : ~~`EPI_ANTICHUTE`~~ — l'EPI, type antichute.
+    fd.set("categorie", "EPI");
+    fd.set("typeEpi", "antichute");
 
     const out = normaliserFormDataEquipement(fd);
     // LA VALEUR, PAS LA CLÉ. La première version de ce test faisait
@@ -523,7 +529,9 @@ describe("du formulaire au schéma, sans perte", () => {
     // sa présence dans un objet qui compte, c'est la Date qui en sort.
     const fd = new FormData();
     fd.set("libelle", "Harnais du quai");
-    fd.set("categorie", "EPI_ANTICHUTE");
+    // 2026-11-07, ADR-057 § 5 : ~~`EPI_ANTICHUTE`~~ — l'EPI, type antichute.
+    fd.set("categorie", "EPI");
+    fd.set("typeEpi", "antichute");
     fd.set("datePeremption", "2031-03-15");
 
     const res = equipementSchema.safeParse(normaliserFormDataEquipement(fd));
@@ -544,6 +552,7 @@ describe("du formulaire au schéma, sans perte", () => {
     const fd = new FormData();
     fd.set("libelle", "Casque");
     fd.set("categorie", "EPI");
+    fd.set("typeEpi", "autre");
     fd.set("datePeremption", "");
 
     const res = equipementSchema.safeParse(normaliserFormDataEquipement(fd));

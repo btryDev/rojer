@@ -269,7 +269,7 @@ const EQUIPEMENTS: EquipementSeed[] = [
   },
   {
     libelle: "VMC de la cuisine et des sanitaires",
-    categorie: "VMC",
+    categorie: "VENTILATION",
     zone: "Cuisine et réserves",
     localisation: "Local technique sur cour",
     dateMiseEnService: "2018-11-05",
@@ -307,10 +307,11 @@ const EQUIPEMENTS: EquipementSeed[] = [
   },
   {
     libelle: "Porte automatique du sas d'entrée",
-    categorie: "PORTE_AUTO",
+    categorie: "PORTE_PORTAIL_MOTORISE",
     zone: NOM_BATIMENT_PRINCIPAL,
     localisation: "Sas d'entrée sur rue",
     dateMiseEnService: "2020-05-14",
+    champs: { typePorte: "porte" },
   },
 ];
 

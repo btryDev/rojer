@@ -485,6 +485,8 @@ describe("une écriture d'équipement fait constater les EPI, avant la régéné
     const fd = new FormData();
     fd.set("libelle", "Harnais");
     fd.set("categorie", categorie);
+    // ADR-057 § 5 : le type d'EPI est exigé.
+    fd.set("typeEpi", "antichute");
     return fd;
   }
 
@@ -498,13 +500,9 @@ describe("une écriture d'équipement fait constater les EPI, avant la régéné
     expect(h.db.journal).toEqual(["constat:etab-1:sans-regen", "régénération"]);
   });
 
-  it("le pré-remplissage", async () => {
-    await creerEquipementsDepuisPreRemplissage("etab-1", [
-      { categorie: "EXTINCTEUR", libelle: "Extincteur" },
-      { categorie: "EPI", libelle: "Gants" },
-    ]);
-    expect(h.db.journal).toEqual(["constat:etab-1:sans-regen", "régénération"]);
-  });
+  // ~~« le pré-remplissage » fait constater les EPI~~ — 2026-11-07, ADR-057
+  // § 5 : un EPI ne s'y crée plus, son type étant exigé (refus éprouvé plus
+  // bas, « catégorie à type »).
 });
 
 describe("décision du 2026-10-08 : « désenfumage mécanique » exigé là où il fait naître DF 10 § 3", () => {
@@ -646,6 +644,20 @@ describe("pré-remplissage : la porte des réponses exigées tient aussi pour un
     ]);
     expect(r).toMatchObject({ status: "success", created: 1 });
     expect(h.db.creesEnLot).toHaveLength(1);
+  });
+
+  // ADR-057 § 5 (revue du lot C) : un EPI ou une porte créés sans leur type
+  // seraient lus par la règle générale — le harnais sans sa vérification de
+  // douze mois.
+  it("catégorie à type (EPI, porte ou portail) : refusée en bloc, rien n'est écrit", async () => {
+    for (const categorie of ["EPI", "PORTE_PORTAIL_MOTORISE"] as const) {
+      const r = await creerEquipementsDepuisPreRemplissage("etab-1", [
+        { categorie, libelle: "x" },
+        { categorie: "EXTINCTEUR", libelle: "Extincteur" },
+      ]);
+      expect(r).toEqual({ status: "error", message: expect.stringContaining(categorie) });
+    }
+    expect(h.db.creesEnLot).toHaveLength(0);
   });
 
   it("ce que le pré-remplissage propose est créé", async () => {

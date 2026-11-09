@@ -581,7 +581,14 @@ const RELEVE = {
   // [main] ~~befd7d3f01d4b946~~ — 2026-11-03, effectif dans Équipe.
   // [main] ~~5d865125dbd34224~~ … ~~0b32c48a2c7f3d82~~ — 2026-11-06, ADR-057,
   // moteur 8 ; sur main : de10984fbe6999b3.
-  empreinte: "f390376323530f97",
+  // ~~f390376323530f97~~ (cc) — 2026-11-09, report de l'ADR-057 lots B et C
+  // (main, #205 et #214) : `siEquipementDeclare` lit les conditions de la
+  // catégorie, `equipementSatisfait`. NON, comme sur main : sur un référentiel
+  // donné la régénération écrit les mêmes lignes ; empreinte de la fusion
+  // relevée en appelant.
+  // [main] ~~de10984fbe6999b3~~ … ~~c21e2a827cf06f35~~ — 2026-11-07, lot C ;
+  // sur main : 0ac56c67a8e4d6b0.
+  empreinte: "bd476b63f185b7ff",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

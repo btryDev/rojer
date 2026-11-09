@@ -21,7 +21,8 @@ export const GESTE_DATE = "Déposer le rapport du dernier contrôle";
  */
 export const QUESTION_COURTE: Record<ChampTriEtat, string> = {
   aGroupeElectrogene: "Un groupe électrogène de sécurité est-il présent ?",
-  estVmcGaz: "La VMC est-elle raccordée à des appareils à gaz ?",
+  // 2026-11-07, ADR-057 § 5 : posée à toute ventilation.
+  estVmcGaz: "Est-ce une VMC raccordée à des appareils à gaz ?",
   aExtinctionAutomatique: "Une extinction automatique est-elle installée ?",
   sertAuLevageDePersonnes: "L'appareil sert-il à lever des personnes ?",
   estMuParForceHumaine: "L'appareil est-il manuel (mû par la seule force humaine) ?",

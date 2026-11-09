@@ -195,6 +195,20 @@ Incendie
   en tête de leur groupe.
 - La section « Équipements de sécurité » (`equipements-securite.ts`,
   décision du 2026-10-15) disparaît.
+- [2026-11-06, lot B, décision de la propriétaire : « d'après le parc »] Le
+  défibrillateur, les extincteurs et l'alarme sonore ne se cochent plus sur
+  « Ce qui doit être en place » : ils sont EN PLACE dès qu'un appareil de la
+  catégorie est déclaré au parc (`etats-permanents/par-le-parc.ts`), comme
+  une formation l'est d'après les titres déclarés dans Équipe. Ils restent
+  comptés au score et au PDF (« D'après le parc déclaré : 2 appareils
+  « Extincteurs » »), ne s'affichent plus sur « Ce qui doit être en place »,
+  et ~~une ancienne case cochée est ignorée~~ [relecture du même jour,
+  décisions de la propriétaire : une ancienne case cochée sans appareil
+  reste en place, avec le rappel « Vous aviez indiqué en avoir : déclarez-les
+  ici » ; un défibrillateur PARTAGÉ avec un voisin (CCH R. 157-3) se déclare
+  d'une case sur la carte « Défibrillateur », sans maintenance ni Géo'DAE à
+  suivre]. Le matériel de premiers secours, sans catégorie d'appareil, reste
+  une case de cet écran ; sa ligne sur la page Équipements lit cette case.
 
 ### 5. Catégories jumelles
 
@@ -212,6 +226,29 @@ Incendie
 C'est un invariant de données : les équipements existants changent de
 catégorie, par migration, et leurs lignes sont reprises (règle 3,
 succession), pas recréées.
+
+[2026-11-07, lot C codé — ce que le texte ci-dessus laissait à préciser :
+- la caractéristique de la porte et celle de l'EPI sont un **type déclaré**,
+  `typePorte` (porte, portail) et `typeEpi` (antichute, respiratoire, gilet
+  de sauvetage, autre), **exigé** à la saisie et posé par la migration depuis
+  l'ancienne catégorie. Il nomme un objet, jamais une conclusion de droit ;
+- les lignes spécifiques lisent le type par `enum_egale` (vérification de
+  douze mois de l'antichute, du respiratoire, du gilet ; sécurité positive
+  des portails), la règle générale par `enum_differente` (maintien en état
+  des EPI courants, R. 4322-1 ; contrat d'entretien des portes, CO 48 § 3 e)) ;
+- CO 48 étant porté par l'établissement (`siEquipementDeclare`), une ligne
+  d'établissement admet désormais des `conditions`, lues sur l'équipement qui
+  la déclenche — et seulement avec `siEquipementDeclare` ;
+- une ancienne CTA reçoit `estVmcGaz: false` : les deux lignes de la VMC-gaz
+  en habitation ne la visaient pas ;
+- ~~en deux déploiements~~ un seul : la migration reprend les rangées puis
+  recrée l'enum sans les sept anciennes valeurs. Un second déploiement
+  n'aurait protégé de rien — il ne diffère que pour une écriture d'ancienne
+  valeur par le code en service pendant la bascule, qui échoue ici au lieu de
+  laisser une rangée que le nouveau code ne sait pas lire ;
+- ce que le gaz retire, voulu : la ligne GZ 15 d'un appareil de cuisson sans
+  installation de gaz déclarée (archivée si elle porte une trace) ; l'aide de
+  l'appareil de cuisson dit de déclarer l'installation.]
 
 ## Les lots
 

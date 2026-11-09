@@ -23,13 +23,13 @@ describe("règles d'un point à corriger (ADR-048)", () => {
   });
 
   it("le contrôle de l'habitation couvre la VMC, pas les extincteurs", () => {
-    expect(categoriesCouvertes(habitation)).toContain("VMC");
-    expect(appareilDesignable(habitation, { categorie: "VMC", actif: true })).toBe(true);
+    expect(categoriesCouvertes(habitation)).toContain("VENTILATION");
+    expect(appareilDesignable(habitation, { categorie: "VENTILATION", actif: true })).toBe(true);
     expect(appareilDesignable(habitation, { categorie: "EXTINCTEUR", actif: true })).toBe(false);
   });
 
   it("un appareil retiré du parc ne se désigne pas", () => {
-    expect(appareilDesignable(habitation, { categorie: "VMC", actif: false })).toBe(false);
+    expect(appareilDesignable(habitation, { categorie: "VENTILATION", actif: false })).toBe(false);
   });
 
   it("un contrôle qui ne cite aucun appareil n'en couvre aucun", () => {

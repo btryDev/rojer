@@ -26,17 +26,22 @@ import {
   resteAFaireDuParc,
 } from "@/lib/equipements/reste-a-faire";
 import {
-  SectionEquipementsSecurite,
+  MaterielHorsParc,
+  MentionPresence,
+  SousLEnTetePresence,
   type LigneSecuriteAffichee,
-} from "@/components/equipements/SectionEquipementsSecurite";
+} from "@/components/equipements/PresenceObligatoire";
 import { requireCompte } from "@/lib/auth/compte";
 import { contexteFondementDe } from "@/lib/etats-permanents/fondement";
 import { obligationsApplicablesDuDossier } from "@/lib/etablissements/dossier-du-rendu";
 import {
+  EQUIPEMENTS_DE_SECURITE,
   hrefActionSecurite,
   lignesEquipementsSecurite,
 } from "@/lib/equipements/equipements-securite";
 import { getEtablissement } from "@/lib/etablissements/queries";
+import { declarationsDePresence } from "@/lib/etats-permanents/queries";
+import { pluriel } from "@/lib/rendu/pluriel";
 import {
   grouperParCategorie,
   listerEquipementsDeLEtablissement,
@@ -102,7 +107,7 @@ export default async function EquipementsPage({
   // + `notFound`) : les bâtiments étaient lus seuls, puis le reste — aucune
   // des ~~quatre~~ cinq autres ne dépend du filtre (audit Next.js du 2026-10-14, M4).
   const { compte, db } = await requireCompte();
-  const [batiments, equipements, etatsVerifs, sansEcheance, fraicheur, dossier, ensembles] =
+  const [batiments, equipements, etatsVerifs, sansEcheance, fraicheur, dossier, ensembles, declarations] =
     await Promise.all([
       listerBatimentsDeLEtablissement(id),
       listerEquipementsDeLEtablissement(id),
@@ -126,6 +131,12 @@ export default async function EquipementsPage({
       // Les contrôles d'ensemble, rangés en tête de leur domaine (points à
       // corriger, lot 2).
       controlesDEnsemble(id, instantDuRendu()),
+      // Les déclarations des lignes de présence (ADR-057 § 4) : premiers
+      // secours, DAE partagé, anciennes cases.
+      declarationsDePresence(
+        id,
+        EQUIPEMENTS_DE_SECURITE.map((e) => e.obligationId),
+      ),
     ]);
   const multiBatiments = estMultiBatiments(batiments);
   const batimentFiltre = resoudreFiltreBatiment(batiments, batiment);
@@ -267,47 +278,86 @@ export default async function EquipementsPage({
     })(),
     href: avecProvenance(`${base}/equipements/${eq.id}`, origine),
   });
-  const parId = new Map(equipements.map((eq) => [eq.id, eq]));
   const periodicitesDe = (liste: { id: string }[]) =>
     liste.flatMap((eq) => etatsVerifs.get(eq.id)?.periodicites ?? []);
 
-  // La section « Équipements de sécurité » (2026-10-15) se lit, comme les
+  // Les obligations de présence (ADR-057 § 4) se lisent, comme les
   // suggestions, sur le parc ENTIER : un DAE déclaré dans une autre zone est
-  // déclaré. Un regroupement d'affichage, rien de plus (`equipements-securite.ts`).
+  // déclaré. Posées en tête de leur groupe : la mention sur la carte de la
+  // catégorie, le matériel sans catégorie dans son domaine.
   const lignesSecurite: LigneSecuriteAffichee[] = (
     dossier
-      ? lignesEquipementsSecurite(dossier.applicables, equipements, contexteFondementDe(etab))
+      ? lignesEquipementsSecurite(
+          dossier.applicables,
+          equipements,
+          contexteFondementDe(etab),
+          declarations,
+        )
       : []
-  ).map((l) => {
-    const declares = l.appareils.flatMap((a) => {
-      const eq = parId.get(a.id);
-      return eq ? [eq] : [];
-    });
-    return {
-      ...l,
-      appareils: declares.map(versAppareil),
-      periodicites: periodicitesDe(declares),
-      hrefAction: hrefActionSecurite(l, { base, hrefNouveau }),
-      hrefAjouter: l.cible.kind === "categorie" ? hrefNouveau(l.cible.categorie) : null,
-    };
-  });
+  ).map((l) => ({
+    ...l,
+    hrefAction: l.cible.kind === "etat_permanent" ? hrefActionSecurite(l, { base, hrefNouveau }) : null,
+  }));
+  const presenceParCategorie = new Map<CategorieEquipement, LigneSecuriteAffichee>();
+  for (const l of lignesSecurite) {
+    if (l.cible.kind === "categorie") presenceParCategorie.set(l.cible.categorie, l);
+  }
+  const horsParc = lignesSecurite.filter((l) => l.cible.kind === "etat_permanent");
 
   // Une section par catégorie, la plus en peine en tête : sur un parc de
   // quinze appareils, l'ordre alphabétique enterrait le seul retard.
-  const sections = [...parCategorie.entries()]
+  // Une catégorie dont la présence est exigée a sa carte même sans appareil
+  // déclaré : c'est elle qui dit « aucun déclaré » et propose l'ajout. Sous un
+  // filtre de zone, seulement si le parc entier n'en déclare aucun — sinon la
+  // carte dirait « 0 équipement » à côté de « 2 déclarés » (relecture du
+  // 2026-11-06) : ils sont ailleurs, la zone n'a rien à en dire.
+  const parCategorieAvecPresence = new Map(parCategorie);
+  for (const [c, l] of presenceParCategorie) {
+    if (parCategorieAvecPresence.has(c)) continue;
+    if (batimentFiltre && l.appareils.length > 0) continue;
+    parCategorieAvecPresence.set(c, []);
+  }
+  const sections = [...parCategorieAvecPresence.entries()]
     .map(([categorie, liste]) => ({
       categorie: categorie as CategorieEquipement,
       appareils: liste.map(versAppareil),
       periodicites: periodicitesDe(liste),
     }))
+    // La présence exigée en tête de son groupe (ADR-057 § 4), puis la plus en
+    // peine.
     .sort(
-      (a, b) => urgenceCategorie(b.appareils) - urgenceCategorie(a.appareils),
+      (a, b) =>
+        Number(presenceParCategorie.has(b.categorie)) -
+          Number(presenceParCategorie.has(a.categorie)) ||
+        urgenceCategorie(b.appareils) - urgenceCategorie(a.appareils),
     );
 
-  const domaines = parDomaine(sections, ensembles);
+  const domaines = parDomaine(
+    sections,
+    ensembles,
+    horsParc.map((l) => l.domaine),
+  );
+  // Ce qu'un texte exige ici, par domaine (ADR-057 § 4) — ce que la section
+  // « Équipements de sécurité » signalait « à déclarer », sans les lignes
+  // « à confirmer » : la carte dit « À confirmer ici », le domaine ne peut pas
+  // dire « à déclarer » (relecture du 2026-11-06).
+  const presenceParDomaine = new Map<DomaineObligation | null, { total: number; aDeclarer: number }>();
+  for (const l of lignesSecurite) {
+    const p = presenceParDomaine.get(l.domaine) ?? { total: 0, aDeclarer: 0 };
+    p.total += 1;
+    if (!l.aConfirmer && (l.etat === "aucun" || l.etat === "ancienne_case")) p.aDeclarer += 1;
+    presenceParDomaine.set(l.domaine, p);
+  }
+  const aDeclarerDans = (domaine: DomaineObligation | null) =>
+    presenceParDomaine.get(domaine)?.aDeclarer ?? 0;
   // S'ouvre le premier domaine qui a du dépassé — contrôles d'ensemble
-  // compris —, à défaut le premier.
-  const domaineOuvert = (domaines.find((d) => d.depassees > 0) ?? domaines[0])?.domaine;
+  // compris —, puis celui où un matériel exigé reste à déclarer, à défaut le
+  // premier.
+  const domaineOuvert = (
+    domaines.find((d) => d.depassees > 0) ??
+    domaines.find((d) => aDeclarerDans(d.domaine) > 0) ??
+    domaines[0]
+  )?.domaine;
 
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
@@ -370,8 +420,6 @@ export default async function EquipementsPage({
             disparaître pendant qu'elle affiche son résultat. */}
         <FenetreSuggestions {...panneauSuggestions} />
 
-        <SectionEquipementsSecurite lignes={lignesSecurite} />
-
         {equipements.length === 0 ? (
           <EmptyState
             titre="Les équipements de votre établissement alimentent tout le reste"
@@ -393,27 +441,44 @@ export default async function EquipementsPage({
             Aucun équipement déclaré dans cette zone. Un appareil se déplace
             depuis sa fiche, en changeant sa zone.
           </p>
-        ) : (
-          // Les catégories rangées sous leur domaine (lot 2, 2026-10-24), le
+        ) : null}
+
+        {/* Les domaines, même sur un parc vide : une obligation de présence
+            (ADR-057 § 4) ou un contrôle d'ensemble y a sa place. */}
+        {// Les catégories rangées sous leur domaine (lot 2, 2026-10-24), le
           // domaine le plus en peine en tête — l'ordre de sa première
           // catégorie. En tête de chaque domaine, ses contrôles d'ensemble.
           domaines.map(({ domaine, sections: ss, propres, depassees }) => {
             const nbAppareils = ss.reduce((n, s) => n + s.appareils.length, 0);
+            const aDeclarer = aDeclarerDans(domaine);
+            const presences = presenceParDomaine.get(domaine)?.total ?? 0;
             return (
-            // Un domaine = une carte repliable, la forme d'« Équipements de
-            // sécurité » (décision de la propriétaire du 2026-10-24) ; le plus
-            // en peine s'ouvre.
+            // Un domaine = une carte repliable (décision de la propriétaire du
+            // 2026-10-24) ; le plus en peine s'ouvre.
             <CarteRepliable
               key={domaine ?? "autre"}
               titre={domaine ? LABEL_DOMAINE[domaine] : "Autres équipements"}
               compte={
                 nbAppareils > 0
                   ? `${nbAppareils} équipement${nbAppareils > 1 ? "s" : ""}`
-                  : `${propres.length} contrôle${propres.length > 1 ? "s" : ""} d'ensemble`
+                  : propres.length > 0
+                    ? `${propres.length} contrôle${propres.length > 1 ? "s" : ""} d'ensemble`
+                    : pluriel(presences, "obligatoire")
               }
-              alerte={depassees > 0 ? `${depassees} ${depassees > 1 ? "dépassées" : "dépassée"}` : null}
+              alerte={
+                depassees > 0
+                  ? `${depassees} ${depassees > 1 ? "dépassées" : "dépassée"}`
+                  : aDeclarer > 0
+                    ? `${aDeclarer} à déclarer`
+                    : null
+              }
               ouverte={domaine === domaineOuvert}
             >
+              {horsParc
+                .filter((l) => l.domaine === domaine)
+                .map((l) => (
+                  <MaterielHorsParc key={l.obligationId} ligne={l} />
+                ))}
               {domaine && (
                 <ControlesDEnsembleDuDomaine
                   controles={propres}
@@ -421,15 +486,31 @@ export default async function EquipementsPage({
                   provenance={origine}
                 />
               )}
-              {ss.map((s) => (
-                <CarteCategorie
-                  key={s.categorie}
-                  categorie={s.categorie}
-                  appareils={s.appareils}
-                  periodicites={s.periodicites}
-                  hrefAjouter={hrefNouveau(s.categorie)}
-                />
-              ))}
+              {ss.map((s) => {
+                const presence = presenceParCategorie.get(s.categorie);
+                return (
+                  <CarteCategorie
+                    key={s.categorie}
+                    categorie={s.categorie}
+                    mention={
+                      presence ? (
+                        <MentionPresence
+                          ligne={presence}
+                          sousUnFiltre={Boolean(batimentFiltre)}
+                        />
+                      ) : undefined
+                    }
+                    sousLEnTete={
+                      presence ? (
+                        <SousLEnTetePresence ligne={presence} etablissementId={id} />
+                      ) : undefined
+                    }
+                    appareils={s.appareils}
+                    periodicites={s.periodicites}
+                    hrefAjouter={hrefNouveau(s.categorie)}
+                  />
+                );
+              })}
               {domaine && (
                 <AussiCouvertPar
                   controles={ensembles.filter((c) => c.aussi.includes(domaine))}
@@ -440,7 +521,7 @@ export default async function EquipementsPage({
             </CarteRepliable>
             );
           })
-        )}
+        }
       </div>
       <VisiteGuidee cle="equipements" />
     </main>
@@ -457,6 +538,8 @@ export default async function EquipementsPage({
 function parDomaine<S extends { categorie: CategorieEquipement; appareils: AppareilListe[] }>(
   sections: S[],
   ensembles: ControleDEnsemble[],
+  /** Les domaines d'un matériel exigé sans catégorie (ADR-057 § 4). */
+  domainesEnPlus: readonly DomaineObligation[] = [],
 ) {
   const groupes = new Map<DomaineObligation | null, S[]>();
   for (const s of sections) {
@@ -464,6 +547,7 @@ function parDomaine<S extends { categorie: CategorieEquipement; appareils: Appar
     groupes.set(d, [...(groupes.get(d) ?? []), s]);
   }
   for (const c of ensembles) if (!groupes.has(c.domaine)) groupes.set(c.domaine, []);
+  for (const d of domainesEnPlus) if (!groupes.has(d)) groupes.set(d, []);
   const compte = (ss: S[], cle: "enRetard" | "proche") =>
     ss.reduce(
       (n, s) => n + s.appareils.reduce((m, a) => m + (a.resume.signaux.find((g) => g.cle === cle)?.nb ?? 0), 0),

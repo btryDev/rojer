@@ -71,9 +71,15 @@ function erp(
   };
 }
 
-function appareil(categorie: EquipementMatching["categorie"]): EquipementMatching {
-  return { id: `eq-${categorie}`, libelle: categorie, categorie, caracteristiques: null };
+function appareil(
+  categorie: EquipementMatching["categorie"],
+  caracteristiques: EquipementMatching["caracteristiques"] = null,
+): EquipementMatching {
+  return { id: `eq-${categorie}`, libelle: categorie, categorie, caracteristiques };
 }
+// ADR-057 § 5 : la porte et le portail, une catégorie, deux types.
+const porte = () => appareil("PORTE_PORTAIL_MOTORISE", { typePorte: "porte" });
+const portail = () => appareil("PORTE_PORTAIL_MOTORISE", { typePorte: "portail" });
 
 function servies(etab: EtablissementMatching, eqs: EquipementMatching[] = []): string[] {
   return determineObligationsApplicables(etab, eqs)
@@ -103,7 +109,7 @@ describe("5ᵉ catégorie : le livre II ne s'applique pas, sauf renvoi exprès",
   const tout = [
     appareil("ALARME_INCENDIE"),
     appareil("BAES"),
-    appareil("PORTE_AUTO"),
+    porte(),
     appareil("APPAREIL_CUISSON_ERP"),
   ];
   it("sans locaux à sommeil : aucune des dix, même tout déclaré et SSI A ou B", () => {
@@ -164,8 +170,11 @@ describe("les lignes qui naissent d'un matériel déclaré", () => {
     expect(servies(erp("N3"), [appareil("BAES")])).toContain(NOTICE_BAES);
   });
   it("porte automatique → le contrat ; un portail automatique seul, non (CO 48 vise les portes)", () => {
-    expect(servies(erp("N3"), [appareil("PORTE_AUTO")])).toContain(CONTRAT_PORTES);
-    expect(servies(erp("N3"), [appareil("PORTAIL_AUTO")])).not.toContain(CONTRAT_PORTES);
+    expect(servies(erp("N3"), [porte()])).toContain(CONTRAT_PORTES);
+    expect(servies(erp("N3"), [portail()])).not.toContain(CONTRAT_PORTES);
+    // Type non dit (impossible à la saisie) : le contrat reste — la règle
+    // générale survit au silence (`enum_differente`).
+    expect(servies(erp("N3"), [appareil("PORTE_PORTAIL_MOTORISE")])).toContain(CONTRAT_PORTES);
   });
   it("appareil de cuisson ERP → les consignes de l'arrêt d'urgence", () => {
     expect(servies(erp("N3"), [appareil("APPAREIL_CUISSON_ERP")])).toContain(ARRET_URGENCE);

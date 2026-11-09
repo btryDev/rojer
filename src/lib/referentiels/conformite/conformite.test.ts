@@ -123,7 +123,12 @@ describe("référentiel conformité — invariants structurels", () => {
             "aucune catégorie — les équipements affichés vont dans " +
             "`equipementsEnContexte`, qui n'est pas un déclencheur",
         ).toBeUndefined();
-        expect(o.conditions, `${o.id} : conditions sans équipement`).toBeUndefined();
+        // ~~Aucune condition sur un porteur établissement.~~ [2026-11-07,
+        // ADR-057 § 5 : admises avec `siEquipementDeclare`, qui seul fait
+        // déclencher un équipement — vérifié ci-dessous.]
+        if (o.porteur !== "etablissement" || !o.siEquipementDeclare) {
+          expect(o.conditions, `${o.id} : conditions sans équipement`).toBeUndefined();
+        }
       }
     }
   });
@@ -353,11 +358,15 @@ describe("référentiel conformité — conditions bien formées", () => {
     // est une condition MORTE : le moteur ne la rencontre jamais, l'obligation
     // s'applique donc sans restriction alors que le rédacteur croyait l'avoir
     // bornée. C'est le pire des cas — un faux positif déguisé en règle fine.
+    // [2026-11-07 : ou de `siEquipementDeclare`, pour un porteur
+    // établissement — ADR-057 § 5.]
     for (const o of obligationsConformite) {
+      const declencheuses =
+        o.porteur === "etablissement" ? (o.siEquipementDeclare ?? []) : o.categoriesEquipement;
       for (const c of o.conditions ?? []) {
         expect(
-          o.categoriesEquipement,
-          `${o.id} : condition sur ${c.categorie}, absente de categoriesEquipement`,
+          declencheuses,
+          `${o.id} : condition sur ${c.categorie}, absente des catégories qui déclenchent`,
         ).toContain(c.categorie);
       }
     }
@@ -1035,6 +1044,18 @@ describe("référentiel conformité — non-régression des obligations critique
     // tomberait sur tout désenfumage naturel d'ERP N1-N4. Celle du SSI est en
     // `non_infirmee`.
     "incendie-erp-desenfumage-triennale-mecanique-ssi",
+    // 2026-11-07, ADR-057 § 5 : les catégories jumelles réunies. Chacune de
+    // ces lignes visait une catégorie à elle (`EPI_ANTICHUTE`,
+    // `EPI_RESPIRATOIRE`, `EPI_GILET_SAUVETAGE`, `PORTAIL_AUTO`) ; elle lit
+    // désormais le type déclaré (`enum_egale`). Aucun appareil ne peut la
+    // perdre au silence : le type est EXIGÉ à la saisie (`equipementSchema`),
+    // et la reprise l'a posé sur chaque appareil existant depuis son ancienne
+    // catégorie (migration `20261107120100_categories_jumelles_reprise`).
+    // Trois des quatre sont au niveau audit.
+    "epi-verification-generale-periodique",
+    "epi-verification-generale-periodique-respiratoire",
+    "epi-verification-generale-periodique-gilet-sauvetage",
+    "porte-auto-portail-piete-coulissant",
   ]);
 
   /**
@@ -2030,6 +2051,9 @@ describe("référentiel conformité — version et empreinte", () => {
     // `incendie-erp-5-plan-intervention-entree` (PE 27 § 6), établissement,
     // toute la 5ᵉ. 205 + 1 − 0 = 206, relevée en appelant `empreinteReferentiel()`.
     { version: "2026-11-06.2", empreinte: "206-8dcc938ef54ccb22" },
+    // ADR-057 § 5 (lot C) : catégories jumelles réunies, types déclarés,
+    // GZ 15 sur l'installation de gaz seule, CO 48 sur la porte.
+    { version: "2026-11-07.1", empreinte: "206-1bed681afa3e5910" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

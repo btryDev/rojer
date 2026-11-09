@@ -199,7 +199,7 @@ function vmc(over: Partial<EquipementMatching> = {}): EquipementMatching {
   return {
     id: "eq-vmc",
     libelle: "VMC simple flux",
-    categorie: "VMC",
+    categorie: "VENTILATION",
     caracteristiques: null,
     ...over,
   };
@@ -1299,8 +1299,8 @@ describe("moteur matching — cartographie des catégories sans obligation", () 
         // pas un trou de typologie : l'appareil porte le motif `niveau_audit`
         // (`equipements/hors-referentiel.ts`), jamais « aucune obligation », et
         // la page « Ce que Rojer ne couvre pas » nomme l'obligation.
-        "EPI_GILET_SAUVETAGE",
-        "EPI_RESPIRATOIRE",
+        // ~~"EPI_GILET_SAUVETAGE", "EPI_RESPIRATOIRE"~~ — 2026-11-07,
+        // ADR-057 § 5 : réunies dans `EPI`, qui porte le maintien en état.
         // ~~"HOTTE_PRO"~~ — sortie le 2026-11-05 (ADR-057) : R. 4222-20 est
         // porté par l'appareil, la hotte comprise.
         // RIA A QUITTÉ CETTE LISTE LE 2026-09-02, et le trou qu'elle notait
@@ -1387,8 +1387,8 @@ describe("moteur matching — cartographie des catégories sans obligation", () 
         // pas un trou de typologie : l'appareil porte le motif `niveau_audit`
         // (`equipements/hors-referentiel.ts`), jamais « aucune obligation », et
         // la page « Ce que Rojer ne couvre pas » nomme l'obligation.
-        "EPI_GILET_SAUVETAGE",
-        "EPI_RESPIRATOIRE",
+        // ~~"EPI_GILET_SAUVETAGE", "EPI_RESPIRATOIRE"~~ — 2026-11-07,
+        // ADR-057 § 5 : réunies dans `EPI`, qui porte le maintien en état.
         // INSTALLATION_GAZ, entrée le 2026-10-14 (décision de la
         // propriétaire) : sa seule obligation, la vérification annuelle de
         // GZ 15, relève du livre II — ERP des quatre premières catégories.
@@ -1548,6 +1548,14 @@ describe("moteur matching — aucun établissement existant ne perd une obligati
       // silence (`QUESTIONS_EXIGEES_PAR_DECISION`)].
       "elec-erp-groupe-electrogene-annuel",
       "elec-erp-groupe-electrogene-quinzaine",
+      // 2026-11-07, ADR-057 § 5 : les trois vérifications de l'arrêté du
+      // 19 mars 1993 lisent le type d'EPI déclaré, la sécurité positive des
+      // portails le type de porte (`enum_egale`). Le type est EXIGÉ à la
+      // saisie et la reprise l'a posé sur chaque appareil existant : aucun
+      // n'est au silence (`categories-jumelles.test.ts`).
+      "epi-verification-generale-periodique",
+      "epi-verification-generale-periodique-gilet-sauvetage",
+      "epi-verification-generale-periodique-respiratoire",
       // ~~"esp-inspection-periodique-generateur-vapeur"~~ — retirée le
       // 2026-10-07 (périmètre, relecture préventeur du 30/09, décision de la
       // propriétaire du 07/10), avec sa jumelle générale.
@@ -1583,6 +1591,8 @@ describe("moteur matching — aucun établissement existant ne perd une obligati
       "levage-vgp-semestrielle-personnes",
       // ~~"levage-vgp-trimestrielle-force-humaine"~~ — retirée le 2026-09-28 :
       // ses conditions sont passées en `non_infirmee`, elle n'est plus stricte.
+      // ADR-057 § 5, même motif que l'EPI ci-dessus.
+      "porte-auto-portail-piete-coulissant",
     ]);
   });
 });

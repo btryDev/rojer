@@ -24,6 +24,7 @@ import type {
   EtablissementMatching,
 } from "@/lib/matching";
 import { genererVerificationsDepuisTitres } from "@/lib/calendrier/generateur";
+import { QUESTION_DE_TYPE } from "@/lib/equipements/type-appareil";
 import { obligationsNiveauAuditDuDossier } from "@/lib/perimetre/niveau-audit";
 import { surfacesDe } from "@/lib/surfaces/obligations-sans-surface";
 import { cataloguerTitres } from "@/lib/salaries/catalogue";
@@ -104,12 +105,18 @@ function parcAudit(): EquipementMatching[] {
       estPorteeParEquipement(o) ? o.categoriesEquipement : (o.siEquipementDeclare ?? []),
     ),
   );
-  return [...categories].map((c) => ({
-    id: `eq-${c}`,
-    libelle: c,
-    categorie: c,
-    caracteristiques: null,
-  }));
+  // ADR-057 § 5 : une catégorie qui pose un type a un appareil PAR type — la
+  // ligne du portail ou du masque lit le type déclaré.
+  return [...categories].flatMap((c): EquipementMatching[] => {
+    const type = QUESTION_DE_TYPE[c];
+    if (!type) return [{ id: `eq-${c}`, libelle: c, categorie: c, caracteristiques: null }];
+    return type.options.map((o) => ({
+      id: `eq-${c}-${o.valeur}`,
+      libelle: `${c} ${o.valeur}`,
+      categorie: c,
+      caracteristiques: { [type.propriete]: o.valeur },
+    }));
+  });
 }
 
 describe("niveau audit — (d) borne basse, jamais la liste exacte", () => {
@@ -148,7 +155,7 @@ describe("niveau audit — (d) borne basse, jamais la liste exacte", () => {
     expect(antichute).toBeDefined();
     expect(estNiveauAudit(antichute!)).toBe(false);
     const res = determineObligationsApplicables(etabLarge(), [
-      { id: "h", libelle: "harnais", categorie: "EPI_ANTICHUTE", caracteristiques: null },
+      { id: "h", libelle: "harnais", categorie: "EPI", caracteristiques: { typeEpi: "antichute" } },
     ]);
     expect(res.map((r) => r.obligation.id)).toContain(
       "epi-verification-generale-periodique",
@@ -238,8 +245,10 @@ describe("niveau audit — (a) aucune ligne", () => {
 
 describe("niveau audit — (b) nommée dans la rubrique « Niveau audit »", () => {
   it("chaque obligation audit atteinte figure dans la rubrique du dossier", () => {
+    // Par les obligations que chaque ligne nomme : la signalisation des
+    // extincteurs et des RIA est réunie par appareil (ADR-057).
     const rubrique = surLesProfils((e) =>
-      obligationsNiveauAuditDuDossier(e, parcAudit()).map((l) => l.id),
+      obligationsNiveauAuditDuDossier(e, parcAudit()).flatMap((l) => l.obligations),
     );
     for (const o of AUDIT) expect(rubrique, o.id).toContain(o.id);
   });
@@ -313,7 +322,41 @@ describe("niveau audit — (c) la référence légale reste", () => {
   it("la rubrique imprime cette référence, pas un résumé", () => {
     const rubrique = obligationsNiveauAuditDuDossier(etabLarge(), parcAudit());
     for (const l of rubrique) {
-      expect(l.reference).toBe(obligationParId(l.id)!.referencesLegales[0].reference);
+      expect(l.reference).toBe(obligationParId(l.obligations[0])!.referencesLegales[0].reference);
     }
+  });
+});
+
+describe("niveau audit — la signalisation réunie par appareil (ADR-057)", () => {
+  it("une ligne pour les extincteurs, une pour les RIA, qui nomment les textes réunis", () => {
+    const erpN3 = { ...etabLarge(), estERP: true, typeErp: "M", categorieErp: "N3" } as EtablissementMatching;
+    const parc = [
+      { id: "ext-1", libelle: "Extincteur hall", categorie: "EXTINCTEUR", caracteristiques: null },
+      { id: "ext-2", libelle: "Extincteur cuisine", categorie: "EXTINCTEUR", caracteristiques: null },
+      { id: "ria-1", libelle: "RIA", categorie: "RIA", caracteristiques: null },
+    ] as EquipementMatching[];
+    const rubrique = obligationsNiveauAuditDuDossier(erpN3, parc);
+    const signalisation = rubrique.filter((l) => l.id.startsWith("signalisation-par-appareil:"));
+    expect(signalisation.map((l) => l.libelle)).toEqual([
+      "Signalisation des extincteurs",
+      "Signalisation des robinets d'incendie armés",
+    ]);
+    // Le Code du travail et MS 39, réunis ; aucune ligne d'origine en double.
+    for (const l of signalisation) {
+      expect(l.obligations.sort()).toEqual([
+        "signalisation-erp-extincteurs-identification",
+        "signalisation-incendie-moyens-lutte",
+      ]);
+    }
+    expect(rubrique.some((l) => l.id === "signalisation-incendie-moyens-lutte")).toBe(false);
+  });
+
+  it("sans RIA déclaré, pas de ligne RIA", () => {
+    const parc = [
+      { id: "ext-1", libelle: "Extincteur", categorie: "EXTINCTEUR", caracteristiques: null },
+    ] as EquipementMatching[];
+    const ids = obligationsNiveauAuditDuDossier(etabLarge(), parc).map((l) => l.id);
+    expect(ids).toContain("signalisation-par-appareil:EXTINCTEUR");
+    expect(ids).not.toContain("signalisation-par-appareil:RIA");
   });
 });

@@ -4,6 +4,7 @@
 // page « Ce que Rojer ne couvre pas » (2026-10-18). Chaîne entière : le calcul
 // du dossier (`obligationsNiveauAuditDuDossier`), puis le rendu des cartes.
 
+import { libelleDuType } from "@/lib/equipements/type-appareil";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -51,8 +52,9 @@ const etab = {
 // Deux appareils de la même catégorie, déclarés sous des noms à eux : la carte
 // doit nommer la catégorie, une fois.
 const equipements = [
-  { id: "eq-1", libelle: "Masque atelier", categorie: "EPI_RESPIRATOIRE" as const, caracteristiques: null },
-  { id: "eq-2", libelle: "Masque réserve", categorie: "EPI_RESPIRATOIRE" as const, caracteristiques: null },
+  // ADR-057 § 5 : un EPI de type respiratoire.
+  { id: "eq-1", libelle: "Masque atelier", categorie: "EPI" as const, caracteristiques: { typeEpi: "respiratoire" } },
+  { id: "eq-2", libelle: "Masque réserve", categorie: "EPI" as const, caracteristiques: { typeEpi: "respiratoire" } },
 ];
 
 const lignes = obligationsNiveauAuditDuDossier(etab, equipements);
@@ -108,7 +110,7 @@ describe("rubrique « hors du quotidien » — ce que la carte dit", () => {
       li.textContent?.includes(lignes.find((l) => l.id === EPI)!.libelle),
     )!;
     expect(carte.textContent).toContain(
-      `Vise les équipements déclarés : ${LABEL_CATEGORIE_EQUIPEMENT.EPI_RESPIRATOIRE}.`,
+      `Vise les équipements déclarés : ${libelleDuType("EPI", { typeEpi: "respiratoire" })}.`,
     );
   });
 

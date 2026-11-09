@@ -20,6 +20,7 @@
 import type { Obligation } from "@/lib/referentiels/conformite";
 import { estFormation } from "@/lib/referentiels/conformite/types";
 import type { LigneEtatPermanent } from "./queries";
+import { estEnPlace } from "./en-place";
 import { dependDUnFaitMuet } from "@/lib/etablissements/guide-par-module";
 
 /**
@@ -47,9 +48,7 @@ export function compteParLEquipe(
 ): { enPlace: number; total: number; lignes: number } {
   const etats = lignes.filter((l) => l.compteDansLEnTete);
   return {
-    enPlace: etats.filter((l) =>
-      l.parLesTitres ? l.parLesTitres.enPlace : l.declareLe !== null,
-    ).length,
+    enPlace: etats.filter(estEnPlace).length,
     total: etats.length,
     /** Toutes les lignes, celles « à dater » comprises (hors compte). */
     lignes: lignes.length,
