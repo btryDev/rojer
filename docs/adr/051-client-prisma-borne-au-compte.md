@@ -398,6 +398,19 @@ vérification publique d'une signature, MCP par clé et stdio).
 - **L'établissement et l'entreprise ne s'écrivent pas** à cette portée : un
   accès sans session n'en a pas besoin, et une création y ouvrirait un
   établissement hors de la portée.
+  [Revue de code de #264 : ni en tête, ni IMBRIQUÉS sous une relation —
+  `reecrireDonnees` refuse l'établissement et toute racine du compte à
+  cette portée.]
+- **Limite : les lectures imbriquées suivent les clés telles qu'elles sont
+  en base.** Une session est bornée au compte, pas à l'établissement : elle
+  peut rattacher une ligne d'un établissement à une ligne d'un autre du
+  même compte (une vérification au prestataire d'un autre site). Un
+  `include` de cette clé, sous la portée d'un établissement, rendrait alors
+  la ligne de l'autre site. Le code ne crée pas de tels liens (chaque écran
+  filtre par établissement) ; la sonde des clés croisées les relève au
+  niveau « établissement » (`scripts/sante-base.sql`, section D bis). Les
+  interdire à l'écriture, pour toute portée, est l'étape suivante si la
+  sonde en trouve un jour.
 - **Inchangé** : une signature posée par un jeton ne passe ni par le gel, ni
   par les quotas, ni par le contrôle de l'essai (choix antérieur) ; les
   `where: { etablissementId }` écrits restent, en seconde ceinture (§ 7).
