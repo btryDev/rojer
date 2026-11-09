@@ -79,6 +79,7 @@ import {
 import { AvertissementFraicheur } from "@/components/calendrier/AvertissementFraicheur";
 import { nomDeZone } from "@/lib/batiments/nom-zone";
 import { VisiteGuidee } from "@/components/visite/VisiteGuidee";
+import { saisieFermeeDuSite } from "@/lib/abonnements/saisie-annoncee";
 
 export default async function EquipementsPage({
   params,
@@ -107,7 +108,7 @@ export default async function EquipementsPage({
   // + `notFound`) : les bâtiments étaient lus seuls, puis le reste — aucune
   // des ~~quatre~~ cinq autres ne dépend du filtre (audit Next.js du 2026-10-14, M4).
   const { compte, db } = await requireCompte();
-  const [batiments, equipements, etatsVerifs, sansEcheance, fraicheur, dossier, ensembles, declarations] =
+  const [batiments, equipements, etatsVerifs, sansEcheance, fraicheur, dossier, ensembles, declarations, saisieFermee] =
     await Promise.all([
       listerBatimentsDeLEtablissement(id),
       listerEquipementsDeLEtablissement(id),
@@ -138,6 +139,9 @@ export default async function EquipementsPage({
         EQUIPEMENTS_DE_SECURITE.map((e) => e.obligationId),
         { compte, db },
       ),
+      // La case du DAE partagé n'est dans aucun formulaire : la saisie fermée
+      // lui est dite ici (ADR-053 § 14).
+      saisieFermeeDuSite(id),
     ]);
   const multiBatiments = estMultiBatiments(batiments);
   const batimentFiltre = resoudreFiltreBatiment(batiments, batiment);
@@ -503,7 +507,7 @@ export default async function EquipementsPage({
                     }
                     sousLEnTete={
                       presence ? (
-                        <SousLEnTetePresence ligne={presence} etablissementId={id} />
+                        <SousLEnTetePresence ligne={presence} etablissementId={id} fermeture={saisieFermee} />
                       ) : undefined
                     }
                     appareils={s.appareils}

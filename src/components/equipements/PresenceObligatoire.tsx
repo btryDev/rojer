@@ -75,9 +75,12 @@ export function MentionPresence({
 export function SousLEnTetePresence({
   ligne,
   etablissementId,
+  fermeture = null,
 }: {
   ligne: LigneSecuriteAffichee;
   etablissementId: string;
+  /** La saisie fermée du site, s'il y a lieu (`saisieFermeeDuSite`). */
+  fermeture?: { motif: string; gel: boolean } | null;
 }) {
   const rappel =
     ligne.etat === "ancienne_case" ? (
@@ -91,6 +94,7 @@ export function SousLEnTetePresence({
         etablissementId={etablissementId}
         partage={ligne.etat === "partage"}
         libelle={NOTE_DAE_PARTAGE}
+        fermeture={fermeture}
       />
     ) : null;
   if (!rappel && !partage) return null;
