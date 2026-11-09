@@ -20,16 +20,8 @@ export type Appartenance = { compteId: string; role: Role };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/**
- * Le compte où la personne travaille : le compte actif de sa session si elle
- * en est membre, sinon le plus ancien de ses comptes (défaut raisonnable, comme
- * l'établissement actif, ADR-028). `null` seulement si elle n'est membre
- * d'aucun compte : c'est le seul cas où l'onboarding en crée un.
- */
-export async function appartenanceCourante(
-  userId: string,
-  compteActifId: string | null | undefined,
-): Promise<Appartenance | null> {
+/** Les comptes dont la personne est membre, le plus ancien d'abord ; un rôle inconnu est écarté. */
+export async function appartenancesDe(userId: string): Promise<Appartenance[]> {
   const lignes = await prisma.membre.findMany({
     where: { userId },
     select: { compteId: true, role: true },
@@ -37,15 +29,43 @@ export async function appartenanceCourante(
     // lectures concurrentes désignent le même (`compteDOnboarding`).
     orderBy: [{ createdAt: "asc" }, { id: "asc" }],
   });
-  const valides = lignes.filter((l): l is Appartenance => estRole(l.role));
-  const active = compteActifId ? valides.find((l) => l.compteId === compteActifId) : undefined;
-  return active ?? valides[0] ?? null;
+  return lignes.filter((l): l is Appartenance => estRole(l.role));
 }
 
-/** L'appartenance de la personne de la session courante (`compteActifId` lu dans la session). */
-export async function appartenanceDeLaSession(userId: string): Promise<Appartenance | null> {
-  const session = await lireSessionCourante();
-  return appartenanceCourante(userId, session?.session.activeOrganizationId);
+/**
+ * Le compte où la personne travaille : le compte actif de sa session si elle
+ * en est membre, sinon le plus ancien de ses comptes (défaut raisonnable, comme
+ * l'établissement actif, ADR-028). `null` seulement si elle n'est membre
+ * d'aucun compte : c'est le seul cas où l'onboarding en crée un.
+ */
+function appartenanceRetenue(toutes: Appartenance[], compteActifId: string | null | undefined): Appartenance | null {
+  const active = compteActifId ? toutes.find((l) => l.compteId === compteActifId) : undefined;
+  return active ?? toutes[0] ?? null;
+}
+
+export async function appartenanceCourante(
+  userId: string,
+  compteActifId: string | null | undefined,
+): Promise<Appartenance | null> {
+  return appartenanceRetenue(await appartenancesDe(userId), compteActifId);
+}
+
+/**
+ * Les appartenances de la personne de la session courante (`compteActifId` lu
+ * dans la session) : celle retenue, et toutes — le choix du compte dans la
+ * gélule les lit sans relire `Membre` (ADR-054 § 7).
+ */
+export async function appartenanceDeLaSession(
+  userId: string,
+): Promise<{ retenue: Appartenance | null; toutes: Appartenance[] }> {
+  const [session, toutes] = await Promise.all([lireSessionCourante(), appartenancesDe(userId)]);
+  return { retenue: appartenanceRetenue(toutes, session?.session.activeOrganizationId), toutes };
+}
+
+/** Le nom de chaque compte dont la personne est membre (lu par `Membre`, donc borné à elle). */
+export async function nomsDesComptesDe(userId: string): Promise<Map<string, string>> {
+  const lignes = await prisma.membre.findMany({ where: { userId }, select: { compteId: true, compte: { select: { name: true } } } });
+  return new Map(lignes.map((l) => [l.compteId, l.compte.name]));
 }
 
 /**

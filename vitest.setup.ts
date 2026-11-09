@@ -30,7 +30,10 @@ import { vi } from "vitest";
 // remplacement par `vi.unmock`.
 vi.mock("@/lib/auth/membres", () => ({
   appartenanceCourante: async (userId: string) => ({ compteId: userId, role: "owner" }),
-  appartenanceDeLaSession: async (userId: string) => ({ compteId: userId, role: "owner" }),
+  appartenanceDeLaSession: async (userId: string) => {
+    const retenue = { compteId: userId, role: "owner" };
+    return { retenue, toutes: [retenue] };
+  },
   compteDOnboarding: async (userId: string) => ({ compteId: userId, role: "owner" }),
   compteDontEstProprietaire: async (userId: string) => userId,
 }));

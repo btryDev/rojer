@@ -14,14 +14,15 @@ import { redirect } from "next/navigation";
 import { getOptionalUser, requireUser } from "./require-user";
 import { clientBorne, type ClientBorne } from "./portee/client";
 import { gelesDuCompte } from "@/lib/abonnements/quotas";
-import { appartenanceDeLaSession, compteDOnboarding, comptesDeLaPersonne, invitationsPourAdresse, type Appartenance } from "./membres";
+import { appartenanceDeLaSession, compteDOnboarding, invitationsPourAdresse, nomsDesComptesDe, type Appartenance } from "./membres";
 
 /**
  * L'appartenance de la personne connectée. Mémoïsée pour un rendu (`cache()`
  * de React) ; dans une action ou une route, relue à chaque appel — ce qui est
  * la condition du retrait immédiat d'un membre (ADR-054 § 6).
  */
-const lireAppartenance = cache((userId: string): Promise<Appartenance | null> => appartenanceDeLaSession(userId));
+const lireAppartenances = cache(appartenanceDeLaSession);
+const lireAppartenance = async (userId: string): Promise<Appartenance | null> => (await lireAppartenances(userId)).retenue;
 
 /** Le client borné de la session, qui porte le gel du compte (ADR-053 § 14) — inutile en lecture seule. */
 async function portee(userId: string, a: Appartenance): Promise<ClientBorne> {
@@ -81,12 +82,17 @@ export async function aiguillageSansCompte(): Promise<string | null> {
 
 /**
  * Les comptes de la personne connectée et celui où elle travaille, pour le
- * choix du compte dans la gélule (ADR-054 § 7). Mémoïsé sur le rendu.
+ * choix du compte dans la gélule (ADR-054 § 7). Mémoïsé sur le rendu, et sans
+ * lecture de plus : les appartenances sont celles que `requireCompte` vient de
+ * relire, et les noms ne se lisent qu'à partir de deux comptes — en dessous, la
+ * gélule n'affiche pas de choix.
  */
 export const comptesDeLaSession = cache(async () => {
   const { user, compte } = await requireCompte();
-  const comptes = await comptesDeLaPersonne(user.id);
-  return { comptes: comptes.map((c) => ({ compteId: c.compteId, nom: c.nom })), actif: compte.compteId };
+  const { toutes } = await lireAppartenances(user.id);
+  if (toutes.length < 2) return { comptes: [], actif: compte.compteId };
+  const noms = await nomsDesComptesDe(user.id);
+  return { comptes: toutes.map((a) => ({ compteId: a.compteId, nom: noms.get(a.compteId) ?? "" })), actif: compte.compteId };
 });
 
 export type Compte = Awaited<ReturnType<typeof requireCompte>>;

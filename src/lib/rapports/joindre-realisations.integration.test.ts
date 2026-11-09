@@ -27,7 +27,10 @@ vi.mock("@/lib/auth/require-user", () => ({
 }));
 // Le compte de la session : celui du dossier lu (ADR-054).
 vi.mock("@/lib/auth/membres", () => ({
-  appartenanceDeLaSession: async () => (session.compteId ? { compteId: session.compteId, role: "owner" } : null),
+  appartenanceDeLaSession: async () => {
+    const retenue = session.compteId ? { compteId: session.compteId, role: "owner" } : null;
+    return { retenue, toutes: retenue ? [retenue] : [] };
+  },
 }));
 
 const URL_BASE = process.env.REALISATIONS_INTEGRATION_URL;

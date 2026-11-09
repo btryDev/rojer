@@ -6,11 +6,19 @@
 // s'éditait. Rendu seulement en lecture seule (`MarqueLectureSeule`).
 //
 // En capture sur le document : avant que React (attaché à la racine) ne voie
-// l'événement. Le refus reste au serveur.
+// l'événement. Le refus reste au serveur. Les contrôles inertes portent aussi
+// `aria-disabled`, pour qu'un lecteur d'écran les annonce indisponibles — y
+// compris ceux rendus après coup (panneau ouvert, liste dépliée).
 
 import { useEffect } from "react";
 
 const INERTE = "[data-ecriture-inerte]";
+const CONTROLES = `${INERTE} :is(button, input, select, textarea, a[href], [role="button"], [role="radio"], [role="checkbox"])`;
+
+function annoncerIndisponibles() {
+  for (const el of document.querySelectorAll(CONTROLES))
+    if (el.getAttribute("aria-disabled") !== "true") el.setAttribute("aria-disabled", "true");
+}
 
 export function InerteAuClavier() {
   useEffect(() => {
@@ -23,9 +31,13 @@ export function InerteAuClavier() {
       e.preventDefault();
       e.stopImmediatePropagation();
     };
+    annoncerIndisponibles();
+    const observateur = new MutationObserver(annoncerIndisponibles);
+    observateur.observe(document.body, { childList: true, subtree: true });
     document.addEventListener("focusin", quitter, true);
     document.addEventListener("click", arreter, true);
     return () => {
+      observateur.disconnect();
       document.removeEventListener("focusin", quitter, true);
       document.removeEventListener("click", arreter, true);
     };
