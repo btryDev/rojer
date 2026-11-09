@@ -1,5 +1,6 @@
 import { requireEtablissement } from "@/lib/auth/scope";
 import { BarreCompte } from "@/components/layout/BarreCompte";
+import { comptesDeLaSession } from "@/lib/auth/compte";
 import { SidebarAvecPastilles } from "@/components/layout/SidebarAvecPastilles";
 import { listerEtablissementsDuCompte } from "@/lib/etablissements/queries";
 import { Suspense } from "react";
@@ -38,9 +39,10 @@ export default async function EtablissementLayout({
   // temps : une lecture des établissements du compte, qui ne dépend pas de
   // la garde. Elle est lue ici et non dans `BarreCompte` : le composant est
   // client.
-  const [{ user, etablissement }, fratrie] = await Promise.all([
+  const [{ user, etablissement }, fratrie, comptes] = await Promise.all([
     requireEtablissement(id),
     listerEtablissementsDuCompte(),
+    comptesDeLaSession(),
   ]);
   // Le client ne reçoit que ce que la barre affiche — l'entreprise chargée
   // par la garde reste ici.
@@ -78,6 +80,8 @@ export default async function EtablissementLayout({
           etablissementId={etab.id}
           email={user.email ?? null}
           etablissements={fratrie}
+          comptes={comptes.comptes}
+          compteActif={comptes.actif}
         />
         {/* L'état de l'abonnement (ADR-053 § 3) : rien avant le lancement de
             l'offre, ni quand tout va bien ; la page ne l'attend pas. */}

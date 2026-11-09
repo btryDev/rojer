@@ -14,7 +14,7 @@ import { redirect } from "next/navigation";
 import { getOptionalUser, requireUser } from "./require-user";
 import { clientBorne, type ClientBorne } from "./portee/client";
 import { gelesDuCompte } from "@/lib/abonnements/quotas";
-import { appartenanceDeLaSession, compteDOnboarding, invitationsPourAdresse, type Appartenance } from "./membres";
+import { appartenanceDeLaSession, compteDOnboarding, comptesDeLaPersonne, invitationsPourAdresse, type Appartenance } from "./membres";
 
 /**
  * L'appartenance de la personne connectée. Mémoïsée pour un rendu (`cache()`
@@ -78,6 +78,16 @@ export async function aiguillageSansCompte(): Promise<string | null> {
   const [invitation] = await invitationsPourAdresse(user.email);
   return invitation ? `/invitation/${invitation.id}` : null;
 }
+
+/**
+ * Les comptes de la personne connectée et celui où elle travaille, pour le
+ * choix du compte dans la gélule (ADR-054 § 7). Mémoïsé sur le rendu.
+ */
+export const comptesDeLaSession = cache(async () => {
+  const { user, compte } = await requireCompte();
+  const comptes = await comptesDeLaPersonne(user.id);
+  return { comptes: comptes.map((c) => ({ compteId: c.compteId, nom: c.nom })), actif: compte.compteId };
+});
 
 export type Compte = Awaited<ReturnType<typeof requireCompte>>;
 

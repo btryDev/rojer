@@ -9,6 +9,7 @@ import { AppSidebar } from "@/components/layout/AppSidebar";
 import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import { BarreDeListe } from "@/components/ui-kit/BarreDeListe";
 import { BarreCompte } from "@/components/layout/BarreCompte";
+import { comptesDeLaSession } from "@/lib/auth/compte";
 import { getDuerp } from "@/lib/duerps/queries";
 import { getOptionalUser } from "@/lib/auth/require-user";
 import { getEtatModules } from "@/lib/etablissements/modules";
@@ -55,10 +56,11 @@ export default async function DuerpLayout({
   // disparaître les retards (ADR-015).
   // La fratrie vient avec, pour le sélecteur de la barre haute : le shell DUERP
   // partage la même barre, donc la même règle (ADR-028).
-  const [modules, counts, fratrie] = await Promise.all([
+  const [modules, counts, fratrie, comptes] = await Promise.all([
     getEtatModules(etab.id, etab.estERP),
     chargerSidebarCounts(etab.id),
     listerEtablissementsDuCompte(),
+    comptesDeLaSession(),
   ]);
   // Secteur affiché dans le contexte : celui choisi dans le wizard en priorité,
   // sinon suggestion par NAF (même règle que la page secteur elle-même).
@@ -103,6 +105,8 @@ export default async function DuerpLayout({
           etablissementId={etab.id}
           email={user?.email ?? null}
           etablissements={fratrie}
+          comptes={comptes.comptes}
+          compteActif={comptes.actif}
         />
         {/* L'état de l'abonnement (ADR-053 § 3), comme dans le dossier. */}
         <Suspense fallback={null}>

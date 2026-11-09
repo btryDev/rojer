@@ -38,9 +38,11 @@ import { useEffect, useRef, useState } from "react";
 import { Building2, Check, CreditCard, HelpCircle, Home, LogOut, Plus, ShieldCheck, Users, type LucideIcon } from "lucide-react";
 import { signOutAction } from "@/lib/auth/actions";
 import { choisirEtablissementActif } from "@/lib/etablissements/actions";
+import { choisirCompte } from "@/lib/membres/actions";
 import { estMultiEtablissements } from "@/lib/etablissements/selection";
 
 export type EtablissementCommutable = { id: string; raisonDisplay: string };
+export type CompteCommutable = { compteId: string; nom: string };
 
 /** Le seul menu ouvert à la fois — deux panneaux flottants côte à côte se
  *  recouvriraient, et fermer l'un en ouvrant l'autre est ce qu'on attend. */
@@ -79,6 +81,11 @@ function EntreeLien({
   );
 }
 
+/** Travailler sur un autre de ses comptes : l'action redirige ; un refus (compte qui n'est pas le sien) ne change rien. */
+async function travaillerSur(formData: FormData) {
+  await choisirCompte({ status: "idle" }, formData);
+}
+
 /** L'entrée « Ajouter un établissement », rendue dans l'un ou l'autre menu. */
 const LienAjouter = ({ onNavigate }: { onNavigate: () => void }) => (
   <EntreeLien href="/onboarding" Icone={Plus} libelle="Ajouter un établissement" onNavigate={onNavigate} ecriture />
@@ -88,11 +95,17 @@ export function BarreCompte({
   etablissementId,
   email,
   etablissements = [],
+  comptes = [],
+  compteActif,
 }: {
   etablissementId: string;
   email: string | null;
   /** Les établissements du compte, dans l'ordre de création. */
   etablissements?: EtablissementCommutable[];
+  /** Les comptes dont la personne est membre (ADR-054 § 7). */
+  comptes?: CompteCommutable[];
+  /** Le compte où elle travaille. */
+  compteActif?: string;
 }) {
   const [ouvert, setOuvert] = useState<MenuOuvert>(null);
   const zone = useRef<HTMLDivElement>(null);
@@ -315,6 +328,31 @@ export function BarreCompte({
                 {email ?? "Utilisateur"}
               </p>
             </div>
+
+            {/* Le choix du compte (ADR-054 § 7), à partir de deux : le même
+                geste que l'écran « Membres », qui relit l'appartenance au
+                serveur. Ouvert à la lecture seule (`data-saisie-ouverte`) :
+                changer de compte n'écrit rien dans le dossier. */}
+            {comptes.length > 1 ? (
+              <div role="group" aria-label="Comptes">
+                <p className="px-3 pb-1.5 pt-1 font-mono text-[9.5px] uppercase tracking-[0.18em] text-[color:var(--board-slate-soft)]">
+                  Travailler sur
+                </p>
+                {comptes.map((c) => {
+                  const actif = c.compteId === compteActif;
+                  return (
+                    <form key={c.compteId} action={travaillerSur} data-saisie-ouverte>
+                      <input type="hidden" name="compte" value={c.compteId} />
+                      <button type="submit" role="menuitem" aria-current={actif ? "true" : undefined} className={CLASSE_ENTREE}>
+                        <Check aria-hidden className={`size-4 flex-none ${actif ? "opacity-90" : "opacity-0"}`} />
+                        <span className="flex-1 truncate">{c.nom}</span>
+                      </button>
+                    </form>
+                  );
+                })}
+                <div aria-hidden className="my-1.5 h-px bg-[color:var(--board-slate-line)]" />
+              </div>
+            ) : null}
 
             {/* Sans sélecteur dans la gélule, c'est ici la seule porte vers le
                 second établissement. Elle disparaît dès qu'il existe, pour ne
