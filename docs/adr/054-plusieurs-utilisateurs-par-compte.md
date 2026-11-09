@@ -154,7 +154,10 @@ action oubliée ne peut donc pas écrire.
   contre cette lecture (`clesDuPlanDansLaLecture`). La garde des imports
   nomme leurs seuls usages du client brut et les fonctions qui le reçoivent
   (`regenerer`, `marquerCalendrierPerime`) ; la sonde des clés croisées
-  vérifie le résultat sur les données.]
+  vérifie le résultat sur les données, au niveau du compte et, pour les
+  lignes qui en ont un des deux côtés, de l'établissement — une ligne
+  rattachée à l'appareil d'un autre établissement du même compte s'y voit
+  (revue de #253).]
 
 ### 5. L'invitation par e-mail
 

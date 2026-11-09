@@ -177,7 +177,9 @@ describe("client Prisma brut", () => {
   it.each(Object.entries(NOMMES_PRISMA))("%s n'emploie le client brut que pour son motif", (f, { usages }) => {
     if (usages === "tous") return;
     const code = sansCommentairesNiChaines(TEXTES.get(f)!);
-    const employes = [...code.matchAll(/\bprisma\s*\.\s*([$\w]+)(?:\s*\.\s*(\w+))?/g)].map(
+    // Sous son nom local : `import { prisma as db }` ne cache pas ses usages.
+    const nom = nomLocal(f) ?? "prisma";
+    const employes = [...code.matchAll(new RegExp(String.raw`(?<![\w$.])${nom}\s*\??\.\s*([$\w]+)(?:\s*\.\s*(\w+))?`, "g"))].map(
       ([, a, b]) => (a.startsWith("$") || !b ? `prisma.${a}` : `prisma.${a}.${b}`),
     );
     expect(employes.length).toBeGreaterThan(0);
@@ -196,8 +198,16 @@ describe("client Prisma brut", () => {
  * (`valeur`) ; affecté, rangé dans un objet ou ré-exporté, jamais : la fonction
  * appelée reçoit tout le client, sans borne, et ne le dit pas.
  * Lu sur le texte sans commentaires ni chaînes (`sansCommentairesNiChaines`) :
- * un `f(prisma)` en commentaire ne compte pas. Échappe : un alias pris par
- * déstructuration d'un import dynamique.
+ * un `f(prisma)` en commentaire ne compte pas. Relevés aussi comme valeurs :
+ * `prisma.$extends(…)`, `prisma.$transaction(rappel)` (le `tx` du rappel est le
+ * client brut) et tout accès par crochets (revue de #253).
+ * Échappent, connus (seconde lecture de #253) :
+ * - la confiance est TRANSITIVE et par NOM : la fonction nommée reçoit le
+ *   client entier, et ce qu'elle en fait n'est gardé par rien ici ; une
+ *   méthode homonyme (`obj.regenerer(prisma)`) passerait aussi ;
+ * - un alias pris par déstructuration d'un import dynamique ;
+ * - faux positifs sans conséquence : `if (prisma)` rend `if`, `x === prisma`
+ *   rend `<valeur>`.
  */
 export function valeursDuClient(code: string, nom = "prisma"): string[] {
   // Les déclarations d'import (et `import type`) ne sont pas des emplois.
@@ -207,7 +217,22 @@ export function valeursDuClient(code: string, nom = "prisma"): string[] {
   for (const m of sansImports.matchAll(nomRe)) {
     const i = m.index ?? 0;
     const apres = sansImports.slice(i + nom.length);
-    if (/^\s*(?:\?\.|\.)/.test(apres)) continue; // prisma.x, prisma?.x : un emploi, pas une valeur
+    // Ce qui livre le client lui-même, sous une autre forme (revue de #253) :
+    // un client étendu, une transaction en rappel (son `tx` EST le client
+    // brut), un accès par crochets que la garde des usages ne lit pas.
+    if (/^\s*\??\.\s*\$extends\b/.test(apres)) {
+      appels.push("$extends");
+      continue;
+    }
+    if (/^\s*\??\.\s*\$transaction\s*\(\s*(?:async\b|function\b|\(|[\w$]+\s*=>)/.test(apres)) {
+      appels.push("$transaction(rappel)");
+      continue;
+    }
+    if (/^\s*(?:\?\.)?\s*\[/.test(apres)) {
+      appels.push("<crochets>");
+      continue;
+    }
+    if (/^\s*\??\.\s*[\w$]/.test(apres)) continue; // prisma.x, prisma?.x : un emploi, pas une valeur
     if (/\btypeof\s*$/.test(sansImports.slice(0, i))) continue; // un type
     appels.push(appelantDe(sansImports, i));
   }
@@ -267,6 +292,19 @@ describe("client Prisma brut : la valeur", () => {
     });
     expect(morts).toEqual([]);
   });
+  it("une porte du client brut ne s'importe que par son nom (ni espace de noms, ni défaut)", () => {
+    // `import * as brut` puis `brut.prisma` échapperait à `nomLocal` (revue de #253).
+    const fautifs = [...TEXTES]
+      .filter(([f]) => !FABRIQUES.has(f))
+      .filter(([f, t]) =>
+        [...t.matchAll(/\bimport\s+(?!type\b)(?:\*\s*as\s+[\w$]+|[\w$]+)\s*(?:,\s*\{[^}]*\}\s*)?from\s*["'`]([^"'`]+)["'`]/g)].some(
+          ([, spec]) => PORTES_BRUTES.includes(cible(f, spec)),
+        ) ||
+        [...t.matchAll(IMPORT_DYNAMIQUE)].some(([, spec]) => PORTES_BRUTES.includes(cible(f, spec))),
+      )
+      .map(([f]) => f);
+    expect(fautifs).toEqual([]);
+  });
   it("aucun module ne ré-exporte une porte du client brut", () => {
     const REEXPORT = /\bexport\s*(?:\*|\{[^}]*\}|\*\s+as\s+\w+)\s*from\s*["'`]([^"'`]+)["'`]/g;
     const fautifs = [...TEXTES]
@@ -289,6 +327,13 @@ describe("client Prisma brut : la valeur", () => {
     ["type C = typeof prisma;", []],
     ["import { prisma } from \"@/lib/prisma\";\nf(prisma)", ["f"]],
     ["const prismaAdapter = 1; xprisma(); prisma2", []],
+    ["await fuite(prisma.$extends({}))", ["$extends"]],
+    ["prisma.$transaction(async (tx) => fuite(tx))", ["$transaction(rappel)"]],
+    ["prisma.$transaction((tx) => f(tx))", ["$transaction(rappel)"]],
+    ["prisma.$transaction(fn => f(fn))", ["$transaction(rappel)"]],
+    ["prisma.$transaction([prisma.a.b()])", []],
+    ['prisma?.["equipement"].deleteMany({})', ["<crochets>"]],
+    ['prisma["x"]', ["<crochets>"]],
   ])("%s → %j", (code, attendu) => expect(valeursDuClient(code)).toEqual(attendu));
   it("un appel en commentaire ne compte pas", () => {
     expect(valeursDuClient(sansCommentairesNiChaines("// f(prisma)\n/* g(prisma) */ x();"))).toEqual([]);
@@ -334,6 +379,13 @@ const PRISMA_RAW_NOMMES: Record<string, string> = {
 };
 const PRISMA_RAW = /\bPrisma\s*(?:\.\s*raw\b|\[\s*["'`]raw["'`]\s*\])/;
 /**
+ * Ce qui ferait échapper `Prisma.raw` au motif ci-dessus, refusé partout
+ * (revue de #253) : renommer `Prisma` à l'import, déstructurer `raw`, ou
+ * l'importer du moteur. Échappe, connu : `const P = Prisma; P.raw(…)`.
+ */
+const PRISMA_RAW_DEGUISE =
+  /import\s*\{[^}]*\bPrisma\s+as\b[^}]*\}\s*from|\{[^}]*\braw\b[^}]*\}\s*=\s*Prisma\b|import\s*\{[^}]*\braw\b[^}]*\}\s*from\s*["'`]@prisma/;
+/**
  * Le motif se cherche sur le texte BRUT, commentaires et chaînes compris :
  * `db["$queryRaw"]`, `const { $queryRaw: q } = db` ou une clé calculée se
  * voient, et aucun analyseur ne peut se dérégler (une apostrophe dans du JSX
@@ -354,6 +406,17 @@ describe("SQL brut", () => {
   it("un module nommé qui n'en écrit plus sort de la liste", () => {
     expect(Object.keys(SQL_BRUT_NOMMES).filter((f) => !ecrivent.includes(f))).toEqual([]);
   });
+  it("Prisma.raw ne se déguise pas (alias de Prisma, raw déstructuré ou importé du moteur)", () => {
+    expect([...TEXTES].filter(([, t]) => PRISMA_RAW_DEGUISE.test(t)).map(([f]) => f)).toEqual([]);
+  });
+  it.each([
+    ['import { Prisma as P } from "@prisma/client";', true],
+    ["const { raw } = Prisma;", true],
+    ["const { sql, raw: r } = Prisma;", true],
+    ['import { raw } from "@prisma/client/runtime/library";', true],
+    ['import { Prisma } from "@prisma/client";', false],
+    ["Prisma.sql`x`", false],
+  ])("déguisement %s → %s", (texte, attendu) => expect(PRISMA_RAW_DEGUISE.test(texte)).toBe(attendu));
   it("seuls les modules nommés emploient Prisma.raw, et chacun l'emploie encore", () => {
     const emploient = [...TEXTES].filter(([, t]) => PRISMA_RAW.test(t)).map(([f]) => f).sort();
     expect(emploient.filter((f) => !(f in PRISMA_RAW_NOMMES))).toEqual([]);

@@ -28,20 +28,9 @@
 import type { Prisma } from "@prisma/client";
 import { getStorage } from "@/lib/storage";
 
-/** Modèle → colonnes qui portent une clé de stockage. */
-export const CLES_STOCKEES = {
-  RapportVerification: ["fichierCle"],
-  Prestataire: ["attestationUrssafCle", "assuranceRcProCle", "kbisCle"],
-  AnalyseLegionelle: ["rapportCle"],
-  // Les pièces de prestataire remplacées (2026-10-12).
-  PiecePrestataire: ["fichierCle"],
-  // La pièce qui prouve la correction d'un point (ADR-048).
-  Action: ["leveeFichierCle"],
-  // La photo du lieu, dans le hero du tableau de bord (2026-10-25).
-  Etablissement: ["photoCle"],
-  // Les écrits annexés au registre, en cours et précédent (ADR-056).
-  PieceEtatPermanent: ["fichierCle"],
-} as const;
+// [2026-11-09 : déplacé dans `./cles-stockees.ts`, sans dépendance, pour que la
+// sonde des clés croisées le lise sans charger le stockage.]
+export { CLES_STOCKEES } from "./cles-stockees";
 
 /**
  * Les colonnes qui ont le nom d'un fichier sans être une clé qu'on libère.

@@ -32,29 +32,40 @@ describe.skipIf(!URL_BASE || !local)("MCP — deux établissements d'un même co
   // portant sur l'établissement servi ne doit la contenir.
   const MARQUE = `VOISIN-${randomUUID().slice(0, 8)}`;
   let servi: string;
+  let voisin: string;
 
-  async function etablissement(entrepriseId: string, nom: string) {
+  /**
+   * Un établissement et une ligne de chaque donnée qu'un outil rend. `marque`
+   * va dans les DONNÉES (adresse, libellés), jamais dans le nom de
+   * l'établissement : chaque réponse en porte le nom en tête
+   * (`avecEtablissement`), et un nom marqué ferait passer chaque témoin sans
+   * rien prouver des lectures.
+   */
+  async function etablissement(entrepriseId: string, nom: string, marque: string) {
     const etab = await prisma.etablissement.create({
-      data: { entrepriseId, raisonDisplay: nom, adresse: `${nom} rue`, codeNaf: "56.10A", effectifSurSite: 5 },
+      data: { entrepriseId, raisonDisplay: nom, adresse: `${marque} rue`, codeNaf: "56.10A", effectifSurSite: 5 },
     });
-    const bat = await prisma.batiment.create({ data: { etablissementId: etab.id, nom: `${nom} zone` } });
+    const bat = await prisma.batiment.create({ data: { etablissementId: etab.id, nom: `${marque} zone` } });
     await prisma.equipement.create({
-      data: { etablissementId: etab.id, batimentId: bat.id, categorie: "EXTINCTEUR", libelle: `${nom} extincteur` },
+      data: { etablissementId: etab.id, batimentId: bat.id, categorie: "EXTINCTEUR", libelle: `${marque} extincteur` },
     });
     await prisma.verification.create({
       data: {
         etablissementId: etab.id,
         obligationId: "incendie-erp-extincteurs-annuelle",
-        libelleObligation: `${nom} vérification`,
+        libelleObligation: `${marque} vérification`,
         periodicite: "annuelle",
         datePrevue: new Date("2026-12-01T00:00:00Z"),
       },
     });
-    await prisma.action.create({ data: { etablissementId: etab.id, libelle: `${nom} action`, type: "suppression" } });
     const duerp = await prisma.duerp.create({ data: { etablissementId: etab.id } });
-    const unite = await prisma.uniteTravail.create({ data: { duerpId: duerp.id, nom: `${nom} unité` } });
-    await prisma.risque.create({
-      data: { uniteId: unite.id, libelle: `${nom} risque`, gravite: 2, probabilite: 2, maitrise: 2, criticite: 4 },
+    const unite = await prisma.uniteTravail.create({ data: { duerpId: duerp.id, nom: `${marque} unité` } });
+    const risque = await prisma.risque.create({
+      data: { uniteId: unite.id, libelle: `${marque} risque`, gravite: 2, probabilite: 2, maitrise: 2, criticite: 4 },
+    });
+    // Une action a une origine, risque XOR vérification (`Action_origine_xor`).
+    await prisma.action.create({
+      data: { etablissementId: etab.id, risqueId: risque.id, libelle: `${marque} action`, type: "suppression" },
     });
     return etab.id;
   }
@@ -65,9 +76,9 @@ describe.skipIf(!URL_BASE || !local)("MCP — deux établissements d'un même co
       data: { id: compteId, name: "mcp", slug: compteId, membres: { create: { userId, role: "owner" } } },
     });
     const ent = await prisma.entreprise.create({ data: { compteId, raisonSociale: "Société servie", effectif: 10, adresse: "x" } });
-    servi = await etablissement(ent.id, "Servi");
+    servi = await etablissement(ent.id, "Servi", "SERVI");
     // Même compte, même entreprise : seul l'identifiant d'établissement sépare.
-    await etablissement(ent.id, MARQUE);
+    voisin = await etablissement(ent.id, "Voisin", MARQUE);
   });
   afterAll(async () => {
     await prisma.entreprise.deleteMany({ where: { compteId } });
@@ -86,11 +97,24 @@ describe.skipIf(!URL_BASE || !local)("MCP — deux établissements d'un même co
     expect(texte).not.toContain(MARQUE);
   });
 
-  it("témoin : la marque se voit quand la clé est celle du voisin", async () => {
-    // Sans ce témoin, un outil qui ne rendrait rien passerait pour borné.
-    const voisin = await prisma.etablissement.findFirstOrThrow({ where: { raisonDisplay: MARQUE }, select: { id: true } });
-    const ctx = await contexteMcp({ etablissementId: voisin.id }, new Date("2026-11-09T12:00:00Z"));
-    const textes = await Promise.all(OUTILS_MCP.map((o) => o.executer(ctx, o.schema.parse({}))));
-    expect(textes.filter((t) => t.includes(MARQUE)).length).toBeGreaterThan(2);
+  /**
+   * Les outils qui ne rendent aucune donnée marquée, et pourquoi. Vide : chacun
+   * des cinq rend au moins une ligne. Un outil ajouté qui n'en rend pas doit
+   * être nommé ici, sinon son témoin tombe — et son test négatif ne prouverait
+   * rien.
+   */
+  const SANS_DONNEE_MARQUEE: Record<string, string> = {};
+
+  it.each(OUTILS_MCP.map((o) => [o.nom, o] as const))(
+    "témoin : %s rend les données du voisin quand la clé est la sienne",
+    async (nom, outil) => {
+      if (nom in SANS_DONNEE_MARQUEE) return;
+      const ctx = await contexteMcp({ etablissementId: voisin }, new Date("2026-11-09T12:00:00Z"));
+      expect(await outil.executer(ctx, outil.schema.parse({}))).toContain(MARQUE);
+    },
+  );
+
+  it("les exemptions nomment des outils qui existent", () => {
+    expect(Object.keys(SANS_DONNEE_MARQUEE).filter((n) => !OUTILS_MCP.some((o) => o.nom === n))).toEqual([]);
   });
 });

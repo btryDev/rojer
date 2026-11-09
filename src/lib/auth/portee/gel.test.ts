@@ -98,7 +98,9 @@ describe("verifierGel : refusé avant d'écrire", () => {
 
   it("la ligne modifiée est lue bornée au compte : celle d'un autre compte ne compte pas comme « déjà là »", async () => {
     // Sans la borne, la ligne d'un autre compte qui nomme déjà le prestataire
-    // gelé ferait passer la désignation pour une clé gardée (audit du 2026-11-09).
+    // gelé ferait passer la désignation pour une clé gardée. Ce n'était pas une
+    // faille — la borne de l'écriture faisait ensuite échouer la mise à jour —,
+    // mais une lecture hors compte, contraire à l'ADR-051 (audit du 2026-11-09).
     const enBase = { x: { prestataireId: "pre-gele", etablissementId: "etab-libre", compte: "autre" } };
     const b = base(["pre-gele"], enBase);
     await expect(

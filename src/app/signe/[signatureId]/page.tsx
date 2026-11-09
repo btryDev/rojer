@@ -41,9 +41,16 @@ export default async function ConfirmationSignaturePage({
     return (
       <main className="mx-auto max-w-xl px-6 py-16 sm:px-10">
         <div className="carte-board px-7 py-7 sm:px-8">
-          <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">Consultation suspendue</p>
-          <h1 className="mt-2 text-[1.4rem] font-semibold tracking-[-0.02em]">Trop de consultations depuis votre connexion</h1>
-          <p role="alert" className="mt-4 text-[0.9rem] text-[color:var(--muted-foreground)]">
+          <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">Confirmation suspendue</p>
+          <h1 className="mt-2 text-[1.4rem] font-semibold tracking-[-0.02em]">Cette page est momentanément indisponible</h1>
+          {/* Le signataire arrive ici juste après avoir signé : derrière une
+              adresse partagée, la limite peut tomber sur lui (revue de #253).
+              On lui dit que sa signature n'est pas en cause. */}
+          <p className="mt-4 text-[0.9rem] text-[color:var(--muted-foreground)]">
+            Si vous venez de signer, votre signature a été enregistrée : seule cette page de confirmation est
+            suspendue, en raison d&apos;un grand nombre de consultations depuis votre connexion.
+          </p>
+          <p role="alert" className="mt-3 text-[0.9rem] text-[color:var(--muted-foreground)]">
             {messageTropDeTentatives(lue.reessayerDansSecondes)}
           </p>
         </div>

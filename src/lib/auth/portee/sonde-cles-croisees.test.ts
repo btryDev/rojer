@@ -7,6 +7,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { Prisma } from "@prisma/client";
 import { describe, expect, it } from "vitest";
+import { CLES_STOCKEES } from "@/lib/suppression/cles-stockees";
 import { CORRESPONDANCE, type Classement } from "./correspondance";
 import {
   CLES_SANS_RELATION,
@@ -39,13 +40,30 @@ describe("sonde des clés croisées : ce qu'elle couvre", () => {
     expect(attendus.filter((l) => !liens.includes(l))).toEqual([]);
   });
 
-  it("borne basse : des liens connus, d'une racine comme d'un rattachement lointain", () => {
-    for (const l of ["Equipement.batiment → Batiment", "Action.risque → Risque", "DemandeAssistance.etablissement → Etablissement"])
+  it("borne basse : des liens connus, d'une racine comme d'un rattachement lointain, et une clé de fichier", () => {
+    for (const l of [
+      "Equipement.batiment → Batiment",
+      "Action.risque → Risque",
+      "DemandeAssistance.etablissement → Etablissement",
+      "RapportVerification.fichierCle → FichierStocke",
+    ])
       expect(liens).toContain(l);
   });
 
+  it("chaque clé de stockage du schéma est sondée (CLES_STOCKEES, tenue complète par suppression/fichiers.test.ts)", () => {
+    const attendues = Object.entries(CLES_STOCKEES).flatMap(([m, cs]) => cs.map((c) => `${m}.${c} → FichierStocke`));
+    expect(attendues.filter((l) => !liens.includes(l))).toEqual([]);
+  });
+
+  it("le niveau établissement : seulement là où les deux côtés en ont un", () => {
+    expect(liens).toContain("Verification.equipement → Equipement (établissement)");
+    // Une racine de compte n'a pas d'établissement par son chemin : pas de requête.
+    expect(liens).not.toContain("DemandeAssistance.etablissement → Etablissement (établissement)");
+    expect(liens.filter((l) => l.endsWith("FichierStocke (établissement)"))).toEqual([]);
+  });
+
   it("aucune requête vers l'identité ni vers un modèle hors compte", () => {
-    const cibles = liens.map((l) => l.split(" → ")[1]);
+    const cibles = liens.map((l) => l.split(" → ")[1].replace(/ \(établissement\)$/, ""));
     expect(cibles.filter((c) => !duCompte(c))).toEqual([]);
   });
 

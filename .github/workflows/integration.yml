@@ -104,6 +104,13 @@ jobs:
           --no-file-parallelism
           --reporter=default --reporter=json --outputFile.json=integration.json
 
+      # Le contrôle de santé de la base (scripts/sante-base.sql) rejoué sur la
+      # base migrée : une colonne renommée ou retirée l'aurait cassé sans que
+      # personne le voie avant la bascule (section F, 2026-11-09). Il ne lit
+      # que : transaction READ ONLY, close par ROLLBACK.
+      - name: Rejouer sante-base.sql
+        run: psql "postgresql://duerp:duerp@localhost:5432/rojer_integration_ci" -v ON_ERROR_STOP=1 -q -f scripts/sante-base.sql > /dev/null
+
       # Un test d'intégration saute sans sa variable : renommée un jour, le job
       # resterait vert sans rien tester. Il tombe si un test a sauté.
       - name: Refuser un test sauté
