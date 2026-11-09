@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
-const m = vi.hoisted(() => ({ rappels: vi.fn(), avertir: vi.fn(), supprimer: vi.fn() }));
+const m = vi.hoisted(() => ({ rappels: vi.fn(), avertir: vi.fn(), supprimer: vi.fn(), lancee: { v: true } }));
+vi.mock("@/lib/abonnements/lancement", () => ({ contexteDroits: () => ({}), offreLancee: () => m.lancee.v }));
 vi.mock("@/lib/abonnements/rappels", () => ({ rappelerLaVeilleDeLaFinDEssai: m.rappels }));
 vi.mock("@/lib/abonnements/suppression", () => ({ avertirAvantSuppression: m.avertir, supprimerComptesEchus: m.supprimer }));
 vi.mock("@/lib/stripe/config", () => ({ configurationStripe: () => ({ active: false }) }));
@@ -17,6 +18,7 @@ const appel = (entete?: string) =>
 beforeEach(() => {
   vi.clearAllMocks();
   vi.unstubAllEnvs();
+  m.lancee.v = true;
   m.rappels.mockResolvedValue({ envoyes: 2, echecs: 0 });
   m.avertir.mockResolvedValue({ j30: { envoyes: 0, echecs: 0 }, j7: { envoyes: 0, echecs: 0 } });
   m.supprimer.mockResolvedValue({ supprimes: 0, reportes: 0, fichiers: { liberes: 0, echecs: 0 } });
@@ -56,6 +58,15 @@ describe("tâches quotidiennes", () => {
     });
     // Sans Stripe actif, la suppression reçoit `null` (elle ne supprime rien).
     expect(m.supprimer).toHaveBeenCalledWith(expect.any(Date), null);
+  });
+
+  it("offre pas lancée : rien ne se rappelle, rien ne s'avertit, rien ne se supprime", async () => {
+    vi.stubEnv("TACHES_SECRET", SECRET);
+    m.lancee.v = false;
+    expect(await (await appel(`Bearer ${SECRET}`)).json()).toEqual({ offreLancee: false });
+    expect(m.rappels).not.toHaveBeenCalled();
+    expect(m.avertir).not.toHaveBeenCalled();
+    expect(m.supprimer).not.toHaveBeenCalled();
   });
 
   it("une tâche qui échoue n'empêche pas les suivantes", async () => {

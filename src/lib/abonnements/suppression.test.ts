@@ -9,8 +9,13 @@ const m = vi.hoisted(() => ({
   enService: vi.fn(() => true),
   abonnements: vi.fn(),
   synchroniser: vi.fn(),
+  versions: vi.fn(),
+  expirer: vi.fn(),
 }));
-vi.mock("@/lib/prisma", () => ({ prisma: { abonnement: { findMany: m.findMany, updateMany: m.updateMany } } }));
+vi.mock("@/lib/prisma", () => ({
+  prisma: { abonnement: { findMany: m.findMany, updateMany: m.updateMany }, duerpVersion: { count: m.versions } },
+}));
+vi.mock("@/lib/stripe/parcours", () => ({ expirerSessionsOuvertes: m.expirer }));
 vi.mock("@/lib/email", () => ({
   envoiEnService: m.enService,
   sendMail: m.sendMail,
@@ -36,6 +41,8 @@ beforeEach(() => {
   m.adresses.mockResolvedValue(["dirigeant@exemple.fr"]);
   m.sendMail.mockResolvedValue(undefined);
   m.synchroniser.mockResolvedValue({ issue: "ecrit" });
+  m.versions.mockResolvedValue(0);
+  m.expirer.mockResolvedValue(undefined);
 });
 
 describe("suppression d'un compte sans abonnement (ADR-058)", () => {
@@ -94,15 +101,23 @@ describe("suppression d'un compte sans abonnement (ADR-058)", () => {
     expect(m.findMany).not.toHaveBeenCalled();
   });
 
-  it("le message : la date, le lien ; l'export seulement pour un compte qui a payé ; la conservation du DUERP à l'employeur ; jamais « Stripe »", () => {
+  it("le message : la date, le lien ; ce qui se garde selon le compte ; la conservation du DUERP à l'employeur ; jamais « Stripe »", () => {
     const le = new Date("2027-11-19T12:00:00Z");
-    const paye = messageAvantSuppression("j30", le, true, "https://rojer.test").text;
-    const jamais = messageAvantSuppression("j30", le, false, "https://rojer.test").text;
+    const depuis = new Date("2026-11-19T12:00:00Z");
+    const msg = (versionsDuerp: boolean, aPaye: boolean) =>
+      messageAvantSuppression("j30", le, depuis, { versionsDuerp, aPaye }, "https://rojer.test").text;
+    const paye = msg(true, true);
+    const versionsSansPaiement = msg(true, false); // validé avant le lancement, jamais payé
+    const rien = msg(false, false);
     expect(paye).toMatch(/19 novembre 2027/);
+    expect(paye).toMatch(/depuis le 19 novembre 2026/);
     expect(paye).toContain("https://rojer.test/compte/abonnement");
-    expect(paye).toMatch(/exportez/);
-    expect(jamais).not.toMatch(/export/);
-    for (const t of [paye, jamais]) {
+    expect(paye).toMatch(/Préparer un contrôle/);
+    expect(versionsSansPaiement).toMatch(/téléchargez-les/);
+    expect(versionsSansPaiement).not.toMatch(/Préparer un contrôle/);
+    expect(versionsSansPaiement).not.toMatch(/aucun document validé/);
+    expect(rien).toMatch(/aucun document validé/);
+    for (const t of [paye, versionsSansPaiement, rien]) {
       expect(t).toMatch(/R\. 4121-4/);
       expect(t).not.toMatch(/stripe/i);
     }
@@ -142,5 +157,7 @@ describe("suppression d'un compte sans abonnement (ADR-058)", () => {
     }
     expect(cancel).not.toHaveBeenCalled();
     expect(m.synchroniser).toHaveBeenCalledWith(stripe, "cus_1");
+    // Les paiements en cours sur Checkout sont arrêtés avant la relecture.
+    expect(m.expirer).toHaveBeenCalledWith(stripe, "cus_1");
   });
 });

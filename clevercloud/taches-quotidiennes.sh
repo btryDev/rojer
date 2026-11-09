@@ -15,7 +15,7 @@ if [ -z "${TACHES_SECRET:-}" ] || [ -z "${PUBLIC_APP_URL:-}" ]; then
 fi
 
 printf 'Authorization: Bearer %s\n' "$TACHES_SECRET" |
-  /usr/bin/curl --fail --silent --show-error --max-time 300 \
+  /usr/bin/curl --fail --silent --show-error --max-time 900 \
     --request POST --header @- \
     "${PUBLIC_APP_URL%/}/api/taches/quotidiennes"
 echo

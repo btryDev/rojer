@@ -867,8 +867,10 @@ Décision et règles : **ADR-058**. En bref : horloge
 `Abonnement.sansAbonnementDepuis` écrite par la synchronisation ; e-mails à
 J-30 (la date de suppression se pose, au moins 30 jours plus tard) et à J-7
 (la date repoussée si le rappel part en retard) ; suppression par la tâche
-quotidienne, 20 comptes au plus par passe, Stripe d'abord (abonnements non
-terminés résiliés ; Stripe injoignable → le compte attend), puis la base
+quotidienne — seulement l'offre lancée —, 10 comptes au plus par passe,
+Stripe d'abord (sessions Checkout ouvertes expirées ; un abonnement ouvert
+chez Stripe → rien n'est effacé, la copie est relue ; sinon les abonnements
+non terminés résiliés ; Stripe injoignable → le compte attend), puis la base
 dans une transaction qui relit la condition sous verrou, puis les fichiers.
 Les versions de DUERP partent avec le compte : la conservation quarante ans
 est à l'employeur (règle 10 de CLAUDE.md, rayée le 2026-11-09). La page

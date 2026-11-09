@@ -70,7 +70,7 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous"; 
   "src/lib/abonnements/suppression.ts": {
     motif:
       "suppression d'un compte sans abonnement depuis douze mois (ADR-058), jouée par la tâche quotidienne hors session : les abonnements de tous les comptes, leurs avertissements, et l'effacement d'un compte entier dans une transaction",
-    usages: ["prisma.$transaction", "prisma.abonnement.findMany", "prisma.abonnement.updateMany"],
+    usages: ["prisma.$transaction", "prisma.abonnement.findMany", "prisma.abonnement.updateMany", "prisma.duerpVersion.count"],
     // L'effacement d'un compte : une transaction interactive (le verrou, la
     // condition relue, puis l'ordre des suppressions).
     valeur: ["$transaction(hors tableau)"],

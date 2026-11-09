@@ -16,6 +16,7 @@ import { envoiEnService, motifErreur, publicAppUrl, sendMail } from "@/lib/email
 import { formaterDateLongueFr } from "@/lib/dates";
 import { clesDesEtablissements, libererFichiers } from "@/lib/suppression/fichiers";
 import { OPTIONS_WEBHOOK } from "@/lib/stripe/client";
+import { expirerSessionsOuvertes } from "@/lib/stripe/parcours";
 import { synchroniserClientStripe } from "@/lib/stripe/synchronisation";
 import { OUVRENT } from "./droits";
 import { adressesDesProprietaires } from "./rappels";
@@ -24,7 +25,7 @@ import { PAGE_ABONNEMENT } from "./saisie";
 export const MOIS_SANS_ABONNEMENT = 12;
 const JOUR_MS = 86_400_000;
 /** Comptes supprimés au plus par passe : la tâche reste courte, le reste attend le lendemain. */
-export const SUPPRESSIONS_PAR_PASSE = 20;
+export const SUPPRESSIONS_PAR_PASSE = 10;
 
 /** Douze mois civils après l'horloge (UTC). */
 export function finDuDelai(sansAbonnementDepuis: Date): Date {
@@ -39,14 +40,29 @@ const FERME = { OR: [{ statut: null }, { statut: { notIn: [...OUVRENT] } }] };
 
 export type Avertissement = "j30" | "j7";
 
-/** Le message, en texte seul. `aPaye` : l'export officiel est ouvert (ADR-053 § 15). */
+/**
+ * Ce que le compte peut garder avant la suppression : `versionsDuerp`, les
+ * versions validées de son DUERP (téléchargeables une à une, abonnement ou
+ * non — un compte d'avant le lancement a pu en valider sans payer) ;
+ * `aPaye`, l'export du dossier (ADR-053 § 15).
+ */
+export type CeQuiSeGarde = { versionsDuerp: boolean; aPaye: boolean };
+
+/** Le message, en texte seul. */
 export function messageAvantSuppression(
   quand: Avertissement,
   suppressionLe: Date,
-  aPaye: boolean,
+  sansAbonnementDepuis: Date,
+  garde: CeQuiSeGarde,
   base: string,
 ): { subject: string; text: string } {
   const date = formaterDateLongueFr(suppressionLe);
+  const conserver = [
+    garde.versionsDuerp
+      ? "Pour conserver les versions validées de votre DUERP, téléchargez-les avant cette date depuis la page DUERP de chaque établissement."
+      : null,
+    garde.aPaye ? "Vos autres documents s'exportent depuis la page « Préparer un contrôle » de chaque établissement." : null,
+  ].filter((l): l is string => l !== null);
   return {
     subject:
       quand === "j7"
@@ -55,13 +71,11 @@ export function messageAvantSuppression(
     text: [
       "Bonjour,",
       "",
-      `Votre compte Rojer n'a plus d'abonnement depuis bientôt ${MOIS_SANS_ABONNEMENT} mois. Ses données seront supprimées définitivement le ${date} : établissements, documents, fichiers déposés et accès de l'équipe.`,
+      `Votre compte Rojer n'a plus d'abonnement depuis le ${formaterDateLongueFr(sansAbonnementDepuis)}. Ses données seront supprimées définitivement le ${date} : établissements, documents, fichiers déposés et accès de l'équipe.`,
       "",
       `Pour les garder, abonnez-vous avant cette date : ${base}${PAGE_ABONNEMENT}`,
       "",
-      aPaye
-        ? "Pour conserver vos documents hors de Rojer, exportez-les avant cette date depuis la page « Préparer un contrôle » de chaque établissement."
-        : "Votre compte n'a jamais été abonné : il ne porte aucun document validé.",
+      ...(conserver.length > 0 ? conserver : ["Votre compte ne porte aucun document validé."]),
       "La conservation de votre document unique d'évaluation des risques (DUERP), quarante ans dans ses versions successives, reste à la charge de l'employeur (articles L. 4121-3-1 et R. 4121-4 du Code du travail).",
       "",
       "— Rojer",
@@ -120,7 +134,7 @@ export async function avertirAvantSuppression(maintenant: Date): Promise<Record<
     if (prise.count !== 1) continue;
     const { partis, echec } = await ecrireAuxProprietaires(
       l.compteId,
-      messageAvantSuppression("j30", prevue, l.debutPayantLe !== null, base),
+      messageAvantSuppression("j30", prevue, l.sansAbonnementDepuis!, await ceQuiSeGarde(l.compteId, l.debutPayantLe), base),
       "avertissement J-30",
     );
     compter(bilan.j30, partis, echec);
@@ -139,7 +153,7 @@ export async function avertirAvantSuppression(maintenant: Date): Promise<Record<
       avertiSuppression7Le: null,
       suppressionPrevueLe: { lte: dans(maintenant, 7) },
     },
-    select: { id: true, compteId: true, suppressionPrevueLe: true, debutPayantLe: true },
+    select: { id: true, compteId: true, suppressionPrevueLe: true, sansAbonnementDepuis: true, debutPayantLe: true },
   });
   for (const l of seconds) {
     const avant = l.suppressionPrevueLe!;
@@ -151,7 +165,7 @@ export async function avertirAvantSuppression(maintenant: Date): Promise<Record<
     if (prise.count !== 1) continue;
     const { partis, echec } = await ecrireAuxProprietaires(
       l.compteId,
-      messageAvantSuppression("j7", prevue, l.debutPayantLe !== null, base),
+      messageAvantSuppression("j7", prevue, l.sansAbonnementDepuis!, await ceQuiSeGarde(l.compteId, l.debutPayantLe), base),
       "avertissement J-7",
     );
     compter(bilan.j7, partis, echec);
@@ -162,6 +176,11 @@ export async function avertirAvantSuppression(maintenant: Date): Promise<Record<
     }
   }
   return bilan;
+}
+
+async function ceQuiSeGarde(compteId: string, debutPayantLe: Date | null): Promise<CeQuiSeGarde> {
+  const versions = await prisma.duerpVersion.count({ where: { duerp: { etablissement: { entreprise: { compteId } } } } });
+  return { versionsDuerp: versions > 0, aPaye: debutPayantLe !== null };
 }
 
 /** L'horloge au plus tard pour que la fin du délai tombe d'ici `jours` jours. */
@@ -208,6 +227,9 @@ export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | n
       // ni effacé, la copie est relue (son horloge se vide) et le compte
       // attend. Sinon, ce qui pourrait encore facturer (pause, impayé, premier
       // paiement en attente) est résilié ; le client et ses factures restent.
+      // Un paiement en cours sur Checkout ne doit pas aboutir pendant la
+      // suppression : ses sessions ouvertes expirent d'abord.
+      await expirerSessionsOuvertes(stripe, stripeCustomerId);
       const abonnements = await stripe.subscriptions
         .list({ customer: stripeCustomerId, status: "all", limit: 100 }, OPTIONS_WEBHOOK)
         .autoPagingToArray({ limit: 10_000 });
@@ -263,6 +285,9 @@ export async function supprimerCompte(compteId: string, maintenant: Date): Promi
         tx,
         etablissements.map((e) => e.id),
       );
+      // Et tout fichier compté au compte, même plus référencé (un dépôt
+      // abandonné) : il partirait sinon du compte, pas du stockage.
+      const comptes = await tx.fichierStocke.findMany({ where: { compteId }, select: { cle: true } });
       // Les versions de DUERP ne suivent aucune cascade, exprès (elles
       // bloquent la suppression d'une entreprise par son dirigeant) : la fin
       // du service les efface, l'employeur les a reçues par l'export (ADR-058).
@@ -288,7 +313,7 @@ export async function supprimerCompte(compteId: string, maintenant: Date): Promi
         ]);
         if (ailleurs + signatures + liens + demandes + acceptations === 0) await tx.user.delete({ where: { id: userId } });
       }
-      return cles;
+      return [...new Set([...cles, ...comptes.map((f) => f.cle)])];
     },
     { timeout: 60_000 },
   );

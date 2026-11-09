@@ -11,6 +11,7 @@ import { rappelerLaVeilleDeLaFinDEssai } from "@/lib/abonnements/rappels";
 import { avertirAvantSuppression, supprimerComptesEchus } from "@/lib/abonnements/suppression";
 import { clientStripe } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
+import { contexteDroits, offreLancee } from "@/lib/abonnements/lancement";
 
 /** Le secret des tâches, ou `null` : la route répond alors 404. */
 export function secretDesTaches(env: Record<string, string | undefined> = process.env): string | null {
@@ -31,6 +32,10 @@ export function appelAutorise(entete: string | null, secret: string): boolean {
  * échus (ADR-058). Une tâche qui échoue n'empêche pas les suivantes.
  */
 export async function lancerTachesQuotidiennes(maintenant: Date) {
+  // L'offre pas lancée (ou retirée) : la saisie est ouverte à tous, rien ne
+  // se rappelle ni ne se supprime — un compte ne lirait nulle part ce que
+  // l'e-mail lui annonce.
+  if (!offreLancee(contexteDroits())) return { offreLancee: false as const };
   const config = configurationStripe();
   const stripe = config.active ? clientStripe(config) : null;
   return {
