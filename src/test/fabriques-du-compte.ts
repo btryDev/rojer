@@ -11,9 +11,9 @@ export type Graine = Record<string, string>;
 /** Les données d'une ligne, à partir des lignes déjà semées ; `n` rend unique ce qui doit l'être. */
 export type Fabrique = (g: Graine, n: number) => Ligne;
 
-const JOUR = new Date("2026-11-09T08:00:00Z");
-const PLUS_TARD = new Date("2026-11-09T18:00:00Z");
-const DANS_UN_AN = new Date("2027-11-09T00:00:00Z");
+const JOUR = new Date(Date.UTC(2026, 10, 9, 8));
+const PLUS_TARD = new Date(Date.UTC(2026, 10, 9, 18));
+const DANS_UN_AN = new Date(Date.UTC(2027, 10, 9));
 
 /**
  * Une ou plusieurs lignes par modèle d'un compte, dans l'ordre où elles se
