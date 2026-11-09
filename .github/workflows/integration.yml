@@ -18,7 +18,7 @@
 # - `auth/scope.integration` (ADR-054) : chaque garde de `scope.ts`, d'un
 #   compte à l'autre et à plusieurs membres (propriétaire, membre, lecteur,
 #   membres retirés) ; n'efface que ses propres lignes.
-# Les deux tests refusent une URL qui ne vise pas `localhost` : la base du
+# Ces tests refusent une URL qui ne vise pas `localhost` : la base du
 # service du runner, jamais une autre.
 #
 # Absents, et pourquoi : `etablissements/comptes-modules.integration` et
@@ -93,7 +93,8 @@ jobs:
           STRIPE_INTEGRATION_URL: postgresql://duerp:duerp@localhost:5432/rojer_integration_ci
           EFFECTIF_INTEGRATION_URL: postgresql://duerp:duerp@localhost:5432/rojer_integration_ci
         # Un fichier après l'autre : ils partagent la base, et
-        # client.integration la vide (TRUNCATE "Entreprise" CASCADE, et "User" sur cc).
+        # client.integration et matrice-isolation.integration la vident (TRUNCATE
+        # "Entreprise", "Compte" et "User" CASCADE) : jamais en parallèle.
         run: >-
           pnpm exec vitest run
           src/lib/auth/portee/client.integration
