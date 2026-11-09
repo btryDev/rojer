@@ -20,7 +20,7 @@ import "server-only";
 // ET à l'établissement de la preuve (`Portee.etablissementId`, `borne.ts`) : une
 // ligne d'un autre établissement du même compte y est absente, comme celle
 // d'un autre compte. Les `where: { etablissementId }` écrits restent, en
-// seconde ceinture (ADR-051 § 7). Le SQL brut (`$queryRaw`, `$executeRaw`) n'est
+// seconde ceinture (ADR-051 § 7). Le SQL brut n'est
 // borné ni au compte ni à l'établissement : son texte porte lui-même son
 // `etablissementId` (`signatures/verrou-contenu.ts`), sous la garde du SQL
 // brut (`portee/imports.test.ts`).]
