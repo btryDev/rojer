@@ -1,6 +1,6 @@
 // La matrice inter-comptes, à plusieurs membres (ADR-051, ADR-054), contre un
-// VRAI PostgreSQL : chaque garde de `scope.ts` (`require*`, `assert*`) est
-// appelée sur les identifiants du compte A par chaque profil.
+// VRAI PostgreSQL : chaque garde de `scope.ts` est appelée sur les
+// identifiants du compte A par chaque profil.
 //
 // - Le propriétaire, un membre et un lecteur de A reçoivent la ligne de A, et
 //   un client borné à A (il rend les établissements de A, aucun de B).
@@ -12,7 +12,8 @@
 //   « introuvable ».
 //
 // La liste des gardes se lit dans les exports de `scope.ts`, jamais recopiée :
-// une garde ajoutée sans son cas fait tomber le test d'exhaustivité. Deux
+// toute fonction exportée a son cas ou un motif écrit hors matrice, sinon le
+// test d'exhaustivité tombe, quel que soit son préfixe. Deux
 // témoins, gardes volontairement cassées et définies ICI, prouvent que la
 // matrice voit une fuite.
 //
@@ -339,10 +340,21 @@ describe.skipIf(!URL_BASE || !local)("gardes de scope.ts, d'un compte à l'autre
     },
   };
 
-  /** Les gardes d'un module : ses fonctions exportées `require*` et `assert*`. */
+  /**
+   * Les fonctions exportées par scope.ts qui ne passent pas par la matrice,
+   * chacune avec son motif. Liste FERMÉE : une fonction exportée qui n'est ni
+   * ici ni dans `CAS` fait tomber le test d'exhaustivité, quel que soit son
+   * préfixe (`getX`, `lireX`…).
+   */
+  const HORS_MATRICE: Record<string, string> = {
+    getOptionalUserEtablissement:
+      "ne reçoit aucun identifiant : elle lit le cookie de l'établissement actif, éprouvé par le test du cookie forgé (plus bas)",
+  };
+
+  /** Les gardes d'un module : toutes ses fonctions exportées, hors de `HORS_MATRICE`. */
   function gardesDe(exports: Record<string, unknown>): string[] {
     return Object.keys(exports)
-      .filter((nom) => /^(require|assert)[A-Z]/.test(nom) && typeof exports[nom] === "function")
+      .filter((nom) => typeof exports[nom] === "function" && !(nom in HORS_MATRICE))
       .sort();
   }
 
@@ -387,8 +399,15 @@ describe.skipIf(!URL_BASE || !local)("gardes de scope.ts, d'un compte à l'autre
 
   // --- La matrice ------------------------------------------------------------
 
-  it("chaque garde exportée par scope.ts a son cas, et chaque cas est une garde", () => {
+  it("chaque fonction exportée par scope.ts a son cas ou son motif hors matrice, et rien d'autre", () => {
     expect(gardesDe(scope)).toEqual(Object.keys(CAS).sort());
+    // Pas de motif pour une fonction qui n'existe plus.
+    for (const nom of Object.keys(HORS_MATRICE)) expect(typeof (scope as Record<string, unknown>)[nom], nom).toBe("function");
+  });
+
+  it("une fonction exportée non classée, quel que soit son préfixe, fait tomber l'exhaustivité", () => {
+    const etendu = { ...scope, lireEtablissementSansGarde: async () => null };
+    expect(gardesDe(etendu)).toEqual([...gardesDe(scope), "lireEtablissementSansGarde"].sort());
   });
 
   describe.each(gardesDe(scope))("%s", (nom) => {
@@ -408,9 +427,9 @@ describe.skipIf(!URL_BASE || !local)("gardes de scope.ts, d'un compte à l'autre
   });
 
   // --- Les témoins : la matrice voit une garde cassée -------------------------
-  // Définis ici et non dans scope.ts : ce ne sont PAS des gardes. Leur nom ne
-  // commence ni par `require` ni par `assert`, et le test d'exhaustivité les
-  // ignore même ajoutés aux exports d'un module.
+  // Définis ici et non dans scope.ts : ce ne sont PAS des gardes. Déplacés
+  // dans scope.ts, ils y seraient des fonctions non classées, et feraient
+  // tomber l'exhaustivité.
 
   /** Témoin : lit l'action par le client brut, sans la borne au compte. */
   const temoinLigneNonBornee: Cas = {
@@ -447,11 +466,6 @@ describe.skipIf(!URL_BASE || !local)("gardes de scope.ts, d'un compte à l'autre
     expect(await ecarts(temoinClientNonBorne)).toEqual(
       expect.arrayContaining([expect.stringMatching(/^propriétaire de A : client mal borné/)]),
     );
-  });
-
-  it("les témoins ne comptent pas parmi les gardes", () => {
-    const etendu = { ...scope, temoinLigneNonBornee, temoinClientNonBorne };
-    expect(gardesDe(etendu)).toEqual(gardesDe(scope));
   });
 
   // --- Lecture seule et gestes réservés (ADR-054 § 4, § 8) --------------------
