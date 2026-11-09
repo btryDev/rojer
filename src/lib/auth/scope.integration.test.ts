@@ -68,6 +68,7 @@ describe.skipIf(!URL_BASE || !local)("gardes de scope.ts, d'un compte à l'autre
   const { Prisma } = await import("@prisma/client");
   const scope = await import("./scope");
   const { requireCompte } = await import("./compte");
+  const { sondeClesCroisees } = await import("./portee/sonde-cles-croisees");
   const { notFound } = await import("next/navigation");
   const { verifierSaisie, verifierRole, verifierProprietaire } = await import("@/lib/abonnements/saisie");
   const { creerCompteDeTest, creerUtilisateurDeTest, effacerUtilisateursDeTest } = await import(
@@ -526,8 +527,11 @@ describe.skipIf(!URL_BASE || !local)("gardes de scope.ts, d'un compte à l'autre
     expect((await scope.getOptionalUserEtablissement())?.id).toBe(a.etab);
   });
 
-  // SONDE : sondeClesCroisees(prisma) → expect([]). À brancher ici, après
-  // toutes les tentatives croisées, par celle des deux PR (cette matrice, la
-  // sonde de `portee/sonde-cles-croisees.ts`) qui fusionne en second. Pas
-  // d'`it.todo` : `integration.yml` refuse un test « todo ».
+  // --- La sonde des clés croisées, après toutes les tentatives croisées ------
+  // Aucune ligne ne doit pointer vers une ligne d'un autre compte (ni d'un
+  // autre établissement), quel que soit le chemin d'écriture.
+
+  it("après la matrice, aucun lien croisé entre comptes", async () => {
+    expect(await sondeClesCroisees(prisma)).toEqual([]);
+  });
 });
