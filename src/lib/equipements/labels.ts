@@ -376,15 +376,3 @@ export const EXEMPLES_CATEGORIE: Partial<
       "Facultatif. La date indiquée par le fabricant pour les électrodes ou la batterie — la plus proche des deux ; l'étiquette du défibrillateur, sur le boîtier ou juste à côté, les porte. Rojer ne vous enverra pas d'échéance à cette date, mais la fiche de l'équipement affichera « Périmé depuis » dès qu'elle sera passée.",
   },
 };
-
-/**
- * Un libellé d'équipement repris en cours de phrase : l'initiale en
- * minuscule, sauf si le premier mot est un sigle (« SSI et équipement
- * d'alarme incendie »). Le reste est laissé tel quel — « Ventilation (VMC,
- * CTA) » → « ventilation (VMC, CTA) », pas « ventilation (vmc, cta) ».
- */
-export function libelleEnCoursDePhrase(libelle: string): string {
-  const premierMot = libelle.split(/[\s'’(]/, 1)[0];
-  if (premierMot.length > 1 && premierMot === premierMot.toUpperCase()) return libelle;
-  return libelle.charAt(0).toLowerCase() + libelle.slice(1);
-}

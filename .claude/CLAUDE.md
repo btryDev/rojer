@@ -301,7 +301,7 @@ référentiel — source, notes, lecture du corpus — sans être servie au quot
 applicable (`evaluerObligation`, la porte unique ; la voie des titres salarié lit
 la même fonction) : ni calendrier, ni « Ce qui doit être en place », ni indice,
 ni tableau de bord, ni MCP, ni registre. Elle n'est jamais cachée : la page
-« Ce que Rojer ne couvre pas » la nomme, rubrique ~~« Niveau audit »~~ « Obligations légales que Rojer ne suit pas au quotidien » [2026-10-18, PR #69 : le mot « audit » n'est plus dit dans l'app], au dossier
+« Ce que Rojer ne couvre pas » la nomme, rubrique ~~« Niveau audit »~~ « Obligations légales que Rojer ne suit pas au quotidien » ~~[2026-10-18, PR #69 : le mot « audit » n'est plus dit dans l'app]~~ [2026-11-09 : sur cette page seulement — PR #69 ; il reste dans les aides des catégories (`EXPLICATION_NIVEAU_AUDIT`), décision du 2026-10-17 écrite dans `RubriqueHorsQuotidien.tsx`], au dossier
 qu'elle peut concerner. Les lignes déjà posées sont archivées si elles portent
 une trace, supprimées sinon ; lever le marqueur la réactive. Ni un retrait
 (`OBLIGATIONS_RETIREES`), ni un hors-périmètre : elle compte dans le total

@@ -3,12 +3,7 @@ import {
   obligationParId,
   obligationsConformite,
 } from "@/lib/referentiels/conformite";
-import {
-  AIDE_GROUPE_ELECTROGENE,
-  DESCRIPTION_CATEGORIE,
-  LABEL_CATEGORIE_EQUIPEMENT,
-  libelleEnCoursDePhrase,
-} from "./labels";
+import { AIDE_GROUPE_ELECTROGENE, DESCRIPTION_CATEGORIE } from "./labels";
 import { CHAMPS_TRI_ETAT, VALEURS_TRI_ETAT } from "./schema";
 import { EXPLICATION_NIVEAU_AUDIT, estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
 import type { CategorieEquipement, Periodicite } from "@/lib/referentiels/types-communs";
@@ -226,22 +221,5 @@ describe("une aide ne promet pas le rythme d'une ligne au niveau audit (2026-10-
       "EPI → epi-verification-generale-periodique-respiratoire",
       "EPI → epi-verification-generale-periodique-gilet-sauvetage",
     ]);
-  });
-});
-
-describe("libelleEnCoursDePhrase — un libellé repris en cours de phrase", () => {
-  it("met l'initiale en minuscule et garde les sigles", () => {
-    expect(libelleEnCoursDePhrase("Ventilation (VMC, CTA)")).toBe("ventilation (VMC, CTA)");
-    expect(libelleEnCoursDePhrase("Appareil de cuisson ERP")).toBe("appareil de cuisson ERP");
-    expect(libelleEnCoursDePhrase("Éclairage de sécurité (BAES)")).toBe("éclairage de sécurité (BAES)");
-  });
-  it("laisse intact un libellé qui commence par un sigle", () => {
-    expect(libelleEnCoursDePhrase("SSI et équipement d'alarme incendie")).toBe("SSI et équipement d'alarme incendie");
-  });
-  it("aucun libellé de catégorie ne perd un sigle", () => {
-    for (const libelle of Object.values(LABEL_CATEGORIE_EQUIPEMENT)) {
-      const sigles = libelle.match(/\b[A-Z]{2,}\b/g) ?? [];
-      for (const sigle of sigles) expect(libelleEnCoursDePhrase(libelle), libelle).toContain(sigle);
-    }
   });
 });
