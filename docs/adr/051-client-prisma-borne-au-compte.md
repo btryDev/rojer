@@ -441,6 +441,39 @@ vérification publique d'une signature, MCP par clé et stdio).
   bornées au compte : 5). Sans base : `borne.test.ts`, « portée d'un
   établissement ».
 
+## Renforcement du 2026-11-09 : ce qui est fait, ce qui est reporté
+
+Audit « isolation applicative, pas de RLS » du 2026-11-09, plan validé par
+la propriétaire le même jour.
+
+| Chantier | Sort |
+|---|---|
+| 1. Matrice générée, chaque modèle et chaque clé | fait, #255 |
+| 2. Retirer prédicats écrits et gardes `tenancy-*` | décidé : tout reste (§ 7), #263 |
+| 3. Portée d'un établissement pour les accès sans session | fait, #264 |
+| 4. Alerte sur les identifiants refusés en rafale | **reporté** |
+| 5. Bandeau quand l'app change de compte en silence | **reporté** |
+
+- **Chantier 4, reporté après la bascule** (décision de la propriétaire du
+  2026-11-09) : détecter, pas protéger — la borne refuse déjà. Il prend son
+  sens avec de vrais clients, et passe par le système d'alertes sur les
+  journaux du projet (à voir avec sa session), pas par un envoi maison.
+  Ce qu'il ferait : une ligne de journal par refus d'un identifiant reçu
+  (404 d'une garde de `scope.ts`, P2025 de la borne), un compteur par
+  personne sur une fenêtre courte (`securite/limite-debit.ts`), une alerte
+  au-delà d'un seuil. Il ne distingue pas « d'un autre compte » de
+  « inexistant » : le faire demanderait une lecture qui serait elle-même un
+  oracle.
+- **Chantier 5, reporté** (même décision) : quand une personne est retirée
+  du compte où elle travaillait, `afterRemoveMember` efface le compte actif
+  de ses sessions, et `appartenanceCourante` la place sans un mot sur le plus
+  ancien de ses autres comptes. Aucune fuite — l'appartenance est relue à
+  chaque requête —, mais un risque de saisie au mauvais endroit, pour une
+  personne membre d'au moins deux comptes. Le corriger demande de garder la
+  trace du compte quitté (ne plus effacer `compteActifId` au retrait) et un
+  bandeau « Vous n'avez plus accès à … ». À reprendre après la PR #262 (choix
+  du compte dans la gélule), dont il réutiliserait le geste.
+
 ## Relecture par la session GestBAT (2026-10-30)
 
 Demandée par la propriétaire. Verdict : conception juste, RLS écartée à
