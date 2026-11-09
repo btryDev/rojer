@@ -441,3 +441,24 @@ chaque transaction (`set_config('app.user_id', …, true)`, exemple officiel
 l'hébergeur, ou si des utilisateurs multiples par entreprise arrivaient : la
 table de correspondance du § 1 donnerait alors les politiques presque mot
 pour mot.
+
+[2026-11-09 : **la seconde condition de réouverture est remplie** —
+plusieurs personnes par compte depuis l'ADR-054 — **et la décision est
+reconfirmée, sous réserve du second rôle.** Les nouveaux risques sont à
+l'intérieur d'un compte (rôles, lecture seule, compte actif, retrait d'un
+membre) : une RLS par compte ne les voit pas ; ils sont tenus par le client
+borné et `requireCompte` (ADR-054 §§ 3-4). La première condition ne l'est
+pas : la documentation de Clever Cloud range l'administration des
+utilisateurs parmi les actions indisponibles — « you won't be able to create
+other users than the one handled with our control plane, i.e. the base owner
+and read-only users » (clever.cloud/developers/doc/deploy/databases/postgresql,
+lue le 2026-11-09) —, et un add-on relevé le même jour (XXS, PostgreSQL 15.17,
+celui de GestBAT, lecture seule) fournit un rôle propriétaire des tables, sans
+`CREATEROLE` ni `BYPASSRLS`. Une RLS n'y passerait que par `FORCE` sur ce rôle
+unique, que le propriétaire peut retirer. **À revérifier sur l'add-on de Rojer
+(XS, 17) au premier déploiement** (`docs/etat-bascule-clever-cloud.md`) ; un
+second rôle ne s'obtiendrait que sur demande au support. Audit rls_audit du
+2026-11-09 ; ses suites dans le code : la garde du client brut étendue à sa
+valeur, au ré-export et à `Prisma.raw` (`portee/imports.test.ts`), la lecture
+du gel bornée (`portee/gel.ts`), la sonde des clés croisées
+(`portee/sonde-cles-croisees.ts`).]
