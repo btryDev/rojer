@@ -41,7 +41,9 @@ deux fois.
    posée au premier avertissement et jamais avancée — **au moins 30 jours
    après le premier e-mail, au moins 7 jours après le second**, même si une
    tâche a manqué un jour. Aucun compte n'est supprimé sans que les deux
-   e-mails soient partis.
+   e-mails soient partis : un avertissement qui n'est parti vers personne
+   (échec d'envoi, aucun propriétaire joignable) rend sa marque et sera
+   retenté.
 3. **Les avertissements** : à J-30 et J-7, aux propriétaires du compte, par
    la tâche quotidienne (`lib/taches/quotidiennes.ts`). Le texte donne la
    date, le lien vers la page Abonnement, ce qui se garde (les versions
@@ -59,14 +61,17 @@ deux fois.
      non terminés (pause, impayé) sont résiliés, sans quoi Stripe pourrait
      encore facturer ; le client Stripe et ses factures restent
      (comptabilité de Rojer). Stripe injoignable : le compte attend la
-     passe suivante ;
+     passe suivante, et passe derrière les autres comptes échus (un compte
+     qui échoue chaque jour ne bloque pas la file). Client Stripe supprimé
+     à la main : il n'y a rien à résilier, la suppression suit ;
    - en base, dans une transaction, la ligne d'abonnement verrouillée et la
      condition relue (un réabonnement de dernière minute l'emporte) : les
      versions de DUERP, les entreprises (tout leur contenu suit par
      cascade), les demandes d'assistance, les preuves d'acceptation des
      conditions, l'abonnement, puis le compte (membres, invitations,
      consommations, fichiers comptés) ; enfin les personnes qui ne sont
-     membres d'aucun autre compte ;
+     membres d'aucun autre compte et dont rien ne garde la trace ailleurs
+     (signature, lien d'accès, demande, acceptation, invitation envoyée) ;
    - les fichiers du stockage, après la transaction (ceux des
      établissements et tout fichier compté au compte).
    - Restent : `EssaiEntreprise` (un essai par SIREN, ADR-053 § 8), le

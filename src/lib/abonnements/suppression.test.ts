@@ -11,9 +11,15 @@ const m = vi.hoisted(() => ({
   synchroniser: vi.fn(),
   versions: vi.fn(),
   expirer: vi.fn(),
+  transaction: vi.fn(),
+  liberer: vi.fn(),
 }));
 vi.mock("@/lib/prisma", () => ({
-  prisma: { abonnement: { findMany: m.findMany, updateMany: m.updateMany }, duerpVersion: { count: m.versions } },
+  prisma: {
+    abonnement: { findMany: m.findMany, updateMany: m.updateMany },
+    duerpVersion: { count: m.versions },
+    $transaction: m.transaction,
+  },
 }));
 vi.mock("@/lib/stripe/parcours", () => ({ expirerSessionsOuvertes: m.expirer }));
 vi.mock("@/lib/email", () => ({
@@ -26,7 +32,7 @@ vi.mock("./rappels", () => ({ adressesDesProprietaires: m.adresses }));
 vi.mock("./saisie", () => ({ PAGE_ABONNEMENT: "/compte/abonnement" }));
 vi.mock("@/lib/stripe/client", () => ({ OPTIONS_WEBHOOK: {} }));
 vi.mock("@/lib/stripe/synchronisation", () => ({ synchroniserClientStripe: m.synchroniser }));
-vi.mock("@/lib/suppression/fichiers", () => ({ clesDesEtablissements: vi.fn(), libererFichiers: vi.fn() }));
+vi.mock("@/lib/suppression/fichiers", () => ({ clesDesEtablissements: vi.fn(), libererFichiers: m.liberer }));
 
 import { ajouterJours, ajouterMois } from "@/lib/dates";
 import { avertirAvantSuppression, finDuDelai, messageAvantSuppression, supprimerComptesEchus } from "./suppression";
@@ -97,6 +103,19 @@ describe("suppression d'un compte sans abonnement (ADR-058)", () => {
     });
   });
 
+  it("aucun propriétaire joignable : rien n'est parti, la marque est rendue (ADR-058 § 2)", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const horloge = new Date("2026-11-10T00:00:00Z");
+    m.findMany.mockResolvedValueOnce([{ id: "ab1", compteId: "c1", sansAbonnementDepuis: horloge, debutPayantLe: null }]).mockResolvedValueOnce([]);
+    m.adresses.mockResolvedValue([]);
+    const bilan = await avertirAvantSuppression(MAINTENANT);
+    expect(bilan.j30).toEqual({ envoyes: 0, echecs: 0 });
+    expect(m.updateMany).toHaveBeenLastCalledWith({
+      where: { id: "ab1", avertiSuppression30Le: MAINTENANT },
+      data: { avertiSuppression30Le: null, suppressionPrevueLe: null },
+    });
+  });
+
   it("e-mails hors service : rien n'est lu ni marqué", async () => {
     m.enService.mockReturnValue(false);
     expect((await avertirAvantSuppression(MAINTENANT)).horsService).toBe(true);
@@ -141,6 +160,28 @@ describe("suppression d'un compte sans abonnement (ADR-058)", () => {
     expect(where.suppressionPrevueLe).toEqual({ lte: MAINTENANT });
     expect(where.avertiSuppression30Le).toEqual({ not: null });
     expect(where.avertiSuppression7Le).toEqual({ not: null });
+    // Le compte reporté passe derrière les autres : il ne bloque pas la file.
+    expect(m.updateMany).toHaveBeenCalledWith({
+      where: expect.objectContaining({ compteId: "c1", suppressionPrevueLe: { lte: MAINTENANT } }),
+      data: { suppressionPrevueLe: MAINTENANT },
+    });
+  });
+
+  it("client Stripe supprimé à la main : rien à résilier, la suppression suit", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    m.findMany.mockResolvedValue([{ compteId: "c1", stripeCustomerId: "cus_parti" }]);
+    m.expirer.mockRejectedValue(Object.assign(new Error("No such customer"), { code: "resource_missing" }));
+    m.transaction.mockResolvedValue(["cle-1"]);
+    m.liberer.mockResolvedValue({ liberes: 1, echecs: 0 });
+    const cancel = vi.fn();
+    const stripe = {
+      subscriptions: { cancel, list: () => ({ autoPagingToArray: m.abonnements }) },
+    } as unknown as Parameters<typeof supprimerComptesEchus>[1];
+    expect(await supprimerComptesEchus(MAINTENANT, stripe)).toEqual({ supprimes: 1, reportes: 0, fichiers: { liberes: 1, echecs: 0 } });
+    expect(cancel).not.toHaveBeenCalled();
+    // Une autre erreur de Stripe ne vaut pas absence : le compte attend.
+    m.expirer.mockRejectedValue(Object.assign(new Error("rate limit"), { code: "rate_limit" }));
+    expect(await supprimerComptesEchus(MAINTENANT, stripe)).toMatchObject({ supprimes: 0, reportes: 1 });
   });
 
   it("notre copie est en retard (webhook perdu) : un abonnement ouvert chez Stripe → rien n'est résilié ni effacé, la copie est relue", async () => {

@@ -1,7 +1,8 @@
 // La suppression d'un compte sans abonnement depuis douze mois (ADR-058)
 // contre un VRAI PostgreSQL : tout ce que le compte porte part — versions de
 // DUERP comprises —, un réabonnement de dernière minute l'emporte, une
-// personne membre d'un autre compte reste, l'autre compte n'est pas touché.
+// personne membre d'un autre compte, ou qui y a invité quelqu'un, reste ;
+// l'autre compte n'est pas touché.
 //
 // SAUTÉ PAR DÉFAUT : il ne tourne que si `STRIPE_INTEGRATION_URL` pointe une
 // base LOCALE migrée (même variable que la synchronisation Stripe). Il
@@ -42,6 +43,7 @@ describe.skipIf(!URL_BASE || !local)("suppression d'un compte sans abonnement �
       await prisma.acceptationConditions.deleteMany({ where: { compteId } });
       await prisma.abonnement.deleteMany({ where: { compteId } });
     }
+    await prisma.invitationCompte.deleteMany({ where: { compteId: { in: [A, B] } } });
     await prisma.compte.deleteMany({ where: { id: { in: [A, B] } } });
     await prisma.user.deleteMany({ where: { id: { in: [SEUL, DEUX] } } });
   }
@@ -98,6 +100,18 @@ describe.skipIf(!URL_BASE || !local)("suppression d'un compte sans abonnement �
     expect(await prisma.user.findUnique({ where: { id: DEUX } })).not.toBeNull();
     expect(await prisma.compte.findUnique({ where: { id: B } })).not.toBeNull();
     expect(await prisma.duerpVersion.count({ where: { duerp: { etablissement: { entreprise: { compteId: B } } } } })).toBe(1);
+  });
+
+  it("une personne qui a invité sur un autre compte reste : l'historique de ses invitations n'est pas effacé", async () => {
+    // SEUL a été membre de B, y a invité quelqu'un, puis en est parti : son
+    // invitation a été annulée à son départ, la ligne reste dans l'historique de B.
+    await prisma.invitationCompte.create({
+      data: { compteId: B, email: "invitee@exemple.invalid", role: "member", status: "canceled", expiresAt: MAINTENANT, inviterId: SEUL },
+    });
+    expect(await supprimerCompte(A, MAINTENANT)).toEqual([]);
+    expect(await prisma.compte.findUnique({ where: { id: A } })).toBeNull();
+    expect(await prisma.user.findUnique({ where: { id: SEUL } })).not.toBeNull();
+    expect(await prisma.invitationCompte.count({ where: { compteId: B, inviterId: SEUL } })).toBe(1);
   });
 
   it("un réabonnement avant la suppression l'emporte : rien n'est effacé", async () => {

@@ -107,7 +107,8 @@ async function ecrireAuxProprietaires(compteId: string, message: { subject: stri
  * Les deux avertissements. J-30 : la date de suppression se pose (douze mois
  * après l'horloge, au moins 30 jours plus tard). J-7 : sept jours avant, la
  * date repoussée d'autant si le rappel part en retard. Au plus une fois
- * chacun : la marque est posée avant l'envoi, rendue si rien n'est parti.
+ * chacun : la marque est posée avant l'envoi, rendue si rien n'est parti —
+ * échec ou aucun destinataire : aucun compte n'est supprimé sans e-mail.
  */
 export async function avertirAvantSuppression(maintenant: Date): Promise<Record<Avertissement, Bilan> & { horsService?: true }> {
   const bilan = { j30: { envoyes: 0, echecs: 0 }, j7: { envoyes: 0, echecs: 0 } };
@@ -135,7 +136,8 @@ export async function avertirAvantSuppression(maintenant: Date): Promise<Record<
       "avertissement J-30",
     );
     compter(bilan.j30, partis, echec);
-    if (partis === 0 && echec) {
+    if (partis === 0) {
+      if (!echec) console.error(`avertissement J-30 : aucun propriétaire joignable (compte ${l.compteId})`);
       await prisma.abonnement
         .updateMany({ where: { id: l.id, avertiSuppression30Le: maintenant }, data: { avertiSuppression30Le: null, suppressionPrevueLe: null } })
         .catch(() => {});
@@ -166,7 +168,8 @@ export async function avertirAvantSuppression(maintenant: Date): Promise<Record<
       "avertissement J-7",
     );
     compter(bilan.j7, partis, echec);
-    if (partis === 0 && echec) {
+    if (partis === 0) {
+      if (!echec) console.error(`avertissement J-7 : aucun propriétaire joignable (compte ${l.compteId})`);
       await prisma.abonnement
         .updateMany({ where: { id: l.id, avertiSuppression7Le: maintenant }, data: { avertiSuppression7Le: null, suppressionPrevueLe: avant } })
         .catch(() => {});
@@ -199,6 +202,20 @@ const ECHUS = (maintenant: Date) => ({
   suppressionPrevueLe: { lte: maintenant },
 });
 
+/**
+ * Un compte reporté passe derrière les autres comptes échus : sa date devient
+ * celle de la passe (elle est déjà dépassée, rien n'est avancé). Sans quoi dix
+ * comptes qui échouent chaque jour bloqueraient la file pour tous les autres.
+ */
+async function reporter(compteId: string, maintenant: Date) {
+  await prisma.abonnement
+    .updateMany({ where: { compteId, ...ECHUS(maintenant) }, data: { suppressionPrevueLe: maintenant } })
+    .catch((e: unknown) => console.error(`report du compte ${compteId} non noté — ${motifErreur(e)}`));
+}
+
+/** Le client Stripe n'existe plus (supprimé à la main dans le tableau de bord) : il n'y a rien à résilier. */
+const clientAbsent = (e: unknown) => (e as { code?: unknown } | null)?.code === "resource_missing";
+
 export type BilanSuppressions = { supprimes: number; reportes: number; fichiers: { liberes: number; echecs: number } };
 
 /**
@@ -224,12 +241,20 @@ export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | n
       // paiement en attente) est résilié ; le client et ses factures restent.
       // Un paiement en cours sur Checkout ne doit pas aboutir pendant la
       // suppression : ses sessions ouvertes expirent d'abord.
-      await expirerSessionsOuvertes(stripe, stripeCustomerId);
-      const abonnements = await stripe.subscriptions
-        .list({ customer: stripeCustomerId, status: "all", limit: 100 }, OPTIONS_WEBHOOK)
-        .autoPagingToArray({ limit: 10_000 });
+      let abonnements: Stripe.Subscription[];
+      try {
+        await expirerSessionsOuvertes(stripe, stripeCustomerId);
+        abonnements = await stripe.subscriptions
+          .list({ customer: stripeCustomerId, status: "all", limit: 100 }, OPTIONS_WEBHOOK)
+          .autoPagingToArray({ limit: 10_000 });
+      } catch (e) {
+        if (!clientAbsent(e)) throw e;
+        console.error(`suppression du compte ${compteId} : client Stripe ${stripeCustomerId} introuvable, rien à résilier`);
+        abonnements = [];
+      }
       if (abonnements.some((s) => OUVRENT.has(s.status))) {
         bilan.reportes++;
+        await reporter(compteId, maintenant);
         const relue = await synchroniserClientStripe(stripe, stripeCustomerId).then(
           () => "copie relue",
           (e: unknown) => `copie NON relue — ${motifErreur(e)}`,
@@ -242,6 +267,7 @@ export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | n
       // actif (l'horloge se vide) ou expiré (la suppression suit).
       if (abonnements.some((s) => s.status === "incomplete")) {
         bilan.reportes++;
+        await reporter(compteId, maintenant);
         console.error(`suppression du compte ${compteId} reportée : un premier paiement est en cours chez Stripe`);
         continue;
       }
@@ -250,6 +276,7 @@ export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | n
       }
     } catch (e) {
       bilan.reportes++;
+      await reporter(compteId, maintenant);
       console.error(`suppression du compte ${compteId} reportée : Stripe — ${motifErreur(e)}`);
       continue;
     }
@@ -265,6 +292,7 @@ export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | n
       bilan.fichiers.echecs += f.echecs;
     } catch (e) {
       bilan.reportes++;
+      await reporter(compteId, maintenant);
       console.error(`suppression du compte ${compteId} échouée — ${motifErreur(e)}`);
     }
   }
@@ -308,16 +336,18 @@ export async function supprimerCompte(compteId: string, maintenant: Date): Promi
 
       // Les personnes qui ne sont membres d'aucun autre compte, et dont rien
       // ne garde la trace ailleurs (une signature, un lien d'accès, une
-      // demande, une acceptation : sur un autre compte, la personne reste).
+      // demande, une acceptation, une invitation envoyée : sur un autre
+      // compte, la personne reste — l'invitation la suit en cascade).
       for (const { userId } of membres) {
-        const [ailleurs, signatures, liens, demandes, acceptations] = await Promise.all([
+        const [ailleurs, signatures, liens, demandes, acceptations, invitations] = await Promise.all([
           tx.membre.count({ where: { userId } }),
           tx.signature.count({ where: { userId } }),
           tx.accessToken.count({ where: { createdByUserId: userId } }),
           tx.demandeAssistance.count({ where: { userId } }),
           tx.acceptationConditions.count({ where: { userId } }),
+          tx.invitationCompte.count({ where: { inviterId: userId } }),
         ]);
-        if (ailleurs + signatures + liens + demandes + acceptations === 0) await tx.user.delete({ where: { id: userId } });
+        if (ailleurs + signatures + liens + demandes + acceptations + invitations === 0) await tx.user.delete({ where: { id: userId } });
       }
       return [...new Set([...cles, ...comptes.map((f) => f.cle)])];
     },
