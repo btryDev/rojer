@@ -12,6 +12,9 @@
 #   simulé, n'efface que ses propres lignes.
 # - `entreprises/effectif-migration.integration` (2026-11-03) : le remplissage
 #   de la migration des effectifs, rejoué sur une base peuplée.
+# - `auth/scope.integration` (ADR-054) : chaque garde de `scope.ts`, d'un
+#   compte à l'autre et à plusieurs membres (propriétaire, membre, lecteur,
+#   membres retirés) ; n'efface que ses propres lignes.
 # Les deux tests refusent une URL qui ne vise pas `localhost` : la base du
 # service du runner, jamais une autre.
 #
@@ -96,6 +99,7 @@ jobs:
           src/lib/securite/limite-debit.integration
           src/lib/calendrier/regeneration-bornee.integration
           src/lib/auth/sql-proprietaire.integration
+          src/lib/auth/scope.integration
           src/lib/auth/membres.integration
           src/lib/auth/creer-compte.integration
           src/lib/membres/invitation.integration
