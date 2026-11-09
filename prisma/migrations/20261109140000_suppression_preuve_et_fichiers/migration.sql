@@ -27,3 +27,8 @@ CREATE TABLE "FichierALiberer" (
 );
 
 CREATE INDEX "FichierALiberer_tentatives_noteLe_idx" ON "FichierALiberer"("tentatives", "noteLe");
+
+-- Comme toute table de public (audit OWASP 2026-10-13, S1) : aucune politique,
+-- donc rien n'est lisible hors du rôle propriétaire de l'application.
+ALTER TABLE "CompteSupprime" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "FichierALiberer" ENABLE ROW LEVEL SECURITY;
