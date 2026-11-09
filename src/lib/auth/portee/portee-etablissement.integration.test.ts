@@ -189,7 +189,7 @@ describe.skipIf(!URL_BASE || !local)("portée d'un établissement — PostgreSQL
 
     it("l'établissement et l'entreprise ne s'écrivent pas", async () => {
       await refuse(() => db.etablissement.update({ where: { id: un.Etablissement }, data: { raisonDisplay: "x" } }), /portée d'un établissement/);
-      await refuse(() => db.etablissement.create({ data: FABRIQUES.Etablissement[0]({ ...un }, ++n) }), /portée d'un établissement/);
+      await refuse(() => delegue(db, "Etablissement").create({ data: FABRIQUES.Etablissement[0]({ ...un }, ++n) }), /portée d'un établissement/);
       await refuse(() => db.entreprise.update({ where: { id: un.Entreprise }, data: { raisonSociale: "x" } }), /portée d'un établissement/);
     });
 
