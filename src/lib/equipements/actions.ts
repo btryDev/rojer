@@ -24,6 +24,7 @@ import {
   serialiserCaracteristiques,
   type ChampTriEtat,
 } from "./schema";
+import { QUESTION_DE_TYPE } from "./type-appareil";
 import {
   CATEGORIES_EQUIPEMENT,
   estCategorieEpi,
@@ -503,6 +504,18 @@ export async function creerEquipementsDepuisPreRemplissage(
       message: `Catégorie d'équipement inconnue (${inconnues.join(", ")}) : rien n'a été créé.`,
     };
   }
+  // Une catégorie qui pose un type (ADR-057 § 5) ne passe pas par ici : le
+  // panneau n'en propose aucune, et le type y est exigé — un appareil créé
+  // sans lui serait lu par la règle générale, jamais par la sienne.
+  const typees = [
+    ...new Set(entrees.map((e) => e.categorie as CategorieEquipement).filter((c) => QUESTION_DE_TYPE[c])),
+  ];
+  if (typees.length > 0) {
+    return {
+      status: "error",
+      message: `Catégorie à déclarer une par une, avec son type (${typees.join(", ")}) : rien n'a été créé.`,
+    };
+  }
   // Le libellé (revue du 2026-10-13) : la règle de la création manuelle,
   // `libelleEquipementSchema`, jamais recopiée — chaîne, rognée, 1 à 200.
   const libelles = entrees.map((e) => libelleEquipementSchema.safeParse(e.libelle));
@@ -586,9 +599,9 @@ export async function creerEquipementsDepuisPreRemplissage(
   );
   if (!creation.ok) return { status: "error", message: `${creation.motif} Rien n'a été créé.` };
   const result = creation.valeur;
-  if (entrees.some((e) => estCategorieEpi(e.categorie))) {
-    await constaterEpiDuCompte(db, etablissementId, { regenerer: false });
-  }
+  // ~~Un EPI créé ici fait constater les EPI du compte.~~ — 2026-11-07,
+  // ADR-057 § 5 : un EPI ne passe plus par le pré-remplissage (type exigé,
+  // refusé plus haut).
 
   const regen = await regenererCalendrier(etablissementId);
 

@@ -107,6 +107,9 @@ après déploiement, lecture du statut Vercel (migration).
 
 ## Lot B — interface
 
+[2026-11-06 : codé, `lot/adr-057-b`. B1 et B3 comme écrit ; B2 par la
+décision « d'après le parc » (ADR § 4) ; B4 sans changement.]
+
 - **B1. Page Équipements** : la section « Équipements de sécurité » est
   retirée. Chaque groupe porte en tête son obligation de présence quand elle
   s'applique : « Premiers secours » (matériel de premiers secours, déclaré par
@@ -126,18 +129,27 @@ après déploiement, lecture du statut Vercel (migration).
 
 ## Lot C — catégories
 
+[2026-11-07 : codé, `lot/adr-057-c`. Les écarts au plan sont dits dans
+l'ADR, § 5, et rayés ci-dessous.]
+
 - Enum Prisma : `VENTILATION` (VMC + CTA), `PORTE_PORTAIL_MOTORISE`, `EPI`
-  absorbant les trois EPI spécialisés. **En deux déploiements** : ajout des
+  absorbant les trois EPI spécialisés. ~~**En deux déploiements** : ajout des
   valeurs et migration des lignes `Equipement`, puis retrait des anciennes
-  valeurs dans un second déploiement.
+  valeurs dans un second déploiement.~~ [2026-11-07 : un seul — la migration
+  recrée l'enum sans les anciennes valeurs, ADR § 5.]
 - Caractéristiques qui remplacent la catégorie là où un texte distingue :
   VMC-gaz (habitation), parc de stationnement couvert (qualité de l'air),
   portail de véhicules, type d'EPI (antichute, respiratoire, gilet). Les
   conditions des obligations passent par `equipement_propriete_booleenne` ou
-  une énumération. Une caractéristique absente rend la condition non
+  une énumération. ~~Une caractéristique absente rend la condition non
   satisfaite (règle actuelle des propriétés d'équipement) : à confirmer pour
-  le type d'EPI, sinon un harnais existant perdrait sa vérification.
+  le type d'EPI, sinon un harnais existant perdrait sa vérification.~~
+  [2026-11-07 : tranché — le type est exigé à la saisie, donc jamais absent ;
+  la règle générale (`enum_differente`) survit tout de même au silence.]
   Migration : la caractéristique est posée depuis l'ancienne catégorie.
+  [VMC-gaz et parc de stationnement : les questions `estVmcGaz` et
+  `nbVehiculesParkingCouvert` existaient déjà ; « portail de véhicules » est
+  le type `portail`.]
 - Les rangées `Verification` restent : la clé de ligne est obligation ×
   appareil, l'identifiant de l'appareil ne change pas.
 - Libellés, pré-remplissage, recherche de matériel, `DOMAINE_DE_CATEGORIE`,

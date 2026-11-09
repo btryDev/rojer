@@ -70,9 +70,10 @@ function poserEtablissement(): EtablissementFaux {
     referentielVersionCalendrier: "2026-10-08.2+ancien",
     prescriptionsParticulieres: [],
     equipements: [
-      { id: "eq-masque", libelle: "Masque", categorie: "EPI_RESPIRATOIRE", actif: true },
-      { id: "eq-gilet", libelle: "Gilet", categorie: "EPI_GILET_SAUVETAGE", actif: true },
-      { id: "eq-harnais", libelle: "Harnais", categorie: "EPI_ANTICHUTE", actif: true },
+      // ADR-057 § 5 : un EPI, le type déclaré.
+      { id: "eq-masque", libelle: "Masque", categorie: "EPI", caracteristiques: { typeEpi: "respiratoire" }, actif: true },
+      { id: "eq-gilet", libelle: "Gilet", categorie: "EPI", caracteristiques: { typeEpi: "gilet_sauvetage" }, actif: true },
+      { id: "eq-harnais", libelle: "Harnais", categorie: "EPI", caracteristiques: { typeEpi: "antichute" }, actif: true },
     ],
   };
   db.etablissements = [etab];

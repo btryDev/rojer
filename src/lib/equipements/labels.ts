@@ -19,13 +19,16 @@ export const LABEL_CATEGORIE_EQUIPEMENT: Record<CategorieEquipement, string> = {
   // préventeur (relecture du 2026-10-05). L'enum ne change pas.
   ALARME_INCENDIE: "SSI et équipement d'alarme incendie",
   DESENFUMAGE: "Désenfumage",
-  VMC: "Ventilation (VMC)",
-  CTA: "Centrale de traitement d'air (CTA)",
+  // 2026-11-07, ADR-057 § 5 : ~~« Ventilation (VMC) »~~ et ~~« Centrale de
+  // traitement d'air (CTA) »~~ ne font plus qu'une catégorie.
+  VENTILATION: "Ventilation (VMC, CTA)",
   HOTTE_PRO: "Hotte professionnelle",
   APPAREIL_CUISSON_ERP: "Appareil de cuisson ERP",
   ASCENSEUR: "Ascenseur",
-  PORTE_AUTO: "Porte automatique",
-  PORTAIL_AUTO: "Portail automatique",
+  // 2026-11-07, ADR-057 § 5 : ~~« Porte automatique »~~ et ~~« Portail
+  // automatique »~~ ne font plus qu'une catégorie ; le type se déclare
+  // (`type-appareil.ts`).
+  PORTE_PORTAIL_MOTORISE: "Porte ou portail motorisé",
   EQUIPEMENT_SOUS_PRESSION: "Équipement sous pression",
   STOCKAGE_MATIERE_DANGEREUSE: "Stockage de matières dangereuses",
   EQUIPEMENT_LEVAGE: "Équipement de levage",
@@ -38,10 +41,9 @@ export const LABEL_CATEGORIE_EQUIPEMENT: Record<CategorieEquipement, string> = {
   // déclare et se voit réclamer quatre rendez-vous par an qu'il ne doit pas.
   COMPACTEUR_PRESSE_DECHETS_MOTORISE:
     "Compacteur à déchets ou presse à cartons (motorisé)",
+  // 2026-11-07, ADR-057 § 5 : les trois EPI vérifiables (harnais antichute,
+  // appareil respiratoire, gilet gonflable) y reviennent, avec un type déclaré.
   EPI: "Équipement de protection individuelle",
-  EPI_ANTICHUTE: "Harnais antichute et systèmes d'arrêt de chute",
-  EPI_RESPIRATOIRE: "Appareil de protection respiratoire",
-  EPI_GILET_SAUVETAGE: "Gilet de sauvetage gonflable",
   // 2026-10-14, décision de la propriétaire : pas « chaudière » — GZ 15 vise
   // l'installation entière, dont une chaudière n'est qu'un appareil.
   INSTALLATION_GAZ: "Installation de gaz (chauffage, stockage…)",
@@ -100,17 +102,20 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
     "Détection, alarme, centrale SSI.",
   DESENFUMAGE:
     "Dispositifs d'évacuation naturelle ou mécanique des fumées (DENFC, volets).",
-  VMC:
-    "Ventilation mécanique contrôlée. Locaux à pollution spécifique à déclarer.",
-  // 2026-10-17, sous-lot C : la seconde phrase est l'ADRESSE de CH 38 6°
-  // (`declareA` du corpus, cité mot pour mot).
-  CTA: "Centrale de traitement d'air avec filtration et conditionnement. Dans un établissement recevant du public des catégories 1 à 4, Rojer ne suit pas l'affichage « Danger d'incendie, filtres empoussiérés inflammables » aux accès des filtres d'une centrale qui traite plus de 10 000 m³/h, d'une centrale qui dessert plusieurs locaux réservés au sommeil, ou d'un ensemble de centrales traitant au total plus de 10 000 m³/h (art. CH 38, 6°).",
+  // 2026-11-07, ADR-057 § 5 : les aides de `VMC` (« Ventilation mécanique
+  // contrôlée. Locaux à pollution spécifique à déclarer. ») et de `CTA`
+  // réunies. 2026-10-17, sous-lot C : la dernière phrase est l'ADRESSE de
+  // CH 38 6° (`declareA` du corpus, cité mot pour mot).
+  VENTILATION:
+    "Ventilation mécanique contrôlée (VMC) ou centrale de traitement d'air (CTA), avec filtration et conditionnement. Locaux à pollution spécifique à déclarer. Dans un établissement recevant du public des catégories 1 à 4, Rojer ne suit pas l'affichage « Danger d'incendie, filtres empoussiérés inflammables » aux accès des filtres d'une centrale qui traite plus de 10 000 m³/h, d'une centrale qui dessert plusieurs locaux réservés au sommeil, ou d'un ensemble de centrales traitant au total plus de 10 000 m³/h (art. CH 38, 6°).",
   HOTTE_PRO:
     "Hotte au-dessus d'appareils de cuisson en cuisine professionnelle.",
-  // 2026-10-17, sous-lot C : la seconde phrase est l'ADRESSE de GC 15 et de
-  // PE 18 (`declareA` du corpus, cité mot pour mot).
+  // 2026-10-17, sous-lot C : la ~~seconde~~ dernière phrase est l'ADRESSE de
+  // GC 15 et de PE 18 (`declareA` du corpus, cité mot pour mot).
+  // 2026-11-07, ADR-057 § 5 : GZ 15 ne naît plus de l'appareil de cuisson ;
+  // la phrase du gaz le dit là où le dirigeant le déclare.
   APPAREIL_CUISSON_ERP:
-    "Fourneau, friteuse, grill, four… situés en cuisine d'un ERP (art. GC). Rojer ne suit pas la présence d'un personnel de service pendant le fonctionnement des appareils d'un îlot de cuisson installé dans une salle de restauration (art. GC 15 et PE 18).",
+    "Fourneau, friteuse, grill, four… situés en cuisine d'un ERP (art. GC). Cuisine au gaz : déclarez aussi l'installation de gaz, qui porte sa vérification (art. GZ 15, PE 4 § 2). Rojer ne suit pas la présence d'un personnel de service pendant le fonctionnement des appareils d'un îlot de cuisson installé dans une salle de restauration (art. GC 15 et PE 18).",
   // 2026-10-17, sous-lot B du plan « mise à jour du référentiel ». La seconde
   // phrase est l'ADRESSE de AS 5 (consignes des ascenseurs d'évacuation,
   // décision du plan, § 3) : son `declareA` la cite mot pour mot. Les pancartes
@@ -119,7 +124,6 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
   // `ascenseur-carnet-entretien`. Le titre Ier du livre II ne vise que les
   // quatre premières catégories : la phrase le dit.
   ASCENSEUR: `Ascenseur électrique ou hydraulique. Contrôle technique quinquennal. En établissement recevant du public des quatre premières catégories, Rojer ne suit pas ${nonPorte("les consignes établies et affichées à chaque niveau sur l'utilisation des ascenseurs destinés à l'évacuation des personnes en situation de handicap et de leurs locaux d'attente")} (règlement de sécurité, art. AS 5), ni ${nonPorte("les pancartes et la signalisation qui portent à la connaissance du public l'arrêt d'un appareil dont un défaut compromet la sécurité")} (art. AS 11).`,
-  PORTE_AUTO: "Porte motorisée piétonne (entrée automatique).",
   // 2026-10-17, décision de c6 sur le sous-lot B : le rideau métallique motorisé
   // et la barrière levante se déclarent ici. L'arrêté du 21 décembre 1993 dit à
   // son article 1er que « les portes ou portails automatiques et
@@ -154,7 +158,11 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
   // ~~« la barrière levante »~~ — 2026-10-18, revue de c6 : « motorisée » ;
   // une barrière manuelle n'est pas visée par l'arrêté et recevrait le
   // semestriel.
-  PORTAIL_AUTO: "Portail motorisé de véhicule. Le rideau métallique motorisé d'une devanture et la barrière levante motorisée se déclarent aussi ici.",
+  // [2026-11-07, ADR-057 § 5 : les aides de ~~`PORTE_AUTO`~~ et
+  // ~~`PORTAIL_AUTO`~~ sont devenues celles des deux types
+  // (`type-appareil.ts`), mot pour mot ; la catégorie dit ce qu'elle réunit.]
+  PORTE_PORTAIL_MOTORISE:
+    "Porte automatique piétonne, portail motorisé de véhicule, barrière levante motorisée, rideau métallique motorisé d'une devanture. Précisez porte ou portail : en établissement recevant du public des catégories 1 à 4, l'article CO 48 ne vise que les portes.",
   // La seconde phrase est l'ADRESSE de non-couverture des articles de l'arrêté
   // du 20 novembre 2017 passés `non_couvert` le 2026-10-07 (relecture
   // préventeur du 30/09, décision de la propriétaire du 07/10) : leur
@@ -189,50 +197,14 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
   // local à poubelles, et la presse actionnée au bras.
   COMPACTEUR_PRESSE_DECHETS_MOTORISE:
     "La machine du local à déchets ou du quai de livraison dans laquelle on charge à la main cartons, films plastiques ou déchets pour les tasser ou les mettre en balles : compacteur-presse à cartons, presse à balles, compacteur à déchets. Ni le local à poubelles lui-même, ni la benne du camion de collecte, ni une presse actionnée à la seule force du bras.",
-  // On nomme des objets, pas la notion : « EPI » ne se reconnaît pas dans un
-  // sélecteur, un harnais si. Les trois exemples cités sont ceux de la
-  // question déjà posée sur la fiche établissement, pour que le dirigeant
-  // retrouve d'un écran à l'autre le mot qu'il a lu.
-  // « pour appareils de protection respiratoire », sans autre qualification :
-  // le texte ne réserve PAS les cartouches aux deux familles ci-dessus. Une
-  // première rédaction écrivait « qui les alimentent », ce qui excluait un
-  // stock de cartouches antigaz servant un demi-masque à cartouches — produit
-  // d'entretien, chlore, peinture —, pourtant dans le champ par la lettre.
-  // L'exclusion du masque JETABLE reste juste : sans cartouche, il n'y a rien
-  // à vérifier.
-  // 2026-10-17, relecture de B (contrôle visuel de c6) : ~~« Vérification par
-  // une personne qualifiée tous les douze mois »~~ seul — la ligne
-  // `epi-verification-generale-periodique-respiratoire` est au NIVEAU AUDIT
-  // depuis le 2026-10-08, et l'aide promettait un rendez-vous qui ne venait
-  // jamais. Même correction pour le gilet. `labels.test.ts` tient qu'aucune
-  // aide n'annonce le rythme d'une ligne audit sans le dire.
-  EPI_RESPIRATOIRE:
-    `L'appareil respiratoire isolant autonome d'évacuation, l'équipement complet d'intervention en milieu hostile, et tout stock de cartouches filtrantes antigaz pour appareil respiratoire — y compris celles d'un demi-masque à cartouches. Le texte impose leur vérification par une personne qualifiée tous les douze mois, en service comme en stock. ${EXPLICATION_NIVEAU_AUDIT} Pas le masque de confort ni le masque jetable sans cartouche, qui ne se vérifient pas. ${PHRASE_FORMATION_EPI}`,
-  EPI_GILET_SAUVETAGE:
-    `Le gilet de sauvetage GONFLABLE — celui dont la cartouche et le déclencheur doivent fonctionner le jour venu. Le texte impose sa vérification par une personne qualifiée tous les douze mois. ${EXPLICATION_NIVEAU_AUDIT} Le gilet en mousse, qui ne se gonfle pas, n'en relève pas. ${PHRASE_FORMATION_EPI}`,
-  // « SYSTÈMES de protection individuelle contre les chutes de hauteur », dit
-  // l'arrêté — un genre plus large que l'arrêt de chute. La retenue et le
-  // maintien au travail, qui EMPÊCHENT la chute au lieu de l'arrêter, en sont.
-  // Une première rédaction n'énumérait que l'arrêt, et rétrécissait l'assiette.
-  //
-  // L'exclusion du point d'ancrage tient, et elle est fondée par l'arrêté
-  // lui-même : son article 2 borne la vérification de cette famille à « l'état
-  // général des coutures et des modes de fixation » — des pièces textiles
-  // portées, pas un ancrage de bâtiment. Mais on ne dit plus qu'il « se déclare
-  // ailleurs » : aucune catégorie ne l'accueille aujourd'hui, et l'annoncer
-  // enverrait le dirigeant chercher une case qui n'existe pas.
-  EPI_ANTICHUTE:
-    `Ce qu'une personne porte pour ne pas chuter de hauteur : le harnais et sa longe, l'antichute mobile ou à rappel automatique, le connecteur, mais aussi les systèmes de retenue et de maintien au travail, qui empêchent la chute au lieu de l'arrêter. Une vérification par une personne qualifiée est due tous les douze mois — en service comme en stock. Le point d'ancrage scellé dans le bâtiment n'en fait pas partie : l'arrêté borne cette vérification aux coutures et aux modes de fixation de l'équipement porté. ${PHRASE_FORMATION_EPI}`,
-  // LE HARNAIS A ÉTÉ RETIRÉ DE CETTE DESCRIPTION LE 2026-09-04, et c'est une
-  // correction, pas un ajustement de style. Il en était le PREMIER exemple, et
-  // cette catégorie ne porte aucune obligation : un dirigeant qui lisait le
-  // sélecteur y déclarait son harnais sans faute de sa part, et le produit ne
-  // lui réclamait jamais les douze mois. Une sur-application se voit ; une
-  // sous-application de cette forme-là ne se voit par personne.
-  //
-  // La description renvoie donc explicitement vers les catégories vérifiables,
-  // et n'énumère plus que ce qui reste vraiment ici.
-  EPI: `Ce qu'une personne porte pour se protéger et qu'aucun texte ne soumet à vérification périodique : casque, gants, chaussures de sécurité, lunettes, protections auditives, masque de confort. Un harnais antichute, un appareil respiratoire ou un gilet de sauvetage gonflable ne se déclarent PAS ici — ils ont leur propre catégorie, parce qu'un texte les soumet à une vérification tous les douze mois. Pas non plus les protections collectives — garde-corps, filet, capot de machine —, qui appartiennent à l'ouvrage ou à la machine qu'elles protègent. ${PHRASE_FORMATION_EPI}`,
+  // ~~Quatre aides — `EPI`, `EPI_ANTICHUTE`, `EPI_RESPIRATOIRE`,
+  // `EPI_GILET_SAUVETAGE` — dont l'historique (2026-09-04, 2026-10-17) est
+  // dans le dépôt.~~ [2026-11-07, ADR-057 § 5 : une catégorie, une aide ; ce
+  // que disaient les trois aides des EPI vérifiables est devenu l'aide de
+  // chaque type (`type-appareil.ts`). Le rythme de douze mois se dit ici, et
+  // le niveau audit des deux familles qui y sont (respiratoire, gilet) avec
+  // lui — `labels.test.ts` y tient.]
+  EPI: `Ce qu'une personne porte pour se protéger : casque, gants, chaussures de sécurité, lunettes, protections auditives, mais aussi harnais antichute, appareil respiratoire, gilet de sauvetage gonflable — précisez lequel. Un harnais antichute se vérifie tous les douze mois par une personne qualifiée, en service comme en stock (arrêté du 19 mars 1993). Le texte impose la même vérification aux appareils respiratoires et aux gilets de sauvetage gonflables. ${EXPLICATION_NIVEAU_AUDIT} Pas les protections collectives — garde-corps, filet, capot de machine —, qui appartiennent à l'ouvrage ou à la machine qu'elles protègent. ${PHRASE_FORMATION_EPI}`,
   // 2026-10-14, décision de la propriétaire. Même rôle que l'aide des
   // équipements sous pression et du stockage : ce qui suit « Rojer ne suit
   // pas » est l'ADRESSE de non-couverture de GZ 13, GZ 14 et de l'arrêté du
@@ -246,7 +218,11 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
   // 2026-10-17, sous-lot B : la dernière phrase est l'adresse de CH 23 et
   // CH 24 (décision de la propriétaire, plan, § 11, Q3) ; elle est aussi dite
   // dans l'entrée « Chaudière » des matériels non couverts.
-  INSTALLATION_GAZ: `Installation fixe de gaz combustible ou d'hydrocarbures liquéfiés : stockage, canalisations et appareils raccordés — chauffage, production d'eau chaude, cuisson. En établissement recevant du public des quatre premières catégories, Rojer suit ${porte("la vérification annuelle des installations de gaz")} (règlement de sécurité, art. GZ 15). En 5ᵉ catégorie, il suit ${porte("les opérations d'entretien et de vérification")} de l'installation, tous les trois ans au plus (art. PE 4 § 2) — tous les deux ans dans un hôtel (art. PO 1 § 3). Un appareil de cuisson au gaz déjà déclaré porte déjà cette vérification annuelle : déclarer aussi l'installation en ajoute une seconde ligne, une par équipement déclaré. Rojer ne suit pas ${nonPorte("la vérification d'une installation de gaz neuve ou modifiée avant sa mise en service")} (art. GZ 13), ni ${nonPorte("l'entretien des installations et appareils à gaz et de leurs conduits d'évacuation")} ni ${nonPorte("l'accès et la signalisation de l'organe de coupure de branchement du gaz")} (art. GZ 14), ni ${nonPorte("l'entretien des installations collectives de gaz des immeubles d'habitation")}, au moins tous les dix ans (arrêté du 23 février 2018, art. 26 § 3), ni ${nonPorte("l'entretien annuel de la chaudière")} (code de l'environnement, art. R. 224-41-4 et suivants). ${PHRASE_PLAN_SCHEMATIQUE_CHAUFFAGE}`,
+  // 2026-11-07, ADR-057 § 5 : ~~« Un appareil de cuisson au gaz déjà déclaré
+  // porte déjà cette vérification annuelle : déclarer aussi l'installation en
+  // ajoute une seconde ligne, une par équipement déclaré. »~~ — GZ 15 ne naît
+  // plus que de l'installation de gaz.
+  INSTALLATION_GAZ: `Installation fixe de gaz combustible ou d'hydrocarbures liquéfiés : stockage, canalisations et appareils raccordés — chauffage, production d'eau chaude, cuisson. En établissement recevant du public des quatre premières catégories, Rojer suit ${porte("la vérification annuelle des installations de gaz")} (règlement de sécurité, art. GZ 15). En 5ᵉ catégorie, il suit ${porte("les opérations d'entretien et de vérification")} de l'installation, tous les trois ans au plus (art. PE 4 § 2) — tous les deux ans dans un hôtel (art. PO 1 § 3). Rojer ne suit pas ${nonPorte("la vérification d'une installation de gaz neuve ou modifiée avant sa mise en service")} (art. GZ 13), ni ${nonPorte("l'entretien des installations et appareils à gaz et de leurs conduits d'évacuation")} ni ${nonPorte("l'accès et la signalisation de l'organe de coupure de branchement du gaz")} (art. GZ 14), ni ${nonPorte("l'entretien des installations collectives de gaz des immeubles d'habitation")}, au moins tous les dix ans (arrêté du 23 février 2018, art. 26 § 3), ni ${nonPorte("l'entretien annuel de la chaudière")} (code de l'environnement, art. R. 224-41-4 et suivants). ${PHRASE_PLAN_SCHEMATIQUE_CHAUFFAGE}`,
   // 2026-10-15, décision de la propriétaire. La maintenance et la déclaration
   // à Géo'DAE sont portées par l'appareil (`dae-erp-maintenance`,
   // `dae-erp-declaration-geodae`), la détention par l'établissement

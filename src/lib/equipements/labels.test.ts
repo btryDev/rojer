@@ -101,14 +101,19 @@ describe("aide de la question groupe électrogène", () => {
   });
 });
 
-describe("aide de l'installation de gaz : la double ligne s'explique (revue du 2026-10-14, point 5)", () => {
-  // Une cuisine au gaz déclarée porte déjà GZ 15 ; déclarer aussi
-  // l'installation en ajoute une seconde ligne. L'aide le dit, pour que le
-  // dirigeant comprenne les deux lignes. Éprouvé en retirant la phrase.
-  it("dit que l'appareil de cuisson au gaz porte déjà la vérification annuelle", () => {
+// ~~« aide de l'installation de gaz : la double ligne s'explique » (revue du
+// 2026-10-14, point 5)~~ — 2026-11-07, ADR-057 § 5 : il n'y a plus de double
+// ligne, GZ 15 ne naît que de l'installation de gaz. L'aide de l'appareil de
+// cuisson dit désormais de déclarer aussi l'installation.
+describe("GZ 15 sur l'installation de gaz seule : les aides le disent (ADR-057 § 5)", () => {
+  it("l'aide de l'installation de gaz ne promet plus de seconde ligne", () => {
     const aide = DESCRIPTION_CATEGORIE.INSTALLATION_GAZ ?? "";
-    expect(aide).toMatch(/appareil de cuisson au gaz déjà déclaré porte déjà cette vérification annuelle/);
-    expect(aide).toMatch(/seconde ligne/);
+    expect(aide).not.toMatch(/seconde ligne/);
+    expect(aide).toContain("GZ 15");
+  });
+  it("l'aide de l'appareil de cuisson renvoie à l'installation de gaz", () => {
+    const aide = DESCRIPTION_CATEGORIE.APPAREIL_CUISSON_ERP ?? "";
+    expect(aide).toMatch(/déclarez aussi l'installation de gaz/);
     expect(aide).toContain("GZ 15");
   });
 });
@@ -189,9 +194,10 @@ describe("une aide ne promet pas le rythme d'une ligne au niveau audit (2026-10-
     expect(rythmesAuditNonDits(DESCRIPTION_CATEGORIE)).toEqual([]);
   });
 
-  it("borne basse : les deux catégories en cause disent bien le niveau audit", () => {
-    expect(DESCRIPTION_CATEGORIE.EPI_RESPIRATOIRE).toContain(EXPLICATION_NIVEAU_AUDIT);
-    expect(DESCRIPTION_CATEGORIE.EPI_GILET_SAUVETAGE).toContain(EXPLICATION_NIVEAU_AUDIT);
+  // ~~« les deux catégories en cause »~~ — 2026-11-07, ADR-057 § 5 : une
+  // seule, `EPI`, qui réunit le respiratoire et le gilet.
+  it("borne basse : la catégorie en cause dit bien le niveau audit", () => {
+    expect(DESCRIPTION_CATEGORIE.EPI).toContain(EXPLICATION_NIVEAU_AUDIT);
   });
 
   it("cassure : l'aide de l'extincteur qui annonce la révision tous les dix ans sans le dire est vue (rythme retenu)", () => {
@@ -209,8 +215,11 @@ describe("une aide ne promet pas le rythme d'une ligne au niveau audit (2026-10-
   it("cassure : l'aide de l'appareil respiratoire sans la mention est vue", () => {
     const casse = {
       ...DESCRIPTION_CATEGORIE,
-      EPI_RESPIRATOIRE: DESCRIPTION_CATEGORIE.EPI_RESPIRATOIRE!.replace(EXPLICATION_NIVEAU_AUDIT, ""),
+      EPI: DESCRIPTION_CATEGORIE.EPI!.replace(EXPLICATION_NIVEAU_AUDIT, ""),
     };
-    expect(rythmesAuditNonDits(casse)).toEqual(["EPI_RESPIRATOIRE → epi-verification-generale-periodique-respiratoire"]);
+    expect(rythmesAuditNonDits(casse)).toEqual([
+      "EPI → epi-verification-generale-periodique-respiratoire",
+      "EPI → epi-verification-generale-periodique-gilet-sauvetage",
+    ]);
   });
 });

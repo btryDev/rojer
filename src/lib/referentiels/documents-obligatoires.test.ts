@@ -50,11 +50,24 @@ describe("vérifications d'EPI — la promesse d'échéance suit le niveau des o
     expect(vgp.some((o) => estNiveauAudit(o))).toBe(true);
   });
 
+  // ~~La catégorie de chaque ligne~~ — 2026-11-07, ADR-057 § 5 : les trois
+  // lignes visent `EPI` et lisent le type déclaré ; c'est le mot du type que
+  // la promesse nomme, ou tait.
+  const MOT_DU_TYPE: Record<string, RegExp> = {
+    antichute: /harnais/i,
+    respiratoire: /respiratoire/i,
+    gilet_sauvetage: /gilet/i,
+  };
   it.each(vgp.map((o) => [o.id, o] as const))("%s", (_id, o) => {
-    for (const cat of o.categoriesEquipement ?? []) {
-      const libelle = LABEL_CATEGORIE_EQUIPEMENT[cat];
-      if (estNiveauAudit(o)) expect(avantPromesse).not.toContain(libelle);
-      else expect(avantPromesse).toContain(libelle);
+    const types = (o.conditions ?? []).flatMap((c) =>
+      c.type === "equipement_propriete_enum_egale" && c.propriete === "typeEpi" ? [c.valeur] : [],
+    );
+    expect(types).toHaveLength(1);
+    const mot = MOT_DU_TYPE[types[0]];
+    if (estNiveauAudit(o)) expect(avantPromesse).not.toMatch(mot);
+    else {
+      expect(avantPromesse).toMatch(mot);
+      expect(avantPromesse).toContain(LABEL_CATEGORIE_EQUIPEMENT.EPI);
     }
   });
 });

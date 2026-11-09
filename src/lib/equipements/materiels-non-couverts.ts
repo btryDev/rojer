@@ -222,9 +222,10 @@ export const MATERIELS_NON_COUVERTS: readonly MaterielNonCouvert[] = [
     // ~~corpus: "R. 4323-61"~~ — 2026-10-17, un manque ne se cite pas par clé
     references: [{ libelle: "Code du travail, art. R. 4323-61" }],
     orienteVers: {
-      categorie: "EPI_ANTICHUTE",
+      // 2026-11-07, ADR-057 § 5 : ~~`EPI_ANTICHUTE`~~ — l'EPI, type antichute.
+      categorie: "EPI",
       phrase:
-        "Le harnais, la longe et l'antichute qu'une personne porte sont suivis : déclarez-les dans leur catégorie, Rojer en suit la vérification tous les douze mois.",
+        "Le harnais, la longe et l'antichute qu'une personne porte sont suivis : déclarez-les en équipement de protection individuelle, type harnais antichute ; Rojer en suit la vérification tous les douze mois.",
     },
   },
   {

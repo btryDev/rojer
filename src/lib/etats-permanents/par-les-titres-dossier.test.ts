@@ -60,6 +60,10 @@ const etab = {
 } as unknown as Parameters<typeof listerEtatsPermanents>[0];
 const installation = [
   { id: "eq-1", libelle: "TGBT", categorie: "INSTALLATION_ELECTRIQUE", caracteristiques: null },
+  // ADR-057 § 4 : les obligations de présence (extincteurs, alarme sonore)
+  // sont en place d'après le parc — « tout en place » les déclare au parc.
+  { id: "eq-2", libelle: "Extincteur", categorie: "EXTINCTEUR", caracteristiques: null },
+  { id: "eq-3", libelle: "Alarme", categorie: "ALARME_INCENDIE", caracteristiques: null },
 ] as unknown as Parameters<typeof listerEtatsPermanents>[1];
 
 const titre = (iso: string) => ({
@@ -184,8 +188,12 @@ describe("les comptes ne disent pas « déclaré » de ce que l'employeur n'a pa
       d.familles.reduce((n, x) => n + f(x), 0);
     const risques = compteParLEquipe(d.parLEquipe);
     const titresRisques = d.parLEquipe.filter((l) => l.parLesTitres);
-    expect(somme((f) => f.total) + risques.total).toBe(d.total);
-    expect(somme((f) => f.enPlace) + risques.enPlace).toBe(d.enPlace);
+    // ADR-057 § 4 : les obligations de présence, établies d'après le parc.
+    const parc = d.parLeParc.filter((l) => l.compteDansLEnTete);
+    expect(somme((f) => f.total) + risques.total + parc.length).toBe(d.total);
+    expect(
+      somme((f) => f.enPlace) + risques.enPlace + parc.filter((l) => l.parLeParc?.enPlace).length,
+    ).toBe(d.enPlace);
     expect(somme((f) => f.parLesTitres.total) + titresRisques.length).toBe(d.parLesTitres.total);
     expect(
       somme((f) => f.parLesTitres.enPlace) + titresRisques.filter((l) => l.parLesTitres?.enPlace).length,
@@ -198,6 +206,7 @@ describe("les comptes ne disent pas « déclaré » de ce que l'employeur n'a pa
       familles: [],
       faits: [],
       parLEquipe: [],
+      parLeParc: [],
       enPlace: 0,
       total: 0,
       parLesTitres: { total: 0, enPlace: 0 },

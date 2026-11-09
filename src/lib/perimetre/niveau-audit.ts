@@ -29,17 +29,24 @@ import type {
   EtablissementMatching,
 } from "@/lib/matching/types";
 import { LABEL_CATEGORIE_EQUIPEMENT } from "@/lib/equipements/labels";
+import { libelleDuType } from "@/lib/equipements/type-appareil";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
 import { estNiveauAudit } from "@/lib/referentiels/conformite/niveau-audit";
 import {
   estPorteeParSalarie,
   type Obligation,
 } from "@/lib/referentiels/conformite/types";
-import type { Realisateur } from "@/lib/referentiels/types-communs";
+import type { CategorieEquipement, Realisateur } from "@/lib/referentiels/types-communs";
 
 /** Une obligation au niveau audit, telle que la page la nomme. */
 export type LigneNiveauAudit = {
   id: string;
+  /**
+   * Les obligations du référentiel que la ligne nomme : la sienne, ou celles
+   * qu'un regroupement par appareil réunit (ADR-057). La première fonde
+   * `reference`.
+   */
+  obligations: string[];
   libelle: string;
   /** Le texte fondateur, tel que le référentiel le cite (premier rang). */
   reference: string;
@@ -134,7 +141,7 @@ export function gesteHorsQuotidien(o: Obligation): string {
 
 function porteePar(
   o: Obligation,
-  equipements: readonly Pick<EquipementMatching, "categorie">[],
+  equipements: readonly Pick<EquipementMatching, "categorie" | "caracteristiques">[],
 ): string | null {
   if (estPorteeParSalarie(o)) {
     return "Concerne chaque personne qui détiendrait ce titre.";
@@ -142,9 +149,15 @@ function porteePar(
   if (equipements.length > 0) {
     // Le LIBELLÉ de la catégorie, jamais le code de l'enum : « EPI_RESPIRATOIRE »
     // n'est pas un mot que le dirigeant a déclaré. Une catégorie nommée une
-    // fois, même pour trois appareils.
+    // fois, même pour trois appareils. [2026-11-07, ADR-057 § 5 : le TYPE
+    // déclaré quand la catégorie en pose un — « Équipement de protection
+    // individuelle » ne dirait pas lequel des EPI la ligne vise.]
     const categories = [
-      ...new Set(equipements.map((e) => LABEL_CATEGORIE_EQUIPEMENT[e.categorie])),
+      ...new Set(
+        equipements.map(
+          (e) => libelleDuType(e.categorie, e.caracteristiques) ?? LABEL_CATEGORIE_EQUIPEMENT[e.categorie],
+        ),
+      ),
     ];
     return `Vise ${equipements.length > 1 ? "les équipements déclarés" : "l'équipement déclaré"} : ${categories.join(", ")}.`;
   }
@@ -154,8 +167,33 @@ function porteePar(
 }
 
 /**
+ * Les obligations que la rubrique réunit PAR APPAREIL (ADR-057, décision de
+ * la propriétaire du 2026-11-05 : « une seule ligne pour tous les extincteurs
+ * et une ligne pour tous les RIA »). Trois textes — l'arrêté du 4 novembre
+ * 1993 en lieu de travail, MS 39 en ERP des catégories 1 à 4, PE 26 en 5ᵉ —
+ * demandent le même geste : que l'appareil soit identifié et signalé. Un
+ * regroupement d'AFFICHAGE : les trois obligations restent au référentiel,
+ * chacune avec sa source.
+ */
+const SIGNALISATION_PAR_APPAREIL: {
+  ids: ReadonlySet<string>;
+  libelles: Partial<Record<CategorieEquipement, string>>;
+} = {
+  ids: new Set([
+    "signalisation-incendie-moyens-lutte",
+    "signalisation-erp-extincteurs-identification",
+    "signalisation-erp-5-extincteurs-identification",
+  ]),
+  libelles: {
+    EXTINCTEUR: "Signalisation des extincteurs",
+    RIA: "Signalisation des robinets d'incendie armés",
+  },
+};
+
+/**
  * Les obligations au niveau audit qui peuvent concerner ce dossier, dans
- * l'ordre du référentiel.
+ * l'ordre du référentiel — la signalisation des extincteurs et des RIA réunie
+ * en une ligne par appareil (`SIGNALISATION_PAR_APPAREIL`).
  */
 export function obligationsNiveauAuditDuDossier(
   etab: EtablissementMatching,
@@ -168,14 +206,24 @@ export function obligationsNiveauAuditDuDossier(
     ),
   );
   const out: LigneNiveauAudit[] = [];
+  // La signalisation réunie, posée à la place du premier de ses textes.
+  let signalisationPosee = false;
   for (const o of obligations) {
     if (!estNiveauAudit(o)) continue;
     const applicable = parId.get(o.id);
     const salarie = estPorteeParSalarie(o) && etab.estEtablissementTravail;
     if (!applicable && !salarie) continue;
+    if (SIGNALISATION_PAR_APPAREIL.ids.has(o.id)) {
+      if (!signalisationPosee) {
+        signalisationPosee = true;
+        out.push(...signalisationParAppareil(parId));
+      }
+      continue;
+    }
     const [fondement] = o.referencesLegales;
     out.push({
       id: o.id,
+      obligations: [o.id],
       libelle: o.libelle,
       reference: fondement.reference,
       url: fondement.url ?? null,
@@ -184,4 +232,45 @@ export function obligationsNiveauAuditDuDossier(
     });
   }
   return out;
+}
+
+/** Une ligne par appareil signalé — extincteurs, puis RIA —, pour ce dossier. */
+function signalisationParAppareil(
+  parId: ReadonlyMap<string, { obligation: Obligation; equipementsConcernes: EquipementMatching[] }>,
+): LigneNiveauAudit[] {
+  // Une passe : par catégorie, les textes qui visent un de ses appareils, et
+  // ces appareils.
+  const parCategorie = new Map<CategorieEquipement, { textes: Obligation[]; appareils: Map<string, EquipementMatching> }>();
+  for (const id of SIGNALISATION_PAR_APPAREIL.ids) {
+    const a = parId.get(id);
+    if (!a) continue;
+    for (const e of a.equipementsConcernes) {
+      const g = parCategorie.get(e.categorie) ?? {
+        textes: [] as Obligation[],
+        appareils: new Map<string, EquipementMatching>(),
+      };
+      if (!g.textes.includes(a.obligation)) g.textes.push(a.obligation);
+      g.appareils.set(e.id, e);
+      parCategorie.set(e.categorie, g);
+    }
+  }
+  return (Object.entries(SIGNALISATION_PAR_APPAREIL.libelles) as [CategorieEquipement, string][])
+    .flatMap(([categorie, libelle]) => {
+      const g = parCategorie.get(categorie);
+      if (!g) return [];
+      // Le texte en tête : le premier qui vise la catégorie.
+      const [tete] = g.textes;
+      const [fondement] = tete.referencesLegales;
+      return [
+        {
+          id: `signalisation-par-appareil:${categorie}`,
+          obligations: g.textes.map((o) => o.id),
+          libelle,
+          reference: fondement.reference,
+          url: fondement.url ?? null,
+          porteePar: porteePar(tete, [...g.appareils.values()]),
+          geste: gesteHorsQuotidien(tete),
+        },
+      ];
+    });
 }

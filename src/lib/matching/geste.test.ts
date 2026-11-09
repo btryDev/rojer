@@ -137,8 +137,7 @@ describe("le geste — la structure du référentiel", () => {
       DESENFUMAGE: ["incendie-erp-desenfumage-annuelle", PE4, PO1, "incendie-travail-desenfumage-entretien-verification"],
       RIA: ["incendie-erp-ria-annuelle", PE4, PO1, "incendie-travail-ria-entretien-verification"],
       APPAREIL_CUISSON_ERP: ["cuisson-erp-appareils-annuelle", PE4, PO1, "cuisson-travail-appareils-entretien-verification"],
-      VMC: ["aeration-controle-installations-r4222-20", "aeration-erp-chauffage-ventilation-annuelle"],
-      CTA: ["aeration-controle-installations-r4222-20", "aeration-erp-chauffage-ventilation-annuelle"],
+      VENTILATION: ["aeration-controle-installations-r4222-20", "aeration-erp-chauffage-ventilation-annuelle"],
       // Seuls sur leur appareil : un membre du geste sans partenaire.
       HOTTE_PRO: ["aeration-controle-installations-r4222-20"],
       // Électricité : PE 4 § 2 et le contrôle annuel de l'hôtel (PO 1 § 3),
@@ -210,7 +209,7 @@ describe("un geste, une ligne par appareil", () => {
   });
 
   it("VMC chez un employeur en ERP : R. 4222-20 et CH 58 sur une seule ligne", () => {
-    const annuelles = lignesDe(ERP_N3, "VMC").filter((l) => l.periodicite === "annuelle");
+    const annuelles = lignesDe(ERP_N3, "VENTILATION").filter((l) => l.periodicite === "annuelle");
     expect(annuelles).toHaveLength(1);
     expect([annuelles[0].obligationId, ...(annuelles[0].fondeeAussiPar ?? [])].sort()).toEqual([
       "aeration-controle-installations-r4222-20",

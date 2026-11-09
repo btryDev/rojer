@@ -325,7 +325,7 @@ describe("creerPointACorriger — ce qui vient du formulaire est revérifié (AD
 
   it("accepte un appareil couvert, et l'écrit avec le rapport d'origine", async () => {
     prismaMock.rapportVerification.findFirst.mockResolvedValue({ id: "r1" });
-    prismaMock.equipement.findFirst.mockResolvedValue({ categorie: "VMC", actif: true });
+    prismaMock.equipement.findFirst.mockResolvedValue({ categorie: "VENTILATION", actif: true });
     const fd = formulaireActionVerif();
     fd.set("rapportOrigineId", "r1");
     fd.set("equipementId", "eq-vmc");

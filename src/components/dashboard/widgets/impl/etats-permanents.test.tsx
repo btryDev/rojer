@@ -59,6 +59,7 @@ function ligne(
     mode: "etat",
     compteDansLEnTete: true,
     parLesTitres: null,
+    parLeParc: null,
     accepteUnFichier: false,
     piece: null,
     piecePrecedente: null,
@@ -132,6 +133,7 @@ const FABRIQUE: EtatsPermanentsDuDossier = {
     },
   ],
   parLEquipe: [],
+  parLeParc: [],
   faits: [
     ligne("fait-1", {
       mode: "fait",
@@ -355,7 +357,11 @@ describe.each(Object.keys(DOSSIERS))("widget « Ce qui doit être en place », d
     expect(r.familles.reduce((n, f) => n + f.enPlace, 0)).toBe(r.enPlace);
     expect(r.familles.reduce((n, f) => n + f.total, 0)).toBe(r.total);
     // Et elles existent bien ailleurs : le dossier en porte, le score les garde.
-    expect(d.total).toBe(r.total + r.risques.total);
+    // ADR-057 § 4 : les obligations de présence, établies d'après le parc,
+    // se voient sur la page Équipements — comptées au dossier, pas au widget.
+    expect(d.total).toBe(
+      r.total + r.risques.total + d.parLeParc.filter((l) => l.compteDansLEnTete).length,
+    );
   });
 
   it("chaque lien mène à l'écran et vise une section présente sur l'écran", async () => {
@@ -397,6 +403,7 @@ describe("widget sans état, ou sans réponse", () => {
     familles: [],
     faits: [],
     parLEquipe: [],
+    parLeParc: [],
     enPlace: 0,
     total: 0,
     parLesTitres: { total: 0, enPlace: 0 },

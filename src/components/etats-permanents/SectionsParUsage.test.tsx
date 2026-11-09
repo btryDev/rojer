@@ -337,7 +337,8 @@ describe("le repli : une ligne de l'écran sans rangement (2026-10-17, revue ind
     // 2026-10-21) sont comptées, hors familles.
     expect(
       d.familles.reduce((n, f) => n + f.total, 0) +
-        d.parLEquipe.filter((l) => l.compteDansLEnTete).length,
+        d.parLEquipe.filter((l) => l.compteDansLEnTete).length +
+        d.parLeParc.filter((l) => l.compteDansLEnTete).length,
     ).toBe(d.total);
     const repliTemoin =
       temoin.familles.find((f) => f.groupe === GROUPE_REPLI)?.total ?? 0;
