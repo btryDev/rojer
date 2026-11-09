@@ -17,6 +17,7 @@ import {
   planifierBaisse,
   prixDesFormules,
   rendrePlanningEchu,
+  tauxDeTva,
 } from "./parcours";
 
 const api = {
@@ -26,6 +27,7 @@ const api = {
   subscriptionSchedules: { create: vi.fn(), retrieve: vi.fn(), update: vi.fn(), release: vi.fn() },
   checkout: { sessions: { create: vi.fn(), list: vi.fn(), expire: vi.fn() } },
   prices: { list: vi.fn() },
+  taxRates: { list: vi.fn() },
 };
 const stripe = api as unknown as Stripe;
 
@@ -44,13 +46,14 @@ describe("parcours Stripe", () => {
     );
 
     api.subscriptions.create.mockResolvedValue({ id: "sub_1" });
-    await demarrerEssai(stripe, { customerId: "cus_1", priceId: "price_e", metadata: { compteId: "c1" }, idempotence: "c1" });
+    await demarrerEssai(stripe, { customerId: "cus_1", priceId: "price_e", tauxTva: "txr_tva", metadata: { compteId: "c1" }, idempotence: "c1" });
     const [params, options] = api.subscriptions.create.mock.calls[0];
     // La formule est dans la clé : revenir en arrière pour en choisir une autre n'est pas refusé.
     expect(options).toEqual({ idempotencyKey: "essai-c1-price_e" });
     expect(params).toMatchObject({
       customer: "cus_1",
       items: [{ price: "price_e" }],
+      default_tax_rates: ["txr_tva"],
       trial_period_days: DUREE_ESSAI_JOURS,
       trial_settings: { end_behavior: { missing_payment_method: "pause" } },
       metadata: { compteId: "c1" },
@@ -61,12 +64,12 @@ describe("parcours Stripe", () => {
   it("Checkout exige l'acceptation des conditions générales, et expire d'abord les sessions encore ouvertes", async () => {
     api.checkout.sessions.list.mockResolvedValue({ data: [{ id: "cs_ancienne" }] });
     api.checkout.sessions.create.mockResolvedValue({ url: "https://checkout.stripe.com/x" });
-    await ouvrirCheckout(stripe, { customerId: "cus_1", priceId: "price_e", metadata: { userId: "u1" }, succes: "s", annulation: "a" });
+    await ouvrirCheckout(stripe, { customerId: "cus_1", priceId: "price_e", tauxTva: "txr_tva", metadata: { userId: "u1" }, succes: "s", annulation: "a" });
     expect(api.checkout.sessions.create.mock.calls[0][0]).toMatchObject({
       mode: "subscription",
       customer: "cus_1",
       consent_collection: { terms_of_service: "required" },
-      subscription_data: { metadata: { userId: "u1" } },
+      subscription_data: { metadata: { userId: "u1" }, default_tax_rates: ["txr_tva"] },
     });
     expect(api.checkout.sessions.list).toHaveBeenCalledWith({ customer: "cus_1", status: "open", limit: 10 }, expect.anything());
     expect(api.checkout.sessions.expire).toHaveBeenCalledWith("cs_ancienne");
@@ -160,6 +163,7 @@ describe("parcours Stripe", () => {
       id: "sub_1",
       schedule: null,
       trial_settings: { end_behavior: { missing_payment_method: "pause" } },
+      default_tax_rates: [{ id: "txr_tva" }],
       items: { data: [{ id: "si_1", quantity: 1, price: { id: "price_pm" } }] },
     } as unknown as Stripe.Subscription;
     api.subscriptions.update.mockClear();
@@ -172,8 +176,9 @@ describe("parcours Stripe", () => {
       end_behavior: "release",
       proration_behavior: "none",
       phases: [
-        { items: [{ price: "price_pm", quantity: 1 }], start_date: 100, end_date: 200 },
-        { items: [{ price: "price_em", quantity: 1 }], duration: { interval: "month", interval_count: 1 } },
+        // La TVA de l'abonnement est reposée sur chaque phase.
+        { items: [{ price: "price_pm", quantity: 1 }], start_date: 100, end_date: 200, default_tax_rates: ["txr_tva"] },
+        { items: [{ price: "price_em", quantity: 1 }], duration: { interval: "month", interval_count: 1 }, default_tax_rates: ["txr_tva"] },
       ],
     });
     // Une seconde baisse reprend le planning existant.
@@ -192,6 +197,9 @@ describe("parcours Stripe", () => {
     api.subscriptionSchedules.release.mockClear();
     await expect(planifierBaisse(stripe, sub, { priceId: "price_em", intervalle: "month" })).rejects.toThrow("phases refusées");
     expect(api.subscriptionSchedules.release).toHaveBeenCalledWith("sub_sched_2");
+    // Sans TVA sur l'abonnement (antérieur à la TVA), les phases n'en portent pas.
+    const phases = api.subscriptionSchedules.update.mock.calls.at(-1)![1].phases;
+    expect(phases.every((p: object) => !("default_tax_rates" in p))).toBe(true);
 
     const passe = Math.floor(Date.now() / 1000) - 86_400;
     api.subscriptionSchedules.retrieve.mockResolvedValue({ status: "active", created: passe, current_phase: { start_date: passe }, phases: [{ start_date: passe - 10 }, { start_date: passe }] });
@@ -253,5 +261,41 @@ describe("parcours Stripe", () => {
     expect((await prixDesFormules(stripe, 0)).size).toBe(0);
     await prixDesFormules(stripe, 1000);
     expect(api.prices.list).toHaveBeenCalledTimes(2);
+  });
+
+  it("la TVA : le taux actif, 20 %, France, type TVA, en sus du prix — le plus ancien ; aucun = null ; gardé dix minutes", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const taux = (id: string, autres: object = {}) => ({
+      id,
+      active: true,
+      inclusive: false,
+      percentage: 20,
+      country: "FR",
+      tax_type: "vat",
+      created: 10,
+      ...autres,
+    });
+    api.taxRates.list.mockResolvedValue({
+      data: [
+        taux("txr_ttc", { inclusive: true }),
+        taux("txr_10", { percentage: 10 }),
+        taux("txr_be", { country: "BE" }),
+        taux("txr_sales", { tax_type: "sales_tax" }),
+        taux("txr_sans_pays", { country: null }),
+        taux("txr_recent", { created: 20 }),
+        taux("txr_ancien", { created: 5 }),
+      ],
+    });
+    expect(await tauxDeTva(stripe, 0)).toBe("txr_ancien");
+    expect(api.taxRates.list).toHaveBeenCalledWith({ active: true, inclusive: false, limit: 100 });
+    await tauxDeTva(stripe, 5 * 60_000);
+    expect(api.taxRates.list).toHaveBeenCalledTimes(1);
+
+    oublierLesPrix();
+    api.taxRates.list.mockResolvedValue({ data: [taux("txr_ttc", { inclusive: true })] });
+    expect(await tauxDeTva(stripe, 0)).toBeNull();
+    // Absent : relu à chaque appel, pour que le taux créé entre-temps serve aussitôt.
+    await tauxDeTva(stripe, 1000);
+    expect(api.taxRates.list).toHaveBeenCalledTimes(3);
   });
 });

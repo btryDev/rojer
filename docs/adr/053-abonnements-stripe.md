@@ -470,7 +470,9 @@ et sans croire une information qui ne vient pas de Stripe.
 - Le contenu des formules et ce qui les distingue (volume ou modules) ; les
   `Entitlements` de Stripe seront à considérer si ce sont des modules.
 - L'essai avec ou sans carte.
-- La TVA, les mentions obligatoires des factures et la facturation
+- ~~La TVA,~~ les mentions obligatoires des factures et la facturation
   électronique (émission obligatoire pour les PME au 1er septembre 2027) :
-  hors code, à voir avec l'expert-comptable (notes, § 6).
+  hors code, à voir avec l'expert-comptable (notes, § 6). [2026-11-09 : la
+  TVA est un taux fixe de 20 % posé sur chaque abonnement, sans lequel
+  aucun abonnement ne se crée (notes, § 12).]
 - La suppression de compte, qui n'existe pas encore.

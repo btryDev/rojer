@@ -166,6 +166,14 @@ sont pas ouverts) :
   pas le serveur, et le démarrage le signale.
 - Le contenu et les prix des formules ne sont pas arrêtés (brouillon de la
   session « pricing » : branche `docs/offres-abonnement`).
+- **TVA** (2026-11-09) : créer dans le tableau de bord de production un taux
+  de TVA de 20 %, pays France, type TVA, « en sus du prix » (exclusif). Sans
+  lui, aucun essai ni abonnement ne se crée (notes du chantier, § 12).
+- **Accès au tableau de bord Stripe** (2026-11-09) : il fait partie du
+  périmètre de confiance — on y change le compte Rojer d'un client
+  (`metadata.compteId`), on y offre une formule, on y rembourse. Double
+  authentification obligatoire ; comptes nominatifs, jamais partagés, au
+  rôle minimal ; l'application n'utilise que la clé restreinte ci-dessus.
 
 ## Règles de travail qui valent ici
 

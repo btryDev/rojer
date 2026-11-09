@@ -2,7 +2,7 @@
 //
 // Prépare un compte Stripe DE TEST pour essayer le parcours d'abonnement en
 // local (ADR-053, notes de chantier § 9) : produits et prix des formules,
-// configuration du portail client. Idempotent : relancé, il ne crée rien de
+// taux de TVA, configuration du portail client. Idempotent : relancé, il ne crée rien de
 // ce qui existe déjà au bon réglage.
 //
 //   pnpm exec tsx scripts/stripe-installer-test.ts
@@ -20,6 +20,7 @@
 
 import { existsSync } from "node:fs";
 import Stripe from "stripe";
+import { TVA, tauxConformes } from "../src/lib/stripe/tva";
 import { CLES_FORMULES, FORMULES, INTERVALLE_STRIPE, PERIODICITES, lookupKey, LOOKUP_KEYS, type CleFormule, type Periodicite } from "../src/lib/abonnements/formules";
 
 type Env = Record<string, string | undefined>;
@@ -112,6 +113,27 @@ export async function installerPrix(stripe: Stripe, produits: Record<CleFormule,
   return installes;
 }
 
+/**
+ * Le taux de TVA que Rojer pose sur chaque abonnement (`src/lib/stripe/tva.ts`) :
+ * gardé s'il existe, créé sinon. Un taux ne se modifie pas chez Stripe
+ * (pourcentage, pays) : un autre taux se crée, l'ancien s'archive.
+ */
+export async function installerTva(stripe: Stripe): Promise<{ taux: Stripe.TaxRate; cree: boolean }> {
+  const { data } = await stripe.taxRates.list({ active: true, inclusive: false, limit: 100 });
+  const existant = tauxConformes(data)[0];
+  if (existant) return { taux: existant, cree: false };
+  const taux = await stripe.taxRates.create({
+    display_name: "TVA",
+    description: "TVA française, taux normal (Rojer)",
+    jurisdiction: "France",
+    percentage: TVA.pourcentage,
+    country: TVA.pays,
+    tax_type: TVA.type,
+    inclusive: false,
+  });
+  return { taux, cree: true };
+}
+
 /** L'URL des conditions, seulement si `PUBLIC_APP_URL` est une adresse publique (https). */
 export function urlConditions(env: Env): string | null {
   const base = env.PUBLIC_APP_URL?.trim().replace(/\/+$/, "");
@@ -167,6 +189,7 @@ export type Installation =
       ok: true;
       produits: Record<CleFormule, Stripe.Product>;
       prix: PrixInstalle[];
+      tva: { taux: Stripe.TaxRate; cree: boolean };
       portail: ResultatPortail;
       conditions: string | null;
     };
@@ -178,9 +201,10 @@ export async function installer(env: Env, creerClient: (cle: string) => Stripe):
   const stripe = creerClient(cle.cle);
   const produits = await installerProduits(stripe);
   const prix = await installerPrix(stripe, produits);
+  const tva = await installerTva(stripe);
   const conditions = urlConditions(env);
   const portail = await installerPortail(stripe, parametresPortail(conditions));
-  return { ok: true, produits, prix, portail, conditions };
+  return { ok: true, produits, prix, tva, portail, conditions };
 }
 
 /** Ce qui ne se règle pas par l'API : à faire dans le tableau de bord de test. */
@@ -190,6 +214,9 @@ export const REGLAGES_MANUELS = [
   "Réglages > Billing > Abonnements et e-mails : e-mail de rappel 7 jours avant la fin d'un essai gratuit " +
     "(et le lien de gestion qu'il porte). Aucune ressource de l'API ne le règle.",
   "Réglages > E-mails clients : envoi des factures et reçus, si on veut les voir partir en test.",
+  "Réglages > Informations publiques et Billing > Factures : raison sociale, adresse, SIREN, numéro de TVA ; " +
+    "numérotation des factures au niveau du compte (une suite sans trou) ; pied de page avec les mentions " +
+    "entre professionnels (pénalités de retard, indemnité forfaitaire de 40 € pour frais de recouvrement).",
 ];
 
 function recapitulatif(r: Extract<Installation, { ok: true }>): string {
@@ -201,6 +228,8 @@ function recapitulatif(r: Extract<Installation, { ok: true }>): string {
     const etat = p.cree ? "créé" : "gardé";
     lignes.push(`  ${p.lookupKey.padEnd(22)} ${p.prix.id}  ${montant} € / ${p.prix.recurring?.interval}  (${etat})`);
   }
+  lignes.push("", `TVA : ${r.tva.taux.id} (${r.tva.taux.percentage} %, ${r.tva.cree ? "créé" : "gardé"})`);
+  if (r.tva.cree) lignes.push("  Les abonnements de test créés avant ce taux n'ont pas de TVA : en recréer pour voir des factures complètes.");
   lignes.push("", `Portail client : ${r.portail.id} (${r.portail.cree ? "créée" : "mise à jour"})`);
   if (!r.portail.parDefaut) {
     lignes.push(
