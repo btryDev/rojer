@@ -599,7 +599,13 @@ export const obligationsConformite: Obligation[] = [
 // `INSTALLATION_GAZ`. Aucune obligation n'entre ni ne sort : 206 + 0 − 0 =
 // 206 ; 99 / 93 / 14 ; 18 au niveau audit, 188 suivies — remesuré en appelant
 // `obligationsConformite`, `porteurDe` et `estNiveauAudit`.
-export const REFERENTIEL_VERSION = "2026-11-07.1";
+// `2026-11-09.1` (`lot/finitions-057`) : les quatre lignes du Code du travail
+// sur les portes et portails automatiques (R. 4224-12, R. 4224-13, arrêté du
+// 21 décembre 1993) disaient « (porte automatique) » alors qu'elles visent
+// aussi le portail, réuni avec la porte depuis `2026-11-07.1` : « (porte ou
+// portail automatique) », le mot de R. 4224-12. Libellés seuls : 206 + 0 − 0
+// = 206 ; 99 / 93 / 14 ; 18 au niveau audit, 188 suivies.
+export const REFERENTIEL_VERSION = "2026-11-09.1";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.
