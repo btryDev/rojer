@@ -13,6 +13,7 @@ import type Stripe from "stripe";
 import { OPTIONS_RELECTURE } from "./client";
 import { idStripe } from "./synchronisation";
 import { INTERVALLE_STRIPE, LOOKUP_KEYS, formuleDeLookupKey } from "@/lib/abonnements/formules";
+import { tauxConformes } from "./tva";
 
 export const DUREE_ESSAI_JOURS = 30;
 
@@ -44,23 +45,31 @@ export async function creerClientStripe(
  * L'essai gratuit (§ 9) : 30 jours, sans moyen de paiement ; à la fin sans
  * carte, l'abonnement se met en pause (saisie fermée, lecture ouverte). La
  * carte se pose dans le portail (moyen de paiement par défaut du client).
- * La formule entre dans la clé : un retour en arrière pour en choisir une
- * autre n'est pas refusé par Stripe comme une requête rejouée différemment.
+ * La formule et le taux de TVA entrent dans la clé : un retour en arrière
+ * pour choisir une autre formule, ou un taux changé entre deux essais, n'est
+ * pas refusé par Stripe comme une requête rejouée différemment.
  */
 export async function demarrerEssai(
   stripe: Stripe,
-  { customerId, priceId, metadata, idempotence }: { customerId: string; priceId: string; metadata: Metadonnees; idempotence: string },
+  {
+    customerId,
+    priceId,
+    tauxTva,
+    metadata,
+    idempotence,
+  }: { customerId: string; priceId: string; tauxTva: string; metadata: Metadonnees; idempotence: string },
 ): Promise<Stripe.Subscription> {
   return stripe.subscriptions.create(
     {
       customer: customerId,
       items: [{ price: priceId }],
+      default_tax_rates: [tauxTva],
       trial_period_days: DUREE_ESSAI_JOURS,
       payment_settings: { save_default_payment_method: "on_subscription" },
       trial_settings: { end_behavior: { missing_payment_method: "pause" } },
       metadata,
     },
-    { idempotencyKey: `essai-${idempotence}-${priceId}` },
+    { idempotencyKey: `essai-${idempotence}-${priceId}-${tauxTva}` },
   );
 }
 
@@ -84,17 +93,18 @@ export async function ouvrirCheckout(
   {
     customerId,
     priceId,
+    tauxTva,
     metadata,
     succes,
     annulation,
-  }: { customerId: string; priceId: string; metadata: Metadonnees; succes: string; annulation: string },
+  }: { customerId: string; priceId: string; tauxTva: string; metadata: Metadonnees; succes: string; annulation: string },
 ) {
   await expirerSessionsOuvertes(stripe, customerId);
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     customer: customerId,
     line_items: [{ price: priceId, quantity: 1 }],
-    subscription_data: { metadata },
+    subscription_data: { metadata, default_tax_rates: [tauxTva] },
     consent_collection: { terms_of_service: "required" },
     tax_id_collection: { enabled: true },
     customer_update: { name: "auto", address: "auto" },
@@ -274,6 +284,10 @@ export async function planifierBaisse(
     ? await stripe.subscriptionSchedules.retrieve(existant)
     : await stripe.subscriptionSchedules.create({ from_subscription: abonnement.id });
   const enCours = planning.current_phase ?? planning.phases[0];
+  // La TVA de l'abonnement, reposée sur chaque phase : la documentation de
+  // Stripe ne dit pas qu'une phase qui l'omet la garde.
+  const tva = (abonnement.default_tax_rates ?? []).map((t) => t.id);
+  const taxes = tva.length > 0 ? { default_tax_rates: tva } : {};
   try {
     await stripe.subscriptionSchedules.update(planning.id, {
     end_behavior: "release",
@@ -283,9 +297,10 @@ export async function planifierBaisse(
         items: [{ price: item.price.id, quantity: item.quantity ?? 1 }],
         start_date: enCours.start_date,
         end_date: enCours.end_date,
+        ...taxes,
       },
       // Une période dans la nouvelle formule, puis l'abonnement continue seul.
-      { items: [{ price: priceId, quantity: 1 }], duration: { interval: intervalle, interval_count: 1 } },
+      { items: [{ price: priceId, quantity: 1 }], duration: { interval: intervalle, interval_count: 1 }, ...taxes },
     ],
     });
   } catch (e) {
@@ -375,7 +390,30 @@ export async function prixDesFormules(stripe: Stripe, maintenant = Date.now()): 
   return prix;
 }
 
+let cacheTva: { lu: number; id: string } | undefined;
+
+/**
+ * Le taux de TVA posé sur chaque abonnement, créé une fois dans Stripe
+ * (tableau de bord en production, `scripts/stripe-installer-test.ts` en test)
+ * et reconnu à ses attributs (`stripe/tva.ts`) ; le plus ancien s'il y en a
+ * plusieurs. `null` s'il manque : l'appelant refuse alors de créer
+ * l'abonnement — aucune facture ne part sans TVA. Gardé dix minutes.
+ */
+export async function tauxDeTva(stripe: Stripe, maintenant = Date.now()): Promise<string | null> {
+  if (cacheTva && maintenant - cacheTva.lu < DUREE_CACHE_PRIX_MS) return cacheTva.id;
+  const { data } = await stripe.taxRates.list({ active: true, inclusive: false, limit: 100 });
+  const conformes = tauxConformes(data);
+  if (conformes.length === 0) {
+    console.error("stripe : aucun taux de TVA actif (20 %, France, type TVA, en sus du prix) — abonnements refusés");
+    return null;
+  }
+  if (conformes.length > 1) console.error(`stripe : ${conformes.length} taux de TVA conformes, le plus ancien est retenu`);
+  cacheTva = { lu: maintenant, id: conformes[0].id };
+  return cacheTva.id;
+}
+
 /** Pour les tests. */
 export function oublierLesPrix() {
   cachePrix = undefined;
+  cacheTva = undefined;
 }

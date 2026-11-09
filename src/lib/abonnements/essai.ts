@@ -19,7 +19,7 @@ import { redirect } from "next/navigation";
 import { getOptionalCompte, requireCompteDOnboarding, type Db } from "@/lib/auth/compte";
 import { clientStripe } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
-import { abonnementsDuClient, creerClientStripe, demarrerEssai, prixDesFormules } from "@/lib/stripe/parcours";
+import { abonnementsDuClient, creerClientStripe, demarrerEssai, prixDesFormules, tauxDeTva } from "@/lib/stripe/parcours";
 import { codePrisma, synchroniserClientStripe } from "@/lib/stripe/synchronisation";
 import { VERSION_CONDITIONS } from "./conditions";
 import { empreinteConditions } from "./conditions-empreinte";
@@ -65,11 +65,14 @@ export async function demarrerEssaiDuCompte(accepte: boolean): Promise<EtatEssai
   if (!config.active || !offreLancee(contexteDroits())) redirect("/onboarding");
   if (!accepte) return erreur("Cochez la case pour accepter les conditions générales.");
 
-  // Le prix d'abord : une formule indisponible ne laisse derrière elle ni
-  // compte, ni client, ni preuve.
+  // Le prix et la TVA d'abord : une formule indisponible ne laisse derrière
+  // elle ni compte, ni client, ni preuve.
   const stripe = clientStripe(config);
-  const prix = await prixDesFormules(stripe).then((m) => m.get(formule), () => undefined);
-  if (!prix) return erreur("L'essai ne peut pas démarrer pour le moment. Réessayez dans quelques minutes.");
+  const [prix, tauxTva] = await Promise.all([
+    prixDesFormules(stripe).then((m) => m.get(formule), () => undefined),
+    tauxDeTva(stripe).catch(() => null),
+  ]);
+  if (!prix || !tauxTva) return erreur("L'essai ne peut pas démarrer pour le moment. Réessayez dans quelques minutes.");
 
   const { user, compte, db } = await requireCompteDOnboarding();
   if (compte.role !== "owner") redirect(`${PAGE_MEMBRES}?reserve=proprietaire`);
@@ -113,7 +116,7 @@ export async function demarrerEssaiDuCompte(accepte: boolean): Promise<EtatEssai
     data: { compteId, userId: user.id, version: VERSION_CONDITIONS, empreinte: empreinteConditions(), contexte: "essai" },
   });
   try {
-    await demarrerEssai(stripe, { customerId, priceId: prix.priceId, metadata: { compteId }, idempotence: compteId });
+    await demarrerEssai(stripe, { customerId, priceId: prix.priceId, tauxTva, metadata: { compteId }, idempotence: compteId });
   } catch (e) {
     // Un refus (requête traitée, rejetée) : rien n'a été créé, le verrou se rend.
     if (refusDefinitif(e)) {

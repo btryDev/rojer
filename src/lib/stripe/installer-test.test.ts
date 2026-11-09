@@ -9,10 +9,13 @@ import { LOOKUP_KEYS } from "@/lib/abonnements/formules";
 const api = {
   products: { list: vi.fn(), create: vi.fn(), update: vi.fn() },
   prices: { list: vi.fn(), create: vi.fn() },
+  taxRates: { list: vi.fn(), create: vi.fn() },
   billingPortal: { configurations: { list: vi.fn(), create: vi.fn(), update: vi.fn() } },
 };
 const creerClient = vi.fn(() => api as unknown as Stripe);
 const ENV = { STRIPE_SECRET_KEY: "sk_test_abc", PUBLIC_APP_URL: "https://rojer.example" };
+
+const TAUX_TVA = { id: "txr_tva", active: true, inclusive: false, percentage: 20, country: "FR", tax_type: "vat", created: 1 };
 
 const produit = (formule: string, libelle: string) => ({ id: `prod_${formule}`, name: libelle, metadata: { formule } });
 const PRODUITS = [produit("essentiel", "Essentiel"), produit("pro", "Pro")];
@@ -38,6 +41,8 @@ beforeEach(() => {
   api.prices.list.mockResolvedValue({ data: LOOKUP_KEYS.map((k) => prixConformeA(k)) });
   api.prices.create.mockImplementation(async (p: { lookup_key: string }) => ({ ...prixConformeA(p.lookup_key), id: `price_neuf_${p.lookup_key}` }));
   api.billingPortal.configurations.list.mockResolvedValue({ data: [{ id: "bpc_defaut", is_default: true }] });
+  api.taxRates.list.mockResolvedValue({ data: [TAUX_TVA] });
+  api.taxRates.create.mockResolvedValue({ ...TAUX_TVA, id: "txr_neuf" });
 });
 
 describe("installation d'un compte Stripe de test", () => {
@@ -54,7 +59,17 @@ describe("installation d'un compte Stripe de test", () => {
     expect(api.products.create).not.toHaveBeenCalled();
     expect(api.products.update).not.toHaveBeenCalled();
     expect(api.prices.create).not.toHaveBeenCalled();
+    expect(api.taxRates.create).not.toHaveBeenCalled();
     expect(api.billingPortal.configurations.create).not.toHaveBeenCalled();
+  });
+
+  it("TVA : sans taux conforme (ici un taux TTC), un taux 20 % France de type TVA, en sus du prix, est créé", async () => {
+    api.taxRates.list.mockResolvedValue({ data: [{ ...TAUX_TVA, id: "txr_ttc", inclusive: true }] });
+    const r = await installer(ENV, creerClient);
+    expect(r.ok && r.tva).toEqual({ taux: expect.objectContaining({ id: "txr_neuf" }), cree: true });
+    expect(api.taxRates.create).toHaveBeenCalledWith(
+      expect.objectContaining({ percentage: 20, country: "FR", tax_type: "vat", inclusive: false }),
+    );
   });
 
   it("compte vide : un produit par formule, un prix par clé, qui reprend la clé", async () => {

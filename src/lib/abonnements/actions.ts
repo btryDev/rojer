@@ -20,6 +20,7 @@ import {
   ouvrirPortail,
   planifierBaisse,
   prixDesFormules,
+  tauxDeTva,
 } from "@/lib/stripe/parcours";
 import { carteParDefaut, finaliserCarte, type IssueCarte } from "./souscription";
 import { demarrerEssaiDuCompte, PAGE_ESSAI, type EtatEssai } from "./essai";
@@ -121,11 +122,13 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
     } else if (courant && abonnementEnCours(courant.status)) {
       await synchroniserClientStripe(stripe, ligne.stripeCustomerId).catch(() => null);
     } else {
-      const prix = (await prixDesFormules(stripe)).get(formule);
-      if (!prix) throw new Error("prix introuvable");
+      const [catalogue, tauxTva] = await Promise.all([prixDesFormules(stripe), tauxDeTva(stripe)]);
+      const prix = catalogue.get(formule);
+      if (!prix || !tauxTva) throw new Error("prix ou TVA introuvable");
       url = await ouvrirCheckout(stripe, {
         customerId: ligne.stripeCustomerId,
         priceId: prix.priceId,
+        tauxTva,
         metadata: { compteId },
         succes: `${base}?paiement=termine`,
         annulation: base,

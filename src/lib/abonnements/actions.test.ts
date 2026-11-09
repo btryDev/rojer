@@ -15,6 +15,7 @@ const m = vi.hoisted(() => ({
   ouvrirCheckout: vi.fn(),
   ouvrirCheckoutCarte: vi.fn(),
   prixDesFormules: vi.fn(),
+  tauxDeTva: vi.fn(),
   synchroniser: vi.fn(async () => ({ issue: "ecrit" })),
   finaliserCarte: vi.fn(),
   carteParDefaut: vi.fn(),
@@ -44,6 +45,7 @@ vi.mock("@/lib/stripe/parcours", () => ({
   ouvrirCheckoutCarte: m.ouvrirCheckoutCarte,
   ouvrirPortail: vi.fn(),
   prixDesFormules: m.prixDesFormules,
+  tauxDeTva: m.tauxDeTva,
 }));
 vi.mock("@/lib/stripe/synchronisation", async (reel) => ({
   ...(await reel<typeof import("@/lib/stripe/synchronisation")>()),
@@ -73,6 +75,7 @@ beforeEach(() => {
   m.ligne.statut = "canceled";
   m.abonnementsDuClient.mockResolvedValue([abonnement("canceled")]);
   m.prixDesFormules.mockResolvedValue(new Map([["rojer_pro_annuel", { priceId: "price_pa" }], ["rojer_essentiel_mensuel", { priceId: "price_em" }]]));
+  m.tauxDeTva.mockResolvedValue("txr_tva");
   m.ouvrirCheckout.mockResolvedValue("https://checkout.stripe.test/abonnement");
   m.ouvrirCheckoutCarte.mockResolvedValue("https://checkout.stripe.test/carte");
   m.carteParDefaut.mockResolvedValue(null);
@@ -121,7 +124,13 @@ describe("sAbonnerAction", () => {
 
   it("abonnement terminé partout : Checkout souscrit, au nom du compte", async () => {
     expect(await redirigeVers(sAbonnerAction(formulaire()))).toBe("https://checkout.stripe.test/abonnement");
-    expect(m.ouvrirCheckout).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ customerId: "cus_1", priceId: "price_pa", metadata: { compteId: "c1" } }));
+    expect(m.ouvrirCheckout).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ customerId: "cus_1", priceId: "price_pa", tauxTva: "txr_tva", metadata: { compteId: "c1" } }));
+  });
+
+  it("sans taux de TVA chez Stripe : pas de Checkout, page d'erreur — aucun abonnement sans TVA", async () => {
+    m.tauxDeTva.mockResolvedValue(null);
+    expect(await redirigeVers(sAbonnerAction(formulaire()))).toBe("/compte/abonnement?stripe=indisponible");
+    expect(m.ouvrirCheckout).not.toHaveBeenCalled();
   });
 
   it("Stripe a déjà un abonnement payant (notre copie retarde) : ni Checkout ni carte, la copie relue, la page le dit", async () => {

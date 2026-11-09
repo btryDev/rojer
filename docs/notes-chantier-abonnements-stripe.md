@@ -36,7 +36,7 @@ l'ouvrir est la décision de la propriétaire, actée par l'ADR-053.
 - Ce qui distingue les formules : un volume (nombre d'établissements,
   d'entreprises) ou des modules ouverts/fermés. À trancher avant le lot 3.
 - Durée de l'essai ; essai **avec ou sans carte** (§ 2.4).
-- TVA : taux fixe ou Stripe Tax (§ 6).
+- ~~TVA : taux fixe ou Stripe Tax (§ 6).~~ [2026-11-09 : taux fixe, 20 %, § 12.]
 - Facturation électronique (§ 6).
 
 ## 2. Ce que dit la doc Stripe (lue le 2026-11-02)
@@ -300,6 +300,7 @@ formules (limites, modules), une page de tarifs publique, la TVA.
   plateforme agréée d'ici 2027.
 - **TVA** : clients B2B en France → taux fixe possible ; Stripe Tax si on vend
   hors de France. Collecte du numéro de TVA intracommunautaire dans Checkout.
+  [2026-11-09 : taux fixe retenu, § 12.]
 - **Mentions obligatoires** des factures françaises dans les réglages de
   facturation Stripe (SIREN, TVA, adresse) — avec l'expert-comptable.
 - **Conditions générales** d'abonnement (durée, résiliation, impayé, sort des
@@ -773,6 +774,58 @@ numéro de TVA du client (déjà demandés au paiement), numérotation continue
 (Stripe), téléchargement depuis la page Abonnement de Rojer et pas seulement
 le portail, envoi par e-mail ; facture électronique obligatoire au
 1er septembre 2027 (plateforme agréée). À valider avec l'expert-comptable.
+
+## 12. TVA et factures émises par Stripe (2026-11-09)
+
+**Décision de la propriétaire** : les factures sont celles de Stripe (émises à
+chaque paiement, envoyées par e-mail, téléchargeables dans le portail). Sa
+société facture la TVA (« je crois » : **à confirmer avec l'expert-comptable**
+; en franchise, il faudrait retirer le taux et porter « TVA non applicable,
+art. 293 B du CGI »).
+
+**TVA : un taux fixe de 20 %, pas Stripe Tax.** Tous les clients sont des
+entreprises françaises (cible, SIRET obligatoire) : le taux normal (art. 278
+du CGI) en sus des prix HT (`tax_behavior: exclusive`, déjà posé sur les
+prix). Stripe Tax coûte un pourcentage par transaction et ne sert qu'à vendre
+hors de France ou à des particuliers.
+
+- Le taux vit chez Stripe, créé une fois (tableau de bord en production,
+  `scripts/stripe-installer-test.ts` en test), reconnu à ses attributs :
+  actif, en sus du prix, 20 %, pays `FR`, type `vat` (`src/lib/stripe/tva.ts`).
+  Le plus ancien sert s'il y en a plusieurs. Un taux ne se modifie pas chez
+  Stripe : un changement de taux = un nouveau taux, l'ancien archivé, et une
+  reprise des abonnements en cours (à écrire ce jour-là).
+- Posé sur l'abonnement (`default_tax_rates`) à sa création : essai
+  (`demarrerEssai`) et réabonnement (`ouvrirCheckout`,
+  `subscription_data.default_tax_rates`). Changer de formule ne touche pas aux
+  taxes de l'abonnement ; une baisse planifiée les repose sur chaque phase du
+  planning, la doc Stripe ne disant pas qu'une phase qui les omet les garde.
+- **Sans taux, rien ne se crée** : l'essai répond « ne peut pas démarrer »
+  avant tout compte ni client, le réabonnement renvoie la page d'erreur.
+  Aucune facture ne part sans TVA.
+- Abonnements antérieurs : aucun en production. En test, ceux créés avant
+  n'ont pas de TVA (les recréer).
+
+**Mentions des factures** : réglages du tableau de bord, pas de code — raison
+sociale, adresse, SIREN, numéro de TVA (informations publiques) ;
+numérotation au niveau du compte (une suite sans trou) ; pied de page avec les
+mentions entre professionnels (pénalités de retard, indemnité forfaitaire de
+40 € pour frais de recouvrement). Le client donne raison sociale, adresse et
+numéro de TVA dans Checkout. Les nouvelles mentions de la réforme (SIREN du
+client, nature de l'opération) et l'émission par plateforme agréée en
+septembre 2027 (§ 6) : **avec l'expert-comptable**.
+
+**Tableau de bord Stripe dans le périmètre de confiance** (revue de
+l'isolation de `cc`, 2026-11-09). Le compte d'un client Stripe est son
+`metadata.compteId`, modifiable dans le tableau de bord. Le modifier ne
+déplace pas un abonnement déjà lié : la ligne visée n'existe pas → l'unicité
+de `stripeCustomerId` refuse la création (`DEJA_LIE`) ; elle existe → elle
+porte un autre client (`AUTRE_CLIENT`) ; les deux sans effet et signalés
+(`synchronisation.integration.test.ts`, « client Stripe déjà à un autre
+compte »). Le déplacement ne passerait que si la ligne de l'ancien compte
+n'existe plus — à revoir avec la suppression de compte. Le tableau de bord
+permet de toute façon d'offrir une formule ou de rembourser : il se protège
+comme un accès d'administration (`docs/etat-bascule-clever-cloud.md`).
 
 ## Sources lues
 

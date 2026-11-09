@@ -15,6 +15,7 @@ const m = vi.hoisted(() => ({
   creerClientStripe: vi.fn(),
   demarrerEssai: vi.fn(),
   prixDesFormules: vi.fn(),
+  tauxDeTva: vi.fn(),
   synchroniserClientStripe: vi.fn(),
   ordre: [] as string[],
 }));
@@ -30,6 +31,7 @@ vi.mock("@/lib/stripe/parcours", () => ({
   creerClientStripe: m.creerClientStripe,
   demarrerEssai: m.demarrerEssai,
   prixDesFormules: m.prixDesFormules,
+  tauxDeTva: m.tauxDeTva,
 }));
 vi.mock("@/lib/stripe/synchronisation", async (reel) => ({
   ...(await reel<typeof import("@/lib/stripe/synchronisation")>()),
@@ -63,6 +65,7 @@ beforeEach(() => {
   m.configurationStripe.mockReturnValue({ active: true, cle: "sk_test_x", secretWebhook: "whsec_x", mode: "test" });
   m.requireCompteDOnboarding.mockResolvedValue(compte());
   m.prixDesFormules.mockResolvedValue(new Map([[FORMULE, { priceId: "price_e", montantCentimes: 2900, devise: "eur" }]]));
+  m.tauxDeTva.mockResolvedValue("txr_tva");
   db.abonnement.findUnique.mockResolvedValue(null);
   m.creerClientStripe.mockImplementation(async () => (m.ordre.push("client"), "cus_1"));
   db.abonnement.create.mockImplementation(async () => m.ordre.push("réservation"));
@@ -111,7 +114,7 @@ describe("demarrerEssaiDuCompte", () => {
       where: { compteId: "c1", essaiUtiliseLe: null, stripeSubscriptionId: null },
     });
     expect(m.creerClientStripe).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ metadata: { compteId: "c1" }, idempotence: "c1" }));
-    expect(m.demarrerEssai).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ customerId: "cus_1", priceId: "price_e", metadata: { compteId: "c1" } }));
+    expect(m.demarrerEssai).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ customerId: "cus_1", priceId: "price_e", tauxTva: "txr_tva", metadata: { compteId: "c1" } }));
     expect(db.acceptationConditions.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ compteId: "c1", userId: "u1", contexte: "essai", version: expect.any(String), empreinte: expect.stringMatching(/^[0-9a-f]{64}$/) }),
     });
@@ -224,6 +227,17 @@ describe("demarrerEssaiDuCompte", () => {
     expect(await demarrerEssaiDuCompte(true)).toMatchObject({ status: "error", message: expect.stringMatching(/ne peut pas démarrer/) });
     expect(m.requireCompteDOnboarding).not.toHaveBeenCalled();
     expect(m.creerClientStripe).not.toHaveBeenCalled();
+  });
+
+  it("sans taux de TVA chez Stripe (absent ou illisible) : ni compte, ni client — aucun essai sans TVA", async () => {
+    for (const tva of [Promise.resolve(null), Promise.reject(new Error("injoignable"))]) {
+      tva.catch(() => {});
+      m.tauxDeTva.mockReturnValueOnce(tva);
+      expect(await demarrerEssaiDuCompte(true)).toMatchObject({ status: "error", message: expect.stringMatching(/ne peut pas démarrer/) });
+    }
+    expect(m.requireCompteDOnboarding).not.toHaveBeenCalled();
+    expect(m.creerClientStripe).not.toHaveBeenCalled();
+    expect(m.demarrerEssai).not.toHaveBeenCalled();
   });
 
   it("la relecture échoue après l'essai créé : pas d'échec annoncé, l'onboarding, le verrou gardé", async () => {
