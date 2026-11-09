@@ -484,6 +484,7 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
           dateFin: new Date("2026-11-09T10:00:00Z"),
           lieu: "x",
           descriptionTravaux: "x",
+          naturesTravaux: [],
         },
       });
       const sig = await prisma.signature.create({
