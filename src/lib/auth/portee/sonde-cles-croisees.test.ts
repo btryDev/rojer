@@ -9,14 +9,7 @@ import { Prisma } from "@prisma/client";
 import { describe, expect, it } from "vitest";
 import { CLES_STOCKEES } from "@/lib/suppression/cles-stockees";
 import { CORRESPONDANCE, type Classement } from "./correspondance";
-import {
-  CLES_SANS_RELATION,
-  DEBUT_SECTION,
-  FIN_SECTION,
-  PAS_UNE_CLE_DE_COMPTE,
-  requetesSonde,
-  sectionSanteBase,
-} from "./sonde-cles-croisees";
+import { CLES_SANS_RELATION, PAS_UNE_CLE_DE_COMPTE, remplacerSection, requetesSonde } from "./sonde-cles-croisees";
 
 const classement = (nom: string): Classement | undefined => (CORRESPONDANCE as Record<string, Classement>)[nom];
 const duCompte = (nom: string) => {
@@ -28,7 +21,9 @@ const liens = requetesSonde().map((r) => r.lien);
 
 describe("sonde des clés croisées : ce qu'elle couvre", () => {
   it("chaque clé étrangère entre deux modèles d'un compte a sa requête, sauf la relation au parent", () => {
-    // Recompté ici depuis le schéma, sans passer par la sonde.
+    // Recompté ici depuis le schéma brut (`Prisma.dmmf`), quand la sonde lit
+    // les relations du client borné (`relations`, `borne.ts`) : deux sources,
+    // qui doivent dire la même chose.
     const attendus = MODELES.filter((m) => duCompte(m.name)).flatMap((m) => {
       const c = classement(m.name)!;
       return m.fields
@@ -92,23 +87,21 @@ describe("sonde des clés croisées : ce qu'elle couvre", () => {
 
   it("le type d'un objet signé : chaque valeur de l'enum a sa cible", () => {
     const signable = Prisma.dmmf.datamodel.enums.find((e) => e.name === "ObjetSignable")!.values.map((v) => v.name);
-    const parSignature = CLES_SANS_RELATION.find((c) => c.modele === "Signature")!.cibles as Record<string, string>;
+    const parSignature = CLES_SANS_RELATION.find((c) => c.modele === "Signature")!.cibles;
     expect(Object.keys(parSignature).sort()).toEqual([...signable].sort());
   });
 });
 
 describe("scripts/sante-base.sql", () => {
+  const texte = readFileSync(join(process.cwd(), "scripts/sante-base.sql"), "utf8");
+
   it("porte la section générée, à jour du schéma (sinon : scripts/sonde-cles-croisees.ts)", () => {
-    const texte = readFileSync(join(process.cwd(), "scripts/sante-base.sql"), "utf8");
-    const debut = texte.indexOf(DEBUT_SECTION);
-    const fin = texte.indexOf(FIN_SECTION);
-    expect(debut).toBeGreaterThan(0);
-    expect(texte.slice(debut, fin + FIN_SECTION.length)).toBe(sectionSanteBase());
+    expect(remplacerSection(texte)).toBe(texte);
   });
 
   it("la section est dans la transaction en lecture seule", () => {
-    const texte = readFileSync(join(process.cwd(), "scripts/sante-base.sql"), "utf8");
-    expect(texte.indexOf("BEGIN TRANSACTION READ ONLY")).toBeLessThan(texte.indexOf(DEBUT_SECTION));
-    expect(texte.indexOf(FIN_SECTION)).toBeLessThan(texte.lastIndexOf("ROLLBACK"));
+    const debut = texte.indexOf("-- SONDE:DEBUT");
+    expect(texte.indexOf("BEGIN TRANSACTION READ ONLY")).toBeLessThan(debut);
+    expect(texte.indexOf("-- SONDE:FIN")).toBeLessThan(texte.lastIndexOf("ROLLBACK"));
   });
 });

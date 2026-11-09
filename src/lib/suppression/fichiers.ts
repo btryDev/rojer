@@ -28,9 +28,9 @@
 import type { Prisma } from "@prisma/client";
 import { getStorage } from "@/lib/storage";
 
-// [2026-11-09 : déplacé dans `./cles-stockees.ts`, sans dépendance, pour que la
-// sonde des clés croisées le lise sans charger le stockage.]
-export { CLES_STOCKEES } from "./cles-stockees";
+// `CLES_STOCKEES` : dans `./cles-stockees.ts` depuis le 2026-11-09, sans
+// dépendance, pour que la sonde des clés croisées le lise sans charger le
+// stockage.
 
 /**
  * Les colonnes qui ont le nom d'un fichier sans être une clé qu'on libère.

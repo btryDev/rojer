@@ -82,15 +82,6 @@ describe("vérification publique sous limite", () => {
     expect(h.cles[0]).not.toBe(h.cles[1]);
   });
 
-  it("la page /signe ne lit la signature que par la limite", () => {
-    // Commentaires retirés : la page raconte encore l'ancienne lecture.
-    const page = readFileSync(join(process.cwd(), "src/app/signe/[signatureId]/page.tsx"), "utf8")
-      .replace(/\/\*[\s\S]*?\*\//g, "")
-      .replace(/^\s*\/\/.*$/gm, "");
-    expect(page).toMatch(/\blireSignatureSousLimite\(/);
-    expect(page).not.toMatch(/\bgetSignature\b/);
-  });
-
   it("n'est exportée d'aucun module \"use server\"", () => {
     const actions = readFileSync(join(process.cwd(), "src/lib/signatures/actions.ts"), "utf8");
     expect(actions).not.toMatch(/export async function verifierIntegriteSignature/);

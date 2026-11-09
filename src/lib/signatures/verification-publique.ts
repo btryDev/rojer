@@ -123,7 +123,7 @@ function enPreuve(signature: PreuveSignature): PreuveSignature {
 }
 
 /** Le refus de la limite par IP, commun aux deux pages publiques d'une signature. */
-export type TropDeDemandes = { ok: false; raison: "trop_de_demandes"; reessayerDansSecondes: number };
+type TropDeDemandes = { ok: false; raison: "trop_de_demandes"; reessayerDansSecondes: number };
 
 /**
  * La limite par IP des deux pages publiques d'une signature, un compteur PAR
@@ -162,7 +162,8 @@ export async function lireSignatureSousLimite(
 /**
  * Lit une signature par son identifiant, **sans authentification**.
  *
- * Seul appelant : `lireSignatureSousLimite`, pour la page de confirmation
+ * Privée au module (simplify de #253) : la seule porte est
+ * `lireSignatureSousLimite`, pour la page de confirmation
  * `/signe/[signatureId]`, que voit le signataire juste après avoir signé. La
  * page publique de vérification `/verifier/[signatureId]`, sa sœur, passe par
  * `verifierSousLimite` ; chacune a son compteur par IP, au même plafond.
@@ -173,7 +174,7 @@ export async function lireSignatureSousLimite(
  * signé ne sortent pas d'ici : ils ne participent pas à la vérification et
  * exposeraient la structure interne du compte.
  */
-export async function getSignature(id: string) {
+async function getSignature(id: string) {
   return prisma.signature.findUnique({
     where: { id },
     select: SELECT_PREUVE,

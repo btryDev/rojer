@@ -11,7 +11,8 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { CLES_STOCKEES, COLONNES_ECARTEES, clesDesEtablissements } from "./fichiers";
+import { CLES_STOCKEES } from "./cles-stockees";
+import { COLONNES_ECARTEES, clesDesEtablissements } from "./fichiers";
 
 const schema = readFileSync(
   join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "prisma", "schema.prisma"),

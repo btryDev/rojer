@@ -10,7 +10,8 @@ import "server-only";
 
 import type { Prisma } from "@prisma/client";
 import type { Db } from "@/lib/auth/compte";
-import { CLES_STOCKEES, libererFichiers } from "@/lib/suppression/fichiers";
+import { CLES_STOCKEES } from "@/lib/suppression/cles-stockees";
+import { libererFichiers } from "@/lib/suppression/fichiers";
 import { getStorage } from "@/lib/storage";
 import { motifDuGel, refusStockage } from "./quotas";
 import { contexteDroits, offreLancee } from "./lancement";

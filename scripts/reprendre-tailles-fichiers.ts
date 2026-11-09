@@ -18,7 +18,7 @@
 
 import { PrismaClient } from "@prisma/client";
 import { getStorage } from "@/lib/storage";
-import { CLES_STOCKEES } from "@/lib/suppression/fichiers";
+import { CLES_STOCKEES } from "@/lib/suppression/cles-stockees";
 
 const appliquer = process.argv.includes("--appliquer");
 const prisma = new PrismaClient();

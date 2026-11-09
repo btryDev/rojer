@@ -6,7 +6,7 @@ import "server-only";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { redirect } from "next/navigation";
 import type { PrismaClient } from "@prisma/client";
-import { avecBorne, filtreVers, relations, type Geles } from "./borne";
+import { avecBorne, borne, filtreVers, relations, type Geles, type Portee } from "./borne";
 
 export type { Geles };
 
@@ -99,21 +99,20 @@ function refuser(nom: string, operation: string): never {
 /**
  * Refuse, AVANT d'écrire, une écriture qui modifie une ligne gelée ou en
  * désigne une. `base` : le client brut, pour lire ce que l'écriture vise —
- * les identifiants gelés sont ceux du compte de la portée. `borneDuCompte` :
- * la borne de la portée (`borne(nom, portee)`), posée sur la seule lecture
- * dont le `where` vient de l'appelant — la ligne qu'une mise à jour modifie
- * (audit rls_audit du 2026-11-09 : elle était lue sans borne, contrairement à
- * l'ADR-051). Les autres lectures portent déjà le filtre du gel, fait des
- * identifiants du compte.
+ * les identifiants gelés sont ceux du compte de la portée. La ligne qu'une
+ * mise à jour modifie est lue bornée au compte (`borne(nom, portee)`) : son
+ * `where` vient de l'appelant (audit rls_audit du 2026-11-09, ADR-051). Les
+ * autres lectures portent déjà le filtre du gel, fait des identifiants du
+ * compte.
  */
 export async function verifierGel(
   base: PrismaClient,
   nom: string,
   operation: string,
   args: unknown,
-  geles: Geles,
-  borneDuCompte: (nom: string) => Objet,
+  portee: Portee & { geles: Geles },
 ): Promise<void> {
+  const geles = portee.geles;
   if (!ECRITURES_GELEES.has(operation) || ouvertAuGel.getStore()) return;
   const a: Objet = estObjet(args) ? args : {};
   const f = filtreGele(nom, geles);
@@ -130,7 +129,7 @@ export async function verifierGel(
     const cles = relations(nom).flatMap((r) => (r.cle ? [[r.cle, true] as const] : []));
     const actuelle = cles.length
       ? ((await delegue(base, nom).findUnique({
-          where: avecBorne(a.where, borneDuCompte(nom)),
+          where: avecBorne(a.where, borne(nom, portee)),
           select: Object.fromEntries(cles),
         })) as Objet | null)
       : null;
