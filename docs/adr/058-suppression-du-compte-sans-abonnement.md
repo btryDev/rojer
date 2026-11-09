@@ -51,7 +51,10 @@ deux fois.
    lancement a pu en valider sans payer — et, pour un compte qui a payé,
    l'export du dossier), et dit que la conservation du DUERP revient à
    l'employeur. Au plus une fois chacun (marque posée avant l'envoi, comme
-   le rappel de fin d'essai).
+   le rappel de fin d'essai). **Les autres membres** (membre, lecture)
+   reçoivent un message à eux avec le rappel J-7 : la date, et que seul un
+   propriétaire peut réabonner (décision du 2026-11-09, usage des éditeurs
+   qui préviennent toute l'équipe). Leur envoi ne retient pas la suppression.
 4. **La suppression** (`lib/abonnements/suppression.ts`), un compte à la fois,
    par la tâche quotidienne :
    - chez Stripe, qui fait foi : les sessions Checkout ouvertes expirent ;
@@ -68,19 +71,30 @@ deux fois.
      condition relue (un réabonnement de dernière minute l'emporte) : les
      versions de DUERP, les entreprises (tout leur contenu suit par
      cascade), les demandes d'assistance, les preuves d'acceptation des
-     conditions, l'abonnement, puis le compte (membres, invitations,
+     conditions (leur trace reste, § 5), l'abonnement, puis le compte (membres, invitations,
      consommations, fichiers comptés) ; enfin les personnes qui ne sont
      membres d'aucun autre compte et dont rien ne garde la trace ailleurs
      (signature, lien d'accès, demande, acceptation, invitation envoyée) ;
-   - les fichiers du stockage, après la transaction (ceux des
-     établissements et tout fichier compté au compte).
+   - les fichiers du stockage (ceux des établissements et tout fichier
+     compté au compte) : notés DANS la transaction (`FichierALiberer`),
+     retirés après par la tâche quotidienne, et retentés chaque jour tant
+     que le stockage échoue, les moins tentés d'abord. Un fichier dont la
+     ligne est effacée ne reste pas lisible (décision du 2026-11-09).
    - Restent : `EssaiEntreprise` (un essai par SIREN, ADR-053 § 8), le
      client Stripe, les journaux.
-5. **Seulement l'offre lancée** : sinon la saisie est ouverte à tous, et
+5. **La trace** (`CompteSupprime`), écrite dans la même transaction et gardée
+   **cinq ans** (prescription de droit commun, art. 2224 C. civ.), puis
+   effacée par la tâche quotidienne : le nom du compte, les adresses des
+   propriétaires, les acceptations des conditions (adresse, version,
+   empreinte, date), les dates des deux avertissements et de la suppression.
+   Aucune donnée métier. C'est la preuve, en cas de litige, que la clause a
+   été acceptée et appliquée comme annoncé (décision du 2026-11-09 ;
+   `docs/rgpd.md` § 4). Les conditions générales doivent dire cette durée.
+6. **Seulement l'offre lancée** : sinon la saisie est ouverte à tous, et
    rien ne s'avertit ni ne se supprime. Limite : l'horloge court pendant un
    retrait de l'offre ; un compte déjà averti à J-30 recevra J-7 à la
    relance, et sera supprimé 7 jours après.
-6. **Hors de cette règle**, faute de date de départ : un compte qui n'a
+7. **Hors de cette règle**, faute de date de départ : un compte qui n'a
    jamais eu de ligne d'abonnement (comptes d'avant le lancement de l'offre).
    Leur sort se décidera au lancement (point ouvert ci-dessous).
 
@@ -88,6 +102,8 @@ deux fois.
 
 - Quatre colonnes neuves sur `Abonnement` : `sansAbonnementDepuis`,
   `suppressionPrevueLe`, `avertiSuppression30Le`, `avertiSuppression7Le`.
+- Deux tables hors compte : `CompteSupprime` (la trace, § 5) et
+  `FichierALiberer` (la file des fichiers, § 4).
 - La page Abonnement dit la date de suppression prévue.
 - Les conditions générales (avocat) doivent dire la même chose.
 

@@ -2621,3 +2621,40 @@ model InvitationCompte {
   @@index([compteId])
   @@index([email])
 }
+
+/// La trace d'un compte supprimé faute d'abonnement (ADR-058 § 5) : la preuve,
+/// en cas de litige, que la personne avait accepté les conditions, qu'elle a été
+/// prévenue deux fois, et la date de la suppression. Aucune donnée métier.
+/// Détachée de tout compte (le compte n'existe plus) ; effacée par la tâche
+/// quotidienne à `conserverJusquAu` (cinq ans, prescription de droit commun,
+/// art. 2224 du Code civil).
+model CompteSupprime {
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// L'identifiant qu'avait le compte : une trace, plus une clé.
+  ancienCompteId        String    @db.Uuid
+  nom                   String
+  /// Les adresses des propriétaires à la suppression : celles qui ont reçu les avertissements.
+  proprietaires         String[]
+  /// Les acceptations des conditions : `{ email, version, empreinte, contexte, accepteeLe }`.
+  acceptations          Json
+  sansAbonnementDepuis  DateTime?
+  avertiSuppression30Le DateTime?
+  avertiSuppression7Le  DateTime?
+  supprimeLe            DateTime
+  conserverJusquAu      DateTime
+
+  @@index([conserverJusquAu])
+}
+
+/// Les fichiers à retirer du stockage après une suppression en base (ADR-058
+/// § 4) : notés DANS la transaction qui efface les lignes, retirés après, et
+/// retentés à chaque passe tant que le stockage échoue — un fichier dont la
+/// ligne est effacée ne reste pas lisible indéfiniment.
+model FichierALiberer {
+  cle        String   @id
+  contexte   String
+  noteLe     DateTime @default(now())
+  tentatives Int      @default(0)
+
+  @@index([tentatives, noteLe])
+}

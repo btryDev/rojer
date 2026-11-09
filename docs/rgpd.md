@@ -347,6 +347,7 @@ ne dit pas :
 | Donnée | Base active | Archivage | Fondement |
 |---|---|---|---|
 | Entreprise / Établissement | Durée de l'activité | + 1 an | Restauration d'un compte fermé par erreur |
+| **Trace d'un compte supprimé faute d'abonnement** (`CompteSupprime`, ADR-058) : nom du compte, adresses des propriétaires, acceptations des conditions (adresse, version, empreinte, date), dates des avertissements et de la suppression — aucune donnée métier | — | **5 ans** après la suppression, puis effacée par la tâche quotidienne | Preuve en cas de contentieux (archivage intermédiaire, référentiel CNIL) ; prescription de droit commun, art. 2224 C. civ. — décision de la propriétaire du 2026-11-09 |
 | **Versions de DUERP** | — | **40 ans** | `R. 4121-4` CT (loi du 2 août 2021) — **obligation** |
 | **Rapports et attestations de vérification** | Exploitation courante | **5 ans au moins**, et en tout état de cause les **deux dernières** vérifications | `D. 4711-3` CT — **obligation** |
 | **Salarié — identité et poste** | Durée de la relation de travail | Jusqu'à l'expiration des délais de prescription applicables | Référentiel CNIL, « gestion du dossier professionnel » (recommandation) |

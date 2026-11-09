@@ -14,7 +14,8 @@ import type Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
 import { envoiEnService, motifErreur, publicAppUrl, sendMail } from "@/lib/email";
 import { ajouterJours, ajouterMois, formaterDateLongueFr } from "@/lib/dates";
-import { clesDesEtablissements, libererFichiers } from "@/lib/suppression/fichiers";
+import { clesDesEtablissements } from "@/lib/suppression/fichiers";
+import { getStorage } from "@/lib/storage";
 import { OPTIONS_WEBHOOK } from "@/lib/stripe/client";
 import { expirerSessionsOuvertes } from "@/lib/stripe/parcours";
 import { synchroniserClientStripe } from "@/lib/stripe/synchronisation";
@@ -25,6 +26,10 @@ import { PAGE_ABONNEMENT } from "./saisie";
 export const MOIS_SANS_ABONNEMENT = 12;
 /** Comptes supprimés au plus par passe : la tâche reste courte, le reste attend le lendemain. */
 export const SUPPRESSIONS_PAR_PASSE = 10;
+/** La trace d'un compte supprimé se garde cinq ans (prescription de droit commun, art. 2224 du Code civil). */
+export const MOIS_DE_CONSERVATION_DE_LA_TRACE = 60;
+/** Fichiers retirés du stockage au plus par passe. */
+export const FICHIERS_PAR_PASSE = 500;
 
 /** Douze mois civils après l'horloge (jour civil de Paris, ADR-011). */
 export function finDuDelai(sansAbonnementDepuis: Date): Date {
@@ -80,6 +85,23 @@ export function messageAvantSuppression(
   };
 }
 
+/** Le message aux membres qui ne sont pas propriétaires, une fois, avec le rappel J-7 : seul un propriétaire peut réabonner. */
+export function messageAuxMembres(nomDuCompte: string, suppressionLe: Date): { subject: string; text: string } {
+  const date = formaterDateLongueFr(suppressionLe);
+  return {
+    subject: `Le compte Rojer « ${nomDuCompte} » sera supprimé le ${date}`,
+    text: [
+      "Bonjour,",
+      "",
+      `Le compte Rojer « ${nomDuCompte} », dont vous êtes membre, n'a plus d'abonnement. Ses données seront supprimées définitivement le ${date}, et votre accès avec.`,
+      "",
+      "Seul un propriétaire du compte peut le réabonner : rapprochez-vous de lui avant cette date. Si vous avez besoin de documents, téléchargez-les ou demandez-lui de les exporter d'ici là.",
+      "",
+      "— Rojer",
+    ].join("\n"),
+  };
+}
+
 type Bilan = { envoyes: number; echecs: number };
 
 /** Envoie un message à tous les propriétaires ; rend le nombre d'e-mails partis et s'il y a eu un échec. */
@@ -110,8 +132,10 @@ async function ecrireAuxProprietaires(compteId: string, message: { subject: stri
  * chacun : la marque est posée avant l'envoi, rendue si rien n'est parti —
  * échec ou aucun destinataire : aucun compte n'est supprimé sans e-mail.
  */
-export async function avertirAvantSuppression(maintenant: Date): Promise<Record<Avertissement, Bilan> & { horsService?: true }> {
-  const bilan = { j30: { envoyes: 0, echecs: 0 }, j7: { envoyes: 0, echecs: 0 } };
+export async function avertirAvantSuppression(
+  maintenant: Date,
+): Promise<Record<Avertissement, Bilan> & { membresPrevenus: number; horsService?: true }> {
+  const bilan = { j30: { envoyes: 0, echecs: 0 }, j7: { envoyes: 0, echecs: 0 }, membresPrevenus: 0 };
   if (!envoiEnService()) return { ...bilan, horsService: true };
   const base = publicAppUrl();
 
@@ -152,7 +176,14 @@ export async function avertirAvantSuppression(maintenant: Date): Promise<Record<
       avertiSuppression7Le: null,
       suppressionPrevueLe: { lte: dans(maintenant, 7) },
     },
-    select: { id: true, compteId: true, suppressionPrevueLe: true, sansAbonnementDepuis: true, debutPayantLe: true },
+    select: {
+      id: true,
+      compteId: true,
+      suppressionPrevueLe: true,
+      sansAbonnementDepuis: true,
+      debutPayantLe: true,
+      compte: { select: { name: true } },
+    },
   });
   for (const l of seconds) {
     const avant = l.suppressionPrevueLe!;
@@ -168,6 +199,10 @@ export async function avertirAvantSuppression(maintenant: Date): Promise<Record<
       "avertissement J-7",
     );
     compter(bilan.j7, partis, echec);
+    // Les autres membres, une fois, quand le propriétaire a été prévenu : leur
+    // échec ne retient pas la suppression (la règle des deux e-mails vaut pour
+    // qui peut réabonner).
+    if (partis > 0) bilan.membresPrevenus += await prevenirLesMembres(l.compteId, l.compte.name, prevue);
     if (partis === 0) {
       if (!echec) console.error(`avertissement J-7 : aucun propriétaire joignable (compte ${l.compteId})`);
       await prisma.abonnement
@@ -176,6 +211,29 @@ export async function avertirAvantSuppression(maintenant: Date): Promise<Record<
     }
   }
   return bilan;
+}
+
+/** Écrit aux membres qui ne sont pas propriétaires ; rend le nombre d'e-mails partis. */
+async function prevenirLesMembres(compteId: string, nom: string, suppressionLe: Date): Promise<number> {
+  let partis = 0;
+  try {
+    const membres = await prisma.membre.findMany({
+      where: { compteId, role: { not: "owner" } },
+      select: { user: { select: { email: true } } },
+    });
+    for (const { user } of membres) {
+      if (!user.email) continue;
+      try {
+        await sendMail({ to: user.email, ...messageAuxMembres(nom, suppressionLe) });
+        partis++;
+      } catch (e) {
+        console.error(`avertissement J-7 aux membres non envoyé (compte ${compteId}) — ${motifErreur(e)}`);
+      }
+    }
+  } catch (e) {
+    console.error(`avertissement J-7 : membres illisibles (compte ${compteId}) — ${motifErreur(e)}`);
+  }
+  return partis;
 }
 
 async function ceQuiSeGarde(compteId: string, debutPayantLe: Date | null): Promise<CeQuiSeGarde> {
@@ -216,7 +274,7 @@ async function reporter(compteId: string, maintenant: Date) {
 /** Le client Stripe n'existe plus (supprimé à la main dans le tableau de bord) : il n'y a rien à résilier. */
 const clientAbsent = (e: unknown) => (e as { code?: unknown } | null)?.code === "resource_missing";
 
-export type BilanSuppressions = { supprimes: number; reportes: number; fichiers: { liberes: number; echecs: number } };
+export type BilanSuppressions = { supprimes: number; reportes: number };
 
 /**
  * Supprime les comptes échus, au plus `SUPPRESSIONS_PAR_PASSE`. Sans Stripe
@@ -224,7 +282,7 @@ export type BilanSuppressions = { supprimes: number; reportes: number; fichiers:
  * peut pas arrêter la facturation.
  */
 export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | null): Promise<BilanSuppressions> {
-  const bilan: BilanSuppressions = { supprimes: 0, reportes: 0, fichiers: { liberes: 0, echecs: 0 } };
+  const bilan: BilanSuppressions = { supprimes: 0, reportes: 0 };
   if (!stripe) return bilan;
   const echus = await prisma.abonnement.findMany({
     where: ECHUS(maintenant),
@@ -286,10 +344,9 @@ export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | n
         bilan.reportes++;
         continue;
       }
+      // Les fichiers sont notés dans la transaction ; la tâche des fichiers
+      // à libérer les retire du stockage (`libererFichiersEnAttente`).
       bilan.supprimes++;
-      const f = await libererFichiers(cles, "comptes/suppression");
-      bilan.fichiers.liberes += f.liberes;
-      bilan.fichiers.echecs += f.echecs;
     } catch (e) {
       bilan.reportes++;
       await reporter(compteId, maintenant);
@@ -302,13 +359,18 @@ export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | n
 /**
  * Efface un compte entier, dans une transaction, la ligne d'abonnement
  * verrouillée et la condition relue : un réabonnement de dernière minute
- * l'emporte (`null`). Rend les clés des fichiers à libérer APRÈS.
+ * l'emporte (`null`). Garde la trace du compte (`CompteSupprime`, cinq ans)
+ * et note ses fichiers dans la file des fichiers à libérer, dans la même
+ * transaction : l'effacement ne peut pas réussir sans elles. Rend les clés.
  */
 export async function supprimerCompte(compteId: string, maintenant: Date): Promise<string[] | null> {
   return prisma.$transaction(
     async (tx) => {
       await tx.$queryRaw`SELECT "id" FROM "Abonnement" WHERE "compteId" = ${compteId}::uuid FOR UPDATE`;
-      const encore = await tx.abonnement.findFirst({ where: { compteId, ...ECHUS(maintenant) }, select: { id: true } });
+      const encore = await tx.abonnement.findFirst({
+        where: { compteId, ...ECHUS(maintenant) },
+        select: { sansAbonnementDepuis: true, avertiSuppression30Le: true, avertiSuppression7Le: true, compte: { select: { name: true } } },
+      });
       if (!encore) return null;
 
       const etablissements = await tx.etablissement.findMany({
@@ -322,6 +384,36 @@ export async function supprimerCompte(compteId: string, maintenant: Date): Promi
       // Et tout fichier compté au compte, même plus référencé (un dépôt
       // abandonné) : il partirait sinon du compte, pas du stockage.
       const comptes = await tx.fichierStocke.findMany({ where: { compteId }, select: { cle: true } });
+      // La trace, avant que les lignes ne partent : qui a accepté quoi, qui a
+      // été prévenu et quand (ADR-058 § 5). Aucune donnée métier.
+      const [acceptations, proprietaires] = await Promise.all([
+        tx.acceptationConditions.findMany({
+          where: { compteId },
+          orderBy: { accepteeLe: "asc" },
+          select: { version: true, empreinte: true, contexte: true, accepteeLe: true, user: { select: { email: true } } },
+        }),
+        tx.membre.findMany({ where: { compteId, role: "owner" }, select: { user: { select: { email: true } } } }),
+      ]);
+      await tx.compteSupprime.create({
+        data: {
+          ancienCompteId: compteId,
+          nom: encore.compte.name,
+          proprietaires: proprietaires.map((m) => m.user.email),
+          acceptations: acceptations.map((a) => ({
+            email: a.user.email,
+            version: a.version,
+            empreinte: a.empreinte,
+            contexte: a.contexte,
+            accepteeLe: a.accepteeLe.toISOString(),
+          })),
+          sansAbonnementDepuis: encore.sansAbonnementDepuis,
+          avertiSuppression30Le: encore.avertiSuppression30Le,
+          avertiSuppression7Le: encore.avertiSuppression7Le,
+          supprimeLe: maintenant,
+          conserverJusquAu: ajouterMois(maintenant, MOIS_DE_CONSERVATION_DE_LA_TRACE),
+        },
+      });
+
       // Les versions de DUERP ne suivent aucune cascade, exprès (elles
       // bloquent la suppression d'une entreprise par son dirigeant) : la fin
       // du service les efface, l'employeur les a reçues par l'export (ADR-058).
@@ -349,8 +441,56 @@ export async function supprimerCompte(compteId: string, maintenant: Date): Promi
         ]);
         if (ailleurs + signatures + liens + demandes + acceptations + invitations === 0) await tx.user.delete({ where: { id: userId } });
       }
-      return [...new Set([...cles, ...comptes.map((f) => f.cle)])];
+      const aLiberer = [...new Set([...cles, ...comptes.map((f) => f.cle)])];
+      await tx.fichierALiberer.createMany({
+        data: aLiberer.map((cle) => ({ cle, contexte: "comptes/suppression" })),
+        skipDuplicates: true,
+      });
+      return aLiberer;
     },
     { timeout: 60_000 },
   );
+}
+
+/**
+ * Retire du stockage les fichiers notés à libérer, les moins tentés d'abord.
+ * Un fichier retiré quitte la file ; un échec y reste, compté, pour la passe
+ * suivante. La suppression d'une clé absente ne lève pas (tous les pilotes) :
+ * une passe rejouée ne fait pas d'erreur.
+ */
+export async function libererFichiersEnAttente(): Promise<{ liberes: number; echecs: number; restants: number }> {
+  const enAttente = await prisma.fichierALiberer.findMany({
+    orderBy: [{ tentatives: "asc" }, { noteLe: "asc" }],
+    take: FICHIERS_PAR_PASSE,
+    select: { cle: true, contexte: true },
+  });
+  let liberes = 0;
+  let echecs = 0;
+  if (enAttente.length > 0) {
+    let stockage: ReturnType<typeof getStorage> | null = null;
+    try {
+      stockage = getStorage();
+    } catch (e) {
+      console.error(`fichiers à libérer : stockage indisponible, ${enAttente.length} en attente — ${motifErreur(e)}`);
+    }
+    for (const { cle, contexte } of stockage ? enAttente : []) {
+      try {
+        await stockage!.delete(cle);
+        await prisma.fichierALiberer.delete({ where: { cle } });
+        liberes++;
+      } catch (e) {
+        echecs++;
+        console.error(`[${contexte}] fichier non libéré, retenté demain : ${cle} — ${motifErreur(e)}`);
+        await prisma.fichierALiberer.update({ where: { cle }, data: { tentatives: { increment: 1 } } }).catch(() => {});
+      }
+    }
+    if (!stockage) echecs = enAttente.length;
+  }
+  return { liberes, echecs, restants: await prisma.fichierALiberer.count() };
+}
+
+/** Efface les traces de comptes supprimés dont les cinq ans sont passés. */
+export async function purgerTracesEchues(maintenant: Date): Promise<{ effacees: number }> {
+  const { count } = await prisma.compteSupprime.deleteMany({ where: { conserverJusquAu: { lt: maintenant } } });
+  return { effacees: count };
 }

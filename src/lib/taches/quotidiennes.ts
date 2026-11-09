@@ -8,7 +8,12 @@ import "server-only";
 
 import { createHash, timingSafeEqual } from "node:crypto";
 import { rappelerLaVeilleDeLaFinDEssai } from "@/lib/abonnements/rappels";
-import { avertirAvantSuppression, supprimerComptesEchus } from "@/lib/abonnements/suppression";
+import {
+  avertirAvantSuppression,
+  libererFichiersEnAttente,
+  purgerTracesEchues,
+  supprimerComptesEchus,
+} from "@/lib/abonnements/suppression";
 import { clientStripe } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
 import { contexteDroits, offreLancee } from "@/lib/abonnements/lancement";
@@ -29,19 +34,26 @@ export function appelAutorise(entete: string | null, secret: string): boolean {
 /**
  * Dans cet ordre : les avertissements avant la suppression (une date posée
  * aujourd'hui est à 30 jours au moins), puis la suppression des comptes
- * échus (ADR-058). Une tâche qui échoue n'empêche pas les suivantes.
+ * échus (ADR-058), puis le retrait de leurs fichiers du stockage. Une tâche
+ * qui échoue n'empêche pas les suivantes. Le ménage (fichiers notés, traces
+ * de plus de cinq ans) se fait même offre retirée : il ne s'annonce à personne.
  */
 export async function lancerTachesQuotidiennes(maintenant: Date) {
+  const menage = async () => ({
+    fichiersALiberer: await tenter("fichiers à libérer", () => libererFichiersEnAttente()),
+    tracesPurgees: await tenter("traces de comptes supprimés", () => purgerTracesEchues(maintenant)),
+  });
   // L'offre pas lancée (ou retirée) : la saisie est ouverte à tous, rien ne
   // se rappelle ni ne se supprime — un compte ne lirait nulle part ce que
   // l'e-mail lui annonce.
-  if (!offreLancee(contexteDroits())) return { offreLancee: false as const };
+  if (!offreLancee(contexteDroits())) return { offreLancee: false as const, ...(await menage()) };
   const config = configurationStripe();
   const stripe = config.active ? clientStripe(config) : null;
   return {
     rappelsVeilleFinEssai: await tenter("rappel de fin d'essai", () => rappelerLaVeilleDeLaFinDEssai(maintenant)),
     avertissementsAvantSuppression: await tenter("avertissements avant suppression", () => avertirAvantSuppression(maintenant)),
     suppressions: await tenter("suppressions", () => supprimerComptesEchus(maintenant, stripe)),
+    ...(await menage()),
   };
 }
 

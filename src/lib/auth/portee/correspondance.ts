@@ -83,6 +83,12 @@ export const CORRESPONDANCE = {
   EssaiEntreprise: {
     horsCompte: "un essai par entreprise (ADR-053 § 8) : le SIREN déjà essayé, lu à travers les comptes par `abonnements/essai-entreprise.ts`",
   },
+  CompteSupprime: {
+    horsCompte: "trace d'un compte supprimé faute d'abonnement (ADR-058) : le compte n'existe plus ; écrite et purgée par la tâche quotidienne (`abonnements/suppression.ts`)",
+  },
+  FichierALiberer: {
+    horsCompte: "file des fichiers à retirer du stockage après une suppression en base : leurs lignes n'existent plus ; vidée par la tâche quotidienne",
+  },
   EvenementStripe: {
     horsCompte: "événement Stripe reçu (ADR-053) : dédoublonnage des livraisons, écrit avant toute identité",
   },

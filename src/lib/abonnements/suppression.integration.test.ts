@@ -20,7 +20,7 @@ const local = URL_BASE ? /@(localhost|127\.0\.0\.1)[:/]/.test(URL_BASE) : false;
 describe.skipIf(!URL_BASE || !local)("suppression d'un compte sans abonnement — PostgreSQL réel", async () => {
   if (URL_BASE) process.env.DATABASE_URL = URL_BASE;
   const { prisma } = await import("@/lib/prisma");
-  const { supprimerCompte } = await import("./suppression");
+  const { supprimerCompte, purgerTracesEchues } = await import("./suppression");
 
   const A = "00000000-0000-0000-0000-5e1e7000000a";
   const B = "00000000-0000-0000-0000-5e1e7000000b";
@@ -46,6 +46,8 @@ describe.skipIf(!URL_BASE || !local)("suppression d'un compte sans abonnement �
     await prisma.invitationCompte.deleteMany({ where: { compteId: { in: [A, B] } } });
     await prisma.compte.deleteMany({ where: { id: { in: [A, B] } } });
     await prisma.user.deleteMany({ where: { id: { in: [SEUL, DEUX] } } });
+    await prisma.compteSupprime.deleteMany({ where: { ancienCompteId: { in: [A, B] } } });
+    await prisma.fichierALiberer.deleteMany({ where: { cle: { startsWith: "5e1e7/" } } });
   }
 
   async function semer() {
@@ -74,6 +76,7 @@ describe.skipIf(!URL_BASE || !local)("suppression d'un compte sans abonnement �
     await prisma.acceptationConditions.create({
       data: { compteId: A, userId: SEUL, version: "v", empreinte: "e", contexte: "essai" },
     });
+    await prisma.fichierStocke.create({ data: { cle: "5e1e7/a/rapport.pdf", compteId: A, octets: 10 } });
     await prisma.demandeAssistance.create({
       data: { compteId: A, userId: SEUL, categorie: "duerp", message: "aide", page: "/" },
     });
@@ -89,7 +92,7 @@ describe.skipIf(!URL_BASE || !local)("suppression d'un compte sans abonnement �
   });
 
   it("efface tout ce que porte le compte, versions de DUERP comprises ; l'autre compte et la personne qui y est membre restent", async () => {
-    expect(await supprimerCompte(A, MAINTENANT)).toEqual([]);
+    expect(await supprimerCompte(A, MAINTENANT)).toEqual(["5e1e7/a/rapport.pdf"]);
     expect(await prisma.compte.findUnique({ where: { id: A } })).toBeNull();
     expect(await prisma.entreprise.count({ where: { compteId: A } })).toBe(0);
     expect(await prisma.abonnement.count({ where: { compteId: A } })).toBe(0);
@@ -102,13 +105,32 @@ describe.skipIf(!URL_BASE || !local)("suppression d'un compte sans abonnement �
     expect(await prisma.duerpVersion.count({ where: { duerp: { etablissement: { entreprise: { compteId: B } } } } })).toBe(1);
   });
 
+  it("garde la trace (cinq ans) et note les fichiers à retirer, dans la même transaction", async () => {
+    await supprimerCompte(A, MAINTENANT);
+    const trace = await prisma.compteSupprime.findFirstOrThrow({ where: { ancienCompteId: A } });
+    expect(trace).toMatchObject({
+      nom: "A",
+      proprietaires: [`${SEUL}@exemple.invalid`],
+      acceptations: [expect.objectContaining({ email: `${SEUL}@exemple.invalid`, version: "v", empreinte: "e" })],
+      avertiSuppression30Le: ECHU.avertiSuppression30Le,
+      avertiSuppression7Le: ECHU.avertiSuppression7Le,
+      supprimeLe: MAINTENANT,
+      conserverJusquAu: new Date("2032-12-01T09:00:00Z"),
+    });
+    expect(await prisma.fichierALiberer.findUnique({ where: { cle: "5e1e7/a/rapport.pdf" } })).not.toBeNull();
+    // La trace part après cinq ans, pas avant.
+    expect(await purgerTracesEchues(new Date("2032-11-30T09:00:00Z"))).toMatchObject({ effacees: 0 });
+    await purgerTracesEchues(new Date("2032-12-02T09:00:00Z"));
+    expect(await prisma.compteSupprime.count({ where: { ancienCompteId: A } })).toBe(0);
+  });
+
   it("une personne qui a invité sur un autre compte reste : l'historique de ses invitations n'est pas effacé", async () => {
     // SEUL a été membre de B, y a invité quelqu'un, puis en est parti : son
     // invitation a été annulée à son départ, la ligne reste dans l'historique de B.
     await prisma.invitationCompte.create({
       data: { compteId: B, email: "invitee@exemple.invalid", role: "member", status: "canceled", expiresAt: MAINTENANT, inviterId: SEUL },
     });
-    expect(await supprimerCompte(A, MAINTENANT)).toEqual([]);
+    expect(await supprimerCompte(A, MAINTENANT)).not.toBeNull();
     expect(await prisma.compte.findUnique({ where: { id: A } })).toBeNull();
     expect(await prisma.user.findUnique({ where: { id: SEUL } })).not.toBeNull();
     expect(await prisma.invitationCompte.count({ where: { compteId: B, inviterId: SEUL } })).toBe(1);
@@ -121,6 +143,7 @@ describe.skipIf(!URL_BASE || !local)("suppression d'un compte sans abonnement �
     });
     expect(await supprimerCompte(A, MAINTENANT)).toBeNull();
     expect(await prisma.compte.findUnique({ where: { id: A } })).not.toBeNull();
+    expect(await prisma.compteSupprime.count({ where: { ancienCompteId: A } })).toBe(0);
     expect(await prisma.duerpVersion.count({ where: { duerp: { etablissement: { entreprise: { compteId: A } } } } })).toBe(1);
   });
 
