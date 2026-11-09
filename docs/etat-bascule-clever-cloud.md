@@ -92,6 +92,24 @@ connecteur MCP OAuth de Supabase n'existe plus — garder la suppression de
   et `verifierSaisie()` en tête ; le registre et le ZIP se lisent avec le
   compte qui les bâtit (`AccesCompte`), sans relire la session. Les cinq
   points communs aux dépôts relevés à la relecture sont traités par #212.
+- **Report de `main`** (2026-11-09, #248) : ADR-057 lots B (#205, les
+  présences établies d'après le parc sur la page Équipements, DAE partagé
+  déclaré d'une case) et C (#214, catégories jumelles réunies, type déclaré,
+  référentiel `2026-11-07.1`), et #245 (relevé provisoire `?ecran` de la page
+  d'accueil, **à retirer une fois le hero réglé**, sur `main` puis ici).
+  Migrations `20261107120000_categories_jumelles` et
+  `20261107120100_categories_jumelles_reprise`, datées après
+  `20261107100000_essai_entreprise` et éprouvées sur une copie de base `cc` :
+  reprise des appareils et des prescriptions, RLS d'`Equipement` et de
+  `PrescriptionParticuliere` inchangée. Ce que `cc` garde et que `main` n'a
+  pas, à ne pas perdre au prochain report : le plafond de l'essai sur le
+  pré-remplissage des équipements (`creerSousPlafond`) ; `basculerDaePartage`
+  appelle `verifierSaisie()` et `CasePartageDae` relance la redirection ;
+  `declarationsDePresence` lit par `compteId`, avec l'accès de la page
+  (`declarations-de-presence.test.ts`) ; l'empreinte du moteur de la fusion
+  (`bd476b63f185b7ff`). Sur un site gelé, cocher « DAE partagé » est refusé
+  (`upsert`), la décocher passe (`deleteMany`, que le gel ne bloque pas) :
+  retirer une déclaration reste ouvert, comme le veut l'ADR-053 § 14.
 
 ### Multi-utilisateurs : ce qui reste (2026-11-03)
 
