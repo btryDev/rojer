@@ -13,7 +13,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { MarqueCategorie } from "@/components/equipements/MarqueCategorie";
 import { VitrineEquipement } from "@/components/equipements/VitrineEquipement";
-import { LABEL_CATEGORIE_EQUIPEMENT } from "@/lib/equipements/labels";
+import { LABEL_CATEGORIE_EQUIPEMENT, libelleEnCoursDePhrase } from "@/lib/equipements/labels";
 import { LABEL_PERIODICITE } from "@/lib/calendrier/labels";
 import {
   CHAMP_ETAT,
@@ -162,7 +162,7 @@ export function CarteCategorie({
         <Plus className="size-4" aria-hidden />
         {/* Le titre de la carte, s'il est donné : le bouton dit ce que la
             carte affiche (contrôle visuel E3). */}
-        Ajouter — {(titre ?? LABEL_CATEGORIE_EQUIPEMENT[categorie]).toLowerCase()}
+        Ajouter — {libelleEnCoursDePhrase(titre ?? LABEL_CATEGORIE_EQUIPEMENT[categorie])}
       </Link>
     </section>
   );
