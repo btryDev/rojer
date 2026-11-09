@@ -142,6 +142,10 @@ const LECTURES_EXPOSEES = new Map<string, string>([
  */
 const ROUTES_OUVERTES = new Map<string, string>([
   [
+    "app/api/taches/quotidiennes/route.ts:POST",
+    "les tâches quotidiennes (rappel de fin d'essai) : sans session, prouvées par le secret de la crontab ; elles n'écrivent dans aucun dossier",
+  ],
+  [
     "app/api/stripe/webhook/route.ts:POST",
     "la notification de Stripe : sans session, prouvée par sa signature — c'est elle qui rouvre un compte impayé",
   ],

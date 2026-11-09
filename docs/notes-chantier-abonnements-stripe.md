@@ -827,6 +827,35 @@ n'existe plus — à revoir avec la suppression de compte. Le tableau de bord
 permet de toute façon d'offrir une formule ou de rembourser : il se protège
 comme un accès d'administration (`docs/etat-bascule-clever-cloud.md`).
 
+## 13. Rappels de fin d'essai et tâche quotidienne (2026-11-09)
+
+Décision du 2026-11-06 : un e-mail **7 jours** et **1 jour** avant la fin de
+l'essai.
+
+- **7 jours : Stripe.** Réglage du tableau de bord (Billing > Abonnements et
+  e-mails, « rappel 7 jours avant la fin d'un essai gratuit »). Il part aussi
+  pour un essai sans carte, avec le lien de résiliation que les réseaux de
+  cartes exigent ([conformité des
+  essais](https://docs.stripe.com/billing/subscriptions/trials/manage-trial-compliance),
+  lue le 2026-11-09). Le délai n'est pas réglable, et rien ne part la veille.
+- **La veille : Rojer** (`abonnements/rappels.ts`). Essais en cours sans
+  résiliation prévue qui finissent dans les 36 heures ; e-mail aux
+  propriétaires du compte, avec la date, le lien vers la page Abonnement,
+  et le rappel que la conservation des documents officiels (le DUERP)
+  revient à l'employeur. Une fois par essai : la marque
+  `Abonnement.rappelVeilleEssaiLe` est posée avant l'envoi par une écriture
+  conditionnelle, et rendue à vide si l'envoi échoue.
+- **La tâche quotidienne** : `clevercloud/cron.json` lance chaque jour à 9 h
+  (heure de Paris) `clevercloud/taches-quotidiennes.sh`, qui appelle
+  `POST /api/taches/quotidiennes` avec le secret `TACHES_SECRET`. Sans
+  secret, la route répond 404. La crontab de Clever Cloud tourne sur chaque
+  instance (seule la première appelle, `INSTANCE_NUMBER`) et sans les
+  variables de l'application (`bash -l` les charge) ; une passe manquée
+  n'est pas rattrapée, d'où la fenêtre de 36 heures
+  ([crons Clever Cloud](https://www.clever.cloud/developers/doc/manage/cron/),
+  lue le 2026-11-09). Elle accueillera les avertissements avant suppression
+  (J-30, J-7) quand la suppression à 12 mois sera écrite.
+
 ## Sources lues
 
 - Stripe : [webhooks](https://docs.stripe.com/webhooks.md) ·
