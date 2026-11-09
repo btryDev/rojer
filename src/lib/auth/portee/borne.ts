@@ -158,6 +158,28 @@ export function clesDuCompte(nom: string): { cle: string; cible: string }[] {
   );
 }
 
+/**
+ * Toutes les clés qu'une écriture voit bornées : relations vers une ligne d'un
+ * compte ou vers l'identité, et identités scalaires. Ce que la matrice
+ * d'isolation éprouve, une à une.
+ */
+export function clesBornees(nom: string): { cle: string; identite: boolean }[] {
+  return [
+    ...relations(nom).flatMap((r) => (r.cle && r.genre !== "hors" ? [{ cle: r.cle, identite: r.genre === "identite" }] : [])),
+    ...(IDENTITES_SCALAIRES[nom as Prisma.ModelName] ?? []).map((cle) => ({ cle, identite: true })),
+  ];
+}
+
+/** Les clés qu'un `createMany` refuse d'emblée : vers un modèle hors compte ou l'identité, sauf la racine (pas de `connect` en lot). */
+export function clesRefuseesAuLot(nom: string): string[] {
+  return relations(nom).flatMap((r) => (r.cle && r.genre !== "compte" && !estLaRacine(nom, r.cle) ? [r.cle] : []));
+}
+
+/** Le délégué Prisma d'un modèle (`PermisFeu` → `client.permisFeu`). */
+export function delegueDe<T>(client: unknown, nom: string): T {
+  return (client as Record<string, T>)[nom.charAt(0).toLowerCase() + nom.slice(1)];
+}
+
 // --- La borne ----------------------------------------------------------------
 
 /** Le filtre `where` qui borne un modèle à la portée. */
@@ -484,9 +506,8 @@ export function argumentsBornes(nom: string, operation: string, args: unknown, p
         const ligne = { ...l };
         racineDe(nom, ligne, portee, true);
         identitesScalaires(nom, ligne, portee);
-        for (const r of relations(nom)) {
-          if (r.cle && r.genre !== "compte" && ligne[r.cle] != null && !estLaRacine(nom, r.cle))
-            throw new ErreurPortee(`${nom}.createMany : clé ${r.cle} vers un modèle hors compte`);
+        for (const cle of clesRefuseesAuLot(nom)) {
+          if (ligne[cle] != null) throw new ErreurPortee(`${nom}.createMany : clé ${cle} vers un modèle hors compte`);
         }
         return ligne;
       });

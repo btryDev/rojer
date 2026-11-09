@@ -63,3 +63,20 @@ describe("table de correspondance", () => {
     expect(liens).toEqual([]);
   });
 });
+
+// Ancrage de la matrice d'isolation, lu dans le schéma et indépendant
+// d'IDENTITES_SCALAIRES : sans lui, retirer une entrée de cette table retirait
+// aussi son test, et tout restait vert (mutation éprouvée le 2026-11-09).
+it("toute colonne UUID sans relation d'un modèle de compte est une identité bornée", async () => {
+  const { clesBornees } = await import("./borne");
+  const nonBornees = Prisma.dmmf.datamodel.models
+    .filter((m) => !estHorsCompte((TABLE as Record<string, Classement>)[m.name]))
+    .flatMap((m) => {
+      const cles = new Set(m.fields.flatMap((f) => f.relationFromFields ?? []));
+      return m.fields
+        .filter((f) => f.kind === "scalar" && !f.isId && !cles.has(f.name) && f.nativeType?.[0] === "Uuid")
+        .filter((f) => !clesBornees(m.name).some((c) => c.cle === f.name))
+        .map((f) => `${m.name}.${f.name}`);
+    });
+  expect(nonBornees).toEqual([]);
+});

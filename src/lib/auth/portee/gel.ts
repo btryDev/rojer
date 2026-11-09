@@ -6,7 +6,7 @@ import "server-only";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { redirect } from "next/navigation";
 import type { PrismaClient } from "@prisma/client";
-import { avecBorne, borne, filtreVers, relations, type Geles, type Portee } from "./borne";
+import { avecBorne, borne, delegueDe, filtreVers, relations, type Geles, type Portee } from "./borne";
 
 export type { Geles };
 
@@ -61,8 +61,7 @@ export function filtreGele(nom: string, geles: Geles): Objet | null {
 
 type Delegue = { count(a: object): Promise<number>; findUnique(a: object): Promise<unknown> };
 /** Le lecteur du gel : la transaction en cours, sinon le client brut. */
-const delegue = (base: PrismaClient, nom: string) =>
-  ((transactionEnCours.getStore() ?? base) as unknown as Record<string, Delegue>)[nom.charAt(0).toLowerCase() + nom.slice(1)];
+const delegue = (base: PrismaClient, nom: string) => delegueDe<Delegue>(transactionEnCours.getStore() ?? base, nom);
 
 /**
  * Les lignes qu'une écriture désigne : clé étrangère (nue ou en `{ set }`),

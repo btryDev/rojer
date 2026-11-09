@@ -10,7 +10,7 @@ import "server-only";
 // relevé qui lui fait accepter le `createMany`.
 
 import type { Prisma } from "@prisma/client";
-import { clesDuCompte, dansUnLot, ErreurPortee } from "./borne";
+import { clesDuCompte, dansUnLot, delegueDe, ErreurPortee } from "./borne";
 import type { ClientBorne, TransactionBornee } from "./client";
 
 type Ligne = Record<string, unknown>;
@@ -20,8 +20,7 @@ type Delegue = {
 };
 
 function delegue(client: ClientBorne | TransactionBornee, nom: string): Delegue {
-  const cle = nom.charAt(0).toLowerCase() + nom.slice(1);
-  return (client as unknown as Record<string, Delegue>)[cle];
+  return delegueDe<Delegue>(client, nom);
 }
 
 export async function creerEnLotVerifie(

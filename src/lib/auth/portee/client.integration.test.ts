@@ -11,6 +11,7 @@
 // Jamais une base qui porte des données utiles.
 
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { estBaseLocale } from "@/test/base-integration";
 
 vi.mock("server-only", () => ({}));
 // Le vrai client borné, pas le remplacement de vitest.setup.ts.
@@ -18,7 +19,7 @@ vi.unmock("@/lib/auth/portee/client");
 vi.unmock("@/lib/auth/portee/lot-verifie");
 
 const URL_BASE = process.env.ISOLATION_INTEGRATION_URL;
-const local = URL_BASE ? /@(localhost|127\.0\.0\.1)[:/]/.test(URL_BASE) : false;
+const local = estBaseLocale(URL_BASE);
 
 describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async () => {
   if (URL_BASE) process.env.DATABASE_URL = URL_BASE;
