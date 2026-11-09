@@ -13,7 +13,7 @@ import "server-only";
 import type Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
 import { envoiEnService, motifErreur, publicAppUrl, sendMail } from "@/lib/email";
-import { formaterDateLongueFr } from "@/lib/dates";
+import { ajouterJours, ajouterMois, formaterDateLongueFr } from "@/lib/dates";
 import { clesDesEtablissements, libererFichiers } from "@/lib/suppression/fichiers";
 import { OPTIONS_WEBHOOK } from "@/lib/stripe/client";
 import { expirerSessionsOuvertes } from "@/lib/stripe/parcours";
@@ -23,19 +23,16 @@ import { adressesDesProprietaires } from "./rappels";
 import { PAGE_ABONNEMENT } from "./saisie";
 
 export const MOIS_SANS_ABONNEMENT = 12;
-const JOUR_MS = 86_400_000;
 /** Comptes supprimés au plus par passe : la tâche reste courte, le reste attend le lendemain. */
 export const SUPPRESSIONS_PAR_PASSE = 10;
 
-/** Douze mois civils après l'horloge (UTC). */
+/** Douze mois civils après l'horloge (jour civil de Paris, ADR-011). */
 export function finDuDelai(sansAbonnementDepuis: Date): Date {
-  const d = new Date(sansAbonnementDepuis);
-  d.setUTCMonth(d.getUTCMonth() + MOIS_SANS_ABONNEMENT);
-  return d;
+  return ajouterMois(sansAbonnementDepuis, MOIS_SANS_ABONNEMENT);
 }
 
 const plusTard = (a: Date, b: Date) => (a.getTime() >= b.getTime() ? a : b);
-const dans = (maintenant: Date, jours: number) => new Date(maintenant.getTime() + jours * JOUR_MS);
+const dans = (maintenant: Date, jours: number) => ajouterJours(maintenant, jours);
 const FERME = { OR: [{ statut: null }, { statut: { notIn: [...OUVRENT] } }] };
 
 export type Avertissement = "j30" | "j7";
@@ -185,9 +182,7 @@ async function ceQuiSeGarde(compteId: string, debutPayantLe: Date | null): Promi
 
 /** L'horloge au plus tard pour que la fin du délai tombe d'ici `jours` jours. */
 function avantDelai(maintenant: Date, jours: number): Date {
-  const d = dans(maintenant, jours);
-  d.setUTCMonth(d.getUTCMonth() - MOIS_SANS_ABONNEMENT);
-  return d;
+  return ajouterMois(dans(maintenant, jours), -MOIS_SANS_ABONNEMENT);
 }
 
 function compter(b: Bilan, partis: number, echec: boolean) {

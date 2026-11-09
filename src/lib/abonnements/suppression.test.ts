@@ -28,10 +28,10 @@ vi.mock("@/lib/stripe/client", () => ({ OPTIONS_WEBHOOK: {} }));
 vi.mock("@/lib/stripe/synchronisation", () => ({ synchroniserClientStripe: m.synchroniser }));
 vi.mock("@/lib/suppression/fichiers", () => ({ clesDesEtablissements: vi.fn(), libererFichiers: vi.fn() }));
 
+import { ajouterJours, ajouterMois } from "@/lib/dates";
 import { avertirAvantSuppression, finDuDelai, messageAvantSuppression, supprimerComptesEchus } from "./suppression";
 
 const MAINTENANT = new Date("2027-10-20T09:00:00Z");
-const JOUR = 86_400_000;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -46,8 +46,10 @@ beforeEach(() => {
 });
 
 describe("suppression d'un compte sans abonnement (ADR-058)", () => {
-  it("douze mois civils après l'horloge", () => {
-    expect(finDuDelai(new Date("2026-11-15T10:00:00Z"))).toEqual(new Date("2027-11-15T10:00:00Z"));
+  it("douze mois civils après l'horloge, au jour civil (ADR-011)", () => {
+    const fin = finDuDelai(new Date("2026-11-15T10:00:00Z"));
+    expect(fin).toEqual(ajouterMois(new Date("2026-11-15T10:00:00Z"), 12));
+    expect(fin.getUTCFullYear()).toBe(2027);
   });
 
   it("J-30 : la date posée est la fin du délai, au moins 30 jours après l'e-mail ; marque avant l'envoi", async () => {
@@ -59,7 +61,7 @@ describe("suppression d'un compte sans abonnement (ADR-058)", () => {
     const bilan = await avertirAvantSuppression(MAINTENANT);
     expect(bilan.j30).toEqual({ envoyes: 1, echecs: 0 });
     expect(ordre).toEqual(["marque", "envoi"]);
-    const prevue = new Date(MAINTENANT.getTime() + 30 * JOUR);
+    const prevue = ajouterJours(MAINTENANT, 30);
     expect(m.updateMany.mock.calls[0][0]).toEqual({
       where: { id: "ab1", avertiSuppression30Le: null, sansAbonnementDepuis: horloge },
       data: { avertiSuppression30Le: MAINTENANT, suppressionPrevueLe: prevue },
@@ -68,23 +70,23 @@ describe("suppression d'un compte sans abonnement (ADR-058)", () => {
     // Requête : comptes fermés, sans premier avertissement, dont le délai finit d'ici 30 jours.
     const where = m.findMany.mock.calls[0][0].where;
     expect(where.avertiSuppression30Le).toBeNull();
-    expect(where.sansAbonnementDepuis.lte).toEqual(new Date("2026-11-19T09:00:00Z"));
+    expect(where.sansAbonnementDepuis.lte).toEqual(ajouterMois(ajouterJours(MAINTENANT, 30), -12));
   });
 
   it("J-7 : sept jours avant la date, repoussée si le rappel part en retard ; jamais avancée", async () => {
-    const prevue = new Date(MAINTENANT.getTime() + 3 * JOUR); // le rappel part en retard
+    const prevue = ajouterJours(MAINTENANT, 3); // le rappel part en retard
     m.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce([{ id: "ab1", compteId: "c1", suppressionPrevueLe: prevue, debutPayantLe: new Date() }]);
     await avertirAvantSuppression(MAINTENANT);
     expect(m.updateMany.mock.calls[0][0]).toEqual({
       where: { id: "ab1", avertiSuppression7Le: null, suppressionPrevueLe: prevue },
-      data: { avertiSuppression7Le: MAINTENANT, suppressionPrevueLe: new Date(MAINTENANT.getTime() + 7 * JOUR) },
+      data: { avertiSuppression7Le: MAINTENANT, suppressionPrevueLe: ajouterJours(MAINTENANT, 7) },
     });
     expect(m.sendMail.mock.calls[0][0].subject).toMatch(/^Rappel : /);
   });
 
   it("rien n'est parti : la marque est rendue, et la date d'avant avec", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
-    const prevue = new Date(MAINTENANT.getTime() + 5 * JOUR);
+    const prevue = ajouterJours(MAINTENANT, 5);
     m.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce([{ id: "ab1", compteId: "c1", suppressionPrevueLe: prevue, debutPayantLe: null }]);
     m.sendMail.mockRejectedValue(new Error("refusé"));
     const bilan = await avertirAvantSuppression(MAINTENANT);
