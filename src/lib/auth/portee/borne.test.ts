@@ -478,3 +478,64 @@ describe("sqlPeutEcrire (lecture seule, $queryRaw)", () => {
     expect(sqlPeutEcrire(sql)).toBe(attendu);
   });
 });
+
+// La portée d'un établissement (chantier 3 du renforcement, 2026-11-09) : sans
+// base, la forme de la borne et les refus. Contre un PostgreSQL réel, deux
+// établissements d'un même compte : `portee-etablissement.integration.test.ts`.
+describe("portée d'un établissement", () => {
+  const E: Portee = { type: "compte", compteId: "compte-a", userId: null, etablissementId: "etab-1" };
+
+  it("pose l'établissement sur lui-même et sur tout ce qui y remonte, le compte avec", () => {
+    expect(borne("Etablissement", E)).toEqual({ id: "etab-1", entreprise: { compteId: "compte-a" } });
+    expect(borne("Risque", E)).toEqual({
+      unite: { duerp: { etablissement: { id: "etab-1", entreprise: { compteId: "compte-a" } } } },
+    });
+    expect(borne("Entreprise", E)).toEqual({ compteId: "compte-a", etablissements: { some: { id: "etab-1" } } });
+  });
+
+  it("refuse les autres racines du compte", () => {
+    for (const nom of ["Abonnement", "FichierStocke", "ConsommationQuota", "DemandeAssistance", "AcceptationConditions"])
+      expect(() => argumentsBornes(nom, "findMany", {}, E)).toThrow(/portée d'un établissement/);
+  });
+
+  it("l'entreprise se lit en champs simples ; une relation qui en part est refusée, à toute profondeur", () => {
+    expect(() => argumentsBornes("Etablissement", "findFirst", { include: { entreprise: true } }, E)).not.toThrow();
+    expect(() =>
+      argumentsBornes("Etablissement", "findFirst", { select: { entreprise: { select: { raisonSociale: true } } } }, E),
+    ).not.toThrow();
+    for (const args of [
+      { include: { entreprise: { include: { etablissements: true } } } },
+      { select: { entreprise: { select: { etablissements: { select: { id: true } } } } } },
+      { where: { entreprise: { etablissements: { some: { id: "etab-2" } } } } },
+      { orderBy: { entreprise: { etablissements: { _count: "asc" } } } },
+    ])
+      expect(() => argumentsBornes("Etablissement", "findMany", args, E)).toThrow(/hors de l'établissement/);
+    expect(() => argumentsBornes("Entreprise", "findMany", { include: { etablissements: true } }, E)).toThrow(
+      /hors de l'établissement/,
+    );
+    expect(() =>
+      argumentsBornes("Action", "findMany", { where: { etablissement: { entreprise: { etablissements: { some: {} } } } } }, E),
+    ).toThrow(/hors de l'établissement/);
+  });
+
+  it("l'établissement et l'entreprise ne s'écrivent pas", () => {
+    for (const [nom, operation] of [
+      ["Etablissement", "update"],
+      ["Etablissement", "create"],
+      ["Etablissement", "deleteMany"],
+      ["Entreprise", "update"],
+    ])
+      expect(() => argumentsBornes(nom, operation, { where: {}, data: {} }, E)).toThrow(/portée d'un établissement/);
+  });
+
+  it("une écriture rattachée à l'établissement passe, et son rattachement est borné à lui", () => {
+    const a = argumentsBornes("PermisFeu", "updateMany", { where: { id: "p" }, data: { statut: "valide" } }, E);
+    expect(a.where).toEqual({ id: "p", AND: [{ etablissement: { id: "etab-1", entreprise: { compteId: "compte-a" } } }] });
+  });
+
+  it("sans portée d'établissement, rien ne change", () => {
+    const C: Portee = { type: "compte", compteId: "compte-a", userId: null };
+    expect(borne("Etablissement", C)).toEqual({ entreprise: { compteId: "compte-a" } });
+    expect(() => argumentsBornes("Abonnement", "findMany", {}, C)).not.toThrow();
+  });
+});
