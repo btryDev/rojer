@@ -222,7 +222,6 @@ async function prevenirLesMembres(compteId: string, nom: string, suppressionLe: 
       select: { user: { select: { email: true } } },
     });
     for (const { user } of membres) {
-      if (!user.email) continue;
       try {
         await sendMail({ to: user.email, ...messageAuxMembres(nom, suppressionLe) });
         partis++;
@@ -271,8 +270,19 @@ async function reporter(compteId: string, maintenant: Date) {
     .catch((e: unknown) => console.error(`report du compte ${compteId} non noté — ${motifErreur(e)}`));
 }
 
-/** Le client Stripe n'existe plus (supprimé à la main dans le tableau de bord) : il n'y a rien à résilier. */
-const clientAbsent = (e: unknown) => (e as { code?: unknown } | null)?.code === "resource_missing";
+const introuvable = (e: unknown) => (e as { code?: unknown } | null)?.code === "resource_missing";
+
+/**
+ * Le client Stripe a-t-il été SUPPRIMÉ (dans le tableau de bord) ? Stripe
+ * résilie alors ses abonnements, et garde le client lisible, marqué
+ * `deleted`. Un « introuvable » ne suffit pas : une mauvaise clé (clé de test
+ * en production, autre compte Stripe) répond de même, alors que l'abonnement
+ * réel facture peut-être encore — on ne supprime pas sur cette réponse-là.
+ */
+async function clientSupprime(stripe: Stripe, customerId: string): Promise<boolean> {
+  const client = await stripe.customers.retrieve(customerId).catch(() => null);
+  return client?.deleted === true;
+}
 
 export type BilanSuppressions = { supprimes: number; reportes: number };
 
@@ -306,8 +316,8 @@ export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | n
           .list({ customer: stripeCustomerId, status: "all", limit: 100 }, OPTIONS_WEBHOOK)
           .autoPagingToArray({ limit: 10_000 });
       } catch (e) {
-        if (!clientAbsent(e)) throw e;
-        console.error(`suppression du compte ${compteId} : client Stripe ${stripeCustomerId} introuvable, rien à résilier`);
+        if (!introuvable(e) || !(await clientSupprime(stripe, stripeCustomerId))) throw e;
+        console.error(`suppression du compte ${compteId} : client Stripe ${stripeCustomerId} supprimé, rien à résilier`);
         abonnements = [];
       }
       if (abonnements.some((s) => OUVRENT.has(s.status))) {
@@ -476,7 +486,8 @@ export async function libererFichiersEnAttente(): Promise<{ liberes: number; ech
     for (const { cle, contexte } of stockage ? enAttente : []) {
       try {
         await stockage!.delete(cle);
-        await prisma.fichierALiberer.delete({ where: { cle } });
+        // `deleteMany` : une autre instance a pu la retirer entre-temps.
+        await prisma.fichierALiberer.deleteMany({ where: { cle } });
         liberes++;
       } catch (e) {
         echecs++;

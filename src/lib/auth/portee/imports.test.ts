@@ -77,7 +77,7 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous"; 
       "prisma.compteSupprime.deleteMany",
       "prisma.duerpVersion.count",
       "prisma.fichierALiberer.count",
-      "prisma.fichierALiberer.delete",
+      "prisma.fichierALiberer.deleteMany",
       "prisma.fichierALiberer.findMany",
       "prisma.fichierALiberer.update",
       "prisma.membre.findMany",

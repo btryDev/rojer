@@ -2633,7 +2633,7 @@ model CompteSupprime {
   /// L'identifiant qu'avait le compte : une trace, plus une clé.
   ancienCompteId        String    @db.Uuid
   nom                   String
-  /// Les adresses des propriétaires à la suppression : celles qui ont reçu les avertissements.
+  /// Les adresses des propriétaires au moment de la suppression (les avertissements ont pu partir vers d'autres, si l'équipe a changé).
   proprietaires         String[]
   /// Les acceptations des conditions : `{ email, version, empreinte, contexte, accepteeLe }`.
   acceptations          Json

@@ -86,7 +86,7 @@ deux fois.
    **cinq ans** (prescription de droit commun, art. 2224 C. civ.), puis
    effacée par la tâche quotidienne : le nom du compte, les adresses des
    propriétaires, les acceptations des conditions (adresse, version,
-   empreinte, date), les dates des deux avertissements et de la suppression.
+   empreinte, contexte, date), les dates des deux avertissements et de la suppression.
    Aucune donnée métier. C'est la preuve, en cas de litige, que la clause a
    été acceptée et appliquée comme annoncé (décision du 2026-11-09 ;
    `docs/rgpd.md` § 4). Les conditions générales doivent dire cette durée.

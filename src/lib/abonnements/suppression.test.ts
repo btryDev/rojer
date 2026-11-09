@@ -13,7 +13,7 @@ const m = vi.hoisted(() => ({
   expirer: vi.fn(),
   transaction: vi.fn(),
   membres: vi.fn(),
-  file: { findMany: vi.fn(), delete: vi.fn(), update: vi.fn(), count: vi.fn() },
+  file: { findMany: vi.fn(), deleteMany: vi.fn(), update: vi.fn(), count: vi.fn() },
   stockage: { delete: vi.fn() },
 }));
 vi.mock("@/lib/prisma", () => ({
@@ -63,7 +63,7 @@ beforeEach(() => {
   m.expirer.mockResolvedValue(undefined);
   m.membres.mockResolvedValue([]);
   m.file.count.mockResolvedValue(0);
-  m.file.delete.mockResolvedValue({});
+  m.file.deleteMany.mockResolvedValue({ count: 1 });
   m.file.update.mockResolvedValue({});
   m.stockage.delete.mockResolvedValue(undefined);
 });
@@ -132,7 +132,7 @@ describe("suppression d'un compte sans abonnement (ADR-058)", () => {
     });
     m.file.count.mockResolvedValue(1);
     expect(await libererFichiersEnAttente()).toEqual({ liberes: 1, echecs: 1, restants: 1 });
-    expect(m.file.delete).toHaveBeenCalledExactlyOnceWith({ where: { cle: "b" } });
+    expect(m.file.deleteMany).toHaveBeenCalledExactlyOnceWith({ where: { cle: "b" } });
     expect(m.file.update).toHaveBeenCalledExactlyOnceWith({ where: { cle: "a" }, data: { tentatives: { increment: 1 } } });
     // Les moins tentés d'abord : un fichier qui échoue toujours ne bloque pas la file.
     expect(m.file.findMany.mock.calls[0][0].orderBy).toEqual([{ tentatives: "asc" }, { noteLe: "asc" }]);
@@ -215,20 +215,35 @@ describe("suppression d'un compte sans abonnement (ADR-058)", () => {
     });
   });
 
-  it("client Stripe supprimé à la main : rien à résilier, la suppression suit", async () => {
+  it("client Stripe SUPPRIMÉ (Stripe le dit) : rien à résilier, la suppression suit ; « introuvable » sans plus (mauvaise clé) : le compte attend", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     m.findMany.mockResolvedValue([{ compteId: "c1", stripeCustomerId: "cus_parti" }]);
-    m.expirer.mockRejectedValue(Object.assign(new Error("No such customer"), { code: "resource_missing" }));
+    const introuvable = Object.assign(new Error("No such customer"), { code: "resource_missing" });
+    m.expirer.mockRejectedValue(introuvable);
     m.transaction.mockResolvedValue(["cle-1"]);
+    const retrieve = vi.fn();
     const cancel = vi.fn();
     const stripe = {
+      customers: { retrieve },
       subscriptions: { cancel, list: () => ({ autoPagingToArray: m.abonnements }) },
     } as unknown as Parameters<typeof supprimerComptesEchus>[1];
+
+    retrieve.mockResolvedValue({ id: "cus_parti", deleted: true });
     expect(await supprimerComptesEchus(MAINTENANT, stripe)).toEqual({ supprimes: 1, reportes: 0 });
     expect(cancel).not.toHaveBeenCalled();
-    // Une autre erreur de Stripe ne vaut pas absence : le compte attend.
+
+    // Clé de test en production, autre compte Stripe : le client est introuvable
+    // aussi à la relecture — l'abonnement réel facture peut-être : rien n'est effacé.
+    m.transaction.mockClear();
+    retrieve.mockRejectedValue(introuvable);
+    expect(await supprimerComptesEchus(MAINTENANT, stripe)).toEqual({ supprimes: 0, reportes: 1 });
+    // Un client lisible et non supprimé : de même.
+    retrieve.mockResolvedValue({ id: "cus_parti" });
+    expect(await supprimerComptesEchus(MAINTENANT, stripe)).toEqual({ supprimes: 0, reportes: 1 });
+    // Une autre erreur ne vaut pas absence.
     m.expirer.mockRejectedValue(Object.assign(new Error("rate limit"), { code: "rate_limit" }));
     expect(await supprimerComptesEchus(MAINTENANT, stripe)).toMatchObject({ supprimes: 0, reportes: 1 });
+    expect(m.transaction).not.toHaveBeenCalled();
   });
 
   it("notre copie est en retard (webhook perdu) : un abonnement ouvert chez Stripe → rien n'est résilié ni effacé, la copie est relue", async () => {

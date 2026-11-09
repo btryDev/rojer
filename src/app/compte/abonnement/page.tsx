@@ -6,6 +6,11 @@ import { abonnementDuCompte, contexteDroits, offreLancee } from "@/lib/abonnemen
 import { droitsDe, gesteAbonnement, libelleStatut, OUVRENT } from "@/lib/abonnements/droits";
 import { formaterDateLongueFr } from "@/lib/dates";
 import { finDuDelai } from "@/lib/abonnements/suppression";
+
+/** Une date déjà passée (suppression reportée d'une passe à l'autre) ne s'affiche pas : la suppression est imminente. */
+function dateDeSuppressionAffichee(le: Date, maintenant = new Date()): string {
+  return le.getTime() > maintenant.getTime() ? `le ${formaterDateLongueFr(le)}` : "très prochainement";
+}
 import { Button, buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
 import { ouvrirPortailAction } from "@/lib/abonnements/actions";
@@ -289,9 +294,9 @@ export default async function AbonnementPage({
                   la date posée au premier avertissement, sinon la fin du délai. */}
               {ligne?.sansAbonnementDepuis && !OUVRENT.has(ligne.statut ?? "") && (
                 <>
-                  <dt className="text-[color:var(--board-slate-mid)]">Données supprimées le</dt>
+                  <dt className="text-[color:var(--board-slate-mid)]">Données supprimées</dt>
                   <dd className="m-0">
-                    {formaterDateLongueFr(ligne.suppressionPrevueLe ?? finDuDelai(ligne.sansAbonnementDepuis))}, sauf
+                    {dateDeSuppressionAffichee(ligne.suppressionPrevueLe ?? finDuDelai(ligne.sansAbonnementDepuis))}, sauf
                     abonnement d&apos;ici là
                   </dd>
                 </>
