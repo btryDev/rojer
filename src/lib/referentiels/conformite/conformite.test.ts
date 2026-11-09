@@ -2054,6 +2054,9 @@ describe("référentiel conformité — version et empreinte", () => {
     // ADR-057 § 5 (lot C) : catégories jumelles réunies, types déclarés,
     // GZ 15 sur l'installation de gaz seule, CO 48 sur la porte.
     { version: "2026-11-07.1", empreinte: "206-1bed681afa3e5910" },
+    // Les quatre lignes des portes et portails automatiques : « (porte ou
+    // portail automatique) » au lieu de « (porte automatique) ». Libellés seuls.
+    { version: "2026-11-09.1", empreinte: "206-1f29963e1dbb0738" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

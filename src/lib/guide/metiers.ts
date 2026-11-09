@@ -130,7 +130,7 @@ export const METIERS: Metier[] = [
     [
       ["Extincteurs", "incendie-erp-extincteurs-annuelle"],
       ["Éclairage de sécurité (BAES)", "incendie-erp-baes-annuelle"],
-      ["Porte automatique", "porte-auto-verification-semestrielle"],
+      ["Porte ou portail automatique", "porte-auto-verification-semestrielle"],
       // PE 4 § 2 est désormais encodé entier et porté par l'établissement
       // (ADR-022) : le fragment « installations électriques » a été absorbé.
       ["Installations techniques (ERP)", "incendie-erp-pe4-entretien-installations-techniques"],

@@ -18,6 +18,7 @@ import { PastilleFondement } from "@/components/etats-permanents/PastilleFondeme
 import { buttonVariants } from "@/components/ui/button";
 import type { LigneEquipementSecurite } from "@/lib/equipements/equipements-securite";
 import { LABEL_CATEGORIE_EQUIPEMENT } from "@/lib/equipements/labels";
+import { enCoursDePhrase } from "@/lib/rendu/en-cours-de-phrase";
 import { NOTE_DAE_PARTAGE } from "@/lib/etats-permanents/par-le-parc";
 import { pluriel } from "@/lib/rendu/pluriel";
 import { CasePartageDae } from "@/components/equipements/CasePartageDae";
@@ -46,7 +47,7 @@ export function MentionPresence({
     ligne.cible.kind === "categorie" ? LABEL_CATEGORIE_EQUIPEMENT[ligne.cible.categorie] : null;
   // Le nom de l'obligation quand il n'est pas celui de la catégorie : R. 4227-34
   // exige un « système d'alarme sonore », dont un SSI n'est qu'une forme.
-  const nom = ligne.libelle !== libelleCategorie ? ` — ${enMinuscule(ligne.libelle)}` : "";
+  const nom = ligne.libelle !== libelleCategorie ? ` — ${enCoursDePhrase(ligne.libelle)}` : "";
   const etat =
     ligne.etat === "partage"
       ? "partagé avec un voisin"
@@ -126,15 +127,10 @@ export function MaterielHorsParc({ ligne }: { ligne: LigneSecuriteAffichee }) {
         {ligne.hrefAction ? (
           <Link href={ligne.hrefAction} className={buttonVariants({ variant: "boardClair", size: "boardSm" })}>
             Déclarer
-            <span className="sr-only"> — {enMinuscule(ligne.libelle)}</span>
+            <span className="sr-only"> — {enCoursDePhrase(ligne.libelle)}</span>
           </Link>
         ) : null}
       </div>
     </section>
   );
-}
-
-/** « Système d'alarme sonore » → « système d'alarme sonore », en fin de phrase. */
-function enMinuscule(s: string): string {
-  return s.charAt(0).toLowerCase() + s.slice(1);
 }
