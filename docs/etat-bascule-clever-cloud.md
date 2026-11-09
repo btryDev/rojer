@@ -183,7 +183,8 @@ audit du proxy de `cc` ; le code est fusionné, il n'a jamais tourné là-bas) :
    « D bis » (clés croisées entre comptes, générée) doit rendre 0 partout.
 
 Abonnements (ne bloquent pas la bascule ; rien à poser tant qu'ils ne
-sont pas ouverts) :
+sont pas ouverts) — **la liste de lancement, dans l'ordre :
+`docs/lancement-abonnements.md`** (2026-11-09) :
 - `STRIPE_SECRET_KEY` et `STRIPE_WEBHOOK_SECRET` vont par deux. En
   production, seule une clé **restreinte** de production (`rk_live_…`) est
   admise, et seulement si `APP_ENV=production` est posée : sans `APP_ENV`,

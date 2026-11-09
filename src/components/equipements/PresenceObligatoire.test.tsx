@@ -108,6 +108,24 @@ describe("SousLEnTetePresence", () => {
     expect(screen.getByRole("checkbox", { name: /partagé avec un établissement voisin/ })).toBeTruthy();
   });
 
+  it("saisie fermée : la case est désactivée et dit pourquoi ; site gelé : seule la case cochée reste ouverte (décocher = retirer)", () => {
+    const motif = "Ce site dépasse votre formule.";
+    const caseDae = () => screen.getByRole("checkbox", { name: /partagé avec un établissement voisin/ }) as HTMLInputElement;
+    const { rerender } = render(<SousLEnTetePresence ligne={dae(0)} etablissementId="e" fermeture={{ motif, gel: false }} />);
+    expect(caseDae().disabled).toBe(true);
+    expect(screen.getByText(motif).id).toBe(caseDae().getAttribute("aria-describedby"));
+
+    rerender(<SousLEnTetePresence ligne={{ ...dae(0), etat: "partage" }} etablissementId="e" fermeture={{ motif, gel: false }} />);
+    expect(caseDae().disabled).toBe(true);
+
+    rerender(<SousLEnTetePresence ligne={dae(0)} etablissementId="e" fermeture={{ motif, gel: true }} />);
+    expect(caseDae().disabled).toBe(true);
+
+    rerender(<SousLEnTetePresence ligne={{ ...dae(0), etat: "partage" }} etablissementId="e" fermeture={{ motif, gel: true }} />);
+    expect(caseDae().disabled).toBe(false);
+    expect(screen.queryByText(motif)).toBeNull();
+  });
+
   it("le DAE déclaré au parc ne la propose plus", () => {
     const { container } = render(<SousLEnTetePresence ligne={dae(1)} etablissementId="e" />);
     expect(container.textContent).toBe("");
