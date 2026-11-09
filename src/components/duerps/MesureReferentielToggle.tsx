@@ -24,6 +24,7 @@ export function MesureReferentielToggle({
 
   return (
     <label
+      data-ecriture-inerte
       className={`flex cursor-pointer items-start gap-3 rounded-[16px] border p-3 transition-colors ${
         selectionne
           ? "border-[color:var(--board-ink)] bg-[color:var(--board-slate-pale)]"

@@ -19,6 +19,7 @@ export function DeclarerAucunRisqueForm({
   if (!ouvert) {
     return (
       <button
+        data-ecriture
         type="button"
         onClick={() => setOuvert(true)}
         className="board-eyebrow inline-flex items-center gap-2 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)] transition-colors hover:text-[color:var(--board-ink)]"

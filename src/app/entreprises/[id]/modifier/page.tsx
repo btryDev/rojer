@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { SaisieDuSite } from "@/components/quotas/SaisieDuSite";
+import { MarqueLectureSeule } from "@/components/quotas/MarqueLectureSeule";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EntrepriseForm } from "@/components/entreprises/EntrepriseForm";
@@ -27,6 +28,7 @@ export default async function ModifierEntreprisePage({
   return (
     <main data-zone-saisie className="mx-auto max-w-[760px] px-6 py-10">
       {/* La saisie fermée (lecture seule, abonnement) s'annonce dès l'ouverture (ADR-053 § 14). */}
+      <MarqueLectureSeule />
       <Suspense fallback={null}>
         <SaisieDuSite />
       </Suspense>

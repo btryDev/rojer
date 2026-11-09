@@ -84,6 +84,7 @@ export function PrescriptionActions({
   const suppression =
     lignesAvecPreuve === 0 ? (
           <Button
+            data-ecriture
             variant="boardClair"
             size="boardSm"
             disabled={pendingAutre}
@@ -126,6 +127,7 @@ export function PrescriptionActions({
       <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-3">
           <Button
+            data-ecriture
             variant="boardClair"
             size="boardSm"
             disabled={pendingAutre}
@@ -153,6 +155,7 @@ export function PrescriptionActions({
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-3">
         <Button
+          data-ecriture
           variant="boardClair"
           size="boardSm"
           onClick={() => setOuvert(!ouvert)}

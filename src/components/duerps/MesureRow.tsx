@@ -62,6 +62,7 @@ export function MesureRow({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div
+            data-ecriture-inerte
             role="radiogroup"
             aria-label="Statut de cette mesure"
             className="inline-flex items-center rounded-full border border-[color:var(--board-slate-line)] bg-[color:var(--board-slate-pale)] p-0.5 text-[12px] font-semibold"
@@ -82,6 +83,7 @@ export function MesureRow({
             />
           </div>
           <Button
+            data-ecriture
             variant="boardClair"
             size="boardSm"
             disabled={pending}
@@ -111,7 +113,7 @@ export function MesureRow({
       {confirmation}
 
       {statut === "prevue" && (
-        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div data-ecriture-inerte className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <ChampValidable
             id={`mesure-${id}-echeance`}
             label="Échéance"

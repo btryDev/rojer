@@ -15,6 +15,7 @@ export function ConfirmerSecteurButton({
 
   return (
     <Button
+      data-ecriture
       variant="board"
       size="board"
       disabled={pending}

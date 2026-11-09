@@ -1,4 +1,5 @@
 import { SaisieDuSite } from "@/components/quotas/SaisieDuSite";
+import { MarqueLectureSeule } from "@/components/quotas/MarqueLectureSeule";
 import { Suspense } from "react";
 import { BandeauAbonnementDuCompte } from "@/components/abonnements/BandeauAbonnementDuCompte";
 import Link from "next/link";
@@ -96,6 +97,8 @@ export default async function DuerpLayout({
       <div className="relative flex min-w-0 flex-col bg-[color:var(--board-canvas)] pt-[var(--reserve-gelule)] pb-[var(--reserve-nav-bas)] md:overflow-y-auto">
         {/* Le compte se tient en haut à droite ici aussi : le shell DUERP
             partage la même sidebar, donc la même règle. */}
+        {/* Lecture seule : masque ce qui mène à une écriture (`data-ecriture`). */}
+        <MarqueLectureSeule />
         <BarreCompte
           etablissementId={etab.id}
           email={user?.email ?? null}

@@ -56,14 +56,23 @@ function EntreeLien({
   Icone,
   libelle,
   onNavigate,
+  ecriture,
 }: {
   href: string;
   Icone: LucideIcon;
   libelle: string;
   onNavigate: () => void;
+  /** Masqué en lecture seule (ADR-054 § 4). */
+  ecriture?: boolean;
 }) {
   return (
-    <Link href={href} role="menuitem" onClick={onNavigate} className={CLASSE_ENTREE}>
+    <Link
+      href={href}
+      role="menuitem"
+      onClick={onNavigate}
+      data-ecriture={ecriture ? "" : undefined}
+      className={CLASSE_ENTREE}
+    >
       <Icone aria-hidden className="size-4 opacity-90" />
       <span className="flex-1 truncate">{libelle}</span>
     </Link>
@@ -72,7 +81,7 @@ function EntreeLien({
 
 /** L'entrée « Ajouter un établissement », rendue dans l'un ou l'autre menu. */
 const LienAjouter = ({ onNavigate }: { onNavigate: () => void }) => (
-  <EntreeLien href="/onboarding" Icone={Plus} libelle="Ajouter un établissement" onNavigate={onNavigate} />
+  <EntreeLien href="/onboarding" Icone={Plus} libelle="Ajouter un établissement" onNavigate={onNavigate} ecriture />
 );
 
 export function BarreCompte({

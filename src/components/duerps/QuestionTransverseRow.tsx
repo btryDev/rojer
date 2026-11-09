@@ -113,6 +113,7 @@ export function QuestionTransverseRow({
       </p>
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <Button
+          data-ecriture-inerte
           variant={reponse === "oui" ? "board" : "boardClair"}
           size="boardSm"
           disabled={pending}
@@ -121,6 +122,7 @@ export function QuestionTransverseRow({
           Oui
         </Button>
         <Button
+          data-ecriture-inerte
           variant={reponse === "non" ? "board" : "boardClair"}
           size="boardSm"
           disabled={pending}
@@ -134,6 +136,7 @@ export function QuestionTransverseRow({
           </span>
         ) : (
           <button
+            data-ecriture
             type="button"
             disabled={pending}
             onClick={() => repondre(null)}

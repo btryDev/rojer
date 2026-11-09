@@ -81,6 +81,7 @@ export function FaitActiviteRow({ etablissementId, champ, intitule, pourquoi, ho
       )}
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <Button
+          data-ecriture-inerte
           variant={valeur === true ? "board" : "boardClair"}
           size="boardSm"
           disabled={pending}
@@ -89,6 +90,7 @@ export function FaitActiviteRow({ etablissementId, champ, intitule, pourquoi, ho
           Oui
         </Button>
         <Button
+          data-ecriture-inerte
           variant={valeur === false ? "board" : "boardClair"}
           size="boardSm"
           disabled={pending}
@@ -102,6 +104,7 @@ export function FaitActiviteRow({ etablissementId, champ, intitule, pourquoi, ho
           </span>
         ) : (
           <button
+            data-ecriture
             type="button"
             disabled={pending}
             onClick={() => repondre(null)}

@@ -79,6 +79,7 @@ export function TeteFicheRegistre({
           {lienReponse && (
             <Link
               href={lienReponse.href}
+              data-ecriture
               className="mt-1 inline-block font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
             >
               {lienReponse.libelle}

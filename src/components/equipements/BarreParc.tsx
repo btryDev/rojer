@@ -148,6 +148,7 @@ export function BarreParc({
           action={
             <Link
               href={hrefAjouter}
+              data-ecriture
               className={buttonVariants({ variant: "board", size: "board" })}
             >
               + Ajouter un équipement

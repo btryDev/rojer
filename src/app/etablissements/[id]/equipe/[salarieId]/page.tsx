@@ -270,6 +270,7 @@ export default async function SalarieDetailPage({
                 <>
                   Date d&apos;entrée non renseignée.{" "}
                   <Link
+                    data-ecriture
                     href={`/etablissements/${id}/equipe/${s.id}/modifier`}
                     className="text-[color:var(--board-blue-ink)] underline-offset-4 hover:underline"
                   >
@@ -303,6 +304,7 @@ export default async function SalarieDetailPage({
             actions={
               <>
                 <Link
+                  data-ecriture
                   href={`/etablissements/${id}/equipe/${s.id}/modifier`}
                   className={buttonVariants({ variant: "boardClair", size: "boardSm" })}
                 >

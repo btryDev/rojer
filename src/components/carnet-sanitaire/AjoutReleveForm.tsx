@@ -70,6 +70,7 @@ export function AjoutReleveForm({
       <button
         type="button"
         onClick={() => setOuvert(true)}
+        data-ecriture
         className="text-[12px] font-medium text-[color:var(--board-slate-mid)] underline-offset-2 transition-colors hover:text-[color:var(--board-ink)] hover:underline"
       >
         Modifier
@@ -80,6 +81,7 @@ export function AjoutReleveForm({
         variant="board"
         size="boardSm"
         onClick={() => setOuvert(true)}
+        data-ecriture
       >
         + Saisir un relevé
       </Button>

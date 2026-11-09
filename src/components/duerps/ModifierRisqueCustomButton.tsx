@@ -31,6 +31,7 @@ export function ModifierRisqueCustomButton({
   if (!ouvert) {
     return (
       <Button
+        data-ecriture
         variant="boardClair"
         size="boardSm"
         onClick={() => setOuvert(true)}

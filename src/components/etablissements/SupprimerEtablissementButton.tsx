@@ -60,6 +60,7 @@ export function SupprimerEtablissementButton({
   return (
     <div className="flex flex-col gap-3">
       <Button
+        data-ecriture
         variant="boardClair"
         size="board"
         className="text-[color:var(--board-signal-ink)]"

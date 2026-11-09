@@ -113,6 +113,7 @@ export function FormationsAOrganiser({
                         Votre DUERP le signale, et personne n&apos;a ce titre.{" "}
                         {t.condition}{" "}
                         <Link
+                          data-ecriture
                           href={`/etablissements/${etablissementId}/equipe/risques#${fait.champ}`}
                           className="text-[color:var(--board-blue-ink)] underline underline-offset-4"
                         >
@@ -128,6 +129,7 @@ export function FormationsAOrganiser({
                     </span>
                     {/* Sans personne présente, la porte est d'en ajouter une. */}
                     <Link
+                      data-ecriture
                       href={`/etablissements/${etablissementId}/equipe${personnePresente ? "#personnes" : "/nouveau"}`}
                       className="pastille-board col-start-2 justify-self-start bg-[color:var(--board-amber)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--board-blue-strong)] sm:col-start-3 sm:justify-self-end text-[color:var(--board-amber-ink)] underline-offset-4 hover:underline"
                     >

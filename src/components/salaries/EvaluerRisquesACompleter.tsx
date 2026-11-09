@@ -32,7 +32,7 @@ export function EvaluerRisquesACompleter({
             {`${pluriel(n, "question")} sans réponse : ${enumerer(sansReponse)}. Elles décident des formations, du suivi et des consignes dus à une partie de l'effectif.`}
           </p>
         </div>
-        <Link href={href} className={buttonVariants({ variant: "board", size: "boardSm" })}>
+        <Link data-ecriture href={href} className={buttonVariants({ variant: "board", size: "boardSm" })}>
           Évaluer les risques →
         </Link>
       </div>

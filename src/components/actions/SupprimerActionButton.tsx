@@ -19,7 +19,7 @@ export function SupprimerActionButton({
 
   return (
     <>
-      <Button
+      <Button data-ecriture
         variant="boardClair"
         size="boardSm"
         disabled={pending}

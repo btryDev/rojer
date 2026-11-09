@@ -127,7 +127,7 @@ export function SuiviControle({
               {hrefPrestataire && (
                 <>
                   {" "}
-                  <Link href={`${hrefPrestataire}/modifier`} className="font-semibold underline underline-offset-4">
+                  <Link href={`${hrefPrestataire}/modifier`} data-ecriture className="font-semibold underline underline-offset-4">
                     Modifier sa fiche
                   </Link>
                 </>
@@ -152,7 +152,7 @@ export function SuiviControle({
           </p>
         </div>
         {!ouvert && (
-          <Button type="button" variant="boardClair" size="boardSm" onClick={() => setOuvert(true)}
+          <Button type="button" variant="boardClair" size="boardSm" onClick={() => setOuvert(true)} data-ecriture
           >
             {prestataire || rendezVousLe ? "Modifier" : "Choisir un prestataire, prendre rendez-vous"}
           </Button>
@@ -172,7 +172,7 @@ export function SuiviControle({
             />
             <p className="m-0 mt-1.5 text-[12px] text-[color:var(--board-slate-mid)]">
               Il n&apos;est pas dans la liste ?{" "}
-              <Link href={hrefNouveauPrestataire} className="font-semibold text-[color:var(--board-blue-ink)] underline underline-offset-4">
+              <Link href={hrefNouveauPrestataire} data-ecriture className="font-semibold text-[color:var(--board-blue-ink)] underline underline-offset-4">
                 Ajouter un prestataire
               </Link>
             </p>

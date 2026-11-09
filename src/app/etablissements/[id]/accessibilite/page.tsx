@@ -137,6 +137,7 @@ export default async function AccessibilitePage({
             <div className="mt-5">
               <Link
                 href={`/etablissements/${id}/modifier`}
+                data-ecriture
                 className={buttonVariants({
                   variant: "boardClair",
                   size: "board",

@@ -154,6 +154,7 @@ function LigneBatiment({
               variant="boardClair"
               size="boardSm"
               onClick={() => setMode("renommer")}
+              data-ecriture
             >
               Renommer
             </Button>
@@ -162,6 +163,7 @@ function LigneBatiment({
                 variant="boardClair"
                 size="boardSm"
                 onClick={() => setMode("supprimer")}
+                data-ecriture
               >
                 Supprimer
               </Button>
@@ -245,6 +247,7 @@ function SaisieZone({
   return (
     <form
       action={formAction}
+      data-ecriture
       className="carte-board flex flex-col gap-5 px-7 py-6 sm:px-8"
     >
       <div>

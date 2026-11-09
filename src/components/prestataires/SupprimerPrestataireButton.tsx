@@ -17,7 +17,7 @@ export function SupprimerPrestataireButton({
 
   return (
     <>
-      <Button
+      <Button data-ecriture
         variant="outline"
         size="sm"
         disabled={pending}

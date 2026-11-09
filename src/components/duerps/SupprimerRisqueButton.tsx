@@ -31,6 +31,7 @@ export function SupprimerRisqueButton({
   return (
     <>
       <Button
+        data-ecriture
         variant="boardClair"
         size="boardSm"
         disabled={pending}

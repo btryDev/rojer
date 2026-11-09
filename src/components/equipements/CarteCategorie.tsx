@@ -157,6 +157,7 @@ export function CarteCategorie({
           une deuxième rangée dès que la famille compte quatre appareils. */}
       <Link
         href={hrefAjouter}
+        data-ecriture
         className="mt-3 flex items-center justify-center gap-2 rounded-[18px] border border-dashed border-[color:var(--board-slate)] py-3 text-[12.5px] font-semibold text-[color:var(--board-slate-soft)] transition-colors hover:border-[color:var(--board-blue-strong)] hover:text-[color:var(--board-blue-ink)]"
       >
         <Plus className="size-4" aria-hidden />

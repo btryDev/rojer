@@ -32,6 +32,7 @@ export function SecteurCard({
     // choix courant se marque par un liseré d'encre en plus, pas par une
     // seconde ombre recopiée en littéral (interdit 26).
     <button
+      data-ecriture-inerte
       type="button"
       disabled={pending}
       onClick={() => {

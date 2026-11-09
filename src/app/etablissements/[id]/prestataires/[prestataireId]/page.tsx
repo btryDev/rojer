@@ -160,7 +160,7 @@ export default async function PrestataireDetailPage({
                   {/* La fiche se corrige (2026-10-12) : nouvelle attestation,
                       RC Pro, Kbis, contacts. Avant, seules les deux dates
                       de remise et d'émission se saisissaient après coup. */}
-                  <Link
+                  <Link data-ecriture
                     href={`/etablissements/${id}/prestataires/${p.id}/modifier`}
                     className={buttonVariants({ variant: "boardClair", size: "boardSm" })}
                   >

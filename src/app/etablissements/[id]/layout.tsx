@@ -5,6 +5,7 @@ import { listerEtablissementsDuCompte } from "@/lib/etablissements/queries";
 import { Suspense } from "react";
 import { BandeauAbonnementDuCompte } from "@/components/abonnements/BandeauAbonnementDuCompte";
 import { SaisieDuSite } from "@/components/quotas/SaisieDuSite";
+import { MarqueLectureSeule } from "@/components/quotas/MarqueLectureSeule";
 
 /**
  * Layout imbriqué pour toutes les pages d'un établissement.
@@ -71,6 +72,8 @@ export default async function EtablissementLayout({
         {/* Gélule de compte : la sidebar porte la hiérarchie du produit, la
             gélule les utilitaires de session. Elle flotte au-dessus du
             contenu, sans bande à elle. Cf. `BarreCompte`. */}
+        {/* Lecture seule : masque ce qui mène à une écriture (`data-ecriture`). */}
+        <MarqueLectureSeule />
         <BarreCompte
           etablissementId={etab.id}
           email={user.email ?? null}

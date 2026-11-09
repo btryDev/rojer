@@ -50,7 +50,7 @@ export default async function PermisFeuListePage({
       <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
         <BarreDeListe
           action={
-            <Link
+            <Link data-ecriture
               href={`/etablissements/${id}/permis-feu/nouveau`}
               className={buttonVariants({ variant: "board", size: "board" })}
             >
@@ -79,7 +79,7 @@ export default async function PermisFeuListePage({
                 au chalumeau, un couvreur au fer chaud intervient sur place.
               </p>
               <div className="mt-2">
-                <Link
+                <Link data-ecriture
                   href={`/etablissements/${id}/permis-feu/nouveau`}
                   className={buttonVariants({
                     variant: "board",

@@ -74,6 +74,7 @@ export function FicheLecture({
         </div>
         <Link
           href={hrefEdition}
+          data-ecriture
           className={
             buttonVariants({ variant: "board", size: "boardSm" }) + " flex-none"
           }
