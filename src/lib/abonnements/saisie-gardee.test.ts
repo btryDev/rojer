@@ -178,6 +178,10 @@ const ECRITURES_A_LA_LECTURE = new Map<string, string>([
     "lib/signatures/verification-publique.ts:verifierSousLimite",
     "le compteur anti-abus de la page publique de vérification d'une signature (`limite-debit`) : ni donnée du compte, ni saisie",
   ],
+  [
+    "lib/signatures/verification-publique.ts:lireSignatureSousLimite",
+    "le même compteur anti-abus, pour la page de confirmation /signe (2026-11-09) : ni donnée du compte, ni saisie",
+  ],
 ]);
 
 /** Une écriture hors Prisma : Better Auth (hors lectures `get…`/`list…`), stockage, Stripe, e-mail. */

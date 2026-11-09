@@ -61,6 +61,8 @@ vi.mock("next/navigation", () => ({
   },
 }));
 vi.mock("next/link", () => ({ default: "a" }));
+// La limite par IP partagée avec /verifier (2026-11-09) : sans IP lue, elle laisse passer.
+vi.mock("next/headers", () => ({ headers: async () => new Headers() }));
 vi.mock("@/components/ui-kit/SignatureBlock", () => ({ SignatureBlock: "div" }));
 vi.mock("@/components/ui-kit/LegalBadge", () => ({ LegalBadge: "div" }));
 

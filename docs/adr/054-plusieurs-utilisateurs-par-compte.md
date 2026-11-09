@@ -144,6 +144,20 @@ action oubliée ne peut donc pas écrire.
   ÉCRIT déjà par son client nommé (`calendrier/actions.ts`, ADR-051) ; aucune
   autre écriture ne passe par le client borné pendant un rendu. La seule
   exception est la demande d'assistance (`ECRITURES_DE_LA_LECTURE_SEULE`).]
+  [2026-11-09, audit rls_audit : ce que « son client nommé » veut dire, écrit
+  ici. Les écritures de la régénération (`regenererUnePasse`,
+  `marquerCalendrierPerime`) passent par le **client brut**. Elles échappent
+  donc à la lecture seule et au gel (ADR-053 § 14), et s'exécutent pendant le
+  rendu, y compris celui d'un lecteur. C'est voulu : elles ne traduisent
+  aucune saisie, elles recalculent ce que les faits rendent dû. Ce qui les
+  borne : l'établissement lu par le client borné, et des clés vérifiées
+  contre cette lecture (`clesDuPlanDansLaLecture`). La garde des imports
+  nomme leurs seuls usages du client brut et les fonctions qui le reçoivent
+  (`regenerer`, `marquerCalendrierPerime`) ; la sonde des clés croisées
+  vérifie le résultat sur les données, au niveau du compte et, pour les
+  lignes qui en ont un des deux côtés, de l'établissement — une ligne
+  rattachée à l'appareil d'un autre établissement du même compte s'y voit
+  (revue de #253).]
 
 ### 5. L'invitation par e-mail
 

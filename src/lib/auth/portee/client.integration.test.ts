@@ -26,6 +26,7 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
   const { Prisma } = await import("@prisma/client");
   const { clientBorne } = await import("./client");
   const { creerEnLotVerifie } = await import("./lot-verifie");
+  const { sondeClesCroisees } = await import("./sonde-cles-croisees");
 
   // Les comptes A et B, et les personnes qui y travaillent (ADR-054) :
   // identifiants distincts, pour qu'une borne qui prendrait l'un pour l'autre
@@ -440,6 +441,99 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
       });
       expect(n).toBe(1);
       await prisma.entreprise.deleteMany({ where: { raisonSociale: "A3" } });
+    });
+  });
+
+  // En dernier : après toutes les tentatives croisées ci-dessus, aucune ligne
+  // d'un compte ne pointe vers une ligne de l'autre — même par une écriture qui
+  // aurait « réussi » sans qu'un test le voie (plan d'isolation, lot 5).
+  describe("sonde des clés croisées", () => {
+    it("après la matrice, aucun lien croisé ; chaque requête générée s'exécute sur le schéma réel", async () => {
+      expect(await sondeClesCroisees(prisma)).toEqual([]);
+    });
+
+    it("un lien croisé posé par le client brut est trouvé et nommé", async () => {
+      // L'appareil de A rangé dans la zone de B : ce que le client borné refuse,
+      // le client brut l'écrit sans broncher.
+      await prisma.equipement.update({ where: { id: a.equip.id }, data: { batimentId: b.bat.id } });
+      try {
+        expect(await sondeClesCroisees(prisma)).toEqual([
+          { lien: "Equipement.batiment → Batiment", lignes: 1 },
+          { lien: "Equipement.batiment → Batiment (établissement)", lignes: 1 },
+        ]);
+      } finally {
+        await prisma.equipement.update({ where: { id: a.equip.id }, data: { batimentId: a.bat.id } });
+      }
+      expect(await sondeClesCroisees(prisma)).toEqual([]);
+    });
+
+    // Les deux autres formes de requête générées, vues tomber elles aussi
+    // (seconde lecture de #253) : la clé polymorphe filtrée par `objetType`, et
+    // la cible au bout d'un chemin profond (Risque → Unité → DUERP →
+    // Établissement → Entreprise).
+    it("une signature de A sur le permis de feu de B (clé polymorphe) est trouvée", async () => {
+      const permis = await prisma.permisFeu.create({
+        data: {
+          etablissementId: b.etab.id,
+          numero: 1,
+          prestataireRaison: "x",
+          prestataireContact: "x",
+          prestataireEmail: "x@exemple.invalid",
+          donneurOrdreNom: "x",
+          dateDebut: new Date("2026-11-09T08:00:00Z"),
+          dateFin: new Date("2026-11-09T10:00:00Z"),
+          lieu: "x",
+          descriptionTravaux: "x",
+          naturesTravaux: [],
+        },
+      });
+      const sig = await prisma.signature.create({
+        data: {
+          etablissementId: a.etab.id,
+          objetType: "permis_feu",
+          objetId: permis.id,
+          signataireNom: "x",
+          signataireEmail: "x@exemple.invalid",
+          hashDocument: "0".repeat(64),
+          methode: "compte_connecte",
+        },
+      });
+      try {
+        expect(await sondeClesCroisees(prisma)).toEqual([
+          { lien: "Signature.objetId (permis_feu) → PermisFeu", lignes: 1 },
+          { lien: "Signature.objetId (permis_feu) → PermisFeu (établissement)", lignes: 1 },
+        ]);
+      } finally {
+        await prisma.signature.delete({ where: { id: sig.id } });
+        await prisma.permisFeu.delete({ where: { id: permis.id } });
+      }
+    });
+
+    it("la photo d'un établissement de A désignant un fichier déposé par B est trouvée", async () => {
+      const cle = `etablissements/${b.etab.id}/photo-sonde.jpg`;
+      await prisma.fichierStocke.create({ data: { cle, compteId: B, octets: 1 } });
+      await prisma.etablissement.update({ where: { id: a.etab.id }, data: { photoCle: cle } });
+      try {
+        expect(await sondeClesCroisees(prisma)).toEqual([{ lien: "Etablissement.photoCle → FichierStocke", lignes: 1 }]);
+      } finally {
+        await prisma.etablissement.update({ where: { id: a.etab.id }, data: { photoCle: null } });
+        await prisma.fichierStocke.delete({ where: { cle } });
+      }
+    });
+
+    it("une action de A sur un risque de B (chemin profond) est trouvée", async () => {
+      const action = await prisma.action.create({
+        data: { etablissementId: a.etab.id, risqueId: b.risque.id, libelle: "x", type: "suppression" },
+      });
+      try {
+        expect(await sondeClesCroisees(prisma)).toEqual([
+          { lien: "Action.risque → Risque", lignes: 1 },
+          { lien: "Action.risque → Risque (établissement)", lignes: 1 },
+        ]);
+      } finally {
+        await prisma.action.delete({ where: { id: action.id } });
+      }
+      expect(await sondeClesCroisees(prisma)).toEqual([]);
     });
   });
 });

@@ -15,9 +15,11 @@ export const PAGE_DU_GEL = "/compte/abonnement?saisie=gelee";
 
 /**
  * La transaction interactive en cours (son client), posée par le client borné
- * (`client.ts`) : le gel y lit ce que l'écriture vise. Lire par le client
- * brut attendrait la seule connexion du pool, que la transaction tient
- * (`connection_limit=1` en production).
+ * (`client.ts`) : le gel y lit ce que l'écriture vise. Lue hors de la
+ * transaction, une ligne créée dans la même transaction ne serait pas vue, et
+ * la lecture prendrait une connexion de plus au pool (`connection_limit`,
+ * `BASE_POOL` sur Clever Cloud, `scripts/demarrer-cc.sh`).
+ * [2026-11-09 : ~~`connection_limit=1` en production~~ — c'était Vercel.]
  */
 export const transactionEnCours = new AsyncLocalStorage<object>();
 
@@ -97,9 +99,21 @@ function refuser(nom: string, operation: string): never {
 /**
  * Refuse, AVANT d'écrire, une écriture qui modifie une ligne gelée ou en
  * désigne une. `base` : le client brut, pour lire ce que l'écriture vise —
- * les identifiants gelés sont ceux du compte de la portée.
+ * les identifiants gelés sont ceux du compte de la portée. `borneDuCompte` :
+ * la borne de la portée (`borne(nom, portee)`), posée sur la seule lecture
+ * dont le `where` vient de l'appelant — la ligne qu'une mise à jour modifie
+ * (audit rls_audit du 2026-11-09 : elle était lue sans borne, contrairement à
+ * l'ADR-051). Les autres lectures portent déjà le filtre du gel, fait des
+ * identifiants du compte.
  */
-export async function verifierGel(base: PrismaClient, nom: string, operation: string, args: unknown, geles: Geles): Promise<void> {
+export async function verifierGel(
+  base: PrismaClient,
+  nom: string,
+  operation: string,
+  args: unknown,
+  geles: Geles,
+  borneDuCompte: (nom: string) => Objet,
+): Promise<void> {
   if (!ECRITURES_GELEES.has(operation) || ouvertAuGel.getStore()) return;
   const a: Objet = estObjet(args) ? args : {};
   const f = filtreGele(nom, geles);
@@ -115,7 +129,10 @@ export async function verifierGel(base: PrismaClient, nom: string, operation: st
   if (misAJour !== undefined) {
     const cles = relations(nom).flatMap((r) => (r.cle ? [[r.cle, true] as const] : []));
     const actuelle = cles.length
-      ? ((await delegue(base, nom).findUnique({ where: a.where as object, select: Object.fromEntries(cles) })) as Objet | null)
+      ? ((await delegue(base, nom).findUnique({
+          where: avecBorne(a.where, borneDuCompte(nom)),
+          select: Object.fromEntries(cles),
+        })) as Objet | null)
       : null;
     designees(nom, misAJour, vues, actuelle);
   }

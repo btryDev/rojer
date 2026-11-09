@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getSignature } from "@/lib/signatures/verification-publique";
+import { lireSignatureSousLimite } from "@/lib/signatures/verification-publique";
+import { messageTropDeTentatives } from "@/lib/securite/limite-debit";
 import { SignatureBlock } from "@/components/ui-kit/SignatureBlock";
 import { LegalBadge } from "@/components/ui-kit/LegalBadge";
 
@@ -33,7 +34,30 @@ export default async function ConfirmationSignaturePage({
   params: Promise<{ signatureId: string }>;
 }) {
   const { signatureId } = await params;
-  const signature = await getSignature(signatureId);
+  // La limite par IP de `/verifier`, partagée (2026-11-09) : les deux pages
+  // prennent le même identifiant, l'une ne doit pas servir de détour à l'autre.
+  const lue = await lireSignatureSousLimite(signatureId);
+  if (lue.ok === false) {
+    return (
+      <main className="mx-auto max-w-xl px-6 py-16 sm:px-10">
+        <div className="carte-board px-7 py-7 sm:px-8">
+          <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">Confirmation suspendue</p>
+          <h1 className="mt-2 text-[1.4rem] font-semibold tracking-[-0.02em]">Cette page est momentanément indisponible</h1>
+          {/* Le signataire arrive ici juste après avoir signé : derrière une
+              adresse partagée, la limite peut tomber sur lui (revue de #253).
+              On lui dit que sa signature n'est pas en cause. */}
+          <p className="mt-4 text-[0.9rem] text-[color:var(--muted-foreground)]">
+            Si vous venez de signer, votre signature a été enregistrée : seule cette page de confirmation est
+            suspendue, en raison d&apos;un grand nombre de consultations depuis votre connexion.
+          </p>
+          <p role="alert" className="mt-3 text-[0.9rem] text-[color:var(--muted-foreground)]">
+            {messageTropDeTentatives(lue.reessayerDansSecondes)}
+          </p>
+        </div>
+      </main>
+    );
+  }
+  const signature = lue.signature;
   if (!signature) notFound();
 
   return (

@@ -13,6 +13,7 @@ import type { Prisma, PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
   argumentsBornes,
+  borne,
   ErreurLectureSeule,
   ErreurPortee,
   estLectureDIdentifiants,
@@ -62,7 +63,7 @@ function etendre(base: PrismaClient, p: Portee) {
         async $allOperations({ model, operation, args, query }) {
           // Le gel (ADR-053 § 14) : refusé avant d'écrire, sur les arguments
           // tels que l'action les donne.
-          if (portee.geles) await verifierGel(base, model, operation, args, portee.geles);
+          if (portee.geles) await verifierGel(base, model, operation, args, portee.geles, (nom) => borne(nom, portee));
           const resultat = await query(argumentsBornes(model, operation, args, portee) as typeof args);
           if (estLectureDIdentifiants(operation, args)) noterVus(model, portee, resultat);
           return resultat;
