@@ -44,15 +44,18 @@ deux fois.
    e-mails soient partis.
 3. **Les avertissements** : à J-30 et J-7, aux propriétaires du compte, par
    la tâche quotidienne (`lib/taches/quotidiennes.ts`). Le texte donne la
-   date, le lien vers la page Abonnement, l'export pour un compte qui a payé
-   (lecture seule sinon), et dit que la conservation du DUERP revient à
+   date, le lien vers la page Abonnement, ce qui se garde (les versions
+   validées du DUERP, téléchargeables sans abonnement — un compte d'avant le
+   lancement a pu en valider sans payer — et, pour un compte qui a payé,
+   l'export du dossier), et dit que la conservation du DUERP revient à
    l'employeur. Au plus une fois chacun (marque posée avant l'envoi, comme
    le rappel de fin d'essai).
 4. **La suppression** (`lib/abonnements/suppression.ts`), un compte à la fois,
    par la tâche quotidienne :
    - chez Stripe, qui fait foi : les sessions Checkout ouvertes expirent ;
      un abonnement OUVERT chez Stripe (notre copie en retard d'un webhook)
-     annule la suppression et fait relire la copie ; sinon, les abonnements
+     annule la suppression et fait relire la copie ; un premier paiement en
+     cours (`incomplete` : prélèvement, 3D Secure) la reporte ; sinon, les abonnements
      non terminés (pause, impayé) sont résiliés, sans quoi Stripe pourrait
      encore facturer ; le client Stripe et ses factures restent
      (comptabilité de Rojer). Stripe injoignable : le compte attend la
@@ -66,15 +69,13 @@ deux fois.
      membres d'aucun autre compte ;
    - les fichiers du stockage, après la transaction (ceux des
      établissements et tout fichier compté au compte).
-   - Seulement l'offre lancée : sinon la saisie est ouverte à tous, et rien
-     ne s'avertit ni ne se supprime.
-   - Le message dit ce qui se garde : les versions validées du DUERP
-     (téléchargeables une à une, abonnement ou non — un compte d'avant le
-     lancement a pu en valider sans payer) et, pour un compte qui a payé,
-     l'export du dossier.
    - Restent : `EssaiEntreprise` (un essai par SIREN, ADR-053 § 8), le
      client Stripe, les journaux.
-5. **Hors de cette règle**, faute de date de départ : un compte qui n'a
+5. **Seulement l'offre lancée** : sinon la saisie est ouverte à tous, et
+   rien ne s'avertit ni ne se supprime. Limite : l'horloge court pendant un
+   retrait de l'offre ; un compte déjà averti à J-30 recevra J-7 à la
+   relance, et sera supprimé 7 jours après.
+6. **Hors de cette règle**, faute de date de départ : un compte qui n'a
    jamais eu de ligne d'abonnement (comptes d'avant le lancement de l'offre).
    Leur sort se décidera au lancement (point ouvert ci-dessous).
 

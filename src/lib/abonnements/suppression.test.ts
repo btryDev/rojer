@@ -160,4 +160,19 @@ describe("suppression d'un compte sans abonnement (ADR-058)", () => {
     // Les paiements en cours sur Checkout sont arrêtés avant la relecture.
     expect(m.expirer).toHaveBeenCalledWith(stripe, "cus_1");
   });
+
+  it("un premier paiement en cours (incomplete) : rien n'est résilié ni effacé, le compte attend", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    m.findMany.mockResolvedValue([{ compteId: "c1", stripeCustomerId: "cus_1" }]);
+    const cancel = vi.fn();
+    const stripe = {
+      subscriptions: { cancel, list: () => ({ autoPagingToArray: m.abonnements }) },
+    } as unknown as Parameters<typeof supprimerComptesEchus>[1];
+    m.abonnements.mockResolvedValue([
+      { id: "sub_vieux", status: "canceled" },
+      { id: "sub_neuf", status: "incomplete" },
+    ]);
+    expect(await supprimerComptesEchus(MAINTENANT, stripe)).toMatchObject({ supprimes: 0, reportes: 1 });
+    expect(cancel).not.toHaveBeenCalled();
+  });
 });

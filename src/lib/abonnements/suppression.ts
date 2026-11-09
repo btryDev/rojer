@@ -235,8 +235,19 @@ export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | n
         .autoPagingToArray({ limit: 10_000 });
       if (abonnements.some((s) => OUVRENT.has(s.status))) {
         bilan.reportes++;
-        console.error(`suppression du compte ${compteId} annulée : un abonnement est ouvert chez Stripe, copie relue`);
-        await synchroniserClientStripe(stripe, stripeCustomerId).catch(() => {});
+        const relue = await synchroniserClientStripe(stripe, stripeCustomerId).then(
+          () => "copie relue",
+          (e: unknown) => `copie NON relue — ${motifErreur(e)}`,
+        );
+        console.error(`suppression du compte ${compteId} annulée : un abonnement est ouvert chez Stripe (${relue})`);
+        continue;
+      }
+      // Un premier paiement encore en traitement (prélèvement SEPA, 3D Secure
+      // en cours) peut aboutir : on ne résilie pas, on attend qu'il devienne
+      // actif (l'horloge se vide) ou expiré (la suppression suit).
+      if (abonnements.some((s) => s.status === "incomplete")) {
+        bilan.reportes++;
+        console.error(`suppression du compte ${compteId} reportée : un premier paiement est en cours chez Stripe`);
         continue;
       }
       for (const s of abonnements) {
