@@ -3,6 +3,7 @@ import "server-only";
 // D) : lecture seule, abonnement, ou site gelé. Lu pour l'annoncer dès
 // l'ouverture des pages (`FermerLaSaisie`) ; le refus reste au serveur.
 
+import { cache } from "react";
 import { getOptionalCompte } from "@/lib/auth/compte";
 import { droitsDuCompte } from "./saisie";
 import { motifDuGel } from "./quotas";
@@ -15,7 +16,11 @@ import { motifDuGel } from "./quotas";
  */
 export type SaisieFermee = { motif: string; annonce: boolean; gel: boolean };
 
-export async function saisieFermeeDuSite(etablissementId?: string): Promise<SaisieFermee | null> {
+// `cache` : la mise en page du site (`SaisieDuSite`) et la page Équipements
+// (case du DAE partagé) la lisent pour le même rendu.
+export const saisieFermeeDuSite = cache(async function saisieFermeeDuSite(
+  etablissementId?: string,
+): Promise<SaisieFermee | null> {
   const c = await getOptionalCompte();
   if (!c) return null;
   if (c.compte.role === "lecture") return { motif: "Accès en lecture seule.", annonce: false, gel: false };
@@ -31,4 +36,4 @@ export async function saisieFermeeDuSite(etablissementId?: string): Promise<Sais
   // quelque chose (impayé, fin programmée), il la garde, et le gel se lit au
   // refus (`/compte/abonnement?saisie=gelee`).
   return gel ? { motif: gel, annonce: !droits.bandeau, gel: true } : null;
-}
+});

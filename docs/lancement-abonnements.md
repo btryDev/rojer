@@ -1,7 +1,7 @@
 # Lancement des abonnements payants — la liste, dans l'ordre
 
 > 2026-11-09. Ce qui reste à BRANCHER pour faire payer pour de vrai : le code
-> est sur `cc`. Chaque étape dit qui la fait. On ne passe à l'étape suivante
+> est sur `cc` (rappel de la veille de la fin d'essai : PR #257). Chaque étape dit qui la fait. On ne passe à l'étape suivante
 > que la précédente faite et vérifiée. L'ordre compte : la dernière étape
 > (`ABONNEMENT_EXIGE=oui`) ferme la saisie de tous les comptes sans
 > abonnement, elle ne se joue qu'une fois tout le reste prêt.
@@ -15,7 +15,8 @@
 | | Quoi | Qui |
 |---|---|---|
 | 0.1 | L'application Clever Cloud existe et `cc` y tourne (préproduction, puis production) — étape 1 du document de bascule | propriétaire |
-| 0.2 | Conditions générales de vente rédigées (durée, résiliation, impayé, sort des données après 12 mois, conservation du DUERP à la charge de l'employeur) et publiées à la place du texte actuel de `/conditions` ; `VERSION_CONDITIONS` montée d'un cran (`src/lib/abonnements/conditions.ts`) | avocat → Claude pour l'intégration |
+| 0.1 bis | PR #257 (tâche quotidienne, `TACHES_SECRET`) fusionnée et déployée | Claude |
+| 0.2 | Conditions générales de vente rédigées (durée, résiliation, impayé, sort des données après 12 mois, conservation du DUERP à la charge de l'employeur) et publiées à la place du texte actuel de `/conditions` ; `VERSION_CONDITIONS` changée (nouvelle date, `src/lib/abonnements/conditions.ts`) | avocat → Claude pour l'intégration |
 | 0.3 | Régime de TVA confirmé (20 % retenu ; en franchise : retirer le taux et porter « TVA non applicable, art. 293 B du CGI ») et mentions de la facture validées | expert-comptable |
 
 ## 1. Compte Stripe en mode réel — propriétaire, tableau de bord
@@ -45,10 +46,14 @@ leur clé et écarte un prix dont l'intervalle contredit la clé.
 
 - Prix récurrents, en EUR, **hors taxe** (« Inclure la taxe dans le prix » :
   non — `tax_behavior: exclusive`).
-- La clé se saisit dans les options avancées du prix.
-- **Taux de TVA** : Produits > Taux de taxe > nouveau : 20 %, type TVA, pays
-  France, « exclusif » (en sus du prix). Sans lui, aucun essai ni abonnement
-  ne démarre.
+- La clé se saisit dans les options avancées du prix. Y ajouter les
+  métadonnées `formule` (`essentiel` ou `pro`) et `periodicite` (`mensuel`
+  ou `annuel`) : si un prix est remplacé un jour, l'ancien perd sa clé, et
+  ce sont elles qui gardent leur formule à ses abonnés (`formuleDuPrix`).
+- **Taux de TVA** (`dashboard.stripe.com/tax-rates`) : 20 %, type TVA, **pays
+  France** (le champ Pays, pas seulement la Région), « exclusif » (en sus du
+  prix). Sans lui, aucun essai ni abonnement ne démarre (journal : « aucun
+  taux de TVA actif »).
 - « Sur mesure » : sur devis, sans prix dans Stripe — un client sur mesure se
   traite à la main le jour où il arrive (décision à prendre ce jour-là).
 
@@ -87,70 +92,93 @@ Développeurs > Webhooks > nouvelle destination :
   `v1.invoice.payment_action_required` ;
 - noter le secret de signature `whsec_…` (étape 7).
 
-## 6. Clé restreinte — propriétaire, tableau de bord
+## 6. Répétition complète en TEST, sur la préproduction — propriétaire, avec Claude
 
-Développeurs > Clés API > clé restreinte « Rojer production », permissions
-(relevées sur les appels du code le 2026-11-09) :
+Rien ne s'ouvre en production sans `ABONNEMENT_EXIGE=oui`, qui ferme la saisie
+de tous les comptes sans abonnement : on répète donc tout en test d'abord,
+sur la préproduction, où fermer la saisie ne gêne personne.
 
-| Ressource | Accès |
-|---|---|
-| Customers | écriture |
-| Subscriptions, et Subscription schedules s'ils sont listés à part | écriture |
-| Checkout Sessions | écriture |
-| Customer portal | écriture |
-| Invoices | lecture |
-| Prices, Products | lecture |
-| Tax Rates | lecture |
-| SetupIntents | lecture |
-| PaymentMethods | lecture |
+1. Compte Stripe en mode **test** : `scripts/stripe-installer-test.ts`
+   (produits, prix, TVA, portail), et les réglages des étapes 1 à 5 en test.
+2. **Clé restreinte de test** aux permissions ci-dessous (relevées sur les
+   appels du code le 2026-11-09 ; Stripe ne publie pas la liste exacte des
+   noms de son écran) :
 
-Tout le reste : aucun. La clé ne se colle jamais dans une conversation.
+   | Ressource | Accès |
+   |---|---|
+   | Customers | écriture |
+   | Subscriptions, et Subscription schedules s'ils sont listés à part | écriture |
+   | Checkout Sessions | écriture |
+   | Customer portal | écriture |
+   | Invoices | lecture |
+   | Prices, Products | lecture |
+   | Tax Rates | lecture |
+   | SetupIntents | lecture |
+   | PaymentMethods | lecture |
+
+   Tout le reste : aucun. La clé ne se colle jamais dans une conversation.
+3. Variables de la **préproduction** : `APP_ENV=preview`,
+   `STRIPE_SECRET_KEY=rk_test_…`, `STRIPE_WEBHOOK_SECRET` (destination de
+   test vers l'URL de préproduction), `TACHES_SECRET`,
+   `ABONNEMENT_EXIGE=oui`. Redémarrer ; journaux sans avertissement
+   « Stripe », crontab installée (« Importing cronjobs »).
+4. Parcours : créer un compte, démarrer l'essai ; choisir une formule avec la
+   carte de test `4242 4242 4242 4242`, « tout de suite » : facture avec la
+   TVA et les mentions, page Abonnement « actif », webhook livré (200) ;
+   résilier depuis le portail. Carte `4000 0000 0000 0341` : l'impayé.
+5. Dans le tableau de bord de test, ouvrir les journaux de la clé
+   restreinte : aucune erreur 403. S'il y en a, ajouter la permission. Puis
+   **« Dupliquer la clé » vers le mode réel** (méthode documentée par
+   Stripe) : c'est la clé de production, mêmes permissions.
 
 ## 7. Variables de l'application Clever Cloud (production) — propriétaire
 
 | Variable | Valeur |
 |---|---|
 | `APP_ENV` | `production` (sans elle, aucune clé Stripe n'est acceptée) |
-| `STRIPE_SECRET_KEY` | la clé restreinte `rk_live_…` de l'étape 6 |
-| `STRIPE_WEBHOOK_SECRET` | le `whsec_…` de l'étape 5 |
-| `TACHES_SECRET` | `openssl rand -base64 32` (tâche quotidienne, rappel de la veille — PR #257) |
-| `ABONNEMENT_EXIGE` | **ne pas la poser encore** (étape 10) |
+| `STRIPE_SECRET_KEY` | la clé restreinte `rk_live_…` dupliquée à l'étape 6.5 |
+| `STRIPE_WEBHOOK_SECRET` | le `whsec_…` de la destination réelle (étape 5) |
+| `TACHES_SECRET` | `openssl rand -base64 32` (tâche quotidienne, rappel de la veille) |
+| `ABONNEMENT_EXIGE` | **ne pas la poser encore** (étape 9) |
 
 Redémarrer, puis lire les journaux du démarrage : aucun avertissement
-« Stripe » ne doit apparaître, et la crontab doit s'être installée
-(« Importing cronjobs »).
+« Stripe », crontab installée (« Importing cronjobs »). Rien ne change encore
+pour les comptes : l'offre n'est pas ouverte.
 
-## 8. Vérifier en réel, avant d'ouvrir — propriétaire, avec Claude
+## 8. Reprises — Claude ou propriétaire, sur l'instance de production
 
-1. Créer un compte de test sur la production, démarrer l'essai : il démarre
-   (sinon : prix ou TVA introuvable, voir les journaux).
-2. Choisir une formule avec sa propre carte, « tout de suite » : la facture
-   arrive par e-mail, avec la TVA et les mentions ; la page Abonnement dit
-   « actif » ; le tableau de bord montre l'événement livré au webhook (200).
-3. Résilier depuis le portail, puis rembourser la facture dans le tableau de
-   bord.
-4. Le lendemain : la tâche quotidienne a répondu (journaux, réponse JSON).
-
-## 9. Reprises — Claude ou propriétaire, sur la production
-
-Chacune d'abord sans `--appliquer` (elle compte, n'écrit rien), puis avec :
+Sur l'instance (`clever ssh`), où `scripts/demarrer-cc.sh` construit
+`DATABASE_URL` depuis l'add-on — pas de `--env-file`, il n'y a pas de `.env`
+sur l'instance. Chacune d'abord sans `--appliquer` (elle compte, n'écrit
+rien), puis avec :
 
 ```
-pnpm tsx --import ./scripts/server-only-hors-next.mjs --env-file=.env scripts/reprendre-tailles-fichiers.ts
-pnpm tsx --import ./scripts/server-only-hors-next.mjs --env-file=.env scripts/reprendre-debut-payant.ts
+sh scripts/demarrer-cc.sh lancer pnpm tsx --import ./scripts/server-only-hors-next.mjs scripts/reprendre-tailles-fichiers.ts
+NODE_ENV=production sh scripts/demarrer-cc.sh lancer pnpm tsx --import ./scripts/server-only-hors-next.mjs scripts/reprendre-debut-payant.ts
 ```
 
-(la base lue est celle de `DATABASE_URL`, affichée en tête : vérifier que
-c'est la production avant `--appliquer`).
+- La base lue est affichée en tête : vérifier que c'est la production avant
+  `--appliquer`.
+- `reprendre-debut-payant` : `NODE_ENV=production`, sinon la clé `live` est
+  refusée (`stripe/config.ts`). Aucun abonnement n'existe encore en
+  production : à blanc, il doit compter 0 — alors ne pas appliquer.
+- `tsx` est une dépendance de développement : vérifier qu'il est présent sur
+  l'instance ; sinon, lancer depuis un poste avec la `DATABASE_URL` et le
+  stockage de production, jamais avec le `.env` local.
 
-## 10. Ouvrir — propriétaire
+## 9. Ouvrir — propriétaire, avec Claude
 
 1. Poser `ABONNEMENT_EXIGE=oui`, redémarrer. Dès lors, un compte sans essai
-   ni abonnement ne saisit plus (lecture et export restent).
+   ni abonnement ne saisit plus (lecture et export restent) : les comptes
+   existants voient « Choisissez une formule ».
 2. Relancer `reprendre-tailles-fichiers.ts --appliquer` (un dépôt fait
    entre-temps sans session lisible n'a pas laissé sa taille).
-3. Se connecter avec un compte existant : la page Abonnement propose l'essai
-   ou la souscription ; la saisie se comporte comme prévu.
+3. Vérifier en réel, tout de suite : un compte de test démarre l'essai ;
+   souscrire « tout de suite » avec sa propre carte — facture par e-mail,
+   avec la TVA et les mentions ; page Abonnement « actif » ; événement livré
+   au webhook (200) ; puis résilier depuis le portail et rembourser la
+   facture dans le tableau de bord.
+4. Le lendemain : la tâche quotidienne a répondu (journaux, réponse JSON).
 
 ## Après le lancement (sans urgence)
 

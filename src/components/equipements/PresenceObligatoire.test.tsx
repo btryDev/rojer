@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import {
   MaterielHorsParc,
   MentionPresence,
@@ -111,18 +111,26 @@ describe("SousLEnTetePresence", () => {
   it("saisie fermée : la case est désactivée et dit pourquoi ; site gelé : seule la case cochée reste ouverte (décocher = retirer)", () => {
     const motif = "Ce site dépasse votre formule.";
     const caseDae = () => screen.getByRole("checkbox", { name: /partagé avec un établissement voisin/ }) as HTMLInputElement;
+    const fermee = () => caseDae().getAttribute("aria-disabled") === "true";
+    const note = () => document.getElementById(caseDae().getAttribute("aria-describedby") ?? "")?.textContent;
     const { rerender } = render(<SousLEnTetePresence ligne={dae(0)} etablissementId="e" fermeture={{ motif, gel: false }} />);
-    expect(caseDae().disabled).toBe(true);
-    expect(screen.getByText(motif).id).toBe(caseDae().getAttribute("aria-describedby"));
+    expect(fermee()).toBe(true);
+    expect(caseDae().disabled).toBe(false); // atteignable au clavier
+    expect(note()).toBe(motif);
+    // Un clic ne coche rien : la case reste celle du serveur.
+    fireEvent.click(caseDae());
+    expect(caseDae().checked).toBe(false);
 
     rerender(<SousLEnTetePresence ligne={{ ...dae(0), etat: "partage" }} etablissementId="e" fermeture={{ motif, gel: false }} />);
-    expect(caseDae().disabled).toBe(true);
+    expect(fermee()).toBe(true);
 
     rerender(<SousLEnTetePresence ligne={dae(0)} etablissementId="e" fermeture={{ motif, gel: true }} />);
-    expect(caseDae().disabled).toBe(true);
+    expect(fermee()).toBe(true);
+    expect(note()).toMatch(/ne peut plus être cochée/);
 
     rerender(<SousLEnTetePresence ligne={{ ...dae(0), etat: "partage" }} etablissementId="e" fermeture={{ motif, gel: true }} />);
-    expect(caseDae().disabled).toBe(false);
+    expect(fermee()).toBe(false);
+    expect(note()).toMatch(/une fois décochée/);
     expect(screen.queryByText(motif)).toBeNull();
   });
 
