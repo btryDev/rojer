@@ -274,6 +274,12 @@ function racineDe(nom: string, data: Objet, portee: Portee, creation: boolean): 
  */
 export function reecrireDonnees(nom: string, data: unknown, portee: Portee, creation: boolean): Objet {
   if (!estObjet(data)) throw new ErreurPortee(`données inattendues pour ${nom}`);
+  // Sous la portée d'un établissement, rien ne s'écrit au-dessus de lui — ni en
+  // tête (`argumentsBornes`), ni imbriqué : un `create` sous une relation
+  // ouvrirait un établissement, ou une racine du compte, hors de la portée
+  // (revue de code de #264).
+  if (portee.etablissementId !== undefined && (nom === "Etablissement" || "racine" in classement(nom)))
+    throw new ErreurPortee(`${nom} : écriture hors de la portée d'un établissement`);
   const d: Objet = { ...data };
   racineDe(nom, d, portee, creation);
   identitesScalaires(nom, d, portee);
@@ -467,6 +473,8 @@ function verifierRemontee(nom: string, args: unknown, chemin = nom): void {
 // partie. Le relevé ne vit que le temps de `dansUnLot` (`creerEnLotVerifie`).
 
 const LOT = new AsyncLocalStorage<Set<string>>();
+/** Le relevé d'un lot porte la portée entière : compte, et établissement s'il y en a un. */
+const clefDuLot = (p: Portee) => `${p.compteId}|${p.etablissementId ?? ""}`;
 
 /** Exécute `fn` dans un lot : les identifiants lus pendant l'appel y sont retenus. */
 export function dansUnLot<T>(fn: () => Promise<T>): Promise<T> {
@@ -486,7 +494,7 @@ export function noterVus(nom: string, portee: Portee, resultat: unknown): void {
   if (!vus || !Array.isArray(resultat)) return;
   for (const ligne of resultat) {
     const id = (ligne as Objet | null)?.id;
-    if (typeof id === "string") vus.add(`${portee.compteId}|${nom}:${id}`);
+    if (typeof id === "string") vus.add(`${clefDuLot(portee)}|${nom}:${id}`);
   }
 }
 
@@ -496,7 +504,7 @@ function clesNonVues(nom: string, ligne: Objet, portee: Portee): string[] {
   return clesDuCompte(nom).flatMap(({ cle, cible: c }) => {
     const v = ligne[cle];
     if (v === undefined || v === null) return [];
-    return vus.has(`${portee.compteId}|${c}:${String(v)}`) ? [] : [`${c}:${String(v)}`];
+    return vus.has(`${clefDuLot(portee)}|${c}:${String(v)}`) ? [] : [`${c}:${String(v)}`];
   });
 }
 

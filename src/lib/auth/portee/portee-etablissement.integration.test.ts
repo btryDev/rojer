@@ -137,6 +137,15 @@ describe.skipIf(!URL_BASE || !local)("portée d'un établissement — PostgreSQL
       await refuse(() => d.delete({ where: ou(ligne) }));
       if (nom === "Etablissement") await refuse(() => d.deleteMany({ where: ou(ligne) }));
       else expect(await d.deleteMany({ where: ou(ligne) })).toEqual({ count: 0 });
+      if (nom !== "Etablissement") {
+        // Mises à jour : la ligne de l'autre établissement est introuvable (revue de #264).
+        const champ = MODELES.get(nom)!.fields.find((f) => f.kind === "scalar" && f.type === "DateTime" && f.isUpdatedAt === false && !f.isId && !f.isRequired);
+        const data = champ ? { [champ.name]: new Date("2026-01-01T00:00:00Z") } : {};
+        await refuse(() => d.update({ where: ou(ligne), data }));
+        expect(await d.updateMany({ where: ou(ligne), data })).toEqual({ count: 0 });
+        const relue = (await delegue(prisma, nom).findUnique({ where: ou(ligne) })) as Ligne;
+        if (champ) expect(relue[champ.name]).toEqual(ligne[champ.name]);
+      }
       expect(await delegue(prisma, nom).findUnique({ where: ou(ligne) })).not.toBeNull();
     });
 
@@ -188,6 +197,14 @@ describe.skipIf(!URL_BASE || !local)("portée d'un établissement — PostgreSQL
     });
 
     it("l'établissement et l'entreprise ne s'écrivent pas", async () => {
+      // Ni en tête, ni imbriqués sous une relation (revue de #264).
+      await refuse(
+        () =>
+          dbAvecPersonne.batiment.create({
+            data: { nom: `imbrique-${++n}`, etablissement: { create: FABRIQUES.Etablissement[0]({ ...un }, ++n) } } as never,
+          }),
+        /portée d'un établissement/,
+      );
       await refuse(() => db.etablissement.update({ where: { id: un.Etablissement }, data: { raisonDisplay: "x" } }), /portée d'un établissement/);
       await refuse(() => delegue(db, "Etablissement").create({ data: FABRIQUES.Etablissement[0]({ ...un }, ++n) }), /portée d'un établissement/);
       await refuse(() => db.entreprise.update({ where: { id: un.Entreprise }, data: { raisonSociale: "x" } }), /portée d'un établissement/);

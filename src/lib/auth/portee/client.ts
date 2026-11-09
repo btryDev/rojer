@@ -1,7 +1,9 @@
 import "server-only";
-// Le client Prisma borné à une portée (ADR-051 § 2) : un compte. [La portée
+// Le client Prisma borné à une portée (ADR-051 § 2) : un compte, et pour un
+// accès sans session un établissement de ce compte. ~~[La portée
 // « établissement » n'est pas faite : jetons et MCP sont bornés au compte
-// propriétaire, décision de la propriétaire du 2026-10-30.] Il ajoute la
+// propriétaire, décision de la propriétaire du 2026-10-30.]~~ [2026-11-09 :
+// faite, `Portee.etablissementId` — ADR-051, « Portée d'un établissement ».] Il ajoute la
 // borne à chaque opération de modèle, même si l'appelant l'oublie, et refuse
 // ce qu'il ne sait pas borner. Il ne s'obtient qu'avec une portée : sans
 // elle, pas de client.
@@ -98,7 +100,7 @@ function texteSql(args: unknown): string {
 export type ClientBorne = PrismaClient;
 
 // Un client par portée, gardé : `$extends` est peu coûteux, mais un rendu en
-// demande des dizaines. La clé est la portée entière (compte et personne) ; un
+// demande des dizaines. La clé est la portée entière (compte, personne, lecture seule, gel, établissement) ; un
 // client borné à X n'est rendu qu'à du code qui s'est authentifié comme X.
 const CLIENTS = new Map<string, ClientBorne>();
 const MAX_CLIENTS = 500;
@@ -106,7 +108,7 @@ const MAX_CLIENTS = 500;
 /** Une portée valide, lue UNE fois (un objet à accesseur ne peut pas en rendre deux). */
 function lirePortee(portee: Portee): Portee {
   if (portee?.type !== "compte")
-    throw new ErreurPortee("seule la portée de compte existe à ce jour : client refusé");
+    throw new ErreurPortee("seule la portée de compte existe (un établissement s'y ajoute) : client refusé");
   const compteId = portee.compteId;
   const userId = portee.userId;
   if (typeof compteId !== "string" || compteId.length === 0)
