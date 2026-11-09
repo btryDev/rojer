@@ -539,3 +539,36 @@ describe("portée d'un établissement", () => {
     expect(() => argumentsBornes("Abonnement", "findMany", {}, C)).not.toThrow();
   });
 });
+
+describe("portée d'un établissement : conditions imbriquées dans les écritures", () => {
+  const E: Portee = { type: "compte", compteId: "compte-a", userId: "u", etablissementId: "etab-1" };
+  // Revue de sécurité de #264 : la condition d'un `connect` ou d'un `deleteMany`
+  // imbriqué est un filtre comme un autre, elle ne remonte pas vers les frères.
+  it("refuse une condition de connect qui redescend de l'entreprise", () => {
+    expect(() =>
+      argumentsBornes(
+        "Equipement",
+        "create",
+        {
+          data: {
+            libelle: "x",
+            categorie: "EXTINCTEUR",
+            etablissementId: "etab-1",
+            batiment: { connect: { id: "b", etablissement: { entreprise: { etablissements: { some: {} } } } } },
+          },
+        },
+        E,
+      ),
+    ).toThrow(/hors de l'établissement/);
+  });
+  it("refuse une condition de deleteMany imbriqué qui redescend de l'entreprise", () => {
+    expect(() =>
+      argumentsBornes(
+        "PlanPrevention",
+        "update",
+        { where: { id: "p" }, data: { lignes: { deleteMany: { plan: { etablissement: { entreprise: { etablissements: { some: {} } } } } } } } },
+        E,
+      ),
+    ).toThrow(/hors de l'établissement/);
+  });
+});
