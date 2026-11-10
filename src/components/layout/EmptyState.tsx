@@ -32,6 +32,7 @@ export function EmptyState({
   ctaHref,
   ctaSecondary,
   variant = "neutral",
+  ecriture,
 }: {
   titre: string;
   pourquoi: string;
@@ -40,6 +41,8 @@ export function EmptyState({
   ctaHref?: string;
   ctaSecondary?: { libelle: string; href: string };
   variant?: "neutral" | "info";
+  /** Le `cta` mène à une saisie. Masqué en lecture seule (ADR-054 § 4). */
+  ecriture?: boolean;
 }) {
   return (
     <div className="carte-board px-7 py-8 sm:px-8">
@@ -70,6 +73,7 @@ export function EmptyState({
             {cta && ctaHref && (
               <Link
                 href={ctaHref}
+                data-ecriture={ecriture ? "" : undefined}
                 className={buttonVariants({ variant: "board", size: "board" })}
               >
                 {cta}

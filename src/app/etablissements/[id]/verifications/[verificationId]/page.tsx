@@ -535,6 +535,7 @@ export default async function VerificationDetailPage({
             {depotOuvert && !pieceMedicale ? (
               <Link
                 href={`${avecParametres(depuisCetteFiche, { de, deposer: "1" })}#depot`}
+                data-ecriture
                 className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[color:var(--board-ink)] px-5 text-[13.5px] font-semibold text-white md:hidden"
               >
                 <FileUp aria-hidden className="size-4" />
@@ -547,6 +548,7 @@ export default async function VerificationDetailPage({
             {v.equipement && !appareilRetire ? (
               <Link
                 href={`/etablissements/${id}/equipements/${v.equipement.id}/modifier`}
+                data-ecriture
                 className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
               >
                 Modifier l&apos;équipement
@@ -716,7 +718,7 @@ export default async function VerificationDetailPage({
             compte={v.rapports.length}
             droite={
               depotOuvert ? (
-              <details className="group">
+              <details className="group" data-ecriture>
                 <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-full px-[18px] py-2.5 text-[12.5px] font-semibold text-[color:var(--board-ink)] ring-1 ring-[color:rgba(10,10,10,.18)] transition-colors hover:bg-[color:var(--board-slate-pale)]">
                   <span className="group-open:hidden">
                     + {mots.nouveau}
@@ -1002,7 +1004,7 @@ export default async function VerificationDetailPage({
         />
       )}
       {recoit ? (
-        <details className="group" open={rapportApres !== undefined}>
+        <details className="group" open={rapportApres !== undefined} data-ecriture>
           <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-[22px] bg-[color:var(--board-slate-pale)] px-6 py-5">
             <p className="m-0 text-[13.5px] text-[color:var(--board-slate-mid)]">
               {rapportApres

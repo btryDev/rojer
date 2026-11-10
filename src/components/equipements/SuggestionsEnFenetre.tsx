@@ -60,6 +60,7 @@ export function OuvrirSuggestions({ forme, libelle }: { forme: "lien" | "bouton"
       type="button"
       onClick={(e) => window.dispatchEvent(new CustomEvent(OUVRIR, { detail: e.currentTarget }))}
       aria-haspopup="dialog"
+      data-ecriture
       className={forme === "bouton" ? buttonVariants({ variant: "board", size: "boardSm" }) : LIEN_DANS_PHRASE}
     >
       {libelle}

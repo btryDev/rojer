@@ -488,6 +488,7 @@ export default async function EquipementDetailPage({
               {retire ? null : (
                 <Link
                   href={`${base}/equipements/${equipementId}/modifier`}
+                  data-ecriture
                   className={cn(
                     buttonVariants({ variant: "boardClair", size: "board" }),
                   )}
@@ -533,6 +534,7 @@ export default async function EquipementDetailPage({
                 retire ? undefined : (
                   <Link
                     href={`${base}/equipements/${equipementId}/modifier`}
+                    data-ecriture
                     className="text-[12.5px] font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
                   >
                     Modifier →
@@ -638,7 +640,7 @@ export default async function EquipementDetailPage({
                 />
               )}
               {!retire && controles.length > 0 && (
-                <details className="group mt-4">
+                <details className="group mt-4" data-ecriture>
                   <summary className="inline-flex cursor-pointer list-none items-center gap-2 rounded-full px-[18px] py-2.5 text-[12.5px] font-semibold text-[color:var(--board-ink)] ring-1 ring-[color:rgba(10,10,10,.18)] transition-colors hover:bg-[color:var(--board-slate-pale)] [&::-webkit-details-marker]:hidden">
                     <span className="group-open:hidden">+ Ajouter un point</span>
                     <span className="hidden group-open:inline">Fermer</span>

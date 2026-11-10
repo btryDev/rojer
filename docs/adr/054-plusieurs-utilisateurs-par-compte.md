@@ -400,12 +400,19 @@ Corrigé :
   renvoie un lecteur à `/compte/lecture-seule` ; le bandeau du dossier dit
   l'accès en lecture seule. Les quatre écritures ouvertes à un impayé mais pas
   à la lecture seule ouvrent par `verifierRole` ou `verifierProprietaire`
-  (`saisie-gardee.test.ts`, deux listes). **Les boutons de saisie ne sont pas
-  encore masqués** : environ 80 écrans de formulaires, lot à part.
+  (`saisie-gardee.test.ts`, deux listes). ~~**Les boutons de saisie ne sont pas
+  encore masqués** : environ 80 écrans de formulaires, lot à part.~~
+  [2026-11-09, #262, décision de la propriétaire : ce qui mène à une écriture
+  est MASQUÉ au lecteur (`data-ecriture`, `MarqueLectureSeule`), ce qui montre
+  une réponse enregistrée reste visible et inerte (`data-ecriture-inerte`) ;
+  garde `lecture-seule-masquee.test.ts`. Les boutons d'envoi des formulaires
+  encore visibles restent grisés (lot D des plafonds).]
 - **Supprimer une entreprise ou un établissement est réservé au
   propriétaire** (`verifierProprietaire`), décision de réalisation : c'est le
-  seul geste qui efface un dossier entier. Il reste ouvert à un impayé. **À confirmer
-  par la propriétaire** (relevé dans `docs/etat-bascule-clever-cloud.md`).
+  seul geste qui efface un dossier entier. Il reste ouvert à un impayé. ~~**À confirmer
+  par la propriétaire** (relevé dans `docs/etat-bascule-clever-cloud.md`).~~
+  [2026-11-09 : confirmé par la propriétaire, la suppression reste au
+  propriétaire.]
 - **Gestes de l'écran Membres** : seule l'invitation, qui ajoute une place,
   passe par la garde d'abonnement ; retirer, annuler, changer un rôle restent
   possibles à un compte impayé. Toutes sont réservées au propriétaire, et
@@ -421,8 +428,10 @@ Corrigé :
   toute création de compte (`aiguillageSansCompte`, lu par l'onboarding et,
   plus tard, par l'écran d'essai). Une invitation à une autre adresse répond
   404 (`requireInvitationDeLaSession`).
-- **Choix du compte** (§ 7) : sur l'écran « Membres », pas encore dans la
-  gélule. À l'acceptation, le plugin fait du compte rejoint le compte actif.
+- **Choix du compte** (§ 7) : sur l'écran « Membres », ~~pas encore dans la
+  gélule~~ [2026-11-09, #262 : et dans le menu « Compte » de la gélule, dès
+  deux comptes (`comptesDeLaSession`, même action `choisirCompte`)]. À
+  l'acceptation, le plugin fait du compte rejoint le compte actif.
 - **Garde « propriétaire seul »** pour l'abonnement : `verifierProprietaire`
   (Checkout, portail, essai : lot de la session « stripe »).
 

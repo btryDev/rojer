@@ -305,7 +305,7 @@ export default async function MesuresPage({
           </section>
         )}
 
-        <section className="carte-board overflow-clip">
+        <section data-ecriture className="carte-board overflow-clip">
           <div className="border-b border-[color:var(--board-slate-line)] px-7 py-5 sm:px-8">
             <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
               Ajouter une mesure personnalisée

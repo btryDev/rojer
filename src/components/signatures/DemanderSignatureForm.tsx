@@ -96,7 +96,7 @@ export function DemanderSignatureForm({
 
   if (!ouvert) {
     return (
-      <button
+      <button data-ecriture
         type="button"
         onClick={() => setOuvert(true)}
         className={cn(buttonVariants({ variant: "boardClair", size: "boardSm" }))}

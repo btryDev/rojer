@@ -220,6 +220,7 @@ export default async function EtablissementPage({
       faite: manqueFiche.length === 0,
       href: `/etablissements/${id}/modifier`,
       cta: manqueFiche.length > 0 ? "Compléter la fiche" : undefined,
+      ecriture: true,
     },
     {
       id: "equipements",
@@ -243,6 +244,7 @@ export default async function EtablissementPage({
           : appareilsAPreciser.length > 0
             ? "Compléter les équipements"
             : undefined,
+      ecriture: true,
     },
     {
       id: "calendrier",
@@ -264,6 +266,7 @@ export default async function EtablissementPage({
           faite: false,
           href: `/duerp/${duerpDernier.id}/transverses`,
           cta: "Compléter le DUERP",
+          ecriture: true,
         }
       : {
           id: "duerp",

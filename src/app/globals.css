@@ -1233,3 +1233,19 @@ body:has([data-saisie-fermee]) [data-portail-saisie] form[action^="javascript:"]
   opacity: 0.45;
   cursor: not-allowed;
 }
+
+/* La lecture seule (ADR-054 § 4, `MarqueLectureSeule`) : ce qui mène à une
+   écriture — lien vers une page de création ou de modification, bouton qui
+   ouvre un panneau de saisie, petite action en un clic — est MASQUÉ, et non
+   grisé : le lecteur n'a aucun moyen d'y accéder, alors que le gel ou
+   l'abonnement se lèvent. Marquer l'élément `data-ecriture`. */
+body:has([data-lecture-seule]) [data-ecriture] {
+  display: none !important;
+}
+/* Ce qui écrit ET montre une donnée enregistrée (une réponse Oui / Non, le
+   statut d'une mesure, un secteur choisi) reste lisible, mais inerte :
+   `data-ecriture-inerte`. */
+body:has([data-lecture-seule]) [data-ecriture-inerte] {
+  pointer-events: none;
+  opacity: 0.6;
+}

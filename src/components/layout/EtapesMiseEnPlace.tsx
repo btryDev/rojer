@@ -30,6 +30,8 @@ export type EtapeOnboarding = {
   href?: string;
   /** Texte du bouton d'action. Non affiché si l'étape est faite. */
   cta?: string;
+  /** Le bouton mène à une saisie. Masqué en lecture seule (ADR-054 § 4). */
+  ecriture?: boolean;
   /**
    * Une étape qui se règle **ici**, sans quitter l'écran : la question est
    * posée dans la liste et sa réponse s'y donne (ADR-025 § 7).
@@ -176,6 +178,7 @@ function LigneEtape({
           <div className="mt-3">
             <Link
               href={e.href}
+              data-ecriture={e.ecriture ? "" : undefined}
               className={buttonVariants({
                 variant: prochaine ? "board" : "boardClair",
                 size: "boardSm",

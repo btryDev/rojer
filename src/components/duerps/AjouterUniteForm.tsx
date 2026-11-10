@@ -27,7 +27,7 @@ export function AjouterUniteForm({ duerpId }: { duerpId: string }) {
 
   if (!ouvert) {
     return (
-      <div className="px-7 py-4 sm:px-8">
+      <div data-ecriture className="px-7 py-4 sm:px-8">
         <button
           type="button"
           onClick={() => setOuvert(true)}

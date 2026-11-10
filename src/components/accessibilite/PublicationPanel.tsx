@@ -91,6 +91,7 @@ export function PublicationPanel({
             size="board"
             onClick={onPublier}
             disabled={pending}
+            data-ecriture
           >
             {pending ? "Publication…" : "Publier le registre"}
           </Button>
@@ -202,6 +203,7 @@ export function PublicationPanel({
               type="button"
               onClick={onDepublier}
               disabled={pending}
+              data-ecriture
               className={buttonVariants({
                 variant: "boardClair",
                 size: "boardSm",

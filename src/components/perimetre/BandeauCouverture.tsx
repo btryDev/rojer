@@ -146,6 +146,11 @@ function Bloc({
               {lien ? (
                 <Link
                   href={lien.href}
+                  // La fiche établissement est une saisie : masquée en
+                  // lecture seule (ADR-054 § 4). DUERP et équipements se lisent.
+                  data-ecriture={
+                    lien.href === hrefs.etablissement ? "" : undefined
+                  }
                   className="mt-3 inline-block text-[12.5px] font-semibold text-[color:var(--board-blue-ink)] hover:text-[color:var(--board-ink)]"
                 >
                   {lien.libelle}

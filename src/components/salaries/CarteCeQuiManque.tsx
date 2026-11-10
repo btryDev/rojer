@@ -93,6 +93,7 @@ export function CarteCeQuiManque({
           <>
             {" "}
             <Link
+              data-ecriture
               href={lienModifier}
               className="text-[color:var(--board-blue-ink)] underline-offset-4 hover:underline"
             >

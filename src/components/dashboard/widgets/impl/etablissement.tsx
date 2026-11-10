@@ -45,6 +45,7 @@ export function WidgetEtablissement({ bundle }: { bundle: DashboardBundle }) {
         <Link
           href={`/etablissements/${etab.id}/modifier`}
           aria-label="Modifier la fiche établissement"
+          data-ecriture
           className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[color:var(--board-blue-ink)]/20 bg-[color:var(--board-card)]/80 text-[color:var(--board-slate-mid)] transition-colors hover:border-[color:var(--board-blue-ink)]/40 hover:text-[color:var(--board-ink)]"
         >
           <Pencil aria-hidden className="h-3.5 w-3.5" />
@@ -83,6 +84,7 @@ export function WidgetEtablissement({ bundle }: { bundle: DashboardBundle }) {
                 salarié{etab.entreprise.effectif > 1 ? "s" : ""} ·{" "}
                 <Link
                   href={hrefEffectifEntreprise(etab.entrepriseId)}
+                  data-ecriture
                   className="text-[color:var(--board-blue-ink)] underline underline-offset-2 hover:text-[color:var(--board-ink)]"
                 >
                   modifier

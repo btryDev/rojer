@@ -26,6 +26,7 @@ export function RisqueReferentielRow({
 
   return (
     <label
+      data-ecriture-inerte
       className={`flex cursor-pointer items-start gap-3 rounded-[16px] border border-[color:var(--board-slate-line)] p-3 transition-colors hover:bg-[color:var(--board-slate-pale)] ${pending ? "opacity-60" : ""}`}
     >
       <input

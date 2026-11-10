@@ -64,7 +64,7 @@ export function DepotEcritAnnexe({
           {stockagePlein}
         </p>
       )}
-      <label className={BOUTON}>
+      <label data-ecriture className={BOUTON}>
         {libelleDepot(fichier.enCours !== null)}
         <input
           type="file"

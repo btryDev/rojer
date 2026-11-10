@@ -12,7 +12,7 @@ import {
 export function BoutonDemarrer({ permisFeuId }: { permisFeuId: string }) {
   const [pending, startTransition] = useTransition();
   return (
-    <Button
+    <Button data-ecriture
       type="button"
       variant="board"
       size="board"
@@ -34,7 +34,7 @@ export function BoutonTerminer({ permisFeuId }: { permisFeuId: string }) {
 
   return (
     <>
-      <Button
+      <Button data-ecriture
         type="button"
         variant="board"
         size="board"
@@ -72,7 +72,7 @@ export function BoutonSupprimer({ permisFeuId }: { permisFeuId: string }) {
 
   return (
     <>
-      <Button
+      <Button data-ecriture
         type="button"
         variant="boardClair"
         size="boardSm"

@@ -129,7 +129,7 @@ export function MaterielHorsParc({ ligne }: { ligne: LigneSecuriteAffichee }) {
           </p>
         </div>
         {ligne.hrefAction ? (
-          <Link href={ligne.hrefAction} className={buttonVariants({ variant: "boardClair", size: "boardSm" })}>
+          <Link href={ligne.hrefAction} data-ecriture className={buttonVariants({ variant: "boardClair", size: "boardSm" })}>
             Déclarer
             <span className="sr-only"> — {enCoursDePhrase(ligne.libelle)}</span>
           </Link>

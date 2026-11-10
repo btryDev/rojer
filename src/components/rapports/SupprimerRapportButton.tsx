@@ -19,6 +19,7 @@ export function SupprimerRapportButton({ id }: { id: string }) {
         variant="outline"
         size="sm"
         disabled={pending}
+        data-ecriture
         onClick={() =>
           demander({
             titre: "Supprimer ce rapport de vérification ?",

@@ -76,6 +76,7 @@ export function QuestionActiviteRow({
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <Button
+          data-ecriture-inerte
           variant={exercee === true ? "board" : "boardClair"}
           size="boardSm"
           disabled={pending}
@@ -84,6 +85,7 @@ export function QuestionActiviteRow({
           Oui
         </Button>
         <Button
+          data-ecriture-inerte
           variant={exercee === false ? "board" : "boardClair"}
           size="boardSm"
           disabled={pending}
@@ -102,6 +104,7 @@ export function QuestionActiviteRow({
           // pas exercer* l'activité. Revenir au silence est un état légitime
           // du dossier (ADR-020), pas un aveu.
           <button
+            data-ecriture
             type="button"
             disabled={pending}
             onClick={() => repondre(null)}

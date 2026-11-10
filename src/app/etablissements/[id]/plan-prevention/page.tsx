@@ -56,7 +56,7 @@ export default async function PlanPreventionListePage({
       <div className="flex flex-col gap-7 px-[var(--board-gutter)] pt-6">
         <BarreDeListe
           action={
-            <Link
+            <Link data-ecriture
               href={`/etablissements/${id}/plan-prevention/nouveau`}
               className={buttonVariants({ variant: "board", size: "board" })}
             >
@@ -87,7 +87,7 @@ export default async function PlanPreventionListePage({
                 d&apos;interférence existe, quelle que soit la durée.
               </p>
               <div className="mt-2">
-                <Link
+                <Link data-ecriture
                   href={`/etablissements/${id}/plan-prevention/nouveau`}
                   className={buttonVariants({
                     variant: "board",

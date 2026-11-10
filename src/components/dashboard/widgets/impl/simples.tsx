@@ -279,6 +279,7 @@ export function WidgetEquipements({ bundle }: { bundle: DashboardBundle }) {
           <>
             <Link
               href={`/etablissements/${etablissementId}/equipements/nouveau`}
+              data-ecriture
               className="rounded-full bg-[color:var(--board-ink)] px-4 py-2.5 text-[12.5px] font-semibold text-white transition-opacity hover:opacity-85"
             >
               + Ajouter

@@ -400,6 +400,7 @@ export default async function RisquesUnitePage({
                       et déjà écrit en clair dans la marche à suivre ci-dessus.
                       Elle n'a pas été traduite, elle a été retirée. */}
                   <Link
+                    data-ecriture
                     href={`/duerp/${id}/risques/${uniteId}/${r.id}`}
                     className={buttonVariants({
                       size: "boardSm",
@@ -480,7 +481,7 @@ export default async function RisquesUnitePage({
       )}
       </div>
 
-      <section className="carte-board overflow-clip">
+      <section data-ecriture className="carte-board overflow-clip">
         <div className="border-b border-[color:var(--board-slate-line)] px-7 py-5 sm:px-8">
           <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
             Ajouter un risque spécifique

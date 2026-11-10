@@ -551,7 +551,7 @@ export default async function PlanPreventionDetailPage({
               {/* Corriger la saisie (2026-10-12) : tant que le plan vit. Signé,
                   l'écran de modification dit ce qui reste ouvert. */}
               {planSignable && (
-                <Link
+                <Link data-ecriture
                   href={`/etablissements/${id}/plan-prevention/${plan.id}/modifier`}
                   className={buttonVariants({ variant: "boardClair", size: "board" })}
                 >

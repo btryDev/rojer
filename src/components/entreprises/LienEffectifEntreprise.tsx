@@ -54,6 +54,7 @@ export function LienEffectifEntreprise({
         </>
       ) : null}
       <Link
+        data-ecriture
         href={hrefEffectifEntreprise(entrepriseId)}
         className="font-medium text-[color:var(--board-blue-ink)] underline underline-offset-2 hover:text-[color:var(--board-ink)]"
       >

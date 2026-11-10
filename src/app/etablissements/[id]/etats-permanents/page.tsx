@@ -259,6 +259,7 @@ export default async function EtatsPermanentsPage({
                   <p className="m-0 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
                     {texteFiche}{" "}
                     <Link
+                      data-ecriture
                       href={`/etablissements/${id}/modifier`}
                       className="font-medium text-[color:var(--board-blue-ink)] underline underline-offset-4"
                     >

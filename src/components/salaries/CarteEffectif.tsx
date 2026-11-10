@@ -129,7 +129,16 @@ const PLACES_AFFICHEES = 12;
  * Les personnes de l'effectif qui n'ont pas encore de fiche : des places,
  * pas des fiches — rien n'est créé en base tant qu'on ne remplit pas.
  */
-export function PlacesARenseigner({ nombre, href }: { nombre: number; href: string }) {
+export function PlacesARenseigner({
+  nombre,
+  href,
+  ecriture,
+}: {
+  nombre: number;
+  href: string;
+  /** Masqué en lecture seule (ADR-054 § 4). */
+  ecriture?: boolean;
+}) {
   if (nombre <= 0) return null;
   const affichees = Math.min(nombre, PLACES_AFFICHEES);
   const reste = nombre - affichees;
@@ -139,6 +148,7 @@ export function PlacesARenseigner({ nombre, href }: { nombre: number; href: stri
         <Link
           key={i}
           href={href}
+          data-ecriture={ecriture ? "" : undefined}
           className={CLASSE_PLACE}
         >
           Personne à renseigner
@@ -147,6 +157,7 @@ export function PlacesARenseigner({ nombre, href }: { nombre: number; href: stri
       {reste > 0 ? (
         <Link
           href={href}
+          data-ecriture={ecriture ? "" : undefined}
           className={CLASSE_PLACE}
         >
           {`Et ${reste + 1} autres personnes à renseigner`}

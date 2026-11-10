@@ -96,7 +96,7 @@ function useOuvrir() {
 export function BoutonAjouterTitre() {
   const ouvrir = useOuvrir();
   return (
-    <Button variant="board" size="boardSm" type="button" onClick={() => ouvrir()}>
+    <Button data-ecriture variant="board" size="boardSm" type="button" onClick={() => ouvrir()}>
       <Plus aria-hidden />
       Ajouter un titre
     </Button>
@@ -117,6 +117,7 @@ export function BoutonDeclarer({
   const ouvrir = useOuvrir();
   return (
     <Button
+      data-ecriture
       variant={plein ? "board" : "boardClair"}
       size="boardSm"
       type="button"

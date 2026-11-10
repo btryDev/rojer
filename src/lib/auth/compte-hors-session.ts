@@ -14,6 +14,16 @@ import "server-only";
 // `objetEstSignable`, partie, OTP) restent appliqués tels quels. Rien ne le
 // vérifie à la construction : c'est la discipline de chaque appelant, que ces
 // tests tiennent.
+//
+// [2026-11-09, chantier 3 du renforcement : la borne d'ÉTABLISSEMENT s'y ajoute.
+// `clientDuProprietaire` et `sessionStdio` rendent un client borné au compte
+// ET à l'établissement de la preuve (`Portee.etablissementId`, `borne.ts`) : une
+// ligne d'un autre établissement du même compte y est absente, comme celle
+// d'un autre compte. Les `where: { etablissementId }` écrits restent, en
+// seconde ceinture (ADR-051 § 7). Le SQL brut n'est
+// borné ni au compte ni à l'établissement : son texte porte lui-même son
+// `etablissementId` (`signatures/verrou-contenu.ts`), sous la garde du SQL
+// brut (`portee/imports.test.ts`).]
 
 import { prisma } from "@/lib/prisma";
 import type { PrismaClient } from "@prisma/client";
@@ -28,7 +38,7 @@ export async function clientDuProprietaire(etablissementId: string): Promise<Cli
   const compteId = etab?.entreprise.compteId;
   // Sans session, personne n'agit au nom du compte : une relation vers `User`
   // n'y désigne personne (ADR-054 § 3).
-  return compteId ? clientBorne({ type: "compte", compteId, userId: null }) : null;
+  return compteId ? clientBorne({ type: "compte", compteId, userId: null, etablissementId }) : null;
 }
 
 /**
@@ -51,7 +61,7 @@ export async function sessionStdio(
   });
   const compteId = etab?.entreprise.compteId;
   return etab && compteId
-    ? { nom: etab.raisonDisplay, db: clientBorneSur(base, { type: "compte", compteId, userId: null }) }
+    ? { nom: etab.raisonDisplay, db: clientBorneSur(base, { type: "compte", compteId, userId: null, etablissementId }) }
     : null;
 }
 

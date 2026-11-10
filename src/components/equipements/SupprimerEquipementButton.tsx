@@ -62,6 +62,7 @@ export function SupprimerEquipementButton({
         variant="boardClair"
         size="boardSm"
         disabled={pending}
+        data-ecriture
         onClick={() =>
           demander({
             titre: "Retirer définitivement cet appareil du parc ?",

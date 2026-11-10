@@ -28,6 +28,7 @@ export function AutresSecteurs({
   return (
     <>
       <button
+        data-ecriture
         type="button"
         onClick={() => setOuvert((o) => !o)}
         aria-expanded={ouvert}
