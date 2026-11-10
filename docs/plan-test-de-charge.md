@@ -225,3 +225,31 @@ tort.
 - [2026-11-10, la propriétaire] Le carnet sanitaire ne s'exporte pas seul :
   aucune route d'export ; il n'existe que dans le ZIP de contrôle, en texte
   (`08_Carnet_sanitaire.txt`, `lib/carnet-sanitaire/export.ts`).
+
+## 12. Volumes à conserver et à exporter — questions pour l'équipe (2026-11-10)
+
+Cadre (API Légifrance en sandbox, recoupé sur code.travail.gouv.fr ; à
+confirmer sur Légifrance avant d'écrire une mention) : D. 4711-3 CT — les
+cinq dernières années « et, en tout état de cause, ceux des deux derniers
+contrôles ou vérifications ». Registre ERP (R. 143-44 CCH) : aucune durée
+écrite, pièces permanentes (travaux, consignes, service de sécurité).
+
+1. Export par défaut : 5 dernières années + les 2 derniers rapports de chaque
+   contrôle + pièces permanentes.
+2. Exports de 1 à 4 ans : proposés comme « extrait » marqué, ou retirés ?
+3. Export de tout l'historique : confort, en tâche de fond ; pas une obligation
+   (ERP compris, sous réserve de relire GE 4).
+4. ZIP de contrôle : même période pour le registre et les fichiers joints.
+5. Rapport plus ancien que la période dont un point est encore ouvert : il
+   reste (justification des travaux, R. 4226-19).
+6. Archives annuelles (proposition de la propriétaire) : chaque année est
+   archivée (ZIP : registre PDF + rapports de l'année) ; l'export ne génère que
+   l'année en cours et sert les archives. Un rapport déposé après l'archivage
+   de son année apparaît dans l'export de l'année en cours (« ajouts aux
+   années archivées ») : aucune archive n'est régénérée.
+7. Suppression tous les 5 ans (proposition de la propriétaire), SAUF les 2
+   derniers rapports de chaque contrôle et les pièces permanentes (D. 4711-3).
+   À dire dans les conditions générales et sur la page du registre. À
+   trancher : supprimer les archives seulement, ou aussi les rapports et leurs
+   fichiers ? Les archives comptent-elles dans le quota de stockage ?
+8. Volumes annoncés par les formules : tous contrôlés par le code ? (§ 11)
