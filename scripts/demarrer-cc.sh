@@ -25,6 +25,8 @@
 #                          certificat, tout autre hôte est refusé
 #   BASE_POOL              connexions par instance (défaut 5 ; plan § 5)
 #   PORT                   défaut 8080, celui que Clever Cloud attend
+#   KEEP_ALIVE_TIMEOUT     ms qu'une connexion inactive reste ouverte
+#                          (défaut 65000, entier ≥ 10000 ; voir `servir`)
 set -eu
 
 mode="${1:-}"
@@ -112,10 +114,17 @@ case "$mode" in
     # répartiteur de Clever Cloud la réutilise parfois à cet instant et
     # répond 502 sans que la requête atteigne l'application. Mesuré sur la
     # préprod XS le 2026-11-10 (k6, paliers 1 à 100 utilisateurs) : 9 puis
-    # 5 réponses 502 sur ~6 100 pages à 5 s, 0 sur ~6 200 à 65 s
-    # (docs/plan-test-de-charge.md § 13). Une valeur posée sur l'application
-    # l'emporte.
-    PORT="${PORT:-8080}" HOSTNAME=0.0.0.0 KEEP_ALIVE_TIMEOUT="${KEEP_ALIVE_TIMEOUT:-65000}" \
+    # 5 réponses 502 sur ~6 100 pages à 5 s, 0 sur 6 176 à 65 s (PR #292 ;
+    # détail dans le plan de test de charge, PR #291). Une valeur posée sur
+    # l'application l'emporte, si c'est un entier de millisecondes ≥ 10000 :
+    # Next la lit par parseInt, et « 65 » (des secondes) ou « 0 » rendraient
+    # les 502 sans un mot.
+    delai="${KEEP_ALIVE_TIMEOUT:-65000}"
+    case "$delai" in
+      ''|*[!0-9]*) echo "KEEP_ALIVE_TIMEOUT « $delai » : un entier de millisecondes (ex. 65000)." >&2; exit 1 ;;
+    esac
+    [ "$delai" -ge 10000 ] || { echo "KEEP_ALIVE_TIMEOUT « $delai » ms : 10000 au moins (des millisecondes, pas des secondes)." >&2; exit 1; }
+    PORT="${PORT:-8080}" HOSTNAME=0.0.0.0 KEEP_ALIVE_TIMEOUT="$delai" \
       exec node .next/standalone/server.js
     ;;
   lancer)

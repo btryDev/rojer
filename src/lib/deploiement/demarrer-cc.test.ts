@@ -7,7 +7,9 @@
  * - TLS vérifié contre le certificat fourni, refusé s'il n'en a pas la forme ;
  * - une URL littérale (`$VAR` non développé) ou déjà paramétrée est refusée
  *   (un `sslmode` hérité désactiverait la vérification sans bruit) ;
- * - le mot de passe ne s'affiche pas.
+ * - le mot de passe ne s'affiche pas ;
+ * - le serveur écoute sur 0.0.0.0 et garde ses connexions inactives 65 s
+ *   (les 502 du répartiteur), sauf valeur valide posée sur l'application.
  */
 import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
@@ -24,17 +26,29 @@ afterEach(() => {
   for (const d of dossiers.splice(0)) rmSync(d, { recursive: true, force: true });
 });
 
-function lancer(env: Record<string, string>, mode = "verifier", ...commande: string[]) {
+function lancerDans(
+  preparer: (dossier: string) => void,
+  env: Record<string, string>,
+  mode = "verifier",
+  ...commande: string[]
+) {
   // Environnement vide : rien n'est hérité du poste, comme sur une instance
-  // neuve. Un dossier temporaire propre à chaque appel : rien n'est écrit
-  // dans le /tmp partagé. NODE_ENV : exigée par le type de Next, sans effet.
+  // neuve. Un dossier temporaire propre à chaque appel, qui sert aussi de
+  // dossier courant : rien n'est écrit dans le /tmp partagé ni dans le dépôt.
+  // NODE_ENV : exigée par le type de Next, sans effet.
   const dossier = mkdtempSync(join(tmpdir(), "cc-"));
   dossiers.push(dossier);
+  preparer(dossier);
   const r = spawnSync("sh", [SCRIPT, mode, ...commande], {
+    cwd: dossier,
     env: { NODE_ENV: "test", PATH: process.env.PATH ?? "", TMPDIR: dossier, ...env },
     encoding: "utf8",
   });
   return { code: r.status, sortie: r.stdout.trim(), erreur: r.stderr, dossier };
+}
+
+function lancer(env: Record<string, string>, mode = "verifier", ...commande: string[]) {
+  return lancerDans(() => {}, env, mode, ...commande);
 }
 
 describe("demarrer-cc.sh : l'URL de la base", () => {
@@ -134,29 +148,36 @@ describe("demarrer-cc.sh : l'URL de la base", () => {
 });
 
 describe("demarrer-cc.sh : le serveur", () => {
-  // Un faux serveur autonome, dans un dossier à part, qui affiche ce qu'il
-  // reçoit : le script s'y lance comme sur l'instance.
+  // Un faux serveur autonome qui affiche ce qu'il reçoit : le script s'y
+  // lance comme sur l'instance.
   function servir(env: Record<string, string>) {
-    const dossier = mkdtempSync(join(tmpdir(), "cc-servir-"));
-    dossiers.push(dossier);
-    mkdirSync(join(dossier, ".next/standalone"), { recursive: true });
-    writeFileSync(
-      join(dossier, ".next/standalone/server.js"),
-      'console.log([process.env.PORT, process.env.HOSTNAME, process.env.KEEP_ALIVE_TIMEOUT].join("|"))',
+    const r = lancerDans(
+      (dossier) => {
+        mkdirSync(join(dossier, ".next/standalone"), { recursive: true });
+        writeFileSync(
+          join(dossier, ".next/standalone/server.js"),
+          'console.log([process.env.PORT, process.env.HOSTNAME, process.env.KEEP_ALIVE_TIMEOUT].join("|"))',
+        );
+      },
+      { POSTGRESQL_ADDON_URI: ADDON, BASE_CA_PEM: CA, ...env },
+      "servir",
     );
-    const r = spawnSync("sh", [SCRIPT, "servir"], {
-      cwd: dossier,
-      env: { NODE_ENV: "test", PATH: process.env.PATH ?? "", TMPDIR: dossier, POSTGRESQL_ADDON_URI: ADDON, BASE_CA_PEM: CA, ...env },
-      encoding: "utf8",
-    });
-    return { code: r.status, sortie: r.stdout.trim().split("\n").at(-1) };
+    return { code: r.code, sortie: r.sortie.split("\n").at(-1), erreur: r.erreur };
   }
 
   it("garde les connexions inactives 65 s par défaut, au-delà du répartiteur", () => {
-    expect(servir({})).toEqual({ code: 0, sortie: "8080|0.0.0.0|65000" });
+    expect(servir({})).toMatchObject({ code: 0, sortie: "8080|0.0.0.0|65000" });
   });
 
-  it("une valeur posée sur l'application l'emporte", () => {
-    expect(servir({ KEEP_ALIVE_TIMEOUT: "120000", PORT: "9000" })).toEqual({ code: 0, sortie: "9000|0.0.0.0|120000" });
+  it("une valeur valide posée sur l'application l'emporte", () => {
+    expect(servir({ KEEP_ALIVE_TIMEOUT: "120000", PORT: "9000" })).toMatchObject({ code: 0, sortie: "9000|0.0.0.0|120000" });
+  });
+
+  it("des secondes, zéro ou du texte sont refusés au lieu de rendre les 502", () => {
+    for (const valeur of ["65", "0", "65s", "abc"]) {
+      const r = servir({ KEEP_ALIVE_TIMEOUT: valeur });
+      expect(r.code, valeur).toBe(1);
+      expect(r.erreur).toMatch(/KEEP_ALIVE_TIMEOUT/);
+    }
   });
 });
