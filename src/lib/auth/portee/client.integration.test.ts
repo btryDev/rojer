@@ -204,6 +204,49 @@ describe.skipIf(!URL_BASE || !local)("client borné — PostgreSQL réel", async
     });
   });
 
+  describe("saisie fermée (ADR-053 § 3 ; piste 2 de l'audit du 2026-11-10)", () => {
+    const fermee = () => clientBorne({ type: "compte", compteId: A, userId: UA, saisieFermee: true });
+
+    it("lit et supprime ; ne crée ni ne modifie — par modèle, en transaction, en SQL brut", async () => {
+      const db = fermee();
+      expect((await db.equipement.findMany()).map((e) => e.id)).toEqual([a.equip.id]);
+      const avant = await prisma.equipement.findUniqueOrThrow({ where: { id: a.equip.id } });
+      await expect(db.batiment.create({ data: { etablissementId: a.etab.id, nom: "fermee" } })).rejects.toThrow(/NEXT_REDIRECT/);
+      await expect(db.equipement.update({ where: { id: a.equip.id }, data: { libelle: "modifié" } })).rejects.toThrow(/NEXT_REDIRECT/);
+      await expect(db.equipement.updateMany({ data: { libelle: "modifié" } })).rejects.toThrow(/NEXT_REDIRECT/);
+      await expect(
+        db.$transaction((tx) => tx.equipement.update({ where: { id: a.equip.id }, data: { libelle: "tx" } })),
+      ).rejects.toThrow(/NEXT_REDIRECT/);
+      await expect(db.$executeRaw`UPDATE "Equipement" SET "libelle" = 'brut' WHERE "id" = ${a.equip.id}`).rejects.toThrow(/NEXT_REDIRECT/);
+      await expect(
+        db.$queryRaw`UPDATE "Equipement" SET "libelle" = 'brut' WHERE "id" = ${a.equip.id} RETURNING "id"`,
+      ).rejects.toThrow(/NEXT_REDIRECT/);
+      // Un verrou de lecture reste une lecture.
+      await db.$transaction((tx) => tx.$queryRaw`SELECT 1 FROM "Equipement" WHERE "id" = ${a.equip.id} FOR UPDATE`);
+      expect(await prisma.equipement.findUniqueOrThrow({ where: { id: a.equip.id } })).toEqual(avant);
+      expect(await prisma.batiment.count({ where: { nom: "fermee" } })).toBe(0);
+      // Supprimer reste ouvert (règle 9).
+      const b = await prisma.batiment.create({ data: { etablissementId: a.etab.id, nom: "a-supprimer" } });
+      await db.batiment.delete({ where: { id: b.id } });
+      expect(await prisma.batiment.count({ where: { id: b.id } })).toBe(0);
+    });
+
+    it("un geste ouvert (ouvrirAuGel) écrit ; le compte d'à côté, non fermé, écrit", async () => {
+      const { ouvrirAuGel } = await import("./gel");
+      const b = await (async () => {
+        await Promise.resolve();
+        ouvrirAuGel();
+        // Attendue DANS l'action ouverte : une requête Prisma part quand on l'attend.
+        return await fermee().batiment.create({ data: { etablissementId: a.etab.id, nom: "ouvert" } });
+      })();
+      await prisma.batiment.delete({ where: { id: b.id } });
+      // Le geste ouvert ne fuit pas hors de son action.
+      await expect(fermee().batiment.create({ data: { etablissementId: a.etab.id, nom: "x" } })).rejects.toThrow(/NEXT_REDIRECT/);
+      const ouvert = await dbA.batiment.create({ data: { etablissementId: a.etab.id, nom: "ouvert-normal" } });
+      await prisma.batiment.delete({ where: { id: ouvert.id } });
+    });
+  });
+
   describe("écritures par where", () => {
     it("update et delete d'une ligne d'un autre compte échouent, B intact", async () => {
       await expect(dbA.etablissement.update({ where: { id: b.etab.id }, data: { raisonDisplay: "x" } })).rejects.toThrow();

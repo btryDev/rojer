@@ -42,6 +42,8 @@ const SQL_BRUT_ECRIT: Record<string, string> = {
  * déclaration ou une photo, demander de l'aide.
  */
 const OUVERTS_AU_GEL: Record<string, string[]> = {
+  // L'essai s'écrit quand la saisie est encore fermée (ADR-053 § 3).
+  "src/lib/abonnements/actions.ts": ["demarrerEssaiAction"],
   "src/lib/assistance/actions.ts": ["demanderAssistance"],
   "src/lib/batiments/actions.ts": ["supprimerBatiment"],
   "src/lib/equipements/actions.ts": ["supprimerEquipement"],
@@ -78,6 +80,16 @@ describe("le gel (ADR-053 § 14)", () => {
     expect(code("src/lib/auth/portee/client.ts")).toMatch(
       /\$allOperations\(\{[^}]*\}\)\s*\{\s*if \(portee\.geles\) await verifierGel\(base, model, operation, args, \{ \.\.\.portee, geles: portee\.geles \}\);/,
     );
+  });
+
+  it("l'extension refuse aussi une écriture quand la saisie est fermée — modèles et SQL brut (piste 2 de l'audit du 2026-11-10)", () => {
+    const c = code("src/lib/auth/portee/client.ts");
+    expect(c).toMatch(/verifierGel\([^;]*\);\s*if \(portee\.saisieFermee\) verifierSaisieOuverte\(model, operation\);/);
+    expect(c).toMatch(/async \$executeRaw\(\{ args, query \}\)\s*\{\s*refuserEnLecture\([^)]*\);\s*if \(portee\.saisieFermee\) verifierSaisieOuverte\(/);
+    // La session pose la saisie fermée, de la même lecture que le gel ; seule elle.
+    const posent = [...TEXTES.keys()].filter((f) => /clientBorne(Sur)?\([^)]*saisieFermee/.test(code(f)));
+    expect(posent).toEqual(["src/lib/auth/compte.ts"]);
+    expect(code("src/lib/auth/compte.ts")).toMatch(/etatDeSaisieDuCompte/);
   });
 
   it("seule la session pose le gel sur la portée ; ce qui y échappe est nommé", () => {

@@ -29,6 +29,7 @@ import { INTERVALLE_STRIPE, estLookupKey, formuleDeLookupKey, formuleDuPrix } fr
 import { sensDuChangement } from "./changement";
 import { depassements } from "./quotas";
 import { PAGE_ABONNEMENT, verifierProprietaire, verifierRole } from "./saisie";
+import { ouvrirAuGel } from "./gel-saisie";
 
 /**
  * Démarrer l'essai (écran « Votre essai gratuit »). Le rôle d'abord : le
@@ -36,6 +37,7 @@ import { PAGE_ABONNEMENT, verifierProprietaire, verifierRole } from "./saisie";
  */
 export async function demarrerEssaiAction(_prev: EtatEssai, formData: FormData): Promise<EtatEssai> {
   await verifierRole();
+  ouvrirAuGel(); // l'essai s'écrit quand la saisie est encore fermée (ADR-053 § 3)
   return demarrerEssaiDuCompte(formData.get("accepte") === "oui");
 }
 

@@ -197,10 +197,12 @@ NODE_ENV=production sh scripts/demarrer-cc.sh lancer pnpm tsx --import ./scripts
 
 ## Avant d'ouvrir — Claude
 
-- La course sur `verifierSaisie` (audit de sécurité de `cc`, 2026-11-10,
+- ~~La course sur `verifierSaisie` (audit de sécurité de `cc`, 2026-11-10,
   piste 2 ; notes du chantier) : un membre de deux comptes qui change de
   compte au moment d'écrire peut écrire dans le compte impayé. Décision de
-  la propriétaire : corriger avant de poser `ABONNEMENT_EXIGE=oui`.
+  la propriétaire : corriger avant de poser `ABONNEMENT_EXIGE=oui`.~~
+  [2026-11-10 : corrigée, branche `lot/saisie-dans-la-portee` — la saisie
+  fermée est refusée dans le client borné (ADR-053 § 3, amendé).]
 
 ## Après le lancement (sans urgence)
 

@@ -12,6 +12,8 @@ export type { Geles };
 
 /** Où un refus renvoie : la page qui dit pourquoi, et ce qui lève le gel. */
 export const PAGE_DU_GEL = "/compte/abonnement?saisie=gelee";
+/** Où renvoie une écriture refusée parce que la saisie du compte est fermée (ADR-053 § 3). */
+export const PAGE_SAISIE_FERMEE = "/compte/abonnement?saisie=fermee";
 
 /**
  * La transaction interactive en cours (son client), posée par le client borné
@@ -24,9 +26,9 @@ export const PAGE_DU_GEL = "/compte/abonnement?saisie=gelee";
 export const transactionEnCours = new AsyncLocalStorage<object>();
 
 /**
- * Les gestes qu'un gel laisse ouverts, liste fermée (`quotas-gel-garde.test.ts`) :
- * supprimer, retirer un accès ou une page publique, demander de l'aide — les
- * mêmes que la saisie fermée laisse ouverts (ADR-053 § 3).
+ * Les gestes qu'un gel, ou une saisie fermée, laissent ouverts, liste fermée
+ * (`quotas-gel-garde.test.ts`) : supprimer, retirer un accès ou une page
+ * publique, demander de l'aide, démarrer l'essai (ADR-053 § 3).
  */
 const ouvertAuGel = new AsyncLocalStorage<true>();
 /**
@@ -87,6 +89,19 @@ function designees(nom: string, data: unknown, sortie: Map<string, Objet[]>, act
       designees(r.cible, n.create, sortie);
     }
   }
+}
+
+/**
+ * La saisie fermée (ADR-053 § 3), dans le client borné de la session : une
+ * écriture qui crée ou modifie est refusée AVANT de partir, sauf un geste
+ * ouvert. Lecture et suppression restent ouvertes (règle 9). `verifierSaisie`
+ * reste en tête des actions pour le message ; ce refus-ci tient même si le
+ * compte actif a changé entre les deux (audit de cc, 2026-11-10, piste 2).
+ */
+export function verifierSaisieOuverte(nom: string, operation: string): void {
+  if (!ECRITURES_GELEES.has(operation) || ouvertAuGel.getStore()) return;
+  console.info(JSON.stringify({ type: "ecriture_saisie_fermee_refusee", modele: nom, operation }));
+  redirect(PAGE_SAISIE_FERMEE);
 }
 
 /** Refuse l'écriture : la page de l'abonnement dit pourquoi (redirection, comme `verifierSaisie`). */

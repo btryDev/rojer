@@ -34,6 +34,14 @@ export type Portee = {
   /** Le gel du compte (ADR-053 § 14), posé par la session seule. */
   geles?: Geles;
   /**
+   * La saisie du compte est fermée (ADR-053 § 3) : toute écriture qui crée ou
+   * modifie est refusée ici, sauf les gestes ouverts (`ouvrirAuGel`). Posée
+   * par la session seule, de la même lecture d'abonnement que le gel : la
+   * décision et le compte écrit ne peuvent plus diverger (audit de sécurité
+   * de cc, 2026-11-10, piste 2).
+   */
+  saisieFermee?: true;
+  /**
    * La portée « établissement » (chantier 3 du renforcement, 2026-11-09) :
    * un accès sans session (jeton de prestataire, signature publique, MCP)
    * ne voit que SON établissement. S'ajoute à la borne du compte, ne la

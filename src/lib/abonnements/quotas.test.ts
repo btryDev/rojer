@@ -19,6 +19,7 @@ import {
   debutDeLAnnee,
   depassements,
   gelesDuCompte,
+  etatDeSaisieDuCompte,
   formuleDesPlafonds,
   limitesMembresDuPlugin,
   placesSousLePlafond,
@@ -348,6 +349,50 @@ describe("gelesDuCompte : qui est gelé après une baisse", () => {
     lancer(false);
     const db = compte(paye, 3, 3);
     expect(await gelesDuCompte(db, "c1")).toBeUndefined();
+    expect(db.abonnement.findUnique).not.toHaveBeenCalled();
+  });
+});
+
+describe("etatDeSaisieDuCompte : le gel et la saisie fermée, d'une seule lecture (piste 2 de l'audit du 2026-11-10)", () => {
+  function compte(ligne: object | null, nbEtab = 1) {
+    const db = {
+      abonnement: { findUnique: vi.fn().mockResolvedValue(ligne) },
+      etablissement: { findMany: vi.fn(async ({ skip }: { skip: number }) => Array.from({ length: nbEtab }, (_, i) => ({ id: `e${i + 1}` })).slice(skip)) },
+      prestataire: { findMany: vi.fn().mockResolvedValue([]) },
+    };
+    return db as unknown as Db & typeof db;
+  }
+  const ligne = (statut: string | null, o: object = {}) => ({
+    formule: "rojer_essentiel_mensuel",
+    statut,
+    debutPayantLe: PAYE_DEPUIS,
+    essaiUtiliseLe: null,
+    finEssai: null,
+    finPeriode: null,
+    resilieEnFinDePeriode: false,
+    finPrevueLe: null,
+    ...o,
+  });
+
+  it("qui paie : saisie ouverte ; impayé, résilié ou sans abonnement : fermée — une lecture de la ligne", async () => {
+    lancer();
+    for (const statut of ["active", "trialing", "past_due"]) expect((await etatDeSaisieDuCompte(compte(ligne(statut)), "c1")).saisieFermee).toBe(false);
+    for (const l of [ligne("unpaid"), ligne("canceled"), ligne("paused"), null]) {
+      const db = compte(l);
+      expect((await etatDeSaisieDuCompte(db, "c1")).saisieFermee).toBe(true);
+      expect(db.abonnement.findUnique).toHaveBeenCalledOnce();
+    }
+  });
+
+  it("le gel vient de la même ligne", async () => {
+    lancer();
+    expect(await etatDeSaisieDuCompte(compte(ligne("active"), 3), "c1")).toEqual({ saisieFermee: false, geles: { etablissements: ["e2", "e3"], prestataires: [] } });
+  });
+
+  it("offre non lancée : rien de fermé, aucune lecture", async () => {
+    lancer(false);
+    const db = compte(null);
+    expect(await etatDeSaisieDuCompte(db, "c1")).toEqual({ saisieFermee: false });
     expect(db.abonnement.findUnique).not.toHaveBeenCalled();
   });
 });

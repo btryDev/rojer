@@ -13,7 +13,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { getOptionalUser, requireUser } from "./require-user";
 import { clientBorne, type ClientBorne } from "./portee/client";
-import { gelesDuCompte } from "@/lib/abonnements/quotas";
+import { etatDeSaisieDuCompte } from "@/lib/abonnements/quotas";
 import { appartenanceDeLaSession, compteDOnboarding, invitationsPourAdresse, comptesDeLaPersonne, type Appartenance } from "./membres";
 
 /**
@@ -24,15 +24,19 @@ import { appartenanceDeLaSession, compteDOnboarding, invitationsPourAdresse, com
 const lireAppartenances = cache(appartenanceDeLaSession);
 const lireAppartenance = async (userId: string): Promise<Appartenance | null> => (await lireAppartenances(userId)).retenue;
 
-/** Le client borné de la session, qui porte le gel du compte (ADR-053 § 14) — inutile en lecture seule. */
+/**
+ * Le client borné de la session, qui porte le gel du compte (ADR-053 § 14) et
+ * sa saisie fermée (§ 3), d'une même lecture d'abonnement — inutiles en
+ * lecture seule, où rien ne s'écrit.
+ */
 async function portee(userId: string, a: Appartenance): Promise<ClientBorne> {
   const p = { type: "compte" as const, compteId: a.compteId, userId, lectureSeule: a.role === "lecture" };
   const db = clientBorne(p);
   if (p.lectureSeule) return db;
-  const geles = await lireGeles(db, a.compteId);
-  return geles ? clientBorne({ ...p, geles }) : db;
+  const { geles, saisieFermee } = await lireEtat(db, a.compteId);
+  return geles || saisieFermee ? clientBorne({ ...p, geles, saisieFermee: saisieFermee ? true : undefined }) : db;
 }
-const lireGeles = cache(gelesDuCompte);
+const lireEtat = cache(etatDeSaisieDuCompte);
 
 /**
  * Sans compte (personne inscrite sans établissement, membre retiré), renvoie
