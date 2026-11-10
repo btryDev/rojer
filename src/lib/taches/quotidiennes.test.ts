@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 const m = vi.hoisted(() => ({
   rappels: vi.fn(),
+  renouvellement: vi.fn(),
   avertir: vi.fn(),
   supprimer: vi.fn(),
   fichiers: vi.fn(),
@@ -20,7 +21,7 @@ vi.mock("@/lib/stripe/rapprochement", () => ({ rapprocher: vi.fn() }));
 vi.mock("@/lib/stripe/evenements", () => ({ oublierLesAnciens: vi.fn().mockResolvedValue(undefined) }));
 vi.mock("@/lib/alertes", () => ({ alerter: vi.fn() }));
 vi.mock("@/lib/abonnements/lancement", () => ({ contexteDroits: () => ({}), offreLancee: () => m.lancee.v }));
-vi.mock("@/lib/abonnements/rappels", () => ({ rappelerLaVeilleDeLaFinDEssai: m.rappels }));
+vi.mock("@/lib/abonnements/rappels", () => ({ rappelerLaVeilleDeLaFinDEssai: m.rappels, rappelerLeRenouvellementAnnuel: m.renouvellement }));
 vi.mock("@/lib/abonnements/suppression", () => ({
   avertirAvantSuppression: m.avertir,
   supprimerComptesEchus: m.supprimer,
@@ -42,6 +43,7 @@ beforeEach(() => {
   vi.unstubAllEnvs();
   m.lancee.v = true;
   m.rappels.mockResolvedValue({ envoyes: 2, echecs: 0 });
+  m.renouvellement.mockResolvedValue({ envoyes: 1, echecs: 0 });
   m.avertir.mockResolvedValue({ j30: { envoyes: 0, echecs: 0 }, j7: { envoyes: 0, echecs: 0 }, membresPrevenus: 0 });
   m.supprimer.mockResolvedValue({ supprimes: 0, reportes: 0 });
   m.fichiers.mockResolvedValue({ liberes: 3, echecs: 0, restants: 0 });
@@ -88,6 +90,7 @@ describe("tâches quotidiennes", () => {
   it("le bilan des tâches du jour", async () => {
     expect(await lancerTachesQuotidiennes(aParis(9))).toEqual({
       rappelsVeilleFinEssai: { envoyes: 2, echecs: 0 },
+      rappelsRenouvellementAnnuel: { envoyes: 1, echecs: 0 },
       avertissementsAvantSuppression: { j30: { envoyes: 0, echecs: 0 }, j7: { envoyes: 0, echecs: 0 }, membresPrevenus: 0 },
       suppressions: { supprimes: 0, reportes: 0 },
       fichiersALiberer: { liberes: 3, echecs: 0, restants: 0 },
@@ -125,6 +128,7 @@ describe("tâches quotidiennes", () => {
       evenementsOublies: undefined,
     });
     expect(m.rappels).not.toHaveBeenCalled();
+    expect(m.renouvellement).not.toHaveBeenCalled();
     expect(m.avertir).not.toHaveBeenCalled();
     expect(m.supprimer).not.toHaveBeenCalled();
   });

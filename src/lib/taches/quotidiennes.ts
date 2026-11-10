@@ -14,7 +14,7 @@ import "server-only";
 //   doublon par elle-même (marques conditionnelles).
 
 import { createHash, timingSafeEqual } from "node:crypto";
-import { rappelerLaVeilleDeLaFinDEssai } from "@/lib/abonnements/rappels";
+import { rappelerLaVeilleDeLaFinDEssai, rappelerLeRenouvellementAnnuel } from "@/lib/abonnements/rappels";
 import {
   avertirAvantSuppression,
   libererFichiersEnAttente,
@@ -79,6 +79,7 @@ export async function lancerTachesQuotidiennes(maintenant: Date) {
   const stripe = config.active ? clientStripe(config) : null;
   return {
     rappelsVeilleFinEssai: await tenter("rappel de fin d'essai", () => rappelerLaVeilleDeLaFinDEssai(maintenant)),
+    rappelsRenouvellementAnnuel: await tenter("rappel de renouvellement annuel", () => rappelerLeRenouvellementAnnuel(maintenant, stripe)),
     avertissementsAvantSuppression: await tenter("avertissements avant suppression", () => avertirAvantSuppression(maintenant)),
     suppressions: await tenter("suppressions", () => supprimerComptesEchus(maintenant, stripe)),
     ...(await menage()),

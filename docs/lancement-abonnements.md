@@ -32,7 +32,9 @@
    court, 10 caractères au plus (au-delà, Stripe remplace la fin par
    « * TRIAL OVER » après un essai) — par exemple `ROJER`.
 4. **Litiges** (2026-11-10) : Paramètres > Billing > Abonnements, « Gérer
-   les paiements contestés » → **annuler l'abonnement immédiatement**. Sans
+   les paiements contestés » → **annuler l'abonnement immédiatement** (sans
+   prorata : la banque a déjà repris tout le paiement contesté). [Fait en
+   environnement de test le 2026-11-10 ; à refaire en production.] Sans
    ce réglage, un abonnement contesté continue de prélever (doc Stripe,
    « cet abonnement continue son cycle »). Rojer reçoit le litige
    (`v1.charge.dispute.created`) et envoie une alerte ; la réponse avec
@@ -78,7 +80,10 @@ leur clé et écarte un prix dont l'intervalle contredit la clé.
   comme impayé** (Rojer ferme alors la saisie, lecture et export restent).
 - **E-mails clients** : envoyer les factures et reçus ; e-mails de carte
   expirée et d'échec de paiement ; **rappel 7 jours avant la fin d'un essai
-  gratuit** (celui de la veille est envoyé par Rojer).
+  gratuit** (celui de la veille est envoyé par Rojer). **Ne pas activer**
+  « Envoyer des e-mails concernant les renouvellements à venir » : Stripe
+  l'enverrait aussi chaque mois aux abonnés mensuels ; le rappel des
+  annuels, 30 jours avant l'échéance, est envoyé par Rojer (2026-11-10).
 
 ## 4. Portail client — propriétaire, tableau de bord
 

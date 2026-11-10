@@ -17,8 +17,12 @@ import "server-only";
 
 import { prisma } from "@/lib/prisma";
 import { envoiEnService, motifErreur, publicAppUrl, sendMail } from "@/lib/email";
-import { formaterDateLongueFr } from "@/lib/dates";
+import { ajouterJours, formaterDateLongueFr } from "@/lib/dates";
 import { PAGE_ABONNEMENT } from "./saisie";
+import { FORMULES, formuleDeLookupKey } from "./formules";
+import type Stripe from "stripe";
+import { OPTIONS_WEBHOOK } from "@/lib/stripe/client";
+import { baissePrevue } from "@/lib/stripe/parcours";
 
 /**
  * L'essai finit dans les 36 heures : la tâche passe une fois par jour, et la
@@ -110,6 +114,133 @@ export async function rappelerLaVeilleDeLaFinDEssai(maintenant: Date): Promise<B
     if (partis === 0 && echec) {
       await prisma.abonnement
         .updateMany({ where: { id: ligne.id, rappelVeilleEssaiLe: maintenant }, data: { rappelVeilleEssaiLe: null } })
+        .catch(() => {});
+    }
+  }
+  return bilan;
+}
+
+/**
+ * Le rappel du renouvellement d'un abonnement ANNUEL, 30 jours avant
+ * l'échéance (décision du 2026-11-10). Ni obligation légale entre
+ * professionnels, ni réglage de Stripe — dont l'e-mail partirait aussi chaque
+ * mois aux mensuels — : l'usage, qui évite le renouvellement oublié et la
+ * contestation qui suit. Au plus une fois par échéance, comme le rappel de
+ * fin d'essai : la marque (l'échéance rappelée) est posée avant l'envoi,
+ * rendue si rien n'est parti.
+ */
+export const JOURS_AVANT_RENOUVELLEMENT = 30;
+
+export function messageRenouvellementAnnuel(
+  formule: string | null,
+  echeance: Date,
+  url: string,
+): { subject: string; text: string } {
+  const date = formaterDateLongueFr(echeance);
+  const f = formuleDeLookupKey(formule);
+  const nom = f ? ` (formule ${FORMULES[f.formule].libelle})` : "";
+  return {
+    subject: `Votre abonnement Rojer se renouvelle le ${date}`,
+    text: [
+      "Bonjour,",
+      "",
+      `Votre abonnement annuel à Rojer${nom} se renouvellera automatiquement le ${date}, pour un an.`,
+      "",
+      "Le montant de votre formule sera prélevé sur le moyen de paiement enregistré ; la facture arrive par e-mail. Vous n'avez rien à faire pour continuer.",
+      "",
+      `Pour changer de formule ou résilier avant cette date : ${url}`,
+      "",
+      "— Rojer",
+    ].join("\n"),
+  };
+}
+
+/**
+ * La formule qui sera facturée à l'échéance : une baisse planifiée (passage
+ * au mensuel, ou à une formule plus petite) la change, et la copie de Rojer
+ * ne la porte pas — elle se lit chez Stripe, comme sur la page Abonnement.
+ */
+async function formuleAuRenouvellement(stripe: Stripe, abonnementId: string, formule: string | null, echeance: Date) {
+  const abonnement = await stripe.subscriptions.retrieve(abonnementId, {}, OPTIONS_WEBHOOK);
+  // Une résiliation que la copie n'a pas encore reçue : rien ne se renouvelle.
+  if (abonnement.cancel_at_period_end || abonnement.cancel_at) return null;
+  const baisse = await baissePrevue(stripe, abonnement);
+  // La baisse prend effet à l'échéance (une heure de marge : la copie et le
+  // planning ne datent pas toujours à la seconde près).
+  return baisse && Math.abs(baisse.le.getTime() - echeance.getTime()) < 3_600_000 ? baisse.lookupKey : formule;
+}
+
+/**
+ * Envoie le rappel aux abonnements annuels qui se renouvellent dans les 30
+ * jours, sans résiliation prévue — et qui se renouvellent bien en annuel :
+ * une baisse planifiée vers le mensuel n'appelle pas de rappel. Sans Stripe,
+ * ou Stripe injoignable : rien ne part (un message faux serait pire), la
+ * passe suivante réessaie.
+ */
+export async function rappelerLeRenouvellementAnnuel(maintenant: Date, stripe: Stripe | null): Promise<BilanRappels> {
+  if (!envoiEnService()) return { envoyes: 0, echecs: 0, horsService: true };
+  if (!stripe) return { envoyes: 0, echecs: 0 };
+  const lignes = await prisma.abonnement.findMany({
+    where: {
+      statut: "active",
+      formule: { endsWith: "_annuel" },
+      resilieEnFinDePeriode: false,
+      finPrevueLe: null,
+      finPeriode: { gt: maintenant, lte: ajouterJours(maintenant, JOURS_AVANT_RENOUVELLEMENT) },
+    },
+    select: { id: true, compteId: true, formule: true, finPeriode: true, rappelRenouvellementPour: true, stripeSubscriptionId: true },
+  });
+  const url = `${publicAppUrl()}${PAGE_ABONNEMENT}`;
+  const bilan: BilanRappels = { envoyes: 0, echecs: 0 };
+  for (const ligne of lignes) {
+    const echeance = ligne.finPeriode;
+    if (!echeance || !ligne.stripeSubscriptionId || ligne.rappelRenouvellementPour?.getTime() === echeance.getTime()) continue;
+    let formule: string | null;
+    try {
+      formule = await formuleAuRenouvellement(stripe, ligne.stripeSubscriptionId, ligne.formule, echeance);
+    } catch (e) {
+      bilan.echecs++;
+      console.error(`rappel de renouvellement reporté (abonnement ${ligne.id}) : abonnement illisible — ${motifErreur(e)}`);
+      continue;
+    }
+    if (!formule?.endsWith("_annuel")) continue;
+    // La marque : cette échéance-ci, posée si elle ne l'est pas encore.
+    const prise = await prisma.abonnement.updateMany({
+      where: {
+        id: ligne.id,
+        finPeriode: echeance,
+        OR: [{ rappelRenouvellementPour: null }, { NOT: { rappelRenouvellementPour: echeance } }],
+      },
+      data: { rappelRenouvellementPour: echeance },
+    });
+    if (prise.count !== 1) continue;
+    const message = messageRenouvellementAnnuel(formule, echeance, url);
+    let partis = 0;
+    let echec = false;
+    try {
+      for (const to of await adressesDesProprietaires(ligne.compteId)) {
+        try {
+          await sendMail({ to, ...message });
+          partis++;
+        } catch (e) {
+          echec = true;
+          console.error(`rappel de renouvellement non envoyé (abonnement ${ligne.id}) — ${motifErreur(e)}`);
+        }
+      }
+    } catch (e) {
+      echec = true;
+      console.error(`rappel de renouvellement : propriétaires illisibles (abonnement ${ligne.id}) — ${motifErreur(e)}`);
+    }
+    if (partis > 0) bilan.envoyes++;
+    if (echec) bilan.echecs++;
+    // Rien n'est parti à cause d'un échec : la marque est rendue (la valeur
+    // d'avant), la passe suivante réessaie. Un e-mail parti la garde.
+    if (partis === 0 && echec) {
+      await prisma.abonnement
+        .updateMany({
+          where: { id: ligne.id, rappelRenouvellementPour: echeance },
+          data: { rappelRenouvellementPour: ligne.rappelRenouvellementPour },
+        })
         .catch(() => {});
     }
   }
