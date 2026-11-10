@@ -8,15 +8,18 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { demarrerEssaiAction } from "@/lib/abonnements/actions";
+import { ChampCompteAttendu } from "@/components/compte/ChampCompteAttendu";
 import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
 import { CASE_A_COCHER } from "@/components/ui-kit/case-a-cocher";
 
-export function FormulaireEssai({ disponible }: { disponible: boolean }) {
+/** `compteId` : le compte que montre la page, `null` si la personne n'en a encore aucun. */
+export function FormulaireEssai({ disponible, compteId }: { disponible: boolean; compteId: string | null }) {
   const [etat, envoyer, enCours] = useActionState(demarrerEssaiAction, { status: "idle" });
   const [accepte, setAccepte] = useState(false);
 
   return (
     <form action={envoyer} className="mt-8 flex flex-col gap-4">
+      <ChampCompteAttendu compteId={compteId} />
       <label className="flex max-w-[var(--board-mesure)] items-start gap-3 text-[14px] leading-[1.5]">
         <input
           type="checkbox"

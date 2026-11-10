@@ -7,6 +7,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { sAbonnerAction } from "@/lib/abonnements/actions";
+import { ChampCompteAttendu } from "@/components/compte/ChampCompteAttendu";
 import { eurosHT } from "@/lib/abonnements/affichage";
 import { LIBELLE_PERIODICITE, PERIODICITES, type CleFormule, type Periodicite } from "@/lib/abonnements/formules";
 
@@ -24,12 +25,15 @@ export function FormulaireAbonnement({
   offres,
   quand,
   immediat,
+  compteId,
   libelle,
 }: {
   offres: OffreAffichee[];
   /** Ce qui se passe une fois la carte enregistrée, en une phrase. */
   quand: string;
   immediat: boolean;
+  /** Le compte que montre la page (`ChampCompteAttendu`). */
+  compteId: string | null;
   /** Le texte du bouton : il dit ce qui se passe au clic. */
   libelle: string;
 }) {
@@ -41,6 +45,7 @@ export function FormulaireAbonnement({
     <form action={sAbonnerAction} className="mt-5 flex flex-col gap-6">
       <input type="hidden" name="formule" value={prixChoisi.cle} />
       {immediat && <input type="hidden" name="immediat" value="oui" />}
+      <ChampCompteAttendu compteId={compteId} />
 
       <fieldset className="m-0 border-0 p-0">
         <legend className="mb-3 text-[14px] font-semibold">Paiement</legend>

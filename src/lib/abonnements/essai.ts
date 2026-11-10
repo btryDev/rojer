@@ -17,6 +17,7 @@ import "server-only";
 import Stripe from "stripe";
 import { redirect } from "next/navigation";
 import { getOptionalCompte, requireCompteDOnboarding, type Db } from "@/lib/auth/compte";
+import { MESSAGE_COMPTE_CHANGE } from "@/lib/auth/compte-attendu";
 import { clientStripe } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
 import { abonnementsDuClient, creerClientStripe, demarrerEssai, prixDesFormules, tauxDeTva } from "@/lib/stripe/parcours";
@@ -59,7 +60,7 @@ const erreur = (message: string): EtatEssai => ({ status: "error", message });
  */
 export const PRIX_D_ESSAI = lookupKey(CLES_FORMULES[0], "mensuel");
 
-export async function demarrerEssaiDuCompte(accepte: boolean): Promise<EtatEssai> {
+export async function demarrerEssaiDuCompte(accepte: boolean, formData: FormData): Promise<EtatEssai> {
   const formule = PRIX_D_ESSAI;
   const config = configurationStripe();
   if (!config.active || !offreLancee(contexteDroits())) redirect("/onboarding");
@@ -74,7 +75,9 @@ export async function demarrerEssaiDuCompte(accepte: boolean): Promise<EtatEssai
   ]);
   if (!prix || !tauxTva) return erreur("L'essai ne peut pas démarrer pour le moment. Réessayez dans quelques minutes.");
 
-  const { user, compte, db } = await requireCompteDOnboarding();
+  const lu = await requireCompteDOnboarding(formData, { page: PAGE_ESSAI });
+  if (!lu) return erreur(MESSAGE_COMPTE_CHANGE);
+  const { user, compte, db } = lu;
   if (compte.role !== "owner") redirect(`${PAGE_MEMBRES}?reserve=proprietaire`);
   if (!user.email) return erreur("Votre compte n'a pas d'adresse e-mail : contactez l'assistance.");
   const compteId = compte.compteId;

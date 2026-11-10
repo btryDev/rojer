@@ -6,6 +6,7 @@
 import Stripe from "stripe";
 import { redirect } from "next/navigation";
 import { publicAppUrl } from "@/lib/email";
+import { memeCompteQueLaPage } from "@/lib/auth/compte-attendu";
 import { clientStripe } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
 import { abonnementCourant, synchroniserClientStripe } from "@/lib/stripe/synchronisation";
@@ -37,7 +38,7 @@ import { ouvrirAuGel } from "./gel-saisie";
 export async function demarrerEssaiAction(_prev: EtatEssai, formData: FormData): Promise<EtatEssai> {
   await verifierRole();
   ouvrirAuGel(); // l'essai s'écrit quand la saisie est encore fermée (ADR-053 § 3)
-  return demarrerEssaiDuCompte(formData.get("accepte") === "oui");
+  return demarrerEssaiDuCompte(formData.get("accepte") === "oui", formData);
 }
 
 /**
@@ -45,7 +46,12 @@ export async function demarrerEssaiAction(_prev: EtatEssai, formData: FormData):
  * compte actif relu (un autre onglet a pu en changer) —, ou la page qui dit
  * pourquoi il n'y en a pas.
  */
-async function clientDuCompte({ compte, db }: Proprietaire) {
+async function clientDuCompte({ compte, db }: Proprietaire, formData: FormData | null) {
+  // Le compte de la page (`ChampCompteAttendu`) : un autre onglet a pu changer
+  // le compte actif, et le geste partirait sur celui-là. La page, rendue de
+  // nouveau sur le compte actif, dit que rien n'a été fait. `null` : le retour
+  // de Stripe, que la session de paiement rattache déjà à son client.
+  if (formData && !memeCompteQueLaPage(formData, compte.compteId)) redirect(`${PAGE_ABONNEMENT}?compte=change`);
   const config = configurationStripe();
   if (!config.active) redirect(PAGE_ABONNEMENT);
   const ligne = await db.abonnement.findUnique({
@@ -61,9 +67,9 @@ async function clientDuCompte({ compte, db }: Proprietaire) {
  * reprendre, résilier, télécharger les factures. Le nom de l'entreprise passe
  * sur le client Stripe juste avant : la facture le porte.
  */
-export async function ouvrirPortailAction(): Promise<void> {
+export async function ouvrirPortailAction(formData: FormData): Promise<void> {
   const proprietaire = await verifierProprietaire();
-  const { stripe, db, ligne } = await clientDuCompte(proprietaire);
+  const { stripe, db, ligne } = await clientDuCompte(proprietaire, formData);
   let url: string;
   try {
     // Seulement si le nom est encore le provisoire de l'essai (l'adresse) : un
@@ -91,7 +97,7 @@ export async function ouvrirPortailAction(): Promise<void> {
  */
 export async function sAbonnerAction(formData: FormData): Promise<void> {
   const proprietaire = await verifierProprietaire();
-  const { stripe, ligne, compteId } = await clientDuCompte(proprietaire);
+  const { stripe, ligne, compteId } = await clientDuCompte(proprietaire, formData);
   const formule = String(formData.get("formule") ?? "");
   if (!estLookupKey(formule)) redirect(PAGE_ABONNEMENT);
   const immediat = formData.get("immediat") === "oui";
@@ -151,7 +157,7 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
  */
 export async function finaliserCarteAction(sessionId: string): Promise<void> {
   const proprietaire = await verifierProprietaire();
-  const { stripe, ligne } = await clientDuCompte(proprietaire);
+  const { stripe, ligne } = await clientDuCompte(proprietaire, null);
   let issue: IssueCarte = { issue: "rien" };
   try {
     if (/^cs_[A-Za-z0-9_]+$/.test(sessionId)) {
@@ -189,7 +195,7 @@ const dejaEnCours = (e: unknown) =>
  */
 export async function changerFormuleAction(formData: FormData): Promise<void> {
   const proprietaire = await verifierProprietaire();
-  const { stripe, db, ligne, compteId } = await clientDuCompte(proprietaire);
+  const { stripe, db, ligne, compteId } = await clientDuCompte(proprietaire, formData);
   const formule = String(formData.get("formule") ?? "");
   const visee = formuleDeLookupKey(formule);
   if (!visee) redirect(PAGE_ABONNEMENT);
@@ -236,9 +242,9 @@ export async function changerFormuleAction(formData: FormData): Promise<void> {
 }
 
 /** Renoncer à une baisse de formule planifiée (§ 10). */
-export async function annulerBaisseAction(): Promise<void> {
+export async function annulerBaisseAction(formData: FormData): Promise<void> {
   const proprietaire = await verifierProprietaire();
-  const { stripe, ligne } = await clientDuCompte(proprietaire);
+  const { stripe, ligne } = await clientDuCompte(proprietaire, formData);
   try {
     const { courant } = abonnementCourant(await abonnementsDuClient(stripe, ligne.stripeCustomerId));
     if (courant) await annulerBaisse(stripe, courant);

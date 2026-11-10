@@ -59,10 +59,19 @@ vi.mock("./saisie", () => ({
   verifierRole: async () => {},
 }));
 
-import { annulerBaisseAction, changerFormuleAction, finaliserCarteAction, sAbonnerAction } from "./actions";
+import {
+  annulerBaisseAction,
+  changerFormuleAction,
+  finaliserCarteAction,
+  ouvrirPortailAction,
+  sAbonnerAction,
+} from "./actions";
+import { CHAMP_COMPTE_ATTENDU } from "@/lib/auth/compte-attendu";
 
+/** Un formulaire posté depuis une page qui montrait `c1`, le compte vérifié des tests. */
 const formulaire = (formule = "rojer_pro_annuel", immediat = false) => {
   const f = new FormData();
+  f.set(CHAMP_COMPTE_ATTENDU, "c1");
   f.set("formule", formule);
   if (immediat) f.set("immediat", "oui");
   return f;
@@ -235,7 +244,35 @@ describe("changerFormuleAction", () => {
 
   it("garder sa formule : le planning est rendu", async () => {
     m.abonnementsDuClient.mockResolvedValue([actif("rojer_pro_annuel")]);
-    expect(await redirigeVers(annulerBaisseAction())).toBe("/compte/abonnement?formule=gardee");
+    expect(await redirigeVers(annulerBaisseAction(formulaire()))).toBe("/compte/abonnement?formule=gardee");
     expect(m.annulerBaisse).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ id: "sub_actif" }));
+  });
+});
+
+describe("un autre onglet a changé de compte (audit du 2026-11-10)", () => {
+  // La page montrait c2 ; `verifierProprietaire` a vérifié c1, le compte actif.
+  const dUnAutreCompte = () => {
+    const f = formulaire();
+    f.set(CHAMP_COMPTE_ATTENDU, "c2");
+    return f;
+  };
+  it.each([
+    ["s'abonner", sAbonnerAction],
+    ["changer de formule", changerFormuleAction],
+    ["garder sa formule", annulerBaisseAction],
+    ["ouvrir le portail", ouvrirPortailAction],
+  ])("%s : rien chez Stripe, la page rendue sur le compte actif le dit", async (_geste, action) => {
+    m.abonnementsDuClient.mockResolvedValue([abonnement("trialing")]);
+    expect(await redirigeVers(action(dUnAutreCompte()))).toBe("/compte/abonnement?compte=change");
+    expect(m.abonnementsDuClient).not.toHaveBeenCalled();
+    for (const f of [m.ouvrirCheckout, m.ouvrirCheckoutCarte, m.appliquerFormule, m.monterDeFormule, m.planifierBaisse, m.annulerBaisse])
+      expect(f).not.toHaveBeenCalled();
+  });
+
+  it("un formulaire sans le compte de sa page (onglet d'avant le déploiement) est refusé de même", async () => {
+    const f = new FormData();
+    f.set("formule", "rojer_pro_annuel");
+    expect(await redirigeVers(sAbonnerAction(f))).toBe("/compte/abonnement?compte=change");
+    expect(m.ouvrirCheckoutCarte).not.toHaveBeenCalled();
   });
 });

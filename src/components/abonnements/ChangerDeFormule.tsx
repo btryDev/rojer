@@ -6,6 +6,7 @@
 
 import { BoutonEnvoi } from "./BoutonEnvoi";
 import { annulerBaisseAction, changerFormuleAction } from "@/lib/abonnements/actions";
+import { ChampCompteAttendu } from "@/components/compte/ChampCompteAttendu";
 import { LIBELLES_PLAFONDS } from "@/lib/abonnements/formules";
 import type { Depassement } from "@/lib/abonnements/quotas";
 import { formaterDateLongueFr } from "@/lib/dates";
@@ -26,8 +27,11 @@ const texte = "m-0 text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid
 export function ChangerDeFormule({
   options,
   baisse,
+  compteId,
 }: {
   options: OptionDeFormule[];
+  /** Le compte que montre la page (`ChampCompteAttendu`). */
+  compteId: string | null;
   /** Une baisse déjà planifiée : vers quoi, et quand. */
   baisse: { libelle: string; le: Date } | null;
 }) {
@@ -42,6 +46,7 @@ export function ChangerDeFormule({
             Passage à {baisse.libelle} prévu le {formaterDateLongueFr(baisse.le)}.
           </p>
           <form action={annulerBaisseAction}>
+            <ChampCompteAttendu compteId={compteId} />
             <BoutonEnvoi variant="boardClair">Garder ma formule</BoutonEnvoi>
           </form>
         </div>
@@ -76,6 +81,7 @@ export function ChangerDeFormule({
               </div>
               <form action={changerFormuleAction}>
                 <input type="hidden" name="formule" value={o.cle} />
+                <ChampCompteAttendu compteId={compteId} />
                 <BoutonEnvoi
                   variant={o.sens === "montee" ? "board" : "boardClair"}
                   disabled={!o.prix || !!tropDeMembres}

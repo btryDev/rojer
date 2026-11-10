@@ -14,7 +14,7 @@ import type { TYPE_ERP } from "@/lib/etablissements/schema";
  * de contenu pré-généré : le calendrier vient des équipements déclarés,
  * le DUERP s'ouvre ensuite, le registre se remplit avec les rapports).
  */
-export function StepResume({ state, entreprisesConnues }: StepProps) {
+export function StepResume({ state, entreprisesConnues, nomCompte }: StepProps) {
   // L'établissement rejoint-il une entreprise déjà suivie (même SIREN) ?
   const rattachee = entrepriseRattachee(state.siret, entreprisesConnues);
   // Le nom sous lequel l'établissement apparaîtra : le nom d'usage, sinon la
@@ -88,6 +88,7 @@ export function StepResume({ state, entreprisesConnues }: StepProps) {
           ) : null}
         </div>
         <dl className="mt-5 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
+          {nomCompte ? <SumLigne label="Compte" valeur={nomCompte} /> : null}
           <SumLigne label="Adresse" valeur={adresseComplete || "—"} />
           <SumLigne label="Code NAF" valeur={state.codeNaf || "—"} />
           <SumLigne

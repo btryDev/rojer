@@ -140,6 +140,8 @@ vi.mock("@/lib/abonnements/essai-entreprise", () => ({
 }));
 
 const { finaliserOnboarding } = await import("./actions");
+const { CHAMP_COMPTE_ATTENDU, MESSAGE_COMPTE_CHANGE } = await import("@/lib/auth/compte-attendu");
+const { revalidatePath } = await import("next/cache");
 const { RefusQuota } = await import("@/lib/abonnements/quotas");
 
 function formulaire(over: Record<string, string> = {}): FormData {
@@ -157,6 +159,8 @@ function formulaire(over: Record<string, string> = {}): FormData {
   fd.set("estERP", "false");
   fd.set("estIGH", "false");
   fd.set("estHabitation", "false");
+  // Le compte que montrait la page : celui de la personne simulée (`vitest.setup.ts`).
+  fd.set(CHAMP_COMPTE_ATTENDU, "user-1");
   for (const [k, v] of Object.entries(over)) fd.set(k, v);
   return fd;
 }
@@ -168,6 +172,7 @@ beforeEach(() => {
   h.regenererApresMutation.mockClear();
   h.tx.etablissement.create.mockClear();
   q.prendreQuota.mockClear();
+  vi.mocked(revalidatePath).mockClear();
 });
 
 describe("plafond d'établissements de la formule (ADR-053 § 14)", () => {
@@ -185,6 +190,23 @@ describe("plafond d'établissements de la formule (ADR-053 § 14)", () => {
     });
     expect(h.tx.etablissement.create).not.toHaveBeenCalled();
     expect(h.regenererApresMutation).not.toHaveBeenCalled();
+  });
+});
+
+describe("un autre onglet a changé de compte (audit du 2026-11-10)", () => {
+  it.each([
+    ["un autre compte", "compte-b"],
+    ["aucun compte encore (une invitation acceptée depuis)", ""],
+  ])("la page montrait %s : refusé, rien n'est créé", async (_cas, attendu) => {
+    expect(await finaliserOnboarding({ status: "idle" }, formulaire({ [CHAMP_COMPTE_ATTENDU]: attendu }))).toEqual({
+      status: "error",
+      message: MESSAGE_COMPTE_CHANGE,
+    });
+    expect(h.tx.entreprise.upsert).not.toHaveBeenCalled();
+    expect(h.tx.etablissement.create).not.toHaveBeenCalled();
+    expect(h.regenererApresMutation).not.toHaveBeenCalled();
+    // La page se rend sur le compte actif, le parcours garde ses réponses.
+    expect(revalidatePath).toHaveBeenCalledWith("/onboarding");
   });
 });
 

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ChampBoard } from "@/components/ui-kit/ChampBoard";
 import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
 import { useConfirmation } from "@/components/ui-kit/Confirmation";
+import { ChampCompteAttendu } from "@/components/compte/ChampCompteAttendu";
 import type { Role } from "@/lib/auth/roles";
 import {
   annulerInvitation,
@@ -33,10 +34,11 @@ function Message({ etat }: { etat: EtatMembres }) {
   );
 }
 
-export function FormulaireInvitation() {
+export function FormulaireInvitation({ compteId }: { compteId: string }) {
   const [etat, action, pending] = useActionState(inviterMembre, INITIAL);
   return (
     <form action={action} className="flex flex-col gap-5">
+      <ChampCompteAttendu compteId={compteId} />
       <ChampBoard id="email" name="email" type="email" label="Adresse e-mail" autoComplete="off" requis />
       <div>
         <label className="label-board" htmlFor="role">
@@ -123,12 +125,14 @@ export function AnnulationInvitation({ invitationId }: { invitationId: string })
   );
 }
 
-export function DepartDuCompte() {
+/** `nomCompte` : nommé quand la personne a plusieurs comptes, pour qu'elle sache lequel elle quitte. */
+export function DepartDuCompte({ compteId, nomCompte }: { compteId: string; nomCompte: string | null }) {
   const [etat, action, pending] = useActionState(quitterCompte, INITIAL);
   const formulaire = useRef<HTMLFormElement>(null);
   const { demander, confirmation } = useConfirmation();
   return (
     <form ref={formulaire} action={action}>
+      <ChampCompteAttendu compteId={compteId} />
       <Button
         type="button"
         variant="boardClair"
@@ -137,7 +141,7 @@ export function DepartDuCompte() {
         className="w-full"
         onClick={() =>
           demander({
-            titre: "Quitter ce compte ?",
+            titre: nomCompte ? `Quitter le compte ${nomCompte} ?` : "Quitter ce compte ?",
             detail: "Vous perdez l'accès à ses dossiers. Pour revenir, il faudra qu'un propriétaire vous invite de nouveau.",
             agir: "Quitter le compte",
             alors: () => formulaire.current?.requestSubmit(),

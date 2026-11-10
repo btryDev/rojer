@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { FormulaireEssai } from "@/components/abonnements/FormulaireEssai";
-import { aiguillageSansCompte } from "@/lib/auth/compte";
+import { aiguillageSansCompte, compteDeLaPage } from "@/lib/auth/compte";
 import { requireUser } from "@/lib/auth/require-user";
 import { aiguillageEssai, PRIX_D_ESSAI } from "@/lib/abonnements/essai";
 import { CLES_FORMULES, FORMULES, lookupKey } from "@/lib/abonnements/formules";
@@ -29,6 +29,9 @@ export default async function EssaiPage() {
   const invitation = await aiguillageSansCompte();
   if (invitation) redirect(invitation);
   if ((await aiguillageEssai()) === null) redirect("/onboarding");
+
+  // Le compte de la personne, s'il existe déjà : l'essai partira sur lui seul.
+  const { compteId } = await compteDeLaPage();
 
   const config = configurationStripe();
   // `aiguillageEssai` n'envoie ici que si l'offre est lancée, donc Stripe actif.
@@ -104,7 +107,7 @@ export default async function EssaiPage() {
             </p>
           </section>
 
-          <FormulaireEssai disponible={mensuel !== undefined} />
+          <FormulaireEssai disponible={mensuel !== undefined} compteId={compteId} />
         </div>
       </main>
     </div>

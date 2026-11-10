@@ -11,9 +11,11 @@ import "server-only";
 
 import { cache } from "react";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { getOptionalUser, requireUser } from "./require-user";
 import { clientBorne, type ClientBorne } from "./portee/client";
 import { etatDeSaisieDuCompte } from "@/lib/abonnements/quotas";
+import { memeCompteQueLaPage } from "./compte-attendu";
 import { appartenanceDeLaSession, compteDOnboarding, invitationsPourAdresse, comptesDeLaPersonne, type Appartenance } from "./membres";
 
 /**
@@ -64,9 +66,22 @@ export async function getOptionalCompte() {
  * la session « stripe ») l'appellera sans nom — le compte garde alors le nom
  * par défaut, que rien n'affiche aujourd'hui.
  */
-export async function requireCompteDOnboarding(nomSiNouveau = "Mon compte") {
+export async function requireCompteDOnboarding(
+  formData: FormData,
+  { page, nomSiNouveau = "Mon compte" }: { page: string; nomSiNouveau?: string },
+) {
   const user = await requireUser();
-  const compte = (await lireAppartenance(user.id)) ?? (await compteDOnboarding(user.id, nomSiNouveau));
+  const existant = await lireAppartenance(user.id);
+  // `null` si la page montrait un autre compte, ou aucun quand il y en a un
+  // désormais (une invitation acceptée dans un autre onglet) — vérifié AVANT de
+  // créer un compte, pour n'en laisser aucun de vide. La page est alors rendue
+  // de nouveau, comme quand le compte vient d'être créé : sans quoi, si le
+  // geste échoue ensuite, elle posterait encore « aucun compte » et un nouvel
+  // essai serait pris pour un changement d'onglet.
+  const refus = !memeCompteQueLaPage(formData, existant?.compteId ?? null);
+  if (refus || !existant) revalidatePath(page);
+  if (refus) return null;
+  const compte = existant ?? (await compteDOnboarding(user.id, nomSiNouveau));
   return { user, compte, db: await portee(user.id, compte) };
 }
 
@@ -98,6 +113,17 @@ export const comptesDeLaSession = cache(async () => {
   const comptes = await comptesDeLaPersonne(user.id);
   return { comptes: comptes.map((c) => ({ compteId: c.compteId, nom: c.nom })), actif: compte.compteId };
 });
+
+/**
+ * Le compte que montre une page dont les gestes portent sur le compte entier
+ * (`ChampCompteAttendu`) : son identifiant, `null` sans compte encore ; son
+ * nom quand la personne en a plusieurs, `null` sinon, comme la gélule.
+ */
+export async function compteDeLaPage(): Promise<{ compteId: string | null; nomCompte: string | null }> {
+  if (!(await getOptionalCompte())) return { compteId: null, nomCompte: null };
+  const { comptes, actif } = await comptesDeLaSession();
+  return { compteId: actif, nomCompte: comptes.find((c) => c.compteId === actif)?.nom ?? null };
+}
 
 export type Compte = Awaited<ReturnType<typeof requireCompte>>;
 

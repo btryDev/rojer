@@ -1,6 +1,9 @@
 import { FilRetour } from "@/components/ui-kit/FilRetour";
+import { NomDuCompte } from "@/components/compte/NomDuCompte";
 import { BandeauAbonnement } from "@/components/abonnements/BandeauAbonnement";
-import { getOptionalCompte, type Db } from "@/lib/auth/compte";
+import { compteDeLaPage, getOptionalCompte, type Db } from "@/lib/auth/compte";
+import { MESSAGE_COMPTE_CHANGE } from "@/lib/auth/compte-attendu";
+import { ChampCompteAttendu } from "@/components/compte/ChampCompteAttendu";
 import { requireUser } from "@/lib/auth/require-user";
 import { abonnementDuCompte, contexteDroits, offreLancee } from "@/lib/abonnements/saisie";
 import { droitsDe, gesteAbonnement, libelleStatut, OUVRENT } from "@/lib/abonnements/droits";
@@ -172,13 +175,16 @@ export default async function AbonnementPage({
     carte?: string;
     immediat?: string;
     formule?: string;
+    compte?: string;
   }>;
 }) {
   // Sans compte encore (rien créé), la page se lit quand même : aucun
   // abonnement (ADR-054). `requireCompte` renverrait à l'onboarding.
   await requireUser();
   const c = await getOptionalCompte();
-  const { saisie, stripe, paiement, abonnement, carte, immediat, formule: formuleChange0 } = await searchParams;
+  const { saisie, stripe, paiement, abonnement, carte, immediat, formule: formuleChange0, compte: compteChange } = await searchParams;
+  // Le compte que montre la page : ses gestes le postent (`ChampCompteAttendu`).
+  const { compteId, nomCompte } = await compteDeLaPage();
   const formuleChange = formuleChange0 && formuleChange0 in MESSAGES_FORMULE ? (formuleChange0 as keyof typeof MESSAGES_FORMULE) : null;
   const ctx = contexteDroits();
   const ouvert = offreLancee(ctx);
@@ -220,9 +226,17 @@ export default async function AbonnementPage({
       <div className="mx-auto w-full max-w-[560px]">
         <FilRetour provenance={null} canonique={{ href: "/entreprises", label: "Mon dossier" }} />
         <h1 className="board-titre m-0 mt-6 text-[clamp(29px,3vw,39px)]">Abonnement</h1>
+        <NomDuCompte nom={nomCompte} />
         <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           Vos dossiers restent toujours consultables, quel que soit l&apos;état de l&apos;abonnement.
         </p>
+
+        {/* Un geste parti d'un onglet resté sur un autre compte (`clientDuCompte`) : refusé. */}
+        {compteChange === "change" && (
+          <div className="mt-6">
+            <MessageFormulaire ton="alerte">{MESSAGE_COMPTE_CHANGE}</MessageFormulaire>
+          </div>
+        )}
 
         {saisie === "fermee" && !droits.saisie && (
           <p className="m-0 mt-6 text-[14px] leading-[1.45] text-[color:var(--board-slate-ink)]">
@@ -349,10 +363,11 @@ export default async function AbonnementPage({
               </>
             )}
             {geste === "portail" && optionsChangement.length > 0 && (
-              <ChangerDeFormule options={optionsChangement} baisse={baisse} />
+              <ChangerDeFormule options={optionsChangement} baisse={baisse} compteId={compteId} />
             )}
             {geste === "portail" && (
               <form action={ouvrirPortailAction} className={optionsChangement.length > 0 ? "mt-6" : undefined}>
+                <ChampCompteAttendu compteId={compteId} />
                 <p className="m-0 mt-2 mb-5 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                   Changer de carte, résilier, télécharger vos factures : sur la page sécurisée de Stripe, notre
                   prestataire de paiement.
@@ -382,10 +397,12 @@ export default async function AbonnementPage({
                     offres={offres}
                     quand={quand}
                     immediat={payerMaintenant}
+                    compteId={compteId}
                     libelle={payerMaintenant ? "Payer et m'abonner" : carteEnregistree ? "Changer de formule" : "Continuer vers le paiement"}
                   />
                   {carteEnregistree && (
                     <form action={ouvrirPortailAction} className="mt-4">
+                      <ChampCompteAttendu compteId={compteId} />
                       <Button type="submit" variant="boardClair" size="board">
                         Changer de carte, voir mes factures
                       </Button>

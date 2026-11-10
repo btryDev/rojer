@@ -24,6 +24,10 @@ vi.mock("@/lib/auth/require-user", () => ({
 }));
 vi.mock("@/lib/auth/compte", () => ({
   aiguillageSansCompte: async () => (!h.compte && h.invitations[0] ? `/invitation/${h.invitations[0].id}` : null),
+  compteDeLaPage: async () => ({
+    compteId: (h.compte as { compte: { compteId: string } } | null)?.compte.compteId ?? null,
+    nomCompte: null,
+  }),
 }));
 vi.mock("@/lib/entreprises/queries", () => ({
   listerEntreprisesConnues: () => h.connues(),
@@ -58,6 +62,8 @@ describe("/onboarding", () => {
     expect(assistant(element)).toMatchObject({
       email: "dirigeant@example.test",
       entreprisesConnues: connues,
+      // Le compte de la page, posté avec le parcours (audit du 2026-11-10).
+      compteId: "c1",
     });
   });
 

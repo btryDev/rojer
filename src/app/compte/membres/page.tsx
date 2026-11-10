@@ -1,6 +1,7 @@
 import { FermerLaSaisie } from "@/components/quotas/FermerLaSaisie";
 import { refusMembres } from "@/lib/abonnements/quotas";
 import { FilRetour } from "@/components/ui-kit/FilRetour";
+import { NomDuCompte } from "@/components/compte/NomDuCompte";
 import { requireCompte } from "@/lib/auth/compte";
 import { comptesDeLaPersonne, invitationsDuCompte, membresDuCompte } from "@/lib/auth/membres";
 import { libelleRole } from "@/lib/auth/roles";
@@ -37,12 +38,16 @@ export default async function MembresPage({
     proprietaire ? invitationsDuCompte(compte.compteId) : Promise.resolve([]),
     comptesDeLaPersonne(user.id),
   ]);
+  // Le compte se nomme dès que la personne en a plusieurs (comme la gélule) :
+  // c'est sur lui que portent l'invitation et le départ.
+  const nomCompte = comptes.length > 1 ? (comptes.find((c) => c.compteId === compte.compteId)?.nom ?? null) : null;
 
   return (
     <main className="flex min-h-[calc(100vh-56px)] flex-col bg-[color:var(--board-canvas)] px-6 py-14 sm:px-10">
       <div className="mx-auto w-full max-w-[640px]">
         <FilRetour provenance={null} canonique={{ href: "/entreprises", label: "Mon dossier" }} />
         <h1 className="board-titre m-0 mt-6 text-[clamp(29px,3vw,39px)]">Membres du compte</h1>
+        <NomDuCompte nom={nomCompte} />
         <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           Les personnes qui travaillent sur vos dossiers. Chacune voit tous les établissements du compte, selon son
           rôle. Les prestataires n&apos;en font pas partie : ils accèdent par un lien.
@@ -97,11 +102,11 @@ export default async function MembresPage({
               </h2>
               <p className="m-0 mt-1 mb-5 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                 La personne invitée a 7 jours pour accepter. Sans compte Rojer, elle crée son mot de passe en
-                ouvrant le lien de l&apos;invitation.
+                ouvrant le lien de l&apos;invitation.{nomCompte ? <> Elle rejoindra le compte {nomCompte}.</> : null}
               </p>
               {/* Le plafond d'utilisateurs de la formule, annoncé avant d'inviter (ADR-053 § 14). */}
               <FermerLaSaisie motif={await refusMembres(db, compte.compteId, membres.length + invitations.length)}>
-                <FormulaireInvitation />
+                <FormulaireInvitation compteId={compte.compteId} />
               </FermerLaSaisie>
             </section>
 
@@ -151,7 +156,7 @@ export default async function MembresPage({
             Vous perdez l&apos;accès à ses dossiers ; ce que vous y avez saisi reste au compte. Le dernier
             propriétaire ne peut pas partir : il nomme d&apos;abord un autre propriétaire.
           </p>
-          <DepartDuCompte />
+          <DepartDuCompte compteId={compte.compteId} nomCompte={nomCompte} />
         </section>
       </div>
     </main>
