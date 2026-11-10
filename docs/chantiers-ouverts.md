@@ -3415,6 +3415,15 @@ environ 7 s pour un registre d'un an). **À retirer ou à relever** quand
 les gros exports passent en tâche de fond (lien par mail + ZIP) ou quand le
 rendu sort du processus (plan, B1-B3).
 
+[2026-11-10, décisions de la propriétaire, le même jour : **B1-B3 sont
+lancés** (`lot/pdf-b1`) après la mesure d'A1 en XS — le processus meurt dès
+3 080 rapports, un registre d'un an fige l'application environ 7 s. Le
+garde-fou reste le premier filet, le fil d'exécution devient le second (un
+tas dépassé n'emporte que l'export ; il revient comme le même refus « trop
+volumineux »). **On garde tout et on exporte tout** : ni borne du registre à
+5 ans, ni suppression ; les gros dossiers passeront par le lien par mail +
+ZIP, puis par une archive annuelle « hybride ».]
+
 **Ce qui reste ouvert :**
 - ~~**Seuils provisoires** (2 500 lignes, bloc de 400) : à remplacer par la
   mesure du registre après A1, en XS, sur le banc de charge (session
