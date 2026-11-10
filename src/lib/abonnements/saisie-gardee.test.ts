@@ -65,6 +65,7 @@ const RGPD: Ouverte = { motif: "supprimer ses données reste possible à tout mo
 
 /** Écritures qui restent ouvertes quand la saisie est fermée. */
 const OUVERTES = new Map<string, Ouverte>([
+  ["lib/auth/actions.ts:activerCompteAction", COMPTE],
   ["lib/auth/actions.ts:activerDoubleAuthAction", COMPTE],
   ["lib/auth/actions.ts:changerMotDePasseAction", COMPTE],
   ["lib/auth/actions.ts:confirmerDoubleAuthAction", COMPTE],

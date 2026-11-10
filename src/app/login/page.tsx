@@ -42,19 +42,19 @@ export default async function LoginPage({
           // geste de conformité accompli. Ici on accuse réception d'une
           // confirmation d'adresse — le registre calme du glacier suffit.
           <MessageFormulaire ton="info" className="mt-6">
-            E-mail confirmé. Vous pouvez vous connecter.
+            Compte activé. Connectez-vous avec le mot de passe que vous venez de choisir.
+          </MessageFormulaire>
+        ) : null}
+
+        {confirmation === "deja" ? (
+          <MessageFormulaire ton="info" className="mt-6">
+            Cette adresse était déjà confirmée : votre mot de passe n’a pas changé. Mot de passe oublié ? Demandez-en un nouveau.
           </MessageFormulaire>
         ) : null}
 
         {reinitialise === "1" ? (
           <MessageFormulaire ton="info" className="mt-6">
             Mot de passe changé. Vos autres sessions ont été fermées : connectez-vous avec le nouveau.
-          </MessageFormulaire>
-        ) : null}
-
-        {confirmation === "invalide" ? (
-          <MessageFormulaire ton="alerte" className="mt-6">
-            Ce lien de confirmation est invalide ou a expiré. Connectez-vous avec votre adresse et votre mot de passe pour en obtenir un nouveau.
           </MessageFormulaire>
         ) : null}
 

@@ -64,12 +64,6 @@ const PUBLIQUES = new Map<string, string>([
     "Affiche QR du registre public d'accessibilité : ne lit que par " +
       "`getRegistrePublicParSlug` (registre publié, champs publiables).",
   ],
-  [
-    "auth/verification/route.ts:GET",
-    "Lien de confirmation d'adresse (ADR-052) : Better Auth juge le jeton du " +
-      "lien. Il n'y a pas de session à vérifier — le compte n'est pas encore " +
-      "confirmé, et la route n'en ouvre aucune.",
-  ],
 ]);
 
 /**
