@@ -141,18 +141,19 @@ const recalculsPublics = creerLimiteur({
 });
 /** Ce que dit la page quand elle refuse, en secondes. */
 const REESSAYER_RECALCUL_S = 5;
+/** Les vérifications en cours, par signature : une même signature ne se recalcule qu'une fois à la fois. */
+const verificationsEnCours = new Map<string, Promise<ResultatSousLimite>>();
 
 /**
  * Ce que la page appelle : la limite par IP d'abord, une place de recalcul
  * ensuite, la vérification enfin. Le refus ne dit rien de la signature
  * demandée — il tombe avant toute lecture.
  */
-export async function verifierSousLimite(
-  signatureId: string,
-): Promise<
+type ResultatSousLimite =
   | Awaited<ReturnType<typeof verifierIntegriteSignature>>
-  | { ok: false; raison: "trop_de_demandes" | "serveur_occupe"; reessayerDansSecondes: number }
-> {
+  | { ok: false; raison: "trop_de_demandes" | "serveur_occupe"; reessayerDansSecondes: number };
+
+export async function verifierSousLimite(signatureId: string): Promise<ResultatSousLimite> {
   const ip = ipClient(await headers());
   if (ip) {
     const verdict = await consommer([
@@ -166,20 +167,31 @@ export async function verifierSousLimite(
       };
     }
   }
+  // La même signature déjà en cours de vérification : on partage son
+  // recalcul au lieu d'en lancer un second. Occuper toutes les places exige
+  // alors autant de rapports signés que de places — pas autant d'adresses
+  // (revue de sécurité de la PR #273).
+  const dejaEnCours = verificationsEnCours.get(signatureId);
+  if (dejaEnCours) return dejaEnCours;
   // Ses propres vérifications d'abord (« depuis votre connexion »), puis
   // l'occupation du service (« réessayez ») : la page ne dit pas la même chose.
   if (ip && recalculsPublics.partAtteinte(ip)) {
     return { ok: false, raison: "trop_de_demandes", reessayerDansSecondes: REESSAYER_RECALCUL_S };
   }
-  const liberer = await recalculsPublics.reserver(ip ?? undefined);
-  if (!liberer) {
-    return { ok: false, raison: "serveur_occupe", reessayerDansSecondes: REESSAYER_RECALCUL_S };
-  }
-  try {
-    return await verifierIntegriteSignature(signatureId);
-  } finally {
-    liberer();
-  }
+  // Inscrite AVANT toute attente : une demande simultanée la trouve.
+  const verification = (async (): Promise<ResultatSousLimite> => {
+    const liberer = await recalculsPublics.reserver(ip ?? undefined);
+    if (!liberer) {
+      return { ok: false, raison: "serveur_occupe", reessayerDansSecondes: REESSAYER_RECALCUL_S };
+    }
+    try {
+      return await verifierIntegriteSignature(signatureId);
+    } finally {
+      liberer();
+    }
+  })().finally(() => verificationsEnCours.delete(signatureId));
+  verificationsEnCours.set(signatureId, verification);
+  return verification;
 }
 
 /**

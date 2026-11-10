@@ -61,13 +61,27 @@ describe("vérification publique sous limite", () => {
     expect(h.lue).toBe(1);
   });
 
+  it("la même signature demandée ensemble : un seul recalcul, partagé", async () => {
+    let ouvrir!: () => void;
+    h.porte = new Promise<void>((r) => (ouvrir = r));
+    const enCours = Array.from({ length: 10 }, () => verifierSousLimite("sig_1"));
+    await new Promise((r) => setTimeout(r, 0));
+    expect(h.lue).toBe(1);
+    ouvrir();
+    expect(await Promise.all(enCours)).toEqual(Array(10).fill({ ok: false, raison: "inexistante" }));
+    expect(h.lue).toBe(1);
+    // Terminée, elle se recalcule de nouveau à la demande suivante.
+    await verifierSousLimite("sig_1");
+    expect(h.lue).toBe(2);
+  });
+
   it("une adresse ne tient que deux recalculs : au-delà, refus sans lecture (audit du 2026-11-10)", async () => {
     let ouvrir!: () => void;
     h.porte = new Promise<void>((r) => (ouvrir = r));
-    const enCours = [verifierSousLimite("sig_1"), verifierSousLimite("sig_1")];
+    const enCours = [verifierSousLimite("sig_1"), verifierSousLimite("sig_2")];
     await new Promise((r) => setTimeout(r, 0));
     expect(h.lue).toBe(2);
-    expect(await verifierSousLimite("sig_1")).toEqual({
+    expect(await verifierSousLimite("sig_3")).toEqual({
       ok: false,
       raison: "trop_de_demandes",
       reessayerDansSecondes: 5,
@@ -80,15 +94,15 @@ describe("vérification publique sous limite", () => {
     let ouvrir!: () => void;
     h.porte = new Promise<void>((r) => (ouvrir = r));
     const enCours = ["203.0.113.1", "203.0.113.2", "203.0.113.3", "203.0.113.4", "203.0.113.5", "203.0.113.6"].map(
-      (ip) => {
+      (ip, i) => {
         h.ip = ip;
-        return verifierSousLimite("sig_1");
+        return verifierSousLimite(`sig_${i}`);
       },
     );
     await new Promise((r) => setTimeout(r, 0));
     expect(h.lue).toBe(2);
     h.ip = "203.0.113.99";
-    expect(await verifierSousLimite("sig_1")).toEqual({
+    expect(await verifierSousLimite("sig_99")).toEqual({
       ok: false,
       raison: "serveur_occupe",
       reessayerDansSecondes: 5,
