@@ -18,6 +18,9 @@ vi.mock("@/lib/email", () => ({
   motifErreur: (e: unknown) => (e instanceof Error ? e.message : "erreur"),
 }));
 vi.mock("./saisie", () => ({ PAGE_ABONNEMENT: "/compte/abonnement" }));
+const st = vi.hoisted(() => ({ baisse: vi.fn(), retrieve: vi.fn() }));
+vi.mock("@/lib/stripe/client", () => ({ OPTIONS_WEBHOOK: {} }));
+vi.mock("@/lib/stripe/parcours", () => ({ baissePrevue: st.baisse }));
 
 import {
   FENETRE_VEILLE_MS,
@@ -111,11 +114,24 @@ describe("rappel de la veille de la fin de l'essai", () => {
 
 describe("rappel du renouvellement annuel (décision du 2026-11-10)", () => {
   const ECHEANCE = new Date("2026-12-10T09:00:00Z");
-  const annuel = (o: object = {}) => ({ id: "ab2", compteId: "c2", formule: "rojer_pro_annuel", finPeriode: ECHEANCE, rappelRenouvellementPour: null, ...o });
+  const annuel = (o: object = {}) => ({
+    id: "ab2",
+    compteId: "c2",
+    formule: "rojer_pro_annuel",
+    finPeriode: ECHEANCE,
+    rappelRenouvellementPour: null,
+    stripeSubscriptionId: "sub_2",
+    ...o,
+  });
+  const stripe = { subscriptions: { retrieve: st.retrieve } } as unknown as Parameters<typeof rappelerLeRenouvellementAnnuel>[1];
+  beforeEach(() => {
+    st.retrieve.mockResolvedValue({ id: "sub_2", schedule: null });
+    st.baisse.mockResolvedValue(null);
+  });
 
   it("cherche les annuels actifs, sans résiliation prévue, qui se renouvellent dans les 30 jours — jamais les mensuels", async () => {
     m.findMany.mockResolvedValue([]);
-    await rappelerLeRenouvellementAnnuel(MAINTENANT);
+    await rappelerLeRenouvellementAnnuel(MAINTENANT, stripe);
     expect(m.findMany.mock.calls[0][0].where).toEqual({
       statut: "active",
       formule: { endsWith: "_annuel" },
@@ -131,7 +147,7 @@ describe("rappel du renouvellement annuel (décision du 2026-11-10)", () => {
     m.findMany.mockResolvedValue([annuel()]);
     m.updateMany.mockImplementation(async () => (ordre.push("marque"), { count: 1 }));
     m.sendMail.mockImplementation(async () => void ordre.push("envoi"));
-    expect(await rappelerLeRenouvellementAnnuel(MAINTENANT)).toEqual({ envoyes: 1, echecs: 0 });
+    expect(await rappelerLeRenouvellementAnnuel(MAINTENANT, stripe)).toEqual({ envoyes: 1, echecs: 0 });
     expect(ordre).toEqual(["marque", "envoi"]);
     expect(m.updateMany.mock.calls[0][0]).toEqual({
       where: { id: "ab2", finPeriode: ECHEANCE, OR: [{ rappelRenouvellementPour: null }, { NOT: { rappelRenouvellementPour: ECHEANCE } }] },
@@ -146,30 +162,67 @@ describe("rappel du renouvellement annuel (décision du 2026-11-10)", () => {
 
   it("une échéance déjà rappelée n'est pas rappelée deux fois ; l'échéance suivante l'est", async () => {
     m.findMany.mockResolvedValue([annuel({ rappelRenouvellementPour: ECHEANCE })]);
-    expect(await rappelerLeRenouvellementAnnuel(MAINTENANT)).toEqual({ envoyes: 0, echecs: 0 });
+    expect(await rappelerLeRenouvellementAnnuel(MAINTENANT, stripe)).toEqual({ envoyes: 0, echecs: 0 });
     expect(m.sendMail).not.toHaveBeenCalled();
     m.findMany.mockResolvedValue([annuel({ rappelRenouvellementPour: new Date("2025-12-10T09:00:00Z") })]);
-    expect(await rappelerLeRenouvellementAnnuel(MAINTENANT)).toEqual({ envoyes: 1, echecs: 0 });
+    expect(await rappelerLeRenouvellementAnnuel(MAINTENANT, stripe)).toEqual({ envoyes: 1, echecs: 0 });
   });
 
   it("marque déjà prise par une autre passe : rien n'est envoyé ; rien n'est parti sur échec : la marque d'avant est rendue", async () => {
     m.findMany.mockResolvedValue([annuel()]);
     m.updateMany.mockResolvedValueOnce({ count: 0 });
-    expect(await rappelerLeRenouvellementAnnuel(MAINTENANT)).toEqual({ envoyes: 0, echecs: 0 });
+    expect(await rappelerLeRenouvellementAnnuel(MAINTENANT, stripe)).toEqual({ envoyes: 0, echecs: 0 });
     expect(m.sendMail).not.toHaveBeenCalled();
 
     vi.spyOn(console, "error").mockImplementation(() => {});
     m.sendMail.mockRejectedValue(new Error("panne"));
-    expect(await rappelerLeRenouvellementAnnuel(MAINTENANT)).toEqual({ envoyes: 0, echecs: 1 });
+    expect(await rappelerLeRenouvellementAnnuel(MAINTENANT, stripe)).toEqual({ envoyes: 0, echecs: 1 });
     expect(m.updateMany).toHaveBeenLastCalledWith({
       where: { id: "ab2", rappelRenouvellementPour: ECHEANCE },
       data: { rappelRenouvellementPour: null },
     });
   });
 
+  it("une baisse planifiée vers le mensuel : pas de rappel ; vers une formule annuelle plus petite : le message dit celle qui sera facturée", async () => {
+    m.findMany.mockResolvedValue([annuel()]);
+    st.baisse.mockResolvedValue({ priceId: "price_m", lookupKey: "rojer_pro_mensuel", le: ECHEANCE });
+    expect(await rappelerLeRenouvellementAnnuel(MAINTENANT, stripe)).toEqual({ envoyes: 0, echecs: 0 });
+    expect(m.updateMany).not.toHaveBeenCalled();
+    expect(m.sendMail).not.toHaveBeenCalled();
+    st.baisse.mockResolvedValue({ priceId: "price_e", lookupKey: "rojer_essentiel_annuel", le: ECHEANCE });
+    expect(await rappelerLeRenouvellementAnnuel(MAINTENANT, stripe)).toEqual({ envoyes: 1, echecs: 0 });
+    expect(m.sendMail.mock.calls[0][0].text).toContain("(formule Essentiel)");
+    // Une baisse planifiée à une autre date que cette échéance ne la change pas.
+    m.sendMail.mockClear();
+    st.baisse.mockResolvedValue({ priceId: "price_m", lookupKey: "rojer_pro_mensuel", le: new Date("2027-12-10T09:00:00Z") });
+    await rappelerLeRenouvellementAnnuel(MAINTENANT, stripe);
+    expect(m.sendMail.mock.calls[0][0].text).toContain("(formule Pro)");
+  });
+
+  it("abonnement illisible chez le prestataire, ou sans client Stripe : rien ne part, rien n'est marqué, la passe suivante réessaie", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    m.findMany.mockResolvedValue([annuel()]);
+    st.retrieve.mockRejectedValue(new Error("délai"));
+    expect(await rappelerLeRenouvellementAnnuel(MAINTENANT, stripe)).toEqual({ envoyes: 0, echecs: 1 });
+    expect(m.updateMany).not.toHaveBeenCalled();
+    expect(await rappelerLeRenouvellementAnnuel(MAINTENANT, null)).toEqual({ envoyes: 0, echecs: 0 });
+  });
+
+  it("rien n'est parti sur échec : la marque rendue est celle d'avant (l'échéance de l'an dernier), pas null", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const anDernier = new Date("2025-12-10T09:00:00Z");
+    m.findMany.mockResolvedValue([annuel({ rappelRenouvellementPour: anDernier })]);
+    m.sendMail.mockRejectedValue(new Error("panne"));
+    await rappelerLeRenouvellementAnnuel(MAINTENANT, stripe);
+    expect(m.updateMany).toHaveBeenLastCalledWith({
+      where: { id: "ab2", rappelRenouvellementPour: ECHEANCE },
+      data: { rappelRenouvellementPour: anDernier },
+    });
+  });
+
   it("sans pilote d'envoi : rien n'est lu", async () => {
     m.enService.mockReturnValue(false);
-    expect(await rappelerLeRenouvellementAnnuel(MAINTENANT)).toEqual({ envoyes: 0, echecs: 0, horsService: true });
+    expect(await rappelerLeRenouvellementAnnuel(MAINTENANT, stripe)).toEqual({ envoyes: 0, echecs: 0, horsService: true });
     expect(m.findMany).not.toHaveBeenCalled();
   });
 

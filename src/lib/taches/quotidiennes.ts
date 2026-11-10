@@ -79,7 +79,7 @@ export async function lancerTachesQuotidiennes(maintenant: Date) {
   const stripe = config.active ? clientStripe(config) : null;
   return {
     rappelsVeilleFinEssai: await tenter("rappel de fin d'essai", () => rappelerLaVeilleDeLaFinDEssai(maintenant)),
-    rappelsRenouvellementAnnuel: await tenter("rappel de renouvellement annuel", () => rappelerLeRenouvellementAnnuel(maintenant)),
+    rappelsRenouvellementAnnuel: await tenter("rappel de renouvellement annuel", () => rappelerLeRenouvellementAnnuel(maintenant, stripe)),
     avertissementsAvantSuppression: await tenter("avertissements avant suppression", () => avertirAvantSuppression(maintenant)),
     suppressions: await tenter("suppressions", () => supprimerComptesEchus(maintenant, stripe)),
     ...(await menage()),

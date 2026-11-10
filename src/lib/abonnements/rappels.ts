@@ -20,6 +20,9 @@ import { envoiEnService, motifErreur, publicAppUrl, sendMail } from "@/lib/email
 import { ajouterJours, formaterDateLongueFr } from "@/lib/dates";
 import { PAGE_ABONNEMENT } from "./saisie";
 import { FORMULES, formuleDeLookupKey } from "./formules";
+import type Stripe from "stripe";
+import { OPTIONS_WEBHOOK } from "@/lib/stripe/client";
+import { baissePrevue } from "@/lib/stripe/parcours";
 
 /**
  * L'essai finit dans les 36 heures : la tâche passe une fois par jour, et la
@@ -152,9 +155,29 @@ export function messageRenouvellementAnnuel(
   };
 }
 
-/** Envoie le rappel aux abonnements annuels qui se renouvellent dans les 30 jours, sans résiliation prévue. */
-export async function rappelerLeRenouvellementAnnuel(maintenant: Date): Promise<BilanRappels> {
+/**
+ * La formule qui sera facturée à l'échéance : une baisse planifiée (passage
+ * au mensuel, ou à une formule plus petite) la change, et la copie de Rojer
+ * ne la porte pas — elle se lit chez Stripe, comme sur la page Abonnement.
+ */
+async function formuleAuRenouvellement(stripe: Stripe, abonnementId: string, formule: string | null, echeance: Date) {
+  const abonnement = await stripe.subscriptions.retrieve(abonnementId, {}, OPTIONS_WEBHOOK);
+  const baisse = await baissePrevue(stripe, abonnement);
+  // La baisse prend effet à l'échéance (une heure de marge : la copie et le
+  // planning ne datent pas toujours à la seconde près).
+  return baisse && Math.abs(baisse.le.getTime() - echeance.getTime()) < 3_600_000 ? baisse.lookupKey : formule;
+}
+
+/**
+ * Envoie le rappel aux abonnements annuels qui se renouvellent dans les 30
+ * jours, sans résiliation prévue — et qui se renouvellent bien en annuel :
+ * une baisse planifiée vers le mensuel n'appelle pas de rappel. Sans Stripe,
+ * ou Stripe injoignable : rien ne part (un message faux serait pire), la
+ * passe suivante réessaie.
+ */
+export async function rappelerLeRenouvellementAnnuel(maintenant: Date, stripe: Stripe | null): Promise<BilanRappels> {
   if (!envoiEnService()) return { envoyes: 0, echecs: 0, horsService: true };
+  if (!stripe) return { envoyes: 0, echecs: 0 };
   const lignes = await prisma.abonnement.findMany({
     where: {
       statut: "active",
@@ -163,13 +186,22 @@ export async function rappelerLeRenouvellementAnnuel(maintenant: Date): Promise<
       finPrevueLe: null,
       finPeriode: { gt: maintenant, lte: ajouterJours(maintenant, JOURS_AVANT_RENOUVELLEMENT) },
     },
-    select: { id: true, compteId: true, formule: true, finPeriode: true, rappelRenouvellementPour: true },
+    select: { id: true, compteId: true, formule: true, finPeriode: true, rappelRenouvellementPour: true, stripeSubscriptionId: true },
   });
   const url = `${publicAppUrl()}${PAGE_ABONNEMENT}`;
   const bilan: BilanRappels = { envoyes: 0, echecs: 0 };
   for (const ligne of lignes) {
     const echeance = ligne.finPeriode;
-    if (!echeance || ligne.rappelRenouvellementPour?.getTime() === echeance.getTime()) continue;
+    if (!echeance || !ligne.stripeSubscriptionId || ligne.rappelRenouvellementPour?.getTime() === echeance.getTime()) continue;
+    let formule: string | null;
+    try {
+      formule = await formuleAuRenouvellement(stripe, ligne.stripeSubscriptionId, ligne.formule, echeance);
+    } catch (e) {
+      bilan.echecs++;
+      console.error(`rappel de renouvellement reporté (abonnement ${ligne.id}) : abonnement illisible — ${motifErreur(e)}`);
+      continue;
+    }
+    if (!formule?.endsWith("_annuel")) continue;
     // La marque : cette échéance-ci, posée si elle ne l'est pas encore.
     const prise = await prisma.abonnement.updateMany({
       where: {
@@ -180,7 +212,7 @@ export async function rappelerLeRenouvellementAnnuel(maintenant: Date): Promise<
       data: { rappelRenouvellementPour: echeance },
     });
     if (prise.count !== 1) continue;
-    const message = messageRenouvellementAnnuel(ligne.formule, echeance, url);
+    const message = messageRenouvellementAnnuel(formule, echeance, url);
     let partis = 0;
     let echec = false;
     try {
