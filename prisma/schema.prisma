@@ -2501,9 +2501,59 @@ model EvenementStripe {
   /// Motif du dernier échec (jamais la charge utile, qui porte des données
   /// personnelles).
   derniereErreur     String?
+  /// La file (ADR-053 § 5, amendé le 2026-11-10) : l'événement est aiguillé
+  /// après la réponse à Stripe ; un échec se retente à `prochainEssaiLe`,
+  /// puis devient durable (alerte).
+  tentatives         Int       @default(0)
+  prochainEssaiLe    DateTime?
+  echecDurableLe     DateTime?
+  /// L'objet de la notification légère (`related_object.id` : `sub_…`,
+  /// `in_…`, `cs_…`, `du_…`, `ch_…`), relu à l'aiguillage.
+  objetId            String?
+  /// Le client Stripe trouvé à l'aiguillage (nul : rien à suivre).
+  clientStripe       String?
+  /// Durée de l'aiguillage, en millisecondes.
+  dureeMs            Int?
 
   // Le ménage des événements anciens (`DELETE … WHERE "recuLe" < …`).
   @@index([recuLe])
+  // Les événements à aiguiller.
+  @@index([traiteLe, prochainEssaiLe])
+}
+
+/// Un client Stripe à relire (ADR-053 § 5, amendé le 2026-11-10) : une ligne
+/// par client, hors compte. Due tant que `demandes > traitees`. Le bail
+/// (`bailJusquAu`) sérialise les relectures d'un même client sans tenir de
+/// connexion ; son jeton (`bailJeton`, augmenté à chaque prise) refuse
+/// l'écriture d'un worker dont le bail a expiré.
+model SynchronisationStripe {
+  customerId      String    @id
+  demandes        Int       @default(0)
+  traitees        Int       @default(0)
+  bailJeton       Int       @default(0)
+  bailJusquAu     DateTime?
+  tentatives      Int       @default(0)
+  prochainEssaiLe DateTime  @default(now())
+  derniereErreur  String?
+  echecDurableLe  DateTime?
+  /// Le dernier abonnement vu à l'aiguillage : relu par son identifiant si le
+  /// client a été supprimé (la liste de ses abonnements peut être refusée).
+  abonnementId    String?
+  synchroniseLe   DateTime?
+
+  @@index([prochainEssaiLe])
+}
+
+/// Une exécution des tâches quotidiennes par jour civil de Paris (ADR-053 § 5,
+/// amendé le 2026-11-10) : la crontab tourne sur chaque instance, et deux
+/// instances numérotées 0 coexistent pendant un déploiement. Le bail reprend
+/// une exécution tuée ; `termineeLe` arrête les suivantes.
+model TacheQuotidienne {
+  jour        String    @id
+  bailJeton   Int       @default(0)
+  bailJusquAu DateTime?
+  termineeLe  DateTime?
+  bilan       Json?
 }
 
 // ============================================================================

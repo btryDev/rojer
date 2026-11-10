@@ -20,6 +20,7 @@ import { OPTIONS_WEBHOOK } from "@/lib/stripe/client";
 import { expirerSessionsOuvertes } from "@/lib/stripe/parcours";
 import { synchroniserClientStripe } from "@/lib/stripe/synchronisation";
 import { OUVRENT } from "./droits";
+import { alerter } from "@/lib/alertes";
 import { adressesDesProprietaires } from "./rappels";
 import { PAGE_ABONNEMENT } from "./saisie";
 
@@ -38,6 +39,17 @@ export function finDuDelai(sansAbonnementDepuis: Date): Date {
 
 const plusTard = (a: Date, b: Date) => (a.getTime() >= b.getTime() ? a : b);
 const dans = (maintenant: Date, jours: number) => ajouterJours(maintenant, jours);
+
+/**
+ * La date de suppression à dire au compte : celle posée au premier
+ * avertissement ; avant lui, la fin du délai — jamais moins de 30 jours,
+ * puisque le premier e-mail la posera à 30 jours au moins (un compte dont
+ * l'horloge a dépassé douze mois sans avertissement, offre relancée ou envoi
+ * hors service, n'est pas « supprimé très prochainement »).
+ */
+export function dateDeSuppressionPrevue(sansAbonnementDepuis: Date, suppressionPrevueLe: Date | null, maintenant: Date): Date {
+  return suppressionPrevueLe ?? plusTard(finDuDelai(sansAbonnementDepuis), dans(maintenant, 30));
+}
 const FERME = { OR: [{ statut: null }, { statut: { notIn: [...OUVRENT] } }] };
 
 export type Avertissement = "j30" | "j7";
@@ -316,7 +328,16 @@ export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | n
           .list({ customer: stripeCustomerId, status: "all", limit: 100 }, OPTIONS_WEBHOOK)
           .autoPagingToArray({ limit: 10_000 });
       } catch (e) {
-        if (!introuvable(e) || !(await clientSupprime(stripe, stripeCustomerId))) throw e;
+        if (!introuvable(e)) throw e;
+        if (!(await clientSupprime(stripe, stripeCustomerId))) {
+          // Introuvable sans être supprimé : mauvaise clé (test en production,
+          // autre compte Stripe) — le compte attend, chaque jour : à signaler.
+          await alerter("suppression d'un compte en attente : client Stripe introuvable", [
+            `compte ${compteId}, client ${stripeCustomerId}`,
+            "Vérifier la clé Stripe de l'application (mode, compte) ; rien n'est effacé tant que Stripe ne dit pas le client supprimé.",
+          ]);
+          throw e;
+        }
         console.error(`suppression du compte ${compteId} : client Stripe ${stripeCustomerId} supprimé, rien à résilier`);
         abonnements = [];
       }

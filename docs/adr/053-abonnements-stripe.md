@@ -98,6 +98,65 @@ et sans croire une information qui ne vient pas de Stripe.
      fait dans la requête (trois appels Stripe au plus, 3 s chacun, sans
      relance du SDK : la relance est celle de Stripe) ; pas de file
      d'attente au volume de Rojer.
+     [2026-11-10, amendé — décision de la propriétaire, après l'audit de
+     sécurité de `cc` et la lecture de la doc Stripe, Next.js, Clever Cloud
+     et Prisma : **le traitement sort de la requête, par une file en
+     base.** Motifs : Stripe demande de répondre « rapidement » avant toute
+     logique complexe et de traiter « avec une file d'attente asynchrone »
+     (docs.stripe.com/webhooks) ; un traitement dans la requête pouvait
+     durer une minute (neuf appels Stripe pour une session de carte) ; un
+     déploiement Clever Cloud arrête l'ancienne instance sans attendre ;
+     cinq connexions SQL par instance ; plusieurs événements par changement
+     relançaient chacun une relecture complète.
+     - **Réception** : signature, mode, insertion de l'événement
+       (`EvenementStripe`, « si absent »), 200. Ni appel Stripe ni logique.
+       Doublon → 200 aussi (déjà enregistré). Les codes 409 et 500
+       disparaissent : une fois l'événement en base, la relance est la nôtre.
+     - **Aiguillage** (après la réponse, `after()` de Next.js, puis chaque
+       minute par la crontab) : l'événement est pris sous bail
+       (`traitementDebuteLe`, jeton), son objet relu chez Stripe pour
+       trouver le client — et les effets propres à l'objet (carte d'une
+       session de configuration, planning de baisse échu) — puis, dans
+       **une seule transaction sans appel réseau**, le client est marqué « à
+       synchroniser » et l'événement marqué aiguillé.
+     - **Synchronisation, une par client** (`SynchronisationStripe`, une
+       ligne par client Stripe) : un compteur de demandes, augmenté par
+       chaque événement et chaque geste de l'utilisateur ; un bail daté
+       (3 min) avec **jeton**, augmenté à chaque prise. Aucune connexion
+       n'est tenue pendant les appels à Stripe. L'écriture de l'abonnement
+       et la clôture de la ligne se font dans une transaction courte qui
+       vérifie d'abord le jeton (`UPDATE … WHERE "bailJeton" = …`, ligne
+       verrouillée jusqu'au commit) : un worker dont le bail a expiré
+       n'écrit rien. La ligne n'est close que pour les demandes lues au
+       début : une demande arrivée pendant la relecture la fait repasser.
+       Les listes v1 de Stripe sont « immédiatement cohérentes »
+       (docs.stripe.com/api-v2-overview) : une relecture qui commence après
+       la précédente voit tout ce que la précédente a vu. `relueLe` reste,
+       en second rempart.
+     - **Relances** : sur échec, essais espacés (1 min, 5 min, 15 min, 1 h,
+       3 h, 6 h, 12 h, 24 h, 24 h — trois jours, comme Stripe), puis
+       **échec durable** et alerte (`ALERTES_EMAIL`). Une nouvelle demande
+       relance un échec durable.
+     - **Rapprochement quotidien** : la tâche du matin demande la relecture
+       de chaque client dont l'abonnement n'est pas terminé. Stripe écrit
+       qu'un événement peut ne jamais être créé
+       (docs.stripe.com/events/manage-webhook-endpoints) : c'est le seul
+       filet.
+     - **Litiges et remboursements** : `v1.charge.dispute.created` et
+       `v1.charge.refunded` écoutés ; alerte, et relecture du client. Les
+       droits suivent l'abonnement : un remboursement se double d'une
+       résiliation dans Stripe, et le réglage « Gérer les paiements
+       contestés » annule l'abonnement contesté
+       (`docs/lancement-abonnements.md`).
+     - Une relecture tronquée par la pagination (limite atteinte) est un
+       échec, jamais un état complet.
+     - La crontab tourne sur chaque instance, et deux instances numérotées
+       0 coexistent pendant un déploiement (doc Clever Cloud) :
+       `INSTANCE_NUMBER` n'est qu'une économie ; la sûreté vient des baux
+       en base. Les tâches quotidiennes s'enregistrent par jour civil
+       (`TacheQuotidienne`, bail et jeton) : une seule exécution par jour,
+       reprise si elle est tuée, rattrapée par la crontab de chaque minute
+       si celle de 9 h a sauté.]
 6. **Une ligne par compte** (`Abonnement`, `userId` unique) : l'état courant,
    l'historique restant chez Stripe (factures, abonnements passés).
    L'état est une **chaîne**, pas une énumération en base : un état inconnu
@@ -463,7 +522,18 @@ et sans croire une information qui ne vient pas de Stripe.
 - `EvenementStripe` : hors compte (ADR-051), écrit avant toute identité :
   `id` (l'identifiant Stripe `evt_…`), `type`, `recuLe` (indexé, pour le
   ménage), `traitementDebuteLe`, `traiteLe`, `derniereErreur` (un motif,
-  jamais la charge utile).
+  jamais la charge utile). [2026-11-10 : et `tentatives`,
+  `prochainEssaiLe`, `echecDurableLe`, `clientStripe` (le client trouvé à
+  l'aiguillage), `dureeMs` (temps d'aiguillage).]
+- `SynchronisationStripe` (2026-11-10) : hors compte ; `customerId` en clé
+  primaire ; `demandes`, `traitees` (compteurs : due tant que `demandes >
+  traitees`) ; `bailJeton`, `bailJusquAu` ; `tentatives`,
+  `prochainEssaiLe`, `derniereErreur`, `echecDurableLe` ;
+  `abonnementId` (le dernier abonnement vu à l'aiguillage : relu par son
+  identifiant si le client a été supprimé) ; `synchroniseLe`.
+- `TacheQuotidienne` (2026-11-10) : hors compte ; `jour` (clé civile de
+  Paris) en clé primaire ; `bailJeton`, `bailJusquAu`, `termineeLe`,
+  `bilan`.
 
 ## Ce que cette décision ne règle pas
 

@@ -125,13 +125,30 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous"; 
     usages: ["prisma.registreAccessibilite.findMany"],
   },
   "src/lib/stripe/evenements.ts": {
-    motif: "événements Stripe reçus (ADR-053), hors compte, écrits avant toute identité",
+    motif: "événements Stripe reçus (ADR-053), hors compte, écrits avant toute identité ; leur aiguillage vers la file des clients",
     usages: [
+      "prisma.$transaction",
+      "prisma.evenementStripe.count",
       "prisma.evenementStripe.createMany",
       "prisma.evenementStripe.deleteMany",
-      "prisma.evenementStripe.findUnique",
+      "prisma.evenementStripe.findMany",
       "prisma.evenementStripe.updateMany",
     ],
+    // L'aiguillage : l'événement marqué et le client demandé, en une
+    // transaction interactive (ADR-053 § 5, amendé le 2026-11-10).
+    valeur: ["$transaction(hors tableau)"],
+  },
+  "src/lib/stripe/file.ts": {
+    motif: "file des relectures Stripe (ADR-053 § 5, amendé le 2026-11-10) : une ligne par client Stripe, hors compte — demande, bail à jeton, clôture",
+    usages: ["prisma.$executeRaw", "prisma.$queryRaw"],
+  },
+  "src/lib/stripe/rapprochement.ts": {
+    motif: "rapprochement quotidien avec Stripe : l'identifiant du client Stripe de chaque abonnement qui court, à travers les comptes, rien d'autre",
+    usages: ["prisma.abonnement.findMany"],
+  },
+  "src/lib/taches/jour.ts": {
+    motif: "exécution des tâches quotidiennes par jour civil (bail à jeton), hors compte",
+    usages: ["prisma.$queryRaw", "prisma.tacheQuotidienne.createMany", "prisma.tacheQuotidienne.updateMany"],
   },
   "src/lib/accessibilite/queries.ts": {
     motif: "registre public par son slug, sans session",
@@ -401,6 +418,9 @@ const SQL_BRUT_NOMMES: Record<string, string> = {
   "src/lib/abonnements/suppression.ts":
     "verrou FOR UPDATE de la ligne d'abonnement d'un compte à supprimer (ADR-058), dans la transaction qui relit la condition",
   "src/lib/abonnements/quotas.ts": "verrou FOR NO KEY UPDATE de la ligne du compte de la portée (plafonds, ADR-053 § 14)",
+  "src/lib/stripe/file.ts":
+    "file des relectures Stripe, hors compte : demande (INSERT … ON CONFLICT), bail à jeton (UPDATE … RETURNING), verrou FOR UPDATE sous le jeton, clôture",
+  "src/lib/taches/jour.ts": "bail à jeton de l'exécution du jour (UPDATE … RETURNING), hors compte",
   "src/lib/abonnements/stockage.ts": "somme des tailles des fichiers du compte de la portée (plafond de stockage, ADR-053 § 14)",
   "src/lib/registre/actions.ts": "UPDATE jsonb borné à l'établissement gardé",
   "src/lib/duerps/ecrire-reponse-fermee.ts": "UPDATE jsonb d'un DUERP déjà gardé",

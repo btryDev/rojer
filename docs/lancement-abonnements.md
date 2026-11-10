@@ -31,6 +31,16 @@
    (Checkout refuse le paiement sans elle) ; libellé de relevé bancaire
    court, 10 caractères au plus (au-delà, Stripe remplace la fin par
    « * TRIAL OVER » après un essai) — par exemple `ROJER`.
+4. **Litiges** (2026-11-10) : Paramètres > Billing > Abonnements, « Gérer
+   les paiements contestés » → **annuler l'abonnement immédiatement**. Sans
+   ce réglage, un abonnement contesté continue de prélever (doc Stripe,
+   « cet abonnement continue son cycle »). Rojer reçoit le litige
+   (`v1.charge.dispute.created`) et envoie une alerte ; la réponse avec
+   preuves se fait dans Stripe, sous 7 à 21 jours.
+5. **Remboursements** : un remboursement ne change pas l'abonnement. Pour
+   couper l'accès, rembourser **et** résilier l'abonnement dans Stripe ;
+   Rojer ferme les droits à la résiliation et envoie une alerte au
+   remboursement (`v1.charge.refunded`).
 
 ## 2. Catalogue — propriétaire, tableau de bord (mode réel)
 
@@ -89,7 +99,8 @@ Développeurs > Webhooks > nouvelle destination :
   `v1.checkout.session.completed`, `v1.customer.subscription.created`,
   `.updated`, `.deleted`, `.paused`, `.resumed`, `.trial_will_end`,
   `v1.invoice.paid`, `v1.invoice.payment_failed`,
-  `v1.invoice.payment_action_required` ;
+  `v1.invoice.payment_action_required`, et depuis le 2026-11-10
+  `v1.charge.dispute.created`, `v1.charge.refunded` ;
 - noter le secret de signature `whsec_…` (étape 7).
 
 ## 6. Répétition complète en TEST, sur la préproduction — propriétaire, avec Claude
@@ -138,7 +149,8 @@ sur la préproduction, où fermer la saisie ne gêne personne.
 | `APP_ENV` | `production` (sans elle, aucune clé Stripe n'est acceptée) |
 | `STRIPE_SECRET_KEY` | la clé restreinte `rk_live_…` dupliquée à l'étape 6.5 |
 | `STRIPE_WEBHOOK_SECRET` | le `whsec_…` de la destination réelle (étape 5) |
-| `TACHES_SECRET` | `openssl rand -base64 32` (tâche quotidienne, rappel de la veille) |
+| `TACHES_SECRET` | `openssl rand -base64 32` (crontab de chaque minute : file Stripe, tâches du jour) |
+| `ALERTES_EMAIL` | `paloma.sanchez@btry.fr` (échec durable de la file Stripe, litige, remboursement) |
 | `ABONNEMENT_EXIGE` | **ne pas la poser encore** (étape 9) |
 
 Redémarrer, puis lire les journaux du démarrage : aucun avertissement
@@ -179,7 +191,16 @@ NODE_ENV=production sh scripts/demarrer-cc.sh lancer pnpm tsx --import ./scripts
    avec la TVA et les mentions ; page Abonnement « actif » ; événement livré
    au webhook (200) ; puis résilier depuis le portail et rembourser la
    facture dans le tableau de bord.
-4. Le lendemain : la tâche quotidienne a répondu (journaux, réponse JSON).
+4. Le lendemain : la tâche du jour a tourné (journaux : « tâches du
+   AAAA-MM-JJ : … »). Chaque minute, la crontab appelle
+   `/api/taches/chaque-minute` (202).
+
+## Avant d'ouvrir — Claude
+
+- La course sur `verifierSaisie` (audit de sécurité de `cc`, 2026-11-10,
+  piste 2 ; notes du chantier) : un membre de deux comptes qui change de
+  compte au moment d'écrire peut écrire dans le compte impayé. Décision de
+  la propriétaire : corriger avant de poser `ABONNEMENT_EXIGE=oui`.
 
 ## Après le lancement (sans urgence)
 

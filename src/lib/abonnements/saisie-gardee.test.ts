@@ -142,7 +142,7 @@ const LECTURES_EXPOSEES = new Map<string, string>([
  */
 const ROUTES_OUVERTES = new Map<string, string>([
   [
-    "app/api/taches/quotidiennes/route.ts:POST",
+    "app/api/taches/chaque-minute/route.ts:POST",
     "les tâches quotidiennes (rappel de fin d'essai) : sans session, prouvées par le secret de la crontab ; elles n'écrivent dans aucun dossier",
   ],
   [

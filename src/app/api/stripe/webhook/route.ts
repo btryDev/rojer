@@ -2,10 +2,16 @@
 // la preuve est la signature, vérifiée sur le corps brut avant toute lecture
 // en base (`stripe/webhook.ts`). Abonnements désactivés : 503, pour que
 // Stripe relance au lieu de perdre une résiliation.
+//
+// La requête ne fait qu'enregistrer l'événement et répondre (amendé le
+// 2026-11-10) ; le traitement suit la réponse (`after()`), et la crontab de
+// chaque minute reprend ce qu'un déploiement aurait interrompu.
 
+import { after } from "next/server";
 import { configurationStripe } from "@/lib/stripe/config";
 import { clientStripeWebhook } from "@/lib/stripe/client";
-import { lireCorpsBorne, traiterNotificationStripe, verifierNotificationStripe } from "@/lib/stripe/webhook";
+import { traiterLaFileIci } from "@/lib/stripe/traitement";
+import { lireCorpsBorne, recevoirNotificationStripe, verifierNotificationStripe } from "@/lib/stripe/webhook";
 
 const reponse = (status: number) => new Response(null, { status, headers: { "Cache-Control": "no-store" } });
 
@@ -30,5 +36,7 @@ export async function POST(request: Request) {
     console.warn(`stripe : notification refusée — ${verification.motif}`);
     return reponse(400);
   }
-  return reponse(await traiterNotificationStripe(stripe, verification.notification, config.mode));
+  const { status, neuf } = await recevoirNotificationStripe(verification.notification, config.mode);
+  if (neuf) after(() => traiterLaFileIci(stripe));
+  return reponse(status);
 }

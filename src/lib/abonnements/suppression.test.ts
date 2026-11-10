@@ -38,10 +38,13 @@ vi.mock("@/lib/stripe/client", () => ({ OPTIONS_WEBHOOK: {} }));
 vi.mock("@/lib/stripe/synchronisation", () => ({ synchroniserClientStripe: m.synchroniser }));
 vi.mock("@/lib/suppression/fichiers", () => ({ clesDesEtablissements: vi.fn() }));
 vi.mock("@/lib/storage", () => ({ getStorage: () => m.stockage }));
+const { alerter } = vi.hoisted(() => ({ alerter: vi.fn() }));
+vi.mock("@/lib/alertes", () => ({ alerter }));
 
 import { ajouterJours, ajouterMois } from "@/lib/dates";
 import {
   avertirAvantSuppression,
+  dateDeSuppressionPrevue,
   finDuDelai,
   libererFichiersEnAttente,
   messageAuxMembres,
@@ -69,6 +72,15 @@ beforeEach(() => {
 });
 
 describe("suppression d'un compte sans abonnement (ADR-058)", () => {
+  it("la date dite au compte : celle du premier avertissement ; avant, la fin du délai, jamais moins de 30 jours", () => {
+    const posee = new Date("2027-12-01T00:00:00Z");
+    expect(dateDeSuppressionPrevue(new Date("2025-01-01T00:00:00Z"), posee, MAINTENANT)).toEqual(posee);
+    // Délai dépassé sans avertissement (offre relancée) : 30 jours au moins, comme le premier e-mail.
+    expect(dateDeSuppressionPrevue(new Date("2025-01-01T00:00:00Z"), null, MAINTENANT)).toEqual(ajouterJours(MAINTENANT, 30));
+    const recent = new Date("2027-06-01T00:00:00Z");
+    expect(dateDeSuppressionPrevue(recent, null, MAINTENANT)).toEqual(finDuDelai(recent));
+  });
+
   it("douze mois civils après l'horloge, au jour civil (ADR-011)", () => {
     const fin = finDuDelai(new Date("2026-11-15T10:00:00Z"));
     expect(fin).toEqual(ajouterMois(new Date("2026-11-15T10:00:00Z"), 12));
@@ -233,10 +245,12 @@ describe("suppression d'un compte sans abonnement (ADR-058)", () => {
     expect(cancel).not.toHaveBeenCalled();
 
     // Clé de test en production, autre compte Stripe : le client est introuvable
-    // aussi à la relecture — l'abonnement réel facture peut-être : rien n'est effacé.
+    // aussi à la relecture — l'abonnement réel facture peut-être : rien n'est effacé,
+    // et c'est signalé (sinon le compte attendrait chaque jour en silence).
     m.transaction.mockClear();
     retrieve.mockRejectedValue(introuvable);
     expect(await supprimerComptesEchus(MAINTENANT, stripe)).toEqual({ supprimes: 0, reportes: 1 });
+    expect(alerter).toHaveBeenCalledWith(expect.stringMatching(/client Stripe introuvable/), expect.any(Array));
     // Un client lisible et non supprimé : de même.
     retrieve.mockResolvedValue({ id: "cus_parti" });
     expect(await supprimerComptesEchus(MAINTENANT, stripe)).toEqual({ supprimes: 0, reportes: 1 });

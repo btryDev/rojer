@@ -39,8 +39,8 @@ const PUBLIC_PREFIXES = [
   "/legal",
   // ADR-053 : le webhook Stripe, sans session ; la signature est sa garde.
   "/api/stripe/webhook",
-  // Les tâches quotidiennes, appelées par la crontab ; le secret partagé est leur garde.
-  "/api/taches/quotidiennes",
+  // Les tâches (file Stripe, tâches du jour), appelées chaque minute par la crontab ; le secret partagé est leur garde.
+  "/api/taches/chaque-minute",
   "/robots.txt",
 ];
 

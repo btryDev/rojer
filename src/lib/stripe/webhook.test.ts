@@ -2,31 +2,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import Stripe from "stripe";
 
 vi.mock("server-only", () => ({}));
-vi.mock("./evenements", () => ({
-  prendreEnCharge: vi.fn(),
-  marquerTraite: vi.fn(),
-  marquerEchec: vi.fn(),
-  oublierLesAnciens: vi.fn().mockResolvedValue(undefined),
-}));
-vi.mock("./synchronisation", async (reel) => ({
-  ...(await reel<typeof import("./synchronisation")>()),
-  synchroniserClientStripe: vi.fn(),
-}));
+vi.mock("./evenements", () => ({ enregistrer: vi.fn() }));
 
 import * as evenements from "./evenements";
-import { synchroniserClientStripe } from "./synchronisation";
-import {
-  EVENEMENTS_ECOUTES,
-  lireCorpsBorne,
-  motifDErreur,
-  traiterNotificationStripe,
-  verifierNotificationStripe,
-  type NotificationStripe,
-} from "./webhook";
+import { lireCorpsBorne, motifDErreur, recevoirNotificationStripe, verifierNotificationStripe, type NotificationStripe } from "./webhook";
 
 const SECRET = "whsec_essai";
 const stripe = new Stripe("sk_test_essai");
-const PRISE = new Date("2026-11-03T10:00:00Z");
 
 /** Une notification légère, telle que Stripe l'envoie. */
 const leger = (type: string, objet: string, livemode = false) => ({
@@ -100,115 +82,37 @@ describe("verifierNotificationStripe", () => {
   });
 });
 
-describe("traiterNotificationStripe", () => {
-  const api = {
-    subscriptions: { retrieve: vi.fn() },
-    checkout: { sessions: { retrieve: vi.fn() } },
-    invoices: { retrieve: vi.fn() },
-  };
-  const faux = api as unknown as Stripe;
+describe("recevoirNotificationStripe : enregistrer, répondre, rien d'autre", () => {
   const notif = (type: string, objet = "obj_1", livemode = false) =>
     stripe.parseEventNotificationWithoutVerification(JSON.stringify(leger(type, objet, livemode))) as NotificationStripe;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(evenements.prendreEnCharge).mockResolvedValue({ etat: "prise", prise: PRISE });
-    vi.mocked(synchroniserClientStripe).mockResolvedValue({ issue: "ecrit" });
+    vi.mocked(evenements.enregistrer).mockResolvedValue(true);
   });
 
   it("refuse un événement d'un autre mode que la clé, avant toute écriture", async () => {
-    expect(await traiterNotificationStripe(faux, notif("v1.invoice.paid", "in_1", true), "test")).toBe(400);
-    expect(await traiterNotificationStripe(faux, notif("v1.invoice.paid", "in_1", false), "live")).toBe(400);
-    expect(evenements.prendreEnCharge).not.toHaveBeenCalled();
-  });
-
-  it("un doublon répond 200 sans rien refaire ; une livraison en cours, 409", async () => {
-    vi.mocked(evenements.prendreEnCharge)
-      .mockResolvedValueOnce({ etat: "deja-traite" })
-      .mockResolvedValueOnce({ etat: "en-cours" });
-    expect(await traiterNotificationStripe(faux, notif("v1.invoice.paid", "in_1"), "test")).toBe(200);
-    expect(await traiterNotificationStripe(faux, notif("v1.invoice.paid", "in_1"), "test")).toBe(409);
-    expect(api.invoices.retrieve).not.toHaveBeenCalled();
-    expect(synchroniserClientStripe).not.toHaveBeenCalled();
-  });
-
-  it("abonnement : relit l'abonnement, synchronise son client, marque traité sous sa prise", async () => {
-    api.subscriptions.retrieve.mockResolvedValue({ id: "sub_1", customer: "cus_1" });
-    expect(await traiterNotificationStripe(faux, notif("v1.customer.subscription.deleted", "sub_1"), "test")).toBe(200);
-    expect(api.subscriptions.retrieve).toHaveBeenCalledWith("sub_1", {}, expect.objectContaining({ maxNetworkRetries: 0 }));
-    // L'abonnement relu suit : seule trace du compte si le client Stripe est supprimé.
-    expect(synchroniserClientStripe).toHaveBeenCalledWith(faux, "cus_1", {
-      abonnementLu: expect.objectContaining({ id: "sub_1" }),
-      depuisWebhook: true,
-    });
-    expect(evenements.marquerTraite).toHaveBeenCalledWith("evt_test_1", PRISE, null);
-  });
-
-  it.each(EVENEMENTS_ECOUTES)("%s : chaque événement écouté relit son objet et synchronise", async (type) => {
-    api.subscriptions.retrieve.mockResolvedValue({ customer: "cus_1" });
-    api.checkout.sessions.retrieve.mockResolvedValue({ mode: "subscription", customer: "cus_1" });
-    api.invoices.retrieve.mockResolvedValue({ customer: "cus_1" });
-    expect(await traiterNotificationStripe(faux, notif(type, "obj_1"), "test")).toBe(200);
-    expect(synchroniserClientStripe).toHaveBeenCalledWith(faux, "cus_1", expect.anything());
-  });
-
-  it("facture et paiement Checkout : le client de l'objet relu", async () => {
-    api.invoices.retrieve.mockResolvedValue({ customer: { id: "cus_2" } });
-    await traiterNotificationStripe(faux, notif("v1.invoice.payment_failed", "in_1"), "test");
-    expect(synchroniserClientStripe).toHaveBeenLastCalledWith(faux, "cus_2", { abonnementLu: undefined, depuisWebhook: true });
-
-    api.checkout.sessions.retrieve.mockResolvedValue({ mode: "subscription", customer: "cus_3" });
-    await traiterNotificationStripe(faux, notif("v1.checkout.session.completed", "cs_1"), "test");
-    expect(synchroniserClientStripe).toHaveBeenLastCalledWith(faux, "cus_3", { abonnementLu: undefined, depuisWebhook: true });
-  });
-
-  it("sans client à suivre (paiement ponctuel, type non écouté) : traité sans effet, avec un motif", async () => {
-    api.checkout.sessions.retrieve.mockResolvedValue({ mode: "payment", customer: "cus_3" });
-    expect(await traiterNotificationStripe(faux, notif("v1.checkout.session.completed", "cs_1"), "test")).toBe(200);
-    expect(await traiterNotificationStripe(faux, notif("v1.customer.subscription.past_due", "sub_1"), "test")).toBe(200);
-    expect(api.subscriptions.retrieve).not.toHaveBeenCalled();
-    expect(synchroniserClientStripe).not.toHaveBeenCalled();
-    expect(evenements.marquerTraite).toHaveBeenCalledWith("evt_test_1", PRISE, expect.stringMatching(/sans client/));
-  });
-
-  it("un conflit (autre compte, compte disparu) est traité sans effet et signalé en erreur", async () => {
-    const erreur = vi.spyOn(console, "error").mockImplementation(() => {});
-    api.invoices.retrieve.mockResolvedValue({ customer: "cus_1" });
-    vi.mocked(synchroniserClientStripe).mockResolvedValue({ issue: "ignore", motif: "compte Rojer introuvable", alerte: true });
-    expect(await traiterNotificationStripe(faux, notif("v1.invoice.paid", "in_1"), "test")).toBe(200);
-    expect(erreur).toHaveBeenCalledWith(expect.stringMatching(/non enregistré — compte Rojer introuvable/));
-    erreur.mockRestore();
-  });
-
-  it("en échec : 500, l'événement est rendu à la relance, avec un motif sans le message reçu", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
-    api.subscriptions.retrieve.mockRejectedValue(
-      new Stripe.errors.StripeInvalidRequestError({
-        message: "No such subscription: 'sub_1' — client@exemple.fr",
-        type: "invalid_request_error",
-        statusCode: 404,
-        code: "resource_missing",
-      } as never),
-    );
-    expect(await traiterNotificationStripe(faux, notif("v1.customer.subscription.updated", "sub_1"), "test")).toBe(500);
-    const [, , motif] = vi.mocked(evenements.marquerEchec).mock.calls[0];
-    expect(motif).toMatch(/^API Stripe : StripeInvalidRequestError 404 \(resource_missing\)$/);
-    expect(evenements.marquerTraite).not.toHaveBeenCalled();
+    expect(await recevoirNotificationStripe(notif("v1.invoice.paid", "in_1", true), "test")).toEqual({ status: 400, neuf: false });
+    expect(await recevoirNotificationStripe(notif("v1.invoice.paid", "in_1", false), "live")).toEqual({ status: 400, neuf: false });
+    expect(evenements.enregistrer).not.toHaveBeenCalled();
   });
 
-  it("le ménage ne transforme jamais un succès en échec, et son échec est rattrapé", async () => {
-    const avertir = vi.spyOn(console, "warn").mockImplementation(() => {});
-    vi.mocked(evenements.oublierLesAnciens).mockRejectedValue(new Error("verrou"));
-    api.invoices.retrieve.mockResolvedValue({ customer: "cus_1" });
-    // Seule l'horloge avance : le ménage n'a lieu qu'une fois par heure.
-    vi.spyOn(Date, "now").mockReturnValue(Date.now() + 2 * 60 * 60_000);
-    expect(await traiterNotificationStripe(faux, notif("v1.invoice.paid", "in_1"), "test")).toBe(200);
-    vi.mocked(Date.now).mockRestore();
-    expect(evenements.oublierLesAnciens).toHaveBeenCalled();
-    expect(evenements.marquerEchec).not.toHaveBeenCalled();
-    // Lancé après la réponse : une promesse rejetée sans `catch` peut arrêter le processus.
-    await new Promise((r) => setTimeout(r, 0));
-    expect(avertir).toHaveBeenCalledWith(expect.stringMatching(/ménage des événements en échec/));
+  it("enregistre l'événement et l'objet de la notification, puis 200 : le traitement suit la réponse", async () => {
+    expect(await recevoirNotificationStripe(notif("v1.customer.subscription.updated", "sub_1"), "test")).toEqual({ status: 200, neuf: true });
+    expect(evenements.enregistrer).toHaveBeenCalledWith("evt_test_1", "v1.customer.subscription.updated", "sub_1");
+  });
+
+  it("un doublon répond 200 aussi, sans rien à traiter", async () => {
+    vi.mocked(evenements.enregistrer).mockResolvedValue(false);
+    expect(await recevoirNotificationStripe(notif("v1.invoice.paid", "in_1"), "test")).toEqual({ status: 200, neuf: false });
+  });
+
+  it("base injoignable : 500, Stripe relance — sans citer l'erreur reçue", async () => {
+    const erreur = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.mocked(evenements.enregistrer).mockRejectedValue(Object.assign(new Error("client@exemple.fr"), { code: "P1001" }));
+    expect(await recevoirNotificationStripe(notif("v1.invoice.paid", "in_1"), "test")).toEqual({ status: 500, neuf: false });
+    expect(erreur).toHaveBeenCalledWith(expect.stringMatching(/non enregistré — base : P1001$/));
   });
 });
 

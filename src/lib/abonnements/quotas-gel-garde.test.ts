@@ -32,6 +32,7 @@ const SQL_BRUT_ECRIT: Record<string, string> = {
   "src/lib/registre/actions.ts": "refuserSiGele dans `preparer`, avant l'UPDATE",
   "src/lib/duerps/ecrire-reponse-fermee.ts": "aide : chacun de ses appelants appelle refuserSiGele",
   "src/lib/securite/limite-debit.ts": "compteurs techniques, hors de tout compte",
+  "src/lib/stripe/file.ts": "file des relectures Stripe, hors de tout compte (aucune saisie)",
   "src/lib/auth/portee/client.ts": "l'extension (lecture seule)",
 };
 

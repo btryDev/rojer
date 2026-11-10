@@ -4,8 +4,17 @@ import type Stripe from "stripe";
 vi.mock("server-only", () => ({}));
 const { clientDuClientStripe } = vi.hoisted(() => ({ clientDuClientStripe: vi.fn() }));
 vi.mock("@/lib/auth/compte-hors-session", () => ({ clientDuClientStripe }));
+// La file (`file.ts`) : le bail est libre, la clôture passe.
+vi.mock("./file", () => ({
+  demanderSynchronisation: vi.fn().mockResolvedValue(undefined),
+  prendreBail: vi.fn().mockResolvedValue({ customerId: "cus_1", jeton: 1, demandes: 1, tentatives: 0, abonnementId: null }),
+  clore: vi.fn().mockResolvedValue(true),
+  echouer: vi.fn().mockResolvedValue(false),
+  verrouillerSousBail: vi.fn().mockResolvedValue(true),
+}));
+vi.mock("@/lib/alertes", () => ({ alerter: vi.fn() }));
 
-import { abonnementCourant, colonnesDe, horlogeDeSuppression, premierEssai, premierPaiement, synchroniserClientStripe } from "./synchronisation";
+import { abonnementCourant, colonnesDe, horlogeDeSuppression, ListeTronquee, premierEssai, premierPaiement, synchroniserClientStripe, toutLister } from "./synchronisation";
 
 const abo = (o: Partial<Stripe.Subscription> & { id: string; prix?: string }) =>
   ({
@@ -132,6 +141,15 @@ describe("synchroniserClientStripe — le compte vient de Stripe relu, jamais de
       expect(await synchroniserClientStripe(s, "cus_1")).toMatchObject({ issue: "ignore" });
     }
     expect(clientDuClientStripe).not.toHaveBeenCalled();
+  });
+});
+
+describe("toutLister : une liste tronquée n'est pas un état complet", () => {
+  const liste = (n: number) => ({ autoPagingToArray: async ({ limit }: { limit: number }) => Array.from({ length: Math.min(n, limit) }, (_, i) => i) });
+  it("sous la limite : la liste ; à la limite (stripe-node tronque en silence) : une erreur", async () => {
+    expect(await toutLister(liste(3), 5)).toEqual([0, 1, 2]);
+    await expect(toutLister(liste(5), 5)).rejects.toBeInstanceOf(ListeTronquee);
+    await expect(toutLister(liste(50), 5)).rejects.toBeInstanceOf(ListeTronquee);
   });
 });
 
