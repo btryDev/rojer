@@ -8,7 +8,7 @@ import { Prisma } from "@prisma/client";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { requireUser } from "./require-user";
-import { getOptionalCompte, requireCompte } from "./compte";
+import { getOptionalCompte, requireCompte, type Compte } from "./compte";
 import { invitationAdresseeA } from "./membres";
 import { etablissementDuRendu } from "@/lib/etablissements/queries";
 import { cache } from "react";
@@ -292,9 +292,12 @@ export async function assertEtablissementOwnership(etablissementId: string) {
 /**
  * La même garde, qui rend aussi le client borné au compte (ADR-051) : le
  * module qui la passe lit et écrit ensuite par `db`, sans relire la session.
+ * `verifie` : le compte qu'une garde de rôle vient de vérifier
+ * (`verifierProprietaire`) — la garde s'y tient au lieu de relire le compte
+ * actif, qu'un autre onglet a pu changer entre-temps.
  */
-export async function assertEtablissementDuCompte(etablissementId: string) {
-  const { user, compte, db } = await requireCompte();
+export async function assertEtablissementDuCompte(etablissementId: string, verifie?: Compte) {
+  const { user, compte, db } = verifie ?? (await requireCompte());
   const exists = await db.etablissement.findFirst({
     where: { id: etablissementId, entreprise: { compteId: compte.compteId } },
     select: { id: true },
@@ -304,8 +307,8 @@ export async function assertEtablissementDuCompte(etablissementId: string) {
 }
 
 /** Vérifie qu'un entrepriseId appartient au user ; rend aussi le client borné au compte (ADR-051). */
-export async function assertEntrepriseDuCompte(entrepriseId: string) {
-  const { user, compte, db } = await requireCompte();
+export async function assertEntrepriseDuCompte(entrepriseId: string, verifie?: Compte) {
+  const { user, compte, db } = verifie ?? (await requireCompte());
   const exists = await db.entreprise.findFirst({
     where: { id: entrepriseId, compteId: compte.compteId },
     select: { id: true },
