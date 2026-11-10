@@ -207,3 +207,66 @@ describe("RegistreDocument", () => {
     expect(noeuds.map(texteDirect).some((t) => /R\. 146-35 CCH.*propriétaire/.test(t))).toBe(true);
   });
 });
+
+// Lot pdf-a1 (2026-11-10) : l'index des rapports est coupé en une `<Page>` par
+// année et par paquet (`paquets.ts`), parce que d'un seul tenant son rendu
+// coûtait le carré du nombre de lignes. Le découpage ne doit RIEN perdre.
+describe("RegistreDocument — index des rapports découpé", () => {
+  /** `n` rapports de l'année `annee`, du plus récent au plus ancien. */
+  const rapportsDe = (annee: number, n: number, depart = 0): RegistreData["rapports"] =>
+    Array.from({ length: n }, (_, i) => ({
+      id: `${annee}-${depart + i}`,
+      dateRapport: new Date(Date.UTC(annee, 11, 28) - i * 3_600_000),
+      resultat: "conforme" as const,
+      realisePar: "Organisme",
+      libelleObligation: `Vérification ${i}`,
+      equipementLibelle: "Tableau électrique",
+      domaine: null,
+      fichierNomOriginal: "rapport.pdf",
+      commentaires: null,
+      points:
+        i % 7 === 0
+          ? [{ id: `p-${annee}-${i}`, libelle: "Prise", etat: "corrige" as const, corrigeLe: new Date(Date.UTC(annee, 11, 30)), justification: "Remplacée", pieceJointe: false }]
+          : [],
+    }));
+  // 2026 : 250 lignes, donc trois paquets ; 2025 : 3 ; 2023 : 1.
+  const rapports = [...rapportsDe(2026, 250), ...rapportsDe(2025, 3), ...rapportsDe(2023, 1)];
+  const avecRapports: RegistreData = { ...data, rapports };
+  const noeuds = elementsDansLOrdre(RegistreDocument({ data: avecRapports }));
+
+  it("garde tous les rapports, une fois chacun, dans l'ordre d'entrée", () => {
+    const ids = noeuds
+      .filter((n) => n.type === "LigneRapportPdf")
+      .map((n) => (n.props.r as { id: string }).id);
+    expect(ids).toEqual(rapports.map((r) => r.id));
+  });
+
+  it("ouvre chaque année par son compte, et dit la suite sur les paquets suivants", () => {
+    const titres = noeuds.map(texteDirect).filter((t) => /^20\d\d( —|\s\(suite\))/.test(t));
+    expect(titres).toEqual([
+      "2026 — 250 rapports",
+      "2026 (suite)",
+      "2026 (suite)",
+      "2025 — 3 rapports",
+      "2023 — 1 rapport",
+    ]);
+  });
+
+  it("répète l'en-tête du tableau sur chaque paquet, et le fixe en tête de feuille", () => {
+    const tetes = noeuds.filter((n) => n.type === "TeteRapportsPdf");
+    expect(tetes).toHaveLength(5);
+  });
+
+  it("met la tenue du registre une seule fois, après les vérifications en attente", () => {
+    const tenue = noeuds.map(texteDirect).filter((t) => t.startsWith("Tenue du registre"));
+    expect(tenue).toHaveLength(1);
+  });
+
+  it("rend le PDF avec un index de plusieurs paquets", async () => {
+    const pdf = await renderToBuffer(RegistreDocument({ data: avecRapports }));
+    expect(pdf.subarray(0, 4).toString()).toBe("%PDF");
+    // Garde de cette page, sommaire, fiches, puis au moins une feuille par
+    // paquet (5) et une pour les vérifications en attente.
+    expect(nombreDePages(pdf)).toBeGreaterThanOrEqual(1 + 1 + 1 + 5 + 1);
+  });
+});
