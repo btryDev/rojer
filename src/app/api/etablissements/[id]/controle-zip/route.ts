@@ -129,7 +129,7 @@ export async function GET(
   // rendue avant le flux : les fichiers déposés ne sont lus qu'à leur tour
   // dans l'archive, un à la fois, et un client lent ne doit pas priver les
   // autres d'export pendant des minutes.
-  const liberer = await reserverPlaceExport();
+  const liberer = await reserverPlaceExport(user.id);
   if (liberer instanceof Response) return liberer;
   let archive: Awaited<ReturnType<typeof construireArchive>>;
   try {

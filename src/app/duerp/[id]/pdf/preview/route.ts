@@ -1,4 +1,5 @@
 import { DuerpDocument } from "@/lib/pdf/DuerpDocument";
+import { requireUser } from "@/lib/auth/require-user";
 import { reponsePdf } from "@/lib/pdf/reponse";
 import { listerVersions } from "@/lib/versions/queries";
 import { historiqueJusqua } from "@/lib/versions/historique";
@@ -44,8 +45,11 @@ export async function GET(
     .replace(/[^a-zA-Z0-9]/g, "_");
 
   // `no-store` (dans `reponsePdf`) : l'aperçu reflète l'état instantané du DUERP.
+  // La part de la file d'export est celle de l'utilisateur (`exports/limite.ts`).
+  const user = await requireUser();
   return reponsePdf(
     DuerpDocument({ snapshot, historique, brouillon: true }),
     `DUERP_${safe}_apercu.pdf`,
+    user.id,
   );
 }

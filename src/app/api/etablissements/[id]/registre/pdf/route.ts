@@ -24,5 +24,6 @@ export async function GET(
   return reponsePdf(
     RegistreDocument({ data }),
     `Registre_securite_${slugifyFilename(data.etablissement)}.pdf`,
+    user.id,
   );
 }

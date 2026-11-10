@@ -27,5 +27,6 @@ export async function GET(
   return reponsePdf(
     DossierConformiteDocument({ data }),
     `Dossier_conformite_${slugifyFilename(data.etablissement)}.pdf`,
+    user.id,
   );
 }

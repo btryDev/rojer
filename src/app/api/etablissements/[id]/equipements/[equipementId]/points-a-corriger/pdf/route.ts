@@ -14,11 +14,12 @@ export async function GET(
   context: { params: Promise<{ id: string; equipementId: string }> },
 ) {
   const { id, equipementId } = await context.params;
-  const { db } = await requireEtablissement(id);
+  const { db, user } = await requireEtablissement(id);
   const data = await construirePointsEquipementData(db, id, equipementId);
   if (!data) return new Response("Introuvable", { status: 404 });
   return reponsePdf(
     PointsACorrigerDocument({ data }),
     `Points_a_corriger_${slugifyFilename(data.appareil)}.pdf`,
+    user.id,
   );
 }

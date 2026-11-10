@@ -14,6 +14,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { ipClient } from "@/lib/securite/ip-client";
 import { cleLimite, consommer, LIMITES } from "@/lib/securite/limite-debit";
+import { creerLimiteur } from "@/lib/securite/limiteur";
 import { calculerHashObjet, versionDeHash } from "./hash-objet";
 import { SELECT_PREUVE } from "./preuve";
 import { clientDuProprietaire } from "@/lib/auth/compte-hors-session";
@@ -123,14 +124,34 @@ function enPreuve(signature: PreuveSignature): PreuveSignature {
 }
 
 /**
- * Ce que la page appelle : la limite par IP d'abord, la vérification ensuite.
- * Le refus ne dit rien de la signature demandée — il tombe avant toute lecture.
+ * Recalculs d'empreinte menés de front par la page publique (audit de
+ * sécurité du 2026-11-10) : chacun peut lire un rapport entier (20 Mo) en
+ * mémoire, et la limite par IP compte les requêtes, pas celles en cours —
+ * trente demandes simultanées d'une seule adresse tenaient 600 Mo. Deux à la
+ * fois, quatre en attente : la mémoire tenue reste bornée quel que soit le
+ * nombre de demandeurs.
+ */
+const recalculsPublics = creerLimiteur({
+  simultanes: 2,
+  enAttenteMax: 4,
+  attenteMaxMs: 10_000,
+  // Une adresse ne tient que deux places : sans part, un seul visiteur, sous
+  // sa limite de requêtes, gardait les six et refusait tous les autres.
+  parDemandeurMax: 2,
+});
+/** Ce que dit la page quand elle refuse, en secondes. */
+const REESSAYER_RECALCUL_S = 5;
+
+/**
+ * Ce que la page appelle : la limite par IP d'abord, une place de recalcul
+ * ensuite, la vérification enfin. Le refus ne dit rien de la signature
+ * demandée — il tombe avant toute lecture.
  */
 export async function verifierSousLimite(
   signatureId: string,
 ): Promise<
   | Awaited<ReturnType<typeof verifierIntegriteSignature>>
-  | { ok: false; raison: "trop_de_demandes"; reessayerDansSecondes: number }
+  | { ok: false; raison: "trop_de_demandes" | "serveur_occupe"; reessayerDansSecondes: number }
 > {
   const ip = ipClient(await headers());
   if (ip) {
@@ -145,7 +166,20 @@ export async function verifierSousLimite(
       };
     }
   }
-  return verifierIntegriteSignature(signatureId);
+  // Ses propres vérifications d'abord (« depuis votre connexion »), puis
+  // l'occupation du service (« réessayez ») : la page ne dit pas la même chose.
+  if (ip && recalculsPublics.partAtteinte(ip)) {
+    return { ok: false, raison: "trop_de_demandes", reessayerDansSecondes: REESSAYER_RECALCUL_S };
+  }
+  const liberer = await recalculsPublics.reserver(ip ?? undefined);
+  if (!liberer) {
+    return { ok: false, raison: "serveur_occupe", reessayerDansSecondes: REESSAYER_RECALCUL_S };
+  }
+  try {
+    return await verifierIntegriteSignature(signatureId);
+  } finally {
+    liberer();
+  }
 }
 
 /**
