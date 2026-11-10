@@ -86,9 +86,10 @@ export async function inviterMembre(_prev: EtatMembres, formData: FormData): Pro
   const p = await proprietaireOuRefus();
   if ("refus" in p) return p.refus;
   const { compte, db } = p;
-  // Le plugin écrit l'invitation hors du client borné : le compte visé doit
-  // être celui dont la saisie vient d'être jugée (piste 2 de l'audit du
-  // 2026-11-10), et celui que montrait la page (point 8).
+  // Deux contrôles, deux motifs (audit du 2026-11-10). Piste 2 : le plugin
+  // écrit l'invitation hors du client borné, donc le compte visé doit être
+  // celui dont la saisie vient d'être jugée. Point 8 : le geste ne porte aucun
+  // identifiant, donc le compte doit être celui que montrait la page.
   if ((juge && juge !== compte.compteId) || !memeCompteQueLaPage(formData, compte.compteId)) return compteChange();
   const lu = schemaInvitation.safeParse({ email: formData.get("email"), role: formData.get("role") });
   if (!lu.success) return { status: "error", message: lu.error.issues[0]?.message ?? "Formulaire invalide" };
