@@ -26,7 +26,10 @@ name: rojer-cc
 
 services:
   db:
-    image: postgres:17
+    # 18 comme l'add-on Clever Cloud : cette pile imite la cible. Son volume
+    # (rojer-cc-db) se jette : `docker compose -p rojer-cc down -v` avant de
+    # relancer si un volume en 17 traîne.
+    image: postgres:18
     container_name: rojer-cc-db
     environment:
       POSTGRES_USER: rojer

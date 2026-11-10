@@ -202,7 +202,7 @@ autre compte.
 ## Constats du lot 1 (essai, 2026-10-30)
 
 Prototype jetable (`.essai-lot1/essai.ts`, non versionné) sur une base locale
-dédiée (`rojer_essai_isolation`, PostgreSQL 17.11 du conteneur `duerp-db` — la version du plan XS de Clever Cloud —, toutes les
+dédiée (`rojer_essai_isolation`, PostgreSQL 17.11 du conteneur `duerp-db` — la version du plan XS de Clever Cloud — [2026-11-10 : l'add-on de la préprod Clever Cloud est en 18.6, la production le sera aussi ; les mesures de cette ADR, prises en 17, ne sont pas refaites], toutes les
 migrations appliquées), deux comptes A et B, client borné à A.
 **28 cas sur 28** conformes. Relevé de la sortie :
 
