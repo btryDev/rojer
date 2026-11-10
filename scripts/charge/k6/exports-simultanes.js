@@ -6,6 +6,7 @@
 //   N          : exports lancés au même instant (un par compte : la file
 //                admet 2 exports par personne, `exports/limite.ts`)
 //   HISTORIQUE : demo (dossiers 6-50, sans historique) | un-an (51, 55-66, 682 rapports)
+//   DOSSIERS   : liste de numéros de dossier, à la place de HISTORIQUE
 //   EXPORT     : registre/pdf (défaut) | controle-zip | dossier-conformite/pdf
 //
 // En fond, 20 utilisateurs consultent leurs pages pendant toute la durée : leur
@@ -22,7 +23,10 @@ const VIVIERS = {
   demo: Array.from({ length: 45 }, (_, i) => i + 6),
   "un-an": [51, ...Array.from({ length: 12 }, (_, i) => i + 55)],
 };
-const vivier = VIVIERS[__ENV.HISTORIQUE || "demo"];
+// `DOSSIERS=52,68` : des dossiers désignés, à la place d'un vivier.
+const vivier = __ENV.DOSSIERS
+  ? __ENV.DOSSIERS.split(",").map(Number)
+  : VIVIERS[__ENV.HISTORIQUE || "demo"];
 if (!vivier) throw new Error(`HISTORIQUE inconnu : ${__ENV.HISTORIQUE}`);
 if (N > vivier.length) throw new Error(`N = ${N} : le vivier n'a que ${vivier.length} comptes.`);
 
