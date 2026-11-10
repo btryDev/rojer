@@ -5,7 +5,9 @@
  * `docs/plan-performance.md`).
  *
  * À lancer APRÈS `seed:complet`, sur une base de mesure locale qui ne porte
- * que ce dossier. Le script refuse toute base qui n'est pas sur la machine.
+ * que ce dossier — ou, avec `--etablissement <id>`, sur une base de test de
+ * charge qui en porte plusieurs. Le script refuse toute base qui n'est pas sur
+ * la machine.
  *
  * Ce qu'il ajoute :
  *   - le parc porté à ≈ 100 équipements (copies des appareils de la démo,
@@ -72,11 +74,21 @@ async function lots<T>(ops: Prisma.PrismaPromise<T>[], taille = 500): Promise<vo
 async function main(): Promise<void> {
   baseLocaleOuRefus();
 
+  // `--etablissement <id>` : le dossier à grossir, désigné, dans une base qui
+  // en porte plusieurs (test de charge, `docs/plan-test-de-charge.md` § 4).
+  // Sans lui, la base ne doit porter qu'un établissement : rien n'est deviné.
+  const i = process.argv.indexOf("--etablissement");
+  const designe = i === -1 ? null : process.argv[i + 1];
   const etabs = await prisma.etablissement.findMany({
+    where: designe ? { id: designe } : undefined,
     select: { id: true, entrepriseId: true },
   });
   if (etabs.length !== 1) {
-    console.error(`REFUS : la base porte ${etabs.length} établissements, le script en attend un seul (celui de seed:complet).`);
+    console.error(
+      designe
+        ? `REFUS : aucun établissement « ${designe} » dans cette base.`
+        : `REFUS : la base porte ${etabs.length} établissements, le script en attend un seul (celui de seed:complet), ou --etablissement <id>.`,
+    );
     process.exit(1);
   }
   const { id: etablissementId, entrepriseId } = etabs[0];

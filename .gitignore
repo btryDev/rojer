@@ -87,3 +87,6 @@ Rojer-*.pdf
 # documentée l'écrit à la racine. Le script le projette pour qu'aucun nom n'y
 # figure ; il n'a pas sa place dans le dépôt pour autant.
 /passage-a-blanc-*.json
+
+# Banc du test de charge (scripts/charge/banc.sh) : certificats et sessions.
+.charge/
