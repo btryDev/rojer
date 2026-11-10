@@ -269,3 +269,13 @@ contrôles ou vérifications ». Registre ERP (R. 143-44 CCH) : aucune durée
 9. R. 4323-26 CT : pour que le PDF suffise sans le ZIP, imprimer par rapport
    la date de remise et le lieu d'archivage (aujourd'hui : « pièce jointe »
    ou « Sans pièce jointe » seulement). Petit ajout, sans effet sur le volume.
+10. Passage à @react-pdf 4.9 (moteur `experimentalPagination`, piste A2) : EN
+    RÉSERVE (2026-11-10). À ressortir si (a) le banc avec le sous-processus
+    montre des exports de gros dossiers au-delà de ~20 s ou des refus du
+    garde-fou trop fréquents ; (b) le journal de production montre des gros
+    dossiers fréquents avant l'archive hybride ; (c) une correction de sécurité
+    ou de bogue de la bibliothèque impose une mise à jour d'entretien.
+
+Ordre convenu (2026-11-10) : sous-processus (lot/pdf-b1) → vérifications de
+build et de banc, nouvelles mesures → fusion dans cc → préproduction Clever
+Cloud → suite de la campagne (§ 5) et décisions ci-dessus.
