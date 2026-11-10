@@ -10,7 +10,7 @@
  * - le mot de passe ne s'affiche pas.
  */
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -130,5 +130,33 @@ describe("demarrer-cc.sh : l'URL de la base", () => {
   it("sans aucune base, ni un mode inconnu, rien ne démarre", () => {
     expect(lancer({}).code).toBe(1);
     expect(lancer({ POSTGRESQL_ADDON_URI: ADDON, BASE_CA_PEM: CA }, "n-importe").code).toBe(2);
+  });
+});
+
+describe("demarrer-cc.sh : le serveur", () => {
+  // Un faux serveur autonome, dans un dossier à part, qui affiche ce qu'il
+  // reçoit : le script s'y lance comme sur l'instance.
+  function servir(env: Record<string, string>) {
+    const dossier = mkdtempSync(join(tmpdir(), "cc-servir-"));
+    dossiers.push(dossier);
+    mkdirSync(join(dossier, ".next/standalone"), { recursive: true });
+    writeFileSync(
+      join(dossier, ".next/standalone/server.js"),
+      'console.log([process.env.PORT, process.env.HOSTNAME, process.env.KEEP_ALIVE_TIMEOUT].join("|"))',
+    );
+    const r = spawnSync("sh", [SCRIPT, "servir"], {
+      cwd: dossier,
+      env: { NODE_ENV: "test", PATH: process.env.PATH ?? "", TMPDIR: dossier, POSTGRESQL_ADDON_URI: ADDON, BASE_CA_PEM: CA, ...env },
+      encoding: "utf8",
+    });
+    return { code: r.status, sortie: r.stdout.trim().split("\n").at(-1) };
+  }
+
+  it("garde les connexions inactives 65 s par défaut, au-delà du répartiteur", () => {
+    expect(servir({})).toEqual({ code: 0, sortie: "8080|0.0.0.0|65000" });
+  });
+
+  it("une valeur posée sur l'application l'emporte", () => {
+    expect(servir({ KEEP_ALIVE_TIMEOUT: "120000", PORT: "9000" })).toEqual({ code: 0, sortie: "9000|0.0.0.0|120000" });
   });
 });

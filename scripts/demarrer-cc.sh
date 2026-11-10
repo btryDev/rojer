@@ -107,7 +107,16 @@ case "$mode" in
     }
     # 0.0.0.0 : le contrôle de santé de Clever Cloud échoue si le serveur
     # n'écoute que sur localhost.
-    PORT="${PORT:-8080}" HOSTNAME=0.0.0.0 exec node .next/standalone/server.js
+    # KEEP_ALIVE_TIMEOUT (ms, lu par le serveur autonome de Next) : par
+    # défaut Node ferme une connexion inactive au bout de 5 s ; le
+    # répartiteur de Clever Cloud la réutilise parfois à cet instant et
+    # répond 502 sans que la requête atteigne l'application. Mesuré sur la
+    # préprod XS le 2026-11-10 (k6, paliers 1 à 100 utilisateurs) : 9 puis
+    # 5 réponses 502 sur ~6 100 pages à 5 s, 0 sur ~6 200 à 65 s
+    # (docs/plan-test-de-charge.md § 13). Une valeur posée sur l'application
+    # l'emporte.
+    PORT="${PORT:-8080}" HOSTNAME=0.0.0.0 KEEP_ALIVE_TIMEOUT="${KEEP_ALIVE_TIMEOUT:-65000}" \
+      exec node .next/standalone/server.js
     ;;
   lancer)
     exec "$@"
