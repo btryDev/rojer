@@ -66,6 +66,46 @@ describe("vérification publique sous limite", () => {
     expect(h.lue).toBe(1);
   });
 
+  it("une IPv6 compte pour son /64, sur les deux pages (audit du 2026-11-10)", async () => {
+    for (const ip of ["2001:db8:1:2::a", "2001:db8:1:2:ffff::b"]) {
+      h.ip = ip;
+      await lireSignatureSousLimite("sig_1");
+      await verifierSousLimite("sig_1");
+    }
+    const [signe1, verifier1, signe2, verifier2] = h.cles;
+    expect(signe2).toBe(signe1);
+    expect(verifier2).toBe(verifier1);
+  });
+
+  it("greffée sur une vérification refusée « service occupé », une demande tente sa propre place", async () => {
+    vi.useFakeTimers();
+    try {
+      let ouvrir!: () => void;
+      h.porte = new Promise<void>((r) => (ouvrir = r));
+      const occupees = ["203.0.113.1", "203.0.113.2"].map((ip, i) => {
+        h.ip = ip;
+        return verifierSousLimite(`sig_occupe_${i}`);
+      });
+      await vi.advanceTimersByTimeAsync(0);
+      h.ip = "203.0.113.3";
+      const premiere = verifierSousLimite("sig_X");
+      await vi.advanceTimersByTimeAsync(0);
+      h.ip = "203.0.113.4";
+      const greffee = verifierSousLimite("sig_X");
+      await vi.advanceTimersByTimeAsync(0);
+      // La première attend sa place au-delà du délai : refusée.
+      await vi.advanceTimersByTimeAsync(10_001);
+      expect(await premiere).toEqual({ ok: false, raison: "serveur_occupe", reessayerDansSecondes: 5 });
+      // La greffée ne reprend pas ce refus : elle attend sa place, et l'obtient.
+      ouvrir();
+      await vi.advanceTimersByTimeAsync(0);
+      expect(await greffee).toEqual({ ok: false, raison: "inexistante" });
+      await Promise.all(occupees);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("/signe passe par la même limite : au-delà, refuse sans lire la signature", async () => {
     h.verdict = { ok: false, reessayerDansSecondes: 120 };
     expect(await lireSignatureSousLimite("sig_1")).toEqual({

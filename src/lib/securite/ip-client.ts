@@ -1,5 +1,5 @@
 // L'adresse IP du client (2026-10-14). SEUL lecteur de l'IP dans l'app, et il
-// sert à deux usages dont le second est une preuve :
+// sert à trois usages, dont le deuxième est une preuve :
 //  - la limitation de débit, par `ipPourLimite` (`auth/actions.ts`,
 //    `signatures/verification-publique.ts`) — l'adresse réduite à son réseau
 //    (voir plus bas) ; le MCP lit l'adresse complète (`mcp/http.ts`, motif
@@ -8,9 +8,12 @@
 //  - la PREUVE de signature, par `ipClient` (`signatures/actions.ts`, ASVS
 //    B17, depuis le 2026-10-30) — l'adresse complète : `null` → la signature
 //    est enregistrée sans IP. Une IP absente vaut mieux qu'une IP que le
-//    client a choisie, ce que lisait l'ancienne première entrée. Changer la
+//    client a choisie, ce que lisait l'ancienne première entrée ;
+//  - [cc] l'en-tête d'IP que le proxy transmet à Better Auth
+//    (`auth/proxy-session.ts`) — l'adresse complète : les sessions de Better
+//    Auth l'enregistrent telle quelle, sans regroupement par réseau. Changer la
 //    RÈGLE DE LECTURE ci-dessous (quelle entrée de l'en-tête) change ce que
-//    prouve une signature : à décider pour les deux usages ensemble. Changer
+//    prouve une signature : à décider pour les trois usages ensemble. Changer
 //    le regroupement par réseau ne touche que les limites.
 //
 // RÈGLE : la DERNIÈRE entrée de `X-Forwarded-For`, celle qu'a écrite le

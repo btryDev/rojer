@@ -127,7 +127,6 @@ function enPreuve(signature: PreuveSignature): PreuveSignature {
 type TropDeDemandes = { ok: false; raison: "trop_de_demandes"; reessayerDansSecondes: number };
 
 /**
-/**
  * La limite par IP des deux pages publiques d'une signature, un compteur PAR
  * PAGE au même plafond (`LIMITES.verificationIp`). `null` : la requête passe.
  * Le refus tombe avant toute lecture et ne dit rien de la signature.
@@ -207,7 +206,11 @@ export async function verifierSousLimite(signatureId: string): Promise<ResultatS
     } finally {
       liberer();
     }
-  })().finally(() => verificationsEnCours.delete(signatureId));
+  })().finally(() => {
+    // Seulement la sienne : après un refus partagé, une demande greffée a pu
+    // inscrire sa propre vérification sous la même signature.
+    if (verificationsEnCours.get(signatureId) === verification) verificationsEnCours.delete(signatureId);
+  });
   verificationsEnCours.set(signatureId, verification);
   return verification;
 }

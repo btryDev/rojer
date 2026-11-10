@@ -63,11 +63,11 @@ const inscriptionSchema = z.object({
  * bloque que celui qui insiste ; un essai distribué reste borné par la limite
  * par IP. « IP » s'entend au sens de `ipPourLimite` : une IPv6 compte pour son
  * /64 (audit du 2026-11-10), donc des voisins du même /64 partagent ce
- * compteur, comme le font déjà les machines derrière une même IPv4. La réinitialisation garde l'adresse seule : ce qu'elle protège est
- * la boîte de la titulaire contre l'envoi en rafale, et la refuser n'empêche
- * pas de se connecter. Une action serveur
- * ne choisit pas son statut HTTP : le refus est un message du formulaire, pas
- * un 429.
+ * compteur, comme le font déjà les machines derrière une même IPv4. La
+ * réinitialisation garde l'adresse seule : ce qu'elle protège est la boîte de
+ * la titulaire contre l'envoi en rafale, et la refuser n'empêche pas de se
+ * connecter. Une action serveur ne choisit pas son statut HTTP : le refus est
+ * un message du formulaire, pas un 429.
  */
 async function refusParLimite(
   action: string,
