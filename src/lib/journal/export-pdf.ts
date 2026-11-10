@@ -7,7 +7,15 @@
 //
 // Module pur : il rend la ligne et son niveau, l'appelant l'écrit.
 
-export type IssueExportPdf = "ok" | "trop_volumineux" | "echec";
+export type IssueExportPdf =
+  | "ok"
+  | "trop_volumineux"
+  | "echec"
+  /** Le fil de rendu a dépassé son tas (lot pdf-b1) : refusé comme trop volumineux. */
+  | "memoire_depassee"
+  | "delai_depasse"
+  /** Le client est parti avant la fin : rien d'anormal. */
+  | "abandonne";
 /** D'où vient l'export : une route PDF ou le ZIP de contrôle. */
 export type OrigineExportPdf = "route" | "zip";
 
@@ -28,11 +36,13 @@ export type NiveauJournal = "info" | "warn" | "error";
 /**
  * Le niveau d'un export : `warn` dès la MOITIÉ d'un seuil, pour que la
  * génération en tâche de fond arrive avant le premier refus ; `warn` aussi
- * pour un refus, `error` pour un échec de rendu.
+ * pour un refus, un tas ou un délai dépassé, `error` pour un échec de rendu,
+ * `info` pour un client parti.
  */
 export function niveauExportPdf(e: ExportPdf): NiveauJournal {
   if (e.issue === "echec") return "error";
-  if (e.issue === "trop_volumineux") return "warn";
+  if (e.issue === "abandonne") return "info";
+  if (e.issue !== "ok") return "warn";
   const approche =
     (e.total ?? 0) * 2 >= e.seuilTotal || (e.plusGrosBloc ?? 0) * 2 >= e.seuilBloc;
   return approche ? "warn" : "info";

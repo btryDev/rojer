@@ -11,7 +11,7 @@ import { reponsePdf } from "@/lib/pdf/reponse";
  * l'adresse et le nom d'établissement d'un tiers si on ne le vérifie pas.
  */
 export async function GET(
-  _req: Request,
+  req: Request,
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
@@ -24,5 +24,6 @@ export async function GET(
     { type: "plan-actions", props: { data } },
     `Plan_actions_${slugifyFilename(data.etablissement)}.pdf`,
     user.id,
+    req.signal,
   );
 }

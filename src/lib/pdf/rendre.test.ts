@@ -4,14 +4,20 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { DemandePdf } from "./documents";
 
 const h = vi.hoisted(() => ({
-  rendu: vi.fn<(element: unknown) => Promise<Buffer>>(async () => Buffer.from("%PDF")),
+  rendu: vi.fn<(demande: unknown, limites?: unknown) => Promise<Buffer>>(async () => Buffer.from("%PDF")),
+  disponible: true,
 }));
-vi.mock("@react-pdf/renderer", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@react-pdf/renderer")>()),
-  renderToBuffer: h.rendu,
+// Le fil d'exécution est simulé ici ; il est éprouvé pour de vrai dans
+// `worker/lancer.test.ts`.
+vi.mock("./worker/lancer", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./worker/lancer")>()),
+  workerDisponible: () => h.disponible,
+  rendreDansUnWorker: h.rendu,
 }));
 
-const { rendrePdf, controlerPoids, SEUILS_PDF, PdfTropVolumineux, raisonEchecRendu } = await import("./rendre");
+const { rendrePdf, controlerPoids, SEUILS_PDF, PdfTropVolumineux, raisonEchecRendu, echecAttendu } =
+  await import("./rendre");
+const { PdfAbandonne, PdfDelaiDepasse, PdfMemoireDepassee } = await import("./worker/lancer");
 
 /** Un plan d'actions de `k` lignes : le plus simple des documents à peser. */
 const plan = (k: number) =>
@@ -36,6 +42,7 @@ let journal: { info: ReturnType<typeof vi.spyOn>; warn: ReturnType<typeof vi.spy
 
 beforeEach(() => {
   h.rendu.mockClear();
+  h.disponible = true;
   journal = {
     info: vi.spyOn(console, "info").mockImplementation(() => {}),
     warn: vi.spyOn(console, "warn").mockImplementation(() => {}),
@@ -159,10 +166,54 @@ describe("rendrePdf — garde-fou", () => {
     }
   });
 
+  it("dans le fil : les limites lues aux réglages et le signal de la requête sont passés", async () => {
+    const signal = new AbortController().signal;
+    await rendrePdf(plan(1), { seuils, signal });
+    expect(h.rendu).toHaveBeenCalledWith(expect.anything(), {
+      tasMaxMo: 384,
+      delaiMaxMs: 60_000,
+      signal,
+    });
+  });
+
+  it("tas du fil dépassé : le même refus que le garde-fou, journalisé à part", async () => {
+    h.rendu.mockRejectedValueOnce(new PdfMemoireDepassee());
+    await expect(rendrePdf(plan(1), { seuils })).rejects.toBeInstanceOf(PdfTropVolumineux);
+    expect(ligneEcrite()).toMatchObject({ issue: "memoire_depassee", niveau: "warn" });
+  });
+
+  it("délai dépassé et client parti : journalisés comme tels, relancés", async () => {
+    h.rendu.mockRejectedValueOnce(new PdfDelaiDepasse(60_000));
+    await expect(rendrePdf(plan(1), { seuils })).rejects.toBeInstanceOf(PdfDelaiDepasse);
+    expect(ligneEcrite()).toMatchObject({ issue: "delai_depasse", niveau: "warn" });
+    journal.warn.mockClear();
+    h.rendu.mockRejectedValueOnce(new PdfAbandonne());
+    await expect(rendrePdf(plan(1), { seuils })).rejects.toBeInstanceOf(PdfAbandonne);
+    expect(ligneEcrite()).toMatchObject({ issue: "abandonne", niveau: "info" });
+  });
+
+  it("sans le fichier du fil, la production échoue au lieu de rendre sur place", async () => {
+    h.disponible = false;
+    vi.stubEnv("NODE_ENV", "production");
+    try {
+      await expect(rendrePdf(plan(1), { seuils })).rejects.toThrow(/pdf-worker introuvable/);
+      expect(h.rendu).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
+  it("les échecs attendus ne sont pas des pannes", () => {
+    expect(echecAttendu(new PdfDelaiDepasse(1))).toBe(true);
+    expect(echecAttendu(new PdfAbandonne())).toBe(true);
+    expect(echecAttendu(new Error("x"))).toBe(false);
+  });
+
   it("la raison du ZIP ne nomme que le refus du garde-fou", () => {
     expect(raisonEchecRendu(new PdfTropVolumineux("registre", { total: 1, plusGrosBloc: 1 }))).toMatch(
       /trop volumineux/,
     );
+    expect(raisonEchecRendu(new PdfDelaiDepasse(1))).toMatch(/délai dépassé/);
     expect(raisonEchecRendu(new Error("autre"))).toBeUndefined();
   });
 });
@@ -199,7 +250,9 @@ describe("garde : un seul endroit met un PDF en page", () => {
   it("hors de rendre.ts, @react-pdf/renderer n'apporte que des primitives et des types", () => {
     const fautifs: string[] = [];
     for (const f of fichiers) {
-      if (relatif(f) === "src/lib/pdf/rendre.ts") continue;
+      // Les deux seuls lieux de rendu : le fil (lot pdf-b1) et le repli de
+      // développement de rendre.ts.
+      if (relatif(f) === "src/lib/pdf/rendre.ts" || relatif(f) === "src/lib/pdf/worker/entree.ts") continue;
       const source = readFileSync(f, "utf8");
       const mentions = source.match(/["']@react-pdf\/[^"']*["']/g) ?? [];
       // Chaque mention doit être un `import { … } from "@react-pdf/renderer"`
@@ -222,10 +275,10 @@ describe("garde : un seul endroit met un PDF en page", () => {
     expect(fautifs).toEqual([]);
   });
 
-  it("le seul rendu du dépôt est celui de rendre.ts", () => {
+  it("les seuls rendus du dépôt : le fil, et le repli de développement de rendre.ts", () => {
     const rendus = fichiers
       .filter((f) => /\brenderTo(Buffer|Stream|File|String)\s*\(|\bpdf\s*\(/.test(readFileSync(f, "utf8")))
       .map(relatif);
-    expect(rendus).toEqual(["src/lib/pdf/rendre.ts"]);
+    expect(rendus.sort()).toEqual(["src/lib/pdf/rendre.ts", "src/lib/pdf/worker/entree.ts"]);
   });
 });

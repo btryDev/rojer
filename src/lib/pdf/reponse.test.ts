@@ -23,7 +23,7 @@ vi.mock("@/lib/exports/limite", () => ({
 }));
 
 const { reponsePdf } = await import("./reponse");
-const { PdfTropVolumineux } = await import("./rendre");
+const { PdfTropVolumineux, PdfDelaiDepasse } = await import("./rendre");
 const demande = { type: "registre", props: { data: {} } } as unknown as DemandePdf;
 
 beforeEach(() => {
@@ -44,7 +44,7 @@ describe("reponsePdf", () => {
       "content-type": "application/pdf",
     });
     expect(await r.text()).toBe("%PDF-1.7 test");
-    expect(h.rendu).toHaveBeenCalledWith(demande, { total: 1, plusGrosBloc: 1 });
+    expect(h.rendu).toHaveBeenCalledWith(demande, { total: 1, plusGrosBloc: 1 }, { signal: undefined });
   });
 
   it("libère sa place après le rendu, y compris quand le rendu échoue", async () => {
@@ -53,6 +53,29 @@ describe("reponsePdf", () => {
     h.rendu.mockRejectedValueOnce(new Error("mise en page"));
     await expect(reponsePdf(demande, "a.pdf", "u-1")).rejects.toThrow("mise en page");
     expect(h.liberer).toHaveBeenCalledTimes(2);
+  });
+
+  it("délai dépassé : 503 AVEC Retry-After, la place est rendue", async () => {
+    h.rendu.mockRejectedValueOnce(new PdfDelaiDepasse(60_000));
+    const r = await reponsePdf(demande, "a.pdf", "u-1");
+    expect(r.status).toBe(503);
+    expect(r.headers.get("Retry-After")).toBe("120");
+    expect(await r.text()).toMatch(/trop de temps/);
+    expect(h.liberer).toHaveBeenCalledTimes(1);
+  });
+
+  it("tas du fil dépassé : le refus « trop volumineux », sans Retry-After", async () => {
+    h.rendu.mockRejectedValueOnce(new PdfTropVolumineux("registre", { total: 1, plusGrosBloc: 1 }));
+    const r = await reponsePdf(demande, "a.pdf", "u-1");
+    expect(r.status).toBe(503);
+    expect(r.headers.get("Retry-After")).toBeNull();
+    expect(await r.text()).toMatch(/trop volumineux/);
+  });
+
+  it("le signal de la requête descend jusqu'à la mise en page", async () => {
+    const signal = new AbortController().signal;
+    await reponsePdf(demande, "a.pdf", "u-1", signal);
+    expect(h.rendu).toHaveBeenCalledWith(demande, { total: 1, plusGrosBloc: 1 }, { signal });
   });
 
   it("file pleine : rend le 503 sans rien mettre en page", async () => {

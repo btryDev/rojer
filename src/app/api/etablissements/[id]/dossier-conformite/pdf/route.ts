@@ -15,7 +15,7 @@ import { reponsePdf } from "@/lib/pdf/reponse";
  * elles, étaient déjà scopées et revenaient vides.
  */
 export async function GET(
-  _req: Request,
+  req: Request,
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
@@ -32,5 +32,6 @@ export async function GET(
     },
     `Dossier_conformite_${slugifyFilename(data.etablissement)}.pdf`,
     user.id,
+    req.signal,
   );
 }

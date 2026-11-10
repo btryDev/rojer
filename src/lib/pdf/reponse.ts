@@ -1,7 +1,14 @@
 import "server-only";
 import { reserverPlaceExport } from "@/lib/exports/limite";
 import type { DemandePdf } from "./documents";
-import { controlerPoids, mettreEnPage, messageTropVolumineux, PdfTropVolumineux } from "./rendre";
+import {
+  controlerPoids,
+  mettreEnPage,
+  messageTropVolumineux,
+  PdfAbandonne,
+  PdfDelaiDepasse,
+  PdfTropVolumineux,
+} from "./rendre";
 import type { PoidsPdf } from "./poids";
 
 /** Un document personnel ne se garde jamais en cache, PDF comme refus. */
@@ -32,6 +39,8 @@ export async function reponsePdf(
   nomFichier: string,
   /** L'utilisateur connecté (`user.id`) : sa part de la file (`exports/limite.ts`). */
   demandeur: string,
+  /** Le signal de la requête : un client parti arrête la mise en page. */
+  signal?: AbortSignal,
 ): Promise<Response> {
   let poids: PoidsPdf;
   try {
@@ -44,7 +53,14 @@ export async function reponsePdf(
   if (liberer instanceof Response) return liberer;
   let pdf: Buffer;
   try {
-    pdf = await mettreEnPage(demande, poids);
+    pdf = await mettreEnPage(demande, poids, { signal });
+  } catch (e) {
+    // Le fil a dépassé son tas : le même refus que le garde-fou.
+    if (e instanceof PdfTropVolumineux) return reponseTropVolumineux(e);
+    if (e instanceof PdfDelaiDepasse) return reponseDelaiDepasse();
+    // Personne n'attend plus la réponse.
+    if (e instanceof PdfAbandonne) return new Response(null, { status: 503, headers: SANS_CACHE });
+    throw e;
   } finally {
     liberer();
   }
@@ -66,4 +82,22 @@ function reponseTropVolumineux(e: PdfTropVolumineux): Response {
       ...SANS_CACHE,
     },
   });
+}
+
+/**
+ * Le rendu a dépassé son délai (lot pdf-b1) : 503 AVEC `Retry-After` — un
+ * serveur moins chargé peut y arriver, contrairement à un document trop gros.
+ */
+function reponseDelaiDepasse(): Response {
+  return new Response(
+    "La préparation de ce document a pris trop de temps. Réessayez dans quelques minutes.",
+    {
+      status: 503,
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Retry-After": "120",
+        ...SANS_CACHE,
+      },
+    },
+  );
 }

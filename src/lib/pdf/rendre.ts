@@ -9,6 +9,14 @@ import {
 } from "@/lib/journal/export-pdf";
 import { elementDuDocument, NOM_DOCUMENT, type DemandePdf, type TypeDocument } from "./documents";
 import { poidsDuDocument, type PoidsPdf } from "./poids";
+import {
+  PdfAbandonne,
+  PdfDelaiDepasse,
+  PdfMemoireDepassee,
+  rendreDansUnWorker,
+  workerDisponible,
+} from "./worker/lancer";
+import { delaiMaxMs, tasMaxMo } from "./worker/reglages";
 
 /**
  * LE SEUL ENDROIT QUI MET UN PDF EN PAGE (lot pdf-b0, 2026-11-10,
@@ -68,8 +76,12 @@ export class PdfTropVolumineux extends Error {
   constructor(
     readonly type: TypeDocument,
     readonly poids: PoidsPdf,
+    options?: { cause?: unknown },
   ) {
-    super(`PDF « ${type} » trop volumineux (${poids.total} lignes, bloc de ${poids.plusGrosBloc})`);
+    super(
+      `PDF « ${type} » trop volumineux (${poids.total} lignes, bloc de ${poids.plusGrosBloc})`,
+      options,
+    );
     this.name = "PdfTropVolumineux";
   }
 }
@@ -87,15 +99,24 @@ export function messageTropVolumineux(type: TypeDocument): string {
  * pour un refus, `undefined` sinon — l'appelant garde alors la sienne.
  */
 export function raisonEchecRendu(e: unknown): string | undefined {
-  return e instanceof PdfTropVolumineux
-    ? "document trop volumineux pour être généré en un seul PDF"
-    : undefined;
+  if (e instanceof PdfTropVolumineux) return "document trop volumineux pour être généré en un seul PDF";
+  if (e instanceof PdfDelaiDepasse) return "génération interrompue, délai dépassé";
+  return undefined;
 }
+
+/** Un échec déjà journalisé par `mettreEnPage`, qui n'est pas une panne. */
+export function echecAttendu(e: unknown): boolean {
+  return e instanceof PdfTropVolumineux || e instanceof PdfDelaiDepasse || e instanceof PdfAbandonne;
+}
+
+export { PdfAbandonne, PdfDelaiDepasse };
 
 export type OptionsRendu = {
   seuils?: SeuilsPdf;
   /** D'où vient l'export : une route PDF ou le ZIP de contrôle (journal). */
   origine?: OrigineExportPdf;
+  /** Le signal de la requête : un client parti arrête le rendu. */
+  signal?: AbortSignal;
 };
 
 /**
@@ -132,6 +153,12 @@ export async function rendrePdf(
 /**
  * La mise en page d'une demande DÉJÀ pesée et admise par `controlerPoids` —
  * pour la route, qui pèse avant la file d'export et ne pèse pas deux fois.
+ *
+ * DANS UN FIL SÉPARÉ (lot pdf-b1, ADR-059) : la boucle du serveur reste libre,
+ * et un tas dépassé ne tue que le fil — il revient comme un refus « trop
+ * volumineux », le même que celui du garde-fou. Sans le fichier du fil
+ * (`dist-pdf/pdf-worker.mjs`), la production échoue au premier export ; le
+ * développement met en page dans le processus, et le dit.
  */
 export async function mettreEnPage(
   demande: DemandePdf,
@@ -140,13 +167,51 @@ export async function mettreEnPage(
 ): Promise<Buffer> {
   const journaliser = journal(demande, options, performance.now());
   try {
-    const pdf = await renderToBuffer(elementDuDocument(demande));
+    const pdf = await rendreSelonLeLieu(demande, options);
     journaliser("ok", poids);
     return pdf;
   } catch (e) {
-    journaliser("echec", poids);
+    if (e instanceof PdfMemoireDepassee) {
+      journaliser("memoire_depassee", poids);
+      throw new PdfTropVolumineux(demande.type, poids, { cause: e });
+    }
+    journaliser(
+      e instanceof PdfDelaiDepasse
+        ? "delai_depasse"
+        : e instanceof PdfAbandonne
+          ? "abandonne"
+          : "echec",
+      poids,
+    );
     throw e;
   }
+}
+
+async function rendreSelonLeLieu(demande: DemandePdf, options: OptionsRendu): Promise<Buffer> {
+  if (workerDisponible()) {
+    return rendreDansUnWorker(demande, {
+      tasMaxMo: tasMaxMo(),
+      delaiMaxMs: delaiMaxMs(),
+      signal: options.signal,
+    });
+  }
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "pdf-worker introuvable (dist-pdf/pdf-worker.mjs) : le build CC doit le construire.",
+    );
+  }
+  avertirRenduSurPlace();
+  return renderToBuffer(elementDuDocument(demande));
+}
+
+let averti = false;
+function avertirRenduSurPlace() {
+  if (averti) return;
+  averti = true;
+  console.warn(
+    "pdf : dist-pdf/pdf-worker.mjs absent, mise en page dans le processus " +
+      "(développement seulement). `node scripts/construire-worker-pdf.mjs` le construit.",
+  );
 }
 
 function seuilsDe(demande: DemandePdf, options: OptionsRendu): SeuilsPdf {

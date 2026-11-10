@@ -17,6 +17,9 @@
 /.next/
 /out/
 
+# le fil des PDF, construit par scripts/construire-worker-pdf.mjs (ADR-059)
+/dist-pdf/
+
 # production
 /build
 

@@ -18,7 +18,7 @@ import { construireSnapshot } from "@/lib/versions/snapshot-builder";
  * (`/duerp/[id]/versions/[numero]/pdf`) passait, elle, par une query scopée.
  */
 export async function GET(
-  _req: Request,
+  req: Request,
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
@@ -50,5 +50,6 @@ export async function GET(
     { type: "duerp", props: { snapshot, historique, brouillon: true } },
     `DUERP_${safe}_apercu.pdf`,
     user.id,
+    req.signal,
   );
 }

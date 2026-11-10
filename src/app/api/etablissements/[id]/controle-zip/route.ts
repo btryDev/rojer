@@ -32,7 +32,7 @@ import {
   construireRegistreData,
 } from "@/lib/pdf/builders";
 import { historiqueJusqua } from "@/lib/versions/historique";
-import { PdfTropVolumineux, raisonEchecRendu, rendrePdf } from "@/lib/pdf/rendre";
+import { echecAttendu, raisonEchecRendu, rendrePdf } from "@/lib/pdf/rendre";
 import { slugifyFilename } from "@/lib/pdf/styles";
 import { contenuR4512_8 } from "@/lib/plan-prevention/contenu-r4512-8";
 import { annoncesZip, ligneHeuresRevisees } from "@/lib/plan-prevention/annonces-plan";
@@ -112,7 +112,7 @@ function datesAttestationZip(p: {
  *   08_Carnet_sanitaire_analyses/ — rapports de laboratoire déposés
  */
 export async function GET(
-  _req: Request,
+  req: Request,
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
@@ -132,7 +132,7 @@ export async function GET(
   if (liberer instanceof Response) return liberer;
   let archive: Awaited<ReturnType<typeof construireArchive>>;
   try {
-    archive = await construireArchive({ compte, db }, id, etablissement);
+    archive = await construireArchive({ compte, db }, id, etablissement, req.signal);
   } finally {
     liberer();
   }
@@ -152,6 +152,8 @@ async function construireArchive(
   acces: AccesCompte,
   id: string,
   etablissement: Awaited<ReturnType<typeof requireEtablissement>>["etablissement"],
+  /** Le signal de la requête : un client parti arrête les mises en page. */
+  signal?: AbortSignal,
 ) {
   const { db } = acces;
   // LA FRAÎCHEUR SE LIT AVANT TOUT LE RESTE, et elle ne répare rien.
@@ -211,9 +213,9 @@ async function construireArchive(
   // comme tel : « trop volumineux », pas « la génération a échoué ».
   const noterEchec = (fichier: string, e: unknown, raison = "la génération a échoué") => {
     echecs.set(fichier, raisonEchecRendu(e) ?? raison);
-    // Un refus est déjà journalisé par `rendrePdf` (ligne `export_pdf`,
-    // niveau warn) : ce n'est pas une erreur, il ne se dit qu'une fois.
-    if (!(e instanceof PdfTropVolumineux)) console.error(`controle-zip : ${fichier} non inclus`, e);
+    // Un refus, un délai dépassé ou un client parti sont déjà journalisés par
+    // `rendrePdf` (ligne `export_pdf`) : pas une panne, dits une seule fois.
+    if (!echecAttendu(e)) console.error(`controle-zip : ${fichier} non inclus`, e);
   };
   let piecesPrestatairesManquantes = 0;
   // Les pièces de prestataires réellement mises au ZIP, par type : le README
@@ -260,7 +262,7 @@ async function construireArchive(
       // retards doit encore les annoncer (revue du 2026-11-10).
       nbVerifsEnRetard = data.verifsEnRetard.length;
       inventaire = data.couverture ? faitInventaire(data.couverture) : null;
-      const buf = await rendrePdf({ type: "dossier-conformite", props: { data } }, { origine: "zip" });
+      const buf = await rendrePdf({ type: "dossier-conformite", props: { data } }, { origine: "zip", signal });
       zip.file(PIECES_ZIP.dossier, new Uint8Array(buf));
       // CE QUI EST IMPRIMÉ APRÈS : collectées avant, les échéances
       // contractuelles et les rythmes étaient annoncés « imprimés dans ce
@@ -328,7 +330,7 @@ async function construireArchive(
           snapshot: versionCourante.snapshot as unknown as DuerpSnapshot,
           historique,
         },
-      }, { origine: "zip" });
+      }, { origine: "zip", signal });
       zip.file(fichierDuerp(versionCourante.numero), new Uint8Array(buf));
     }
   } catch (e) {
@@ -351,7 +353,7 @@ async function construireArchive(
       // et pour 03_Registre_annexes/ (relecture du 2026-11-05). Avant le
       // rendu : les fichiers annexés vont au ZIP même si le PDF est refusé.
       annexesListees = data.annexes ?? [];
-      const buf = await rendrePdf({ type: "registre", props: { data } }, { origine: "zip" });
+      const buf = await rendrePdf({ type: "registre", props: { data } }, { origine: "zip", signal });
       zip.file(PIECES_ZIP.registre, new Uint8Array(buf));
       // Après le rendu, comme pour 01 : le README n'annonce que ce qui est
       // imprimé.
@@ -402,7 +404,7 @@ async function construireArchive(
   try {
     const data = await construirePlanActionsData(db, id);
     if (data) {
-      const buf = await rendrePdf({ type: "plan-actions", props: { data } }, { origine: "zip" });
+      const buf = await rendrePdf({ type: "plan-actions", props: { data } }, { origine: "zip", signal });
       zip.file(PIECES_ZIP.plan, new Uint8Array(buf));
     }
   } catch (e) {
