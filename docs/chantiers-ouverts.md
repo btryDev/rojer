@@ -3420,13 +3420,13 @@ rendu sort du processus (plan, B1-B3).
   mesure du registre après A1, en XS, sur le banc de charge (session
   `rojer-outils-cb`), avec une marge de moitié.~~ [2026-11-10 : remplacés,
   et PAR TYPE de document (revue : le seuil du registre refusait un DUERP de
-  cent risques). Registre : total 1 200, la moitié des 2 274 rapports qui
-  passent en XS (3 080 tuent le processus) ; bloc 400. Autres documents : non
-  mesurés, borne large (5 000 / 2 000).] **Reste ouvert** : le banc compte
-  des rapports, le garde-fou des lignes (rapports, points, fiches, attentes) —
-  un registre plus petit que ceux qui passent peut être refusé ; à recaler sur
-  le champ `total` de la ligne `export_pdf` des dossiers du banc. Le DUERP, le
-  plan d'actions et les points à corriger restent à mesurer.
+  cent risques). Registre : ~~total 1 200, la moitié des 2 274 rapports qui
+  passent en XS~~ [même jour : 1 200 comptait des rapports, pas des lignes]
+  total 2 000 lignes, bloc 400, mesurés en lignes sur le banc XS (dernier qui
+  passe 2 921, mort vers 3 700 ; gel d'une dizaine de secondes à 2 000).
+  Autres documents : non mesurés, borne large (5 000 / 2 000).] **Reste
+  ouvert** : remesurer avec le worker (B1-B3) et en S ; le DUERP, le plan
+  d'actions et les points à corriger restent à mesurer.
 - **Réglage par instance** : les seuils sont des constantes ; ils devront
   suivre la taille de l'instance (XS au départ, S ensuite).
 - **Tableaux encore d'un seul tenant** : le corps des fiches du registre

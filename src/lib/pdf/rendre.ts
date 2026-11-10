@@ -37,16 +37,16 @@ export type SeuilsPdf = { total: number; bloc: number };
  * Les seuils, PAR TYPE de document : chaque document pèse ses lignes à sa
  * façon (`poids.ts`), un seuil ne se transpose pas de l'un à l'autre.
  *
- * REGISTRE — mesuré sur le banc de charge en XS (1 cœur, 1 Go ; session
- * `rojer-outils-cb`, registre après le lot pdf-a1, 2026-11-10) : 2 274
- * rapports passent (672 Mo), 3 080 tuent le processus deux fois sur deux.
- * Le total est la MOITIÉ du dernier qui passe. ⚠ Le banc compte des
- * rapports, le garde-fou des lignes (rapports, points, fiches, attentes) : le
- * même dossier pèse plus ici, et un registre plus petit que ceux qui passent
- * peut être refusé. À recaler sur le champ `total` de la ligne `export_pdf`
- * des dossiers du banc (`docs/chantiers-ouverts.md` § 23). Le bloc reste à
- * 400 : le corps des fiches reprend les équipements (environ 300 lignes pour
- * les 100 de la cible).
+ * REGISTRE — mesurés le 2026-11-10 sur le banc XS (1 cœur, 1 Go ;
+ * `rojer-outils-cb`, `lot/charge-k6`), fca75951 + B0, le compte exact lu
+ * dans la ligne `export_pdf` (en LIGNES du garde-fou, pas en rapports) :
+ *   - 1 267 lignes (1 an, 682 rapports) : 5,3 s, 413 Mo ;
+ *   - 2 115 (2 ans) : 10,2 s, 574 Mo ; 2 868 (2 ans, points longs) : 14,7 s ;
+ *   - 2 921 (3 ans) : 15,1 s, 663 Mo — le dernier qui passe ;
+ *   - environ 3 700 (4 ans) : processus tué, deux fois sur deux.
+ * Total 2 000 : les deux tiers du dernier qui passe, 55 % de la mort, et un
+ * gel borné à une dizaine de secondes en XS. Bloc 400 : le plus gros observé
+ * est 299 (le corps des fiches). À REMESURER avec le worker (B1-B3) et en S.
  *
  * AUTRES DOCUMENTS — NON MESURÉS. Le dossier de conformité a passé le banc à
  * dix ans d'historique (2,6 s au plus) ; le DUERP, le plan d'actions et les
@@ -56,7 +56,7 @@ export type SeuilsPdf = { total: number; bloc: number };
  */
 const NON_MESURE: SeuilsPdf = { total: 5_000, bloc: 2_000 };
 export const SEUILS_PDF: Record<TypeDocument, SeuilsPdf> = {
-  registre: { total: 1_200, bloc: 400 },
+  registre: { total: 2_000, bloc: 400 },
   "dossier-conformite": NON_MESURE,
   "plan-actions": NON_MESURE,
   "points-a-corriger": NON_MESURE,
