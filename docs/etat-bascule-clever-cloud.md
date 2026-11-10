@@ -118,12 +118,13 @@ connecteur MCP OAuth de Supabase n'existe plus — garder la suppression de
 - **Recette à rejouer AVANT la bascule** : [2026-11-09 : la liste est
   écrite, section « Recette « pages × comptes à plusieurs membres » »
   plus bas.]
-- **Décision à confirmer par la propriétaire** : supprimer une entreprise ou
+- ~~**Décision à confirmer par la propriétaire** : supprimer une entreprise ou
   un établissement est réservé au propriétaire du compte
   (`verifierProprietaire`), choix de réalisation (ADR-054, « Ce que la
   réalisation a précisé, lots 3 et 4 »). Pour l'ouvrir aux membres :
   `verifierRole` à la place, dans `entreprises/actions.ts` et
-  `etablissements/actions.ts`.
+  `etablissements/actions.ts`.~~ [2026-11-09, décision de la propriétaire :
+  la suppression reste réservée au propriétaire. Rien à changer.]
 - ~~**Lot à part, lecture seule** : masquer les boutons de saisie pour un
   membre en lecture seule (environ 80 écrans de formulaires). D'ici là, tout
   geste tenté aboutit à `/compte/lecture-seule`, et le client borné refuse
@@ -134,9 +135,13 @@ connecteur MCP OAuth de Supabase n'existe plus — garder la suppression de
   [2026-11-09 : posé, 5a7ca218.]
 - ~~**Choix du compte dans la gélule** : il n'existe que sur l'écran « Membres »
   (ADR-054 § 7).~~ [2026-11-09 : livré par #262.]
-- **Bases locales** qui ont joué `20261103120000_comptes_et_membres` avant
+- ~~**Bases locales** qui ont joué `20261103120000_comptes_et_membres` avant
   son CHECK et son déclencheur : à remettre à zéro (aucune n'est en
-  production).
+  production).~~ [2026-11-09, vérifié sur les bases du conteneur
+  `duerp-verif-db` : seules `duerp_cc_visuel` et `duerp_quota_navig` portent la
+  migration, avec l'empreinte du fichier actuel (appliquée le 2026-11-05,
+  après le CHECK et le déclencheur) ; les quatre autres ne l'ont pas. Rien à
+  remettre à zéro.]
 
 ## Ce qui reste avant la bascule
 
