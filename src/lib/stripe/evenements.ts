@@ -81,6 +81,8 @@ export type Aiguillage = {
   abonnementId?: string | null;
   /** Écrit par Rojer, jamais la charge utile. */
   motif?: string | null;
+  /** Une alerte à envoyer, une fois l'aiguillage acquis (jamais deux fois pour un événement repris). */
+  alerte?: { sujet: string; lignes: string[] };
 };
 
 /**

@@ -85,24 +85,34 @@ export async function aiguillageDe(stripe: Stripe, type: string, objetId: string
       const litige = await stripe.disputes.retrieve(objetId, { expand: ["charge"] }, OPTIONS_WEBHOOK);
       const charge = typeof litige.charge === "object" ? litige.charge : null;
       const client = idStripe(charge?.customer);
-      await alerter("litige sur un paiement", [
-        `litige ${litige.id} (${litige.reason}), ${montant(litige.amount, litige.currency)}`,
-        `client ${client ?? "inconnu"}`,
-        "Répondre dans Stripe (preuves) ; l'abonnement continue sauf réglage « Gérer les paiements contestés ».",
-      ]);
-      return { clientStripe: client };
+      return {
+        clientStripe: client,
+        alerte: {
+          sujet: "litige sur un paiement",
+          lignes: [
+            `litige ${litige.id} (${litige.reason}), ${montant(litige.amount, litige.currency)}`,
+            `client ${client ?? "inconnu"}`,
+            "Répondre dans Stripe (preuves) ; l'abonnement continue sauf réglage « Gérer les paiements contestés ».",
+          ],
+        },
+      };
     }
     case "v1.charge.refunded": {
       // Un remboursement ne change pas l'abonnement : il se double d'une
       // résiliation dans Stripe si l'accès doit cesser.
       const charge = await stripe.charges.retrieve(objetId, {}, OPTIONS_WEBHOOK);
       const client = idStripe(charge.customer);
-      await alerter("remboursement", [
-        `paiement ${charge.id}, remboursé ${montant(charge.amount_refunded, charge.currency)} sur ${montant(charge.amount, charge.currency)}`,
-        `client ${client ?? "inconnu"}`,
-        "L'abonnement continue : le résilier dans Stripe si l'accès doit cesser.",
-      ]);
-      return { clientStripe: client };
+      return {
+        clientStripe: client,
+        alerte: {
+          sujet: "remboursement",
+          lignes: [
+            `paiement ${charge.id}, remboursé ${montant(charge.amount_refunded, charge.currency)} sur ${montant(charge.amount, charge.currency)}`,
+            `client ${client ?? "inconnu"}`,
+            "L'abonnement continue : le résilier dans Stripe si l'accès doit cesser.",
+          ],
+        },
+      };
     }
     default:
       return { clientStripe: null, motif: "type non suivi" };
@@ -116,8 +126,11 @@ export async function aiguiller(stripe: Stripe, e: EvenementAAiguiller, maintena
   const debut = Date.now();
   try {
     const a = await aiguillageDe(stripe, e.type, e.objetId);
-    // `false` : la prise a été reprise entre-temps ; l'autre worker conclut.
-    return (await marquerAiguille(e.id, prise, a, Date.now() - debut, maintenant())) ? "aiguille" : "pris";
+    // `false` : la prise a été reprise entre-temps ; l'autre worker conclut —
+    // et alerte : l'alerte ne part qu'avec l'aiguillage acquis, une fois.
+    if (!(await marquerAiguille(e.id, prise, a, Date.now() - debut, maintenant()))) return "pris";
+    if (a.alerte) await alerter(a.alerte.sujet, a.alerte.lignes);
+    return "aiguille";
   } catch (err) {
     const motif = motifDErreur(err);
     console.error(`stripe : ${e.type} ${e.id} non aiguillé — ${motif}`);

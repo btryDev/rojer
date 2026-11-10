@@ -77,11 +77,16 @@ describe("aiguillageDe : le client de l'objet relu, et les effets propres à l'o
     expect(await aiguillageDe(faux, "v1.invoice.paid", null)).toMatchObject({ clientStripe: null });
   });
 
-  it("litige et remboursement : une alerte (identifiants et montants), et la relecture du client", async () => {
-    await aiguillageDe(faux, "v1.charge.dispute.created", "du_1");
-    expect(alerter).toHaveBeenLastCalledWith("litige sur un paiement", expect.arrayContaining([expect.stringContaining("29.00 EUR")]));
-    await aiguillageDe(faux, "v1.charge.refunded", "ch_1");
-    expect(alerter).toHaveBeenLastCalledWith("remboursement", expect.arrayContaining([expect.stringContaining("34.80 EUR")]));
+  it("litige et remboursement : une alerte (identifiants et montants) à envoyer, et la relecture du client", async () => {
+    expect(await aiguillageDe(faux, "v1.charge.dispute.created", "du_1")).toMatchObject({
+      clientStripe: "cus_1",
+      alerte: { sujet: "litige sur un paiement", lignes: expect.arrayContaining([expect.stringContaining("29.00 EUR")]) },
+    });
+    expect(await aiguillageDe(faux, "v1.charge.refunded", "ch_1")).toMatchObject({
+      alerte: { sujet: "remboursement", lignes: expect.arrayContaining([expect.stringContaining("34.80 EUR")]) },
+    });
+    // Rien n'est encore envoyé : l'alerte part avec l'aiguillage acquis.
+    expect(alerter).not.toHaveBeenCalled();
   });
 });
 
@@ -94,9 +99,13 @@ describe("aiguiller : prise, lecture, issue", () => {
     expect(api.invoices.retrieve).not.toHaveBeenCalled();
   });
 
-  it("prise reprise pendant la lecture : l'autre worker conclut", async () => {
-    vi.mocked(evenements.marquerAiguille).mockResolvedValue(false);
-    expect(await aiguiller(faux, evt, maintenant)).toBe("pris");
+  it("prise reprise pendant la lecture : l'autre worker conclut — et alerte, une seule fois", async () => {
+    const litige = { id: "evt_2", type: "v1.charge.dispute.created", objetId: "du_1", tentatives: 0 };
+    vi.mocked(evenements.marquerAiguille).mockResolvedValueOnce(false);
+    expect(await aiguiller(faux, litige, maintenant)).toBe("pris");
+    expect(alerter).not.toHaveBeenCalled();
+    expect(await aiguiller(faux, litige, maintenant)).toBe("aiguille");
+    expect(alerter).toHaveBeenCalledExactlyOnceWith("litige sur un paiement", expect.any(Array));
   });
 
   it("aiguillé sous sa prise : le client demandé et l'événement marqué, ensemble", async () => {

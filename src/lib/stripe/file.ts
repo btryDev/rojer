@@ -39,7 +39,8 @@ const executer = (requete: Prisma.Sql, db?: Executeur) => (db ? db.$executeRaw(r
 /**
  * Demande une relecture du client. `abonnementId` : le dernier abonnement vu
  * (relu par son identifiant si le client a été supprimé). Relance un échec
- * durable : une demande neuve mérite un essai.
+ * durable avec tout son cycle d'essais (tentatives remises à zéro) : une
+ * demande neuve mérite trois jours, pas un essai puis une alerte.
  */
 export async function demanderSynchronisation(
   customerId: string,
@@ -53,6 +54,7 @@ export async function demanderSynchronisation(
     ON CONFLICT ("customerId") DO UPDATE SET
       "demandes" = "SynchronisationStripe"."demandes" + 1,
       "prochainEssaiLe" = LEAST("SynchronisationStripe"."prochainEssaiLe", ${maintenant}),
+      "tentatives" = CASE WHEN "SynchronisationStripe"."echecDurableLe" IS NULL THEN "SynchronisationStripe"."tentatives" ELSE 0 END,
       "echecDurableLe" = NULL,
       "abonnementId" = COALESCE(EXCLUDED."abonnementId", "SynchronisationStripe"."abonnementId")`,
     db,
@@ -68,6 +70,7 @@ export async function demanderSynchronisations(customerIds: string[], maintenant
     ON CONFLICT ("customerId") DO UPDATE SET
       "demandes" = "SynchronisationStripe"."demandes" + 1,
       "prochainEssaiLe" = LEAST("SynchronisationStripe"."prochainEssaiLe", ${maintenant}),
+      "tentatives" = CASE WHEN "SynchronisationStripe"."echecDurableLe" IS NULL THEN "SynchronisationStripe"."tentatives" ELSE 0 END,
       "echecDurableLe" = NULL`;
 }
 
