@@ -9,7 +9,7 @@
  *   (un `sslmode` hérité désactiverait la vérification sans bruit) ;
  * - le mot de passe ne s'affiche pas ;
  * - le serveur écoute sur 0.0.0.0 et garde ses connexions inactives 65 s
- *   (les 502 du répartiteur), sauf valeur valide posée sur l'application.
+ *   (les 502 du répartiteur).
  */
 import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
@@ -26,29 +26,26 @@ afterEach(() => {
   for (const d of dossiers.splice(0)) rmSync(d, { recursive: true, force: true });
 });
 
-function lancerDans(
-  preparer: (dossier: string) => void,
-  env: Record<string, string>,
-  mode = "verifier",
-  ...commande: string[]
-) {
+function lancer(env: Record<string, string>, mode = "verifier", ...commande: string[]) {
   // Environnement vide : rien n'est hérité du poste, comme sur une instance
-  // neuve. Un dossier temporaire propre à chaque appel, qui sert aussi de
-  // dossier courant : rien n'est écrit dans le /tmp partagé ni dans le dépôt.
-  // NODE_ENV : exigée par le type de Next, sans effet.
+  // neuve. Un dossier temporaire propre à chaque appel : rien n'est écrit
+  // dans le /tmp partagé. Le dossier courant, à part, porte un faux serveur
+  // autonome qui affiche ce qu'il reçoit (mode `servir`). NODE_ENV : exigée
+  // par le type de Next, sans effet.
   const dossier = mkdtempSync(join(tmpdir(), "cc-"));
-  dossiers.push(dossier);
-  preparer(dossier);
+  const appli = mkdtempSync(join(tmpdir(), "cc-appli-"));
+  dossiers.push(dossier, appli);
+  mkdirSync(join(appli, ".next/standalone"), { recursive: true });
+  writeFileSync(
+    join(appli, ".next/standalone/server.js"),
+    'console.log([process.env.PORT, process.env.HOSTNAME, process.env.KEEP_ALIVE_TIMEOUT].join("|"))',
+  );
   const r = spawnSync("sh", [SCRIPT, mode, ...commande], {
-    cwd: dossier,
+    cwd: appli,
     env: { NODE_ENV: "test", PATH: process.env.PATH ?? "", TMPDIR: dossier, ...env },
     encoding: "utf8",
   });
   return { code: r.status, sortie: r.stdout.trim(), erreur: r.stderr, dossier };
-}
-
-function lancer(env: Record<string, string>, mode = "verifier", ...commande: string[]) {
-  return lancerDans(() => {}, env, mode, ...commande);
 }
 
 describe("demarrer-cc.sh : l'URL de la base", () => {
@@ -148,36 +145,10 @@ describe("demarrer-cc.sh : l'URL de la base", () => {
 });
 
 describe("demarrer-cc.sh : le serveur", () => {
-  // Un faux serveur autonome qui affiche ce qu'il reçoit : le script s'y
-  // lance comme sur l'instance.
-  function servir(env: Record<string, string>) {
-    const r = lancerDans(
-      (dossier) => {
-        mkdirSync(join(dossier, ".next/standalone"), { recursive: true });
-        writeFileSync(
-          join(dossier, ".next/standalone/server.js"),
-          'console.log([process.env.PORT, process.env.HOSTNAME, process.env.KEEP_ALIVE_TIMEOUT].join("|"))',
-        );
-      },
-      { POSTGRESQL_ADDON_URI: ADDON, BASE_CA_PEM: CA, ...env },
-      "servir",
-    );
-    return { code: r.code, sortie: r.sortie.split("\n").at(-1), erreur: r.erreur };
-  }
-
-  it("garde les connexions inactives 65 s par défaut, au-delà du répartiteur", () => {
-    expect(servir({})).toMatchObject({ code: 0, sortie: "8080|0.0.0.0|65000" });
-  });
-
-  it("une valeur valide posée sur l'application l'emporte", () => {
-    expect(servir({ KEEP_ALIVE_TIMEOUT: "120000", PORT: "9000" })).toMatchObject({ code: 0, sortie: "9000|0.0.0.0|120000" });
-  });
-
-  it("des secondes, zéro ou du texte sont refusés au lieu de rendre les 502", () => {
-    for (const valeur of ["65", "0", "65s", "abc"]) {
-      const r = servir({ KEEP_ALIVE_TIMEOUT: valeur });
-      expect(r.code, valeur).toBe(1);
-      expect(r.erreur).toMatch(/KEEP_ALIVE_TIMEOUT/);
-    }
+  it("écoute sur 0.0.0.0 et garde les connexions inactives 65 s, au-delà du répartiteur", () => {
+    const r = lancer({ POSTGRESQL_ADDON_URI: ADDON, BASE_CA_PEM: CA, KEEP_ALIVE_TIMEOUT: "5000" }, "servir");
+    expect(r.erreur).toBe("");
+    expect(r.code).toBe(0);
+    expect(r.sortie.split("\n").at(-1)).toBe("8080|0.0.0.0|65000");
   });
 });
