@@ -791,6 +791,14 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     type déclaré (`typePorte`, `typeEpi`, exigé) ; GZ 15 sur l'installation
     de gaz seule ; référentiel `2026-11-07.1`, 206 inchangé ; migration en un
     seul déploiement, enum recréé])
+59. **059** — Les PDF se mettent en page dans un fil d'exécution séparé :
+    une seule porte de rendu (`rendrePdf`, demande `{ type, props }`), un
+    garde-fou de volume par type en amont (`SEUILS_PDF`, refus 503), un
+    `worker_thread` par rendu (tas, délai, annulation ; un tas dépassé
+    revient comme le même refus), un fichier autonome empaqueté par esbuild
+    (`dist-pdf/pdf-worker.mjs`), une ligne `export_pdf` par export
+    (**proposée le 2026-11-10**, lots `pdf-a1`, `pdf-b0`, `pdf-b1` ; à
+    accepter après les preuves sur le build CC et le banc)
 
 [2026-10-15, ménage des ADR : 037, 038 et 043 manquaient à cette liste ;
 **il n'existe pas d'ADR-044** — annoncée dans
