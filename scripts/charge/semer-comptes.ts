@@ -75,6 +75,11 @@ async function dossierDuCompte(userId: string) {
   });
 }
 
+/** Grossi par `grossir-dossier.ts` : il porte le parc de la cible (≈ 100). */
+async function estGros(etablissementId: string): Promise<boolean> {
+  return (await prisma.equipement.count({ where: { etablissementId, actif: true } })) >= 100;
+}
+
 /** Même choix que `mesurer.mjs` : l'appareil au plus long historique. */
 async function ficheLaPlusLourde(etablissementId: string) {
   const [ligne] = await prisma.$queryRaw<{ equipementId: string; id: string }[]>`
@@ -109,13 +114,18 @@ async function main(): Promise<void> {
     const email = `charge-${String(n).padStart(2, "0")}@rojer.invalid`;
     const { userId, cookie } = await ouvrirSession(email, MOT_DE_PASSE);
     let dossier = await dossierDuCompte(userId);
-    const taille = n <= gros ? "gros" : "demo";
     if (!dossier) {
       tsx("scripts/seed-dossier-complet.ts", ["--user", userId, "--dossier-de-charge", String(n)]);
       dossier = await dossierDuCompte(userId);
       if (!dossier) throw new Error(`Dossier ${n} absent après le semis.`);
-      if (taille === "gros") tsx("scripts/perf/grossir-dossier.ts", ["--etablissement", dossier.id]);
     }
+    // La taille se lit sur le dossier, pas sur le rang : une relance avec un
+    // autre --gros grossit ce qui doit l'être, et n'étiquette jamais « gros »
+    // un dossier qui ne l'est pas.
+    if (n <= gros && !(await estGros(dossier.id))) {
+      tsx("scripts/perf/grossir-dossier.ts", ["--etablissement", dossier.id]);
+    }
+    const taille = (await estGros(dossier.id)) ? "gros" : "demo";
     if (!dossier.duerps[0]) throw new Error(`Dossier ${n} sans DUERP.`);
     const fiche = await ficheLaPlusLourde(dossier.id);
     dossiers.push({
