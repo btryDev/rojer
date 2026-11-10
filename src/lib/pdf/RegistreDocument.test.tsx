@@ -10,7 +10,7 @@
 import { describe, expect, it } from "vitest";
 import { elementsDansLOrdre, texteDirect } from "./arbre-rendu.test-utils";
 import { renderToBuffer } from "@react-pdf/renderer";
-import { RegistreDocument, type RegistreData } from "./RegistreDocument";
+import { RegistreDocument, TenueDuRegistrePdf, type RegistreData } from "./RegistreDocument";
 import { phraseFraicheur } from "@/lib/calendrier/fraicheur";
 
 const data: RegistreData = {
@@ -179,8 +179,13 @@ describe("RegistreDocument", () => {
     // et la compression, et le rendu ERP est sorti PLUS COURT que le rendu
     // sans régime, avec la citation en plus. La taille n'était qu'un
     // substitut ; l'arbre de rendu dit le texte.
+    // La tenue est un sous-composant (lot pdf-a1) : son arbre se lit à part,
+    // et le test du découpage vérifie qu'elle est bien au document.
     const textes = (regime: { estERP: boolean; estIGH: boolean }) =>
-      elementsDansLOrdre(RegistreDocument({ data: { ...data, regime } }))
+      [
+        ...elementsDansLOrdre(RegistreDocument({ data: { ...data, regime } })),
+        ...elementsDansLOrdre(TenueDuRegistrePdf({ regime })),
+      ]
         .map(texteDirect)
         .join("\n");
     const aucun = textes({ estERP: false, estIGH: false });
@@ -197,9 +202,7 @@ describe("RegistreDocument", () => {
   it("ne met pas R. 146-35 dans le titre du registre, et le nomme à part en IGH", () => {
     // Ce document n'est pas le registre de l'immeuble (R. 146-35 : « tenu,
     // par le propriétaire ») : le titre ne cite que ce qu'il met en œuvre.
-    const noeuds = elementsDansLOrdre(
-      RegistreDocument({ data: { ...data, regime: { estERP: true, estIGH: true } } }),
-    );
+    const noeuds = elementsDansLOrdre(TenueDuRegistrePdf({ regime: { estERP: true, estIGH: true } }));
     const titre = noeuds.map(texteDirect).find((t) => t.startsWith("Tenue du registre ("));
     expect(titre).toBeDefined();
     expect(titre).toContain("R. 143-44 CCH");
@@ -208,8 +211,8 @@ describe("RegistreDocument", () => {
   });
 });
 
-// Lot pdf-a1 (2026-11-10) : l'index des rapports est coupé en une `<Page>` par
-// année et par paquet (`paquets.ts`), parce que d'un seul tenant son rendu
+// Lot pdf-a1 (2026-11-10) : l'index des rapports est coupé en `<Page>` de cent
+// lignes au plus, par année (`paquets.ts`), parce que d'un seul tenant son rendu
 // coûtait le carré du nombre de lignes. Le découpage ne doit RIEN perdre.
 describe("RegistreDocument — index des rapports découpé", () => {
   /** `n` rapports de l'année `annee`, du plus récent au plus ancien. */
@@ -258,8 +261,9 @@ describe("RegistreDocument — index des rapports découpé", () => {
   });
 
   it("met la tenue du registre une seule fois, après les vérifications en attente", () => {
-    const tenue = noeuds.map(texteDirect).filter((t) => t.startsWith("Tenue du registre"));
-    expect(tenue).toHaveLength(1);
+    const types = noeuds.map((n) => n.type);
+    expect(types.filter((t) => t === "TenueDuRegistrePdf")).toHaveLength(1);
+    expect(types.lastIndexOf("LigneAttentePdf")).toBeLessThan(types.indexOf("TenueDuRegistrePdf"));
   });
 
   it("rend le PDF avec un index de plusieurs paquets", async () => {

@@ -1,35 +1,33 @@
 import { composantesCiviles } from "@/lib/dates";
 
 /**
- * Le découpage des longs tableaux des PDF en `<Page>` successives
- * (lot pdf-a1, 2026-11-10, `docs/revues/generation-pdf-volume-2026-11-10.md`).
+ * Le découpage des longs tableaux des PDF en `<Page>` successives (lot
+ * pdf-a1, 2026-11-10).
  *
  * LA CAUSE. Le moteur de pagination de `@react-pdf` 4.5.1 refait la mise en
  * page de TOUT le reste d'une `<Page>` à chaque saut de feuille : le coût d'un
  * tableau croît comme le carré de son nombre de lignes. Mesuré sur le banc de
- * charge : 682 rapports en 11 s, 2 274 en 105 s, au-delà le processus meurt —
- * et toute l'application est figée pendant ce temps.
+ * charge (session du test de charge, `lot/charge-k6`) : 682 rapports en 11 s,
+ * 2 274 en 105 s, au-delà le processus meurt — et toute l'application est
+ * figée pendant ce temps.
  *
- * LE REMÈDE ICI. Chaque `<Page>` se pagine seule : un tableau coupé en paquets
- * de `LIGNES_PAR_PAQUET` lignes coûte linéairement (mesure synthétique :
- * 2 000 lignes, 14,8 s → 2,5 s). Le prix est visible : un paquet commence
- * toujours une nouvelle feuille, la dernière feuille d'un paquet peut rester
- * à moitié vide.
+ * LE REMÈDE ICI. Chaque `<Page>` se pagine seule : un tableau coupé en
+ * `<Page>` de `LIGNES_PAR_PAQUET` lignes au plus coûte linéairement (registre
+ * réel, données synthétiques : 1 500 rapports, 16,2 s → 2,5 s). Le prix est
+ * visible : une `<Page>` commence toujours une nouvelle feuille, et la
+ * dernière feuille d'un paquet peut rester à moitié vide.
  */
 
 /**
- * Lignes par paquet. Environ trois à quatre feuilles de tableau : assez
- * petit pour que le carré reste négligeable, assez grand pour que les
- * feuilles à moitié vides restent rares (mesure synthétique : 1 000 lignes en
- * 2,0 s par paquets de 100, contre 5,2 s d'un seul tenant).
+ * Lignes par `<Page>`. Environ trois à neuf feuilles de tableau selon la
+ * hauteur des lignes : assez petit pour que le carré reste négligeable, assez
+ * grand pour que les feuilles à moitié vides restent rares.
  */
 export const LIGNES_PAR_PAQUET = 100;
 
 /** Coupe une liste en paquets consécutifs, sans rien perdre ni réordonner. */
 export function enPaquets<T>(items: readonly T[], taille = LIGNES_PAR_PAQUET): T[][] {
-  if (!Number.isInteger(taille) || taille < 1) {
-    throw new Error("La taille d'un paquet est un entier ≥ 1.");
-  }
+  verifierTaille(taille);
   const paquets: T[][] = [];
   for (let i = 0; i < items.length; i += taille) {
     paquets.push(items.slice(i, i + taille));
@@ -37,35 +35,68 @@ export function enPaquets<T>(items: readonly T[], taille = LIGNES_PAR_PAQUET): T
   return paquets;
 }
 
-/** Les lignes d'une année civile, coupées en paquets. */
-export type TrancheAnnuelle<T> = {
+/** Une suite de lignes d'une même année civile, sur une même `<Page>`. */
+export type SegmentAnnuel<T> = {
   /** L'année civile, en heure de Paris (ADR-011). */
   annee: number;
-  /** Le nombre de lignes de l'année, tous paquets confondus. */
+  /** Le nombre de lignes de cette année, tous segments confondus. */
   total: number;
-  paquets: T[][];
+  /** `true` si l'année a commencé sur une `<Page>` précédente. */
+  suite: boolean;
+  lignes: T[];
 };
 
 /**
- * Regroupe par année civile (heure de Paris), dans l'ordre où les années
- * apparaissent, puis coupe chaque année en paquets. L'ordre des lignes est
- * celui de l'entrée : une liste triée du plus récent au plus ancien le reste.
+ * Range les lignes en `<Page>` de `taille` lignes au plus, chacune faite de
+ * segments annuels : une année courte partage sa `<Page>` avec la suivante,
+ * une année longue s'étend sur plusieurs.
+ *
+ * L'ordre de l'entrée est gardé tel quel : une année se coupe à chaque
+ * changement d'année, jamais par regroupement. Une entrée triée du plus
+ * récent au plus ancien donne donc un segment par année ; une entrée qui ne
+ * l'est pas reste dans son ordre, quitte à montrer deux fois la même année.
  */
-export function parAnneeCivile<T>(
+export function feuillesParAnnee<T>(
   items: readonly T[],
   dateDe: (item: T) => Date,
   taille = LIGNES_PAR_PAQUET,
-): TrancheAnnuelle<T>[] {
-  const parAnnee = new Map<number, T[]>();
+): SegmentAnnuel<T>[][] {
+  verifierTaille(taille);
+  const suites: { annee: number; lignes: T[] }[] = [];
   for (const item of items) {
     const annee = composantesCiviles(dateDe(item)).annee;
-    const lignes = parAnnee.get(annee);
-    if (lignes) lignes.push(item);
-    else parAnnee.set(annee, [item]);
+    const derniere = suites.at(-1);
+    if (derniere?.annee === annee) derniere.lignes.push(item);
+    else suites.push({ annee, lignes: [item] });
   }
-  return [...parAnnee].map(([annee, lignes]) => ({
-    annee,
-    total: lignes.length,
-    paquets: enPaquets(lignes, taille),
-  }));
+
+  const feuilles: SegmentAnnuel<T>[][] = [];
+  let courante: SegmentAnnuel<T>[] = [];
+  let place = taille;
+  for (const { annee, lignes } of suites) {
+    for (let debut = 0; debut < lignes.length; ) {
+      if (place === 0) {
+        feuilles.push(courante);
+        courante = [];
+        place = taille;
+      }
+      const n = Math.min(place, lignes.length - debut);
+      courante.push({
+        annee,
+        total: lignes.length,
+        suite: debut > 0,
+        lignes: lignes.slice(debut, debut + n),
+      });
+      debut += n;
+      place -= n;
+    }
+  }
+  if (courante.length > 0) feuilles.push(courante);
+  return feuilles;
+}
+
+function verifierTaille(taille: number) {
+  if (!Number.isInteger(taille) || taille < 1) {
+    throw new Error("La taille d'un paquet est un entier ≥ 1.");
+  }
 }

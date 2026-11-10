@@ -9,7 +9,7 @@ import { PiedFixe } from "./PiedFixe";
 import { stylesCommuns as s } from "./styles";
 
 /** Une `<Page>` de `n` lignes sous le style commun (et son `lineHeight`). */
-function longDocument(pied: React.ReactNode, n = 1500) {
+function longDocument(pied: React.ReactNode, n = 700) {
   return (
     <Document>
       <Page size="A4" style={s.page}>

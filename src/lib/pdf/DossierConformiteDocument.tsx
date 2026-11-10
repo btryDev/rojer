@@ -254,6 +254,8 @@ function EncadreALire({
 }
 
 export function DossierConformiteDocument({ data, projet = false }: { data: DossierData; projet?: boolean }) {
+  // Le même pied sur chaque `<Page>` (`PiedFixe`).
+  const pied = <PiedFixe texte={`Dossier de conformité — ${data.etablissement}`} />;
   // Un compte qui n'a jamais payé : un aperçu, pas un document officiel (ADR-053 § 15).
   const mention = projet ? <MentionProjet precision="Aperçu : le dossier officiel demande un abonnement." /> : null;
   // Muet si la couverture n'a pas pu être lue : un document qui ne sait pas
@@ -480,7 +482,7 @@ export function DossierConformiteDocument({ data, projet = false }: { data: Doss
           </View>
         </View>
 
-        <PiedFixe texte={`Dossier de conformité — ${data.etablissement}`} />
+        {pied}
       </Page>
 
       {/* Ce qui doit être en place — déclarations de l'employeur.
@@ -535,7 +537,7 @@ export function DossierConformiteDocument({ data, projet = false }: { data: Doss
           </View>
         )}
 
-        <PiedFixe texte={`Dossier de conformité — ${data.etablissement}`} />
+        {pied}
       </Page>
 
       {/* Vérifs en retard */}
@@ -656,7 +658,7 @@ export function DossierConformiteDocument({ data, projet = false }: { data: Doss
           </View>
         )}
 
-        <PiedFixe texte={`Dossier de conformité — ${data.etablissement}`} />
+        {pied}
       </Page>
 
       {/* Mesures et points à corriger en cours (ADR-048, lot 3) */}
@@ -670,7 +672,7 @@ export function DossierConformiteDocument({ data, projet = false }: { data: Doss
           Points à corriger ouverts
         </Text>
         <TableActions actions={data.pointsEnCours} colonne="Point à corriger" vide="Aucun point à corriger ouvert." />
-        <PiedFixe texte={`Dossier de conformité — ${data.etablissement}`} />
+        {pied}
       </Page>
 
       {/* Rapports récents + mentions légales */}
@@ -769,7 +771,7 @@ export function DossierConformiteDocument({ data, projet = false }: { data: Doss
           </Text>
         </View>
 
-        <PiedFixe texte={`Dossier de conformité — ${data.etablissement}`} />
+        {pied}
       </Page>
     </Document>
   );
