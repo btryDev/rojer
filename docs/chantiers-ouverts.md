@@ -3401,26 +3401,38 @@ n'ouvre l'accès aux données d'un autre compte. Chemins : `cc` sauf mention.
 
 Lot `lot/pdf-b0`, sur `lot/pdf-a1`. Le plan du chantier est
 `docs/plan-pdf-sous-processus.md` ; le diagnostic,
-`docs/revues/generation-pdf-volume-2026-11-10.md` (worktree principal, non
-commité au 2026-11-10).
+`docs/revues/generation-pdf-volume-2026-11-10.md`.
 
 **Le palliatif.** `rendrePdf` (`src/lib/pdf/rendre.ts`) refuse de mettre en
 page un document qui dépasse `SEUILS_PDF` (lignes du document, lignes de la
 plus grosse `<Page>`) : 503 « trop volumineux… reste consultable à l'écran »,
-pièce absente du ZIP de contrôle. Il empêche un seul export de figer ou de
-tuer le processus pour tous ; il ne rend pas le document. **À retirer** quand
+pièce absente du ZIP de contrôle. ~~Il empêche un seul export de figer ou de
+tuer le processus pour tous~~ [2026-11-10, revue : plus affirmatif que le
+code] Il borne la taille d'un export mis en page dans le processus web, avec
+des seuils mesurés sur le banc ; il ne rend pas le document, et sous le
+seuil un export fige encore l'application le temps de son rendu (banc, XS :
+environ 7 s pour un registre d'un an). **À retirer ou à relever** quand
 les gros exports passent en tâche de fond (lien par mail + ZIP) ou quand le
 rendu sort du processus (plan, B1-B3).
 
 **Ce qui reste ouvert :**
-- **Seuils provisoires** (2 500 lignes, bloc de 400) : à remplacer par la
+- ~~**Seuils provisoires** (2 500 lignes, bloc de 400) : à remplacer par la
   mesure du registre après A1, en XS, sur le banc de charge (session
-  `rojer-outils-cb`), avec une marge de moitié.
+  `rojer-outils-cb`), avec une marge de moitié.~~ [2026-11-10 : remplacés —
+  total 1 200, la moitié des 2 274 rapports qui passent en XS (3 080 tuent
+  le processus) ; bloc 400 inchangé.] **Reste ouvert** : le banc compte des
+  rapports, le garde-fou des lignes (rapports, points, fiches, attentes) ; à
+  recaler sur le champ `total` de la ligne `export_pdf` des dossiers du banc.
 - **Réglage par instance** : les seuils sont des constantes ; ils devront
   suivre la taille de l'instance (XS au départ, S ensuite).
 - **Tableaux encore d'un seul tenant** : le corps des fiches du registre
-  (journaux), les tableaux du dossier de conformité et du plan d'actions. Le
-  garde-fou les compte ; le découpage d'A1 ne les touche pas.
+  (journaux), les tableaux du dossier de conformité, du plan d'actions, des
+  points à corriger d'un appareil, et les pages du DUERP (inventaire, plan de
+  prévention, historique des versions). Le garde-fou les compte ; le
+  découpage d'A1 ne les touche pas. Le corps des fiches reprend les
+  équipements : environ 450 lignes pour 150 appareils, au-delà du bloc de
+  400 — le registre entier serait refusé. Le seuil de bloc doit suivre la
+  cible (100 appareils, environ 300 lignes).
 - **Passage de XS à S** : seuils proposés le 2026-11-10 (p95 des pages > 1 s,
   p95 des exports > 10 s ou un export > 30 s, RSS > 70 % ou un redémarrage
   pour mémoire, CPU > 60 % en continu, premier refus en production), à fixer

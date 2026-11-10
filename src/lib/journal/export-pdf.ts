@@ -8,11 +8,15 @@
 // Module pur : il rend la ligne et son niveau, l'appelant l'écrit.
 
 export type IssueExportPdf = "ok" | "trop_volumineux" | "echec";
+/** D'où vient l'export : une route PDF ou le ZIP de contrôle. */
+export type OrigineExportPdf = "route" | "zip";
 
 export type ExportPdf = {
   document: string;
-  total: number;
-  plusGrosBloc: number;
+  origine: OrigineExportPdf;
+  /** `null` quand la pesée elle-même a échoué (donnée malformée). */
+  total: number | null;
+  plusGrosBloc: number | null;
   seuilTotal: number;
   seuilBloc: number;
   dureeMs: number;
@@ -29,7 +33,8 @@ export type NiveauJournal = "info" | "warn" | "error";
 export function niveauExportPdf(e: ExportPdf): NiveauJournal {
   if (e.issue === "echec") return "error";
   if (e.issue === "trop_volumineux") return "warn";
-  const approche = e.total * 2 >= e.seuilTotal || e.plusGrosBloc * 2 >= e.seuilBloc;
+  const approche =
+    (e.total ?? 0) * 2 >= e.seuilTotal || (e.plusGrosBloc ?? 0) * 2 >= e.seuilBloc;
   return approche ? "warn" : "info";
 }
 
@@ -38,6 +43,7 @@ export function ligneExportPdf(e: ExportPdf): string {
     niveau: niveauExportPdf(e),
     evenement: "export_pdf",
     document: e.document,
+    origine: e.origine,
     total: e.total,
     plusGrosBloc: e.plusGrosBloc,
     seuilTotal: e.seuilTotal,

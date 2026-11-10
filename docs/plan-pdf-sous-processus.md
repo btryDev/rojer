@@ -181,7 +181,7 @@ lot ne garantit pas, les deux réglages. Écrit avant le code, dans le même lot
 
 | Étape | Contenu | Preuve | Coût machine |
 |---|---|---|---|
-| B0 | `documents.ts`, `rendrePdf` **dans le processus**, routes et ZIP migrés, garde. Aucun changement de comportement ; fusionnable seul. | 3 (clonage) | tests ciblés |
+| B0 | `documents.ts`, `rendrePdf` **dans le processus**, routes et ZIP migrés, garde. ~~Aucun changement de comportement~~ [2026-11-10 : le garde-fou de volume et le journal y sont entrés — refus 503 au-delà d'un seuil, pièce absente du ZIP] ; fusionnable seul. | 3 (clonage) | tests ciblés |
 | B1 | Worker, esbuild, délai, annulation, erreurs typées, réponses. | 2 (même PDF), 7 (dev) | tests ciblés |
 | B2 | `build:cc`, `preparer-standalone.sh`, standalone isolé. | 1 (standalone), 6 (`NODE_OPTIONS`) | **un build**, après les vagues du banc |
 | B3 | Plafond et délai calés ; ADR finalisé. | 4 et 5 (banc, par `rojer-outils-cb`) | banc |

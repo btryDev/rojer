@@ -1,6 +1,12 @@
 import "server-only";
 import { renderToBuffer } from "@react-pdf/renderer";
-import { ligneExportPdf, niveauExportPdf, type ExportPdf, type IssueExportPdf } from "@/lib/journal/export-pdf";
+import {
+  ligneExportPdf,
+  niveauExportPdf,
+  type ExportPdf,
+  type IssueExportPdf,
+  type OrigineExportPdf,
+} from "@/lib/journal/export-pdf";
 import { elementDuDocument, NOM_DOCUMENT, type DemandePdf, type TypeDocument } from "./documents";
 import { poidsDuDocument, type PoidsPdf } from "./poids";
 
@@ -15,27 +21,33 @@ import { poidsDuDocument, type PoidsPdf } from "./poids";
  *   2. le GARDE-FOU : au-delà d'un seuil, on refuse au lieu de mettre en page ;
  *   3. une ligne de journal (`journal/export-pdf.ts`).
  *
- * ⚠ LE GARDE-FOU EST UN PALLIATIF, NOMMÉ COMME TEL. La mise en page tourne
- * dans le processus web : un seul gros document peut figer l'application ou
- * saturer le tas et tuer le processus pour tous (banc de charge du
- * 2026-11-10). Refuser ne règle rien ; cela empêche un export de faire
- * tomber le service. Il se retire quand le rendu sort du processus (plan,
- * B1-B3) ou quand les gros exports passent en tâche de fond (lien par mail +
- * ZIP). Inscrit à `docs/chantiers-ouverts.md`.
+ * ⚠ LE GARDE-FOU EST UN PALLIATIF, NOMMÉ COMME TEL. Il borne la taille d'un
+ * export mis en page dans le processus web ; ses seuils viennent du banc de
+ * charge. Il ne rend pas le document, et il n'empêche pas tout : sous le
+ * seuil, un export fige encore l'application le temps de son rendu (banc,
+ * XS, 2026-11-10 : environ 7 s pour un registre d'un an). Il se retire ou se
+ * relève quand le rendu sort du processus (plan, B1-B3) ou quand les gros
+ * exports passent en tâche de fond (lien par mail + ZIP). Inscrit à
+ * `docs/chantiers-ouverts.md` § 23.
  */
 
 /**
- * Les seuils, PROVISOIRES : à remplacer par la mesure du registre après le
- * lot pdf-a1, en XS, sur le banc de charge (session `rojer-outils-cb`), avec
- * une marge de moitié — une ligne réelle pèse plus qu'une ligne du banc.
+ * Les seuils, mesurés sur le banc de charge en XS (1 cœur, 1 Go ; session
+ * `rojer-outils-cb`, registre après le lot pdf-a1, 2026-11-10) : 2 274
+ * rapports passent (672 Mo), 3 080 tuent le processus deux fois sur deux.
+ * Le total est la MOITIÉ du dernier qui passe — une ligne réelle pèse plus
+ * qu'une ligne du banc.
  *
- * Ordre de grandeur d'ici là (mesures synthétiques, 2026-11-10) : un tas de
- * 520 Mo sature vers 4 000 lignes même découpées ; un bloc de 700 lignes
- * d'un seul tenant fige l'application plusieurs secondes en XS.
+ * ⚠ Le banc compte des rapports, le garde-fou des lignes (rapports, points,
+ * fiches, attentes) : le même dossier pèse plus ici. À recaler sur la ligne
+ * `export_pdf` des dossiers du banc (champ `total`) au prochain passage.
+ *
+ * Le bloc reste à 400 : le corps des fiches du registre, d'un seul tenant,
+ * reprend les équipements (environ 300 lignes pour les 100 de la cible).
  */
 export const SEUILS_PDF = {
   /** Lignes de tout le document (mémoire). */
-  total: 2_500,
+  total: 1_200,
   /** Lignes de la plus grosse `<Page>` (temps). */
   bloc: 400,
 } as const;
@@ -71,35 +83,66 @@ export function raisonEchecRendu(e: unknown): string | undefined {
     : undefined;
 }
 
+export type OptionsRendu = {
+  seuils?: SeuilsPdf;
+  /** D'où vient l'export : une route PDF ou le ZIP de contrôle (journal). */
+  origine?: OrigineExportPdf;
+};
+
+/**
+ * Pèse la demande et la refuse au-delà d'un seuil (`PdfTropVolumineux`,
+ * journalisé). Calcul pur et rapide : une route l'appelle AVANT de prendre sa
+ * place dans la file d'export, pour qu'un refus ne fasse pas attendre.
+ * `rendrePdf` l'appelle aussi : le ZIP n'a pas d'autre porte.
+ */
+export function controlerPoids(demande: DemandePdf, options: OptionsRendu = {}): PoidsPdf {
+  const seuils = options.seuils ?? SEUILS_PDF;
+  const journaliser = journal(demande, options, performance.now());
+  let poids: PoidsPdf;
+  try {
+    poids = poidsDuDocument(demande);
+  } catch (e) {
+    // Une donnée malformée (un vieux snapshot) : l'export échoue, et se dit.
+    journaliser("echec", null);
+    throw e;
+  }
+  if (poids.total > seuils.total || poids.plusGrosBloc > seuils.bloc) {
+    journaliser("trop_volumineux", poids);
+    throw new PdfTropVolumineux(demande.type, poids);
+  }
+  return poids;
+}
+
 export async function rendrePdf(
   demande: DemandePdf,
-  seuils: SeuilsPdf = SEUILS_PDF,
+  options: OptionsRendu = {},
 ): Promise<Buffer> {
-  const poids = poidsDuDocument(demande);
-  const debut = performance.now();
-  const journaliser = (issue: IssueExportPdf) =>
+  const poids = controlerPoids(demande, options);
+  const journaliser = journal(demande, options, performance.now());
+  try {
+    const pdf = await renderToBuffer(elementDuDocument(demande));
+    journaliser("ok", poids);
+    return pdf;
+  } catch (e) {
+    journaliser("echec", poids);
+    throw e;
+  }
+}
+
+/** La ligne `export_pdf` d'une demande, écrite à son issue. */
+function journal(demande: DemandePdf, options: OptionsRendu, debut: number) {
+  const seuils = options.seuils ?? SEUILS_PDF;
+  return (issue: IssueExportPdf, poids: PoidsPdf | null) =>
     ecrire({
       document: demande.type,
-      total: poids.total,
-      plusGrosBloc: poids.plusGrosBloc,
+      origine: options.origine ?? "route",
+      total: poids?.total ?? null,
+      plusGrosBloc: poids?.plusGrosBloc ?? null,
       seuilTotal: seuils.total,
       seuilBloc: seuils.bloc,
       dureeMs: performance.now() - debut,
       issue,
     });
-
-  if (poids.total > seuils.total || poids.plusGrosBloc > seuils.bloc) {
-    journaliser("trop_volumineux");
-    throw new PdfTropVolumineux(demande.type, poids);
-  }
-  try {
-    const pdf = await renderToBuffer(elementDuDocument(demande));
-    journaliser("ok");
-    return pdf;
-  } catch (e) {
-    journaliser("echec");
-    throw e;
-  }
 }
 
 function ecrire(e: ExportPdf) {

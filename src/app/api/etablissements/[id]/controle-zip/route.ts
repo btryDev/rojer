@@ -32,7 +32,7 @@ import {
   construireRegistreData,
 } from "@/lib/pdf/builders";
 import { historiqueJusqua } from "@/lib/versions/historique";
-import { raisonEchecRendu, rendrePdf } from "@/lib/pdf/rendre";
+import { PdfTropVolumineux, raisonEchecRendu, rendrePdf } from "@/lib/pdf/rendre";
 import { slugifyFilename } from "@/lib/pdf/styles";
 import { contenuR4512_8 } from "@/lib/plan-prevention/contenu-r4512-8";
 import { annoncesZip, ligneHeuresRevisees } from "@/lib/plan-prevention/annonces-plan";
@@ -211,7 +211,9 @@ async function construireArchive(
   // comme tel : « trop volumineux », pas « la génération a échoué ».
   const noterEchec = (fichier: string, e: unknown, raison = "la génération a échoué") => {
     echecs.set(fichier, raisonEchecRendu(e) ?? raison);
-    console.error(`controle-zip : ${fichier} non inclus`, e);
+    // Un refus est déjà journalisé par `rendrePdf` (ligne `export_pdf`,
+    // niveau warn) : ce n'est pas une erreur, il ne se dit qu'une fois.
+    if (!(e instanceof PdfTropVolumineux)) console.error(`controle-zip : ${fichier} non inclus`, e);
   };
   let piecesPrestatairesManquantes = 0;
   // Les pièces de prestataires réellement mises au ZIP, par type : le README
@@ -252,14 +254,17 @@ async function construireArchive(
   try {
     const data = await construireDossierConformiteData(db, id);
     if (data) {
+      const buf = await rendrePdf({ type: "dossier-conformite", props: { data } }, { origine: "zip" });
+      zip.file(PIECES_ZIP.dossier, new Uint8Array(buf));
+      // APRÈS le rendu (lot pdf-b0, 2026-11-10) : collectés avant, ces faits
+      // étaient annoncés par le README pour un PDF refusé par le garde-fou
+      // ou en échec — « imprimées dans ce dossier » quand rien ne l'était.
       for (const v of data.verifsEnRetard) {
         if (v.contractuelle) echeancesContractuelles.add(v.id);
         if (v.rythmeRetenu) rythmesRetenus.set(v.id, v.rythmeRetenu);
       }
       nbVerifsEnRetard = data.verifsEnRetard.length;
       inventaire = data.couverture ? faitInventaire(data.couverture) : null;
-      const buf = await rendrePdf({ type: "dossier-conformite", props: { data } });
-      zip.file(PIECES_ZIP.dossier, new Uint8Array(buf));
     }
   } catch (e) {
     // On continue même si une brique échoue — et on le dit.
@@ -319,7 +324,7 @@ async function construireArchive(
           snapshot: versionCourante.snapshot as unknown as DuerpSnapshot,
           historique,
         },
-      });
+      }, { origine: "zip" });
       zip.file(fichierDuerp(versionCourante.numero), new Uint8Array(buf));
     }
   } catch (e) {
@@ -338,16 +343,19 @@ async function construireArchive(
   try {
     const data = await construireRegistreData(acces, id);
     if (data) {
+      // Les annexes, lues avec le registre : une seule lecture pour le PDF
+      // et pour 03_Registre_annexes/ (relecture du 2026-11-05). Avant le
+      // rendu : les fichiers annexés vont au ZIP même si le PDF est refusé.
+      annexesListees = data.annexes ?? [];
+      const buf = await rendrePdf({ type: "registre", props: { data } }, { origine: "zip" });
+      zip.file(PIECES_ZIP.registre, new Uint8Array(buf));
+      // Après le rendu, comme pour 01 : le README n'annonce que ce qui est
+      // imprimé.
       for (const v of data.verifsEnAttente) {
         if (v.contractuelle) echeancesContractuelles.add(v.id);
         if (v.rythmeRetenu) rythmesRetenus.set(v.id, v.rythmeRetenu);
         if (v.pourInformation) visitesPourInformation.add(v.id);
       }
-      // Les annexes, lues avec le registre : une seule lecture pour le PDF
-      // et pour 03_Registre_annexes/ (relecture du 2026-11-05).
-      annexesListees = data.annexes ?? [];
-      const buf = await rendrePdf({ type: "registre", props: { data } });
-      zip.file(PIECES_ZIP.registre, new Uint8Array(buf));
     }
   } catch (e) {
     noterEchec(PIECES_ZIP.registre, e);
@@ -390,7 +398,7 @@ async function construireArchive(
   try {
     const data = await construirePlanActionsData(db, id);
     if (data) {
-      const buf = await rendrePdf({ type: "plan-actions", props: { data } });
+      const buf = await rendrePdf({ type: "plan-actions", props: { data } }, { origine: "zip" });
       zip.file(PIECES_ZIP.plan, new Uint8Array(buf));
     }
   } catch (e) {

@@ -3,6 +3,7 @@ import { ligneExportPdf, niveauExportPdf, type ExportPdf } from "./export-pdf";
 
 const base: ExportPdf = {
   document: "registre",
+  origine: "route",
   total: 100,
   plusGrosBloc: 50,
   seuilTotal: 1_000,
@@ -22,6 +23,11 @@ describe("niveauExportPdf", () => {
     expect(niveauExportPdf({ ...base, plusGrosBloc: 200 })).toBe("warn");
   });
 
+  it("une pesée en échec (total null) ne lève pas, et reste une erreur", () => {
+    expect(niveauExportPdf({ ...base, total: null, plusGrosBloc: null, issue: "echec" })).toBe("error");
+    expect(JSON.parse(ligneExportPdf({ ...base, total: null, plusGrosBloc: null, issue: "echec" })).total).toBeNull();
+  });
+
   it("warn pour un refus, error pour un échec", () => {
     expect(niveauExportPdf({ ...base, issue: "trop_volumineux" })).toBe("warn");
     expect(niveauExportPdf({ ...base, issue: "echec" })).toBe("error");
@@ -36,6 +42,7 @@ describe("ligneExportPdf", () => {
       niveau: "info",
       evenement: "export_pdf",
       document: "registre",
+      origine: "route",
       total: 100,
       plusGrosBloc: 50,
       seuilTotal: 1_000,

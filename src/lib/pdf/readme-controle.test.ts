@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { PdfTropVolumineux, raisonEchecRendu } from "./rendre";
 import { genererReadme } from "./readme-controle";
 
 const base: Parameters<typeof genererReadme>[0] = {
@@ -107,6 +108,19 @@ describe("le README ne décrit que ce que le ZIP contient (relecture du 2026-09-
     // Le registre porte l'INDEX des rapports ; les fichiers sont dans Rapports/
     // (2026-09-27) — le README ne doit pas laisser croire qu'ils sont au 03.
     expect(t).toMatch(/03_Registre_securite\.pdf\s+Registre des vérifications, index des rapports/);
+  });
+
+  it("une pièce refusée par le garde-fou des PDF dit « trop volumineux » (lot pdf-b0)", () => {
+    const t = genererReadme({
+      ...base,
+      presents: new Set(["01_Dossier_conformite.pdf", "04_Plan_actions.pdf"]),
+      echecs: new Map([
+        ["03_Registre_securite.pdf", raisonEchecRendu(new PdfTropVolumineux("registre", { total: 9_999, plusGrosBloc: 1 }))!],
+      ]),
+    });
+    expect(t).toMatch(
+      /03_Registre_securite\.pdf\s+Non inclus — document trop volumineux pour être généré en un seul PDF/,
+    );
   });
 
   it("annonce les rythmes retenus avec la mention même des lignes, et se tait sans eux (ADR-039)", () => {

@@ -17,6 +17,12 @@ import { enPaquets, feuillesParAnnee } from "./paquets";
  * prévention ou une ligne de journal en sont une aussi, parce qu'ils
  * s'impriment comme telles. Les blocs suivent les `<Page>` réelles de chaque
  * document : un tableau découpé par le lot pdf-a1 compte par paquet.
+ *
+ * CE QUI N'EST PAS COMPTÉ, exprès : la longueur des textes (un libellé long
+ * fait une ligne plus haute, pas une ligne de plus) et ce que la cible borne
+ * (en-têtes de parties et de fiches du registre, axes de couverture et
+ * matériels non couverts du dossier, dix rapports récents au plus). Le
+ * garde-fou compte ce qui grossit avec le dossier.
  */
 export type PoidsPdf = { total: number; plusGrosBloc: number };
 
@@ -50,10 +56,22 @@ function blocsDuDocument(demande: DemandePdf): number[] {
     case "points-a-corriger":
       return [demande.props.data.ouverts.length + demande.props.data.corriges.length];
     case "duerp": {
-      // Les unités, leurs risques et leurs mesures s'impriment sur les mêmes
-      // `<Page>` (inventaire, puis plan de prévention) : un seul bloc.
-      const risques = demande.props.snapshot.unites.flatMap((u) => u.risques);
-      return [risques.length + risques.reduce((n, r) => n + r.mesures.length, 0)];
+      // Une entrée par `<Page>` de `DuerpDocument` qui grossit avec lui :
+      //   - les unités (et celles hors référentiel, au plus autant) ;
+      //   - l'inventaire : risques, leurs mesures, la liste des risques CMR ;
+      //   - le plan de prévention : risques priorisés et mesures prévues ;
+      //   - l'annexe des expositions : au plus un risque par ligne ;
+      //   - l'historique des versions, une de plus à chaque mise à jour.
+      const { snapshot, historique } = demande.props;
+      const risques = snapshot.unites.flatMap((u) => u.risques);
+      const mesures = risques.flatMap((r) => r.mesures);
+      return [
+        snapshot.unites.length * 2,
+        risques.length + mesures.length + risques.filter((r) => r.exposeCMR).length,
+        risques.length + mesures.filter((m) => m.statut === "prevue").length,
+        risques.length,
+        historique.length,
+      ];
     }
   }
 }
@@ -67,11 +85,16 @@ function blocsDuRegistre(data: RegistreData): number[] {
       0,
     );
   // L'index des rapports, par `<Page>` comme le document le découpe ; un
-  // point à corriger s'imprime sous son rapport, une ligne de plus.
+  // point à corriger s'imprime sous son rapport, une ligne de plus, et un
+  // rapport d'électricité à points porte en plus la mention de R. 4226-19.
   const rapports = feuillesParAnnee(data.rapports, (r) => r.dateRapport).map((feuille) =>
     feuille
       .flatMap((s) => s.lignes)
-      .reduce((n, r) => n + 1 + r.points.length, 0),
+      .reduce(
+        (n, r) =>
+          n + 1 + r.points.length + (r.points.length > 0 && r.domaine === "electricite" ? 1 : 0),
+        0,
+      ),
   );
   const attente = enPaquets(data.verifsEnAttente).map((p) => p.length);
   return [fiches, ...rapports, ...attente];

@@ -33,12 +33,13 @@ describe("poidsDuDocument — registre", () => {
           { fiches: [{ champs: n(3) }, { lignes: n(5), tenues: n(2) }] },
           { fiches: [{}] },
         ],
-        rapports: [rapport(2026, 2), rapport(2026), rapport(2025, 1)],
+        rapports: [rapport(2026, 2), rapport(2026), { ...rapport(2025, 1), domaine: "electricite" }],
         verifsEnAttente: n(4),
       }),
     );
-    // fiches 3 + 5 + 2 = 10 ; rapports 3 + 3 points = 6 ; attente 4.
-    expect(poids).toEqual({ total: 20, plusGrosBloc: 10 });
+    // fiches 3 + 5 + 2 = 10 ; rapports 3 + 3 points + 1 mention R. 4226-19
+    // (le rapport d'électricité à points) = 7 ; attente 4.
+    expect(poids).toEqual({ total: 21, plusGrosBloc: 10 });
   });
 
   it("le corps des fiches est un seul bloc ; les rapports comptent par paquet", () => {
@@ -88,22 +89,31 @@ describe("poidsDuDocument — autres documents", () => {
     ).toEqual({ total: 5, plusGrosBloc: 5 });
   });
 
-  it("DUERP : risques et mesures de toutes les unités, un seul bloc", () => {
-    const poids = poidsDuDocument(
+  it("DUERP : unités, inventaire, plan de prévention, annexe, historique", () => {
+    const mesure = (statut: string) => ({ statut });
+    const duerp = (historique: number) =>
       demande({
         type: "duerp",
         props: {
           snapshot: {
             unites: [
-              { risques: [{ mesures: n(2) }, { mesures: n(0) }] },
-              { risques: [{ mesures: n(3) }] },
+              {
+                risques: [
+                  { mesures: [mesure("prevue"), mesure("existante")], exposeCMR: true },
+                  { mesures: [] },
+                ],
+              },
+              { risques: [{ mesures: [mesure("prevue"), mesure("prevue"), mesure("existante")] }] },
             ],
           },
-          historique: [],
+          historique: n(historique),
         },
-      }),
-    );
-    // 3 risques + 5 mesures.
-    expect(poids).toEqual({ total: 8, plusGrosBloc: 8 });
+      });
+    // Unités 2 × 2 = 4 ; inventaire 3 risques + 5 mesures + 1 CMR = 9 ;
+    // plan 3 + 3 prévues = 6 ; annexe 3 ; historique.
+    expect(poidsDuDocument(duerp(2))).toEqual({ total: 24, plusGrosBloc: 9 });
+    // L'historique grossit d'une version par mise à jour : il finit par peser
+    // plus que tout le reste.
+    expect(poidsDuDocument(duerp(40))).toEqual({ total: 62, plusGrosBloc: 40 });
   });
 });
