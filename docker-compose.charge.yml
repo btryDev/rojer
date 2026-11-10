@@ -1,0 +1,91 @@
+# Banc du test de charge (`docs/plan-test-de-charge.md` § 3). Surcharge de
+# `docker-compose.cc.yml`, qui reste inchangé : même image, même script de
+# démarrage, même pool que sur Clever Cloud. Se pilote par
+# `scripts/charge/banc.sh`, qui pose les variables ci-dessous.
+#
+# Ce que la surcharge ajoute :
+#   - les ressources de l'application calées sur une taille d'instance Clever
+#     Cloud (APP_CPUS, APP_MEM) : on mesure l'instance, pas le Mac ;
+#   - Toxiproxy entre l'application et la base : une latence par aller-retour
+#     se pose à chaud (`banc.sh latence <ms>`), sans redémarrer ;
+#   - MinIO en https à la place de Cellar : les dépôts passent par le pilote
+#     S3 de production. Le refus du http (`refusDuPointDAcces`) n'est pas
+#     affaibli : le certificat du banc est ajouté aux autorités de Node.
+#     MinIO ne publie plus d'images : celle-ci (RELEASE.2025-09-07T16-13-09Z)
+#     est épinglée par son empreinte et prise sur la machine (`pull_policy:
+#     never`). Ailleurs, sans elle, les dépôts sortent du banc local ; ils se
+#     testent de toute façon sur Cellar réel (§ 8).
+#
+# La base reste joignable depuis la machine sur 5435, sans latence : le semis
+# passe par là, pas par Toxiproxy.
+
+services:
+  # Noms propres au banc : la pile `rojer-cc` d'une autre session garde les siens.
+  db:
+    container_name: rojer-charge-db
+
+  app:
+    container_name: rojer-charge-app
+    cpus: ${APP_CPUS:-1}
+    mem_limit: ${APP_MEM:-1g}
+    depends_on:
+      toxiproxy:
+        condition: service_started
+      minio-bucket:
+        condition: service_completed_successfully
+    environment:
+      POSTGRESQL_ADDON_URI: postgresql://rojer:rojer@toxiproxy:5432/rojer
+      BASE_EN_CLAIR_HOTE: toxiproxy
+      BASE_POOL: ${BASE_POOL:-5}
+      STORAGE_DRIVER: s3
+      STORAGE_BUCKET: rojer-charge
+      CELLAR_ADDON_HOST: minio:9000
+      CELLAR_ADDON_KEY_ID: charge
+      CELLAR_ADDON_KEY_SECRET: charge-minio-secret
+      NODE_EXTRA_CA_CERTS: /certs/public.crt
+    volumes:
+      - ./.charge/certs/public.crt:/certs/public.crt:ro
+
+  toxiproxy:
+    image: ghcr.io/shopify/toxiproxy:2.9.0
+    container_name: rojer-charge-toxiproxy
+    command: ["-host=0.0.0.0", "-config=/config/toxiproxy.json"]
+    volumes:
+      - ./scripts/charge/toxiproxy.json:/config/toxiproxy.json:ro
+    ports:
+      - "8474:8474"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  minio:
+    image: minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
+    pull_policy: never
+    container_name: rojer-charge-minio
+    command: ["server", "/data", "--certs-dir", "/certs"]
+    environment:
+      MINIO_ROOT_USER: charge
+      MINIO_ROOT_PASSWORD: charge-minio-secret
+    volumes:
+      - ./.charge/certs:/certs:ro
+      - rojer-charge-minio:/data
+    healthcheck:
+      test: ["CMD", "curl", "-skf", "https://localhost:9000/minio/health/live"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  minio-bucket:
+    image: minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
+    pull_policy: never
+    container_name: rojer-charge-minio-bucket
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint:
+      - sh
+      - -c
+      - mc alias set --insecure banc https://minio:9000 charge charge-minio-secret && mc mb --insecure --ignore-existing banc/rojer-charge
+
+volumes:
+  rojer-charge-minio:

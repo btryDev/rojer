@@ -5,7 +5,9 @@
  * `docs/plan-performance.md`).
  *
  * À lancer APRÈS `seed:complet`, sur une base de mesure locale qui ne porte
- * que ce dossier. Le script refuse toute base qui n'est pas sur la machine.
+ * que ce dossier — ou, avec `--etablissement <id>`, sur une base de test de
+ * charge qui en porte plusieurs. Le script refuse toute base qui n'est pas sur
+ * la machine.
  *
  * Ce qu'il ajoute :
  *   - le parc porté à ≈ 100 équipements (copies des appareils de la démo,
@@ -27,7 +29,16 @@ import { prisma } from "../../src/lib/prisma";
 
 const CIBLE_EQUIPEMENTS = 100;
 const CIBLE_SALARIES = 50;
-const ANNEES = 10;
+// `--annees <n>` : la profondeur d'historique (10 par défaut). Sert à trouver
+// à partir de combien d'années un écran ou un export ne tient plus.
+const historiqueSeul = process.argv.includes("--historique-seulement");
+
+const ANNEES = (() => {
+  const i = process.argv.indexOf("--annees");
+  const n = i === -1 ? 10 : Number(process.argv[i + 1]);
+  if (!Number.isInteger(n) || n < 1 || n > 40) throw new Error("--annees : un entier de 1 à 40.");
+  return n;
+})();
 const JOUR = 86_400_000;
 const MAINTENANT = Date.now();
 
@@ -72,85 +83,100 @@ async function lots<T>(ops: Prisma.PrismaPromise<T>[], taille = 500): Promise<vo
 async function main(): Promise<void> {
   baseLocaleOuRefus();
 
+  // `--etablissement <id>` : le dossier à grossir, désigné, dans une base qui
+  // en porte plusieurs (test de charge, `docs/plan-test-de-charge.md` § 4).
+  // Sans lui, la base ne doit porter qu'un établissement : rien n'est deviné.
+  const i = process.argv.indexOf("--etablissement");
+  const designe = i === -1 ? null : process.argv[i + 1];
   const etabs = await prisma.etablissement.findMany({
+    where: designe ? { id: designe } : undefined,
     select: { id: true, entrepriseId: true },
   });
   if (etabs.length !== 1) {
-    console.error(`REFUS : la base porte ${etabs.length} établissements, le script en attend un seul (celui de seed:complet).`);
+    console.error(
+      designe
+        ? `REFUS : aucun établissement « ${designe} » dans cette base.`
+        : `REFUS : la base porte ${etabs.length} établissements, le script en attend un seul (celui de seed:complet), ou --etablissement <id>.`,
+    );
     process.exit(1);
   }
   const { id: etablissementId, entrepriseId } = etabs[0];
 
-  // 1. Parc — copies des appareils de la démo, réparties sur les zones.
-  const zones = await prisma.batiment.findMany({
-    where: { etablissementId },
-    select: { id: true },
-    orderBy: { ordre: "asc" },
-  });
-  const modeles = await prisma.equipement.findMany({
-    where: { etablissementId, actif: true },
-    orderBy: { createdAt: "asc" },
-  });
-  const manquants = CIBLE_EQUIPEMENTS - modeles.length;
-  const copies: Prisma.PrismaPromise<unknown>[] = [];
-  for (let i = 0; i < manquants; i++) {
-    const m = modeles[i % modeles.length];
-    copies.push(
-      prisma.equipement.create({
-        data: {
-          etablissementId,
-          batimentId: zones[i % zones.length].id,
-          categorie: m.categorie,
-          libelle: `${m.libelle} n° ${Math.floor(i / modeles.length) + 2}`,
-          localisation: m.localisation,
-          dateMiseEnService: m.dateMiseEnService,
-          caracteristiques: (m.caracteristiques ?? Prisma.DbNull) as Prisma.InputJsonValue,
-        },
-      }),
-    );
-  }
-  await lots(copies);
-  console.log(`  parc : ${modeles.length} + ${Math.max(0, manquants)} équipements`);
-
-  // 2. Effectif — 50 salariés, avec les titres des salariés de la démo.
-  await prisma.entreprise.update({
-    where: { id: entrepriseId },
-    data: { effectif: CIBLE_SALARIES },
-  });
-  await prisma.etablissement.update({
-    where: { id: etablissementId },
-    data: { effectifSurSite: CIBLE_SALARIES },
-  });
-  const salaries = await prisma.salarie.findMany({
-    where: { etablissementId, actif: true },
-    include: { titres: true },
-    orderBy: { createdAt: "asc" },
-  });
-  const nouveaux: Prisma.PrismaPromise<unknown>[] = [];
-  for (let i = salaries.length; i < CIBLE_SALARIES; i++) {
-    const m = salaries[i % salaries.length];
-    nouveaux.push(
-      prisma.salarie.create({
-        data: {
-          etablissementId,
-          nom: `${m.nom}-${i}`,
-          prenom: m.prenom,
-          poste: m.poste,
-          entreLe: m.entreLe,
-          titres: {
-            create: m.titres.map((t) => ({
-              obligationId: t.obligationId,
-              delivreLe: t.delivreLe,
-              echeanceLe: t.echeanceLe,
-              note: t.note,
-            })),
+  // `--historique-seulement` : un dossier type (le parc et l'effectif de la
+  // démo), dont seul l'historique grossit — le client moyen, pas la limite
+  // de la cible (test de charge, 2026-11-10).
+  if (!historiqueSeul) {
+    // 1. Parc — copies des appareils de la démo, réparties sur les zones.
+    const zones = await prisma.batiment.findMany({
+      where: { etablissementId },
+      select: { id: true },
+      orderBy: { ordre: "asc" },
+    });
+    const modeles = await prisma.equipement.findMany({
+      where: { etablissementId, actif: true },
+      orderBy: { createdAt: "asc" },
+    });
+    const manquants = CIBLE_EQUIPEMENTS - modeles.length;
+    const copies: Prisma.PrismaPromise<unknown>[] = [];
+    for (let i = 0; i < manquants; i++) {
+      const m = modeles[i % modeles.length];
+      copies.push(
+        prisma.equipement.create({
+          data: {
+            etablissementId,
+            batimentId: zones[i % zones.length].id,
+            categorie: m.categorie,
+            libelle: `${m.libelle} n° ${Math.floor(i / modeles.length) + 2}`,
+            localisation: m.localisation,
+            dateMiseEnService: m.dateMiseEnService,
+            caracteristiques: (m.caracteristiques ?? Prisma.DbNull) as Prisma.InputJsonValue,
           },
-        },
-      }),
-    );
+        }),
+      );
+    }
+    await lots(copies);
+    console.log(`  parc : ${modeles.length} + ${Math.max(0, manquants)} équipements`);
+
+    // 2. Effectif — 50 salariés, avec les titres des salariés de la démo.
+    await prisma.entreprise.update({
+      where: { id: entrepriseId },
+      data: { effectif: CIBLE_SALARIES },
+    });
+    await prisma.etablissement.update({
+      where: { id: etablissementId },
+      data: { effectifSurSite: CIBLE_SALARIES },
+    });
+    const salaries = await prisma.salarie.findMany({
+      where: { etablissementId, actif: true },
+      include: { titres: true },
+      orderBy: { createdAt: "asc" },
+    });
+    const nouveaux: Prisma.PrismaPromise<unknown>[] = [];
+    for (let i = salaries.length; i < CIBLE_SALARIES; i++) {
+      const m = salaries[i % salaries.length];
+      nouveaux.push(
+        prisma.salarie.create({
+          data: {
+            etablissementId,
+            nom: `${m.nom}-${i}`,
+            prenom: m.prenom,
+            poste: m.poste,
+            entreLe: m.entreLe,
+            titres: {
+              create: m.titres.map((t) => ({
+                obligationId: t.obligationId,
+                delivreLe: t.delivreLe,
+                echeanceLe: t.echeanceLe,
+                note: t.note,
+              })),
+            },
+          },
+        }),
+      );
+    }
+    await lots(nouveaux, 50);
+    console.log(`  effectif : ${salaries.length} + ${Math.max(0, CIBLE_SALARIES - salaries.length)} salariés`);
   }
-  await lots(nouveaux, 50);
-  console.log(`  effectif : ${salaries.length} + ${Math.max(0, CIBLE_SALARIES - salaries.length)} salariés`);
 
   // 3. Calendrier — par le script de maintenance, seule porte hors session
   // (`regeneration-hors-session.test.ts`).

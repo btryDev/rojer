@@ -15,8 +15,8 @@
  * Base de mesure seulement : le mot de passe est écrit ici.
  */
 import { writeFileSync } from "node:fs";
-import { auth } from "../../src/lib/auth/better-auth";
 import { prisma } from "../../src/lib/prisma";
+import { ouvrirSession } from "./ouvrir-session";
 
 const EMAIL = "mesure@rojer.invalid";
 const MOT_DE_PASSE = "mesure-des-pages-perf";
@@ -27,30 +27,11 @@ async function main(): Promise<void> {
     throw new Error("Usage : session-mesure.ts <fichier-id> <fichier-cookie>");
   }
 
-  if (!(await prisma.user.findUnique({ where: { email: EMAIL } }))) {
-    await auth.api.signUpEmail({ body: { email: EMAIL, password: MOT_DE_PASSE, name: EMAIL } });
-  }
-  const user = await prisma.user.update({
-    where: { email: EMAIL },
-    data: { emailVerified: true },
-    select: { id: true },
-  });
+  const { userId, cookie } = await ouvrirSession(EMAIL, MOT_DE_PASSE);
 
-  const reponse = await auth.api.signInEmail({
-    body: { email: EMAIL, password: MOT_DE_PASSE },
-    asResponse: true,
-  });
-  const cookie = reponse.headers
-    .getSetCookie()
-    .map((c) => c.split(";")[0])
-    .find((c) => /session_token=/.test(c));
-  if (!reponse.ok || !cookie) {
-    throw new Error(`Connexion de mesure refusée (${reponse.status}).`);
-  }
-
-  writeFileSync(fichierId, user.id);
+  writeFileSync(fichierId, userId);
   writeFileSync(fichierCookie, cookie);
-  console.log(`Compte de mesure ${user.id}, session écrite dans ${fichierCookie}.`);
+  console.log(`Compte de mesure ${userId}, session écrite dans ${fichierCookie}.`);
 }
 
 main()

@@ -27,6 +27,8 @@
 import { execFileSync, spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 
+import { pagesDuDossier } from "./pages.mjs";
+
 const arg = (nom, defaut) => {
   const i = process.argv.indexOf(`--${nom}`);
   return i === -1 ? defaut : process.argv[i + 1];
@@ -147,26 +149,12 @@ function pagesAMesurer() {
       ORDER BY count(*) DESC, v."obligationId", e.libelle, e."createdAt"
       LIMIT 1`,
   ).split("|");
-  const e = `/etablissements/${etab}`;
-  return [
-    ["Tableau de bord", e],
-    ["Calendrier", `${e}/calendrier`],
-    ["Registre", `${e}/registre`],
-    ["Équipements", `${e}/equipements`],
-    ["Plan d'actions", `${e}/actions`],
-    ["Équipe", `${e}/equipe`],
-    ["Prestataires", `${e}/prestataires`],
-    ["Carnet sanitaire", `${e}/carnet-sanitaire`],
-    ["Documents", `${e}/documents`],
-    ["DUERP (unités)", `/duerp/${duerp}/unites`],
-    ["DUERP (synthèse)", `/duerp/${duerp}/synthese`],
-    ...(equipement
-      ? [
-          ["Fiche équipement", `${e}/equipements/${equipement}`],
-          ["Fiche contrôle", `${e}/equipements/${equipement}/controles/${controle}`],
-        ]
-      : []),
-  ];
+  return pagesDuDossier({
+    etablissementId: etab,
+    duerpId: duerp,
+    equipementId: equipement || null,
+    controleId: controle || null,
+  });
 }
 
 const COOKIE = (() => {

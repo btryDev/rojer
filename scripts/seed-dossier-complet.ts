@@ -101,6 +101,7 @@ import {
 
 import { randomUUID } from "node:crypto";
 import { genererSlug } from "@/lib/accessibilite/schema";
+import { estSiretValide } from "@/lib/etablissements/siret";
 import { estReleveConforme } from "@/lib/carnet-sanitaire/schema";
 import { NOM_BATIMENT_PRINCIPAL } from "@/lib/batiments/schema";
 import { calculerCriticite } from "@/lib/cotation";
@@ -798,6 +799,48 @@ function lireEntrepriseHote(argv: string[]): string | null {
   return valeur;
 }
 
+/**
+ * `--dossier-de-charge <n>` crée le n-ième dossier d'une base de test de
+ * charge (`docs/plan-test-de-charge.md` § 4) : un compte, une entreprise, un
+ * établissement chacun, sur une base qui en porte déjà.
+ *
+ * POURQUOI CE N'EST PAS UN CONTOURNEMENT DU REFUS. Comme
+ * `--second-etablissement` : l'intention est nommée sur la ligne de commande,
+ * rien ne s'empile en silence. Le dossier porte son propre nom et son propre
+ * SIRET (clés de contrôle comprises), donc son propre slug public : cinquante
+ * dossiers homonymes se confondraient à l'écran et entreraient en collision
+ * sur `slugPublic`.
+ */
+function lireDossierDeCharge(argv: string[]): number | null {
+  const i = argv.indexOf("--dossier-de-charge");
+  if (i === -1) return null;
+  const n = Number(argv[i + 1]);
+  if (!Number.isInteger(n) || n < 1 || n > 99) {
+    throw new Error("--dossier-de-charge <n> attend un entier de 1 à 99.");
+  }
+  return n;
+}
+
+/** Le premier chiffre qui rend `debut + chiffre` valide, au sens de `valide`. */
+function completerCle(debut: string, valide: (s: string) => boolean): string {
+  for (let c = 0; c <= 9; c++) if (valide(`${debut}${c}`)) return `${debut}${c}`;
+  throw new Error(`Aucune clé de contrôle pour ${debut}.`);
+}
+
+/** Nom et SIRET du n-ième dossier de charge : SIREN et SIRET valides (Luhn). */
+function identiteDeCharge(n: number): { raisonSociale: string; siret: string } {
+  const luhn = (s: string) =>
+    [...s].reverse().reduce((t, ch, k) => {
+      let d = Number(ch) * (k % 2 === 1 ? 2 : 1);
+      if (d > 9) d -= 9;
+      return t + d;
+    }, 0) % 10 === 0;
+  // SIREN : « 8421 » + n sur quatre chiffres, puis la clé qui le rend valide.
+  const siren = completerCle(`8421${String(n).padStart(4, "0")}`, luhn);
+  const siret = completerCle(`${siren}0002`, estSiretValide);
+  return { raisonSociale: `Charge ${String(n).padStart(2, "0")} — Le Comptoir des Halles`, siret };
+}
+
 function lireZoneUnique(argv: string[]): boolean {
   return argv.includes("--zone-unique");
 }
@@ -834,11 +877,11 @@ function lireUserId(argv: string[]): string {
 // ===========================================================================
 
 /** Le compte dont `userId` est propriétaire, créé s'il n'existe pas (ADR-054). */
-async function compteDuProprietaire(userId: string): Promise<string> {
+async function compteDuProprietaire(userId: string, nom: string): Promise<string> {
   const membre = await prisma.membre.findFirst({ where: { userId, role: "owner" }, select: { compteId: true } });
   if (membre) return membre.compteId;
   const compte = await prisma.compte.create({
-    data: { name: ENTREPRISE.raisonSociale, slug: randomUUID(), membres: { create: { userId, role: "owner" } } },
+    data: { name: nom, slug: randomUUID(), membres: { create: { userId, role: "owner" } } },
     select: { id: true },
   });
   return compte.id;
@@ -851,12 +894,35 @@ async function main(): Promise<void> {
   }
   const zoneUnique = lireZoneUnique(process.argv.slice(2));
   const entrepriseHote = lireEntrepriseHote(process.argv.slice(2));
+  const dossierDeCharge = lireDossierDeCharge(process.argv.slice(2));
+  if (dossierDeCharge !== null && entrepriseHote !== null) {
+    throw new Error("--dossier-de-charge et --second-etablissement ne se combinent pas.");
+  }
+  const identite = dossierDeCharge === null ? ENTREPRISE : identiteDeCharge(dossierDeCharge);
+  if (dossierDeCharge !== null) {
+    // Le refus « base non vide » est levé pour un dossier de charge : la
+    // base doit donc être locale ou désignée nommément (même règle que
+    // scripts/charge/semer-comptes.ts), et le numéro encore libre.
+    let hote = "";
+    try {
+      hote = new URL(process.env.DATABASE_URL ?? "").hostname;
+    } catch {
+      /* illisible : refusé ci-dessous */
+    }
+    const locale = hote === "localhost" || hote === "127.0.0.1";
+    if (!locale && (hote === "" || hote !== process.env.CHARGE_BASE_DESIGNEE)) {
+      throw new Error(`REFUS : --dossier-de-charge sur une base ni locale ni désignée par CHARGE_BASE_DESIGNEE (« ${hote || "illisible"} »).`);
+    }
+    if (await prisma.entreprise.count({ where: { raisonSociale: identite.raisonSociale } })) {
+      throw new Error(`REFUS : le dossier de charge ${dossierDeCharge} existe déjà dans cette base (« ${identite.raisonSociale} »).`);
+    }
+  }
 
   // Refus explicite sur base non vide — cf. l'en-tête. Le compte des
   // entreprises suffit : elles sont la racine de tenancy (ADR-005), tout le
   // reste en dépend par cascade.
   const dejaLa = await prisma.entreprise.count();
-  if (dejaLa > 0 && entrepriseHote === null) {
+  if (dejaLa > 0 && entrepriseHote === null && dossierDeCharge === null) {
     console.error(
       `REFUS : la base porte déjà ${dejaLa} entreprise(s).\n` +
         "Ce script CRÉE un dossier, il n'en complète aucun — le relancer ici\n" +
@@ -879,9 +945,9 @@ async function main(): Promise<void> {
     data: {
       // [2026-11-03, ADR-054 : l'entreprise est au compte dont la personne
       // est propriétaire ; il naît ici s'il n'existe pas.]
-      compteId: await compteDuProprietaire(userId),
-      siren: ENTREPRISE.siret.slice(0, 9),
-      raisonSociale: ENTREPRISE.raisonSociale,
+      compteId: await compteDuProprietaire(userId, identite.raisonSociale),
+      siren: identite.siret.slice(0, 9),
+      raisonSociale: identite.raisonSociale,
       effectif: ENTREPRISE.effectif,
       adresse: ENTREPRISE.adresse,
     },
@@ -893,7 +959,7 @@ async function main(): Promise<void> {
   // collision avec celui du premier, `slugPublic` étant unique.
   const nomDuDossier = entrepriseHote
     ? "Le Comptoir des Halles — Quai Nord"
-    : ENTREPRISE.raisonSociale;
+    : identite.raisonSociale;
   const adresseDuDossier = entrepriseHote
     ? "3 quai Nord, 44000 Nantes"
     : ENTREPRISE.adresse;
@@ -903,7 +969,7 @@ async function main(): Promise<void> {
       entrepriseId: entreprise.id,
       raisonDisplay: nomDuDossier,
       adresse: adresseDuDossier,
-      siret: entrepriseHote ? ENTREPRISE.siretSecond : ENTREPRISE.siret,
+      siret: entrepriseHote ? ENTREPRISE.siretSecond : identite.siret,
       codeNaf: ENTREPRISE.codeNaf,
       effectifSurSite: ENTREPRISE.effectif,
 
