@@ -50,7 +50,12 @@ describe("un seul chemin pour effacer un fichier", () => {
   // Le stockage lui-même, la définition de `libererFichiers`, et la seule
   // fonction qui l'appelle.
   const PERMIS = (r: string) =>
-    r.startsWith("lib/storage/") || r === "lib/suppression/fichiers.ts" || r === "lib/abonnements/stockage.ts";
+    r.startsWith("lib/storage/") ||
+    r === "lib/suppression/fichiers.ts" ||
+    r === "lib/abonnements/stockage.ts" ||
+    // La suppression d'un compte entier (ADR-058) : ses lignes `FichierStocke`
+    // partent avec le compte, en cascade, dans la même transaction.
+    r === "lib/abonnements/suppression.ts";
   // Effacer sans rendre la ligne du plafond : `libererFichiers`, ou le
   // stockage en direct (`getStorage().delete(`, `storage?.delete(`).
   // Et rendre une ligne sans effacer le fichier (`fichierStocke.delete…`) :

@@ -67,6 +67,25 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous"; 
       "rappel de la veille de la fin de l'essai (ADR-053), joué par la tâche quotidienne hors session : les essais de tous les comptes, l'adresse de leurs propriétaires, et sa seule marque d'envoi",
     usages: ["prisma.abonnement.findMany", "prisma.abonnement.updateMany", "prisma.membre.findMany"],
   },
+  "src/lib/abonnements/suppression.ts": {
+    motif:
+      "suppression d'un compte sans abonnement depuis douze mois (ADR-058), jouée par la tâche quotidienne hors session : les abonnements de tous les comptes, leurs avertissements, et l'effacement d'un compte entier dans une transaction",
+    usages: [
+      "prisma.$transaction",
+      "prisma.abonnement.findMany",
+      "prisma.abonnement.updateMany",
+      "prisma.compteSupprime.deleteMany",
+      "prisma.duerpVersion.count",
+      "prisma.fichierALiberer.count",
+      "prisma.fichierALiberer.deleteMany",
+      "prisma.fichierALiberer.findMany",
+      "prisma.fichierALiberer.update",
+      "prisma.membre.findMany",
+    ],
+    // L'effacement d'un compte : une transaction interactive (le verrou, la
+    // condition relue, puis l'ordre des suppressions).
+    valeur: ["$transaction(hors tableau)"],
+  },
   "src/lib/securite/limite-debit.ts": {
     motif: "compteurs techniques, hors de tout compte",
     usages: ["prisma.$executeRaw", "prisma.$queryRaw"],
@@ -379,6 +398,8 @@ const SQL_BRUT_NOMMES: Record<string, string> = {
   "src/lib/salaries/suppression.ts": "verrou FOR UPDATE borné au salarié et à l'établissement gardés",
   "src/lib/calendrier/recalcul-ligne.ts": "verrou FOR UPDATE d'une ligne déjà lue par le client borné",
   "src/lib/entreprises/cycle-de-vie.ts": "verrou FOR UPDATE d'une entreprise déjà gardée",
+  "src/lib/abonnements/suppression.ts":
+    "verrou FOR UPDATE de la ligne d'abonnement d'un compte à supprimer (ADR-058), dans la transaction qui relit la condition",
   "src/lib/abonnements/quotas.ts": "verrou FOR NO KEY UPDATE de la ligne du compte de la portée (plafonds, ADR-053 § 14)",
   "src/lib/abonnements/stockage.ts": "somme des tailles des fichiers du compte de la portée (plafond de stockage, ADR-053 § 14)",
   "src/lib/registre/actions.ts": "UPDATE jsonb borné à l'établissement gardé",

@@ -2457,6 +2457,19 @@ model Abonnement {
   /// conditionnelle — deux instances ou deux passes n'envoient qu'une fois ;
   /// rendu à vide si aucun e-mail n'est parti (`abonnements/rappels.ts`).
   rappelVeilleEssaiLe   DateTime?
+  /// Depuis quand le compte est sans abonnement ouvert (ADR-058) : la fin
+  /// chez Stripe (`ended_at`, `trial_end` d'une pause), sinon la première
+  /// relecture qui l'a vu fermé. Vide dès qu'un abonnement s'ouvre — et les
+  /// trois colonnes suivantes avec. Écrite par la synchronisation seule.
+  sansAbonnementDepuis  DateTime?
+  /// La date de suppression du compte, posée au premier avertissement :
+  /// douze mois après `sansAbonnementDepuis`, au moins 30 jours après le
+  /// premier e-mail et 7 jours après le second ; jamais avancée.
+  suppressionPrevueLe   DateTime?
+  /// Avertissements avant suppression envoyés (J-30, J-7) : posés avant
+  /// l'envoi, rendus à vide si aucun e-mail n'est parti.
+  avertiSuppression30Le DateTime?
+  avertiSuppression7Le  DateTime?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 }
@@ -2607,4 +2620,41 @@ model InvitationCompte {
 
   @@index([compteId])
   @@index([email])
+}
+
+/// La trace d'un compte supprimé faute d'abonnement (ADR-058 § 5) : la preuve,
+/// en cas de litige, que la personne avait accepté les conditions, qu'elle a été
+/// prévenue deux fois, et la date de la suppression. Aucune donnée métier.
+/// Détachée de tout compte (le compte n'existe plus) ; effacée par la tâche
+/// quotidienne à `conserverJusquAu` (cinq ans, prescription de droit commun,
+/// art. 2224 du Code civil).
+model CompteSupprime {
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// L'identifiant qu'avait le compte : une trace, plus une clé.
+  ancienCompteId        String    @db.Uuid
+  nom                   String
+  /// Les adresses des propriétaires au moment de la suppression (les avertissements ont pu partir vers d'autres, si l'équipe a changé).
+  proprietaires         String[]
+  /// Les acceptations des conditions : `{ email, version, empreinte, contexte, accepteeLe }`.
+  acceptations          Json
+  sansAbonnementDepuis  DateTime?
+  avertiSuppression30Le DateTime?
+  avertiSuppression7Le  DateTime?
+  supprimeLe            DateTime
+  conserverJusquAu      DateTime
+
+  @@index([conserverJusquAu])
+}
+
+/// Les fichiers à retirer du stockage après une suppression en base (ADR-058
+/// § 4) : notés DANS la transaction qui efface les lignes, retirés après, et
+/// retentés à chaque passe tant que le stockage échoue — un fichier dont la
+/// ligne est effacée ne reste pas lisible indéfiniment.
+model FichierALiberer {
+  cle        String   @id
+  contexte   String
+  noteLe     DateTime @default(now())
+  tentatives Int      @default(0)
+
+  @@index([tentatives, noteLe])
 }

@@ -130,7 +130,7 @@ export async function abonnementsDuClient(stripe: Stripe, customerId: string): P
  * Les sessions Checkout encore ouvertes du client, expirées avant d'en ouvrir
  * une neuve : deux onglets ne paient pas deux abonnements.
  */
-async function expirerSessionsOuvertes(stripe: Stripe, customerId: string) {
+export async function expirerSessionsOuvertes(stripe: Stripe, customerId: string) {
   const ouvertes = await stripe.checkout.sessions.list({ customer: customerId, status: "open", limit: 10 }, OPTIONS_RELECTURE);
   await Promise.all(ouvertes.data.map((s) => stripe.checkout.sessions.expire(s.id)));
 }

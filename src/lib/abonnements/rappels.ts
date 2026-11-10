@@ -53,7 +53,7 @@ export function messageVeilleFinEssai(finEssai: Date, url: string): { subject: s
 }
 
 /** Les adresses des propriétaires du compte : eux seuls peuvent s'abonner. */
-async function adressesDesProprietaires(compteId: string): Promise<string[]> {
+export async function adressesDesProprietaires(compteId: string): Promise<string[]> {
   const membres = await prisma.membre.findMany({
     where: { compteId, role: "owner" },
     select: { user: { select: { email: true } } },

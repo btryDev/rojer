@@ -35,6 +35,9 @@ const COLONNES = {
   finPeriode: true,
   resilieEnFinDePeriode: true,
   finPrevueLe: true,
+  // La suppression du compte sans abonnement (ADR-058), dite sur la page Abonnement.
+  sansAbonnementDepuis: true,
+  suppressionPrevueLe: true,
 } as const;
 
 /** La ligne d'abonnement du compte (ADR-054 : une par compte), lue seulement une fois l'offre lancée. */

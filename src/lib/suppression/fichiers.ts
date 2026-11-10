@@ -75,6 +75,11 @@ export const COLONNES_ECARTEES: Record<
       "Index des tailles pour le plafond de stockage (ADR-053 § 14) : la clé d'un fichier déjà référencé par l'une des colonnes collectées, qui le libèrent ; la ligne suit le compte (suppression en cascade).",
     jamaisEcrite: false,
   },
+  "FichierALiberer.cle": {
+    motif:
+      "File des fichiers à retirer du stockage (ADR-058) : la clé d'un fichier déjà collecté par les colonnes ci-dessus, dont la ligne est effacée ; la file le libère elle-même.",
+    jamaisEcrite: false,
+  },
   "LimiteDebit.cle": {
     motif:
       "Clé d'un compteur de limitation de débit (`action:dimension:empreinte`), pas une clé de stockage.",
