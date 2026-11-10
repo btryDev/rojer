@@ -26,12 +26,6 @@ const m = vi.hoisted(() => ({
   depassements: vi.fn(),
 }));
 vi.mock("next/navigation", () => ({ redirect: m.redirect }));
-vi.mock("@/lib/auth/compte", () => ({
-  requireCompte: async () => ({
-    compte: { compteId: "c1" },
-    db: { abonnement: { findUnique: async () => m.ligne } },
-  }),
-}));
 vi.mock("@/lib/email", () => ({ publicAppUrl: () => "https://rojer.test" }));
 vi.mock("@/lib/stripe/client", () => ({ clientStripe: () => ({}) }));
 vi.mock("@/lib/stripe/config", () => ({ configurationStripe: () => ({ active: true }) }));
@@ -56,7 +50,10 @@ vi.mock("./quotas", () => ({ depassements: m.depassements }));
 vi.mock("./essai", () => ({ PAGE_ESSAI: "/essai", demarrerEssaiDuCompte: vi.fn() }));
 vi.mock("./saisie", () => ({
   PAGE_ABONNEMENT: "/compte/abonnement",
-  verifierProprietaire: async () => {},
+  verifierProprietaire: async () => ({
+    compte: { compteId: "c1" },
+    db: { abonnement: { findUnique: async () => m.ligne } },
+  }),
   verifierRole: async () => {},
 }));
 
