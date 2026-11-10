@@ -122,7 +122,7 @@ export async function GET(
   const { id } = await context.params;
   // Le compte, lu une fois ici, est passé aux builders (M7) : hors rendu,
   // chaque garde relit la session.
-  const { compte, db, etablissement } = await requireEtablissement(id);
+  const { compte, db, etablissement, user } = await requireEtablissement(id);
   // Exporter le dossier de contrôle demande d'avoir payé (ADR-053 § 15) ;
   // un ancien abonné le garde, une fois l'abonnement fini.
   await exigerUnPaiement(db, compte.compteId);
@@ -132,7 +132,7 @@ export async function GET(
   // rendue avant le flux : les fichiers déposés ne sont lus qu'à leur tour
   // dans l'archive, un à la fois, et un client lent ne doit pas priver les
   // autres d'export pendant des minutes.
-  const liberer = await reserverPlaceExport();
+  const liberer = await reserverPlaceExport(user.id);
   if (liberer instanceof Response) return liberer;
   let archive: Awaited<ReturnType<typeof construireArchive>>;
   try {

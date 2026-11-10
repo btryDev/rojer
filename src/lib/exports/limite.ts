@@ -39,6 +39,15 @@ export const EXPORTS_EN_ATTENTE_MAX = 8;
 export const ATTENTE_EXPORT_MAX_MS = 20_000;
 /** Ce que dit `Retry-After`, en secondes. */
 export const REESSAYER_APRES_S = 5;
+/**
+ * Places qu'une même personne connectée tient à la fois, en cours ET en
+ * attente (audit de sécurité du 2026-11-10) : sans cette part, un seul
+ * utilisateur, même en essai, gardait la place et la file pleines, et tous
+ * les autres recevaient 503. Deux : un export en cours et le suivant qui
+ * attend. La part est celle de l'UTILISATEUR (sa session), quels que soient
+ * l'établissement ou le DUERP exportés.
+ */
+export const EXPORTS_PAR_DEMANDEUR_MAX = 2;
 
 /**
  * La forme admise de `EXPORTS_SIMULTANES` : un entier ≥ 1 écrit en chiffres.
@@ -61,91 +70,52 @@ export function exportsSimultanes(valeur = process.env.EXPORTS_SIMULTANES): numb
   return Number(v);
 }
 
-export type Liberer = () => void;
-
-export type Limiteur = {
-  /** Une place, ou `null` si la file est pleine ou l'attente trop longue. */
-  reserver(): Promise<Liberer | null>;
-  etat(): { actifs: number; enAttente: number };
-};
-
-export function creerLimiteur(options: {
-  simultanes: number;
-  enAttenteMax: number;
-  attenteMaxMs: number;
-}): Limiteur {
-  let actifs = 0;
-  const file: { reveiller: () => void }[] = [];
-
-  // La place se TRANSMET au suivant de la file sans repasser par `actifs` :
-  // un export qui arrive entre la libération et le réveil ne la prend pas.
-  const liberateur = (): Liberer => {
-    let libere = false;
-    return () => {
-      if (libere) return;
-      libere = true;
-      const suivant = file.shift();
-      if (suivant) suivant.reveiller();
-      else actifs--;
-    };
-  };
-
-  return {
-    async reserver() {
-      if (actifs < options.simultanes) {
-        actifs++;
-        return liberateur();
-      }
-      if (file.length >= options.enAttenteMax) return null;
-      const servi = await new Promise<boolean>((resolve) => {
-        const attente = {
-          reveiller: () => {
-            clearTimeout(minuteur);
-            resolve(true);
-          },
-        };
-        const minuteur = setTimeout(() => {
-          const i = file.indexOf(attente);
-          if (i !== -1) file.splice(i, 1);
-          resolve(false);
-        }, options.attenteMaxMs);
-        file.push(attente);
-      });
-      return servi ? liberateur() : null;
-    },
-    etat: () => ({ actifs, enAttente: file.length }),
-  };
-}
+import { creerLimiteur, type Liberer, type Limiteur } from "@/lib/securite/limiteur";
 
 /** Le limiteur du processus, partagé par toutes les routes d'export. */
 const limiteur = creerLimiteur({
   simultanes: exportsSimultanes(),
   enAttenteMax: EXPORTS_EN_ATTENTE_MAX,
   attenteMaxMs: ATTENTE_EXPORT_MAX_MS,
+  parDemandeurMax: EXPORTS_PAR_DEMANDEUR_MAX,
 });
+
+/** Les en-têtes d'un refus de place : réessayer, texte, jamais en cache. */
+const ENTETES_REFUS = {
+  "Retry-After": String(REESSAYER_APRES_S),
+  "Content-Type": "text/plain; charset=utf-8",
+  "Cache-Control": "no-store",
+};
 
 /** La réponse d'une file pleine. */
 export function reponseExportsSatures(): Response {
   return new Response(
     "Trop d'exports sont en cours de préparation. Réessayez dans quelques secondes.",
-    {
-      status: 503,
-      headers: {
-        "Retry-After": String(REESSAYER_APRES_S),
-        "Content-Type": "text/plain; charset=utf-8",
-        "Cache-Control": "no-store",
-      },
-    },
+    { status: 503, headers: ENTETES_REFUS },
+  );
+}
+
+/** La réponse à qui tient déjà sa part : ses propres exports, pas le serveur. */
+export function reponsePartAtteinte(): Response {
+  return new Response(
+    "Vos exports précédents sont encore en préparation. Réessayez quand ils sont prêts.",
+    { status: 429, headers: ENTETES_REFUS },
   );
 }
 
 /**
  * Une place d'export, à libérer quand le travail lourd est fini — ou la
- * réponse 503 à rendre telle quelle. À appeler APRÈS les contrôles d'accès :
- * une requête refusée ne doit pas occuper la file.
+ * réponse (429 ou 503) à rendre telle quelle. À appeler APRÈS les contrôles
+ * d'accès : une requête refusée ne doit pas occuper la file.
+ *
+ * `demandeur` : l'identifiant de l'utilisateur connecté (`user.id`), qui ne
+ * tient que sa part de la file (`EXPORTS_PAR_DEMANDEUR_MAX`).
  */
 export async function reserverPlaceExport(
+  demandeur: string,
   l: Limiteur = limiteur,
 ): Promise<Liberer | Response> {
-  return (await l.reserver()) ?? reponseExportsSatures();
+  // Lu juste avant `reserver`, sans `await` entre les deux : rien ne se glisse.
+  if (l.partAtteinte(demandeur)) return reponsePartAtteinte();
+  return (await l.reserver(demandeur)) ?? reponseExportsSatures();
 }

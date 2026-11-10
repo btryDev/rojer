@@ -16,7 +16,7 @@ export async function GET(
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
-  const { db } = await requireEtablissement(id);
+  const { db, user } = await requireEtablissement(id);
 
   const data = await construirePlanActionsData(db, id);
   if (!data) return new Response("Établissement introuvable", { status: 404 });
@@ -24,5 +24,6 @@ export async function GET(
   return reponsePdf(
     PlanActionsDocument({ data }),
     `Plan_actions_${slugifyFilename(data.etablissement)}.pdf`,
+    user.id,
   );
 }

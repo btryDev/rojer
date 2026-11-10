@@ -3247,3 +3247,152 @@ une année à la fois (`?annee=`).
 À faire, le jour où on le prend : des filtres par année sur l'historique, la
 fiche s'ouvrant probablement sur l'année en cours seulement — même mécanisme
 que le registre. D'ici là, la page reste telle quelle.
+
+## 22. Durcissement issu de l'audit de sécurité du 2026-11-10 (branche `cc`)
+
+L'audit (skill `security-audit` de Cloudflare, commit `2db0b1d6` de `cc`,
+rapport hors dépôt : `~/security-audit-skill/duerp-cc/run-1/`) a rendu sept
+pistes, corrigées ou planifiées (#270 à #276), et **58 notes de durcissement**
+sans faille démontrée. Les voici, regroupées, les plus utiles en tête. Aucune
+n'ouvre l'accès aux données d'un autre compte. Chemins : `cc` sauf mention.
+
+### 22.1 Les plus utiles
+- **Codes à usage unique hachés sans clé** (`signatures/otp.ts:46-48`) :
+  SHA-256 nu d'un code à 6 chiffres, réversible à l'instant pour qui lit la
+  base pendant ses 10 minutes de vie. Un HMAC à clé serveur.
+- **Le limiteur s'ouvre sur toute erreur de base** (`securite/limite-debit.ts`,
+  `consommer`) — y compris une saturation du pool, le moment même d'une
+  attaque. Fermer pour les chemins coûteux (inscription, mot de passe,
+  `/verifier`), garder ouvert pour la connexion.
+- **Sans IP lisible, plus aucune limite par IP** : l'inscription n'a alors
+  aucune limite, `/verifier` et le MCP sautent la leur
+  (`auth/actions.ts`, `refusParLimite`). Une clé de repli commune
+  (`ip:inconnue`). Dépend du point 3 du plan de bascule (`X-Forwarded-For`).
+- **Double authentification** (`auth/actions.ts:567-591`, `better-auth.ts`) :
+  la désactiver ou régénérer les codes ne demande que le mot de passe (exiger
+  un code) ; changer ou réinitialiser le mot de passe n'oublie pas les
+  appareils de confiance (seule la désactivation le fait).
+- **`scripts/perf/session-mesure.ts`** crée un compte confirmé à mot de passe
+  écrit en dur dans la base que désigne `DATABASE_URL`, sans refus en
+  production — et `demarrer-cc.sh lancer` lance des scripts sur la base de
+  production. Le refuser hors base locale.
+- **`PUBLIC_APP_URL` en `http://` accepté en production** (`src/env.ts`) :
+  les cookies de session perdraient `Secure` et le préfixe `__Secure-`.
+  Exiger `https:` en production (constat aussi au point 8 du plan de bascule).
+- **Mails d'invitation sans plafond par destinataire** : la limite est par
+  compte (20 par jour) ; plusieurs comptes, ou inviter puis annuler, écrivent
+  sans limite à une même adresse tierce. Le plafond par adresse de #272 ne
+  couvre que les liens de confirmation.
+- **Texte saisi dans les mails de signature** (`access-tokens/mail.ts`,
+  `signatures/libelle-document.ts`) : nom du destinataire et raison sociale
+  passent sans neutraliser les liens, contrairement à `nomPourEmail` des
+  invitations. Même traitement.
+
+### 22.2 Accès externes et signatures
+- `revoquerAccessToken` accepte un `motif` libre, affiché tel quel au
+  destinataire, et le motif réservé `MOTIF_REVOCATION_ENVOI_ECHOUE`, qui sort
+  le lien des compteurs d'émission. Valider (zod, longueur), refuser le motif
+  réservé.
+- Le plafond de 5 codes par heure et par adresse (ADR-006) ne vaut qu'aux
+  renvois ; l'émission d'un lien n'y puise pas.
+- La `partie` d'un objet cosigné est choisie par le demandeur, sans lien avec
+  l'e-mail du chef d'entreprise extérieure : choix de produit (signature
+  simple = contrôle de la boîte), à garder en tête.
+- Bon code au dernier essai, puis échec du calcul d'empreinte : le lien reste
+  à 0 essai, ni révoqué ni consommé ; il faut en émettre un autre.
+- Les accès sans session (jeton de signature) ne portent pas le gel : un tiers
+  signe par un lien déjà émis sur un site gelé (documenté dans `gel.ts`).
+  Révoquer les liens ouverts d'un site qu'on gèle, si c'est la règle voulue.
+- Un lien émis par un membre retiré reste valide (il appartient au compte) ;
+  le révoquer au retrait, si c'est la règle voulue.
+
+### 22.3 Client borné, SQL brut, isolation
+- Le refus en lecture seule n'intercepte que `$executeRaw`/`$queryRaw` ; les
+  formes `Unsafe` ne sont interdites que par la garde de texte
+  (`portee/imports.test.ts`). Les refuser aussi à l'exécution (`client.ts`).
+- `requireLectureSqlProprietaire` vérifie la PRÉSENCE du prédicat, pas sa
+  conjonction (déjà écrit dans l'ADR-051) : faire poser le `WHERE … AND (…)`
+  par l'aide elle-même.
+- Verrous `FOR UPDATE` (`rapports/actions.ts:286,449`,
+  `calendrier/recalcul-ligne.ts:101`) et `ecrireReponseFermee` bornés par
+  l'id seul, sur la foi de l'appelant : y ajouter `etablissementId`, comme
+  `verrou-contenu.ts`.
+- Lectures imbriquées (`include`/`select`) sous la portée d'un établissement :
+  le genre du modèle est vérifié, pas l'établissement ; une clé étrangère
+  entre deux établissements d'un même compte ferait remonter le voisin vers un
+  porteur de jeton. Aucun cas aujourd'hui.
+- `Signature.objetId` et `AccessToken.objetId` sont polymorphes, hors de la
+  borne : l'appartenance repose sur les appelants
+  (`objetAppartientAEtablissement`, `calculerHashObjet`).
+- PDF DUERP (aperçu, versions) : aucun prédicat de compte écrit, la borne
+  seule ; les routes sœurs gardent les deux. `requireDuerp` en tête.
+- Le calendrier régénéré s'écrit par le client brut : la lecture seule et le
+  gel ne s'y appliquent pas (écriture dérivée, documentée, ADR-054 § 4).
+- La garde d'import fait confiance par nom aux fonctions qui reçoivent le
+  client brut, et ne relit pas `scripts/`.
+
+### 22.4 Stockage
+- `abandonnerFichiers` efface la réservation même quand la suppression de
+  l'objet a échoué : un objet non décompté reste au stockage.
+- Aucun balayage des objets orphelins (seul `reprendre-tailles-fichiers.ts`
+  mesure les clés référencées).
+- Avant le lancement de l'offre, aucun plafond de stockage par compte (choix
+  de l'ADR-053) : seul le corps de 25 Mo et le débit bornent.
+
+### 22.5 Limites de débit
+- Une requête refusée insère quand même sa clé par adresse : une ligne
+  `LimiteDebit` par adresse essayée ; ménage probabiliste (1 %).
+- Fenêtre fixe : jusqu'à deux fois le maximum à la bascule d'une fenêtre, et
+  le maximum d'un coup (compte, pas concurrence) — documenté.
+- `definirMotDePasseAction` ne limite que par IP l'appel au service des mots
+  de passe divulgués.
+
+### 22.6 Comptes, abonnements, divers
+- Plafond de membres à l'acceptation (`membershipLimit` du plugin) : compter
+  puis insérer, sans verrou de compte — des acceptations simultanées après une
+  baisse de formule peuvent dépasser de quelques places.
+- Slug public du registre d'accessibilité : la création lit les slugs de
+  TOUS les comptes, publiés ou non (le suffixe dit qu'un autre compte a un
+  registre au même nom et aux mêmes 6 derniers chiffres de SIRET) ; et un slug
+  libéré par une suppression peut être repris. Suffixe aléatoire.
+- `sirenEssayeAilleurs` dit qu'un SIREN a déjà servi à un essai ailleurs ;
+  accepté par l'ADR-053 § 8.
+- Porte de paiement inégale entre exports : `controle-zip` et `registre/pdf`
+  l'exigent, `plan-actions`, `points-a-corriger` et les PDF DUERP non
+  (`dossier-conformite` est filigrané « projet »). Question commerciale.
+- Repli `metadata.userId` de Stripe : sûr par l'index unique sur
+  `stripeCustomerId` ; à retirer quand plus aucun client ancien n'existe.
+- MCP : la clé passe dans l'URL (journaux du répartiteur) — acceptable si elle
+  désigne un établissement de démonstration ; `decodeURIComponent` sur un
+  échappement mal formé rend 500 au lieu du 404 muet ; `localhost` toujours
+  admis comme hôte ; la clé ne suit ni le gel ni les membres (variable
+  d'environnement, rotation par redéploiement).
+- La page « Connecter » affiche des chemins absolus du serveur à tout membre.
+- `libererFichiers` journalise les clés de stockage en clair.
+- `versConnexion` (`proxy-session.ts`) bâtit la redirection depuis l'hôte de
+  la requête ; sans cache partagé, sans effet.
+- La protection contre les requêtes intersites des actions serveur repose sur
+  la seule vérification d'origine de Next ; un test qui poste avec une origine
+  étrangère l'épinglerait.
+- `next.config.ts` n'exclut la boîte mail de développement qu'à la
+  compilation (`NODE_ENV`) ; deux autres verrous tiennent. Un test de
+  construction l'expliciterait.
+- `.mcp.json` (suivi) nomme le projet Supabase de production : à retirer après
+  la bascule.
+- Import DUERP CSV : lignes bornées, pas la largeur ; 5 Mo, authentifié.
+
+### 22.7 Traités le jour même (rayés)
+- ~~Inscription sans plafond par adresse ; liens de confirmation renvoyés à
+  volonté~~ — #272 (5 par heure et par adresse).
+- ~~`/auth/verification` change l'état sur un GET (scanners de liens)~~ —
+  #270 (page avec formulaire).
+- ~~Webhook Stripe : la prise de 2 minutes supposait des appels de 3 s~~ —
+  #274 (client Stripe propre au webhook), session stripe.
+- ~~`retirerMembre`/`changerRoleMembre` reposent sur le plugin seul~~ —
+  vérifié le 2026-11-10 : le plugin refuse un membre d'une autre organisation
+  (`crud-members.mjs`, `removeMember` et `updateMemberRole`).
+- ~~`finaliserCarte` ne recoupe pas `metadata.compteId`~~ — écarté par la
+  session stripe : la session Checkout est déjà bornée par son client, unique
+  par compte.
+- ~~Dernière entrée de `X-Forwarded-For` à vérifier chez Clever Cloud~~ —
+  au plan de bascule (points 3 et 6), #276.

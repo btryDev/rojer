@@ -18,8 +18,10 @@ import { reserverPlaceExport } from "@/lib/exports/limite";
 export async function reponsePdf(
   document: Parameters<typeof renderToBuffer>[0],
   nomFichier: string,
+  /** L'utilisateur connecté (`user.id`) : sa part de la file (`exports/limite.ts`). */
+  demandeur: string,
 ): Promise<Response> {
-  const liberer = await reserverPlaceExport();
+  const liberer = await reserverPlaceExport(demandeur);
   if (liberer instanceof Response) return liberer;
   let pdf: Buffer;
   try {

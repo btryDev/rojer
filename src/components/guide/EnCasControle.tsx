@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { ArrowDown } from "lucide-react";
 
@@ -71,12 +70,14 @@ export function EnCasControle({
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-4 pt-1">
-              <Link
+              {/* Une balise <a>, pas un <Link> : son préchargement lancerait le
+                  rendu du PDF et prendrait une place d'export avant le clic. */}
+              <a
                 href={`/api/etablissements/${etablissementId}/dossier-conformite/pdf`}
                 className={buttonVariants({ size: "sm" })}
               >
                 Générer mon dossier PDF ↓
-              </Link>
+              </a>
               <span className="font-mono text-[0.62rem] uppercase tracking-[0.18em] text-[color:var(--board-slate-mid)]">
                 ~30 secondes
               </span>

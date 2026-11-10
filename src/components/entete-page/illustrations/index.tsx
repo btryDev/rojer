@@ -32,7 +32,8 @@ import { IllustrationZones } from "./Zones";
  * Le style est commun à toutes : trait noir d'épaisseur constante, aplats
  * noirs ponctuels, objets blancs en perspective isométrique, posés sur la
  * teinte de la section — pas de fond propre. Une seule animation par dessin
- * vectoriel (une image générée, comme celle du Calendrier, reste fixe),
+ * vectoriel (une image générée reste fixe : Calendrier, Plan d'actions et
+ * Ce qui doit être en place, `ImageEnTete`, depuis le 2026-11-09),
  * jouée une fois au chargement (`ep-*` dans `globals.css`), aucune si le
  * visiteur a demandé moins de mouvement.
  */
