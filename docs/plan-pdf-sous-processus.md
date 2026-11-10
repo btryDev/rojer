@@ -4,11 +4,20 @@
 > - **Maintenant : B0 + garde-fou + journal** (`lot/pdf-b0`). Une seule
 >   fonction de rendu (`rendrePdf`), un refus « trop volumineux » au-delà
 >   d'un seuil, une ligne de journal par export.
-> - **B1 à B3 reportés** : au lancement, les clients n'ont pas d'historique
+> - ~~**B1 à B3 reportés** : au lancement, les clients n'ont pas d'historique
 >   (dossiers de démo : tous les exports en 1-2 s, 9 simultanés servis sans
->   gêner les autres).
+>   gêner les autres).~~ **[2026-11-10, même jour, après la mesure d'A1 en
+>   XS : B1 à B3 LANCÉS** (`lot/pdf-b1`). En XS, le processus meurt dès
+>   3 080 rapports, et un registre d'un an fige l'application environ 7 s.
+>   Le garde-fou reste le premier filet (refus instantané au-delà du seuil),
+>   le fil d'exécution le second (tas dépassé confiné à l'export, boucle
+>   libre).]
 > - **Issue future des « trop volumineux »** : lien par mail + ZIP, générés en
->   tâche de fond.
+>   tâche de fond ; puis une archive annuelle « hybride » (un seul registre :
+>   volumes annuels figés recollés + année en cours générée).
+> - **On garde tout et on exporte tout** (même jour) : ni borne du registre à
+>   5 ans, ni suppression. Le client type (10 équipements, environ 86 rapports
+>   par an) n'atteint le seuil du garde-fou qu'après une vingtaine d'années.
 > - **Production en XS au départ**, passage en S sur des seuils à fixer par
 >   elle plus tard (proposés : `docs/chantiers-ouverts.md` § 23).
 > - **Import de rapports en masse** : vérifié absent le 2026-11-10, les
@@ -18,7 +27,7 @@
 
 
 ~~Plan seulement : rien n'est codé avant le feu vert de la propriétaire.~~
-[2026-11-10 : B0 codé, `lot/pdf-b0` ; B1-B3 reportés, voir l'encadré.]
+[2026-11-10 : B0 codé, `lot/pdf-b0` ; ~~B1-B3 reportés~~ B1-B3 lancés le même jour, `lot/pdf-b1`, voir l'encadré.]
 Base : `lot/pdf-a1` (fca75951). Entrées : l'étude de viabilité de
 `rojer-outils-cb` et `docs/revues/generation-pdf-volume-2026-11-10.md`.
 
@@ -130,8 +139,9 @@ route (parent)                                   worker_thread (1 par rendu)
   plus la marge du worker). À l'échéance : `terminate()`, place d'export
   rendue dans le `finally` existant.
 - Le texte « trop volumineux » est honnête mais ne donne pas d'issue. L'issue
-  viendra de la borne à 5 ans ou des volumes annuels, selon la décision de la
-  propriétaire.
+  viendra ~~de la borne à 5 ans ou~~ des volumes annuels ~~, selon la décision de la
+  propriétaire~~ [2026-11-10 : pas de borne, décision de la propriétaire — lien
+  par mail + ZIP, puis archive annuelle hybride].
 
 ## 7. Développement (Turbopack) et tests
 
@@ -197,8 +207,9 @@ Total : 3 à 4 jours, plus une revue indépendante avant fusion.
 
 ## 11. Questions pour la propriétaire
 
-1. Le message « trop volumineux » suffit-il en attendant la borne ou les
-   volumes annuels ?
+1. Le message « trop volumineux » suffit-il en attendant ~~la borne ou~~ les
+   volumes annuels ? [2026-11-10 : oui, en attendant le lien par mail + ZIP ;
+   pas de borne.]
 2. Production en XS ou en S ? Le plafond, donc la taille de dossier servie,
    en dépend directement.
 3. Y a-t-il un `NODE_OPTIONS` dans les variables de l'application Clever
