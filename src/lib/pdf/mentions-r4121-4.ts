@@ -11,10 +11,12 @@
 //
 // Le verbatim n'est écrit qu'une fois, au corpus. Ce module le lit.
 
-import { CORPUS } from "@/lib/referentiels/corpus";
+import { CODE_TRAVAIL_INFORMATION_TRAVAILLEURS } from "@/lib/referentiels/corpus/code-travail-information-travailleurs";
 
 function texte(): string {
-  const corpus = CORPUS.find((c) => c.id === "code-travail-information-travailleurs");
+  // Le fichier du corpus, pas l'index : l'index charge tout le référentiel,
+  // qui n'a rien à faire dans le fil des PDF (lot pdf-b1).
+  const corpus = CODE_TRAVAIL_INFORMATION_TRAVAILLEURS;
   const article = corpus?.articles.find((a) => a.ref === "R. 4121-4");
   if (!article?.citationCle)
     throw new Error("R. 4121-4 n'a plus de verbatim au corpus : le PDF n'a rien à citer.");

@@ -1,7 +1,7 @@
 import { MentionProjet } from "./MentionProjet";
 import { Document, Page, Text, View } from "@react-pdf/renderer";
 import { MENTION_POUR_INFORMATION_DOCUMENT } from "@/lib/referentiels/conformite/initiative";
-import type { FraicheurCalendrier } from "@/lib/calendrier/fraicheur";
+import type { FraicheurCalendrier } from "@/lib/calendrier/fraicheur-texte";
 import { faitRetards } from "./fait-retards";
 import type { LignePlanActions } from "./PlanActionsDocument";
 import type { LigneRapport, LigneVerif } from "./RegistreDocument";
