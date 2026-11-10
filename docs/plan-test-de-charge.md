@@ -212,3 +212,13 @@ tort.
 - Il ne teste ni le MCP, ni Stripe, ni l'envoi d'e-mails.
 - Il n'entre pas dans la CI : trop lourd, et le budget de requêtes
   (`budget-requetes.yml`) y garde déjà la régression.
+
+## 11. Notés en cours de campagne, à traiter plus tard
+
+- [2026-11-10, la propriétaire] Les volumes annoncés par les formules
+  (`src/lib/abonnements/formules.ts` : établissements, membres, équipements,
+  stockage…) sont-ils tous contrôlés par le code ? À vérifier quota par
+  quota, contre `refusQuota` / `refusStockage` et les portes qui créent.
+- [2026-11-10] Le ZIP de contrôle embarque tous les fichiers déposés : le
+  plafond de stockage (2 Go Essentiel, 6 Go Pro) en fait le pire cas. Non
+  mesuré (les rapports semés n'ont pas de fichier réel).
