@@ -160,6 +160,15 @@ connecteur MCP OAuth de Supabase n'existe plus — garder la suppression de
 
 Gestes de la propriétaire (Clever Cloud) :
 1. Créer l'application et les add-ons : PostgreSQL, stockage Cellar (S3).
+   [2026-11-10 : PostgreSQL en **version 18**, comme la préprod (18.6) et
+   la CI ; Node en **24** (`CC_NODE_VERSION=24`, comme la CI, le
+   Dockerfile et `.nvmrc` ; Node 22 finit le 2027-04-30). La préprod a
+   tourné en 24.22 toute la campagne du 2026-11-10.]
+   [2026-11-11 : 18 est la plus récente que Clever Cloud propose (13 à 18).
+   Créer l'add-on de production avec l'option **`encryption=true`**
+   (chiffrement au repos, désactivé par défaut — la préprod a été créée
+   sans) ; `do-backup` est actif par défaut. Exemple :
+   `clever addon create postgresql-addon <nom> --plan <plan> --region par --option version=18 --option encryption=true`.]
    [2026-11-07 : pas encore fait — le compte Clever Cloud ne porte que
    l'application « riskboard » ; `scripts/deployer-cc.sh` n'a donc rien à
    déployer.]

@@ -7,7 +7,7 @@
 #
 # Ce n'est PAS une image de production : Clever Cloud déploie en Node natif.
 # Node 22, comme .nvmrc et la CI.
-FROM node:22-bookworm-slim
+FROM node:24-bookworm-slim
 
 # OpenSSL : requis par le moteur de Prisma.
 RUN apt-get update \
