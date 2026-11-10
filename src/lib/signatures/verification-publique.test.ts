@@ -13,10 +13,13 @@ const h = vi.hoisted(() => ({
   verdict: { ok: true } as { ok: true } | { ok: false; reessayerDansSecondes: number },
   lue: 0,
   cles: [] as string[],
+  /** Si posée, chaque lecture attend cette promesse (recalcul « en cours »). */
+  porte: null as Promise<void> | null,
+  ip: "203.0.113.7",
 }));
 
 vi.mock("next/headers", () => ({
-  headers: async () => new Headers({ "x-forwarded-for": "203.0.113.7" }),
+  headers: async () => new Headers({ "x-forwarded-for": h.ip }),
 }));
 vi.mock("@/lib/securite/limite-debit", async (original) => ({
   ...(await original<typeof import("@/lib/securite/limite-debit")>()),
@@ -30,6 +33,7 @@ vi.mock("@/lib/prisma", () => ({
     signature: {
       findUnique: async () => {
         h.lue += 1;
+        if (h.porte) await h.porte;
         return null;
       },
     },
@@ -42,6 +46,8 @@ beforeEach(() => {
   h.verdict = { ok: true };
   h.lue = 0;
   h.cles = [];
+  h.porte = null;
+  h.ip = "203.0.113.7";
 });
 
 describe("vérification publique sous limite", () => {
@@ -80,6 +86,57 @@ describe("vérification publique sous limite", () => {
     await lireSignatureSousLimite("sig_1");
     expect(h.cles).toHaveLength(2);
     expect(h.cles[0]).not.toBe(h.cles[1]);
+  });
+
+  it("la même signature demandée ensemble : un seul recalcul, partagé", async () => {
+    let ouvrir!: () => void;
+    h.porte = new Promise<void>((r) => (ouvrir = r));
+    const enCours = Array.from({ length: 10 }, () => verifierSousLimite("sig_1"));
+    await new Promise((r) => setTimeout(r, 0));
+    expect(h.lue).toBe(1);
+    ouvrir();
+    expect(await Promise.all(enCours)).toEqual(Array(10).fill({ ok: false, raison: "inexistante" }));
+    expect(h.lue).toBe(1);
+    // Terminée, elle se recalcule de nouveau à la demande suivante.
+    await verifierSousLimite("sig_1");
+    expect(h.lue).toBe(2);
+  });
+
+  it("une adresse ne tient que deux recalculs : au-delà, refus sans lecture (audit du 2026-11-10)", async () => {
+    let ouvrir!: () => void;
+    h.porte = new Promise<void>((r) => (ouvrir = r));
+    const enCours = [verifierSousLimite("sig_1"), verifierSousLimite("sig_2")];
+    await new Promise((r) => setTimeout(r, 0));
+    expect(h.lue).toBe(2);
+    expect(await verifierSousLimite("sig_3")).toEqual({
+      ok: false,
+      raison: "trop_de_demandes",
+      reessayerDansSecondes: 5,
+    });
+    ouvrir();
+    expect(await Promise.all(enCours)).toEqual(Array(2).fill({ ok: false, raison: "inexistante" }));
+  });
+
+  it("deux recalculs à la fois, quatre en attente, toutes adresses confondues : au-delà, « service occupé »", async () => {
+    let ouvrir!: () => void;
+    h.porte = new Promise<void>((r) => (ouvrir = r));
+    const enCours = ["203.0.113.1", "203.0.113.2", "203.0.113.3", "203.0.113.4", "203.0.113.5", "203.0.113.6"].map(
+      (ip, i) => {
+        h.ip = ip;
+        return verifierSousLimite(`sig_${i}`);
+      },
+    );
+    await new Promise((r) => setTimeout(r, 0));
+    expect(h.lue).toBe(2);
+    h.ip = "203.0.113.99";
+    expect(await verifierSousLimite("sig_99")).toEqual({
+      ok: false,
+      raison: "serveur_occupe",
+      reessayerDansSecondes: 5,
+    });
+    ouvrir();
+    expect(await Promise.all(enCours)).toEqual(Array(6).fill({ ok: false, raison: "inexistante" }));
+    expect(h.lue).toBe(6);
   });
 
   it("n'est exportée d'aucun module \"use server\"", () => {

@@ -50,7 +50,7 @@ describe("branchements des fichiers déposés", () => {
     const differees = zip.match(/contenuDiffere\(\s*\(\) => storage!\.get\(/g) ?? [];
     expect(lectures.length).toBeGreaterThan(0);
     expect(differees.length).toBe(lectures.length);
-    expect(zip).toMatch(/const liberer = await reserverPlaceExport\(\);/);
+    expect(zip).toMatch(/const liberer = await reserverPlaceExport\(user\.id\);/);
     expect(zip).toMatch(/\} finally \{\s*liberer\(\);\s*\}/);
   });
 

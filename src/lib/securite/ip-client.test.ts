@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { ipClient } from "./ip-client";
+import { ipClient, ipPourLimite, reseauPourLimite } from "./ip-client";
 
 const entetes = (xff?: string) => new Headers(xff === undefined ? {} : { "x-forwarded-for": xff });
 
@@ -56,5 +56,75 @@ describe("aucune lecture d'un en-tête d'IP hors de ip-client.ts", () => {
     parcourir(join(depot, "src"));
     parcourir(join(depot, "scripts"));
     expect(fautifs).toEqual([]);
+  });
+});
+
+describe("clé réseau des limites de débit (audit du 2026-11-10)", () => {
+  it("l'IPv4 reste telle quelle", () => {
+    expect(reseauPourLimite("203.0.113.7")).toBe("203.0.113.7");
+  });
+
+  it("deux adresses du même /64 partagent un compteur ; un autre /64, non", () => {
+    expect(reseauPourLimite("2001:db8:1:2::1")).toBe("2001:db8:1:2::/64");
+    expect(reseauPourLimite("2001:db8:1:2:ffff:ffff:ffff:ffff")).toBe("2001:db8:1:2::/64");
+    expect(reseauPourLimite("2001:db8:1:3::1")).toBe("2001:db8:1:3::/64");
+  });
+
+  it("une même adresse écrite autrement donne la même clé", () => {
+    const attendu = "2001:db8:1:2::/64";
+    expect(reseauPourLimite("2001:0DB8:0001:0002:0000:0000:0000:0001")).toBe(attendu);
+    expect(reseauPourLimite("2001:db8:1:2:0:0:0:1")).toBe(attendu);
+    expect(reseauPourLimite("2001:db8:1:2::1%eth0")).toBe(attendu);
+  });
+
+  it("les formes compressées en fin ; un préfixe nul n'est pas regroupé", () => {
+    expect(reseauPourLimite("fe80::")).toBe("fe80:0:0:0::/64");
+    expect(reseauPourLimite("::1")).toBe("::1");
+    expect(reseauPourLimite("::2")).toBe("::2");
+    expect(reseauPourLimite("::198.51.100.9")).not.toBe(reseauPourLimite("::198.51.100.10"));
+  });
+
+  it("l'IPv4 écrite en IPv6 est ramenée à l'IPv4 ; une IPv4 finale ailleurs reste une IPv6", () => {
+    expect(reseauPourLimite("::ffff:198.51.100.9")).toBe("198.51.100.9");
+    expect(reseauPourLimite("::FFFF:c633:6409")).toBe("198.51.100.9");
+    expect(reseauPourLimite("64:ff9b::198.51.100.9")).toBe("64:ff9b:0:0::/64");
+  });
+
+  it("ipPourLimite lit la même dernière entrée que ipClient, sous sa clé réseau", () => {
+    expect(ipPourLimite(entetes("forgé, 2001:db8:1:2::abcd"))).toBe("2001:db8:1:2::/64");
+    expect(ipPourLimite(entetes("1.2.3.4, 198.51.100.9"))).toBe("198.51.100.9");
+    expect(ipPourLimite(entetes())).toBeNull();
+  });
+});
+
+/**
+ * Une limite par IP se construit sur `ipPourLimite`, jamais sur `ipClient`
+ * (audit du 2026-11-10) : sinon chaque IPv6 retrouve un compteur neuf par
+ * requête. Exceptions nommées, avec leur motif.
+ */
+const LIMITES_SUR_ADRESSE_COMPLETE = new Map<string, string>([
+  ["lib/mcp/http.ts", "clients MCP hébergés : réseaux de sortie partagés ; limite par portée après authentification"],
+]);
+
+describe("les limites par IP lisent la clé réseau", () => {
+  it("tout module qui compte par IP passe par ipPourLimite, hors exceptions nommées", () => {
+    const racine = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
+    const fichiers = (readdirSync(racine, { recursive: true }) as string[]).filter(
+      (f) => f.endsWith(".ts") && !f.endsWith(".test.ts"),
+    );
+    const fautifs: string[] = [];
+    const exceptionsVues: string[] = [];
+    for (const f of fichiers) {
+      const texte = readFileSync(join(racine, f), "utf8");
+      if (!/cleLimite\([^)]*"ip"/.test(texte)) continue;
+      const nom = relative(racine, join(racine, f)).split("\\").join("/");
+      if (LIMITES_SUR_ADRESSE_COMPLETE.has(nom)) {
+        exceptionsVues.push(nom);
+        continue;
+      }
+      if (/\bipClient\(/.test(texte) || !/\bipPourLimite\(/.test(texte)) fautifs.push(nom);
+    }
+    expect(fautifs).toEqual([]);
+    expect(exceptionsVues.sort()).toEqual([...LIMITES_SUR_ADRESSE_COMPLETE.keys()].sort());
   });
 });

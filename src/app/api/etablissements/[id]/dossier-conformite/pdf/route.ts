@@ -20,7 +20,7 @@ export async function GET(
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
-  const { compte, db } = await requireEtablissement(id);
+  const { compte, db, user } = await requireEtablissement(id);
 
   const data = await construireDossierConformiteData(db, id);
   if (!data) return new Response("Établissement introuvable", { status: 404 });
@@ -29,5 +29,6 @@ export async function GET(
     // Sans abonnement payé, un aperçu marqué « Projet – non validé » (ADR-053 § 15).
     DossierConformiteDocument({ data, projet: !(await aDejaPaye(db, compte.compteId)) }),
     `Dossier_conformite_${slugifyFilename(data.etablissement)}.pdf`,
+    user.id,
   );
 }

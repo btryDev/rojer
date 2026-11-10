@@ -12,8 +12,9 @@ import "server-only";
 import { headers } from "next/headers";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { ipClient } from "@/lib/securite/ip-client";
+import { ipPourLimite } from "@/lib/securite/ip-client";
 import { cleLimite, consommer, LIMITES } from "@/lib/securite/limite-debit";
+import { creerLimiteur } from "@/lib/securite/limiteur";
 import { calculerHashObjet, versionDeHash } from "./hash-objet";
 import { SELECT_PREUVE } from "./preuve";
 import { clientDuProprietaire } from "@/lib/auth/compte-hors-session";
@@ -126,6 +127,7 @@ function enPreuve(signature: PreuveSignature): PreuveSignature {
 type TropDeDemandes = { ok: false; raison: "trop_de_demandes"; reessayerDansSecondes: number };
 
 /**
+/**
  * La limite par IP des deux pages publiques d'une signature, un compteur PAR
  * PAGE au même plafond (`LIMITES.verificationIp`). `null` : la requête passe.
  * Le refus tombe avant toute lecture et ne dit rien de la signature.
@@ -138,25 +140,83 @@ type TropDeDemandes = { ok: false; raison: "trop_de_demandes"; reessayerDansSeco
  * acceptable. Ne pas « réparer » vers un compteur unique, ni vers deux
  * plafonds différents.
  */
-async function limiteParIp(page: "verification" | "confirmation"): Promise<TropDeDemandes | null> {
-  const ip = ipClient(await headers());
+async function limiteParIp(page: "verification" | "confirmation", ip: string | null): Promise<TropDeDemandes | null> {
   if (!ip) return null;
   const verdict = await consommer([{ cle: cleLimite(page, "ip", ip), limite: LIMITES.verificationIp }]);
   return verdict.ok ? null : { ok: false, raison: "trop_de_demandes", reessayerDansSecondes: verdict.reessayerDansSecondes };
 }
 
-/** Ce que `/verifier` appelle : la limite par IP d'abord, la vérification ensuite. */
-export async function verifierSousLimite(
-  signatureId: string,
-): Promise<Awaited<ReturnType<typeof verifierIntegriteSignature>> | TropDeDemandes> {
-  return (await limiteParIp("verification")) ?? verifierIntegriteSignature(signatureId);
+/**
+ * Recalculs d'empreinte menés de front par la page publique (audit de
+ * sécurité du 2026-11-10) : chacun peut lire un rapport entier (20 Mo) en
+ * mémoire, et la limite par IP compte les requêtes, pas celles en cours —
+ * trente demandes simultanées d'une seule adresse tenaient 600 Mo. Deux à la
+ * fois, quatre en attente : la mémoire tenue reste bornée quel que soit le
+ * nombre de demandeurs.
+ */
+const recalculsPublics = creerLimiteur({
+  simultanes: 2,
+  enAttenteMax: 4,
+  attenteMaxMs: 10_000,
+  // Une adresse ne tient que deux places : sans part, un seul visiteur, sous
+  // sa limite de requêtes, gardait les six et refusait tous les autres.
+  parDemandeurMax: 2,
+});
+/** Ce que dit la page quand elle refuse, en secondes. */
+const REESSAYER_RECALCUL_S = 5;
+/** Les vérifications en cours, par signature : une même signature ne se recalcule qu'une fois à la fois. */
+const verificationsEnCours = new Map<string, Promise<ResultatSousLimite>>();
+
+type ResultatSousLimite =
+  | Awaited<ReturnType<typeof verifierIntegriteSignature>>
+  | { ok: false; raison: "trop_de_demandes" | "serveur_occupe"; reessayerDansSecondes: number };
+
+/**
+ * Ce que `/verifier` appelle : la limite par IP d'abord, une place de
+ * recalcul ensuite, la vérification enfin. Le refus ne dit rien de la
+ * signature demandée — il tombe avant toute lecture.
+ */
+export async function verifierSousLimite(signatureId: string): Promise<ResultatSousLimite> {
+  const ip = ipPourLimite(await headers());
+  const refus = await limiteParIp("verification", ip);
+  if (refus) return refus;
+  // La même signature déjà en cours de vérification : on partage son
+  // recalcul au lieu d'en lancer un second. Occuper toutes les places exige
+  // alors autant de rapports signés que de places — pas autant d'adresses
+  // (revue de sécurité de la PR #273).
+  const dejaEnCours = verificationsEnCours.get(signatureId);
+  if (dejaEnCours) {
+    const partage = await dejaEnCours;
+    // Un refus « service occupé » appartient au premier demandeur : celui qui
+    // s'est greffé tente sa propre place (relecture de la PR #273).
+    if (!(partage.ok === false && partage.raison === "serveur_occupe")) return partage;
+  }
+  // Ses propres vérifications d'abord (« depuis votre connexion »), puis
+  // l'occupation du service (« réessayez ») : la page ne dit pas la même chose.
+  if (ip && recalculsPublics.partAtteinte(ip)) {
+    return { ok: false, raison: "trop_de_demandes", reessayerDansSecondes: REESSAYER_RECALCUL_S };
+  }
+  // Inscrite AVANT toute attente : une demande simultanée la trouve.
+  const verification = (async (): Promise<ResultatSousLimite> => {
+    const liberer = await recalculsPublics.reserver(ip ?? undefined);
+    if (!liberer) {
+      return { ok: false, raison: "serveur_occupe", reessayerDansSecondes: REESSAYER_RECALCUL_S };
+    }
+    try {
+      return await verifierIntegriteSignature(signatureId);
+    } finally {
+      liberer();
+    }
+  })().finally(() => verificationsEnCours.delete(signatureId));
+  verificationsEnCours.set(signatureId, verification);
+  return verification;
 }
 
 /** Ce que `/signe` appelle : la même limite par IP, puis la signature (`null` si elle n'existe pas). */
 export async function lireSignatureSousLimite(
   signatureId: string,
 ): Promise<TropDeDemandes | { ok: true; signature: Awaited<ReturnType<typeof getSignature>> }> {
-  return (await limiteParIp("confirmation")) ?? { ok: true, signature: await getSignature(signatureId) };
+  return (await limiteParIp("confirmation", ipPourLimite(await headers()))) ?? { ok: true, signature: await getSignature(signatureId) };
 }
 
 /**
