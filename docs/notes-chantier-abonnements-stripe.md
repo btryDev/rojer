@@ -878,7 +878,7 @@ l'essai.
 - Facturation électronique : [service-public](https://entreprendre.service-public.gouv.fr/actualites/A15683) ·
   [ecommerce-nation](https://www.ecommerce-nation.fr/factures-stripe-facturation-electronique/) (source non officielle)
 
-## 14. Audit de sécurité du 2026-11-10 — à faire avant le lancement de l'offre
+## 16. Audit de sécurité du 2026-11-10 — à faire avant le lancement de l'offre
 
 **Course sur `verifierSaisie`** (piste 2 de l'audit, à valider ; sans effet tant
 que l'offre n'est pas lancée : `offreLancee` exige `ABONNEMENT_EXIGE=oui` et
