@@ -359,8 +359,14 @@ rapports dans le serveur, journal `export_pdf` : 0,29 à 0,96 s.
 Lecture : à dossiers réalistes, un processus neuf par rendu coûte plus qu'il
 ne protège — le rendu dure moins d'une seconde, le démarrage du processus
 (paquet de 4,6 Mo, code non optimisé) le double ou le triple et prend le seul
-processeur aux pages. Cause déduite des chiffres, pas chronométrée étape par
-étape.
+processeur aux pages. ~~Cause déduite des chiffres, pas chronométrée étape par
+étape.~~ [2026-11-10, chronométré par la session de la #289 — Mac, Node 22,
+registre de 100 rapports, médianes sur 7, tas 256 Mo : démarrage d'un Node nu
+23 ms ; démarrage + import du paquet 99 ms (import 80 ms) ; pareil avec
+`NODE_COMPILE_CACHE` 104 ms, piste écartée ; rendu complet par processus neuf
+390 ms ; même rendu dans le serveur, à chaud, 170 ms. Soit ~100 ms de
+démarrage et ~120 ms de code non optimisé : un surcoût à froid de ~220 ms,
+supérieur au rendu lui-même. Un processus gardé chaud (palier 2) le supprime.]
 
 Erreurs : 9 puis 5 réponses 502 sur ~5 000 pages, à tous les paliers (dès 10
 utilisateurs) et sur les deux versions : indépendantes de la charge et du
