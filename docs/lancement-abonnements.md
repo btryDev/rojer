@@ -17,6 +17,7 @@
 | 0.1 | L'application Clever Cloud existe et `cc` y tourne (préproduction, puis production) — étape 1 du document de bascule | propriétaire |
 | 0.1 bis | `cc` déployé avec la PR #257 (tâche quotidienne, `TACHES_SECRET`), fusionnée le 2026-11-09 | Claude |
 | 0.2 | Conditions générales de vente rédigées (durée, résiliation, impayé, sort des données après 12 mois, conservation du DUERP à la charge de l'employeur) et publiées à la place du texte actuel de `/conditions` ; `VERSION_CONDITIONS` changée (nouvelle date, `src/lib/abonnements/conditions.ts`) | avocat → Claude pour l'intégration |
+| 0.2 bis | **Course sur `verifierSaisie` corrigée** (audit de sécurité du 2026-11-10, piste 2) : la saisie se juge dans la portée du client borné, de la même lecture d'`Abonnement` que le gel — détail et périmètre au § 14 de `notes-chantier-abonnements-stripe.md`. Sans effet tant que `ABONNEMENT_EXIGE` n'est pas posée, donc à faire avant l'étape 9 | Claude |
 | 0.3 | Régime de TVA confirmé (20 % retenu ; en franchise : retirer le taux et porter « TVA non applicable, art. 293 B du CGI ») et mentions de la facture validées | expert-comptable |
 
 ## 1. Compte Stripe en mode réel — propriétaire, tableau de bord

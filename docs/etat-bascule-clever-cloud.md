@@ -184,6 +184,25 @@ audit du proxy de `cc` ; le code est fusionné, il n'a jamais tourné là-bas) :
 5. **`scripts/sante-base.sql` avant et après la bascule** : la section
    « D bis » (clés croisées entre comptes, générée) doit rendre 0 partout.
 
+Ajoutés le 2026-11-10 (audit de sécurité de `cc`, rapport hors dépôt :
+`~/security-audit-skill/duerp-cc/run-1/`) :
+6. **IPv6** : le domaine de production a-t-il un enregistrement AAAA, et
+   l'adresse IPv6 du client arrive-t-elle en dernière entrée de
+   `X-Forwarded-For` ? Les limites de débit regroupent l'IPv6 par /64
+   (#271) ; sans IPv6 servie, la question tombe. Sans `X-Forwarded-For`
+   lisible, l'inscription n'a **aucune** limite par IP (`ipClient` rend
+   `null`) : le point 3 le tranche.
+7. **Instances et mémoire** : combien d'instances, quelle RAM, quel
+   `EXPORTS_SIMULTANES`. La file d'export et les recalculs de `/verifier`
+   sont bornés **par processus** (#273) : ces chiffres disent ce que tient
+   l'instance sous charge.
+8. **`PUBLIC_APP_URL` en `https://`** : `src/env.ts` accepte aussi `http://`
+   en production, et Better Auth en déduit l'attribut `Secure` et le préfixe
+   `__Secure-` des cookies de session.
+9. **Le compartiment Cellar est privé** : ni lecture publique, ni listage.
+   Le code ne sert les fichiers que par l'application (pas d'URL signée ni
+   publique) ; la politique du compartiment ne se lit pas dans le dépôt.
+
 Abonnements (ne bloquent pas la bascule ; rien à poser tant qu'ils ne
 sont pas ouverts) — **la liste de lancement, dans l'ordre :
 `docs/lancement-abonnements.md`** (2026-11-09) :
