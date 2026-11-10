@@ -32,7 +32,7 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
   const { synchroniserClientStripe, synchroniserSousBail } = await import("./synchronisation");
   const { enregistrer, prendre, marquerAiguille, marquerEchec, oublierLesAnciens, evenementsAAiguiller, PRISE_EXPIREE_MS, CONSERVATION_MS } =
     await import("./evenements");
-  const { demanderSynchronisation, prendreBail, clientsDus, BAIL_MS, ESSAIS_EN_MINUTES } = await import("./file");
+  const { demanderSynchronisation, demanderSynchronisations, prendreBail, clientsDus, BAIL_MS, ESSAIS_EN_MINUTES } = await import("./file");
   const { prendreLeJour, terminerLeJour, BAIL_DU_JOUR_MS } = await import("@/lib/taches/jour");
   const CLIENTS = ["cus_A", "cus_B", "cus_X", "cus_F", "cus_autre", "cus_integ_file"];
   const JOUR = "1999-01-01";
@@ -336,6 +336,18 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
     });
   });
 
+  describe("le rapprochement", () => {
+    it("demande en une requête : crée les absents, ajoute une demande aux présents, relance un échec durable", async () => {
+      const t = new Date();
+      await demanderSynchronisation("cus_A", t);
+      await prisma.synchronisationStripe.update({ where: { customerId: "cus_A" }, data: { echecDurableLe: t, traitees: 1 } });
+      await demanderSynchronisations(["cus_A", "cus_B"], t);
+      expect(await prisma.synchronisationStripe.findUnique({ where: { customerId: "cus_A" } })).toMatchObject({ demandes: 2, traitees: 1, echecDurableLe: null });
+      expect(await prisma.synchronisationStripe.findUnique({ where: { customerId: "cus_B" } })).toMatchObject({ demandes: 1, traitees: 0 });
+      expect(await clientsDus(t, 10)).toEqual(expect.arrayContaining(["cus_A", "cus_B"]));
+    });
+  });
+
   describe("aiguillage d'un événement", () => {
     it("enregistré une fois ; un doublon ne crée rien", async () => {
       expect(await enregistrer("evt_integ_1", "v1.invoice.paid", "in_1")).toBe(true);
@@ -411,13 +423,15 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
       const t = new Date();
       const [a, b] = await Promise.all([prendreLeJour(JOUR, t), prendreLeJour(JOUR, t)]);
       expect([a, b].filter((j) => j !== null)).toHaveLength(1);
-      const tue = (a ?? b)!;
+      // Tenue ailleurs, pas finie : ni jeton ni « faite ».
+      expect(await prendreLeJour(JOUR, t)).toBeNull();
+      const tue = (a ?? b) as number;
       // Le bail expire (exécution tuée par un déploiement) : reprise, jeton suivant.
       const repris = await prendreLeJour(JOUR, new Date(t.getTime() + BAIL_DU_JOUR_MS + 1));
       expect(repris).toBe(tue + 1);
       expect(await terminerLeJour(JOUR, tue, new Date(), {})).toBe(false);
-      expect(await terminerLeJour(JOUR, repris!, new Date(), { ok: true })).toBe(true);
-      expect(await prendreLeJour(JOUR, new Date(t.getTime() + 10 * BAIL_DU_JOUR_MS))).toBeNull();
+      expect(await terminerLeJour(JOUR, repris as number, new Date(), { ok: true })).toBe(true);
+      expect(await prendreLeJour(JOUR, new Date(t.getTime() + 10 * BAIL_DU_JOUR_MS))).toBe("faite");
     });
   });
 });

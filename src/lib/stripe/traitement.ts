@@ -27,7 +27,6 @@ import {
   evenementsAAiguiller,
   marquerAiguille,
   marquerEchec,
-  oublierLesAnciens,
   prendre,
 } from "./evenements";
 import { clientsDus, enEchecDurable } from "./file";
@@ -195,9 +194,8 @@ export function traiterLaFileIci(stripe: Stripe): Promise<BilanFile | null> {
   });
 }
 
-/** Ce que la crontab de chaque minute rend, et le ménage des anciens événements. */
+/** L'état de la file, pour le bilan du jour et son alerte. */
 export async function etatDeLaFile(maintenant: Date) {
   const [evenements, clientsEnEchecDurable] = await Promise.all([etatDesEvenements(maintenant), enEchecDurable()]);
-  await oublierLesAnciens(maintenant).catch(() => console.warn("stripe : ménage des événements en échec"));
   return { ...evenements, clientsEnEchecDurable };
 }

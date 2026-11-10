@@ -148,7 +148,7 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous"; 
   },
   "src/lib/taches/jour.ts": {
     motif: "exécution des tâches quotidiennes par jour civil (bail à jeton), hors compte",
-    usages: ["prisma.$queryRaw", "prisma.tacheQuotidienne.createMany", "prisma.tacheQuotidienne.updateMany"],
+    usages: ["prisma.$queryRaw", "prisma.tacheQuotidienne.createMany", "prisma.tacheQuotidienne.findUnique", "prisma.tacheQuotidienne.updateMany"],
   },
   "src/lib/accessibilite/queries.ts": {
     motif: "registre public par son slug, sans session",

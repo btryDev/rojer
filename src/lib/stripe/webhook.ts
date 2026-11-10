@@ -18,8 +18,6 @@ import type { ModeStripe } from "./config";
 import { enregistrer } from "./evenements";
 import { motifDErreur } from "./synchronisation";
 
-export { motifDErreur };
-
 /** Une notification légère pèse moins d'un kilo-octet. */
 export const TAILLE_MAX_NOTIFICATION = 64 * 1024;
 

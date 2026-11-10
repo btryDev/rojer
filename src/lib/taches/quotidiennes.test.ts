@@ -101,13 +101,17 @@ describe("tâches quotidiennes", () => {
     expect(m.prendreLeJour).not.toHaveBeenCalled();
 
     m.prendreLeJour.mockResolvedValueOnce(null);
-    expect(await lancerTachesDuJour(aParis(9))).toEqual({ etat: "deja-faite-ou-en-cours", jour: "2026-11-10" });
+    expect(await lancerTachesDuJour(aParis(9))).toEqual({ etat: "en-cours-ailleurs", jour: "2026-11-10" });
     expect(m.rappels).not.toHaveBeenCalled();
 
     vi.spyOn(console, "info").mockImplementation(() => {});
     expect(await lancerTachesDuJour(aParis(15))).toMatchObject({ etat: "faite", jour: "2026-11-10" });
     expect(m.prendreLeJour).toHaveBeenLastCalledWith("2026-11-10", aParis(15));
     expect(m.terminerLeJour).toHaveBeenCalledWith("2026-11-10", 7, expect.any(Date), expect.objectContaining({ suppressions: expect.anything() }));
+    // Fini ici : les minutes suivantes du même jour ne touchent plus la base.
+    m.prendreLeJour.mockClear();
+    expect(await lancerTachesDuJour(aParis(16))).toEqual({ etat: "deja-faite", jour: "2026-11-10" });
+    expect(m.prendreLeJour).not.toHaveBeenCalled();
   });
 
   it("offre pas lancée : rien ne se rappelle, rien ne s'avertit, rien ne se supprime ; le ménage se fait", async () => {

@@ -59,6 +59,18 @@ export async function demanderSynchronisation(
   );
 }
 
+/** Demande la relecture de plusieurs clients, en une requête (le rapprochement quotidien). */
+export async function demanderSynchronisations(customerIds: string[], maintenant: Date): Promise<void> {
+  if (customerIds.length === 0) return;
+  await prisma.$executeRaw`
+    INSERT INTO "SynchronisationStripe" ("customerId", "demandes", "prochainEssaiLe")
+    SELECT c, 1, ${maintenant} FROM unnest(${customerIds}::text[]) AS c
+    ON CONFLICT ("customerId") DO UPDATE SET
+      "demandes" = "SynchronisationStripe"."demandes" + 1,
+      "prochainEssaiLe" = LEAST("SynchronisationStripe"."prochainEssaiLe", ${maintenant}),
+      "echecDurableLe" = NULL`;
+}
+
 export type Bail = { customerId: string; jeton: number; demandes: number; tentatives: number; abonnementId: string | null };
 
 /**

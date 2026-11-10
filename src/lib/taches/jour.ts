@@ -18,15 +18,17 @@ import { prisma } from "@/lib/prisma";
 /** Au-delà de la pire exécution (dix suppressions, des e-mails, le rapprochement). */
 export const BAIL_DU_JOUR_MS = 30 * 60_000;
 
-/** Prend l'exécution du jour ; rend le jeton, ou `null` (faite, ou en cours ailleurs). */
-export async function prendreLeJour(jour: string, maintenant: Date): Promise<number | null> {
+/** Prend l'exécution du jour ; rend le jeton, `"faite"`, ou `null` (en cours ailleurs, bail encore valide). */
+export async function prendreLeJour(jour: string, maintenant: Date): Promise<number | "faite" | null> {
   await prisma.tacheQuotidienne.createMany({ data: [{ jour }], skipDuplicates: true });
   const lignes = await prisma.$queryRaw<{ jeton: number }[]>`
     UPDATE "TacheQuotidienne"
     SET "bailJeton" = "bailJeton" + 1, "bailJusquAu" = ${new Date(maintenant.getTime() + BAIL_DU_JOUR_MS)}
     WHERE "jour" = ${jour} AND "termineeLe" IS NULL AND ("bailJusquAu" IS NULL OR "bailJusquAu" < ${maintenant})
     RETURNING "bailJeton" AS "jeton"`;
-  return lignes[0]?.jeton ?? null;
+  if (lignes[0]) return lignes[0].jeton;
+  const ligne = await prisma.tacheQuotidienne.findUnique({ where: { jour }, select: { termineeLe: true } });
+  return ligne?.termineeLe ? "faite" : null;
 }
 
 /** Marque l'exécution du jour finie, avec son bilan ; seulement sous le jeton qui l'a prise. */

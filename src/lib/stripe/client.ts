@@ -15,9 +15,10 @@ import type { ConfigurationStripe } from "./config";
 export const VERSION_API_STRIPE = "2026-10-28.endive" satisfies Stripe.LatestApiVersion;
 
 /**
- * Par appel, dans le webhook : 3 s, sans relance du SDK — la relance est celle
- * de Stripe, sur toute la livraison. Trois ou quatre appels par notification
- * (le quatrième, la liste des factures, tant que le premier paiement manque).
+ * Par appel, dans la file Stripe (aiguillage, relecture sous bail) : 3 s,
+ * sans relance du SDK — la relance est celle de la file (`ESSAIS_EN_MINUTES`).
+ * Passée aussi par appel dans la relecture, que les gestes de l'utilisateur
+ * lancent avec le client ordinaire : elle la tient sous son bail (`BAIL_MS`).
  */
 export const OPTIONS_WEBHOOK: Stripe.RequestOptions = { timeout: 3_000, maxNetworkRetries: 0 };
 

@@ -28,6 +28,8 @@ import { configurationStripe } from "@/lib/stripe/config";
 import { rapprocher } from "@/lib/stripe/rapprochement";
 import { etatDeLaFile, traiterLaFileIci } from "@/lib/stripe/traitement";
 import { contexteDroits, offreLancee } from "@/lib/abonnements/lancement";
+import { oublierLesAnciens } from "@/lib/stripe/evenements";
+import { motifDErreur } from "@/lib/stripe/synchronisation";
 import { prendreLeJour, terminerLeJour } from "./jour";
 
 function horlogeReelle(): Date {
@@ -66,6 +68,7 @@ export async function lancerTachesQuotidiennes(maintenant: Date) {
     // relu par la file (un événement peut ne jamais être créé).
     ...(config.active ? { rapprochement: await tenter("rapprochement Stripe", () => rapprocher(maintenant)) } : {}),
     ...(config.active ? { fileStripe: await tenter("état de la file Stripe", () => signalerLaFile(maintenant)) } : {}),
+    evenementsOublies: await tenter("ménage des événements Stripe", () => oublierLesAnciens(maintenant)),
   });
   // L'offre pas lancée (ou retirée) : la saisie est ouverte à tous, rien ne
   // se rappelle ni ne se supprime — un compte ne lirait nulle part ce que
@@ -102,13 +105,26 @@ export async function lancerTaches(maintenant: () => Date = horlogeReelle) {
   return { fileStripe, jour: await lancerTachesDuJour(maintenant()) };
 }
 
+/**
+ * Le dernier jour vu FINI par ce processus : une économie (rien n'est écrit
+ * chaque minute jusqu'à minuit) ; la sûreté reste en base. Un jour tenu
+ * ailleurs n'est pas mémorisé : si l'autre exécution meurt, celle-ci la
+ * reprend à l'expiration du bail.
+ */
+let jourFiniVuIci: string | null = null;
+
 export async function lancerTachesDuJour(maintenant: Date) {
   if (composantesCiviles(maintenant).heure < HEURE_DES_TACHES) return { etat: "pas-encore" as const };
   const jour = cleJourCivil(maintenant);
+  if (jourFiniVuIci === jour) return { etat: "deja-faite" as const, jour };
   const jeton = await prendreLeJour(jour, maintenant);
-  if (jeton === null) return { etat: "deja-faite-ou-en-cours" as const, jour };
+  if (jeton === "faite") {
+    jourFiniVuIci = jour;
+    return { etat: "deja-faite" as const, jour };
+  }
+  if (jeton === null) return { etat: "en-cours-ailleurs" as const, jour };
   const bilan = await lancerTachesQuotidiennes(maintenant);
-  await terminerLeJour(jour, jeton, new Date(), bilan);
+  if (await terminerLeJour(jour, jeton, new Date(), bilan)) jourFiniVuIci = jour;
   console.info(`tâches du ${jour} : ${JSON.stringify(bilan)}`);
   return { etat: "faite" as const, jour, bilan };
 }
@@ -117,7 +133,8 @@ async function tenter<T>(nom: string, tache: () => Promise<T>): Promise<T | { er
   try {
     return await tache();
   } catch (e) {
-    console.error(`tâche quotidienne « ${nom} » en échec — ${e instanceof Error ? e.message : "erreur"}`);
+    // Un motif écrit par Rojer, jamais le message reçu (qui peut citer des données).
+    console.error(`tâche quotidienne « ${nom} » en échec — ${motifDErreur(e)}`);
     return { erreur: true };
   }
 }

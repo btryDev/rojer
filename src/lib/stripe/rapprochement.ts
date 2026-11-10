@@ -11,7 +11,7 @@ import "server-only";
 // Stripe, aucune donnée de compte.
 
 import { prisma } from "@/lib/prisma";
-import { demanderSynchronisation } from "./file";
+import { demanderSynchronisations } from "./file";
 
 /** Statuts terminés chez Stripe : plus rien n'y change. */
 const TERMINES = ["canceled", "incomplete_expired"];
@@ -27,10 +27,8 @@ export async function rapprocher(maintenant: Date): Promise<{ demandes: number }
       take: PAR_LOT,
       select: { stripeCustomerId: true },
     });
-    for (const { stripeCustomerId } of lot) {
-      await demanderSynchronisation(stripeCustomerId, maintenant);
-      demandes++;
-    }
+    await demanderSynchronisations(lot.map((l) => l.stripeCustomerId), maintenant);
+    demandes += lot.length;
     if (lot.length < PAR_LOT) return { demandes };
     apres = lot[lot.length - 1].stripeCustomerId;
   }

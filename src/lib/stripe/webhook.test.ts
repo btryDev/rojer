@@ -5,7 +5,8 @@ vi.mock("server-only", () => ({}));
 vi.mock("./evenements", () => ({ enregistrer: vi.fn() }));
 
 import * as evenements from "./evenements";
-import { lireCorpsBorne, motifDErreur, recevoirNotificationStripe, verifierNotificationStripe, type NotificationStripe } from "./webhook";
+import { lireCorpsBorne, recevoirNotificationStripe, verifierNotificationStripe, type NotificationStripe } from "./webhook";
+import { motifDErreur } from "./synchronisation";
 
 const SECRET = "whsec_essai";
 const stripe = new Stripe("sk_test_essai");
