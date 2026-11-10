@@ -162,6 +162,8 @@ export function messageRenouvellementAnnuel(
  */
 async function formuleAuRenouvellement(stripe: Stripe, abonnementId: string, formule: string | null, echeance: Date) {
   const abonnement = await stripe.subscriptions.retrieve(abonnementId, {}, OPTIONS_WEBHOOK);
+  // Une résiliation que la copie n'a pas encore reçue : rien ne se renouvelle.
+  if (abonnement.cancel_at_period_end || abonnement.cancel_at) return null;
   const baisse = await baissePrevue(stripe, abonnement);
   // La baisse prend effet à l'échéance (une heure de marge : la copie et le
   // planning ne datent pas toujours à la seconde près).

@@ -199,6 +199,13 @@ describe("rappel du renouvellement annuel (décision du 2026-11-10)", () => {
     expect(m.sendMail.mock.calls[0][0].text).toContain("(formule Pro)");
   });
 
+  it("résilié chez le prestataire mais pas encore dans la copie : pas de rappel", async () => {
+    m.findMany.mockResolvedValue([annuel()]);
+    st.retrieve.mockResolvedValue({ id: "sub_2", schedule: null, cancel_at_period_end: true, cancel_at: null });
+    expect(await rappelerLeRenouvellementAnnuel(MAINTENANT, stripe)).toEqual({ envoyes: 0, echecs: 0 });
+    expect(m.sendMail).not.toHaveBeenCalled();
+  });
+
   it("abonnement illisible chez le prestataire, ou sans client Stripe : rien ne part, rien n'est marqué, la passe suivante réessaie", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     m.findMany.mockResolvedValue([annuel()]);
