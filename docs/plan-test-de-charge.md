@@ -222,3 +222,6 @@ tort.
 - [2026-11-10] Le ZIP de contrôle embarque tous les fichiers déposés : le
   plafond de stockage (2 Go Essentiel, 6 Go Pro) en fait le pire cas. Non
   mesuré (les rapports semés n'ont pas de fichier réel).
+- [2026-11-10, la propriétaire] Le carnet sanitaire ne s'exporte pas seul :
+  aucune route d'export ; il n'existe que dans le ZIP de contrôle, en texte
+  (`08_Carnet_sanitaire.txt`, `lib/carnet-sanitaire/export.ts`).
