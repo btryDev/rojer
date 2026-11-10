@@ -3424,6 +3424,13 @@ volumineux »). **On garde tout et on exporte tout** : ni borne du registre à
 5 ans, ni suppression ; les gros dossiers passeront par le lien par mail +
 ZIP, puis par une archive annuelle « hybride ».]
 
+[2026-11-10, soir : A1 et B0 fusionnent seuls ; le rendu hors du processus
+attend la préproduction. Sur Clever Cloud, le `--max-old-space-size` injecté
+par la plateforme annule la borne d'un `worker_thread` : B1 passe à un
+processus enfant (`docs/plan-pdf-sous-processus.md`, encadré). D'ici là, le
+garde-fou est le seul filet, et un export fige l'application le temps de son
+rendu.]
+
 **Ce qui reste ouvert :**
 - ~~**Seuils provisoires** (2 500 lignes, bloc de 400) : à remplacer par la
   mesure du registre après A1, en XS, sur le banc de charge (session

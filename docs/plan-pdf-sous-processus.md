@@ -12,6 +12,14 @@
 >   Le garde-fou reste le premier filet (refus instantané au-delà du seuil),
 >   le fil d'exécution le second (tas dépassé confiné à l'export, boucle
 >   libre).]
+> - **[2026-11-10, soir : livraison en deux temps.** A1 et B0 (garde-fou,
+>   journal) fusionnent seuls dans `cc` : ils ne dépendent pas de la
+>   plateforme. Le rendu hors du processus ne fusionne qu'après la
+>   préproduction : Clever Cloud pose lui-même `--max-old-space-size`, qui
+>   annule la borne de tas d'un `worker_thread` (mesuré : 1 310 Mo reçus pour
+>   64 demandés). B1 passe donc à un **processus enfant** (`fork`, drapeaux et
+>   environnement explicites), dont la borne tient quel que soit le mode
+>   d'injection (mesuré : 432 Mo pour 384 demandés).]
 > - **Issue future des « trop volumineux »** : lien par mail + ZIP, générés en
 >   tâche de fond ; puis une archive annuelle « hybride » (un seul registre :
 >   volumes annuels figés recollés + année en cours générée).
