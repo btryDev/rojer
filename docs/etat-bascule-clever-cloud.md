@@ -219,7 +219,11 @@ Ajoutés le 2026-11-10 (audit de sécurité de `cc`, rapport hors dépôt :
 7. **Instances et mémoire** : combien d'instances, quelle RAM, quel
    `EXPORTS_SIMULTANES`. La file d'export et les recalculs de `/verifier`
    sont bornés **par processus** (#273) : ces chiffres disent ce que tient
-   l'instance sous charge.
+   l'instance sous charge. [2026-11-10, ADR-059 : et quels `EXPORT_TAS_MAX_MO`
+   et `EXPORT_DELAI_MAX_MS` pour le fil des PDF, calés sur le banc ; aucun
+   `NODE_OPTIONS` avec `--max-old-space-size` dans la console, qui prendrait
+   le pas sur le tas du fil. Le build CC construit `dist-pdf/pdf-worker.mjs` :
+   un déploiement sans lui échoue au premier export.]
 8. **`PUBLIC_APP_URL` en `https://`** : `src/env.ts` accepte aussi `http://`
    en production, et Better Auth en déduit l'attribut `Secure` et le préfixe
    `__Secure-` des cookies de session.

@@ -17,8 +17,9 @@ import type { ReponseWorker } from "./entree";
  */
 
 /** Le fil, à la racine du serveur : `dist-pdf/pdf-worker.mjs`. Le serveur
- *  autonome de Next se place dans son dossier au démarrage, le développement
- *  tourne à la racine du dépôt : `process.cwd()` vaut pour les deux. */
+ *  autonome de Next se place dans son dossier au démarrage
+ *  (`process.chdir(__dirname)`), `PDF_WORKER=1` en local tourne à la racine
+ *  du dépôt : `process.cwd()` vaut pour les deux. */
 export function cheminWorker(): string {
   return path.join(process.cwd(), "dist-pdf", "pdf-worker.mjs");
 }

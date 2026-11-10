@@ -6,7 +6,7 @@
     "node": ">=22.15 <25"
   },
   "scripts": {
-    "dev": "node scripts/construire-worker-pdf.mjs && next dev",
+    "dev": "next dev",
     "pdf-worker": "node scripts/construire-worker-pdf.mjs",
     "build": "prisma generate && next build && sh scripts/migrer-en-production.sh",
     "postinstall": "prisma generate",

@@ -139,6 +139,8 @@ const schema = z
       vide,
       z.string().regex(FORME_REGLAGE_WORKER, "doit être un entier ≥ 1").optional(),
     ),
+    // Hors production, force la mise en page dans le fil (`pdf/rendre.ts`).
+    PDF_WORKER: enumeration(["1"] as const),
 
     // API Légifrance (`legifrance/client.ts`, scripts).
     LEGIFRANCE_CLIENT_ID: optionnelle,

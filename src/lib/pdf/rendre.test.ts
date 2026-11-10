@@ -5,10 +5,15 @@ import type { DemandePdf } from "./documents";
 
 const h = vi.hoisted(() => ({
   rendu: vi.fn<(demande: unknown, limites?: unknown) => Promise<Buffer>>(async () => Buffer.from("%PDF")),
+  surPlace: vi.fn<(element: unknown) => Promise<Buffer>>(async () => Buffer.from("%PDF")),
   disponible: true,
 }));
 // Le fil d'exécution est simulé ici ; il est éprouvé pour de vrai dans
-// `worker/lancer.test.ts`.
+// `worker/lancer.test.ts`. Le rendu sur place aussi.
+vi.mock("@react-pdf/renderer", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@react-pdf/renderer")>()),
+  renderToBuffer: h.surPlace,
+}));
 vi.mock("./worker/lancer", async (importOriginal) => ({
   ...(await importOriginal<typeof import("./worker/lancer")>()),
   workerDisponible: () => h.disponible,
@@ -42,14 +47,21 @@ let journal: { info: ReturnType<typeof vi.spyOn>; warn: ReturnType<typeof vi.spy
 
 beforeEach(() => {
   h.rendu.mockClear();
+  h.surPlace.mockClear();
   h.disponible = true;
+  // La voie de production : le fil. Le rendu sur place (hors production) a
+  // son propre test.
+  vi.stubEnv("NODE_ENV", "production");
   journal = {
     info: vi.spyOn(console, "info").mockImplementation(() => {}),
     warn: vi.spyOn(console, "warn").mockImplementation(() => {}),
     error: vi.spyOn(console, "error").mockImplementation(() => {}),
   };
 });
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllEnvs();
+});
 
 /** La seule ligne de journal écrite, lue. */
 const ligneEcrite = () => {
@@ -194,13 +206,24 @@ describe("rendrePdf — garde-fou", () => {
 
   it("sans le fichier du fil, la production échoue au lieu de rendre sur place", async () => {
     h.disponible = false;
-    vi.stubEnv("NODE_ENV", "production");
-    try {
-      await expect(rendrePdf(plan(1), { seuils })).rejects.toThrow(/pdf-worker introuvable/);
-      expect(h.rendu).not.toHaveBeenCalled();
-    } finally {
-      vi.unstubAllEnvs();
-    }
+    await expect(rendrePdf(plan(1), { seuils })).rejects.toThrow(/pdf-worker introuvable/);
+    expect(h.rendu).not.toHaveBeenCalled();
+    expect(h.surPlace).not.toHaveBeenCalled();
+  });
+
+  it("hors production : sur place, même si le fichier du fil existe (code à jour)", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    await rendrePdf(plan(1), { seuils });
+    expect(h.surPlace).toHaveBeenCalledTimes(1);
+    expect(h.rendu).not.toHaveBeenCalled();
+  });
+
+  it("hors production, PDF_WORKER=1 force le fil", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("PDF_WORKER", "1");
+    await rendrePdf(plan(1), { seuils });
+    expect(h.rendu).toHaveBeenCalledTimes(1);
+    expect(h.surPlace).not.toHaveBeenCalled();
   });
 
   it("les échecs attendus ne sont pas des pannes", () => {

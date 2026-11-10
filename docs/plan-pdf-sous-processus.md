@@ -154,8 +154,12 @@ route (parent)                                   worker_thread (1 par rendu)
     `production`, `rendrePdf` rend dans le processus, avec un avertissement en
     console. En production, un fichier manquant est une erreur au premier
     export, jamais un repli.
-  - Je propose (a) + (b) : (b) évite qu'un clone neuf soit cassé, (a) garde le
-    dev proche de la production. La preuve 7 confirme.
+  - ~~Je propose (a) + (b) : (b) évite qu'un clone neuf soit cassé, (a) garde le
+    dev proche de la production. La preuve 7 confirme.~~ [2026-11-10,
+    relecture de B1 : (a) imprimait en silence l'ancienne version d'un
+    document modifié pendant `next dev`. Retenu : le fil en production
+    seulement ; hors production, rendu dans le processus, sauf
+    `PDF_WORKER=1` qui force le fil (ADR-059).]
 - Vitest : `rendrePdf` se teste avec le vrai worker, construit par esbuild en
   `globalSetup` du fichier de test (rapide). Les tests d'arbre existants des
   documents ne changent pas.

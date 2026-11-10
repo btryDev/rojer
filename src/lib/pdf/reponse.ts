@@ -18,9 +18,10 @@ const SANS_CACHE = { "Cache-Control": "no-store" } as const;
  * La réponse d'une route PDF : rendu, puis `Response` (audit Next.js du
  * 2026-10-14, B8). Les ~~cinq~~ six routes [2026-11-10 : les deux du DUERP
  * comprises] répétaient le même squelette, et c'est ici
- * que passe le sémaphore des exports (H3) : le rendu `@react-pdf` est du
- * calcul synchrone, il ne se mène qu'à `EXPORTS_SIMULTANES` à la fois dans le
- * processus (`exports/limite.ts`).
+ * que passe le sémaphore des exports (H3) : ~~le rendu `@react-pdf` est du
+ * calcul synchrone,~~ il ne se mène qu'à `EXPORTS_SIMULTANES` à la fois dans le
+ * processus (`exports/limite.ts`) [2026-11-10, ADR-059 : chaque rendu tient un
+ * fil et son tas ; la file borne la mémoire, plus la boucle].
  *
  * La place n'est tenue que pendant le rendu : les lectures en base, faites
  * avant par la route, ne bloquent pas la boucle.

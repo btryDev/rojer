@@ -30,12 +30,13 @@ import { delaiMaxMs, tasMaxMo } from "./worker/reglages";
  *   3. une ligne de journal (`journal/export-pdf.ts`).
  *
  * ⚠ LE GARDE-FOU EST UN PALLIATIF, NOMMÉ COMME TEL. Il borne la taille d'un
- * export mis en page dans le processus web ; ses seuils viennent du banc de
- * charge. Il ne rend pas le document, et il n'empêche pas tout : sous le
- * seuil, un export fige encore l'application le temps de son rendu (banc,
- * XS, 2026-11-10 : environ 7 s pour un registre d'un an). Il se retire ou se
- * relève quand le rendu sort du processus (plan, B1-B3) ou quand les gros
- * exports passent en tâche de fond (lien par mail + ZIP). Inscrit à
+ * export ; ses seuils viennent du banc de charge. Il ne rend pas le document.
+ * ~~Sous le seuil, un export fige encore l'application le temps de son rendu~~
+ * [2026-11-10 : depuis B1, la mise en page de production tourne dans un fil
+ * (`mettreEnPage`) — le garde-fou devient le PREMIER filet, qui refuse sans
+ * rien lancer ; le fil est le second, qui confine un tas dépassé.] Il se
+ * relève quand le fil est mesuré (B3), et se retire quand les gros exports
+ * passent en tâche de fond (lien par mail + ZIP). Inscrit à
  * `docs/chantiers-ouverts.md` § 23.
  */
 
@@ -154,11 +155,12 @@ export async function rendrePdf(
  * La mise en page d'une demande DÉJÀ pesée et admise par `controlerPoids` —
  * pour la route, qui pèse avant la file d'export et ne pèse pas deux fois.
  *
- * DANS UN FIL SÉPARÉ (lot pdf-b1, ADR-059) : la boucle du serveur reste libre,
- * et un tas dépassé ne tue que le fil — il revient comme un refus « trop
- * volumineux », le même que celui du garde-fou. Sans le fichier du fil
- * (`dist-pdf/pdf-worker.mjs`), la production échoue au premier export ; le
- * développement met en page dans le processus, et le dit.
+ * DANS UN FIL SÉPARÉ en production (lot pdf-b1, ADR-059) : la boucle du
+ * serveur reste libre, et un tas dépassé ne tue que le fil — il revient comme
+ * un refus « trop volumineux », le même que celui du garde-fou. Sans le
+ * fichier du fil (`dist-pdf/pdf-worker.mjs`), la production échoue au premier
+ * export. Hors production, la mise en page reste dans le processus
+ * (`rendreSelonLeLieu`).
  */
 export async function mettreEnPage(
   demande: DemandePdf,
@@ -187,31 +189,29 @@ export async function mettreEnPage(
   }
 }
 
+/**
+ * Où mettre en page. EN PRODUCTION, toujours dans le fil, qui doit exister.
+ * HORS PRODUCTION, dans le processus, avec le code des documents à jour : un
+ * fil construit au démarrage de `next dev` imprimerait l'ancienne version
+ * d'un document modifié depuis, sans rien en dire (relecture du 2026-11-10).
+ * `PDF_WORKER=1` force le fil en local, pour l'éprouver.
+ */
 async function rendreSelonLeLieu(demande: DemandePdf, options: OptionsRendu): Promise<Buffer> {
-  if (workerDisponible()) {
+  const production = process.env.NODE_ENV === "production";
+  if (production || process.env.PDF_WORKER === "1") {
+    if (!workerDisponible()) {
+      throw new Error(
+        "pdf-worker introuvable (dist-pdf/pdf-worker.mjs) : `pnpm pdf-worker` le construit, " +
+          "le build CC aussi.",
+      );
+    }
     return rendreDansUnWorker(demande, {
       tasMaxMo: tasMaxMo(),
       delaiMaxMs: delaiMaxMs(),
       signal: options.signal,
     });
   }
-  if (process.env.NODE_ENV === "production") {
-    throw new Error(
-      "pdf-worker introuvable (dist-pdf/pdf-worker.mjs) : le build CC doit le construire.",
-    );
-  }
-  avertirRenduSurPlace();
   return renderToBuffer(elementDuDocument(demande));
-}
-
-let averti = false;
-function avertirRenduSurPlace() {
-  if (averti) return;
-  averti = true;
-  console.warn(
-    "pdf : dist-pdf/pdf-worker.mjs absent, mise en page dans le processus " +
-      "(développement seulement). `node scripts/construire-worker-pdf.mjs` le construit.",
-  );
 }
 
 function seuilsDe(demande: DemandePdf, options: OptionsRendu): SeuilsPdf {

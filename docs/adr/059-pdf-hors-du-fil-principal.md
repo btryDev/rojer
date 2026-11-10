@@ -88,9 +88,11 @@ long, ni le processus contre un seul gros.
 - Les documents PDF n'importent plus aucun module serveur (`fraicheur-texte.ts`,
   corpus lus par fichier) : une nouvelle dépendance serveur dans un document
   casse la garde du paquet.
-- `pnpm dev` construit le fil d'abord ; sans lui, le développement met en
-  page dans le processus et l'écrit en console. La production, elle, échoue
-  au premier export.
+- Le fil ne sert qu'EN PRODUCTION, où il doit exister (sinon le premier
+  export échoue). Hors production, la mise en page reste dans le processus,
+  avec le code des documents à jour : un fil construit au démarrage de
+  `next dev` imprimerait l'ancienne version d'un document modifié depuis.
+  `PDF_WORKER=1` force le fil en local ; `pnpm pdf-worker` le construit.
 - Les seuils du garde-fou et les deux réglages du fil se remesurent avec le
   fil, en XS et en S (B3) ; les documents autres que le registre restent à
   mesurer.
