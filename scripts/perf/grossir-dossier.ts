@@ -29,7 +29,14 @@ import { prisma } from "../../src/lib/prisma";
 
 const CIBLE_EQUIPEMENTS = 100;
 const CIBLE_SALARIES = 50;
-const ANNEES = 10;
+// `--annees <n>` : la profondeur d'historique (10 par défaut). Sert à trouver
+// à partir de combien d'années un écran ou un export ne tient plus.
+const ANNEES = (() => {
+  const i = process.argv.indexOf("--annees");
+  const n = i === -1 ? 10 : Number(process.argv[i + 1]);
+  if (!Number.isInteger(n) || n < 1 || n > 40) throw new Error("--annees : un entier de 1 à 40.");
+  return n;
+})();
 const JOUR = 86_400_000;
 const MAINTENANT = Date.now();
 
