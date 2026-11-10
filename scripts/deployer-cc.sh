@@ -62,7 +62,7 @@ etat_build=$(gh run view "$build" --json jobs --jq '.jobs[] | select(.name == "b
 [ "$etat_build" = "success" ] || refus "le job build-cc de $court n'a pas réussi (« ${etat_build:-absent} »)."
 echo "CI verte pour $court, build Clever Cloud compris."
 
-echo "Déploiement de $court ($branche) sur $app…"
+echo "Déploiement de $court ($branche) sur ${app}…"
 # `rebuild` : un commit déjà poussé chez Clever Cloud est reconstruit au lieu
 # d'être refusé (politique par défaut `error`). La commande attend la fin.
 clever deploy --alias "$app" --branch "$branche" \
