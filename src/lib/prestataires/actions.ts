@@ -28,7 +28,7 @@ import {
   type TypePiecePrestataire,
 } from "./storage";
 import { estSiretEnDouble, MESSAGE_SIRET_EN_DOUBLE } from "./siret-en-double";
-import { piecesRemplacees } from "./pieces";
+import { PIECES, piecesRemplacees } from "./pieces";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
 import { motifDuGel, prendreQuota, refusQuota, RefusQuota } from "@/lib/abonnements/quotas";
 
@@ -76,6 +76,13 @@ const CHAMPS_PIECES = [
   { type: "rcpro", champ: "assuranceRcPro", cle: "assuranceRcProCle", nom: "assuranceRcProNom" },
   { type: "kbis", champ: "kbis", cle: "kbisCle", nom: "kbisNom" },
 ] as const satisfies readonly { type: TypePiecePrestataire; champ: string; cle: string; nom: string }[];
+
+/** Une pièce lue a changé entre la lecture et l'écriture (modification simultanée). */
+class PiecesChangees extends Error {}
+const MESSAGE_FICHE_CHANGEE =
+  "Cette fiche a été modifiée entre-temps. Rechargez la page, puis recommencez.";
+/** Suppression bornée : relire autant de fois qu'une modification simultanée change une clé. */
+const ESSAIS_SUR_CHANGEMENT = 3;
 
 type ColonnePiece =
   | (typeof CHAMPS_PIECES)[number]["cle"]
@@ -267,6 +274,16 @@ export async function creerPrestataire(
  * à régénérer : la création n'en régénère pas, les échéances de vigilance se
  * lisent à chaque affichage (`calendrier/echeances.ts`).
  */
+/** L'écriture bornée n'a rien trouvé : fiche supprimée, ou pièce changée entre-temps. */
+async function refusModificationConcurrente(
+  db: Db,
+  prestataireId: string,
+  etablissementId: string,
+): Promise<PrestataireActionState> {
+  const encore = await db.prestataire.findFirst({ where: { id: prestataireId, etablissementId }, select: { id: true } });
+  return { status: "error", message: encore ? MESSAGE_FICHE_CHANGEE : "Prestataire introuvable" };
+}
+
 export async function modifierPrestataire(
   etablissementId: string,
   prestataireId: string,
@@ -313,19 +330,36 @@ export async function modifierPrestataire(
   }
 
   const remplacees = piecesRemplacees(existant, depot.colonnes);
+  // Bornée aux pièces lues (audit de sécurité du 2026-11-10, comme la photo
+  // d'établissement) : chaque pièce déposée ne remplace que celle qu'on a
+  // lue. Sinon, de deux modifications simultanées, la seconde écrasait la
+  // clé de la première sans l'inscrire nulle part — un fichier stocké, hors
+  // du décompte du plafond de stockage.
+  // Clé, nom ET validité de la pièce remplacée : c'est ce qui s'archive en
+  // `PiecePrestataire` ; une date corrigée entre-temps ne doit pas y entrer
+  // périmée (preuve de vigilance, L. 8222-2).
+  const lues = Object.fromEntries(
+    Object.values(PIECES)
+      .filter((p) => depot.colonnes[p.cle] !== undefined)
+      .flatMap((p) => [p.cle, p.nom, ...(p.validite ? [p.validite] : [])])
+      .map((champ) => [champ, existant[champ]]),
+  );
+  let ecrite = true;
   try {
     const modification = {
-      where: { id: existant.id },
+      where: { id: existant.id, ...lues },
       data: { ...colonnesDeLaSaisie(parsed.data), ...depot.colonnes },
     };
     // Sans pièce remplacée, une seule écriture : pas de transaction.
     // Avec, transaction interactive : `creerEnLotVerifie` (ADR-051) lit le
     // prestataire avant d'insérer ses pièces, dans la transaction.
     if (remplacees.length === 0) {
-      await db.prestataire.update(modification);
+      ecrite = (await db.prestataire.updateMany(modification)).count > 0;
     } else {
       await db.$transaction(async (tx) => {
-        await tx.prestataire.update(modification);
+        if ((await tx.prestataire.updateMany(modification)).count === 0) {
+          throw new PiecesChangees();
+        }
         await creerEnLotVerifie(
           tx,
           "PiecePrestataire",
@@ -335,8 +369,13 @@ export async function modifierPrestataire(
     }
   } catch (err) {
     await abandonnerFichiers(db, depot.cles, "prestataires/modification");
+    if (err instanceof PiecesChangees) return await refusModificationConcurrente(db, existant.id, etablissementId);
     if (estSiretEnDouble(err)) return erreurSiret();
     throw err;
+  }
+  if (!ecrite) {
+    await abandonnerFichiers(db, depot.cles, "prestataires/modification-concurrente");
+    return await refusModificationConcurrente(db, existant.id, etablissementId);
   }
 
   // Les pièces remplacées ne sont PAS libérées (2026-10-12) : elles sont
@@ -405,22 +444,41 @@ export async function supprimerPrestataire(
   ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   const { db } = await assertEtablissementDuCompte(etablissementId);
 
-  const prestataire = await db.prestataire.findFirst({
-    where: { id: prestataireId, etablissementId },
-    select: {
-      id: true,
-      attestationUrssafCle: true,
-      assuranceRcProCle: true,
-      kbisCle: true,
-      // Lues AVANT la suppression : la cascade emporte les lignes, pas les
-      // fichiers (2026-10-12).
-      piecesPrecedentes: { select: { fichierCle: true } },
-    },
-  });
-  if (!prestataire) return;
+  // Bornée aux pièces lues : une modification simultanée qui remplace une
+  // pièce change sa clé, et la suppression relit au lieu d'emporter la fiche
+  // en laissant la nouvelle pièce hors de toute ligne (audit du 2026-11-10).
+  for (let essai = 0; essai < ESSAIS_SUR_CHANGEMENT; essai++) {
+    const prestataire = await db.prestataire.findFirst({
+      where: { id: prestataireId, etablissementId },
+      select: {
+        id: true,
+        attestationUrssafCle: true,
+        assuranceRcProCle: true,
+        kbisCle: true,
+        // Lues AVANT la suppression : la cascade emporte les lignes, pas les
+        // fichiers (2026-10-12).
+        piecesPrecedentes: { select: { fichierCle: true } },
+      },
+    });
+    if (!prestataire) return;
 
-  await db.prestataire.delete({ where: { id: prestataire.id } });
-  await deletePiecesPrestataire(db, prestataire);
+    const { count } = await db.prestataire.deleteMany({
+      where: {
+        id: prestataire.id,
+        attestationUrssafCle: prestataire.attestationUrssafCle,
+        assuranceRcProCle: prestataire.assuranceRcProCle,
+        kbisCle: prestataire.kbisCle,
+      },
+    });
+    if (count > 0) {
+      await deletePiecesPrestataire(db, prestataire);
+      break;
+    }
+    if (essai === ESSAIS_SUR_CHANGEMENT - 1) {
+      // Toujours là après chaque essai : rien n'est supprimé, et on le dit.
+      throw new Error(`Suppression du prestataire ${prestataireId} abandonnée : pièce remplacée pendant chaque essai`);
+    }
+  }
 
   revalidatePath(`/etablissements/${etablissementId}/prestataires`);
   revalidatePath(`/etablissements/${etablissementId}`);
