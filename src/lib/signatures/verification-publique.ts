@@ -12,7 +12,7 @@ import "server-only";
 import { headers } from "next/headers";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { ipClient } from "@/lib/securite/ip-client";
+import { ipPourLimite } from "@/lib/securite/ip-client";
 import { cleLimite, consommer, LIMITES } from "@/lib/securite/limite-debit";
 import { calculerHashObjet, versionDeHash } from "./hash-objet";
 import { SELECT_PREUVE } from "./preuve";
@@ -132,7 +132,7 @@ export async function verifierSousLimite(
   | Awaited<ReturnType<typeof verifierIntegriteSignature>>
   | { ok: false; raison: "trop_de_demandes"; reessayerDansSecondes: number }
 > {
-  const ip = ipClient(await headers());
+  const ip = ipPourLimite(await headers());
   if (ip) {
     const verdict = await consommer([
       { cle: cleLimite("verification", "ip", ip), limite: LIMITES.verificationIp },
