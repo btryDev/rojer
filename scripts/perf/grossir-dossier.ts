@@ -31,6 +31,8 @@ const CIBLE_EQUIPEMENTS = 100;
 const CIBLE_SALARIES = 50;
 // `--annees <n>` : la profondeur d'historique (10 par défaut). Sert à trouver
 // à partir de combien d'années un écran ou un export ne tient plus.
+const historiqueSeul = process.argv.includes("--historique-seulement");
+
 const ANNEES = (() => {
   const i = process.argv.indexOf("--annees");
   const n = i === -1 ? 10 : Number(process.argv[i + 1]);
@@ -100,76 +102,81 @@ async function main(): Promise<void> {
   }
   const { id: etablissementId, entrepriseId } = etabs[0];
 
-  // 1. Parc — copies des appareils de la démo, réparties sur les zones.
-  const zones = await prisma.batiment.findMany({
-    where: { etablissementId },
-    select: { id: true },
-    orderBy: { ordre: "asc" },
-  });
-  const modeles = await prisma.equipement.findMany({
-    where: { etablissementId, actif: true },
-    orderBy: { createdAt: "asc" },
-  });
-  const manquants = CIBLE_EQUIPEMENTS - modeles.length;
-  const copies: Prisma.PrismaPromise<unknown>[] = [];
-  for (let i = 0; i < manquants; i++) {
-    const m = modeles[i % modeles.length];
-    copies.push(
-      prisma.equipement.create({
-        data: {
-          etablissementId,
-          batimentId: zones[i % zones.length].id,
-          categorie: m.categorie,
-          libelle: `${m.libelle} n° ${Math.floor(i / modeles.length) + 2}`,
-          localisation: m.localisation,
-          dateMiseEnService: m.dateMiseEnService,
-          caracteristiques: (m.caracteristiques ?? Prisma.DbNull) as Prisma.InputJsonValue,
-        },
-      }),
-    );
-  }
-  await lots(copies);
-  console.log(`  parc : ${modeles.length} + ${Math.max(0, manquants)} équipements`);
-
-  // 2. Effectif — 50 salariés, avec les titres des salariés de la démo.
-  await prisma.entreprise.update({
-    where: { id: entrepriseId },
-    data: { effectif: CIBLE_SALARIES },
-  });
-  await prisma.etablissement.update({
-    where: { id: etablissementId },
-    data: { effectifSurSite: CIBLE_SALARIES },
-  });
-  const salaries = await prisma.salarie.findMany({
-    where: { etablissementId, actif: true },
-    include: { titres: true },
-    orderBy: { createdAt: "asc" },
-  });
-  const nouveaux: Prisma.PrismaPromise<unknown>[] = [];
-  for (let i = salaries.length; i < CIBLE_SALARIES; i++) {
-    const m = salaries[i % salaries.length];
-    nouveaux.push(
-      prisma.salarie.create({
-        data: {
-          etablissementId,
-          nom: `${m.nom}-${i}`,
-          prenom: m.prenom,
-          poste: m.poste,
-          entreLe: m.entreLe,
-          titres: {
-            create: m.titres.map((t) => ({
-              obligationId: t.obligationId,
-              delivreLe: t.delivreLe,
-              echeanceLe: t.echeanceLe,
-              note: t.note,
-            })),
+  // `--historique-seulement` : un dossier type (le parc et l'effectif de la
+  // démo), dont seul l'historique grossit — le client moyen, pas la limite
+  // de la cible (test de charge, 2026-11-10).
+  if (!historiqueSeul) {
+    // 1. Parc — copies des appareils de la démo, réparties sur les zones.
+    const zones = await prisma.batiment.findMany({
+      where: { etablissementId },
+      select: { id: true },
+      orderBy: { ordre: "asc" },
+    });
+    const modeles = await prisma.equipement.findMany({
+      where: { etablissementId, actif: true },
+      orderBy: { createdAt: "asc" },
+    });
+    const manquants = CIBLE_EQUIPEMENTS - modeles.length;
+    const copies: Prisma.PrismaPromise<unknown>[] = [];
+    for (let i = 0; i < manquants; i++) {
+      const m = modeles[i % modeles.length];
+      copies.push(
+        prisma.equipement.create({
+          data: {
+            etablissementId,
+            batimentId: zones[i % zones.length].id,
+            categorie: m.categorie,
+            libelle: `${m.libelle} n° ${Math.floor(i / modeles.length) + 2}`,
+            localisation: m.localisation,
+            dateMiseEnService: m.dateMiseEnService,
+            caracteristiques: (m.caracteristiques ?? Prisma.DbNull) as Prisma.InputJsonValue,
           },
-        },
-      }),
-    );
+        }),
+      );
+    }
+    await lots(copies);
+    console.log(`  parc : ${modeles.length} + ${Math.max(0, manquants)} équipements`);
+
+    // 2. Effectif — 50 salariés, avec les titres des salariés de la démo.
+    await prisma.entreprise.update({
+      where: { id: entrepriseId },
+      data: { effectif: CIBLE_SALARIES },
+    });
+    await prisma.etablissement.update({
+      where: { id: etablissementId },
+      data: { effectifSurSite: CIBLE_SALARIES },
+    });
+    const salaries = await prisma.salarie.findMany({
+      where: { etablissementId, actif: true },
+      include: { titres: true },
+      orderBy: { createdAt: "asc" },
+    });
+    const nouveaux: Prisma.PrismaPromise<unknown>[] = [];
+    for (let i = salaries.length; i < CIBLE_SALARIES; i++) {
+      const m = salaries[i % salaries.length];
+      nouveaux.push(
+        prisma.salarie.create({
+          data: {
+            etablissementId,
+            nom: `${m.nom}-${i}`,
+            prenom: m.prenom,
+            poste: m.poste,
+            entreLe: m.entreLe,
+            titres: {
+              create: m.titres.map((t) => ({
+                obligationId: t.obligationId,
+                delivreLe: t.delivreLe,
+                echeanceLe: t.echeanceLe,
+                note: t.note,
+              })),
+            },
+          },
+        }),
+      );
+    }
+    await lots(nouveaux, 50);
+    console.log(`  effectif : ${salaries.length} + ${Math.max(0, CIBLE_SALARIES - salaries.length)} salariés`);
   }
-  await lots(nouveaux, 50);
-  console.log(`  effectif : ${salaries.length} + ${Math.max(0, CIBLE_SALARIES - salaries.length)} salariés`);
 
   // 3. Calendrier — par le script de maintenance, seule porte hors session
   // (`regeneration-hors-session.test.ts`).
