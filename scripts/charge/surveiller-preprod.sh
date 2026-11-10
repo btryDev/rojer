@@ -32,7 +32,10 @@ while :; do
 done
 EOF
 ssh_pid=$!
-trap 'kill $ssh_pid 2>/dev/null' EXIT INT TERM
+# Arrêter la boucle aussi : sans `exit`, `kill %1` ne coupait que la
+# session SSH et la boucle continuait d'écrire.
+trap 'kill $ssh_pid 2>/dev/null' EXIT
+trap 'exit 0' INT TERM
 
 echo "heure,app_cpu,app_mem,db_cpu,connexions_actives,connexions_inactives,en_attente_verrou,sonde_ms" > "$sortie"
 while :; do

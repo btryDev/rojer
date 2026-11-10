@@ -899,6 +899,24 @@ async function main(): Promise<void> {
     throw new Error("--dossier-de-charge et --second-etablissement ne se combinent pas.");
   }
   const identite = dossierDeCharge === null ? ENTREPRISE : identiteDeCharge(dossierDeCharge);
+  if (dossierDeCharge !== null) {
+    // Le refus « base non vide » est levé pour un dossier de charge : la
+    // base doit donc être locale ou désignée nommément (même règle que
+    // scripts/charge/semer-comptes.ts), et le numéro encore libre.
+    let hote = "";
+    try {
+      hote = new URL(process.env.DATABASE_URL ?? "").hostname;
+    } catch {
+      /* illisible : refusé ci-dessous */
+    }
+    const locale = hote === "localhost" || hote === "127.0.0.1";
+    if (!locale && (hote === "" || hote !== process.env.CHARGE_BASE_DESIGNEE)) {
+      throw new Error(`REFUS : --dossier-de-charge sur une base ni locale ni désignée par CHARGE_BASE_DESIGNEE (« ${hote || "illisible"} »).`);
+    }
+    if (await prisma.entreprise.count({ where: { raisonSociale: identite.raisonSociale } })) {
+      throw new Error(`REFUS : le dossier de charge ${dossierDeCharge} existe déjà dans cette base (« ${identite.raisonSociale} »).`);
+    }
+  }
 
   // Refus explicite sur base non vide — cf. l'en-tête. Le compte des
   // entreprises suffit : elles sont la racine de tenancy (ADR-005), tout le

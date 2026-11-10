@@ -22,7 +22,8 @@
  * (son hôte exact ; la préproduction Clever Cloud). Refus si une base locale
  * porte un dossier qui n'est pas un dossier de charge, ou si une base désignée
  * porte un compte hors `@rojer.invalid` : jamais une base avec de vrais
- * utilisateurs.
+ * utilisateurs. Sur une base désignée, le mot de passe des comptes vient de
+ * CHARGE_MOT_DE_PASSE (le dépôt est public) et --gros doit valoir 0.
  */
 import { execFileSync } from "node:child_process";
 import { writeFileSync } from "node:fs";
@@ -31,7 +32,22 @@ import { prisma } from "../../src/lib/prisma";
 import { ouvrirSession } from "../perf/ouvrir-session";
 
 const PREFIXE_DOSSIER = "Charge ";
-const MOT_DE_PASSE = "charge-k6-mot-de-passe";
+/** Mot de passe des comptes d'une base LOCALE seulement : il est écrit ici. */
+const MOT_DE_PASSE_LOCAL = "charge-k6-mot-de-passe";
+
+/**
+ * Le dépôt est public : sur une base désignée (joignable d'internet), le mot
+ * de passe vient de CHARGE_MOT_DE_PASSE, jamais de ce fichier. Les cookies de
+ * session suffisent à k6 ; le mot de passe ne sert qu'à les ouvrir.
+ */
+function motDePasse(base: "locale" | "designee"): string {
+  if (base === "locale") return MOT_DE_PASSE_LOCAL;
+  const secret = process.env.CHARGE_MOT_DE_PASSE ?? "";
+  if (secret.length < 16 || secret === MOT_DE_PASSE_LOCAL) {
+    throw new Error("REFUS : base désignée sans CHARGE_MOT_DE_PASSE (16 caractères au moins, propre à la campagne).");
+  }
+  return secret;
+}
 
 const arg = (nom: string, defaut?: string): string | undefined => {
   const i = process.argv.indexOf(`--${nom}`);
@@ -152,11 +168,17 @@ async function main(): Promise<void> {
   }
 
   await baseDeTestOuRefus(base);
+  // Grossir un dossier passe par grossir-dossier.ts, qui refuse toute base
+  // non locale : mieux vaut le dire avant d'avoir créé quoi que ce soit.
+  if (base === "designee" && gros > 0) {
+    throw new Error("REFUS : --gros doit valoir 0 sur une base désignée (grossir-dossier.ts n'y tourne pas).");
+  }
+  const mdp = motDePasse(base);
 
   const dossiers: DossierDeCharge[] = [];
   for (let n = premier; n < premier + comptes; n++) {
     const email = `charge-${String(n).padStart(2, "0")}@rojer.invalid`;
-    const { userId, cookie } = await ouvrirSession(email, MOT_DE_PASSE);
+    const { userId, cookie } = await ouvrirSession(email, mdp);
     let dossier = await dossierDuCompte(userId);
     if (!dossier) {
       tsx("scripts/seed-dossier-complet.ts", ["--user", userId, "--dossier-de-charge", String(n)]);

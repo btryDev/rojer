@@ -9,15 +9,18 @@ set -eu
 sortie="${1:?fichier de sortie}"
 echo "heure,app_cpu,app_mem,db_cpu,connexions_actives,connexions_inactives,en_attente_verrou,sonde_ms" > "$sortie"
 while :; do
-  stats=$(docker stats --no-stream --format '{{.Name}} {{.CPUPerc}} {{.MemUsage}}' rojer-charge-app rojer-charge-db)
+  # Chaque relevé peut échouer au pire moment (conteneur qui redémarre après
+  # un manque de mémoire, base saturée) : on écrit un trou, on ne s'arrête pas.
+  stats=$(docker stats --no-stream --format '{{.Name}} {{.CPUPerc}} {{.MemUsage}}' rojer-charge-app rojer-charge-db 2>/dev/null || true)
   app_cpu=$(echo "$stats" | awk '/rojer-charge-app/ {print $2}')
   app_mem=$(echo "$stats" | awk '/rojer-charge-app/ {print $3}')
   db_cpu=$(echo "$stats" | awk '/rojer-charge-db/ {print $2}')
   pg=$(docker exec rojer-charge-db psql -U rojer -d rojer -Atc \
     "select count(*) filter (where state = 'active'), count(*) filter (where state = 'idle'),
             count(*) filter (where wait_event_type = 'Lock')
-       from pg_stat_activity where datname = 'rojer' and pid <> pg_backend_pid()" | tr '|' ',')
-  sonde=$(curl -s -o /dev/null -w '%{time_total}' http://localhost:8080/login | awk '{printf "%.0f", $1 * 1000}')
+       from pg_stat_activity where datname = 'rojer' and pid <> pg_backend_pid()" 2>/dev/null | tr '|' ',' || true)
+  [ -n "$pg" ] || pg="0,0,0"
+  sonde=$(curl -s -o /dev/null -w '%{time_total}' http://localhost:8080/login | awk '{printf "%.0f", $1 * 1000}' || true)
   echo "$(date +%H:%M:%S),$app_cpu,$app_mem,$db_cpu,$pg,$sonde" >> "$sortie"
   sleep 5
 done

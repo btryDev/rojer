@@ -368,10 +368,15 @@ registre de 100 rapports, médianes sur 7, tas 256 Mo : démarrage d'un Node nu
 démarrage et ~120 ms de code non optimisé : un surcoût à froid de ~220 ms,
 supérieur au rendu lui-même. Un processus gardé chaud (palier 2) le supprime.]
 
-Erreurs : 9 puis 5 réponses 502 sur ~5 000 pages, à tous les paliers (dès 10
+Erreurs : 9 puis 5 réponses 502 sur ~6 100 pages, à tous les paliers (dès 10
 utilisateurs) et sur les deux versions : indépendantes de la charge et du
-sous-processus. Piste : connexion inactive fermée par Node au moment où le
-répartiteur la réutilise (`keepAliveTimeout`) ; non confirmée. Les « GoAway
+sous-processus. ~~Piste : connexion inactive fermée par Node au moment où le
+répartiteur la réutilise (`keepAliveTimeout`) ; non confirmée.~~ [2026-11-11 :
+confirmé. Le serveur annonçait `Keep-Alive: timeout=5` et fermait une
+connexion inactive après ~6 s ; aucune trace au journal de l'application à
+l'instant des 502. Mêmes paliers avec `KEEP_ALIVE_TIMEOUT=65000` : **0** 502
+sur 6 176 pages, temps équivalents. Corrigé dans `scripts/demarrer-cc.sh`
+(PR #292).] Les « GoAway
 ENHANCE_YOUR_CALM » (26 et 32) sont des refus du répartiteur sur les rafales
 de fichiers statiques de k6, pas des erreurs d'application.
 

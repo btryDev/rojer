@@ -129,6 +129,11 @@ export function soumettre(d, chemin, champ, valeurs, nom) {
     redirects: 0,
     tags: { page: nom },
   });
-  check(r, { [`${nom} : accepté`]: (x) => x.status < 400 && !/Formulaire invalide|n'a pas été accepté/.test(x.body || "") });
+  check(r, {
+    [`${nom} : accepté`]: (x) =>
+      x.status < 400 &&
+      !/\/login/.test(x.headers.Location || "") &&
+      !/Formulaire invalide|n'a pas été accepté/.test(x.body || ""),
+  });
   return r;
 }
