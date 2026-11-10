@@ -172,7 +172,12 @@ export async function verifierSousLimite(signatureId: string): Promise<ResultatS
   // alors autant de rapports signés que de places — pas autant d'adresses
   // (revue de sécurité de la PR #273).
   const dejaEnCours = verificationsEnCours.get(signatureId);
-  if (dejaEnCours) return dejaEnCours;
+  if (dejaEnCours) {
+    const partage = await dejaEnCours;
+    // Un refus « service occupé » appartient au premier demandeur : celui qui
+    // s'est greffé tente sa propre place (relecture de la PR #273).
+    if (!(partage.ok === false && partage.raison === "serveur_occupe")) return partage;
+  }
   // Ses propres vérifications d'abord (« depuis votre connexion »), puis
   // l'occupation du service (« réessayez ») : la page ne dit pas la même chose.
   if (ip && recalculsPublics.partAtteinte(ip)) {

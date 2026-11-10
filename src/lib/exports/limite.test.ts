@@ -66,8 +66,8 @@ describe("le limiteur des exports", () => {
 
   it("une file pleine répond 503 avec Retry-After, sans cache", async () => {
     const l = creerLimiteur({ simultanes: 1, enAttenteMax: 0, attenteMaxMs: 1 });
-    expect(typeof (await reserverPlaceExport("etab-1", l))).toBe("function");
-    const r = await reserverPlaceExport("etab-1", l);
+    expect(typeof (await reserverPlaceExport("u-1", l))).toBe("function");
+    const r = await reserverPlaceExport("u-1", l);
     expect(r).toBeInstanceOf(Response);
     const reponse = r as Response;
     expect(reponse.status).toBe(503);

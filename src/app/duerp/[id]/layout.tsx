@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { AppSidebar } from "@/components/layout/AppSidebar";
@@ -113,7 +112,10 @@ export default async function DuerpLayout({
           <BarreDeListe
             contexte={contexte}
             action={
-              <Link
+              // Une balise <a>, pas un <Link> : Next précharge les <Link>, et le
+              // préchargement lancerait le rendu du PDF — il prendrait une des
+              // deux places d'export de l'utilisateur avant son clic.
+              <a
                 href={`/duerp/${id}/pdf/preview`}
                 className={buttonVariants({
                   variant: "boardClair",
@@ -121,7 +123,7 @@ export default async function DuerpLayout({
                 })}
               >
                 PDF DUERP ↓
-              </Link>
+              </a>
             }
           />
         </div>
