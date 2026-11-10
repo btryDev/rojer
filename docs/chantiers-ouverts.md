@@ -3439,7 +3439,7 @@ rendu.]
 422, délai → 503 avec `Retry-After`, client parti → 503 vide. Sept
 garanties éprouvées en les cassant (`worker/lancer.test.ts`). Coût : environ
 100 Mo de mémoire réelle par export, contre 25 à 30 pour un `worker_thread` ;
-`EXPORT_TAS_MAX_MO` (384, calculé pour un fil) sera sans doute à baisser.
+`EXPORT_TAS_MAX_MO` ~~(384, calculé pour un fil) sera sans doute à baisser~~ [même nuit : 256, sur le relevé de la préproduction XS — un registre au seuil du garde-fou passe à 256, échoue à 192 ; le banc confirme].
 **Reste ouvert** : la preuve sur le build CC et en préproduction, le banc
 (B3) ; et la décision sur `process.exit(1)` au démarrage si le contrôle de
 santé de Clever Cloud accepte un serveur qui répond 500.]

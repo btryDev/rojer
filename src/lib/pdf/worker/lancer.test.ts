@@ -122,10 +122,12 @@ describe("rendreDansUnProcessus", () => {
   }, 60_000);
 
   it("au-delà du délai, le processus est arrêté EN COURS de rendu", async () => {
-    // Un rendu court tient largement dans le délai : ce n'est pas le
-    // démarrage du processus qui l'épuise.
-    const delaiMaxMs = 1_000;
-    expect(await dureeDUnRenduCourt()).toBeLessThan(delaiMaxMs / 2);
+    // Le délai vaut au moins deux rendus courts entiers, démarrage compris,
+    // mesurés sur cette machine : ce n'est pas le démarrage qui l'épuise. Pas
+    // de seuil chronométré à respecter (un runner lent le ratait) : si le
+    // gros rendu finissait avant, la promesse se résoudrait et le test
+    // échouerait.
+    const delaiMaxMs = Math.max(1_000, 2 * (await dureeDUnRenduCourt()));
     const t0 = performance.now();
     await expect(
       rendreDansUnProcessus(demandeRegistre(2_500), { tasMaxMo: 512, delaiMaxMs }, chemin),
@@ -140,9 +142,10 @@ describe("rendreDansUnProcessus", () => {
       rendreDansUnProcessus(demandeRegistre(5), { ...limites, signal: deja.signal }, chemin),
     ).rejects.toBeInstanceOf(PdfAbandonne);
 
-    // Pendant : l'abandon tombe après le temps d'un rendu court entier.
-    const apresMs = 700;
-    expect(await dureeDUnRenduCourt()).toBeLessThan(apresMs / 2);
+    // Pendant : l'abandon tombe après deux rendus courts entiers, mesurés
+    // ici (même raisonnement que pour le délai), et c'est l'enfant EN COURS
+    // de rendu qui est tué.
+    const apresMs = Math.max(700, 2 * (await dureeDUnRenduCourt()));
     const pendant = new AbortController();
     const rendu = rendreDansUnProcessus(
       demandeRegistre(2_500),
@@ -151,6 +154,7 @@ describe("rendreDansUnProcessus", () => {
     );
     setTimeout(() => pendant.abort(), apresMs);
     await expect(rendu).rejects.toBeInstanceOf(PdfAbandonne);
+    expect(vus.dernier?.signalCode).toBe("SIGKILL");
   }, 60_000);
 
   it("délai ou abandon : l'issue ne revient qu'une fois le processus mort", async () => {

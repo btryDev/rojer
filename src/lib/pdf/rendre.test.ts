@@ -182,7 +182,7 @@ describe("rendrePdf — garde-fou", () => {
     const signal = new AbortController().signal;
     await rendrePdf(plan(1), { seuils, signal });
     expect(h.rendu).toHaveBeenCalledWith(expect.anything(), {
-      tasMaxMo: 384,
+      tasMaxMo: 256,
       delaiMaxMs: 60_000,
       signal,
     });

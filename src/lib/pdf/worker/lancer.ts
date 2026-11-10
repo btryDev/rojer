@@ -29,7 +29,11 @@ import type { ReponseWorker } from "./entree";
  *  (`process.chdir(__dirname)`), `PDF_WORKER=1` en local tourne à la racine
  *  du dépôt : `process.cwd()` vaut pour les deux. */
 export function cheminWorker(): string {
-  return path.join(process.cwd(), "dist-pdf", "pdf-worker.mjs");
+  // `turbopackIgnore` : sans lui, Turbopack (`next build`) prend le chemin
+  // passé à `fork` pour un module à empaqueter, et échoue sans `dist-pdf`
+  // (CI du budget de requêtes, 2026-11-10). Le paquet n'est jamais importé :
+  // il est copié à côté du serveur (`preparer-standalone.sh`).
+  return path.join(/* turbopackIgnore: true */ process.cwd(), "dist-pdf", "pdf-worker.mjs");
 }
 
 export function workerDisponible(): boolean {

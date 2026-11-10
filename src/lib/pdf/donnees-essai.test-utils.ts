@@ -7,6 +7,7 @@ import type { BlocEtatsPermanents } from "./mentions-etats-permanents";
 import type { PlanActionsData } from "./PlanActionsDocument";
 import type { PointsACorrigerData } from "./PointsACorrigerDocument";
 import type { RegistreData } from "./RegistreDocument";
+import { ajouterJours, instantCivil } from "@/lib/dates";
 import type { DuerpSnapshot } from "@/lib/versions/snapshot";
 
 export const VIDE: BlocEtatsPermanents = {
@@ -30,7 +31,7 @@ export function dossier(etatsPermanents: BlocEtatsPermanents): DossierData {
     regimesTexte: "Établissement de travail, ERP type N cat. 5",
     materielsNonCouverts: [],
     regime: { estERP: true, estIGH: false },
-    genereLe: new Date("2026-09-01T10:00:00Z"),
+    genereLe: instantCivil(2026, 9, 1, 12),
     couverture: null,
     avertissementCalendrier: null,
     calendrier: { etat: "a_jour" },
@@ -67,7 +68,7 @@ export function registre(n: number): RegistreData {
     entreprise: "Btry",
     etablissement: "Le Comptoir",
     adresse: "1 rue des Lilas",
-    genereLe: new Date("2026-11-10T10:00:00Z"),
+    genereLe: instantCivil(2026, 11, 10, 11),
     calendrier: { etat: "a_jour" },
     regime: { estERP: true, estIGH: false },
     inventaire: null,
@@ -75,7 +76,7 @@ export function registre(n: number): RegistreData {
     parties: [],
     rapports: Array.from({ length: n }, (_, i) => ({
       id: `r${i}`,
-      dateRapport: new Date(Date.UTC(2026, 10, 1) - i * 86_400_000),
+      dateRapport: ajouterJours(instantCivil(2026, 11, 1), -i),
       resultat: "conforme",
       realisePar: "Bureau de contrôle",
       libelleObligation: `Vérification périodique des installations électriques ${i}`,
@@ -85,7 +86,7 @@ export function registre(n: number): RegistreData {
       commentaires: null,
       points:
         i % 9 === 0
-          ? [{ id: `p${i}`, libelle: "Prise", etat: "corrige", corrigeLe: new Date(Date.UTC(2026, 10, 2)), justification: "Remplacée", pieceJointe: false }]
+          ? [{ id: `p${i}`, libelle: "Prise", etat: "corrige", corrigeLe: instantCivil(2026, 11, 2), justification: "Remplacée", pieceJointe: false }]
           : [],
     })),
     verifsEnAttente: [],
@@ -97,7 +98,7 @@ export function planActions(): PlanActionsData {
     entreprise: "Btry",
     etablissement: "Le Comptoir",
     adresse: "1 rue des Lilas",
-    genereLe: new Date("2026-11-10T10:00:00Z"),
+    genereLe: instantCivil(2026, 11, 10, 11),
     totalOuvertes: 0,
     totalEnCours: 0,
     totalLevees: 2,
@@ -111,7 +112,7 @@ export function pointsACorriger(): PointsACorrigerData {
     etablissement: "Le Comptoir",
     adresse: "1 rue des Lilas",
     appareil: "Tableau électrique",
-    genereLe: new Date("2026-11-10T10:00:00Z"),
+    genereLe: instantCivil(2026, 11, 10, 11),
     ouverts: [],
     corriges: [],
   };
