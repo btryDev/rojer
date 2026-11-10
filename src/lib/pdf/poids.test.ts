@@ -47,7 +47,7 @@ describe("poidsDuDocument — registre", () => {
     expect(poids).toEqual({ total: 21, plusGrosBloc: 11 });
   });
 
-  it("le corps des fiches est un seul bloc ; les rapports comptent par paquet", () => {
+  it("les rapports comptent par page de l'index, chacune de 100 lignes au plus", () => {
     const rapports = Array.from({ length: 250 }, () => rapport(2026));
     const poids = poidsDuDocument(
       registre({ parties: [{ fiches: [{ lignes: n(30) }] }], rapports }),
@@ -143,8 +143,6 @@ describe("poidsDuDocument — autres documents", () => {
           historique: n(historique),
         },
       });
-    // Unités 2 × 2 = 4 ; inventaire 3 risques + 5 mesures + 1 CMR = 9 ;
-    // plan 3 + 3 prévues = 6 ; annexe 3 ; historique.
     // Unités 2 × 2 = 4 ; inventaire 3 risques + 5 mesures + 1 CMR + 2 × 2
     // listes par unité = 13 ; plan 3 + 3 prévues = 6 ; annexe 3 ; historique.
     expect(poidsDuDocument(duerp(2))).toEqual({ total: 28, plusGrosBloc: 13 });

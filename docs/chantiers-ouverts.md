@@ -3458,7 +3458,9 @@ rendu.]
   #286 : le corps des fiches se découpe comme l'index (`decoupage-registre.ts`,
   pages de 100 lignes, une fiche longue sur plusieurs pages « suite ») ; les
   vérifications en attente se pèsent à leurs lignes. Aucune page du registre
-  ne dépasse plus 100 lignes : le seuil du bloc ne refuse plus un registre,
+  ne dépasse plus 100 lignes — sauf un rapport seul de plus de 99 points à corriger,
+  qu'aucune borne n'empêche (`rapports/schema.ts`) : le seuil du bloc ne
+  refuse plus un registre que dans ce cas, à 399 points ou plus ; sinon,
   seul le total le peut.]
 - **Passage de XS à S** : seuils proposés le 2026-11-10 (p95 des pages > 1 s,
   p95 des exports > 10 s ou un export > 30 s, RSS > 70 % ou un redémarrage

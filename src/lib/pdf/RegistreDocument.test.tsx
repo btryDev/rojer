@@ -10,7 +10,8 @@
 import { describe, expect, it } from "vitest";
 import { elementsDansLOrdre, texteDirect } from "./arbre-rendu.test-utils";
 import { renderToBuffer } from "@react-pdf/renderer";
-import { RegistreDocument, TenueDuRegistrePdf, type RegistreData } from "./RegistreDocument";
+import { MorceauFichePdf, RegistreDocument, TenueDuRegistrePdf, type RegistreData } from "./RegistreDocument";
+import { pagesDuRegistre } from "./decoupage-registre";
 import { phraseFraicheur } from "@/lib/calendrier/fraicheur";
 
 const data: RegistreData = {
@@ -314,6 +315,33 @@ describe("RegistreDocument — index des rapports découpé", () => {
     expect(noeudsLong.filter((n) => n.type === "MorceauFichePdf")).toHaveLength(3);
     const pdf = await renderToBuffer(RegistreDocument({ data: long }));
     expect(nombreDePages(pdf)).toBeGreaterThanOrEqual(1 + 1 + 3 + 1);
+  });
+
+  it("une fiche longue : la tête sur le premier morceau, « suite » ensuite, le pied sur le dernier", () => {
+    const journal = {
+      id: "j",
+      titre: "Journal",
+      attendu: "",
+      raisons: [],
+      aConfirmer: [],
+      etat: "",
+      ton: "faite" as const,
+      misAJourLe: null,
+      colonnes: ["Date", "Fait"],
+      lignes: Array.from({ length: 250 }, (_, i) => [`${i}`, `fait ${i}`]),
+    };
+    const pages = pagesDuRegistre({ ...data, parties: [{ id: "4", titre: "Événements", fiches: [journal] }] });
+    const morceaux = pages.flatMap((p) => (p.genre === "fiches" ? p.morceaux : []));
+    // Ce que chaque morceau transmet à la fiche qu'il rend.
+    const props = morceaux.map((m) => {
+      const fiche = elementsDansLOrdre(MorceauFichePdf({ m })).find((n) => n.type === "FichePdfVue")!;
+      return [fiche.props.suite, fiche.props.dernier];
+    });
+    expect(props).toEqual([
+      [false, false],
+      [true, false],
+      [true, true],
+    ]);
   });
 
   it("rend le PDF avec un index de plusieurs paquets", async () => {

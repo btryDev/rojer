@@ -97,6 +97,31 @@ describe("pagesDuRegistre", () => {
     expect(genres(pages)).toEqual(["index:100", "attente:1"]);
   });
 
+  it("égalité : un index de 96 lignes et une attente de 4 font une seule page de 100", () => {
+    const rapports = Array.from({ length: 96 }, (_, i) => ({
+      id: `r${i}`,
+      dateRapport: new Date(Date.UTC(2026, 5, 1)),
+      points: [],
+      domaine: null,
+    })) as unknown as RegistreData["rapports"];
+    const pages = pagesDuRegistre({ ...base, rapports, verifsEnAttente: [attente(1, true)] }, 100);
+    expect(genres(pages)).toEqual(["index:100"]);
+  });
+
+  it("limite connue : un rapport seul de 150 points fait une page de 151 lignes (rien ne borne les points)", () => {
+    const rapports = [
+      {
+        id: "r",
+        dateRapport: new Date(Date.UTC(2026, 5, 1)),
+        points: Array.from({ length: 150 }, (_, i) => ({ id: `p${i}` })),
+        domaine: null,
+      },
+    ] as unknown as RegistreData["rapports"];
+    // L'index déborde : la section d'attente (vide) et la tenue partent sur la
+    // page suivante.
+    expect(genres(pagesDuRegistre({ ...base, rapports }, 100))).toEqual(["index:151", "attente:0"]);
+  });
+
   it("le poids d'une attente : sa ligne, le marquage contractuel, le rythme, « À confirmer »", () => {
     expect(lignesDeLAttente(attente(1))).toBe(1);
     expect(lignesDeLAttente(attente(1, true))).toBe(4);

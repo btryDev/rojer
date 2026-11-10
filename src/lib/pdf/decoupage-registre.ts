@@ -13,8 +13,11 @@ import type { FichePdf, LigneRapport, LigneVerif, RegistreData } from "./Registr
  *   - un tableau d'un seul tenant au-delà du bloc de 400 lignes rend le
  *     registre ENTIER inexportable : le corps des fiches (journaux et tenues,
  *     qui grossissent avec les années) se découpe donc comme l'index, et
- *     aucune page ne dépasse `LIGNES_PAR_PAQUET` lignes, sauf une ligne seule
- *     plus haute qu'elle — ce qui n'arrive pas.
+ *     aucune page ne dépasse `LIGNES_PAR_PAQUET` lignes, sauf un élément seul
+ *     plus lourd qu'elle : ~~ce qui n'arrive pas~~ [relecture du 2026-11-10 :
+ *     rien ne le garantit — aucune borne ne limite les points d'un rapport
+ *     (`rapports/schema.ts`) ; un rapport de 150 points fait une page de 151
+ *     lignes, et de 399 points ou plus, il fait refuser le registre].
  */
 
 /** Les lignes qu'un rapport imprime dans l'index : la sienne, une par point à

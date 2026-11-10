@@ -49,8 +49,9 @@ type SeuilsPdf = { total: number; bloc: number };
  * gel borné à une dizaine de secondes en XS. Bloc 400 : le plus gros observé
  * était 299 (le corps des fiches) ; [2026-11-10, revue de la PR #286 :
  * depuis, toutes les pages du registre sont découpées à 100 lignes
- * (`decoupage-registre.ts`), et ce seuil ne le refuse plus — il reste pour
- * les documents non découpés.] À REMESURER avec le worker (B1-B3) et en S.
+ * (`decoupage-registre.ts`), et ce seuil ne le refuse plus — sauf un rapport seul de plus de 99 points à corriger
+ * (399 ou plus), qu'aucune borne n'empêche ; il reste pour les documents non
+ * découpés.] À REMESURER avec le worker (B1-B3) et en S.
  *
  * AUTRES DOCUMENTS — NON MESURÉS. Le dossier de conformité a passé le banc à
  * dix ans d'historique (2,6 s au plus) ; le DUERP, le plan d'actions et les

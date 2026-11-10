@@ -141,7 +141,7 @@ route (parent)                                   worker_thread (1 par rendu)
 
 | Cas | Réponse d'une route PDF | Dans le ZIP |
 |---|---|---|
-| Tas dépassé (`ERR_WORKER_OUT_OF_MEMORY`) | 503, texte : « Ce document est trop volumineux pour être préparé ici. Votre dossier n'est pas touché. » Pas de `Retry-After` : réessayer ne changera rien. | Pièce notée absente, raison « document trop volumineux », dite dans le README. |
+| Tas dépassé (`ERR_WORKER_OUT_OF_MEMORY`) | ~~503~~ 422 [2026-11-10 : refus définitif, comme le garde-fou — décision de la propriétaire], texte : « Ce document est trop volumineux pour être préparé ici. Votre dossier n'est pas touché. » Pas de `Retry-After` : réessayer ne changera rien. | Pièce notée absente, raison « document trop volumineux », dite dans le README. |
 | Délai dépassé (`EXPORT_DELAI_MAX_MS`) | 503 + `Retry-After`, « La préparation a pris trop de temps. Réessayez dans quelques minutes. » | Idem, raison « délai dépassé ». |
 | Autre erreur de rendu | 500, comme aujourd'hui. | Comme aujourd'hui (`noterEchec`). |
 

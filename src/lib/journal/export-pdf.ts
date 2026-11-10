@@ -35,7 +35,8 @@ type NiveauJournal = "info" | "warn" | "error";
  *   - le TOTAL grandit avec les années : il avertit dès la MOITIÉ ;
  *   - le BLOC, non : il dit qu'un tableau d'un seul tenant approche de son
  *     coût quadratique. Le registre n'en a plus (toutes ses pages font 100
- *     lignes au plus depuis la revue de la PR #286) ; les autres documents
+ *     lignes au plus depuis la revue de la PR #286, sauf un rapport seul de
+ *     plus de 99 points à corriger) ; les autres documents
  *     suivent le parc, pas les années. Il avertit à 90 % de son seuil, quand
  *     le refus est proche — à la moitié, des documents ordinaires
  *     avertiraient sans rien annoncer.

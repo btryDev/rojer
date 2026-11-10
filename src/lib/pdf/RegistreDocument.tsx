@@ -739,7 +739,8 @@ export function TenueDuRegistrePdf({ regime }: { regime: RegistreData["regime"] 
  * partie devant son premier morceau, puis la fiche — entière, ou une tranche
  * de ses lignes.
  */
-function MorceauFichePdf({ m }: { m: MorceauFiche }) {
+/** Exporté pour ses tests. */
+export function MorceauFichePdf({ m }: { m: MorceauFiche }) {
   return (
     <>
       {/* L'en-tête de partie a voyagé avec sa première fiche, dans un même
