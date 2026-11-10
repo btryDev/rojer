@@ -175,7 +175,7 @@ export async function signInAction(
       return {
         error: envoiImpossible()
           ? `Votre adresse n'est pas encore confirmée. ${ENVOI_IMPOSSIBLE}`
-          : "Votre adresse n'est pas encore confirmée : un nouveau lien vous est envoyé (cinq au plus par heure). Ouvrez le plus récent pour activer votre compte.",
+          : "Votre adresse n'est pas encore confirmée : un nouveau lien part vers votre boîte (cinq au plus par heure). Ouvrez le plus récent pour activer votre compte.",
       };
     }
     return { error: "Identifiants invalides" };
