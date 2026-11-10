@@ -89,6 +89,12 @@ export const CORRESPONDANCE = {
   FichierALiberer: {
     horsCompte: "file des fichiers à retirer du stockage après une suppression en base : leurs lignes n'existent plus ; vidée par la tâche quotidienne",
   },
+  SynchronisationStripe: {
+    horsCompte: "client Stripe à relire (ADR-053 § 5) : file et bail des relectures, par client Stripe, avant toute identité ; le compte se lit sur le client relu",
+  },
+  TacheQuotidienne: {
+    horsCompte: "exécution des tâches quotidiennes par jour civil (bail, fin, bilan) : technique, hors de tout compte",
+  },
   EvenementStripe: {
     horsCompte: "événement Stripe reçu (ADR-053) : dédoublonnage des livraisons, écrit avant toute identité",
   },

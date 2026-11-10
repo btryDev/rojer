@@ -860,6 +860,14 @@ l'essai.
   ([crons Clever Cloud](https://www.clever.cloud/developers/doc/manage/cron/),
   lue le 2026-11-09). Elle accueillera les avertissements avant suppression
   (J-30, J-7) quand la suppression à 12 mois sera écrite.
+  [2026-11-10 : remplacé. La crontab tourne **chaque minute**
+  (`clevercloud/taches.sh` → `POST /api/taches/chaque-minute`, qui répond
+  202 et travaille après la réponse) : la file Stripe, puis les tâches du
+  jour dès 9 h, enregistrées par jour civil (`TacheQuotidienne`, bail à
+  jeton) — une exécution par jour, reprise si elle est tuée, rattrapée si
+  la minute de 9 h a sauté. `INSTANCE_NUMBER` n'est qu'une économie : la
+  doc Clever Cloud dit que deux instances numérotées 0 coexistent pendant
+  un déploiement (« a job can then run twice »). ADR-053 § 5, amendé.]
 
 ## 14. Suppression du compte sans abonnement (2026-11-09)
 

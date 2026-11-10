@@ -12,14 +12,23 @@ import "server-only";
 // - La ligne n'est écrite que si elle porte CE client Stripe ; un conflit
 //   (autre client, autre compte, compte disparu) ne s'écrit pas : il se
 //   signale (`alerte`).
-// - Écriture conditionnelle sur `relueLe`, l'heure à laquelle la relecture
-//   commence : une relecture lancée plus tôt n'écrase pas une lancée plus
-//   tard. Limite connue : deux relectures croisées dont la plus récente
-//   reviendrait avec l'état le plus ancien (latence réseau inégale) laissent
-//   cet état jusqu'à l'événement suivant — Stripe en envoie plusieurs par
-//   changement (abonnement, facture).
+// - Les relectures d'un même client sont SÉRIALISÉES (ADR-053 § 5, amendé le
+//   2026-11-10) : chacune tient le bail du client (`file.ts`), et
+//   l'écriture se fait dans une transaction qui vérifie d'abord le jeton du
+//   bail, ligne verrouillée jusqu'au commit — un worker dont le bail a
+//   expiré n'écrit rien. Les listes v1 de Stripe étant immédiatement
+//   cohérentes, une relecture qui commence après la précédente voit au moins
+//   ce qu'elle a vu : la dernière écrite est la plus fraîche.
+// - En second rempart, écriture conditionnelle sur `relueLe` (l'heure du
+//   début de la relecture) : une relecture lancée plus tôt n'écrase pas une
+//   lancée plus tard.
+// - Une liste tronquée par la pagination est un échec, jamais un état
+//   complet ; une erreur de Stripe n'écrit rien (aucun droit retiré).
 
-import type Stripe from "stripe";
+import Stripe from "stripe";
+import type { Prisma } from "@prisma/client";
+import { alerter } from "@/lib/alertes";
+import { type Bail, clore, demanderSynchronisation, echouer, prendreBail, rendreBail, verrouillerSousBail } from "./file";
 import { clientDuClientStripe } from "@/lib/auth/compte-hors-session";
 import { compteDontEstProprietaire } from "@/lib/auth/membres";
 import { OPTIONS_WEBHOOK } from "./client";
@@ -112,13 +121,26 @@ export function horlogeDeSuppression(
  * facture reste `paid` chez Stripe.
  */
 export async function premierPaiement(stripe: Stripe, customerId: string): Promise<Date | null> {
-  const payees = await stripe.invoices
-    .list({ customer: customerId, status: "paid", limit: 100 }, OPTIONS_WEBHOOK)
-    .autoPagingToArray({ limit: 1000 });
+  const payees = await toutLister(stripe.invoices.list({ customer: customerId, status: "paid", limit: 100 }, OPTIONS_WEBHOOK), 1000);
   const dates = payees
     .filter((f) => f.amount_paid > 0 && f.status_transitions?.paid_at)
     .map((f) => f.status_transitions.paid_at as number);
   return dates.length ? date(Math.min(...dates)) : null;
+}
+
+/** Une liste tronquée par la pagination n'est pas un état complet (stripe-node tronque en silence). */
+export class ListeTronquee extends Error {
+  constructor(public readonly max: number) {
+    super(`liste Stripe tronquée à ${max} éléments`);
+    this.name = "ListeTronquee";
+  }
+}
+
+/** Toute la liste, ou une erreur : à la limite, `autoPagingToArray` s'arrête sans rien dire. */
+export async function toutLister<T>(liste: { autoPagingToArray(o: { limit: number }): Promise<T[]> }, max: number): Promise<T[]> {
+  const tous = await liste.autoPagingToArray({ limit: max });
+  if (tous.length >= max) throw new ListeTronquee(max);
+  return tous;
 }
 
 /** Le premier essai pris par ce client, sur quelque abonnement que ce soit. */
@@ -157,89 +179,140 @@ export const codePrisma = (e: unknown) => {
 };
 
 export type Synchronisation =
-  | { issue: "ecrit" | "inchange" }
-  | { issue: "ignore"; motif: string; alerte?: true };
+  | { issue: "ecrit" | "inchange"; facturesEnEchecDurable?: true }
+  | { issue: "ignore"; motif: string; alerte?: true }
+  /** Une autre relecture tient le client : la demande est notée, elle la couvrira ou la suivra. */
+  | { issue: "en_file" };
 
 const ECRIT = { issue: "ecrit" } as const;
 const INCHANGE = { issue: "inchange" } as const;
+const EN_FILE = { issue: "en_file" } as const;
 const SANS_COMPTE = { issue: "ignore", motif: "client Stripe sans compte Rojer (metadata.compteId)" } as const;
 const INTROUVABLE = { issue: "ignore", motif: "compte Rojer introuvable", alerte: true } as const;
+/** Un client d'avant l'ADR-054 dont la personne n'est propriétaire d'aucun compte, ou de plusieurs : il paie peut-être et n'est jamais relu. */
+const PROPRIETAIRE_AMBIGU = {
+  issue: "ignore",
+  motif: "client Stripe d'avant les comptes (metadata.userId) : la personne n'est propriétaire d'aucun compte, ou de plusieurs — poser metadata.compteId",
+  alerte: true,
+} as const;
 const DEJA_LIE = { issue: "ignore", motif: "client ou abonnement Stripe déjà lié à un autre compte", alerte: true } as const;
 const AUTRE_CLIENT = { issue: "ignore", motif: "le compte est lié à un autre client Stripe", alerte: true } as const;
 
-type Db = ReturnType<typeof clientDuClientStripe>;
+/** Un motif écrit par Rojer : la nature de l'erreur, jamais son message (qui peut citer des données). */
+export function motifDErreur(e: unknown): string {
+  if (e instanceof Stripe.errors.StripeError) {
+    return `API Stripe : ${e.type}${e.statusCode ? ` ${e.statusCode}` : ""}${e.code ? ` (${e.code})` : ""}`;
+  }
+  if (e instanceof ListeTronquee) return `liste Stripe tronquée (${e.max})`;
+  const code = codePrisma(e);
+  return code ? `base : ${code}` : "erreur inattendue";
+}
+
+/** Le bail a été repris par un autre worker pendant la relecture : rien n'est écrit. */
+class BailPerdu extends Error {}
+
+type Tx = Prisma.TransactionClient;
 type Donnees = ReturnType<typeof colonnesDe> &
   ReturnType<typeof horlogeDeSuppression> & { relueLe: Date; essaiUtiliseLe: Date | null };
 
-/** `null` : une livraison simultanée a créé la ligne du compte — passer à la mise à jour. */
-async function creerLigne(db: Db, compteId: string, customerId: string, donnees: Donnees) {
-  try {
-    await db.abonnement.create({ data: { compteId, stripeCustomerId: customerId, ...donnees } });
-    return ECRIT;
-  } catch (e) {
-    switch (codePrisma(e)) {
-      // Compte disparu : clé étrangère (P2003), ou la liaison au compte que
-      // pose la borne (P2025, enregistrement requis introuvable).
-      case "P2003":
-      case "P2025":
-        return INTROUVABLE;
-      case "P2002":
-        break;
-      default:
-        throw e;
-    }
-  }
-  // Unicité : la ligne du compte vient d'être créée, ou ce client Stripe est
-  // déjà à un autre compte.
-  const creee = await db.abonnement.findUnique({ where: { compteId }, select: { stripeCustomerId: true } });
-  if (!creee) return DEJA_LIE;
-  return creee.stripeCustomerId !== customerId ? AUTRE_CLIENT : null;
+async function mettreAJour(tx: Tx, compteId: string, customerId: string, donnees: Donnees) {
+  const { count } = await tx.abonnement.updateMany({
+    where: { compteId, stripeCustomerId: customerId, OR: [{ relueLe: null }, { relueLe: { lt: donnees.relueLe } }] },
+    data: donnees,
+  });
+  return count === 1 ? ECRIT : INCHANGE;
 }
 
-async function mettreAJour(db: Db, compteId: string, customerId: string, donnees: Donnees) {
+function horlogeReelle(): Date {
+  return new Date();
+}
+
+type OptionsSynchro = {
+  maintenant?: () => Date;
+  /**
+   * La file (worker) : la date du premier paiement doit être lue, sinon le
+   * client est retenté plus tard. Depuis un geste de l'utilisateur, elle
+   * viendra à la relecture suivante.
+   */
+  strict?: boolean;
+};
+
+/**
+ * Demande la relecture du client, puis la fait si personne ne la tient
+ * (`en_file` sinon : la relecture en cours, ou la file, la couvrira). La
+ * seule porte des gestes de l'utilisateur et des scripts.
+ */
+export async function synchroniserClientStripe(
+  stripe: Stripe,
+  customerId: string,
+  options: OptionsSynchro = {},
+): Promise<Synchronisation> {
+  await demanderSynchronisation(customerId, (options.maintenant ?? horlogeReelle)());
+  return synchroniserSousBail(stripe, customerId, options);
+}
+
+/** La relecture d'un client déjà demandé, sous son bail. La porte de la file. */
+export async function synchroniserSousBail(
+  stripe: Stripe,
+  customerId: string,
+  options: OptionsSynchro = {},
+): Promise<Synchronisation> {
+  const maintenant = options.maintenant ?? horlogeReelle;
+  const bail = await prendreBail(customerId, maintenant());
+  if (!bail) return EN_FILE;
   try {
-    const { count } = await db.abonnement.updateMany({
-      where: { compteId, stripeCustomerId: customerId, OR: [{ relueLe: null }, { relueLe: { lt: donnees.relueLe } }] },
-      data: donnees,
-    });
-    return count === 1 ? ECRIT : INCHANGE;
+    const issue = await relireEtEcrire(stripe, bail, maintenant(), options.strict === true);
+    // Un compte introuvable a pour cas normal un compte supprimé faute
+    // d'abonnement (ADR-058), dont les événements de résiliation arrivent
+    // après : journal seulement. Les conflits de liaison, eux, se signalent.
+    if (issue.issue === "ignore" && issue.alerte && issue.motif !== INTROUVABLE.motif) {
+      await alerter("client Stripe non enregistré", [`client ${customerId}`, issue.motif]);
+    } else if (issue.issue === "ignore" && issue.alerte) console.error(`stripe : client ${customerId} — ${issue.motif}`);
+    if (issue.issue !== "ignore" && issue.issue !== "en_file" && issue.facturesEnEchecDurable) {
+      await alerterEchecDurable(customerId, "API Stripe : factures illisibles (premier paiement)");
+    }
+    return issue;
   } catch (e) {
-    // L'abonnement relu est déjà sur la ligne d'un autre compte.
-    if (codePrisma(e) === "P2002") return DEJA_LIE;
+    const motif = motifDErreur(e);
+    if (await echouer(bail, maintenant(), motif).catch(() => false)) await alerterEchecDurable(customerId, motif);
     throw e;
   }
 }
 
-export async function synchroniserClientStripe(
-  stripe: Stripe,
-  customerId: string,
-  options: { abonnementLu?: Stripe.Subscription | null; maintenant?: () => Date; depuisWebhook?: boolean } = {},
-): Promise<Synchronisation> {
-  // L'heure de la relecture, prise AVANT les deux lectures, lancées ensemble.
-  const relueLe = options.maintenant?.() ?? new Date();
+async function alerterEchecDurable(customerId: string, motif: string) {
+  await alerter("relecture Stripe en échec durable", [
+    `client ${customerId}`,
+    motif,
+    "La copie de l'abonnement n'est plus relue : vérifier le client dans Stripe, puis renvoyer depuis Stripe un événement de ce client (Dashboard 15 jours, CLI `stripe events resend` 30 jours) : la relecture reprend à sa réception.",
+  ]);
+}
+
+async function relireEtEcrire(stripe: Stripe, bail: Bail, relueLe: Date, strict: boolean): Promise<Synchronisation> {
+  const { customerId } = bail;
+  // L'heure de la relecture est prise AVANT les lectures, lancées ensemble.
   const [client, liste] = await Promise.allSettled([
     stripe.customers.retrieve(customerId, {}, OPTIONS_WEBHOOK),
-    stripe.subscriptions
-      .list({ customer: customerId, status: "all", limit: 100 }, OPTIONS_WEBHOOK)
-      .autoPagingToArray({ limit: 10_000 }),
+    toutLister(stripe.subscriptions.list({ customer: customerId, status: "all", limit: 100 }, OPTIONS_WEBHOOK), 10_000),
   ]);
   if (client.status === "rejected") throw client.reason;
-  // Client supprimé : la liste peut être refusée ; l'abonnement relu depuis
-  // la notification reste la seule trace du compte et de la résiliation.
+  // Client supprimé : la liste peut être refusée ; le dernier abonnement vu à
+  // l'aiguillage, relu par son identifiant, reste la trace du compte et de
+  // la résiliation.
   const supprime = client.value.deleted === true;
-  const abonnements =
-    liste.status === "fulfilled" ? liste.value
-    : supprime ? (options.abonnementLu ? [options.abonnementLu] : [])
-    : null;
-  if (!abonnements) throw (liste as PromiseRejectedResult).reason;
+  let abonnements: Stripe.Subscription[];
+  if (liste.status === "fulfilled") abonnements = liste.value;
+  else if (supprime) {
+    const dernier = bail.abonnementId ? await stripe.subscriptions.retrieve(bail.abonnementId, {}, OPTIONS_WEBHOOK) : null;
+    abonnements = dernier && idStripe(dernier.customer) === customerId ? [dernier] : [];
+  } else throw liste.reason;
 
   const { courant, plusieurs } = abonnementCourant(abonnements);
   const designe = compteDuClientStripe(client.value, courant);
-  if (!designe) return SANS_COMPTE;
+  if (!designe) return terminer(bail, relueLe, SANS_COMPTE);
   // Un client d'avant l'ADR-054 : le compte dont la personne est l'unique
   // propriétaire ; aucun, ou plusieurs, ne se devinent pas.
   const compteId = "compteId" in designe ? designe.compteId : await compteDontEstProprietaire(designe.proprietaire);
-  if (!compteId) return INTROUVABLE;
+  if (!compteId) return terminer(bail, relueLe, "compteId" in designe ? INTROUVABLE : PROPRIETAIRE_AMBIGU);
   if (plusieurs) console.error(`stripe : plusieurs abonnements en cours pour un même client (${customerId})`);
 
   const db = clientDuClientStripe(compteId);
@@ -247,7 +320,19 @@ export async function synchroniserClientStripe(
     where: { compteId },
     select: { stripeCustomerId: true, essaiUtiliseLe: true, debutPayantLe: true, sansAbonnementDepuis: true },
   });
-  if (ligne && ligne.stripeCustomerId !== customerId) return AUTRE_CLIENT;
+  if (ligne && ligne.stripeCustomerId !== customerId) return terminer(bail, relueLe, AUTRE_CLIENT);
+
+  // Le premier paiement confirmé, lu tant que la ligne n'en a pas. En échec :
+  // l'état s'écrit quand même ; depuis la file, le client est retenté plus
+  // tard pour la date.
+  let factures: "lues" | "en_echec" = "lues";
+  const debut =
+    !ligne?.debutPayantLe && !supprime
+      ? await premierPaiement(stripe, customerId).catch(() => {
+          factures = "en_echec";
+          return null;
+        })
+      : null;
 
   const donnees: Donnees = {
     ...colonnesDe(courant),
@@ -255,32 +340,72 @@ export async function synchroniserClientStripe(
     relueLe,
     essaiUtiliseLe: ligne?.essaiUtiliseLe ?? premierEssai(abonnements),
   };
-  let issue: Synchronisation | null = null;
-  if (!ligne) issue = await creerLigne(db, compteId, customerId, donnees);
-  issue ??= await mettreAJour(db, compteId, customerId, donnees);
-  if (issue.issue !== "ignore" && !ligne?.debutPayantLe && !supprime) {
-    await noterPremierPaiement(stripe, db, compteId, customerId, options.depuisWebhook === true);
+  // Dans la transaction, une erreur l'annule entière : la création d'une
+  // ligne que l'essai vient de poser (`essai.ts`, même client) fait relire
+  // la ligne, puis réécrire en mise à jour, une fois.
+  const ecrire = (existe: boolean) =>
+    db.$transaction(async (tx) => {
+      // Le jeton d'abord, ligne verrouillée jusqu'au commit : un bail repris
+      // entre-temps n'écrit rien.
+      if (!(await verrouillerSousBail(tx, bail))) throw new BailPerdu();
+      let issue: { issue: "ecrit" | "inchange"; facturesEnEchecDurable?: true };
+      if (existe) issue = await mettreAJour(tx, compteId, customerId, donnees);
+      else {
+        await tx.abonnement.create({ data: { compteId, stripeCustomerId: customerId, ...donnees } });
+        issue = ECRIT;
+      }
+      if (debut) {
+        // Jamais écrasée : seulement là où la ligne n'en a pas.
+        await tx.abonnement.updateMany({
+          where: { compteId, stripeCustomerId: customerId, debutPayantLe: null },
+          data: { debutPayantLe: debut },
+        });
+      }
+      // Factures illisibles : l'état est écrit, la date du premier paiement
+      // manque. Depuis la file, un échec retenté plus tard ; depuis un geste,
+      // le bail est rendu sans couvrir les demandes — la file fera la
+      // relecture stricte.
+      if (factures === "en_echec") {
+        if (!strict) {
+          await rendreBail(bail, tx);
+          return issue;
+        }
+        const durable = await echouer(bail, relueLe, "API Stripe : factures illisibles (premier paiement)", tx);
+        return durable ? { ...issue, facturesEnEchecDurable: true as const } : issue;
+      }
+      await clore(bail, relueLe, tx);
+      return issue;
+    });
+  try {
+    try {
+      return await ecrire(ligne !== null);
+    } catch (e) {
+      if (ligne || codePrisma(e) !== "P2002") throw e;
+      // Unicité à la création : la ligne du compte existe maintenant, ou ce
+      // client (ou cet abonnement) est déjà à un autre compte.
+      const creee = await db.abonnement.findUnique({ where: { compteId }, select: { stripeCustomerId: true } });
+      if (!creee) return terminer(bail, relueLe, DEJA_LIE);
+      if (creee.stripeCustomerId !== customerId) return terminer(bail, relueLe, AUTRE_CLIENT);
+      return await ecrire(true);
+    }
+  } catch (e) {
+    if (e instanceof BailPerdu) return EN_FILE;
+    // Le compte a disparu (clé étrangère), ou l'abonnement relu est déjà sur
+    // la ligne d'un autre compte (unicité) : la transaction est annulée, le
+    // client clos sans rien écrire.
+    switch (codePrisma(e)) {
+      case "P2003":
+      case "P2025":
+        return terminer(bail, relueLe, INTROUVABLE);
+      case "P2002":
+        return terminer(bail, relueLe, DEJA_LIE);
+      default:
+        throw e;
+    }
   }
-  return issue;
 }
 
-/**
- * Le premier paiement confirmé, écrit à part de l'instantané : seulement là
- * où la ligne n'en a pas (`debutPayantLe: null` dans la clause), donc jamais
- * écrasé ni effacé par une relecture plus tardive, quel que soit l'ordre des
- * notifications. La liste des factures en échec (délai) : l'état est déjà
- * écrit ; depuis le webhook, l'erreur remonte pour que Stripe relance la
- * notification (sinon la date manquerait jusqu'à la facture suivante) ;
- * depuis un geste de l'utilisateur, elle viendra à la notification suivante.
- */
-async function noterPremierPaiement(stripe: Stripe, db: Db, compteId: string, customerId: string, strict: boolean) {
-  const debut = await premierPaiement(stripe, customerId).catch((e: unknown) => {
-    if (strict) throw e;
-    return null;
-  });
-  if (!debut) return;
-  await db.abonnement.updateMany({
-    where: { compteId, stripeCustomerId: customerId, debutPayantLe: null },
-    data: { debutPayantLe: debut },
-  });
+/** Clôt la relecture d'un client sans rien écrire (rien à suivre, ou conflit signalé). */
+async function terminer(bail: Bail, maintenant: Date, issue: Synchronisation): Promise<Synchronisation> {
+  return (await clore(bail, maintenant)) ? issue : EN_FILE;
 }

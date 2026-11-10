@@ -147,9 +147,12 @@ const schema = z
       z.enum(["oui", "non"]).optional(),
     ),
 
-    // Les tâches quotidiennes (`taches/quotidiennes.ts`, `clevercloud/cron.json`) :
-    // le secret que la crontab présente. Absente, la route répond 404.
+    // Les tâches (`taches/quotidiennes.ts`, `clevercloud/cron.json`, chaque
+    // minute) : le secret que la crontab présente. Absente, la route répond 404.
     TACHES_SECRET: z.preprocess(vide, z.string().min(32, "doit faire au moins 32 caractères").optional()),
+    // Les alertes d'exploitation (`lib/alertes.ts`) : échec durable de la
+    // file Stripe, litige, remboursement. Absente, elles ne vont qu'au journal.
+    ALERTES_EMAIL: z.preprocess(vide, z.string().email("doit être une adresse e-mail").optional()),
   });
 
 /**

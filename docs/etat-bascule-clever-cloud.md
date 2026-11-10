@@ -227,7 +227,10 @@ sont pas ouverts) — **la liste de lancement, dans l'ordre :
   `/api/taches/quotidiennes` avec ce secret : rappel de la veille de la fin
   de l'essai. Sans lui, elle s'arrête en le disant dans les journaux, et la
   route répond 404. Le rappel des 7 jours est un réglage du tableau de bord
-  Stripe (notes du chantier, § 13).
+  Stripe (notes du chantier, § 13). [2026-11-10 : la crontab appelle désormais
+  `/api/taches/chaque-minute` **chaque minute** (`clevercloud/taches.sh`) :
+  la file Stripe, puis les tâches du jour dès 9 h, une fois par jour civil
+  (`TacheQuotidienne`). Poser aussi `ALERTES_EMAIL` (ADR-053 § 5, amendé).]
 - **Accès au tableau de bord Stripe** (2026-11-09) : il fait partie du
   périmètre de confiance — on y change le compte Rojer d'un client
   (`metadata.compteId`), on y offre une formule, on y rembourse. Double
