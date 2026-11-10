@@ -31,28 +31,37 @@ import { poidsDuDocument, type PoidsPdf } from "./poids";
  * `docs/chantiers-ouverts.md` § 23.
  */
 
+export type SeuilsPdf = { total: number; bloc: number };
+
 /**
- * Les seuils, mesurés sur le banc de charge en XS (1 cœur, 1 Go ; session
+ * Les seuils, PAR TYPE de document : chaque document pèse ses lignes à sa
+ * façon (`poids.ts`), un seuil ne se transpose pas de l'un à l'autre.
+ *
+ * REGISTRE — mesuré sur le banc de charge en XS (1 cœur, 1 Go ; session
  * `rojer-outils-cb`, registre après le lot pdf-a1, 2026-11-10) : 2 274
  * rapports passent (672 Mo), 3 080 tuent le processus deux fois sur deux.
- * Le total est la MOITIÉ du dernier qui passe — une ligne réelle pèse plus
- * qu'une ligne du banc.
+ * Le total est la MOITIÉ du dernier qui passe. ⚠ Le banc compte des
+ * rapports, le garde-fou des lignes (rapports, points, fiches, attentes) : le
+ * même dossier pèse plus ici, et un registre plus petit que ceux qui passent
+ * peut être refusé. À recaler sur le champ `total` de la ligne `export_pdf`
+ * des dossiers du banc (`docs/chantiers-ouverts.md` § 23). Le bloc reste à
+ * 400 : le corps des fiches reprend les équipements (environ 300 lignes pour
+ * les 100 de la cible).
  *
- * ⚠ Le banc compte des rapports, le garde-fou des lignes (rapports, points,
- * fiches, attentes) : le même dossier pèse plus ici. À recaler sur la ligne
- * `export_pdf` des dossiers du banc (champ `total`) au prochain passage.
- *
- * Le bloc reste à 400 : le corps des fiches du registre, d'un seul tenant,
- * reprend les équipements (environ 300 lignes pour les 100 de la cible).
+ * AUTRES DOCUMENTS — NON MESURÉS. Le dossier de conformité a passé le banc à
+ * dix ans d'historique (2,6 s au plus) ; le DUERP, le plan d'actions et les
+ * points à corriger n'y ont jamais été menés. Leur seuil n'est qu'une borne
+ * d'absurdité, large exprès : leur appliquer celui du registre refusait un
+ * DUERP de cent risques, document dû et versionné (revue du 2026-11-10).
  */
-export const SEUILS_PDF = {
-  /** Lignes de tout le document (mémoire). */
-  total: 1_200,
-  /** Lignes de la plus grosse `<Page>` (temps). */
-  bloc: 400,
-} as const;
-
-export type SeuilsPdf = { total: number; bloc: number };
+const NON_MESURE: SeuilsPdf = { total: 5_000, bloc: 2_000 };
+export const SEUILS_PDF: Record<TypeDocument, SeuilsPdf> = {
+  registre: { total: 1_200, bloc: 400 },
+  "dossier-conformite": NON_MESURE,
+  "plan-actions": NON_MESURE,
+  "points-a-corriger": NON_MESURE,
+  duerp: NON_MESURE,
+};
 
 /** Le document dépasse un seuil : il n'est pas mis en page. */
 export class PdfTropVolumineux extends Error {
@@ -96,7 +105,7 @@ export type OptionsRendu = {
  * `rendrePdf` l'appelle aussi : le ZIP n'a pas d'autre porte.
  */
 export function controlerPoids(demande: DemandePdf, options: OptionsRendu = {}): PoidsPdf {
-  const seuils = options.seuils ?? SEUILS_PDF;
+  const seuils = seuilsDe(demande, options);
   const journaliser = journal(demande, options, performance.now());
   let poids: PoidsPdf;
   try {
@@ -117,7 +126,18 @@ export async function rendrePdf(
   demande: DemandePdf,
   options: OptionsRendu = {},
 ): Promise<Buffer> {
-  const poids = controlerPoids(demande, options);
+  return mettreEnPage(demande, controlerPoids(demande, options), options);
+}
+
+/**
+ * La mise en page d'une demande DÉJÀ pesée et admise par `controlerPoids` —
+ * pour la route, qui pèse avant la file d'export et ne pèse pas deux fois.
+ */
+export async function mettreEnPage(
+  demande: DemandePdf,
+  poids: PoidsPdf,
+  options: OptionsRendu = {},
+): Promise<Buffer> {
   const journaliser = journal(demande, options, performance.now());
   try {
     const pdf = await renderToBuffer(elementDuDocument(demande));
@@ -129,9 +149,17 @@ export async function rendrePdf(
   }
 }
 
-/** La ligne `export_pdf` d'une demande, écrite à son issue. */
+function seuilsDe(demande: DemandePdf, options: OptionsRendu): SeuilsPdf {
+  return options.seuils ?? SEUILS_PDF[demande.type];
+}
+
+/**
+ * La ligne `export_pdf` d'une demande, écrite à son issue. `dureeMs` mesure
+ * l'étape qui a tranché : la mise en page pour « ok » et pour un échec de
+ * rendu, la pesée pour un refus et pour une pesée en échec.
+ */
 function journal(demande: DemandePdf, options: OptionsRendu, debut: number) {
-  const seuils = options.seuils ?? SEUILS_PDF;
+  const seuils = seuilsDe(demande, options);
   return (issue: IssueExportPdf, poids: PoidsPdf | null) =>
     ecrire({
       document: demande.type,

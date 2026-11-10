@@ -11,7 +11,7 @@ vi.mock("@react-pdf/renderer", async (importOriginal) => ({
   renderToBuffer: h.rendu,
 }));
 
-const { rendrePdf, PdfTropVolumineux, raisonEchecRendu } = await import("./rendre");
+const { rendrePdf, controlerPoids, SEUILS_PDF, PdfTropVolumineux, raisonEchecRendu } = await import("./rendre");
 
 /** Un plan d'actions de `k` lignes : le plus simple des documents à peser. */
 const plan = (k: number) =>
@@ -96,6 +96,21 @@ describe("rendrePdf — garde-fou", () => {
     await expect(rendrePdf(malforme, { seuils })).rejects.toThrow();
     expect(h.rendu).not.toHaveBeenCalled();
     expect(ligneEcrite()).toMatchObject({ issue: "echec", total: null, niveau: "error" });
+  });
+
+  it("seuils par type : un DUERP de cent dix risques n'est pas jugé au seuil du registre", async () => {
+    const risque = () => ({ mesures: [{ statut: "prevue" }, { statut: "existante" }, { statut: "existante" }] });
+    const duerp = {
+      type: "duerp",
+      props: {
+        snapshot: { unites: Array.from({ length: 5 }, () => ({ risques: Array.from({ length: 22 }, risque) })) },
+        historique: [],
+      },
+    } as unknown as DemandePdf;
+    // Admis à son propre seuil…
+    expect(controlerPoids(duerp).plusGrosBloc).toBeGreaterThan(SEUILS_PDF.registre.bloc);
+    // … quand le seuil du registre l'aurait refusé.
+    expect(() => controlerPoids(duerp, { seuils: SEUILS_PDF.registre })).toThrow(PdfTropVolumineux);
   });
 
   it("l'origine du ZIP se lit dans le journal", async () => {

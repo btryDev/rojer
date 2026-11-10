@@ -1,7 +1,8 @@
 import "server-only";
 import { reserverPlaceExport } from "@/lib/exports/limite";
 import type { DemandePdf } from "./documents";
-import { controlerPoids, messageTropVolumineux, PdfTropVolumineux, rendrePdf } from "./rendre";
+import { controlerPoids, mettreEnPage, messageTropVolumineux, PdfTropVolumineux } from "./rendre";
+import type { PoidsPdf } from "./poids";
 
 /** Un document personnel ne se garde jamais en cache, PDF comme refus. */
 const SANS_CACHE = { "Cache-Control": "no-store" } as const;
@@ -22,7 +23,7 @@ const SANS_CACHE = { "Cache-Control": "no-store" } as const;
  *
  * La route passe une DEMANDE (`{ type, props }`), plus un élément React (lot
  * pdf-b0, 2026-11-10) : elle est pesée AVANT la file d'export (un refus ne
- * fait pas attendre), puis `rendrePdf` la met en page et la journalise. Un
+ * fait pas attendre), puis `mettreEnPage` la met en page et la journalise. Un
  * refus répond 503 SANS `Retry-After` : réessayer ne changerait rien, et le
  * document reste à l'écran.
  */
@@ -32,8 +33,9 @@ export async function reponsePdf(
   /** L'utilisateur connecté (`user.id`) : sa part de la file (`exports/limite.ts`). */
   demandeur: string,
 ): Promise<Response> {
+  let poids: PoidsPdf;
   try {
-    controlerPoids(demande);
+    poids = controlerPoids(demande);
   } catch (e) {
     if (e instanceof PdfTropVolumineux) return reponseTropVolumineux(e);
     throw e;
@@ -42,10 +44,7 @@ export async function reponsePdf(
   if (liberer instanceof Response) return liberer;
   let pdf: Buffer;
   try {
-    pdf = await rendrePdf(demande);
-  } catch (e) {
-    if (e instanceof PdfTropVolumineux) return reponseTropVolumineux(e);
-    throw e;
+    pdf = await mettreEnPage(demande, poids);
   } finally {
     liberer();
   }

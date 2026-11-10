@@ -6,12 +6,14 @@
 import { describe, expect, it, vi } from "vitest";
 import type { DemandePdf } from "./documents";
 
-const h = vi.hoisted(() => ({ rendu: vi.fn<(demande: unknown) => Promise<Buffer>>() }));
-// Le refus est simulé AU RENDU, donc après la prise de place : c'est là
-// qu'une place pourrait se perdre. La pesée d'avant la file passe.
+const h = vi.hoisted(() => ({
+  controle: vi.fn<(demande: unknown) => unknown>(),
+  rendu: vi.fn<(demande: unknown, poids: unknown) => Promise<Buffer>>(async () => Buffer.from("%PDF")),
+}));
+// La pesée et la mise en page sont simulées ; la file d'export est la vraie.
 vi.mock("./rendre", async (importOriginal) => {
   const vrai = await importOriginal<typeof import("./rendre")>();
-  return { ...vrai, rendrePdf: h.rendu, controlerPoids: () => ({ total: 1, plusGrosBloc: 1 }) };
+  return { ...vrai, controlerPoids: h.controle, mettreEnPage: h.rendu };
 });
 
 const { reponsePdf } = await import("./reponse");
@@ -19,24 +21,30 @@ const { PdfTropVolumineux } = await import("./rendre");
 const demande = { type: "registre", props: { data: {} } } as unknown as DemandePdf;
 
 describe("reponsePdf avec la vraie file d'export", () => {
-  it("trois refus de suite, puis un export qui passe : aucune place n'est perdue", async () => {
+  it("des refus puis des exports, en alternance : la file sert toujours", async () => {
     const refus = new PdfTropVolumineux("registre", { total: 9_999, plusGrosBloc: 1 });
+    const admis = { total: 1, plusGrosBloc: 1 };
+    // Refus, admis, refus, admis, échec de rendu, admis : six demandes d'un
+    // même utilisateur, une place, deux par demandeur.
+    for (const issue of [refus, admis, refus, admis, admis, admis]) {
+      if (issue instanceof Error) h.controle.mockImplementationOnce(() => { throw issue; });
+      else h.controle.mockReturnValueOnce(issue);
+    }
     h.rendu
-      .mockRejectedValueOnce(refus)
-      .mockRejectedValueOnce(refus)
-      .mockRejectedValueOnce(refus)
+      .mockResolvedValueOnce(Buffer.from("%PDF"))
+      .mockResolvedValueOnce(Buffer.from("%PDF"))
+      .mockRejectedValueOnce(new Error("mise en page"))
       .mockResolvedValueOnce(Buffer.from("%PDF"));
 
-    const statuts: number[] = [];
-    const textes: string[] = [];
-    for (let i = 0; i < 4; i++) {
-      const r = await reponsePdf(demande, "a.pdf", "u-1");
-      statuts.push(r.status);
-      textes.push(await r.text());
+    const statuts: (number | string)[] = [];
+    for (let i = 0; i < 6; i++) {
+      try {
+        statuts.push((await reponsePdf(demande, "a.pdf", "u-1")).status);
+      } catch {
+        statuts.push("échec");
+      }
     }
-    expect(statuts).toEqual([503, 503, 503, 200]);
-    // Les trois 503 sont ceux du garde-fou, pas ceux de la file pleine.
-    for (const t of textes.slice(0, 3)) expect(t).toMatch(/trop volumineux/);
-    expect(textes[3]).toBe("%PDF");
+    // Une place perdue rendrait 429 ou 503 « Trop d'exports » après 20 s.
+    expect(statuts).toEqual([503, 200, 503, 200, "échec", 200]);
   });
 });

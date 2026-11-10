@@ -9,11 +9,11 @@ const h = vi.hoisted(() => ({
   place: undefined as undefined | (() => Promise<unknown>),
 }));
 
-// `controlerPoids` et `rendrePdf` sont simulés ; la classe d'erreur et le
+// `controlerPoids` et `mettreEnPage` sont simulés ; la classe d'erreur et le
 // message restent les vrais.
 vi.mock("./rendre", async (importOriginal) => {
   const vrai = await importOriginal<typeof import("./rendre")>();
-  return { ...vrai, rendrePdf: h.rendu, controlerPoids: h.controle };
+  return { ...vrai, mettreEnPage: h.rendu, controlerPoids: h.controle };
 });
 vi.mock("@/lib/exports/limite", () => ({
   reserverPlaceExport: () => {
@@ -44,7 +44,7 @@ describe("reponsePdf", () => {
       "content-type": "application/pdf",
     });
     expect(await r.text()).toBe("%PDF-1.7 test");
-    expect(h.rendu).toHaveBeenCalledWith(demande);
+    expect(h.rendu).toHaveBeenCalledWith(demande, { total: 1, plusGrosBloc: 1 });
   });
 
   it("libère sa place après le rendu, y compris quand le rendu échoue", async () => {
@@ -73,20 +73,5 @@ describe("reponsePdf", () => {
     expect(await r.text()).toMatch(/^Le dossier de conformité est trop volumineux/);
     expect(h.reserve).not.toHaveBeenCalled();
     expect(h.rendu).not.toHaveBeenCalled();
-  });
-
-  it("trop volumineux au rendu : 503 sans Retry-After, le document reste à l'écran, la place est rendue", async () => {
-    h.rendu.mockRejectedValueOnce(
-      new PdfTropVolumineux("registre", { total: 9_999, plusGrosBloc: 10 }),
-    );
-    const r = await reponsePdf(demande, "a.pdf", "u-1");
-    expect(r.status).toBe(503);
-    expect(r.headers.get("Retry-After")).toBeNull();
-    expect(r.headers.get("Cache-Control")).toBe("no-store");
-    expect(await r.text()).toBe(
-      "Le registre de sécurité est trop volumineux pour être exporté en un seul PDF. " +
-        "Il reste consultable à l'écran, avec tout son contenu.",
-    );
-    expect(h.liberer).toHaveBeenCalledTimes(1);
   });
 });

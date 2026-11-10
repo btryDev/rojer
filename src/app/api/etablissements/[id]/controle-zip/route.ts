@@ -254,17 +254,21 @@ async function construireArchive(
   try {
     const data = await construireDossierConformiteData(db, id);
     if (data) {
+      // LES FAITS DU DOSSIER AVANT LE RENDU, comme pour le DUERP : le nombre
+      // de retards et l'inventaire disent l'état de l'établissement, pas le
+      // contenu du ZIP — un dossier refusé parce qu'il porte beaucoup de
+      // retards doit encore les annoncer (revue du 2026-11-10).
+      nbVerifsEnRetard = data.verifsEnRetard.length;
+      inventaire = data.couverture ? faitInventaire(data.couverture) : null;
       const buf = await rendrePdf({ type: "dossier-conformite", props: { data } }, { origine: "zip" });
       zip.file(PIECES_ZIP.dossier, new Uint8Array(buf));
-      // APRÈS le rendu (lot pdf-b0, 2026-11-10) : collectés avant, ces faits
-      // étaient annoncés par le README pour un PDF refusé par le garde-fou
-      // ou en échec — « imprimées dans ce dossier » quand rien ne l'était.
+      // CE QUI EST IMPRIMÉ APRÈS : collectées avant, les échéances
+      // contractuelles et les rythmes étaient annoncés « imprimés dans ce
+      // dossier » pour un PDF refusé ou en échec (lot pdf-b0, 2026-11-10).
       for (const v of data.verifsEnRetard) {
         if (v.contractuelle) echeancesContractuelles.add(v.id);
         if (v.rythmeRetenu) rythmesRetenus.set(v.id, v.rythmeRetenu);
       }
-      nbVerifsEnRetard = data.verifsEnRetard.length;
-      inventaire = data.couverture ? faitInventaire(data.couverture) : null;
     }
   } catch (e) {
     // On continue même si une brique échoue — et on le dit.
