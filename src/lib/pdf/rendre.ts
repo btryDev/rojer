@@ -32,7 +32,7 @@ import { poidsDuDocument, type PoidsPdf } from "./poids";
  * `docs/chantiers-ouverts.md` § 23.
  */
 
-export type SeuilsPdf = { total: number; bloc: number };
+type SeuilsPdf = { total: number; bloc: number };
 
 /**
  * Les seuils, PAR TYPE de document : chaque document pèse ses lignes à sa
@@ -93,7 +93,8 @@ export function raisonEchecRendu(e: unknown): string | undefined {
     : undefined;
 }
 
-export type OptionsRendu = {
+type OptionsRendu = {
+  /** Réservé aux tests : la production lit toujours `SEUILS_PDF`. */
   seuils?: SeuilsPdf;
   /** D'où vient l'export : une route PDF ou le ZIP de contrôle (journal). */
   origine?: OrigineExportPdf;
@@ -108,7 +109,7 @@ export type OptionsRendu = {
  */
 export function controlerPoids(demande: DemandePdf, options: OptionsRendu = {}): PoidsPdf {
   const seuils = seuilsDe(demande, options);
-  const journaliser = journal(demande, options, performance.now());
+  const journaliser = journal(demande, options.origine, seuils, performance.now());
   let poids: PoidsPdf;
   try {
     poids = poidsDuDocument(demande);
@@ -140,7 +141,7 @@ export async function mettreEnPage(
   poids: PoidsPdf,
   options: OptionsRendu = {},
 ): Promise<Buffer> {
-  const journaliser = journal(demande, options, performance.now());
+  const journaliser = journal(demande, options.origine, seuilsDe(demande, options), performance.now());
   try {
     const pdf = await renderToBuffer(elementDuDocument(demande));
     journaliser("ok", poids);
@@ -160,12 +161,16 @@ function seuilsDe(demande: DemandePdf, options: OptionsRendu): SeuilsPdf {
  * l'étape qui a tranché : la mise en page pour « ok » et pour un échec de
  * rendu, la pesée pour un refus et pour une pesée en échec.
  */
-function journal(demande: DemandePdf, options: OptionsRendu, debut: number) {
-  const seuils = seuilsDe(demande, options);
+function journal(
+  demande: DemandePdf,
+  origine: OrigineExportPdf | undefined,
+  seuils: SeuilsPdf,
+  debut: number,
+) {
   return (issue: IssueExportPdf, poids: PoidsPdf | null) =>
     ecrire({
       document: demande.type,
-      origine: options.origine ?? "route",
+      origine: origine ?? "route",
       total: poids?.total ?? null,
       plusGrosBloc: poids?.plusGrosBloc ?? null,
       seuilTotal: seuils.total,
@@ -176,8 +181,8 @@ function journal(demande: DemandePdf, options: OptionsRendu, debut: number) {
 }
 
 function ecrire(e: ExportPdf) {
-  const ligne = ligneExportPdf(e);
   const niveau = niveauExportPdf(e);
+  const ligne = ligneExportPdf(e, niveau);
   if (niveau === "error") console.error(ligne);
   else if (niveau === "warn") console.warn(ligne);
   else console.info(ligne);

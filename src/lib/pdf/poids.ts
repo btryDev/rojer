@@ -1,6 +1,6 @@
 import type { DemandePdf } from "./documents";
 import type { RegistreData } from "./RegistreDocument";
-import { enPaquets, feuillesParAnnee, lignesDuRapport, LIGNES_PAR_PAQUET } from "./paquets";
+import { decoupageDuRegistre } from "./decoupage-registre";
 
 /**
  * Le poids d'un PDF avant sa mise en page (lot pdf-b0, 2026-11-10).
@@ -27,10 +27,7 @@ import { enPaquets, feuillesParAnnee, lignesDuRapport, LIGNES_PAR_PAQUET } from 
 export type PoidsPdf = { total: number; plusGrosBloc: number };
 
 export function poidsDuDocument(demande: DemandePdf): PoidsPdf {
-  return depuisBlocs(blocsDuDocument(demande));
-}
-
-function depuisBlocs(blocs: number[]): PoidsPdf {
+  const blocs = blocsDuDocument(demande);
   return {
     total: blocs.reduce((a, b) => a + b, 0),
     plusGrosBloc: blocs.reduce((a, b) => Math.max(a, b), 0),
@@ -77,21 +74,9 @@ function blocsDuDocument(demande: DemandePdf): number[] {
 }
 
 function blocsDuRegistre(data: RegistreData): number[] {
-  // Le corps des fiches est une seule `<Page>` (lot pdf-a1 : hors découpage).
-  const fiches = data.parties
-    .flatMap((p) => p.fiches)
-    .reduce(
-      (n, f) => n + (f.champs?.length ?? 0) + (f.lignes?.length ?? 0) + (f.tenues?.length ?? 0),
-      0,
-    );
-  // L'index des rapports, par `<Page>` EXACTEMENT comme le document le
-  // découpe : même fonction, même poids par rapport (`lignesDuRapport`).
-  const rapports = feuillesParAnnee(
-    data.rapports,
-    (r) => r.dateRapport,
-    LIGNES_PAR_PAQUET,
-    lignesDuRapport,
-  ).map((feuille) => feuille.flatMap((s) => s.lignes).reduce((n, r) => n + lignesDuRapport(r), 0));
-  const attente = enPaquets(data.verifsEnAttente).map((p) => p.length);
-  return [fiches, ...rapports, ...attente];
+  // Le découpage même du document (`decoupage-registre.ts`) : le corps des
+  // fiches (une seule `<Page>`), chaque feuille de l'index, chaque paquet en
+  // attente.
+  const d = decoupageDuRegistre(data);
+  return [d.lignesDesFiches, ...d.poidsDesFeuilles, ...d.paquetsAttente.map((p) => p.length)];
 }

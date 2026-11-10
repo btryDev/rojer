@@ -2,6 +2,7 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { DemandePdf } from "./documents";
+import { sansCommentairesNiChaines } from "@/lib/interface/confirmations-natives";
 
 const h = vi.hoisted(() => ({
   rendu: vi.fn<(element: unknown) => Promise<Buffer>>(async () => Buffer.from("%PDF")),
@@ -224,7 +225,13 @@ describe("garde : un seul endroit met un PDF en page", () => {
 
   it("le seul rendu du dépôt est celui de rendre.ts", () => {
     const rendus = fichiers
-      .filter((f) => /\brenderTo(Buffer|Stream|File|String)\s*\(|\bpdf\s*\(/.test(readFileSync(f, "utf8")))
+      // Le code seul, commentaires et chaînes blanchis : un commentaire qui
+      // cite un appel n'est pas un appel (`interface/confirmations-natives.ts`).
+      .filter((f) =>
+        /\brenderTo(Buffer|Stream|File|String)\s*\(|\bpdf\s*\(/.test(
+          sansCommentairesNiChaines(readFileSync(f, "utf8")),
+        ),
+      )
       .map(relatif);
     expect(rendus).toEqual(["src/lib/pdf/rendre.ts"]);
   });

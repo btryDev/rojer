@@ -13,7 +13,10 @@ import { stylesCommuns as s } from "./styles";
  * « unsupported number … clipBorderTop » (issues react-pdf #3416, #3452) : le
  * dossier de conformité d'un établissement chargé tombait en 500 (banc de
  * charge, 2026-11-10). Les quatre PDF qui l'employaient passent ici (lot
- * pdf-a1). Numéroter demandera une autre version de la bibliothèque.
+ * pdf-a1) : dossier de conformité, plan d'actions, points à corriger,
+ * registre. Le DUERP, lui, n'employait pas `render` : ses pieds fixes, à son
+ * propre style, restent les siens. Numéroter demandera une autre version de
+ * la bibliothèque.
  *
  * Mieux vaut un pied qui s'imprime sans numéro qu'un pied qui ne s'imprime
  * pas : devant un contrôleur, savoir de quel établissement il s'agit est ce

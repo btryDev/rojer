@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { enPaquets, feuillesParAnnee, lignesDuRapport } from "./paquets";
+import { lignesDuRapport } from "./decoupage-registre";
+import { enPaquets, feuillesParAnnee } from "./paquets";
 
 describe("enPaquets", () => {
   it("ne perd ni ne réordonne aucune ligne", () => {

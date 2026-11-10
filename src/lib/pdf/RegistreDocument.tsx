@@ -15,7 +15,7 @@ import {
   referencesRegistreTenue,
   type RegimeDuRegistre,
 } from "./mentions-registre";
-import { enPaquets, feuillesParAnnee, lignesDuRapport, LIGNES_PAR_PAQUET } from "./paquets";
+import { decoupageDuRegistre } from "./decoupage-registre";
 import { PiedFixe } from "./PiedFixe";
 import { LABEL_RESULTAT } from "@/lib/rapports/resultats";
 import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
@@ -508,15 +508,28 @@ function FichePdfVue({ fiche }: { fiche: FichePdf }) {
   );
 }
 
+/** Les colonnes de l'index des rapports : une seule source pour l'en-tête et
+ *  les lignes, qui ne peuvent plus se décaler. */
+const COL_RAPPORTS = {
+  date: "14%",
+  obligation: "36%",
+  equipement: "20%",
+  realisePar: "16%",
+  resultat: "14%",
+} as const;
+
+/** Les colonnes des vérifications en attente, même règle. */
+const COL_ATTENTE = { echeance: "14%", obligation: "40%", equipement: "25%", statut: "21%" } as const;
+
 /** L'en-tête de l'index des rapports, répété en tête de chaque feuille. */
 function TeteRapportsPdf() {
   return (
     <View style={s.thead} fixed>
-      <Text style={[s.th, { width: "14%" }]}>Date</Text>
-      <Text style={[s.th, { width: "36%" }]}>Obligation</Text>
-      <Text style={[s.th, { width: "20%" }]}>Équipement</Text>
-      <Text style={[s.th, { width: "16%" }]}>Réalisé par</Text>
-      <Text style={[s.th, { width: "14%" }]}>Résultat</Text>
+      <Text style={[s.th, { width: COL_RAPPORTS.date }]}>Date</Text>
+      <Text style={[s.th, { width: COL_RAPPORTS.obligation }]}>Obligation</Text>
+      <Text style={[s.th, { width: COL_RAPPORTS.equipement }]}>Équipement</Text>
+      <Text style={[s.th, { width: COL_RAPPORTS.realisePar }]}>Réalisé par</Text>
+      <Text style={[s.th, { width: COL_RAPPORTS.resultat }]}>Résultat</Text>
     </View>
   );
 }
@@ -525,10 +538,10 @@ function TeteRapportsPdf() {
 function TeteAttentePdf() {
   return (
     <View style={s.thead} fixed>
-      <Text style={[s.th, { width: "14%" }]}>Échéance</Text>
-      <Text style={[s.th, { width: "40%" }]}>Obligation</Text>
-      <Text style={[s.th, { width: "25%" }]}>Équipement</Text>
-      <Text style={[s.th, { width: "21%" }]}>Statut</Text>
+      <Text style={[s.th, { width: COL_ATTENTE.echeance }]}>Échéance</Text>
+      <Text style={[s.th, { width: COL_ATTENTE.obligation }]}>Obligation</Text>
+      <Text style={[s.th, { width: COL_ATTENTE.equipement }]}>Équipement</Text>
+      <Text style={[s.th, { width: COL_ATTENTE.statut }]}>Statut</Text>
     </View>
   );
 }
@@ -541,10 +554,10 @@ function LigneRapportPdf({ r }: { r: LigneRapport }) {
     // passer la page — un rapport à trente corrections ne tiendrait
     // pas sur une seule (revue du 2026-10-24).
     <View style={[s.row, { flexWrap: "wrap" }]} wrap={r.points.length > 0}>
-      <Text style={[s.td, { width: "14%" }]}>
+      <Text style={[s.td, { width: COL_RAPPORTS.date }]}>
         {formatDateCourte(r.dateRapport)}
       </Text>
-      <View style={{ width: "36%", paddingRight: 4 }}>
+      <View style={{ width: COL_RAPPORTS.obligation, paddingRight: 4 }}>
         <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 9.5 }}>
           {r.libelleObligation}
         </Text>
@@ -552,16 +565,16 @@ function LigneRapportPdf({ r }: { r: LigneRapport }) {
           {r.domaine ? LABEL_DOMAINE[r.domaine] : ""}
         </Text>
       </View>
-      <Text style={[s.td, { width: "20%" }]}>
+      <Text style={[s.td, { width: COL_RAPPORTS.equipement }]}>
         {r.equipementLibelle}
       </Text>
-      <View style={{ width: "16%", paddingRight: 4 }}>
+      <View style={{ width: COL_RAPPORTS.realisePar, paddingRight: 4 }}>
         <Text style={s.td}>{r.realisePar ?? "—"}</Text>
         {r.fichierNomOriginal === null ? (
           <Text style={[s.small, { marginTop: 2 }]}>Sans pièce jointe</Text>
         ) : null}
       </View>
-      <Text style={[s.td, { width: "14%" }]}>
+      <Text style={[s.td, { width: COL_RAPPORTS.resultat }]}>
         {LABEL_RESULTAT[r.resultat]}
       </Text>
       {/* Sous le rapport, ses points et leur correction (ADR-048) :
@@ -570,7 +583,7 @@ function LigneRapportPdf({ r }: { r: LigneRapport }) {
           effectués pour porter remède aux défectuosités
           constatées ». */}
       {r.points.length > 0 && (
-        <View style={{ width: "100%", paddingLeft: "14%", marginTop: 3 }}>
+        <View style={{ width: "100%", paddingLeft: COL_RAPPORTS.date, marginTop: 3 }}>
           {r.points.map((p) => (
             <Text key={p.id} style={[s.small, { marginTop: 1 }]}>
               {`${LIBELLE_POINT} : ${p.libelle} — ${texteDuPoint(p, formatDateCourte)}`}
@@ -589,12 +602,12 @@ function LigneRapportPdf({ r }: { r: LigneRapport }) {
 function LigneAttentePdf({ v }: { v: LigneVerif }) {
   return (
     <View style={s.row} wrap={false}>
-      <Text style={[s.td, { width: "14%" }]}>
+      <Text style={[s.td, { width: COL_ATTENTE.echeance }]}>
         {/* Une date de génération n'est pas une échéance : on ne
             l'imprime pas dans cette colonne (`echeanceConnue`). */}
         {v.echeanceConnue ? formatDateCourte(v.datePrevue) : LIBELLE_SANS_ECHEANCE}
       </Text>
-      <View style={{ width: "40%", paddingRight: 4 }}>
+      <View style={{ width: COL_ATTENTE.obligation, paddingRight: 4 }}>
         <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 9.5 }}>
           {v.libelleObligation}
         </Text>
@@ -628,10 +641,10 @@ function LigneAttentePdf({ v }: { v: LigneVerif }) {
           </Text>
         )}
       </View>
-      <Text style={[s.td, { width: "25%" }]}>
+      <Text style={[s.td, { width: COL_ATTENTE.equipement }]}>
         {v.equipementLibelle}
       </Text>
-      <Text style={[s.td, { width: "21%" }]}>
+      <Text style={[s.td, { width: COL_ATTENTE.statut }]}>
         {LIBELLE_STATUT_VERIF[v.statut]}
       </Text>
     </View>
@@ -730,18 +743,11 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
   // `null` à jour, et quand l'état n'a pas pu être lu (`faitAttenteVide` dit
   // alors « non déterminé ») : le document n'affirme pas un âge qu'il ignore.
   const avertissementCalendrier = data.calendrier ? phraseFraicheur(data.calendrier) : null;
-  // Le découpage des deux longs tableaux (`paquets.ts`).
-  // Découpées au poids des lignes, le même que celui du garde-fou (`poids.ts`).
-  const feuillesRapports = feuillesParAnnee(
-    data.rapports,
-    (r) => r.dateRapport,
-    LIGNES_PAR_PAQUET,
-    lignesDuRapport,
-  );
-  // Au moins un paquet, vide s'il n'y a rien en attente : la feuille porte
-  // alors le fait de l'attente vide, puis la tenue du registre.
-  const paquetsAttente: LigneVerif[][] =
-    data.verifsEnAttente.length === 0 ? [[]] : enPaquets(data.verifsEnAttente);
+  // Le découpage des deux longs tableaux, le même que pèse le garde-fou
+  // (`decoupage-registre.ts`). Sans rapport, une feuille vide porte le titre
+  // et le fait « aucun rapport archivé ».
+  const { feuillesRapports, paquetsAttente } = decoupageDuRegistre(data);
+  const feuillesIndex = feuillesRapports.length === 0 ? [[]] : feuillesRapports;
 
   return (
     <Document>
@@ -888,23 +894,17 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
           lecture (du plus récent au plus ancien). Les années courtes
           partagent une feuille ; chaque année a son titre et son en-tête de
           tableau, répété en tête de chaque feuille. */}
-      {feuillesRapports.length === 0 ? (
-        <Page size="A4" style={s.page}>
-          <Text style={[s.h1, { color: BOARD.encre }]}>
-            Rapports de vérification archivés
-          </Text>
-          <Text style={s.small}>
-            Aucun rapport archivé à ce jour. Le registre reste tenu à
-            disposition de l&apos;inspection.
-          </Text>
-          <PiedDePage etablissement={data.etablissement} />
-        </Page>
-      ) : (
-        feuillesRapports.map((feuille, f) => (
+      {feuillesIndex.map((feuille, f) => (
           <Page key={`rapports-${f}`} size="A4" style={s.page}>
             {f === 0 && (
               <Text style={[s.h1, { color: BOARD.encre }]}>
                 Rapports de vérification archivés
+              </Text>
+            )}
+            {feuille.length === 0 && (
+              <Text style={s.small}>
+                Aucun rapport archivé à ce jour. Le registre reste tenu à
+                disposition de l&apos;inspection.
               </Text>
             )}
             {/* Le titre d'année reste au niveau de la `<Page>` : react-pdf
@@ -934,8 +934,7 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
             })}
             <PiedDePage etablissement={data.etablissement} />
           </Page>
-        ))
-      )}
+        ))}
 
       {/* Les vérifications en attente, par paquets elles aussi, puis la
           tenue du registre sur la dernière feuille. */}

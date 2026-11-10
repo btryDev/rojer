@@ -47,18 +47,6 @@ export type SegmentAnnuel<T> = {
 };
 
 /**
- * Les lignes qu'un rapport imprime dans l'index du registre : la sienne, une
- * par point à corriger, et la mention de R. 4226-19 sous un rapport
- * d'électricité à points. LA MÊME mesure découpe les `<Page>` (ici) et pèse le
- * document (`poids.ts`) — mesurés différemment, une `<Page>` de cent rapports
- * à quatre points pesait 500 lignes et faisait refuser le registre entier
- * (revue finale de la PR #286, 2026-11-10).
- */
-export function lignesDuRapport(r: { points: readonly unknown[]; domaine: string | null }): number {
-  return 1 + r.points.length + (r.points.length > 0 && r.domaine === "electricite" ? 1 : 0);
-}
-
-/**
  * Range les éléments en `<Page>` de `taille` lignes PESÉES au plus (`poidsDe`,
  * une par défaut), chacune faite de segments annuels : une année courte
  * partage sa `<Page>` avec la suivante, une année longue s'étend sur

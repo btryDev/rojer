@@ -23,7 +23,7 @@ export type ExportPdf = {
   issue: IssueExportPdf;
 };
 
-export type NiveauJournal = "info" | "warn" | "error";
+type NiveauJournal = "info" | "warn" | "error";
 
 /**
  * Le niveau d'un export : `warn` quand un seuil approche, pour que la
@@ -39,8 +39,8 @@ export type NiveauJournal = "info" | "warn" | "error";
  *     avertirait toujours, et le signal ne dirait plus rien. Il avertit à
  *     90 % de son seuil.
  */
-export const PART_AVERTISSEMENT_TOTAL = 0.5;
-export const PART_AVERTISSEMENT_BLOC = 0.9;
+const PART_AVERTISSEMENT_TOTAL = 0.5;
+const PART_AVERTISSEMENT_BLOC = 0.9;
 
 export function niveauExportPdf(e: ExportPdf): NiveauJournal {
   if (e.issue === "echec") return "error";
@@ -51,9 +51,10 @@ export function niveauExportPdf(e: ExportPdf): NiveauJournal {
   return approche ? "warn" : "info";
 }
 
-export function ligneExportPdf(e: ExportPdf): string {
+/** La ligne JSON ; le niveau se passe quand l'appelant l'a déjà calculé. */
+export function ligneExportPdf(e: ExportPdf, niveau = niveauExportPdf(e)): string {
   return JSON.stringify({
-    niveau: niveauExportPdf(e),
+    niveau,
     evenement: "export_pdf",
     document: e.document,
     origine: e.origine,

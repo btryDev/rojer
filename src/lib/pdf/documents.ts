@@ -16,7 +16,7 @@ import { RegistreDocument } from "./RegistreDocument";
  * (`rendre.ts`), et, plus tard, de l'envoyer à un fil d'exécution séparé — un
  * élément React ne se transmet pas, des données si.
  */
-export const DOCUMENTS = {
+const DOCUMENTS = {
   registre: RegistreDocument,
   "dossier-conformite": DossierConformiteDocument,
   "plan-actions": PlanActionsDocument,
@@ -27,7 +27,7 @@ export const DOCUMENTS = {
 export type TypeDocument = keyof typeof DOCUMENTS;
 
 /** Les props du composant d'un type. */
-export type PropsDe<T extends TypeDocument> = Parameters<(typeof DOCUMENTS)[T]>[0];
+type PropsDe<T extends TypeDocument> = Parameters<(typeof DOCUMENTS)[T]>[0];
 
 /** Une demande de PDF : son type et ses données, rien d'autre. */
 export type DemandePdf = { [T in TypeDocument]: { type: T; props: PropsDe<T> } }[TypeDocument];
