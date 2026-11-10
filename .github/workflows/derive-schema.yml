@@ -38,7 +38,7 @@ jobs:
         # (docker-compose). Elle était en 16 — un écart de version majeure
         # entre ce que la CI valide et ce qui tourne (audit de la base du
         # 2026-10-28).
-        image: postgres:17
+        image: postgres:18
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
