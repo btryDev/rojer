@@ -26,7 +26,7 @@ import { rendrePlanningEchu } from "./parcours";
 import { finaliserCarte } from "@/lib/abonnements/souscription";
 import { alerter } from "@/lib/alertes";
 import { EVENEMENTS_ECOUTES } from "./webhook";
-import { aiguillageDe, aiguiller, traiterLaFile } from "./traitement";
+import { aiguillageDe, aiguiller, traiterLaFile, traiterLaFileIci } from "./traitement";
 
 const api = {
   subscriptions: { retrieve: vi.fn() },
@@ -94,6 +94,11 @@ describe("aiguiller : prise, lecture, issue", () => {
     expect(api.invoices.retrieve).not.toHaveBeenCalled();
   });
 
+  it("prise reprise pendant la lecture : l'autre worker conclut", async () => {
+    vi.mocked(evenements.marquerAiguille).mockResolvedValue(false);
+    expect(await aiguiller(faux, evt, maintenant)).toBe("pris");
+  });
+
   it("aiguillé sous sa prise : le client demandé et l'événement marqué, ensemble", async () => {
     expect(await aiguiller(faux, evt, maintenant)).toBe("aiguille");
     expect(evenements.marquerAiguille).toHaveBeenCalledWith("evt_1", PRISE, { clientStripe: "cus_1" }, expect.any(Number), PRISE);
@@ -132,6 +137,17 @@ describe("traiterLaFile", () => {
     vi.mocked(file.clientsDus).mockResolvedValueOnce(["cus_1", "cus_2"]).mockResolvedValue([]);
     vi.mocked(synchroniserSousBail).mockRejectedValueOnce(new Error("panne")).mockResolvedValue({ issue: "ecrit" });
     expect(await traiterLaFile(faux, { maintenant })).toMatchObject({ relus: 1, relecturesEnEchec: 1 });
+  });
+
+  it("traiterLaFileIci ne lève jamais, pas même pour un appel qui arrive pendant un traitement", async () => {
+    let lacher!: (e: Error) => void;
+    vi.mocked(evenements.evenementsAAiguiller).mockReturnValueOnce(new Promise((_, r) => (lacher = r)));
+    const premier = traiterLaFileIci(faux);
+    const second = traiterLaFileIci(faux);
+    lacher(new Error("base injoignable"));
+    vi.mocked(evenements.evenementsAAiguiller).mockRejectedValue(new Error("base injoignable"));
+    expect(await premier).toBeNull();
+    expect(await second).toBeNull();
   });
 
   it("rend la main au bout du budget", async () => {

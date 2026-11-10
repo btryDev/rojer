@@ -28,7 +28,7 @@ import "server-only";
 import Stripe from "stripe";
 import type { Prisma } from "@prisma/client";
 import { alerter } from "@/lib/alertes";
-import { type Bail, clore, demanderSynchronisation, echouer, prendreBail, verrouillerSousBail } from "./file";
+import { type Bail, clore, demanderSynchronisation, echouer, prendreBail, rendreBail, verrouillerSousBail } from "./file";
 import { clientDuClientStripe } from "@/lib/auth/compte-hors-session";
 import { compteDontEstProprietaire } from "@/lib/auth/membres";
 import { OPTIONS_WEBHOOK } from "./client";
@@ -179,7 +179,7 @@ export const codePrisma = (e: unknown) => {
 };
 
 export type Synchronisation =
-  | { issue: "ecrit" | "inchange" }
+  | { issue: "ecrit" | "inchange"; facturesEnEchecDurable?: true }
   | { issue: "ignore"; motif: string; alerte?: true }
   /** Une autre relecture tient le client : la demande est notée, elle la couvrira ou la suivra. */
   | { issue: "en_file" };
@@ -256,22 +256,29 @@ export async function synchroniserSousBail(
   if (!bail) return EN_FILE;
   try {
     const issue = await relireEtEcrire(stripe, bail, maintenant(), options.strict === true);
-    if (issue.issue === "ignore" && issue.alerte) {
+    // Un compte introuvable a pour cas normal un compte supprimé faute
+    // d'abonnement (ADR-058), dont les événements de résiliation arrivent
+    // après : journal seulement. Les conflits de liaison, eux, se signalent.
+    if (issue.issue === "ignore" && issue.alerte && issue.motif !== INTROUVABLE.motif) {
       await alerter("client Stripe non enregistré", [`client ${customerId}`, issue.motif]);
+    } else if (issue.issue === "ignore" && issue.alerte) console.error(`stripe : client ${customerId} — ${issue.motif}`);
+    if (issue.issue !== "ignore" && issue.issue !== "en_file" && issue.facturesEnEchecDurable) {
+      await alerterEchecDurable(customerId, "API Stripe : factures illisibles (premier paiement)");
     }
     return issue;
   } catch (e) {
     const motif = motifDErreur(e);
-    const durable = await echouer(bail, maintenant(), motif).catch(() => false);
-    if (durable) {
-      await alerter("relecture Stripe en échec durable", [
-        `client ${customerId}`,
-        motif,
-        "La copie de l'abonnement n'est plus relue : vérifier le client dans Stripe, puis renvoyer un événement.",
-      ]);
-    }
+    if (await echouer(bail, maintenant(), motif).catch(() => false)) await alerterEchecDurable(customerId, motif);
     throw e;
   }
+}
+
+async function alerterEchecDurable(customerId: string, motif: string) {
+  await alerter("relecture Stripe en échec durable", [
+    `client ${customerId}`,
+    motif,
+    "La copie de l'abonnement n'est plus relue : vérifier le client dans Stripe, puis renvoyer depuis Stripe un événement de ce client (Dashboard 15 jours, CLI `stripe events resend` 30 jours) — il relance la relecture.",
+  ]);
 }
 
 async function relireEtEcrire(stripe: Stripe, bail: Bail, relueLe: Date, strict: boolean): Promise<Synchronisation> {
@@ -335,7 +342,7 @@ async function relireEtEcrire(stripe: Stripe, bail: Bail, relueLe: Date, strict:
       // Le jeton d'abord, ligne verrouillée jusqu'au commit : un bail repris
       // entre-temps n'écrit rien.
       if (!(await verrouillerSousBail(tx, bail))) throw new BailPerdu();
-      let issue: { issue: "ecrit" | "inchange" };
+      let issue: { issue: "ecrit" | "inchange"; facturesEnEchecDurable?: true };
       if (existe) issue = await mettreAJour(tx, compteId, customerId, donnees);
       else {
         await tx.abonnement.create({ data: { compteId, stripeCustomerId: customerId, ...donnees } });
@@ -348,9 +355,19 @@ async function relireEtEcrire(stripe: Stripe, bail: Bail, relueLe: Date, strict:
           data: { debutPayantLe: debut },
         });
       }
-      if (strict && factures === "en_echec") {
-        await echouer(bail, relueLe, "API Stripe : factures illisibles (premier paiement)", tx);
-      } else await clore(bail, relueLe, tx);
+      // Factures illisibles : l'état est écrit, la date du premier paiement
+      // manque. Depuis la file, un échec retenté plus tard ; depuis un geste,
+      // le bail est rendu sans couvrir les demandes — la file fera la
+      // relecture stricte.
+      if (factures === "en_echec") {
+        if (!strict) {
+          await rendreBail(bail, tx);
+          return issue;
+        }
+        const durable = await echouer(bail, relueLe, "API Stripe : factures illisibles (premier paiement)", tx);
+        return durable ? { ...issue, facturesEnEchecDurable: true as const } : issue;
+      }
+      await clore(bail, relueLe, tx);
       return issue;
     });
   try {

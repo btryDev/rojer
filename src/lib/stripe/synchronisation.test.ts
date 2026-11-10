@@ -144,6 +144,26 @@ describe("synchroniserClientStripe — le compte vient de Stripe relu, jamais de
   });
 });
 
+describe("échec durable des factures (premier paiement) : signalé", () => {
+  it("depuis la file, la neuvième relecture aux factures illisibles alerte", async () => {
+    const file = await import("./file");
+    const { alerter } = await import("@/lib/alertes");
+    vi.mocked(file.echouer).mockResolvedValueOnce(true);
+    const tx = { abonnement: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) } };
+    clientDuClientStripe.mockReturnValue({
+      abonnement: { findUnique: vi.fn().mockResolvedValue({ stripeCustomerId: "cus_1", essaiUtiliseLe: null, debutPayantLe: null, sansAbonnementDepuis: null }) },
+      $transaction: (f: (t: unknown) => unknown) => f(tx),
+    });
+    const s = {
+      customers: { retrieve: vi.fn().mockResolvedValue({ id: "cus_1", metadata: { compteId: "00000000-0000-0000-0000-00000000000a" } }) },
+      subscriptions: { list: vi.fn().mockReturnValue({ autoPagingToArray: vi.fn().mockResolvedValue([abo({ id: "sub_1" })]) }) },
+      invoices: { list: vi.fn().mockReturnValue({ autoPagingToArray: vi.fn().mockRejectedValue(new Error("délai")) }) },
+    } as unknown as Stripe;
+    expect(await synchroniserClientStripe(s, "cus_1", { strict: true })).toMatchObject({ issue: "ecrit", facturesEnEchecDurable: true });
+    expect(alerter).toHaveBeenCalledWith("relecture Stripe en échec durable", expect.arrayContaining([expect.stringMatching(/factures illisibles/)]));
+  });
+});
+
 describe("toutLister : une liste tronquée n'est pas un état complet", () => {
   const liste = (n: number) => ({ autoPagingToArray: async ({ limit }: { limit: number }) => Array.from({ length: Math.min(n, limit) }, (_, i) => i) });
   it("sous la limite : la liste ; à la limite (stripe-node tronque en silence) : une erreur", async () => {

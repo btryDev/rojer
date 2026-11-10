@@ -132,6 +132,7 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous"; 
       "prisma.evenementStripe.createMany",
       "prisma.evenementStripe.deleteMany",
       "prisma.evenementStripe.findMany",
+      "prisma.evenementStripe.findUnique",
       "prisma.evenementStripe.updateMany",
     ],
     // L'aiguillage : l'événement marqué et le client demandé, en une

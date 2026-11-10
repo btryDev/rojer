@@ -19,10 +19,28 @@ export const PRISE_EXPIREE_MS = 2 * 60_000;
 /** Stripe ne relance plus après 3 jours ; un renvoi à la main va jusqu'à 30. */
 export const CONSERVATION_MS = 45 * 24 * 60 * 60_000;
 
-/** Enregistre l'événement s'il ne l'est pas déjà ; `false` : doublon. */
-export async function enregistrer(id: string, type: string, objetId: string | null): Promise<boolean> {
+/**
+ * Enregistre l'événement ; `true` : il y a quelque chose à traiter. Un
+ * événement déjà connu, RENVOYÉ depuis Stripe (Dashboard, CLI) — le geste
+ * que les alertes conseillent — n'est pas un simple doublon : en échec
+ * durable, il est relancé ; déjà aiguillé, son client est redemandé à la
+ * relecture. Une relivraison automatique de Stripe a le même effet, sans
+ * dommage : une relecture de plus.
+ */
+export async function enregistrer(id: string, type: string, objetId: string | null, maintenant = new Date()): Promise<boolean> {
   const { count } = await prisma.evenementStripe.createMany({ data: [{ id, type, objetId }], skipDuplicates: true });
-  return count === 1;
+  if (count === 1) return true;
+  const relance = await prisma.evenementStripe.updateMany({
+    where: { id, traiteLe: null, echecDurableLe: { not: null } },
+    data: { echecDurableLe: null, tentatives: 0, prochainEssaiLe: null, traitementDebuteLe: null },
+  });
+  if (relance.count === 1) return true;
+  const deja = await prisma.evenementStripe.findUnique({ where: { id }, select: { traiteLe: true, clientStripe: true } });
+  if (deja?.traiteLe && deja.clientStripe) {
+    await demanderSynchronisation(deja.clientStripe, maintenant);
+    return true;
+  }
+  return false;
 }
 
 export type EvenementAAiguiller = { id: string; type: string; objetId: string | null; tentatives: number };

@@ -129,6 +129,17 @@ export async function clore(bail: Bail, maintenant: Date, db?: Executeur): Promi
   return n === 1;
 }
 
+/** Rend le bail sans couvrir les demandes : le client reste dû, la file le reprend. */
+export async function rendreBail(bail: Bail, db?: Executeur): Promise<boolean> {
+  const n = await executer(
+    Prisma.sql`
+    UPDATE "SynchronisationStripe" SET "bailJusquAu" = NULL
+    WHERE "customerId" = ${bail.customerId} AND "bailJeton" = ${bail.jeton}`,
+    db,
+  );
+  return n === 1;
+}
+
 /**
  * Note un échec sous le bail : essai suivant plus loin, ou échec durable.
  * `motif` : écrit par Rojer, jamais un message reçu. Rend `true` si l'échec

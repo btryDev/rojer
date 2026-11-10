@@ -17,6 +17,7 @@ vi.mock("next/server", () => ({ after: (f: () => Promise<unknown>) => m.apres.pu
 vi.mock("./jour", () => ({ prendreLeJour: m.prendreLeJour, terminerLeJour: m.terminerLeJour }));
 vi.mock("@/lib/stripe/traitement", () => ({ traiterLaFileIci: m.file, etatDeLaFile: vi.fn() }));
 vi.mock("@/lib/stripe/rapprochement", () => ({ rapprocher: vi.fn() }));
+vi.mock("@/lib/stripe/evenements", () => ({ oublierLesAnciens: vi.fn().mockResolvedValue(undefined) }));
 vi.mock("@/lib/alertes", () => ({ alerter: vi.fn() }));
 vi.mock("@/lib/abonnements/lancement", () => ({ contexteDroits: () => ({}), offreLancee: () => m.lancee.v }));
 vi.mock("@/lib/abonnements/rappels", () => ({ rappelerLaVeilleDeLaFinDEssai: m.rappels }));
@@ -91,6 +92,7 @@ describe("tâches quotidiennes", () => {
       suppressions: { supprimes: 0, reportes: 0 },
       fichiersALiberer: { liberes: 3, echecs: 0, restants: 0 },
       tracesPurgees: { effacees: 1 },
+      evenementsOublies: undefined,
     });
     // Sans Stripe actif, la suppression reçoit `null` (elle ne supprime rien).
     expect(m.supprimer).toHaveBeenCalledWith(expect.any(Date), null);
@@ -120,6 +122,7 @@ describe("tâches quotidiennes", () => {
       offreLancee: false,
       fichiersALiberer: { liberes: 3, echecs: 0, restants: 0 },
       tracesPurgees: { effacees: 1 },
+      evenementsOublies: undefined,
     });
     expect(m.rappels).not.toHaveBeenCalled();
     expect(m.avertir).not.toHaveBeenCalled();

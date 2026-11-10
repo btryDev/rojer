@@ -116,8 +116,8 @@ export async function aiguiller(stripe: Stripe, e: EvenementAAiguiller, maintena
   const debut = Date.now();
   try {
     const a = await aiguillageDe(stripe, e.type, e.objetId);
-    await marquerAiguille(e.id, prise, a, Date.now() - debut, maintenant());
-    return "aiguille";
+    // `false` : la prise a été reprise entre-temps ; l'autre worker conclut.
+    return (await marquerAiguille(e.id, prise, a, Date.now() - debut, maintenant())) ? "aiguille" : "pris";
   } catch (err) {
     const motif = motifDErreur(err);
     console.error(`stripe : ${e.type} ${e.id} non aiguillé — ${motif}`);
@@ -175,7 +175,7 @@ let encore = false;
 export function traiterLaFileIci(stripe: Stripe): Promise<BilanFile | null> {
   if (enCours) {
     encore = true;
-    return enCours;
+    return enCours.catch(() => null);
   }
   const tour = async (): Promise<BilanFile> => {
     let bilan: BilanFile;

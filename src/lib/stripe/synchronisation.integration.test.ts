@@ -145,7 +145,8 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
       });
       expect(await synchroniserClientStripe(s, "cus_B", { maintenant: () => new Date(1000) })).toEqual({ issue: "ecrit" });
       expect(await ligne(B)).toMatchObject({ statut: "active", debutPayantLe: null });
-      expect(await clientsDus(new Date(1500), 10)).not.toContain("cus_B");
+      // Depuis un geste : le bail est rendu sans couvrir la demande — la file fera la relecture stricte.
+      expect(await clientsDus(new Date(1500), 10)).toContain("cus_B");
       // Depuis la file (strict) : l'état s'écrit, et le client reste dû, retenté plus tard pour la date.
       expect(await synchroniserClientStripe(s, "cus_B", { maintenant: () => new Date(2000), strict: true })).toEqual({ issue: "ecrit" });
       expect(await ligne(B)).toMatchObject({ statut: "active", debutPayantLe: null });
@@ -405,6 +406,24 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
         quand = l!.prochainEssaiLe!;
       }
       expect((await evenementsAAiguiller(new Date(quand.getTime() + 3_600_000), 50)).map((e) => e.id)).not.toContain("evt_integ_4");
+    });
+
+    it("renvoyé depuis Stripe : un échec durable est relancé ; un événement déjà aiguillé redemande son client", async () => {
+      await enregistrer("evt_integ_6", "v1.invoice.paid", "in_6");
+      await prisma.evenementStripe.update({ where: { id: "evt_integ_6" }, data: { echecDurableLe: new Date(), tentatives: 9 } });
+      expect(await enregistrer("evt_integ_6", "v1.invoice.paid", "in_6")).toBe(true);
+      expect(await prisma.evenementStripe.findUnique({ where: { id: "evt_integ_6" } })).toMatchObject({ echecDurableLe: null, tentatives: 0 });
+
+      await enregistrer("evt_integ_7", "v1.invoice.paid", "in_7");
+      const t = new Date();
+      await marquerAiguille("evt_integ_7", (await prendre("evt_integ_7", t))!, { clientStripe: "cus_integ_file" }, 1, t);
+      await prisma.synchronisationStripe.update({ where: { customerId: "cus_integ_file" }, data: { traitees: 1 } });
+      expect(await clientsDus(t, 10)).not.toContain("cus_integ_file");
+      expect(await enregistrer("evt_integ_7", "v1.invoice.paid", "in_7", t)).toBe(true);
+      expect(await clientsDus(t, 10)).toContain("cus_integ_file");
+      // Ni l'un ni l'autre : un doublon pendant l'aiguillage, rien à faire.
+      await enregistrer("evt_integ_8", "v1.invoice.paid", "in_8");
+      expect(await enregistrer("evt_integ_8", "v1.invoice.paid", "in_8")).toBe(false);
     });
 
     it("le ménage n'oublie que les anciens", async () => {

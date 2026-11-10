@@ -66,8 +66,10 @@ export async function lancerTachesQuotidiennes(maintenant: Date) {
     tracesPurgees: await tenter("traces de comptes supprimés", () => purgerTracesEchues(maintenant)),
     // Le rapprochement avec Stripe : tout client dont l'abonnement court est
     // relu par la file (un événement peut ne jamais être créé).
-    ...(config.active ? { rapprochement: await tenter("rapprochement Stripe", () => rapprocher(maintenant)) } : {}),
+    // L'état de la file d'abord : le rapprochement relance les échecs durables
+    // des abonnements qui courent, qu'il ne faut pas taire.
     ...(config.active ? { fileStripe: await tenter("état de la file Stripe", () => signalerLaFile(maintenant)) } : {}),
+    ...(config.active ? { rapprochement: await tenter("rapprochement Stripe", () => rapprocher(maintenant)) } : {}),
     evenementsOublies: await tenter("ménage des événements Stripe", () => oublierLesAnciens(maintenant)),
   });
   // L'offre pas lancée (ou retirée) : la saisie est ouverte à tous, rien ne
