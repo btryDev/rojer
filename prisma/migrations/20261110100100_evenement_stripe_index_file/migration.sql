@@ -1,0 +1,19 @@
+-- Les événements Stripe à aiguiller (ADR-053 § 5, amendé le 2026-11-10) :
+-- `traiteLe` nul, à l'heure de leur essai (`prochainEssaiLe`).
+--
+-- `CONCURRENTLY` : la table existe et reçoit les notifications de Stripe ;
+-- en production `migrate deploy` passe pendant que la version précédente
+-- sert encore (`scripts/migrer-en-production.sh`) — un index posé
+-- normalement bloquerait l'enregistrement des notifications le temps de sa
+-- construction (règle tenue par `migrations-index.test.ts`).
+--
+-- SEULE instruction de ce fichier : PostgreSQL exécute dans une transaction
+-- implicite un envoi qui en compte plusieurs, et `CONCURRENTLY` y est refusé.
+--
+-- Si la construction échoue en production, elle laisse un index INVALID et la
+-- migration marquée en échec : supprimer l'index
+-- (`DROP INDEX CONCURRENTLY "EvenementStripe_traiteLe_prochainEssaiLe_idx"`),
+-- puis `prisma migrate resolve --rolled-back 20261110100100_evenement_stripe_index_file`,
+-- et redéployer. Pas de `IF NOT EXISTS` : il laisserait passer en silence un
+-- index invalide.
+CREATE INDEX CONCURRENTLY "EvenementStripe_traiteLe_prochainEssaiLe_idx" ON "EvenementStripe"("traiteLe", "prochainEssaiLe");

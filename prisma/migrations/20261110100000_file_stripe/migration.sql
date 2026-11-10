@@ -10,7 +10,8 @@ ALTER TABLE "EvenementStripe"
     ADD COLUMN "clientStripe" TEXT,
     ADD COLUMN "dureeMs" INTEGER;
 
-CREATE INDEX "EvenementStripe_traiteLe_prochainEssaiLe_idx" ON "EvenementStripe"("traiteLe", "prochainEssaiLe");
+-- L'index des événements à aiguiller est posé par la migration suivante, en
+-- `CONCURRENTLY` (table existante, `migrations-index.test.ts`).
 
 CREATE TABLE "SynchronisationStripe" (
     "customerId" TEXT NOT NULL,

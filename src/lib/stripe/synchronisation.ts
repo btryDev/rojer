@@ -277,7 +277,7 @@ async function alerterEchecDurable(customerId: string, motif: string) {
   await alerter("relecture Stripe en échec durable", [
     `client ${customerId}`,
     motif,
-    "La copie de l'abonnement n'est plus relue : vérifier le client dans Stripe, puis renvoyer depuis Stripe un événement de ce client (Dashboard 15 jours, CLI `stripe events resend` 30 jours) — il relance la relecture.",
+    "La copie de l'abonnement n'est plus relue : vérifier le client dans Stripe, puis renvoyer depuis Stripe un événement de ce client (Dashboard 15 jours, CLI `stripe events resend` 30 jours) : la relecture reprend à sa réception.",
   ]);
 }
 
