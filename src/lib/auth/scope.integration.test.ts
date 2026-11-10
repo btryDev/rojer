@@ -86,13 +86,17 @@ describe.skipIf(!URL_BASE || !local)("gardes de scope.ts, d'un compte à l'autre
   const PB = randomUUID(); // propriétaire de B
   const PD = randomUUID(); // propriétaire de D
   const I = randomUUID(); // invitée dans A, sans compte
-  const PERSONNES = [P, M, L, R, R2, R3, PB, PD, I];
+  const X = randomUUID(); // propriétaire de E, lecteur de F
+  const PF = randomUUID(); // propriétaire de F
+  const PERSONNES = [P, M, L, R, R2, R3, PB, PD, I, X, PF];
 
   type Profil = { nom: string; userId: string; compteActifId: () => string | null };
   let A = "";
   let B = "";
   let C = "";
   let D = "";
+  let E = "";
+  let F = "";
   const PROFILS: Profil[] = [
     { nom: "propriétaire de A", userId: P, compteActifId: () => A },
     { nom: "membre de A", userId: M, compteActifId: () => A },
@@ -199,6 +203,8 @@ describe.skipIf(!URL_BASE || !local)("gardes de scope.ts, d'un compte à l'autre
     B = await creerCompteDeTest(prisma, PB);
     C = await creerCompteDeTest(prisma, R2);
     D = await creerCompteDeTest(prisma, PD);
+    E = await creerCompteDeTest(prisma, X);
+    F = await creerCompteDeTest(prisma, PF);
     await prisma.membre.createMany({
       data: [
         { compteId: A, userId: M, role: "member" },
@@ -207,6 +213,7 @@ describe.skipIf(!URL_BASE || !local)("gardes de scope.ts, d'un compte à l'autre
         { compteId: A, userId: R2, role: "member" },
         { compteId: A, userId: R3, role: "member" },
         { compteId: D, userId: R3, role: "member" },
+        { compteId: F, userId: X, role: "lecture" },
       ],
     });
     a = await semer(A, "A");
@@ -221,8 +228,8 @@ describe.skipIf(!URL_BASE || !local)("gardes de scope.ts, d'un compte à l'autre
     await prisma.membre.deleteMany({ where: { compteId: A, userId: { in: [R, R2, R3] } } });
   });
   afterAll(async () => {
-    await prisma.entreprise.deleteMany({ where: { compteId: { in: [A, B, C, D] } } });
-    await prisma.compte.deleteMany({ where: { id: { in: [A, B, C, D] } } });
+    await prisma.entreprise.deleteMany({ where: { compteId: { in: [A, B, C, D, E, F] } } });
+    await prisma.compte.deleteMany({ where: { id: { in: [A, B, C, D, E, F] } } });
     await effacerUtilisateursDeTest(prisma, PERSONNES);
     await prisma.$disconnect();
   });
@@ -503,6 +510,22 @@ describe.skipIf(!URL_BASE || !local)("gardes de scope.ts, d'un compte à l'autre
       comme(profil(nom));
       expect([nom, await issueDe(verifierProprietaire)]).toEqual([nom, attendu]);
     }
+  });
+
+  it("un geste du propriétaire reste sur le compte vérifié quand un autre onglet change de compte actif", async () => {
+    // X est propriétaire de E et lecteur de F (comptes propres à ce cas : la
+    // matrice ne les voit pas). La garde passe sur E…
+    const f = await semer(F, "F");
+    comme({ userId: X, compteActifId: () => E });
+    const verifie = await verifierProprietaire();
+    expect(verifie.compte).toMatchObject({ compteId: E, role: "owner" });
+    // … puis un autre onglet bascule sur F avant que l'action ne lise.
+    comme({ userId: X, compteActifId: () => F });
+    await expect(scope.assertEntrepriseDuCompte(f.entreprise, verifie)).rejects.toThrow("NOT_FOUND");
+    await expect(scope.assertEtablissementDuCompte(f.etab, verifie)).rejects.toThrow("NOT_FOUND");
+    // Sans le compte vérifié, la garde relit F et passe : la course que le
+    // passage de `verifie` ferme (audit de sécurité du 2026-11-10).
+    expect((await scope.assertEntrepriseDuCompte(f.entreprise)).compte).toMatchObject({ compteId: F, role: "lecture" });
   });
 
   it("le client qu'une garde rend au lecteur refuse l'écriture ; celui du membre écrit", async () => {

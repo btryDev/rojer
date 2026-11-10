@@ -427,9 +427,9 @@ export async function supprimerEtablissement(
 ): Promise<SuppressionResult> {
   // Ouverte à un compte impayé (RGPD) ; réservée au propriétaire : elle
   // efface un dossier entier (ADR-054 § 2).
-  await verifierProprietaire();
+  const proprietaire = await verifierProprietaire();
   ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
-  const { db } = await assertEtablissementDuCompte(id);
+  const { db } = await assertEtablissementDuCompte(id, proprietaire);
 
   const etab = await db.etablissement.findUnique({
     where: { id },

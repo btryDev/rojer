@@ -26,6 +26,19 @@ export const LONGUEUR_MIN_MOT_DE_PASSE = 12;
 
 export const AIDE_MOT_DE_PASSE = `${LONGUEUR_MIN_MOT_DE_PASSE} caractères minimum`;
 
+/**
+ * Le plafond du fournisseur (`maxPasswordLength` de `better-auth.ts`), compté
+ * comme lui en unités `String.length`. L'activation pose le mot de passe sans
+ * passer par sa vérification (`activation.ts`) : elle le vérifie elle-même,
+ * faute de quoi un mot de passe trop long serait enregistré, puis refusé à
+ * chaque connexion.
+ */
+export const LONGUEUR_MAX_MOT_DE_PASSE = 128;
+
+/** Lien de confirmation refusé : une nouvelle inscription renvoie un lien. */
+export const LIEN_ACTIVATION_INVALIDE =
+  "Ce lien de confirmation est invalide ou a expiré. Pour en recevoir un nouveau, refaites l'inscription avec la même adresse.";
+
 /** Le message d'erreur à afficher, ou `null` si le mot de passe convient. */
 export function erreurMotDePasse(motDePasse: string): string | null {
   // Longueur en points de code, pas en unités UTF-16 : un émoji compte pour

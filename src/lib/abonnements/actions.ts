@@ -5,7 +5,6 @@
 
 import Stripe from "stripe";
 import { redirect } from "next/navigation";
-import { requireCompte } from "@/lib/auth/compte";
 import { publicAppUrl } from "@/lib/email";
 import { clientStripe } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
@@ -28,7 +27,7 @@ import { aNomProvisoire, abonnementEnCours, SANS_PAIEMENT_ENCORE } from "./droit
 import { INTERVALLE_STRIPE, estLookupKey, formuleDeLookupKey, formuleDuPrix } from "./formules";
 import { sensDuChangement } from "./changement";
 import { depassements } from "./quotas";
-import { PAGE_ABONNEMENT, verifierProprietaire, verifierRole } from "./saisie";
+import { PAGE_ABONNEMENT, verifierProprietaire, verifierRole, type Proprietaire } from "./saisie";
 
 /**
  * Démarrer l'essai (écran « Votre essai gratuit »). Le rôle d'abord : le
@@ -39,11 +38,14 @@ export async function demarrerEssaiAction(_prev: EtatEssai, formData: FormData):
   return demarrerEssaiDuCompte(formData.get("accepte") === "oui");
 }
 
-/** Le client Stripe du compte, ou la page qui dit pourquoi il n'y en a pas. */
-async function clientDuCompte() {
+/**
+ * Le client Stripe du compte que `verifierProprietaire` a vérifié — jamais du
+ * compte actif relu (un autre onglet a pu en changer) —, ou la page qui dit
+ * pourquoi il n'y en a pas.
+ */
+async function clientDuCompte({ compte, db }: Proprietaire) {
   const config = configurationStripe();
   if (!config.active) redirect(PAGE_ABONNEMENT);
-  const { compte, db } = await requireCompte();
   const ligne = await db.abonnement.findUnique({
     where: { compteId: compte.compteId },
     select: { stripeCustomerId: true, statut: true },
@@ -58,8 +60,8 @@ async function clientDuCompte() {
  * sur le client Stripe juste avant : la facture le porte.
  */
 export async function ouvrirPortailAction(): Promise<void> {
-  await verifierProprietaire();
-  const { stripe, db, ligne } = await clientDuCompte();
+  const proprietaire = await verifierProprietaire();
+  const { stripe, db, ligne } = await clientDuCompte(proprietaire);
   let url: string;
   try {
     // Seulement si le nom est encore le provisoire de l'essai (l'adresse) : un
@@ -86,8 +88,8 @@ export async function ouvrirPortailAction(): Promise<void> {
  * tout de suite (valider un document légal pendant l'essai).
  */
 export async function sAbonnerAction(formData: FormData): Promise<void> {
-  await verifierProprietaire();
-  const { stripe, ligne, compteId } = await clientDuCompte();
+  const proprietaire = await verifierProprietaire();
+  const { stripe, ligne, compteId } = await clientDuCompte(proprietaire);
   const formule = String(formData.get("formule") ?? "");
   if (!estLookupKey(formule)) redirect(PAGE_ABONNEMENT);
   const immediat = formData.get("immediat") === "oui";
@@ -146,8 +148,8 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
  * fermé (`finaliserCarte` est idempotente).
  */
 export async function finaliserCarteAction(sessionId: string): Promise<void> {
-  await verifierProprietaire();
-  const { stripe, ligne } = await clientDuCompte();
+  const proprietaire = await verifierProprietaire();
+  const { stripe, ligne } = await clientDuCompte(proprietaire);
   let issue: IssueCarte = { issue: "rien" };
   try {
     if (/^cs_[A-Za-z0-9_]+$/.test(sessionId)) {
@@ -184,8 +186,8 @@ const dejaEnCours = (e: unknown) =>
  * seule (§ 14, la page le dit avant le clic).
  */
 export async function changerFormuleAction(formData: FormData): Promise<void> {
-  await verifierProprietaire();
-  const { stripe, db, ligne, compteId } = await clientDuCompte();
+  const proprietaire = await verifierProprietaire();
+  const { stripe, db, ligne, compteId } = await clientDuCompte(proprietaire);
   const formule = String(formData.get("formule") ?? "");
   const visee = formuleDeLookupKey(formule);
   if (!visee) redirect(PAGE_ABONNEMENT);
@@ -233,8 +235,8 @@ export async function changerFormuleAction(formData: FormData): Promise<void> {
 
 /** Renoncer à une baisse de formule planifiée (§ 10). */
 export async function annulerBaisseAction(): Promise<void> {
-  await verifierProprietaire();
-  const { stripe, ligne } = await clientDuCompte();
+  const proprietaire = await verifierProprietaire();
+  const { stripe, ligne } = await clientDuCompte(proprietaire);
   try {
     const { courant } = abonnementCourant(await abonnementsDuClient(stripe, ligne.stripeCustomerId));
     if (courant) await annulerBaisse(stripe, courant);

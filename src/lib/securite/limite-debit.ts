@@ -53,6 +53,13 @@ export const LIMITES = {
   inscriptionIp: { max: 10, fenetreSecondes: 60 * 60 },
   /** Réinitialisation : envoi de courriels en série vers une adresse. */
   reinitialisationCompte: { max: 5, fenetreSecondes: 60 * 60 },
+  /**
+   * Liens de confirmation vers UNE adresse, quel que soit le chemin
+   * (inscription, réinscription, connexion d'un compte non confirmé) et l'IP
+   * d'où l'on demande : sans elle, une adresse tierce recevait des mails Rojer
+   * à volonté (audit de sécurité du 2026-11-10).
+   */
+  verificationEnvoiAdresse: { max: 5, fenetreSecondes: 60 * 60 },
   reinitialisationIp: { max: 20, fenetreSecondes: 60 * 60 },
   /** Vérification publique : recalcule une empreinte (jusqu'à 20 Mo lus). */
   verificationIp: { max: 30, fenetreSecondes: 10 * 60 },

@@ -114,6 +114,8 @@ jobs:
           src/lib/auth/scope.integration
           src/lib/auth/membres.integration
           src/lib/auth/creer-compte.integration
+          src/lib/auth/activation.integration
+          src/lib/auth/plafond-verification.integration
           src/lib/membres/invitation.integration
           src/lib/stripe/synchronisation.integration
           src/lib/abonnements/suppression.integration

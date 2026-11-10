@@ -17,7 +17,7 @@ export async function GET(
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
-  const { compte, db } = await requireEtablissement(id);
+  const { compte, db, user } = await requireEtablissement(id);
   // Le registre consolidé demande d'avoir payé (ADR-053 § 15) ; un ancien
   // abonné le garde, une fois l'abonnement fini.
   await exigerUnPaiement(db, compte.compteId);
@@ -28,5 +28,6 @@ export async function GET(
   return reponsePdf(
     RegistreDocument({ data }),
     `Registre_securite_${slugifyFilename(data.etablissement)}.pdf`,
+    user.id,
   );
 }

@@ -24,7 +24,11 @@ const h = vi.hoisted(() => ({
     enableTwoFactor: vi.fn<(arg: { body: Record<string, unknown> }) => Promise<unknown>>(),
     generateBackupCodes: vi.fn<(arg: { body: Record<string, unknown> }) => Promise<unknown>>(),
     disableTwoFactor: vi.fn<(arg: { body: Record<string, unknown> }) => Promise<unknown>>(),
+    verifyEmail: vi.fn<(arg: { query: { token: string } }) => Promise<unknown>>(),
   },
+  // Activation : le mot de passe a-t-il été posé (compte non encore confirmé) ?
+  activationAppliquee: true,
+  motDePasseActive: null as string | null,
   user: { id: "u-1", email: "a@exemple.fr", twoFactorEnabled: false },
   divulgue: vi.fn<(mdp: string) => Promise<boolean | null>>(),
   entetes: new Headers({ "x-forwarded-for": "203.0.113.7" }),
@@ -53,12 +57,19 @@ vi.mock("./mot-de-passe-divulgue", async (original) => ({
   motDePasseDivulgue: h.divulgue,
 }));
 vi.mock("@/lib/auth/scope", () => ({ COOKIE_ETABLISSEMENT_ACTIF: "etablissement-actif" }));
+vi.mock("./activation", () => ({
+  avecActivation: async (motDePasse: string, confirmer: () => Promise<unknown>) => {
+    h.motDePasseActive = motDePasse;
+    return { resultat: await confirmer(), applique: h.activationAppliquee };
+  },
+}));
 vi.mock("@/lib/securite/limite-debit", async (original) => ({
   ...(await original<typeof import("@/lib/securite/limite-debit")>()),
   consommer: h.limite,
 }));
 
 const {
+  activerCompteAction,
   activerDoubleAuthAction,
   confirmerDoubleAuthAction,
   gererDoubleAuthAction,
@@ -85,6 +96,8 @@ async function cibleDeRedirection(p: Promise<unknown>): Promise<string> {
 
 beforeEach(() => {
   h.redirect.mockClear();
+  h.activationAppliquee = true;
+  h.motDePasseActive = null;
   for (const f of Object.values(h.auth)) f.mockReset();
   h.auth.signInEmail.mockResolvedValue({});
   h.auth.signUpEmail.mockResolvedValue({});
@@ -635,5 +648,69 @@ describe("gérer la double authentification (lot 3b)", () => {
     await expect(gererDoubleAuthAction({}, formulaire({ password: "mdp", geste: "desactiver" }))).rejects.toThrow(
       "panne",
     );
+  });
+});
+
+/**
+ * Activation du compte (audit du 2026-11-10, pré-détournement) : le lien de
+ * confirmation mène à une page où l'on CHOISIT le mot de passe ; il est posé
+ * avant la confirmation, par qui tient la boîte.
+ */
+describe("activation du compte au retour du lien de confirmation", () => {
+  const activer = (champs: Record<string, string>) => activerCompteAction({}, formulaire(champs));
+
+  it("pose le mot de passe saisi avec le jeton du lien, puis renvoie à la connexion", async () => {
+    h.auth.verifyEmail.mockResolvedValue({ status: true });
+    const cible = await cibleDeRedirection(
+      activer({ password: "douze-caract", confirm: "douze-caract", token: "jeton-du-lien" }),
+    );
+    expect(h.auth.verifyEmail).toHaveBeenCalledWith({ query: { token: "jeton-du-lien" } });
+    expect(h.motDePasseActive).toBe("douze-caract");
+    expect(cible).toBe("/login?confirmed=1");
+  });
+
+  it("un compte déjà confirmé garde son mot de passe et le dit", async () => {
+    h.auth.verifyEmail.mockResolvedValue({ status: true });
+    h.activationAppliquee = false;
+    const cible = await cibleDeRedirection(
+      activer({ password: "douze-caract", confirm: "douze-caract", token: "vieux-lien" }),
+    );
+    expect(cible).toBe("/login?confirmation=deja");
+  });
+
+  it("un jeton refusé : lien invalide, sans redirection", async () => {
+    h.auth.verifyEmail.mockRejectedValue(new APIError("UNAUTHORIZED", { code: "INVALID_TOKEN", message: "x" }));
+    const r = await activer({ password: "douze-caract", confirm: "douze-caract", token: "mort" });
+    expect(r.error).toMatch(/invalide ou a expiré/);
+  });
+
+  it("une panne autre qu'un refus du jeton se propage", async () => {
+    h.auth.verifyEmail.mockRejectedValue(new Error("base injoignable"));
+    await expect(activer({ password: "douze-caract", confirm: "douze-caract", token: "t" })).rejects.toThrow(
+      "base injoignable",
+    );
+  });
+
+  it("refuse avant Better Auth : saisies différentes, trop court, sans jeton, divulgué, limite atteinte", async () => {
+    expect((await activer({ password: "douze-caract", confirm: "douze-caracX", token: "t" })).error).toMatch(
+      /ne correspondent pas/,
+    );
+    expect((await activer({ password: "onze-caract", confirm: "onze-caract", token: "t" })).error).toMatch(
+      /au moins 12 caractères/,
+    );
+    expect((await activer({ password: "douze-caract", confirm: "douze-caract" })).error).toMatch(
+      /invalide ou a expiré/,
+    );
+    const long = "x".repeat(129);
+    expect((await activer({ password: long, confirm: long, token: "t" })).error).toMatch(/trop long/);
+    h.divulgue.mockResolvedValueOnce(true);
+    expect((await activer({ password: "motdepasse123", confirm: "motdepasse123", token: "t" })).error).toMatch(
+      /fuites de données/,
+    );
+    h.limite.mockResolvedValueOnce({ ok: false, reessayerDansSecondes: 60 });
+    expect((await activer({ password: "douze-caract", confirm: "douze-caract", token: "t" })).error).toMatch(
+      /Trop de tentatives/,
+    );
+    expect(h.auth.verifyEmail).not.toHaveBeenCalled();
   });
 });

@@ -936,3 +936,37 @@ aucune n'existe en production (offre pas lancée) ; en test, sans importance. Pa
 - Better Auth : [module Stripe](https://www.better-auth.com/docs/plugins/stripe)
 - Facturation électronique : [service-public](https://entreprendre.service-public.gouv.fr/actualites/A15683) ·
   [ecommerce-nation](https://www.ecommerce-nation.fr/factures-stripe-facturation-electronique/) (source non officielle)
+
+## 16. Audit de sécurité du 2026-11-10 — à faire avant le lancement de l'offre
+
+**Course sur `verifierSaisie`** (piste 2 de l'audit, à valider ; sans effet tant
+que l'offre n'est pas lancée : `offreLancee` exige `ABONNEMENT_EXIGE=oui` et
+Stripe actif). `verifierSaisie()` juge les droits du compte actif puis rend
+`void` ; l'action relit ensuite le compte actif (`requireCompte`,
+`assertEtablissementDuCompte`), `cache()` ne mémoïsant rien dans une action.
+Un membre non lecteur d'un compte X payé et d'un compte Y impayé qui bascule
+de compte (`choisirCompte`) entre les deux lectures écrit dans Y, saisie
+fermée. Rôle, gel et quotas tiennent (même lecture que le client borné) ;
+seul le contrôle d'abonnement saute. Même forme dans `inviterMembre`.
+
+**Correctif retenu (proposé, décision de la propriétaire du 2026-11-10 : avant
+le lancement)** : porter l'état de saisie dans la portée du client borné, comme
+le gel. `portee()` (`auth/compte.ts`) lit déjà la ligne `Abonnement` du compte
+lié (`gelesDuCompte`) : en tirer aussi « saisie fermée », et refuser les
+écritures dans l'extension, avant qu'elles partent. La décision d'abonnement
+et le compte écrit viennent alors de la même lecture ; `verifierSaisie` reste
+pour le message et la redirection.
+
+Ce que le lot demande vraiment :
+- passer en revue les écritures **ouvertes** à un compte impayé
+  (`OUVERTES` de `saisie-gardee.test.ts`, 38 au 2026-11-10) : celles qui
+  écrivent par le client borné s'ouvrent explicitement (`ouvrirAuGel` sert
+  déjà le gel ; son commentaire dit qu'il couvre « les mêmes que la saisie
+  fermée laisse ouverts ») ;
+- une seule lecture de `Abonnement` pour le gel et la saisie (aujourd'hui
+  `abonnementDesPlafonds` et `abonnementDuCompte`, deux fonctions) ; le gel
+  n'est pas lu pour un membre en lecture seule ;
+- un amendement de l'ADR-053 (invariant : une écriture n'est permise que si
+  la saisie du compte **auquel le client est lié** est ouverte).
+
+Rapport de l'audit, hors dépôt : `~/security-audit-skill/duerp-cc/run-1/`.

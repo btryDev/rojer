@@ -24,6 +24,13 @@ import {
 } from "./schema";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
 
+
+/** Une écriture bornée à ce qu'elle a lu, et la ligne a changé entre-temps. */
+const MESSAGE_MODIFIEE_ENTRE_TEMPS =
+  "Cette analyse a été modifiée entre-temps. Rechargez la page, puis recommencez.";
+/** Suppression bornée : relire autant de fois qu'un remplacement simultané change la clé. */
+const ESSAIS_SUR_CHANGEMENT = 3;
+
 export type CarnetActionState =
   | { status: "idle" }
   | {
@@ -445,25 +452,39 @@ export async function modifierAnalyseLegionelle(
   const depot = await deposerRapportLabo(db, compte.compteId, etablissementId, formData);
   if (!depot.ok) return { status: "error", message: depot.message };
 
+  const donnees = {
+    dateAnalyse: parsed.data.dateAnalyse,
+    laboratoire: parsed.data.laboratoire ?? null,
+    valeurUfcParL: parsed.data.valeurUfcParL ?? null,
+    conforme: resultatAnalyse(parsed.data.valeurUfcParL) === "sous_limite",
+    commentaire: parsed.data.commentaire ?? null,
+    ...(depot.rapport ? { rapportCle: depot.rapport.cle, rapportNom: depot.rapport.nom } : {}),
+  };
+  // Bornée à l'analyse lue, et au rapport lu quand on le remplace (audit de
+  // sécurité du 2026-11-10, comme la photo d'établissement) : de deux
+  // remplacements simultanés, le second ne trouve plus le même rapport et
+  // libère le sien, au lieu d'écraser la clé du premier et de la laisser hors
+  // de toute ligne — donc hors du décompte du plafond de stockage, mais
+  // toujours stockée.
+  let count: number;
   try {
-    await db.analyseLegionelle.update({
-      where: { id: analyse.id },
-      data: {
-        dateAnalyse: parsed.data.dateAnalyse,
-        laboratoire: parsed.data.laboratoire ?? null,
-        valeurUfcParL: parsed.data.valeurUfcParL ?? null,
-        conforme: resultatAnalyse(parsed.data.valeurUfcParL) === "sous_limite",
-        commentaire: parsed.data.commentaire ?? null,
-        ...(depot.rapport
-          ? { rapportCle: depot.rapport.cle, rapportNom: depot.rapport.nom }
-          : {}),
-      },
-    });
+    ({ count } = await db.analyseLegionelle.updateMany({
+      where: { id: analyse.id, ...(depot.rapport ? { rapportCle: analyse.rapportCle } : {}) },
+      data: donnees,
+    }));
   } catch (e) {
     if (depot.rapport) {
       await abandonnerFichiers(db, [depot.rapport.cle], "carnet-sanitaire/modification");
     }
     throw e;
+  }
+  if (count === 0) {
+    if (depot.rapport) {
+      await abandonnerFichiers(db, [depot.rapport.cle], "carnet-sanitaire/modification-concurrente");
+    }
+    // Supprimée entre-temps, ou rapport remplacé par quelqu'un d'autre.
+    const encore = await analyseDansLeCarnet(db, etablissementId, analyse.id);
+    return { status: "error", message: encore ? MESSAGE_MODIFIEE_ENTRE_TEMPS : "Analyse introuvable" };
   }
   if (depot.rapport && analyse.rapportCle) {
     await abandonnerFichiers(db, [analyse.rapportCle], "carnet-sanitaire/remplacement");
@@ -481,11 +502,32 @@ export async function supprimerAnalyseLegionelle(
   await verifierSaisie();
   ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
   const { db } = await assertEtablissementDuCompte(etablissementId);
-  const analyse = await analyseDansLeCarnet(db, etablissementId, analyseId);
-  if (!analyse) notFound();
-  await db.analyseLegionelle.delete({ where: { id: analyse.id } });
-  if (analyse.rapportCle) {
-    await abandonnerFichiers(db, [analyse.rapportCle], "carnet-sanitaire/suppression");
+  // Bornée au rapport lu : un remplacement simultané change la clé, et la
+  // suppression relit au lieu d'emporter la ligne en laissant le nouveau
+  // rapport hors de toute ligne (audit de sécurité du 2026-11-10).
+  for (let essai = 0; essai < ESSAIS_SUR_CHANGEMENT; essai++) {
+    const analyse = await analyseDansLeCarnet(db, etablissementId, analyseId);
+    if (!analyse) {
+      if (essai === 0) notFound();
+      break;
+    }
+    const { count } = await db.analyseLegionelle.deleteMany({
+      where: { id: analyse.id, rapportCle: analyse.rapportCle },
+    });
+    if (count > 0) {
+      if (analyse.rapportCle) {
+        await abandonnerFichiers(db, [analyse.rapportCle], "carnet-sanitaire/suppression");
+      }
+      revaliderCarnet(etablissementId);
+      return;
+    }
   }
-  revaliderCarnet(etablissementId);
+  // Supprimée par quelqu'un d'autre entre deux essais : c'est fait.
+  if (!(await analyseDansLeCarnet(db, etablissementId, analyseId))) {
+    revaliderCarnet(etablissementId);
+    return;
+  }
+  // Toujours là après chaque essai : des remplacements sans fin. Rien n'est
+  // supprimé, et on le dit plutôt que de laisser croire à une suppression.
+  throw new Error(`Suppression de l'analyse ${analyseId} abandonnée : rapport remplacé pendant chaque essai`);
 }

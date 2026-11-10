@@ -172,6 +172,7 @@ describe("modifierReleve / supprimerReleve", () => {
 describe("modifierAnalyseLegionelle / supprimerAnalyseLegionelle", () => {
   it("une valeur vidée s'efface : l'analyse redevient « valeur non saisie », pas « sous la limite »", async () => {
     h.reponses["analyseLegionelle.findFirst"] = () => ({ id: "a_1", rapportCle: null });
+    h.reponses["analyseLegionelle.updateMany"] = () => ({ count: 1 });
     const r = await modifierAnalyseLegionelle(
       "e1",
       "a_1",
@@ -179,7 +180,9 @@ describe("modifierAnalyseLegionelle / supprimerAnalyseLegionelle", () => {
       fd({ dateAnalyse: cleJourCivil(new Date()), valeurUfcParL: "", laboratoire: "", commentaire: "" }),
     );
     expect(r).toEqual({ status: "success" });
-    const { data } = ops("analyseLegionelle.update")[0].args as { data: Record<string, unknown> };
+    // Sans nouveau rapport, bornée à l'analyse seule.
+    expect(ops("analyseLegionelle.updateMany")[0].args).toMatchObject({ where: { id: "a_1" } });
+    const { data } = ops("analyseLegionelle.updateMany")[0].args as { data: Record<string, unknown> };
     expect(data.valeurUfcParL).toBeNull();
     expect(data.laboratoire).toBeNull();
     expect(data.conforme).toBe(false);
@@ -187,12 +190,67 @@ describe("modifierAnalyseLegionelle / supprimerAnalyseLegionelle", () => {
 
   it("supprimer libère le rapport de laboratoire, après la base", async () => {
     h.reponses["analyseLegionelle.findFirst"] = () => ({ id: "a_1", rapportCle: "rapports/e1/legio.pdf" });
+    h.reponses["analyseLegionelle.deleteMany"] = () => ({ count: 1 });
     await supprimerAnalyseLegionelle("e1", "a_1");
     expect(ops("analyseLegionelle.findFirst")[0].args).toMatchObject({
       where: { id: "a_1", carnet: { etablissementId: "e1" } },
     });
-    expect(ops("analyseLegionelle.delete")).toHaveLength(1);
+    // Bornée au rapport lu (audit du 2026-11-10).
+    expect(ops("analyseLegionelle.deleteMany")[0].args).toEqual({
+      where: { id: "a_1", rapportCle: "rapports/e1/legio.pdf" },
+    });
     expect(h.stockage.liberes).toEqual(["rapports/e1/legio.pdf"]);
+  });
+
+  it("supprimer pendant un remplacement : relit, et libère le rapport en place, pas l'ancien", async () => {
+    const lus = ["rapports/e1/ancien.pdf", "rapports/e1/nouveau.pdf"];
+    h.reponses["analyseLegionelle.findFirst"] = () => ({ id: "a_1", rapportCle: lus.shift() ?? null });
+    let premiere = true;
+    h.reponses["analyseLegionelle.deleteMany"] = () => {
+      const count = premiere ? 0 : 1;
+      premiere = false;
+      return { count };
+    };
+    await supprimerAnalyseLegionelle("e1", "a_1");
+    expect(ops("analyseLegionelle.deleteMany")).toHaveLength(2);
+    expect(h.stockage.liberes).toEqual(["rapports/e1/nouveau.pdf"]);
+  });
+
+  it("modifier une analyse supprimée entre-temps : « introuvable », pas une erreur serveur", async () => {
+    let lectures = 0;
+    h.reponses["analyseLegionelle.findFirst"] = () => (lectures++ === 0 ? { id: "a_1", rapportCle: null } : null);
+    h.reponses["analyseLegionelle.updateMany"] = () => ({ count: 0 });
+    const r = await modifierAnalyseLegionelle(
+      "e1",
+      "a_1",
+      idle,
+      fd({ dateAnalyse: cleJourCivil(new Date()), valeurUfcParL: "", laboratoire: "", commentaire: "" }),
+    );
+    expect(r).toEqual({ status: "error", message: "Analyse introuvable" });
+  });
+
+  it("supprimer quand chaque essai perd la course : rien n'est supprimé, et on le dit", async () => {
+    let n = 0;
+    h.reponses["analyseLegionelle.findFirst"] = () => ({ id: "a_1", rapportCle: `rapports/e1/v${n++}.pdf` });
+    h.reponses["analyseLegionelle.deleteMany"] = () => ({ count: 0 });
+    await expect(supprimerAnalyseLegionelle("e1", "a_1")).rejects.toThrow(/abandonnée/);
+    expect(h.stockage.liberes).toEqual([]);
+  });
+
+  it("remplacer le rapport pendant un autre remplacement : refusé, et le fichier déposé est libéré", async () => {
+    h.reponses["analyseLegionelle.findFirst"] = () => ({ id: "a_1", rapportCle: "rapports/e1/ancien.pdf" });
+    h.reponses["analyseLegionelle.updateMany"] = () => ({ count: 0 });
+    const rapport = new File([new TextEncoder().encode("%PDF-1.7\n")], "labo.pdf", { type: "application/pdf" });
+    const champs = fd({ dateAnalyse: cleJourCivil(new Date()), valeurUfcParL: "", laboratoire: "", commentaire: "" });
+    champs.set("rapport", rapport);
+    const r = await modifierAnalyseLegionelle("e1", "a_1", idle, champs);
+    expect(r).toMatchObject({ status: "error", message: expect.stringMatching(/modifiée entre-temps/) });
+    expect(ops("analyseLegionelle.updateMany")[0].args).toMatchObject({
+      where: { id: "a_1", rapportCle: "rapports/e1/ancien.pdf" },
+    });
+    // Le nouveau fichier est libéré ; l'ancien, toujours référencé, reste.
+    expect(h.stockage.liberes).toHaveLength(1);
+    expect(h.stockage.liberes[0]).not.toBe("rapports/e1/ancien.pdf");
   });
 });
 
@@ -221,7 +279,7 @@ describe("identifiant étranger ou disparu : 404, jamais une erreur serveur", ()
   it("supprimer une analyse : ni suppression, ni fichier libéré", async () => {
     h.reponses["analyseLegionelle.findFirst"] = () => null;
     await expect(supprimerAnalyseLegionelle("e1", "analyse_d_un_autre")).rejects.toThrow(INTROUVABLE);
-    expect(h.appels.map((a) => a.op)).not.toContain("analyseLegionelle.delete");
+    expect(h.appels.map((a) => a.op)).not.toContain("analyseLegionelle.deleteMany");
     expect(h.stockage.liberes).toEqual([]);
   });
 });

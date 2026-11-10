@@ -15,7 +15,7 @@ import { auth, VERROU_DOUBLE_AUTH_MINUTES } from "./better-auth";
 import { MESSAGE_MOT_DE_PASSE_DIVULGUE, motDePasseDivulgue } from "./mot-de-passe-divulgue";
 import { entetesDeSession, requireUser } from "./require-user";
 import { codeSaisi, donneesActivation, type DonneesActivation } from "./double-authentification";
-import { ipClient } from "@/lib/securite/ip-client";
+import { ipPourLimite } from "@/lib/securite/ip-client";
 import {
   cleLimite,
   consommer,
@@ -24,7 +24,8 @@ import {
   type Limite,
 } from "@/lib/securite/limite-debit";
 import { cheminDeRetour } from "./chemin-de-retour";
-import { erreurMotDePasse } from "./mot-de-passe";
+import { erreurMotDePasse, LIEN_ACTIVATION_INVALIDE, LONGUEUR_MAX_MOT_DE_PASSE } from "./mot-de-passe";
+import { avecActivation } from "./activation";
 
 const emailSchema = z.string().email("Adresse e-mail invalide");
 
@@ -60,18 +61,20 @@ const inscriptionSchema = z.object({
  * indéfiniment à la titulaire son propre mot de passe, depuis n'importe quelle
  * IP (revue de l'intégration Next.js du 2026-10-14, C1). Liée à l'IP, elle ne
  * bloque que celui qui insiste ; un essai distribué reste borné par la limite
- * par IP. La réinitialisation garde l'adresse seule : ce qu'elle protège est
- * la boîte de la titulaire contre l'envoi en rafale, et la refuser n'empêche
- * pas de se connecter. Une action serveur
- * ne choisit pas son statut HTTP : le refus est un message du formulaire, pas
- * un 429.
+ * par IP. « IP » s'entend au sens de `ipPourLimite` : une IPv6 compte pour son
+ * /64 (audit du 2026-11-10), donc des voisins du même /64 partagent ce
+ * compteur, comme le font déjà les machines derrière une même IPv4. La
+ * réinitialisation garde l'adresse seule : ce qu'elle protège est la boîte de
+ * la titulaire contre l'envoi en rafale, et la refuser n'empêche pas de se
+ * connecter. Une action serveur ne choisit pas son statut HTTP : le refus est
+ * un message du formulaire, pas un 429.
  */
 async function refusParLimite(
   action: string,
   parIp: Limite,
   compte?: { adresse: string; limite: Limite; parIp?: boolean },
 ): Promise<string | null> {
-  const ip = ipClient(await headers());
+  const ip = ipPourLimite(await headers());
   const demandes = [
     ...(ip ? [{ cle: cleLimite(action, "ip", ip), limite: parIp }] : []),
     ...(compte
@@ -174,7 +177,7 @@ export async function signInAction(
       return {
         error: envoiImpossible()
           ? `Votre adresse n'est pas encore confirmée. ${ENVOI_IMPOSSIBLE}`
-          : "Votre adresse n'est pas encore confirmée : un nouveau lien vient de vous être envoyé. Ouvrez-le, puis reconnectez-vous.",
+          : "Votre adresse n'est pas encore confirmée : un nouveau lien part vers votre boîte (cinq au plus par heure). Ouvrez le plus récent pour activer votre compte.",
       };
     }
     return { error: "Identifiants invalides" };
@@ -294,6 +297,45 @@ export async function definirMotDePasseAction(
     };
   }
   redirect("/login?reinitialise=1");
+}
+
+/**
+ * Activer un compte au retour du lien de confirmation : l'adresse est
+ * confirmée ET le mot de passe saisi ici devient celui du compte, posé avant
+ * la confirmation (`activation.ts`) — c'est celui qui tient la boîte qui le
+ * choisit, jamais le premier venu qui aurait inscrit l'adresse. Envoi d'un
+ * formulaire : un scanner de liens qui ouvre la page ne confirme rien.
+ * Un compte déjà confirmé ne change pas de mot de passe.
+ */
+export async function activerCompteAction(
+  _prev: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const motDePasse = String(formData.get("password") ?? "");
+  const confirmation = String(formData.get("confirm") ?? "");
+  if (motDePasse !== confirmation) {
+    return { error: "Les deux mots de passe ne correspondent pas" };
+  }
+  const invalide = erreurMotDePasse(motDePasse);
+  if (invalide) return { error: invalide };
+  if (motDePasse.length > LONGUEUR_MAX_MOT_DE_PASSE) return { error: MOT_DE_PASSE_TROP_LONG };
+
+  const token = String(formData.get("token") ?? "");
+  if (!token) return { error: LIEN_ACTIVATION_INVALIDE };
+  const limite = await refusParLimite("activation-compte", LIMITES.reinitialisationIp);
+  if (limite) return { error: limite };
+  const divulgue = await refusNouveauMotDePasse(motDePasse);
+  if (divulgue) return { error: divulgue };
+
+  let applique: boolean;
+  try {
+    ({ applique } = await avecActivation(motDePasse, () => auth.api.verifyEmail({ query: { token } })));
+  } catch (e) {
+    // Un jeton refusé est un lien invalide ; une panne de base, elle, se voit.
+    if (isAPIError(e)) return { error: LIEN_ACTIVATION_INVALIDE };
+    throw e;
+  }
+  redirect(applique ? "/login?confirmed=1" : "/login?confirmation=deja");
 }
 
 

@@ -1,4 +1,5 @@
-import { ResetPasswordForm } from "./ResetPasswordForm";
+import { definirMotDePasseAction } from "@/lib/auth/actions";
+import { FormulaireMotDePasse } from "../FormulaireMotDePasse";
 
 export const metadata = {
   title: "Nouveau mot de passe — Rojer",
@@ -23,7 +24,18 @@ export default async function ResetPasswordPage({
         </h1>
 
         <div className="carte-board mt-7 px-7 py-6 sm:px-8">
-          <ResetPasswordForm token={token ?? null} />
+          <FormulaireMotDePasse
+            token={token ?? null}
+            action={definirMotDePasseAction}
+            libelleChamp="Nouveau mot de passe"
+            libelleBouton="Définir le mot de passe →"
+            libelleEnCours="Mise à jour…"
+            lienInvalide={{
+              message: "Ce lien de réinitialisation est invalide ou a expiré.",
+              href: "/login/mot-de-passe-oublie",
+              libelle: "Redemander un lien →",
+            }}
+          />
         </div>
       </div>
     </main>
