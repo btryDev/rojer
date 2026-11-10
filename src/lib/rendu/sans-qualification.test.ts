@@ -157,6 +157,13 @@ const ADMISES: { fichier: string; ligne: string; motif: string }[] = [
     motif:
       "Envoyé par Better Auth (`requestPasswordReset`) ; le message ne s'affiche qu'après le contrôle `envoiImpossible`.",
   },
+  {
+    fichier: "src/lib/auth/actions.ts",
+    ligne:
+      ': "Votre adresse n\'est pas encore confirmée : un nouveau lien part vers votre boîte (cinq au plus par heure). Ouvrez le plus récent pour activer votre compte.",',
+    motif:
+      "Envoyé par Better Auth (`sendOnSignIn`), sous le plafond par adresse (`verificationEnvoiAdresse`, audit du 2026-11-10) ; le message ne s'affiche qu'après le contrôle `envoiImpossible`, et dit le plafond.",
+  },
   // Deux envois VRAIS, qui ne sont pas des e-mails.
   {
     fichier: "src/app/etablissements/[id]/connecter/page.tsx",
