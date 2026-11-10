@@ -22,7 +22,7 @@ beforeEach(() => {
 
 describe("reponsePdf", () => {
   it("rend les trois en-têtes que les cinq routes écrivaient, et seulement eux", async () => {
-    const r = await reponsePdf(doc, "Registre_securite_Le_Comptoir.pdf");
+    const r = await reponsePdf(doc, "Registre_securite_Le_Comptoir.pdf", "u-1");
     expect(r.status).toBe(200);
     expect(Object.fromEntries(r.headers)).toEqual({
       "cache-control": "no-store",
@@ -33,17 +33,17 @@ describe("reponsePdf", () => {
   });
 
   it("libère sa place après le rendu, y compris quand le rendu échoue", async () => {
-    await reponsePdf(doc, "a.pdf");
+    await reponsePdf(doc, "a.pdf", "u-1");
     expect(h.liberer).toHaveBeenCalledTimes(1);
     h.rendu.mockRejectedValueOnce(new Error("mise en page"));
-    await expect(reponsePdf(doc, "a.pdf")).rejects.toThrow("mise en page");
+    await expect(reponsePdf(doc, "a.pdf", "u-1")).rejects.toThrow("mise en page");
     expect(h.liberer).toHaveBeenCalledTimes(2);
   });
 
   it("file pleine : rend le 503 sans rien mettre en page", async () => {
     const sature = new Response("plein", { status: 503, headers: { "Retry-After": "5" } });
     h.place = async () => sature;
-    const r = await reponsePdf(doc, "a.pdf");
+    const r = await reponsePdf(doc, "a.pdf", "u-1");
     expect(r).toBe(sature);
     expect(h.rendu).not.toHaveBeenCalled();
   });

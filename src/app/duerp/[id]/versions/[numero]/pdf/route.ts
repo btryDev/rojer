@@ -1,4 +1,5 @@
 import { DuerpDocument } from "@/lib/pdf/DuerpDocument";
+import { requireUser } from "@/lib/auth/require-user";
 import { reponsePdf } from "@/lib/pdf/reponse";
 import { getVersion, listerVersions } from "@/lib/versions/queries";
 import { historiqueJusqua } from "@/lib/versions/historique";
@@ -33,8 +34,11 @@ export async function GET(
   // V14.3.2, audit du 2026-10-13) : `private, max-age=60` laissait le DUERP
   // nominatif dans le cache du navigateur, relisible après déconnexion sur un
   // poste partagé.
+  // La part de la file d'export est celle de l'utilisateur (`exports/limite.ts`).
+  const user = await requireUser();
   return reponsePdf(
     DuerpDocument({ snapshot, historique }),
     `DUERP_${safe}_v${numeroInt}.pdf`,
+    user.id,
   );
 }
