@@ -166,15 +166,13 @@ const METHODES_QUI_ECRIVENT = new Set(["POST", "PUT", "PATCH", "DELETE"]);
  * le refus à l'écran plutôt qu'en redirection.
  */
 const GARDES_DE_ROLE = ["verifierRole", "verifierProprietaire"];
-/** Ce qui relit le compte actif : interdit après `verifierProprietaire`. */
+/** Ce qui relit le compte actif et rend un client : interdit après `verifierProprietaire`. */
 const RELECTURES_DU_COMPTE = new Set([
   "requireCompte",
   "getOptionalCompte",
   "requireEtablissement",
   "getOptionalUserEtablissement",
   "assertEtablissementOwnership",
-  "verifierSaisie",
-  "verifierRole",
 ]);
 /** Les gardes de portée qui prennent le compte vérifié en second argument. */
 const GARDES_A_COMPTE_VERIFIE = new Set(["assertEntrepriseDuCompte", "assertEtablissementDuCompte"]);
