@@ -3433,6 +3433,17 @@ processus enfant (`docs/plan-pdf-sous-processus.md`, encadré). D'ici là, le
 garde-fou est le seul filet, et un export fige l'application le temps de son
 rendu.]
 
+[2026-11-10, nuit : B1 en processus enfant codé sur `lot/pdf-b1-cc` (depuis
+`cc`, 6cd09e91) — `child_process.fork` par rendu, son propre
+`--max-old-space-size`, environnement sans `NODE_OPTIONS` ; tas dépassé →
+422, délai → 503 avec `Retry-After`, client parti → 503 vide. Sept
+garanties éprouvées en les cassant (`worker/lancer.test.ts`). Coût : environ
+100 Mo de mémoire réelle par export, contre 25 à 30 pour un `worker_thread` ;
+`EXPORT_TAS_MAX_MO` (384, calculé pour un fil) sera sans doute à baisser.
+**Reste ouvert** : la preuve sur le build CC et en préproduction, le banc
+(B3) ; et la décision sur `process.exit(1)` au démarrage si le contrôle de
+santé de Clever Cloud accepte un serveur qui répond 500.]
+
 **Ce qui reste ouvert :**
 - ~~**Seuils provisoires** (2 500 lignes, bloc de 400) : à remplacer par la
   mesure du registre après A1, en XS, sur le banc de charge (session
