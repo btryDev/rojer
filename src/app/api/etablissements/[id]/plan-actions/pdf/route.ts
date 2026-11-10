@@ -1,6 +1,5 @@
 import { requireEtablissement } from "@/lib/auth/scope";
 import { construirePlanActionsData } from "@/lib/pdf/builders";
-import { PlanActionsDocument } from "@/lib/pdf/PlanActionsDocument";
 import { slugifyFilename } from "@/lib/pdf/styles";
 import { reponsePdf } from "@/lib/pdf/reponse";
 
@@ -22,7 +21,7 @@ export async function GET(
   if (!data) return new Response("Établissement introuvable", { status: 404 });
 
   return reponsePdf(
-    PlanActionsDocument({ data }),
+    { type: "plan-actions", props: { data } },
     `Plan_actions_${slugifyFilename(data.etablissement)}.pdf`,
     user.id,
   );

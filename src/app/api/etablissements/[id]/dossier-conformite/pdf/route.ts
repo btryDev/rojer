@@ -1,7 +1,6 @@
 import { aDejaPaye } from "@/lib/abonnements/validation";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { construireDossierConformiteData } from "@/lib/pdf/builders";
-import { DossierConformiteDocument } from "@/lib/pdf/DossierConformiteDocument";
 import { slugifyFilename } from "@/lib/pdf/styles";
 import { reponsePdf } from "@/lib/pdf/reponse";
 
@@ -27,7 +26,10 @@ export async function GET(
 
   return reponsePdf(
     // Sans abonnement payé, un aperçu marqué « Projet – non validé » (ADR-053 § 15).
-    DossierConformiteDocument({ data, projet: !(await aDejaPaye(db, compte.compteId)) }),
+    {
+      type: "dossier-conformite",
+      props: { data, projet: !(await aDejaPaye(db, compte.compteId)) },
+    },
     `Dossier_conformite_${slugifyFilename(data.etablissement)}.pdf`,
     user.id,
   );

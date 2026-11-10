@@ -15,6 +15,8 @@ import {
   referencesRegistreTenue,
   type RegimeDuRegistre,
 } from "./mentions-registre";
+import { pagesDuRegistre, type MorceauFiche, type SectionAttente } from "./decoupage-registre";
+import { PiedFixe } from "./PiedFixe";
 import { LABEL_RESULTAT } from "@/lib/rapports/resultats";
 import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
 import { MARQUAGE_CONTRACTUEL } from "@/lib/prescriptions/sources";
@@ -356,7 +358,17 @@ function piedDeFiche(fiche: FichePdf): string {
 }
 
 /** Une feuille du registre : son titre, son état, ce qu'elle porte, sa date. */
-function FichePdfVue({ fiche }: { fiche: FichePdf }) {
+function FichePdfVue({
+  fiche,
+  suite = false,
+  dernier = true,
+}: {
+  fiche: FichePdf;
+  /** Une tranche après la première : le titre seul, « (suite) ». */
+  suite?: boolean;
+  /** La dernière tranche : elle porte le pied de la fiche. */
+  dernier?: boolean;
+}) {
   const largeur = (n: number) => `${(100 / n).toFixed(4)}%`;
 
   return (
@@ -372,6 +384,9 @@ function FichePdfVue({ fiche }: { fiche: FichePdf }) {
     // Seule la tête reste insécable : un titre de fiche seul en bas de page
     // est laid, un corps tronqué est faux.
     <View style={{ marginTop: 14 }}>
+      {suite ? (
+        <Text style={sr.ficheTitre}>{`${fiche.titre} (suite)`}</Text>
+      ) : (
       <View wrap={false}>
         <View style={sr.ficheTete}>
           <Text style={sr.ficheTitre}>{fiche.titre}</Text>
@@ -395,6 +410,7 @@ function FichePdfVue({ fiche }: { fiche: FichePdf }) {
           </Text>
         )}
       </View>
+      )}
 
       {/* Forme « établissement » ou « formulaire » : des questions, des
           réponses. Une question sans réponse s'imprime quand même — c'est
@@ -501,39 +517,291 @@ function FichePdfVue({ fiche }: { fiche: FichePdf }) {
         </Text>
       )}
 
-      <Text style={sr.fichePied}>{piedDeFiche(fiche)}</Text>
+      {dernier && <Text style={sr.fichePied}>{piedDeFiche(fiche)}</Text>}
+    </View>
+  );
+}
+
+/** Les colonnes de l'index des rapports : une seule source pour l'en-tête et
+ *  les lignes, qui ne peuvent plus se décaler. */
+const COL_RAPPORTS = {
+  date: "14%",
+  obligation: "36%",
+  equipement: "20%",
+  realisePar: "16%",
+  resultat: "14%",
+} as const;
+
+/** Les colonnes des vérifications en attente, même règle. */
+const COL_ATTENTE = { echeance: "14%", obligation: "40%", equipement: "25%", statut: "21%" } as const;
+
+/** L'en-tête de l'index des rapports, répété en tête de chaque feuille. */
+function TeteRapportsPdf() {
+  return (
+    <View style={s.thead} fixed>
+      <Text style={[s.th, { width: COL_RAPPORTS.date }]}>Date</Text>
+      <Text style={[s.th, { width: COL_RAPPORTS.obligation }]}>Obligation</Text>
+      <Text style={[s.th, { width: COL_RAPPORTS.equipement }]}>Équipement</Text>
+      <Text style={[s.th, { width: COL_RAPPORTS.realisePar }]}>Réalisé par</Text>
+      <Text style={[s.th, { width: COL_RAPPORTS.resultat }]}>Résultat</Text>
+    </View>
+  );
+}
+
+/** L'en-tête des vérifications en attente, répété en tête de chaque feuille. */
+function TeteAttentePdf() {
+  return (
+    <View style={s.thead} fixed>
+      <Text style={[s.th, { width: COL_ATTENTE.echeance }]}>Échéance</Text>
+      <Text style={[s.th, { width: COL_ATTENTE.obligation }]}>Obligation</Text>
+      <Text style={[s.th, { width: COL_ATTENTE.equipement }]}>Équipement</Text>
+      <Text style={[s.th, { width: COL_ATTENTE.statut }]}>Statut</Text>
+    </View>
+  );
+}
+
+/** Une ligne de l'index des rapports archivés. */
+function LigneRapportPdf({ r }: { r: LigneRapport }) {
+  return (
+    // `flexWrap` : les points du rapport passent sous sa ligne.
+    // Sans point, une ligne insécable ; avec ses points, elle peut
+    // passer la page — un rapport à trente corrections ne tiendrait
+    // pas sur une seule (revue du 2026-10-24).
+    <View style={[s.row, { flexWrap: "wrap" }]} wrap={r.points.length > 0}>
+      <Text style={[s.td, { width: COL_RAPPORTS.date }]}>
+        {formatDateCourte(r.dateRapport)}
+      </Text>
+      <View style={{ width: COL_RAPPORTS.obligation, paddingRight: 4 }}>
+        <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 9.5 }}>
+          {r.libelleObligation}
+        </Text>
+        <Text style={[s.small, { marginTop: 2 }]}>
+          {r.domaine ? LABEL_DOMAINE[r.domaine] : ""}
+        </Text>
+      </View>
+      <Text style={[s.td, { width: COL_RAPPORTS.equipement }]}>
+        {r.equipementLibelle}
+      </Text>
+      <View style={{ width: COL_RAPPORTS.realisePar, paddingRight: 4 }}>
+        <Text style={s.td}>{r.realisePar ?? "—"}</Text>
+        {r.fichierNomOriginal === null ? (
+          <Text style={[s.small, { marginTop: 2 }]}>Sans pièce jointe</Text>
+        ) : null}
+      </View>
+      <Text style={[s.td, { width: COL_RAPPORTS.resultat }]}>
+        {LABEL_RESULTAT[r.resultat]}
+      </Text>
+      {/* Sous le rapport, ses points et leur correction (ADR-048) :
+          pour les installations électriques, R. 4226-19 veut sur le
+          registre « les justifications des travaux et modifications
+          effectués pour porter remède aux défectuosités
+          constatées ». */}
+      {r.points.length > 0 && (
+        <View style={{ width: "100%", paddingLeft: COL_RAPPORTS.date, marginTop: 3 }}>
+          {r.points.map((p) => (
+            <Text key={p.id} style={[s.small, { marginTop: 1 }]}>
+              {`${LIBELLE_POINT} : ${p.libelle} — ${texteDuPoint(p, formatDateCourte)}`}
+            </Text>
+          ))}
+          {r.domaine === "electricite" && (
+            <Text style={[s.small, { marginTop: 1 }]}>{MENTION_R4226_19}</Text>
+          )}
+        </View>
+      )}
+    </View>
+  );
+}
+
+/** Une ligne des vérifications en attente ou programmées. */
+function LigneAttentePdf({ v }: { v: LigneVerif }) {
+  return (
+    <View style={s.row} wrap={false}>
+      <Text style={[s.td, { width: COL_ATTENTE.echeance }]}>
+        {/* Une date de génération n'est pas une échéance : on ne
+            l'imprime pas dans cette colonne (`echeanceConnue`). */}
+        {v.echeanceConnue ? formatDateCourte(v.datePrevue) : LIBELLE_SANS_ECHEANCE}
+      </Text>
+      <View style={{ width: COL_ATTENTE.obligation, paddingRight: 4 }}>
+        <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 9.5 }}>
+          {v.libelleObligation}
+        </Text>
+        <Text style={[s.small, { marginTop: 2 }]}>
+          {v.domaine ? LABEL_DOMAINE[v.domaine] : ""}
+        </Text>
+        {/* Sous l'obligation, en ambre : c'est la place où la ligne
+            dit ce qu'elle est, et le domaine y est vide pour une
+            obligation sur mesure. Le registre se lit devant une
+            commission de sécurité — ce document ne peut pas laisser
+            une échéance d'assurance passer pour du droit
+            (ADR-032). */}
+        {v.contractuelle && (
+          <Text
+            style={[
+              s.small,
+              { marginTop: 2, color: BOARD.ambreEncre },
+            ]}
+          >
+            {MARQUAGE_CONTRACTUEL}
+          </Text>
+        )}
+        {v.rythmeRetenu && (
+          <Text style={[s.small, { marginTop: 2 }]}>
+            {v.rythmeRetenu}
+          </Text>
+        )}
+        {v.aConfirmer.length > 0 && (
+          <Text style={[s.small, { marginTop: 2 }]}>
+            {`À confirmer. ${v.aConfirmer.join(" ")}`}
+          </Text>
+        )}
+      </View>
+      <Text style={[s.td, { width: COL_ATTENTE.equipement }]}>
+        {v.equipementLibelle}
+      </Text>
+      <Text style={[s.td, { width: COL_ATTENTE.statut }]}>
+        {LIBELLE_STATUT_VERIF[v.statut]}
+      </Text>
+    </View>
+  );
+}
+
+/** La tenue du registre, sur la dernière feuille (exportée pour ses tests). */
+export function TenueDuRegistrePdf({ regime }: { regime: RegistreData["regime"] }) {
+  return (
+    <View style={s.mentionsLegalesBloc}>
+      {/* Trois références, et pas une de plus. R. 143-44 CCH fonde le
+          registre en ERP ; R. 4323-25 et R. 4323-26 CT le fondent côté
+          employeur — ce sont les deux régimes que ce générateur sert.
+
+          ~~« L. 4711-1 et L. 4711-5 CT le fondent côté employeur »~~ —
+          corrigé le 2026-09-20, les deux relus à la source. L. 4711-5
+          « autorise à réunir » : une faculté, ce que le dépôt avait déjà
+          tranché trois fois. L. 4711-1 ne fonde rien non plus : il dit que
+          les documents « COMPORTENT des mentions obligatoires déterminées
+          par voie réglementaire » — le verbe porte sur leur CONTENU, pas
+          sur l'obligation d'en tenir un. Ce qui impose la consignation est
+          R. 4323-25, ce qui impose d'annexer les rapports d'un tiers est
+          R. 4323-26, et ce qui impose de les conserver est D. 4711-3. La
+          fausse paire a tenu parce que R. 4323-25 renvoie lui-même à
+          L. 4711-5 pour NOMMER le registre : le renvoi se lisait comme un
+          fondement.
+
+          R. 146-35 CCH, qui figurait ici, n'y est plus. ~~Motif d'alors :
+          « c'est l'article du registre IGH, et l'IGH est hors périmètre du
+          produit ».~~ CE MOTIF EST FAUX, relevé le 2026-09-20 : l'ADR-031
+          ne refuse à l'entrée qu'un ERP SITUÉ EN IGH — « l'IGH seul n'est
+          pas refusé » —, et `perimetre/couverture.ts` lui POUSSE un manque
+          sur l'axe `igh` au lieu d'écarter son dossier. Un IGH peut donc
+          présenter ce document.
+
+          ~~« le produit ne porte du régime IGH que deux obligations »~~ —
+          faux aussi, mesuré le 2026-09-26 en appelant le référentiel : ONZE
+          obligations admettent l'IGH, trois qui lui sont propres
+          (`elec-igh-annuelle`, `incendie-igh-moyens-secours-annuelle`,
+          `incendie-igh-charge-calorifique-quinquennale`) et huit
+          d'ascenseur, ouvertes à tous les régimes.
+
+          2026-10-07 : les trois lignes propres à l'IGH sont RETIRÉES
+          (périmètre, relecture préventeur du 30/09, décision de la
+          propriétaire du 07/10). Restent les huit d'ascenseur ; la phrase
+          du registre IGH (`phraseRegistreIgh`) ne dépend d'aucune d'elles.
+
+          TRANCHÉ LE 2026-09-26, par le texte. R. 146-35, relu sur sa page
+          Légifrance : « Il doit être tenu, par le propriétaire, un registre
+          de sécurité […] ». Il n'entre donc pas dans le titre — ce document
+          n'est pas ce registre-là, qui est celui de l'immeuble et de son
+          propriétaire — mais il est nommé pour un IGH, en une phrase qui
+          dit de qui il relève (`phraseRegistreIgh`). R. 143-44, lui, n'est
+          plus cité qu'à un ERP : il s'imprimait en titre chez tous. Le
+          dossier de conformité suit la même règle, par le même module. */}
+      <Text style={{ fontFamily: "Helvetica-Bold", marginBottom: 4 }}>
+        Tenue du registre ({referencesRegistreTenue(regime)})
+      </Text>
+      <Text>
+        Ce registre réunit les fiches dues à cet établissement, leur contenu
+        et les rapports de vérification archivés, à tenir à disposition de{" "}
+        {destinatairesRegistre(regime)}. Les
+        fichiers originaux des rapports sont conservés et téléchargeables
+        depuis l&apos;application ; le dossier de contrôle exporté les joint,
+        dans son dossier « Rapports/ ». Une vérification faite en interne
+        peut être consignée sans pièce jointe : la ligne le dit, et le
+        dossier « Rapports/ » n&apos;a alors pas de fichier pour elle.
+      </Text>
+      {phraseRegistreIgh(regime) && (
+        <Text style={{ marginTop: 4 }}>{phraseRegistreIgh(regime)}</Text>
+      )}
     </View>
   );
 }
 
 /**
- * Le pied de page, à instancier une fois par `Page`.
- *
- * ⚠ **Sans numéro de page, et ce n'est pas un oubli.** La prop `render` de
- * `@react-pdf/renderer` (4.5.1) ne produit rien — vérifié en isolant les
- * quatre variantes : `fixed` + texte statique s'imprime, `render` ne
- * s'imprime jamais, qu'il rende une chaîne ou un nœud, avec ou sans `fixed`,
- * sur un `Text` comme sur un `View`.
- *
- * Le défaut ne vient pas de ce document : `stylesCommuns.footer` est utilisé
- * avec `render` par les quatre PDF du produit (DUERP, plan d'actions,
- * dossier de conformité, registre), qui perdent donc tous leur pied de page
- * en silence. Le rétablir partout suppose de monter de version ou de
- * numéroter autrement, ce qui se décide à l'échelle du dossier `pdf/`.
- *
- * En attendant, mieux vaut un pied qui s'imprime sans numéro qu'un pied
- * qui ne s'imprime pas : sur un document d'une cinquantaine de feuilles
- * présenté à un contrôleur, savoir de quel établissement il s'agit est ce
- * qui compte le plus.
+ * Un morceau de fiche sur sa page (`decoupage-registre.ts`) : la tête de la
+ * partie devant son premier morceau, puis la fiche — entière, ou une tranche
+ * de ses lignes.
  */
+/** Exporté pour ses tests. */
+export function MorceauFichePdf({ m }: { m: MorceauFiche }) {
+  return (
+    <>
+      {/* L'en-tête de partie a voyagé avec sa première fiche, dans un même
+          bloc insécable, pour éviter qu'un titre de partie reste seul en bas
+          de page. L'intention était bonne, la portée trop large : la partie 4
+          n'ayant qu'une fiche, son journal d'événements se retrouvait toujours
+          enfermé, donc tronqué dès qu'il grossissait. Un titre orphelin est un
+          défaut d'allure ; une fiche coupée est un document faux. Seul
+          l'en-tête reste insécable. */}
+      {m.ouvrePartie && (
+        <View wrap={false} minPresenceAhead={70}>
+          <View style={sr.partieAccent} />
+          <View style={[sr.partieTete, { marginTop: 6 }]}>
+            <Text style={sr.partieNum}>{m.partie.id}</Text>
+            <Text style={sr.partieTitre}>{m.partie.titre}</Text>
+          </View>
+        </View>
+      )}
+      <FichePdfVue fiche={m.fiche} suite={m.suite} dernier={m.dernier} />
+    </>
+  );
+}
+
+/** Les vérifications en attente d'une page, puis la tenue sur la dernière. */
+function SectionAttentePdf({ section, data }: { section: SectionAttente; data: RegistreData }) {
+  return (
+    <>
+      <Text style={[s.h2, { color: BOARD.encre }]}>
+        {section.rang === 0
+          ? `Vérifications en attente ou programmées${data.verifsEnAttente.length > 0 ? ` — ${data.verifsEnAttente.length}` : ""}`
+          : "Vérifications en attente ou programmées (suite)"}
+      </Text>
+      {section.paquet.length === 0 ? (
+        <Text style={s.small}>
+          {faitAttenteVide({
+            calendrier: data.calendrier,
+            inventaire: data.inventaire,
+          })}
+        </Text>
+      ) : (
+        // Dans sa `View`, comme l'index : l'en-tête fixe ne se répète que sur
+        // les feuilles du tableau, pas sur celle de la tenue.
+        <View>
+          <TeteAttentePdf />
+          {section.paquet.map((v) => (
+            <LigneAttentePdf key={v.id} v={v} />
+          ))}
+        </View>
+      )}
+      {section.dernier && <TenueDuRegistrePdf regime={data.regime} />}
+    </>
+  );
+}
+
+/** Le pied de page du registre, une fois par `Page` (`PiedFixe`). */
 function PiedDePage({ etablissement }: { etablissement: string }) {
   return (
-    <Text
-      style={[s.footer, { color: BOARD.ardoiseMoyenne, borderTopColor: BOARD.ardoiseFilet }]}
-      fixed
-    >
-      {etablissement} — Registre de sécurité incendie
-    </Text>
+    <PiedFixe
+      texte={`${etablissement} — Registre de sécurité incendie`}
+      couleurs={{ color: BOARD.ardoiseMoyenne, borderTopColor: BOARD.ardoiseFilet }}
+    />
   );
 }
 
@@ -550,6 +818,9 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
   // `null` à jour, et quand l'état n'a pas pu être lu (`faitAttenteVide` dit
   // alors « non déterminé ») : le document n'affirme pas un âge qu'il ignore.
   const avertissementCalendrier = data.calendrier ? phraseFraicheur(data.calendrier) : null;
+  // Les pages du corps, celles mêmes que pèse le garde-fou
+  // (`decoupage-registre.ts`).
+  const pages = pagesDuRegistre(data);
 
   return (
     <Document>
@@ -658,240 +929,65 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
         <PiedDePage etablissement={data.etablissement} />
       </Page>
 
-      {/* Le corps : les fiches, dans l'ordre du document. */}
-      <Page size="A4" style={s.page}>
-        {data.parties.map((partie) => (
-          <View key={partie.id}>
-            {/* L'en-tête a voyagé avec sa première fiche, dans un même bloc
-                insécable, pour éviter qu'un titre de partie reste seul en bas
-                de page. L'intention était bonne, la portée trop large : la
-                partie 4 n'ayant qu'une fiche, son journal d'événements se
-                retrouvait toujours enfermé, donc tronqué dès qu'il grossissait.
-                Un titre orphelin est un défaut d'allure ; une fiche coupée est
-                un document faux. Seul l'en-tête reste insécable. */}
-            <View wrap={false} minPresenceAhead={70}>
-              <View style={sr.partieAccent} />
-              <View style={[sr.partieTete, { marginTop: 6 }]}>
-                <Text style={sr.partieNum}>{partie.id}</Text>
-                <Text style={sr.partieTitre}>{partie.titre}</Text>
-              </View>
-            </View>
-            {partie.fiches.map((fiche) => (
-              <FichePdfVue key={fiche.id} fiche={fiche} />
-            ))}
-          </View>
-        ))}
-
-        <PiedDePage etablissement={data.etablissement} />
-      </Page>
-
-      {/* L'index des rapports archivés — la pièce qu'un contrôleur ouvre en
-          premier, et la seule qui pointe vers des fichiers conservés à part. */}
-      <Page size="A4" style={s.page}>
-        <Text style={[s.h1, { color: BOARD.encre }]}>
-          Rapports de vérification archivés
-        </Text>
-        {data.rapports.length === 0 ? (
-          <Text style={s.small}>
-            Aucun rapport archivé à ce jour. Le registre reste tenu à
-            disposition de l&apos;inspection.
-          </Text>
-        ) : (
-          <View>
-            <View style={s.thead}>
-              <Text style={[s.th, { width: "14%" }]}>Date</Text>
-              <Text style={[s.th, { width: "36%" }]}>Obligation</Text>
-              <Text style={[s.th, { width: "20%" }]}>Équipement</Text>
-              <Text style={[s.th, { width: "16%" }]}>Réalisé par</Text>
-              <Text style={[s.th, { width: "14%" }]}>Résultat</Text>
-            </View>
-            {data.rapports.map((r) => (
-              // `flexWrap` : les points du rapport passent sous sa ligne.
-              // Sans point, une ligne insécable ; avec ses points, elle peut
-              // passer la page — un rapport à trente corrections ne tiendrait
-              // pas sur une seule (revue du 2026-10-24).
-              <View key={r.id} style={[s.row, { flexWrap: "wrap" }]} wrap={r.points.length > 0}>
-                <Text style={[s.td, { width: "14%" }]}>
-                  {formatDateCourte(r.dateRapport)}
+      {/* LE CORPS, EN PAGES DE CENT LIGNES AU PLUS (lot pdf-a1, puis revues
+          de la PR #286, 2026-11-10). D'un seul tenant, un tableau coûtait le
+          carré de son nombre de lignes (`paquets.ts`) : 2 274 rapports
+          figeaient l'application 105 s, au-delà le processus mourait ; et un
+          corps de fiches au-delà du garde-fou rendait le registre entier
+          inexportable. Rien n'est retiré ni réordonné : les fiches dans
+          l'ordre du document, une fiche longue sur plusieurs pages (« suite »),
+          puis l'index des rapports par année (du plus récent au plus ancien),
+          les vérifications en attente et la tenue du registre — qui
+          rejoignent la dernière feuille de l'index quand ils y tiennent. */}
+      {pages.map((page, n) => (
+        <Page key={`corps-${n}`} size="A4" style={s.page}>
+          {page.genre === "fiches" &&
+            page.morceaux.map((m) => <MorceauFichePdf key={`${m.fiche.id}-${n}`} m={m} />)}
+          {page.genre === "index" && (
+            <>
+              {page.premiere && (
+                <Text style={[s.h1, { color: BOARD.encre }]}>
+                  Rapports de vérification archivés
                 </Text>
-                <View style={{ width: "36%", paddingRight: 4 }}>
-                  <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 9.5 }}>
-                    {r.libelleObligation}
-                  </Text>
-                  <Text style={[s.small, { marginTop: 2 }]}>
-                    {r.domaine ? LABEL_DOMAINE[r.domaine] : ""}
-                  </Text>
-                </View>
-                <Text style={[s.td, { width: "20%" }]}>
-                  {r.equipementLibelle}
+              )}
+              {page.feuille.length === 0 && (
+                <Text style={s.small}>
+                  Aucun rapport archivé à ce jour. Le registre reste tenu à
+                  disposition de l&apos;inspection.
                 </Text>
-                <View style={{ width: "16%", paddingRight: 4 }}>
-                  <Text style={s.td}>{r.realisePar ?? "—"}</Text>
-                  {r.fichierNomOriginal === null ? (
-                    <Text style={[s.small, { marginTop: 2 }]}>Sans pièce jointe</Text>
-                  ) : null}
-                </View>
-                <Text style={[s.td, { width: "14%" }]}>
-                  {LABEL_RESULTAT[r.resultat]}
-                </Text>
-                {/* Sous le rapport, ses points et leur correction (ADR-048) :
-                    pour les installations électriques, R. 4226-19 veut sur le
-                    registre « les justifications des travaux et modifications
-                    effectués pour porter remède aux défectuosités
-                    constatées ». */}
-                {r.points.length > 0 && (
-                  <View style={{ width: "100%", paddingLeft: "14%", marginTop: 3 }}>
-                    {r.points.map((p) => (
-                      <Text key={p.id} style={[s.small, { marginTop: 1 }]}>
-                        {`${LIBELLE_POINT} : ${p.libelle} — ${texteDuPoint(p, formatDateCourte)}`}
-                      </Text>
+              )}
+              {/* Le titre d'année reste au niveau de la `<Page>` : react-pdf
+                  n'applique `minPresenceAhead` qu'à un nœud qui a un frère
+                  avant lui, et c'est ce qui l'empêche de rester seul, avec son
+                  en-tête, en bas de feuille. Le tableau vit dans sa `View`,
+                  pour que son en-tête fixe ne se répète que sur ses feuilles. */}
+              {page.feuille.flatMap((segment) => {
+                const cle = `${segment.annee}-${segment.lignes[0].id}`;
+                return [
+                  <Text
+                    key={`titre-${cle}`}
+                    style={[s.h2, { color: BOARD.encre }]}
+                    minPresenceAhead={70}
+                  >
+                    {segment.suite
+                      ? `${segment.annee} (suite)`
+                      : `${segment.annee} — ${segment.total} rapport${segment.total > 1 ? "s" : ""}`}
+                  </Text>,
+                  <View key={`tableau-${cle}`}>
+                    <TeteRapportsPdf />
+                    {segment.lignes.map((r) => (
+                      <LigneRapportPdf key={r.id} r={r} />
                     ))}
-                    {r.domaine === "electricite" && (
-                      <Text style={[s.small, { marginTop: 1 }]}>{MENTION_R4226_19}</Text>
-                    )}
-                  </View>
-                )}
-              </View>
-            ))}
-          </View>
-        )}
-
-        <Text style={[s.h2, { color: BOARD.encre }]}>
-          Vérifications en attente ou programmées
-        </Text>
-        {data.verifsEnAttente.length === 0 ? (
-          <Text style={s.small}>
-            {faitAttenteVide({
-              calendrier: data.calendrier,
-              inventaire: data.inventaire,
-            })}
-          </Text>
-        ) : (
-          <View>
-            <View style={s.thead}>
-              <Text style={[s.th, { width: "14%" }]}>Échéance</Text>
-              <Text style={[s.th, { width: "40%" }]}>Obligation</Text>
-              <Text style={[s.th, { width: "25%" }]}>Équipement</Text>
-              <Text style={[s.th, { width: "21%" }]}>Statut</Text>
-            </View>
-            {data.verifsEnAttente.map((v) => (
-              <View key={v.id} style={s.row} wrap={false}>
-                <Text style={[s.td, { width: "14%" }]}>
-                  {/* Une date de génération n'est pas une échéance : on ne
-                      l'imprime pas dans cette colonne (`echeanceConnue`). */}
-                  {v.echeanceConnue ? formatDateCourte(v.datePrevue) : LIBELLE_SANS_ECHEANCE}
-                </Text>
-                <View style={{ width: "40%", paddingRight: 4 }}>
-                  <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 9.5 }}>
-                    {v.libelleObligation}
-                  </Text>
-                  <Text style={[s.small, { marginTop: 2 }]}>
-                    {v.domaine ? LABEL_DOMAINE[v.domaine] : ""}
-                  </Text>
-                  {/* Sous l'obligation, en ambre : c'est la place où la ligne
-                      dit ce qu'elle est, et le domaine y est vide pour une
-                      obligation sur mesure. Le registre se lit devant une
-                      commission de sécurité — ce document ne peut pas laisser
-                      une échéance d'assurance passer pour du droit
-                      (ADR-032). */}
-                  {v.contractuelle && (
-                    <Text
-                      style={[
-                        s.small,
-                        { marginTop: 2, color: BOARD.ambreEncre },
-                      ]}
-                    >
-                      {MARQUAGE_CONTRACTUEL}
-                    </Text>
-                  )}
-                  {v.rythmeRetenu && (
-                    <Text style={[s.small, { marginTop: 2 }]}>
-                      {v.rythmeRetenu}
-                    </Text>
-                  )}
-                  {v.aConfirmer.length > 0 && (
-                    <Text style={[s.small, { marginTop: 2 }]}>
-                      {`À confirmer. ${v.aConfirmer.join(" ")}`}
-                    </Text>
-                  )}
-                </View>
-                <Text style={[s.td, { width: "25%" }]}>
-                  {v.equipementLibelle}
-                </Text>
-                <Text style={[s.td, { width: "21%" }]}>
-                  {LIBELLE_STATUT_VERIF[v.statut]}
-                </Text>
-              </View>
-            ))}
-          </View>
-        )}
-
-        <View style={s.mentionsLegalesBloc}>
-          {/* Trois références, et pas une de plus. R. 143-44 CCH fonde le
-              registre en ERP ; R. 4323-25 et R. 4323-26 CT le fondent côté
-              employeur — ce sont les deux régimes que ce générateur sert.
-
-              ~~« L. 4711-1 et L. 4711-5 CT le fondent côté employeur »~~ —
-              corrigé le 2026-09-20, les deux relus à la source. L. 4711-5
-              « autorise à réunir » : une faculté, ce que le dépôt avait déjà
-              tranché trois fois. L. 4711-1 ne fonde rien non plus : il dit que
-              les documents « COMPORTENT des mentions obligatoires déterminées
-              par voie réglementaire » — le verbe porte sur leur CONTENU, pas
-              sur l'obligation d'en tenir un. Ce qui impose la consignation est
-              R. 4323-25, ce qui impose d'annexer les rapports d'un tiers est
-              R. 4323-26, et ce qui impose de les conserver est D. 4711-3. La
-              fausse paire a tenu parce que R. 4323-25 renvoie lui-même à
-              L. 4711-5 pour NOMMER le registre : le renvoi se lisait comme un
-              fondement.
-
-              R. 146-35 CCH, qui figurait ici, n'y est plus. ~~Motif d'alors :
-              « c'est l'article du registre IGH, et l'IGH est hors périmètre du
-              produit ».~~ CE MOTIF EST FAUX, relevé le 2026-09-20 : l'ADR-031
-              ne refuse à l'entrée qu'un ERP SITUÉ EN IGH — « l'IGH seul n'est
-              pas refusé » —, et `perimetre/couverture.ts` lui POUSSE un manque
-              sur l'axe `igh` au lieu d'écarter son dossier. Un IGH peut donc
-              présenter ce document.
-
-              ~~« le produit ne porte du régime IGH que deux obligations »~~ —
-              faux aussi, mesuré le 2026-09-26 en appelant le référentiel : ONZE
-              obligations admettent l'IGH, trois qui lui sont propres
-              (`elec-igh-annuelle`, `incendie-igh-moyens-secours-annuelle`,
-              `incendie-igh-charge-calorifique-quinquennale`) et huit
-              d'ascenseur, ouvertes à tous les régimes.
-
-              2026-10-07 : les trois lignes propres à l'IGH sont RETIRÉES
-              (périmètre, relecture préventeur du 30/09, décision de la
-              propriétaire du 07/10). Restent les huit d'ascenseur ; la phrase
-              du registre IGH (`phraseRegistreIgh`) ne dépend d'aucune d'elles.
-
-              TRANCHÉ LE 2026-09-26, par le texte. R. 146-35, relu sur sa page
-              Légifrance : « Il doit être tenu, par le propriétaire, un registre
-              de sécurité […] ». Il n'entre donc pas dans le titre — ce document
-              n'est pas ce registre-là, qui est celui de l'immeuble et de son
-              propriétaire — mais il est nommé pour un IGH, en une phrase qui
-              dit de qui il relève (`phraseRegistreIgh`). R. 143-44, lui, n'est
-              plus cité qu'à un ERP : il s'imprimait en titre chez tous. Le
-              dossier de conformité suit la même règle, par le même module. */}
-          <Text style={{ fontFamily: "Helvetica-Bold", marginBottom: 4 }}>
-            Tenue du registre ({referencesRegistreTenue(data.regime)})
-          </Text>
-          <Text>
-            Ce registre réunit les fiches dues à cet établissement, leur contenu
-            et les rapports de vérification archivés, à tenir à disposition de{" "}
-            {destinatairesRegistre(data.regime)}. Les
-            fichiers originaux des rapports sont conservés et téléchargeables
-            depuis l&apos;application ; le dossier de contrôle exporté les joint,
-            dans son dossier « Rapports/ ». Une vérification faite en interne
-            peut être consignée sans pièce jointe : la ligne le dit, et le
-            dossier « Rapports/ » n&apos;a alors pas de fichier pour elle.
-          </Text>
-          {phraseRegistreIgh(data.regime) && (
-            <Text style={{ marginTop: 4 }}>{phraseRegistreIgh(data.regime)}</Text>
+                  </View>,
+                ];
+              })}
+              {page.attente && <SectionAttentePdf section={page.attente} data={data} />}
+            </>
           )}
-        </View>
-
-        <PiedDePage etablissement={data.etablissement} />
-      </Page>
+          {page.genre === "attente" && <SectionAttentePdf section={page.attente} data={data} />}
+          <PiedDePage etablissement={data.etablissement} />
+        </Page>
+      ))}
     </Document>
   );
 }

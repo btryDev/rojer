@@ -21,7 +21,8 @@
  * Puis, pour le processus : le RSS avant les mesures et le pic (`maxRSS`).
  *
  * Avec [concurrence] > 1, autant d'exports partent ensemble, et le scénario
- * relève en plus combien sont refusés (503).
+ * relève en plus combien sont refusés : 503 pour la file pleine, 422 pour un
+ * document refusé par le garde-fou de volume (`pdf/rendre.ts`).
  */
 import { performance } from "node:perf_hooks";
 
@@ -126,6 +127,7 @@ async function main() {
       statuts,
       entetes: r0[0].entetes,
       refus503: mesures.reduce((a, m) => a + m.resultats.filter((r) => r.statut === 503).length, 0),
+      refus422: mesures.reduce((a, m) => a + m.resultats.filter((r) => r.statut === 422).length, 0),
       rssAvantMo: mo(rssAvant),
       picRssMo: mo(maxRss),
     }),

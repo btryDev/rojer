@@ -3396,3 +3396,76 @@ n'ouvre l'accès aux données d'un autre compte. Chemins : `cc` sauf mention.
   par compte.
 - ~~Dernière entrée de `X-Forwarded-For` à vérifier chez Clever Cloud~~ —
   au plan de bascule (points 3 et 6), #276.
+
+## 23. Les PDF trop volumineux — un garde-fou, pas une solution (2026-11-10)
+
+Lot `lot/pdf-b0`, sur `lot/pdf-a1`. Le plan du chantier est
+`docs/plan-pdf-sous-processus.md` ; le diagnostic,
+`docs/revues/generation-pdf-volume-2026-11-10.md`.
+
+**Le palliatif.** `rendrePdf` (`src/lib/pdf/rendre.ts`) refuse de mettre en
+page un document qui dépasse `SEUILS_PDF` (lignes du document, lignes de la
+plus grosse `<Page>`) : ~~503~~ 422 [2026-11-10, décision de la propriétaire :
+un refus définitif ne se confond plus avec la file pleine] « trop volumineux…
+reste consultable à l'écran »,
+pièce absente du ZIP de contrôle. ~~Il empêche un seul export de figer ou de
+tuer le processus pour tous~~ [2026-11-10, revue : plus affirmatif que le
+code] Il borne la taille d'un export mis en page dans le processus web, avec
+des seuils mesurés sur le banc ; il ne rend pas le document, et sous le
+seuil un export fige encore l'application le temps de son rendu (banc, XS :
+environ 7 s pour un registre d'un an). **À retirer ou à relever** quand
+les gros exports passent en tâche de fond (lien par mail + ZIP) ou quand le
+rendu sort du processus (plan, B1-B3).
+
+[2026-11-10, décisions de la propriétaire, le même jour : **B1-B3 sont
+lancés** (`lot/pdf-b1`) après la mesure d'A1 en XS — le processus meurt dès
+3 080 rapports, un registre d'un an fige l'application environ 7 s. Le
+garde-fou reste le premier filet, le fil d'exécution devient le second (un
+tas dépassé n'emporte que l'export ; il revient comme le même refus « trop
+volumineux »). **On garde tout et on exporte tout** : ni borne du registre à
+5 ans, ni suppression ; les gros dossiers passeront par le lien par mail +
+ZIP, puis par une archive annuelle « hybride ».]
+
+[2026-11-10, soir : A1 et B0 fusionnent seuls ; le rendu hors du processus
+attend la préproduction. Sur Clever Cloud, le `--max-old-space-size` injecté
+par la plateforme annule la borne d'un `worker_thread` : B1 passe à un
+processus enfant (`docs/plan-pdf-sous-processus.md`, encadré). D'ici là, le
+garde-fou est le seul filet, et un export fige l'application le temps de son
+rendu.]
+
+**Ce qui reste ouvert :**
+- ~~**Seuils provisoires** (2 500 lignes, bloc de 400) : à remplacer par la
+  mesure du registre après A1, en XS, sur le banc de charge (session
+  `rojer-outils-cb`), avec une marge de moitié.~~ [2026-11-10 : remplacés,
+  et PAR TYPE de document (revue : le seuil du registre refusait un DUERP de
+  cent risques). Registre : ~~total 1 200, la moitié des 2 274 rapports qui
+  passent en XS~~ [même jour : 1 200 comptait des rapports, pas des lignes]
+  total 2 000 lignes, bloc 400, mesurés en lignes sur le banc XS (dernier qui
+  passe 2 921, mort vers 3 700 ; gel d'une dizaine de secondes à 2 000).
+  Autres documents : non mesurés, borne large (5 000 / 2 000).] **Reste
+  ouvert** : remesurer avec le worker (B1-B3) et en S ; le DUERP, le plan
+  d'actions et les points à corriger restent à mesurer.
+- **Réglage par instance** : les seuils sont des constantes ; ils devront
+  suivre la taille de l'instance (XS au départ, S ensuite).
+- **Tableaux encore d'un seul tenant** : ~~le corps des fiches du registre
+  (journaux),~~ les tableaux du dossier de conformité, du plan d'actions, des
+  points à corriger d'un appareil, et les pages du DUERP (inventaire, plan de
+  prévention, historique des versions). Le garde-fou les compte ; le
+  découpage d'A1 ne les touche pas. ~~Le corps des fiches reprend les
+  équipements : environ 450 lignes pour 150 appareils, au-delà du bloc de
+  400 — le registre entier serait refusé. Le seuil de bloc doit suivre la
+  cible (100 appareils, environ 300 lignes).~~ [2026-11-10, revue de la PR
+  #286 : le corps des fiches se découpe comme l'index (`decoupage-registre.ts`,
+  pages de 100 lignes, une fiche longue sur plusieurs pages « suite ») ; les
+  vérifications en attente se pèsent à leurs lignes. Aucune page du registre
+  ne dépasse plus 100 lignes — sauf un rapport seul de plus de 99 points à corriger,
+  qu'aucune borne n'empêche (`rapports/schema.ts`) : le seuil du bloc ne
+  refuse plus un registre que dans ce cas, à 399 points ou plus ; sinon,
+  seul le total le peut.]
+- **Passage de XS à S** : seuils proposés le 2026-11-10 (p95 des pages > 1 s,
+  p95 des exports > 10 s ou un export > 30 s, RSS > 70 % ou un redémarrage
+  pour mémoire, CPU > 60 % en continu, premier refus en production), à fixer
+  par la propriétaire. Le journal `export_pdf` en donne la matière.
+- **Vérifié le 2026-11-10** : aucun import de rapports en masse. Les rapports
+  se déposent un par un (`uploadRapport`, `src/lib/rapports/actions.ts`) ; le
+  seul import est celui du DUERP.

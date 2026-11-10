@@ -1,5 +1,4 @@
 import { exigerUnPaiement } from "@/lib/abonnements/validation";
-import { renderToBuffer } from "@react-pdf/renderer";
 import { mesureParId, surListeAnterieure } from "@/lib/permis-feu/referentiel";
 import { dureeHhMm } from "@/lib/permis-feu/duree";
 import JSZip from "jszip";
@@ -32,11 +31,8 @@ import {
   construirePlanActionsData,
   construireRegistreData,
 } from "@/lib/pdf/builders";
-import { DossierConformiteDocument } from "@/lib/pdf/DossierConformiteDocument";
 import { historiqueJusqua } from "@/lib/versions/historique";
-import { DuerpDocument } from "@/lib/pdf/DuerpDocument";
-import { PlanActionsDocument } from "@/lib/pdf/PlanActionsDocument";
-import { RegistreDocument } from "@/lib/pdf/RegistreDocument";
+import { raisonEchecRendu, rendrePdf } from "@/lib/pdf/rendre";
 import { slugifyFilename } from "@/lib/pdf/styles";
 import { contenuR4512_8 } from "@/lib/plan-prevention/contenu-r4512-8";
 import { annoncesZip, ligneHeuresRevisees } from "@/lib/plan-prevention/annonces-plan";
@@ -79,6 +75,9 @@ import { resultatAnalyse } from "@/lib/carnet-sanitaire/schema";
 import { formaterMesure } from "@/lib/rendu/mesures";
 import { lignesPointDeReleve } from "@/lib/carnet-sanitaire/export";
 import { registreAuDossier } from "@/lib/accessibilite/registre-au-dossier";
+
+/** Les rendus du ZIP se journalisent sous leur origine (`export_pdf`). */
+const RENDU_DU_ZIP = { origine: "zip" } as const;
 
 /** Les dates de l'attestation d'un prestataire, telles que le ZIP les écrit. */
 function datesAttestationZip(p: {
@@ -211,9 +210,14 @@ async function construireArchive(
   // noté ici, par le nom du fichier qu'il prive, et le README ne décrit que ce
   // que le ZIP contient vraiment (`zip.files`).
   const echecs = new Map<string, string>();
+  // Un document refusé par le garde-fou des PDF (`pdf/rendre.ts`) se dit
+  // comme tel : « trop volumineux », pas « la génération a échoué ».
   const noterEchec = (fichier: string, e: unknown, raison = "la génération a échoué") => {
-    echecs.set(fichier, raison);
-    console.error(`controle-zip : ${fichier} non inclus`, e);
+    // Un refus du garde-fou a sa raison, et il est déjà journalisé par
+    // `rendrePdf` (ligne `export_pdf`, niveau warn) : il ne se dit qu'une fois.
+    const refus = raisonEchecRendu(e);
+    echecs.set(fichier, refus ?? raison);
+    if (!refus) console.error(`controle-zip : ${fichier} non inclus`, e);
   };
   let piecesPrestatairesManquantes = 0;
   // Les pièces de prestataires réellement mises au ZIP, par type : le README
@@ -254,14 +258,21 @@ async function construireArchive(
   try {
     const data = await construireDossierConformiteData(db, id);
     if (data) {
+      // LES FAITS DU DOSSIER AVANT LE RENDU, comme pour le DUERP : le nombre
+      // de retards et l'inventaire disent l'état de l'établissement, pas le
+      // contenu du ZIP — un dossier refusé parce qu'il porte beaucoup de
+      // retards doit encore les annoncer (revue du 2026-11-10).
+      nbVerifsEnRetard = data.verifsEnRetard.length;
+      inventaire = data.couverture ? faitInventaire(data.couverture) : null;
+      const buf = await rendrePdf({ type: "dossier-conformite", props: { data } }, RENDU_DU_ZIP);
+      zip.file(PIECES_ZIP.dossier, new Uint8Array(buf));
+      // CE QUI EST IMPRIMÉ APRÈS : collectées avant, les échéances
+      // contractuelles et les rythmes étaient annoncés « imprimés dans ce
+      // dossier » pour un PDF refusé ou en échec (lot pdf-b0, 2026-11-10).
       for (const v of data.verifsEnRetard) {
         if (v.contractuelle) echeancesContractuelles.add(v.id);
         if (v.rythmeRetenu) rythmesRetenus.set(v.id, v.rythmeRetenu);
       }
-      nbVerifsEnRetard = data.verifsEnRetard.length;
-      inventaire = data.couverture ? faitInventaire(data.couverture) : null;
-      const buf = await renderToBuffer(DossierConformiteDocument({ data }));
-      zip.file(PIECES_ZIP.dossier, new Uint8Array(buf));
     }
   } catch (e) {
     // On continue même si une brique échoue — et on le dit.
@@ -300,7 +311,7 @@ async function construireArchive(
       // l'article n'exige aucune traçabilité — rayé le 2026-09-26.)
       const historique = historiqueJusqua(versions, versionCourante.numero);
       // LES FAITS AVANT LE RENDU, qui peut jeter. Affectés après, une panne
-      // de `renderToBuffer` laissait `duerpNumeroVersion` à `null` et la
+      // de `rendrePdf` laissait `duerpNumeroVersion` à `null` et la
       // checklist imprimait « aucune version figée — à créer avant le
       // contrôle » alors qu'une version existait. Le `catch` promettait que
       // « le README dira que le DUERP n'est pas inclus » : vrai du sommaire,
@@ -315,12 +326,13 @@ async function construireArchive(
       // Les entrées non plus (2026-10-12) : l'écran « Préparer un contrôle »
       // passe par la même fonction, avec les mêmes.
       etatDuerp = etatDuerpDuDossier(versionCourante, etablissement, maintenant);
-      const buf = await renderToBuffer(
-        DuerpDocument({
+      const buf = await rendrePdf({
+        type: "duerp",
+        props: {
           snapshot: versionCourante.snapshot as unknown as DuerpSnapshot,
           historique,
-        }),
-      );
+        },
+      }, RENDU_DU_ZIP);
       zip.file(fichierDuerp(versionCourante.numero), new Uint8Array(buf));
     }
   } catch (e) {
@@ -339,16 +351,19 @@ async function construireArchive(
   try {
     const data = await construireRegistreData(acces, id);
     if (data) {
+      // Les annexes, lues avec le registre : une seule lecture pour le PDF
+      // et pour 03_Registre_annexes/ (relecture du 2026-11-05). Avant le
+      // rendu : les fichiers annexés vont au ZIP même si le PDF est refusé.
+      annexesListees = data.annexes ?? [];
+      const buf = await rendrePdf({ type: "registre", props: { data } }, RENDU_DU_ZIP);
+      zip.file(PIECES_ZIP.registre, new Uint8Array(buf));
+      // Après le rendu, comme pour 01 : le README n'annonce que ce qui est
+      // imprimé.
       for (const v of data.verifsEnAttente) {
         if (v.contractuelle) echeancesContractuelles.add(v.id);
         if (v.rythmeRetenu) rythmesRetenus.set(v.id, v.rythmeRetenu);
         if (v.pourInformation) visitesPourInformation.add(v.id);
       }
-      // Les annexes, lues avec le registre : une seule lecture pour le PDF
-      // et pour 03_Registre_annexes/ (relecture du 2026-11-05).
-      annexesListees = data.annexes ?? [];
-      const buf = await renderToBuffer(RegistreDocument({ data }));
-      zip.file(PIECES_ZIP.registre, new Uint8Array(buf));
     }
   } catch (e) {
     noterEchec(PIECES_ZIP.registre, e);
@@ -391,7 +406,7 @@ async function construireArchive(
   try {
     const data = await construirePlanActionsData(db, id);
     if (data) {
-      const buf = await renderToBuffer(PlanActionsDocument({ data }));
+      const buf = await rendrePdf({ type: "plan-actions", props: { data } }, RENDU_DU_ZIP);
       zip.file(PIECES_ZIP.plan, new Uint8Array(buf));
     }
   } catch (e) {

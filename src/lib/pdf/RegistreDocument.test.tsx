@@ -10,7 +10,8 @@
 import { describe, expect, it } from "vitest";
 import { elementsDansLOrdre, texteDirect } from "./arbre-rendu.test-utils";
 import { renderToBuffer } from "@react-pdf/renderer";
-import { RegistreDocument, type RegistreData } from "./RegistreDocument";
+import { MorceauFichePdf, RegistreDocument, TenueDuRegistrePdf, type RegistreData } from "./RegistreDocument";
+import { pagesDuRegistre } from "./decoupage-registre";
 import { phraseFraicheur } from "@/lib/calendrier/fraicheur";
 
 const data: RegistreData = {
@@ -179,8 +180,13 @@ describe("RegistreDocument", () => {
     // et la compression, et le rendu ERP est sorti PLUS COURT que le rendu
     // sans régime, avec la citation en plus. La taille n'était qu'un
     // substitut ; l'arbre de rendu dit le texte.
+    // La tenue est un sous-composant (lot pdf-a1) : son arbre se lit à part,
+    // et le test du découpage vérifie qu'elle est bien au document.
     const textes = (regime: { estERP: boolean; estIGH: boolean }) =>
-      elementsDansLOrdre(RegistreDocument({ data: { ...data, regime } }))
+      [
+        ...elementsDansLOrdre(RegistreDocument({ data: { ...data, regime } })),
+        ...elementsDansLOrdre(TenueDuRegistrePdf({ regime })),
+      ]
         .map(texteDirect)
         .join("\n");
     const aucun = textes({ estERP: false, estIGH: false });
@@ -197,13 +203,152 @@ describe("RegistreDocument", () => {
   it("ne met pas R. 146-35 dans le titre du registre, et le nomme à part en IGH", () => {
     // Ce document n'est pas le registre de l'immeuble (R. 146-35 : « tenu,
     // par le propriétaire ») : le titre ne cite que ce qu'il met en œuvre.
-    const noeuds = elementsDansLOrdre(
-      RegistreDocument({ data: { ...data, regime: { estERP: true, estIGH: true } } }),
-    );
+    const noeuds = elementsDansLOrdre(TenueDuRegistrePdf({ regime: { estERP: true, estIGH: true } }));
     const titre = noeuds.map(texteDirect).find((t) => t.startsWith("Tenue du registre ("));
     expect(titre).toBeDefined();
     expect(titre).toContain("R. 143-44 CCH");
     expect(titre).not.toContain("146-35");
     expect(noeuds.map(texteDirect).some((t) => /R\. 146-35 CCH.*propriétaire/.test(t))).toBe(true);
+  });
+});
+
+// Lot pdf-a1 (2026-11-10) : l'index des rapports est coupé en `<Page>` de cent
+// lignes au plus, par année (`paquets.ts`), parce que d'un seul tenant son rendu
+// coûtait le carré du nombre de lignes. Le découpage ne doit RIEN perdre.
+describe("RegistreDocument — index des rapports découpé", () => {
+  /** `n` rapports de l'année `annee`, du plus récent au plus ancien. */
+  const rapportsDe = (annee: number, n: number, depart = 0): RegistreData["rapports"] =>
+    Array.from({ length: n }, (_, i) => ({
+      id: `${annee}-${depart + i}`,
+      dateRapport: new Date(Date.UTC(annee, 11, 28) - i * 3_600_000),
+      resultat: "conforme" as const,
+      realisePar: "Organisme",
+      libelleObligation: `Vérification ${i}`,
+      equipementLibelle: "Tableau électrique",
+      domaine: null,
+      fichierNomOriginal: "rapport.pdf",
+      commentaires: null,
+      points:
+        i % 7 === 0
+          ? [{ id: `p-${annee}-${i}`, libelle: "Prise", etat: "corrige" as const, corrigeLe: new Date(Date.UTC(annee, 11, 30)), justification: "Remplacée", pieceJointe: false }]
+          : [],
+    }));
+  // 2026 : 250 lignes, donc trois paquets ; 2025 : 3 ; 2023 : 1.
+  const rapports = [...rapportsDe(2026, 250), ...rapportsDe(2025, 3), ...rapportsDe(2023, 1)];
+  const avecRapports: RegistreData = { ...data, rapports };
+  const noeuds = elementsDansLOrdre(RegistreDocument({ data: avecRapports }));
+
+  it("garde tous les rapports, une fois chacun, dans l'ordre d'entrée", () => {
+    const ids = noeuds
+      .filter((n) => n.type === "LigneRapportPdf")
+      .map((n) => (n.props.r as { id: string }).id);
+    expect(ids).toEqual(rapports.map((r) => r.id));
+  });
+
+  it("ouvre chaque année par son compte, et dit la suite sur les paquets suivants", () => {
+    const titres = noeuds.map(texteDirect).filter((t) => /^20\d\d( —|\s\(suite\))/.test(t));
+    expect(titres).toEqual([
+      "2026 — 250 rapports",
+      "2026 (suite)",
+      "2026 (suite)",
+      "2025 — 3 rapports",
+      "2023 — 1 rapport",
+    ]);
+  });
+
+  it("répète l'en-tête du tableau sur chaque paquet, et le fixe en tête de feuille", () => {
+    const tetes = noeuds.filter((n) => n.type === "TeteRapportsPdf");
+    expect(tetes).toHaveLength(5);
+  });
+
+  it("met la tenue du registre une seule fois, sur la dernière section d'attente, après l'index", () => {
+    // Les sections sont des sous-composants : on lit leurs props.
+    const sections = noeuds.filter((n) => n.type === "SectionAttentePdf");
+    expect(sections.map((n) => (n.props.section as { dernier: boolean }).dernier)).toEqual([
+      ...Array(sections.length - 1).fill(false),
+      true,
+    ]);
+    const types = noeuds.map((n) => n.type);
+    expect(types.lastIndexOf("LigneRapportPdf")).toBeLessThan(types.indexOf("SectionAttentePdf"));
+  });
+
+  it("une année riche en points est découpée au poids des lignes, sans rien perdre", () => {
+    // 100 rapports d'une même année à 4 points : 5 lignes chacun, donc 20 par
+    // <Page> et 5 <Page>, au lieu d'une <Page> de 500 lignes.
+    const riches = rapportsDe(2026, 100).map((r) => ({
+      ...r,
+      points: Array.from({ length: 4 }, (_, k) => ({ ...(r.points[0] ?? {
+        id: "", libelle: "Prise", etat: "corrige" as const, corrigeLe: null, justification: null, pieceJointe: false,
+      }), id: `${r.id}-p${k}` })),
+    }));
+    const arbre = elementsDansLOrdre(RegistreDocument({ data: { ...data, rapports: riches } }));
+    const ids = arbre.filter((n) => n.type === "LigneRapportPdf").map((n) => (n.props.r as { id: string }).id);
+    expect(ids).toEqual(riches.map((r) => r.id));
+    expect(arbre.filter((n) => n.type === "TeteRapportsPdf")).toHaveLength(5);
+  });
+
+  it("rend un registre dont le journal compte 250 lignes, en plusieurs pages (« suite »)", async () => {
+    const long = {
+      ...data,
+      parties: [
+        {
+          id: "4",
+          titre: "Événements",
+          fiches: [
+            {
+              id: "j",
+              titre: "Comptes rendus d'incendie",
+              attendu: "Date, fait",
+              raisons: [],
+              aConfirmer: [],
+              etat: "Consignée",
+              ton: "faite" as const,
+              misAJourLe: null,
+              colonnes: ["Date", "Fait"],
+              lignes: Array.from({ length: 250 }, (_, i) => [`0${i % 9}/01/2026`, `Fait ${i}`]),
+            },
+          ],
+        },
+      ],
+    };
+    const noeudsLong = elementsDansLOrdre(RegistreDocument({ data: long }));
+    expect(noeudsLong.filter((n) => n.type === "MorceauFichePdf")).toHaveLength(3);
+    const pdf = await renderToBuffer(RegistreDocument({ data: long }));
+    expect(nombreDePages(pdf)).toBeGreaterThanOrEqual(1 + 1 + 3 + 1);
+  });
+
+  it("une fiche longue : la tête sur le premier morceau, « suite » ensuite, le pied sur le dernier", () => {
+    const journal = {
+      id: "j",
+      titre: "Journal",
+      attendu: "",
+      raisons: [],
+      aConfirmer: [],
+      etat: "",
+      ton: "faite" as const,
+      misAJourLe: null,
+      colonnes: ["Date", "Fait"],
+      lignes: Array.from({ length: 250 }, (_, i) => [`${i}`, `fait ${i}`]),
+    };
+    const pages = pagesDuRegistre({ ...data, parties: [{ id: "4", titre: "Événements", fiches: [journal] }] });
+    const morceaux = pages.flatMap((p) => (p.genre === "fiches" ? p.morceaux : []));
+    // Ce que chaque morceau transmet à la fiche qu'il rend.
+    const props = morceaux.map((m) => {
+      const fiche = elementsDansLOrdre(MorceauFichePdf({ m })).find((n) => n.type === "FichePdfVue")!;
+      return [fiche.props.suite, fiche.props.dernier];
+    });
+    expect(props).toEqual([
+      [false, false],
+      [true, false],
+      [true, true],
+    ]);
+  });
+
+  it("rend le PDF avec un index de plusieurs paquets", async () => {
+    const pdf = await renderToBuffer(RegistreDocument({ data: avecRapports }));
+    expect(pdf.subarray(0, 4).toString()).toBe("%PDF");
+    // Garde de cette page, sommaire, fiches, puis au moins une feuille par
+    // paquet (5) et une pour les vérifications en attente.
+    expect(nombreDePages(pdf)).toBeGreaterThanOrEqual(1 + 1 + 1 + 5 + 1);
   });
 });
