@@ -70,7 +70,6 @@ export function exportsSimultanes(valeur = process.env.EXPORTS_SIMULTANES): numb
   return Number(v);
 }
 
-export { creerLimiteur, type Liberer, type Limiteur } from "@/lib/securite/limiteur";
 import { creerLimiteur, type Liberer, type Limiteur } from "@/lib/securite/limiteur";
 
 /** Le limiteur du processus, partagé par toutes les routes d'export. */

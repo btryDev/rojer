@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { creerLimiteur } from "@/lib/securite/limiteur";
 import {
-  creerLimiteur,
   exportsSimultanes,
   EXPORTS_SIMULTANES_DEFAUT,
   reserverPlaceExport,
