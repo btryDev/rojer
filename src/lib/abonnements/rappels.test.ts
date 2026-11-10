@@ -19,7 +19,15 @@ vi.mock("@/lib/email", () => ({
 }));
 vi.mock("./saisie", () => ({ PAGE_ABONNEMENT: "/compte/abonnement" }));
 
-import { FENETRE_VEILLE_MS, messageVeilleFinEssai, rappelerLaVeilleDeLaFinDEssai } from "./rappels";
+import {
+  FENETRE_VEILLE_MS,
+  JOURS_AVANT_RENOUVELLEMENT,
+  messageRenouvellementAnnuel,
+  messageVeilleFinEssai,
+  rappelerLaVeilleDeLaFinDEssai,
+  rappelerLeRenouvellementAnnuel,
+} from "./rappels";
+import { ajouterJours } from "@/lib/dates";
 
 const MAINTENANT = new Date("2026-11-20T08:00:00Z");
 const FIN = new Date("2026-11-21T10:00:00Z");
@@ -98,5 +106,74 @@ describe("rappel de la veille de la fin de l'essai", () => {
     expect(text).not.toMatch(/stripe/i);
     expect(text).not.toMatch(/export/i);
     expect(text).toMatch(/consultables pendant 12 mois/);
+  });
+});
+
+describe("rappel du renouvellement annuel (décision du 2026-11-10)", () => {
+  const ECHEANCE = new Date("2026-12-10T09:00:00Z");
+  const annuel = (o: object = {}) => ({ id: "ab2", compteId: "c2", formule: "rojer_pro_annuel", finPeriode: ECHEANCE, rappelRenouvellementPour: null, ...o });
+
+  it("cherche les annuels actifs, sans résiliation prévue, qui se renouvellent dans les 30 jours — jamais les mensuels", async () => {
+    m.findMany.mockResolvedValue([]);
+    await rappelerLeRenouvellementAnnuel(MAINTENANT);
+    expect(m.findMany.mock.calls[0][0].where).toEqual({
+      statut: "active",
+      formule: { endsWith: "_annuel" },
+      resilieEnFinDePeriode: false,
+      finPrevueLe: null,
+      finPeriode: { gt: MAINTENANT, lte: ajouterJours(MAINTENANT, 30) },
+    });
+    expect(JOURS_AVANT_RENOUVELLEMENT).toBe(30);
+  });
+
+  it("pose la marque (l'échéance) AVANT d'envoyer ; le message dit la formule, la date, le lien, et ne nomme pas le prestataire de paiement", async () => {
+    const ordre: string[] = [];
+    m.findMany.mockResolvedValue([annuel()]);
+    m.updateMany.mockImplementation(async () => (ordre.push("marque"), { count: 1 }));
+    m.sendMail.mockImplementation(async () => void ordre.push("envoi"));
+    expect(await rappelerLeRenouvellementAnnuel(MAINTENANT)).toEqual({ envoyes: 1, echecs: 0 });
+    expect(ordre).toEqual(["marque", "envoi"]);
+    expect(m.updateMany.mock.calls[0][0]).toEqual({
+      where: { id: "ab2", finPeriode: ECHEANCE, OR: [{ rappelRenouvellementPour: null }, { NOT: { rappelRenouvellementPour: ECHEANCE } }] },
+      data: { rappelRenouvellementPour: ECHEANCE },
+    });
+    const mail = m.sendMail.mock.calls[0][0];
+    expect(mail.subject).toBe("Votre abonnement Rojer se renouvelle le 10 décembre 2026");
+    expect(mail.text).toContain("(formule Pro)");
+    expect(mail.text).toContain("https://rojer.test/compte/abonnement");
+    expect(mail.text).not.toMatch(/stripe/i);
+  });
+
+  it("une échéance déjà rappelée n'est pas rappelée deux fois ; l'échéance suivante l'est", async () => {
+    m.findMany.mockResolvedValue([annuel({ rappelRenouvellementPour: ECHEANCE })]);
+    expect(await rappelerLeRenouvellementAnnuel(MAINTENANT)).toEqual({ envoyes: 0, echecs: 0 });
+    expect(m.sendMail).not.toHaveBeenCalled();
+    m.findMany.mockResolvedValue([annuel({ rappelRenouvellementPour: new Date("2025-12-10T09:00:00Z") })]);
+    expect(await rappelerLeRenouvellementAnnuel(MAINTENANT)).toEqual({ envoyes: 1, echecs: 0 });
+  });
+
+  it("marque déjà prise par une autre passe : rien n'est envoyé ; rien n'est parti sur échec : la marque d'avant est rendue", async () => {
+    m.findMany.mockResolvedValue([annuel()]);
+    m.updateMany.mockResolvedValueOnce({ count: 0 });
+    expect(await rappelerLeRenouvellementAnnuel(MAINTENANT)).toEqual({ envoyes: 0, echecs: 0 });
+    expect(m.sendMail).not.toHaveBeenCalled();
+
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    m.sendMail.mockRejectedValue(new Error("panne"));
+    expect(await rappelerLeRenouvellementAnnuel(MAINTENANT)).toEqual({ envoyes: 0, echecs: 1 });
+    expect(m.updateMany).toHaveBeenLastCalledWith({
+      where: { id: "ab2", rappelRenouvellementPour: ECHEANCE },
+      data: { rappelRenouvellementPour: null },
+    });
+  });
+
+  it("sans pilote d'envoi : rien n'est lu", async () => {
+    m.enService.mockReturnValue(false);
+    expect(await rappelerLeRenouvellementAnnuel(MAINTENANT)).toEqual({ envoyes: 0, echecs: 0, horsService: true });
+    expect(m.findMany).not.toHaveBeenCalled();
+  });
+
+  it("une formule inconnue : le message ne nomme pas de formule", () => {
+    expect(messageRenouvellementAnnuel("autre", ECHEANCE, "u").text).not.toContain("(formule ");
   });
 });

@@ -518,6 +518,17 @@ et sans croire une information qui ne vient pas de Stripe.
    veille » (notes § 10, 2026-11-06). Rien ne change avant le lancement de
    l'offre.
 
+[2026-11-10 — **rappel du renouvellement annuel**, décision de la
+propriétaire : 30 jours avant l'échéance d'un abonnement **annuel** actif,
+sans résiliation prévue, un e-mail aux propriétaires du compte (formule,
+date, lien vers la page Abonnement), par la tâche du jour
+(`rappelerLeRenouvellementAnnuel`). Ce n'est pas une obligation entre
+professionnels (la loi Chatel vise consommateurs et non-professionnels) :
+l'usage, qui évite le renouvellement oublié et la contestation qui suit.
+L'e-mail équivalent de Stripe n'est pas activé : il partirait aussi chaque
+mois aux mensuels. Au plus une fois par échéance (`rappelRenouvellementPour`,
+posée avant l'envoi, rendue si rien n'est parti).]
+
 ## Données
 
 - `Abonnement` : racine de compte (`userId`, ADR-051) ; `stripeCustomerId`

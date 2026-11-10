@@ -266,11 +266,15 @@ sont pas ouverts) — **la liste de lancement, dans l'ordre :
   - abonner la destination du webhook, en plus de la liste d'origine, à
     `v1.charge.dispute.created` et `v1.charge.refunded` (liste complète :
     `EVENEMENTS_ECOUTES`, `src/lib/stripe/webhook.ts`) ;
-  - Paramètres > Billing > Abonnements, « Gérer les paiements contestés » →
+  - [2026-11-10 : fait en environnement de test ; à refaire en production]
+    Paramètres > Billing > Abonnements, « Gérer les paiements contestés » →
     **annuler l'abonnement immédiatement** : sans ce réglage, un abonnement
     contesté continue de prélever (doc Stripe) ;
   - un remboursement ne change pas l'abonnement : pour couper l'accès,
-    rembourser **et** résilier dans Stripe ; Rojer ferme alors les droits.
+    rembourser **et** résilier dans Stripe ; Rojer ferme alors les droits ;
+  - **ne pas activer** l'e-mail Stripe des renouvellements à venir (il
+    partirait chaque mois aux mensuels) : Rojer rappelle le renouvellement
+    des annuels, 30 jours avant (2026-11-10).
 - **Décision à prendre au lancement** (ADR-058, point ouvert) : la date de
   départ des douze mois pour les comptes créés avant l'ouverture de l'offre
   — ils n'ont pas de ligne d'abonnement, et ne sont donc jamais avertis ni

@@ -2457,6 +2457,12 @@ model Abonnement {
   /// conditionnelle — deux instances ou deux passes n'envoient qu'une fois ;
   /// rendu à vide si aucun e-mail n'est parti (`abonnements/rappels.ts`).
   rappelVeilleEssaiLe   DateTime?
+  /// L'échéance annuelle dont le renouvellement a été rappelé par Rojer, 30
+  /// jours avant (décision du 2026-11-10 : les annuels seulement, l'e-mail de
+  /// Stripe partirait aussi chaque mois). Posée AVANT l'envoi par une
+  /// écriture conditionnelle, rendue si aucun e-mail n'est parti ; une
+  /// nouvelle échéance appelle un nouveau rappel (`abonnements/rappels.ts`).
+  rappelRenouvellementPour DateTime?
   /// Depuis quand le compte est sans abonnement ouvert (ADR-058) : la fin
   /// chez Stripe (`ended_at`, `trial_end` d'une pause), sinon la première
   /// relecture qui l'a vu fermé. Vide dès qu'un abonnement s'ouvre — et les
