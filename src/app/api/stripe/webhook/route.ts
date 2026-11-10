@@ -4,7 +4,7 @@
 // Stripe relance au lieu de perdre une résiliation.
 
 import { configurationStripe } from "@/lib/stripe/config";
-import { clientStripe } from "@/lib/stripe/client";
+import { clientStripeWebhook } from "@/lib/stripe/client";
 import { lireCorpsBorne, traiterNotificationStripe, verifierNotificationStripe } from "@/lib/stripe/webhook";
 
 const reponse = (status: number) => new Response(null, { status, headers: { "Cache-Control": "no-store" } });
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
   const corps = await lireCorpsBorne(request);
   if (corps === null) return reponse(413);
 
-  const stripe = clientStripe(config);
+  const stripe = clientStripeWebhook(config);
   const verification = verifierNotificationStripe(
     stripe,
     corps,

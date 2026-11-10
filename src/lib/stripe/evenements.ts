@@ -13,7 +13,7 @@ import "server-only";
 
 import { prisma } from "@/lib/prisma";
 
-/** Bien au-delà du pire traitement (quatre appels de 3 s, `OPTIONS_WEBHOOK`). */
+/** Bien au-delà du pire traitement : une dizaine d'appels de 3 s sans relance (`clientStripeWebhook`). */
 export const PRISE_EXPIREE_MS = 2 * 60_000;
 /** Stripe ne relance plus après 3 jours ; un renvoi à la main va jusqu'à 30. */
 export const CONSERVATION_MS = 45 * 24 * 60 * 60_000;
