@@ -304,3 +304,28 @@ XS, build dédié M, PostgreSQL 18 XXS Tiny Space, Cellar `rojer-preprod-fichier
    (dépôt de 15 Mo, IP derrière le répartiteur, rôle de la base, migrations,
    crontab).
 7. PostgreSQL 18 en préproduction, 17 en CI : aligner pour la production.
+
+### Relevés du 2026-11-10 (commit 6cd09e91)
+
+1. Build sur M : 1 min 43, aucun manque de mémoire.
+2. Démarrage sur XS : 127 migrations à jour, serveur prêt, `/robots.txt` 200.
+3. Mémoire sur XS : 1 076 Mo de RAM, pas de swap, 1 vCPU. Clever Cloud
+   injecte `NODE_OPTIONS=--max-old-space-size=644` au serveur (lu dans
+   `/proc/<pid>/environ`) : tas limité à 692 Mo. Serveur Next au repos :
+   308 Mo résidents (pic 394 Mo) ; 510-530 Mo disponibles. La limite du tas
+   du serveur dépasse donc ce qui reste libre : sous forte charge, c'est le
+   noyau qui tuerait le processus, pas V8. Pour le processus enfant des PDF
+   (lot/pdf-b1) : 256 Mo de tas (environ 340 Mo résidents) tient sur XS,
+   320 Mo ne laisse presque rien.
+4. Déploiement cassé (`BETTER_AUTH_SECRET` retirée) : le serveur refuse de
+   démarrer et nomme la variable ; `/robots.txt` répond 500, Clever Cloud ne
+   bascule pas et garde l'ancienne instance (aucune coupure sur 7 min de
+   sonde). Mais il relance sans fin : le déploiement est resté « en cours »
+   jusqu'à `clever cancel-deploy`. Consigne : un déploiement en cours depuis
+   plus de 5 min s'annule et on lit les journaux. Le `process.exit(1)` n'est
+   pas nécessaire.
+5. Tâche de chaque minute : CMD/CMDEND chaque minute dans les journaux, aucune
+   erreur ; un « setuid failed » de cron, sans effet.
+6. Fait : 15 Mo déposés intacts, en-tête X-Forwarded-For forgé ignoré, rôle de
+   base sans privilège élevé, TLS 1.3, crontab active.
+7. Reste une décision : PostgreSQL 18 ou 17 pour la production.
