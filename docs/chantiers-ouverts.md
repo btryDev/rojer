@@ -3396,3 +3396,35 @@ n'ouvre l'accès aux données d'un autre compte. Chemins : `cc` sauf mention.
   par compte.
 - ~~Dernière entrée de `X-Forwarded-For` à vérifier chez Clever Cloud~~ —
   au plan de bascule (points 3 et 6), #276.
+
+## 23. Les PDF trop volumineux — un garde-fou, pas une solution (2026-11-10)
+
+Lot `lot/pdf-b0`, sur `lot/pdf-a1`. Le plan du chantier est
+`docs/plan-pdf-sous-processus.md` ; le diagnostic,
+`docs/revues/generation-pdf-volume-2026-11-10.md` (worktree principal, non
+commité au 2026-11-10).
+
+**Le palliatif.** `rendrePdf` (`src/lib/pdf/rendre.ts`) refuse de mettre en
+page un document qui dépasse `SEUILS_PDF` (lignes du document, lignes de la
+plus grosse `<Page>`) : 503 « trop volumineux… reste consultable à l'écran »,
+pièce absente du ZIP de contrôle. Il empêche un seul export de figer ou de
+tuer le processus pour tous ; il ne rend pas le document. **À retirer** quand
+les gros exports passent en tâche de fond (lien par mail + ZIP) ou quand le
+rendu sort du processus (plan, B1-B3).
+
+**Ce qui reste ouvert :**
+- **Seuils provisoires** (2 500 lignes, bloc de 400) : à remplacer par la
+  mesure du registre après A1, en XS, sur le banc de charge (session
+  `rojer-outils-cb`), avec une marge de moitié.
+- **Réglage par instance** : les seuils sont des constantes ; ils devront
+  suivre la taille de l'instance (XS au départ, S ensuite).
+- **Tableaux encore d'un seul tenant** : le corps des fiches du registre
+  (journaux), les tableaux du dossier de conformité et du plan d'actions. Le
+  garde-fou les compte ; le découpage d'A1 ne les touche pas.
+- **Passage de XS à S** : seuils proposés le 2026-11-10 (p95 des pages > 1 s,
+  p95 des exports > 10 s ou un export > 30 s, RSS > 70 % ou un redémarrage
+  pour mémoire, CPU > 60 % en continu, premier refus en production), à fixer
+  par la propriétaire. Le journal `export_pdf` en donne la matière.
+- **Vérifié le 2026-11-10** : aucun import de rapports en masse. Les rapports
+  se déposent un par un (`uploadRapport`, `src/lib/rapports/actions.ts`) ; le
+  seul import est celui du DUERP.
