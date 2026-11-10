@@ -294,7 +294,8 @@ export async function assertEtablissementOwnership(etablissementId: string) {
  * module qui la passe lit et écrit ensuite par `db`, sans relire la session.
  * `verifie` : le compte qu'une garde de rôle vient de vérifier
  * (`verifierProprietaire`) — la garde s'y tient au lieu de relire le compte
- * actif, qu'un autre onglet a pu changer entre-temps.
+ * actif, qu'un autre onglet a pu changer entre-temps. Obligatoire après
+ * `verifierProprietaire` (`saisie-gardee.test.ts`).
  */
 export async function assertEtablissementDuCompte(etablissementId: string, verifie?: Compte) {
   const { user, compte, db } = verifie ?? (await requireCompte());
@@ -306,7 +307,12 @@ export async function assertEtablissementDuCompte(etablissementId: string, verif
   return { user, compte, db };
 }
 
-/** Vérifie qu'un entrepriseId appartient au user ; rend aussi le client borné au compte (ADR-051). */
+/**
+ * Vérifie qu'un entrepriseId appartient au compte ; rend aussi le client borné
+ * au compte (ADR-051). `verifie` : comme pour `assertEtablissementDuCompte`,
+ * le compte que `verifierProprietaire` a vérifié — obligatoire après elle
+ * (`saisie-gardee.test.ts`).
+ */
 export async function assertEntrepriseDuCompte(entrepriseId: string, verifie?: Compte) {
   const { user, compte, db } = verifie ?? (await requireCompte());
   const exists = await db.entreprise.findFirst({

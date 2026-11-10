@@ -72,11 +72,14 @@ function refuserLaLecture(c: Awaited<ReturnType<typeof getOptionalCompte>>): voi
  * entre les deux lectures, et le geste passait sur un compte où la personne
  * n'est que membre, voire lectrice (audit de sécurité du 2026-11-10).
  */
-export async function verifierProprietaire(): Promise<Compte> {
+export async function verifierProprietaire(): Promise<Proprietaire> {
   const c = await getOptionalCompte();
   if (c?.compte?.role !== "owner") redirect(`${PAGE_MEMBRES}?reserve=proprietaire`);
-  return c;
+  return c as Proprietaire;
 }
+
+/** Un compte dont `verifierProprietaire` a vérifié que la personne est propriétaire. */
+export type Proprietaire = Compte & { compte: Compte["compte"] & { role: "owner" } };
 
 /**
  * La garde d'une écriture : le rôle d'abord, toujours (une lecture de

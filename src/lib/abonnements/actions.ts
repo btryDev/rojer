@@ -5,7 +5,6 @@
 
 import Stripe from "stripe";
 import { redirect } from "next/navigation";
-import type { Compte } from "@/lib/auth/compte";
 import { publicAppUrl } from "@/lib/email";
 import { clientStripe } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
@@ -28,7 +27,7 @@ import { aNomProvisoire, abonnementEnCours, SANS_PAIEMENT_ENCORE } from "./droit
 import { INTERVALLE_STRIPE, estLookupKey, formuleDeLookupKey, formuleDuPrix } from "./formules";
 import { sensDuChangement } from "./changement";
 import { depassements } from "./quotas";
-import { PAGE_ABONNEMENT, verifierProprietaire, verifierRole } from "./saisie";
+import { PAGE_ABONNEMENT, verifierProprietaire, verifierRole, type Proprietaire } from "./saisie";
 
 /**
  * Démarrer l'essai (écran « Votre essai gratuit »). Le rôle d'abord : le
@@ -44,7 +43,7 @@ export async function demarrerEssaiAction(_prev: EtatEssai, formData: FormData):
  * compte actif relu (un autre onglet a pu en changer) —, ou la page qui dit
  * pourquoi il n'y en a pas.
  */
-async function clientDuCompte({ compte, db }: Compte) {
+async function clientDuCompte({ compte, db }: Proprietaire) {
   const config = configurationStripe();
   if (!config.active) redirect(PAGE_ABONNEMENT);
   const ligne = await db.abonnement.findUnique({
