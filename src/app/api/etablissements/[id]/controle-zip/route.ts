@@ -1,5 +1,4 @@
 import { exigerUnPaiement } from "@/lib/abonnements/validation";
-import { renderToBuffer } from "@react-pdf/renderer";
 import { mesureParId, surListeAnterieure } from "@/lib/permis-feu/referentiel";
 import { dureeHhMm } from "@/lib/permis-feu/duree";
 import JSZip from "jszip";
@@ -32,11 +31,8 @@ import {
   construirePlanActionsData,
   construireRegistreData,
 } from "@/lib/pdf/builders";
-import { DossierConformiteDocument } from "@/lib/pdf/DossierConformiteDocument";
 import { historiqueJusqua } from "@/lib/versions/historique";
-import { DuerpDocument } from "@/lib/pdf/DuerpDocument";
-import { PlanActionsDocument } from "@/lib/pdf/PlanActionsDocument";
-import { RegistreDocument } from "@/lib/pdf/RegistreDocument";
+import { raisonEchecRendu, rendrePdf } from "@/lib/pdf/rendre";
 import { slugifyFilename } from "@/lib/pdf/styles";
 import { contenuR4512_8 } from "@/lib/plan-prevention/contenu-r4512-8";
 import { annoncesZip, ligneHeuresRevisees } from "@/lib/plan-prevention/annonces-plan";
@@ -211,8 +207,10 @@ async function construireArchive(
   // noté ici, par le nom du fichier qu'il prive, et le README ne décrit que ce
   // que le ZIP contient vraiment (`zip.files`).
   const echecs = new Map<string, string>();
+  // Un document refusé par le garde-fou des PDF (`pdf/rendre.ts`) se dit
+  // comme tel : « trop volumineux », pas « la génération a échoué ».
   const noterEchec = (fichier: string, e: unknown, raison = "la génération a échoué") => {
-    echecs.set(fichier, raison);
+    echecs.set(fichier, raisonEchecRendu(e) ?? raison);
     console.error(`controle-zip : ${fichier} non inclus`, e);
   };
   let piecesPrestatairesManquantes = 0;
@@ -260,7 +258,7 @@ async function construireArchive(
       }
       nbVerifsEnRetard = data.verifsEnRetard.length;
       inventaire = data.couverture ? faitInventaire(data.couverture) : null;
-      const buf = await renderToBuffer(DossierConformiteDocument({ data }));
+      const buf = await rendrePdf({ type: "dossier-conformite", props: { data } });
       zip.file(PIECES_ZIP.dossier, new Uint8Array(buf));
     }
   } catch (e) {
@@ -300,7 +298,7 @@ async function construireArchive(
       // l'article n'exige aucune traçabilité — rayé le 2026-09-26.)
       const historique = historiqueJusqua(versions, versionCourante.numero);
       // LES FAITS AVANT LE RENDU, qui peut jeter. Affectés après, une panne
-      // de `renderToBuffer` laissait `duerpNumeroVersion` à `null` et la
+      // de `rendrePdf` laissait `duerpNumeroVersion` à `null` et la
       // checklist imprimait « aucune version figée — à créer avant le
       // contrôle » alors qu'une version existait. Le `catch` promettait que
       // « le README dira que le DUERP n'est pas inclus » : vrai du sommaire,
@@ -315,12 +313,13 @@ async function construireArchive(
       // Les entrées non plus (2026-10-12) : l'écran « Préparer un contrôle »
       // passe par la même fonction, avec les mêmes.
       etatDuerp = etatDuerpDuDossier(versionCourante, etablissement, maintenant);
-      const buf = await renderToBuffer(
-        DuerpDocument({
+      const buf = await rendrePdf({
+        type: "duerp",
+        props: {
           snapshot: versionCourante.snapshot as unknown as DuerpSnapshot,
           historique,
-        }),
-      );
+        },
+      });
       zip.file(fichierDuerp(versionCourante.numero), new Uint8Array(buf));
     }
   } catch (e) {
@@ -347,7 +346,7 @@ async function construireArchive(
       // Les annexes, lues avec le registre : une seule lecture pour le PDF
       // et pour 03_Registre_annexes/ (relecture du 2026-11-05).
       annexesListees = data.annexes ?? [];
-      const buf = await renderToBuffer(RegistreDocument({ data }));
+      const buf = await rendrePdf({ type: "registre", props: { data } });
       zip.file(PIECES_ZIP.registre, new Uint8Array(buf));
     }
   } catch (e) {
@@ -391,7 +390,7 @@ async function construireArchive(
   try {
     const data = await construirePlanActionsData(db, id);
     if (data) {
-      const buf = await renderToBuffer(PlanActionsDocument({ data }));
+      const buf = await rendrePdf({ type: "plan-actions", props: { data } });
       zip.file(PIECES_ZIP.plan, new Uint8Array(buf));
     }
   } catch (e) {

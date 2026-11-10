@@ -1,7 +1,6 @@
 import { exigerUnPaiement } from "@/lib/abonnements/validation";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { construireRegistreData } from "@/lib/pdf/builders";
-import { RegistreDocument } from "@/lib/pdf/RegistreDocument";
 import { slugifyFilename } from "@/lib/pdf/styles";
 import { reponsePdf } from "@/lib/pdf/reponse";
 
@@ -26,7 +25,7 @@ export async function GET(
   if (!data) return new Response("Établissement introuvable", { status: 404 });
 
   return reponsePdf(
-    RegistreDocument({ data }),
+    { type: "registre", props: { data } },
     `Registre_securite_${slugifyFilename(data.etablissement)}.pdf`,
     user.id,
   );

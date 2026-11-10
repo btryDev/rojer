@@ -1,6 +1,5 @@
 import { requireEtablissement } from "@/lib/auth/scope";
 import { construirePointsEquipementData } from "@/lib/pdf/builders";
-import { PointsACorrigerDocument } from "@/lib/pdf/PointsACorrigerDocument";
 import { slugifyFilename } from "@/lib/pdf/styles";
 import { reponsePdf } from "@/lib/pdf/reponse";
 
@@ -18,7 +17,7 @@ export async function GET(
   const data = await construirePointsEquipementData(db, id, equipementId);
   if (!data) return new Response("Introuvable", { status: 404 });
   return reponsePdf(
-    PointsACorrigerDocument({ data }),
+    { type: "points-a-corriger", props: { data } },
     `Points_a_corriger_${slugifyFilename(data.appareil)}.pdf`,
     user.id,
   );

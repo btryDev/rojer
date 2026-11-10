@@ -1,18 +1,24 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { DemandePdf } from "./documents";
 
 const h = vi.hoisted(() => ({
-  rendu: vi.fn(async () => Buffer.from("%PDF-1.7 test")),
+  rendu: vi.fn<(demande: unknown) => Promise<Buffer>>(async () => Buffer.from("%PDF-1.7 test")),
   liberer: vi.fn(),
   place: undefined as undefined | (() => Promise<unknown>),
 }));
 
-vi.mock("@react-pdf/renderer", () => ({ renderToBuffer: h.rendu }));
+// `rendrePdf` est simulé ; la classe d'erreur et le message restent les vrais.
+vi.mock("./rendre", async (importOriginal) => {
+  const vrai = await importOriginal<typeof import("./rendre")>();
+  return { ...vrai, rendrePdf: h.rendu };
+});
 vi.mock("@/lib/exports/limite", () => ({
   reserverPlaceExport: () => (h.place ? h.place() : Promise.resolve(h.liberer)),
 }));
 
 const { reponsePdf } = await import("./reponse");
-const doc = {} as Parameters<typeof reponsePdf>[0];
+const { PdfTropVolumineux } = await import("./rendre");
+const demande = { type: "registre", props: { data: {} } } as unknown as DemandePdf;
 
 beforeEach(() => {
   h.rendu.mockClear();
@@ -22,7 +28,7 @@ beforeEach(() => {
 
 describe("reponsePdf", () => {
   it("rend les trois en-têtes que les cinq routes écrivaient, et seulement eux", async () => {
-    const r = await reponsePdf(doc, "Registre_securite_Le_Comptoir.pdf", "u-1");
+    const r = await reponsePdf(demande, "Registre_securite_Le_Comptoir.pdf", "u-1");
     expect(r.status).toBe(200);
     expect(Object.fromEntries(r.headers)).toEqual({
       "cache-control": "no-store",
@@ -30,21 +36,37 @@ describe("reponsePdf", () => {
       "content-type": "application/pdf",
     });
     expect(await r.text()).toBe("%PDF-1.7 test");
+    expect(h.rendu).toHaveBeenCalledWith(demande);
   });
 
   it("libère sa place après le rendu, y compris quand le rendu échoue", async () => {
-    await reponsePdf(doc, "a.pdf", "u-1");
+    await reponsePdf(demande, "a.pdf", "u-1");
     expect(h.liberer).toHaveBeenCalledTimes(1);
     h.rendu.mockRejectedValueOnce(new Error("mise en page"));
-    await expect(reponsePdf(doc, "a.pdf", "u-1")).rejects.toThrow("mise en page");
+    await expect(reponsePdf(demande, "a.pdf", "u-1")).rejects.toThrow("mise en page");
     expect(h.liberer).toHaveBeenCalledTimes(2);
   });
 
   it("file pleine : rend le 503 sans rien mettre en page", async () => {
     const sature = new Response("plein", { status: 503, headers: { "Retry-After": "5" } });
     h.place = async () => sature;
-    const r = await reponsePdf(doc, "a.pdf", "u-1");
+    const r = await reponsePdf(demande, "a.pdf", "u-1");
     expect(r).toBe(sature);
     expect(h.rendu).not.toHaveBeenCalled();
+  });
+
+  it("trop volumineux : 503 sans Retry-After, le document reste à l'écran, la place est rendue", async () => {
+    h.rendu.mockRejectedValueOnce(
+      new PdfTropVolumineux("registre", { total: 9_999, plusGrosBloc: 10 }),
+    );
+    const r = await reponsePdf(demande, "a.pdf", "u-1");
+    expect(r.status).toBe(503);
+    expect(r.headers.get("Retry-After")).toBeNull();
+    expect(r.headers.get("Cache-Control")).toBe("no-store");
+    expect(await r.text()).toBe(
+      "Le registre de sécurité est trop volumineux pour être exporté en un seul PDF. " +
+        "Il reste consultable à l'écran, avec tout son contenu.",
+    );
+    expect(h.liberer).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,0 +1,78 @@
+import type { DemandePdf } from "./documents";
+import type { RegistreData } from "./RegistreDocument";
+import { enPaquets, feuillesParAnnee } from "./paquets";
+
+/**
+ * Le poids d'un PDF avant sa mise en page (lot pdf-b0, 2026-11-10).
+ *
+ * Deux grandeurs, parce que deux défauts de `@react-pdf` 4.5.1 :
+ *   - `total` : les lignes de tout le document. La mise en page garde tout le
+ *     document en mémoire jusqu'à la fin ; c'est elle qui tue le processus
+ *     (banc de charge : registre de 3 899 rapports, tas saturé en XS).
+ *   - `plusGrosBloc` : les lignes de la plus grosse `<Page>` — la mise en page
+ *     d'une `<Page>` coûte le carré de son nombre de lignes, et fige toute
+ *     l'application pendant ce temps.
+ *
+ * Une « ligne » est une ligne de tableau ; un point à corriger, une mesure de
+ * prévention ou une ligne de journal en sont une aussi, parce qu'ils
+ * s'impriment comme telles. Les blocs suivent les `<Page>` réelles de chaque
+ * document : un tableau découpé par le lot pdf-a1 compte par paquet.
+ */
+export type PoidsPdf = { total: number; plusGrosBloc: number };
+
+export function poidsDuDocument(demande: DemandePdf): PoidsPdf {
+  return depuisBlocs(blocsDuDocument(demande));
+}
+
+function depuisBlocs(blocs: number[]): PoidsPdf {
+  return {
+    total: blocs.reduce((a, b) => a + b, 0),
+    plusGrosBloc: blocs.reduce((a, b) => Math.max(a, b), 0),
+  };
+}
+
+/** Les lignes de chaque `<Page>` du document, dans l'ordre. */
+function blocsDuDocument(demande: DemandePdf): number[] {
+  switch (demande.type) {
+    case "registre":
+      return blocsDuRegistre(demande.props.data);
+    case "dossier-conformite": {
+      const d = demande.props.data;
+      return [
+        d.etatsPermanents.etats.length + d.etatsPermanents.faits.length,
+        d.verifsEnRetard.length + d.verifsAConfirmer.length + d.verifsPourInformation.length,
+        d.actionsEnCours.length + d.pointsEnCours.length,
+        d.rapportsRecents.length,
+      ];
+    }
+    case "plan-actions":
+      return [demande.props.data.actions.length];
+    case "points-a-corriger":
+      return [demande.props.data.ouverts.length + demande.props.data.corriges.length];
+    case "duerp": {
+      // Les unités, leurs risques et leurs mesures s'impriment sur les mêmes
+      // `<Page>` (inventaire, puis plan de prévention) : un seul bloc.
+      const risques = demande.props.snapshot.unites.flatMap((u) => u.risques);
+      return [risques.length + risques.reduce((n, r) => n + r.mesures.length, 0)];
+    }
+  }
+}
+
+function blocsDuRegistre(data: RegistreData): number[] {
+  // Le corps des fiches est une seule `<Page>` (lot pdf-a1 : hors découpage).
+  const fiches = data.parties
+    .flatMap((p) => p.fiches)
+    .reduce(
+      (n, f) => n + (f.champs?.length ?? 0) + (f.lignes?.length ?? 0) + (f.tenues?.length ?? 0),
+      0,
+    );
+  // L'index des rapports, par `<Page>` comme le document le découpe ; un
+  // point à corriger s'imprime sous son rapport, une ligne de plus.
+  const rapports = feuillesParAnnee(data.rapports, (r) => r.dateRapport).map((feuille) =>
+    feuille
+      .flatMap((s) => s.lignes)
+      .reduce((n, r) => n + 1 + r.points.length, 0),
+  );
+  const attente = enPaquets(data.verifsEnAttente).map((p) => p.length);
+  return [fiches, ...rapports, ...attente];
+}
