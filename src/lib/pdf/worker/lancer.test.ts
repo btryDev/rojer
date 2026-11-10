@@ -21,6 +21,7 @@ import {
   registre,
   VIDE,
 } from "../donnees-essai.test-utils";
+import { drapeauQuiLEmporte, problemeDeBorne } from "./borne";
 import {
   drapeauxDuRendu,
   environnementDuRendu,
@@ -218,6 +219,23 @@ describe("la borne de tas du processus de rendu", () => {
     expect(reponse.ok).toBe(false);
     expect(reponse.message).toMatch(/borne de tas non appliquée/);
   }, 60_000);
+
+  it("le drapeau qui l'emporte : le dernier, NODE_OPTIONS avant les arguments", () => {
+    expect(drapeauQuiLEmporte(["--max-old-space-size=256"], "--max-old-space-size=644")).toBe(256);
+    expect(drapeauQuiLEmporte(["--max-old-space-size=256", "--max_old_space_size=2048"], undefined)).toBe(2048);
+    expect(drapeauQuiLEmporte([], "--max-old-space-size=644")).toBe(644);
+    expect(drapeauQuiLEmporte([], undefined)).toBeNull();
+  });
+
+  it("la borne se juge au drapeau, et la limite annoncée sous toutes les versions mesurées", () => {
+    const tenue = { tasMaxMo: 256, execArgv: ["--max-old-space-size=256"], nodeOptions: undefined };
+    // Node 22 annonce + 48 Mo, Node 24 + 192 : les deux passent.
+    expect(problemeDeBorne({ ...tenue, limiteMo: 304 })).toBeNull();
+    expect(problemeDeBorne({ ...tenue, limiteMo: 448 })).toBeNull();
+    expect(problemeDeBorne({ ...tenue, limiteMo: 1_310 })).toMatch(/1310 Mo de limite/);
+    expect(problemeDeBorne({ ...tenue, execArgv: [], limiteMo: 448 })).toMatch(/drapeau absent/);
+    expect(problemeDeBorne({ ...tenue, tasMaxMo: Number.NaN, limiteMo: 448 })).toMatch(/illisible/);
+  });
 
   it("l'environnement du rendu perd NODE_OPTIONS, et rien d'autre", () => {
     const env = environnementDuRendu({ NODE_OPTIONS: "--max-old-space-size=1262", DATABASE_URL: "x", PATH: "/bin" } as unknown as NodeJS.ProcessEnv);

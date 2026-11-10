@@ -127,7 +127,12 @@ long, ni le processus contre un seul gros.
   `--max-old-space-size` (option de Node ou `NODE_OPTIONS`) qui annulerait sa
   borne de tas~~ [2026-11-10, soir : ce drapeau n'est plus que noté au
   démarrage, il n'atteint pas l'enfant] ; l'enfant revérifie sa limite
-  réelle avant de rendre. ⚠ Vérifié sur le serveur
+  réelle avant de rendre. [2026-11-10, nuit : il vérifie que le drapeau qui
+  l'emporte est le sien, et que la limite annoncée par V8 reste dans un
+  écart de 256 Mo. La marge fixe de 64 Mo d'abord retenue, calée sur
+  Node 22 (+ 48 Mo de jeune génération), refusait TOUS les PDF sous
+  Node 24 (+ 192 Mo), que Clever Cloud prend (`borne.ts`). Clever Cloud
+  injecte la variable `NODE_OPTIONS` (644 Mo en XS), pas un argument.] ⚠ Vérifié sur le serveur
   autonome : Next ne s'arrête pas pour autant, il répond 500 à toute requête
   (comme pour la validation de l'environnement). Que le contrôle de santé de
   Clever Cloud refuse ce déploiement reste à vérifier ; à défaut, arrêter le

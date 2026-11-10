@@ -14,18 +14,12 @@
 import { getHeapStatistics } from "node:v8";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { elementDuDocument, type DemandePdf } from "../documents";
+import { problemeDeBorne } from "./borne";
 
 /** Ce que le processus renvoie : le PDF, ou le message et la pile d'une erreur. */
 export type ReponseWorker =
   | { ok: true; pdf: ArrayBuffer }
   | { ok: false; message: string; pile?: string };
-
-/**
- * Marge entre le tas demandé et la limite que V8 annonce : la jeune
- * génération et les espaces de code s'y ajoutent (mesuré : 48 Mo pour 64 ou
- * 384 demandés). Au-delà, un drapeau d'ailleurs a pris le pas sur la borne.
- */
-const MARGE_TAS_MO = 64;
 
 if (!process.send) throw new Error("pdf-worker : à lancer par fork (lancer.ts), pas directement.");
 const envoyer = (r: ReponseWorker) => process.send!(r);
@@ -37,12 +31,16 @@ process.once("message", async (demande: DemandePdf) => {
   // LA BORNE EST-ELLE TENUE ? Le lanceur pose `--max-old-space-size` et
   // retire `NODE_OPTIONS` ; si un autre drapeau l'emportait encore, le
   // processus grossirait sans borne. Refusé ici, avant tout rendu.
-  const limiteMo = getHeapStatistics().heap_size_limit / 1_048_576;
-  if (!Number.isFinite(tasMaxMo) || limiteMo > tasMaxMo + MARGE_TAS_MO) {
-    envoyer({
-      ok: false,
-      message: `pdf-worker : borne de tas non appliquée (${Math.round(limiteMo)} Mo pour ${tasMaxMo} demandés)`,
-    });
+  // [2026-11-10 : la marge fixe de 64 Mo, calée sur Node 22, refusait tout
+  // sous Node 24 (+ 192 Mo de jeune génération) — `borne.ts`.]
+  const probleme = problemeDeBorne({
+    tasMaxMo,
+    execArgv: process.execArgv,
+    nodeOptions: process.env.NODE_OPTIONS,
+    limiteMo: getHeapStatistics().heap_size_limit / 1_048_576,
+  });
+  if (probleme) {
+    envoyer({ ok: false, message: `pdf-worker : borne de tas non appliquée (${probleme})` });
     return;
   }
   try {
