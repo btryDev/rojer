@@ -18,8 +18,9 @@ import { workerDisponible } from "./lancer";
  *
  * En production, un problème lève dans `register()`. [2026-11-10, vérifié sur
  * le serveur autonome : Next ne s'arrête pas, il répond 500 à toute requête —
- * le message est écrit, aucune page n'est servie. Que Clever Cloud refuse
- * alors le déploiement reste à vérifier, `docs/chantiers-ouverts.md` § 23.]
+ * le message est écrit, aucune page n'est servie. Relevé en préproduction :
+ * Clever Cloud garde alors l'ancienne instance, le déploiement reste « en
+ * cours ». Refus de démarrer gardé (décision de la propriétaire, ADR-059).]
  * Rend le problème, `null` si tout va bien ; pure, pour ses tests.
  */
 export function problemeDuRenduDesPdf(contexte: { production: boolean; workerPresent: boolean }): string | null {

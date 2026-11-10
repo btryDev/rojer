@@ -3441,8 +3441,12 @@ garanties éprouvées en les cassant (`worker/lancer.test.ts`). Coût : environ
 100 Mo de mémoire réelle par export, contre 25 à 30 pour un `worker_thread` ;
 `EXPORT_TAS_MAX_MO` ~~(384, calculé pour un fil) sera sans doute à baisser~~ [même nuit : 256, sur le relevé de la préproduction XS — un registre au seuil du garde-fou passe à 256, échoue à 192 ; le banc confirme].
 **Reste ouvert** : la preuve sur le build CC et en préproduction, le banc
-(B3) ; et la décision sur `process.exit(1)` au démarrage si le contrôle de
-santé de Clever Cloud accepte un serveur qui répond 500.]
+(B3) ; ~~et la décision sur `process.exit(1)` au démarrage si le contrôle de
+santé de Clever Cloud accepte un serveur qui répond 500~~ [relevé en préproduction le 2026-11-10 : une erreur dans `register()` fait répondre 500, et Clever Cloud garde l'ancienne instance — le déploiement reste « en cours » jusqu'à son annulation. Décision de la propriétaire du même jour : le refus de démarrer est gardé, sans `process.exit`.]. Les
+trois revues (/simplify, /code-review medium, /security-review) sont faites ;
+la fusion attend la mesure avant/après sur la préproduction XS (mêmes
+50 dossiers à 10 équipements) — sinon la PR #289 reste en réserve, sans
+bloquer la bascule.]
 
 **Ce qui reste ouvert :**
 - ~~**Seuils provisoires** (2 500 lignes, bloc de 400) : à remplacer par la

@@ -134,9 +134,9 @@ long, ni le processus contre un seul gros.
   Node 24 (+ 192 Mo), que Clever Cloud prend (`borne.ts`). Clever Cloud
   injecte la variable `NODE_OPTIONS` (644 Mo en XS), pas un argument.] ⚠ Vérifié sur le serveur
   autonome : Next ne s'arrête pas pour autant, il répond 500 à toute requête
-  (comme pour la validation de l'environnement). Que le contrôle de santé de
+  (comme pour la validation de l'environnement). ~~Que le contrôle de santé de
   Clever Cloud refuse ce déploiement reste à vérifier ; à défaut, arrêter le
-  processus (`process.exit(1)`) — décision en attente.
+  processus (`process.exit(1)`) — décision en attente.~~ [relevé en préproduction le 2026-11-10 : une erreur dans `register()` fait répondre 500, et Clever Cloud garde l'ancienne instance — le déploiement reste « en cours » jusqu'à son annulation. Décision de la propriétaire du même jour : le refus de démarrer est gardé, sans `process.exit`.]
 - Les seuils du garde-fou et les deux réglages du rendu se remesurent avec
   le processus enfant, en XS et en S (B3) ; les documents autres que le registre restent à
   mesurer.
