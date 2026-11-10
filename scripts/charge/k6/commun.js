@@ -87,3 +87,48 @@ export function ouvrir(d, nom) {
 export function lire() {
   sleep(3 + Math.random() * 7);
 }
+
+const ENTITES = { "&quot;": '"', "&#x27;": "'", "&#39;": "'", "&lt;": "<", "&gt;": ">", "&amp;": "&" };
+const desEchapper = (s) => s.replace(/&(quot|#x27|#39|lt|gt|amp);/g, (e) => ENTITES[e]);
+
+/**
+ * Les champs cachés du formulaire d'action serveur qui contient `champ` :
+ * `$ACTION_REF_n`, `$ACTION_n:k` (arguments liés, chiffrés), `$ACTION_KEY`,
+ * plus ses propres champs cachés. `null` si la page n'en a pas.
+ */
+export function champsDuFormulaire(corps, champ) {
+  for (const m of corps.matchAll(/<form[^>]*method="POST"[^>]*>([\s\S]*?)<\/form>/g)) {
+    if (!m[1].includes(`name="${champ}"`)) continue;
+    const champs = {};
+    for (const i of m[1].matchAll(/<input[^>]*type="hidden"[^>]*>/g)) {
+      const nom = /name="([^"]*)"/.exec(i[0]);
+      const valeur = /value="([^"]*)"/.exec(i[0]);
+      if (nom) champs[desEchapper(nom[1])] = valeur ? desEchapper(valeur[1]) : "";
+    }
+    return champs;
+  }
+  return null;
+}
+
+/**
+ * Soumet un formulaire d'action serveur comme un navigateur sans JavaScript
+ * (amélioration progressive de React) : la page en HTML, ses champs cachés,
+ * puis un POST multipart sur la même adresse. Le serveur exécute la même
+ * action qu'avec JavaScript, puis rend la page.
+ */
+export function soumettre(d, chemin, champ, valeurs, nom) {
+  const page = http.get(BASE + chemin, {
+    headers: { cookie: d.cookie },
+    redirects: 0,
+    tags: { page: `${nom} (formulaire)` },
+  });
+  const caches = page.status === 200 ? champsDuFormulaire(page.body, champ) : null;
+  if (!check(caches, { [`${nom} : formulaire trouvé`]: (c) => c !== null })) return null;
+  const r = http.post(BASE + chemin, { ...caches, ...valeurs }, {
+    headers: { cookie: d.cookie },
+    redirects: 0,
+    tags: { page: nom },
+  });
+  check(r, { [`${nom} : accepté`]: (x) => x.status < 400 && !/Formulaire invalide|n'a pas été accepté/.test(x.body || "") });
+  return r;
+}

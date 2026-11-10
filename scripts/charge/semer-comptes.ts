@@ -65,6 +65,8 @@ export type DossierDeCharge = {
   /** L'appareil et le contrôle qui portent le plus de rapports (fiches lues). */
   equipementId: string | null;
   controleId: string | null;
+  /** Contrôles d'appareil ouverts où déposer un rapport (parcours Saisie). */
+  controles: { equipementId: string; id: string }[];
   cookie: string;
 };
 
@@ -73,6 +75,16 @@ async function dossierDuCompte(userId: string) {
     where: { entreprise: { compte: { membres: { some: { userId, role: "owner" } } } } },
     select: { id: true, raisonDisplay: true, duerps: { select: { id: true }, take: 1 } },
   });
+}
+
+/** Jusqu'à dix contrôles d'appareil ouverts : le parcours Saisie y dépose. */
+async function controlesOuverts(etablissementId: string) {
+  return prisma.$queryRaw<{ equipementId: string; id: string }[]>`
+    SELECT v."equipementId", v.id FROM "Verification" v
+      JOIN "Equipement" e ON e.id = v."equipementId" AND e.actif
+     WHERE v."etablissementId" = ${etablissementId} AND v."archiveLe" IS NULL
+     ORDER BY v."obligationId", e.libelle
+     LIMIT 10`;
 }
 
 /** Grossi par `grossir-dossier.ts` : il porte le parc de la cible (≈ 100). */
@@ -136,6 +148,7 @@ async function main(): Promise<void> {
       duerpId: dossier.duerps[0].id,
       equipementId: fiche?.equipementId ?? null,
       controleId: fiche?.id ?? null,
+      controles: await controlesOuverts(dossier.id),
       cookie,
     });
     process.stderr.write(`  ${n}/${comptes} ${taille} ${dossier.raisonDisplay}\n`);

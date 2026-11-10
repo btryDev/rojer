@@ -43,6 +43,15 @@ case "${1:-}" in
         -keyout "$banc/certs/private.key" -out "$banc/certs/public.crt" 2>/dev/null
       echo "Certificat du banc : $banc/certs/public.crt"
     fi
+    if [ ! -f "$banc/rapport-1mo.pdf" ]; then
+      # Le rapport déposé par le parcours Saisie : un PDF de 1 Mo (en-tête
+      # %PDF-, ce que le contrôle du contenu lit), le reste en commentaires.
+      python3 -I -c "
+import sys
+corps = b'%PDF-1.4\n' + b''.join(b'% remplissage du test de charge ' + str(i).encode() + b'\n' for i in range(30000))
+corps = corps[: 1024 * 1024 - 6] + b'%%EOF\n'
+open(sys.argv[1], 'wb').write(corps)" "$banc/rapport-1mo.pdf"
+    fi
     if [ ! -f "$env_local" ]; then
       printf 'BETTER_AUTH_SECRET=%s\nAPP_ENV=preview\n' "$(openssl rand -base64 32)" > "$env_local"
       echo "$env_local créé (secret propre au banc)."
