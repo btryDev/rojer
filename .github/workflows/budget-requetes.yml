@@ -89,6 +89,12 @@ jobs:
         # `next build` et non `pnpm build`, qui enchaîne une migration.
         run: pnpm exec next build
 
+      # Le paquet du rendu des PDF (ADR-059) : `next start` est en production,
+      # et `register()` refuse de servir sans `dist-pdf/pdf-worker.mjs`.
+      # `next start` tourne à la racine du dépôt, où le serveur le cherche.
+      - name: Construire le rendu des PDF
+        run: pnpm pdf-worker
+
       - name: Mesurer les pages contre leur budget
         env:
           # Le conteneur du service Postgres : la mesure lit son journal.
