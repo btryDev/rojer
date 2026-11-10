@@ -279,3 +279,28 @@ contrôles ou vérifications ». Registre ERP (R. 143-44 CCH) : aucune durée
 Ordre convenu (2026-11-10) : sous-processus (lot/pdf-b1) → vérifications de
 build et de banc, nouvelles mesures → fusion dans cc → préproduction Clever
 Cloud → suite de la campagne (§ 5) et décisions ci-dessus.
+
+## 13. Préproduction Clever Cloud — à surveiller au premier déploiement (2026-11-10)
+
+Application « Rojer » (app_9bbac77c-af66-4562-81a7-0257a21401ad, zone par),
+XS, build dédié M, PostgreSQL 18 XXS Tiny Space, Cellar `rojer-preprod-fichiers`.
+
+1. Build sur M : durée, aucun manque de mémoire (RiskBoard en a eu un en S).
+2. Démarrage sur XS : migrations (CC_PRE_RUN_HOOK) puis serveur, sans manque
+   de mémoire ; contrôle de santé `/robots.txt` vert. Si XS ne tient pas au
+   démarrage : passer l'instance en S (réglage de console, pas de code).
+   [La propriétaire, 2026-11-10 : RiskBoard construit plus haut puis tourne en
+   XS.]
+3. Mémoire au repos sur XS et limite de Node injectée par Clever Cloud :
+   `echo $NODE_OPTIONS`, `/proc/<pid>/cmdline`, `process.execArgv`,
+   `v8.getHeapStatistics().heap_size_limit`, mémoire du cgroup. Elles calent
+   le tas du processus enfant des PDF (lot/pdf-b1).
+4. Déploiement volontairement cassé (variable requise retirée) : Clever Cloud
+   garde-t-il l'ancienne instance ? Tranche le `process.exit(1)` au démarrage.
+5. Tâche planifiée de chaque minute : aucun signalement dans la console
+   (RiskBoard dit en avoir eu pour des crons trop fréquents ; la doc CC n'en
+   fixe aucune limite).
+6. Vérifications déjà listées dans docs/etat-bascule-clever-cloud.md
+   (dépôt de 15 Mo, IP derrière le répartiteur, rôle de la base, migrations,
+   crontab).
+7. PostgreSQL 18 en préproduction, 17 en CI : aligner pour la production.
