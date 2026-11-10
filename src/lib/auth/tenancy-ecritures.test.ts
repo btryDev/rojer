@@ -101,6 +101,17 @@ const EXEMPTIONS = new Map<string, Exemption>([
     },
   ],
   [
+    "lib/auth/actions.ts:activerCompteAction",
+    {
+      garde: "auth.api.verifyEmail",
+      raison:
+        "Activation au retour du lien de confirmation, appelant non connecté : Better " +
+        "Auth n'agit que sur le compte que désigne le jeton du lien, et le mot de passe " +
+        "choisi y est posé avant la confirmation (`activation.ts`) ; l'autre écriture est " +
+        "le compteur de limitation de débit. Aucune donnée de dossier.",
+    },
+  ],
+  [
     "lib/auth/actions.ts:definirMotDePasseAction",
     {
       garde: "auth.api.resetPassword",

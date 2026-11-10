@@ -10,7 +10,7 @@ import "server-only";
 
 import { cache } from "react";
 import { redirect } from "next/navigation";
-import { getOptionalCompte, type Db } from "@/lib/auth/compte";
+import { getOptionalCompte, type Compte, type Db } from "@/lib/auth/compte";
 import { requireUser } from "@/lib/auth/require-user";
 import { droitsDe, type Droits } from "./droits";
 
@@ -70,11 +70,20 @@ function refuserLaLecture(c: Awaited<ReturnType<typeof getOptionalCompte>>): voi
  * (Checkout, portail, essai). Un membre ou un lecteur est renvoyé à la page des
  * membres, qui le dit. À placer après `verifierSaisie`, ou seule pour un geste
  * ouvert à un impayé.
+ *
+ * Rend le compte qu'elle a vérifié, et l'action agit sur CELUI-LÀ : relire le
+ * compte actif après elle (`requireCompte`) laissait un autre onglet en changer
+ * entre les deux lectures, et le geste passait sur un compte où la personne
+ * n'est que membre, voire lectrice (audit de sécurité du 2026-11-10).
  */
-export async function verifierProprietaire(): Promise<void> {
+export async function verifierProprietaire(): Promise<Proprietaire> {
   const c = await getOptionalCompte();
   if (c?.compte?.role !== "owner") redirect(`${PAGE_MEMBRES}?reserve=proprietaire`);
+  return c as Proprietaire;
 }
+
+/** Un compte dont `verifierProprietaire` a vérifié que la personne est propriétaire. */
+export type Proprietaire = Compte & { compte: Compte["compte"] & { role: "owner" } };
 
 /**
  * La garde d'une écriture : le rôle d'abord, toujours (une lecture de

@@ -24,8 +24,6 @@ const EXEMPTIONS: Record<string, string> = {
     "gabarit XLSX vierge, identique pour tous : aucune donnée de compte",
   "api/accessibilite/[slug]/affiche/route.ts":
     "affiche du registre PUBLIC d'accessibilité, faite pour être imprimée et vue de tous",
-  "auth/verification/route.ts":
-    "vérification d'un jeton puis redirection : aucun document dans la réponse",
   "api/mcp/[cle]/route.ts":
     "protocole MCP (JSON-RPC en POST, `force-dynamic`), pas un document téléchargé — hors classe, voir le rapport du lot",
 };

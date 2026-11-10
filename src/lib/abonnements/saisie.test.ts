@@ -90,8 +90,10 @@ describe("verifierProprietaire (ADR-054 § 8)", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("laisse passer le propriétaire, renvoie tout autre rôle à la page des membres", async () => {
-    getOptionalCompte.mockResolvedValueOnce({ compte: { compteId: "c1", role: "owner" } });
-    await expect(verifierProprietaire()).resolves.toBeUndefined();
+    const proprietaire = { compte: { compteId: "c1", role: "owner" } };
+    getOptionalCompte.mockResolvedValueOnce(proprietaire);
+    // Le compte vérifié est rendu : l'action agit sur lui, sans relire le compte actif.
+    await expect(verifierProprietaire()).resolves.toBe(proprietaire);
     for (const role of ["member", "lecture"]) {
       getOptionalCompte.mockResolvedValueOnce({ compte: { compteId: "c1", role } });
       await expect(verifierProprietaire()).rejects.toThrow("NEXT_REDIRECT");

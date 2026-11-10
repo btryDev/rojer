@@ -65,6 +65,7 @@ const RGPD: Ouverte = { motif: "supprimer ses données reste possible à tout mo
 
 /** Écritures qui restent ouvertes quand la saisie est fermée. */
 const OUVERTES = new Map<string, Ouverte>([
+  ["lib/auth/actions.ts:activerCompteAction", COMPTE],
   ["lib/auth/actions.ts:activerDoubleAuthAction", COMPTE],
   ["lib/auth/actions.ts:changerMotDePasseAction", COMPTE],
   ["lib/auth/actions.ts:confirmerDoubleAuthAction", COMPTE],
@@ -165,6 +166,16 @@ const METHODES_QUI_ECRIVENT = new Set(["POST", "PUT", "PATCH", "DELETE"]);
  * le refus à l'écran plutôt qu'en redirection.
  */
 const GARDES_DE_ROLE = ["verifierRole", "verifierProprietaire"];
+/** Ce qui relit le compte actif et rend un client : interdit après `verifierProprietaire`. */
+const RELECTURES_DU_COMPTE = new Set([
+  "requireCompte",
+  "getOptionalCompte",
+  "requireEtablissement",
+  "getOptionalUserEtablissement",
+  "assertEtablissementOwnership",
+]);
+/** Les gardes de portée qui prennent le compte vérifié en second argument. */
+const GARDES_A_COMPTE_VERIFIE = new Set(["assertEntrepriseDuCompte", "assertEtablissementDuCompte"]);
 const GARDE_LOCALE_MEMBRES = { fichier: "lib/membres/actions.ts", garde: "proprietaireOuRefus" };
 
 /**
@@ -498,6 +509,35 @@ describe("la saisie fermée (ADR-053 § 3)", () => {
       "Appelez `await verifierRole()` (ou `verifierProprietaire()`) en tête de l'action, ou marquez-la `lectureSeule` dans OUVERTES.",
     ).toEqual([]);
     expect([...OUVERTES].filter(([c, o]) => o.lectureSeule && ferme(c)).map(([c]) => c)).toEqual([]);
+  });
+
+  it("un geste du propriétaire agit sur le compte vérifié, sans relire le compte actif (audit du 2026-11-10)", () => {
+    // Entre la garde et une seconde lecture, un autre onglet peut changer de
+    // compte actif : le geste passerait sur un compte où la personne n'est pas
+    // propriétaire. Le compte que rend `verifierProprietaire` se nomme, se
+    // passe aux gardes de portée, et rien ne relit la session.
+    const fautes: string[] = [];
+    for (const [cle, fn] of releve.exportees) {
+      if (!ouvrePar(fn, "verifierProprietaire") || !fn.corps) continue;
+      const premiere = fn.corps.statements[0];
+      const decl = ts.isVariableStatement(premiere) ? premiere.declarationList.declarations[0] : undefined;
+      const nom = decl && ts.isIdentifier(decl.name) ? decl.name.text : null;
+      const visiter = (n: ts.Node): void => {
+        if (ts.isCallExpression(n) && ts.isIdentifier(n.expression)) {
+          const appel = n.expression.text;
+          if (RELECTURES_DU_COMPTE.has(appel)) fautes.push(`${cle} : ${appel}() relit le compte actif`);
+          if (GARDES_A_COMPTE_VERIFIE.has(appel)) {
+            const passe = n.arguments[1];
+            if (!nom || !passe || !ts.isIdentifier(passe) || passe.text !== nom) {
+              fautes.push(`${cle} : ${appel}() sans le compte vérifié en second argument`);
+            }
+          }
+        }
+        ts.forEachChild(n, visiter);
+      };
+      fn.corps.statements.slice(1).forEach(visiter);
+    }
+    expect(fautes).toEqual([]);
   });
 
   it("chaque route d'une méthode qui écrit appelle verifierSaisie, sauf les ouvertes nommées", () => {

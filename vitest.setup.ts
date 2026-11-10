@@ -47,7 +47,13 @@ vi.mock("@/lib/abonnements/saisie", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/abonnements/saisie")>()),
   verifierSaisie: async () => {},
   verifierRole: async () => {},
-  verifierProprietaire: async () => {},
+  // Le compte vérifié, comme la vraie garde : les suppressions le passent aux
+  // gardes de portée au lieu de relire le compte actif.
+  verifierProprietaire: async () => ({
+    user: { id: "user-1" },
+    compte: { compteId: "user-1", role: "owner" },
+    db: await (await import("@/test/garde-simulee")).clientDuCompteSimule(),
+  }),
 }));
 
 vi.mock("@/lib/auth/portee/client", async () => {

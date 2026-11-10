@@ -116,13 +116,15 @@ beforeEach(() => {
     (args as { where: { etablissementId: string } }).where.etablissementId === "e1"
       ? FICHE
       : null;
+  h.reponses["prestataire.updateMany"] = () => ({ count: 1 });
+  h.reponses["prestataire.deleteMany"] = () => ({ count: 1 });
 });
 
 describe("modifierPrestataire", () => {
   it("une fiche d'un autre établissement est introuvable, et rien n'est écrit", async () => {
     const r = await modifierPrestataire("e2", "pre_1", { status: "idle" }, saisie());
     expect(r).toEqual({ status: "error", message: "Prestataire introuvable" });
-    expect(ecritures("prestataire.update")).toEqual([]);
+    expect(ecritures("prestataire.updateMany")).toEqual([]);
   });
 
   it("un champ vidé efface la valeur, et la nouvelle remise s'écrit avec sa validité", async () => {
@@ -137,7 +139,7 @@ describe("modifierPrestataire", () => {
       }),
     );
     expect(r).toEqual({ status: "success", prestataireId: "pre_1" });
-    const [maj] = ecritures("prestataire.update");
+    const [maj] = ecritures("prestataire.updateMany");
     const data = (maj.args as { data: Record<string, unknown> }).data;
     expect(data.contactTelephone).toBeNull();
     expect(data.notesInternes).toBeNull();
@@ -146,7 +148,7 @@ describe("modifierPrestataire", () => {
     // Aucune pièce jointe : les pièces en place ne sont pas touchées, et la
     // modification est une seule écriture, sans transaction.
     expect("attestationUrssafCle" in data).toBe(false);
-    expect(h.appels.map((a) => a.op).filter((op) => op !== "prestataire.findFirst")).toEqual(["prestataire.update"]);
+    expect(h.appels.map((a) => a.op).filter((op) => op !== "prestataire.findFirst")).toEqual(["prestataire.updateMany"]);
     expect(h.stockage.liberes).toEqual([]);
   });
 
@@ -161,7 +163,7 @@ describe("modifierPrestataire", () => {
       saisie({ attestationUrssaf: pdf() }),
     );
     expect(r.status).toBe("success");
-    const data = (ecritures("prestataire.update")[0].args as { data: Record<string, unknown> }).data;
+    const data = (ecritures("prestataire.updateMany")[0].args as { data: Record<string, unknown> }).data;
     expect(data.attestationUrssafCle).toBe(h.stockage.ecrits[0]);
     expect(data.attestationUrssafNom).toBe("nouvelle.pdf");
     expect("assuranceRcProCle" in data).toBe(false);
@@ -186,7 +188,41 @@ describe("modifierPrestataire", () => {
     const r = await modifierPrestataire("e1", "pre_1", { status: "idle" }, saisie({ kbis: pdf() }));
     expect(r.status).toBe("error");
     expect(h.stockage.ecrits).toEqual([]);
-    expect(ecritures("prestataire.update")).toEqual([]);
+    expect(ecritures("prestataire.updateMany")).toEqual([]);
+  });
+
+  it("la pièce remplacée est celle qu'on a lue : l'écriture est bornée à sa clé (audit du 2026-11-10)", async () => {
+    await modifierPrestataire("e1", "pre_1", { status: "idle" }, saisie({ attestationUrssaf: pdf() }));
+    // Clé, nom et validité de la pièce remplacée : ce qui s'archive.
+    expect((ecritures("prestataire.updateMany")[0].args as { where: unknown }).where).toEqual({
+      id: "pre_1",
+      attestationUrssafCle: FICHE.attestationUrssafCle,
+      attestationUrssafNom: FICHE.attestationUrssafNom,
+      attestationUrssafValableJusquA: FICHE.attestationUrssafValableJusquA,
+    });
+  });
+
+  it("une autre modification a remplacé la pièce entre-temps : refus, rien d'inscrit, la pièce déposée est libérée", async () => {
+    h.reponses["prestataire.updateMany"] = () => ({ count: 0 });
+    const r = await modifierPrestataire("e1", "pre_1", { status: "idle" }, saisie({ attestationUrssaf: pdf() }));
+    expect(r).toMatchObject({ status: "error", message: expect.stringMatching(/modifiée entre-temps/) });
+    expect(ecritures("piecePrestataire.createMany")).toEqual([]);
+    expect(h.stockage.liberes).toEqual(h.stockage.ecrits);
+  });
+
+  it("la fiche a été supprimée entre-temps : « introuvable »", async () => {
+    let lectures = 0;
+    h.reponses["prestataire.findFirst"] = () => (lectures++ === 0 ? FICHE : null);
+    h.reponses["prestataire.updateMany"] = () => ({ count: 0 });
+    const r = await modifierPrestataire("e1", "pre_1", { status: "idle" }, saisie());
+    expect(r).toEqual({ status: "error", message: "Prestataire introuvable" });
+  });
+
+  it("idem sans pièce remplacée (première pièce d'un type) : refus, et la pièce déposée est libérée", async () => {
+    h.reponses["prestataire.updateMany"] = () => ({ count: 0 });
+    const r = await modifierPrestataire("e1", "pre_1", { status: "idle" }, saisie({ kbis: pdf() }));
+    expect(r).toMatchObject({ status: "error", message: expect.stringMatching(/modifiée entre-temps/) });
+    expect(h.stockage.liberes).toEqual(h.stockage.ecrits);
   });
 
   it("une pièce jointe là où il n'y en avait pas n'inscrit rien", async () => {
@@ -205,7 +241,7 @@ describe("modifierPrestataire", () => {
     if (r.status === "error") {
       expect(r.fieldErrors?.attestationUrssafRemiseLe).toBeDefined();
     }
-    expect(ecritures("prestataire.update")).toEqual([]);
+    expect(ecritures("prestataire.updateMany")).toEqual([]);
   });
 });
 
@@ -228,7 +264,7 @@ describe("SIRET déjà présent dans l'annuaire", () => {
   });
 
   it("à la modification : même message, et la pièce déjà écrite est reprise", async () => {
-    h.reponses["prestataire.update"] = doublon;
+    h.reponses["prestataire.updateMany"] = doublon;
     const r = await modifierPrestataire(
       "e1",
       "pre_1",
@@ -256,7 +292,7 @@ describe("supprimerPrestataire — les pièces précédentes partent avec (2026-
       piecesPrecedentes: [{ fichierCle: "prestataires/e1/pre_1/urssaf-1-2025.pdf" }],
     });
     await supprimerPrestataire("e1", "pre_1");
-    expect(ecritures("prestataire.delete")).toHaveLength(1);
+    expect(ecritures("prestataire.deleteMany")).toHaveLength(1);
     expect([...h.stockage.liberes].sort()).toEqual(
       [
         FICHE.attestationUrssafCle,
@@ -264,6 +300,38 @@ describe("supprimerPrestataire — les pièces précédentes partent avec (2026-
         "prestataires/e1/pre_1/urssaf-1-2025.pdf",
       ].sort(),
     );
+  });
+});
+
+describe("supprimerPrestataire pendant une modification (audit du 2026-11-10)", () => {
+  it("bornée aux pièces lues : relit quand une pièce a changé, et libère la pièce en place", async () => {
+    const fiches = [FICHE, { ...FICHE, kbisCle: "prestataires/e1/pre_1/kbis-nouveau.pdf" }];
+    h.reponses["prestataire.findFirst"] = () => ({ ...(fiches.shift() ?? FICHE), piecesPrecedentes: [] });
+    let premiere = true;
+    h.reponses["prestataire.deleteMany"] = () => {
+      const count = premiere ? 0 : 1;
+      premiere = false;
+      return { count };
+    };
+    await supprimerPrestataire("e1", "pre_1");
+    expect(ecritures("prestataire.deleteMany")).toHaveLength(2);
+    expect((ecritures("prestataire.deleteMany")[0].args as { where: unknown }).where).toEqual({
+      id: "pre_1",
+      attestationUrssafCle: FICHE.attestationUrssafCle,
+      assuranceRcProCle: FICHE.assuranceRcProCle,
+      kbisCle: null,
+    });
+    expect(h.stockage.liberes).toContain("prestataires/e1/pre_1/kbis-nouveau.pdf");
+  });
+});
+
+describe("supprimerPrestataire : chaque essai perd la course", () => {
+  it("rien n'est supprimé, et on le dit", async () => {
+    let n = 0;
+    h.reponses["prestataire.findFirst"] = () => ({ ...FICHE, kbisCle: `k${n++}.pdf`, piecesPrecedentes: [] });
+    h.reponses["prestataire.deleteMany"] = () => ({ count: 0 });
+    await expect(supprimerPrestataire("e1", "pre_1")).rejects.toThrow(/abandonnée/);
+    expect(h.stockage.liberes).toEqual([]);
   });
 });
 

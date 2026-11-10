@@ -24,7 +24,8 @@ import {
   type Limite,
 } from "@/lib/securite/limite-debit";
 import { cheminDeRetour } from "./chemin-de-retour";
-import { erreurMotDePasse } from "./mot-de-passe";
+import { erreurMotDePasse, LIEN_ACTIVATION_INVALIDE, LONGUEUR_MAX_MOT_DE_PASSE } from "./mot-de-passe";
+import { avecActivation } from "./activation";
 
 const emailSchema = z.string().email("Adresse e-mail invalide");
 
@@ -174,7 +175,7 @@ export async function signInAction(
       return {
         error: envoiImpossible()
           ? `Votre adresse n'est pas encore confirmée. ${ENVOI_IMPOSSIBLE}`
-          : "Votre adresse n'est pas encore confirmée : un nouveau lien vient de vous être envoyé. Ouvrez-le, puis reconnectez-vous.",
+          : "Votre adresse n'est pas encore confirmée : un nouveau lien part vers votre boîte (cinq au plus par heure). Ouvrez le plus récent pour activer votre compte.",
       };
     }
     return { error: "Identifiants invalides" };
@@ -294,6 +295,45 @@ export async function definirMotDePasseAction(
     };
   }
   redirect("/login?reinitialise=1");
+}
+
+/**
+ * Activer un compte au retour du lien de confirmation : l'adresse est
+ * confirmée ET le mot de passe saisi ici devient celui du compte, posé avant
+ * la confirmation (`activation.ts`) — c'est celui qui tient la boîte qui le
+ * choisit, jamais le premier venu qui aurait inscrit l'adresse. Envoi d'un
+ * formulaire : un scanner de liens qui ouvre la page ne confirme rien.
+ * Un compte déjà confirmé ne change pas de mot de passe.
+ */
+export async function activerCompteAction(
+  _prev: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const motDePasse = String(formData.get("password") ?? "");
+  const confirmation = String(formData.get("confirm") ?? "");
+  if (motDePasse !== confirmation) {
+    return { error: "Les deux mots de passe ne correspondent pas" };
+  }
+  const invalide = erreurMotDePasse(motDePasse);
+  if (invalide) return { error: invalide };
+  if (motDePasse.length > LONGUEUR_MAX_MOT_DE_PASSE) return { error: MOT_DE_PASSE_TROP_LONG };
+
+  const token = String(formData.get("token") ?? "");
+  if (!token) return { error: LIEN_ACTIVATION_INVALIDE };
+  const limite = await refusParLimite("activation-compte", LIMITES.reinitialisationIp);
+  if (limite) return { error: limite };
+  const divulgue = await refusNouveauMotDePasse(motDePasse);
+  if (divulgue) return { error: divulgue };
+
+  let applique: boolean;
+  try {
+    ({ applique } = await avecActivation(motDePasse, () => auth.api.verifyEmail({ query: { token } })));
+  } catch (e) {
+    // Un jeton refusé est un lien invalide ; une panne de base, elle, se voit.
+    if (isAPIError(e)) return { error: LIEN_ACTIVATION_INVALIDE };
+    throw e;
+  }
+  redirect(applique ? "/login?confirmed=1" : "/login?confirmation=deja");
 }
 
 

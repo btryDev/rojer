@@ -104,9 +104,9 @@ export async function supprimerEntreprise(
 ): Promise<SuppressionEntrepriseResult> {
   // Ouverte à un compte impayé (RGPD) ; réservée au propriétaire : elle
   // efface un dossier entier (ADR-054 § 2).
-  await verifierProprietaire();
+  const proprietaire = await verifierProprietaire();
   ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
-  const { db } = await assertEntrepriseDuCompte(id);
+  const { db } = await assertEntrepriseDuCompte(id, proprietaire);
 
   // Un établissement dont on connaît l'id permet d'orienter vers l'export.
   const etablissement = await db.etablissement.findFirst({

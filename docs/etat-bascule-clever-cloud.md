@@ -118,12 +118,13 @@ connecteur MCP OAuth de Supabase n'existe plus — garder la suppression de
 - **Recette à rejouer AVANT la bascule** : [2026-11-09 : la liste est
   écrite, section « Recette « pages × comptes à plusieurs membres » »
   plus bas.]
-- **Décision à confirmer par la propriétaire** : supprimer une entreprise ou
+- ~~**Décision à confirmer par la propriétaire** : supprimer une entreprise ou
   un établissement est réservé au propriétaire du compte
   (`verifierProprietaire`), choix de réalisation (ADR-054, « Ce que la
   réalisation a précisé, lots 3 et 4 »). Pour l'ouvrir aux membres :
   `verifierRole` à la place, dans `entreprises/actions.ts` et
-  `etablissements/actions.ts`.
+  `etablissements/actions.ts`.~~ [2026-11-09, décision de la propriétaire :
+  la suppression reste réservée au propriétaire. Rien à changer.]
 - ~~**Lot à part, lecture seule** : masquer les boutons de saisie pour un
   membre en lecture seule (environ 80 écrans de formulaires). D'ici là, tout
   geste tenté aboutit à `/compte/lecture-seule`, et le client borné refuse
@@ -134,9 +135,13 @@ connecteur MCP OAuth de Supabase n'existe plus — garder la suppression de
   [2026-11-09 : posé, 5a7ca218.]
 - ~~**Choix du compte dans la gélule** : il n'existe que sur l'écran « Membres »
   (ADR-054 § 7).~~ [2026-11-09 : livré par #262.]
-- **Bases locales** qui ont joué `20261103120000_comptes_et_membres` avant
+- ~~**Bases locales** qui ont joué `20261103120000_comptes_et_membres` avant
   son CHECK et son déclencheur : à remettre à zéro (aucune n'est en
-  production).
+  production).~~ [2026-11-09, vérifié sur les bases du conteneur
+  `duerp-verif-db` : seules `duerp_cc_visuel` et `duerp_quota_navig` portent la
+  migration, avec l'empreinte du fichier actuel (appliquée le 2026-11-05,
+  après le CHECK et le déclencheur) ; les quatre autres ne l'ont pas. Rien à
+  remettre à zéro.]
 
 ## Ce qui reste avant la bascule
 
@@ -183,6 +188,25 @@ audit du proxy de `cc` ; le code est fusionné, il n'a jamais tourné là-bas) :
    XXS 15.17 le même jour). Autre chose : le dire, l'ADR-051 se relit.
 5. **`scripts/sante-base.sql` avant et après la bascule** : la section
    « D bis » (clés croisées entre comptes, générée) doit rendre 0 partout.
+
+Ajoutés le 2026-11-10 (audit de sécurité de `cc`, rapport hors dépôt :
+`~/security-audit-skill/duerp-cc/run-1/`) :
+6. **IPv6** : le domaine de production a-t-il un enregistrement AAAA, et
+   l'adresse IPv6 du client arrive-t-elle en dernière entrée de
+   `X-Forwarded-For` ? Les limites de débit regroupent l'IPv6 par /64
+   (#271) ; sans IPv6 servie, la question tombe. Sans `X-Forwarded-For`
+   lisible, l'inscription n'a **aucune** limite par IP (`ipClient` rend
+   `null`) : le point 3 le tranche.
+7. **Instances et mémoire** : combien d'instances, quelle RAM, quel
+   `EXPORTS_SIMULTANES`. La file d'export et les recalculs de `/verifier`
+   sont bornés **par processus** (#273) : ces chiffres disent ce que tient
+   l'instance sous charge.
+8. **`PUBLIC_APP_URL` en `https://`** : `src/env.ts` accepte aussi `http://`
+   en production, et Better Auth en déduit l'attribut `Secure` et le préfixe
+   `__Secure-` des cookies de session.
+9. **Le compartiment Cellar est privé** : ni lecture publique, ni listage.
+   Le code ne sert les fichiers que par l'application (pas d'URL signée ni
+   publique) ; la politique du compartiment ne se lit pas dans le dépôt.
 
 Abonnements (ne bloquent pas la bascule ; rien à poser tant qu'ils ne
 sont pas ouverts) — **la liste de lancement, dans l'ordre :
