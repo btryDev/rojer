@@ -43,6 +43,18 @@ describe("branchements des fichiers déposés", () => {
     expect(zip).toMatch(/export const maxDuration = \d+;/);
   });
 
+  it("un client parti arrête l'archive, et la place d'export est rendue (lot pdf-b1)", () => {
+    // Chaque jeu de fichiers et chaque lecture s'arrête sur l'abandon ; un
+    // abandon n'est pas noté comme une pièce en échec, il remonte.
+    const jeux = zip.match(/await joindreFichiers\(/g) ?? [];
+    const gardes = zip.match(/arreterSiParti\(\);\s*const \w+ = await joindreFichiers\(/g) ?? [];
+    expect(jeux.length).toBeGreaterThan(0);
+    expect(gardes.length).toBe(jeux.length);
+    expect(zip).toMatch(/const lire = async[^{]*\{\s*arreterSiParti\(\);/);
+    expect(zip).toMatch(/const noterEchec = [^{]*\{\s*if \(e instanceof PdfAbandonne\) throw e;\s*arreterSiParti\(\);/);
+    expect(zip).toMatch(/if \(e instanceof PdfAbandonne\) return new Response\(null, \{ status: 503/);
+  });
+
   it("le ZIP ne lit aucun fichier déposé avant le flux, et tient une place d'export (H3)", () => {
     // Toute lecture du stockage passe par `contenuDiffere` : lue à son tour
     // dans l'archive, jamais toute d'avance (`fichiers-zip.ts`).

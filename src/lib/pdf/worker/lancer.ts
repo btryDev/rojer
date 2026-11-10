@@ -70,20 +70,35 @@ export class PdfAbandonne extends Error {
 }
 
 /**
- * L'environnement du processus de rendu : celui du serveur, SANS
- * `NODE_OPTIONS` — qui porterait le `--max-old-space-size` de la plateforme
- * et remplacerait la borne.
+ * Ce que le processus de rendu reçoit de l'environnement du serveur : une
+ * liste FERMÉE (revue de code de B1, 2026-11-10). Il met en page des données
+ * saisies par les utilisateurs et n'a besoin d'aucun secret — ni base, ni
+ * authentification, ni paiement ; le paquet ne lit d'ailleurs que
+ * `NODE_OPTIONS` (pour sa borne), qui n'est PAS transmise : elle porterait le
+ * `--max-old-space-size` de la plateforme.
  */
-export function environnementDuRendu(env: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
-  const copie = { ...env };
-  delete copie.NODE_OPTIONS;
-  return copie;
+const VARIABLES_DU_RENDU = ["PATH", "NODE_ENV", "TZ", "LANG", "LC_ALL"] as const;
+
+export function environnementDuRendu(env: NodeJS.ProcessEnv = process.env): Record<string, string> {
+  const transmis: Record<string, string> = {};
+  for (const nom of VARIABLES_DU_RENDU) {
+    const valeur = env[nom];
+    if (valeur !== undefined) transmis[nom] = valeur;
+  }
+  return transmis;
 }
 
 /** Les drapeaux du processus de rendu : la borne de tas, et rien d'hérité. */
 export function drapeauxDuRendu(tasMaxMo: number): string[] {
   return [`--max-old-space-size=${tasMaxMo}`];
 }
+
+/**
+ * Au-delà, l'issue revient même sans la fin du processus tué : `SIGKILL` est
+ * immédiat, et une place d'export ne doit jamais rester prise (revue de code
+ * de B1).
+ */
+const ATTENTE_FIN_MAX_MS = 5_000;
 
 /**
  * Une sortie de processus qui dit un tas dépassé : V8 avorte (`SIGABRT`,
@@ -104,24 +119,31 @@ export function rendreDansUnProcessus(
     const enfant = fork(chemin, [String(limites.tasMaxMo)], {
       // Explicites : sans eux, `fork` reprend `process.execArgv` du serveur.
       execArgv: drapeauxDuRendu(limites.tasMaxMo),
-      env: environnementDuRendu(),
+      // Le type de Next exige NODE_ENV ; il est transmis quand il est posé.
+      env: environnementDuRendu() as NodeJS.ProcessEnv,
       // Clonage structuré (Date, ArrayBuffer).
       serialization: "advanced",
       stdio: ["ignore", "inherit", "inherit", "ipc"],
     });
-    let sorti = false;
+    let termine = false;
     let fini = false;
-    // Une seule issue par rendu, rendue APRÈS la mort du processus (revue
+    // Une seule issue par rendu, rendue APRÈS la fin du processus (revue
     // de B1) : sinon la place d'export se libère pendant qu'il se défait
     // encore, et le suivant démarre à côté — deux tas en même temps, que
-    // `EXPORTS_SIMULTANES=1` devait empêcher.
+    // `EXPORTS_SIMULTANES=1` devait empêcher. Un processus qui n'a jamais
+    // démarré (`fork` en échec : pas de `pid`, et ni `exit` ni `close` ne
+    // viendront) est déjà « fini » ; sinon, l'attente est bornée.
     const finir = (issue: () => void) => {
       if (fini) return;
       fini = true;
       clearTimeout(minuterie);
       limites.signal?.removeEventListener("abort", surAbandon);
-      if (sorti) return issue();
-      enfant.once("exit", () => issue());
+      if (termine || enfant.pid === undefined) return issue();
+      const secours = setTimeout(issue, ATTENTE_FIN_MAX_MS);
+      enfant.once("close", () => {
+        clearTimeout(secours);
+        issue();
+      });
       enfant.kill("SIGKILL");
     };
     const minuterie = setTimeout(
@@ -135,8 +157,10 @@ export function rendreDansUnProcessus(
       finir(() => (r.ok ? resolve(Buffer.from(r.pdf)) : reject(erreurDuProcessus(r)))),
     );
     enfant.once("error", (e) => finir(() => reject(e)));
-    enfant.once("exit", (code, signal) => {
-      sorti = true;
+    // `close` et non `exit` : `exit` peut précéder la livraison du dernier
+    // message (le PDF), `close` attend aussi la fermeture du canal IPC.
+    enfant.once("close", (code, signal) => {
+      termine = true;
       finir(() =>
         reject(
           sortieDeTasDepasse(code, signal)

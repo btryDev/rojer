@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "next dev",
     "pdf-worker": "node scripts/construire-worker-pdf.mjs",
-    "build": "prisma generate && next build && sh scripts/migrer-en-production.sh",
+    "build": "prisma generate && next build && node scripts/construire-worker-pdf.mjs && sh scripts/migrer-en-production.sh",
     "postinstall": "prisma generate",
     "start": "next start",
     "build:cc": "prisma generate && next build --webpack && node scripts/construire-worker-pdf.mjs && sh scripts/preparer-standalone.sh",

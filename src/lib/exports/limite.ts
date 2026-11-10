@@ -1,5 +1,8 @@
 import "server-only";
 
+import { lireEntierPositif } from "./reglage-entier";
+import { creerLimiteur, type Liberer, type Limiteur } from "@/lib/securite/limiteur";
+
 /**
  * Combien d'exports (PDF, ZIP de contrôle) le processus mène de front
  * (audit Next.js du 2026-10-14, H3).
@@ -57,8 +60,6 @@ export function exportsSimultanes(valeur = process.env.EXPORTS_SIMULTANES): numb
   return lireEntierPositif("EXPORTS_SIMULTANES", valeur, EXPORTS_SIMULTANES_DEFAUT);
 }
 
-import { lireEntierPositif } from "./reglage-entier";
-import { creerLimiteur, type Liberer, type Limiteur } from "@/lib/securite/limiteur";
 
 /** Le limiteur du processus, partagé par toutes les routes d'export. */
 const limiteur = creerLimiteur({

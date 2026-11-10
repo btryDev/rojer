@@ -16,7 +16,7 @@ import { CODE_TRAVAIL_DUERP_PRINCIPES } from "@/lib/referentiels/corpus/code-tra
 function texte(): string {
   // Le fichier du corpus, pas l'index (voir `mentions-r4121-4.ts`).
   const corpus = CODE_TRAVAIL_DUERP_PRINCIPES;
-  const article = corpus?.articles.find((a) => a.ref === "L. 4121-2");
+  const article = corpus.articles.find((a) => a.ref === "L. 4121-2");
   if (!article?.citationCle)
     throw new Error("L. 4121-2 n'a plus de verbatim au corpus : les PDF n'ont rien à citer.");
   return article.citationCle;

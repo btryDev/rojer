@@ -33,12 +33,18 @@ import {
 
 // `fork` observé, sans rien changer : le dernier processus lancé, pour lire
 // s'il est mort au moment où l'issue revient.
-const vus = vi.hoisted(() => ({ dernier: undefined as ChildProcess | undefined }));
+// `casser` fait échouer le lancement lui-même (exécutable introuvable).
+const vus = vi.hoisted(() => ({ dernier: undefined as ChildProcess | undefined, casser: false }));
 vi.mock("node:child_process", async (importOriginal) => {
   const reel = await importOriginal<typeof import("node:child_process")>();
   return {
     ...reel,
-    fork: (...args: Parameters<typeof reel.fork>) => (vus.dernier = reel.fork(...args)),
+    fork: (chemin: string, args: readonly string[], options: Parameters<typeof reel.fork>[2]) =>
+      (vus.dernier = reel.fork(
+        chemin,
+        args,
+        vus.casser ? { ...options, execPath: "/chemin/inexistant/node" } : options,
+      )),
   };
 });
 
@@ -174,6 +180,23 @@ describe("rendreDansUnProcessus", () => {
     expect(vus.dernier?.signalCode).toBe("SIGKILL");
   }, 60_000);
 
+  it("un lancement en échec rend la main tout de suite, sans attendre une fin qui ne viendra pas", async () => {
+    // Sans pid, ni `exit` ni `close` ne viennent : l'attente serait infinie,
+    // et la place d'export jamais rendue (revue de code de B1).
+    vus.casser = true;
+    try {
+      const t0 = performance.now();
+      const e = await rendreDansUnProcessus(demandeRegistre(1), limites, chemin).catch((x: Error) => x);
+      expect(e).toMatchObject({ code: "ENOENT" });
+      expect(vus.dernier?.pid).toBeUndefined();
+      // Bien avant l'attente de secours (5 s) : c'est l'absence de pid qui
+      // rend la main, pas la borne. Constaté : environ 1 ms.
+      expect(performance.now() - t0).toBeLessThan(2_000);
+    } finally {
+      vus.casser = false;
+    }
+  });
+
   it("une erreur de mise en page revient du processus, avec sa pile", async () => {
     const casse = { type: "registre", props: { data: { parties: null } } } as unknown as DemandePdf;
     const e = await rendreDansUnProcessus(casse, limites, chemin).catch((x: Error) => x);
@@ -241,9 +264,16 @@ describe("la borne de tas du processus de rendu", () => {
     expect(problemeDeBorne({ ...tenue, tasMaxMo: Number.NaN, limiteMo: 448 })).toMatch(/illisible/);
   });
 
-  it("l'environnement du rendu perd NODE_OPTIONS, et rien d'autre", () => {
-    const env = environnementDuRendu({ NODE_OPTIONS: "--max-old-space-size=1262", DATABASE_URL: "x", PATH: "/bin" } as unknown as NodeJS.ProcessEnv);
-    expect(env).toEqual({ DATABASE_URL: "x", PATH: "/bin" });
+  it("l'environnement du rendu : ni NODE_OPTIONS, ni aucun secret du serveur", () => {
+    const env = environnementDuRendu({
+      NODE_OPTIONS: "--max-old-space-size=1262",
+      DATABASE_URL: "postgres://secret",
+      BETTER_AUTH_SECRET: "secret",
+      STRIPE_SECRET_KEY: "secret",
+      PATH: "/bin",
+    } as unknown as NodeJS.ProcessEnv);
+    expect(env.PATH).toBe("/bin");
+    expect(JSON.stringify(env)).not.toMatch(/secret|max-old-space-size/);
     expect(drapeauxDuRendu(384)).toEqual(["--max-old-space-size=384"]);
   });
 });

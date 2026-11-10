@@ -91,6 +91,13 @@ function reponseTropVolumineux(e: PdfTropVolumineux): Response {
  * Le rendu a dépassé son délai (lot pdf-b1) : 503 AVEC `Retry-After` — un
  * serveur moins chargé peut y arriver, contrairement à un document trop gros.
  */
+/**
+ * Plus long que le `Retry-After` de la file pleine (`REESSAYER_APRES_S`,
+ * 5 s) : un rendu qui a épuisé son délai ne passera pas dans 5 s, il lui
+ * faut un serveur moins chargé.
+ */
+const REESSAYER_APRES_DELAI_S = 120;
+
 function reponseDelaiDepasse(): Response {
   return new Response(
     "La préparation de ce document a pris trop de temps. Réessayez dans quelques minutes.",
@@ -98,7 +105,7 @@ function reponseDelaiDepasse(): Response {
       status: 503,
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
-        "Retry-After": "120",
+        "Retry-After": String(REESSAYER_APRES_DELAI_S),
         ...SANS_CACHE,
       },
     },
