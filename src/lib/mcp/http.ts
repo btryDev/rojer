@@ -306,7 +306,11 @@ export function creerHandlerMcpHttp(options: OptionsServeurHttp) {
 
     // Par IP AVANT l'authentification, qui peut coûter un appel au serveur
     // Auth ; par portée APRÈS, pour qu'un porteur légitime ne puisse pas
-    // marteler un établissement depuis plusieurs adresses.
+    // marteler un établissement depuis plusieurs adresses. Adresse COMPLÈTE,
+    // pas son /64 (exception à `ipPourLimite`, audit du 2026-11-10) : les
+    // clients MCP hébergés partagent leurs réseaux de sortie entre leurs
+    // utilisateurs, et le travail avant authentification est minime ; la
+    // limite par portée, elle, tient quelle que soit l'adresse.
     const ip = ipClient(request.headers);
     if (ip) {
       const trop = await refusParLimite(cleLimite("mcp", "ip", ip), LIMITES.mcpIp);
