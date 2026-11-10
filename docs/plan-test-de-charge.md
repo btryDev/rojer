@@ -329,3 +329,117 @@ XS, build dédié M, PostgreSQL 18 XXS Tiny Space, Cellar `rojer-preprod-fichier
 6. Fait : 15 Mo déposés intacts, en-tête X-Forwarded-For forgé ignoré, rôle de
    base sans privilège élevé, TLS 1.3, crontab active.
 7. Reste une décision : PostgreSQL 18 ou 17 pour la production.
+
+## 14. Exports PDF : trois paliers (décision de la propriétaire, 2026-11-10)
+
+La propriétaire veut une solution durable, par paliers, standard pour une
+application Node monolithique sur un PaaS. On démarre au palier 1 ; on ne
+monte que sur un seuil mesuré. Les routes d'export appellent une seule
+fonction de rendu : d'un palier à l'autre, seul l'endroit où elle s'exécute
+change, ni les écrans ni les documents.
+
+### Mesures de la préproduction (XS, 1 vCPU, 1 076 Mo ; base XXS ; 50 dossiers à 10 équipements, ~100 rapports)
+
+Scénario `paliers` de k6 (30 s de montée, 3 min de tenue), le 2026-11-10.
+« Avant » = `cc` 6cd09e91 (rendu dans le serveur). « Après » = #289, 87f65198
+(un processus neuf par rendu, tas 256 Mo).
+
+| Utilisateurs | Pages/s | Pages p95 avant | Pages p95 après | Export registre p95 avant | après | CPU avant | après | Mémoire serveur avant | après |
+|---|---|---|---|---|---|---|---|---|---|
+| 10 | 1,6 | 0,17–0,23 s | 0,13–0,22 s | 0,68 s | — | 15 % | 10 % | 422 Mo | 370 Mo |
+| 25 | 3,9 | 0,10–0,24 s | 0,15–0,46 s | 1,16 s | 1,38 s | 30 % | 39 % | 440 Mo | 393 Mo |
+| 50 | 7,6 | 0,17–0,31 s | 0,16–0,29 s | 0,93 s | 1,80 s | 38 % | 63 % | 460 Mo | 421 Mo |
+| 100 | 15 | 0,21–0,69 s | 0,40–0,86 s | 1,19 s | 3,65 s | 78 % | 92 % | 512 Mo | 476 Mo |
+
+(« Pages p95 » : étendue des p95 des sept pages lues du parcours, hors dépôt
+— le dépôt d'un rapport de 1 Mo est borné par le débit montant du poste de
+mesure, 5 s à un seul utilisateur.) Durée du rendu d'un registre de ~100
+rapports dans le serveur, journal `export_pdf` : 0,29 à 0,96 s.
+
+Lecture : à dossiers réalistes, un processus neuf par rendu coûte plus qu'il
+ne protège — le rendu dure moins d'une seconde, le démarrage du processus
+(paquet de 4,6 Mo, code non optimisé) le double ou le triple et prend le seul
+processeur aux pages. Cause déduite des chiffres, pas chronométrée étape par
+étape.
+
+Erreurs : 9 puis 5 réponses 502 sur ~5 000 pages, à tous les paliers (dès 10
+utilisateurs) et sur les deux versions : indépendantes de la charge et du
+sous-processus. Piste : connexion inactive fermée par Node au moment où le
+répartiteur la réutilise (`keepAliveTimeout`) ; non confirmée. Les « GoAway
+ENHANCE_YOUR_CALM » (26 et 32) sont des refus du répartiteur sur les rafales
+de fichiers statiques de k6, pas des erreurs d'application.
+
+Banc local (XS simulé, rendu dans le serveur, vagues lancées à la même
+seconde, `.charge/resultats/H2-vague-*`) :
+
+| Dossiers | Exports lancés | Servis / refusés (503) | Durée des servis | Pages des autres p95 | pire |
+|---|---|---|---|---|---|
+| 10 équipements | 3 | 3 / 0 | 2–3 s | 0,23 s | 0,23 s |
+| 10 équipements | 12 | 9 / 3 | 1–5 s | 0,27 s | 0,27 s |
+| 10 équipements, ZIP | 12 | 9 / 3 | 2–16 s | 0,30 s | 0,40 s |
+| 682 rapports | 12 | 3 / 9 | 23–37 s | 1,3 s | 8,0 s |
+| 682 rapports, ZIP | 12 | 2 / 10 | 15–29 s | 8,5 s | 10,2 s |
+
+Aucun arrêt du serveur dans aucune vague : la file (un rendu à la fois, huit
+en attente, deux places par personne) borne la mémoire. Les arrêts par
+mémoire n'ont été vus qu'au-delà de ~3 000 rapports, que le garde-fou de
+taille (#286 : 2 000 au total, 400 par bloc) refuse désormais.
+
+### Palier 1 — lancement (état de `cc`)
+
+Rendu dans le serveur ; un export à la fois (`EXPORTS_SIMULTANES=1`), file de
+huit, 503 au-delà ; refus des documents hors seuil. Mesuré bon jusqu'à 100
+utilisateurs actifs sur XS.
+
+Limite connue : un rendu long gèle les autres pages pendant sa durée (rien à
+10 équipements ; 8 s au pire à 682 rapports), et ne peut pas être interrompu.
+
+**Monter au palier 2 quand**, sur le journal `export_pdf` de production :
+la durée d'un rendu (`dureeMs`) dépasse 2 s pour plus d'un export sur vingt,
+ou un dossier dépasse ~500 rapports au registre, ou des 503 d'export
+apparaissent en usage normal.
+
+### Palier 2 — croissance : un processus de rendu permanent
+
+Un processus de rendu démarré avec le serveur, gardé chaud, qui traite les
+exports l'un après l'autre ; tué et relancé s'il dépasse sa mémoire ou son
+délai ; renouvelé tous les N rendus. C'est le « pool de travailleurs » que
+recommande Node pour le calcul lourd (guide « Don't Block the Event Loop » ;
+la page « Comparing Node.js concurrency models » classe le démarrage d'un
+processus comme plus coûteux que celui d'un fil, d'où la réutilisation). Le
+processus plutôt que le fil : sa mémoire est bornée et rendue à part.
+
+Base : la #289 (paquet du rendu, protocole, bornes, journal, tests), dont
+seul le cycle de vie change. Sur Clever Cloud, deux formes possibles : un
+processus enfant du serveur, ou un service `CC_WORKER_COMMAND` (lancé par
+systemd dans la même instance, relancé seul en cas d'échec — documentation
+Clever Cloud, « Workers »).
+
+À mesurer avant fusion, même scénario que ci-dessus : pages et exports au
+niveau de la colonne « avant » à dossiers réalistes ; à 682 rapports, pages
+des autres sous 1 s pendant un export ; mémoire au repos du processus
+(attendu 100–150 Mo, à vérifier contre les ~520 Mo libres de XS).
+
+**Monter au palier 3 quand** un export dépasse ~30 s, ou qu'il faut plus
+d'une instance (la file d'exports est par processus), ou que l'envoi par
+mail d'un lien est voulu.
+
+### Palier 3 — volume : exports en arrière-plan
+
+La demande s'inscrit dans une file tenue dans PostgreSQL (`SELECT … FOR
+UPDATE SKIP LOCKED`, le mécanisme de pg-boss et de graphile-worker — pas de
+Redis à ajouter) ; un travailleur (service `CC_WORKER_COMMAND`, puis une
+application séparée si le volume le demande) produit le fichier et le range
+dans Cellar ; l'utilisateur est prévenu dans l'application ou par mail, avec
+un lien. L'archive annuelle (années closes générées une fois) s'y range.
+Rien n'en est codé ni mesuré.
+
+### Ce qui a été écarté
+
+- Un processus neuf par rendu (#289 en l'état) : mesuré plus lent à dossiers
+  réalistes (tableau ci-dessus).
+- Aiguiller selon la taille du document (petit dans le serveur, gros dans un
+  processus) : deux chemins à maintenir, écarté par la propriétaire
+  (« bricolage ») au profit d'un chemin unique par palier.
+- Agrandir l'instance pour absorber le démarrage du processus : payer plus
+  pour un mécanisme sans bénéfice à ces volumes.
