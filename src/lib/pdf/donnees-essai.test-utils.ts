@@ -1,5 +1,5 @@
 // Des données d'essai pour les documents PDF, partagées par les tests (lot
-// pdf-b1) : le fil d'exécution doit rendre chaque type comme la mise en page
+// pdf-b1) : le processus de rendu doit rendre chaque type comme la mise en page
 // sur place, et ses données doivent se cloner sans perte.
 
 import type { DossierData } from "./DossierConformiteDocument";

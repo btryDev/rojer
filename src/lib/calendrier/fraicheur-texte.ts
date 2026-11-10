@@ -1,6 +1,6 @@
 // L'âge du calendrier d'un dossier, en TEXTE : le type, le prédicat et les
 // phrases, sans base ni session (sortis de `fraicheur.ts` le 2026-11-10, lot
-// pdf-b1). Les PDF, mis en page dans un fil séparé, n'importent que ce
+// pdf-b1). Les PDF, mis en page dans un processus séparé, n'importent que ce
 // module ; la lecture du repère reste dans `fraicheur.ts`.
 
 /**

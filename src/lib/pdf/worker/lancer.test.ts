@@ -98,10 +98,10 @@ describe("rendreDansUnProcessus", () => {
   it.each(parType.map((d) => [d.type, d] as const))(
     "%s : même contenu que la mise en page sur place (preuve 2)",
     async (_type, demande) => {
-      const parLeFil = await rendreDansUnProcessus(demande, limites, chemin);
+      const parLeProcessus = await rendreDansUnProcessus(demande, limites, chemin);
       const surPlace = await renderToBuffer(elementDuDocument(demande));
-      expect(parLeFil.subarray(0, 4).toString()).toBe("%PDF");
-      expect(contenu(parLeFil)).toEqual(contenu(surPlace));
+      expect(parLeProcessus.subarray(0, 4).toString()).toBe("%PDF");
+      expect(contenu(parLeProcessus)).toEqual(contenu(surPlace));
     },
     60_000,
   );

@@ -33,7 +33,7 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
-    // Le fil des PDF, construit par esbuild (ADR-059) : 4,6 Mo empaquetés.
+    // Le paquet du rendu des PDF, construit par esbuild (ADR-059) : 4,6 Mo empaquetés.
     "dist-pdf/**",
   ]),
 ]);

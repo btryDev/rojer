@@ -1,10 +1,8 @@
 // Les deux réglages du rendu des PDF (lot pdf-b1, ADR-059), lus dans
-// l'environnement, validés au démarrage par `src/env.ts` avec la MÊME règle :
-// les deux lectures ne peuvent pas se contredire. Une valeur mal formée est
-// une erreur, jamais un repli silencieux (comme `EXPORTS_SIMULTANES`).
+// l'environnement par la règle commune des réglages d'export
+// (`exports/reglage-entier.ts`), que `src/env.ts` applique au démarrage.
 
-/** Un entier ≥ 1 écrit en chiffres. */
-export const FORME_REGLAGE_WORKER = /^[1-9]\d*$/;
+import { lireEntierPositif } from "@/lib/exports/reglage-entier";
 
 /**
  * Tas JS maximal du processus de rendu, en Mo (`--max-old-space-size` de
@@ -28,17 +26,10 @@ export const TAS_MAX_MO_DEFAUT = 384;
  */
 export const DELAI_MAX_MS_DEFAUT = 60_000;
 
-function lire(nom: string, valeur: string | undefined, defaut: number): number {
-  const v = valeur?.trim();
-  if (!v) return defaut;
-  if (!FORME_REGLAGE_WORKER.test(v)) throw new Error(`${nom} doit être un entier ≥ 1.`);
-  return Number(v);
-}
-
 export function tasMaxMo(valeur = process.env.EXPORT_TAS_MAX_MO): number {
-  return lire("EXPORT_TAS_MAX_MO", valeur, TAS_MAX_MO_DEFAUT);
+  return lireEntierPositif("EXPORT_TAS_MAX_MO", valeur, TAS_MAX_MO_DEFAUT);
 }
 
 export function delaiMaxMs(valeur = process.env.EXPORT_DELAI_MAX_MS): number {
-  return lire("EXPORT_DELAI_MAX_MS", valeur, DELAI_MAX_MS_DEFAUT);
+  return lireEntierPositif("EXPORT_DELAI_MAX_MS", valeur, DELAI_MAX_MS_DEFAUT);
 }

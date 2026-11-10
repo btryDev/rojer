@@ -15,7 +15,7 @@
 import { build, context } from "esbuild";
 import { fileURLToPath } from "node:url";
 
-export const SORTIE = "dist-pdf/pdf-worker.mjs";
+const SORTIE = "dist-pdf/pdf-worker.mjs";
 
 /** Les options d'esbuild, partagées par le script et par les tests. */
 export function optionsWorkerPdf(outfile = SORTIE) {

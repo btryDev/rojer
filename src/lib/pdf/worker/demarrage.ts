@@ -1,3 +1,4 @@
+import { drapeauQuiLEmporte } from "./borne";
 import { workerDisponible } from "./lancer";
 
 /**
@@ -19,44 +20,35 @@ import { workerDisponible } from "./lancer";
  * le serveur autonome : Next ne s'arrête pas, il répond 500 à toute requête —
  * le message est écrit, aucune page n'est servie. Que Clever Cloud refuse
  * alors le déploiement reste à vérifier, `docs/chantiers-ouverts.md` § 23.]
- * Rend la liste, vide si tout va bien ; pure, pour ses tests.
+ * Rend le problème, `null` si tout va bien ; pure, pour ses tests.
  */
-export function problemesDuFilDesPdf(contexte: {
-  production: boolean;
-  workerPresent: boolean;
-}): string[] {
-  if (!contexte.production || contexte.workerPresent) return [];
-  return [
-    "dist-pdf/pdf-worker.mjs absent : le build CC (`pnpm build:cc`) le construit et le copie dans le serveur autonome.",
-  ];
+export function problemeDuRenduDesPdf(contexte: { production: boolean; workerPresent: boolean }): string | null {
+  if (!contexte.production || contexte.workerPresent) return null;
+  return "dist-pdf/pdf-worker.mjs absent : le build CC (`pnpm build:cc`) le construit et le copie dans le serveur autonome.";
 }
 
 /**
  * Ce que la plateforme pose sur la mémoire du SERVEUR (pas du rendu, qui a
  * ses propres drapeaux) : à lire dans les journaux de démarrage. `null` si
- * rien n'est posé.
+ * rien n'est posé. (Clever Cloud : la variable `NODE_OPTIONS`, 644 Mo en XS,
+ * relevé le 2026-11-10.)
  */
 export function informationsDuRendu(contexte: {
   execArgv: readonly string[];
   nodeOptions: string | undefined;
 }): string | null {
-  const source = [
-    ...contexte.execArgv.filter((a) => a.includes("max-old-space-size")).map((a) => `argument ${a}`),
-    ...(contexte.nodeOptions?.match(/--max-old-space-size=\S+/g) ?? []).map((a) => `NODE_OPTIONS ${a}`),
-  ];
-  return source.length > 0
-    ? `pdf : le serveur tourne avec ${source.join(", ")} ; le rendu des PDF a sa propre borne (EXPORT_TAS_MAX_MO).`
-    : null;
+  const tas = drapeauQuiLEmporte(contexte.execArgv, contexte.nodeOptions);
+  return tas === null
+    ? null
+    : `pdf : le serveur tourne avec --max-old-space-size=${tas} ; le rendu des PDF a sa propre borne (EXPORT_TAS_MAX_MO).`;
 }
 
-export function verifierFilDesPdfAuDemarrage(): void {
-  const problemes = problemesDuFilDesPdf({
+export function verifierRenduDesPdfAuDemarrage(): void {
+  const probleme = problemeDuRenduDesPdf({
     production: process.env.NODE_ENV === "production",
     workerPresent: workerDisponible(),
   });
-  if (problemes.length > 0) {
-    throw new Error(`Rendu des PDF (ADR-059) :\n- ${problemes.join("\n- ")}`);
-  }
+  if (probleme) throw new Error(`Rendu des PDF (ADR-059) : ${probleme}`);
   const info = informationsDuRendu({
     execArgv: process.execArgv,
     nodeOptions: process.env.NODE_OPTIONS,

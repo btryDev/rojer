@@ -32,8 +32,8 @@ export function cheminWorker(): string {
   return path.join(process.cwd(), "dist-pdf", "pdf-worker.mjs");
 }
 
-export function workerDisponible(chemin = cheminWorker()): boolean {
-  return existsSync(chemin);
+export function workerDisponible(): boolean {
+  return existsSync(cheminWorker());
 }
 
 export type LimitesRendu = {
@@ -101,7 +101,7 @@ export function rendreDansUnProcessus(
       // Explicites : sans eux, `fork` reprend `process.execArgv` du serveur.
       execArgv: drapeauxDuRendu(limites.tasMaxMo),
       env: environnementDuRendu(),
-      // Clonage structuré (Date, ArrayBuffer), comme entre fils.
+      // Clonage structuré (Date, ArrayBuffer).
       serialization: "advanced",
       stdio: ["ignore", "inherit", "inherit", "ipc"],
     });

@@ -72,7 +72,7 @@ import { cache } from "react";
 import { SCEAU_CALENDRIER } from "./version-moteur";
 
 // Le type et les phrases vivent dans `fraicheur-texte.ts` (lot pdf-b1,
-// 2026-11-10) : sans base ni session, le fil des PDF les importe sans tirer
+// 2026-11-10) : sans base ni session, le paquet du rendu des PDF les importe sans tirer
 // l'authentification et Prisma. Réexportés ici pour les appelants existants.
 export {
   calendrierIncertain,

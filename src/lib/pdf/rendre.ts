@@ -101,15 +101,30 @@ export function messageTropVolumineux(type: TypeDocument): string {
   );
 }
 
+/** Les échecs de rendu attendus, nommés ; tout le reste est une panne. */
+type RefusDuRendu = "trop_volumineux" | "delai_depasse" | "abandonne";
+
+/** Le refus que porte une erreur de rendu, `null` pour une panne. */
+function refusDuRendu(e: unknown): RefusDuRendu | null {
+  if (e instanceof PdfTropVolumineux) return "trop_volumineux";
+  if (e instanceof PdfDelaiDepasse) return "delai_depasse";
+  if (e instanceof PdfAbandonne) return "abandonne";
+  return null;
+}
+
+const RAISON_DANS_LE_ZIP: Record<RefusDuRendu, string> = {
+  trop_volumineux: "document trop volumineux pour être généré en un seul PDF",
+  delai_depasse: "génération interrompue, délai dépassé",
+  abandonne: "génération abandonnée, la demande a été interrompue",
+};
+
 /**
  * La raison d'un échec de rendu dans le ZIP de contrôle (README) : nommée
  * pour un refus, `undefined` sinon — l'appelant garde alors la sienne.
  */
 export function raisonEchecRendu(e: unknown): string | undefined {
-  if (e instanceof PdfTropVolumineux) return "document trop volumineux pour être généré en un seul PDF";
-  if (e instanceof PdfDelaiDepasse) return "génération interrompue, délai dépassé";
-  if (e instanceof PdfAbandonne) return "génération abandonnée, la demande a été interrompue";
-  return undefined;
+  const refus = refusDuRendu(e);
+  return refus ? RAISON_DANS_LE_ZIP[refus] : undefined;
 }
 
 export { PdfAbandonne, PdfDelaiDepasse };
@@ -174,10 +189,7 @@ export async function mettreEnPage(
       journaliser("memoire_depassee", poids);
       throw new PdfTropVolumineux(demande.type, poids, { cause: e });
     }
-    journaliser(
-      e instanceof PdfDelaiDepasse ? "delai_depasse" : e instanceof PdfAbandonne ? "abandonne" : "echec",
-      poids,
-    );
+    journaliser(refusDuRendu(e) ?? "echec", poids);
     throw e;
   }
 }

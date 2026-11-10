@@ -25,8 +25,8 @@ export async function register(): Promise<void> {
   // premier export. Pas pendant `next build`, qui ne sert rien et précède la
   // construction du paquet.
   if (process.env.NEXT_PHASE !== "phase-production-build") {
-    const { verifierFilDesPdfAuDemarrage } = await import("./lib/pdf/worker/demarrage");
-    verifierFilDesPdfAuDemarrage();
+    const { verifierRenduDesPdfAuDemarrage } = await import("./lib/pdf/worker/demarrage");
+    verifierRenduDesPdfAuDemarrage();
   }
 }
 
