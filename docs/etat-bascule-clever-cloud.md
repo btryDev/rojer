@@ -286,6 +286,39 @@ sont pas ouverts) — **la liste de lancement, dans l'ordre :
   authentification obligatoire ; comptes nominatifs, jamais partagés, au
   rôle minimal ; l'application n'utilise que la clé restreinte ci-dessus.
 
+Ajoutés le 2026-11-10 (état de la CI et du dépôt, relevé ce jour-là ; décision
+de la propriétaire : à traiter avant la bascule, après le chantier en cours) :
+- **Protéger `cc`** comme `main` : `cc` n'a aucune protection de branche
+  (`gh api repos/btryDev/rojer/branches/cc/protection` → « Branch not
+  protected »). Contrôles obligatoires `vitest`, `derive` **et `build-cc`**,
+  aucun force-push, règle valable pour les administrateurs. Le script de
+  déploiement refuse déjà un commit sans CI verte, mais la branche n'est pas
+  gardée contre un push direct ni une réécriture.
+- **`build-cc` obligatoire sur la branche déployée** : sur `main`, seuls
+  `vitest` et `derive` sont requis ; à corriger le jour où `main` redevient la
+  branche déployée (après la fusion de `cc`) : rendre le contrôle obligatoire
+  **et** étendre à `main` la condition `if:` du job `build-cc`
+  (`.github/workflows/tests.yml`), sinon le job est sauté, et un job sauté
+  compte comme réussi.
+- **Une organisation Clever Cloud propre à Rojer** (décision de la
+  propriétaire, 2026-11-10) : la préproduction de test vit pour l'instant
+  dans l'organisation « btry », à côté de RiskBoard (application « Rojer »,
+  app_9bbac77c-af66-4562-81a7-0257a21401ad, add-ons `Rojer-db` et
+  `rojer-files`). Avant de créer la production : créer l'organisation
+  « Rojer », y créer la production, y recréer la préproduction (la
+  documentation Clever Cloud ne décrit aucun déplacement d'application ou
+  d'add-on d'une organisation à l'autre ; à confirmer au support si besoin),
+  puis
+  supprimer l'ancienne préproduction et ses add-ons.
+- **Trier les alertes Dependabot** : 104 ouvertes le 2026-11-10 (34 élevées,
+  57 moyennes, 13 faibles, aucune critique ; relevé avec `gh api --paginate`),
+  calculées sur `main`. En dépendances d'exécution : `ws`, `browserslist`,
+  `deepmerge-ts`, `source-map-js` (élevées), `fflate`,
+  `baseline-browser-mapping` (moyennes), `@babel/core` (faible) ; le reste en
+  développement (`undici`, `hono`, `fast-uri`, `vite`…). Un lot : mettre à jour ce qui
+  est exploitable en production, écrire le motif pour le reste, refaire le
+  relevé sur `cc`.
+
 ## Recette « pages × comptes à plusieurs membres » (avant la bascule)
 
 Ajoutée le 2026-11-09. À jouer **sur l'application déployée chez Clever
