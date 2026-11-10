@@ -228,20 +228,27 @@ tort.
 
 ## 12. Volumes à conserver et à exporter — questions pour l'équipe (2026-11-10)
 
+[2026-11-10, décision de la propriétaire : **on garde tout, on exporte tout.**
+Aucune borne à 5 ans, aucune suppression. Motif : le client type (10
+équipements, ≈ 86 rapports par an) n'atteint le seuil du garde-fou qu'après une
+vingtaine d'années ; les gros dossiers sont couverts par le garde-fou, le
+sous-processus, puis l'archive hybride (point 6). D. 4711-3 est satisfait par
+construction. Les points 1 à 5 et 7 sont rayés en conséquence.]
+
 Cadre (API Légifrance en sandbox, recoupé sur code.travail.gouv.fr ; à
 confirmer sur Légifrance avant d'écrire une mention) : D. 4711-3 CT — les
 cinq dernières années « et, en tout état de cause, ceux des deux derniers
 contrôles ou vérifications ». Registre ERP (R. 143-44 CCH) : aucune durée
 écrite, pièces permanentes (travaux, consignes, service de sécurité).
 
-1. Export par défaut : 5 dernières années + les 2 derniers rapports de chaque
-   contrôle + pièces permanentes.
-2. Exports de 1 à 4 ans : proposés comme « extrait » marqué, ou retirés ?
-3. Export de tout l'historique : confort, en tâche de fond ; pas une obligation
-   (ERP compris, sous réserve de relire GE 4).
-4. ZIP de contrôle : même période pour le registre et les fichiers joints.
-5. Rapport plus ancien que la période dont un point est encore ouvert : il
-   reste (justification des travaux, R. 4226-19).
+1. ~~Export par défaut : 5 dernières années + les 2 derniers rapports de chaque
+   contrôle + pièces permanentes.~~ [rayé le 2026-11-10 : on garde tout]
+2. ~~Exports de 1 à 4 ans : proposés comme « extrait » marqué, ou retirés ?~~ [rayé le 2026-11-10 : on garde tout]
+3. ~~Export de tout l'historique : confort, en tâche de fond ; pas une obligation
+   (ERP compris, sous réserve de relire GE 4).~~ [rayé le 2026-11-10 : on garde tout]
+4. ~~ZIP de contrôle : même période pour le registre et les fichiers joints.~~ [rayé le 2026-11-10 : on garde tout]
+5. ~~Rapport plus ancien que la période dont un point est encore ouvert : il
+   reste (justification des travaux, R. 4226-19).~~ [rayé le 2026-11-10 : on garde tout]
 6. ~~Archives annuelles (proposition de la propriétaire) : chaque année est
    archivée (ZIP : registre PDF + rapports de l'année) ; l'export ne génère que
    l'année en cours et sert les archives.~~ [2026-11-10, principe posé par la
@@ -253,11 +260,11 @@ contrôles ou vérifications ». Registre ERP (R. 143-44 CCH) : aucune durée
    partie « ajouts aux années archivées » : aucune archive n'est régénérée.
    À vérifier : R. 143-44 CCH sur le site Légifrance (« un registre »), et
    l'avis du préventeur sur un registre ERP assemblé de volumes annuels.
-7. Suppression tous les 5 ans (proposition de la propriétaire), SAUF les 2
+7. ~~Suppression tous les 5 ans (proposition de la propriétaire), SAUF les 2
    derniers rapports de chaque contrôle et les pièces permanentes (D. 4711-3).
    À dire dans les conditions générales et sur la page du registre. À
    trancher : supprimer les archives seulement, ou aussi les rapports et leurs
-   fichiers ? Les archives comptent-elles dans le quota de stockage ?
+   fichiers ? Les archives comptent-elles dans le quota de stockage ?~~ [rayé le 2026-11-10 : on garde tout]
 8. Volumes annoncés par les formules : tous contrôlés par le code ? (§ 11)
 9. R. 4323-26 CT : pour que le PDF suffise sans le ZIP, imprimer par rapport
    la date de remise et le lieu d'archivage (aujourd'hui : « pièce jointe »
