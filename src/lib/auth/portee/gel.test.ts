@@ -12,7 +12,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 import type { PrismaClient } from "@prisma/client";
-import { filtreGele, ouvrirAuGel, transactionEnCours, verifierGel, PAGE_DU_GEL, type Geles } from "./gel";
+import { filtreGele, ouvrirAuGel, transactionEnCours, verifierGel, verifierSaisieOuverte, PAGE_DU_GEL, PAGE_SAISIE_FERMEE, type Geles } from "./gel";
 
 const GELES: Geles = { etablissements: ["etab-gele"], prestataires: ["pre-gele"] };
 const REFUS = `REDIRECT ${PAGE_DU_GEL}`;
@@ -177,5 +177,23 @@ describe("verifierGel : refusé avant d'écrire", () => {
       await verifierGel(client, "Equipement", op, { where: { etablissementId: "etab-gele" } }, PORTEE);
     expect(delegue.count).not.toHaveBeenCalled();
     expect(delegue.findUnique).not.toHaveBeenCalled();
+  });
+});
+
+describe("verifierSaisieOuverte : la saisie fermée dans le client borné (ADR-053 § 3)", () => {
+  it("refuse ce qui crée ou modifie ; laisse lire et supprimer", () => {
+    for (const op of ["create", "createMany", "createManyAndReturn", "update", "updateMany", "upsert"])
+      expect(() => verifierSaisieOuverte("Equipement", op)).toThrow(`REDIRECT ${PAGE_SAISIE_FERMEE}`);
+    for (const op of ["findMany", "findUnique", "count", "delete", "deleteMany"])
+      expect(() => verifierSaisieOuverte("Equipement", op)).not.toThrow();
+  });
+
+  it("un geste ouvert passe, dans son action seulement", async () => {
+    await (async () => {
+      await Promise.resolve();
+      ouvrirAuGel();
+      expect(() => verifierSaisieOuverte("DemandeAssistance", "create")).not.toThrow();
+    })();
+    expect(() => verifierSaisieOuverte("DemandeAssistance", "create")).toThrow(`REDIRECT ${PAGE_SAISIE_FERMEE}`);
   });
 });

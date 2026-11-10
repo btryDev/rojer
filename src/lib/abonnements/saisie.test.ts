@@ -67,7 +67,8 @@ describe("verifierSaisie", () => {
     vi.stubEnv("ABONNEMENT_EXIGE", "oui");
     etatStripe.mockReturnValue({ active: true, mode: "test" });
     findUnique.mockResolvedValueOnce({ statut: "active", finEssai: null, finPeriode: null, resilieEnFinDePeriode: false, finPrevueLe: null });
-    await expect(verifierSaisie()).resolves.toBeUndefined();
+    // Rend le compte jugé : une écriture hors du client borné le compare au sien.
+    await expect(verifierSaisie()).resolves.toBe("c1");
     findUnique.mockResolvedValueOnce({ statut: "unpaid", finEssai: null, finPeriode: null, resilieEnFinDePeriode: false, finPrevueLe: null });
     await expect(verifierSaisie()).rejects.toThrow("NEXT_REDIRECT");
     expect(redirect).toHaveBeenCalledWith("/compte/abonnement?saisie=fermee");

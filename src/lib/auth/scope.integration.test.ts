@@ -58,6 +58,13 @@ vi.mock("next/headers", () => ({
     get: (nom: string) => (nom === "etablissement-actif" && session.cookie ? { value: session.cookie } : undefined),
   }),
 }));
+// L'offre, lancée pour un seul cas (la saisie fermée, plus bas) : partout
+// ailleurs Stripe reste tel que l'environnement le dit (inactif en CI).
+const offre = vi.hoisted(() => ({ lancee: false }));
+vi.mock("@/lib/stripe/config", async (reel) => {
+  const r = await reel<typeof import("@/lib/stripe/config")>();
+  return { ...r, etatStripe: () => (offre.lancee ? { active: true as const, mode: "test" as const } : r.etatStripe()) };
+});
 
 const URL_BASE = process.env.ISOLATION_INTEGRATION_URL;
 const local = URL_BASE ? /@(localhost|127\.0\.0\.1)[:/]/.test(URL_BASE) : false;
@@ -548,6 +555,57 @@ describe.skipIf(!URL_BASE || !local)("gardes de scope.ts, d'un compte à l'autre
     expect((await scope.getOptionalUserEtablissement())?.id).toBe(b.etab);
     comme(profil("membre de A"), a.etab);
     expect((await scope.getOptionalUserEtablissement())?.id).toBe(a.etab);
+  });
+
+  // --- La saisie fermée portée par le client (ADR-053 § 3, amendé ; audit du
+  // 2026-11-10, piste 2) : la course des deux onglets ------------------------
+
+  it("la garde de saisie juge un compte qui paie, l'onglet voisin bascule sur un compte impayé : son client refuse l'écriture", async () => {
+    // X est propriétaire de E (qui paie) et membre de F (sans abonnement).
+    const X = randomUUID();
+    const E = randomUUID();
+    const F = randomUUID();
+    await prisma.user.create({ data: { id: X, name: "X", email: `${X}@exemple.test` } });
+    const etab: Record<string, string> = {};
+    for (const [compteId, role] of [[E, "owner"], [F, "member"]] as const) {
+      await prisma.compte.create({ data: { id: compteId, name: compteId, slug: compteId, membres: { create: { userId: X, role } } } });
+      const entreprise = await prisma.entreprise.create({ data: { compteId, raisonSociale: compteId, effectif: 5, adresse: "1 rue" } });
+      etab[compteId] = (
+        await prisma.etablissement.create({
+          data: { entrepriseId: entreprise.id, raisonDisplay: "avant", adresse: "1 rue", codeNaf: "56.10A", effectifSurSite: 5 },
+        })
+      ).id;
+    }
+    await prisma.abonnement.create({ data: { compteId: E, stripeCustomerId: `cus_${E}`, statut: "active" } });
+    offre.lancee = true;
+    vi.stubEnv("ABONNEMENT_EXIGE", "oui");
+    try {
+      comme({ userId: X, compteActifId: () => E });
+      expect(await verifierSaisie()).toBe(E);
+      // Un autre onglet change de compte actif avant que l'action ne relise.
+      comme({ userId: X, compteActifId: () => F });
+      const { compte, db } = await scope.assertEtablissementDuCompte(etab[F]);
+      expect(compte.compteId).toBe(F);
+      await expect(db.etablissement.update({ where: { id: etab[F] }, data: { raisonDisplay: "écrit" } })).rejects.toThrow(
+        "REDIRECT /compte/abonnement?saisie=fermee",
+      );
+      // La lecture reste ouverte ; rien n'est écrit.
+      expect((await db.etablissement.findUnique({ where: { id: etab[F] } }))?.raisonDisplay).toBe("avant");
+      // Sur E, qui paie, la même écriture passe.
+      comme({ userId: X, compteActifId: () => E });
+      const { db: dbE } = await scope.assertEtablissementDuCompte(etab[E]);
+      await dbE.etablissement.update({ where: { id: etab[E] }, data: { raisonDisplay: "écrit" } });
+      expect((await prisma.etablissement.findUniqueOrThrow({ where: { id: etab[E] } })).raisonDisplay).toBe("écrit");
+    } finally {
+      offre.lancee = false;
+      vi.unstubAllEnvs();
+      for (const compteId of [E, F]) {
+        await prisma.abonnement.deleteMany({ where: { compteId } });
+        await prisma.entreprise.deleteMany({ where: { compteId } });
+        await prisma.compte.deleteMany({ where: { id: compteId } });
+      }
+      await prisma.user.deleteMany({ where: { id: X } });
+    }
   });
 
   // --- La sonde des clés croisées, après toutes les tentatives croisées ------

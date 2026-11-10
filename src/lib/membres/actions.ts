@@ -75,10 +75,14 @@ const schemaInvitation = z.object({
 
 /** Inviter une personne par e-mail, avec un rôle. Propriétaire seulement. */
 export async function inviterMembre(_prev: EtatMembres, formData: FormData): Promise<EtatMembres> {
-  await verifierSaisie();
+  const juge = await verifierSaisie();
   const p = await proprietaireOuRefus();
   if ("refus" in p) return p.refus;
   const { compte, db } = p;
+  // Le plugin écrit l'invitation hors du client borné : le compte visé doit
+  // être celui dont la saisie vient d'être jugée (un changement de compte
+  // entre les deux lectures, piste 2 de l'audit du 2026-11-10).
+  if (juge && juge !== compte.compteId) return { status: "error", message: "Le compte actif a changé : réessayez." };
   const lu = schemaInvitation.safeParse({ email: formData.get("email"), role: formData.get("role") });
   if (!lu.success) return { status: "error", message: lu.error.issues[0]?.message ?? "Formulaire invalide" };
   // Une baisse de formule planifiée borne déjà les utilisateurs (ADR-053 § 10).

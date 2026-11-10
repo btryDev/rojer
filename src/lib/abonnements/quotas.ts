@@ -13,6 +13,7 @@ import { lienActif } from "@/lib/access-tokens/revocation";
 import type { Geles } from "@/lib/auth/portee/gel";
 import { CLES_FORMULES, FORMULES, LIBELLES_PLAFONDS, LIMITES_ESSAI, formuleDeLookupKey, type CleFormule } from "./formules";
 import { contexteDroits, offreLancee } from "./lancement";
+import { droitsDe } from "./droits";
 
 /** Les plafonds appliqués (les autres clés de `Quotas` ne le sont pas encore). */
 export type CleQuota = keyof typeof LIBELLES_PLAFONDS;
@@ -331,6 +332,30 @@ export async function depassements(db: Db, compteId: string, formule: string): P
 export async function gelesDuCompte(db: Db, compteId: string): Promise<Geles | undefined> {
   if (!lancee()) return undefined;
   return gelesDuRegime(db, (await abonnementDesPlafonds(db, compteId)).regime);
+}
+
+/** Les colonnes du gel ET de la saisie : une seule lecture de la ligne. */
+const COLONNES_ETAT = {
+  ...COLONNES_PLAFONDS,
+  finEssai: true,
+  finPeriode: true,
+  resilieEnFinDePeriode: true,
+  finPrevueLe: true,
+} as const;
+
+/**
+ * Ce que la session porte dans le client borné (ADR-053 §§ 3 et 14) : le gel
+ * et la saisie fermée, d'UNE lecture de la ligne d'abonnement du compte lié —
+ * la décision et le compte écrit viennent de la même lecture. Aucune lecture
+ * avant le lancement de l'offre.
+ */
+export async function etatDeSaisieDuCompte(db: Db, compteId: string): Promise<{ geles?: Geles; saisieFermee: boolean }> {
+  if (!lancee()) return { saisieFermee: false };
+  const ligne = await db.abonnement.findUnique({ where: { compteId }, select: COLONNES_ETAT });
+  return {
+    saisieFermee: !droitsDe(ligne, contexteDroits()).saisie,
+    geles: await gelesDuRegime(db, plafondsDeLaLigne(ligne).regime),
+  };
 }
 
 async function gelesDuRegime(db: Db, regime: Regime): Promise<Geles | undefined> {

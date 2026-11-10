@@ -22,7 +22,7 @@ import {
   sqlPeutEcrire,
   type Portee,
 } from "./borne";
-import { transactionEnCours, verifierGel } from "./gel";
+import { transactionEnCours, verifierGel, verifierSaisieOuverte } from "./gel";
 
 function etendre(base: PrismaClient, p: Portee) {
   // Copie figée : un appelant qui garderait l'objet ne peut plus déplacer la
@@ -33,6 +33,7 @@ function etendre(base: PrismaClient, p: Portee) {
     userId: p.userId,
     lectureSeule: p.lectureSeule === true,
     geles: p.geles,
+    saisieFermee: p.saisieFermee,
     etablissementId: p.etablissementId,
   });
   // Le SQL brut d'écriture n'est pas borné par l'extension (ADR-051 § 5) ; en
@@ -51,20 +52,28 @@ function etendre(base: PrismaClient, p: Portee) {
   const client = base.$extends({
     name: "borne-au-compte",
     query: {
+      // La saisie fermée vaut aussi pour le SQL brut écrit par ce client
+      // (`ecrireReponseFermee`, registre) : même lecture d'abonnement.
       async $executeRaw({ args, query }) {
         refuserEnLecture("$executeRaw");
+        if (portee.saisieFermee) verifierSaisieOuverte("$executeRaw", "update");
         return query(args);
       },
       // Une lecture brute qui écrirait (`UPDATE … RETURNING`) est refusée en
       // lecture seule, comme `$executeRaw` (revue de sécurité des lots 3-4).
       async $queryRaw({ args, query }) {
-        if (portee.lectureSeule && sqlPeutEcrire(texteSql(args))) refuserEnLecture("$queryRaw");
+        if ((portee.lectureSeule || portee.saisieFermee) && sqlPeutEcrire(texteSql(args))) {
+          refuserEnLecture("$queryRaw");
+          if (portee.saisieFermee) verifierSaisieOuverte("$queryRaw", "update");
+        }
         return query(args);
       },
       $allModels: {
         async $allOperations({ model, operation, args, query }) {
           // Le gel (ADR-053 § 14) : refusé avant d'écrire, sur les arguments
           // tels que l'action les donne.
+          // La saisie fermée d'abord : synchrone, sans lecture, et son message est le bon.
+          if (portee.saisieFermee) verifierSaisieOuverte(model, operation);
           if (portee.geles) await verifierGel(base, model, operation, args, { ...portee, geles: portee.geles });
           const resultat = await query(argumentsBornes(model, operation, args, portee) as typeof args);
           if (estLectureDIdentifiants(operation, args)) noterVus(model, portee, resultat);
@@ -124,14 +133,16 @@ function lirePortee(portee: Portee): Portee {
   // Le gel, figé (`gelesDuCompte` ne rend jamais un gel vide).
   const g = portee.geles;
   const geles = g && Object.freeze({ etablissements: Object.freeze([...g.etablissements]), prestataires: Object.freeze([...g.prestataires]) });
-  return { type: "compte", compteId, userId, lectureSeule: portee.lectureSeule === true, geles, etablissementId };
+  const saisieFermee = portee.saisieFermee === true ? (true as const) : undefined;
+  return { type: "compte", compteId, userId, lectureSeule: portee.lectureSeule === true, geles, saisieFermee, etablissementId };
 }
 
 export function clientBorne(portee: Portee): ClientBorne {
   const lue = lirePortee(portee);
   const gel = lue.geles ? `|gel:${lue.geles.etablissements.join(",")};${lue.geles.prestataires.join(",")}` : "";
   const etab = lue.etablissementId === undefined ? "" : `|etab:${lue.etablissementId}`;
-  const cle = `compte:${lue.compteId}|${lue.userId ?? "-"}|${lue.lectureSeule ? "lecture" : "saisie"}${gel}${etab}`;
+  const fermee = lue.saisieFermee ? "|fermee" : "";
+  const cle = `compte:${lue.compteId}|${lue.userId ?? "-"}|${lue.lectureSeule ? "lecture" : "saisie"}${gel}${fermee}${etab}`;
   let client = CLIENTS.get(cle);
   if (client) {
     // Le plus récemment servi passe en queue : l'éviction vise le moins

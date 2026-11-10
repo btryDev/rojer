@@ -15,6 +15,7 @@ import { requireUser } from "@/lib/auth/require-user";
 import { droitsDe, type Droits } from "./droits";
 
 export const PAGE_ABONNEMENT = "/compte/abonnement";
+import { PAGE_SAISIE_FERMEE } from "@/lib/auth/portee/gel";
 /** Où une écriture refusée à un membre en lecture seule renvoie (ADR-054 § 4). */
 export const PAGE_LECTURE_SEULE = "/compte/lecture-seule";
 /** Où un geste réservé au propriétaire renvoie un autre membre. */
@@ -91,16 +92,20 @@ export type Proprietaire = Compte & { compte: Compte["compte"] & { role: "owner"
  * d'abonnement non plus : page de l'abonnement — et surtout pas
  * `requireCompte`, qui renverrait à l'onboarding qu'on vient de quitter.
  * Le client borné refuse de toute façon l'écriture d'un membre en lecture
- * seule : cette garde n'en est que la réponse lisible.
+ * seule, et celle d'un compte dont la saisie est fermée : cette garde n'en est
+ * que la réponse lisible. Rend le compte qu'elle a jugé : une écriture qui ne
+ * passe pas par le client borné (le plugin des invitations) le compare au
+ * compte qu'elle vise (audit de cc, 2026-11-10, piste 2).
  */
-export async function verifierSaisie(): Promise<void> {
+export async function verifierSaisie(): Promise<string | null> {
   // Une seule lecture de l'appartenance : le rôle, puis l'abonnement.
   const c = await getOptionalCompte();
   refuserLaLecture(c);
-  if (!offreLancee(contexteDroits())) return;
+  if (!offreLancee(contexteDroits())) return c?.compte.compteId ?? null;
   if (!c) {
     await requireUser();
-    redirect(`${PAGE_ABONNEMENT}?saisie=fermee`);
+    redirect(PAGE_SAISIE_FERMEE);
   }
-  if (!(await droitsDuCompte(c.db, c.compte.compteId)).saisie) redirect(`${PAGE_ABONNEMENT}?saisie=fermee`);
+  if (!(await droitsDuCompte(c.db, c.compte.compteId)).saisie) redirect(PAGE_SAISIE_FERMEE);
+  return c.compte.compteId;
 }

@@ -32,7 +32,8 @@ vi.mock("next/navigation", () => ({
     throw new Error(`REDIRECT ${u}`);
   },
 }));
-vi.mock("@/lib/abonnements/saisie", () => ({ verifierSaisie: async () => {} }));
+const saisie = vi.hoisted(() => ({ juge: undefined as string | undefined }));
+vi.mock("@/lib/abonnements/saisie", () => ({ verifierSaisie: async () => saisie.juge }));
 vi.mock("@/lib/abonnements/quotas", () => ({ motifPlafondMembres: h.motifPlafond }));
 vi.mock("@/lib/auth/compte", () => ({
   requireCompte: async () => ({ user: { id: "u1" }, compte: h.compte, db: "db-borne" }),
@@ -87,6 +88,20 @@ describe("gestes réservés au propriétaire", () => {
     await actions.changerRoleMembre(IDLE, fd({ membreId: "m1", role: "lecture", organizationId: "compte-b" }));
     for (const f of [h.api.createInvitation, h.api.removeMember, h.api.updateMemberRole])
       expect(f).toHaveBeenCalledWith(expect.objectContaining({ body: expect.objectContaining({ organizationId: "compte-a" }) }));
+  });
+
+  it("compte actif changé entre la garde de saisie et l'invitation : rien n'est créé (audit du 2026-11-10, piste 2)", async () => {
+    saisie.juge = "compte-b";
+    try {
+      const r = await actions.inviterMembre(IDLE, fd({ email: "x@exemple.fr", role: "member" }));
+      expect(r).toEqual({ status: "error", message: "Le compte actif a changé : réessayez." });
+      expect(h.api.createInvitation).not.toHaveBeenCalled();
+      saisie.juge = "compte-a";
+      await actions.inviterMembre(IDLE, fd({ email: "x@exemple.fr", role: "member" }));
+      expect(h.api.createInvitation).toHaveBeenCalled();
+    } finally {
+      saisie.juge = undefined;
+    }
   });
 
   it("refuse un rôle hors des trois, et un retrait désigné par adresse", async () => {

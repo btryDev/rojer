@@ -52,6 +52,25 @@ et sans croire une information qui ne vient pas de Stripe.
    Sans lui, la garde ne lit rien (ni session ni abonnement) et aucun bandeau
    ne s'affiche. Ce qui arrive aux comptes existants le jour où il passe à
    `oui` (essai offert, délai) se décide avec l'offre et le lot 5.
+   [2026-11-10, amendé — audit de sécurité de `cc`, piste 2 ; décision de
+   la propriétaire : corriger avant le lancement, une adresse gardant
+   plusieurs comptes (ADR-054 § 7). **La saisie fermée est aussi refusée
+   dans le client borné de la session**, comme le gel (§ 14). Invariant :
+   une écriture n'est permise que si la saisie du compte **auquel le
+   client est lié** est ouverte. Motif : `verifierSaisie` jugeait le
+   compte actif, puis l'action relisait le compte actif pour écrire — un
+   membre de deux comptes qui changeait de compte entre les deux lectures
+   écrivait dans le compte impayé. Désormais la session lit UNE fois la
+   ligne d'abonnement du compte lié (`etatDeSaisieDuCompte`, gel et saisie
+   ensemble) et pose `saisieFermee` sur la portée ; l'extension refuse,
+   avant qu'elle parte, toute création ou modification (modèles, et SQL
+   brut écrit par ce client), jamais la lecture ni la suppression. Les
+   gestes ouverts à un impayé qui écrivent par ce client s'ouvrent
+   explicitement (`ouvrirAuGel`, liste fermée de
+   `quotas-gel-garde.test.ts` — l'essai s'y ajoute). `verifierSaisie`
+   reste pour le message et la redirection, et rend le compte jugé :
+   l'invitation, que le plugin écrit hors du client borné, le compare au
+   compte qu'elle vise.]
 4. **Le SDK Stripe direct**, pas le module Stripe de Better Auth : celui-ci
    exige sa route HTTP (`/api/auth/stripe/webhook`), et `cc` n'en monte
    aucune, par choix (`auth/better-auth.ts`).
