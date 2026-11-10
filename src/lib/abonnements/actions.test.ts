@@ -48,6 +48,8 @@ vi.mock("@/lib/stripe/synchronisation", async (reel) => ({
 vi.mock("./souscription", () => ({ finaliserCarte: m.finaliserCarte, carteParDefaut: m.carteParDefaut }));
 vi.mock("./quotas", () => ({ depassements: m.depassements }));
 vi.mock("./essai", () => ({ PAGE_ESSAI: "/essai", demarrerEssaiDuCompte: vi.fn() }));
+// `ouvrirAuGel` (l'essai) : sans la chaîne de la session, que ce test remplace par ./saisie.
+vi.mock("./gel-saisie", () => ({ ouvrirAuGel: vi.fn() }));
 vi.mock("./saisie", () => ({
   PAGE_ABONNEMENT: "/compte/abonnement",
   verifierProprietaire: async () => ({
