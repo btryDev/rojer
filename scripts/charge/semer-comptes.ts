@@ -5,7 +5,7 @@
  * d'historique), et un fichier de sessions que k6 rejoue.
  *
  *   pnpm exec tsx --import ./scripts/server-only-hors-next.mjs \
- *     scripts/charge/semer-comptes.ts --comptes 50 --gros 5 --sortie <fichier.json>
+ *     scripts/charge/semer-comptes.ts --comptes 50 --gros 5 --sortie <fichier.json> [--premier 1]
  *
  * Exige DATABASE_URL, BETTER_AUTH_SECRET (celui du serveur testé) et
  * PUBLIC_APP_URL (la même adresse que le serveur : elle fixe le nom du cookie).
@@ -18,10 +18,11 @@
  * REJOUABLE. Un compte qui a déjà son dossier n'est pas resemé : seule sa
  * session est rouverte (le fichier de sessions se régénère sans tout refaire).
  *
- * GARDE-FOUS. Base locale seulement (la campagne Clever Cloud ajoutera une base
- * désignée explicitement, jamais la production). Refus si la base porte un
- * dossier qui n'est pas un dossier de charge : ce script ne se lance pas sur une
- * base de travail.
+ * GARDE-FOUS. Base locale, ou base distante désignée par CHARGE_BASE_DESIGNEE
+ * (son hôte exact ; la préproduction Clever Cloud). Refus si une base locale
+ * porte un dossier qui n'est pas un dossier de charge, ou si une base désignée
+ * porte un compte hors `@rojer.invalid` : jamais une base avec de vrais
+ * utilisateurs.
  */
 import { execFileSync } from "node:child_process";
 import { writeFileSync } from "node:fs";
@@ -37,15 +38,45 @@ const arg = (nom: string, defaut?: string): string | undefined => {
   return i === -1 ? defaut : process.argv[i + 1];
 };
 
-function baseLocaleOuRefus(): void {
+const DOMAINE_DE_TEST = "@rojer.invalid";
+
+/**
+ * Base locale, ou base distante DÉSIGNÉE : `CHARGE_BASE_DESIGNEE` doit porter
+ * exactement l'hôte de DATABASE_URL (la préproduction, plan § 8). Rien n'est
+ * deviné : sans la variable, toute base distante est refusée.
+ */
+function baseAutoriseeOuRefus(): "locale" | "designee" {
   let hote = "";
   try {
     hote = new URL(process.env.DATABASE_URL ?? "").hostname;
   } catch {
     /* illisible : refusé ci-dessous */
   }
-  if (hote !== "localhost" && hote !== "127.0.0.1") {
-    throw new Error(`REFUS : DATABASE_URL ne pointe pas une base locale (« ${hote || "illisible"} »).`);
+  if (hote === "localhost" || hote === "127.0.0.1") return "locale";
+  if (hote !== "" && hote === process.env.CHARGE_BASE_DESIGNEE) return "designee";
+  throw new Error(
+    `REFUS : DATABASE_URL ne pointe ni une base locale ni la base désignée par CHARGE_BASE_DESIGNEE (« ${hote || "illisible"} »).`,
+  );
+}
+
+/**
+ * Une base locale ne porte que des dossiers de charge. Une base désignée peut
+ * porter d'autres dossiers de test, mais aucun compte réel : tout utilisateur
+ * y est au domaine réservé `.invalid` (RFC 2606).
+ */
+async function baseDeTestOuRefus(base: "locale" | "designee"): Promise<void> {
+  if (base === "locale") {
+    const etrangers = await prisma.entreprise.count({
+      where: { NOT: { raisonSociale: { startsWith: PREFIXE_DOSSIER } } },
+    });
+    if (etrangers > 0) {
+      throw new Error(`REFUS : la base porte ${etrangers} dossier(s) hors test de charge. Base dédiée seulement.`);
+    }
+    return;
+  }
+  const reels = await prisma.user.count({ where: { NOT: { email: { endsWith: DOMAINE_DE_TEST } } } });
+  if (reels > 0) {
+    throw new Error(`REFUS : la base désignée porte ${reels} compte(s) hors ${DOMAINE_DE_TEST}. Jamais une base avec des utilisateurs réels.`);
   }
 }
 
@@ -106,23 +137,24 @@ async function ficheLaPlusLourde(etablissementId: string) {
 }
 
 async function main(): Promise<void> {
-  baseLocaleOuRefus();
+  const base = baseAutoriseeOuRefus();
   const comptes = Number(arg("comptes", "50"));
   const gros = Number(arg("gros", "5"));
+  // Premier numéro de dossier : une base désignée peut déjà porter des
+  // dossiers de test aux premiers numéros (même nom, même slug public).
+  const premier = Number(arg("premier", "1"));
   const sortie = arg("sortie");
   if (!sortie) throw new Error("--sortie <fichier.json> est obligatoire.");
   if (!Number.isInteger(comptes) || comptes < 1 || comptes > 99) throw new Error("--comptes : de 1 à 99.");
   if (!Number.isInteger(gros) || gros < 0 || gros > comptes) throw new Error("--gros : de 0 à --comptes.");
-
-  const etrangers = await prisma.entreprise.count({
-    where: { NOT: { raisonSociale: { startsWith: PREFIXE_DOSSIER } } },
-  });
-  if (etrangers > 0) {
-    throw new Error(`REFUS : la base porte ${etrangers} dossier(s) hors test de charge. Base dédiée seulement.`);
+  if (!Number.isInteger(premier) || premier < 1 || premier + comptes - 1 > 99) {
+    throw new Error("--premier : les numéros vont de 1 à 99.");
   }
 
+  await baseDeTestOuRefus(base);
+
   const dossiers: DossierDeCharge[] = [];
-  for (let n = 1; n <= comptes; n++) {
+  for (let n = premier; n < premier + comptes; n++) {
     const email = `charge-${String(n).padStart(2, "0")}@rojer.invalid`;
     const { userId, cookie } = await ouvrirSession(email, MOT_DE_PASSE);
     let dossier = await dossierDuCompte(userId);
@@ -134,7 +166,7 @@ async function main(): Promise<void> {
     // La taille se lit sur le dossier, pas sur le rang : une relance avec un
     // autre --gros grossit ce qui doit l'être, et n'étiquette jamais « gros »
     // un dossier qui ne l'est pas.
-    if (n <= gros && !(await estGros(dossier.id))) {
+    if (n - premier < gros && !(await estGros(dossier.id))) {
       tsx("scripts/perf/grossir-dossier.ts", ["--etablissement", dossier.id]);
     }
     const taille = (await estGros(dossier.id)) ? "gros" : "demo";
@@ -151,7 +183,7 @@ async function main(): Promise<void> {
       controles: await controlesOuverts(dossier.id),
       cookie,
     });
-    process.stderr.write(`  ${n}/${comptes} ${taille} ${dossier.raisonDisplay}\n`);
+    process.stderr.write(`  ${n - premier + 1}/${comptes} ${taille} ${dossier.raisonDisplay}\n`);
   }
 
   writeFileSync(sortie, JSON.stringify(dossiers, null, 2));
