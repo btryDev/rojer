@@ -5,14 +5,24 @@ import type { DemandePdf } from "./documents";
 import { sansCommentairesNiChaines } from "@/lib/interface/confirmations-natives";
 
 const h = vi.hoisted(() => ({
-  rendu: vi.fn<(element: unknown) => Promise<Buffer>>(async () => Buffer.from("%PDF")),
+  rendu: vi.fn<(demande: unknown, limites?: unknown) => Promise<Buffer>>(async () => Buffer.from("%PDF")),
+  surPlace: vi.fn<(element: unknown) => Promise<Buffer>>(async () => Buffer.from("%PDF")),
+  disponible: true,
 }));
+// Le processus enfant est simulé ici ; il est éprouvé pour de vrai dans
+// `worker/lancer.test.ts`. Le rendu sur place aussi.
 vi.mock("@react-pdf/renderer", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@react-pdf/renderer")>()),
-  renderToBuffer: h.rendu,
+  renderToBuffer: h.surPlace,
+}));
+vi.mock("./worker/lancer", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./worker/lancer")>()),
+  workerDisponible: () => h.disponible,
+  rendreDansUnProcessus: h.rendu,
 }));
 
 const { rendrePdf, controlerPoids, SEUILS_PDF, PdfTropVolumineux, raisonEchecRendu } = await import("./rendre");
+const { PdfAbandonne, PdfDelaiDepasse, PdfMemoireDepassee } = await import("./worker/lancer");
 
 /** Un plan d'actions de `k` lignes : le plus simple des documents à peser. */
 const plan = (k: number) =>
@@ -37,13 +47,21 @@ let journal: { info: ReturnType<typeof vi.spyOn>; warn: ReturnType<typeof vi.spy
 
 beforeEach(() => {
   h.rendu.mockClear();
+  h.surPlace.mockClear();
+  h.disponible = true;
+  // La voie de production : le processus enfant. Le rendu sur place (hors
+  // production) a son propre test.
+  vi.stubEnv("NODE_ENV", "production");
   journal = {
     info: vi.spyOn(console, "info").mockImplementation(() => {}),
     warn: vi.spyOn(console, "warn").mockImplementation(() => {}),
     error: vi.spyOn(console, "error").mockImplementation(() => {}),
   };
 });
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllEnvs();
+});
 
 /** La seule ligne de journal écrite, lue. */
 const ligneEcrite = () => {
@@ -160,10 +178,59 @@ describe("rendrePdf — garde-fou", () => {
     }
   });
 
+  it("dans le processus enfant : les limites lues aux réglages et le signal de la requête sont passés", async () => {
+    const signal = new AbortController().signal;
+    await rendrePdf(plan(1), { seuils, signal });
+    expect(h.rendu).toHaveBeenCalledWith(expect.anything(), {
+      tasMaxMo: 384,
+      delaiMaxMs: 60_000,
+      signal,
+    });
+  });
+
+  it("tas de l'enfant dépassé : le même refus que le garde-fou, journalisé à part", async () => {
+    h.rendu.mockRejectedValueOnce(new PdfMemoireDepassee());
+    await expect(rendrePdf(plan(1), { seuils })).rejects.toBeInstanceOf(PdfTropVolumineux);
+    expect(ligneEcrite()).toMatchObject({ issue: "memoire_depassee", niveau: "warn" });
+  });
+
+  it("délai dépassé et client parti : journalisés comme tels, relancés", async () => {
+    h.rendu.mockRejectedValueOnce(new PdfDelaiDepasse(60_000));
+    await expect(rendrePdf(plan(1), { seuils })).rejects.toBeInstanceOf(PdfDelaiDepasse);
+    expect(ligneEcrite()).toMatchObject({ issue: "delai_depasse", niveau: "warn" });
+    journal.warn.mockClear();
+    h.rendu.mockRejectedValueOnce(new PdfAbandonne());
+    await expect(rendrePdf(plan(1), { seuils })).rejects.toBeInstanceOf(PdfAbandonne);
+    expect(ligneEcrite()).toMatchObject({ issue: "abandonne", niveau: "info" });
+  });
+
+  it("sans le paquet de l'enfant, la production échoue au lieu de rendre sur place", async () => {
+    h.disponible = false;
+    await expect(rendrePdf(plan(1), { seuils })).rejects.toThrow(/pdf-worker introuvable/);
+    expect(h.rendu).not.toHaveBeenCalled();
+    expect(h.surPlace).not.toHaveBeenCalled();
+  });
+
+  it("hors production : sur place, même si le paquet existe (code à jour)", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    await rendrePdf(plan(1), { seuils });
+    expect(h.surPlace).toHaveBeenCalledTimes(1);
+    expect(h.rendu).not.toHaveBeenCalled();
+  });
+
+  it("hors production, PDF_WORKER=1 force le processus enfant", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("PDF_WORKER", "1");
+    await rendrePdf(plan(1), { seuils });
+    expect(h.rendu).toHaveBeenCalledTimes(1);
+    expect(h.surPlace).not.toHaveBeenCalled();
+  });
+
   it("la raison du ZIP ne nomme que le refus du garde-fou", () => {
     expect(raisonEchecRendu(new PdfTropVolumineux("registre", { total: 1, plusGrosBloc: 1 }))).toMatch(
       /trop volumineux/,
     );
+    expect(raisonEchecRendu(new PdfDelaiDepasse(1))).toMatch(/délai dépassé/);
     expect(raisonEchecRendu(new Error("autre"))).toBeUndefined();
   });
 });
@@ -200,7 +267,9 @@ describe("garde : un seul endroit met un PDF en page", () => {
   it("hors de rendre.ts, @react-pdf/renderer n'apporte que des primitives et des types", () => {
     const fautifs: string[] = [];
     for (const f of fichiers) {
-      if (relatif(f) === "src/lib/pdf/rendre.ts") continue;
+      // Les deux seuls lieux de rendu : le processus enfant (lot pdf-b1) et
+      // le repli de développement de rendre.ts.
+      if (relatif(f) === "src/lib/pdf/rendre.ts" || relatif(f) === "src/lib/pdf/worker/entree.ts") continue;
       const source = readFileSync(f, "utf8");
       const mentions = source.match(/["']@react-pdf\/[^"']*["']/g) ?? [];
       // Chaque mention doit être un `import { … } from "@react-pdf/renderer"`
@@ -223,7 +292,7 @@ describe("garde : un seul endroit met un PDF en page", () => {
     expect(fautifs).toEqual([]);
   });
 
-  it("le seul rendu du dépôt est celui de rendre.ts", () => {
+  it("les seuls rendus du dépôt : le processus enfant, et le repli de développement de rendre.ts", () => {
     const rendus = fichiers
       // Le code seul, commentaires et chaînes blanchis : un commentaire qui
       // cite un appel n'est pas un appel (`interface/confirmations-natives.ts`).
@@ -233,6 +302,6 @@ describe("garde : un seul endroit met un PDF en page", () => {
         ),
       )
       .map(relatif);
-    expect(rendus).toEqual(["src/lib/pdf/rendre.ts"]);
+    expect(rendus.sort()).toEqual(["src/lib/pdf/rendre.ts", "src/lib/pdf/worker/entree.ts"]);
   });
 });

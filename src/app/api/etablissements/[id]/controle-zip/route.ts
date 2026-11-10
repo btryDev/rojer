@@ -76,9 +76,6 @@ import { formaterMesure } from "@/lib/rendu/mesures";
 import { lignesPointDeReleve } from "@/lib/carnet-sanitaire/export";
 import { registreAuDossier } from "@/lib/accessibilite/registre-au-dossier";
 
-/** Les rendus du ZIP se journalisent sous leur origine (`export_pdf`). */
-const RENDU_DU_ZIP = { origine: "zip" } as const;
-
 /** Les dates de l'attestation d'un prestataire, telles que le ZIP les écrit. */
 function datesAttestationZip(p: {
   raisonSociale: string;
@@ -115,7 +112,7 @@ function datesAttestationZip(p: {
  *   08_Carnet_sanitaire_analyses/ — rapports de laboratoire déposés
  */
 export async function GET(
-  _req: Request,
+  req: Request,
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
@@ -135,7 +132,7 @@ export async function GET(
   if (liberer instanceof Response) return liberer;
   let archive: Awaited<ReturnType<typeof construireArchive>>;
   try {
-    archive = await construireArchive({ compte, db }, id, etablissement);
+    archive = await construireArchive({ compte, db }, id, etablissement, req.signal);
   } finally {
     liberer();
   }
@@ -155,7 +152,12 @@ async function construireArchive(
   acces: AccesCompte,
   id: string,
   etablissement: Awaited<ReturnType<typeof requireEtablissement>>["etablissement"],
+  /** Le signal de la requête : un client parti arrête les mises en page. */
+  signal?: AbortSignal,
 ) {
+  // Les rendus du ZIP se journalisent sous leur origine (`export_pdf`), et
+  // s'arrêtent avec la requête.
+  const renduDuZip = { origine: "zip" as const, signal };
   const { db } = acces;
   // LA FRAÎCHEUR SE LIT AVANT TOUT LE RESTE, et elle ne répare rien.
   // Ce dossier part chez un tiers qui n'a aucun moyen de recouper ce
@@ -264,7 +266,7 @@ async function construireArchive(
       // retards doit encore les annoncer (revue du 2026-11-10).
       nbVerifsEnRetard = data.verifsEnRetard.length;
       inventaire = data.couverture ? faitInventaire(data.couverture) : null;
-      const buf = await rendrePdf({ type: "dossier-conformite", props: { data } }, RENDU_DU_ZIP);
+      const buf = await rendrePdf({ type: "dossier-conformite", props: { data } }, renduDuZip);
       zip.file(PIECES_ZIP.dossier, new Uint8Array(buf));
       // CE QUI EST IMPRIMÉ APRÈS : collectées avant, les échéances
       // contractuelles et les rythmes étaient annoncés « imprimés dans ce
@@ -332,7 +334,7 @@ async function construireArchive(
           snapshot: versionCourante.snapshot as unknown as DuerpSnapshot,
           historique,
         },
-      }, RENDU_DU_ZIP);
+      }, renduDuZip);
       zip.file(fichierDuerp(versionCourante.numero), new Uint8Array(buf));
     }
   } catch (e) {
@@ -355,7 +357,7 @@ async function construireArchive(
       // et pour 03_Registre_annexes/ (relecture du 2026-11-05). Avant le
       // rendu : les fichiers annexés vont au ZIP même si le PDF est refusé.
       annexesListees = data.annexes ?? [];
-      const buf = await rendrePdf({ type: "registre", props: { data } }, RENDU_DU_ZIP);
+      const buf = await rendrePdf({ type: "registre", props: { data } }, renduDuZip);
       zip.file(PIECES_ZIP.registre, new Uint8Array(buf));
       // Après le rendu, comme pour 01 : le README n'annonce que ce qui est
       // imprimé.
@@ -406,7 +408,7 @@ async function construireArchive(
   try {
     const data = await construirePlanActionsData(db, id);
     if (data) {
-      const buf = await rendrePdf({ type: "plan-actions", props: { data } }, RENDU_DU_ZIP);
+      const buf = await rendrePdf({ type: "plan-actions", props: { data } }, renduDuZip);
       zip.file(PIECES_ZIP.plan, new Uint8Array(buf));
     }
   } catch (e) {

@@ -4,8 +4,11 @@ import "server-only";
  * Combien d'exports (PDF, ZIP de contrôle) le processus mène de front
  * (audit Next.js du 2026-10-14, H3).
  *
- * LA CAUSE. La mise en page `@react-pdf` est du calcul synchrone : pendant
- * qu'elle tourne, la boucle d'événements ne sert personne d'autre — mesuré
+ * LA CAUSE. ~~La mise en page `@react-pdf` est du calcul synchrone : pendant
+ * qu'elle tourne, la boucle d'événements ne sert personne d'autre~~
+ * [2026-11-10, ADR-059 : en production, la mise en page tourne dans un fil
+ * séparé ; la boucle reste libre. La file borne désormais la MÉMOIRE — un fil
+ * par export en cours, chacun avec son tas.] Mesuré avant l'ADR-059 :
  * jusqu'à 250 ms d'un tenant par PDF, 470 ms avec quatre ZIP lancés ensemble
  * (`scripts/mesure-exports.ts`). Et quatre ZIP construits ensemble montaient
  * le processus à 1,8 Go. Sur Vercel (Fluid Compute), une instance sert

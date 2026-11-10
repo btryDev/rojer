@@ -7,7 +7,16 @@
 //
 // Module pur : il rend la ligne et son niveau, l'appelant l'écrit.
 
-export type IssueExportPdf = "ok" | "trop_volumineux" | "echec";
+export type IssueExportPdf =
+  | "ok"
+  | "trop_volumineux"
+  | "echec"
+  /** Le processus de rendu a dépassé son tas (lot pdf-b1) : refusé comme
+   *  trop volumineux. */
+  | "memoire_depassee"
+  | "delai_depasse"
+  /** Le client est parti avant la fin : rien d'anormal. */
+  | "abandonne";
 /** D'où vient l'export : une route PDF ou le ZIP de contrôle. */
 export type OrigineExportPdf = "route" | "zip";
 
@@ -46,7 +55,8 @@ const PART_AVERTISSEMENT_BLOC = 0.9;
 
 export function niveauExportPdf(e: ExportPdf): NiveauJournal {
   if (e.issue === "echec") return "error";
-  if (e.issue === "trop_volumineux") return "warn";
+  if (e.issue === "abandonne") return "info";
+  if (e.issue !== "ok") return "warn";
   const approche =
     (e.total ?? 0) >= e.seuilTotal * PART_AVERTISSEMENT_TOTAL ||
     (e.plusGrosBloc ?? 0) >= e.seuilBloc * PART_AVERTISSEMENT_BLOC;
