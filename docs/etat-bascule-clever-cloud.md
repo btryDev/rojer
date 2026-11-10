@@ -297,6 +297,14 @@ de la propriétaire : à traiter avant la bascule, après le chantier en cours) 
 - **`build-cc` obligatoire sur la branche déployée** : sur `main`, seuls
   `vitest` et `derive` sont requis ; à corriger le jour où `main` redevient la
   branche déployée (après la fusion de `cc`).
+- **Une organisation Clever Cloud propre à Rojer** (décision de la
+  propriétaire, 2026-11-10) : la préproduction de test vit pour l'instant
+  dans l'organisation « btry », à côté de RiskBoard (application « Rojer »,
+  app_9bbac77c-af66-4562-81a7-0257a21401ad, add-ons `Rojer-db` et
+  `rojer-files`). Avant de créer la production : créer l'organisation
+  « Rojer », y créer la production, y recréer la préproduction (Clever Cloud
+  ne déplace ni application ni add-on d'une organisation à l'autre), puis
+  supprimer l'ancienne préproduction et ses add-ons.
 - **Trier les alertes Dependabot** : 100 ouvertes le 2026-11-10 (34 graves,
   53 moyennes, 13 faibles), calculées sur `main`. En dépendances d'exécution :
   `ws`, `browserslist`, `deepmerge-ts`, `source-map-js` ; le reste en
