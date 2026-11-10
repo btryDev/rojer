@@ -13,8 +13,9 @@ import { poidsDuDocument, type PoidsPdf } from "./poids";
 /**
  * LE SEUL ENDROIT QUI MET UN PDF EN PAGE (lot pdf-b0, 2026-11-10,
  * `docs/plan-pdf-sous-processus.md`). Les six routes PDF et les quatre rendus
- * du ZIP de contrôle y passent ; une garde (`rendre.test.ts`) refuse tout
- * autre appel à `renderToBuffer`.
+ * du ZIP de contrôle y passent ; une garde (`rendre.test.ts`) refuse, dans
+ * `src/`, tout autre appel à `renderToBuffer` (les scripts de `scripts/`, hors
+ * de l'application, n'y sont pas soumis).
  *
  * Trois choses avant et après chaque rendu :
  *   1. le poids du document (`poids.ts`) ;
@@ -100,9 +101,10 @@ export type OptionsRendu = {
 
 /**
  * Pèse la demande et la refuse au-delà d'un seuil (`PdfTropVolumineux`,
- * journalisé). Calcul pur et rapide : une route l'appelle AVANT de prendre sa
- * place dans la file d'export, pour qu'un refus ne fasse pas attendre.
- * `rendrePdf` l'appelle aussi : le ZIP n'a pas d'autre porte.
+ * journalisé). Calcul pur et rapide : une route PDF l'appelle AVANT de
+ * prendre sa place dans la file d'export, pour qu'un refus ne fasse pas
+ * attendre. Le ZIP de contrôle, lui, pèse chaque document DANS sa place : il
+ * la tient pour toute l'archive (`controle-zip/route.ts`), par `rendrePdf`.
  */
 export function controlerPoids(demande: DemandePdf, options: OptionsRendu = {}): PoidsPdf {
   const seuils = seuilsDe(demande, options);

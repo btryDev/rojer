@@ -266,6 +266,21 @@ describe("RegistreDocument — index des rapports découpé", () => {
     expect(types.lastIndexOf("LigneAttentePdf")).toBeLessThan(types.indexOf("TenueDuRegistrePdf"));
   });
 
+  it("une année riche en points est découpée au poids des lignes, sans rien perdre", () => {
+    // 100 rapports d'une même année à 4 points : 5 lignes chacun, donc 20 par
+    // <Page> et 5 <Page>, au lieu d'une <Page> de 500 lignes.
+    const riches = rapportsDe(2026, 100).map((r) => ({
+      ...r,
+      points: Array.from({ length: 4 }, (_, k) => ({ ...(r.points[0] ?? {
+        id: "", libelle: "Prise", etat: "corrige" as const, corrigeLe: null, justification: null, pieceJointe: false,
+      }), id: `${r.id}-p${k}` })),
+    }));
+    const arbre = elementsDansLOrdre(RegistreDocument({ data: { ...data, rapports: riches } }));
+    const ids = arbre.filter((n) => n.type === "LigneRapportPdf").map((n) => (n.props.r as { id: string }).id);
+    expect(ids).toEqual(riches.map((r) => r.id));
+    expect(arbre.filter((n) => n.type === "TeteRapportsPdf")).toHaveLength(5);
+  });
+
   it("rend le PDF avec un index de plusieurs paquets", async () => {
     const pdf = await renderToBuffer(RegistreDocument({ data: avecRapports }));
     expect(pdf.subarray(0, 4).toString()).toBe("%PDF");

@@ -26,15 +26,28 @@ export type ExportPdf = {
 export type NiveauJournal = "info" | "warn" | "error";
 
 /**
- * Le niveau d'un export : `warn` dès la MOITIÉ d'un seuil, pour que la
+ * Le niveau d'un export : `warn` quand un seuil approche, pour que la
  * génération en tâche de fond arrive avant le premier refus ; `warn` aussi
  * pour un refus, `error` pour un échec de rendu.
+ *
+ * « Approche » ne se lit pas pareil pour les deux seuils (revue finale de la
+ * PR #286) :
+ *   - le TOTAL grandit avec les années : il avertit dès la MOITIÉ ;
+ *   - le BLOC, non — la plus grosse `<Page>` d'un registre est le corps des
+ *     fiches, qui suit le parc (environ 300 lignes pour les 100 appareils de
+ *     la cible, sur 400) : à la moitié, tout registre de la cible
+ *     avertirait toujours, et le signal ne dirait plus rien. Il avertit à
+ *     90 % de son seuil.
  */
+export const PART_AVERTISSEMENT_TOTAL = 0.5;
+export const PART_AVERTISSEMENT_BLOC = 0.9;
+
 export function niveauExportPdf(e: ExportPdf): NiveauJournal {
   if (e.issue === "echec") return "error";
   if (e.issue === "trop_volumineux") return "warn";
   const approche =
-    (e.total ?? 0) * 2 >= e.seuilTotal || (e.plusGrosBloc ?? 0) * 2 >= e.seuilBloc;
+    (e.total ?? 0) >= e.seuilTotal * PART_AVERTISSEMENT_TOTAL ||
+    (e.plusGrosBloc ?? 0) >= e.seuilBloc * PART_AVERTISSEMENT_BLOC;
   return approche ? "warn" : "info";
 }
 

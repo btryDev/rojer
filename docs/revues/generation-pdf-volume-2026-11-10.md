@@ -1,5 +1,10 @@
 # Génération des PDF en volume — diagnostic et recommandation (2026-11-10)
 
+> **Suite donnée (2026-11-10)** : A1 (registre découpé, pieds de page fixes,
+> sur 4.5.1) et B0 (une seule porte de rendu, garde-fou de volume, journal),
+> PR #286 ; le rendu hors du processus (B1) suit à part, en processus enfant.
+> La montée en 4.9 + `experimentalPagination` reste en réserve.
+
 Commande : session `rojer-outils-cb` (test de charge, `lot/charge-k6`), pour la
 propriétaire. Lecture du code sur `origin/cc` (b635a372). Aucun correctif écrit,
 rien poussé, banc Docker non touché.
@@ -213,13 +218,15 @@ C'est la seule voie vers une mémoire constante à 10 ans en un seul fichier.
 Effort : plusieurs semaines (réécrire les gabarits), et on perd la charte
 partagée. Pas recommandé tant que A + C n'ont pas été mesurés à 10 ans.
 
-### Contournement immédiat du problème 3, si A attend
+### ~~Contournement immédiat du problème 3, si A attend~~ [2026-11-10 : fait (A1, `PiedFixe`) et mesuré]
 
-Remplacer les `render` des pieds de page du dossier et du plan d'actions par un
+~~Remplacer les `render` des pieds de page du dossier et du plan d'actions par un
 texte `fixed` statique, comme le registre. Le registre n'a pas ce plantage sur
 le banc, et le commentaire de `RegistreDocument.tsx` dit que `render` ne
 s'imprime de toute façon pas en 4.5.1. **Non mesuré en synthétique** : à
-vérifier sur Charge 53.
+vérifier sur Charge 53.~~ [2026-11-10 : mesuré — en synthétique, le pied fixe
+passe là où le pied `render` plante (`PiedFixe.test.tsx`) ; sur le banc, plus
+de 500 du dossier de conformité, Charge 1 à 10 ans compris.]
 
 ## 5. Le registre doit rester complet
 
@@ -244,6 +251,7 @@ rapport** : la question ne se pose pas tant qu'on reste à un seul document.
 3. Après la bascule : exports en tâche de fond (C), puis pré-génération des
    années closes.
 
-Fichiers de mesure (hors dépôt) :
+Fichiers de mesure (hors dépôt, dans un dossier temporaire de session qui
+ne survit pas à la session) :
 `/private/tmp/claude-501/-Users-palomasanchezc-Documents-rojer-outils/93761193-8287-4ebb-ac6c-22f39f19b87b/scratchpad/mesure/`
 (`mesure.cjs`, `mesure49.cjs`, `pied-lh.cjs`, `pied-lh49.cjs`).

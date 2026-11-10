@@ -123,8 +123,8 @@ describe("rendrePdf — garde-fou", () => {
     expect(h.rendu).toHaveBeenCalledTimes(1);
   });
 
-  it("à la moitié d'un seuil : met en page, mais avertit", async () => {
-    await rendrePdf(plan(20), { seuils });
+  it("près d'un seuil (90 % du bloc) : met en page, mais avertit", async () => {
+    await rendrePdf(plan(36), { seuils });
     expect(journal.warn).toHaveBeenCalledTimes(1);
     expect(ligneEcrite()).toMatchObject({ niveau: "warn", issue: "ok" });
   });

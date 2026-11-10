@@ -25,7 +25,11 @@
 >   volumes annuels figés recollés + année en cours générée).
 > - **On garde tout et on exporte tout** (même jour) : ni borne du registre à
 >   5 ans, ni suppression. Le client type (10 équipements, environ 86 rapports
->   par an) n'atteint le seuil du garde-fou qu'après une vingtaine d'années.
+>   par an) n'atteint le seuil du TOTAL du garde-fou qu'après une vingtaine
+>   d'années. [Même jour, revue finale de la PR #286 : le seuil du BLOC, lui,
+>   ne suit pas les années mais la plus grosse `<Page>` — depuis, l'index des
+>   rapports se découpe au même poids que la pesée, et une année riche en
+>   points ne le dépasse plus.]
 > - **Production en XS au départ**, passage en S sur des seuils à fixer par
 >   elle plus tard (proposés : `docs/chantiers-ouverts.md` § 23).
 > - **Import de rapports en masse** : vérifié absent le 2026-11-10, les

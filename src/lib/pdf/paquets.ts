@@ -47,9 +47,23 @@ export type SegmentAnnuel<T> = {
 };
 
 /**
- * Range les lignes en `<Page>` de `taille` lignes au plus, chacune faite de
- * segments annuels : une année courte partage sa `<Page>` avec la suivante,
- * une année longue s'étend sur plusieurs.
+ * Les lignes qu'un rapport imprime dans l'index du registre : la sienne, une
+ * par point à corriger, et la mention de R. 4226-19 sous un rapport
+ * d'électricité à points. LA MÊME mesure découpe les `<Page>` (ici) et pèse le
+ * document (`poids.ts`) — mesurés différemment, une `<Page>` de cent rapports
+ * à quatre points pesait 500 lignes et faisait refuser le registre entier
+ * (revue finale de la PR #286, 2026-11-10).
+ */
+export function lignesDuRapport(r: { points: readonly unknown[]; domaine: string | null }): number {
+  return 1 + r.points.length + (r.points.length > 0 && r.domaine === "electricite" ? 1 : 0);
+}
+
+/**
+ * Range les éléments en `<Page>` de `taille` lignes PESÉES au plus (`poidsDe`,
+ * une par défaut), chacune faite de segments annuels : une année courte
+ * partage sa `<Page>` avec la suivante, une année longue s'étend sur
+ * plusieurs. Un élément n'est jamais coupé : plus lourd à lui seul que
+ * `taille`, il occupe sa `<Page>`.
  *
  * L'ordre de l'entrée est gardé tel quel : une année se coupe à chaque
  * changement d'année, jamais par regroupement. Une entrée triée du plus
@@ -60,6 +74,7 @@ export function feuillesParAnnee<T>(
   items: readonly T[],
   dateDe: (item: T) => Date,
   taille = LIGNES_PAR_PAQUET,
+  poidsDe: (item: T) => number = () => 1,
 ): SegmentAnnuel<T>[][] {
   verifierTaille(taille);
   const suites: { annee: number; lignes: T[] }[] = [];
@@ -72,24 +87,26 @@ export function feuillesParAnnee<T>(
 
   const feuilles: SegmentAnnuel<T>[][] = [];
   let courante: SegmentAnnuel<T>[] = [];
-  let place = taille;
+  let poidsCourant = 0;
   for (const { annee, lignes } of suites) {
-    for (let debut = 0; debut < lignes.length; ) {
-      if (place === 0) {
+    let segment: SegmentAnnuel<T> | null = null;
+    lignes.forEach((item, rang) => {
+      const poids = poidsDe(item);
+      // Feuille pleine : la suite de l'année ouvre la suivante. Une feuille
+      // vide accepte toujours un élément, même trop lourd.
+      if (poidsCourant > 0 && poidsCourant + poids > taille) {
         feuilles.push(courante);
         courante = [];
-        place = taille;
+        poidsCourant = 0;
+        segment = null;
       }
-      const n = Math.min(place, lignes.length - debut);
-      courante.push({
-        annee,
-        total: lignes.length,
-        suite: debut > 0,
-        lignes: lignes.slice(debut, debut + n),
-      });
-      debut += n;
-      place -= n;
-    }
+      if (!segment) {
+        segment = { annee, total: lignes.length, suite: rang > 0, lignes: [] };
+        courante.push(segment);
+      }
+      segment.lignes.push(item);
+      poidsCourant += poids;
+    });
   }
   if (courante.length > 0) feuilles.push(courante);
   return feuilles;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { enPaquets, feuillesParAnnee } from "./paquets";
+import { enPaquets, feuillesParAnnee, lignesDuRapport } from "./paquets";
 
 describe("enPaquets", () => {
   it("ne perd ni ne réordonne aucune ligne", () => {
@@ -59,5 +59,33 @@ describe("feuillesParAnnee", () => {
 
   it("aucune ligne, aucune feuille", () => {
     expect(feuillesParAnnee([], (x: { d: Date }) => x.d)).toEqual([]);
+  });
+});
+
+describe("feuillesParAnnee — au poids des lignes (revue finale de la PR #286)", () => {
+  const de = (n: number, poids: number) =>
+    Array.from({ length: n }, (_, i) => ({ i, poids, d: new Date(Date.UTC(2026, 5, 1, 12)) }));
+
+  it("une feuille ne dépasse jamais la taille en lignes pesées", () => {
+    const feuilles = feuillesParAnnee(de(100, 5), (x) => x.d, 100, (x) => x.poids);
+    const poidsParFeuille = feuilles.map((f) => f.flatMap((s) => s.lignes).reduce((n, x) => n + x.poids, 0));
+    expect(Math.max(...poidsParFeuille)).toBeLessThanOrEqual(100);
+    expect(poidsParFeuille).toEqual([100, 100, 100, 100, 100]);
+  });
+
+  it("un élément n'est jamais coupé ; plus lourd que la taille, il a sa feuille", () => {
+    const items = [{ i: 0, poids: 30 }, { i: 1, poids: 150 }, { i: 2, poids: 30 }].map((x) => ({
+      ...x,
+      d: new Date(Date.UTC(2026, 5, 1, 12)),
+    }));
+    const feuilles = feuillesParAnnee(items, (x) => x.d, 100, (x) => x.poids);
+    expect(feuilles.map((f) => f.flatMap((s) => s.lignes).map((x) => x.i))).toEqual([[0], [1], [2]]);
+    expect(feuilles.flat().flatMap((s) => s.lignes)).toEqual(items);
+  });
+
+  it("le poids d'un rapport : sa ligne, ses points, la mention de R. 4226-19 en électricité", () => {
+    expect(lignesDuRapport({ points: [], domaine: "electricite" })).toBe(1);
+    expect(lignesDuRapport({ points: [1, 2, 3, 4], domaine: "incendie" })).toBe(5);
+    expect(lignesDuRapport({ points: [1, 2, 3, 4, 5, 6], domaine: "electricite" })).toBe(8);
   });
 });

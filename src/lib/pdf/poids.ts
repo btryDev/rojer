@@ -1,6 +1,6 @@
 import type { DemandePdf } from "./documents";
 import type { RegistreData } from "./RegistreDocument";
-import { enPaquets, feuillesParAnnee } from "./paquets";
+import { enPaquets, feuillesParAnnee, lignesDuRapport, LIGNES_PAR_PAQUET } from "./paquets";
 
 /**
  * Le poids d'un PDF avant sa mise en page (lot pdf-b0, 2026-11-10).
@@ -84,18 +84,14 @@ function blocsDuRegistre(data: RegistreData): number[] {
       (n, f) => n + (f.champs?.length ?? 0) + (f.lignes?.length ?? 0) + (f.tenues?.length ?? 0),
       0,
     );
-  // L'index des rapports, par `<Page>` comme le document le découpe ; un
-  // point à corriger s'imprime sous son rapport, une ligne de plus, et un
-  // rapport d'électricité à points porte en plus la mention de R. 4226-19.
-  const rapports = feuillesParAnnee(data.rapports, (r) => r.dateRapport).map((feuille) =>
-    feuille
-      .flatMap((s) => s.lignes)
-      .reduce(
-        (n, r) =>
-          n + 1 + r.points.length + (r.points.length > 0 && r.domaine === "electricite" ? 1 : 0),
-        0,
-      ),
-  );
+  // L'index des rapports, par `<Page>` EXACTEMENT comme le document le
+  // découpe : même fonction, même poids par rapport (`lignesDuRapport`).
+  const rapports = feuillesParAnnee(
+    data.rapports,
+    (r) => r.dateRapport,
+    LIGNES_PAR_PAQUET,
+    lignesDuRapport,
+  ).map((feuille) => feuille.flatMap((s) => s.lignes).reduce((n, r) => n + lignesDuRapport(r), 0));
   const attente = enPaquets(data.verifsEnAttente).map((p) => p.length);
   return [fiches, ...rapports, ...attente];
 }

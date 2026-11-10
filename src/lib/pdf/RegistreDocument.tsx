@@ -15,7 +15,7 @@ import {
   referencesRegistreTenue,
   type RegimeDuRegistre,
 } from "./mentions-registre";
-import { enPaquets, feuillesParAnnee } from "./paquets";
+import { enPaquets, feuillesParAnnee, lignesDuRapport, LIGNES_PAR_PAQUET } from "./paquets";
 import { PiedFixe } from "./PiedFixe";
 import { LABEL_RESULTAT } from "@/lib/rapports/resultats";
 import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
@@ -731,7 +731,13 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
   // alors « non déterminé ») : le document n'affirme pas un âge qu'il ignore.
   const avertissementCalendrier = data.calendrier ? phraseFraicheur(data.calendrier) : null;
   // Le découpage des deux longs tableaux (`paquets.ts`).
-  const feuillesRapports = feuillesParAnnee(data.rapports, (r) => r.dateRapport);
+  // Découpées au poids des lignes, le même que celui du garde-fou (`poids.ts`).
+  const feuillesRapports = feuillesParAnnee(
+    data.rapports,
+    (r) => r.dateRapport,
+    LIGNES_PAR_PAQUET,
+    lignesDuRapport,
+  );
   // Au moins un paquet, vide s'il n'y a rien en attente : la feuille porte
   // alors le fait de l'attente vide, puis la tenue du registre.
   const paquetsAttente: LigneVerif[][] =
@@ -948,12 +954,14 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
               })}
             </Text>
           ) : (
-            <>
+            // Dans sa `View`, comme l'index : l'en-tête fixe ne se répète que
+            // sur les feuilles du tableau, pas sur celle de la tenue.
+            <View>
               <TeteAttentePdf />
               {paquet.map((v) => (
                 <LigneAttentePdf key={v.id} v={v} />
               ))}
-            </>
+            </View>
           )}
           {k === paquetsAttente.length - 1 && <TenueDuRegistrePdf regime={data.regime} />}
           <PiedDePage etablissement={data.etablissement} />

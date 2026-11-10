@@ -18,9 +18,10 @@ describe("niveauExportPdf", () => {
     expect(niveauExportPdf({ ...base, total: 499, plusGrosBloc: 199 })).toBe("info");
   });
 
-  it("warn dès la moitié d'un seuil, l'un ou l'autre", () => {
+  it("warn dès la moitié du total, à 90 % du bloc (le corps des fiches d'un registre de la cible n'avertit pas)", () => {
     expect(niveauExportPdf({ ...base, total: 500 })).toBe("warn");
-    expect(niveauExportPdf({ ...base, plusGrosBloc: 200 })).toBe("warn");
+    expect(niveauExportPdf({ ...base, plusGrosBloc: 300 })).toBe("info");
+    expect(niveauExportPdf({ ...base, plusGrosBloc: 360 })).toBe("warn");
   });
 
   it("une pesée en échec (total null) ne lève pas, et reste une erreur", () => {

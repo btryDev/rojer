@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { DemandePdf } from "./documents";
 import { poidsDuDocument } from "./poids";
+import { SEUILS_PDF } from "./rendre";
 
 /** Une liste de `n` éléments quelconques. */
 const n = (k: number) => Array.from({ length: k }, (_, i) => ({ id: String(i) }));
@@ -49,6 +50,21 @@ describe("poidsDuDocument — registre", () => {
     );
     // 250 rapports en paquets de 100 : le plus gros paquet pèse 100.
     expect(poids).toEqual({ total: 280, plusGrosBloc: 100 });
+  });
+
+  it("une année riche en points ne fait plus dépasser le bloc (sondes de la revue finale)", () => {
+    // 100 rapports d'une même année à 4 points : avant, une seule <Page> de
+    // 500 lignes, et le registre entier refusé.
+    const quatre = poidsDuDocument(registre({ rapports: Array.from({ length: 100 }, () => rapport(2026, 4)) }));
+    expect(quatre).toEqual({ total: 500, plusGrosBloc: 100 });
+    // 60 rapports d'électricité à 6 points : 8 lignes chacun, 12 par <Page>.
+    const elec = poidsDuDocument(
+      registre({
+        rapports: Array.from({ length: 60 }, () => ({ ...rapport(2026, 6), domaine: "electricite" })),
+      }),
+    );
+    expect(elec).toEqual({ total: 480, plusGrosBloc: 96 });
+    expect(Math.max(quatre.plusGrosBloc, elec.plusGrosBloc)).toBeLessThanOrEqual(SEUILS_PDF.registre.bloc);
   });
 
   it("un journal de fiche plus long qu'un paquet devient le plus gros bloc", () => {
