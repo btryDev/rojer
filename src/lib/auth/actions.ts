@@ -10,7 +10,7 @@ import { z } from "zod";
 import { publicAppUrl, refusUrlPublique } from "@/lib/email";
 import { createClient } from "@/lib/supabase/server";
 import { COOKIE_ETABLISSEMENT_ACTIF } from "@/lib/auth/scope";
-import { ipClient } from "@/lib/securite/ip-client";
+import { ipPourLimite } from "@/lib/securite/ip-client";
 import {
   cleLimite,
   consommer,
@@ -55,7 +55,9 @@ const inscriptionSchema = z.object({
  * indéfiniment à la titulaire son propre mot de passe, depuis n'importe quelle
  * IP (revue de l'intégration Next.js du 2026-10-14, C1). Liée à l'IP, elle ne
  * bloque que celui qui insiste ; un essai distribué reste borné par la limite
- * par IP. La réinitialisation garde l'adresse seule : ce qu'elle protège est
+ * par IP. « IP » s'entend au sens de `ipPourLimite` : une IPv6 compte pour son
+ * /64 (audit du 2026-11-10), donc des voisins du même /64 partagent ce
+ * compteur, comme le font déjà les machines derrière une même IPv4. La réinitialisation garde l'adresse seule : ce qu'elle protège est
  * la boîte de la titulaire contre l'envoi en rafale, et la refuser n'empêche
  * pas de se connecter. Une action serveur
  * ne choisit pas son statut HTTP : le refus est un message du formulaire, pas
@@ -66,7 +68,7 @@ async function refusParLimite(
   parIp: Limite,
   compte?: { adresse: string; limite: Limite; parIp?: boolean },
 ): Promise<string | null> {
-  const ip = ipClient(await headers());
+  const ip = ipPourLimite(await headers());
   const demandes = [
     ...(ip ? [{ cle: cleLimite(action, "ip", ip), limite: parIp }] : []),
     ...(compte
