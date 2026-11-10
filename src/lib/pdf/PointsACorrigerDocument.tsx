@@ -2,6 +2,7 @@ import { Document, Page, Text, View } from "@react-pdf/renderer";
 import { LABEL_STATUT_POINT, LIBELLE_CORRIGE, LIBELLE_POINTS } from "@/lib/points-a-corriger/libelles";
 import { COULEUR_STATUT } from "./PlanActionsDocument";
 import { formatDateCourte, formatDateLongue, stylesCommuns as s } from "./styles";
+import { PiedFixe } from "./PiedFixe";
 import type { StatutAction } from "@prisma/client";
 
 /** Un point tel que le document l'imprime (ADR-048). */
@@ -115,13 +116,7 @@ export function PointsACorrigerDocument({ data }: { data: PointsACorrigerData })
           </Text>
         </View>
 
-        <Text
-          style={s.footer}
-          render={({ pageNumber, totalPages }) =>
-            `${data.etablissement} — ${data.appareil} — ${LIBELLE_POINTS.toLowerCase()} — page ${pageNumber}/${totalPages}`
-          }
-          fixed
-        />
+        <PiedFixe texte={`${data.etablissement} — ${data.appareil} — ${LIBELLE_POINTS.toLowerCase()}`} />
       </Page>
     </Document>
   );

@@ -17,6 +17,7 @@ import {
   formatDateLongue,
   stylesCommuns as s,
 } from "./styles";
+import { PiedFixe } from "./PiedFixe";
 import type { Score } from "@/lib/dashboard/score";
 import {
   faitInventaire,
@@ -479,13 +480,7 @@ export function DossierConformiteDocument({ data, projet = false }: { data: Doss
           </View>
         </View>
 
-        <Text
-          style={s.footer}
-          render={({ pageNumber, totalPages }) =>
-            `Dossier de conformité — ${data.etablissement} — page ${pageNumber}/${totalPages}`
-          }
-          fixed
-        />
+        <PiedFixe texte={`Dossier de conformité — ${data.etablissement}`} />
       </Page>
 
       {/* Ce qui doit être en place — déclarations de l'employeur.
@@ -540,13 +535,7 @@ export function DossierConformiteDocument({ data, projet = false }: { data: Doss
           </View>
         )}
 
-        <Text
-          style={s.footer}
-          render={({ pageNumber, totalPages }) =>
-            `Dossier de conformité — ${data.etablissement} — page ${pageNumber}/${totalPages}`
-          }
-          fixed
-        />
+        <PiedFixe texte={`Dossier de conformité — ${data.etablissement}`} />
       </Page>
 
       {/* Vérifs en retard */}
@@ -667,13 +656,7 @@ export function DossierConformiteDocument({ data, projet = false }: { data: Doss
           </View>
         )}
 
-        <Text
-          style={s.footer}
-          render={({ pageNumber, totalPages }) =>
-            `Dossier de conformité — ${data.etablissement} — page ${pageNumber}/${totalPages}`
-          }
-          fixed
-        />
+        <PiedFixe texte={`Dossier de conformité — ${data.etablissement}`} />
       </Page>
 
       {/* Mesures et points à corriger en cours (ADR-048, lot 3) */}
@@ -687,13 +670,7 @@ export function DossierConformiteDocument({ data, projet = false }: { data: Doss
           Points à corriger ouverts
         </Text>
         <TableActions actions={data.pointsEnCours} colonne="Point à corriger" vide="Aucun point à corriger ouvert." />
-        <Text
-          style={s.footer}
-          render={({ pageNumber, totalPages }) =>
-            `Dossier de conformité — ${data.etablissement} — page ${pageNumber}/${totalPages}`
-          }
-          fixed
-        />
+        <PiedFixe texte={`Dossier de conformité — ${data.etablissement}`} />
       </Page>
 
       {/* Rapports récents + mentions légales */}
@@ -792,13 +769,7 @@ export function DossierConformiteDocument({ data, projet = false }: { data: Doss
           </Text>
         </View>
 
-        <Text
-          style={s.footer}
-          render={({ pageNumber, totalPages }) =>
-            `Dossier de conformité — ${data.etablissement} — page ${pageNumber}/${totalPages}`
-          }
-          fixed
-        />
+        <PiedFixe texte={`Dossier de conformité — ${data.etablissement}`} />
       </Page>
     </Document>
   );

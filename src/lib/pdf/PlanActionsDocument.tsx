@@ -8,6 +8,7 @@ import {
   formatDateLongue,
   stylesCommuns as s,
 } from "./styles";
+import { PiedFixe } from "./PiedFixe";
 import type { StatutAction, TypeAction } from "@prisma/client";
 
 export type LignePlanActions = {
@@ -155,13 +156,7 @@ export function PlanActionsDocument({ data }: { data: PlanActionsData }) {
           </Text>
         </View>
 
-        <Text
-          style={s.footer}
-          render={({ pageNumber, totalPages }) =>
-            `${data.etablissement} — Plan d'actions — page ${pageNumber}/${totalPages}`
-          }
-          fixed
-        />
+        <PiedFixe texte={`${data.etablissement} — Plan d'actions`} />
       </Page>
     </Document>
   );

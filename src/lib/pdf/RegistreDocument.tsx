@@ -16,6 +16,7 @@ import {
   type RegimeDuRegistre,
 } from "./mentions-registre";
 import { enPaquets, parAnneeCivile } from "./paquets";
+import { PiedFixe } from "./PiedFixe";
 import { LABEL_RESULTAT } from "@/lib/rapports/resultats";
 import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
 import { MARQUAGE_CONTRACTUEL } from "@/lib/prescriptions/sources";
@@ -637,34 +638,13 @@ function LigneAttentePdf({ v }: { v: LigneVerif }) {
   );
 }
 
-/**
- * Le pied de page, à instancier une fois par `Page`.
- *
- * ⚠ **Sans numéro de page, et ce n'est pas un oubli.** La prop `render` de
- * `@react-pdf/renderer` (4.5.1) ne produit rien — vérifié en isolant les
- * quatre variantes : `fixed` + texte statique s'imprime, `render` ne
- * s'imprime jamais, qu'il rende une chaîne ou un nœud, avec ou sans `fixed`,
- * sur un `Text` comme sur un `View`.
- *
- * Le défaut ne vient pas de ce document : `stylesCommuns.footer` est utilisé
- * avec `render` par les quatre PDF du produit (DUERP, plan d'actions,
- * dossier de conformité, registre), qui perdent donc tous leur pied de page
- * en silence. Le rétablir partout suppose de monter de version ou de
- * numéroter autrement, ce qui se décide à l'échelle du dossier `pdf/`.
- *
- * En attendant, mieux vaut un pied qui s'imprime sans numéro qu'un pied
- * qui ne s'imprime pas : sur un document d'une cinquantaine de feuilles
- * présenté à un contrôleur, savoir de quel établissement il s'agit est ce
- * qui compte le plus.
- */
+/** Le pied de page du registre, une fois par `Page` (`PiedFixe`). */
 function PiedDePage({ etablissement }: { etablissement: string }) {
   return (
-    <Text
-      style={[s.footer, { color: BOARD.ardoiseMoyenne, borderTopColor: BOARD.ardoiseFilet }]}
-      fixed
-    >
-      {etablissement} — Registre de sécurité incendie
-    </Text>
+    <PiedFixe
+      texte={`${etablissement} — Registre de sécurité incendie`}
+      couleurs={{ color: BOARD.ardoiseMoyenne, borderTopColor: BOARD.ardoiseFilet }}
+    />
   );
 }
 
