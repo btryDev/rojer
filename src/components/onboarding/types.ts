@@ -115,4 +115,6 @@ export type StepProps = {
    * reprend le SIREN rattache le nouvel établissement à l'une d'elles.
    */
   entreprisesConnues: readonly EntrepriseConnue[];
+  /** Le compte où l'établissement se rangera, nommé quand la personne en a plusieurs. */
+  nomCompte?: string | null;
 };

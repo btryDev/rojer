@@ -1,6 +1,7 @@
 "use server";
 
 import { requireCompteDOnboarding } from "@/lib/auth/compte";
+import { MESSAGE_COMPTE_CHANGE } from "@/lib/auth/compte-attendu";
 import { requireUser } from "@/lib/auth/require-user";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
@@ -105,7 +106,11 @@ export async function finaliserOnboarding(
   // Le compte où ranger l'établissement : celui de la personne, ou un compte
   // neuf dont elle devient propriétaire (ADR-054 § 5). Créé avant la
   // transaction : si elle échoue, le parcours suivant le reprend.
-  const { compte, db } = await requireCompteDOnboarding(d.raisonSociale);
+  // Refusé si la page montrait un autre compte : elle est rendue de nouveau sur
+  // le compte actif, et le parcours garde ses réponses.
+  const lu = await requireCompteDOnboarding(formData, { page: "/onboarding", nomSiNouveau: d.raisonSociale });
+  if (!lu) return { status: "error", message: MESSAGE_COMPTE_CHANGE };
+  const { compte, db } = lu;
 
   const siren = sirenDuSiret(d.siret);
 

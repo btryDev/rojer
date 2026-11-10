@@ -12,6 +12,7 @@ import { signOutAction } from "@/lib/auth/actions";
 import { StepIdentite } from "./StepIdentite";
 import { StepTypologie } from "./StepTypologie";
 import { StepResume } from "./StepResume";
+import { ChampCompteAttendu } from "@/components/compte/ChampCompteAttendu";
 import { CHAMP_TEMOIN_TYPES_ERP_AUTRES } from "@/lib/etablissements/types-erp-affiches";
 import {
   finaliserOnboarding,
@@ -69,10 +70,16 @@ const ETAPES: Etape[] = [
 export function WizardShell({
   email,
   entreprisesConnues,
+  compteId,
+  nomCompte,
 }: {
   email?: string | null;
   /** Les entreprises du compte (une par SIREN), pour rattacher un nouvel établissement. */
   entreprisesConnues: readonly EntrepriseConnue[];
+  /** Le compte où l'établissement se rangera, posté avec le parcours ; `null` : aucun encore. */
+  compteId: string | null;
+  /** Son nom, au résumé, quand la personne a plusieurs comptes. */
+  nomCompte: string | null;
 }) {
   const router = useRouter();
   const [state, setState] = useState<OnboardingState>(VALEURS_INITIALES);
@@ -424,10 +431,12 @@ export function WizardShell({
               errors={serverErrors}
               blocage={blocageAffiche}
               entreprisesConnues={entreprisesConnues}
+              nomCompte={nomCompte}
             />
           </div>
 
           <ChampsCaches state={state} />
+          <ChampCompteAttendu compteId={compteId} />
 
           {/* Seuls les refus qui ne visent aucun champ restent ici : les
               autres sont rendus par l'étape, sous le contrôle concerné. */}

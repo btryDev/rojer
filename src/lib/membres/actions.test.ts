@@ -55,10 +55,13 @@ vi.mock("@/lib/securite/limite-debit", () => ({
   messageTropDeTentatives: () => "trop",
 }));
 
+import { CHAMP_COMPTE_ATTENDU, MESSAGE_COMPTE_CHANGE } from "@/lib/auth/compte-attendu";
 const actions = await import("./actions");
 const IDLE = { status: "idle" as const };
+/** Un formulaire posté depuis une page qui montrait `compte-a`, le compte actif des tests. */
 const fd = (o: Record<string, string>) => {
   const f = new FormData();
+  f.set(CHAMP_COMPTE_ATTENDU, "compte-a");
   for (const [k, v] of Object.entries(o)) f.set(k, v);
   return f;
 };
@@ -94,7 +97,7 @@ describe("gestes réservés au propriétaire", () => {
     saisie.juge = "compte-b";
     try {
       const r = await actions.inviterMembre(IDLE, fd({ email: "x@exemple.fr", role: "member" }));
-      expect(r).toEqual({ status: "error", message: "Le compte actif a changé : réessayez." });
+      expect(r).toEqual({ status: "error", message: MESSAGE_COMPTE_CHANGE });
       expect(h.api.createInvitation).not.toHaveBeenCalled();
       saisie.juge = "compte-a";
       await actions.inviterMembre(IDLE, fd({ email: "x@exemple.fr", role: "member" }));
@@ -176,16 +179,34 @@ describe("choisirCompte (ADR-054 § 7)", () => {
   });
 });
 
+describe("un autre onglet a changé de compte (audit du 2026-11-10)", () => {
+  // La page montrait compte-b ; la session travaille maintenant sur compte-a.
+  it.each([
+    ["inviter", () => actions.inviterMembre(IDLE, fd({ email: "x@exemple.fr", role: "member", [CHAMP_COMPTE_ATTENDU]: "compte-b" }))],
+    ["quitter", () => actions.quitterCompte(IDLE, fd({ [CHAMP_COMPTE_ATTENDU]: "compte-b" }))],
+  ])("%s : refusé, et rien ne part au plugin", async (_geste, geste) => {
+    expect(await geste()).toEqual({ status: "error", message: MESSAGE_COMPTE_CHANGE });
+    for (const f of Object.values(h.api)) expect(f).not.toHaveBeenCalled();
+    expect(h.annuler).not.toHaveBeenCalled();
+  });
+
+  it("un formulaire sans le compte de sa page (onglet d'avant le déploiement) est refusé", async () => {
+    const f = new FormData();
+    expect(await actions.quitterCompte(IDLE, f)).toEqual({ status: "error", message: MESSAGE_COMPTE_CHANGE });
+    expect(h.api.leaveOrganization).not.toHaveBeenCalled();
+  });
+});
+
 describe("quitterCompte", () => {
   it("à son départ, les invitations en attente de la personne tombent", async () => {
-    await expect(actions.quitterCompte()).rejects.toThrow("REDIRECT /entreprises");
+    await expect(actions.quitterCompte(IDLE, fd({}))).rejects.toThrow("REDIRECT /entreprises");
     expect(h.api.leaveOrganization).toHaveBeenCalledWith(expect.objectContaining({ body: { organizationId: "compte-a" } }));
     expect(h.annuler).toHaveBeenCalledWith("u1", "compte-a");
   });
 
   it("un départ refusé (dernier propriétaire) n'annule rien", async () => {
     h.api.leaveOrganization.mockRejectedValueOnce({ body: { code: "YOU_CANNOT_LEAVE_THE_ORGANIZATION_AS_THE_ONLY_OWNER" } });
-    const r = await actions.quitterCompte();
+    const r = await actions.quitterCompte(IDLE, fd({}));
     expect(r).toMatchObject({ status: "error", message: expect.stringMatching(/propriétaire/) });
     expect(h.annuler).not.toHaveBeenCalled();
   });

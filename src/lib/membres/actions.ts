@@ -19,6 +19,7 @@ import { annulerInvitationsEnAttenteDe, comptesDeLaPersonne, invitationsDuCompte
 import { auth } from "@/lib/auth/better-auth";
 import { entetesDeSession } from "@/lib/auth/require-user";
 import { requireInvitationDeLaSession } from "@/lib/auth/scope";
+import { MESSAGE_COMPTE_CHANGE, memeCompteQueLaPage } from "@/lib/auth/compte-attendu";
 import { ROLES } from "@/lib/auth/roles";
 import { cleLimite, consommer, LIMITES, messageTropDeTentatives } from "@/lib/securite/limite-debit";
 import { envoiEnService, refusUrlPublique } from "@/lib/email";
@@ -68,6 +69,12 @@ function refus(e: unknown, contexte: string): EtatMembres {
   return { status: "error", message: "Ce geste n'a pas pu être fait. Réessayez, ou contactez l'assistance." };
 }
 
+/** Le refus d'un geste parti d'un onglet resté sur un autre compte ; la page se rend sur le compte actif. */
+function compteChange(): EtatMembres {
+  revalidatePath(PAGE);
+  return { status: "error", message: MESSAGE_COMPTE_CHANGE };
+}
+
 const schemaInvitation = z.object({
   email: z.string().trim().toLowerCase().email("Adresse e-mail invalide"),
   role: z.enum(ROLES),
@@ -80,9 +87,9 @@ export async function inviterMembre(_prev: EtatMembres, formData: FormData): Pro
   if ("refus" in p) return p.refus;
   const { compte, db } = p;
   // Le plugin écrit l'invitation hors du client borné : le compte visé doit
-  // être celui dont la saisie vient d'être jugée (un changement de compte
-  // entre les deux lectures, piste 2 de l'audit du 2026-11-10).
-  if (juge && juge !== compte.compteId) return { status: "error", message: "Le compte actif a changé : réessayez." };
+  // être celui dont la saisie vient d'être jugée (piste 2 de l'audit du
+  // 2026-11-10), et celui que montrait la page (point 8).
+  if ((juge && juge !== compte.compteId) || !memeCompteQueLaPage(formData, compte.compteId)) return compteChange();
   const lu = schemaInvitation.safeParse({ email: formData.get("email"), role: formData.get("role") });
   if (!lu.success) return { status: "error", message: lu.error.issues[0]?.message ?? "Formulaire invalide" };
   // Une baisse de formule planifiée borne déjà les utilisateurs (ADR-053 § 10).
@@ -185,9 +192,14 @@ export async function changerRoleMembre(_prev: EtatMembres, formData: FormData):
   return { status: "success", message: "Rôle modifié." };
 }
 
-/** Quitter le compte (tout rôle ; le dernier propriétaire ne le peut pas). */
-export async function quitterCompte(): Promise<EtatMembres> {
+/**
+ * Quitter le compte (tout rôle ; le dernier propriétaire ne le peut pas). Le
+ * compte quitté est celui que la page montrait : un autre onglet a pu changer
+ * le compte actif de la session.
+ */
+export async function quitterCompte(_prev: EtatMembres, formData: FormData): Promise<EtatMembres> {
   const { user, compte } = await requireCompte();
+  if (!memeCompteQueLaPage(formData, compte.compteId)) return compteChange();
   try {
     await auth.api.leaveOrganization({ headers: await entetesDeSession(), body: { organizationId: compte.compteId } });
   } catch (e) {
