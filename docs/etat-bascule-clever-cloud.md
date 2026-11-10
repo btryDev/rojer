@@ -286,6 +286,24 @@ sont pas ouverts) — **la liste de lancement, dans l'ordre :
   authentification obligatoire ; comptes nominatifs, jamais partagés, au
   rôle minimal ; l'application n'utilise que la clé restreinte ci-dessus.
 
+Ajoutés le 2026-11-10 (état de la CI et du dépôt, relevé ce jour-là ; décision
+de la propriétaire : à traiter avant la bascule, après le chantier en cours) :
+- **Protéger `cc`** comme `main` : `cc` n'a aucune protection de branche
+  (`gh api repos/btryDev/rojer/branches/cc/protection` → « Branch not
+  protected »). Contrôles obligatoires `vitest`, `derive` **et `build-cc`**,
+  aucun force-push, règle valable pour les administrateurs. Le script de
+  déploiement refuse déjà un commit sans CI verte, mais la branche n'est pas
+  gardée contre un push direct ni une réécriture.
+- **`build-cc` obligatoire sur la branche déployée** : sur `main`, seuls
+  `vitest` et `derive` sont requis ; à corriger le jour où `main` redevient la
+  branche déployée (après la fusion de `cc`).
+- **Trier les alertes Dependabot** : 100 ouvertes le 2026-11-10 (34 graves,
+  53 moyennes, 13 faibles), calculées sur `main`. En dépendances d'exécution :
+  `ws`, `browserslist`, `deepmerge-ts`, `source-map-js` ; le reste en
+  développement (`undici`, `fast-uri`, `vite`…). Un lot : mettre à jour ce qui
+  est exploitable en production, écrire le motif pour le reste, refaire le
+  relevé sur `cc`.
+
 ## Recette « pages × comptes à plusieurs membres » (avant la bascule)
 
 Ajoutée le 2026-11-09. À jouer **sur l'application déployée chez Clever
