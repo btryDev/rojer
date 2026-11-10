@@ -65,7 +65,8 @@ export async function reponsePdf(
   } finally {
     liberer();
   }
-  return new Response(new Uint8Array(pdf), {
+  // Une vue sur le Buffer, sans recopier le PDF.
+  return new Response(new Uint8Array(pdf.buffer as ArrayBuffer, pdf.byteOffset, pdf.byteLength), {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `inline; filename="${nomFichier}"`,

@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { Worker } from "node:worker_threads";
 import type { DemandePdf } from "../documents";
-import type { ReponseWorker } from "./entree";
+import type { DonneesWorker, ReponseWorker } from "./entree";
 
 /**
  * Un rendu PDF dans son propre fil d'exécution (lot pdf-b1, 2026-11-10,
@@ -65,19 +65,24 @@ export function rendreDansUnWorker(
   return new Promise<Buffer>((resolve, reject) => {
     if (limites.signal?.aborted) return reject(new PdfAbandonne());
 
+    const donnees: DonneesWorker = { tasMaxMo: limites.tasMaxMo };
     const fil = new Worker(chemin, {
+      workerData: donnees,
       resourceLimits: { maxOldGenerationSizeMb: limites.tasMaxMo },
     });
     let fini = false;
     // Une seule issue par rendu, et le fil toujours terminé — sur succès
-    // comme sur erreur, délai ou abandon.
+    // comme sur erreur, délai ou abandon. L'issue n'est rendue qu'APRÈS la
+    // mort du fil (revue de B1, 2026-11-10) : sinon la place d'export se
+    // libère pendant que l'ancien fil se défait encore, et le suivant démarre
+    // à côté — deux tas en même temps, que `EXPORTS_SIMULTANES=1` devait
+    // empêcher.
     const finir = (issue: () => void) => {
       if (fini) return;
       fini = true;
       clearTimeout(minuterie);
       limites.signal?.removeEventListener("abort", surAbandon);
-      void fil.terminate();
-      issue();
+      fil.terminate().then(issue, issue);
     };
     const minuterie = setTimeout(
       () => finir(() => reject(new PdfDelaiDepasse(limites.delaiMaxMs))),
@@ -87,7 +92,12 @@ export function rendreDansUnWorker(
     limites.signal?.addEventListener("abort", surAbandon, { once: true });
 
     fil.once("message", (r: ReponseWorker) =>
-      finir(() => (r.ok ? resolve(Buffer.from(r.pdf)) : reject(new Error(r.message)))),
+      finir(() => (r.ok ? resolve(Buffer.from(r.pdf)) : reject(erreurDuFil(r)))),
+    );
+    // Une réponse qui ne se désérialise pas : sans cet écouteur, le délai
+    // tomberait 60 s plus tard avec un « réessayez » trompeur.
+    fil.once("messageerror", () =>
+      finir(() => reject(new Error("pdf-worker : réponse illisible"))),
     );
     fil.once("error", (e: Error & { code?: string }) =>
       finir(() => reject(e.code === "ERR_WORKER_OUT_OF_MEMORY" ? new PdfMemoireDepassee() : e)),
@@ -97,11 +107,19 @@ export function rendreDansUnWorker(
     );
 
     try {
-      // Clonage structuré : une donnée non clonable (fonction, instance de
-      // classe) lève ici, avant tout rendu.
+      // Clonage structuré : une fonction ou un symbole lève ici, avant tout
+      // rendu. Une instance de classe, elle, passe copiée en objet simple —
+      // ses méthodes perdues (d'où le test de clonage des données des PDF).
       fil.postMessage(demande);
     } catch (e) {
       finir(() => reject(e));
     }
   });
+}
+
+/** L'erreur d'un rendu, avec la pile du fil (du code, aucune donnée). */
+function erreurDuFil(r: Extract<ReponseWorker, { ok: false }>): Error {
+  const e = new Error(r.message);
+  if (r.pile) e.stack = r.pile;
+  return e;
 }

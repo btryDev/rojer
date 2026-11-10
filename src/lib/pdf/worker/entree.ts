@@ -10,18 +10,45 @@
 // Un rendu par fil : le processus web la lance, attend un message, puis la
 // termine — toute sa mémoire est rendue.
 
-import { parentPort } from "node:worker_threads";
+import { getHeapStatistics } from "node:v8";
+import { parentPort, workerData } from "node:worker_threads";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { elementDuDocument, type DemandePdf } from "../documents";
 
-/** Ce que le fil renvoie : le PDF, ou le message d'une erreur de rendu. */
-export type ReponseWorker = { ok: true; pdf: ArrayBuffer } | { ok: false; message: string };
+/** Ce que le fil renvoie : le PDF, ou le message et la pile d'une erreur. */
+export type ReponseWorker =
+  | { ok: true; pdf: ArrayBuffer }
+  | { ok: false; message: string; pile?: string };
+
+/** Ce que le lanceur passe au fil (`lancer.ts`). */
+export type DonneesWorker = { tasMaxMo: number };
+
+/**
+ * Marge entre le tas demandé et la limite que V8 annonce : la jeune
+ * génération et les espaces de code s'y ajoutent (mesuré : 48 Mo pour 64 ou
+ * 384 demandés). Au-delà, une option de Node a pris le pas sur la borne.
+ */
+const MARGE_TAS_MO = 64;
 
 if (!parentPort) throw new Error("pdf-worker : à lancer comme worker_thread, pas directement.");
 const port = parentPort;
 
 port.once("message", async (demande: DemandePdf) => {
   let reponse: ReponseWorker;
+  // LA BORNE EST-ELLE TENUE ? `--max-old-space-size` (option de Node ou
+  // NODE_OPTIONS) prend le pas sur `resourceLimits` : le fil grossirait sans
+  // borne (mesuré : 2 096 Mo de limite pour 64 demandés). Refusé ici aussi,
+  // au cas où le contrôle du démarrage (`demarrage.ts`) serait contourné.
+  const { tasMaxMo } = workerData as DonneesWorker;
+  const limiteMo = getHeapStatistics().heap_size_limit / 1_048_576;
+  if (limiteMo > tasMaxMo + MARGE_TAS_MO) {
+    reponse = {
+      ok: false,
+      message: `pdf-worker : borne de tas non appliquée (${Math.round(limiteMo)} Mo pour ${tasMaxMo} demandés)`,
+    };
+    port.postMessage(reponse);
+    return;
+  }
   try {
     const buf = await renderToBuffer(elementDuDocument(demande));
     // Copie dans un ArrayBuffer propre, transféré sans recopie au parent.
@@ -29,7 +56,11 @@ port.once("message", async (demande: DemandePdf) => {
     reponse = { ok: true, pdf };
     port.postMessage(reponse, [pdf]);
   } catch (e) {
-    reponse = { ok: false, message: e instanceof Error ? e.message : String(e) };
+    // Le message et la pile : du code, pas de donnée du dossier.
+    reponse =
+      e instanceof Error
+        ? { ok: false, message: e.message, pile: e.stack }
+        : { ok: false, message: String(e) };
     port.postMessage(reponse);
   }
 });

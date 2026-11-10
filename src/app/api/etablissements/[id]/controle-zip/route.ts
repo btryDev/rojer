@@ -263,7 +263,7 @@ async function construireArchive(
       nbVerifsEnRetard = data.verifsEnRetard.length;
       inventaire = data.couverture ? faitInventaire(data.couverture) : null;
       const buf = await rendrePdf({ type: "dossier-conformite", props: { data } }, { origine: "zip", signal });
-      zip.file(PIECES_ZIP.dossier, new Uint8Array(buf));
+      zip.file(PIECES_ZIP.dossier, vueSur(buf));
       // CE QUI EST IMPRIMÉ APRÈS : collectées avant, les échéances
       // contractuelles et les rythmes étaient annoncés « imprimés dans ce
       // dossier » pour un PDF refusé ou en échec (lot pdf-b0, 2026-11-10).
@@ -331,7 +331,7 @@ async function construireArchive(
           historique,
         },
       }, { origine: "zip", signal });
-      zip.file(fichierDuerp(versionCourante.numero), new Uint8Array(buf));
+      zip.file(fichierDuerp(versionCourante.numero), vueSur(buf));
     }
   } catch (e) {
     // On continue même si une brique échoue : le README dira que le DUERP
@@ -354,7 +354,7 @@ async function construireArchive(
       // rendu : les fichiers annexés vont au ZIP même si le PDF est refusé.
       annexesListees = data.annexes ?? [];
       const buf = await rendrePdf({ type: "registre", props: { data } }, { origine: "zip", signal });
-      zip.file(PIECES_ZIP.registre, new Uint8Array(buf));
+      zip.file(PIECES_ZIP.registre, vueSur(buf));
       // Après le rendu, comme pour 01 : le README n'annonce que ce qui est
       // imprimé.
       for (const v of data.verifsEnAttente) {
@@ -405,7 +405,7 @@ async function construireArchive(
     const data = await construirePlanActionsData(db, id);
     if (data) {
       const buf = await rendrePdf({ type: "plan-actions", props: { data } }, { origine: "zip", signal });
-      zip.file(PIECES_ZIP.plan, new Uint8Array(buf));
+      zip.file(PIECES_ZIP.plan, vueSur(buf));
     }
   } catch (e) {
     noterEchec(PIECES_ZIP.plan, e);
@@ -755,4 +755,9 @@ async function construireArchive(
   const filename = `Dossier_controle_${slugifyFilename(etablissement.raisonDisplay)}_${cleJourCivil(maintenant)}.zip`;
 
   return { zip, filename };
+}
+
+/** Une vue sur le Buffer d'un PDF, sans le recopier (revue de B1). */
+function vueSur(buf: Buffer): Uint8Array {
+  return new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength);
 }

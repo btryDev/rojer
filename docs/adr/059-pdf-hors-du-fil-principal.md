@@ -87,12 +87,21 @@ long, ni le processus contre un seul gros.
 
 - Les documents PDF n'importent plus aucun module serveur (`fraicheur-texte.ts`,
   corpus lus par fichier) : une nouvelle dépendance serveur dans un document
-  casse la garde du paquet.
+  casse la garde du paquet — pour les motifs que ce test connaît (Prisma,
+  Better Auth, Next, `src/lib/auth`, `src/lib/prisma`, `server-only`), pas
+  au-delà.
 - Le fil ne sert qu'EN PRODUCTION, où il doit exister (sinon le premier
   export échoue). Hors production, la mise en page reste dans le processus,
   avec le code des documents à jour : un fil construit au démarrage de
   `next dev` imprimerait l'ancienne version d'un document modifié depuis.
   `PDF_WORKER=1` force le fil en local ; `pnpm pdf-worker` le construit.
+  `pnpm build && pnpm start` en local est en production : il exige
+  `pnpm pdf-worker` (sinon le serveur refuse de démarrer), et un `dist-pdf`
+  périmé y imprime les anciens documents.
+- Au démarrage (`src/instrumentation.ts`, `pdf/worker/demarrage.ts`), la
+  production refuse de démarrer sans le fichier du fil, ou avec un
+  `--max-old-space-size` (option de Node ou `NODE_OPTIONS`) qui annulerait
+  sa borne de tas ; le fil revérifie sa limite réelle avant de rendre.
 - Les seuils du garde-fou et les deux réglages du fil se remesurent avec le
   fil, en XS et en S (B3) ; les documents autres que le registre restent à
   mesurer.

@@ -3,6 +3,8 @@
 // `register()` : Next l'exécute une fois, au démarrage d'une instance, avant
 // de servir la moindre requête. On y valide l'environnement (`src/env.ts`) :
 // une variable requise manquante empêche le serveur de démarrer, avec son nom.
+// Et le fil des PDF (ADR-059) : sans son fichier, ou avec un
+// `--max-old-space-size` qui annule sa borne de tas, pas de démarrage.
 // Côté Node seulement — le module de validation est `server-only` et lit des
 // variables serveur ; le runtime edge n'est pas utilisé par l'application.
 //
@@ -16,6 +18,13 @@ export async function register(): Promise<void> {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
   const { validerEnvironnementAuDemarrage } = await import("./env");
   validerEnvironnementAuDemarrage();
+  // Le fil des PDF (ADR-059) : son fichier et sa borne de tas, vérifiés ici
+  // plutôt qu'au premier export. Pas pendant `next build`, qui ne sert rien
+  // et précède la construction du fil.
+  if (process.env.NEXT_PHASE !== "phase-production-build") {
+    const { verifierFilDesPdfAuDemarrage } = await import("./lib/pdf/worker/demarrage");
+    verifierFilDesPdfAuDemarrage();
+  }
 }
 
 export const onRequestError: Instrumentation.onRequestError = async (

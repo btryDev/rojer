@@ -17,7 +17,7 @@ function texte(): string {
   // Le fichier du corpus, pas l'index : l'index charge tout le référentiel,
   // qui n'a rien à faire dans le fil des PDF (lot pdf-b1).
   const corpus = CODE_TRAVAIL_INFORMATION_TRAVAILLEURS;
-  const article = corpus?.articles.find((a) => a.ref === "R. 4121-4");
+  const article = corpus.articles.find((a) => a.ref === "R. 4121-4");
   if (!article?.citationCle)
     throw new Error("R. 4121-4 n'a plus de verbatim au corpus : le PDF n'a rien à citer.");
   return article.citationCle;
