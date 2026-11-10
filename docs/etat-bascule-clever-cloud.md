@@ -143,6 +143,19 @@ connecteur MCP OAuth de Supabase n'existe plus — garder la suppression de
   après le CHECK et le déclencheur) ; les quatre autres ne l'ont pas. Rien à
   remettre à zéro.]
 
+- **Abonnements et audit de sécurité** (2026-11-10) :
+  - suppression d'un compte sans abonnement depuis douze mois, après deux
+    e-mails (J-30, J-7), ADR-058 (#265) ;
+  - le webhook Stripe a son propre client, aux appels courts (#274) ;
+  - le webhook ne fait plus qu'enregistrer et répondre : une file en base
+    traite, une relecture par client sous bail à jeton, relances sur trois
+    jours puis alerte e-mail, rapprochement quotidien, litiges et
+    remboursements signalés ; la crontab tourne **chaque minute**, les
+    tâches du jour une fois par jour civil (ADR-053 § 5 amendé, #277) ;
+  - la saisie fermée est refusée dans le client borné de la session, même
+    si le compte actif change dans un autre onglet (ADR-053 § 3 amendé,
+    #281).
+
 ## Ce qui reste avant la bascule
 
 Gestes de la propriétaire (Clever Cloud) :
@@ -154,6 +167,12 @@ Gestes de la propriétaire (Clever Cloud) :
    `BASE_CA_PEM`, celles de Mailpace (nom exact à confirmer :
    `MAILPACE_API_TOKEN`), `STORAGE_DRIVER=s3` et celles du stockage. En
    production, `STORAGE_DRIVER=local` est refusé au démarrage, c'est voulu.
+   [2026-11-10] Et, même avant l'ouverture des abonnements :
+   `TACHES_SECRET` (`openssl rand -base64 32`), que présente la crontab de
+   chaque minute (ménage des fichiers, file Stripe, tâches du jour) — sans
+   lui, la route répond 404 et rien ne tourne ; `ALERTES_EMAIL` =
+   `paloma.sanchez@btry.fr` (échec durable de la file Stripe, litige,
+   remboursement ; sans elle, les alertes ne vont qu'au journal).
 3. Questions au support : chiffrement au repos, restauration à un instant
    donné (PITR), durée de conservation des sauvegardes.
 
@@ -208,6 +227,17 @@ Ajoutés le 2026-11-10 (audit de sécurité de `cc`, rapport hors dépôt :
    Le code ne sert les fichiers que par l'application (pas d'URL signée ni
    publique) ; la politique du compartiment ne se lit pas dans le dépôt.
 
+Ajoutés le 2026-11-10 (file Stripe et tâches, #277) :
+10. **La crontab** : journaux du démarrage, « Importing cronjobs » ; puis,
+    chaque minute, `/api/taches/chaque-minute` répond 202 ; après 9 h, la
+    ligne « tâches du AAAA-MM-JJ : … » apparaît une fois par jour, même
+    avec plusieurs instances.
+11. **Les migrations du 2026-11-10** : `prisma migrate status` sans échec ;
+    l'index `EvenementStripe_traiteLe_prochainEssaiLe_idx` est posé en
+    `CONCURRENTLY` par une migration seule — en cas d'échec, la procédure
+    est écrite en tête de
+    `prisma/migrations/20261110100100_evenement_stripe_index_file/migration.sql`.
+
 Abonnements (ne bloquent pas la bascule ; rien à poser tant qu'ils ne
 sont pas ouverts) — **la liste de lancement, dans l'ordre :
 `docs/lancement-abonnements.md`** (2026-11-09) :
@@ -231,6 +261,21 @@ sont pas ouverts) — **la liste de lancement, dans l'ordre :
   `/api/taches/chaque-minute` **chaque minute** (`clevercloud/taches.sh`) :
   la file Stripe, puis les tâches du jour dès 9 h, une fois par jour civil
   (`TacheQuotidienne`). Poser aussi `ALERTES_EMAIL` (ADR-053 § 5, amendé).]
+- **Webhook, litiges, remboursements** (2026-11-10, #277) — tableau de bord
+  Stripe de production :
+  - abonner la destination du webhook, en plus de la liste d'origine, à
+    `v1.charge.dispute.created` et `v1.charge.refunded` (liste complète :
+    `EVENEMENTS_ECOUTES`, `src/lib/stripe/webhook.ts`) ;
+  - Paramètres > Billing > Abonnements, « Gérer les paiements contestés » →
+    **annuler l'abonnement immédiatement** : sans ce réglage, un abonnement
+    contesté continue de prélever (doc Stripe) ;
+  - un remboursement ne change pas l'abonnement : pour couper l'accès,
+    rembourser **et** résilier dans Stripe ; Rojer ferme alors les droits.
+- **Décision à prendre au lancement** (ADR-058, point ouvert) : la date de
+  départ des douze mois pour les comptes créés avant l'ouverture de l'offre
+  — ils n'ont pas de ligne d'abonnement, et ne sont donc jamais avertis ni
+  supprimés tant qu'elle n'est pas posée. Proposition : le jour du
+  lancement.
 - **Accès au tableau de bord Stripe** (2026-11-09) : il fait partie du
   périmètre de confiance — on y change le compte Rojer d'un client
   (`metadata.compteId`), on y offre une formule, on y rembourse. Double
