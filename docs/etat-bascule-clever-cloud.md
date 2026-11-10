@@ -67,8 +67,10 @@ connecteur MCP OAuth de Supabase n'existe plus — garder la suppression de
   l'ADR). [2026-11-03 : sans objet, fusionné avant la bascule.] ~~Pas encore d'écran : invitation, lecture seule et membres viennent
   aux lots suivants.~~ [2026-11-03 : lots 3 et 4 sur la même PR — lecture
   seule (client borné et `verifierSaisie`), écran « Membres », invitation par
-  e-mail, choix du compte. Reste : masquer les boutons de saisie pour la
-  lecture seule, plafond de membres par formule.]
+  e-mail, choix du compte. ~~Reste : masquer les boutons de saisie pour la
+  lecture seule, plafond de membres par formule.~~ [2026-11-09 : le plafond
+  de membres est posé (5a7ca218, lot A des plafonds) ; le masquage en lecture
+  seule et le choix du compte dans la gélule sont livrés par #262.]]
 
 - **Reports de `main`** (2026-11-03) : borne d'effectif à 49 (#161, #163) ;
   effectif de la société = somme de ses sites, apprentis, effectif hors
@@ -113,31 +115,33 @@ connecteur MCP OAuth de Supabase n'existe plus — garder la suppression de
 
 ### Multi-utilisateurs : ce qui reste (2026-11-03)
 
-- **Recette à rejouer AVANT la bascule** : la matrice « 75 routes × 2 comptes »
-  du 2026-10-31 n'a pas été rejouée depuis l'ADR-054 (son outil n'est pas
-  versionné). La rejouer avec un compte A à **deux membres** (un membre, un
-  lecture seule) et un compte B, plus un membre retiré (ADR-054 § 9). Les
-  tests sur base réelle (`portee/client`, `auth/membres`,
-  `membres/invitation` .integration) couvrent la borne, l'appartenance et le
-  parcours d'invitation, pas chaque route.
-- **Décision à confirmer par la propriétaire** : supprimer une entreprise ou
+- **Recette à rejouer AVANT la bascule** : [2026-11-09 : la liste est
+  écrite, section « Recette « pages × comptes à plusieurs membres » »
+  plus bas.]
+- ~~**Décision à confirmer par la propriétaire** : supprimer une entreprise ou
   un établissement est réservé au propriétaire du compte
   (`verifierProprietaire`), choix de réalisation (ADR-054, « Ce que la
   réalisation a précisé, lots 3 et 4 »). Pour l'ouvrir aux membres :
   `verifierRole` à la place, dans `entreprises/actions.ts` et
-  `etablissements/actions.ts`.
-- **Lot à part, lecture seule** : masquer les boutons de saisie pour un
+  `etablissements/actions.ts`.~~ [2026-11-09, décision de la propriétaire :
+  la suppression reste réservée au propriétaire. Rien à changer.]
+- ~~**Lot à part, lecture seule** : masquer les boutons de saisie pour un
   membre en lecture seule (environ 80 écrans de formulaires). D'ici là, tout
   geste tenté aboutit à `/compte/lecture-seule`, et le client borné refuse
-  l'écriture.
-- **Plafond de membres par formule** : à poser quand la gamme est arrêtée
+  l'écriture.~~ [2026-11-09 : livré par #262.]
+- ~~**Plafond de membres par formule** : à poser quand la gamme est arrêtée
   (`membershipLimit` du plugin, lu depuis la formule, invitations en attente
-  comprises ; ADR-054 § 8). Le plugin garde aujourd'hui son défaut de 100.
-- **Choix du compte dans la gélule** : il n'existe que sur l'écran « Membres »
-  (ADR-054 § 7).
-- **Bases locales** qui ont joué `20261103120000_comptes_et_membres` avant
+  comprises ; ADR-054 § 8). Le plugin garde aujourd'hui son défaut de 100.~~
+  [2026-11-09 : posé, 5a7ca218.]
+- ~~**Choix du compte dans la gélule** : il n'existe que sur l'écran « Membres »
+  (ADR-054 § 7).~~ [2026-11-09 : livré par #262.]
+- ~~**Bases locales** qui ont joué `20261103120000_comptes_et_membres` avant
   son CHECK et son déclencheur : à remettre à zéro (aucune n'est en
-  production).
+  production).~~ [2026-11-09, vérifié sur les bases du conteneur
+  `duerp-verif-db` : seules `duerp_cc_visuel` et `duerp_quota_navig` portent la
+  migration, avec l'empreinte du fichier actuel (appliquée le 2026-11-05,
+  après le CHECK et le déclencheur) ; les quatre autres ne l'ont pas. Rien à
+  remettre à zéro.]
 
 ## Ce qui reste avant la bascule
 
@@ -158,6 +162,9 @@ Documents à valider puis fusionner :
   la bascule (couper Vercel avant de fusionner `cc`).
 - PR #130 — ADR-052 (Better Auth).
 
+Avant d'y faire pointer le domaine : jouer la recette « pages × comptes
+à plusieurs membres » (section suivante).
+
 Le jour J : suivre le plan de #126.
 
 À vérifier au premier déploiement sur Clever Cloud (ajouté le 2026-11-05,
@@ -174,9 +181,36 @@ audit du proxy de `cc` ; le code est fusionné, il n'a jamais tourné là-bas) :
    tête et vérifier que l'IP lue est la dernière entrée, celle du répartiteur
    (`src/lib/securite/ip-client.ts`, « À VÉRIFIER au premier déploiement
    CC ») — elle sert à la limitation de débit et à la preuve de signature.
+4. **Le rôle de la base** (ajouté le 2026-11-09, ADR-051 : RLS écartée,
+   décision de la propriétaire) : sur l'add-on de Rojer, lancer
+   `SELECT rolname, rolsuper, rolcreaterole, rolbypassrls FROM pg_roles WHERE rolname = current_user;`
+   Attendu : propriétaire des tables, `false` partout (relevé sur un add-on
+   XXS 15.17 le même jour). Autre chose : le dire, l'ADR-051 se relit.
+5. **`scripts/sante-base.sql` avant et après la bascule** : la section
+   « D bis » (clés croisées entre comptes, générée) doit rendre 0 partout.
+
+Ajoutés le 2026-11-10 (audit de sécurité de `cc`, rapport hors dépôt :
+`~/security-audit-skill/duerp-cc/run-1/`) :
+6. **IPv6** : le domaine de production a-t-il un enregistrement AAAA, et
+   l'adresse IPv6 du client arrive-t-elle en dernière entrée de
+   `X-Forwarded-For` ? Les limites de débit regroupent l'IPv6 par /64
+   (#271) ; sans IPv6 servie, la question tombe. Sans `X-Forwarded-For`
+   lisible, l'inscription n'a **aucune** limite par IP (`ipClient` rend
+   `null`) : le point 3 le tranche.
+7. **Instances et mémoire** : combien d'instances, quelle RAM, quel
+   `EXPORTS_SIMULTANES`. La file d'export et les recalculs de `/verifier`
+   sont bornés **par processus** (#273) : ces chiffres disent ce que tient
+   l'instance sous charge.
+8. **`PUBLIC_APP_URL` en `https://`** : `src/env.ts` accepte aussi `http://`
+   en production, et Better Auth en déduit l'attribut `Secure` et le préfixe
+   `__Secure-` des cookies de session.
+9. **Le compartiment Cellar est privé** : ni lecture publique, ni listage.
+   Le code ne sert les fichiers que par l'application (pas d'URL signée ni
+   publique) ; la politique du compartiment ne se lit pas dans le dépôt.
 
 Abonnements (ne bloquent pas la bascule ; rien à poser tant qu'ils ne
-sont pas ouverts) :
+sont pas ouverts) — **la liste de lancement, dans l'ordre :
+`docs/lancement-abonnements.md`** (2026-11-09) :
 - `STRIPE_SECRET_KEY` et `STRIPE_WEBHOOK_SECRET` vont par deux. En
   production, seule une clé **restreinte** de production (`rk_live_…`) est
   admise, et seulement si `APP_ENV=production` est posée : sans `APP_ENV`,
@@ -184,6 +218,150 @@ sont pas ouverts) :
   pas le serveur, et le démarrage le signale.
 - Le contenu et les prix des formules ne sont pas arrêtés (brouillon de la
   session « pricing » : branche `docs/offres-abonnement`).
+- **TVA** (2026-11-09) : créer dans le tableau de bord de production un taux
+  de TVA de 20 %, pays France, type TVA, « en sus du prix » (exclusif). Sans
+  lui, aucun essai ni abonnement ne se crée (notes du chantier, § 12).
+- **Tâche quotidienne** (2026-11-09) : poser `TACHES_SECRET`
+  (`openssl rand -base64 32`) sur l'application. La crontab
+  (`clevercloud/cron.json`, 9 h heure de Paris) appelle
+  `/api/taches/quotidiennes` avec ce secret : rappel de la veille de la fin
+  de l'essai. Sans lui, elle s'arrête en le disant dans les journaux, et la
+  route répond 404. Le rappel des 7 jours est un réglage du tableau de bord
+  Stripe (notes du chantier, § 13).
+- **Accès au tableau de bord Stripe** (2026-11-09) : il fait partie du
+  périmètre de confiance — on y change le compte Rojer d'un client
+  (`metadata.compteId`), on y offre une formule, on y rembourse. Double
+  authentification obligatoire ; comptes nominatifs, jamais partagés, au
+  rôle minimal ; l'application n'utilise que la clé restreinte ci-dessus.
+
+## Recette « pages × comptes à plusieurs membres » (avant la bascule)
+
+Ajoutée le 2026-11-09. À jouer **sur l'application déployée chez Clever
+Cloud, avant d'y faire pointer le domaine**, dans un vrai navigateur. Les
+tests automatiques éprouvent déjà la borne au compte et à l'établissement
+contre une vraie base (matrice d'isolation, portée d'établissement,
+appartenance, invitation) ; la recette vérifie le reste : l'application
+réelle, son proxy, ses réglages, et les pages qu'aucun test ne parcourt.
+Elle remplace la matrice « 75 routes × 2 comptes » du 2026-10-31, jouée
+avant l'ADR-054 (plusieurs membres par compte).
+
+Un écart = noter la page, la personne, ce qui s'est affiché. Toute donnée
+d'un autre compte visible, ou toute écriture qui passe là où elle devrait
+être refusée, **bloque la bascule**.
+
+### 1. Préparer
+
+Les personnes (six adresses e-mail de test, sur un domaine qui accepte
+tout — jamais `btry.fr`) :
+
+| Qui | Rôle |
+|---|---|
+| **P** | propriétaire du compte A |
+| **M** | membre du compte A |
+| **L** | membre en lecture seule du compte A |
+| **D** | membre du compte A **et** propriétaire du compte B |
+| **X** | propriétaire du compte B seulement |
+| **R** | membre du compte A, retiré pendant la recette (étape 5) |
+
+Les données : dans **A** comme dans **B**, une entreprise et **deux**
+établissements (A1, A2 ; B1, B2), et dans A1 et B1 au moins un élément de
+chaque module, pour avoir des adresses à essayer :
+un équipement avec un contrôle, un rapport déposé (PDF) et un point à
+corriger avec sa pièce ; un prestataire avec une pièce ; un salarié avec un
+titre ; un DUERP avec une unité, un risque, une mesure et **une version
+validée** ; un permis de feu ; un plan de prévention ; une action ; une
+analyse du carnet sanitaire ; une pièce d'un état permanent ; la photo de
+l'établissement ; une demande de signature ; un lien d'accès prestataire
+(jeton). Relever dans un fichier les **adresses** de B (identifiants dans
+l'URL) : elles servent à l'étape 2.
+
+### 2. Isolation : rien de B depuis A
+
+Connecté en **P** (puis refaire les lignes marquées ★ en **L**), coller
+chaque adresse de B relevée à l'étape 1. Attendu partout : **page 404**
+(ou « introuvable »), jamais une donnée de B, jamais une erreur 500.
+
+| Famille | Adresses à essayer avec un identifiant de B |
+|---|---|
+| Établissement ★ | `/etablissements/[B1]` et chaque sous-page : `accessibilite`, `actions`, `batiments`, `calendrier`, `carnet-sanitaire`, `connecter`, `controle`, `documents`, `duerp`, `equipe`, `equipements`, `etats-permanents`, `guide`, `modifier`, `perimetre`, `permis-feu`, `plan-prevention`, `prescriptions`, `prestataires`, `quand-ca-arrive`, `registre` |
+| Éléments ★ | `/etablissements/[A1]/equipements/[équipement de B]` (l'établissement de A, l'élément de B : le cas le plus sournois), idem pour `actions/[…]`, `permis-feu/[…]`, `plan-prevention/[…]`, `prestataires/[…]`, `equipe/[…]`, `verifications/[…]`, `registre/[section]`, `equipements/[…]/controles/[…]`, `equipements/[…]/points/[…]` |
+| Entreprise ★ | `/entreprises/[entreprise de B]`, `…/effectif`, `…/modifier` |
+| DUERP ★ | `/duerp/[DUERP de B]` et `activites`, `risques`, `risques/[unité]`, `risques/[unité]/[risque]`, `…/mesures`, `secteur`, `synthese`, `transverses`, `unites` |
+| Fichiers et PDF ★ | `/api/etablissements/[B1]/` + `controle-zip`, `dossier-conformite/pdf`, `plan-actions/pdf`, `registre/pdf`, `photo`, `pieces/[pièce]`, `equipe/[salarié]/donnees`, `equipements/[…]/points-a-corriger/pdf` ; `/api/rapports/[rapport de B]/fichier` ; `/api/points/[point de B]/piece` ; `/api/prestataires/[…]/pieces/[…]` et `pieces-precedentes/[…]` ; `/api/analyses-legionelles/[…]/rapport` ; `/duerp/[DUERP de B]/pdf/preview` ; `/duerp/[DUERP de B]/versions/1/pdf` |
+| Listes | `/entreprises`, le sélecteur d'établissement de la gélule, la recherche s'il y en a une : seuls A1 et A2 apparaissent |
+
+Et dans l'autre sens, une fois, en **X** : trois adresses de A prises au
+hasard dans le tableau → 404.
+
+### 3. Les rôles dans le compte A
+
+Parcourir A1 en entier (chaque entrée de la barre latérale) avec chaque
+personne :
+
+| Geste | P | M | L |
+|---|---|---|---|
+| Voir toutes les pages et télécharger les PDF | oui | oui | oui |
+| Boutons « Ajouter », « Modifier », « Supprimer », formulaires | visibles | visibles | **masqués** ; réponses Oui / Non affichées mais inertes, au clic **et au clavier** (Tab puis Entrée) |
+| Créer, modifier un élément (équipement, salarié, risque…) | oui | oui | refusé : une adresse `…/nouveau` ou `…/modifier` tapée à la main mène à `/compte/lecture-seule`, rien n'est écrit |
+| Supprimer une entreprise ou un établissement | oui | **refusé** | refusé |
+| `/compte/membres` : inviter, changer un rôle, retirer | oui | lecture seule de la liste | lecture seule de la liste |
+| `/compte/abonnement` : changer de formule, portail de paiement | oui | non | non |
+| Lien d'accès prestataire : créer, révoquer | oui | oui | non |
+
+En **L**, un lecteur d'écran (VoiceOver : Cmd + F5) sur une question Oui /
+Non du DUERP doit annoncer le bouton « indisponible ».
+
+### 4. Changer de compte
+
+En **D** : la gélule propose A et B. Passer de A à B : les établissements
+affichés sont B1 et B2, plus rien de A. Revenir à A. Puis, **avec deux
+onglets** ouverts (un sur A1, l'autre après passage sur B) : recharger le
+premier — il suit le compte choisi, ou renvoie à l'accueil, sans mélanger
+une page de A et des données de B.
+
+En **X** (un seul compte) : la gélule ne propose aucun choix.
+
+### 5. Retirer un membre
+
+**R** ouvre A1 dans un onglet et y laisse un formulaire ouvert. **P** le
+retire depuis `/compte/membres`. Puis **R** :
+- clique un lien dans l'onglet resté ouvert → plus aucune donnée de A
+  (renvoyé à l'onboarding ou à l'accueil) ;
+- envoie le formulaire resté ouvert → refusé, rien n'est écrit (le
+  vérifier en **P**) ;
+- tape une adresse de A1 relevée avant → 404.
+
+Même chose en rétrogradant **M** en lecture seule : dès la page suivante,
+ses boutons disparaissent.
+
+### 6. Invitations
+
+- **P** invite une nouvelle adresse en « membre » : l'e-mail arrive, le lien
+  ouvre l'invitation, l'acceptation donne accès à A et à rien d'autre.
+- Le même lien ouvert connecté avec **une autre adresse** (X) → 404, pas
+  d'acceptation possible.
+- **M** et **L** n'ont pas de bouton d'invitation ; l'action tentée est
+  refusée.
+- Une invitation annulée ou expirée → le lien ne mène plus nulle part.
+
+### 7. Accès sans session
+
+- **Lien prestataire** de A1 (`/acces/[jeton]`), ouvert dans une fenêtre
+  privée : il montre A1 seulement — ni A2 (même compte, autre
+  établissement), ni B. Révoqué par P : il ne s'ouvre plus.
+- **`/verifier/[signature]`** d'une signature de A : la vérification
+  s'affiche ; un identifiant inventé → introuvable.
+- **`/signe/[signature]`** : ne s'ouvre que pour la personne invitée à
+  signer.
+- **Connecteur MCP** (`/etablissements/[A1]/connecter`) : branché depuis
+  A1, il ne lit que A1.
+
+### 8. Après la recette
+
+- `scripts/sante-base.sql`, section « D bis » (clés croisées entre
+  comptes) : 0 partout.
+- Supprimer les comptes et les adresses de test.
+- Noter ici la date, le commit déployé et le résultat (ou les écarts).
 
 ## Règles de travail qui valent ici
 
