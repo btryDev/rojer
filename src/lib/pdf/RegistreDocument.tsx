@@ -7,7 +7,7 @@ import {
 } from "@/lib/points-a-corriger/libelles";
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import type { ManqueCouverture } from "@/lib/perimetre/couverture";
-import { phraseFraicheur, type FraicheurCalendrier } from "@/lib/calendrier/fraicheur";
+import { phraseFraicheur, type FraicheurCalendrier } from "@/lib/calendrier/fraicheur-texte";
 import { faitAttenteVide } from "./fait-retards";
 import {
   destinatairesRegistre,

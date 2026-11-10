@@ -19,7 +19,7 @@
 //
 // Module pur : il ne lit rien, il reçoit ce que l'appelant a lu.
 
-import { calendrierIncertain, type FraicheurCalendrier } from "@/lib/calendrier/fraicheur";
+import { calendrierIncertain, type FraicheurCalendrier } from "@/lib/calendrier/fraicheur-texte";
 
 export type LectureRetards = {
   /** Le nombre de vérifications en retard, ou `null` s'il n'a pas pu être lu. */
