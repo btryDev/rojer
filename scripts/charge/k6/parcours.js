@@ -1,14 +1,17 @@
-// Scénarios de lecture du test de charge (`docs/plan-test-de-charge.md` § 5) :
-// parcours Consultation (70) et DUERP (5), remis à leurs parts relatives
-// tant que Saisie et Export (C3) ne sont pas écrits.
+// Scénarios du test de charge (`docs/plan-test-de-charge.md` § 5). Parcours
+// mêlés selon le plan : Consultation 70, Saisie 20, Export 5, DUERP 5 ;
+// `PARCOURS=lecture` garde les seuls parcours de lecture (Consultation et
+// DUERP, remis à leurs parts relatives).
 //
-//   k6 run -e SCENARIO=fumee scripts/charge/k6/lecture.js
+//   k6 run -e SCENARIO=fumee scripts/charge/k6/parcours.js
 //   SCENARIO : fumee | reference | paliers | nominale | pointe | endurance | rupture
 //   OBJECTIF : utilisateurs de la charge nominale (50) ; DUREE : endurance (30m)
 //   DOSSIER  : n du dossier pour `reference` (1 = gros, le premier démo sinon)
-import { group } from "k6";
+import http from "k6/http";
+import { check, group } from "k6";
 
-import { dossierDuVu, lire, ouvrir, pages } from "./commun.js";
+import { BASE, dossierDuVu, lire, ouvrir, pages } from "./commun.js";
+import { deposerRapport } from "./ecriture.js";
 
 const OBJECTIF = Number(__ENV.OBJECTIF || 50);
 
@@ -62,6 +65,7 @@ export const options = {
     "http_req_duration{page:DUERP (unités)}": ["p(95)<1000"],
     "http_req_duration{page:DUERP (synthèse)}": ["p(95)<1000"],
     http_req_failed: ["rate<0.001"],
+    "http_req_duration{page:Dépôt d'un rapport}": ["p(95)<3000"],
     isolation_page_d_un_autre_compte: ["rate==0"],
   },
   summaryTrendStats: ["avg", "med", "p(90)", "p(95)", "p(99)", "max"],
@@ -93,11 +97,44 @@ function duerp(d) {
   });
 }
 
+/** Saisie : board → dépôt d'un rapport (PDF de 1 Mo) → board. */
+function saisie(d) {
+  group("saisie", () => {
+    ouvrir(d, "Tableau de bord");
+    lire();
+    deposerRapport(d);
+    lire();
+    ouvrir(d, "Tableau de bord");
+    lire();
+  });
+}
+
+/**
+ * Export : le registre en PDF. Un 503 est la file des exports qui se dit
+ * pleine (`exports/limite.ts`) : attendu sous forte charge, compté à part.
+ */
+function exporter(d) {
+  group("export", () => {
+    ouvrir(d, "Registre");
+    lire();
+    const r = http.get(`${BASE}/api/etablissements/${d.etablissementId}/registre/pdf`, {
+      headers: { cookie: d.cookie },
+      redirects: 0,
+      tags: { page: "Export registre PDF" },
+      responseCallback: http.expectedStatuses(200, 503),
+    });
+    check(r, { "Export : 200 ou 503": (x) => x.status === 200 || x.status === 503 });
+    lire();
+  });
+}
+
 export default function () {
   const d = dossierDuVu();
-  // Parts du § 5 entre parcours de lecture : 70 / 5, soit 14 sur 15.
-  if (Math.random() < 14 / 15) consultation(d);
-  else duerp(d);
+  const t = Math.random() * (__ENV.PARCOURS === "lecture" ? 75 : 100);
+  if (t < 70) consultation(d);
+  else if (t < 75) duerp(d);
+  else if (t < 95) saisie(d);
+  else exporter(d);
 }
 
 /** Référence par page (scénario B) : chaque page, sans pause. */

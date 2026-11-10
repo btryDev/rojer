@@ -90,7 +90,7 @@ def main():
         pass
 
     pages = ["Tableau de bord", "Calendrier", "Équipements", "Fiche équipement", "Registre",
-             "DUERP (unités)", "DUERP (synthèse)", "(toutes)"]
+             "DUERP (unités)", "DUERP (synthèse)", "Dépôt d'un rapport", "Export registre PDF", "(toutes)"]
     print("| Palier (VU) | Pages/s | Erreurs | " + " | ".join(f"{p} p95" for p in pages)
           + " | CPU app max | Mémoire app (fin) | Connexions actives max | Sonde p95 |")
     print("|" + "---|" * (len(pages) + 7))
