@@ -68,7 +68,7 @@ describe("reponsePdf", () => {
       throw new PdfTropVolumineux("dossier-conformite", { total: 9_999, plusGrosBloc: 10 });
     });
     const r = await reponsePdf(demande, "a.pdf", "u-1");
-    expect(r.status).toBe(503);
+    expect(r.status).toBe(422);
     expect(r.headers.get("Retry-After")).toBeNull();
     expect(await r.text()).toMatch(/^Le dossier de conformité est trop volumineux/);
     expect(h.reserve).not.toHaveBeenCalled();

@@ -44,7 +44,8 @@ describe("reponsePdf avec la vraie file d'export", () => {
         statuts.push("échec");
       }
     }
-    // Une place perdue rendrait 429 ou 503 « Trop d'exports » après 20 s.
-    expect(statuts).toEqual([503, 200, 503, 200, "échec", 200]);
+    // Une place perdue rendrait 429 ou 503 « Trop d'exports » après 20 s ;
+    // le refus pour volume, lui, est un 422.
+    expect(statuts).toEqual([422, 200, 422, 200, "échec", 200]);
   });
 });

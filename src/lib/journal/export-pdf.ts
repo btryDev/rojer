@@ -33,11 +33,12 @@ type NiveauJournal = "info" | "warn" | "error";
  * « Approche » ne se lit pas pareil pour les deux seuils (revue finale de la
  * PR #286) :
  *   - le TOTAL grandit avec les années : il avertit dès la MOITIÉ ;
- *   - le BLOC, non — la plus grosse `<Page>` d'un registre est le corps des
- *     fiches, qui suit le parc (environ 300 lignes pour les 100 appareils de
- *     la cible, sur 400) : à la moitié, tout registre de la cible
- *     avertirait toujours, et le signal ne dirait plus rien. Il avertit à
- *     90 % de son seuil.
+ *   - le BLOC, non : il dit qu'un tableau d'un seul tenant approche de son
+ *     coût quadratique. Le registre n'en a plus (toutes ses pages font 100
+ *     lignes au plus depuis la revue de la PR #286) ; les autres documents
+ *     suivent le parc, pas les années. Il avertit à 90 % de son seuil, quand
+ *     le refus est proche — à la moitié, des documents ordinaires
+ *     avertiraient sans rien annoncer.
  */
 const PART_AVERTISSEMENT_TOTAL = 0.5;
 const PART_AVERTISSEMENT_BLOC = 0.9;

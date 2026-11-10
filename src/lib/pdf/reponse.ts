@@ -24,7 +24,10 @@ const SANS_CACHE = { "Cache-Control": "no-store" } as const;
  * La route passe une DEMANDE (`{ type, props }`), plus un élément React (lot
  * pdf-b0, 2026-11-10) : elle est pesée AVANT la file d'export (un refus ne
  * fait pas attendre), puis `mettreEnPage` la met en page et la journalise. Un
- * refus répond 503 SANS `Retry-After` : réessayer ne changerait rien, et le
+ * refus répond ~~503~~ 422 [2026-11-10, décision de la propriétaire : un refus
+ * pour volume est définitif — un 503 se confondait avec la file pleine et se
+ * faisait relancer par les clients et les sondes] SANS `Retry-After` :
+ * réessayer ne changerait rien, et le
  * document reste à l'écran.
  */
 export async function reponsePdf(
@@ -58,10 +61,15 @@ export async function reponsePdf(
   });
 }
 
-/** Le refus du garde-fou : 503, texte, jamais en cache, sans `Retry-After`. */
+/**
+ * Le refus du garde-fou : 422 (Unprocessable Content), texte, jamais en
+ * cache, sans `Retry-After` — la demande est valide, son volume la rend
+ * impossible à traiter ici, et réessayer ne changerait rien. Le 503 reste à
+ * la file pleine (`exports/limite.ts`), qui, elle, est passagère.
+ */
 function reponseTropVolumineux(e: PdfTropVolumineux): Response {
   return new Response(messageTropVolumineux(e.type), {
-    status: 503,
+    status: 422,
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
       ...SANS_CACHE,

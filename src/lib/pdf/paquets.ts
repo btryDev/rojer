@@ -27,11 +27,34 @@ export const LIGNES_PAR_PAQUET = 100;
 
 /** Coupe une liste en paquets consécutifs, sans rien perdre ni réordonner. */
 export function enPaquets<T>(items: readonly T[], taille = LIGNES_PAR_PAQUET): T[][] {
+  return enPaquetsPeses(items, taille, () => 1);
+}
+
+/**
+ * Coupe une liste en paquets consécutifs de `taille` lignes PESÉES au plus
+ * (`poidsDe`), sans rien perdre ni réordonner. Un élément n'est jamais coupé :
+ * plus lourd à lui seul que `taille`, il fait son paquet.
+ */
+export function enPaquetsPeses<T>(
+  items: readonly T[],
+  taille: number,
+  poidsDe: (item: T) => number,
+): T[][] {
   verifierTaille(taille);
   const paquets: T[][] = [];
-  for (let i = 0; i < items.length; i += taille) {
-    paquets.push(items.slice(i, i + taille));
+  let courant: T[] = [];
+  let poidsCourant = 0;
+  for (const item of items) {
+    const poids = poidsDe(item);
+    if (courant.length > 0 && poidsCourant + poids > taille) {
+      paquets.push(courant);
+      courant = [];
+      poidsCourant = 0;
+    }
+    courant.push(item);
+    poidsCourant += poids;
   }
+  if (courant.length > 0) paquets.push(courant);
   return paquets;
 }
 

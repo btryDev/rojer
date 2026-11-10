@@ -5,6 +5,9 @@ import { SEUILS_PDF } from "./rendre";
 
 /** Une liste de `n` éléments quelconques. */
 const n = (k: number) => Array.from({ length: k }, (_, i) => ({ id: String(i) }));
+/** `k` vérifications en attente d'une ligne chacune (`lignesDeLAttente`). */
+const attentes = (k: number) =>
+  Array.from({ length: k }, (_, i) => ({ id: `v${i}`, contractuelle: false, rythmeRetenu: null, aConfirmer: [] }));
 /** Une demande construite sur des données partielles : seules les listes comptent. */
 const demande = (d: unknown) => d as DemandePdf;
 
@@ -35,12 +38,13 @@ describe("poidsDuDocument — registre", () => {
           { fiches: [{}] },
         ],
         rapports: [rapport(2026, 2), rapport(2026), { ...rapport(2025, 1), domaine: "electricite" }],
-        verifsEnAttente: n(4),
+        verifsEnAttente: attentes(4),
       }),
     );
-    // fiches 3 + 5 + 2 = 10 ; rapports 3 + 3 points + 1 mention R. 4226-19
-    // (le rapport d'électricité à points) = 7 ; attente 4.
-    expect(poids).toEqual({ total: 21, plusGrosBloc: 10 });
+    // Page des fiches : 3 + 5 + 2 = 10. Page de l'index : 3 rapports + 3
+    // points + 1 mention R. 4226-19 = 7, que rejoignent les 4 attentes (elles
+    // y tiennent) = 11.
+    expect(poids).toEqual({ total: 21, plusGrosBloc: 11 });
   });
 
   it("le corps des fiches est un seul bloc ; les rapports comptent par paquet", () => {
@@ -67,9 +71,23 @@ describe("poidsDuDocument — registre", () => {
     expect(Math.max(quatre.plusGrosBloc, elec.plusGrosBloc)).toBeLessThanOrEqual(SEUILS_PDF.registre.bloc);
   });
 
-  it("un journal de fiche plus long qu'un paquet devient le plus gros bloc", () => {
+  it("un journal de fiche de 600 lignes se découpe en pages de 100 : plus de refus du registre entier", () => {
+    // Avant la revue de la PR #286 : un bloc de 600, au-delà du seuil de 400,
+    // et le registre devenait définitivement inexportable.
     const poids = poidsDuDocument(registre({ parties: [{ fiches: [{ lignes: n(600) }] }] }));
-    expect(poids.plusGrosBloc).toBe(600);
+    expect(poids).toEqual({ total: 600, plusGrosBloc: 100 });
+  });
+
+  it("les vérifications en attente se pèsent à leurs lignes, comme les rapports", () => {
+    // 30 attentes à 4 lignes (marquage contractuel, rythme, « À confirmer ») :
+    // 25 tiennent avec l'index vide, 5 suivent sur la page suivante.
+    const lourdes = Array.from({ length: 30 }, (_, i) => ({
+      id: `v${i}`,
+      contractuelle: true,
+      rythmeRetenu: "1 fois par an",
+      aConfirmer: ["Effectif à confirmer."],
+    }));
+    expect(poidsDuDocument(registre({ verifsEnAttente: lourdes }))).toEqual({ total: 120, plusGrosBloc: 100 });
   });
 });
 
@@ -127,9 +145,24 @@ describe("poidsDuDocument — autres documents", () => {
       });
     // Unités 2 × 2 = 4 ; inventaire 3 risques + 5 mesures + 1 CMR = 9 ;
     // plan 3 + 3 prévues = 6 ; annexe 3 ; historique.
-    expect(poidsDuDocument(duerp(2))).toEqual({ total: 24, plusGrosBloc: 9 });
+    // Unités 2 × 2 = 4 ; inventaire 3 risques + 5 mesures + 1 CMR + 2 × 2
+    // listes par unité = 13 ; plan 3 + 3 prévues = 6 ; annexe 3 ; historique.
+    expect(poidsDuDocument(duerp(2))).toEqual({ total: 28, plusGrosBloc: 13 });
     // L'historique grossit d'une version par mise à jour : il finit par peser
     // plus que tout le reste.
-    expect(poidsDuDocument(duerp(40))).toEqual({ total: 62, plusGrosBloc: 40 });
+    expect(poidsDuDocument(duerp(40))).toEqual({ total: 66, plusGrosBloc: 40 });
+  });
+
+  it("DUERP : les activités déclarées comptent sur la page des unités", () => {
+    const avec = (activites: { exercee: boolean }[]) =>
+      poidsDuDocument(
+        demande({
+          type: "duerp",
+          props: { snapshot: { unites: [{ risques: [] }], couverture: { activites } }, historique: [] },
+        }),
+      );
+    // Une unité : 2 lignes ; + 3 activités exercées (la non exercée ne compte pas).
+    expect(avec([]).plusGrosBloc).toBe(2);
+    expect(avec([{ exercee: true }, { exercee: true }, { exercee: true }, { exercee: false }]).plusGrosBloc).toBe(5);
   });
 });

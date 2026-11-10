@@ -260,10 +260,15 @@ describe("RegistreDocument — index des rapports découpé", () => {
     expect(tetes).toHaveLength(5);
   });
 
-  it("met la tenue du registre une seule fois, après les vérifications en attente", () => {
+  it("met la tenue du registre une seule fois, sur la dernière section d'attente, après l'index", () => {
+    // Les sections sont des sous-composants : on lit leurs props.
+    const sections = noeuds.filter((n) => n.type === "SectionAttentePdf");
+    expect(sections.map((n) => (n.props.section as { dernier: boolean }).dernier)).toEqual([
+      ...Array(sections.length - 1).fill(false),
+      true,
+    ]);
     const types = noeuds.map((n) => n.type);
-    expect(types.filter((t) => t === "TenueDuRegistrePdf")).toHaveLength(1);
-    expect(types.lastIndexOf("LigneAttentePdf")).toBeLessThan(types.indexOf("TenueDuRegistrePdf"));
+    expect(types.lastIndexOf("LigneRapportPdf")).toBeLessThan(types.indexOf("SectionAttentePdf"));
   });
 
   it("une année riche en points est découpée au poids des lignes, sans rien perdre", () => {
@@ -279,6 +284,36 @@ describe("RegistreDocument — index des rapports découpé", () => {
     const ids = arbre.filter((n) => n.type === "LigneRapportPdf").map((n) => (n.props.r as { id: string }).id);
     expect(ids).toEqual(riches.map((r) => r.id));
     expect(arbre.filter((n) => n.type === "TeteRapportsPdf")).toHaveLength(5);
+  });
+
+  it("rend un registre dont le journal compte 250 lignes, en plusieurs pages (« suite »)", async () => {
+    const long = {
+      ...data,
+      parties: [
+        {
+          id: "4",
+          titre: "Événements",
+          fiches: [
+            {
+              id: "j",
+              titre: "Comptes rendus d'incendie",
+              attendu: "Date, fait",
+              raisons: [],
+              aConfirmer: [],
+              etat: "Consignée",
+              ton: "faite" as const,
+              misAJourLe: null,
+              colonnes: ["Date", "Fait"],
+              lignes: Array.from({ length: 250 }, (_, i) => [`0${i % 9}/01/2026`, `Fait ${i}`]),
+            },
+          ],
+        },
+      ],
+    };
+    const noeudsLong = elementsDansLOrdre(RegistreDocument({ data: long }));
+    expect(noeudsLong.filter((n) => n.type === "MorceauFichePdf")).toHaveLength(3);
+    const pdf = await renderToBuffer(RegistreDocument({ data: long }));
+    expect(nombreDePages(pdf)).toBeGreaterThanOrEqual(1 + 1 + 3 + 1);
   });
 
   it("rend le PDF avec un index de plusieurs paquets", async () => {

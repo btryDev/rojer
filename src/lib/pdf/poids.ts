@@ -1,6 +1,7 @@
 import type { DemandePdf } from "./documents";
 import type { RegistreData } from "./RegistreDocument";
-import { decoupageDuRegistre } from "./decoupage-registre";
+import { activitesDeclareesSnapshot } from "@/lib/activites/snapshot";
+import { pagesDuRegistre } from "./decoupage-registre";
 
 /**
  * Le poids d'un PDF avant sa mise en page (lot pdf-b0, 2026-11-10).
@@ -54,17 +55,21 @@ function blocsDuDocument(demande: DemandePdf): number[] {
       return [demande.props.data.ouverts.length + demande.props.data.corriges.length];
     case "duerp": {
       // Une entrée par `<Page>` de `DuerpDocument` qui grossit avec lui :
-      //   - les unités (et celles hors référentiel, au plus autant) ;
-      //   - l'inventaire : risques, leurs mesures, la liste des risques CMR ;
+      //   - les unités (et celles hors référentiel, au plus autant), et les
+      //     activités déclarées hors référentiel (revue de la PR #286) ;
+      //   - l'inventaire : risques, leurs mesures, la liste des risques CMR,
+      //     et les listes par unité (sans risque justifié, à compléter, au
+      //     plus une ligne par unité chacune) ;
       //   - le plan de prévention : risques priorisés et mesures prévues ;
       //   - l'annexe des expositions : au plus un risque par ligne ;
       //   - l'historique des versions, une de plus à chaque mise à jour.
       const { snapshot, historique } = demande.props;
+      const unites = snapshot.unites.length;
       const risques = snapshot.unites.flatMap((u) => u.risques);
       const mesures = risques.flatMap((r) => r.mesures);
       return [
-        snapshot.unites.length * 2,
-        risques.length + mesures.length + risques.filter((r) => r.exposeCMR).length,
+        unites * 2 + activitesDeclareesSnapshot(snapshot.couverture).length,
+        risques.length + mesures.length + risques.filter((r) => r.exposeCMR).length + unites * 2,
         risques.length + mesures.filter((m) => m.statut === "prevue").length,
         risques.length,
         historique.length,
@@ -74,9 +79,7 @@ function blocsDuDocument(demande: DemandePdf): number[] {
 }
 
 function blocsDuRegistre(data: RegistreData): number[] {
-  // Le découpage même du document (`decoupage-registre.ts`) : le corps des
-  // fiches (une seule `<Page>`), chaque feuille de l'index, chaque paquet en
-  // attente.
-  const d = decoupageDuRegistre(data);
-  return [d.lignesDesFiches, ...d.poidsDesFeuilles, ...d.paquetsAttente.map((p) => p.length)];
+  // Les pages mêmes du document (`decoupage-registre.ts`), chacune avec son
+  // poids : fiches, index des rapports, vérifications en attente.
+  return pagesDuRegistre(data).map((p) => p.poids);
 }

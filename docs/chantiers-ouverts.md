@@ -3405,7 +3405,9 @@ Lot `lot/pdf-b0`, sur `lot/pdf-a1`. Le plan du chantier est
 
 **Le palliatif.** `rendrePdf` (`src/lib/pdf/rendre.ts`) refuse de mettre en
 page un document qui dépasse `SEUILS_PDF` (lignes du document, lignes de la
-plus grosse `<Page>`) : 503 « trop volumineux… reste consultable à l'écran »,
+plus grosse `<Page>`) : ~~503~~ 422 [2026-11-10, décision de la propriétaire :
+un refus définitif ne se confond plus avec la file pleine] « trop volumineux…
+reste consultable à l'écran »,
 pièce absente du ZIP de contrôle. ~~Il empêche un seul export de figer ou de
 tuer le processus pour tous~~ [2026-11-10, revue : plus affirmatif que le
 code] Il borne la taille d'un export mis en page dans le processus web, avec
@@ -3445,14 +3447,19 @@ rendu.]
   d'actions et les points à corriger restent à mesurer.
 - **Réglage par instance** : les seuils sont des constantes ; ils devront
   suivre la taille de l'instance (XS au départ, S ensuite).
-- **Tableaux encore d'un seul tenant** : le corps des fiches du registre
-  (journaux), les tableaux du dossier de conformité, du plan d'actions, des
+- **Tableaux encore d'un seul tenant** : ~~le corps des fiches du registre
+  (journaux),~~ les tableaux du dossier de conformité, du plan d'actions, des
   points à corriger d'un appareil, et les pages du DUERP (inventaire, plan de
   prévention, historique des versions). Le garde-fou les compte ; le
-  découpage d'A1 ne les touche pas. Le corps des fiches reprend les
+  découpage d'A1 ne les touche pas. ~~Le corps des fiches reprend les
   équipements : environ 450 lignes pour 150 appareils, au-delà du bloc de
   400 — le registre entier serait refusé. Le seuil de bloc doit suivre la
-  cible (100 appareils, environ 300 lignes).
+  cible (100 appareils, environ 300 lignes).~~ [2026-11-10, revue de la PR
+  #286 : le corps des fiches se découpe comme l'index (`decoupage-registre.ts`,
+  pages de 100 lignes, une fiche longue sur plusieurs pages « suite ») ; les
+  vérifications en attente se pèsent à leurs lignes. Aucune page du registre
+  ne dépasse plus 100 lignes : le seuil du bloc ne refuse plus un registre,
+  seul le total le peut.]
 - **Passage de XS à S** : seuils proposés le 2026-11-10 (p95 des pages > 1 s,
   p95 des exports > 10 s ou un export > 30 s, RSS > 70 % ou un redémarrage
   pour mémoire, CPU > 60 % en continu, premier refus en production), à fixer

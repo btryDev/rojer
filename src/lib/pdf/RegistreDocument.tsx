@@ -15,7 +15,7 @@ import {
   referencesRegistreTenue,
   type RegimeDuRegistre,
 } from "./mentions-registre";
-import { decoupageDuRegistre } from "./decoupage-registre";
+import { pagesDuRegistre, type MorceauFiche, type SectionAttente } from "./decoupage-registre";
 import { PiedFixe } from "./PiedFixe";
 import { LABEL_RESULTAT } from "@/lib/rapports/resultats";
 import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
@@ -358,7 +358,17 @@ function piedDeFiche(fiche: FichePdf): string {
 }
 
 /** Une feuille du registre : son titre, son état, ce qu'elle porte, sa date. */
-function FichePdfVue({ fiche }: { fiche: FichePdf }) {
+function FichePdfVue({
+  fiche,
+  suite = false,
+  dernier = true,
+}: {
+  fiche: FichePdf;
+  /** Une tranche après la première : le titre seul, « (suite) ». */
+  suite?: boolean;
+  /** La dernière tranche : elle porte le pied de la fiche. */
+  dernier?: boolean;
+}) {
   const largeur = (n: number) => `${(100 / n).toFixed(4)}%`;
 
   return (
@@ -374,6 +384,9 @@ function FichePdfVue({ fiche }: { fiche: FichePdf }) {
     // Seule la tête reste insécable : un titre de fiche seul en bas de page
     // est laid, un corps tronqué est faux.
     <View style={{ marginTop: 14 }}>
+      {suite ? (
+        <Text style={sr.ficheTitre}>{`${fiche.titre} (suite)`}</Text>
+      ) : (
       <View wrap={false}>
         <View style={sr.ficheTete}>
           <Text style={sr.ficheTitre}>{fiche.titre}</Text>
@@ -397,6 +410,7 @@ function FichePdfVue({ fiche }: { fiche: FichePdf }) {
           </Text>
         )}
       </View>
+      )}
 
       {/* Forme « établissement » ou « formulaire » : des questions, des
           réponses. Une question sans réponse s'imprime quand même — c'est
@@ -503,7 +517,7 @@ function FichePdfVue({ fiche }: { fiche: FichePdf }) {
         </Text>
       )}
 
-      <Text style={sr.fichePied}>{piedDeFiche(fiche)}</Text>
+      {dernier && <Text style={sr.fichePied}>{piedDeFiche(fiche)}</Text>}
     </View>
   );
 }
@@ -720,6 +734,66 @@ export function TenueDuRegistrePdf({ regime }: { regime: RegistreData["regime"] 
   );
 }
 
+/**
+ * Un morceau de fiche sur sa page (`decoupage-registre.ts`) : la tête de la
+ * partie devant son premier morceau, puis la fiche — entière, ou une tranche
+ * de ses lignes.
+ */
+function MorceauFichePdf({ m }: { m: MorceauFiche }) {
+  return (
+    <>
+      {/* L'en-tête de partie a voyagé avec sa première fiche, dans un même
+          bloc insécable, pour éviter qu'un titre de partie reste seul en bas
+          de page. L'intention était bonne, la portée trop large : la partie 4
+          n'ayant qu'une fiche, son journal d'événements se retrouvait toujours
+          enfermé, donc tronqué dès qu'il grossissait. Un titre orphelin est un
+          défaut d'allure ; une fiche coupée est un document faux. Seul
+          l'en-tête reste insécable. */}
+      {m.ouvrePartie && (
+        <View wrap={false} minPresenceAhead={70}>
+          <View style={sr.partieAccent} />
+          <View style={[sr.partieTete, { marginTop: 6 }]}>
+            <Text style={sr.partieNum}>{m.partie.id}</Text>
+            <Text style={sr.partieTitre}>{m.partie.titre}</Text>
+          </View>
+        </View>
+      )}
+      <FichePdfVue fiche={m.fiche} suite={m.suite} dernier={m.dernier} />
+    </>
+  );
+}
+
+/** Les vérifications en attente d'une page, puis la tenue sur la dernière. */
+function SectionAttentePdf({ section, data }: { section: SectionAttente; data: RegistreData }) {
+  return (
+    <>
+      <Text style={[s.h2, { color: BOARD.encre }]}>
+        {section.rang === 0
+          ? `Vérifications en attente ou programmées${data.verifsEnAttente.length > 0 ? ` — ${data.verifsEnAttente.length}` : ""}`
+          : "Vérifications en attente ou programmées (suite)"}
+      </Text>
+      {section.paquet.length === 0 ? (
+        <Text style={s.small}>
+          {faitAttenteVide({
+            calendrier: data.calendrier,
+            inventaire: data.inventaire,
+          })}
+        </Text>
+      ) : (
+        // Dans sa `View`, comme l'index : l'en-tête fixe ne se répète que sur
+        // les feuilles du tableau, pas sur celle de la tenue.
+        <View>
+          <TeteAttentePdf />
+          {section.paquet.map((v) => (
+            <LigneAttentePdf key={v.id} v={v} />
+          ))}
+        </View>
+      )}
+      {section.dernier && <TenueDuRegistrePdf regime={data.regime} />}
+    </>
+  );
+}
+
 /** Le pied de page du registre, une fois par `Page` (`PiedFixe`). */
 function PiedDePage({ etablissement }: { etablissement: string }) {
   return (
@@ -743,11 +817,9 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
   // `null` à jour, et quand l'état n'a pas pu être lu (`faitAttenteVide` dit
   // alors « non déterminé ») : le document n'affirme pas un âge qu'il ignore.
   const avertissementCalendrier = data.calendrier ? phraseFraicheur(data.calendrier) : null;
-  // Le découpage des deux longs tableaux, le même que pèse le garde-fou
-  // (`decoupage-registre.ts`). Sans rapport, une feuille vide porte le titre
-  // et le fait « aucun rapport archivé ».
-  const { feuillesRapports, paquetsAttente } = decoupageDuRegistre(data);
-  const feuillesIndex = feuillesRapports.length === 0 ? [[]] : feuillesRapports;
+  // Les pages du corps, celles mêmes que pèse le garde-fou
+  // (`decoupage-registre.ts`).
+  const pages = pagesDuRegistre(data);
 
   return (
     <Document>
@@ -856,113 +928,62 @@ export function RegistreDocument({ data }: { data: RegistreData }) {
         <PiedDePage etablissement={data.etablissement} />
       </Page>
 
-      {/* Le corps : les fiches, dans l'ordre du document. */}
-      <Page size="A4" style={s.page}>
-        {data.parties.map((partie) => (
-          <View key={partie.id}>
-            {/* L'en-tête a voyagé avec sa première fiche, dans un même bloc
-                insécable, pour éviter qu'un titre de partie reste seul en bas
-                de page. L'intention était bonne, la portée trop large : la
-                partie 4 n'ayant qu'une fiche, son journal d'événements se
-                retrouvait toujours enfermé, donc tronqué dès qu'il grossissait.
-                Un titre orphelin est un défaut d'allure ; une fiche coupée est
-                un document faux. Seul l'en-tête reste insécable. */}
-            <View wrap={false} minPresenceAhead={70}>
-              <View style={sr.partieAccent} />
-              <View style={[sr.partieTete, { marginTop: 6 }]}>
-                <Text style={sr.partieNum}>{partie.id}</Text>
-                <Text style={sr.partieTitre}>{partie.titre}</Text>
-              </View>
-            </View>
-            {partie.fiches.map((fiche) => (
-              <FichePdfVue key={fiche.id} fiche={fiche} />
-            ))}
-          </View>
-        ))}
-
-        <PiedDePage etablissement={data.etablissement} />
-      </Page>
-
-      {/* L'index des rapports archivés — la pièce qu'un contrôleur ouvre en
-          premier, et la seule qui pointe vers des fichiers conservés à part.
-
-          EN `<Page>` DE CENT LIGNES AU PLUS, PAR ANNÉE (lot pdf-a1,
-          2026-11-10). D'un seul tenant, le tableau coûtait le carré de son
-          nombre de lignes (`paquets.ts`) : 2 274 rapports figeaient
-          l'application 105 s, au-delà le processus mourait. Rien n'est
-          retiré : toutes les années, tous les rapports, dans l'ordre de la
-          lecture (du plus récent au plus ancien). Les années courtes
-          partagent une feuille ; chaque année a son titre et son en-tête de
-          tableau, répété en tête de chaque feuille. */}
-      {feuillesIndex.map((feuille, f) => (
-          <Page key={`rapports-${f}`} size="A4" style={s.page}>
-            {f === 0 && (
-              <Text style={[s.h1, { color: BOARD.encre }]}>
-                Rapports de vérification archivés
-              </Text>
-            )}
-            {feuille.length === 0 && (
-              <Text style={s.small}>
-                Aucun rapport archivé à ce jour. Le registre reste tenu à
-                disposition de l&apos;inspection.
-              </Text>
-            )}
-            {/* Le titre d'année reste au niveau de la `<Page>` : react-pdf
-                n'applique `minPresenceAhead` qu'à un nœud qui a un frère
-                avant lui, et c'est ce qui l'empêche de rester seul, avec son
-                en-tête, en bas de feuille. Le tableau vit dans sa `View`,
-                pour que son en-tête fixe ne se répète que sur ses feuilles. */}
-            {feuille.flatMap((segment) => {
-              const cle = `${segment.annee}-${segment.lignes[0].id}`;
-              return [
-                <Text
-                  key={`titre-${cle}`}
-                  style={[s.h2, { color: BOARD.encre }]}
-                  minPresenceAhead={70}
-                >
-                  {segment.suite
-                    ? `${segment.annee} (suite)`
-                    : `${segment.annee} — ${segment.total} rapport${segment.total > 1 ? "s" : ""}`}
-                </Text>,
-                <View key={`tableau-${cle}`}>
-                  <TeteRapportsPdf />
-                  {segment.lignes.map((r) => (
-                    <LigneRapportPdf key={r.id} r={r} />
-                  ))}
-                </View>,
-              ];
-            })}
-            <PiedDePage etablissement={data.etablissement} />
-          </Page>
-        ))}
-
-      {/* Les vérifications en attente, par paquets elles aussi, puis la
-          tenue du registre sur la dernière feuille. */}
-      {paquetsAttente.map((paquet, k) => (
-        <Page key={`attente-${k}`} size="A4" style={s.page}>
-          <Text style={[s.h2, { color: BOARD.encre }]}>
-            {k === 0
-              ? `Vérifications en attente ou programmées${data.verifsEnAttente.length > 0 ? ` — ${data.verifsEnAttente.length}` : ""}`
-              : "Vérifications en attente ou programmées (suite)"}
-          </Text>
-          {paquet.length === 0 ? (
-            <Text style={s.small}>
-              {faitAttenteVide({
-                calendrier: data.calendrier,
-                inventaire: data.inventaire,
+      {/* LE CORPS, EN PAGES DE CENT LIGNES AU PLUS (lot pdf-a1, puis revues
+          de la PR #286, 2026-11-10). D'un seul tenant, un tableau coûtait le
+          carré de son nombre de lignes (`paquets.ts`) : 2 274 rapports
+          figeaient l'application 105 s, au-delà le processus mourait ; et un
+          corps de fiches au-delà du garde-fou rendait le registre entier
+          inexportable. Rien n'est retiré ni réordonné : les fiches dans
+          l'ordre du document, une fiche longue sur plusieurs pages (« suite »),
+          puis l'index des rapports par année (du plus récent au plus ancien),
+          les vérifications en attente et la tenue du registre — qui
+          rejoignent la dernière feuille de l'index quand ils y tiennent. */}
+      {pages.map((page, n) => (
+        <Page key={`corps-${n}`} size="A4" style={s.page}>
+          {page.genre === "fiches" &&
+            page.morceaux.map((m) => <MorceauFichePdf key={`${m.fiche.id}-${n}`} m={m} />)}
+          {page.genre === "index" && (
+            <>
+              {page.premiere && (
+                <Text style={[s.h1, { color: BOARD.encre }]}>
+                  Rapports de vérification archivés
+                </Text>
+              )}
+              {page.feuille.length === 0 && (
+                <Text style={s.small}>
+                  Aucun rapport archivé à ce jour. Le registre reste tenu à
+                  disposition de l&apos;inspection.
+                </Text>
+              )}
+              {/* Le titre d'année reste au niveau de la `<Page>` : react-pdf
+                  n'applique `minPresenceAhead` qu'à un nœud qui a un frère
+                  avant lui, et c'est ce qui l'empêche de rester seul, avec son
+                  en-tête, en bas de feuille. Le tableau vit dans sa `View`,
+                  pour que son en-tête fixe ne se répète que sur ses feuilles. */}
+              {page.feuille.flatMap((segment) => {
+                const cle = `${segment.annee}-${segment.lignes[0].id}`;
+                return [
+                  <Text
+                    key={`titre-${cle}`}
+                    style={[s.h2, { color: BOARD.encre }]}
+                    minPresenceAhead={70}
+                  >
+                    {segment.suite
+                      ? `${segment.annee} (suite)`
+                      : `${segment.annee} — ${segment.total} rapport${segment.total > 1 ? "s" : ""}`}
+                  </Text>,
+                  <View key={`tableau-${cle}`}>
+                    <TeteRapportsPdf />
+                    {segment.lignes.map((r) => (
+                      <LigneRapportPdf key={r.id} r={r} />
+                    ))}
+                  </View>,
+                ];
               })}
-            </Text>
-          ) : (
-            // Dans sa `View`, comme l'index : l'en-tête fixe ne se répète que
-            // sur les feuilles du tableau, pas sur celle de la tenue.
-            <View>
-              <TeteAttentePdf />
-              {paquet.map((v) => (
-                <LigneAttentePdf key={v.id} v={v} />
-              ))}
-            </View>
+              {page.attente && <SectionAttentePdf section={page.attente} data={data} />}
+            </>
           )}
-          {k === paquetsAttente.length - 1 && <TenueDuRegistrePdf regime={data.regime} />}
+          {page.genre === "attente" && <SectionAttentePdf section={page.attente} data={data} />}
           <PiedDePage etablissement={data.etablissement} />
         </Page>
       ))}

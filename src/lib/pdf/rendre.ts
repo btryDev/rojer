@@ -47,7 +47,10 @@ type SeuilsPdf = { total: number; bloc: number };
  *   - environ 3 700 (4 ans) : processus tué, deux fois sur deux.
  * Total 2 000 : les deux tiers du dernier qui passe, 55 % de la mort, et un
  * gel borné à une dizaine de secondes en XS. Bloc 400 : le plus gros observé
- * est 299 (le corps des fiches). À REMESURER avec le worker (B1-B3) et en S.
+ * était 299 (le corps des fiches) ; [2026-11-10, revue de la PR #286 :
+ * depuis, toutes les pages du registre sont découpées à 100 lignes
+ * (`decoupage-registre.ts`), et ce seuil ne le refuse plus — il reste pour
+ * les documents non découpés.] À REMESURER avec le worker (B1-B3) et en S.
  *
  * AUTRES DOCUMENTS — NON MESURÉS. Le dossier de conformité a passé le banc à
  * dix ans d'historique (2,6 s au plus) ; le DUERP, le plan d'actions et les
