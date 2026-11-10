@@ -242,14 +242,23 @@ contrôles ou vérifications ». Registre ERP (R. 143-44 CCH) : aucune durée
 4. ZIP de contrôle : même période pour le registre et les fichiers joints.
 5. Rapport plus ancien que la période dont un point est encore ouvert : il
    reste (justification des travaux, R. 4226-19).
-6. Archives annuelles (proposition de la propriétaire) : chaque année est
+6. ~~Archives annuelles (proposition de la propriétaire) : chaque année est
    archivée (ZIP : registre PDF + rapports de l'année) ; l'export ne génère que
-   l'année en cours et sert les archives. Un rapport déposé après l'archivage
-   de son année apparaît dans l'export de l'année en cours (« ajouts aux
-   années archivées ») : aucune archive n'est régénérée.
+   l'année en cours et sert les archives.~~ [2026-11-10, principe posé par la
+   propriétaire : UN SEUL registre. L'archive devient hybride : chaque année
+   close est figée une fois (volume PDF) ; l'export produit UN document — page
+   de garde et sommaire uniques, volumes archivés recollés tels quels, année
+   en cours générée, puis ajouts tardifs. Recoller ne refait aucune mise en
+   page.] Un rapport déposé après l'archivage de son année apparaît dans la
+   partie « ajouts aux années archivées » : aucune archive n'est régénérée.
+   À vérifier : R. 143-44 CCH sur le site Légifrance (« un registre »), et
+   l'avis du préventeur sur un registre ERP assemblé de volumes annuels.
 7. Suppression tous les 5 ans (proposition de la propriétaire), SAUF les 2
    derniers rapports de chaque contrôle et les pièces permanentes (D. 4711-3).
    À dire dans les conditions générales et sur la page du registre. À
    trancher : supprimer les archives seulement, ou aussi les rapports et leurs
    fichiers ? Les archives comptent-elles dans le quota de stockage ?
 8. Volumes annoncés par les formules : tous contrôlés par le code ? (§ 11)
+9. R. 4323-26 CT : pour que le PDF suffise sans le ZIP, imprimer par rapport
+   la date de remise et le lieu d'archivage (aujourd'hui : « pièce jointe »
+   ou « Sans pièce jointe » seulement). Petit ajout, sans effet sur le volume.
