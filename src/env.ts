@@ -50,6 +50,7 @@ import "server-only";
 import { z } from "zod";
 import { ENVIRONNEMENTS_APP } from "@/lib/environnement";
 import { FORME_EXPORTS_SIMULTANES } from "@/lib/exports/limite";
+import { FORME_REGLAGE_WORKER } from "@/lib/pdf/worker/reglages";
 import { etatStripe } from "@/lib/stripe/config";
 
 type Env = Record<string, string | undefined>;
@@ -128,6 +129,18 @@ const schema = z
       vide,
       z.string().regex(FORME_EXPORTS_SIMULTANES, "doit être un entier ≥ 1").optional(),
     ),
+    // Le fil des PDF (`pdf/worker/reglages.ts`, ADR-059) : tas maximal en Mo
+    // et délai maximal en ms d'un rendu. Même règle que leur lecture.
+    EXPORT_TAS_MAX_MO: z.preprocess(
+      vide,
+      z.string().regex(FORME_REGLAGE_WORKER, "doit être un entier ≥ 1").optional(),
+    ),
+    EXPORT_DELAI_MAX_MS: z.preprocess(
+      vide,
+      z.string().regex(FORME_REGLAGE_WORKER, "doit être un entier ≥ 1").optional(),
+    ),
+    // Hors production, force la mise en page dans un processus enfant (`pdf/rendre.ts`).
+    PDF_WORKER: enumeration(["1"] as const),
 
     // API Légifrance (`legifrance/client.ts`, scripts).
     LEGIFRANCE_CLIENT_ID: optionnelle,

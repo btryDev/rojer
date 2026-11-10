@@ -15,7 +15,7 @@ import { CODE_TRAVAIL_INFORMATION_TRAVAILLEURS } from "@/lib/referentiels/corpus
 
 function texte(): string {
   // Le fichier du corpus, pas l'index : l'index charge tout le référentiel,
-  // qui n'a rien à faire dans le fil des PDF (lot pdf-b1).
+  // qui n'a rien à faire dans le paquet du rendu des PDF (lot pdf-b1).
   const corpus = CODE_TRAVAIL_INFORMATION_TRAVAILLEURS;
   const article = corpus?.articles.find((a) => a.ref === "R. 4121-4");
   if (!article?.citationCle)

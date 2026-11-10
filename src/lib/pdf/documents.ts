@@ -13,8 +13,8 @@ import { RegistreDocument } from "./RegistreDocument";
  * Les routes ne passent plus un élément React tout fait mais une demande
  * `{ type, props }` : c'est ce qui permet de peser le document avant de le
  * mettre en page (`poids.ts`), de journaliser chaque export par type
- * (`rendre.ts`), et, plus tard, de l'envoyer à un fil d'exécution séparé — un
- * élément React ne se transmet pas, des données si.
+ * (`rendre.ts`), et de l'envoyer à un processus de rendu séparé (lot pdf-b1) —
+ * un élément React ne se transmet pas, des données si.
  */
 const DOCUMENTS = {
   registre: RegistreDocument,
