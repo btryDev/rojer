@@ -165,6 +165,11 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
       expect(await ligne(B)).toBeNull();
     });
 
+    it("un client d'avant l'ADR-054 dont la personne n'est propriétaire d'aucun compte : signalé comme tel, rien d'écrit", async () => {
+      const s = stripe(A, [abo({ id: "sub_1", status: "active", created: 1 })], { id: "cus_F", metadata: { userId: "00000000-0000-0000-0000-5715e00000ee" } });
+      expect(await synchroniserClientStripe(s, "cus_F")).toMatchObject({ issue: "ignore", alerte: true, motif: expect.stringMatching(/metadata\.userId/) });
+    });
+
     it("crée la ligne du compte que désigne le client Stripe relu, puis la met à jour", async () => {
       const essai = 1_780_000_000;
       const s1 = stripe(A, [abo({ id: "sub_1", status: "trialing", created: 1, trial_start: essai })]);
@@ -334,6 +339,10 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
       expect(await clientsDus(new Date(quand.getTime() + 3_600_000), 10)).not.toContain("cus_integ_file");
       await demanderSynchronisation("cus_integ_file", quand);
       expect(await clientsDus(quand, 10)).toContain("cus_integ_file");
+      // Relancé avec tout son cycle : un échec suivant n'est pas aussitôt durable.
+      expect(await prisma.synchronisationStripe.findUnique({ where: { customerId: "cus_integ_file" } })).toMatchObject({ tentatives: 0, echecDurableLe: null });
+      await expect(synchroniserSousBail(stripe(A, new Error("panne")), "cus_integ_file", { maintenant: () => quand })).rejects.toThrow("panne");
+      expect(await prisma.synchronisationStripe.findUnique({ where: { customerId: "cus_integ_file" } })).toMatchObject({ tentatives: 1, echecDurableLe: null });
     });
   });
 

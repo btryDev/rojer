@@ -189,6 +189,12 @@ const INCHANGE = { issue: "inchange" } as const;
 const EN_FILE = { issue: "en_file" } as const;
 const SANS_COMPTE = { issue: "ignore", motif: "client Stripe sans compte Rojer (metadata.compteId)" } as const;
 const INTROUVABLE = { issue: "ignore", motif: "compte Rojer introuvable", alerte: true } as const;
+/** Un client d'avant l'ADR-054 dont la personne n'est propriétaire d'aucun compte, ou de plusieurs : il paie peut-être et n'est jamais relu. */
+const PROPRIETAIRE_AMBIGU = {
+  issue: "ignore",
+  motif: "client Stripe d'avant les comptes (metadata.userId) : la personne n'est propriétaire d'aucun compte, ou de plusieurs — poser metadata.compteId",
+  alerte: true,
+} as const;
 const DEJA_LIE = { issue: "ignore", motif: "client ou abonnement Stripe déjà lié à un autre compte", alerte: true } as const;
 const AUTRE_CLIENT = { issue: "ignore", motif: "le compte est lié à un autre client Stripe", alerte: true } as const;
 
@@ -306,7 +312,7 @@ async function relireEtEcrire(stripe: Stripe, bail: Bail, relueLe: Date, strict:
   // Un client d'avant l'ADR-054 : le compte dont la personne est l'unique
   // propriétaire ; aucun, ou plusieurs, ne se devinent pas.
   const compteId = "compteId" in designe ? designe.compteId : await compteDontEstProprietaire(designe.proprietaire);
-  if (!compteId) return terminer(bail, relueLe, INTROUVABLE);
+  if (!compteId) return terminer(bail, relueLe, "compteId" in designe ? INTROUVABLE : PROPRIETAIRE_AMBIGU);
   if (plusieurs) console.error(`stripe : plusieurs abonnements en cours pour un même client (${customerId})`);
 
   const db = clientDuClientStripe(compteId);
