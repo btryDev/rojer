@@ -15,6 +15,7 @@ import { requireUser } from "@/lib/auth/require-user";
 import { droitsDe, type Droits } from "./droits";
 
 export const PAGE_ABONNEMENT = "/compte/abonnement";
+import { PAGE_SAISIE_FERMEE } from "@/lib/auth/portee/gel";
 /** Où une écriture refusée à un membre en lecture seule renvoie (ADR-054 § 4). */
 export const PAGE_LECTURE_SEULE = "/compte/lecture-seule";
 /** Où un geste réservé au propriétaire renvoie un autre membre. */
@@ -94,8 +95,8 @@ export async function verifierSaisie(): Promise<string | null> {
   if (!offreLancee(contexteDroits())) return c?.compte.compteId ?? null;
   if (!c) {
     await requireUser();
-    redirect(`${PAGE_ABONNEMENT}?saisie=fermee`);
+    redirect(PAGE_SAISIE_FERMEE);
   }
-  if (!(await droitsDuCompte(c.db, c.compte.compteId)).saisie) redirect(`${PAGE_ABONNEMENT}?saisie=fermee`);
+  if (!(await droitsDuCompte(c.db, c.compte.compteId)).saisie) redirect(PAGE_SAISIE_FERMEE);
   return c.compte.compteId;
 }

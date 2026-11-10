@@ -190,6 +190,7 @@ const NOMMES_ROUAGES: Record<string, Record<string, Nomme>> = {
     "src/lib/auth/portee/client.ts": "l'extension : le refus avant l'écriture",
     "src/lib/abonnements/quotas.ts": { motif: "le type des identifiants gelés", typesSeuls: true },
     "src/lib/abonnements/gel-saisie.ts": { motif: "la page du refus, pour le SQL brut d'une saisie", symboles: ["PAGE_DU_GEL", "ouvrirAuGel"] },
+    "src/lib/abonnements/saisie.ts": { motif: "la page du refus de la saisie fermée, la même que l'extension", symboles: ["PAGE_SAISIE_FERMEE"] },
   },
   "src/lib/auth/portee/borne": {
     "src/lib/auth/portee/client.ts": "l'extension",

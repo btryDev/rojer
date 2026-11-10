@@ -33,8 +33,11 @@ export const transactionEnCours = new AsyncLocalStorage<object>();
 const ouvertAuGel = new AsyncLocalStorage<true>();
 /**
  * Ouvre au gel la suite de l'action en cours. À appeler APRÈS son premier
- * `await` (sa garde) : le contexte de l'appelant n'en hérite pas, seule la
- * suite de cette action.
+ * `await` (sa garde), et chaque requête attendue DANS l'action (une requête
+ * Prisma part quand on l'attend). L'ouverture n'est pas confinée à l'action :
+ * sous Node 22, ce qui l'attend ensuite dans la même requête en hérite — sans
+ * effet aujourd'hui, rien n'écrivant par le client de session après une
+ * action ; à ne pas croire étanche.
  */
 export function ouvrirAuGel(): void {
   ouvertAuGel.enterWith(true);

@@ -62,17 +62,19 @@ function etendre(base: PrismaClient, p: Portee) {
       // Une lecture brute qui écrirait (`UPDATE … RETURNING`) est refusée en
       // lecture seule, comme `$executeRaw` (revue de sécurité des lots 3-4).
       async $queryRaw({ args, query }) {
-        const ecrit = (portee.lectureSeule || portee.saisieFermee) && sqlPeutEcrire(texteSql(args));
-        if (ecrit && portee.lectureSeule) refuserEnLecture("$queryRaw");
-        if (ecrit && portee.saisieFermee) verifierSaisieOuverte("$queryRaw", "update");
+        if ((portee.lectureSeule || portee.saisieFermee) && sqlPeutEcrire(texteSql(args))) {
+          refuserEnLecture("$queryRaw");
+          if (portee.saisieFermee) verifierSaisieOuverte("$queryRaw", "update");
+        }
         return query(args);
       },
       $allModels: {
         async $allOperations({ model, operation, args, query }) {
           // Le gel (ADR-053 § 14) : refusé avant d'écrire, sur les arguments
           // tels que l'action les donne.
-          if (portee.geles) await verifierGel(base, model, operation, args, { ...portee, geles: portee.geles });
+          // La saisie fermée d'abord : synchrone, sans lecture, et son message est le bon.
           if (portee.saisieFermee) verifierSaisieOuverte(model, operation);
+          if (portee.geles) await verifierGel(base, model, operation, args, { ...portee, geles: portee.geles });
           const resultat = await query(argumentsBornes(model, operation, args, portee) as typeof args);
           if (estLectureDIdentifiants(operation, args)) noterVus(model, portee, resultat);
           return resultat;
