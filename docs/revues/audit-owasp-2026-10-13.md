@@ -274,7 +274,8 @@ un critère de recette.
   `CC_NODE_DEV_DEPENDENCIES=install`, ou déplacer ces paquets. `engines.node` n'existe pas encore dans `package.json` : `lot/audit-1013-robustesse`
   l'ajoute en plage (`>=22 <25`). Chez CC, il passe avant `CC_NODE_VERSION` :
   vérifier au premier déploiement la version retenue. [2026-11-10 : vérifié —
-  la préprod a pris Node 24.22 ; `engines` borné à `>=22.15 <23`.]
+  la préprod a pris Node 24.22. Décision du 2026-11-10 : tout passe en Node 24
+  (CI, Dockerfile, `.nvmrc`, `CC_NODE_VERSION=24`), `engines` reste `>=22.15 <25`.]
 
 Les points B11 à B16 viennent de l'audit infra du même jour.
 
