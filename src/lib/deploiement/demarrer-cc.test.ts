@@ -7,10 +7,12 @@
  * - TLS vérifié contre le certificat fourni, refusé s'il n'en a pas la forme ;
  * - une URL littérale (`$VAR` non développé) ou déjà paramétrée est refusée
  *   (un `sslmode` hérité désactiverait la vérification sans bruit) ;
- * - le mot de passe ne s'affiche pas.
+ * - le mot de passe ne s'affiche pas ;
+ * - le serveur écoute sur 0.0.0.0 et garde ses connexions inactives 65 s
+ *   (les 502 du répartiteur).
  */
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -27,10 +29,19 @@ afterEach(() => {
 function lancer(env: Record<string, string>, mode = "verifier", ...commande: string[]) {
   // Environnement vide : rien n'est hérité du poste, comme sur une instance
   // neuve. Un dossier temporaire propre à chaque appel : rien n'est écrit
-  // dans le /tmp partagé. NODE_ENV : exigée par le type de Next, sans effet.
+  // dans le /tmp partagé. Le dossier courant, à part, porte un faux serveur
+  // autonome qui affiche ce qu'il reçoit (mode `servir`). NODE_ENV : exigée
+  // par le type de Next, sans effet.
   const dossier = mkdtempSync(join(tmpdir(), "cc-"));
-  dossiers.push(dossier);
+  const appli = mkdtempSync(join(tmpdir(), "cc-appli-"));
+  dossiers.push(dossier, appli);
+  mkdirSync(join(appli, ".next/standalone"), { recursive: true });
+  writeFileSync(
+    join(appli, ".next/standalone/server.js"),
+    'console.log([process.env.PORT, process.env.HOSTNAME, process.env.KEEP_ALIVE_TIMEOUT].join("|"))',
+  );
   const r = spawnSync("sh", [SCRIPT, mode, ...commande], {
+    cwd: appli,
     env: { NODE_ENV: "test", PATH: process.env.PATH ?? "", TMPDIR: dossier, ...env },
     encoding: "utf8",
   });
@@ -130,5 +141,14 @@ describe("demarrer-cc.sh : l'URL de la base", () => {
   it("sans aucune base, ni un mode inconnu, rien ne démarre", () => {
     expect(lancer({}).code).toBe(1);
     expect(lancer({ POSTGRESQL_ADDON_URI: ADDON, BASE_CA_PEM: CA }, "n-importe").code).toBe(2);
+  });
+});
+
+describe("demarrer-cc.sh : le serveur", () => {
+  it("écoute sur 0.0.0.0 et garde les connexions inactives 65 s, au-delà du répartiteur", () => {
+    const r = lancer({ POSTGRESQL_ADDON_URI: ADDON, BASE_CA_PEM: CA, KEEP_ALIVE_TIMEOUT: "5000" }, "servir");
+    expect(r.erreur).toBe("");
+    expect(r.code).toBe(0);
+    expect(r.sortie.split("\n").at(-1)).toBe("8080|0.0.0.0|65000");
   });
 });
