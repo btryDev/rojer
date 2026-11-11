@@ -112,7 +112,9 @@ export function CartePhotoLieu({
     // Le bleu de marque derrière le dessin (2026-11-11) : les planches sont
     // blanches à liseré bleu, comme l'illustration de la landing. Une photo
     // couvre toute la carte, il ne se voit pas derrière elle.
-    <div className="relative min-h-[220px] overflow-hidden rounded-[24px] bg-[color:var(--board-sky)] ring-1 ring-[color:rgba(13,18,36,.10)]">
+    // Sur téléphone (2026-11-11) : au-dessus de la fiche, en bandeau de
+    // 150 px — le dessin à gauche, le bouton photo à droite.
+    <div className="relative h-[150px] overflow-hidden rounded-[24px] bg-[color:var(--board-sky)] ring-1 ring-[color:rgba(13,18,36,.10)] max-md:order-first md:h-auto md:min-h-[220px]">
       {photo ? (
         // Non optimisée : la photo est servie sous session
         // (`/api/etablissements/[id]/photo`), l'optimiseur la demanderait sans.
@@ -133,9 +135,10 @@ export function CartePhotoLieu({
           alt=""
           aria-hidden
           fill
-          sizes="(min-width: 1024px) 380px, 100vw"
+          // Sur téléphone le dessin tient dans ~170 px de large (bandeau).
+          sizes="(min-width: 1024px) 380px, (min-width: 768px) 60vw, 200px"
           priority
-          className="select-none object-contain p-5 pb-12"
+          className="select-none object-contain p-3 max-md:object-left md:p-5 md:pb-12"
         />
       )}
 

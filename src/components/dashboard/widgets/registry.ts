@@ -207,6 +207,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
     taille: "medium",
     variants: [{ id: "default", label: "Défaut" }],
     defaultVariant: "default",
+    telephone: { ordre: 1 },
     Component: BlocAFaire,
   },
   "plan-actions": {
@@ -218,6 +219,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
     taille: "medium",
     variants: [{ id: "default", label: "Défaut" }],
     defaultVariant: "default",
+    telephone: { ordre: 3 },
     Component: BlocPlanActions,
   },
   "actions-retard": {
@@ -241,6 +243,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
     taille: "medium",
     variants: [{ id: "default", label: "Défaut" }],
     defaultVariant: "default",
+    telephone: { ordre: 7, raccourci: { titre: "Préparer un contrôle", ligne: "Rassemblez vos pièces avant une visite", chemin: "/controle" } },
     Component: BlocControle,
   },
   registre: {
@@ -261,6 +264,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
     taille: "medium",
     variants: [{ id: "default", label: "Défaut" }],
     defaultVariant: "default",
+    telephone: { ordre: 4 },
     Component: WidgetEquipements,
     obligatoire: true,
   },
@@ -273,6 +277,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
     taille: "medium",
     variants: [{ id: "default", label: "Défaut" }],
     defaultVariant: "default",
+    telephone: { ordre: 5, raccourci: { titre: "Vos documents", ligne: "Ce qu'il faut tenir à jour et présenter", chemin: "/documents" } },
     Component: BlocDocuments,
   },
   duerp: {
@@ -296,6 +301,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
     taille: "medium",
     variants: [{ id: "default", label: "Défaut" }],
     defaultVariant: "default",
+    telephone: { ordre: 8, raccourci: { titre: "Comprendre vos obligations", ligne: "Le guide, étape par étape", chemin: "/guide" } },
     Component: WidgetGuide,
   },
   recos: {
@@ -323,6 +329,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
     taille: "medium",
     variants: [{ id: "default", label: "Défaut" }],
     defaultVariant: "default",
+    telephone: { ordre: 2 },
     Component: BlocFrise,
   },
   countdown: {
@@ -368,6 +375,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
     taille: "medium",
     variants: [{ id: "default", label: "Défaut" }],
     defaultVariant: "default",
+    telephone: { ordre: 6, raccourci: { titre: "Ce qui a changé", ligne: "Les derniers mouvements du dossier", chemin: "/registre" } },
     Component: BlocCeQuiAChange,
   },
   meteo: {

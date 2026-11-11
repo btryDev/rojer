@@ -11,7 +11,8 @@ import type { DraggableAttributes } from "@dnd-kit/core";
 import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Check, GripVertical, Shuffle, X } from "lucide-react";
+import { Check, ChevronRight, GripVertical, Shuffle, X } from "lucide-react";
+import Link from "next/link";
 import { categorieDeItem } from "@/components/layout/sidebar-nav";
 import { REGISTRY } from "./registry";
 import { FournisseurSectionDuWidget } from "./section-du-widget";
@@ -19,6 +20,7 @@ import type { WidgetId } from "./types";
 
 export function WidgetShell({
   widgetId,
+  etablissementId,
   variant,
   enEdition,
   onRetirer,
@@ -27,6 +29,7 @@ export function WidgetShell({
   children,
 }: {
   widgetId: WidgetId;
+  etablissementId: string;
   variant: string;
   enEdition: boolean;
   onRetirer: () => void;
@@ -36,6 +39,9 @@ export function WidgetShell({
 }) {
   const def = REGISTRY[widgetId];
   const aVariants = def.variants.length > 1;
+  // Le raccourci du téléphone ne s'applique pas en édition : on y déplace
+  // et règle les widgets eux-mêmes.
+  const raccourci = enEdition ? undefined : def.telephone?.raccourci;
   // Un widget obligatoire est épinglé : ni retirable, ni déplaçable —
   // sa position est recalculée par `epingler` (useLayoutPerso).
   const epingle = Boolean(def.obligatoire);
@@ -71,14 +77,37 @@ export function WidgetShell({
         "@container relative " +
         classePortee +
         " " +
+        ORDRE_TELEPHONE[def.telephone?.ordre ?? 0] +
+        " " +
         (enEdition
           ? "rounded-[30px] ring-1 ring-dashed ring-[color:var(--board-blue-strong)]/60 ring-offset-4 ring-offset-[color:var(--board-canvas)]"
           : "")
       }
     >
-      <FournisseurSectionDuWidget value={categorieDeItem(def.page)}>
-        {children}
-      </FournisseurSectionDuWidget>
+      {raccourci ? (
+        <Link
+          href={`/etablissements/${etablissementId}${raccourci.chemin}`}
+          className="flex min-h-11 items-center gap-3 rounded-[22px] bg-[color:var(--board-card)] px-5 py-4 ring-1 ring-[color:rgba(13,18,36,.08)] md:hidden"
+        >
+          <span className="min-w-0 flex-1">
+            <span className="block text-[15px] font-semibold tracking-[-0.01em] text-[color:var(--board-ink)]">
+              {raccourci.titre}
+            </span>
+            <span className="block text-[12.5px] text-[color:var(--board-slate-mid)]">
+              {raccourci.ligne}
+            </span>
+          </span>
+          <ChevronRight aria-hidden className="size-4 flex-none text-[color:var(--board-slate-soft)]" />
+        </Link>
+      ) : null}
+      {/* Remplacé par son raccourci, le widget n'est pas affiché sur
+          téléphone : `display: none` — ses images, en chargement différé,
+          n'y sont pas téléchargées. */}
+      <div className={raccourci ? "contents max-md:hidden" : "contents"}>
+        <FournisseurSectionDuWidget value={categorieDeItem(def.page)}>
+          {children}
+        </FournisseurSectionDuWidget>
+      </div>
 
       {enEdition ? (
         <ShellOverlay
@@ -98,6 +127,22 @@ export function WidgetShell({
     </div>
   );
 }
+
+/**
+ * Le rang sur téléphone, en classes écrites en toutes lettres (le scanner de
+ * Tailwind lit le source). L'indice 0 : sans rang déclaré, en fin de colonne.
+ */
+const ORDRE_TELEPHONE = [
+  "max-md:order-last",
+  "max-md:order-1",
+  "max-md:order-2",
+  "max-md:order-3",
+  "max-md:order-4",
+  "max-md:order-5",
+  "max-md:order-6",
+  "max-md:order-7",
+  "max-md:order-8",
+] as const;
 
 type DragActivator = (element: HTMLElement | null) => void;
 

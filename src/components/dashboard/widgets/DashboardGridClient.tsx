@@ -124,6 +124,7 @@ export function DashboardGridClient({
                 <WidgetShell
                   key={item.widgetId}
                   widgetId={item.widgetId}
+                  etablissementId={bundle.etablissementId}
                   variant={item.variant}
                   enEdition={enEdition}
                   onRetirer={() => retirer(item.widgetId)}
