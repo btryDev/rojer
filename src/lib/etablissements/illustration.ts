@@ -12,7 +12,7 @@
 // propriétaire), et une devanture unique pour un restaurant et un magasin,
 // un même cube pour un bureau et un hôtel, ne disaient plus le genre de lieu.
 //
-// [2026-11-11] ~~Six~~ Cinq planches, redessinées en une série (bleus de la
+// [2026-11-11] Passées de six à cinq, redessinées en une série (bleus de la
 // charte, isométrique) : seules les grandes catégories ont la leur, décision
 // de la propriétaire. La salle de sport (type X) rejoint le local générique —
 // lui garder une planche aurait appelé l'école, la crèche, chaque type.
