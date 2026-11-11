@@ -1,5 +1,6 @@
 "use client";
 
+import { EFFECTIF_MAX } from "@/lib/etablissements/schema";
 import { Check, OctagonX } from "lucide-react";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { ChampBoard, SectionChamps } from "@/components/ui-kit";
@@ -95,7 +96,7 @@ export function StepIdentite({
       {/* Chaque section prend la carte blanche du board : posé à même le
           canvas, le creux ardoise du `.champ-board` ne s'en détache plus
           (1,03:1) et les champs s'effacent. */}
-      <section className="carte-board px-7 py-6 sm:px-8">
+      <section className="carte-board px-5 py-6 md:px-8">
         <SectionChamps titre="Identité juridique">
           <div className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
             <ChampBoard
@@ -176,7 +177,7 @@ export function StepIdentite({
         </SectionChamps>
       </section>
 
-      <section className="carte-board px-7 py-6 sm:px-8">
+      <section className="carte-board px-5 py-6 md:px-8">
         <SectionChamps titre="L'établissement">
           <div className="grid grid-cols-1 gap-x-5 gap-y-4">
             <ChampBoard
@@ -349,7 +350,7 @@ export function StepIdentite({
                 value={state.effectifSurSite}
                 onChange={(e) => update({ effectifSurSite: e.target.value })}
                 placeholder="8"
-                aide="Salariés et apprentis qui y travaillent régulièrement. Rojer s'arrête à 50."
+                aide={`Salariés et apprentis qui y travaillent régulièrement. Rojer suit jusqu'à ${EFFECTIF_MAX}.`}
                 // Le refus de périmètre n'est pas rendu ici mais dans le bloc
                 // ci-dessous : il tient trois lignes et il porte une icône.
                 erreur={refus ? undefined : messagePour("effectifSurSite")}
