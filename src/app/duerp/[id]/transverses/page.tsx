@@ -176,6 +176,7 @@ export default async function TransversesPage({
             `transversesRepondues` n'est pas relue : `etapesValidees`.] */}
         <ValiderEtapeBouton
           duerpId={id}
+          etablissementId={duerp.etablissementId}
           etape="transverses"
           libelle="Valider — aller à la synthèse →"
         />

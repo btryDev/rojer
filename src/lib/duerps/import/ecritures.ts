@@ -95,7 +95,6 @@ export function construireEcrituresImport({
     if (!parNom.has(u.nom)) parNom.set(u.nom, u.id);
   }
 
-
   const ecritures: EcrituresImport = {
     unitesACreer: [],
     risques: [],

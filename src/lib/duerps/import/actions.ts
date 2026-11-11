@@ -7,7 +7,7 @@ import { SELECT_FAITS_ACTIVITE } from "@/lib/etablissements/faits-activite";
 import { reprendreFaitsDansDuerp } from "@/lib/etablissements/faits-activite-ecriture";
 import { assertEtablissementDuCompte, assertEtablissementOwnership } from "@/lib/auth/scope";
 import { construireEcrituresImport } from "./ecritures";
-import { avecValidation } from "../etapes-validees";
+import { avecValidations } from "../etapes-validees";
 import {
   LIBELLE_CHAMP_IMPORT,
   erreurDeFichier,
@@ -233,10 +233,14 @@ export async function commitImport(
       // Des unités et des risques arrivent : leurs étapes sont à revalider
       // (« si pas validé, pas fait », 2026-11-11).
       if (duerpExistant?.etapesValidees) {
-        const sansUnites = avecValidation(duerpExistant.etapesValidees, "unites", null);
         await tx.duerp.update({
           where: { id: duerpId },
-          data: { etapesValidees: avecValidation(sansUnites, "risques", null) },
+          data: {
+            etapesValidees: avecValidations(duerpExistant.etapesValidees, {
+              unites: null,
+              risques: null,
+            }),
+          },
         });
       }
       // Le plafond annuel d'imports (ADR-053 § 14), en DERNIER : le verrou du

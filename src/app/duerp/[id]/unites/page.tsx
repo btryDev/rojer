@@ -4,7 +4,7 @@ import { AjouterUniteForm } from "@/components/duerps/AjouterUniteForm";
 import { UniteRow } from "@/components/duerps/UniteRow";
 import { ValiderEtapeBouton } from "@/components/duerps/ValiderEtapeBouton";
 import { WizardSteps } from "@/components/duerps/WizardSteps";
-import { etapesDuDuerp, numeroEtape } from "@/lib/duerps/etapes";
+import { etapesDuDuerp, enteteEtape } from "@/lib/duerps/etapes";
 import { AideEcran } from "@/components/ui-kit/AideEcran";
 import { getDuerp } from "@/lib/duerps/queries";
 
@@ -29,7 +29,7 @@ export default async function UnitesPage({
           fois (infobulle et paragraphe) ; elle est derrière le « ? ». */}
       <header className="flex max-w-[var(--board-mesure)] flex-col gap-3">
         <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-          {numeroEtape("unites")} · Unités de travail
+          {enteteEtape("unites")}
         </p>
         <div className="flex items-center gap-3">
           <h2 className="board-titre m-0 text-[clamp(23px,2.1vw,30px)]">
@@ -86,7 +86,7 @@ export default async function UnitesPage({
         {/* Valider, même sans rien changer, coche l'étape (2026-11-11) : les
             unités pré-remplies par le secteur ne la cochent plus seules. Sans
             unité, un vrai `disabled` (interdit 20). */}
-        <ValiderEtapeBouton duerpId={id} etape="unites" disabled={!unitesOk} />
+        <ValiderEtapeBouton duerpId={id} etablissementId={duerp.etablissementId} etape="unites" disabled={!unitesOk} />
       </div>
     </div>
   );

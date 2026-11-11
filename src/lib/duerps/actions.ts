@@ -11,9 +11,9 @@ import { trouverReferentielParId } from "@/lib/referentiels";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
 import {
   ETAPES_VALIDABLES,
-  avecValidation,
+  avecValidations,
+  etapeSuivante,
   type EtapeValidable,
-  type EtapesValidees,
 } from "./etapes-validees";
 import { creerSousPlafond, placesSousLePlafond } from "@/lib/abonnements/quotas";
 
@@ -103,6 +103,29 @@ export async function choisirSecteur(
     duerp.referentielSecteurId !== null &&
     duerp.referentielSecteurId !== secteurId;
 
+  const aDesQuestions = ref.activitesNonCouvertes.length > 0;
+  const suite = `/duerp/${duerpId}/${aDesQuestions ? "activites" : "unites"}`;
+
+  // Reconfirmer le même secteur ne refait rien (2026-11-11) : ni
+  // pré-remplissage — il recréerait les unités supprimées depuis —, ni
+  // retrait de validation, ni verrou du compte. Le fil mène à /secteur pour
+  // un secteur sans précision : confirmer y vaut seulement validation de
+  // « Votre activité » (ADR-059).
+  if (duerp.referentielSecteurId === secteurId) {
+    if (!aDesQuestions) {
+      await db.duerp.update({
+        where: { id: duerpId },
+        data: {
+          etapesValidees: avecValidations(duerp.etapesValidees, {
+            activite: new Date(),
+          }),
+        },
+      });
+      revalidatePath(`/duerp/${duerpId}`, "layout");
+    }
+    redirect(suite);
+  }
+
   const unitesExistantes = await db.uniteTravail.findMany({
     where: { duerpId },
     select: { nom: true, estTransverse: true },
@@ -111,30 +134,14 @@ export async function choisirSecteur(
     unitesExistantes.map((u) => u.nom.toLowerCase()),
   );
 
-  // Reconfirmer le même secteur ne refait rien (2026-11-11) : ni
-  // pré-remplissage — il recréerait les unités supprimées depuis —, ni
-  // retrait de validation. Le fil mène à /secteur pour un secteur sans
-  // précision : ce chemin doit être sans effet.
-  const memeSecteur = duerp.referentielSecteurId === secteurId;
-
-  // Validations (« si pas validé, pas fait », 2026-11-11). Sans précision à
-  // demander, confirmer le secteur valide « Votre activité » ; avec, c'est la
-  // page des précisions qui la valide. Un changement de secteur remet aussi
-  // les unités et les risques à valider : de nouvelles unités arrivent, que
-  // personne n'a relues.
-  const aDesQuestions = ref.activitesNonCouvertes.length > 0;
-  let etapesValidees = duerp.etapesValidees as unknown;
-  if (!memeSecteur || !aDesQuestions) {
-    etapesValidees = avecValidation(
-      etapesValidees,
-      "activite",
-      aDesQuestions ? null : new Date(),
-    );
-  }
-  if (changeDeSecteur) {
-    etapesValidees = avecValidation(etapesValidees, "unites", null);
-    etapesValidees = avecValidation(etapesValidees, "risques", null);
-  }
+  // Validations (ADR-059). Sans précision à demander, confirmer le secteur
+  // valide « Votre activité » ; avec, c'est la page des précisions qui la
+  // valide. Un changement de secteur remet aussi les unités et les risques
+  // à valider : de nouvelles unités arrivent, que personne n'a relues.
+  const etapesValidees = avecValidations(duerp.etapesValidees, {
+    activite: aDesQuestions ? null : new Date(),
+    ...(changeDeSecteur ? { unites: null, risques: null } : {}),
+  });
 
   await db.$transaction(async (tx) => {
     // Pendant l'essai gratuit, le pré-remplissage s'arrête à sa limite
@@ -146,12 +153,12 @@ export async function choisirSecteur(
       where: { id: duerpId },
       data: {
         referentielSecteurId: secteurId,
-        etapesValidees: etapesValidees as EtapesValidees,
+        etapesValidees,
         ...(changeDeSecteur ? { reponsesActivitesNonCouvertes: Prisma.DbNull } : {}),
       },
     });
     for (const u of ref.unitesTravailSuggerees
-      .filter((u) => !memeSecteur && !nomsExistants.has(u.nom.toLowerCase()))
+      .filter((u) => !nomsExistants.has(u.nom.toLowerCase()))
       .slice(0, sousLEssai))
       await tx.uniteTravail.create({
         data: {
@@ -171,7 +178,7 @@ export async function choisirSecteur(
   // une question jamais posée ne produit aucune mention dans le document.
   // Elles se posent avant les unités parce qu'un « oui » se traduit souvent
   // par une unité de travail à créer à la main dans la foulée.
-  redirect(`/duerp/${duerpId}/${aDesQuestions ? "activites" : "unites"}`);
+  redirect(suite);
 }
 
 const uniteSchema = z.object({
@@ -206,7 +213,6 @@ export async function ajouterUnite(
     };
   }
 
-
   // Limite d'unités de l'essai gratuit (ADR-053 § 14).
   const creation = await creerSousPlafond(db, compte.compteId, "unitesTravail", (tx) =>
     tx.uniteTravail.create({
@@ -224,14 +230,6 @@ export async function ajouterUnite(
 }
 
 const etapeValidableSchema = z.enum(ETAPES_VALIDABLES);
-
-/** La page où mène la validation de chaque étape. */
-const SUITE_DE: Record<EtapeValidable, string> = {
-  activite: "unites",
-  unites: "risques",
-  risques: "transverses",
-  transverses: "synthese",
-};
 
 /**
  * Le dirigeant valide une étape du fil (2026-11-11, « si pas validé, pas
@@ -263,11 +261,11 @@ export async function validerEtape(
   await db.duerp.update({
     where: { id: duerpId },
     data: {
-      etapesValidees: avecValidation(duerp.etapesValidees, quelle, new Date()),
+      etapesValidees: avecValidations(duerp.etapesValidees, { [quelle]: new Date() }),
     },
   });
   revalidatePath(`/duerp/${duerpId}`, "layout");
-  redirect(`/duerp/${duerpId}/${SUITE_DE[quelle]}`);
+  redirect(`/duerp/${duerpId}/${etapeSuivante(quelle)}`);
 }
 
 export async function renommerUnite(

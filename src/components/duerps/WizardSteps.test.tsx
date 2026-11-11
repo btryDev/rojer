@@ -3,10 +3,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { WizardSteps, type Etape } from "./WizardSteps";
 
 const ETAPES: Etape[] = [
-  { id: "a", libelle: "Secteur", href: "/a", atteinte: true, faite: true },
-  { id: "b", libelle: "Unités", href: "/b", atteinte: true, faite: false, actuelle: true },
-  { id: "t", libelle: "Transverses", href: "/t", atteinte: true, faite: false },
-  { id: "c", libelle: "Synthèse", href: "/c", atteinte: false, faite: false },
+  { id: "a", libelle: "Secteur", href: "/a", atteinte: true, faite: true, avancement: 1 },
+  { id: "b", libelle: "Unités", href: "/b", atteinte: true, faite: false, actuelle: true, avancement: 0 },
+  { id: "t", libelle: "Transverses", href: "/t", atteinte: true, faite: false, avancement: 0 },
+  { id: "c", libelle: "Synthèse", href: "/c", atteinte: false, faite: false, avancement: 0 },
 ];
 
 describe("WizardSteps — la frise Progression", () => {
@@ -26,7 +26,7 @@ describe("WizardSteps — la frise Progression", () => {
   it("l'étape courante déjà faite dit « Fait »", () => {
     const h = renderToStaticMarkup(
       <WizardSteps
-        etapes={[{ id: "u", libelle: "Unités", href: "/u", atteinte: true, faite: true, actuelle: true }]}
+        etapes={[{ id: "u", libelle: "Unités", href: "/u", atteinte: true, faite: true, actuelle: true, avancement: 1 }]}
       />,
     );
     expect(h).toContain(">✓ Fait<");
@@ -56,8 +56,8 @@ describe("WizardSteps — la frise Progression", () => {
       <WizardSteps
         etapes={[
           { id: "r", libelle: "Risques", href: "/r", atteinte: true, faite: false, avancement: 0.5 },
-          { id: "s", libelle: "Synthèse", href: "/s", atteinte: true, faite: true },
-          { id: "t", libelle: "Transverses", href: "/t", atteinte: true, faite: false },
+          { id: "s", libelle: "Synthèse", href: "/s", atteinte: true, faite: true, avancement: 1 },
+          { id: "t", libelle: "Transverses", href: "/t", atteinte: true, faite: false, avancement: 0 },
         ]}
       />,
     );

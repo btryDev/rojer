@@ -177,7 +177,8 @@ describe("choisirSecteur — reconfirmer le même secteur ne refait rien (2026-1
     await expect(choisirSecteur("d1", "restauration")).rejects.toThrow("REDIRECT");
 
     expect(unitesCreeesParLeSecteur()).toEqual([]);
-    expect(ecrit()).toEqual({ activite: VALIDEE, unites: VALIDEE });
+    // Secteur à précisions : rien n'est écrit, aucune validation ne bouge.
+    expect(prismaMock.duerp.update).not.toHaveBeenCalled();
   });
 
   it("un changement de secteur remet unités et risques à valider", async () => {

@@ -265,7 +265,7 @@ export default async function RisquesOverviewPage({
         >
           ← Unités
         </Link>
-        <ValiderEtapeBouton duerpId={id} etape="risques" />
+        <ValiderEtapeBouton duerpId={id} etablissementId={duerp.etablissementId} etape="risques" />
       </div>
     </div>
   );

@@ -9,11 +9,11 @@ export type Etape = {
   /** Complète, lu sur les données (`construireEtapes`). */
   faite: boolean;
   /**
-   * La part faite de l'étape, de 0 à 1 (2026-11-11) : le segment se remplit
-   * d'autant. Absente, le segment est plein si l'étape est faite. Aucun
-   * pourcentage n'est écrit — la longueur du trait suffit.
+   * La part faite de l'étape, de 0 à 1 (2026-11-11), calculée par
+   * `construireEtapes` : le segment se remplit d'autant. Aucun pourcentage
+   * n'est écrit — la longueur du trait suffit.
    */
-  avancement?: number;
+  avancement: number;
   actuelle?: boolean;
   /**
    * Ce qui manque pour que l'étape soit faite, et où le faire. Posé
@@ -71,7 +71,7 @@ export function WizardSteps({ etapes }: { etapes: Etape[] }) {
         className="flex gap-1.5"
       >
         {etapes.map((e) => {
-          const part = Math.max(0, Math.min(1, e.avancement ?? (e.faite ? 1 : 0)));
+          const part = e.avancement;
           // L'œil va à l'étape courante (2026-11-11) : son segment est le
           // seul en bleu, sur un fond bleu pâle qui le rend visible même vide,
           // et rempli de sa part faite. Les étapes faites s'effacent en gris

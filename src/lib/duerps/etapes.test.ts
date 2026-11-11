@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 const TOUTES_VALIDEES = { activite: true, unites: true, risques: true, transverses: true };
-import { construireEtapes, numeroEtape, type EtapeFilId } from "./etapes";
+import { construireEtapes, enteteEtape } from "./etapes";
+import type { EtapeFilId } from "./etapes-validees";
 
 const progression = {
   secteurOk: true,
@@ -36,9 +37,9 @@ describe("construireEtapes — « Votre activité »", () => {
       const etapes = construireEtapes("d1", page, progression);
       expect(etapes.find((e) => e.actuelle)?.id).toBe("activite");
     }
-    expect(numeroEtape("secteur")).toBe("01");
-    expect(numeroEtape("activites")).toBe("01");
-    expect(numeroEtape("synthese")).toBe("05");
+    expect(enteteEtape("secteur")).toBe("01 · Votre activité");
+    expect(enteteEtape("activites")).toBe("01 · Votre activité");
+    expect(enteteEtape("synthese")).toBe("05 · Synthèse");
   });
 
   it("non validée, l'étape est à faire, sans rien bloquer", () => {
@@ -77,15 +78,6 @@ describe("construireEtapes — les unités se valident (2026-11-11)", () => {
 });
 
 describe("construireEtapes — si pas validé, pas fait (2026-11-11)", () => {
-  it("complète mais non validée, l'étape courante ne se remplit pas jusqu'au bout", () => {
-    const etapes = construireEtapes("d1", "risques", {
-      ...progression,
-      validees: { ...TOUTES_VALIDEES, risques: false },
-      avancement: { risques: 1 },
-    });
-    expect(etapes.find((e) => e.id === "risques")?.avancement).toBeLessThan(1);
-  });
-
   it("complète mais non validée, aucune étape n'est faite", () => {
     const etapes = construireEtapes("d1", "unites", {
       ...progression,

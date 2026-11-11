@@ -4,7 +4,7 @@ import { QuestionActiviteRow } from "@/components/duerps/QuestionActiviteRow";
 import { ValiderEtapeBouton } from "@/components/duerps/ValiderEtapeBouton";
 import { WizardSteps } from "@/components/duerps/WizardSteps";
 import { questionsActivites } from "@/lib/activites/reponses";
-import { etapesDuDuerp, numeroEtape } from "@/lib/duerps/etapes";
+import { etapesDuDuerp, enteteEtape } from "@/lib/duerps/etapes";
 import { AideEcran } from "@/components/ui-kit/AideEcran";
 import { getDuerp } from "@/lib/duerps/queries";
 import { trouverReferentielParId } from "@/lib/referentiels";
@@ -61,7 +61,7 @@ export default async function ActivitesPage({
           « ? » — on ne les lit qu'une fois. */}
       <header className="flex max-w-[var(--board-mesure)] flex-col gap-3">
         <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-          {numeroEtape("activites")} · Votre activité
+          {enteteEtape("activites")}
         </p>
         {/* Le « ? » à côté du titre qu'il explique, pas sur sa propre ligne. */}
         <div className="flex items-center gap-3">
@@ -135,7 +135,7 @@ export default async function ActivitesPage({
             ? `${sansReponse.length} sans réponse — vous pouvez continuer.`
             : "Toutes les questions ont une réponse."}
         </p>
-        <ValiderEtapeBouton duerpId={id} etape="activite" />
+        <ValiderEtapeBouton duerpId={id} etablissementId={duerp.etablissementId} etape="activite" />
       </div>
     </div>
   );

@@ -29,14 +29,27 @@ export function lireEtapesValidees(brut: unknown): EtapesValidees {
   return lu;
 }
 
-/** Les validations après qu'une étape a été validée (`quand`) ou retirée (`null`). */
-export function avecValidation(
+/** Le fil complet : les étapes validables, puis la synthèse (validée par sa version). */
+export const ORDRE_DU_FIL = [...ETAPES_VALIDABLES, "synthese"] as const;
+export type EtapeFilId = (typeof ORDRE_DU_FIL)[number];
+
+/** L'étape où mène la validation d'une étape : la suivante du fil. */
+export function etapeSuivante(etape: EtapeValidable): EtapeFilId {
+  return ORDRE_DU_FIL[ORDRE_DU_FIL.indexOf(etape) + 1];
+}
+
+/**
+ * Les validations après changements : une date valide l'étape, `null` la
+ * retire. Les autres étapes restent telles quelles.
+ */
+export function avecValidations(
   brut: unknown,
-  etape: EtapeValidable,
-  quand: Date | null,
+  changements: Partial<Record<EtapeValidable, Date | null>>,
 ): EtapesValidees {
   const lu = lireEtapesValidees(brut);
-  if (quand) lu[etape] = quand.toISOString();
-  else delete lu[etape];
+  for (const [etape, quand] of Object.entries(changements) as [EtapeValidable, Date | null][]) {
+    if (quand) lu[etape] = quand.toISOString();
+    else delete lu[etape];
+  }
   return lu;
 }
