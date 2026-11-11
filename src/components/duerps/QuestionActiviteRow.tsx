@@ -212,8 +212,11 @@ function AjoutsDeLActivite({
       )}
       {questionsTransverses.length > 0 && (
         <p className="m-0 mt-1.5">
-          À l&apos;étape 04, répondez «&nbsp;oui&nbsp;» à&nbsp;:{" "}
-          {questionsTransverses.map((q) => `« ${q.question} »`).join(", ")}.
+          {/* Une piste, pas une réponse dictée : le transport peut être confié
+              à un tiers, un salarié n'est pas forcément seul (2026-11-12). */}
+          {`À l'étape 04, si c'est votre cas, répondez « oui » à : ${questionsTransverses
+            .map((q) => `« ${q.question} »`)
+            .join(", ")}`}
         </p>
       )}
     </div>
