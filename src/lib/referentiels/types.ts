@@ -81,6 +81,28 @@ export type QuestionDetection = {
  * qui se présente comme exhaustif alors qu'il ignore un atelier entier est
  * plus dangereux qu'un refus d'onboarding.
  */
+/**
+ * Les ajouts d'un « oui » (ADR-060). Rien d'inventé : chaque risque est un
+ * découpage de `cequiManque`, et aucune cotation n'est proposée.
+ */
+export type AFaireActivite = {
+  /**
+   * L'unité type du même secteur qui reçoit les risques quand aucune unité
+   * dédiée n'est créée (limite d'unités de la formule atteinte, ou pas
+   * d'unité dédiée). Un `id` de `unitesTravailSuggerees`.
+   */
+  uniteExistante: string;
+  /** L'unité créée pour l'activité s'il reste une place. Absente : jamais créée. */
+  uniteDediee?: { nom: string; description: string };
+  /** Deux à quatre libellés de risques personnalisés, ajoutés non cotés. */
+  risques: string[];
+  /**
+   * Les questions transverses (`q-*` de `commun.ts`) que l'activité appelle.
+   * Signalées à l'écran, jamais répondues à la place du dirigeant.
+   */
+  questionsTransverses?: string[];
+};
+
 export type ActiviteNonCouverte = {
   /** Identifiant stable, préfixé par le secteur (ex. `com-decoupe-viande`). */
   id: string;
@@ -96,6 +118,12 @@ export type ActiviteNonCouverte = {
    * descriptif — les familles de risques absentes, pas une appréciation.
    */
   cequiManque: string;
+  /**
+   * Ce que Rojer ajoute au DUERP quand le dirigeant répond « oui » (ADR-060).
+   * Écran et écriture seulement : jamais imprimé, jamais figé dans le
+   * snapshot — `cequiManque` reste la seule mention du document.
+   */
+  aFaire: AFaireActivite;
   /**
    * Pourquoi le référentiel s'arrête là. `cequiManque` dit **ce que** le
    * document ne traite pas ; celui-ci dit **d'où vient la limite**, et les

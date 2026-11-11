@@ -1,5 +1,10 @@
 # ADR-020 — Ce qu'un DUERP ne couvre pas se déclare, et se grave avec lui
 
+> **Amendée le 2026-11-11 par l'ADR-060.** Un « oui » à une activité hors
+> référentiel ajoute désormais au DUERP les risques à évaluer qu'elle appelle
+> (non cotés), dans une unité dédiée ou une unité type existante. La mention
+> de couverture partielle s'imprime toujours, inchangée.
+
 > **Amendée le 2026-09-01 par l'ADR-031.** Le mécanisme décrit ici — ce qui n'est
 > pas couvert se déclare, se grave avec la version, et ne se refuse pas — reste
 > entier. L'ADR-031 ajoute en amont une classe de cas traitée autrement : les
@@ -95,7 +100,9 @@ ailleurs**, jamais l'état d'avancement du produit — qui ne veut rien dire pou
 lecteur et vieillirait mal sur une pièce conservée quarante ans.
 
 Côté produit, la déclaration est **informative et jamais bloquante** : elle
-n'ajoute ni ne retire aucun risque, elle n'empêche pas de valider une version,
+~~n'ajoute ni ne retire aucun risque,~~ [2026-11-11, ADR-060 : un « oui »
+ajoute à évaluer, non cotés, les risques que l'activité appelle, et un retour
+au « non » retire ceux que le dirigeant n'a pas touchés] elle n'empêche pas de valider une version,
 et elle ne produit ni score, ni pourcentage de complétude — un chiffre
 laisserait croire à une mesure de la qualité de l'évaluation. Le registre reste
 descriptif de bout en bout : on nomme l'activité et ce que le document ne

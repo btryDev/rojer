@@ -16,6 +16,7 @@ import {
   type EtapeValidable,
 } from "./etapes-validees";
 import { creerSousPlafond, placesSousLePlafond } from "@/lib/abonnements/quotas";
+import { retirerPourActivites } from "@/lib/activites/ajouts";
 
 /**
  * Cloisonnement : aucune de ces actions ne peut faire confiance à
@@ -157,6 +158,14 @@ export async function choisirSecteur(
         ...(changeDeSecteur ? { reponsesActivitesNonCouvertes: Prisma.DbNull } : {}),
       },
     });
+    // Les réponses de l'ancien secteur tombent : ce qu'elles avaient ajouté
+    // et que le dirigeant n'a pas touché tombe avec elles (ADR-060).
+    if (changeDeSecteur) {
+      await retirerPourActivites(tx, {
+        duerpId,
+        activiteIds: (trouverReferentielParId(duerp.referentielSecteurId!)?.activitesNonCouvertes ?? []).map((a) => a.id),
+      });
+    }
     for (const u of ref.unitesTravailSuggerees
       .filter((u) => !nomsExistants.has(u.nom.toLowerCase()))
       .slice(0, sousLEssai))

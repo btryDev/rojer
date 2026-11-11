@@ -7,6 +7,7 @@ import { estJourCivilReel } from "@/lib/dates";
 import { ecrireFaitActivite } from "@/lib/etablissements/faits-activite-ecriture";
 import { requireRisque, requireUnite } from "@/lib/auth/scope";
 import { calculerCriticite } from "@/lib/cotation";
+import { defautCotation } from "./cotation-defaut";
 import { tousRisquesConnus } from "@/lib/referentiels";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
 
@@ -18,22 +19,6 @@ import { verifierSaisie } from "@/lib/abonnements/saisie";
  * `requireUnite` / `requireRisque` font ça et répondent 404 (pas 403) quand
  * l'objet n'appartient pas au user : on ne révèle même pas son existence.
  */
-
-function defautCotation(
-  ref: ReturnType<typeof tousRisquesConnus> extends Map<string, infer V>
-    ? V | undefined
-    : never,
-) {
-  const gravite = ref?.graviteParDefaut ?? 2;
-  const probabilite = ref?.probabiliteParDefaut ?? 2;
-  const maitrise = ref?.maitriseParDefaut ?? 2;
-  return {
-    gravite,
-    probabilite,
-    maitrise,
-    criticite: calculerCriticite({ gravite, probabilite, maitrise }),
-  };
-}
 
 /**
  * Retient un risque du référentiel pour une unité — AJOUT SEUL (relecture

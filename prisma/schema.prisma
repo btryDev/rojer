@@ -536,10 +536,13 @@ model UniteTravail {
   estTransverse      Boolean  @default(false)
   aucunRisqueJustif  String?
   risques            Risque[]
+  /// L'activité hors référentiel dont un « oui » a créé cette unité (ADR-060).
+  activiteId         String?
 
   // Clé étrangère sans index jusqu'ici : scan séquentiel à chaque construction
   // de snapshot et à chaque cascade partant du DUERP.
   @@index([duerpId])
+  @@unique([duerpId, activiteId])
 }
 
 model Risque {
@@ -559,8 +562,11 @@ model Risque {
   exposeCMR             Boolean        @default(false)
   actions               Action[]
   interventions         Intervention[]
+  /// L'activité hors référentiel dont un « oui » a ajouté ce risque (ADR-060).
+  activiteId            String?
 
   @@unique([uniteId, referentielId])
+  @@unique([uniteId, activiteId, libelle])
 }
 
 // ----------------------------------------------------------------------------
