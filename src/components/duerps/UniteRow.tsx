@@ -28,8 +28,10 @@ export function UniteRow({ id, nom, description, nombreRisques }: Props) {
     // la question a besoin de la largeur du `<li>`, alors que la colonne
     // d'actions qui la déclenche est `shrink-0`. Sans ce niveau, la carte
     // naîtrait dans une bande de 150 px collée au bord droit.
-    <li className="flex flex-col px-7 py-5 sm:px-8">
-      <div className="flex items-start justify-between gap-6">
+    // Une carte par unité (2026-11-12) : nom et description en haut, les
+    // gestes en pied de carte.
+    <li className="carte-board flex flex-col px-6 py-5 sm:px-7">
+      <div className="flex h-full flex-col justify-between gap-4">
         <div className="min-w-0 flex-1">
           {editing ? (
             <div className="flex flex-wrap items-center gap-2">
@@ -86,7 +88,7 @@ export function UniteRow({ id, nom, description, nombreRisques }: Props) {
           )}
         </div>
         {!editing && (
-          <div className="flex shrink-0 gap-1.5">
+          <div className="flex flex-wrap gap-1.5">
             <Button
               data-ecriture
               variant="boardClair"

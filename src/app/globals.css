@@ -917,6 +917,18 @@
      board : les mêmes couleurs, les mêmes cartes, mais deux polices de
      titre. La marque parle maintenant d'une seule voix des deux côtés de
      la connexion. */
+  /* Le sur-titre sans chasse fixe (2026-11-12, décision de la propriétaire) :
+     le DUERP quitte les capitales monospacées de `.board-eyebrow` ; le reste
+     de l'app les garde tant qu'il n'est pas repris. */
+  .board-surtitre {
+    font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--board-slate-soft);
+    font-variant-numeric: tabular-nums;
+  }
+
   .board-titre {
     font-family: var(--font-titre), ui-sans-serif, system-ui, sans-serif;
     font-weight: 600;

@@ -12,8 +12,9 @@ const ETAPES: Etape[] = [
 describe("WizardSteps — la frise Progression", () => {
   const html = renderToStaticMarkup(<WizardSteps etapes={ETAPES} />);
 
-  it("est posée sur une carte board, pas sur le canvas", () => {
-    expect(html).toMatch(/<nav[^>]*class="carte-board /);
+  it("est posée sur le canevas, pleine largeur, sans carte (2026-11-12)", () => {
+    expect(html).toMatch(/<nav[^>]*class="not-prose /);
+    expect(html).not.toContain("carte-board");
   });
 
   it("une étape aux prérequis manquants n'est pas un lien mort", () => {

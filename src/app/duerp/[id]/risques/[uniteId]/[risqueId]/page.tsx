@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LienRetour } from "@/components/duerps/LienRetour";
 import { notFound } from "next/navigation";
 import { CotationForm } from "@/components/duerps/CotationForm";
 import { EvaluationProgression } from "@/components/duerps/EvaluationProgression";
@@ -33,14 +33,9 @@ export default async function CotationPage({
     : undefined;
 
   return (
-    <div className="flex flex-col gap-[22px]">
+    <div className="flex flex-col gap-8">
       <nav>
-        <Link
-          href={hrefRetourUnite}
-          className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-[color:var(--board-slate-soft)] transition-colors hover:text-[color:var(--board-ink)]"
-        >
-          ← {risque.unite.nom}
-        </Link>
+        <LienRetour href={hrefRetourUnite}>{risque.unite.nom}</LienRetour>
       </nav>
 
       <header className="max-w-[var(--board-mesure)]">

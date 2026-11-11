@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LienRetour } from "@/components/duerps/LienRetour";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { QuestionTransverseRow } from "@/components/duerps/QuestionTransverseRow";
@@ -53,7 +54,7 @@ export default async function TransversesPage({
   const ancresACompleter = new Set(manques.map((f) => f.questionTransverse ?? f.champ));
 
   return (
-    <div className="flex flex-col gap-[22px]">
+    <div className="flex flex-col gap-8">
       <WizardSteps etapes={etapes} />
 
       <header className="max-w-[var(--board-mesure)]">
@@ -162,12 +163,7 @@ export default async function TransversesPage({
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-4 border-t border-[color:var(--board-slate-line)] pt-6">
-        <Link
-          href={`/duerp/${id}/risques`}
-          className={buttonVariants({ variant: "boardClair", size: "board" })}
-        >
-          ← Risques
-        </Link>
+        <LienRetour href={`/duerp/${id}/risques`}>Risques</LienRetour>
         {/* ~~Un lien, plus une validation : l'étape se calcule sur les
             réponses (2026-10-12), cliquer « Terminer » ne la coche plus.~~
             [2026-11-11, « si pas validé, pas fait » : l'étape se valide de

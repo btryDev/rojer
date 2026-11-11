@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LienRetour } from "@/components/duerps/LienRetour";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
@@ -62,14 +63,9 @@ export default async function MesuresPage({
     : undefined;
 
   return (
-    <div className="flex flex-col gap-[22px]">
+    <div className="flex flex-col gap-8">
       <nav>
-        <Link
-          href={hrefUnite}
-          className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-[color:var(--board-slate-soft)] transition-colors hover:text-[color:var(--board-ink)]"
-        >
-          ← {risque.unite.nom}
-        </Link>
+        <LienRetour href={hrefUnite}>{risque.unite.nom}</LienRetour>
       </nav>
 
       <header className="max-w-[var(--board-mesure)]">
@@ -320,19 +316,9 @@ export default async function MesuresPage({
       {/* Actions */}
       <div className="space-y-4 border-t border-[color:var(--board-slate-line)] pt-7">
         <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-          <Link
-            href={hrefUnite}
-            className={buttonVariants({ variant: "boardClair", size: "boardSm" })}
-          >
-            ← Retour à l&apos;unité
-          </Link>
+          <LienRetour href={hrefUnite}>Retour à l&apos;unité</LienRetour>
           <div className="flex flex-wrap items-center gap-3">
-            <Link
-              href={hrefCotation}
-              className={buttonVariants({ variant: "boardClair", size: "board" })}
-            >
-              ← Revoir la cotation
-            </Link>
+            <LienRetour href={hrefCotation}>Revoir la cotation</LienRetour>
             {hrefSuivant ? (
               <Link
                 href={hrefSuivant}

@@ -57,7 +57,7 @@ export default async function ActivitesPage({
   const sansReponse = questions.filter((q) => q.exercee === undefined);
 
   return (
-    <div className="flex flex-col gap-[22px]">
+    <div className="flex flex-col gap-8">
       <WizardSteps etapes={etapes} />
 
       {/* Allégé le 2026-11-11 : le titre parlait du référentiel, un mot de

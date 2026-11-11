@@ -33,8 +33,9 @@ export type Etape = {
  * « À venir » se confondait avec « à faire »). Une étape dont les prérequis
  * manquent reste un bloc non cliquable. `aria-current="step"` double le tout.
  *
- * Posé sur une carte board (charte § checklist 3) : sans surface, le fil
- * flottait sur le canvas et ne se lisait pas comme un bloc de la page.
+ * ~~Posé sur une carte board (charte § checklist 3)~~ [2026-11-12, décision
+ * de la propriétaire : pleine largeur sur le canevas, fermé par un filet — la
+ * carte en faisait un bloc de plus parmi les cartes de la page.]
  */
 export function WizardSteps({ etapes }: { etapes: Etape[] }) {
   const total = etapes.length;
@@ -44,14 +45,12 @@ export function WizardSteps({ etapes }: { etapes: Etape[] }) {
   return (
     <nav
       aria-label="Sommaire du DUERP"
-      className="carte-board not-prose px-7 py-6 sm:px-8"
+      className="not-prose border-b border-[color:var(--board-slate-line)] pb-7"
     >
       {/* Compteur haut */}
       <div className="mb-4 flex items-baseline justify-between">
-        <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-          Progression
-        </p>
-        <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
+        <p className="board-surtitre m-0">Progression</p>
+        <p className="board-surtitre m-0">
           <span className="text-[13px] tabular-nums text-[color:var(--board-ink)]">
             {faites}
           </span>
@@ -110,7 +109,7 @@ export function WizardSteps({ etapes }: { etapes: Etape[] }) {
           // (interdits 19 et 20), un simple bloc.
           const corps = (
             <>
-              <div className="board-eyebrow flex items-baseline gap-2 text-[10px] tracking-[0.16em]">
+              <div className="flex items-baseline gap-2 text-[12px] font-semibold tabular-nums">
                 <span
                   className={`tabular-nums ${
                     e.actuelle

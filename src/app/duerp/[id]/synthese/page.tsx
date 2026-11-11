@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LienRetour } from "@/components/duerps/LienRetour";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { CarteMiseAJour } from "@/components/duerps/CarteMiseAJour";
@@ -117,7 +118,7 @@ export default async function SynthesePage({
   const etatMaj = majEchue && !majAnnuelleAConfirmer ? "enRetard" : "aPlanifier";
 
   return (
-    <div className="flex flex-col gap-[22px]">
+    <div className="flex flex-col gap-8">
       <WizardSteps etapes={etapes} />
 
       {(majEchue || jamaisValide) && (
@@ -647,12 +648,7 @@ export default async function SynthesePage({
       </section>
 
       <div className="flex flex-wrap items-center justify-between gap-4 border-t border-[color:var(--board-slate-line)] pt-6">
-        <Link
-          href={`/duerp/${id}/transverses`}
-          className={buttonVariants({ variant: "boardClair", size: "board" })}
-        >
-          ← Étape précédente
-        </Link>
+        <LienRetour href={`/duerp/${id}/transverses`}>Étape précédente</LienRetour>
         <p className="m-0 text-[12.5px] text-[color:var(--board-slate-mid)]">
           Fait à {formaterDateFr(aujourdhui)}
         </p>

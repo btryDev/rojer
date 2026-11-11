@@ -22,7 +22,7 @@ export default async function UnitesPage({
   const etapes = etapesDuDuerp(duerp, "unites");
 
   return (
-    <div className="flex flex-col gap-[22px]">
+    <div className="flex flex-col gap-8">
       <WizardSteps etapes={etapes} />
 
       {/* Allégé le 2026-11-11 : la définition d'une unité était dite deux
@@ -49,19 +49,18 @@ export default async function UnitesPage({
         </p>
       </header>
 
-      <section className="carte-board overflow-clip">
-        <div className="flex items-baseline justify-between gap-4 border-b border-[color:var(--board-slate-line)] px-7 py-5 sm:px-8">
-          <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] tabular-nums text-[color:var(--board-slate-soft)]">
-            {unitesVisibles.length} unité{unitesVisibles.length > 1 ? "s" : ""}
-          </p>
-        </div>
-
+      {/* Les unités en cartes (2026-11-12, demande de la propriétaire), sur
+          le canevas ; l'ajout dans sa propre carte, après elles. */}
+      <section aria-label="Unités de travail" className="flex flex-col gap-4">
+        <p className="board-surtitre m-0">
+          {unitesVisibles.length} unité{unitesVisibles.length > 1 ? "s" : ""}
+        </p>
         {unitesVisibles.length === 0 ? (
-          <p className="m-0 px-7 py-8 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)] sm:px-8">
+          <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
             Aucune unité de travail. Ajoutez-en au moins une pour continuer.
           </p>
         ) : (
-          <ul className="m-0 list-none divide-y divide-[color:var(--board-slate-line)] p-0">
+          <ul className="m-0 grid list-none grid-cols-1 gap-4 p-0 md:grid-cols-2">
             {unitesVisibles.map((u) => (
               <UniteRow
                 key={u.id}
@@ -73,8 +72,7 @@ export default async function UnitesPage({
             ))}
           </ul>
         )}
-
-        <div className="border-t border-[color:var(--board-slate-line)]">
+        <div className="carte-board overflow-clip">
           {/* La limite d'unités de l'essai, annoncée avant la saisie (ADR-053 § 14). */}
           <PlafondDeCreation cle="unitesTravail" className="mx-6 mt-4">
             <AjouterUniteForm duerpId={id} />

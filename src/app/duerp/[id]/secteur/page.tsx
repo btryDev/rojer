@@ -37,7 +37,7 @@ export default async function SecteurPage({
     }));
 
   return (
-    <div className="flex flex-col gap-[22px]">
+    <div className="flex flex-col gap-8">
       <WizardSteps etapes={etapes} />
 
       {/* Raccourci : importer un DUERP existant plutôt que reconstruire */}
