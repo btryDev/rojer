@@ -1,4 +1,4 @@
-import { LienRetour } from "@/components/duerps/LienRetour";
+import { FilUnite } from "@/components/duerps/FilUnite";
 import { notFound } from "next/navigation";
 import { CotationForm } from "@/components/duerps/CotationForm";
 import { EvaluationProgression } from "@/components/duerps/EvaluationProgression";
@@ -34,9 +34,13 @@ export default async function CotationPage({
 
   return (
     <div className="flex flex-col gap-8">
-      <nav>
-        <LienRetour href={hrefRetourUnite}>{risque.unite.nom}</LienRetour>
-      </nav>
+      <FilUnite
+        niveaux={[
+          { libelle: "Toutes les unités", href: `/duerp/${id}/risques` },
+          { libelle: risque.unite.nom, href: hrefRetourUnite },
+          { libelle: risque.libelle },
+        ]}
+      />
 
       <header className="max-w-[var(--board-mesure)]">
         <div className="board-eyebrow flex flex-wrap items-baseline gap-2 text-[10.5px] tracking-[0.18em]">
@@ -58,7 +62,7 @@ export default async function CotationPage({
             {risque.cotationSaisie ? "déjà coté" : "à coter"}
           </span>
         </div>
-        <h2 className="board-titre m-0 mt-3 text-[clamp(23px,2.1vw,30px)]">
+        <h2 className="board-titre m-0 mt-3 text-[22px]">
           {risque.libelle}
         </h2>
         {risque.description && (
@@ -81,7 +85,7 @@ export default async function CotationPage({
           <span className="font-mono text-[18px] font-semibold tabular-nums text-[color:var(--board-blue-ink)]">
             01
           </span>
-          <h3 id="partie-cotation" className="board-titre m-0 text-[22px]">
+          <h3 id="partie-cotation" className="board-titre m-0 text-[18px]">
             Cotation
           </h3>
           <span aria-hidden className="text-[color:var(--board-slate)]">
@@ -107,7 +111,6 @@ export default async function CotationPage({
             exposeCMR: risque.exposeCMR,
           }}
           cotationSaisie={risque.cotationSaisie}
-          hrefRetourUnite={hrefRetourUnite}
           hrefMesures={hrefMesures}
           hrefSuivant={hrefSuivant}
         />

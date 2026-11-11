@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LienRetour } from "@/components/duerps/LienRetour";
+import { FilUnite } from "@/components/duerps/FilUnite";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
@@ -64,9 +64,14 @@ export default async function MesuresPage({
 
   return (
     <div className="flex flex-col gap-8">
-      <nav>
-        <LienRetour href={hrefUnite}>{risque.unite.nom}</LienRetour>
-      </nav>
+      <FilUnite
+        niveaux={[
+          { libelle: "Toutes les unités", href: `/duerp/${id}/risques` },
+          { libelle: risque.unite.nom, href: hrefUnite },
+          { libelle: risque.libelle, href: hrefCotation },
+          { libelle: "Mesures" },
+        ]}
+      />
 
       <header className="max-w-[var(--board-mesure)]">
         <div className="board-eyebrow flex flex-wrap items-baseline gap-2 text-[10.5px] tracking-[0.18em]">
@@ -82,7 +87,7 @@ export default async function MesuresPage({
             {String(risquesUnite.length).padStart(2, "0")}
           </span>
         </div>
-        <h2 className="board-titre m-0 mt-3 text-[clamp(23px,2.1vw,30px)]">
+        <h2 className="board-titre m-0 mt-3 text-[22px]">
           {risque.libelle}
         </h2>
         <p className="board-eyebrow m-0 mt-3 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
@@ -115,7 +120,7 @@ export default async function MesuresPage({
           </span>
           <h3
             id="partie-mesures"
-            className="board-titre m-0 text-[22px]"
+            className="board-titre m-0 text-[18px]"
           >
             Mesures de prévention
           </h3>
@@ -316,9 +321,9 @@ export default async function MesuresPage({
       {/* Actions */}
       <div className="space-y-4 border-t border-[color:var(--board-slate-line)] pt-7">
         <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-          <LienRetour href={hrefUnite}>Retour à l&apos;unité</LienRetour>
-          <div className="flex flex-wrap items-center gap-3">
-            <LienRetour href={hrefCotation}>Revoir la cotation</LienRetour>
+          {/* Les retours du bas sont partis (2026-11-12) : le fil du haut
+              mène à l'unité et à la cotation. */}
+          <div className="flex flex-wrap items-center gap-3 sm:ml-auto">
             {hrefSuivant ? (
               <Link
                 href={hrefSuivant}

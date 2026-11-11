@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LienRetour } from "@/components/duerps/LienRetour";
+import { FilUnite } from "@/components/duerps/FilUnite";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { AjouterRisqueCustomBouton } from "@/components/duerps/AjouterRisqueCustomBouton";
@@ -86,11 +86,14 @@ export default async function RisquesUnitePage({
 
   return (
     <div className="flex flex-col gap-8">
-      <nav>
-        <LienRetour href={`/duerp/${id}/risques`}>Toutes les unités</LienRetour>
-      </nav>
+      <FilUnite
+        niveaux={[
+          { libelle: "Toutes les unités", href: `/duerp/${id}/risques` },
+          { libelle: unite.nom },
+        ]}
+      />
 
-      <EnTeteEtape page="risques" titre={unite.nom}>
+      <EnTeteEtape page="risques" titre={unite.nom} niveau="detail">
         {unite.description}
       </EnTeteEtape>
 

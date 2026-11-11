@@ -28,7 +28,6 @@ type Props = {
     exposeCMR: boolean;
   };
   cotationSaisie: boolean;
-  hrefRetourUnite: string;
   hrefMesures: string;
   hrefSuivant?: string;
 };
@@ -45,7 +44,6 @@ export function CotationForm({
   libelleRisque,
   initial,
   cotationSaisie,
-  hrefRetourUnite,
   hrefMesures,
   hrefSuivant,
 }: Props) {
@@ -348,19 +346,12 @@ export function CotationForm({
         </p>
       )}
 
-      {/* Actions — primaire à droite, navigation de repli à gauche */}
+      {/* Actions — à droite */}
       <div className="space-y-5 border-t border-[color:var(--board-slate-line)] pt-7">
         <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-          <Link
-            href={hrefRetourUnite}
-            className={buttonVariants({
-              variant: "boardClair",
-              size: "boardSm",
-            })}
-          >
-            ← Retour à l&apos;unité
-          </Link>
-          <div className="flex flex-wrap items-center gap-3">
+          {/* Plus de « ← Retour à l'unité » ici (2026-11-12) : le fil du
+              haut de page y mène. */}
+          <div className="flex flex-wrap items-center gap-3 sm:ml-auto">
             {cotationSaisie ? (
               <>
                 <Button
