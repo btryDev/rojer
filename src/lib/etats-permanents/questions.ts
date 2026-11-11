@@ -17,6 +17,10 @@ export const QUESTION_PAR_OBLIGATION: Readonly<Record<string, string>> = {
     "Une consigne est-elle affichée près de l'arrêt d'urgence des appareils de cuisson ?",
   "incendie-erp-interdiction-fumer-affichee":
     "L'interdiction de fumer est-elle affichée dans l'établissement ?",
+  "incendie-erp-5-sommeil-avis-controle-affiche":
+    "L'avis sur le contrôle de la sécurité est-il affiché près de l'entrée principale ?",
+  "incendie-erp-avis-controle-affiche":
+    "L'avis sur le contrôle de la sécurité est-il affiché près de l'entrée principale ?",
   // alerter
   "incendie-erp-5-consignes-affichees":
     "Les consignes incendie sont-elles affichées bien en vue, avec le numéro des pompiers et l'adresse du centre de secours ?",
@@ -105,10 +109,6 @@ export const QUESTION_PAR_OBLIGATION: Readonly<Record<string, string>> = {
     "Une personne qualifiée en électricité est-elle présente pendant l'ouverture au public de la salle ?",
   "elec-travail-habilitation-personnel":
     "Les salariés qui travaillent sur ou près d'installations électriques sont-ils habilités ?",
-  "incendie-erp-5-sommeil-avis-controle-affiche":
-    "L'avis sur le contrôle de la sécurité est-il affiché près de l'entrée principale ?",
-  "incendie-erp-avis-controle-affiche":
-    "L'avis sur le contrôle de la sécurité est-il affiché près de l'entrée principale ?",
   "incendie-erp-exploitant-present-public":
     "Vous-même ou votre représentant êtes-vous présent tant que le public est là ?",
   "incendie-erp-personnel-qualifie-detection":

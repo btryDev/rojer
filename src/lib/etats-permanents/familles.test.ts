@@ -29,6 +29,7 @@ import { estPeriodicitePlusStricte } from "@/lib/calendrier/periodicite";
 import { prescriptionRenforce } from "@/lib/matching/prescriptions";
 import { figureSurLEcranEnPlace } from "./regle";
 import { ORDRE_GROUPES, ORDRE_SOUS_CATEGORIES, rangementDe } from "./familles";
+import { gesteDe } from "./gestes";
 
 const SUR_L_ECRAN = obligationsConformite.filter(figureSurLEcranEnPlace);
 const HORS_ECRAN = obligationsConformite.filter(
@@ -106,7 +107,21 @@ describe("le rangement de l'écran « Ce qui doit être en place »", () => {
     else expect(permises).toContain(sous);
   });
 
+  // 2026-11-11 : l'avis de GE 5 avait été rangé dans « Qui s'occupe de quoi »
+  // (sous-lot C, 2026-10-17) alors que sa table des gestes le disait « à
+  // afficher » — le dirigeant le cherchait avec les autres affichages. Ce que
+  // l'on met au mur sert soit l'incendie, soit l'information des salariés.
+  it.each(
+    SUR_L_ECRAN.filter((o) => gesteDe(o.id) === "afficher").map(
+      (o) => [o.id, o] as const,
+    ),
+  )("%s : un affichage se range avec les affichages", (_id, o) => {
+    expect(["incendie_secours", "quotidien"]).toContain(rangementDe(o)?.groupe);
+  });
+
   it.each([
+    ["incendie-erp-avis-controle-affiche", "incendie_secours", "prevenir"],
+    ["incendie-erp-5-sommeil-avis-controle-affiche", "incendie_secours", "prevenir"],
     ["information-etablissement-avis-acces-duerp", "quotidien", "informer"],
     // 2026-10-17, revue de c6 : ~~incendie_secours / alerter~~. Les
     // coordonnées de `D. 4711-1` (médecin du travail, secours, inspection)
