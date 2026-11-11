@@ -35,13 +35,8 @@ export async function AppHeader() {
           <span className="flex h-7 w-7 items-center justify-center rounded-[10px] bg-[color:var(--board-ink)] text-[0.6rem] font-bold uppercase tracking-widest text-[color:var(--board-card)]">
             R
           </span>
-          <span className="flex flex-col leading-tight">
-            <span className="text-[0.88rem] font-semibold tracking-[-0.01em] text-[color:var(--board-ink)]">
-              Rojer
-            </span>
-            <span className="board-eyebrow m-0 text-[9px] tracking-[0.22em] text-[color:var(--board-slate-soft)]">
-              Conformité santé-sécurité — TPE / PME
-            </span>
+          <span className="text-[0.88rem] font-semibold tracking-[-0.01em] text-[color:var(--board-ink)]">
+            Rojer
           </span>
         </Link>
 

@@ -238,9 +238,6 @@ export function WizardShell({
           className="flex items-baseline gap-2 text-[17px] font-semibold leading-none tracking-[-0.025em] text-white transition-colors hover:text-white/75"
         >
           Rojer
-          <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-white/50">
-            conformité
-          </span>
         </Link>
 
         <h2 className="board-titre m-0 text-[26px] text-white">
@@ -343,9 +340,6 @@ export function WizardShell({
             className="flex items-baseline gap-2 text-[16px] font-semibold leading-none tracking-[-0.025em] text-[color:var(--board-ink)]"
           >
             Rojer
-            <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-[color:var(--board-slate-soft)]">
-              conformité
-            </span>
           </Link>
 
           {/* Le rail — et donc la déconnexion qu'il porte — est replié sous
