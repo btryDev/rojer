@@ -25,7 +25,7 @@ vi.mock("@/lib/auth/portee/lot-verifie", () => ({
   },
 }));
 
-const { ajouterPourActivite, retirerPourActivites, synchroniserAjouts, questionsTransversesDe, estDoublonDOrigine } =
+const { ajouterPourActivite, retirerPourActivites, synchroniserAjouts, estDoublonDOrigine } =
   await import("./ajouts");
 
 const ACTIVITE: ActiviteNonCouverte = {
@@ -256,10 +256,3 @@ describe("synchroniserAjouts", () => {
   });
 });
 
-describe("questionsTransversesDe", () => {
-  it("résout les questions connues, ignore les autres", () => {
-    const qs = questionsTransversesDe(ACTIVITE);
-    expect(qs.map((q) => q.id)).toEqual(["q-biologique"]);
-    expect(qs[0].question).toMatch(/denrées crues/);
-  });
-});

@@ -7,7 +7,7 @@ import { questionsActivites } from "@/lib/activites/reponses";
 import { etapesDuDuerp, enteteEtape } from "@/lib/duerps/etapes";
 import { AideEcran } from "@/components/ui-kit/AideEcran";
 import { getDuerp } from "@/lib/duerps/queries";
-import { ajoutsParActivite, questionsTransversesDe } from "@/lib/activites/ajouts";
+import { ajoutsParActivite } from "@/lib/activites/ajouts";
 import { requireCompte } from "@/lib/auth/compte";
 import { trouverReferentielParId } from "@/lib/referentiels";
 
@@ -130,7 +130,6 @@ export default async function ActivitesPage({
             aide={q.activite.aide}
             ajout={ajouts.get(q.activite.id)}
             risquesAPenser={q.activite.aFaire.risques}
-            questionsTransverses={questionsTransversesDe(q.activite)}
             exercee={q.exercee}
           />
         ))}

@@ -10,7 +10,6 @@ import type { TransactionBornee } from "@/lib/auth/portee/client";
 import { creerEnLotVerifie } from "@/lib/auth/portee/lot-verifie";
 import { placesSousLePlafond } from "@/lib/abonnements/quotas";
 import { avecValidations } from "@/lib/duerps/etapes-validees";
-import { questionsDetectionTransverses } from "@/lib/referentiels";
 import type { ActiviteNonCouverte } from "@/lib/referentiels/types";
 import { defautCotation } from "@/lib/risques/cotation-defaut";
 
@@ -69,16 +68,6 @@ export async function ajoutsParActivite(
     ajout.risques.push({ id: r.id, libelle: r.libelle, cotationSaisie: r.cotationSaisie });
   }
   return parActivite;
-}
-
-/** Les questions transverses qu'une activité appelle, dans l'ordre déclaré. */
-export function questionsTransversesDe(
-  activite: Pick<ActiviteNonCouverte, "aFaire">,
-): { id: string; question: string }[] {
-  return (activite.aFaire.questionsTransverses ?? []).flatMap((id) => {
-    const q = questionsDetectionTransverses.find((x) => x.id === id);
-    return q ? [{ id: q.id, question: q.intitule }] : [];
-  });
 }
 
 /**

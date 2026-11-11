@@ -32,8 +32,6 @@ type Props = {
   ajout: AjoutActivite | undefined;
   /** Les risques à ajouter à la main quand rien n'a pu l'être (`aFaire.risques`). */
   risquesAPenser: string[];
-  /** Les questions transverses à qui répondre « oui » (`questionsTransversesDe`). */
-  questionsTransverses: { id: string; question: string }[];
   /** `undefined` = pas de réponse. Ne jamais replier sur `false`. */
   exercee: boolean | undefined;
 };
@@ -45,7 +43,6 @@ export function QuestionActiviteRow({
   aide,
   ajout,
   risquesAPenser,
-  questionsTransverses,
   exercee,
 }: Props) {
   const [pending, startTransition] = useTransition();
@@ -145,7 +142,6 @@ export function QuestionActiviteRow({
         <AjoutsDeLActivite
           ajout={ajout}
           risquesAPenser={risquesAPenser}
-          questionsTransverses={questionsTransverses}
         />
       )}
       {exercee === false && ajout && ajout.risques.length > 0 && (
@@ -165,8 +161,7 @@ const NOTE =
 function AjoutsDeLActivite({
   ajout,
   risquesAPenser,
-  questionsTransverses,
-}: Pick<Props, "ajout" | "risquesAPenser" | "questionsTransverses">) {
+}: Pick<Props, "ajout" | "risquesAPenser">) {
   return (
     <div className="mt-4 max-w-[var(--board-mesure)] rounded-[16px] bg-[color:var(--board-blue-pale)] px-4 py-3 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-ink)]">
       {ajout ? (
@@ -209,15 +204,6 @@ function AjoutsDeLActivite({
             </p>
           </AideEcran>
         </div>
-      )}
-      {questionsTransverses.length > 0 && (
-        <p className="m-0 mt-1.5">
-          {/* Une piste, pas une réponse dictée : le transport peut être confié
-              à un tiers, un salarié n'est pas forcément seul (2026-11-12). */}
-          {`À l'étape 04, si c'est votre cas, répondez « oui » à : ${questionsTransverses
-            .map((q) => `« ${q.question} »`)
-            .join(", ")}`}
-        </p>
       )}
     </div>
   );
