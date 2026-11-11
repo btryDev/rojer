@@ -129,8 +129,7 @@ export default async function MesuresPage({
             <AideEcran titre="Types de mesures — classement de Rojer">
               <p className="m-0 font-semibold">Art. L. 4121-2 · Code du travail</p>
               <p className="m-0 mt-2">
-                {ORDRE_SELON_L4121_2} L&apos;ordre des types ci-dessous est un
-                classement de Rojer&nbsp;:
+                {`${ORDRE_SELON_L4121_2} L'ordre des types ci-dessous est un classement de Rojer :`}
               </p>
               <ol className="m-0 mt-2 pl-5">
                 <li>Supprimer le risque</li>
