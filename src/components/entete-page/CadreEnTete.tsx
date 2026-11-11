@@ -93,7 +93,7 @@ export function CadreEnTete({
         </div>
       ) : null}
       {pied ? (
-        <div className="col-span-full border-t border-[color:var(--board-slate-line)] px-[var(--board-gutter)] py-4">
+        <div className="col-span-full border-t border-[color:var(--board-slate-line)] px-[var(--board-gutter)] py-7">
           {pied}
         </div>
       ) : null}
