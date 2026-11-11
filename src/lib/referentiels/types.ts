@@ -26,7 +26,14 @@ export type MesureRecommandee = {
 export type UniteTravailSuggeree = {
   id: string;
   nom: string;
+  /** Recopiée sur l'unité créée : lue par le dirigeant, sans référence. */
   description?: string;
+  /**
+   * D'où vient l'unité type (2026-11-12). Sortie de `description`, où elle
+   * s'affichait sur l'écran des unités et dans le PDF : la traçabilité reste
+   * au référentiel, l'écran parle au dirigeant.
+   */
+  source?: string;
 };
 
 export type RisqueReferentiel = {

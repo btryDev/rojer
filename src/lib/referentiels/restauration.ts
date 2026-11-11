@@ -32,31 +32,36 @@ export const restauration: Referentiel = {
       id: "reception",
       nom: "Réception des matières premières",
       description:
-        "Déchargement, contrôle, transfert vers les zones de stockage (source : INRS ED 880, fiche 1).",
+        "Déchargement, contrôle, transfert vers les zones de stockage.",
+      source: "INRS ED 880, fiche 1",
     },
     {
       id: "stockage",
       nom: "Stockage (réserve, chambre froide)",
       description:
-        "Rayonnages, chambres froides, locaux d'emballage (source : INRS ED 880, fiche 2).",
+        "Rayonnages, chambres froides, locaux d'emballage.",
+      source: "INRS ED 880, fiche 2",
     },
     {
       id: "production",
       nom: "Production froide et chaude (cuisine)",
       description:
-        "Préparation et cuisson, plans de travail, équipements (source : INRS ED 880, fiche 3).",
+        "Préparation et cuisson, plans de travail, équipements.",
+      source: "INRS ED 880, fiche 3",
     },
     {
       id: "service-salle",
       nom: "Service en salle",
       description:
-        "Accueil, prise de commande, service, encaissement (source : INRS ED 880, fiche 4).",
+        "Accueil, prise de commande, service, encaissement.",
+      source: "INRS ED 880, fiche 4",
     },
     {
       id: "plonge",
       nom: "Plonge, nettoyage",
       description:
-        "Lavage de la vaisselle, nettoyage des locaux et équipements (source : INRS ED 880, fiche 5).",
+        "Lavage de la vaisselle, nettoyage des locaux et équipements.",
+      source: "INRS ED 880, fiche 5",
     },
   ],
   risques: [

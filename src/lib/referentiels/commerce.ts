@@ -44,13 +44,15 @@ export const commerce: Referentiel = {
       id: "com-reception-stockage",
       nom: "Réception et stockage",
       description:
-        "Déchargement, contrôle, rangement en réserve (source : OiRA commerce non alimentaire).",
+        "Déchargement, contrôle, rangement en réserve.",
+      source: "OiRA commerce non alimentaire",
     },
     {
       id: "com-mise-rayon",
       nom: "Mise en rayon et vitrine",
       description:
-        "Approvisionnement des rayons, opérations en hauteur, merchandising (source : OiRA).",
+        "Approvisionnement des rayons, opérations en hauteur, merchandising.",
+      source: "OiRA",
     },
     {
       id: "com-vente-caisse",
@@ -62,7 +64,8 @@ export const commerce: Referentiel = {
       id: "com-locaux",
       nom: "Locaux et ambiance générale",
       description:
-        "Surface de vente, sanitaires, espaces communs (source : OiRA).",
+        "Surface de vente, sanitaires, espaces communs.",
+      source: "OiRA",
     },
   ],
   risques: [

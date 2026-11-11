@@ -42,7 +42,8 @@ export const bureau: Referentiel = {
       id: "bur-poste-ecran",
       nom: "Postes de travail sur écran (open-space, bureaux)",
       description:
-        "Postes individuels ou partagés, travail prolongé sur écran (source : INRS, page « Travail de bureau. Les risques du métier »).",
+        "Postes individuels ou partagés, travail prolongé sur écran.",
+      source: "INRS, page « Travail de bureau. Les risques du métier »",
     },
     {
       id: "bur-accueil",
