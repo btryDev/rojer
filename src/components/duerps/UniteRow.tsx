@@ -78,14 +78,10 @@ export function UniteRow({ id, nom, description, nombreRisques }: Props) {
                   {description}
                 </p>
               )}
-              {/* Le compte ne s'écrit que s'il y en a (2026-11-11) : « Aucun
-                  risque renseigné » sur des unités qu'on vient de créer
-                  parlait de l'étape suivante et laissait croire à un oubli. */}
-              {nombreRisques > 0 && (
-                <p className="board-eyebrow m-0 mt-2 text-[10px] tracking-[0.16em] tabular-nums text-[color:var(--board-slate-soft)]">
-                  {`${String(nombreRisques).padStart(2, "0")} risque${nombreRisques > 1 ? "s" : ""} renseigné${nombreRisques > 1 ? "s" : ""}`}
-                </p>
-              )}
+              {/* ~~Le compte de risques renseignés~~ (retiré le 2026-11-12) :
+                  les risques sont l'étape suivante, l'écran des unités n'en
+                  parle pas. `nombreRisques` sert encore à la confirmation de
+                  suppression. */}
             </>
           )}
         </div>
