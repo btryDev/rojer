@@ -41,15 +41,15 @@ export function AccueilParcours({ surCommencer }: { surCommencer: () => void }) 
             de marque de la landing (`--board-sky`), plus grand et ancré en bas
             à droite : centré et petit, il flottait. La hauteur le borne, quel
             que soit le format de la planche. */}
-        <div className="relative h-[170px] overflow-hidden bg-[color:var(--board-sky)] md:h-[210px]">
+        <div className="relative h-[180px] overflow-hidden bg-[color:var(--board-sky)] md:h-[220px]">
           <Image
             src="/illustrations/batiments/restaurant.webp"
             alt=""
             width={1000}
             height={901}
             preload
-            sizes="(min-width: 768px) 290px, 230px"
-            className="absolute -bottom-3 right-4 h-[200px] w-auto md:right-8 md:h-[250px]"
+            sizes="(min-width: 768px) 230px, 190px"
+            className="absolute -bottom-1.5 right-6 h-[166px] w-auto md:right-10 md:h-[204px]"
           />
         </div>
         <div className="flex flex-col gap-6 px-5 pb-[calc(22px+env(safe-area-inset-bottom,0px))] pt-6 md:px-9 md:pb-8 md:pt-7">
