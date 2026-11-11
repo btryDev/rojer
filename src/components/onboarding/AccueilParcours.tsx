@@ -10,8 +10,8 @@ import { Button } from "@/components/ui/button";
  * de temps ça prend. Elle s'ouvre sur le parcours flouté derrière elle, et
  * « Commencer » la referme sur l'étape 1 — le parcours continue la fenêtre.
  *
- * Pas `PanneauModal` : son en-tête (sur-titre + titre + croix) et son
- * rembourrage ne laissent pas l'illustration aller bord à bord. Même
+ * Pas `PanneauModal` : son en-tête (sur-titre + titre + croix) ne laisse
+ * pas place au bandeau qui porte le titre et le dessin côte à côte. Même
  * comportement pour le reste : Échap ferme, le focus est posé dedans, et sur
  * téléphone la fenêtre monte du bas. Rendue en place et non en portail :
  * elle s'affiche dès le rendu serveur, sans flash du formulaire nu. Tout le
@@ -44,27 +44,25 @@ export function AccueilParcours({ surCommencer }: { surCommencer: () => void }) 
         <div className="flex h-[180px] items-center gap-4 overflow-hidden bg-[color:var(--board-sky)] px-5 md:h-[210px] md:gap-7 md:px-9">
           <h1
             id={titreId}
-            className="board-titre m-0 flex-none text-[22px] leading-[1.12] md:text-[25px]"
+            className="board-titre m-0 flex-none text-[22px] md:text-[25px]"
           >
             {/* L'espace garde au nom lu « place votre » ses deux mots. */}
             Mettez en place{" "}
             <br />
             <span className="whitespace-nowrap">votre établissement</span>
           </h1>
-          {/* Le filet sépare le titre du dessin (idée de la propriétaire) ;
-              à la hauteur du titre, et titre et dessin centrés sur une même
-              ligne : calé en bas, le titre laissait un vide au-dessus et le
-              dessin flottait. */}
+          {/* Le filet sépare le titre du dessin, à la hauteur du titre. */}
           <span
             aria-hidden
             className="h-12 w-px flex-none bg-[color:var(--board-blue-ink)] opacity-40 md:h-14"
           />
           {/* Le dessin tient entier dans le bandeau, socle compris : la
               hauteur le borne, quel que soit le format de la planche. */}
-          <div className="flex h-full min-w-0 flex-1 items-center justify-center py-4">
+          <div className="flex min-w-0 flex-1 items-center justify-center self-stretch py-4">
             <Image
               src="/illustrations/batiments/restaurant.webp"
               alt=""
+              // Les dimensions de ce fichier : à changer avec la planche.
               width={1000}
               height={901}
               preload
