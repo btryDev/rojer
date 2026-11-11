@@ -110,7 +110,9 @@ describe("le rangement de l'écran « Ce qui doit être en place »", () => {
   // 2026-11-11 : l'avis de GE 5 avait été rangé dans « Qui s'occupe de quoi »
   // (sous-lot C, 2026-10-17) alors que sa table des gestes le disait « à
   // afficher » — le dirigeant le cherchait avec les autres affichages. Ce que
-  // l'on met au mur sert soit l'incendie, soit l'information des salariés.
+  // l'on met au mur va dans Incendie et secours ou dans Le quotidien de vos
+  // salariés (informer, et conditions pour les panneaux de risques) — jamais
+  // avec les désignations ni avec les registres.
   it.each(
     SUR_L_ECRAN.filter((o) => gesteDe(o.id) === "afficher").map(
       (o) => [o.id, o] as const,
