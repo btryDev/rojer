@@ -4,10 +4,8 @@ import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { AjouterRisqueCustomBouton } from "@/components/duerps/AjouterRisqueCustomBouton";
 import { ActionsSecondaires } from "@/components/duerps/ActionsSecondaires";
-import { ListeRepliable } from "@/components/duerps/ListeRepliable";
 import { MarcheASuivre, type PasMarche } from "@/components/duerps/MarcheASuivre";
 import { EnTeteEtape } from "@/components/duerps/EnTeteEtape";
-import { ProchaineAction } from "@/components/duerps/ProchaineAction";
 import { etatUnite } from "@/lib/risques/etat-unite";
 import { DeclarerAucunRisqueForm } from "@/components/duerps/DeclarerAucunRisqueForm";
 import { ModifierRisqueCustomButton } from "@/components/duerps/ModifierRisqueCustomButton";
@@ -49,13 +47,6 @@ export default async function RisquesUnitePage({
   const e = etatUnite(unite);
   const lienRisque = (risqueId: string) => `/duerp/${id}/risques/${uniteId}/${risqueId}`;
 
-  // La prochaine chose à faire sur cette unité (2026-11-12) : le premier
-  // risque à coter, sinon le premier sans mesure.
-  const prochain = e.aCoter[0]
-    ? { verbe: "coter", risque: e.aCoter[0], libelle: "Coter ce risque →" }
-    : e.sansMesure[0]
-      ? { verbe: "prévoir les mesures de", risque: e.sansMesure[0], libelle: "Prévoir les mesures →" }
-      : null;
 
   const pas: PasMarche[] = e.declareeSansRisque
     ? [
@@ -110,26 +101,6 @@ export default async function RisquesUnitePage({
           au même rang que les listes. */}
       <MarcheASuivre libelle="Avancement de cette unité" pas={pas} />
 
-      {prochain ? (
-        <ProchaineAction
-          texte={
-            <>
-              Prochaine action&nbsp;: <strong className="text-[color:var(--board-ink)]">{`${prochain.verbe} « ${prochain.risque.libelle} »`}</strong>
-            </>
-          }
-          action={{ href: lienRisque(prochain.risque.id), libelle: prochain.libelle }}
-        />
-      ) : (
-        !e.inventoriee && (
-          <ProchaineAction
-            texte={
-              horsReferentiel
-                ? "Pour commencer, ajoutez les risques de cette unité."
-                : "Pour commencer, cochez les risques types qui s'appliquent, ou ajoutez les vôtres."
-            }
-          />
-        )
-      )}
 
       <section className="carte-board overflow-clip">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[color:var(--board-slate-line)] px-7 py-4 sm:px-8">
@@ -137,12 +108,30 @@ export default async function RisquesUnitePage({
             Risques retenus
             <span className="board-surtitre font-normal">{e.nbRisques}</span>
           </h3>
-          <AjouterRisqueCustomBouton uniteId={uniteId} />
+          <AjouterRisqueCustomBouton
+            uniteId={uniteId}
+            nbRisquesTypes={nonSelectionnes.length}
+            risquesTypes={nonSelectionnes.flatMap((refId) => {
+              const ref = refMap.get(refId);
+              if (!ref) return [];
+              return [
+                <li key={refId}>
+                  <RisqueReferentielRow
+                    uniteId={uniteId}
+                    referentielId={refId}
+                    libelle={ref.libelle}
+                    description={ref.description}
+                  />
+                </li>,
+              ];
+            })}
+          />
         </div>
 
         {risquesRetenus.length === 0 ? (
           <p className="m-0 px-7 py-6 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)] sm:px-8">
-            Aucun risque retenu pour l&apos;instant.
+            Aucun risque retenu pour l&apos;instant : «&nbsp;+ Ajouter un
+            risque&nbsp;» pour cocher les risques types ou saisir les vôtres.
           </p>
         ) : (
           <ul className="m-0 list-none divide-y divide-[color:var(--board-slate-line)] p-0">
@@ -241,38 +230,6 @@ export default async function RisquesUnitePage({
         )}
       </section>
 
-      {nonSelectionnes.length > 0 && (
-        <section className="carte-board overflow-clip">
-          <div className="flex flex-wrap items-baseline gap-2 border-b border-[color:var(--board-slate-line)] px-7 py-4 sm:px-8">
-            <h3 className="m-0 text-[13.5px] font-semibold text-[color:var(--board-ink)]">
-              Risques types de votre secteur
-            </h3>
-            <span className="board-surtitre font-normal">
-              {nonSelectionnes.length} à passer en revue
-            </span>
-          </div>
-          <p className="m-0 border-b border-[color:var(--board-slate-line)] px-7 py-3.5 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)] sm:px-8">
-            Cochez ceux qui s&apos;appliquent ; les autres sont considérés
-            comme écartés pour cette unité.
-          </p>
-          <ListeRepliable>
-            {nonSelectionnes.flatMap((refId) => {
-              const ref = refMap.get(refId);
-              if (!ref) return [];
-              return [
-                <li key={refId} className="px-7 py-4 sm:px-8">
-                  <RisqueReferentielRow
-                    uniteId={uniteId}
-                    referentielId={refId}
-                    libelle={ref.libelle}
-                    description={ref.description}
-                  />
-                </li>,
-              ];
-            })}
-          </ListeRepliable>
-        </section>
-      )}
 
       {risquesRetenus.length === 0 && (
         <section>
