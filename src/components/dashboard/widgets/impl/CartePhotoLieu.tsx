@@ -74,6 +74,9 @@ export function CartePhotoLieu({
   // est occupé dès le choix du fichier, pas seulement pendant l'envoi.
   const [preparation, setPreparation] = useState(false);
   const champ = useRef<HTMLInputElement>(null);
+  // Sur téléphone, la vignette ouvre les actions (changer, retirer) quand
+  // une photo est posée ; sans photo, elle ouvre directement le choix.
+  const [actionsOuvertes, setActionsOuvertes] = useState(false);
   const idConseil = useId();
   const occupe = preparation || depotEnCours || retraitEnCours;
 
@@ -109,11 +112,13 @@ export function CartePhotoLieu({
   }
 
   return (
-    // Le bleu de marque derrière le dessin seulement (2026-11-11) : les
-    // planches sont blanches à liseré bleu, comme l'illustration de la
-    // landing ; une photo qui charge garde le fond neutre de la carte.
+    // (2026-11-11) Le bleu de marque derrière le dessin seulement, blanc à
+    // liseré bleu comme l'illustration de la landing ; une photo qui charge
+    // garde le fond neutre de la carte. Sur téléphone, la même carte devient
+    // la vignette de 64 px de la fiche, à la place du monogramme
+    // (`hero-batiments`) : une seule image, une seule requête.
     <div
-      className={`relative min-h-[220px] overflow-hidden rounded-[24px] ring-1 ring-[color:rgba(13,18,36,.10)] ${
+      className={`relative min-h-[220px] overflow-hidden rounded-[24px] ring-1 ring-[color:rgba(13,18,36,.10)] max-md:absolute max-md:left-6 max-md:top-6 max-md:z-10 max-md:size-16 max-md:min-h-0 max-md:overflow-visible max-md:rounded-[16px] sm:max-md:left-7 sm:max-md:top-7 ${
         photo ? "bg-[color:var(--board-card)]" : "bg-[color:var(--board-sky)]"
       }`}
     >
@@ -128,7 +133,7 @@ export function CartePhotoLieu({
           // Le premier plan du hero : chargée d'emblée, comme l'illustration.
           priority
           sizes="(min-width: 1024px) 380px, 100vw"
-          className="object-cover"
+          className="object-cover max-md:rounded-[16px]"
         />
       ) : (
         // Décoratif : tout ce que le dessin évoque est écrit dans la fiche.
@@ -137,22 +142,46 @@ export function CartePhotoLieu({
           alt=""
           aria-hidden
           fill
-          sizes="(min-width: 1024px) 380px, 100vw"
+          // Sur téléphone, la vignette de 64 px.
+          sizes="(min-width: 1024px) 380px, (min-width: 768px) 60vw, 64px"
           priority
-          className="select-none object-contain p-5 pb-12"
+          className="select-none rounded-[16px] object-contain p-1 md:rounded-none md:p-5 md:pb-12"
         />
       )}
 
-      <div className="absolute inset-x-3 bottom-3 flex flex-wrap items-center justify-end gap-2">
-        <input
-          ref={champ}
-          type="file"
-          accept="image/*"
-          className="sr-only"
-          tabIndex={-1}
-          aria-hidden
-          onChange={choisir}
-        />
+      <input
+        ref={champ}
+        type="file"
+        accept="image/*"
+        className="sr-only"
+        tabIndex={-1}
+        aria-hidden
+        onChange={choisir}
+      />
+      {/* Sur téléphone, la vignette entière est le bouton. */}
+      <button
+        type="button"
+        className="absolute inset-0 rounded-[16px] md:hidden"
+        disabled={occupe}
+        aria-label={photo ? "Photo du lieu : changer ou retirer" : "Ajouter une photo"}
+        aria-describedby={idConseil}
+        aria-expanded={photo ? actionsOuvertes : undefined}
+        aria-busy={occupe}
+        data-ecriture
+        onClick={() => (photo ? setActionsOuvertes((o) => !o) : champ.current?.click())}
+      >
+        <span className="absolute -bottom-1.5 -right-1.5 flex size-6 items-center justify-center rounded-full bg-[color:var(--board-card)] text-[color:var(--board-ink)] shadow-[0_0_0_1px_rgba(13,18,36,.12)]">
+          <Camera aria-hidden className="size-3" />
+        </span>
+      </button>
+
+      {/* Sur téléphone, les mêmes boutons en menu sous la vignette. */}
+      <div
+        className={
+          "absolute inset-x-3 bottom-3 flex flex-wrap items-center justify-end gap-2 max-md:inset-x-auto max-md:bottom-auto max-md:left-0 max-md:top-full max-md:z-20 max-md:mt-2 max-md:w-max max-md:rounded-[16px] max-md:bg-[color:var(--board-card)] max-md:p-2 max-md:shadow-[0_0_0_1px_rgba(13,18,36,.08),0_12px_28px_-12px_rgba(13,18,36,.35)] " +
+          (actionsOuvertes ? "" : "max-md:hidden")
+        }
+      >
         {/* Le conseil RGPD en infobulle, pas sur l'image (demande de la
             propriétaire) : une vue du lieu n'a pas à montrer de personne
             reconnaissable. Doublé d'une description pour le clavier et les
@@ -191,7 +220,7 @@ export function CartePhotoLieu({
       {erreur ? (
         <p
           role="alert"
-          className="absolute inset-x-3 top-3 m-0 rounded-[12px] bg-[color:var(--board-signal-pale)] px-3 py-2 text-[12px] text-[color:var(--board-signal-ink)]"
+          className="absolute inset-x-3 top-3 m-0 rounded-[12px] bg-[color:var(--board-signal-pale)] px-3 py-2 text-[12px] text-[color:var(--board-signal-ink)] max-md:inset-x-auto max-md:left-0 max-md:top-full max-md:mt-2 max-md:w-64"
         >
           {erreur}
         </p>

@@ -49,6 +49,8 @@ import {
   type EchelleFrise,
 } from "@/lib/dashboard/frise";
 import { composantesCiviles } from "@/lib/dates";
+import { dateEnJeuEvenement } from "@/lib/calendrier/etats";
+import { MOIS_FR_COURT } from "@/lib/calendrier/labels";
 import { estVerificationEnRetard } from "@/lib/dates/retard";
 import { horsDesComptesDeLExploitant } from "@/lib/calendrier/prudence";
 import { estLignePourInformation } from "@/lib/referentiels/conformite/initiative";
@@ -736,7 +738,127 @@ function FlecheDefilement({
   );
 }
 
+/**
+ * Le calendrier du board : sur téléphone, les trois prochains mois en liste
+ * (2026-11-11) — les douze tuiles de l'année y faisaient un écran presque
+ * vide ; ailleurs, la frise et le calendrier complets. CSS seulement : rien
+ * ne dépend de la largeur côté JavaScript, donc pas de saut à l'hydratation.
+ */
 export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
+  return (
+    <>
+      <div className="contents md:hidden">
+        <CalendrierTroisMois bundle={bundle} />
+      </div>
+      <div className="contents max-md:hidden">
+        <BlocFriseComplet bundle={bundle} />
+      </div>
+    </>
+  );
+}
+
+const MOIS_TELEPHONE = 3;
+
+/** Le lien de pied des cartes resserrées sur téléphone (« Tout voir »,
+ *  « Voir le calendrier ») : une cible de 44 px. */
+const LIEN_PIED_TELEPHONE =
+  "-mx-2 flex min-h-11 items-center justify-center rounded-[14px] text-[13px] font-semibold text-[color:var(--board-ink)] hover:bg-[color:var(--board-slate-pale)]";
+
+/** Les échéances datées des trois prochains mois, comptées par mois civil
+ *  (heure de Paris), et dont combien sont en retard. Un seul passage. */
+function compterParMois(bundle: DashboardBundle) {
+  const c0 = composantesCiviles(bundle.aujourdhui);
+  const mois = Array.from({ length: MOIS_TELEPHONE }, (_, k) => {
+    const n = c0.annee * 12 + (c0.mois - 1) + k;
+    return { annee: Math.floor(n / 12), mois: (n % 12) + 1, total: 0, retard: 0 };
+  });
+  for (const e of bundle.evenementsHorizon) {
+    // La date que la grille et la frise lisent (fin d'opération, retard) :
+    // le téléphone compte les mêmes mois que le calendrier complet.
+    const c = composantesCiviles(dateEnJeuEvenement(e, bundle.aujourdhui));
+    const k = (c.annee - c0.annee) * 12 + (c.mois - c0.mois);
+    if (k < 0 || k >= MOIS_TELEPHONE) continue;
+    mois[k].total += 1;
+    if (e.tone === "alerte") mois[k].retard += 1;
+  }
+  return mois;
+}
+
+function CalendrierTroisMois({ bundle }: { bundle: DashboardBundle }) {
+  const mois = compterParMois(bundle);
+  const nbSansDate = bundle.echeances.verifsAPlanifier;
+  // Le même agrégat que l'en-tête du calendrier complet (« N en retard ») :
+  // un retard d'un mois passé n'est dans aucun des trois mois listés.
+  const nbEnRetard = bundle.echeances.retards.total;
+  const href = `/etablissements/${bundle.etablissementId}/calendrier`;
+  return (
+    <CarteBoard className="px-5 pb-2 pt-[22px]">
+      <TitreBloc
+        titre="Les 3 prochains mois"
+        sousTitre={
+          nbEnRetard > 0 ? (
+            <span className="font-semibold text-[color:var(--board-signal-ink)]">
+              {nbEnRetard} en retard
+            </span>
+          ) : undefined
+        }
+        href={href}
+      />
+      <ul className="m-0 mt-2 list-none p-0">
+        {mois.map((m, i) => (
+          <li
+            key={`${m.annee}-${m.mois}`}
+            className={
+              "flex items-center gap-3 py-3 " +
+              (i === 0 ? "" : "border-t border-[color:var(--board-slate-line)]")
+            }
+          >
+            <span
+              className={
+                "flex size-[50px] flex-none flex-col items-center justify-center rounded-[17px] font-mono text-[10.5px] uppercase tabular-nums " +
+                (m.total > 0
+                  ? "bg-[color:var(--board-blue-pale)] text-[color:var(--board-blue-ink)]"
+                  : "bg-[color:var(--board-slate-pale)] text-[color:var(--board-slate-mid)]")
+              }
+            >
+              {MOIS_FR_COURT[m.mois - 1]}
+              <b className="text-[13px] text-[color:var(--board-ink)]">
+                {String(m.annee).slice(2)}
+              </b>
+            </span>
+            <span className="min-w-0 flex-1 text-[14px]">
+              {m.total === 0 ? (
+                <span className="text-[color:var(--board-slate-mid)]">Rien de prévu</span>
+              ) : (
+                <>
+                  <strong className="font-semibold text-[color:var(--board-ink)]">
+                    {m.total} échéance{m.total > 1 ? "s" : ""}
+                  </strong>
+                  {m.retard > 0 ? (
+                    <span className="block text-[12.5px] text-[color:var(--board-signal-ink)]">
+                      dont {m.retard} en retard
+                    </span>
+                  ) : null}
+                </>
+              )}
+            </span>
+          </li>
+        ))}
+      </ul>
+      {nbSansDate > 0 ? (
+        <p className="m-0 border-t border-[color:var(--board-slate-line)] py-3 text-[12.5px] text-[color:var(--board-slate-mid)]">
+          {nbSansDate} vérification{nbSansDate > 1 ? "s" : ""} à planifier, sans
+          échéance connue.
+        </p>
+      ) : null}
+      <Link href={href} className={LIEN_PIED_TELEPHONE}>
+        Voir le calendrier
+      </Link>
+    </CarteBoard>
+  );
+}
+
+function BlocFriseComplet({ bundle }: { bundle: DashboardBundle }) {
   // Bascules inline, comme dans le design. Elles vivent ici plutôt que
   // dans le système de variants pour rester accessibles hors mode
   // « Personnaliser ».
@@ -1363,6 +1485,9 @@ const TYPE_RECO: Partial<Record<Recommandation["kind"], string>> = {
   duerp_a_jour: "DUERP",
 };
 
+/** Les lignes de « À faire » montrées sur téléphone (2026-11-11). */
+const A_FAIRE_TELEPHONE = 3;
+
 /**
  * La to-do du dossier : vérifications ET actions mélangées, triées par
  * urgence réelle par le moteur de recommandations — l'utilisateur n'a
@@ -1467,9 +1592,10 @@ export function BlocAFaire({ bundle }: { bundle: DashboardBundle }) {
               <li
                 key={r.cle}
                 className={
-                  i === 0
-                    ? ""
-                    : "border-t border-[color:rgba(10,10,10,.07)]"
+                  (i === 0 ? "" : "border-t border-[color:rgba(10,10,10,.07)]") +
+                  // Sur téléphone, les trois premières ; le reste derrière
+                  // « Tout voir », juste en dessous.
+                  (i >= A_FAIRE_TELEPHONE ? " max-md:hidden" : "")
                 }
               >
                 <LienProvenance
@@ -1496,7 +1622,20 @@ export function BlocAFaire({ bundle }: { bundle: DashboardBundle }) {
         </ul>
       )}
 
-      <p className="m-0 mt-auto border-t border-[color:rgba(10,10,10,.10)] pt-[14px] text-[13px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+      {file.length > A_FAIRE_TELEPHONE ? (
+        <Link href={hrefCalendrier} className={`${LIEN_PIED_TELEPHONE} mb-2 md:hidden`}>
+          Tout voir
+        </Link>
+      ) : null}
+
+      {/* Sur téléphone, quand des lignes sont cachées, le solde compterait
+          ce qu'on ne voit pas : « Tout voir » le remplace. */}
+      <p
+        className={
+          "m-0 mt-auto border-t border-[color:rgba(10,10,10,.10)] pt-[14px] text-[13px] leading-[1.5] text-[color:var(--board-slate-mid)]" +
+          (file.length > A_FAIRE_TELEPHONE ? " max-md:hidden" : "")
+        }
+      >
         {resteUrgent > 0 ? (
           <Link
             href={hrefCalendrier}

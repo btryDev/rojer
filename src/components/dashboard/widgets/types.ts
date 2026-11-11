@@ -317,5 +317,17 @@ export type WidgetDefinition = {
   /** Si la fonction renvoie false, le widget est masqué même s'il est
    * dans le layout (ex. widget DUERP alors qu'aucun DUERP n'existe). */
   visibleQuand?: (b: DashboardBundle) => boolean;
+  /**
+   * Sur téléphone (sous `md`, 2026-11-11) : le rang du widget dans la
+   * colonne — l'action d'abord —, appliqué tant que la disposition est celle
+   * par défaut (une disposition personnalisée garde son ordre) ; et, s'il
+   * est donné, le raccourci qui le remplace : titre et lien viennent de
+   * `page` (navigation), le widget ne déclare que sa phrase. CSS seulement,
+   * ordinateur inchangé.
+   */
+  telephone?: {
+    ordre: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+    raccourci?: { ligne: string };
+  };
 };
 
