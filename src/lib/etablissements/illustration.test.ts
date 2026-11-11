@@ -22,8 +22,12 @@ describe("illustrationBatiment — le type ERP d'abord", () => {
     expect(illustrationBatiment({ ...base, typeErp: "W", codeNaf: "47.11Z" })).toBe("bureaux");
   });
 
-  it("une salle de sport (X) n'a plus sa planche : le local générique (2026-11-11)", () => {
+  it("une salle de sport (X) n'a plus sa planche : le local générique, quel que soit le NAF (2026-11-11)", () => {
     expect(illustrationBatiment({ ...base, typeErp: "X" })).toBe("local");
+    expect(illustrationBatiment({ ...base, typeErp: "X", codeNaf: "56.10A" })).toBe("local");
+    expect(illustrationBatiment({ ...base, typeErp: "X", codeNaf: "47.64Z" })).toBe("local");
+    // Le type W déclaré en plus ne l'emporte pas : X passe avant, comme avant.
+    expect(illustrationBatiment({ ...base, typeErp: "X", typesErpAutres: ["W"] })).toBe("local");
   });
 
   it("un type sans planche laisse parler le code NAF", () => {

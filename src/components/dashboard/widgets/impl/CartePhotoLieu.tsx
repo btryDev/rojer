@@ -109,10 +109,14 @@ export function CartePhotoLieu({
   }
 
   return (
-    // Le bleu de marque derrière le dessin (2026-11-11) : les planches sont
-    // blanches à liseré bleu, comme l'illustration de la landing. Une photo
-    // couvre toute la carte, il ne se voit pas derrière elle.
-    <div className="relative min-h-[220px] overflow-hidden rounded-[24px] bg-[color:var(--board-sky)] ring-1 ring-[color:rgba(13,18,36,.10)]">
+    // Le bleu de marque derrière le dessin seulement (2026-11-11) : les
+    // planches sont blanches à liseré bleu, comme l'illustration de la
+    // landing ; une photo qui charge garde le fond neutre de la carte.
+    <div
+      className={`relative min-h-[220px] overflow-hidden rounded-[24px] ring-1 ring-[color:rgba(13,18,36,.10)] ${
+        photo ? "bg-[color:var(--board-card)]" : "bg-[color:var(--board-sky)]"
+      }`}
+    >
       {photo ? (
         // Non optimisée : la photo est servie sous session
         // (`/api/etablissements/[id]/photo`), l'optimiseur la demanderait sans.
