@@ -42,10 +42,12 @@ export const CITATION_R146_3 =
 export const AIDE_IGH_COURTE =
   "Ce cas est rare en TPE/PME : en cas de doute, demandez-le au propriétaire ou au gestionnaire de l'immeuble.";
 
-export const AIDE_IGH =
+/** L'aide entière sans sa phrase courte, qui reste à l'écran du parcours. */
+export const AIDE_IGH_DETAIL =
   `Le code de la construction et de l'habitation (art. R. 146-3) appelle immeuble de grande hauteur tout corps de bâtiment « ${CITATION_R146_3} ». ` +
-  "C'est le plancher du dernier niveau qui se mesure, pas le toit. Entre 28 et 50 mètres, un immeuble à usage principal d'habitation en est un aussi lorsque ses locaux autres que d'habitation ne répondent pas aux conditions d'isolement fixées par arrêté (même article ; classe GHZ, art. R. 146-4). " +
-  AIDE_IGH_COURTE;
+  "C'est le plancher du dernier niveau qui se mesure, pas le toit. Entre 28 et 50 mètres, un immeuble à usage principal d'habitation en est un aussi lorsque ses locaux autres que d'habitation ne répondent pas aux conditions d'isolement fixées par arrêté (même article ; classe GHZ, art. R. 146-4).";
+
+export const AIDE_IGH = `${AIDE_IGH_DETAIL} ${AIDE_IGH_COURTE}`;
 
 /* ─── Immeuble d'habitation ────────────────────────────────────────────── */
 
@@ -103,12 +105,14 @@ const avecVmcGaz = CE_QUE_DECLENCHE_HABITATION.filter((c) => c.siEquipement === 
 export const AIDE_HABITATION_COURTE =
   "Uniquement si vous êtes propriétaire ou syndic d'un immeuble de logements collectifs ; rare pour les commerces et restaurants.";
 
-export const AIDE_HABITATION =
-  `${AIDE_HABITATION_COURTE} ` +
+/** L'aide entière sans sa phrase courte, qui reste à l'écran du parcours. */
+export const AIDE_HABITATION_DETAIL =
   `Répondre « oui » ajoute à votre calendrier ${enumerer(dEmblee.map((c) => c.quoi))} (arrêté du 31 janvier 1986)` +
   (avecVmcGaz.length > 0
     ? ` et, si vous déclarez une installation collective de VMC-Gaz, ${enumerer(avecVmcGaz.map((c) => c.quoi))} (arrêté du 23 février 2018).`
     : ".");
+
+export const AIDE_HABITATION = `${AIDE_HABITATION_COURTE} ${AIDE_HABITATION_DETAIL}`;
 
 /**
  * CE QUE « OUI » AUX LOCAUX À SOMMEIL CHANGE, CATÉGORIE PAR CATÉGORIE

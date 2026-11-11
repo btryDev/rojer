@@ -2,7 +2,7 @@
 
 import type { EntrepriseConnue } from "@/lib/onboarding/rattachement";
 import { DemandeAide } from "@/components/assistance/DemandeAide";
-import { useActionState, useState } from "react";
+import { useActionState, useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, LogOut, ShieldCheck } from "lucide-react";
@@ -89,15 +89,21 @@ export function WizardShell({
   // La fenêtre d'accueil, ouverte à chaque arrivée : le parcours ne garde
   // rien d'une visite à l'autre, il n'y a donc rien à mémoriser.
   const [accueil, setAccueil] = useState(true);
-  const commencer = () => {
+  const formulaire = useRef<HTMLFormElement | null>(null);
+  // Stable : la fenêtre s'abonne à Échap avec, et ne se réabonne pas à
+  // chaque rendu.
+  const commencer = useCallback(() => {
     setAccueil(false);
-    // Le focus va au premier champ que la fenêtre découvre : son `autoFocus`
-    // s'est joué pendant qu'il était `inert`, donc sans effet. Le premier
-    // champ et non `#raisonSociale`, absent quand l'entreprise est déjà suivie.
+    // Le focus va au premier champ modifiable du parcours : l'`autoFocus` de
+    // l'étape s'est joué pendant qu'elle était `inert`, donc sans effet. Pas
+    // `#raisonSociale` : il est en lecture seule quand l'entreprise est déjà
+    // suivie. Cherché dans CE formulaire, pas dans la page.
     requestAnimationFrame(() =>
-      document.querySelector<HTMLElement>("form input:not([type=hidden]), form select")?.focus(),
+      formulaire.current
+        ?.querySelector<HTMLElement>("input:not([type=hidden]):not([readonly]), select")
+        ?.focus(),
     );
-  };
+  }, []);
   const { demander, confirmation } = useConfirmation();
 
   // Quitter : rien n'est persisté avant l'étape finale (état React pur),
@@ -418,6 +424,7 @@ export function WizardShell({
         {confirmation ? <div className="mb-5">{confirmation}</div> : null}
 
         <form
+          ref={formulaire}
           action={formAction}
           className="flex flex-1 flex-col"
           // Ce formulaire couvre les trois étapes, et il ne se soumet qu'à la

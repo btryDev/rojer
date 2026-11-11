@@ -18,10 +18,10 @@ import {
   QUESTION_NOMBRE_DE_PERSONNES,
 } from "@/lib/matching/personnes-presentes";
 import {
-  AIDE_HABITATION,
   AIDE_HABITATION_COURTE,
-  AIDE_IGH,
+  AIDE_HABITATION_DETAIL,
   AIDE_IGH_COURTE,
+  AIDE_IGH_DETAIL,
   AIDE_LOCAUX_SOMMEIL,
   QUESTION_IGH,
 } from "@/lib/etablissements/aides-regimes";
@@ -397,7 +397,7 @@ export function StepTypologie({
                   l'explication à un clic), sa dernière phrase reste à l'écran. */}
               <div className="flex items-start justify-between gap-3">
                 <h3 className="board-titre m-0 text-[22px]">{QUESTION_IGH}</h3>
-                <AideEcran titre="Immeuble de grande hauteur">{AIDE_IGH}</AideEcran>
+                <AideEcran titre="Immeuble de grande hauteur">{AIDE_IGH_DETAIL}</AideEcran>
               </div>
               <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                 {AIDE_IGH_COURTE}
@@ -440,7 +440,7 @@ export function StepTypologie({
                 <h3 className="board-titre m-0 text-[22px]">
                   Gérez-vous un immeuble d&apos;habitation ?
                 </h3>
-                <AideEcran titre="Immeuble d'habitation">{AIDE_HABITATION}</AideEcran>
+                <AideEcran titre="Immeuble d'habitation">{AIDE_HABITATION_DETAIL}</AideEcran>
               </div>
               {/* ~~« (ramonage, VMC-Gaz…) »~~ — le ramonage n'a aucune
                   ligne (2026-10-12, audit). Aide partagée avec la fiche. */}

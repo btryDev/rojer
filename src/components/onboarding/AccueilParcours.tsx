@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useId } from "react";
+import { useEffect, useId } from "react";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -15,24 +15,37 @@ import { Button } from "@/components/ui/button";
  * comportement pour le reste : Échap ferme, le focus est posé dedans, et sur
  * téléphone la fenêtre monte du bas. Rendue en place et non en portail :
  * elle s'affiche dès le rendu serveur, sans flash du formulaire nu. Tout le
- * reste de la page étant `inert`, le focus ne peut pas en sortir : Échap se
- * lit sur la fenêtre elle-même, sans écouteur sur `document`.
+ * reste de la page étant `inert`, on n'y saisit rien ; mais le focus peut
+ * retomber sur `<body>` (un clic hors du bouton), donc Échap s'écoute sur
+ * `document`. Un clic sur le voile ferme aussi, comme `PanneauModal`, et la
+ * page ne défile pas derrière tant que la fenêtre est ouverte.
  */
 export function AccueilParcours({ surCommencer }: { surCommencer: () => void }) {
   const titreId = useId();
+
+  useEffect(() => {
+    const surTouche = (e: KeyboardEvent) => {
+      if (e.key === "Escape") surCommencer();
+    };
+    document.addEventListener("keydown", surTouche);
+    const debordement = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", surTouche);
+      document.body.style.overflow = debordement;
+    };
+  }, [surCommencer]);
 
   return (
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby={titreId}
-      onKeyDown={(e) => {
-        if (e.key === "Escape") surCommencer();
-      }}
       className="fixed inset-0 z-[60] flex items-end justify-center md:items-center md:p-4"
     >
       <div
         aria-hidden
+        onClick={surCommencer}
         className="absolute inset-0 bg-[rgba(13,18,36,.28)] backdrop-blur-[6px]"
       />
       <div className="relative max-h-[92dvh] w-full max-w-[600px] overflow-y-auto overscroll-contain rounded-t-[26px] bg-[color:var(--board-card)] shadow-[0_0_0_1px_rgba(13,18,36,.06),0_24px_60px_-24px_rgba(13,18,36,.45)] md:rounded-[26px]">
