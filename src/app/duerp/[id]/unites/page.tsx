@@ -50,11 +50,17 @@ export default async function UnitesPage({
       </header>
 
       {/* Les unités en cartes (2026-11-12, demande de la propriétaire), sur
-          le canevas ; l'ajout dans sa propre carte, après elles. */}
+          le canevas ; l'ajout en tête, dans une fenêtre. */}
       <section aria-label="Unités de travail" className="flex flex-col gap-4">
-        <p className="board-surtitre m-0">
-          {unitesVisibles.length} unité{unitesVisibles.length > 1 ? "s" : ""}
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="board-surtitre m-0">
+            {unitesVisibles.length} unité{unitesVisibles.length > 1 ? "s" : ""}
+          </p>
+          {/* La limite d'unités de l'essai, annoncée avant la saisie (ADR-053 § 14). */}
+          <PlafondDeCreation cle="unitesTravail">
+            <AjouterUniteForm duerpId={id} />
+          </PlafondDeCreation>
+        </div>
         {unitesVisibles.length === 0 ? (
           <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
             Aucune unité de travail. Ajoutez-en au moins une pour continuer.
@@ -72,12 +78,6 @@ export default async function UnitesPage({
             ))}
           </ul>
         )}
-        <div className="carte-board overflow-clip">
-          {/* La limite d'unités de l'essai, annoncée avant la saisie (ADR-053 § 14). */}
-          <PlafondDeCreation cle="unitesTravail" className="mx-6 mt-4">
-            <AjouterUniteForm duerpId={id} />
-          </PlafondDeCreation>
-        </div>
       </section>
 
       <div className="flex items-center justify-end">

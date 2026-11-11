@@ -1,89 +1,88 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ChampBoard } from "@/components/ui-kit";
+import { PanneauModal } from "@/components/ui-kit/PanneauModal";
 import {
   ajouterUnite,
   type UniteActionState,
 } from "@/lib/duerps/actions";
 
+/**
+ * « + Ajouter une unité de travail », en tête de la liste, ouvre une fenêtre
+ * (2026-11-12) : comme l'ajout d'un risque. Même action serveur ; la fenêtre
+ * se ferme depuis l'action, après un ajout réussi.
+ */
 export function AjouterUniteForm({ duerpId }: { duerpId: string }) {
-  const action = ajouterUnite.bind(null, duerpId);
-  const [state, formAction, pending] = useActionState<
-    UniteActionState,
-    FormData
-  >(action, { status: "idle" });
   const [ouvert, setOuvert] = useState(false);
+  const fermer = useCallback(() => setOuvert(false), []);
   const formRef = useRef<HTMLFormElement>(null);
-
-  useEffect(() => {
-    if (state.status === "success") {
+  const action = async (prev: UniteActionState, fd: FormData) => {
+    const resultat = await ajouterUnite(duerpId, prev, fd);
+    if (resultat.status === "success") {
       formRef.current?.reset();
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- fermeture du form après succès du Server Action
-      setOuvert(false);
+      fermer();
     }
-  }, [state]);
-
-  if (!ouvert) {
-    return (
-      <div data-ecriture className="px-7 py-4 sm:px-8">
-        {/* Un vrai bouton (2026-11-11) : en petites capitales grises, l'ajout
-            se lisait comme une légende et passait inaperçu. */}
-        <Button
-          type="button"
-          variant="boardClair"
-          size="board"
-          onClick={() => setOuvert(true)}
-        >
-          + Ajouter une unité de travail
-        </Button>
-      </div>
-    );
-  }
+    return resultat;
+  };
+  const [state, formAction, pending] = useActionState<UniteActionState, FormData>(
+    action,
+    { status: "idle" },
+  );
 
   const erreurNom =
     state.status === "error" ? state.fieldErrors?.nom?.[0] : undefined;
 
   return (
-    <form
-      ref={formRef}
-      action={formAction}
-      className="bg-[color:var(--board-slate-pale)] px-7 py-5 sm:px-8"
-    >
-      <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
-        Nouvelle unité
-      </p>
-      <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <ChampBoard
-          id="unite-nom"
-          name="nom"
-          label="Nom de l'unité"
-          placeholder="ex. Terrasse, Atelier, Entrepôt"
-          requis
-          autoFocus
-          erreur={erreurNom}
-        />
-        <ChampBoard
-          id="unite-description"
-          name="description"
-          label="Description"
-          placeholder="Description courte (facultatif)"
-        />
-      </div>
-      <div className="mt-4 flex flex-wrap gap-2">
-        <Button type="submit" variant="board" size="board" disabled={pending}>
-          {pending ? "Ajout…" : "Ajouter"}
-        </Button>
-        <Button
-          type="button"
-          variant="boardClair"
-          size="board"
-          onClick={() => setOuvert(false)}
-        >
-          Annuler
-        </Button>
-      </div>
-    </form>
+    <>
+      <Button
+        data-ecriture
+        type="button"
+        variant="boardClair"
+        size="boardSm"
+        onClick={() => setOuvert(true)}
+      >
+        + Ajouter une unité de travail
+      </Button>
+      <PanneauModal
+        ouvert={ouvert}
+        surFermer={fermer}
+        surtitre="Unités de travail"
+        titre="Ajouter une unité de travail"
+      >
+        <form ref={formRef} action={formAction} className="flex flex-col gap-4">
+          <ChampBoard
+            id="unite-nom"
+            name="nom"
+            label="Nom de l'unité"
+            placeholder="ex. Terrasse, Atelier, Entrepôt"
+            requis
+            autoFocus
+            erreur={erreurNom}
+          />
+          <ChampBoard
+            id="unite-description"
+            name="description"
+            label="Description (facultatif)"
+            placeholder="Description courte"
+          />
+          {/* Un refus sans champ (limite de l'essai…) se dit dans la fenêtre. */}
+          {state.status === "error" && !erreurNom && (
+            <p role="alert" className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
+              {state.message}
+            </p>
+          )}
+          <div className="flex flex-wrap gap-2">
+            <Button type="submit" variant="board" size="board" disabled={pending}>
+              {pending ? "Ajout…" : "Ajouter"}
+            </Button>
+            <Button type="button" variant="boardClair" size="board" onClick={fermer}>
+              Annuler
+            </Button>
+          </div>
+        </form>
+      </PanneauModal>
+    </>
   );
 }
