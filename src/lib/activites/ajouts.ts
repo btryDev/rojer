@@ -9,7 +9,7 @@ import type { Db } from "@/lib/auth/compte";
 import type { TransactionBornee } from "@/lib/auth/portee/client";
 import { creerEnLotVerifie } from "@/lib/auth/portee/lot-verifie";
 import { placesSousLePlafond } from "@/lib/abonnements/quotas";
-import { avecValidation } from "@/lib/duerps/etapes-validees";
+import { avecValidations } from "@/lib/duerps/etapes-validees";
 import { questionsDetectionTransverses } from "@/lib/referentiels";
 import type { ActiviteNonCouverte } from "@/lib/referentiels/types";
 import { defautCotation } from "@/lib/risques/cotation-defaut";
@@ -236,9 +236,8 @@ export async function aRevalider(tx: TransactionBornee, duerpId: string): Promis
     select: { etapesValidees: true },
   });
   if (!duerp) return;
-  const sansUnites = avecValidation(duerp.etapesValidees, "unites", null);
   await tx.duerp.update({
     where: { id: duerpId },
-    data: { etapesValidees: avecValidation(sansUnites, "risques", null) },
+    data: { etapesValidees: avecValidations(duerp.etapesValidees, { unites: null, risques: null }) },
   });
 }

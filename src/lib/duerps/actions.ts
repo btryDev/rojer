@@ -145,6 +145,19 @@ export async function choisirSecteur(
   });
 
   await db.$transaction(async (tx) => {
+    // Les réponses de l'ancien secteur tombent : ce qu'elles avaient ajouté
+    // et que le dirigeant n'a pas touché tombe avec elles (ADR-060) — toutes
+    // les activités connues hors du nouveau secteur, pas seulement celles de
+    // l'ancien tel que le référentiel le décrit aujourd'hui. Avant de compter
+    // les places : ce qui sort libère la limite de l'essai.
+    if (changeDeSecteur) {
+      await retirerPourActivites(tx, {
+        duerpId,
+        activites: referentielsSectoriels
+          .filter((r) => r.id !== secteurId)
+          .flatMap((r) => r.activitesNonCouvertes),
+      });
+    }
     // Pendant l'essai gratuit, le pré-remplissage s'arrête à sa limite
     // d'unités (ADR-053 § 14), sans refuser : ce sont des unités proposées,
     // le dirigeant ne perd rien. Le verrou du compte d'abord, comme partout
@@ -158,18 +171,6 @@ export async function choisirSecteur(
         ...(changeDeSecteur ? { reponsesActivitesNonCouvertes: Prisma.DbNull } : {}),
       },
     });
-    // Les réponses de l'ancien secteur tombent : ce qu'elles avaient ajouté
-    // et que le dirigeant n'a pas touché tombe avec elles (ADR-060) — toutes
-    // les activités connues hors du nouveau secteur, pas seulement celles de
-    // l'ancien tel que le référentiel le décrit aujourd'hui.
-    if (changeDeSecteur) {
-      await retirerPourActivites(tx, {
-        duerpId,
-        activites: referentielsSectoriels
-          .filter((r) => r.id !== secteurId)
-          .flatMap((r) => r.activitesNonCouvertes),
-      });
-    }
     for (const u of ref.unitesTravailSuggerees
       .filter((u) => !nomsExistants.has(u.nom.toLowerCase()))
       .slice(0, sousLEssai))

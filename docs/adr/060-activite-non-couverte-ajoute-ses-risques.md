@@ -28,8 +28,12 @@ Au « oui », Rojer ajoute lui-même au DUERP ce qu'il faut évaluer :
    (`placesSousLePlafond`, ADR-053 : 3 pendant l'essai, sans limite ensuite).
    Sinon — ou si l'activité n'a pas de lieu propre (la caisse d'un
    restaurant) — l'unité type existante désignée (`aFaire.uniteExistante`),
-   retrouvée par `referentielUniteId`. Absente (supprimée par le dirigeant) :
-   l'unité « Risques transverses ».
+   retrouvée par `referentielUniteId`. Si l'activité a déjà des ajouts (un
+   « non » en a gardé), c'est leur unité qui est reprise. Sans aucune de ces
+   unités (limite atteinte et unité type supprimée), **rien n'est ajouté** :
+   l'unité « Risques transverses » ne porte que les risques des questions
+   transverses, jamais ceux d'une activité. L'écran le dit et rend la liste
+   des risques à ajouter à la main.
 2. **Les risques.** Deux à quatre risques personnalisés (`aFaire.risques`),
    **non cotés** (`cotationSaisie: false`, cotation par défaut d'un risque
    personnalisé) et **sans mesure proposée**.
@@ -37,10 +41,15 @@ Au « oui », Rojer ajoute lui-même au DUERP ce qu'il faut évaluer :
    (ADR-059) : ce qui vient d'arriver, personne ne l'a relu.
 
 Au « non » ou au retour au silence, Rojer retire ce qu'il a ajouté **et que
-le dirigeant n'a pas touché** : un risque non coté et sans action ; puis
-l'unité créée pour l'activité si elle est vide et sans justification
-« aucun risque ». Le reste est gardé, et l'écran le dit. Un changement de
-secteur retire de même les ajouts des activités de l'ancien secteur.
+le dirigeant n'a pas touché** : un risque qui ne porte que ce que Rojer y a
+mis — libellé d'origine, ni cotation saisie, ni action, ni description, ni
+nombre d'exposés, ni date de mesures, ni exposition CMR ; puis l'unité créée
+pour l'activité si elle est vide, sans justification « aucun risque », et
+sous son nom et sa description d'origine. Le reste est gardé, et l'écran le
+dit. Un nouveau « oui » rend ce qui manque, sans doubler ce qui est resté.
+Un changement de secteur retire de même les ajouts de toutes les activités
+connues hors du nouveau secteur, avant le pré-remplissage (ce qui sort
+libère la limite de l'essai).
 
 Les questions transverses que l'activité appelle (`aFaire.questionsTransverses`,
 ex. « travail seul » pour une ouverture par un salarié seul) ne sont **pas**
