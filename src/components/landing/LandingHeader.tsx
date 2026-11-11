@@ -22,7 +22,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { CompteLanding } from "./compte";
-import { Marque } from "./Marque";
+import { Marque } from "@/components/marque/Marque";
 
 // « Tarif » mène à la section du même nom (`/#tarif` : depuis la racine,
 // l'en-tête sert aussi aux pages légales). « Comprendre » n'a

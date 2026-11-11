@@ -11,6 +11,7 @@
 // lit comme celui du client, et le produit ne le connaît pas. Ce qu'on sait
 // de l'établissement est écrit dans sa fiche, sur laquelle le dessin est posé.
 
+import { typesErpDe } from "@/lib/matching/types-erp";
 import { ArrowRight, DoorOpen, IdCard, Users, Wrench } from "lucide-react";
 import { nomDeZone } from "@/lib/batiments/nom-zone";
 import { CartePhotoLieu } from "./CartePhotoLieu";
@@ -49,7 +50,6 @@ const ACTIVITE: Record<IllustrationBatiment, string | null> = {
   magasin: "Commerce",
   bureaux: "Bureaux",
   hotel: "Hôtel",
-  "salle-sport": "Salle de sport",
   local: null,
 };
 
@@ -154,19 +154,25 @@ export function HeroEtablissement({
   zones: readonly { id: string; nom: string; nbEquipements: number }[];
 }) {
   const [principal = "Régime non renseigné", ...autres] = regimesAffiches(etab);
-  const activite = ACTIVITE[illustration];
+  // Le mot d'activité suit le dessin, sauf la salle de sport : sans planche
+  // propre depuis le 2026-11-11, elle garde son mot, lu sur le type déclaré.
+  const activite =
+    ACTIVITE[illustration] ?? (typesErpDe(etab).includes("X") ? "Salle de sport" : null);
 
   return (
     <div>
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_clamp(260px,24vw,380px)]">
+    <div className="relative grid gap-5 lg:grid-cols-[minmax(0,1fr)_clamp(260px,24vw,380px)]">
       <div className="min-w-0 rounded-[24px] bg-[color:var(--board-card)] p-6 ring-1 ring-[color:rgba(13,18,36,.10)] sm:p-7">
         {/* Sur téléphone, « Informations incomplètes » passe sous le nom :
             à côté, il réduisait « Le Comptoir des Halles » à quatre lignes
             d'un mot (2026-10-29). */}
         <div className="flex min-w-0 flex-wrap items-center gap-3.5">
+          {/* Sur téléphone, la place de la vignette (`CartePhotoLieu`, posée
+              en absolu par-dessus) remplace le monogramme. */}
+          <span aria-hidden className="size-16 flex-none self-start md:hidden" />
           <span
             aria-hidden
-            className="flex size-12 flex-none items-center justify-center rounded-[14px] bg-[color:var(--board-ink)] indent-[0.06em] font-mono text-[13px] font-medium tracking-[0.06em] text-white"
+            className="flex size-12 flex-none max-md:hidden items-center justify-center rounded-[14px] bg-[color:var(--board-ink)] indent-[0.06em] font-mono text-[13px] font-medium tracking-[0.06em] text-white"
           >
             {monogramme(etab.raisonDisplay)}
           </span>

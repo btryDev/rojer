@@ -71,7 +71,7 @@ export function StepResume({ state, entreprisesConnues, nomCompte }: StepProps) 
       </div>
 
       {/* Ce qui a été saisi */}
-      <section className="carte-board px-7 py-6 sm:px-8">
+      <section className="carte-board px-5 py-6 md:px-8">
         <div>
           <strong className="board-titre block text-[22px]">
             {nomAffiche || "—"}
@@ -116,7 +116,7 @@ export function StepResume({ state, entreprisesConnues, nomCompte }: StepProps) 
 
       {/* Ce qui existera après la création. Aucune couleur d'état : rien
           n'est encore fait, et le vert du board dirait justement « fait ». */}
-      <section className="carte-board px-7 py-6 sm:px-8">
+      <section className="carte-board px-5 py-6 md:px-8">
         <div>
           <h3 className="board-titre m-0 text-[22px]">La suite, concrètement</h3>
           <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">

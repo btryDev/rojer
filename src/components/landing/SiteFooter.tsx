@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { BoutonContact } from "./BoutonContact";
 import type { CompteLanding } from "./compte";
-import { Marque } from "./Marque";
+import { Marque } from "@/components/marque/Marque";
 import { LIENS_INFORMATIONS } from "./pages-legales";
 
 // Le pied de page de la page publique, classique : la marque et le contact à

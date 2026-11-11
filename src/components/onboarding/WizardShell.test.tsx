@@ -672,3 +672,26 @@ describe("un nouvel établissement d'une entreprise déjà suivie (2026-10-26)",
     expect(screen.queryByLabelText(/Nom de l'établissement/)).toBeNull();
   });
 });
+
+describe("la fenêtre d'accueil (2026-11-11)", () => {
+  it("s'ouvre sur le parcours rendu inerte, et « Commencer » la referme", async () => {
+    const { container } = render(<WizardShell compteId={null} nomCompte={null} entreprisesConnues={[]} />);
+    const fenetre = screen.getByRole("dialog", { name: /Mettez en place votre établissement/ });
+    expect(fenetre).toBeTruthy();
+    // Derrière elle, rien ne se saisit au clavier.
+    expect(container.querySelector("form")!.closest("[inert]")).not.toBeNull();
+
+    screen.getByRole("button", { name: "Commencer" }).click();
+    await souffler();
+
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(container.querySelector("[inert]")).toBeNull();
+  });
+
+  it("Échap la referme aussi", async () => {
+    render(<WizardShell compteId={null} nomCompte={null} entreprisesConnues={[]} />);
+    screen.getByRole("dialog").dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    await souffler();
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+});

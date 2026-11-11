@@ -13,7 +13,6 @@ describe("illustrationBatiment — le type ERP d'abord", () => {
     expect(illustrationBatiment({ ...base, typeErp: "N" })).toBe("restaurant");
     expect(illustrationBatiment({ ...base, typeErp: "M" })).toBe("magasin");
     expect(illustrationBatiment({ ...base, typeErp: "O" })).toBe("hotel");
-    expect(illustrationBatiment({ ...base, typeErp: "X" })).toBe("salle-sport");
     expect(illustrationBatiment({ ...base, typeErp: "W" })).toBe("bureaux");
   });
 
@@ -21,6 +20,14 @@ describe("illustrationBatiment — le type ERP d'abord", () => {
     // Le régime déclaré prime : un code NAF de commerce ne fait pas d'un
     // établissement de type W une boutique.
     expect(illustrationBatiment({ ...base, typeErp: "W", codeNaf: "47.11Z" })).toBe("bureaux");
+  });
+
+  it("une salle de sport (X) n'a plus sa planche : le local générique, quel que soit le NAF (2026-11-11)", () => {
+    expect(illustrationBatiment({ ...base, typeErp: "X" })).toBe("local");
+    expect(illustrationBatiment({ ...base, typeErp: "X", codeNaf: "56.10A" })).toBe("local");
+    expect(illustrationBatiment({ ...base, typeErp: "X", codeNaf: "47.64Z" })).toBe("local");
+    // Le type W déclaré en plus ne l'emporte pas : X passe avant, comme avant.
+    expect(illustrationBatiment({ ...base, typeErp: "X", typesErpAutres: ["W"] })).toBe("local");
   });
 
   it("un type sans planche laisse parler le code NAF", () => {
