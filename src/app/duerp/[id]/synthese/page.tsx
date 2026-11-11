@@ -116,6 +116,11 @@ export default async function SynthesePage({
 
   return (
     <div className="flex flex-col gap-8">
+      {/* Le retour à l'étape précédente, en tête (2026-11-12) : tout le
+          monde ne devine pas que le fil des étapes se clique. */}
+      <nav>
+        <LienRetour href={`/duerp/${id}/transverses`}>Questions transverses</LienRetour>
+      </nav>
 
       {(majEchue || jamaisValide) && (
         <section
@@ -644,7 +649,6 @@ export default async function SynthesePage({
       </section>
 
       <div className="flex flex-wrap items-center justify-between gap-4 border-t border-[color:var(--board-slate-line)] pt-6">
-        <LienRetour href={`/duerp/${id}/transverses`}>Étape précédente</LienRetour>
         <p className="m-0 text-[12.5px] text-[color:var(--board-slate-mid)]">
           Fait à {formaterDateFr(aujourdhui)}
         </p>

@@ -52,6 +52,11 @@ export default async function TransversesPage({
 
   return (
     <div className="flex flex-col gap-8">
+      {/* Le retour à l'étape précédente, en tête (2026-11-12) : tout le
+          monde ne devine pas que le fil des étapes se clique. */}
+      <nav>
+        <LienRetour href={`/duerp/${id}/risques`}>Risques par unité</LienRetour>
+      </nav>
 
       <header className="max-w-[var(--board-mesure)]">
         <h2 className="board-titre m-0 text-[clamp(23px,2.1vw,30px)]">
@@ -158,8 +163,7 @@ export default async function TransversesPage({
         </section>
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-4 border-t border-[color:var(--board-slate-line)] pt-6">
-        <LienRetour href={`/duerp/${id}/risques`}>Risques</LienRetour>
+      <div className="flex flex-wrap items-center justify-end gap-4 border-t border-[color:var(--board-slate-line)] pt-6">
         {/* ~~Un lien, plus une validation : l'étape se calcule sur les
             réponses (2026-10-12), cliquer « Terminer » ne la coche plus.~~
             [2026-11-11, « si pas validé, pas fait » : l'étape se valide de

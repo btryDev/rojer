@@ -172,7 +172,7 @@ export default async function DuerpLayout({
 
         {/* La saisie fermée (lecture seule, abonnement, site gelé) s'annonce
             dès l'ouverture, comme sur les autres pages du site (ADR-053 § 14). */}
-        <div data-zone-saisie className="mx-auto w-full max-w-5xl px-6 py-8 sm:px-10 sm:py-10">
+        <div data-zone-saisie className="mx-auto w-full max-w-5xl px-6 py-12 sm:px-10 sm:py-14">
           <Suspense fallback={null}>
             <SaisieDuSite etablissementId={etab.id} />
           </Suspense>

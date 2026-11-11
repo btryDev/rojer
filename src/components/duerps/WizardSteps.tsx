@@ -80,7 +80,7 @@ export function WizardSteps({ etapes }: { etapes: Etape[] }) {
                 <Link
                   href={e.href}
                   aria-current={e.actuelle ? "step" : undefined}
-                  className="group block underline-offset-4"
+                  className="group block cursor-pointer underline-offset-4"
                 >
                   {corps}
                 </Link>

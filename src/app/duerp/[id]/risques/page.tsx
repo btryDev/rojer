@@ -26,6 +26,11 @@ export default async function RisquesOverviewPage({
 
   return (
     <div className="flex flex-col gap-8">
+      {/* Le retour à l'étape précédente, en tête (2026-11-12) : tout le
+          monde ne devine pas que le fil des étapes se clique. */}
+      <nav>
+        <LienRetour href={`/duerp/${id}/unites`}>Unités de travail</LienRetour>
+      </nav>
 
       {/* Allégé le 2026-11-12 : la marche à suivre était une grille de quatre
           cartes d'explication, au même rang que la liste. C'est un rail sur
@@ -151,8 +156,7 @@ export default async function RisquesOverviewPage({
         </p>
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <LienRetour href={`/duerp/${id}/unites`}>Unités</LienRetour>
+      <div className="flex flex-wrap items-center justify-end gap-4">
         <ValiderEtapeBouton duerpId={id} etablissementId={duerp.etablissementId} etape="risques" />
       </div>
     </div>

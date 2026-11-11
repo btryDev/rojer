@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { AjouterUniteForm } from "@/components/duerps/AjouterUniteForm";
 import { UniteRow } from "@/components/duerps/UniteRow";
 import { ValiderEtapeBouton } from "@/components/duerps/ValiderEtapeBouton";
+import { LienRetour } from "@/components/duerps/LienRetour";
+import { questionsActivites } from "@/lib/activites/reponses";
 import { enteteEtape } from "@/lib/duerps/etapes";
 import { AideEcran } from "@/components/ui-kit/AideEcran";
 import { getDuerp } from "@/lib/duerps/queries";
@@ -20,7 +22,20 @@ export default async function UnitesPage({
   const unitesOk = unitesVisibles.length > 0;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
+      {/* Le retour à l'étape précédente, en tête (2026-11-12) : tout le
+          monde ne devine pas que le fil des étapes se clique. */}
+      <nav>
+        <LienRetour
+          href={`/duerp/${id}/${
+            questionsActivites(duerp.referentielSecteurId, duerp.reponsesActivitesNonCouvertes).length > 0
+              ? "activites"
+              : "secteur"
+          }`}
+        >
+          Votre activité
+        </LienRetour>
+      </nav>
 
       {/* Allégé le 2026-11-11 : la définition d'une unité était dite deux
           fois (infobulle et paragraphe) ; elle est derrière le « ? ». */}
@@ -77,7 +92,7 @@ export default async function UnitesPage({
         )}
       </section>
 
-      <div className="flex items-center justify-end">
+      <div className="flex flex-wrap items-center justify-end gap-4">
         {/* Valider, même sans rien changer, coche l'étape (2026-11-11) : les
             unités pré-remplies par le secteur ne la cochent plus seules. Sans
             unité, un vrai `disabled` (interdit 20). */}

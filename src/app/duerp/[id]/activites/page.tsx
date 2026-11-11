@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LienRetour } from "@/components/duerps/LienRetour";
 import { notFound, redirect } from "next/navigation";
 import { QuestionActiviteRow } from "@/components/duerps/QuestionActiviteRow";
 import { ValiderEtapeBouton } from "@/components/duerps/ValiderEtapeBouton";
@@ -56,6 +57,11 @@ export default async function ActivitesPage({
 
   return (
     <div className="flex flex-col gap-8">
+      {/* Le retour à l'étape précédente, en tête (2026-11-12) : tout le
+          monde ne devine pas que le fil des étapes se clique. */}
+      <nav>
+        <LienRetour href={`/duerp/${id}/secteur`}>Secteur d&apos;activité</LienRetour>
+      </nav>
 
       {/* Allégé le 2026-11-11 : le titre parlait du référentiel, un mot de
           l'outil que le dirigeant ne connaît pas ; il dit maintenant ce qu'on
@@ -136,10 +142,10 @@ export default async function ActivitesPage({
         {/* Décompte, pas reproche : aucun taux de complétude, qui laisserait
             croire à une mesure de la qualité du DUERP. */}
         <p className="m-0 text-[12.5px] text-[color:var(--board-slate-mid)]">
-          {sansReponse.length > 0
-            ? `${sansReponse.length} sans réponse — vous pouvez continuer.`
-            : "Toutes les questions ont une réponse."}
-        </p>
+            {sansReponse.length > 0
+              ? `${sansReponse.length} sans réponse — vous pouvez continuer.`
+              : "Toutes les questions ont une réponse."}
+          </p>
         <ValiderEtapeBouton duerpId={id} etablissementId={duerp.etablissementId} etape="activite" />
       </div>
     </div>
