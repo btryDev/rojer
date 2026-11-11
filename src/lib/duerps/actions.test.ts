@@ -201,9 +201,11 @@ describe("choisirSecteur — reconfirmer le même secteur ne refait rien (2026-1
 
     await expect(choisirSecteur("d1", "restauration")).rejects.toThrow("REDIRECT");
 
-    const where = prismaMock.risque.deleteMany.mock.calls[0][0].where as { activiteId: { in: string[] } };
-    expect(where.activiteId.in).toContain("bur-teletravail");
-    expect(where.activiteId.in.every((id) => id.startsWith("bur-"))).toBe(true);
+    const where = prismaMock.risque.deleteMany.mock.calls[0][0].where as { OR: { activiteId: string }[] };
+    const ids = where.OR.map((o) => o.activiteId);
+    expect(ids).toContain("bur-teletravail");
+    expect(ids).toContain("com-decoupe-viande");
+    expect(ids.some((id) => id.startsWith("resto-"))).toBe(false);
   });
 
   it("reconfirmer le même secteur ne retire aucun ajout", async () => {

@@ -7,7 +7,7 @@ import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { reprendreFaitsDansDuerp } from "@/lib/etablissements/faits-activite-ecriture";
 import { requireDuerp, requireEtablissement, requireUnite } from "@/lib/auth/scope";
-import { trouverReferentielParId } from "@/lib/referentiels";
+import { referentielsSectoriels, trouverReferentielParId } from "@/lib/referentiels";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
 import {
   ETAPES_VALIDABLES,
@@ -159,11 +159,15 @@ export async function choisirSecteur(
       },
     });
     // Les réponses de l'ancien secteur tombent : ce qu'elles avaient ajouté
-    // et que le dirigeant n'a pas touché tombe avec elles (ADR-060).
+    // et que le dirigeant n'a pas touché tombe avec elles (ADR-060) — toutes
+    // les activités connues hors du nouveau secteur, pas seulement celles de
+    // l'ancien tel que le référentiel le décrit aujourd'hui.
     if (changeDeSecteur) {
       await retirerPourActivites(tx, {
         duerpId,
-        activiteIds: (trouverReferentielParId(duerp.referentielSecteurId!)?.activitesNonCouvertes ?? []).map((a) => a.id),
+        activites: referentielsSectoriels
+          .filter((r) => r.id !== secteurId)
+          .flatMap((r) => r.activitesNonCouvertes),
       });
     }
     for (const u of ref.unitesTravailSuggerees

@@ -318,7 +318,7 @@ describe("repondreActivite — ajouts (ADR-060)", () => {
     await repondreActivite(DUERP, VIANDE, true);
     expect(h.synchroniserAjouts).toHaveBeenCalledTimes(1);
     const [, p] = h.synchroniserAjouts.mock.calls[0];
-    expect(p).toMatchObject({ duerpId: DUERP, compteId: "user-1", exercee: true });
+    expect(p).toMatchObject({ duerpId: DUERP, compte: { compteId: "user-1" }, exercee: true });
     expect(p.activite.id).toBe(VIANDE);
     expect(p.activite.aFaire.risques.length).toBeGreaterThan(0);
   });

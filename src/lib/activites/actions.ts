@@ -77,7 +77,7 @@ export async function repondreActivite(
   // laisseraient des risques que rien n'explique.
   await synchroniserAjouts(db, {
     duerpId,
-    compteId: compte.compteId,
+    compte,
     activite,
     exercee,
   });
