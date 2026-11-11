@@ -102,7 +102,7 @@ export default async function RisquesUnitePage({
       {/* La marche à suivre, en rail sur le canevas (2026-11-12) : elle
           était une grande carte, barre, pastilles et paragraphes compris,
           au même rang que les listes. */}
-      <MarcheASuivre libelle="Avancement de cette unité" pas={pas} />
+      <MarcheASuivre libelle="Où en est cette unité" pas={pas} />
 
 
       <section className="carte-board overflow-clip">
