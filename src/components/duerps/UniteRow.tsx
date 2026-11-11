@@ -78,11 +78,14 @@ export function UniteRow({ id, nom, description, nombreRisques }: Props) {
                   {description}
                 </p>
               )}
-              <p className="board-eyebrow m-0 mt-2 text-[10px] tracking-[0.16em] tabular-nums text-[color:var(--board-slate-soft)]">
-                {nombreRisques === 0
-                  ? "Aucun risque renseigné"
-                  : `${String(nombreRisques).padStart(2, "0")} risque${nombreRisques > 1 ? "s" : ""} renseigné${nombreRisques > 1 ? "s" : ""}`}
-              </p>
+              {/* Le compte ne s'écrit que s'il y en a (2026-11-11) : « Aucun
+                  risque renseigné » sur des unités qu'on vient de créer
+                  parlait de l'étape suivante et laissait croire à un oubli. */}
+              {nombreRisques > 0 && (
+                <p className="board-eyebrow m-0 mt-2 text-[10px] tracking-[0.16em] tabular-nums text-[color:var(--board-slate-soft)]">
+                  {`${String(nombreRisques).padStart(2, "0")} risque${nombreRisques > 1 ? "s" : ""} renseigné${nombreRisques > 1 ? "s" : ""}`}
+                </p>
+              )}
             </>
           )}
         </div>

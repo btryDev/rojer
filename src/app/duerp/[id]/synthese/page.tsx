@@ -455,7 +455,7 @@ export default async function SynthesePage({
           <div className="flex flex-wrap items-baseline justify-between gap-3">
             <div className="min-w-0">
               <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-                Périmètre du référentiel
+                Votre activité
               </p>
               <h3 className="board-titre m-0 mt-1.5 text-[22px]">
                 Ce que le document ne traite pas

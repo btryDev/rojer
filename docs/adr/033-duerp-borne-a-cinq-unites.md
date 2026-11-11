@@ -1,10 +1,25 @@
 # ADR-033 — Le DUERP est borné à cinq unités de travail
 
-- **Statut** : acceptée, 2026-09-01 (réunion d'équipe)
+- **Statut** : acceptée, 2026-09-01 (réunion d'équipe) ; **plafond levé le 2026-11-11** (amendement ci-dessous)
 - **Portée** : `src/lib/duerps/plafond-unites.ts` (le chiffre, le compte hors
   unité transverse et les deux phrases de refus, sans prisma),
   `src/lib/duerps/actions.ts`, `src/lib/duerps/import/`
 - **Découle de** l'ADR-025
+
+
+> **Amendement du 2026-11-11 — le plafond de cinq est levé** (décision de la
+> propriétaire). La tarification (ADR-053, grille du 2026-11-05) borne déjà les
+> unités : trois pendant l'essai, sans limite dans les formules payantes. Le
+> plafond de cinq s'y superposait et bloquait un client payant à cinq, alors
+> que sa formule annonce « sans limite » ; restauration et bureau
+> pré-remplissant cinq unités, l'ajout était refusé dès la première visite.
+> La raison d'origine — fixer la taille d'entreprise servie — est tenue depuis
+> le 2026-11-03 par l'effectif (ADR-031, 49 salariés au plus), et le chiffre
+> n'avait jamais été mesuré (section finale). Retirés : `plafond-unites.ts`
+> et ses quatre points d'appel (choix du secteur, ajout manuel, import, écran
+> des unités). Reste vrai de cette ADR : l'unité « Risques transverses » ne
+> compte dans aucune limite, et le pré-remplissage s'arrête à la limite de
+> l'essai sans refuser. Le reste du texte ci-dessous est l'état d'origine.
 
 ## Le problème
 

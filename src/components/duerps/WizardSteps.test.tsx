@@ -29,13 +29,13 @@ describe("WizardSteps — la frise Progression", () => {
         etapes={[{ id: "u", libelle: "Unités", href: "/u", atteinte: true, faite: true, actuelle: true }]}
       />,
     );
-    expect(h).toContain(">Fait<");
+    expect(h).toContain(">✓ Fait<");
     expect(h).not.toContain("En cours");
   });
 
   it("trois mots seulement : En cours, Fait, À faire — plus « Ouvert » ni « À venir »", () => {
     expect(html).toContain("En cours");
-    expect(html.match(/>Fait</g)).toHaveLength(1);
+    expect(html.match(/>✓ Fait</g)).toHaveLength(1);
     // Accessible mais pas faite, et bloquée : les deux disent « À faire ».
     expect(html.match(/>À faire</g)).toHaveLength(2);
     expect(html).not.toContain("Ouvert");
@@ -49,5 +49,21 @@ describe("WizardSteps — la frise Progression", () => {
 
   it("aucune encre en `--board-slate` (interdit 5)", () => {
     expect(html).not.toContain("text-[color:var(--board-slate)]");
+  });
+
+  it("un segment se remplit de la part faite de son étape", () => {
+    const h = renderToStaticMarkup(
+      <WizardSteps
+        etapes={[
+          { id: "r", libelle: "Risques", href: "/r", atteinte: true, faite: false, avancement: 0.5 },
+          { id: "s", libelle: "Synthèse", href: "/s", atteinte: true, faite: true },
+          { id: "t", libelle: "Transverses", href: "/t", atteinte: true, faite: false },
+        ]}
+      />,
+    );
+    expect(h).toContain("width:50%");
+    expect(h).toContain("width:100%");
+    // Rien de fait : aucun remplissage, pas même à 0 %.
+    expect(h.match(/width:/g)).toHaveLength(2);
   });
 });

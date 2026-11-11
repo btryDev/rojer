@@ -8,12 +8,13 @@ import { Prisma } from "@prisma/client";
 import { reprendreFaitsDansDuerp } from "@/lib/etablissements/faits-activite-ecriture";
 import { requireDuerp, requireEtablissement, requireUnite } from "@/lib/auth/scope";
 import { trouverReferentielParId } from "@/lib/referentiels";
-import {
-  compterUnitesPlafonnees,
-  messagePlafondAjout,
-  placesRestantes,
-} from "./plafond-unites";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
+import {
+  ETAPES_VALIDABLES,
+  avecValidation,
+  type EtapeValidable,
+  type EtapesValidees,
+} from "./etapes-validees";
 import { creerSousPlafond, placesSousLePlafond } from "@/lib/abonnements/quotas";
 
 /**
@@ -44,11 +45,10 @@ export async function creerDuerp(etablissementId: string): Promise<void> {
   });
 
   if (!duerp) {
-    // L'unité transverse est créée sans regarder le plafond, et c'est voulu :
-    // elle ne compte pas dans les cinq (ADR-033). Le DUERP naît donc toujours
-    // avec ses cinq places entières.
+    // L'unité transverse est créée sans regarder la limite de l'essai : elle
+    // n'y compte pas (ADR-053 § 14, comptage hors transverse).
     //
-    // Il naît aussi avec les risques des faits d'activité déjà déclarés
+    // Le DUERP naît aussi avec les risques des faits d'activité déjà déclarés
     // (ADR-041) : un dirigeant qui a répondu « oui, des travailleurs
     // conduisent des engins » depuis Équipe retrouve la question répondue ET
     // son risque dans le document, sans la reposer.
@@ -111,33 +111,48 @@ export async function choisirSecteur(
     unitesExistantes.map((u) => u.nom.toLowerCase()),
   );
 
-  // Le pré-remplissage sectoriel s'arrête au plafond (ADR-033). Il s'arrête,
-  // il ne refuse pas : ce sont des unités que le produit propose, pas des
-  // données que le dirigeant a apportées — en écarter une ne lui fait rien
-  // perdre, et il peut toujours l'ajouter à la main. C'est la différence avec
-  // l'import, qui refuse en bloc plutôt que d'amputer un document reçu.
-  //
-  // Le cas où la coupe mord vraiment est le changement de secteur : les unités
-  // de l'ancien secteur restent et occupent les places. Une bascule
-  // restauration → bureau n'en installera donc aucune, et l'utilisateur devra
-  // supprimer les anciennes lui-même.
-  const places = placesRestantes(compterUnitesPlafonnees(unitesExistantes));
+  // Reconfirmer le même secteur ne refait rien (2026-11-11) : ni
+  // pré-remplissage — il recréerait les unités supprimées depuis —, ni
+  // retrait de validation. Le fil mène à /secteur pour un secteur sans
+  // précision : ce chemin doit être sans effet.
+  const memeSecteur = duerp.referentielSecteurId === secteurId;
+
+  // Validations (« si pas validé, pas fait », 2026-11-11). Sans précision à
+  // demander, confirmer le secteur valide « Votre activité » ; avec, c'est la
+  // page des précisions qui la valide. Un changement de secteur remet aussi
+  // les unités et les risques à valider : de nouvelles unités arrivent, que
+  // personne n'a relues.
+  const aDesQuestions = ref.activitesNonCouvertes.length > 0;
+  let etapesValidees = duerp.etapesValidees as unknown;
+  if (!memeSecteur || !aDesQuestions) {
+    etapesValidees = avecValidation(
+      etapesValidees,
+      "activite",
+      aDesQuestions ? null : new Date(),
+    );
+  }
+  if (changeDeSecteur) {
+    etapesValidees = avecValidation(etapesValidees, "unites", null);
+    etapesValidees = avecValidation(etapesValidees, "risques", null);
+  }
 
   await db.$transaction(async (tx) => {
-    // Pendant l'essai gratuit, le pré-remplissage s'arrête aussi à sa limite
-    // d'unités (ADR-053 § 14), sans refuser : même règle que l'ADR-033. Le
-    // verrou du compte d'abord, comme partout ailleurs.
+    // Pendant l'essai gratuit, le pré-remplissage s'arrête à sa limite
+    // d'unités (ADR-053 § 14), sans refuser : ce sont des unités proposées,
+    // le dirigeant ne perd rien. Le verrou du compte d'abord, comme partout
+    // ailleurs.
     const sousLEssai = await placesSousLePlafond(tx, compte.compteId, "unitesTravail");
     await tx.duerp.update({
       where: { id: duerpId },
       data: {
         referentielSecteurId: secteurId,
+        etapesValidees: etapesValidees as EtapesValidees,
         ...(changeDeSecteur ? { reponsesActivitesNonCouvertes: Prisma.DbNull } : {}),
       },
     });
     for (const u of ref.unitesTravailSuggerees
-      .filter((u) => !nomsExistants.has(u.nom.toLowerCase()))
-      .slice(0, Math.min(places, sousLEssai)))
+      .filter((u) => !memeSecteur && !nomsExistants.has(u.nom.toLowerCase()))
+      .slice(0, sousLEssai))
       await tx.uniteTravail.create({
         data: {
           duerpId,
@@ -156,7 +171,6 @@ export async function choisirSecteur(
   // une question jamais posée ne produit aucune mention dans le document.
   // Elles se posent avant les unités parce qu'un « oui » se traduit souvent
   // par une unité de travail à créer à la main dans la foulée.
-  const aDesQuestions = ref.activitesNonCouvertes.length > 0;
   redirect(`/duerp/${duerpId}/${aDesQuestions ? "activites" : "unites"}`);
 }
 
@@ -192,18 +206,6 @@ export async function ajouterUnite(
     };
   }
 
-  // Le plafond de l'ADR-033 vaut à l'ajout, jamais à la lecture : un DUERP qui
-  // porte déjà huit unités n'en perd aucune, il n'en gagne plus.
-  const unites = await db.uniteTravail.findMany({
-    where: { duerpId },
-    select: { estTransverse: true },
-  });
-  if (placesRestantes(compterUnitesPlafonnees(unites)) === 0) {
-    const message = messagePlafondAjout();
-    // Sur le champ `nom` : c'est le seul que `AjouterUniteForm` affiche, un
-    // message rangé ailleurs ne serait jamais lu.
-    return { status: "error", message, fieldErrors: { nom: [message] } };
-  }
 
   // Limite d'unités de l'essai gratuit (ADR-053 § 14).
   const creation = await creerSousPlafond(db, compte.compteId, "unitesTravail", (tx) =>
@@ -219,6 +221,53 @@ export async function ajouterUnite(
 
   revalidatePath(`/duerp/${duerpId}/unites`);
   return { status: "success" };
+}
+
+const etapeValidableSchema = z.enum(ETAPES_VALIDABLES);
+
+/** La page où mène la validation de chaque étape. */
+const SUITE_DE: Record<EtapeValidable, string> = {
+  activite: "unites",
+  unites: "risques",
+  risques: "transverses",
+  transverses: "synthese",
+};
+
+/**
+ * Le dirigeant valide une étape du fil (2026-11-11, « si pas validé, pas
+ * fait »). Valider sans rien changer est un geste légitime : ce que le secteur
+ * a proposé lui convient. La validation ne force rien : une étape dont l'état
+ * calculé est incomplet (une unité sans risque, une question sans réponse)
+ * reste à faire, validée ou non.
+ */
+export async function validerEtape(
+  duerpId: string,
+  etape: EtapeValidable,
+): Promise<void> {
+  await verifierSaisie();
+  const quelle = etapeValidableSchema.parse(etape);
+  const { db, duerp } = await requireDuerp(duerpId);
+
+  // Rien à valider sans secteur, ni sans unité : le bouton n'est pas offert,
+  // seul un appel forgé arrive ici.
+  if (quelle === "activite" && !duerp.referentielSecteurId) {
+    throw new Error("Aucun secteur retenu.");
+  }
+  if (quelle === "unites") {
+    const nb = await db.uniteTravail.count({
+      where: { duerpId, estTransverse: false },
+    });
+    if (nb === 0) throw new Error("Aucune unité de travail à valider.");
+  }
+
+  await db.duerp.update({
+    where: { id: duerpId },
+    data: {
+      etapesValidees: avecValidation(duerp.etapesValidees, quelle, new Date()),
+    },
+  });
+  revalidatePath(`/duerp/${duerpId}`, "layout");
+  redirect(`/duerp/${duerpId}/${SUITE_DE[quelle]}`);
 }
 
 export async function renommerUnite(

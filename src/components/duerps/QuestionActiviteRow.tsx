@@ -63,56 +63,62 @@ export function QuestionActiviteRow({
     });
   };
 
+  // Une ligne d'une seule carte (2026-11-11) : trois grandes cartes pour
+  // trois questions fermées alourdissaient l'écran. « Sans réponse » n'est
+  // plus écrit à côté des boutons — aucun des deux n'étant mis en avant, le
+  // silence se voit déjà.
   return (
-    <li className="carte-board px-7 py-6 sm:px-8">
-      <p className="m-0 text-[16px] font-semibold leading-[1.3] tracking-[-0.01em] text-[color:var(--board-ink)]">
-        {question}
-      </p>
-      {aide && (
-        <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-          {aide}
-        </p>
-      )}
+    <li className="border-t border-[color:var(--board-slate-line)] px-7 py-5 first:border-t-0 sm:px-8">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+        <div className="min-w-0">
+          <p className="m-0 text-[14.5px] font-semibold leading-[1.35] tracking-[-0.01em] text-[color:var(--board-ink)]">
+            {question}
+          </p>
+          {aide && (
+            <p className="m-0 mt-1 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+              {aide}
+            </p>
+          )}
+        </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        <Button
-          data-ecriture-inerte
-          variant={exercee === true ? "board" : "boardClair"}
-          size="boardSm"
-          disabled={pending}
-          onClick={() => repondre(true)}
-        >
-          Oui
-        </Button>
-        <Button
-          data-ecriture-inerte
-          variant={exercee === false ? "board" : "boardClair"}
-          size="boardSm"
-          disabled={pending}
-          onClick={() => repondre(false)}
-        >
-          Non
-        </Button>
-        {exercee === undefined ? (
-          <span className="board-eyebrow text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
-            Sans réponse
-          </span>
-        ) : (
-          // Une réponse doit pouvoir être retirée, et pas seulement changée :
-          // un « non » cliqué par erreur partait sinon dans une version figée
-          // pour quarante ans, où il affirme que le dirigeant a *déclaré ne
-          // pas exercer* l'activité. Revenir au silence est un état légitime
-          // du dossier (ADR-020), pas un aveu.
-          <button
-            data-ecriture
-            type="button"
-            disabled={pending}
-            onClick={() => repondre(null)}
-            className="text-[12.5px] text-[color:var(--board-blue-ink)] underline-offset-4 hover:underline disabled:opacity-50"
-          >
-            retirer ma réponse
-          </button>
-        )}
+        <div className="flex flex-none flex-wrap items-center gap-2 sm:flex-col sm:items-end">
+          <div className="flex gap-2">
+            <Button
+              data-ecriture-inerte
+              variant={exercee === true ? "board" : "boardClair"}
+              size="boardSm"
+              disabled={pending}
+              onClick={() => repondre(true)}
+            >
+              Oui
+            </Button>
+            <Button
+              data-ecriture-inerte
+              variant={exercee === false ? "board" : "boardClair"}
+              size="boardSm"
+              disabled={pending}
+              onClick={() => repondre(false)}
+            >
+              Non
+            </Button>
+          </div>
+          {exercee !== undefined && (
+            // Une réponse doit pouvoir être retirée, et pas seulement changée :
+            // un « non » cliqué par erreur partait sinon dans une version figée
+            // pour quarante ans, où il affirme que le dirigeant a *déclaré ne
+            // pas exercer* l'activité. Revenir au silence est un état légitime
+            // du dossier (ADR-020), pas un aveu.
+            <button
+              data-ecriture
+              type="button"
+              disabled={pending}
+              onClick={() => repondre(null)}
+              className="text-[12px] text-[color:var(--board-blue-ink)] underline-offset-4 hover:underline disabled:opacity-50"
+            >
+              retirer ma réponse
+            </button>
+          )}
+        </div>
       </div>
 
       {echec && (
@@ -128,13 +134,10 @@ export function QuestionActiviteRow({
       {exercee === true && (
         <div className="mt-4 max-w-[var(--board-mesure)] border-l-2 border-[color:var(--board-slate-line)] pl-4">
           <p className="m-0 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-            Ce que le référentiel de votre secteur ne propose pas pour cette
-            activité&nbsp;: {cequiManque}
+            Non couvert par votre secteur&nbsp;: {cequiManque}
           </p>
-          <p className="m-0 mt-1.5 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-            L&apos;inventaire reste à votre main — créez au besoin une unité de
-            travail dédiée à l&apos;étape suivante. Le DUERP généré porte la
-            mention de cette déclaration.
+          <p className="m-0 mt-1 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+            Créez au besoin une unité de travail dédiée à l&apos;étape suivante.
           </p>
         </div>
       )}

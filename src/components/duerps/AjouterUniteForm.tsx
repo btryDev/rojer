@@ -28,14 +28,16 @@ export function AjouterUniteForm({ duerpId }: { duerpId: string }) {
   if (!ouvert) {
     return (
       <div data-ecriture className="px-7 py-4 sm:px-8">
-        <button
+        {/* Un vrai bouton (2026-11-11) : en petites capitales grises, l'ajout
+            se lisait comme une légende et passait inaperçu. */}
+        <Button
           type="button"
+          variant="boardClair"
+          size="board"
           onClick={() => setOuvert(true)}
-          className="board-eyebrow inline-flex items-center gap-2 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)] transition-colors hover:text-[color:var(--board-ink)]"
         >
-          <span aria-hidden className="text-[13px] leading-none">+</span>
-          Ajouter une unité de travail
-        </button>
+          + Ajouter une unité de travail
+        </Button>
       </div>
     );
   }

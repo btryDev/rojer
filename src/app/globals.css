@@ -1239,3 +1239,18 @@ body:has([data-lecture-seule]) [data-ecriture-inerte] {
   pointer-events: none;
   opacity: 0.6;
 }
+/* Le chemin de lecture d'une action qui écrit ET fait avancer (2026-11-11,
+   « Valider et continuer » du DUERP) : caché d'ordinaire, montré à qui ne
+   peut pas écrire — lecture seule ou saisie fermée —, pour qu'il avance
+   quand même. L'action elle-même porte `data-ecriture-ou-saisie`. */
+[data-chemin-lecture] {
+  display: none !important;
+}
+body:has([data-lecture-seule]) [data-chemin-lecture],
+body:has([data-saisie-fermee]) [data-chemin-lecture] {
+  display: revert !important;
+}
+body:has([data-lecture-seule]) [data-ecriture-ou-saisie],
+body:has([data-saisie-fermee]) [data-ecriture-ou-saisie] {
+  display: none !important;
+}

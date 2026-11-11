@@ -8,6 +8,12 @@ export type Etape = {
   atteinte: boolean;
   /** Complète, lu sur les données (`construireEtapes`). */
   faite: boolean;
+  /**
+   * La part faite de l'étape, de 0 à 1 (2026-11-11) : le segment se remplit
+   * d'autant. Absente, le segment est plein si l'étape est faite. Aucun
+   * pourcentage n'est écrit — la longueur du trait suffit.
+   */
+  avancement?: number;
   actuelle?: boolean;
   /**
    * Ce qui manque pour que l'étape soit faite, et où le faire. Posé
@@ -65,15 +71,31 @@ export function WizardSteps({ etapes }: { etapes: Etape[] }) {
         className="flex gap-1.5"
       >
         {etapes.map((e) => {
-          let fill = "bg-[color:var(--board-slate-line)]";
-          if (e.faite && !e.actuelle) fill = "bg-[color:var(--board-ink)]";
-          if (e.actuelle) fill = "bg-[color:var(--board-blue-ink)]";
+          const part = Math.max(0, Math.min(1, e.avancement ?? (e.faite ? 1 : 0)));
+          // L'œil va à l'étape courante (2026-11-11) : son segment est le
+          // seul en bleu, sur un fond bleu pâle qui le rend visible même vide,
+          // et rempli de sa part faite. Les étapes faites s'effacent en gris
+          // — passées, pas actives : un trait plein et foncé se lisait
+          // « c'est ici » ou « déjà fait par moi ».
+          const fond = e.actuelle
+            ? "bg-[color:var(--board-blue-pale)]"
+            : "bg-[color:var(--board-slate-line)]";
+          const encre = e.actuelle
+            ? "bg-[color:var(--board-blue-ink)]"
+            : "bg-[color:var(--board-slate-soft)]";
           return (
             <span
               key={e.id}
               aria-hidden
-              className={`h-[5px] flex-1 rounded-full ${fill}`}
-            />
+              className={`h-[5px] flex-1 overflow-hidden rounded-full ${fond}`}
+            >
+              {part > 0 && (
+                <span
+                  className={`block h-full rounded-full ${encre}`}
+                  style={{ width: `${Math.round(part * 100)}%` }}
+                />
+              )}
+            </span>
           );
         })}
       </div>
@@ -82,7 +104,6 @@ export function WizardSteps({ etapes }: { etapes: Etape[] }) {
       <ol className="mt-4 grid list-none grid-cols-1 gap-y-5 p-0 sm:grid-cols-2 lg:grid-cols-5 lg:gap-x-6 lg:gap-y-0">
         {etapes.map((e, i) => {
           const numero = String(i + 1).padStart(2, "0");
-          const muet = !e.faite && !e.actuelle;
           const clickable = e.atteinte || e.actuelle;
 
           // Une étape à venir n'est pas un lien : pas de `href="#"` inerte
@@ -94,9 +115,7 @@ export function WizardSteps({ etapes }: { etapes: Etape[] }) {
                   className={`tabular-nums ${
                     e.actuelle
                       ? "font-semibold text-[color:var(--board-blue-ink)]"
-                      : e.faite
-                        ? "text-[color:var(--board-ink)]"
-                        : "text-[color:var(--board-slate-soft)]"
+                      : "text-[color:var(--board-slate-soft)]"
                   }`}
                 >
                   {numero}
@@ -111,17 +130,15 @@ export function WizardSteps({ etapes }: { etapes: Etape[] }) {
                   {/* « Fait » prime : le compteur compte l'étape courante quand
                       elle est faite, le mot doit le dire aussi. L'étape
                       courante garde son encre bleue et `aria-current`. */}
-                  {e.faite ? "Fait" : e.actuelle ? "En cours" : "À faire"}
+                  {e.faite ? "✓ Fait" : e.actuelle ? "En cours" : "À faire"}
                 </span>
               </div>
 
               <p
                 className={`m-0 mt-2 text-[14px] leading-[1.3] tracking-[-0.01em] ${
-                  muet
-                    ? "text-[color:var(--board-slate-mid)]"
-                    : e.actuelle
-                      ? "font-semibold text-[color:var(--board-ink)]"
-                      : "font-medium text-[color:var(--board-ink)]"
+                  e.actuelle
+                    ? "font-semibold text-[color:var(--board-ink)]"
+                    : "text-[color:var(--board-slate-mid)]"
                 } ${clickable ? "transition-opacity group-hover:opacity-60" : ""}`}
               >
                 {e.libelle}

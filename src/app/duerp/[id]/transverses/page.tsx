@@ -7,6 +7,7 @@ import { FAITS_ACTIVITE, intituleDuFait } from "@/lib/etablissements/faits-activ
 import { CadreACompleter, ListeACompleter } from "@/components/ui-kit/CadreACompleter";
 import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
 import { faitsManquants } from "@/lib/etablissements/guide-par-module";
+import { ValiderEtapeBouton } from "@/components/duerps/ValiderEtapeBouton";
 import { WizardSteps } from "@/components/duerps/WizardSteps";
 import { etapesDuDuerp } from "@/lib/duerps/etapes";
 import { getDuerp } from "@/lib/duerps/queries";
@@ -167,16 +168,17 @@ export default async function TransversesPage({
         >
           ← Risques
         </Link>
-        {/* Un lien, plus une validation : l'étape se calcule sur les
-            réponses (2026-10-12), cliquer « Terminer » ne la coche plus.
-            `ValiderTransversesButton` et `validerTransverses` sont retirés —
-            ils n'écrivaient plus que la colonne inerte. */}
-        <Link
-          href={`/duerp/${id}/synthese`}
-          className={buttonVariants({ variant: "board", size: "board" })}
-        >
-          Terminer — aller à la synthèse →
-        </Link>
+        {/* ~~Un lien, plus une validation : l'étape se calcule sur les
+            réponses (2026-10-12), cliquer « Terminer » ne la coche plus.~~
+            [2026-11-11, « si pas validé, pas fait » : l'étape se valide de
+            nouveau, ET se calcule toujours sur les réponses — une question
+            sans réponse la laisse à faire, validée ou non. La colonne inerte
+            `transversesRepondues` n'est pas relue : `etapesValidees`.] */}
+        <ValiderEtapeBouton
+          duerpId={id}
+          etape="transverses"
+          libelle="Valider — aller à la synthèse →"
+        />
       </div>
     </div>
   );

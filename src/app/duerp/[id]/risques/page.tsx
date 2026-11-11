@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
+import { ValiderEtapeBouton } from "@/components/duerps/ValiderEtapeBouton";
 import { WizardSteps } from "@/components/duerps/WizardSteps";
 import { LigneHorsReferentiel } from "@/components/duerps/MentionHorsReferentiel";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
@@ -264,12 +265,7 @@ export default async function RisquesOverviewPage({
         >
           ← Unités
         </Link>
-        <Link
-          href={`/duerp/${id}/transverses`}
-          className={buttonVariants({ variant: "board", size: "board" })}
-        >
-          Étape suivante : questions transverses →
-        </Link>
+        <ValiderEtapeBouton duerpId={id} etape="risques" />
       </div>
     </div>
   );

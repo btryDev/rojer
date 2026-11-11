@@ -1,9 +1,11 @@
+import { trouverReferentielParId } from "@/lib/referentiels";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * Le plafond de cinq unités de travail (ADR-033), aux trois points d'écriture
- * qui vivent ici — la création du DUERP, le choix du secteur, l'ajout manuel.
- * Le quatrième, l'import, se prouve dans `import/ecritures.test.ts`.
+ * L'écriture des unités de travail aux points qui vivent ici — la création du
+ * DUERP, le choix du secteur, l'ajout manuel. ~~Le plafond de cinq unités
+ * (ADR-033)~~ est levé le 2026-11-11 (ADR-033 amendée) : seule la limite de
+ * l'essai borne encore leur nombre.
  *
  * Prisma est simulé et les vrais helpers de `lib/auth/scope` sont utilisés,
  * comme dans `isolation.test.ts` : ce qui est en cause ici est la décision de
@@ -55,7 +57,6 @@ vi.mock("next/navigation", async (importer) => ({
 }));
 
 import { ajouterUnite, choisirSecteur, creerDuerp } from "./actions";
-import { MAX_UNITES_TRAVAIL } from "./plafond-unites";
 
 const USER = { id: "user-1", email: "dirigeant@exemple.fr" };
 const DUERP = { id: "d1", etablissementId: "e1", referentielSecteurId: null };
@@ -128,35 +129,22 @@ describe("creerDuerp — reprend les faits d'activité déjà déclarés (ADR-04
   });
 });
 
-describe("choisirSecteur — le pré-remplissage s'arrête au plafond", () => {
-  it("installe les cinq unités de la restauration à côté de la transverse", async () => {
-    // Le cas cible du produit : cinq unités sectorielles plus la transverse.
-    // Compter la transverse ferait échouer l'étape la plus normale.
+// ADR-033 amendée le 2026-11-11 : plus de plafond de cinq unités ; seule la
+// limite de l'essai (ADR-053 § 14) borne encore le nombre d'unités.
+describe("choisirSecteur — le pré-remplissage installe toutes les unités du secteur", () => {
+  it("installe les unités de la restauration à côté de la transverse", async () => {
     prismaMock.uniteTravail.findMany.mockResolvedValue([TRANSVERSE]);
 
     await expect(choisirSecteur("d1", "restauration")).rejects.toThrow(
       "REDIRECT",
     );
 
-    expect(unitesCreeesParLeSecteur()).toHaveLength(MAX_UNITES_TRAVAIL);
-  });
-
-  it("n'en installe que ce qui tient quand des unités sont déjà là", async () => {
-    prismaMock.uniteTravail.findMany.mockResolvedValue([
-      TRANSVERSE,
-      unite("Terrasse"),
-      unite("Cave"),
-      unite("Bureau"),
-    ]);
-
-    await expect(choisirSecteur("d1", "restauration")).rejects.toThrow(
-      "REDIRECT",
+    expect(unitesCreeesParLeSecteur()).toHaveLength(
+      trouverReferentielParId("restauration")!.unitesTravailSuggerees.length,
     );
-
-    expect(unitesCreeesParLeSecteur()).toHaveLength(2);
   });
 
-  it("n'en installe aucune sur un DUERP déjà plein", async () => {
+  it("n'en retire aucune parce que d'autres unités sont déjà là", async () => {
     prismaMock.uniteTravail.findMany.mockResolvedValue([
       TRANSVERSE,
       ...["A", "B", "C", "D", "E"].map(unite),
@@ -166,81 +154,58 @@ describe("choisirSecteur — le pré-remplissage s'arrête au plafond", () => {
       "REDIRECT",
     );
 
-    expect(unitesCreeesParLeSecteur()).toEqual([]);
-  });
-
-  it("n'en installe aucune sur un DUERP ancien qui en porte huit", async () => {
-    // `placesRestantes` ne descend pas sous zéro : un `slice(0, -3)` aurait
-    // compté depuis la fin du tableau et créé deux unités de plus.
-    prismaMock.uniteTravail.findMany.mockResolvedValue(
-      Array.from({ length: 8 }, (_, i) => unite(`Ancienne ${i + 1}`)),
+    expect(unitesCreeesParLeSecteur()).toHaveLength(
+      trouverReferentielParId("restauration")!.unitesTravailSuggerees.length,
     );
-
-    await expect(choisirSecteur("d1", "restauration")).rejects.toThrow(
-      "REDIRECT",
-    );
-
-    expect(unitesCreeesParLeSecteur()).toEqual([]);
   });
 });
 
-describe("ajouterUnite — la sixième est refusée", () => {
-  const ajouter = (nom: string) => {
-    const fd = new FormData();
-    fd.set("nom", nom);
-    return ajouterUnite("d1", { status: "idle" }, fd);
-  };
+describe("choisirSecteur — reconfirmer le même secteur ne refait rien (2026-11-11)", () => {
+  const VALIDEE = "2026-11-10T10:00:00.000Z";
+  const ecrit = () =>
+    (prismaMock.duerp.update.mock.calls[0][0] as { data: { etapesValidees: Record<string, string> } })
+      .data.etapesValidees;
 
-  it("accepte la cinquième", async () => {
-    prismaMock.uniteTravail.findMany.mockResolvedValue([
-      TRANSVERSE,
-      ...["A", "B", "C", "D"].map(unite),
-    ]);
+  it("ne recrée pas les unités supprimées, ne retire aucune validation", async () => {
+    prismaMock.duerp.findFirst.mockResolvedValue({
+      ...DUERP,
+      referentielSecteurId: "restauration",
+      etapesValidees: { activite: VALIDEE, unites: VALIDEE },
+    });
+    prismaMock.uniteTravail.findMany.mockResolvedValue([TRANSVERSE]);
 
-    const res = await ajouter("Terrasse");
+    await expect(choisirSecteur("d1", "restauration")).rejects.toThrow("REDIRECT");
 
-    expect(res.status).toBe("success");
-    expect(prismaMock.uniteTravail.create).toHaveBeenCalled();
+    expect(unitesCreeesParLeSecteur()).toEqual([]);
+    expect(ecrit()).toEqual({ activite: VALIDEE, unites: VALIDEE });
   });
 
-  it("refuse la sixième, et le message nomme la limite", async () => {
+  it("un changement de secteur remet unités et risques à valider", async () => {
+    prismaMock.duerp.findFirst.mockResolvedValue({
+      ...DUERP,
+      referentielSecteurId: "bureau",
+      etapesValidees: { unites: VALIDEE, risques: VALIDEE, transverses: VALIDEE },
+    });
+    prismaMock.uniteTravail.findMany.mockResolvedValue([TRANSVERSE]);
+
+    await expect(choisirSecteur("d1", "restauration")).rejects.toThrow("REDIRECT");
+
+    expect(ecrit()).toEqual({ transverses: VALIDEE });
+  });
+});
+
+describe("ajouterUnite — plus de plafond de cinq", () => {
+  it("accepte une sixième unité", async () => {
     prismaMock.uniteTravail.findMany.mockResolvedValue([
       TRANSVERSE,
       ...["A", "B", "C", "D", "E"].map(unite),
     ]);
+    const fd = new FormData();
+    fd.set("nom", "Terrasse");
 
-    const res = await ajouter("Terrasse");
+    const res = await ajouterUnite("d1", { status: "idle" }, fd);
 
-    expect(res.status).toBe("error");
-    if (res.status === "error") {
-      expect(res.message).toContain("5 unités de travail");
-    }
-    expect(prismaMock.uniteTravail.create).not.toHaveBeenCalled();
-  });
-
-  it("porte l'erreur sur le champ « nom », le seul que le formulaire affiche", async () => {
-    prismaMock.uniteTravail.findMany.mockResolvedValue(
-      ["A", "B", "C", "D", "E"].map(unite),
-    );
-
-    const res = await ajouter("Terrasse");
-
-    expect(res.status).toBe("error");
-    if (res.status === "error") {
-      expect(res.fieldErrors?.nom?.[0]).toBe(res.message);
-    }
-  });
-
-  it("un DUERP ancien à huit unités refuse l'ajout sans rien perdre", async () => {
-    prismaMock.uniteTravail.findMany.mockResolvedValue(
-      Array.from({ length: 8 }, (_, i) => unite(`Ancienne ${i + 1}`)),
-    );
-
-    const res = await ajouter("Neuvième");
-
-    expect(res.status).toBe("error");
-    expect(prismaMock.uniteTravail.create).not.toHaveBeenCalled();
-    expect(prismaMock.uniteTravail.delete).not.toHaveBeenCalled();
-    expect(prismaMock.uniteTravail.update).not.toHaveBeenCalled();
+    expect(res.status).toBe("success");
+    expect(prismaMock.uniteTravail.create).toHaveBeenCalled();
   });
 });

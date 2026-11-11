@@ -20,6 +20,8 @@ import {
   type ReponsesFaitsActivite,
 } from "@/lib/etablissements/faits-activite";
 import { questionsDetectionTransverses, risquesTransverses } from "@/lib/referentiels";
+
+const TOUTES_VALIDEES = { activite: true, unites: true, risques: true, transverses: true };
 import { etatEtapeTransverses, signalQuestionsARepondre } from "./etat";
 
 const TOUS_NON: ReponsesFaitsActivite = {
@@ -66,10 +68,10 @@ const etapes = (d: ReturnType<typeof duerp>, actuelle: "unites" | "transverses" 
   construireEtapes("d1", actuelle, {
     secteurOk: true,
     unitesOk: true,
+  validees: TOUTES_VALIDEES,
     risquesOk: true,
     transverses: etatEtapeTransverses(d),
     activitesPosees: false,
-    activitesOk: false,
     versionValidee: false,
   });
 
@@ -163,10 +165,10 @@ describe("étape « Questions transverses » — calculée, plus stockée (§ 17
     const e = construireEtapes("d1", "unites", {
       secteurOk: true,
       unitesOk: false,
+      validees: {},
       risquesOk: false,
       transverses: etatEtapeTransverses(ANCIEN),
       activitesPosees: false,
-      activitesOk: false,
       versionValidee: false,
     }).find((x) => x.id === "transverses");
     expect(e?.atteinte).toBe(false);

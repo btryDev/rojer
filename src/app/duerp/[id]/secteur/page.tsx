@@ -4,7 +4,7 @@ import { SecteurCard } from "@/components/duerps/SecteurCard";
 import { AutresSecteurs } from "@/components/duerps/AutresSecteurs";
 import { ConfirmerSecteurButton } from "@/components/duerps/ConfirmerSecteurButton";
 import { WizardSteps } from "@/components/duerps/WizardSteps";
-import { etapesDuDuerp } from "@/lib/duerps/etapes";
+import { etapesDuDuerp, numeroEtape } from "@/lib/duerps/etapes";
 import { getDuerp } from "@/lib/duerps/queries";
 import {
   referentielsSectoriels,
@@ -59,7 +59,7 @@ export default async function SecteurPage({
         <>
           <header className="max-w-[var(--board-mesure)]">
             <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-              Secteur d&apos;activité
+              {numeroEtape("secteur")} · Votre activité
             </p>
             <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
               À partir du code NAF{" "}
@@ -126,7 +126,7 @@ export default async function SecteurPage({
         <>
           <header className="max-w-[var(--board-mesure)]">
             <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-              Secteur d&apos;activité
+              {numeroEtape("secteur")} · Votre activité
             </p>
             <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
               Le code NAF{" "}

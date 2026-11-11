@@ -459,6 +459,16 @@ model Duerp {
   versions                      DuerpVersion[]
   unites                        UniteTravail[]
   referentielSecteurId          String?
+  // Les étapes du fil validées par le dirigeant (2026-11-11, décision de la
+  // propriétaire : « si pas validé, pas fait »). Forme :
+  // `{ activite?, unites?, risques?, transverses? }`, chaque valeur la date ISO
+  // de la validation ; lue par la seule `lireEtapesValidees`. Les unités du
+  // secteur sont pré-remplies : leur existence cochait l'étape sans que
+  // personne les ait relues. La validation s'AJOUTE à l'état calculé (une
+  // question transverse sans réponse laisse l'étape à faire, validée ou non) ;
+  // elle ne le remplace pas — c'est ce qui la distingue de
+  // `transversesRepondues` ci-dessous. La synthèse se valide par sa version.
+  etapesValidees                Json?
   // INERTE DEPUIS LE 2026-10-12 — décision de la propriétaire
   // (chantiers-ouverts § 17.5) : l'étape « Questions transverses » est
   // CALCULÉE sur les réponses (`etatEtapeTransverses`, `transverses/etat.ts`),
