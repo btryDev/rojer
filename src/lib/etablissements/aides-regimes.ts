@@ -38,10 +38,14 @@ export const QUESTION_IGH =
 export const CITATION_R146_3 =
   "dont le plancher bas du dernier niveau est situé, par rapport au niveau du sol le plus haut utilisable pour les engins des services publics de secours et de lutte contre l'incendie : à plus de 50 mètres pour les immeubles à usage d'habitation […] ; à plus de 28 mètres pour tous les autres immeubles";
 
+/** Ce qui fait répondre, seul à l'écran du parcours ; l'aide entière est derrière le « ? ». */
+export const AIDE_IGH_COURTE =
+  "Ce cas est rare en TPE/PME : en cas de doute, demandez-le au propriétaire ou au gestionnaire de l'immeuble.";
+
 export const AIDE_IGH =
   `Le code de la construction et de l'habitation (art. R. 146-3) appelle immeuble de grande hauteur tout corps de bâtiment « ${CITATION_R146_3} ». ` +
   "C'est le plancher du dernier niveau qui se mesure, pas le toit. Entre 28 et 50 mètres, un immeuble à usage principal d'habitation en est un aussi lorsque ses locaux autres que d'habitation ne répondent pas aux conditions d'isolement fixées par arrêté (même article ; classe GHZ, art. R. 146-4). " +
-  "Ce cas est rare en TPE/PME : en cas de doute, demandez-le au propriétaire ou au gestionnaire de l'immeuble.";
+  AIDE_IGH_COURTE;
 
 /* ─── Immeuble d'habitation ────────────────────────────────────────────── */
 
@@ -95,8 +99,12 @@ function enumerer(items: readonly string[]): string {
 const dEmblee = CE_QUE_DECLENCHE_HABITATION.filter((c) => c.siEquipement === null);
 const avecVmcGaz = CE_QUE_DECLENCHE_HABITATION.filter((c) => c.siEquipement === "VMC-Gaz");
 
+/** Ce qui fait répondre, seul à l'écran du parcours ; l'aide entière est derrière le « ? ». */
+export const AIDE_HABITATION_COURTE =
+  "Uniquement si vous êtes propriétaire ou syndic d'un immeuble de logements collectifs ; rare pour les commerces et restaurants.";
+
 export const AIDE_HABITATION =
-  "Uniquement si vous êtes propriétaire ou syndic d'un immeuble de logements collectifs ; rare pour les commerces et restaurants. " +
+  `${AIDE_HABITATION_COURTE} ` +
   `Répondre « oui » ajoute à votre calendrier ${enumerer(dEmblee.map((c) => c.quoi))} (arrêté du 31 janvier 1986)` +
   (avecVmcGaz.length > 0
     ? ` et, si vous déclarez une installation collective de VMC-Gaz, ${enumerer(avecVmcGaz.map((c) => c.quoi))} (arrêté du 23 février 2018).`

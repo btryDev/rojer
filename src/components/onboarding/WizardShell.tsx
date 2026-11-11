@@ -12,6 +12,7 @@ import { signOutAction } from "@/lib/auth/actions";
 import { StepIdentite } from "./StepIdentite";
 import { StepTypologie } from "./StepTypologie";
 import { StepResume } from "./StepResume";
+import { AccueilParcours } from "./AccueilParcours";
 import { ChampCompteAttendu } from "@/components/compte/ChampCompteAttendu";
 import { CHAMP_TEMOIN_TYPES_ERP_AUTRES } from "@/lib/etablissements/types-erp-affiches";
 import {
@@ -85,6 +86,18 @@ export function WizardShell({
   const [state, setState] = useState<OnboardingState>(VALEURS_INITIALES);
   const [etapeIdx, setEtapeIdx] = useState(0);
   const [blocage, setBlocage] = useState<Blocage | null>(null);
+  // La fenêtre d'accueil, ouverte à chaque arrivée : le parcours ne garde
+  // rien d'une visite à l'autre, il n'y a donc rien à mémoriser.
+  const [accueil, setAccueil] = useState(true);
+  const commencer = () => {
+    setAccueil(false);
+    // Le focus va au premier champ que la fenêtre découvre : son `autoFocus`
+    // s'est joué pendant qu'il était `inert`, donc sans effet. Le premier
+    // champ et non `#raisonSociale`, absent quand l'entreprise est déjà suivie.
+    requestAnimationFrame(() =>
+      document.querySelector<HTMLElement>("form input:not([type=hidden]), form select")?.focus(),
+    );
+  };
   const { demander, confirmation } = useConfirmation();
 
   // Quitter : rien n'est persisté avant l'étape finale (état React pur),
@@ -226,7 +239,12 @@ export function WizardShell({
   const progression = ((etapeIdx + 1) / ETAPES.length) * 100;
 
   return (
-    <div className="grid min-h-[calc(100vh-56px)] grid-cols-1 bg-[color:var(--board-canvas)] text-[color:var(--board-ink)] lg:grid-cols-[320px_1fr]">
+    <>
+    {/* `min-h-dvh` et non `100vh − 56px` : le bandeau de 56 px n'est plus rendu
+        sur cet écran, et ses 56 px laissaient une bande vide sous le rail.
+        `inert` tant que la fenêtre d'accueil est ouverte : rien ne se saisit
+        derrière elle. */}
+    <div inert={accueil} className="grid min-h-dvh grid-cols-1 bg-[color:var(--board-canvas)] text-[color:var(--board-ink)] lg:grid-cols-[320px_1fr]">
       {/* ─── Rail ─────────────────────────────────────────────── */}
       {/* Même chrome que `AppSidebar` : encre pleine, blancs voilés,
           marque en toutes lettres. La mise en place est le premier écran
@@ -533,6 +551,8 @@ export function WizardShell({
         ) : null}
       </div>
     </div>
+    {accueil ? <AccueilParcours surCommencer={commencer} /> : null}
+    </>
   );
 }
 

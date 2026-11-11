@@ -19,7 +19,9 @@ import {
 } from "@/lib/matching/personnes-presentes";
 import {
   AIDE_HABITATION,
+  AIDE_HABITATION_COURTE,
   AIDE_IGH,
+  AIDE_IGH_COURTE,
   AIDE_LOCAUX_SOMMEIL,
   QUESTION_IGH,
 } from "@/lib/etablissements/aides-regimes";
@@ -28,6 +30,7 @@ import { AideQuestionMatieres } from "@/components/etablissements/AideQuestionMa
 import type { StepProps } from "./types";
 import { nombreDePersonnesDemande } from "./validation";
 import { AideTypesErp } from "@/components/etablissements/AideTypesErp";
+import { AideEcran } from "@/components/ui-kit";
 
 /**
  * Étape 2 sur 3 — la typologie de l'établissement (ERP / IGH / habitation).
@@ -118,7 +121,7 @@ export function StepTypologie({
       </div>
 
       {/* ─── Accueil du public (ERP) ──────────────────────── */}
-          <section className="carte-board flex flex-col gap-6 px-7 py-6 sm:px-8">
+          <section className="carte-board flex flex-col gap-6 px-5 py-6 md:px-8">
             <div>
               <h3 className="board-titre m-0 text-[22px]">
                 Accueillez-vous du public sur ce lieu ?
@@ -383,16 +386,21 @@ export function StepTypologie({
           </section>
 
           {/* ─── IGH ─────────────────────────────────────────── */}
-          <section className="carte-board flex flex-col gap-6 px-7 py-6 sm:px-8">
+          <section className="carte-board flex flex-col gap-6 px-5 py-6 md:px-8">
             <div>
               {/* ~~« Votre bâtiment fait-il plus de 28 mètres de hauteur ?
                   Environ 9 étages et plus »~~ — corrigé le 2026-10-12 (audit
                   B1) : R. 146-3 mesure le plancher bas du dernier niveau, pas
                   le bâtiment, et place l'habitation à 50 mètres. Question et
-                  aide sont celles de la fiche (`aides-regimes.ts`). */}
-              <h3 className="board-titre m-0 text-[22px]">{QUESTION_IGH}</h3>
+                  aide sont celles de la fiche (`aides-regimes.ts`) ; depuis le
+                  2026-11-11, l'aide entière passe derrière le « ? » (charte :
+                  l'explication à un clic), sa dernière phrase reste à l'écran. */}
+              <div className="flex items-start justify-between gap-3">
+                <h3 className="board-titre m-0 text-[22px]">{QUESTION_IGH}</h3>
+                <AideEcran titre="Immeuble de grande hauteur">{AIDE_IGH}</AideEcran>
+              </div>
               <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-                {AIDE_IGH}
+                {AIDE_IGH_COURTE}
               </p>
             </div>
 
@@ -426,15 +434,18 @@ export function StepTypologie({
           </section>
 
           {/* ─── Habitation ──────────────────────────────────── */}
-          <section className="carte-board flex flex-col gap-4 px-7 py-6 sm:px-8">
+          <section className="carte-board flex flex-col gap-4 px-5 py-6 md:px-8">
             <div>
-              <h3 className="board-titre m-0 text-[22px]">
-                Gérez-vous un immeuble d&apos;habitation ?
-              </h3>
+              <div className="flex items-start justify-between gap-3">
+                <h3 className="board-titre m-0 text-[22px]">
+                  Gérez-vous un immeuble d&apos;habitation ?
+                </h3>
+                <AideEcran titre="Immeuble d'habitation">{AIDE_HABITATION}</AideEcran>
+              </div>
               {/* ~~« (ramonage, VMC-Gaz…) »~~ — le ramonage n'a aucune
                   ligne (2026-10-12, audit). Aide partagée avec la fiche. */}
               <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-                {AIDE_HABITATION}
+                {AIDE_HABITATION_COURTE}
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -477,7 +488,7 @@ export function StepTypologie({
               nombre de personnes au parcours le 2026-09-20 : poser la question
               là où la réponse change des lignes. Trois états : « je ne sais
               pas encore » est une réponse, qui laisse la ligne affichée. */}
-          <section className="carte-board flex flex-col gap-6 px-7 py-6 sm:px-8">
+          <section className="carte-board flex flex-col gap-6 px-5 py-6 md:px-8">
             <div>
               <h3 className="board-titre m-0 text-[22px]">
                 Ce qui se fait dans vos locaux
@@ -570,7 +581,7 @@ function BoutonOuiNon({
       onClick={onClick}
       aria-pressed={actif}
       className={
-        "min-w-[100px] rounded-full px-5 py-2 text-[12.5px] font-semibold tracking-[-0.01em] transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--board-blue-strong)] " +
+        "min-h-11 min-w-[100px] rounded-full px-5 py-2 md:min-h-0 text-[12.5px] font-semibold tracking-[-0.01em] transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--board-blue-strong)] " +
         (actif
           ? "bg-[color:var(--board-ink)] text-white"
           : "bg-[color:var(--board-slate-pale)] text-[color:var(--board-slate-mid)] hover:bg-[color:var(--board-blue-pale)] hover:text-[color:var(--board-blue-ink)]")
