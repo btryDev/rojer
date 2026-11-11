@@ -4,6 +4,7 @@ import { unstable_rethrow } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { repondreActivite } from "@/lib/activites/actions";
+import type { AjoutActivite } from "@/lib/activites/ajouts";
 
 /**
  * Une question d'activité hors couverture, et son couple Oui / Non (ADR-020).
@@ -17,18 +18,21 @@ import { repondreActivite } from "@/lib/activites/actions";
  * Et les trois sont atteignables dans les deux sens : « retirer ma réponse »
  * ramène au silence.
  *
- * Répondre « oui » ne bloque rien et n'ajoute aucun risque : c'est une
- * déclaration de périmètre, pas une étape d'évaluation. C'est aussi pourquoi
- * la conséquence est affichée en clair sous la question — ce que le document
- * ne traitera pas est la seule chose que le dirigeant a besoin de savoir pour
- * décider de créer, ou non, une unité de travail à la main.
+ * ~~Répondre « oui » ne bloque rien et n'ajoute aucun risque~~ [2026-11-11,
+ * ADR-060 : un « oui » ajoute l'unité et les risques de l'activité, à évaluer ;
+ * l'écran dit ce qui a été ajouté (`AjoutsDeLActivite`).]
  */
 type Props = {
   duerpId: string;
   activiteId: string;
   question: string;
   aide?: string;
-  cequiManque: string;
+  /** Ce que le « oui » a ajouté, lu en base (`ajoutsParActivite`). */
+  ajout: AjoutActivite | undefined;
+  /** Les risques à ajouter à la main quand rien n'a pu l'être (`aFaire.risques`). */
+  risquesAPenser: string[];
+  /** Les questions transverses à qui répondre « oui » (`questionsTransversesDe`). */
+  questionsTransverses: { id: string; question: string }[];
   /** `undefined` = pas de réponse. Ne jamais replier sur `false`. */
   exercee: boolean | undefined;
 };
@@ -38,7 +42,9 @@ export function QuestionActiviteRow({
   activiteId,
   question,
   aide,
-  cequiManque,
+  ajout,
+  risquesAPenser,
+  questionsTransverses,
   exercee,
 }: Props) {
   const [pending, startTransition] = useTransition();
@@ -131,16 +137,77 @@ export function QuestionActiviteRow({
         </p>
       )}
 
+      {/* Ce que le « oui » a fait (ADR-060, 2026-11-11) : dit en clair, et
+          non plus « non couvert par votre secteur », qui se lisait « Rojer ne
+          s'en occupe pas ». */}
       {exercee === true && (
-        <div className="mt-4 max-w-[var(--board-mesure)] border-l-2 border-[color:var(--board-slate-line)] pl-4">
-          <p className="m-0 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-            Non couvert par votre secteur&nbsp;: {cequiManque}
-          </p>
-          <p className="m-0 mt-1 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-            Créez au besoin une unité de travail dédiée à l&apos;étape suivante.
-          </p>
-        </div>
+        <AjoutsDeLActivite
+          ajout={ajout}
+          risquesAPenser={risquesAPenser}
+          questionsTransverses={questionsTransverses}
+        />
+      )}
+      {exercee === false && ajout && ajout.risques.length > 0 && (
+        <p className={NOTE}>
+          {`Conservés parce que vous les avez déjà complétés : ${ajout.risques
+            .map((r) => r.libelle)
+            .join(" · ")} (unité « ${ajout.unite.nom} »).`}
+        </p>
       )}
     </li>
+  );
+}
+
+const NOTE =
+  "m-0 mt-3 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]";
+
+function AjoutsDeLActivite({
+  ajout,
+  risquesAPenser,
+  questionsTransverses,
+}: Pick<Props, "ajout" | "risquesAPenser" | "questionsTransverses">) {
+  return (
+    <div className="mt-4 max-w-[var(--board-mesure)] rounded-[16px] bg-[color:var(--board-blue-pale)] px-4 py-3 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-ink)]">
+      {ajout ? (
+        <>
+          <p className="m-0 font-semibold text-[color:var(--board-ink)]">
+            {ajout.unite.creeePourActivite
+              ? `Nous avons ajouté l'unité « ${ajout.unite.nom} »`
+              : `Nous avons complété l'unité « ${ajout.unite.nom} »`}
+            {ajout.risques.length > 0 ? " avec ces risques :" : "."}
+          </p>
+          {ajout.risques.length > 0 && (
+            <ul className="m-0 mt-1 list-disc pl-5">
+              {ajout.risques.map((r) => (
+                <li key={r.id}>{r.libelle}</li>
+              ))}
+            </ul>
+          )}
+          <p className="m-0 mt-1.5">
+            Vous les évaluerez à l&apos;étape 03, Risques par unité.
+          </p>
+        </>
+      ) : (
+        // Aucune unité possible (essai plein, unité type supprimée) : la
+        // liste reste à reporter à la main.
+        <>
+          <p className="m-0 font-semibold text-[color:var(--board-ink)]">
+            À ajouter à l&apos;étape 03, Risques par unité, dans l&apos;unité
+            de votre choix&nbsp;:
+          </p>
+          <ul className="m-0 mt-1 list-disc pl-5">
+            {risquesAPenser.map((r) => (
+              <li key={r}>{r}</li>
+            ))}
+          </ul>
+        </>
+      )}
+      {questionsTransverses.length > 0 && (
+        <p className="m-0 mt-1.5">
+          À l&apos;étape 04, répondez «&nbsp;oui&nbsp;» à&nbsp;:{" "}
+          {questionsTransverses.map((q) => `« ${q.question} »`).join(", ")}.
+        </p>
+      )}
+    </div>
   );
 }

@@ -7,6 +7,8 @@ import { questionsActivites } from "@/lib/activites/reponses";
 import { etapesDuDuerp, enteteEtape } from "@/lib/duerps/etapes";
 import { AideEcran } from "@/components/ui-kit/AideEcran";
 import { getDuerp } from "@/lib/duerps/queries";
+import { ajoutsParActivite, questionsTransversesDe } from "@/lib/activites/ajouts";
+import { requireCompte } from "@/lib/auth/compte";
 import { trouverReferentielParId } from "@/lib/referentiels";
 
 /**
@@ -49,6 +51,9 @@ export default async function ActivitesPage({
   const referentiel = duerp.referentielSecteurId
     ? trouverReferentielParId(duerp.referentielSecteurId)
     : undefined;
+  // Ce que les « oui » ont ajouté, lu en base (ADR-060).
+  const { db } = await requireCompte();
+  const ajouts = await ajoutsParActivite(db, id);
   const sansReponse = questions.filter((q) => q.exercee === undefined);
 
   return (
@@ -76,9 +81,11 @@ export default async function ActivitesPage({
               le savoir.
             </p>
             <p className="m-0 mt-3">
-              Répondre «&nbsp;oui&nbsp;» ne bloque rien, n&apos;ajoute aucun
-              risque et n&apos;en retire aucun. La réponse est reprise dans le
-              DUERP généré&nbsp;: son lecteur saura ce qu&apos;il ne traite pas.
+              Répondre «&nbsp;oui&nbsp;» ajoute à votre DUERP l&apos;unité et
+              les risques de cette activité, à évaluer à l&apos;étape Risques.
+              Revenir à «&nbsp;non&nbsp;» les retire, sauf ce que vous avez
+              déjà complété. La réponse est aussi reprise dans le DUERP
+              généré.
             </p>
             <p className="m-0 mt-3">
               Vous pouvez continuer sans répondre. Le document ne dira alors ni
@@ -121,7 +128,9 @@ export default async function ActivitesPage({
             activiteId={q.activite.id}
             question={q.activite.question}
             aide={q.activite.aide}
-            cequiManque={q.activite.cequiManque}
+            ajout={ajouts.get(q.activite.id)}
+            risquesAPenser={q.activite.aFaire.risques}
+            questionsTransverses={questionsTransversesDe(q.activite)}
             exercee={q.exercee}
           />
         ))}
