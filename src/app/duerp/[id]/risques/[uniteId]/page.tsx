@@ -240,11 +240,6 @@ export default async function RisquesUnitePage({
         </section>
       )}
 
-      {/* Tout s'enregistre au fil des gestes : le pied ne porte que le
-          retour, sous la même forme qu'en tête (2026-11-12). */}
-      <div>
-        <LienRetour href={`/duerp/${id}/risques`}>Toutes les unités</LienRetour>
-      </div>
     </div>
   );
 }
