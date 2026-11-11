@@ -22,7 +22,7 @@ export function DeclarerAucunRisqueForm({
         data-ecriture
         type="button"
         onClick={() => setOuvert(true)}
-        className="board-eyebrow inline-flex items-center gap-2 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)] transition-colors hover:text-[color:var(--board-ink)]"
+        className="board-surtitre inline-flex items-center gap-2 text-[color:var(--board-slate-soft)] transition-colors hover:text-[color:var(--board-ink)]"
       >
         <span aria-hidden className="text-[13px] leading-none">+</span>
         Déclarer « aucun risque significatif »
@@ -35,7 +35,7 @@ export function DeclarerAucunRisqueForm({
     // pas un état d'échéance : le bloc porte la surface creuse de l'ardoise,
     // sans champ de couleur (charte, interdit 3).
     <div className="rounded-[22px] bg-[color:var(--board-slate-pale)] px-7 py-6 sm:px-8">
-      <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
+      <p className="board-surtitre m-0 text-[color:var(--board-slate-soft)]">
         Déclaration — aucun risque significatif
       </p>
       <p className="m-0 mt-2.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">

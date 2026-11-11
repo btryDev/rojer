@@ -46,7 +46,7 @@ export default async function SecteurPage({
         <Link
           data-ecriture
           href={`/etablissements/${duerp.etablissementId}/duerp/import`}
-          className="board-eyebrow text-[10px] tracking-[0.16em] text-[color:var(--board-blue-ink)] hover:underline"
+          className="board-surtitre text-[color:var(--board-blue-ink)] hover:underline"
         >
           Importer depuis Excel →
         </Link>
@@ -64,7 +64,7 @@ export default async function SecteurPage({
           </EnTeteEtape>
 
           <section className="carte-board px-7 py-6 sm:px-8">
-            <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
+            <p className="board-surtitre m-0 text-[color:var(--board-slate-soft)]">
               Secteur détecté
             </p>
 
@@ -80,7 +80,7 @@ export default async function SecteurPage({
                 <dl className="mt-7 flex flex-wrap gap-x-10 gap-y-4">
                   <div className="flex items-baseline gap-2.5">
                     <dt className="sr-only">Unités pré-remplies</dt>
-                    <dd className="m-0 font-mono text-[20px] tabular-nums text-[color:var(--board-ink)]">
+                    <dd className="m-0 text-[20px] tabular-nums text-[color:var(--board-ink)]">
                       {String(refRecommande.unitesTravailSuggerees.length).padStart(2, "0")}
                     </dd>
                     <span className="text-[12.5px] text-[color:var(--board-slate-mid)]">
@@ -89,7 +89,7 @@ export default async function SecteurPage({
                   </div>
                   <div className="flex items-baseline gap-2.5">
                     <dt className="sr-only">Risques référencés</dt>
-                    <dd className="m-0 font-mono text-[20px] tabular-nums text-[color:var(--board-ink)]">
+                    <dd className="m-0 text-[20px] tabular-nums text-[color:var(--board-ink)]">
                       {String(refRecommande.risques.length).padStart(2, "0")}
                     </dd>
                     <span className="text-[12.5px] text-[color:var(--board-slate-mid)]">
@@ -127,7 +127,7 @@ export default async function SecteurPage({
           </EnTeteEtape>
 
           <section>
-            <p className="board-eyebrow m-0 mb-5 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
+            <p className="board-surtitre m-0 mb-5 text-[color:var(--board-slate-soft)]">
               Secteurs disponibles
             </p>
             <div className="grid gap-[22px] md:grid-cols-2 lg:grid-cols-3">

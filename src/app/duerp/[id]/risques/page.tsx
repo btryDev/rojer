@@ -62,7 +62,7 @@ export default async function RisquesOverviewPage({
       />
 
       <MarcheASuivre
-        libelle="Comment ça marche, pour chaque unité"
+        libelle="Les étapes, pour chaque unité"
         pas={[
           { titre: "Inventorier", detail: "Cochez les risques types, ajoutez les vôtres.", etat: "a-faire" },
           { titre: "Coter", detail: "Gravité, probabilité, maîtrise.", etat: "a-faire" },

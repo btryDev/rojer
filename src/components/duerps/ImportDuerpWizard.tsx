@@ -74,7 +74,7 @@ export function ImportDuerpWizard({
       {/* Étape 1 — upload */}
       <form ref={formRef} action={previewAction}>
         <div className="rounded-[22px] bg-[color:var(--board-slate-pale)] px-7 py-6 sm:px-8">
-          <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
+          <p className="board-surtitre m-0 text-[color:var(--board-slate-soft)]">
             Étape 1 · Fichier
           </p>
           <h3 className="board-titre m-0 mt-2 text-[22px]">
@@ -109,7 +109,7 @@ export function ImportDuerpWizard({
               <span className="block text-[13.5px] font-medium text-[color:var(--board-ink)]">
                 {nomFichier ?? "Choisir un fichier"}
               </span>
-              <span className="board-eyebrow block text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
+              <span className="board-surtitre block text-[color:var(--board-slate-soft)]">
                 .xlsx · .xls · .csv · max {TAILLE_MAX_IMPORT_MO} Mo
               </span>
             </span>
@@ -158,7 +158,7 @@ export function ImportDuerpWizard({
             }`}
           />
           <div className="px-7 pb-4 pt-7 sm:px-8">
-            <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
+            <p className="board-surtitre m-0 text-[color:var(--board-slate-soft)]">
               Étape 2 · Aperçu
             </p>
             <h3 className="board-titre m-0 mt-2 text-[22px]">
@@ -168,7 +168,7 @@ export function ImportDuerpWizard({
             </h3>
             <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
               Fichier{" "}
-              <span className="font-mono text-[color:var(--board-ink)]">
+              <span className="text-[color:var(--board-ink)]">
                 {previewState.nomFichier}
               </span>{" "}
               — {previewState.nbLignes} ligne
@@ -199,7 +199,7 @@ export function ImportDuerpWizard({
               place, ou « Niveau de risque » pour le libellé, ne se voyait
               qu'après l'import. */}
           <div className="border-b border-[color:var(--board-slate-line)] px-7 py-5 sm:px-8">
-            <p className="board-eyebrow m-0 mb-3 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
+            <p className="board-surtitre m-0 mb-3 text-[color:var(--board-slate-soft)]">
               Colonnes lues
             </p>
             <dl className="m-0 grid grid-cols-1 gap-x-6 gap-y-1.5 text-[12.5px] sm:grid-cols-2">
@@ -225,7 +225,7 @@ export function ImportDuerpWizard({
           {/* Résumé par unité */}
           {previewState.resume.length > 0 && (
             <div className="max-h-96 overflow-auto px-7 py-5 sm:px-8">
-              <p className="board-eyebrow m-0 mb-3 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
+              <p className="board-surtitre m-0 mb-3 text-[color:var(--board-slate-soft)]">
                 Contenu détecté
               </p>
               <ul className="m-0 flex list-none flex-col gap-2 p-0">
@@ -244,7 +244,7 @@ export function ImportDuerpWizard({
                         </p>
                       )}
                     </div>
-                    <span className="shrink-0 rounded-full bg-[color:var(--board-blue-pale)] px-2.5 py-0.5 font-mono text-[11px] font-semibold tabular-nums text-[color:var(--board-blue-ink)]">
+                    <span className="board-surtitre shrink-0 rounded-full bg-[color:var(--board-blue-pale)] px-2.5 py-0.5 font-semibold tabular-nums text-[color:var(--board-blue-ink)]">
                       {u.nbRisques} risque{u.nbRisques > 1 ? "s" : ""}
                     </span>
                   </li>
@@ -305,11 +305,11 @@ function Stat({
 }) {
   return (
     <div className="px-5 py-4">
-      <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
+      <p className="board-surtitre m-0 text-[color:var(--board-slate-soft)]">
         {label}
       </p>
       <p
-        className={`m-0 mt-1.5 font-mono text-[24px] font-semibold tabular-nums leading-none ${
+        className={`m-0 mt-1.5 text-[24px] font-semibold tabular-nums leading-none${
           attention
             ? "text-[color:var(--board-amber-ink)]"
             : "text-[color:var(--board-ink)]"

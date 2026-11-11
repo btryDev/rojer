@@ -43,7 +43,7 @@ export default async function CotationPage({
       />
 
       <header className="max-w-[var(--board-mesure)]">
-        <div className="board-eyebrow flex flex-wrap items-baseline gap-2 text-[10.5px] tracking-[0.18em]">
+        <div className="board-surtitre flex flex-wrap items-baseline gap-2">
           <span className="text-[color:var(--board-ink)]">
             Évaluation du risque
           </span>
@@ -82,7 +82,7 @@ export default async function CotationPage({
 
       <section aria-labelledby="partie-cotation" className="flex flex-col gap-[22px] pt-2">
         <div className="flex flex-wrap items-baseline gap-3">
-          <span className="font-mono text-[18px] font-semibold tabular-nums text-[color:var(--board-blue-ink)]">
+          <span className="text-[18px] font-semibold tabular-nums text-[color:var(--board-blue-ink)]">
             01
           </span>
           <h3 id="partie-cotation" className="board-titre m-0 text-[18px]">
@@ -91,7 +91,7 @@ export default async function CotationPage({
           <span aria-hidden className="text-[color:var(--board-slate)]">
             /
           </span>
-          <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
+          <p className="board-surtitre m-0 text-[color:var(--board-slate-soft)]">
             3 questions — criticité calculée
           </p>
         </div>

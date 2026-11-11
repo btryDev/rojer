@@ -211,7 +211,7 @@ function ChampValidable({
       <span className="mt-2 flex h-[20px] items-center justify-end gap-2">
         {dirty ? (
           <>
-            <span className="board-eyebrow text-[10px] tracking-[0.16em] text-[color:var(--board-blue-ink)]">
+            <span className="board-surtitre text-[color:var(--board-blue-ink)]">
               Non enregistré
             </span>
             <Button
@@ -226,7 +226,7 @@ function ChampValidable({
             </Button>
           </>
         ) : etat === "saved" ? (
-          <span className="board-eyebrow inline-flex items-center gap-1 text-[10px] tracking-[0.16em] text-[color:var(--board-green-ink)]">
+          <span className="board-surtitre inline-flex items-center gap-1 text-[color:var(--board-green-ink)]">
             <Check aria-hidden className="h-2.5 w-2.5" strokeWidth={3} />
             Enregistré
           </span>

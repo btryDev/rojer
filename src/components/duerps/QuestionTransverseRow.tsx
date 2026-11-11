@@ -131,7 +131,7 @@ export function QuestionTransverseRow({
           Non
         </Button>
         {reponse === "sans_reponse" ? (
-          <span className="board-eyebrow text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
+          <span className="board-surtitre text-[color:var(--board-slate-soft)]">
             Sans réponse
           </span>
         ) : (
