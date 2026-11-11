@@ -41,25 +41,35 @@ export function AccueilParcours({ surCommencer }: { surCommencer: () => void }) 
             comme l'illustration de la landing, à droite ; le titre à gauche,
             « votre établissement » d'un seul tenant. Le dessin est l'emblème
             d'un lieu, pas un portrait du vôtre : décoratif. */}
-        <div className="relative h-[180px] overflow-hidden bg-[color:var(--board-sky)] md:h-[220px]">
+        <div className="flex h-[180px] items-end gap-4 overflow-hidden bg-[color:var(--board-sky)] px-5 pb-6 md:h-[220px] md:gap-6 md:px-9 md:pb-8">
           <h1
             id={titreId}
-            className="board-titre absolute bottom-6 left-5 z-10 m-0 text-[clamp(25px,2.4vw,30px)] leading-[1.08] md:bottom-8 md:left-9"
+            className="board-titre m-0 flex-none text-[clamp(25px,2.4vw,30px)] leading-[1.08]"
           >
             {/* L'espace garde au nom lu « place votre » ses deux mots. */}
             Mettez en place{" "}
             <br />
             <span className="whitespace-nowrap">votre établissement</span>
           </h1>
-          <Image
-            src="/illustrations/batiments/restaurant.webp"
-            alt=""
-            width={1000}
-            height={901}
-            preload
-            sizes="(min-width: 768px) 230px, 160px"
-            className="absolute -bottom-1.5 right-3 h-[140px] w-auto md:right-8 md:h-[204px]"
+          {/* Le filet sépare le titre du dessin (idée de la propriétaire) ;
+              l'encre bleue de la charte, à demi, sur le bleu de marque. */}
+          <span
+            aria-hidden
+            className="mb-1 h-[96px] w-px flex-none bg-[color:var(--board-blue-ink)] opacity-40 md:h-[132px]"
           />
+          {/* Le dessin tient entier dans le bandeau, socle compris : la
+              hauteur le borne, quel que soit le format de la planche. */}
+          <div className="flex h-full min-w-0 flex-1 items-end justify-center pt-4">
+            <Image
+              src="/illustrations/batiments/restaurant.webp"
+              alt=""
+              width={1000}
+              height={901}
+              preload
+              sizes="(min-width: 768px) 200px, 140px"
+              className="max-h-full w-auto object-contain"
+            />
+          </div>
         </div>
         <div className="flex flex-col gap-6 px-5 pb-[calc(22px+env(safe-area-inset-bottom,0px))] pt-6 md:px-9 md:pb-8 md:pt-7">
           <p className="m-0 text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
