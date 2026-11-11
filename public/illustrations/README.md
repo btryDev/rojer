@@ -57,7 +57,8 @@ sport n'a plus de planche : le type X prend le local générique, seules les
 grandes catégories ont la leur (décision de la propriétaire).]
 
 
-[2026-11-11, plus tard : aplats pâles blanchis en code, comme l'illustration
-de la landing — bâtiment blanc à liseré bleu, posé sur `--board-sky` dans
-la carte du tableau de bord et dans la fenêtre d'accueil de l'onboarding.
-Le bleu sur bleu ne se lisait pas.]
+[2026-11-11, plus tard : ~~aplats pâles blanchis en code~~ planche
+régénérée avec des bâtiments blancs à liseré bleu, comme l'illustration de
+la landing, sur un fond bleu uni (détouré par la couleur du fond) ; posés
+sur `--board-sky` dans la carte du tableau de bord et dans la fenêtre
+d'accueil de l'onboarding. Le bleu sur bleu ne se lisait pas.]
