@@ -44,7 +44,7 @@ export function AccueilParcours({ surCommencer }: { surCommencer: () => void }) 
         <div className="flex h-[180px] items-end gap-4 overflow-hidden bg-[color:var(--board-sky)] px-5 pb-6 md:h-[220px] md:gap-6 md:px-9 md:pb-8">
           <h1
             id={titreId}
-            className="board-titre m-0 flex-none text-[clamp(25px,2.4vw,30px)] leading-[1.08]"
+            className="board-titre m-0 flex-none text-[22px] leading-[1.12] md:text-[25px]"
           >
             {/* L'espace garde au nom lu « place votre » ses deux mots. */}
             Mettez en place{" "}
