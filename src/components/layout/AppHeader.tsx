@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Marque } from "@/components/landing/Marque";
+import { Marque } from "@/components/marque/Marque";
 import { buttonVariants } from "@/components/ui/button";
 import { getOptionalUser } from "@/lib/auth/require-user";
 import { getOptionalUserEtablissement } from "@/lib/auth/scope";
