@@ -31,30 +31,29 @@ export type AjoutActivite = {
  * réponse « non » : des ajouts gardés parce que le dirigeant les avait
  * complétés.
  */
-export async function ajoutsParActivite(
-  db: Db,
-  duerpId: string,
-): Promise<Map<string, AjoutActivite>> {
-  const [unites, risques] = await Promise.all([
-    db.uniteTravail.findMany({
-      where: { duerpId, activiteId: { not: null } },
-      select: { id: true, nom: true, activiteId: true },
-    }),
-    db.risque.findMany({
-      where: { activiteId: { not: null }, unite: { duerpId } },
-      select: {
-        id: true,
-        libelle: true,
-        cotationSaisie: true,
-        activiteId: true,
-        unite: { select: { id: true, nom: true, activiteId: true } },
-      },
-      orderBy: { id: "asc" },
-    }),
-  ]);
+export function ajoutsParActivite(
+  unites: readonly {
+    id: string;
+    nom: string;
+    activiteId: string | null;
+    risques: readonly {
+      id: string;
+      libelle: string;
+      cotationSaisie: boolean;
+      activiteId: string | null;
+    }[];
+  }[],
+): Map<string, AjoutActivite> {
+  // Lu sur le DUERP déjà chargé par la page (`getDuerp`), sans requête de
+  // plus (2026-11-12) : la version précédente relisait unités et risques.
   const parActivite = new Map<string, AjoutActivite>();
   for (const u of unites)
-    parActivite.set(u.activiteId!, { unite: { id: u.id, nom: u.nom, creeePourActivite: true }, risques: [] });
+    if (u.activiteId)
+      parActivite.set(u.activiteId, { unite: { id: u.id, nom: u.nom, creeePourActivite: true }, risques: [] });
+  const risques = unites
+    .flatMap((u) => u.risques.map((r) => ({ ...r, unite: u })))
+    .filter((r) => r.activiteId !== null)
+    .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   for (const r of risques) {
     const activiteId = r.activiteId!;
     let ajout = parActivite.get(activiteId);

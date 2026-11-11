@@ -3,10 +3,10 @@ import { LienRetour } from "@/components/duerps/LienRetour";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { ValiderEtapeBouton } from "@/components/duerps/ValiderEtapeBouton";
-import { AideEcran } from "@/components/ui-kit/AideEcran";
+import { PastilleFiche } from "@/components/ui-kit/fiche";
 import { MarcheASuivre } from "@/components/duerps/MarcheASuivre";
+import { EnTeteEtape } from "@/components/duerps/EnTeteEtape";
 import { etatUnite } from "@/lib/risques/etat-unite";
-import { enteteEtape } from "@/lib/duerps/etapes";
 import { getDuerp } from "@/lib/duerps/queries";
 
 export default async function RisquesOverviewPage({
@@ -22,7 +22,11 @@ export default async function RisquesOverviewPage({
 
   const etats = unitesVisibles.map((u) => ({ unite: u, etat: etatUnite(u) }));
   const totalRisques = etats.reduce((acc, e) => acc + e.etat.nbRisques, 0);
-  const sansRisqueNiDeclaration = etats.filter((e) => !e.etat.inventoriee).length;
+  // Ni risque du tout ni déclaration : une unité qui porte des risques
+  // ajoutés par Rojer a quelque chose à vérifier, pas « rien ».
+  const sansRisqueNiDeclaration = etats.filter(
+    (e) => e.etat.nbRisques === 0 && !e.etat.declareeSansRisque,
+  ).length;
 
   return (
     <div className="flex flex-col gap-8">
@@ -35,13 +39,13 @@ export default async function RisquesOverviewPage({
       {/* Allégé le 2026-11-12 : la marche à suivre était une grille de quatre
           cartes d'explication, au même rang que la liste. C'est un rail sur
           le canevas ; la définition d'un risque est derrière le « ? ». */}
-      <header className="flex max-w-[var(--board-mesure)] flex-col gap-2">
-        <p className="board-surtitre m-0">{enteteEtape("risques")}</p>
-        <div className="flex items-center gap-3">
-          <h2 className="board-titre m-0 text-[clamp(23px,2.1vw,30px)]">
-            Évaluez les risques de chaque unité
-          </h2>
-          <AideEcran titre="Qu'est-ce qu'un risque professionnel">
+      <EnTeteEtape
+        page="risques"
+        titre="Évaluez les risques de chaque unité"
+        aide={{
+          titre: "Qu'est-ce qu'un risque professionnel",
+          contenu: (
+            <>
             <p className="m-0">
               Un risque professionnel est tout ce qui peut causer un accident
               ou une atteinte à la santé au travail (coupure, chute, charge
@@ -52,9 +56,10 @@ export default async function RisquesOverviewPage({
               Si une unité n&apos;a aucun risque significatif, vous pouvez le
               déclarer et le justifier sur sa page.
             </p>
-          </AideEcran>
-        </div>
-      </header>
+            </>
+          ),
+        }}
+      />
 
       <MarcheASuivre
         libelle="Pour chaque unité"
@@ -79,11 +84,13 @@ export default async function RisquesOverviewPage({
         <ul className="m-0 list-none divide-y divide-[color:var(--board-slate-line)] p-0">
           {etats.map(({ unite: u, etat: e }) => {
             const enCours = e.inventoriee && !e.terminee;
+            // Les tons de pastille de la charte (`PastilleFiche`), pas une
+            // table locale (charte § 1.5).
             const pastille = e.terminee
-              ? { texte: "✓ Évaluée", classe: "bg-[color:var(--board-green)] text-[color:var(--board-green-ink)]" }
+              ? { texte: "✓ Évaluée", ton: "fait" as const }
               : enCours
-                ? { texte: "En cours", classe: "bg-[color:var(--board-blue-pale)] text-[color:var(--board-blue-ink)]" }
-                : { texte: "À faire", classe: "bg-[color:var(--board-slate-pale)] text-[color:var(--board-slate-mid)]" };
+                ? { texte: "En cours", ton: "bleu" as const }
+                : { texte: "À faire", ton: "neutre" as const };
             const detail = e.declareeSansRisque
               ? "Aucun risque significatif, justifié"
               : e.nbRisques === 0
@@ -127,8 +134,8 @@ export default async function RisquesOverviewPage({
                       />
                     ))}
                   </span>
-                  <span className={`pastille-board shrink-0 ${pastille.classe}`}>
-                    {pastille.texte}
+                  <span className="shrink-0">
+                    <PastilleFiche ton={pastille.ton}>{pastille.texte}</PastilleFiche>
                   </span>
                   <span
                     className={`${buttonVariants({

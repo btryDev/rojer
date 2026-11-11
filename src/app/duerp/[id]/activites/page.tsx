@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { LienRetour } from "@/components/duerps/LienRetour";
+import { EnTeteEtape } from "@/components/duerps/EnTeteEtape";
+import { enteteEtape } from "@/lib/duerps/etapes";
+import { LIMITES_ESSAI } from "@/lib/abonnements/formules";
 import { notFound, redirect } from "next/navigation";
 import { QuestionActiviteRow } from "@/components/duerps/QuestionActiviteRow";
 import { ValiderEtapeBouton } from "@/components/duerps/ValiderEtapeBouton";
 import { questionsActivites } from "@/lib/activites/reponses";
-import { enteteEtape } from "@/lib/duerps/etapes";
-import { AideEcran } from "@/components/ui-kit/AideEcran";
 import { getDuerp } from "@/lib/duerps/queries";
 import { ajoutsParActivite } from "@/lib/activites/ajouts";
-import { requireCompte } from "@/lib/auth/compte";
 import { trouverReferentielParId } from "@/lib/referentiels";
 
 /**
@@ -50,9 +50,8 @@ export default async function ActivitesPage({
   const referentiel = duerp.referentielSecteurId
     ? trouverReferentielParId(duerp.referentielSecteurId)
     : undefined;
-  // Ce que les « oui » ont ajouté, lu en base (ADR-060).
-  const { db } = await requireCompte();
-  const ajouts = await ajoutsParActivite(db, id);
+  // Ce que les « oui » ont ajouté (ADR-060), lu sur le DUERP déjà chargé.
+  const ajouts = ajoutsParActivite(duerp.unites);
   const sansReponse = questions.filter((q) => q.exercee === undefined);
 
   return (
@@ -67,16 +66,13 @@ export default async function ActivitesPage({
           l'outil que le dirigeant ne connaît pas ; il dit maintenant ce qu'on
           attend de lui. Les deux paragraphes d'explication sont derrière le
           « ? » — on ne les lit qu'une fois. */}
-      <header className="flex max-w-[var(--board-mesure)] flex-col gap-3">
-        <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-          {enteteEtape("activites")}
-        </p>
-        {/* Le « ? » à côté du titre qu'il explique, pas sur sa propre ligne. */}
-        <div className="flex items-center gap-3">
-          <h2 className="board-titre m-0 text-[clamp(23px,2.1vw,30px)]">
-            Précisez votre activité
-          </h2>
-          <AideEcran titre="Pourquoi ces questions">
+      <EnTeteEtape
+        page="activites"
+        titre="Précisez votre activité"
+        aide={{
+          titre: "Pourquoi ces questions",
+          contenu: (
+            <>
             <p className="m-0">
               Les risques proposés pour votre secteur sont bâtis sur une activité
               type. Ils ne connaissent ni les ateliers, ni les métiers annexes que
@@ -94,9 +90,10 @@ export default async function ActivitesPage({
               Vous pouvez continuer sans répondre. Le document ne dira alors ni
               que ces activités sont exercées, ni qu&apos;elles ne le sont pas.
             </p>
-          </AideEcran>
-        </div>
-        <p className="m-0 text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+            </>
+          ),
+        }}
+      >
           {referentiel ? (
             <>
               Secteur retenu&nbsp;: {referentiel.nom} (
@@ -120,8 +117,7 @@ export default async function ActivitesPage({
               )
             </>
           )}
-        </p>
-      </header>
+      </EnTeteEtape>
 
       <ul className="carte-board m-0 flex list-none flex-col p-0">
         {questions.map((q) => (
@@ -133,6 +129,8 @@ export default async function ActivitesPage({
             aide={q.activite.aide}
             ajout={ajouts.get(q.activite.id)}
             risquesAPenser={q.activite.aFaire.risques}
+            etapeRisques={enteteEtape("risques")}
+            limiteUnitesEssai={LIMITES_ESSAI.unitesTravail}
             exercee={q.exercee}
           />
         ))}

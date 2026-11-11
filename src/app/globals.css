@@ -908,15 +908,6 @@
     color: var(--board-blue-ink);
   }
 
-  /* Titrage de l'application — même voix que `.lp-titre` (Instrument Sans,
-     grotesque serré), réglée pour des titres d'interface plutôt que pour
-     une couverture : l'approche est un cran moins serrée et l'interligne
-     laisse passer un titre sur deux lignes.
-
-     C'est le seul écart qui restait audible entre la page publique et le
-     board : les mêmes couleurs, les mêmes cartes, mais deux polices de
-     titre. La marque parle maintenant d'une seule voix des deux côtés de
-     la connexion. */
   /* Le sur-titre sans chasse fixe (2026-11-12, décision de la propriétaire) :
      le DUERP quitte les capitales monospacées de `.board-eyebrow` ; le reste
      de l'app les garde tant qu'il n'est pas repris. */
@@ -929,6 +920,15 @@
     font-variant-numeric: tabular-nums;
   }
 
+  /* Titrage de l'application — même voix que `.lp-titre` (Instrument Sans,
+     grotesque serré), réglée pour des titres d'interface plutôt que pour
+     une couverture : l'approche est un cran moins serrée et l'interligne
+     laisse passer un titre sur deux lignes.
+
+     C'est le seul écart qui restait audible entre la page publique et le
+     board : les mêmes couleurs, les mêmes cartes, mais deux polices de
+     titre. La marque parle maintenant d'une seule voix des deux côtés de
+     la connexion. */
   .board-titre {
     font-family: var(--font-titre), ui-sans-serif, system-ui, sans-serif;
     font-weight: 600;

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LienRetour } from "@/components/duerps/LienRetour";
+import { EnTeteEtape } from "@/components/duerps/EnTeteEtape";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { QuestionTransverseRow } from "@/components/duerps/QuestionTransverseRow";
@@ -58,17 +59,12 @@ export default async function TransversesPage({
         <LienRetour href={`/duerp/${id}/risques`}>Risques par unité</LienRetour>
       </nav>
 
-      <header className="max-w-[var(--board-mesure)]">
-        <h2 className="board-titre m-0 text-[clamp(23px,2.1vw,30px)]">
-          Questions transverses
-        </h2>
-        <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-          Ces questions couvrent des risques présents dans la plupart des
-          entreprises, quel que soit le métier. Chaque « oui » ajoute
-          automatiquement le risque correspondant à votre DUERP — vous pourrez
-          ensuite le coter comme les autres.
-        </p>
-      </header>
+      <EnTeteEtape page="transverses" titre="Questions transverses">
+        Ces questions couvrent des risques présents dans la plupart des
+        entreprises, quel que soit le métier. Chaque « oui » ajoute
+        automatiquement le risque correspondant à votre DUERP — vous pourrez
+        ensuite le coter comme les autres.
+      </EnTeteEtape>
 
       {manques.length > 0 ? (
         <CadreACompleter

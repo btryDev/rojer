@@ -24,10 +24,6 @@ export function UniteRow({ id, nom, description, nombreRisques }: Props) {
     });
 
   return (
-    // La ligne devient une colonne, et la ligne d'origine descend d'un cran :
-    // la question a besoin de la largeur du `<li>`, alors que la colonne
-    // d'actions qui la déclenche est `shrink-0`. Sans ce niveau, la carte
-    // naîtrait dans une bande de 150 px collée au bord droit.
     // Une carte par unité (2026-11-12) : nom et description en haut, les
     // gestes en pied de carte.
     <li className="carte-board flex flex-col px-5 py-4 sm:px-6">

@@ -10,17 +10,9 @@ import { BarreDeListe } from "@/components/ui-kit/BarreDeListe";
 import { BarreCompte } from "@/components/layout/BarreCompte";
 import { comptesDeLaSession } from "@/lib/auth/compte";
 import { getDuerp } from "@/lib/duerps/queries";
-import { etapesDuDuerp, type EtapeId } from "@/lib/duerps/etapes";
+import { PAGES_DU_PARCOURS, etapesDuDuerp, type EtapeId } from "@/lib/duerps/etapes";
 import { FilDuDuerp } from "@/components/duerps/FilDuDuerp";
 
-const PAGES_DU_FIL: readonly EtapeId[] = [
-  "secteur",
-  "activites",
-  "unites",
-  "risques",
-  "transverses",
-  "synthese",
-];
 import { getOptionalUser } from "@/lib/auth/require-user";
 import { getEtatModules } from "@/lib/etablissements/modules";
 import { listerEtablissementsDuCompte } from "@/lib/etablissements/queries";
@@ -29,6 +21,7 @@ import {
   trouverReferentielParId,
   trouverReferentielParNaf,
 } from "@/lib/referentiels";
+
 
 /**
  * Shell V2 pour les pages DUERP — aligne /duerp/[id]/* sur le même
@@ -83,7 +76,7 @@ export default async function DuerpLayout({
   // Le fil des étapes, calculé pour chaque page : la mise en page ne sait pas
   // laquelle est ouverte, `FilDuDuerp` la lit sur l'adresse (2026-11-12).
   const etapesParPage = Object.fromEntries(
-    PAGES_DU_FIL.map((page) => [page, etapesDuDuerp(duerp, page)]),
+    PAGES_DU_PARCOURS.map((page) => [page, etapesDuDuerp(duerp, page)]),
   ) as Record<EtapeId, ReturnType<typeof etapesDuDuerp>>;
 
   // Le PDF ne se propose qu'un DUERP complété (2026-11-12, décision de la

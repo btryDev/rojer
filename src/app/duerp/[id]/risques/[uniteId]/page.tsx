@@ -6,15 +6,16 @@ import { AjouterRisqueCustomBouton } from "@/components/duerps/AjouterRisqueCust
 import { ActionsSecondaires } from "@/components/duerps/ActionsSecondaires";
 import { ListeRepliable } from "@/components/duerps/ListeRepliable";
 import { MarcheASuivre, type PasMarche } from "@/components/duerps/MarcheASuivre";
+import { EnTeteEtape } from "@/components/duerps/EnTeteEtape";
 import { ProchaineAction } from "@/components/duerps/ProchaineAction";
 import { etatUnite } from "@/lib/risques/etat-unite";
-import { enteteEtape } from "@/lib/duerps/etapes";
 import { DeclarerAucunRisqueForm } from "@/components/duerps/DeclarerAucunRisqueForm";
 import { ModifierRisqueCustomButton } from "@/components/duerps/ModifierRisqueCustomButton";
 import { RisqueReferentielRow } from "@/components/duerps/RisqueReferentielRow";
 import { SupprimerRisqueButton } from "@/components/duerps/SupprimerRisqueButton";
 import { MentionHorsReferentiel } from "@/components/duerps/MentionHorsReferentiel";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
+import { PastilleFiche } from "@/components/ui-kit/fiche";
 import { getUnite } from "@/lib/duerps/queries";
 import {
   estHorsReferentiel,
@@ -98,17 +99,9 @@ export default async function RisquesUnitePage({
         <LienRetour href={`/duerp/${id}/risques`}>Toutes les unités</LienRetour>
       </nav>
 
-      <header className="flex max-w-[var(--board-mesure)] flex-col gap-2">
-        <p className="board-surtitre m-0">{enteteEtape("risques")}</p>
-        <h2 className="board-titre m-0 text-[clamp(23px,2.1vw,30px)]">
-          {unite.nom}
-        </h2>
-        {unite.description && (
-          <p className="m-0 text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-            {unite.description}
-          </p>
-        )}
-      </header>
+      <EnTeteEtape page="risques" titre={unite.nom}>
+        {unite.description}
+      </EnTeteEtape>
 
       {horsReferentiel && <MentionHorsReferentiel />}
 
@@ -198,8 +191,8 @@ export default async function RisquesUnitePage({
                     </span>
                   )}
                   {evalComplete && (
-                    <span className="pastille-board shrink-0 bg-[color:var(--board-green)] text-[color:var(--board-green-ink)]">
-                      ✓ Évalué
+                    <span className="shrink-0">
+                      <PastilleFiche ton="fait">✓ Évalué</PastilleFiche>
                     </span>
                   )}
                   <div className="flex flex-wrap items-center gap-2">

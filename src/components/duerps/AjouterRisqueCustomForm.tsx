@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useRef } from "react";
+import { useActionState, useTransition, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { ChampBoard } from "@/components/ui-kit";
 import {
@@ -16,22 +16,25 @@ export function AjouterRisqueCustomForm({
   /** Appelé après un ajout réussi — la fenêtre qui porte le formulaire se ferme. */
   surAjout?: () => void;
 }) {
-  const formRef = useRef<HTMLFormElement>(null);
-  // La fenêtre se ferme depuis l'action elle-même, après un ajout réussi :
-  // un effet sur l'état ne se déclenchait pas de façon fiable une fois la
-  // page revalidée (2026-11-12).
-  const action = async (prev: RisqueActionState, fd: FormData) => {
-    const resultat = await ajouterRisqueCustom(uniteId, prev, fd);
-    if (resultat.status === "success") {
-      formRef.current?.reset();
-      surAjout?.();
-    }
-    return resultat;
+  const [, startTransition] = useTransition();
+  // La fenêtre se ferme depuis l'action elle-même, après un ajout réussi
+  // (2026-11-12) : un effet sur l'état ne se déclenchait pas de façon fiable
+  // une fois la page revalidée.
+  const [state, formAction, pending] = useActionState<RisqueActionState, FormData>(
+    async (prev, fd) => {
+      const resultat = await ajouterRisqueCustom(uniteId, prev, fd);
+      if (resultat.status === "success") surAjout?.();
+      return resultat;
+    },
+    { status: "idle" },
+  );
+  // `onSubmit` plutôt que `action` : React vide les champs après toute
+  // action de formulaire, refus compris ; la saisie doit survivre à un refus.
+  const soumettre = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    startTransition(() => formAction(fd));
   };
-  const [state, formAction, pending] = useActionState<
-    RisqueActionState,
-    FormData
-  >(action, { status: "idle" });
 
   const erreurLibelle =
     state.status === "error" ? state.fieldErrors?.libelle?.[0] : undefined;
@@ -41,7 +44,7 @@ export function AjouterRisqueCustomForm({
     // disparaît dès la première frappe, et un lecteur d'écran n'a plus rien
     // à annoncer. `ChampBoard` pose un vrai `<label>`, l'astérisque du
     // champ requis, et l'erreur en encre de signal.
-    <form ref={formRef} action={formAction}>
+    <form onSubmit={soumettre}>
       <div className="grid grid-cols-1 gap-4">
         <ChampBoard
           id="risque-custom-libelle"

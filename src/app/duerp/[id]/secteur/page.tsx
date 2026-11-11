@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { SecteurCard } from "@/components/duerps/SecteurCard";
 import { AutresSecteurs } from "@/components/duerps/AutresSecteurs";
 import { ConfirmerSecteurButton } from "@/components/duerps/ConfirmerSecteurButton";
-import { enteteEtape } from "@/lib/duerps/etapes";
+import { EnTeteEtape } from "@/components/duerps/EnTeteEtape";
 import { getDuerp } from "@/lib/duerps/queries";
 import {
   referentielsSectoriels,
@@ -54,19 +54,14 @@ export default async function SecteurPage({
 
       {refRecommande ? (
         <>
-          <header className="max-w-[var(--board-mesure)]">
-            <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-              {enteteEtape("secteur")}
-            </p>
-            <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          <EnTeteEtape page="secteur">
               À partir du code NAF{" "}
-              <span className="font-mono tabular-nums text-[color:var(--board-ink)]">
+              <span className="tabular-nums text-[color:var(--board-ink)]">
                 {duerp.etablissement.codeNaf}
               </span>
               , le secteur ci-dessous a été détecté. Confirmez pour charger
               les unités et risques types.
-            </p>
-          </header>
+          </EnTeteEtape>
 
           <section className="carte-board px-7 py-6 sm:px-8">
             <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
@@ -121,20 +116,15 @@ export default async function SecteurPage({
         </>
       ) : (
         <>
-          <header className="max-w-[var(--board-mesure)]">
-            <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-              {enteteEtape("secteur")}
-            </p>
-            <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          <EnTeteEtape page="secteur">
               Le code NAF{" "}
-              <span className="font-mono tabular-nums text-[color:var(--board-ink)]">
+              <span className="tabular-nums text-[color:var(--board-ink)]">
                 {duerp.etablissement.codeNaf}
               </span>{" "}
               n&apos;est pas couvert par un référentiel dédié. Choisissez le
               secteur le plus proche — vous pourrez décocher les risques non
               applicables à l&apos;étape suivante.
-            </p>
-          </header>
+          </EnTeteEtape>
 
           <section>
             <p className="board-eyebrow m-0 mb-5 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">

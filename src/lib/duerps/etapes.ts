@@ -12,25 +12,25 @@ import {
   type EtapeFilId,
   type EtapeValidable,
 } from "./etapes-validees";
+import { etatUnite, type RisqueEvalue } from "@/lib/risques/etat-unite";
 
 /** Les pages du parcours — ce qu'une page passe pour dire où l'on est. */
-export type EtapeId =
-  | "secteur"
-  | "activites"
-  | "unites"
-  | "risques"
-  | "transverses"
-  | "synthese";
+export const PAGES_DU_PARCOURS = [
+  "secteur",
+  "activites",
+  "unites",
+  "risques",
+  "transverses",
+  "synthese",
+] as const;
+export type EtapeId = (typeof PAGES_DU_PARCOURS)[number];
 
 /**
- * Les étapes du fil (`ORDRE_DU_FIL`). « Votre activité » regroupe deux pages,
- * le secteur et ses précisions (2026-11-11) : la seconde n'existait que pour
- * certains secteurs, le fil comptait donc 4 ou 5 étapes selon le cas, et
- * « Secteur » disparaissait une fois choisi. Le fil a désormais toujours cinq
- * étapes.
+ * La page d'un parcours → l'étape du fil qui la porte (`ORDRE_DU_FIL`).
+ * « Votre activité » regroupe deux pages, le secteur et ses précisions
+ * (2026-11-11) : la seconde n'existait que pour certains secteurs, le fil
+ * comptait donc 4 ou 5 étapes selon le cas. Il a toujours cinq étapes.
  */
-
-/** La page d'un parcours → l'étape du fil qui la porte. */
 const ETAPE_DE_LA_PAGE: Record<EtapeId, EtapeFilId> = {
   secteur: "activite",
   activites: "activite",
@@ -194,7 +194,8 @@ export function etapesDuDuerp(
     reponsesActivitesNonCouvertes: unknown;
     unites: (Parameters<typeof etatEtapeTransverses>[0]["unites"][number] & {
       estTransverse: boolean;
-      risques: readonly unknown[];
+      aucunRisqueJustif: string | null;
+      risques: readonly RisqueEvalue[];
     })[];
     reponsesTransverses: unknown;
     etablissement: Parameters<typeof etatEtapeTransverses>[0]["etablissement"];
@@ -204,7 +205,12 @@ export function etapesDuDuerp(
 ): Etape[] {
   const unites = duerp.unites.filter((u) => !u.estTransverse);
   const unitesOk = unites.length > 0;
-  const unitesEvaluees = unites.filter((u) => u.risques.length > 0).length;
+  // Une unité est évaluée selon la même règle que la vue d'ensemble
+  // (`etatUnite`, 2026-11-12) : déclarée sans risque, ou tous ses risques
+  // cotés et pourvus de mesures. Compter les seules unités « avec un risque »
+  // laissait l'étape à faire pour une unité déclarée sans risque — et le PDF
+  // n'était jamais proposé.
+  const unitesEvaluees = unites.filter((u) => etatUnite(u).terminee).length;
   const questions = questionsActivites(
     duerp.referentielSecteurId,
     duerp.reponsesActivitesNonCouvertes,

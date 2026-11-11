@@ -4,14 +4,6 @@ import { usePathname } from "next/navigation";
 import { WizardSteps, type Etape } from "./WizardSteps";
 import type { EtapeId } from "@/lib/duerps/etapes";
 
-const PAGES: readonly EtapeId[] = [
-  "secteur",
-  "activites",
-  "unites",
-  "risques",
-  "transverses",
-  "synthese",
-];
 
 /**
  * Le fil des étapes, posé une fois par la mise en page du DUERP dans le pied
@@ -25,6 +17,6 @@ export function FilDuDuerp({
   etapesParPage: Record<EtapeId, Etape[]>;
 }) {
   const segment = usePathname().split("/")[3] as EtapeId | undefined;
-  if (!segment || !PAGES.includes(segment)) return null;
+  if (!segment || !(segment in etapesParPage)) return null;
   return <WizardSteps etapes={etapesParPage[segment]} />;
 }

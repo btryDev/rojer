@@ -30,7 +30,7 @@ export function ListeRepliable({
           onClick={() => setDeplie((d) => !d)}
           className="w-full border-t border-[color:var(--board-slate-line)] px-7 py-4 text-left text-[13px] font-semibold text-[color:var(--board-blue-ink)] hover:underline sm:px-8"
         >
-          {deplie ? "Replier ↑" : `Afficher les ${caches} autres ↓`}
+          {deplie ? "Replier ↑" : `Passer en revue les ${caches} autres ↓`}
         </button>
       )}
     </>

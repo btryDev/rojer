@@ -2,6 +2,7 @@ import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { saisieFermeeDuSite } from "@/lib/abonnements/saisie-annoncee";
 import { validerEtape } from "@/lib/duerps/actions";
+import { BoutonValider } from "./BoutonValider";
 import { etapeSuivante, type EtapeValidable } from "@/lib/duerps/etapes-validees";
 
 /**
@@ -37,9 +38,7 @@ export async function ValiderEtapeBouton({
   }
   return (
     <form action={validerEtape.bind(null, duerpId, etape)}>
-      <button type="submit" disabled={disabled} className={classe}>
-        {libelle}
-      </button>
+      <BoutonValider libelle={libelle} disabled={disabled} />
     </form>
   );
 }

@@ -32,6 +32,10 @@ type Props = {
   ajout: AjoutActivite | undefined;
   /** Les risques à ajouter à la main quand rien n'a pu l'être (`aFaire.risques`). */
   risquesAPenser: string[];
+  /** « 03 · Risques par unité » — le nom de l'étape où se cotent les ajouts. */
+  etapeRisques: string;
+  /** La limite d'unités de l'essai (`LIMITES_ESSAI.unitesTravail`). */
+  limiteUnitesEssai: number;
   /** `undefined` = pas de réponse. Ne jamais replier sur `false`. */
   exercee: boolean | undefined;
 };
@@ -43,6 +47,8 @@ export function QuestionActiviteRow({
   aide,
   ajout,
   risquesAPenser,
+  etapeRisques,
+  limiteUnitesEssai,
   exercee,
 }: Props) {
   const [pending, startTransition] = useTransition();
@@ -142,6 +148,8 @@ export function QuestionActiviteRow({
         <AjoutsDeLActivite
           ajout={ajout}
           risquesAPenser={risquesAPenser}
+          etapeRisques={etapeRisques}
+          limiteUnitesEssai={limiteUnitesEssai}
         />
       )}
       {exercee === false && ajout && ajout.risques.length > 0 && (
@@ -161,7 +169,9 @@ const NOTE =
 function AjoutsDeLActivite({
   ajout,
   risquesAPenser,
-}: Pick<Props, "ajout" | "risquesAPenser">) {
+  etapeRisques,
+  limiteUnitesEssai,
+}: Pick<Props, "ajout" | "risquesAPenser" | "etapeRisques" | "limiteUnitesEssai">) {
   return (
     <div className="mt-4 max-w-[var(--board-mesure)] rounded-[16px] bg-[color:var(--board-blue-pale)] px-4 py-3 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-ink)]">
       {ajout ? (
@@ -180,7 +190,7 @@ function AjoutsDeLActivite({
             </ul>
           )}
           <p className="m-0 mt-1.5">
-            Vous les évaluerez à l&apos;étape 03, Risques par unité.
+            {`Vous les évaluerez à l'étape ${etapeRisques}.`}
           </p>
         </>
       ) : (
@@ -189,7 +199,7 @@ function AjoutsDeLActivite({
         // détail derrière le « ? ».
         <div className="flex flex-wrap items-center gap-3">
           <span>
-            Ajoutez ces risques à la main à l&apos;étape 03, Risques par unité.
+            {`Ajoutez ces risques à la main à l'étape ${etapeRisques}.`}
           </span>
           <AideEcran titre="Les risques de cette activité">
             <ul className="m-0 list-disc pl-5">
@@ -198,9 +208,7 @@ function AjoutsDeLActivite({
               ))}
             </ul>
             <p className="m-0 mt-3">
-              Nous n&apos;avons pas pu les ajouter nous-mêmes&nbsp;: pendant
-              l&apos;essai, un DUERP compte 3 unités au plus, ou l&apos;unité
-              qui devait les recevoir a été supprimée.
+              {`Nous n'avons pas pu les ajouter nous-mêmes : pendant l'essai, un DUERP compte ${limiteUnitesEssai} unités au plus, ou l'unité qui devait les recevoir a été supprimée.`}
             </p>
           </AideEcran>
         </div>

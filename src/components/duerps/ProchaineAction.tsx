@@ -13,8 +13,8 @@ export function ProchaineAction({
   action?: { href: string; libelle: string };
 }) {
   return (
-    <div
-      role="status"
+    <section
+      aria-label="Prochaine action"
       className="flex flex-wrap items-center justify-between gap-x-5 gap-y-3 rounded-[18px] bg-[color:var(--board-blue-pale)] px-5 py-3.5 sm:px-6"
     >
       <p className="m-0 min-w-0 text-[14px] leading-[1.5] text-[color:var(--board-slate-ink)]">
@@ -29,6 +29,6 @@ export function ProchaineAction({
           {action.libelle}
         </Link>
       )}
-    </div>
+    </section>
   );
 }

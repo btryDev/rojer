@@ -82,8 +82,7 @@ export async function repondreActivite(
     exercee,
   });
 
-  revalidatePath(`/duerp/${duerpId}/activites`);
-  revalidatePath(`/duerp/${duerpId}/unites`);
-  revalidatePath(`/duerp/${duerpId}/risques`);
-  revalidatePath(`/duerp/${duerpId}/synthese`);
+  // Toutes les pages du DUERP et le fil des étapes de l'en-tête, qui lit les
+  // validations que les ajouts peuvent retirer (2026-11-12).
+  revalidatePath(`/duerp/${duerpId}`, "layout");
 }

@@ -4,9 +4,8 @@ import { AjouterUniteForm } from "@/components/duerps/AjouterUniteForm";
 import { UniteRow } from "@/components/duerps/UniteRow";
 import { ValiderEtapeBouton } from "@/components/duerps/ValiderEtapeBouton";
 import { LienRetour } from "@/components/duerps/LienRetour";
+import { EnTeteEtape } from "@/components/duerps/EnTeteEtape";
 import { questionsActivites } from "@/lib/activites/reponses";
-import { enteteEtape } from "@/lib/duerps/etapes";
-import { AideEcran } from "@/components/ui-kit/AideEcran";
 import { getDuerp } from "@/lib/duerps/queries";
 
 export default async function UnitesPage({
@@ -39,27 +38,23 @@ export default async function UnitesPage({
 
       {/* Allégé le 2026-11-11 : la définition d'une unité était dite deux
           fois (infobulle et paragraphe) ; elle est derrière le « ? ». */}
-      <header className="flex max-w-[var(--board-mesure)] flex-col gap-3">
-        <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-          {enteteEtape("unites")}
-        </p>
-        <div className="flex items-center gap-3">
-          <h2 className="board-titre m-0 text-[clamp(23px,2.1vw,30px)]">
-            Vérifiez vos unités de travail
-          </h2>
-          <AideEcran titre="Qu'est-ce qu'une unité de travail">
+      <EnTeteEtape
+        page="unites"
+        titre="Vérifiez vos unités de travail"
+        aide={{
+          titre: "Qu'est-ce qu'une unité de travail",
+          contenu: (
             <p className="m-0">
               Une unité de travail regroupe des salariés exposés aux mêmes
               risques. Ça peut être un poste (ex. accueil), une zone (ex.
               cuisine) ou une activité (ex. livraison). L&apos;évaluation se
               fait unité par unité, à l&apos;étape suivante.
             </p>
-          </AideEcran>
-        </div>
-        <p className="m-0 text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-          Proposées selon votre secteur. Renommez, supprimez ou ajoutez.
-        </p>
-      </header>
+          ),
+        }}
+      >
+        Proposées selon votre secteur. Renommez, supprimez ou ajoutez.
+      </EnTeteEtape>
 
       {/* Les unités en cartes (2026-11-12, demande de la propriétaire), sur
           le canevas ; l'ajout en tête, dans une fenêtre. */}

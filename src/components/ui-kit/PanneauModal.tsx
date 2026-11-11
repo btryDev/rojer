@@ -55,7 +55,9 @@ export function PanneauModal({
 
   useEffect(() => {
     if (!ouvert) return;
-    panneau.current?.focus();
+    // Un champ `autoFocus` du contenu a déjà pris le focus : le lui laisser
+    // (2026-11-12), sinon le premier champ d'un formulaire n'est jamais actif.
+    if (!panneau.current?.contains(document.activeElement)) panneau.current?.focus();
     const surTouche = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       // Échap ferme CE panneau, et lui seul : sans quoi le `<dialog>` qui le
