@@ -46,7 +46,8 @@ export function AccueilParcours({ surCommencer }: { surCommencer: () => void }) 
             id={titreId}
             className="board-titre absolute bottom-6 left-5 z-10 m-0 text-[clamp(25px,2.4vw,30px)] leading-[1.08] md:bottom-8 md:left-9"
           >
-            Mettez en place
+            {/* L'espace garde au nom lu « place votre » ses deux mots. */}
+            Mettez en place{" "}
             <br />
             <span className="whitespace-nowrap">votre établissement</span>
           </h1>
