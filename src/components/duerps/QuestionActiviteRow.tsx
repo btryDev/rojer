@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { repondreActivite } from "@/lib/activites/actions";
 import type { AjoutActivite } from "@/lib/activites/ajouts";
+import { AideEcran } from "@/components/ui-kit/AideEcran";
 
 /**
  * Une question d'activité hors couverture, et son couple Oui / Non (ADR-020).
@@ -201,15 +202,12 @@ function AjoutsDeLActivite({
         // possible (essai plein, unité type supprimée). On relance l'ajout ;
         // s'il échoue encore, la liste reste à reporter à la main.
         <>
-          <p className="m-0 font-semibold text-[color:var(--board-ink)]">
-            Ces risques ne sont pas encore dans votre DUERP&nbsp;:
-          </p>
-          <ul className="m-0 mt-1 list-disc pl-5">
-            {risquesAPenser.map((r) => (
-              <li key={r}>{r}</li>
-            ))}
-          </ul>
-          <div className="mt-2.5 flex flex-wrap items-center gap-3">
+          {/* Une ligne et un bouton : le détail (la liste, la limite de
+              l'essai) est derrière le « ? », pas en texte courant. */}
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="font-semibold text-[color:var(--board-ink)]">
+              Pas encore ajouté à votre DUERP.
+            </span>
             <Button
               data-ecriture
               type="button"
@@ -218,12 +216,21 @@ function AjoutsDeLActivite({
               disabled={pending}
               onClick={onAjouter}
             >
-              {pending ? "Ajout…" : "Les ajouter à mon DUERP"}
+              {pending ? "Ajout…" : "Ajouter"}
             </Button>
-            <span className="text-[12px] text-[color:var(--board-slate-mid)]">
-              Si l&apos;ajout reste impossible (essai limité à 3 unités),
-              ajoutez-les à la main à l&apos;étape 03.
-            </span>
+            <AideEcran titre="Ce qui sera ajouté">
+              <p className="m-0">Les risques de cette activité&nbsp;:</p>
+              <ul className="m-0 mt-1 list-disc pl-5">
+                {risquesAPenser.map((r) => (
+                  <li key={r}>{r}</li>
+                ))}
+              </ul>
+              <p className="m-0 mt-3">
+                Pendant l&apos;essai, un DUERP compte 3 unités au plus&nbsp;:
+                si l&apos;ajout reste impossible, ajoutez ces risques à la main
+                à l&apos;étape 03.
+              </p>
+            </AideEcran>
           </div>
         </>
       )}
