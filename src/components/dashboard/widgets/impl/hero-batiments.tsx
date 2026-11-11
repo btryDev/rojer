@@ -11,6 +11,7 @@
 // lit comme celui du client, et le produit ne le connaît pas. Ce qu'on sait
 // de l'établissement est écrit dans sa fiche, sur laquelle le dessin est posé.
 
+import { typesErpDe } from "@/lib/matching/types-erp";
 import { ArrowRight, DoorOpen, IdCard, Users, Wrench } from "lucide-react";
 import { nomDeZone } from "@/lib/batiments/nom-zone";
 import { CartePhotoLieu } from "./CartePhotoLieu";
@@ -49,7 +50,6 @@ const ACTIVITE: Record<IllustrationBatiment, string | null> = {
   magasin: "Commerce",
   bureaux: "Bureaux",
   hotel: "Hôtel",
-  "salle-sport": "Salle de sport",
   local: null,
 };
 
@@ -154,7 +154,10 @@ export function HeroEtablissement({
   zones: readonly { id: string; nom: string; nbEquipements: number }[];
 }) {
   const [principal = "Régime non renseigné", ...autres] = regimesAffiches(etab);
-  const activite = ACTIVITE[illustration];
+  // Le mot d'activité suit le dessin, sauf la salle de sport : sans planche
+  // propre depuis le 2026-11-11, elle garde son mot, lu sur le type déclaré.
+  const activite =
+    ACTIVITE[illustration] ?? (typesErpDe(etab).includes("X") ? "Salle de sport" : null);
 
   return (
     <div>

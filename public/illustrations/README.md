@@ -1,6 +1,6 @@
 # Illustrations de bâtiment
 
-Les six planches du hero du tableau de bord, dans `batiments/`. Le choix se
+Les ~~six~~ cinq planches du hero du tableau de bord, dans `batiments/`. Le choix se
 fait à un seul endroit : `illustrationBatiment`
 (`src/lib/etablissements/illustration.ts`), d'après le type ERP déclaré, puis
 le secteur du code NAF, puis le local générique.
@@ -10,7 +10,6 @@ le secteur du code NAF, puis le local générique.
 | `batiments/restaurant.webp` | ERP de type N, ou NAF du référentiel restauration     |
 | `batiments/magasin.webp`    | ERP de type M, ou NAF du référentiel commerce         |
 | `batiments/hotel.webp`      | ERP de type O                                         |
-| `batiments/salle-sport.webp`| ERP de type X                                         |
 | `batiments/bureaux.webp`    | ERP de type W, ou NAF du référentiel bureau           |
 | `batiments/local.webp`      | tous les autres cas                                   |
 
@@ -23,6 +22,7 @@ recadré ; rien n'y est épinglé. Les planches sont décoratives — `alt=""`,
 
 ## Origine
 
+~~
 Générées par la propriétaire (planche « isométrique de bâtiments monochromes »,
 2026-10-25), découpées et détourées depuis une seule planche pour garder le
 même angle, le même trait et la même échelle. Provisoires : des versions
@@ -30,14 +30,16 @@ définitives viendront au même cadrage. [2026-10-25 : `restaurant.webp` vient
 d'une seconde génération de la propriétaire, « café pastel isométrique avec
 terrasse », aux couleurs des sections.]
 
+~~ [2026-11-11 : origine remplacée, voir les notes datées en fin de fichier.]
+
 ## Consignes
 
 - **Format** : WebP à fond transparent, détouré au ras du dessin. La carte le
   contient (`object-contain`) : n'importe quel ratio tient, sans dimension à
   recopier dans le code.
-- **Couleurs** : les teintes des sections (pêche, eau, glacier), un crème, le
+- ~~**Couleurs** : les teintes des sections (pêche, eau, glacier), un crème, le
   noir — jamais le rouge, le jaune ni le vert des états. `restaurant.webp` est
-  la première planche dans cette palette ; les cinq autres sont encore en gris.
+  la première planche dans cette palette ; les cinq autres sont encore en gris.~~ [2026-11-11 : caduc — bâtiments blancs à liseré bleu, posés sur `--board-sky` ; voir les notes datées ci-dessous.]
 - **Poids** : viser moins de 100 Ko (1000 px de large suffisent).
 - **Ajouter une planche** : déposer le fichier ici ne l'affiche pas. Il faut
   l'ajouter à `ILLUSTRATIONS_BATIMENT` et à la règle de choix ; un test
@@ -48,3 +50,18 @@ terrasse », aux couleurs des sections.]
 Les images de la page publique (photos, illustration « Transparent »,
 pictos des documents) ne sont plus ici : elles sont importées depuis
 `src/assets/landing/`, qui a son propre README.
+
+[2026-11-11 : les cinq planches sont remplacées par une série redessinée
+d'une seule planche (Krea, Nano Banana Pro, 4K) — isométrique, trait fin
+ardoise `#304148`, bleus de la charte (`#d8eef9`, `#b2daf2`, `#a9d3ec`,
+`#7fb0d0`, `#5d93b8`), ombre au sol décalée. Les consignes de couleur
+ci-dessus (pêche, eau, crème) sont caduques pour cette série. La salle de
+sport n'a plus de planche : le type X prend le local générique, seules les
+grandes catégories ont la leur (décision de la propriétaire).]
+
+
+[2026-11-11, plus tard : ~~aplats pâles blanchis en code~~ planche
+régénérée avec des bâtiments blancs à liseré bleu, comme l'illustration de
+la landing, sur un fond bleu uni (détouré par la couleur du fond) ; posés
+sur `--board-sky` dans la carte du tableau de bord et dans la fenêtre
+d'accueil de l'onboarding. Le bleu sur bleu ne se lisait pas.]
