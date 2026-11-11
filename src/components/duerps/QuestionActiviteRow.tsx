@@ -55,8 +55,10 @@ export function QuestionActiviteRow({
   // instruite. Sans ce `catch`, le rejet se perdait dans la transition, la
   // ligne restait affichée dans son état précédent, et le dirigeant repartait
   // en croyant avoir répondu.
-  const repondre = (valeur: boolean | null) => {
-    if (valeur === exercee) return;
+  // `forcer` : relancer un « oui » déjà donné, pour que le serveur ajoute ce
+  // qui manque (un « oui » antérieur à l'ADR-060 n'a rien ajouté).
+  const repondre = (valeur: boolean | null, forcer = false) => {
+    if (valeur === exercee && !forcer) return;
     setEchec(false);
     startTransition(async () => {
       try {
@@ -142,6 +144,8 @@ export function QuestionActiviteRow({
           s'en occupe pas ». */}
       {exercee === true && (
         <AjoutsDeLActivite
+          onAjouter={() => repondre(true, true)}
+          pending={pending}
           ajout={ajout}
           risquesAPenser={risquesAPenser}
           questionsTransverses={questionsTransverses}
@@ -165,7 +169,12 @@ function AjoutsDeLActivite({
   ajout,
   risquesAPenser,
   questionsTransverses,
-}: Pick<Props, "ajout" | "risquesAPenser" | "questionsTransverses">) {
+  onAjouter,
+  pending,
+}: Pick<Props, "ajout" | "risquesAPenser" | "questionsTransverses"> & {
+  onAjouter: () => void;
+  pending: boolean;
+}) {
   return (
     <div className="mt-4 max-w-[var(--board-mesure)] rounded-[16px] bg-[color:var(--board-blue-pale)] px-4 py-3 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-ink)]">
       {ajout ? (
@@ -188,18 +197,34 @@ function AjoutsDeLActivite({
           </p>
         </>
       ) : (
-        // Aucune unité possible (essai plein, unité type supprimée) : la
-        // liste reste à reporter à la main.
+        // Rien d'ajouté : un « oui » antérieur à l'ADR-060, ou aucune unité
+        // possible (essai plein, unité type supprimée). On relance l'ajout ;
+        // s'il échoue encore, la liste reste à reporter à la main.
         <>
           <p className="m-0 font-semibold text-[color:var(--board-ink)]">
-            À ajouter à l&apos;étape 03, Risques par unité, dans l&apos;unité
-            de votre choix&nbsp;:
+            Ces risques ne sont pas encore dans votre DUERP&nbsp;:
           </p>
           <ul className="m-0 mt-1 list-disc pl-5">
             {risquesAPenser.map((r) => (
               <li key={r}>{r}</li>
             ))}
           </ul>
+          <div className="mt-2.5 flex flex-wrap items-center gap-3">
+            <Button
+              data-ecriture
+              type="button"
+              variant="board"
+              size="boardSm"
+              disabled={pending}
+              onClick={onAjouter}
+            >
+              {pending ? "Ajout…" : "Les ajouter à mon DUERP"}
+            </Button>
+            <span className="text-[12px] text-[color:var(--board-slate-mid)]">
+              Si l&apos;ajout reste impossible (essai limité à 3 unités),
+              ajoutez-les à la main à l&apos;étape 03.
+            </span>
+          </div>
         </>
       )}
       {questionsTransverses.length > 0 && (
