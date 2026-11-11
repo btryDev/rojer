@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Marque } from "@/components/landing/Marque";
 import { buttonVariants } from "@/components/ui/button";
 import { getOptionalUser } from "@/lib/auth/require-user";
 import { getOptionalUserEtablissement } from "@/lib/auth/scope";
@@ -29,16 +30,9 @@ export async function AppHeader() {
   return (
     <header className="sticky top-0 z-30 border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)]/95 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-3 sm:px-10">
-        <Link href="/" className="group flex items-center gap-3">
-          {/* Marque carrée : le rayon suit la règle du board pour ces
-              marques — un tiers du côté, ici 28 px. */}
-          <span className="flex h-7 w-7 items-center justify-center rounded-[10px] bg-[color:var(--board-ink)] text-[0.6rem] font-bold uppercase tracking-widest text-[color:var(--board-card)]">
-            R
-          </span>
-          <span className="text-[0.88rem] font-semibold tracking-[-0.01em] text-[color:var(--board-ink)]">
-            Rojer
-          </span>
-        </Link>
+        {/* La marque de la landing, pastille bleue (2026-11-11) : le carré
+            « R » est retiré, décision de la propriétaire. */}
+        <Marque />
 
         <nav className="flex items-center gap-6">
           {user ? (
