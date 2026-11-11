@@ -36,33 +36,36 @@ export function AccueilParcours({ surCommencer }: { surCommencer: () => void }) 
         className="absolute inset-0 bg-[rgba(13,18,36,.28)] backdrop-blur-[6px]"
       />
       <div className="relative max-h-[92dvh] w-full max-w-[600px] overflow-y-auto overscroll-contain rounded-t-[26px] bg-[color:var(--board-card)] shadow-[0_0_0_1px_rgba(13,18,36,.06),0_24px_60px_-24px_rgba(13,18,36,.45)] md:rounded-[26px]">
-        {/* Le dessin est l'emblème d'un lieu, pas un portrait du vôtre :
-            décoratif, comme les planches du tableau de bord. Posé sur le bleu
-            de marque de la landing (`--board-sky`), plus grand et ancré en bas
-            à droite : centré et petit, il flottait. La hauteur le borne, quel
-            que soit le format de la planche. */}
+        {/* Le titre et le dessin dans le bandeau bleu de marque (décision de
+            la propriétaire, 2026-11-11) : le bâtiment, blanc à liseré bleu
+            comme l'illustration de la landing, à droite ; le titre à gauche,
+            « votre établissement » d'un seul tenant. Le dessin est l'emblème
+            d'un lieu, pas un portrait du vôtre : décoratif. */}
         <div className="relative h-[180px] overflow-hidden bg-[color:var(--board-sky)] md:h-[220px]">
+          <h1
+            id={titreId}
+            className="board-titre absolute bottom-6 left-5 z-10 m-0 text-[clamp(25px,2.4vw,30px)] leading-[1.08] md:bottom-8 md:left-9"
+          >
+            Mettez en place
+            <br />
+            <span className="whitespace-nowrap">votre établissement</span>
+          </h1>
           <Image
             src="/illustrations/batiments/restaurant.webp"
             alt=""
             width={1000}
             height={901}
             preload
-            sizes="(min-width: 768px) 230px, 190px"
-            className="absolute -bottom-1.5 right-6 h-[166px] w-auto md:right-10 md:h-[204px]"
+            sizes="(min-width: 768px) 230px, 160px"
+            className="absolute -bottom-1.5 right-3 h-[140px] w-auto md:right-8 md:h-[204px]"
           />
         </div>
         <div className="flex flex-col gap-6 px-5 pb-[calc(22px+env(safe-area-inset-bottom,0px))] pt-6 md:px-9 md:pb-8 md:pt-7">
-          <div className="flex flex-col gap-2.5">
-            <h1 id={titreId} className="board-titre m-0 text-[clamp(25px,2.4vw,29px)]">
-              Mettez en place votre établissement
-            </h1>
-            <p className="m-0 text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-              Quelques informations essentielles, en trois étapes : comptez
-              environ 5 minutes. Rojer en déduit les obligations qui s&apos;y
-              appliquent et prépare votre calendrier.
-            </p>
-          </div>
+          <p className="m-0 text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+            Quelques informations essentielles, en trois étapes : comptez
+            environ 5 minutes. Rojer en déduit les obligations qui s&apos;y
+            appliquent et prépare votre calendrier.
+          </p>
           <div className="flex flex-col-reverse items-stretch gap-3 md:flex-row md:items-center md:justify-between">
             <span className="text-center text-[12.5px] leading-[1.5] text-[color:var(--board-slate-soft)] md:text-left">
               Rien n&apos;est enregistré avant la dernière étape.
