@@ -13,7 +13,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Check, ChevronRight, GripVertical, Shuffle, X } from "lucide-react";
 import Link from "next/link";
-import { categorieDeItem } from "@/components/layout/sidebar-nav";
+import { LABEL_ITEM, categorieDeItem } from "@/components/layout/sidebar-nav";
 import { REGISTRY } from "./registry";
 import { FournisseurSectionDuWidget } from "./section-du-widget";
 import type { WidgetId } from "./types";
@@ -21,6 +21,7 @@ import type { WidgetId } from "./types";
 export function WidgetShell({
   widgetId,
   etablissementId,
+  rangTelephone,
   variant,
   enEdition,
   onRetirer,
@@ -30,6 +31,8 @@ export function WidgetShell({
 }: {
   widgetId: WidgetId;
   etablissementId: string;
+  /** Appliquer le rang téléphone du registre (disposition par défaut). */
+  rangTelephone: boolean;
   variant: string;
   enEdition: boolean;
   onRetirer: () => void;
@@ -42,6 +45,11 @@ export function WidgetShell({
   // Le raccourci du téléphone ne s'applique pas en édition : on y déplace
   // et règle les widgets eux-mêmes.
   const raccourci = enEdition ? undefined : def.telephone?.raccourci;
+  const contenu = (
+    <FournisseurSectionDuWidget value={categorieDeItem(def.page)}>
+      {children}
+    </FournisseurSectionDuWidget>
+  );
   // Un widget obligatoire est épinglé : ni retirable, ni déplaçable —
   // sa position est recalculée par `epingler` (useLayoutPerso).
   const epingle = Boolean(def.obligatoire);
@@ -77,7 +85,7 @@ export function WidgetShell({
         "@container relative " +
         classePortee +
         " " +
-        ORDRE_TELEPHONE[def.telephone?.ordre ?? 0] +
+        (rangTelephone ? ORDRE_TELEPHONE[def.telephone?.ordre ?? 0] : "") +
         " " +
         (enEdition
           ? "rounded-[30px] ring-1 ring-dashed ring-[color:var(--board-blue-strong)]/60 ring-offset-4 ring-offset-[color:var(--board-canvas)]"
@@ -86,12 +94,12 @@ export function WidgetShell({
     >
       {raccourci ? (
         <Link
-          href={`/etablissements/${etablissementId}${raccourci.chemin}`}
+          href={`/etablissements/${etablissementId}/${def.page}`}
           className="flex min-h-11 items-center gap-3 rounded-[22px] bg-[color:var(--board-card)] px-5 py-4 ring-1 ring-[color:rgba(13,18,36,.08)] md:hidden"
         >
           <span className="min-w-0 flex-1">
             <span className="block text-[15px] font-semibold tracking-[-0.01em] text-[color:var(--board-ink)]">
-              {raccourci.titre}
+              {LABEL_ITEM[def.page]}
             </span>
             <span className="block text-[12.5px] text-[color:var(--board-slate-mid)]">
               {raccourci.ligne}
@@ -103,11 +111,11 @@ export function WidgetShell({
       {/* Remplacé par son raccourci, le widget n'est pas affiché sur
           téléphone : `display: none` — ses images, en chargement différé,
           n'y sont pas téléchargées. */}
-      <div className={raccourci ? "contents max-md:hidden" : "contents"}>
-        <FournisseurSectionDuWidget value={categorieDeItem(def.page)}>
-          {children}
-        </FournisseurSectionDuWidget>
-      </div>
+      {raccourci ? (
+        <div className="contents max-md:hidden">{contenu}</div>
+      ) : (
+        contenu
+      )}
 
       {enEdition ? (
         <ShellOverlay

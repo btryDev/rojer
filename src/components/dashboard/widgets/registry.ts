@@ -243,7 +243,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
     taille: "medium",
     variants: [{ id: "default", label: "Défaut" }],
     defaultVariant: "default",
-    telephone: { ordre: 7, raccourci: { titre: "Préparer un contrôle", ligne: "Rassemblez vos pièces avant une visite", chemin: "/controle" } },
+    telephone: { ordre: 7, raccourci: { ligne: "Rassemblez vos pièces avant une visite" } },
     Component: BlocControle,
   },
   registre: {
@@ -277,7 +277,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
     taille: "medium",
     variants: [{ id: "default", label: "Défaut" }],
     defaultVariant: "default",
-    telephone: { ordre: 5, raccourci: { titre: "Vos documents", ligne: "Ce qu'il faut tenir à jour et présenter", chemin: "/documents" } },
+    telephone: { ordre: 5, raccourci: { ligne: "Ce qu'il faut tenir à jour et présenter" } },
     Component: BlocDocuments,
   },
   duerp: {
@@ -301,7 +301,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
     taille: "medium",
     variants: [{ id: "default", label: "Défaut" }],
     defaultVariant: "default",
-    telephone: { ordre: 8, raccourci: { titre: "Comprendre vos obligations", ligne: "Le guide, étape par étape", chemin: "/guide" } },
+    telephone: { ordre: 8, raccourci: { ligne: "Le guide, étape par étape" } },
     Component: WidgetGuide,
   },
   recos: {
@@ -375,7 +375,7 @@ export const REGISTRY: Record<WidgetId, WidgetDefinition> = {
     taille: "medium",
     variants: [{ id: "default", label: "Défaut" }],
     defaultVariant: "default",
-    telephone: { ordre: 6, raccourci: { titre: "Ce qui a changé", ligne: "Les derniers mouvements du dossier", chemin: "/registre" } },
+    telephone: { ordre: 6, raccourci: { ligne: "Les derniers mouvements du dossier" } },
     Component: BlocCeQuiAChange,
   },
   meteo: {

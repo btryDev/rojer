@@ -319,13 +319,15 @@ export type WidgetDefinition = {
   visibleQuand?: (b: DashboardBundle) => boolean;
   /**
    * Sur téléphone (sous `md`, 2026-11-11) : le rang du widget dans la
-   * colonne — l'action d'abord —, et, s'il est donné, le raccourci qui le
-   * remplace (une ligne : titre, phrase, chevron). Absent : le widget garde
-   * sa forme, en fin de colonne. CSS seulement, ordinateur inchangé.
+   * colonne — l'action d'abord —, appliqué tant que la disposition est celle
+   * par défaut (une disposition personnalisée garde son ordre) ; et, s'il
+   * est donné, le raccourci qui le remplace : titre et lien viennent de
+   * `page` (navigation), le widget ne déclare que sa phrase. CSS seulement,
+   * ordinateur inchangé.
    */
   telephone?: {
-    ordre: number;
-    raccourci?: { titre: string; ligne: string; chemin: string };
+    ordre: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+    raccourci?: { ligne: string };
   };
 };
 

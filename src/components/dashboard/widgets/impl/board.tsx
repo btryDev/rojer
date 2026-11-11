@@ -49,6 +49,7 @@ import {
   type EchelleFrise,
 } from "@/lib/dashboard/frise";
 import { composantesCiviles } from "@/lib/dates";
+import { MOIS_FR_COURT } from "@/lib/calendrier/labels";
 import { estVerificationEnRetard } from "@/lib/dates/retard";
 import { horsDesComptesDeLExploitant } from "@/lib/calendrier/prudence";
 import { estLignePourInformation } from "@/lib/referentiels/conformite/initiative";
@@ -757,13 +758,18 @@ export function BlocFrise({ bundle }: { bundle: DashboardBundle }) {
 
 const MOIS_TELEPHONE = 3;
 
+/** Le lien de pied des cartes resserrées sur téléphone (« Tout voir »,
+ *  « Voir le calendrier ») : une cible de 44 px. */
+const LIEN_PIED_TELEPHONE =
+  "-mx-2 flex min-h-11 items-center justify-center rounded-[14px] text-[13px] font-semibold text-[color:var(--board-ink)] hover:bg-[color:var(--board-slate-pale)]";
+
 /** Les échéances datées des trois prochains mois, comptées par mois civil
  *  (heure de Paris), et dont combien sont en retard. Un seul passage. */
 function compterParMois(bundle: DashboardBundle) {
   const c0 = composantesCiviles(bundle.aujourdhui);
   const mois = Array.from({ length: MOIS_TELEPHONE }, (_, k) => {
-    const d = new Date(c0.annee, c0.mois - 1 + k, 1);
-    return { date: d, total: 0, retard: 0 };
+    const n = c0.annee * 12 + (c0.mois - 1) + k;
+    return { annee: Math.floor(n / 12), mois: (n % 12) + 1, total: 0, retard: 0 };
   });
   for (const e of bundle.evenementsHorizon) {
     const c = composantesCiviles(e.date);
@@ -785,7 +791,7 @@ function CalendrierTroisMois({ bundle }: { bundle: DashboardBundle }) {
       <ul className="m-0 mt-2 list-none p-0">
         {mois.map((m, i) => (
           <li
-            key={m.date.getTime()}
+            key={`${m.annee}-${m.mois}`}
             className={
               "flex items-center gap-3 py-3 " +
               (i === 0 ? "" : "border-t border-[color:var(--board-slate-line)]")
@@ -799,9 +805,9 @@ function CalendrierTroisMois({ bundle }: { bundle: DashboardBundle }) {
                   : "bg-[color:var(--board-slate-pale)] text-[color:var(--board-slate-mid)]")
               }
             >
-              {m.date.toLocaleDateString("fr-FR", { month: "short" }).replace(".", "")}
+              {MOIS_FR_COURT[m.mois - 1]}
               <b className="text-[13px] text-[color:var(--board-ink)]">
-                {String(m.date.getFullYear()).slice(2)}
+                {String(m.annee).slice(2)}
               </b>
             </span>
             <span className="min-w-0 flex-1 text-[14px]">
@@ -829,10 +835,7 @@ function CalendrierTroisMois({ bundle }: { bundle: DashboardBundle }) {
           échéance connue.
         </p>
       ) : null}
-      <Link
-        href={href}
-        className="-mx-2 flex min-h-11 items-center justify-center rounded-[14px] border-t border-[color:var(--board-slate-line)] text-[13px] font-semibold text-[color:var(--board-ink)]"
-      >
+      <Link href={href} className={LIEN_PIED_TELEPHONE}>
         Voir le calendrier
       </Link>
     </CarteBoard>
@@ -1466,6 +1469,9 @@ const TYPE_RECO: Partial<Record<Recommandation["kind"], string>> = {
   duerp_a_jour: "DUERP",
 };
 
+/** Les lignes de « À faire » montrées sur téléphone (2026-11-11). */
+const A_FAIRE_TELEPHONE = 3;
+
 /**
  * La to-do du dossier : vérifications ET actions mélangées, triées par
  * urgence réelle par le moteur de recommandations — l'utilisateur n'a
@@ -1478,9 +1484,6 @@ const TYPE_RECO: Partial<Record<Recommandation["kind"], string>> = {
  * traiter maintenant. Ici, la profondeur — jusqu'à 5 items datés, et le
  * solde sous 30 jours en pied de carte.
  */
-/** Les lignes de « À faire » montrées sur téléphone (2026-11-11). */
-const A_FAIRE_TELEPHONE = 3;
-
 export function BlocAFaire({ bundle }: { bundle: DashboardBundle }) {
   const { etablissementId, aujourdhui, dashboard, echeances } = bundle;
   const { recommandations } = dashboard;
@@ -1604,10 +1607,7 @@ export function BlocAFaire({ bundle }: { bundle: DashboardBundle }) {
       )}
 
       {file.length > A_FAIRE_TELEPHONE ? (
-        <Link
-          href={hrefCalendrier}
-          className="-mx-2 mb-2 flex min-h-11 items-center justify-center rounded-[14px] text-[13px] font-semibold text-[color:var(--board-ink)] hover:bg-[color:var(--board-slate-pale)] md:hidden"
-        >
+        <Link href={hrefCalendrier} className={`${LIEN_PIED_TELEPHONE} mb-2 md:hidden`}>
           Tout voir ({file.length})
         </Link>
       ) : null}

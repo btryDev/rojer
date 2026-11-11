@@ -25,7 +25,7 @@ import {
 } from "@dnd-kit/sortable";
 import { EditToolbar } from "./EditToolbar";
 import { WidgetShell } from "./WidgetShell";
-import { REGISTRY, classePortee } from "./registry";
+import { REGISTRY, classePortee, layoutParDefaut } from "./registry";
 import { useLayoutPerso } from "./useLayoutPerso";
 import type { DashboardBundle, WidgetId } from "./types";
 
@@ -78,6 +78,9 @@ export function DashboardGridClient({
   };
 
   const ids = layout.items.map((i) => i.widgetId as WidgetId);
+  // Le rang téléphone ne vaut que pour la disposition par défaut : un ordre
+  // personnalisé est le choix de l'utilisateur, sur toutes les largeurs.
+  const ordreParDefaut = memesIds(ids, layoutParDefaut());
 
   const toolbar = (
     <EditToolbar
@@ -125,6 +128,7 @@ export function DashboardGridClient({
                   key={item.widgetId}
                   widgetId={item.widgetId}
                   etablissementId={bundle.etablissementId}
+                  rangTelephone={ordreParDefaut}
                   variant={item.variant}
                   enEdition={enEdition}
                   onRetirer={() => retirer(item.widgetId)}
@@ -140,4 +144,8 @@ export function DashboardGridClient({
       </DndContext>
     </div>
   );
+}
+
+function memesIds(ids: readonly WidgetId[], defaut: readonly { widgetId: string }[]): boolean {
+  return ids.length === defaut.length && ids.every((id, i) => id === defaut[i].widgetId);
 }

@@ -109,11 +109,9 @@ export function CartePhotoLieu({
   }
 
   return (
-    // Le bleu de marque derrière le dessin (2026-11-11) : les planches sont
-    // blanches à liseré bleu, comme l'illustration de la landing. Une photo
-    // couvre toute la carte, il ne se voit pas derrière elle.
-    // Sur téléphone (2026-11-11) : au-dessus de la fiche, en bandeau de
-    // 150 px — le dessin à gauche, le bouton photo à droite.
+    // (2026-11-11) Le bleu de marque derrière le dessin, blanc à liseré bleu
+    // comme l'illustration de la landing (une photo le couvre). Sur
+    // téléphone, la carte passe au-dessus de la fiche en bandeau de 150 px.
     <div className="relative h-[150px] overflow-hidden rounded-[24px] bg-[color:var(--board-sky)] ring-1 ring-[color:rgba(13,18,36,.10)] max-md:order-first md:h-auto md:min-h-[220px]">
       {photo ? (
         // Non optimisée : la photo est servie sous session
