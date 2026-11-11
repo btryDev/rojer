@@ -86,6 +86,14 @@ export default async function DuerpLayout({
     PAGES_DU_FIL.map((page) => [page, etapesDuDuerp(duerp, page)]),
   ) as Record<EtapeId, ReturnType<typeof etapesDuDuerp>>;
 
+  // Le PDF ne se propose qu'un DUERP complété (2026-11-12, décision de la
+  // propriétaire) : les quatre étapes avant la synthèse faites. Télécharger
+  // un document à moitié rempli n'a pas de sens ; l'aperçu reste ouvert à la
+  // synthèse, où le DUERP se valide.
+  const complete = etapesParPage.synthese
+    .filter((e) => e.id !== "synthese")
+    .every((e) => e.faite);
+
   const effectif = duerp.entreprise.effectif;
   const contexte = [
     `NAF ${duerp.etablissement.codeNaf}`,
@@ -144,6 +152,7 @@ export default async function DuerpLayout({
           <BarreDeListe
             contexte={contexte}
             action={
+              complete ? (
               // Une balise <a>, pas un <Link> : Next précharge les <Link>, et le
               // préchargement lancerait le rendu du PDF — il prendrait une des
               // deux places d'export de l'utilisateur avant son clic.
@@ -156,13 +165,14 @@ export default async function DuerpLayout({
               >
                 PDF DUERP ↓
               </a>
+              ) : undefined
             }
           />
         </div>
 
         {/* La saisie fermée (lecture seule, abonnement, site gelé) s'annonce
             dès l'ouverture, comme sur les autres pages du site (ADR-053 § 14). */}
-        <div data-zone-saisie className="mx-auto w-full max-w-5xl px-6 py-12 sm:px-10 sm:py-14">
+        <div data-zone-saisie className="mx-auto w-full max-w-5xl px-6 py-8 sm:px-10 sm:py-10">
           <Suspense fallback={null}>
             <SaisieDuSite etablissementId={etab.id} />
           </Suspense>

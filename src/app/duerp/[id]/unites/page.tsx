@@ -20,7 +20,7 @@ export default async function UnitesPage({
   const unitesOk = unitesVisibles.length > 0;
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
 
       {/* Allégé le 2026-11-11 : la définition d'une unité était dite deux
           fois (infobulle et paragraphe) ; elle est derrière le « ? ». */}
@@ -48,7 +48,7 @@ export default async function UnitesPage({
 
       {/* Les unités en cartes (2026-11-12, demande de la propriétaire), sur
           le canevas ; l'ajout en tête, dans une fenêtre. */}
-      <section aria-label="Unités de travail" className="flex flex-col gap-4">
+      <section aria-label="Unités de travail" className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="board-surtitre m-0">
             {unitesVisibles.length} unité{unitesVisibles.length > 1 ? "s" : ""}
@@ -63,7 +63,7 @@ export default async function UnitesPage({
             Aucune unité de travail. Ajoutez-en au moins une pour continuer.
           </p>
         ) : (
-          <ul className="m-0 grid list-none grid-cols-1 gap-4 p-0 md:grid-cols-2">
+          <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 xl:grid-cols-3">
             {unitesVisibles.map((u) => (
               <UniteRow
                 key={u.id}

@@ -30,8 +30,8 @@ export function UniteRow({ id, nom, description, nombreRisques }: Props) {
     // naîtrait dans une bande de 150 px collée au bord droit.
     // Une carte par unité (2026-11-12) : nom et description en haut, les
     // gestes en pied de carte.
-    <li className="carte-board flex flex-col px-6 py-5 sm:px-7">
-      <div className="flex h-full flex-col justify-between gap-4">
+    <li className="carte-board flex flex-col px-5 py-4 sm:px-6">
+      <div className="flex h-full flex-col justify-between gap-3">
         <div className="min-w-0 flex-1">
           {editing ? (
             <div className="flex flex-wrap items-center gap-2">
@@ -72,11 +72,16 @@ export function UniteRow({ id, nom, description, nombreRisques }: Props) {
             </div>
           ) : (
             <>
-              <p className="m-0 text-[16px] font-semibold leading-[1.3] tracking-[-0.01em] text-[color:var(--board-ink)]">
+              <p className="m-0 text-[15px] font-semibold leading-[1.3] tracking-[-0.01em] text-[color:var(--board-ink)]">
                 {nom}
               </p>
+              {/* Deux lignes au plus : la page doit tenir sur un écran
+                  (2026-11-12). Le texte entier reste dans `title`. */}
               {description && (
-                <p className="m-0 mt-1 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                <p
+                  title={description}
+                  className="m-0 mt-1 line-clamp-2 text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]"
+                >
                   {description}
                 </p>
               )}
