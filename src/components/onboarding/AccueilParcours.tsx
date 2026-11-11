@@ -41,7 +41,7 @@ export function AccueilParcours({ surCommencer }: { surCommencer: () => void }) 
             comme l'illustration de la landing, à droite ; le titre à gauche,
             « votre établissement » d'un seul tenant. Le dessin est l'emblème
             d'un lieu, pas un portrait du vôtre : décoratif. */}
-        <div className="flex h-[180px] items-end gap-4 overflow-hidden bg-[color:var(--board-sky)] px-5 pb-6 md:h-[220px] md:gap-6 md:px-9 md:pb-8">
+        <div className="flex h-[180px] items-center gap-4 overflow-hidden bg-[color:var(--board-sky)] px-5 md:h-[210px] md:gap-7 md:px-9">
           <h1
             id={titreId}
             className="board-titre m-0 flex-none text-[22px] leading-[1.12] md:text-[25px]"
@@ -52,14 +52,16 @@ export function AccueilParcours({ surCommencer }: { surCommencer: () => void }) 
             <span className="whitespace-nowrap">votre établissement</span>
           </h1>
           {/* Le filet sépare le titre du dessin (idée de la propriétaire) ;
-              l'encre bleue de la charte, à demi, sur le bleu de marque. */}
+              à la hauteur du titre, et titre et dessin centrés sur une même
+              ligne : calé en bas, le titre laissait un vide au-dessus et le
+              dessin flottait. */}
           <span
             aria-hidden
-            className="mb-1 h-[96px] w-px flex-none bg-[color:var(--board-blue-ink)] opacity-40 md:h-[132px]"
+            className="h-[50px] w-px flex-none bg-[color:var(--board-blue-ink)] opacity-40 md:h-[56px]"
           />
           {/* Le dessin tient entier dans le bandeau, socle compris : la
               hauteur le borne, quel que soit le format de la planche. */}
-          <div className="flex h-full min-w-0 flex-1 items-end justify-center pt-4">
+          <div className="flex h-full min-w-0 flex-1 items-center justify-center py-4">
             <Image
               src="/illustrations/batiments/restaurant.webp"
               alt=""
