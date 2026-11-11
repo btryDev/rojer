@@ -49,6 +49,9 @@ const PLANCHE_PAR_TYPE_ERP: ReadonlyArray<readonly [string, IllustrationBatiment
   ["N", "restaurant"],
   ["M", "magasin"],
   ["O", "hotel"],
+  // Sans planche propre depuis le 2026-11-11 : le local générique, quel que
+  // soit le code NAF (le type déclaré prime, comme pour les autres).
+  ["X", "local"],
   ["W", "bureaux"],
 ];
 

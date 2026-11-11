@@ -109,12 +109,16 @@ export function CartePhotoLieu({
   }
 
   return (
-    // (2026-11-11) Le bleu de marque derrière le dessin, blanc à liseré bleu
-    // comme l'illustration de la landing (une photo le couvre). Sur
-    // téléphone, la même carte devient la vignette de 64 px de la fiche, à la
-    // place du monogramme (`hero-batiments`) : une seule image, une seule
-    // requête ; la toucher ouvre le choix d'une photo.
-    <div className="relative min-h-[220px] overflow-hidden rounded-[24px] bg-[color:var(--board-sky)] ring-1 ring-[color:rgba(13,18,36,.10)] max-md:absolute max-md:left-6 max-md:top-6 max-md:z-10 max-md:size-16 max-md:min-h-0 max-md:overflow-visible max-md:rounded-[16px] sm:max-md:left-7 sm:max-md:top-7">
+    // (2026-11-11) Le bleu de marque derrière le dessin seulement, blanc à
+    // liseré bleu comme l'illustration de la landing ; une photo qui charge
+    // garde le fond neutre de la carte. Sur téléphone, la même carte devient
+    // la vignette de 64 px de la fiche, à la place du monogramme
+    // (`hero-batiments`) : une seule image, une seule requête.
+    <div
+      className={`relative min-h-[220px] overflow-hidden rounded-[24px] ring-1 ring-[color:rgba(13,18,36,.10)] max-md:absolute max-md:left-6 max-md:top-6 max-md:z-10 max-md:size-16 max-md:min-h-0 max-md:overflow-visible max-md:rounded-[16px] sm:max-md:left-7 sm:max-md:top-7 ${
+        photo ? "bg-[color:var(--board-card)]" : "bg-[color:var(--board-sky)]"
+      }`}
+    >
       {photo ? (
         // Non optimisée : la photo est servie sous session
         // (`/api/etablissements/[id]/photo`), l'optimiseur la demanderait sans.
