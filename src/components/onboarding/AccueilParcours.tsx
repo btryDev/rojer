@@ -38,15 +38,17 @@ export function AccueilParcours({ surCommencer }: { surCommencer: () => void }) 
       <div className="relative max-h-[92dvh] w-full max-w-[600px] overflow-y-auto overscroll-contain rounded-t-[26px] bg-[color:var(--board-card)] shadow-[0_0_0_1px_rgba(13,18,36,.06),0_24px_60px_-24px_rgba(13,18,36,.45)] md:rounded-[26px]">
         {/* Le dessin est l'emblème d'un lieu, pas un portrait du vôtre :
             décoratif, comme les planches du tableau de bord. */}
-        <div className="relative h-[170px] bg-[color:var(--board-blue-pale)] md:h-[210px]">
+        <div className="flex h-[170px] items-center justify-center border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-canvas)] py-4 md:h-[210px]">
           <Image
             src="/illustrations/batiments/restaurant.webp"
             alt=""
             width={1000}
-            height={772}
+            height={901}
             preload
-            sizes="(min-width: 768px) 236px, 190px"
-            className="absolute left-1/2 top-4 h-auto w-[190px] -translate-x-1/2 md:w-[236px]"
+            sizes="(min-width: 768px) 200px, 160px"
+            // La hauteur borne le dessin, quel que soit son format : les planches
+            // n'ont pas toutes le même rapport (le restaurant est plus haut).
+            className="h-full w-auto object-contain"
           />
         </div>
         <div className="flex flex-col gap-6 px-5 pb-[calc(22px+env(safe-area-inset-bottom,0px))] pt-6 md:px-9 md:pb-8 md:pt-7">
