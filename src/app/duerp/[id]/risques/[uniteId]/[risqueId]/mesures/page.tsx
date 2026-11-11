@@ -1,8 +1,8 @@
 import Link from "next/link";
+import { AideEcran } from "@/components/ui-kit/AideEcran";
 import { FilUnite } from "@/components/duerps/FilUnite";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
-import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { AjouterMesureCustomForm } from "@/components/duerps/AjouterMesureCustomForm";
 import { EvaluationProgression } from "@/components/duerps/EvaluationProgression";
 import { MesureReferentielToggle } from "@/components/duerps/MesureReferentielToggle";
@@ -113,74 +113,42 @@ export default async function MesuresPage({
         hrefMesures={hrefMesures}
       />
 
-      <section aria-labelledby="partie-mesures" className="flex flex-col gap-[22px] pt-2">
-        <div className="flex flex-wrap items-baseline gap-3">
-          <span className="text-[18px] font-semibold tabular-nums text-[color:var(--board-blue-ink)]">
-            02
-          </span>
-          <h3
-            id="partie-mesures"
-            className="board-titre m-0 text-[18px]"
-          >
-            Mesures de prévention
-          </h3>
-          <span aria-hidden className="text-[color:var(--board-slate)]">
-            /
-          </span>
-          <span className="board-surtitre inline-flex items-center text-[color:var(--board-slate-soft)]">
-            Types de mesures — existantes et prévues
-            <InfoTooltip variant="legal" align="left" label="Types de mesures — classement de Rojer">
-              <span className="board-surtitre block font-semibold opacity-70">
-                Art. L. 4121-2 · Code du travail
-              </span>
-              <span className="mt-2 block font-medium normal-case tracking-normal">
-                {ORDRE_SELON_L4121_2}{" "}
-                L&apos;ordre des types ci-dessous est un
+      <section aria-labelledby="partie-mesures" className="flex flex-col gap-6">
+        {/* Allégé le 2026-11-12 : le titre « 02 Mesures de prévention » doublait
+            la progression, et la hiérarchie de L. 4121-2 vivait dans une
+            infobulle. Une phrase, et le détail derrière le « ? ». */}
+        <h3 id="partie-mesures" className="sr-only">
+          Mesures de prévention
+        </h3>
+        <div className="flex max-w-[var(--board-mesure)] flex-col gap-1.5">
+          <div className="flex items-center gap-3">
+            <p className="m-0 text-[14.5px] font-medium leading-[1.55] text-[color:var(--board-ink)]">
+              Cochez les mesures déjà en place et celles que vous comptez
+              mettre en œuvre.
+            </p>
+            <AideEcran titre="Types de mesures — classement de Rojer">
+              <p className="m-0 font-semibold">Art. L. 4121-2 · Code du travail</p>
+              <p className="m-0 mt-2">
+                {ORDRE_SELON_L4121_2} L&apos;ordre des types ci-dessous est un
                 classement de Rojer&nbsp;:
-              </span>
-              <span className="mt-1.5 block normal-case tracking-normal">
-                <span className="block">
-                  <span className="tabular-nums opacity-60">1.</span>{" "}
-                  Supprimer le risque
-                </span>
-                <span className="block">
-                  <span className="tabular-nums opacity-60">2.</span>{" "}
-                  Réduire à la source
-                </span>
-                <span className="block">
-                  <span className="tabular-nums opacity-60">3.</span>{" "}
-                  Protection collective
-                </span>
-                <span className="mt-1 block border-t border-white/20 pt-1">
-                  <span className="tabular-nums opacity-60">4.</span>{" "}
-                  EPI (individuelle)
-                </span>
-                <span className="block">
-                  <span className="tabular-nums opacity-60">5.</span>{" "}
-                  Formation / information
-                </span>
-                <span className="block">
-                  <span className="tabular-nums opacity-60">6.</span>{" "}
-                  Mesure organisationnelle
-                </span>
-              </span>
-              <span className="mt-2 block text-[11px] opacity-75">
+              </p>
+              <ol className="m-0 mt-2 pl-5">
+                <li>Supprimer le risque</li>
+                <li>Réduire à la source</li>
+                <li>Protection collective</li>
+                <li>EPI (individuelle)</li>
+                <li>Formation / information</li>
+                <li>Mesure organisationnelle</li>
+              </ol>
+              <p className="m-0 mt-2">
                 EPI et formation viennent en dernier, jamais en substitut des
                 trois premiers niveaux — classement de Rojer, que l&apos;article
                 n&apos;écrit pas.
-              </span>
-            </InfoTooltip>
-          </span>
-        </div>
-
-        <div className="max-w-[var(--board-mesure)] space-y-2.5">
-          <p className="m-0 text-[14.5px] font-medium leading-[1.55] text-[color:var(--board-ink)]">
-            Sélectionnez les mesures déjà en place et celles que vous comptez
-            mettre en œuvre.
-          </p>
+              </p>
+            </AideEcran>
+          </div>
           <p className="m-0 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-            Si votre inventaire diffère de la maîtrise que vous aviez cotée,
-            vous pourrez{" "}
+            Si votre inventaire diffère de la maîtrise cotée, vous pourrez{" "}
             <Link
               href={hrefCotation}
               className="font-medium text-[color:var(--board-blue-ink)] hover:underline"

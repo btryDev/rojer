@@ -80,21 +80,10 @@ export default async function CotationPage({
         hrefMesures={hrefMesures}
       />
 
-      <section aria-labelledby="partie-cotation" className="flex flex-col gap-[22px] pt-2">
-        <div className="flex flex-wrap items-baseline gap-3">
-          <span className="text-[18px] font-semibold tabular-nums text-[color:var(--board-blue-ink)]">
-            01
-          </span>
-          <h3 id="partie-cotation" className="board-titre m-0 text-[18px]">
-            Cotation
-          </h3>
-          <span aria-hidden className="text-[color:var(--board-slate)]">
-            /
-          </span>
-          <p className="board-surtitre m-0 text-[color:var(--board-slate-soft)]">
-            3 questions — criticité calculée
-          </p>
-        </div>
+      <section aria-labelledby="partie-cotation" className="flex flex-col gap-6">
+        <h3 id="partie-cotation" className="sr-only">
+          Cotation
+        </h3>
 
         <CotationForm
           risqueId={risqueId}

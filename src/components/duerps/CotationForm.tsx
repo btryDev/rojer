@@ -101,29 +101,27 @@ export function CotationForm({
   const nombreAxes = questionsCotation.length;
 
   return (
-    <form action={formAction} className="space-y-10">
+    <form action={formAction} className="flex flex-col gap-6">
       {questionsCotation.map((q, i) => {
         const estMaitrise = q.axe === "maitrise";
         return (
-          <fieldset key={q.axe} className="space-y-4">
-            <div className="flex items-baseline gap-3 border-b border-[color:var(--board-slate-line)] pb-3">
-              <span className="board-surtitre tabular-nums text-[color:var(--board-slate-soft)]">
-                {String(i + 1).padStart(2, "0")}
-                <span className="mx-1 text-[color:var(--board-slate)]">/</span>
-                {String(nombreAxes).padStart(2, "0")}
-              </span>
-              <legend className="text-[16px] font-semibold leading-[1.3] tracking-[-0.01em] text-[color:var(--board-ink)]">
-                <span className="board-surtitre block text-[color:var(--board-slate-soft)]">
-                  {titreAxe[q.axe] ?? q.axe}
-                </span>
-                <span className="mt-1 block">{q.intitule}</span>
-              </legend>
+          // Une carte par question (2026-11-12) : la question en tête, les
+          // réponses en tuiles dessous, la réponse retenue en bleu.
+          <fieldset key={q.axe} className="carte-board m-0 flex min-w-0 flex-col gap-4 border-0 px-6 py-6 sm:px-7">
+            <legend className="sr-only">{titreAxe[q.axe] ?? q.axe}</legend>
+            <div className="flex flex-col gap-1">
+              <p className="board-surtitre m-0">
+                {titreAxe[q.axe] ?? q.axe} · question {i + 1} sur {nombreAxes}
+              </p>
+              <p className="m-0 text-[16px] font-semibold leading-[1.35] tracking-[-0.01em] text-[color:var(--board-ink)]">
+                {q.intitule}
+              </p>
             </div>
 
             {estMaitrise && (
               // Note de lecture, pas état : sous-bloc creux, et le bleu du
               // board seulement sur le sur-titre.
-              <aside className="rounded-[22px] bg-[color:var(--board-slate-pale)] px-6 py-4">
+              <aside className="rounded-[16px] border border-[color:var(--board-slate-line)] px-5 py-3.5">
                 <p className="board-surtitre m-0 text-[color:var(--board-blue-ink)]">
                   À lire avant de cocher
                 </p>
@@ -141,7 +139,7 @@ export function CotationForm({
               </aside>
             )}
 
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {q.options.map((opt) => {
                 const id = `${q.axe}-${opt.valeur}`;
                 const checked = valeurActuelle(q.axe) === opt.valeur;
@@ -149,10 +147,10 @@ export function CotationForm({
                   <label
                     key={id}
                     htmlFor={id}
-                    className={`flex cursor-pointer items-start gap-3 rounded-[16px] border p-3.5 transition-colors ${
+                    className={`flex cursor-pointer items-start gap-3 rounded-[16px] border p-3.5 transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-[color:var(--board-blue-strong)] ${
                       checked
-                        ? "border-[color:var(--board-ink)] bg-[color:var(--board-slate-pale)]"
-                        : "border-[color:var(--board-slate-line)] hover:bg-[color:var(--board-slate-pale)]"
+                        ? "border-[color:var(--board-blue-ink)] bg-[color:var(--board-blue-pale)]"
+                        : "border-transparent bg-[color:var(--board-slate-pale)] hover:border-[color:var(--board-slate-line)]"
                     }`}
                   >
                     <input
@@ -162,7 +160,7 @@ export function CotationForm({
                       value={opt.valeur}
                       defaultChecked={checked}
                       onChange={() => setter(q.axe)(opt.valeur)}
-                      className="mt-1 accent-[color:var(--board-ink)]"
+                      className="mt-1 accent-[color:var(--board-blue-ink)]"
                       required
                     />
                     <span className="flex min-w-0 flex-1 items-baseline gap-3">
@@ -228,10 +226,9 @@ export function CotationForm({
         </div>
       </div>
 
-      <fieldset className="space-y-5 rounded-[22px] border border-[color:var(--board-slate-line)] px-6 py-6">
-        <legend className="board-surtitre px-2 text-[color:var(--board-slate-soft)]">
-          Informations complémentaires · facultatives
-        </legend>
+      <fieldset className="carte-board m-0 min-w-0 space-y-5 border-0 px-6 py-6 sm:px-7">
+        <legend className="sr-only">Informations complémentaires</legend>
+        <p className="board-surtitre m-0">Informations complémentaires · facultatives</p>
         <p className="m-0 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           Utiles à la traçabilité de l&apos;évaluation.
         </p>
