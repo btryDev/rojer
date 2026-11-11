@@ -127,6 +127,8 @@ export const SUJET_PAR_OBLIGATION: Readonly<Record<string, SujetIllustration>> =
   // Incendie et secours — prévenir
   "cuisson-erp-consignes-arret-urgence": "arret-urgence",
   "incendie-erp-interdiction-fumer-affichee": "interdiction-fumer",
+  "incendie-erp-5-sommeil-avis-controle-affiche": "avis-controle",
+  "incendie-erp-avis-controle-affiche": "avis-controle",
   // alerter
   "incendie-erp-5-consignes-affichees": "consigne-incendie",
   "incendie-erp-modalites-appel-pompiers-affichees": "appel-pompiers",
@@ -174,8 +176,6 @@ export const SUJET_PAR_OBLIGATION: Readonly<Record<string, SujetIllustration>> =
   "elec-erp-presence-personne-qualifiee": "badge-electrique",
   "elec-erp-presence-personne-qualifiee-scene-n3": "badge-electrique",
   "elec-travail-habilitation-personnel": "badge-electrique",
-  "incendie-erp-5-sommeil-avis-controle-affiche": "avis-controle",
-  "incendie-erp-avis-controle-affiche": "avis-controle",
   "incendie-erp-exploitant-present-public": "exploitant",
   "incendie-erp-personnel-qualifie-detection": "badge-incendie",
   "incendie-erp-schema-organisation-securite": "organigramme",

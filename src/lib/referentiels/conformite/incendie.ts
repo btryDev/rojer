@@ -2639,7 +2639,9 @@ export const obligationsIncendie: Obligation[] = [
     periodicite: "autre",
     nature: "etat_permanent",
     pieceAttendue: "avis relatif au contrôle de la sécurité, affiché",
-    usageEcran: { groupe: "organisation", sous: null },
+    // ~~{ groupe: "organisation", sous: null }~~ [2026-11-11 : un affichage se
+    // range avec les affichages incendie, pas avec « Qui s'occupe de quoi ».]
+    usageEcran: { groupe: "incendie_secours", sous: "prevenir" },
     realisateurs: ["exploitant"],
     criticite: 3,
     transmet: [],
@@ -2682,7 +2684,9 @@ export const obligationsIncendie: Obligation[] = [
     periodicite: "autre",
     nature: "etat_permanent",
     pieceAttendue: "avis relatif au contrôle de la sécurité, affiché",
-    usageEcran: { groupe: "organisation", sous: null },
+    // ~~{ groupe: "organisation", sous: null }~~ [2026-11-11 : un affichage se
+    // range avec les affichages incendie, pas avec « Qui s'occupe de quoi ».]
+    usageEcran: { groupe: "incendie_secours", sous: "prevenir" },
     realisateurs: ["exploitant"],
     criticite: 3,
     transmet: [],
