@@ -49,7 +49,6 @@ const ACTIVITE: Record<IllustrationBatiment, string | null> = {
   magasin: "Commerce",
   bureaux: "Bureaux",
   hotel: "Hôtel",
-  "salle-sport": "Salle de sport",
   local: null,
 };
 

@@ -1,6 +1,6 @@
 # Illustrations de bâtiment
 
-Les six planches du hero du tableau de bord, dans `batiments/`. Le choix se
+Les ~~six~~ cinq planches du hero du tableau de bord, dans `batiments/`. Le choix se
 fait à un seul endroit : `illustrationBatiment`
 (`src/lib/etablissements/illustration.ts`), d'après le type ERP déclaré, puis
 le secteur du code NAF, puis le local générique.
@@ -10,7 +10,6 @@ le secteur du code NAF, puis le local générique.
 | `batiments/restaurant.webp` | ERP de type N, ou NAF du référentiel restauration     |
 | `batiments/magasin.webp`    | ERP de type M, ou NAF du référentiel commerce         |
 | `batiments/hotel.webp`      | ERP de type O                                         |
-| `batiments/salle-sport.webp`| ERP de type X                                         |
 | `batiments/bureaux.webp`    | ERP de type W, ou NAF du référentiel bureau           |
 | `batiments/local.webp`      | tous les autres cas                                   |
 
@@ -48,3 +47,11 @@ terrasse », aux couleurs des sections.]
 Les images de la page publique (photos, illustration « Transparent »,
 pictos des documents) ne sont plus ici : elles sont importées depuis
 `src/assets/landing/`, qui a son propre README.
+
+[2026-11-11 : les cinq planches sont remplacées par une série redessinée
+d'une seule planche (Krea, Nano Banana Pro, 4K) — isométrique, trait fin
+ardoise `#304148`, bleus de la charte (`#d8eef9`, `#b2daf2`, `#a9d3ec`,
+`#7fb0d0`, `#5d93b8`), ombre au sol décalée. Les consignes de couleur
+ci-dessus (pêche, eau, crème) sont caduques pour cette série. La salle de
+sport n'a plus de planche : le type X prend le local générique, seules les
+grandes catégories ont la leur (décision de la propriétaire).]

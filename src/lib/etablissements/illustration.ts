@@ -12,6 +12,11 @@
 // propriétaire), et une devanture unique pour un restaurant et un magasin,
 // un même cube pour un bureau et un hôtel, ne disaient plus le genre de lieu.
 //
+// [2026-11-11] ~~Six~~ Cinq planches, redessinées en une série (bleus de la
+// charte, isométrique) : seules les grandes catégories ont la leur, décision
+// de la propriétaire. La salle de sport (type X) rejoint le local générique —
+// lui garder une planche aurait appelé l'école, la crèche, chaque type.
+//
 // Module **serveur** : la reconnaissance par code NAF lit les référentiels
 // sectoriels, qui n'ont pas à partir dans le bundle du board. Le choix arrive
 // au client tout fait (`DashboardBundle.illustrationHero`).
@@ -26,7 +31,6 @@ export const ILLUSTRATIONS_BATIMENT = [
   "magasin",
   "bureaux",
   "hotel",
-  "salle-sport",
   "local",
 ] as const;
 
@@ -45,7 +49,6 @@ const PLANCHE_PAR_TYPE_ERP: ReadonlyArray<readonly [string, IllustrationBatiment
   ["N", "restaurant"],
   ["M", "magasin"],
   ["O", "hotel"],
-  ["X", "salle-sport"],
   ["W", "bureaux"],
 ];
 
