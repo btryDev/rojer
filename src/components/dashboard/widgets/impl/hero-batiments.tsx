@@ -169,7 +169,7 @@ export function HeroEtablissement({
         <div className="flex min-w-0 flex-wrap items-center gap-3.5">
           {/* Sur téléphone, la place de la vignette (`CartePhotoLieu`, posée
               en absolu par-dessus) remplace le monogramme. */}
-          <span aria-hidden className="size-16 flex-none md:hidden" />
+          <span aria-hidden className="size-16 flex-none self-start md:hidden" />
           <span
             aria-hidden
             className="flex size-12 flex-none max-md:hidden items-center justify-center rounded-[14px] bg-[color:var(--board-ink)] indent-[0.06em] font-mono text-[13px] font-medium tracking-[0.06em] text-white"

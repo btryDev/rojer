@@ -74,6 +74,9 @@ export function CartePhotoLieu({
   // est occupé dès le choix du fichier, pas seulement pendant l'envoi.
   const [preparation, setPreparation] = useState(false);
   const champ = useRef<HTMLInputElement>(null);
+  // Sur téléphone, la vignette ouvre les actions (changer, retirer) quand
+  // une photo est posée ; sans photo, elle ouvre directement le choix.
+  const [actionsOuvertes, setActionsOuvertes] = useState(false);
   const idConseil = useId();
   const occupe = preparation || depotEnCours || retraitEnCours;
 
@@ -130,7 +133,7 @@ export function CartePhotoLieu({
           // Le premier plan du hero : chargée d'emblée, comme l'illustration.
           priority
           sizes="(min-width: 1024px) 380px, 100vw"
-          className="object-cover"
+          className="object-cover max-md:rounded-[16px]"
         />
       ) : (
         // Décoratif : tout ce que le dessin évoque est écrit dans la fiche.
@@ -160,16 +163,25 @@ export function CartePhotoLieu({
         type="button"
         className="absolute inset-0 rounded-[16px] md:hidden"
         disabled={occupe}
-        aria-label={photo ? "Changer la photo" : "Ajouter une photo"}
+        aria-label={photo ? "Photo du lieu : changer ou retirer" : "Ajouter une photo"}
+        aria-describedby={idConseil}
+        aria-expanded={photo ? actionsOuvertes : undefined}
+        aria-busy={occupe}
         data-ecriture
-        onClick={() => champ.current?.click()}
+        onClick={() => (photo ? setActionsOuvertes((o) => !o) : champ.current?.click())}
       >
         <span className="absolute -bottom-1.5 -right-1.5 flex size-6 items-center justify-center rounded-full bg-[color:var(--board-card)] text-[color:var(--board-ink)] shadow-[0_0_0_1px_rgba(13,18,36,.12)]">
           <Camera aria-hidden className="size-3" />
         </span>
       </button>
 
-      <div className="absolute inset-x-3 bottom-3 flex flex-wrap items-center justify-end gap-2 max-md:hidden">
+      {/* Sur téléphone, les mêmes boutons en menu sous la vignette. */}
+      <div
+        className={
+          "absolute inset-x-3 bottom-3 flex flex-wrap items-center justify-end gap-2 max-md:inset-x-auto max-md:bottom-auto max-md:left-0 max-md:top-full max-md:z-20 max-md:mt-2 max-md:w-max max-md:rounded-[16px] max-md:bg-[color:var(--board-card)] max-md:p-2 max-md:shadow-[0_0_0_1px_rgba(13,18,36,.08),0_12px_28px_-12px_rgba(13,18,36,.35)] " +
+          (actionsOuvertes ? "" : "max-md:hidden")
+        }
+      >
         {/* Le conseil RGPD en infobulle, pas sur l'image (demande de la
             propriétaire) : une vue du lieu n'a pas à montrer de personne
             reconnaissable. Doublé d'une description pour le clavier et les

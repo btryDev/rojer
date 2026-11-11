@@ -49,6 +49,7 @@ import {
   type EchelleFrise,
 } from "@/lib/dashboard/frise";
 import { composantesCiviles } from "@/lib/dates";
+import { dateEnJeuEvenement } from "@/lib/calendrier/etats";
 import { MOIS_FR_COURT } from "@/lib/calendrier/labels";
 import { estVerificationEnRetard } from "@/lib/dates/retard";
 import { horsDesComptesDeLExploitant } from "@/lib/calendrier/prudence";
@@ -772,7 +773,9 @@ function compterParMois(bundle: DashboardBundle) {
     return { annee: Math.floor(n / 12), mois: (n % 12) + 1, total: 0, retard: 0 };
   });
   for (const e of bundle.evenementsHorizon) {
-    const c = composantesCiviles(e.date);
+    // La date que la grille et la frise lisent (fin d'opération, retard) :
+    // le téléphone compte les mêmes mois que le calendrier complet.
+    const c = composantesCiviles(dateEnJeuEvenement(e, bundle.aujourdhui));
     const k = (c.annee - c0.annee) * 12 + (c.mois - c0.mois);
     if (k < 0 || k >= MOIS_TELEPHONE) continue;
     mois[k].total += 1;
@@ -784,10 +787,23 @@ function compterParMois(bundle: DashboardBundle) {
 function CalendrierTroisMois({ bundle }: { bundle: DashboardBundle }) {
   const mois = compterParMois(bundle);
   const nbSansDate = bundle.echeances.verifsAPlanifier;
+  // Le même agrégat que l'en-tête du calendrier complet (« N en retard ») :
+  // un retard d'un mois passé n'est dans aucun des trois mois listés.
+  const nbEnRetard = bundle.echeances.retards.total;
   const href = `/etablissements/${bundle.etablissementId}/calendrier`;
   return (
     <CarteBoard className="px-5 pb-2 pt-[22px]">
-      <TitreBloc titre="Les 3 prochains mois" href={href} />
+      <TitreBloc
+        titre="Les 3 prochains mois"
+        sousTitre={
+          nbEnRetard > 0 ? (
+            <span className="font-semibold text-[color:var(--board-signal-ink)]">
+              {nbEnRetard} en retard
+            </span>
+          ) : undefined
+        }
+        href={href}
+      />
       <ul className="m-0 mt-2 list-none p-0">
         {mois.map((m, i) => (
           <li
@@ -1608,11 +1624,18 @@ export function BlocAFaire({ bundle }: { bundle: DashboardBundle }) {
 
       {file.length > A_FAIRE_TELEPHONE ? (
         <Link href={hrefCalendrier} className={`${LIEN_PIED_TELEPHONE} mb-2 md:hidden`}>
-          Tout voir ({file.length})
+          Tout voir
         </Link>
       ) : null}
 
-      <p className="m-0 mt-auto border-t border-[color:rgba(10,10,10,.10)] pt-[14px] text-[13px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+      {/* Sur téléphone, quand des lignes sont cachées, le solde compterait
+          ce qu'on ne voit pas : « Tout voir » le remplace. */}
+      <p
+        className={
+          "m-0 mt-auto border-t border-[color:rgba(10,10,10,.10)] pt-[14px] text-[13px] leading-[1.5] text-[color:var(--board-slate-mid)]" +
+          (file.length > A_FAIRE_TELEPHONE ? " max-md:hidden" : "")
+        }
+      >
         {resteUrgent > 0 ? (
           <Link
             href={hrefCalendrier}
