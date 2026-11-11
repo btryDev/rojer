@@ -1,7 +1,8 @@
 import { AideEcran } from "@/components/ui-kit/AideEcran";
 
 /**
- * La mention « hors référentiel sectoriel », dans ses deux formats.
+ * La mention « hors référentiel sectoriel », sur la page d'une unité.
+ * ~~Format court sur la vue d'ensemble~~ (retiré le 2026-11-12).
  *
  * Pourquoi elle existe : quand une unité n'a pas d'équivalent dans le
  * référentiel sectoriel, la liste des risques proposés est vide. Sans un mot,
@@ -20,15 +21,6 @@ import { AideEcran } from "@/components/ui-kit/AideEcran";
  * n'est ni un retard ni une alerte (charte, interdit 3). La mention porte
  * donc la surface creuse de l'ardoise, comme un sous-bloc.
  */
-
-/** Format court, pour une ligne de liste déjà dense. */
-export function LigneHorsReferentiel() {
-  return (
-    <p className="board-eyebrow m-0 mt-2 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
-      Unité sans modèle · aucun risque proposé d&apos;avance
-    </p>
-  );
-}
 
 /**
  * Format développé, en tête de la fiche d'une unité. Une ligne (2026-11-12) :

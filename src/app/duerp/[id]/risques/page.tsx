@@ -3,11 +3,9 @@ import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { ValiderEtapeBouton } from "@/components/duerps/ValiderEtapeBouton";
 import { WizardSteps } from "@/components/duerps/WizardSteps";
-import { LigneHorsReferentiel } from "@/components/duerps/MentionHorsReferentiel";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { etapesDuDuerp } from "@/lib/duerps/etapes";
 import { getDuerp } from "@/lib/duerps/queries";
-import { estHorsReferentiel, unitesHorsReferentiel } from "@/lib/risques/helpers";
 
 const ETAPES_MARCHE = [
   {
@@ -55,9 +53,9 @@ export default async function RisquesOverviewPage({
   const unitesSansRisqueSansJustif = unitesVisibles.filter(
     (u) => u.risques.length === 0 && !u.aucunRisqueJustif,
   );
-  // Le fait se voit d'abord d'ici : entrer dans chaque unité pour découvrir
-  // que le référentiel ne la couvre pas, c'est l'apprendre trop tard.
-  const horsRef = unitesHorsReferentiel(unitesVisibles);
+  // ~~Le fait se voit d'abord d'ici~~ (2026-11-12, décision de la
+  // propriétaire) : « unité sans modèle » se dit sur la page de l'unité
+  // seulement ; la vue d'ensemble n'en parle plus.
 
   return (
     <div className="flex flex-col gap-[22px]">
@@ -182,7 +180,6 @@ export default async function RisquesOverviewPage({
                         {u.description}
                       </p>
                     )}
-                    {estHorsReferentiel(u) && <LigneHorsReferentiel />}
                     {nbRisques === 0 && declaree && (
                       // Un fait de saisie — la déclaration a été faite et
                       // justifiée. Le vert du board dit « fait », jamais
@@ -222,24 +219,6 @@ export default async function RisquesOverviewPage({
         </ul>
       </section>
 
-      {horsRef.length > 0 && (
-        // Un fait sur le référentiel, pas un état du dossier : sous-bloc
-        // creux, sans champ de couleur.
-        <div className="rounded-[22px] bg-[color:var(--board-slate-pale)] px-7 py-5 sm:px-8">
-          <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-            Unités sans modèle
-          </p>
-          <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
-            {horsRef.length > 1
-              ? `${horsRef.length} unités ne correspondent`
-              : "1 unité ne correspond"}{" "}
-            à aucun modèle de Rojer pour votre secteur —{" "}
-            {horsRef.map((u) => u.nom).join(", ")}. Aucun risque n&apos;y est
-            proposé d&apos;avance : c&apos;est à vous de les lister, de les
-            coter et de choisir les mesures. Le DUERP généré le mentionnera.
-          </p>
-        </div>
-      )}
 
       {unitesSansRisqueSansJustif.length > 0 && (
         // Point à vérifier avant de continuer : l'encre de signal le dit,
