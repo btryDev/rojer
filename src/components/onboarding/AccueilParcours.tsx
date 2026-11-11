@@ -57,7 +57,7 @@ export function AccueilParcours({ surCommencer }: { surCommencer: () => void }) 
               dessin flottait. */}
           <span
             aria-hidden
-            className="h-[50px] w-px flex-none bg-[color:var(--board-blue-ink)] opacity-40 md:h-[56px]"
+            className="h-12 w-px flex-none bg-[color:var(--board-blue-ink)] opacity-40 md:h-14"
           />
           {/* Le dessin tient entier dans le bandeau, socle compris : la
               hauteur le borne, quel que soit le format de la planche. */}
