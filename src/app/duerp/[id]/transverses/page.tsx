@@ -9,8 +9,6 @@ import { CadreACompleter, ListeACompleter } from "@/components/ui-kit/CadreAComp
 import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
 import { faitsManquants } from "@/lib/etablissements/guide-par-module";
 import { ValiderEtapeBouton } from "@/components/duerps/ValiderEtapeBouton";
-import { WizardSteps } from "@/components/duerps/WizardSteps";
-import { etapesDuDuerp } from "@/lib/duerps/etapes";
 import { getDuerp } from "@/lib/duerps/queries";
 import { risquesTransverses } from "@/lib/referentiels";
 import {
@@ -41,7 +39,6 @@ export default async function TransversesPage({
     duerp.etablissement,
   );
 
-  const etapes = etapesDuDuerp(duerp, "transverses");
 
   const risquesParId = new Map(risquesTransverses.map((r) => [r.id, r]));
 
@@ -55,7 +52,6 @@ export default async function TransversesPage({
 
   return (
     <div className="flex flex-col gap-8">
-      <WizardSteps etapes={etapes} />
 
       <header className="max-w-[var(--board-mesure)]">
         <h2 className="board-titre m-0 text-[clamp(23px,2.1vw,30px)]">

@@ -2,9 +2,8 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { QuestionActiviteRow } from "@/components/duerps/QuestionActiviteRow";
 import { ValiderEtapeBouton } from "@/components/duerps/ValiderEtapeBouton";
-import { WizardSteps } from "@/components/duerps/WizardSteps";
 import { questionsActivites } from "@/lib/activites/reponses";
-import { etapesDuDuerp, enteteEtape } from "@/lib/duerps/etapes";
+import { enteteEtape } from "@/lib/duerps/etapes";
 import { AideEcran } from "@/components/ui-kit/AideEcran";
 import { getDuerp } from "@/lib/duerps/queries";
 import { ajoutsParActivite } from "@/lib/activites/ajouts";
@@ -46,7 +45,6 @@ export default async function ActivitesPage({
     redirect(`/duerp/${id}/${duerp.referentielSecteurId ? "unites" : "secteur"}`);
   }
 
-  const etapes = etapesDuDuerp(duerp, "activites");
 
   const referentiel = duerp.referentielSecteurId
     ? trouverReferentielParId(duerp.referentielSecteurId)
@@ -58,7 +56,6 @@ export default async function ActivitesPage({
 
   return (
     <div className="flex flex-col gap-8">
-      <WizardSteps etapes={etapes} />
 
       {/* Allégé le 2026-11-11 : le titre parlait du référentiel, un mot de
           l'outil que le dirigeant ne connaît pas ; il dit maintenant ce qu'on

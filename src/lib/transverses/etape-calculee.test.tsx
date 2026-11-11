@@ -98,8 +98,10 @@ describe("étape « Questions transverses » — calculée, plus stockée (§ 17
 
   it("le signal est RENDU dans le fil d'étapes, en lien", () => {
     const html = renderToStaticMarkup(<WizardSteps etapes={etapes(ANCIEN)} />);
-    expect(html).toContain(
-      '<a class="mt-1.5 inline-block text-[12.5px] leading-[1.4] text-[color:var(--board-blue-ink)] underline-offset-4 hover:underline" href="/duerp/d1/transverses#q-operations-electriques">2 questions sans réponse →</a>',
+    // Le lien, son adresse et son texte — pas ses classes, qui suivent la
+    // forme du fil (au pied de l'en-tête depuis le 2026-11-12).
+    expect(html).toMatch(
+      /<a [^>]*href="\/duerp\/d1\/transverses#q-operations-electriques"[^>]*>2 questions sans réponse →<\/a>/,
     );
   });
 

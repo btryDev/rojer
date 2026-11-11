@@ -3,8 +3,7 @@ import { notFound } from "next/navigation";
 import { SecteurCard } from "@/components/duerps/SecteurCard";
 import { AutresSecteurs } from "@/components/duerps/AutresSecteurs";
 import { ConfirmerSecteurButton } from "@/components/duerps/ConfirmerSecteurButton";
-import { WizardSteps } from "@/components/duerps/WizardSteps";
-import { etapesDuDuerp, enteteEtape } from "@/lib/duerps/etapes";
+import { enteteEtape } from "@/lib/duerps/etapes";
 import { getDuerp } from "@/lib/duerps/queries";
 import {
   referentielsSectoriels,
@@ -23,7 +22,6 @@ export default async function SecteurPage({
   const refRecommande = trouverReferentielParNaf(duerp.etablissement.codeNaf);
   const secteurChoisi = duerp.referentielSecteurId;
 
-  const etapes = etapesDuDuerp(duerp, "secteur");
 
   const autresSecteurs = referentielsSectoriels
     .filter((r) => r.id !== refRecommande?.id)
@@ -38,7 +36,6 @@ export default async function SecteurPage({
 
   return (
     <div className="flex flex-col gap-8">
-      <WizardSteps etapes={etapes} />
 
       {/* Raccourci : importer un DUERP existant plutôt que reconstruire */}
       <aside className="flex flex-wrap items-center justify-between gap-3 rounded-[22px] bg-[color:var(--board-slate-pale)] px-6 py-4">

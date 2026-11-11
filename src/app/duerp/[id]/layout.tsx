@@ -10,6 +10,17 @@ import { BarreDeListe } from "@/components/ui-kit/BarreDeListe";
 import { BarreCompte } from "@/components/layout/BarreCompte";
 import { comptesDeLaSession } from "@/lib/auth/compte";
 import { getDuerp } from "@/lib/duerps/queries";
+import { etapesDuDuerp, type EtapeId } from "@/lib/duerps/etapes";
+import { FilDuDuerp } from "@/components/duerps/FilDuDuerp";
+
+const PAGES_DU_FIL: readonly EtapeId[] = [
+  "secteur",
+  "activites",
+  "unites",
+  "risques",
+  "transverses",
+  "synthese",
+];
 import { getOptionalUser } from "@/lib/auth/require-user";
 import { getEtatModules } from "@/lib/etablissements/modules";
 import { listerEtablissementsDuCompte } from "@/lib/etablissements/queries";
@@ -69,6 +80,12 @@ export default async function DuerpLayout({
   const refParNaf = trouverReferentielParNaf(duerp.etablissement.codeNaf);
   const ref = refChoisi ?? refParNaf;
 
+  // Le fil des étapes, calculé pour chaque page : la mise en page ne sait pas
+  // laquelle est ouverte, `FilDuDuerp` la lit sur l'adresse (2026-11-12).
+  const etapesParPage = Object.fromEntries(
+    PAGES_DU_FIL.map((page) => [page, etapesDuDuerp(duerp, page)]),
+  ) as Record<EtapeId, ReturnType<typeof etapesDuDuerp>>;
+
   const effectif = duerp.entreprise.effectif;
   const contexte = [
     `NAF ${duerp.etablissement.codeNaf}`,
@@ -119,6 +136,7 @@ export default async function DuerpLayout({
         <EnTetePage
           item="duerp"
           description="Votre évaluation des risques, unité de travail par unité. Tout est enregistré au fur et à mesure : vous pouvez vous arrêter et reprendre."
+          pied={<FilDuDuerp etapesParPage={etapesParPage} />}
         />
         {/* Le contexte du document et sa sortie, au-dessus de l'étape : ce
             que l'en-tête portait à droite, il ne le porte plus. */}

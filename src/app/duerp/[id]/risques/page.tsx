@@ -3,11 +3,10 @@ import { LienRetour } from "@/components/duerps/LienRetour";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { ValiderEtapeBouton } from "@/components/duerps/ValiderEtapeBouton";
-import { WizardSteps } from "@/components/duerps/WizardSteps";
 import { AideEcran } from "@/components/ui-kit/AideEcran";
 import { MarcheASuivre } from "@/components/duerps/MarcheASuivre";
 import { etatUnite } from "@/lib/risques/etat-unite";
-import { enteteEtape, etapesDuDuerp } from "@/lib/duerps/etapes";
+import { enteteEtape } from "@/lib/duerps/etapes";
 import { getDuerp } from "@/lib/duerps/queries";
 
 export default async function RisquesOverviewPage({
@@ -20,7 +19,6 @@ export default async function RisquesOverviewPage({
   if (!duerp) notFound();
 
   const unitesVisibles = duerp.unites.filter((u) => !u.estTransverse);
-  const etapes = etapesDuDuerp(duerp, "risques");
 
   const etats = unitesVisibles.map((u) => ({ unite: u, etat: etatUnite(u) }));
   const totalRisques = etats.reduce((acc, e) => acc + e.etat.nbRisques, 0);
@@ -28,7 +26,6 @@ export default async function RisquesOverviewPage({
 
   return (
     <div className="flex flex-col gap-8">
-      <WizardSteps etapes={etapes} />
 
       {/* Allégé le 2026-11-12 : la marche à suivre était une grille de quatre
           cartes d'explication, au même rang que la liste. C'est un rail sur

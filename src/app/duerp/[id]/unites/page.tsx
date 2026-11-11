@@ -3,8 +3,7 @@ import { notFound } from "next/navigation";
 import { AjouterUniteForm } from "@/components/duerps/AjouterUniteForm";
 import { UniteRow } from "@/components/duerps/UniteRow";
 import { ValiderEtapeBouton } from "@/components/duerps/ValiderEtapeBouton";
-import { WizardSteps } from "@/components/duerps/WizardSteps";
-import { etapesDuDuerp, enteteEtape } from "@/lib/duerps/etapes";
+import { enteteEtape } from "@/lib/duerps/etapes";
 import { AideEcran } from "@/components/ui-kit/AideEcran";
 import { getDuerp } from "@/lib/duerps/queries";
 
@@ -19,11 +18,9 @@ export default async function UnitesPage({
 
   const unitesVisibles = duerp.unites.filter((u) => !u.estTransverse);
   const unitesOk = unitesVisibles.length > 0;
-  const etapes = etapesDuDuerp(duerp, "unites");
 
   return (
     <div className="flex flex-col gap-8">
-      <WizardSteps etapes={etapes} />
 
       {/* Allégé le 2026-11-11 : la définition d'une unité était dite deux
           fois (infobulle et paragraphe) ; elle est derrière le « ? ». */}

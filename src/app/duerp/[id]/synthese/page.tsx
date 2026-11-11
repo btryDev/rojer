@@ -6,13 +6,11 @@ import { CarteMiseAJour } from "@/components/duerps/CarteMiseAJour";
 import { mentionAConfirmer } from "@/lib/matching/effectif-entreprise";
 import { CreerVersionForm } from "@/components/duerps/CreerVersionForm";
 import { TransmissionSpstForm } from "@/components/duerps/TransmissionSpstForm";
-import { WizardSteps } from "@/components/duerps/WizardSteps";
 import {
   lireReponsesActivites,
 } from "@/lib/activites/reponses";
 import { CHAMP_ETAT, ENCRE_ETAT } from "@/lib/calendrier/etats";
 import { evaluerCouverture } from "@/lib/duerps/couverture";
-import { etapesDuDuerp } from "@/lib/duerps/etapes";
 import { getDuerp } from "@/lib/duerps/queries";
 import { construireSynthese } from "@/lib/duerps/synthese";
 import { LABEL_TYPE_MESURE } from "@/lib/mesures/labels";
@@ -42,7 +40,6 @@ export default async function SynthesePage({
   const duerp = await getDuerp(id);
   if (!duerp) notFound();
 
-  const etapes = etapesDuDuerp(duerp, "synthese");
 
   const synthese = construireSynthese(duerp.unites);
   const versions = await listerVersions(id);
@@ -119,7 +116,6 @@ export default async function SynthesePage({
 
   return (
     <div className="flex flex-col gap-8">
-      <WizardSteps etapes={etapes} />
 
       {(majEchue || jamaisValide) && (
         <section

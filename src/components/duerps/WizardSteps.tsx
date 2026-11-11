@@ -24,134 +24,63 @@ export type Etape = {
 };
 
 /**
- * Le fil des étapes du DUERP, en charte board.
+ * Le fil des étapes du DUERP, au pied de l'en-tête (2026-11-12, option C
+ * retenue par la propriétaire) : une ligne de cinq segments, chacun nommé,
+ * sous un filet. Il était une carte puis un bloc pleine largeur au-dessus
+ * du contenu ; il fait désormais partie de l'en-tête.
  *
- * Trois mots — et jamais la couleur seule (interdit 10) : « Fait » pour
- * une étape complète (même celle où l'on est), « En cours » pour l'étape
- * courante pas encore faite, « À faire » pour les autres. L'étape courante
- * porte toujours l'encre bleue (2026-10-28 : « Ouvert » disait seulement « accessible », et
- * « À venir » se confondait avec « à faire »). Une étape dont les prérequis
- * manquent reste un bloc non cliquable. `aria-current="step"` double le tout.
- *
- * ~~Posé sur une carte board (charte § checklist 3)~~ [2026-11-12, décision
- * de la propriétaire : pleine largeur sur le canevas, fermé par un filet — la
- * carte en faisait un bloc de plus parmi les cartes de la page.]
+ * Trois états, dits en mots et pas seulement en couleur (interdit 10) :
+ * « ✓ » devant une étape faite, l'étape courante en bleu et en gras,
+ * `aria-current="step"`. Une étape dont les prérequis manquent n'est pas un
+ * lien. Le segment de l'étape courante se remplit de sa part faite.
  */
 export function WizardSteps({ etapes }: { etapes: Etape[] }) {
-  const total = etapes.length;
-  // Le compteur dit ce qui est FAIT, pas où l'on se trouve.
-  const faites = etapes.filter((e) => e.faite).length;
-
   return (
-    <nav
-      aria-label="Sommaire du DUERP"
-      className="not-prose border-b border-[color:var(--board-slate-line)] pb-7"
-    >
-      {/* Compteur haut */}
-      <div className="mb-4 flex items-baseline justify-between">
-        <p className="board-surtitre m-0">Progression</p>
-        <p className="board-surtitre m-0">
-          <span className="text-[13px] tabular-nums text-[color:var(--board-ink)]">
-            {faites}
-          </span>
-          <span className="mx-1 text-[color:var(--board-slate-soft)]">/</span>
-          <span className="tabular-nums">{total}</span>
-          <span className="ml-1.5">{faites > 1 ? "faites" : "faite"}</span>
-        </p>
-      </div>
-
-      {/* Barre segmentée — continue, avec gaps */}
-      <div
-        role="progressbar"
-        aria-label="Étapes faites"
-        aria-valuemin={0}
-        aria-valuemax={total}
-        aria-valuenow={faites}
-        className="flex gap-1.5"
-      >
-        {etapes.map((e) => {
-          const part = e.avancement;
-          // L'œil va à l'étape courante (2026-11-11) : son segment est le
-          // seul en bleu, sur un fond bleu pâle qui le rend visible même vide,
-          // et rempli de sa part faite. Les étapes faites s'effacent en gris
-          // — passées, pas actives : un trait plein et foncé se lisait
-          // « c'est ici » ou « déjà fait par moi ».
-          const fond = e.actuelle
-            ? "bg-[color:var(--board-blue-pale)]"
-            : "bg-[color:var(--board-slate-line)]";
-          const encre = e.actuelle
-            ? "bg-[color:var(--board-blue-ink)]"
-            : "bg-[color:var(--board-slate-soft)]";
-          return (
-            <span
-              key={e.id}
-              aria-hidden
-              className={`h-[5px] flex-1 overflow-hidden rounded-full ${fond}`}
-            >
-              {part > 0 && (
-                <span
-                  className={`block h-full rounded-full ${encre}`}
-                  style={{ width: `${Math.round(part * 100)}%` }}
-                />
-              )}
-            </span>
-          );
-        })}
-      </div>
-
-      {/* Libellés alignés sous chaque segment */}
-      <ol className="mt-4 grid list-none grid-cols-1 gap-y-5 p-0 sm:grid-cols-2 lg:grid-cols-5 lg:gap-x-6 lg:gap-y-0">
+    <nav aria-label="Étapes du DUERP" className="not-prose">
+      <ol className="m-0 grid list-none grid-cols-1 gap-x-2 gap-y-3 p-0 sm:grid-cols-5">
         {etapes.map((e, i) => {
           const numero = String(i + 1).padStart(2, "0");
           const clickable = e.atteinte || e.actuelle;
-
-          // Une étape à venir n'est pas un lien : pas de `href="#"` inerte
-          // (interdits 19 et 20), un simple bloc.
+          const encre = e.actuelle
+            ? "bg-[color:var(--board-blue-ink)]"
+            : "bg-[color:var(--board-slate-soft)]";
           const corps = (
             <>
-              <div className="flex items-baseline gap-2 text-[12px] font-semibold tabular-nums">
-                <span
-                  className={`tabular-nums ${
-                    e.actuelle
-                      ? "font-semibold text-[color:var(--board-blue-ink)]"
-                      : "text-[color:var(--board-slate-soft)]"
-                  }`}
-                >
-                  {numero}
-                </span>
-                <span
-                  className={
-                    e.actuelle
-                      ? "font-semibold text-[color:var(--board-blue-ink)]"
-                      : "text-[color:var(--board-slate-soft)]"
-                  }
-                >
-                  {/* « Fait » prime : le compteur compte l'étape courante quand
-                      elle est faite, le mot doit le dire aussi. L'étape
-                      courante garde son encre bleue et `aria-current`. */}
-                  {e.faite ? "✓ Fait" : e.actuelle ? "En cours" : "À faire"}
-                </span>
-              </div>
-
-              <p
-                className={`m-0 mt-2 text-[14px] leading-[1.3] tracking-[-0.01em] ${
+              <span
+                aria-hidden
+                className={`block h-[5px] overflow-hidden rounded-full ${
                   e.actuelle
-                    ? "font-semibold text-[color:var(--board-ink)]"
-                    : "text-[color:var(--board-slate-mid)]"
-                } ${clickable ? "transition-opacity group-hover:opacity-60" : ""}`}
+                    ? "bg-[color:var(--board-blue-pale)]"
+                    : "bg-[color:var(--board-slate-line)]"
+                }`}
               >
-                {e.libelle}
-              </p>
+                {e.avancement > 0 && (
+                  <span
+                    className={`block h-full rounded-full ${encre}`}
+                    style={{ width: `${Math.round(e.avancement * 100)}%` }}
+                  />
+                )}
+              </span>
+              <span
+                className={`mt-2 block truncate text-[13px] leading-[1.35] ${
+                  e.actuelle
+                    ? "font-semibold text-[color:var(--board-blue-ink)]"
+                    : e.faite
+                      ? "text-[color:var(--board-ink)]"
+                      : "text-[color:var(--board-slate-mid)]"
+                } ${clickable ? "group-hover:underline" : ""}`}
+              >
+                {e.faite ? `✓ ${e.libelle}` : `${numero} · ${e.libelle}`}
+              </span>
             </>
           );
-
           return (
             <li key={e.id} className="min-w-0">
               {clickable ? (
                 <Link
                   href={e.href}
                   aria-current={e.actuelle ? "step" : undefined}
-                  className="group block"
+                  className="group block underline-offset-4"
                 >
                   {corps}
                 </Link>
@@ -162,7 +91,7 @@ export function WizardSteps({ etapes }: { etapes: Etape[] }) {
               {e.signal && (
                 <Link
                   href={e.signal.href}
-                  className="mt-1.5 inline-block text-[12.5px] leading-[1.4] text-[color:var(--board-blue-ink)] underline-offset-4 hover:underline"
+                  className="mt-0.5 inline-block text-[12px] leading-[1.4] text-[color:var(--board-blue-ink)] underline-offset-4 hover:underline"
                 >
                   {e.signal.texte} →
                 </Link>

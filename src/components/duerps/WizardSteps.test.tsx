@@ -3,68 +3,38 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { WizardSteps, type Etape } from "./WizardSteps";
 
 const ETAPES: Etape[] = [
-  { id: "a", libelle: "Secteur", href: "/a", atteinte: true, faite: true, avancement: 1 },
-  { id: "b", libelle: "Unités", href: "/b", atteinte: true, faite: false, actuelle: true, avancement: 0 },
+  { id: "a", libelle: "Votre activité", href: "/a", atteinte: true, faite: true, avancement: 1 },
+  { id: "b", libelle: "Unités", href: "/b", atteinte: true, faite: false, actuelle: true, avancement: 0.5 },
   { id: "t", libelle: "Transverses", href: "/t", atteinte: true, faite: false, avancement: 0 },
   { id: "c", libelle: "Synthèse", href: "/c", atteinte: false, faite: false, avancement: 0 },
 ];
 
-describe("WizardSteps — la frise Progression", () => {
+describe("WizardSteps — le fil au pied de l'en-tête (2026-11-12)", () => {
   const html = renderToStaticMarkup(<WizardSteps etapes={ETAPES} />);
 
-  it("est posée sur le canevas, pleine largeur, sans carte (2026-11-12)", () => {
-    expect(html).toMatch(/<nav[^>]*class="not-prose /);
+  it("n'est pas une carte", () => {
     expect(html).not.toContain("carte-board");
   });
 
   it("une étape aux prérequis manquants n'est pas un lien mort", () => {
     expect(html).not.toContain('href="#"');
-    expect(html).not.toContain("aria-disabled");
     expect(html).toContain('href="/b"');
     expect(html).not.toContain('href="/c"');
   });
 
-  it("l'étape courante déjà faite dit « Fait »", () => {
-    const h = renderToStaticMarkup(
-      <WizardSteps
-        etapes={[{ id: "u", libelle: "Unités", href: "/u", atteinte: true, faite: true, actuelle: true, avancement: 1 }]}
-      />,
-    );
-    expect(h).toContain(">✓ Fait<");
-    expect(h).not.toContain("En cours");
+  it("l'état se dit en mots : ✓ pour une étape faite, le numéro sinon, aria-current pour la courante", () => {
+    expect(html).toContain("✓ Votre activité");
+    expect(html).toContain("02 · Unités");
+    expect(html).toContain('aria-current="step"');
   });
 
-  it("trois mots seulement : En cours, Fait, À faire — plus « Ouvert » ni « À venir »", () => {
-    expect(html).toContain("En cours");
-    expect(html.match(/>✓ Fait</g)).toHaveLength(1);
-    // Accessible mais pas faite, et bloquée : les deux disent « À faire ».
-    expect(html.match(/>À faire</g)).toHaveLength(2);
-    expect(html).not.toContain("Ouvert");
-    expect(html).not.toContain("À venir");
-  });
-
-  it("le compteur compte les étapes faites, pas la position", () => {
-    expect(html).toMatch(/>1<\/span>.*>4<\/span>.*faite</);
-    expect(html).toContain('aria-valuenow="1"');
+  it("le segment courant se remplit de sa part, une étape faite est pleine", () => {
+    expect(html).toContain("width:50%");
+    expect(html).toContain("width:100%");
+    expect(html.match(/width:/g)).toHaveLength(2);
   });
 
   it("aucune encre en `--board-slate` (interdit 5)", () => {
     expect(html).not.toContain("text-[color:var(--board-slate)]");
-  });
-
-  it("un segment se remplit de la part faite de son étape", () => {
-    const h = renderToStaticMarkup(
-      <WizardSteps
-        etapes={[
-          { id: "r", libelle: "Risques", href: "/r", atteinte: true, faite: false, avancement: 0.5 },
-          { id: "s", libelle: "Synthèse", href: "/s", atteinte: true, faite: true, avancement: 1 },
-          { id: "t", libelle: "Transverses", href: "/t", atteinte: true, faite: false, avancement: 0 },
-        ]}
-      />,
-    );
-    expect(h).toContain("width:50%");
-    expect(h).toContain("width:100%");
-    // Rien de fait : aucun remplissage, pas même à 0 %.
-    expect(h.match(/width:/g)).toHaveLength(2);
   });
 });
