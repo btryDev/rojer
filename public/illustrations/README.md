@@ -55,3 +55,4 @@ ardoise `#304148`, bleus de la charte (`#d8eef9`, `#b2daf2`, `#a9d3ec`,
 ci-dessus (pêche, eau, crème) sont caduques pour cette série. La salle de
 sport n'a plus de planche : le type X prend le local générique, seules les
 grandes catégories ont la leur (décision de la propriétaire).]
+\n\n[2026-11-11, plus tard : aplats pâles blanchis en code, comme l'illustration\nde la landing — bâtiment blanc à liseré bleu, posé sur `--board-sky` dans\nla carte du tableau de bord et dans la fenêtre d'accueil de l'onboarding.\nLe bleu sur bleu ne se lisait pas.]\n
