@@ -275,31 +275,28 @@ beforeEach(() => {
 });
 
 describe("modifierEtablissement — ERP + IGH (ADR-031, 2026-11-12)", () => {
+  // L'ERP de 5ᵉ catégorie, côté formulaire et côté dossier en base.
   const ERP = { estERP: "on", typeErp: "N", categorieErp: "N5" };
+  const dossierErp = (): void => {
+    Object.assign(h.db.etablissement, { estERP: true, typeErp: "N", categorieErp: "N5" });
+  };
 
-  it("refuse de cocher IGH sur un ERP : rien n'est écrit, l'erreur est sur la case IGH", async () => {
-    h.db.etablissement.estERP = true;
-    h.db.etablissement.typeErp = "N";
-    h.db.etablissement.categorieErp = "N5";
+  it.each([
+    { cas: "IGH coché sur un ERP", avant: dossierErp, champ: "estIGH" as const },
+    { cas: "ERP coché sur un IGH", avant: (): void => {
+      h.db.etablissement.estIGH = true;
+    }, champ: "estERP" as const },
+  ])("refuse $cas : rien n'est écrit, l'erreur est sur la case cochée", async ({ avant, champ }) => {
+    avant();
     const res = await modifierEtablissement("etab-1", { status: "idle" }, formulaire({ ...ERP, estIGH: "on" }));
-    expect(res).toEqual({ status: "error", message: "Formulaire invalide", fieldErrors: { estIGH: [MESSAGE_ERP_EN_IGH] } });
-    expect(h.db.etablissement.estIGH).toBe(false);
-    expect(h.genererCalendrier).not.toHaveBeenCalled();
-  });
-
-  it("refuse de cocher ERP sur un IGH : l'erreur est sur la case ERP", async () => {
-    h.db.etablissement.estIGH = true;
-    const res = await modifierEtablissement("etab-1", { status: "idle" }, formulaire({ ...ERP, estIGH: "on" }));
-    expect(res.status === "error" && res.fieldErrors).toEqual({ estERP: [MESSAGE_ERP_EN_IGH] });
-    expect(h.db.etablissement.estERP).toBe(false);
+    expect(res).toEqual({ status: "error", message: "Formulaire invalide", fieldErrors: { [champ]: [MESSAGE_ERP_EN_IGH] } });
+    expect(h.db.etablissement.estERP && h.db.etablissement.estIGH).toBe(false);
     expect(h.genererCalendrier).not.toHaveBeenCalled();
   });
 
   it("laisse enregistrer un dossier déjà ERP + IGH (il n'est pas fermé)", async () => {
-    h.db.etablissement.estERP = true;
+    dossierErp();
     h.db.etablissement.estIGH = true;
-    h.db.etablissement.typeErp = "N";
-    h.db.etablissement.categorieErp = "N5";
     const res = await modifierEtablissement(
       "etab-1",
       { status: "idle" },

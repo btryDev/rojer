@@ -269,6 +269,10 @@ const dateCivileOptionnelle = z
   ])
   .optional();
 
+/** Le cumul que l'ADR-031 refuse : un ERP situé dans un IGH. Une seule écriture de la règle. */
+export const estErpEnIgh = (r: { estERP?: boolean | null; estIGH?: boolean | null }): boolean =>
+  r.estERP === true && r.estIGH === true;
+
 /**
  * Le refus d'un ERP situé dans un IGH (ADR-031) : le règlement de sécurité
  * des IGH n'est pas traité. Un seul texte pour les trois lieux qui le disent :
@@ -276,10 +280,6 @@ const dateCivileOptionnelle = z
  * (`modifierEtablissement`, qui refuse le PASSAGE à ERP + IGH — décision de la
  * propriétaire du 2026-11-12).
  */
-/** Le cumul que l'ADR-031 refuse : un ERP situé dans un IGH. Une seule écriture de la règle. */
-export const estErpEnIgh = (r: { estERP?: boolean | null; estIGH?: boolean | null }): boolean =>
-  r.estERP === true && r.estIGH === true;
-
 export const MESSAGE_ERP_EN_IGH =
   "Un établissement recevant du public situé dans un immeuble de grande hauteur relève du règlement de sécurité des IGH, que Rojer ne couvre pas.";
 

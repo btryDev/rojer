@@ -147,6 +147,9 @@ export function EtablissementForm({
   );
   const err = (champ: string) =>
     state.status === "error" ? state.fieldErrors?.[champ]?.[0] : undefined;
+  // Le refus ERP + IGH (2026-11-12), lu une fois par case.
+  const erreurErp = err("estERP");
+  const erreurIgh = err("estIGH");
 
   return (
     <form
@@ -386,8 +389,8 @@ export function EtablissementForm({
                   type="checkbox"
                   name="estERP"
                   checked={estERP === true}
-                  aria-invalid={Boolean(err("estERP"))}
-                  aria-describedby={err("estERP") ? "estERP-erreur" : undefined}
+                  aria-invalid={Boolean(erreurErp)}
+                  aria-describedby={erreurErp ? "estERP-erreur" : undefined}
                   onChange={(e) => setEstERP(e.currentTarget.checked)}
                   className={CASE_A_COCHER}
                 />
@@ -403,7 +406,7 @@ export function EtablissementForm({
                 </div>
               </label>
               {/* ERP coché sur un IGH : refusé (2026-11-12). */}
-              <Erreur id="estERP-erreur" message={err("estERP")} />
+              <Erreur id="estERP-erreur" message={erreurErp} />
 
               {estERP && (
                 /* TYPE ET CATÉGORIE PRENNENT LA LIGNE ENTIÈRE, ET C'EST UNE
@@ -662,8 +665,8 @@ export function EtablissementForm({
                   type="checkbox"
                   name="estIGH"
                   checked={estIGH === true}
-                  aria-invalid={Boolean(err("estIGH"))}
-                  aria-describedby={err("estIGH") ? "estIGH-erreur" : undefined}
+                  aria-invalid={Boolean(erreurIgh)}
+                  aria-describedby={erreurIgh ? "estIGH-erreur" : undefined}
                   onChange={(e) => setEstIGH(e.currentTarget.checked)}
                   className={CASE_A_COCHER}
                 />
@@ -682,7 +685,7 @@ export function EtablissementForm({
               </label>
               {/* ERP + IGH refusé quand on y passe (2026-11-12) ; l'erreur
                   va sur la case qu'on vient de cocher. */}
-              <Erreur id="estIGH-erreur" message={err("estIGH")} />
+              <Erreur id="estIGH-erreur" message={erreurIgh} />
 
               {/* LA QUESTION « CLASSE IGH » A ÉTÉ RETIRÉE LE 2026-09-03.
                   Elle était obligatoire, offrait les dix classes de R. 146-4,
