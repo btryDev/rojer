@@ -58,7 +58,7 @@ export default async function SecteurPage({
                 {duerp.etablissement.codeNaf}
               </span>
               , le secteur ci-dessous a été détecté. Choisissez-le pour charger
-              les unités et risques types, ou voyez les autres secteurs.
+              les unités et risques types, ou choisissez-en un autre plus bas.
           </EnTeteEtape>
 
           <section className="carte-board px-7 py-6 sm:px-8">
@@ -85,9 +85,7 @@ export default async function SecteurPage({
             </div>
           </section>
 
-          {/* Les autres secteurs, par un vrai bouton hors de la carte
-              (2026-11-12) : le lien « Changer de secteur » se perdait sous
-              le bouton de choix. */}
+          {/* Les autres secteurs, montrés d'emblée sous la carte (2026-11-12). */}
           <AutresSecteurs
             duerpId={id}
             secteurs={autresSecteurs}
