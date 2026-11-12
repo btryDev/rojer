@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { cleJourCivil } from "@/lib/dates";
 import { TYPES_ERP } from "@/lib/referentiels/types-communs";
 import { onboardingSchema } from "@/lib/onboarding/schema";
-import { MESSAGE_ERP_EN_IGH, TYPE_ERP, etablissementSchema } from "./schema";
+import { TYPE_ERP, etablissementSchema } from "./schema";
 
 const base = {
   raisonDisplay: "Restaurant du Marché",
@@ -65,9 +65,10 @@ describe("etablissementSchema — typologie (ADR-004)", () => {
     expect(res.success).toBe(true);
   });
 
-  // ~~« accepte ERP + IGH cumulés (régimes non exclusifs) »~~ — retourné le
-  // 2026-11-12 : la fiche refuse ce que l'onboarding refuse (ADR-031).
-  it("refuse ERP + IGH, avec le message de l'onboarding, sur la case IGH", () => {
+  // Le schéma accepte le cumul : c'est `modifierEtablissement` qui refuse le
+  // PASSAGE à ERP + IGH (2026-11-12), pour qu'un dossier déjà dans ce cas
+  // garde sa fiche (`actions.test.ts`).
+  it("accepte ERP + IGH au schéma (le refus est dans l'action)", () => {
     const res = etablissementSchema.safeParse({
       ...base,
       estERP: true,
@@ -75,8 +76,7 @@ describe("etablissementSchema — typologie (ADR-004)", () => {
       categorieErp: "N2",
       estIGH: true,
     });
-    expect(res.success).toBe(false);
-    expect(res.error?.flatten().fieldErrors.estIGH).toEqual([MESSAGE_ERP_EN_IGH]);
+    expect(res.success).toBe(true);
   });
 
   it("refuse un établissement sans aucun régime coché", () => {

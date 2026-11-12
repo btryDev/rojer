@@ -400,6 +400,8 @@ export function EtablissementForm({
                   </p>
                 </div>
               </label>
+              {/* ERP coché sur un IGH : refusé (2026-11-12). */}
+              <Erreur message={err("estERP")} />
 
               {estERP && (
                 /* TYPE ET CATÉGORIE PRENNENT LA LIGNE ENTIÈRE, ET C'EST UNE
@@ -674,7 +676,8 @@ export function EtablissementForm({
                   </p>
                 </div>
               </label>
-              {/* ERP + IGH refusé, comme à l'onboarding (2026-11-12). */}
+              {/* ERP + IGH refusé quand on y passe (2026-11-12) ; l'erreur
+                  va sur la case qu'on vient de cocher. */}
               <Erreur message={err("estIGH")} />
 
               {/* LA QUESTION « CLASSE IGH » A ÉTÉ RETIRÉE LE 2026-09-03.

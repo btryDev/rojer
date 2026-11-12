@@ -15,7 +15,7 @@
 
 import { normaliserSiret, refusSiret } from "@/lib/etablissements/siret";
 import { evaluerScopeSecteur } from "@/lib/onboarding/scope";
-import { questionSommeilPosee } from "@/lib/etablissements/schema";
+import { MESSAGE_ERP_EN_IGH, questionSommeilPosee } from "@/lib/etablissements/schema";
 import {
   MESSAGE_NOMBRE_DE_PERSONNES,
   nombreDePersonnesADemander,
@@ -232,8 +232,7 @@ export function validerTypologie(s: OnboardingState): Blocage | null {
   if (s.estERP && s.estIGH)
     return {
       perimetre: true,
-      message:
-        "Un établissement recevant du public situé dans un immeuble de grande hauteur relève du règlement de sécurité des IGH, que Rojer ne couvre pas.",
+      message: MESSAGE_ERP_EN_IGH,
     };
   // « Précisez votre activité ERP » nommait un champ qui n'existe plus : le
   // parcours proposait des cartes d'« activité », le recadrage du

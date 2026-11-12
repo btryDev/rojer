@@ -316,8 +316,11 @@ export const onboardingSchema = z
     // Le seul cumul refusé (ADR-025 § 1) : un ERP en IGH relève du règlement
     // de sécurité des IGH, jamais dépouillé. L'IGH seul reste servi — un
     // employeur locataire d'une tour de bureaux relève du Code du travail, que
-    // le produit sert entièrement, et les obligations du règlement IGH pèsent
-    // sur l'exploitant de l'immeuble, pas sur lui.
+    // le produit sert entièrement. ~~Les obligations du règlement IGH pèsent
+    // sur l'exploitant de l'immeuble, pas sur lui.~~ [2026-11-12, rayé comme
+    // dans `components/onboarding/validation.ts` le 2026-10-12 : GH 61 § 5 et
+    // GH W 5 § 2 visent les occupants ; le produit ne les porte pas et le dit.]
+    // La fiche refuse le PASSAGE à ce cumul (`modifierEtablissement`).
     if (val.estERP && val.estIGH) {
       ctx.addIssue({
         code: "custom",
