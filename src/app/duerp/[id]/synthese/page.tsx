@@ -703,7 +703,7 @@ function AlerteItem({
       : "text-[color:var(--board-slate-soft)]";
   return (
     <li className="flex items-start gap-3.5 border-t border-[color:var(--board-slate-line)] py-3">
-      <span aria-hidden className={`mt-0.5 text-[12.5px]${encre}`}>
+      <span aria-hidden className={`mt-0.5 text-[12.5px] ${encre}`}>
         {ton === "alerte" ? "⚑" : "·"}
       </span>
       <div className="min-w-0 flex-1">

@@ -309,7 +309,7 @@ function Stat({
         {label}
       </p>
       <p
-        className={`m-0 mt-1.5 text-[24px] font-semibold tabular-nums leading-none${
+        className={`m-0 mt-1.5 text-[24px] font-semibold tabular-nums leading-none ${
           attention
             ? "text-[color:var(--board-amber-ink)]"
             : "text-[color:var(--board-ink)]"

@@ -47,7 +47,6 @@ export default async function RisquesUnitePage({
   const e = etatUnite(unite);
   const lienRisque = (risqueId: string) => `/duerp/${id}/risques/${uniteId}/${risqueId}`;
 
-
   const pas: PasMarche[] = e.declareeSansRisque
     ? [
         { titre: "Inventorier", detail: "Aucun risque significatif, justifié", etat: "fait" },
@@ -99,11 +98,10 @@ export default async function RisquesUnitePage({
 
       {horsReferentiel && <MentionHorsReferentiel />}
 
-      {/* La marche à suivre, en rail sur le canevas (2026-11-12) : elle
+      {/* La marche à suivre, sur fond creux (2026-11-12) : elle
           était une grande carte, barre, pastilles et paragraphes compris,
           au même rang que les listes. */}
       <MarcheASuivre libelle="Les étapes, pour cette unité" pas={pas} />
-
 
       <section className="carte-board overflow-clip">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[color:var(--board-slate-line)] px-7 py-4 sm:px-8">
@@ -232,7 +230,6 @@ export default async function RisquesUnitePage({
           </ul>
         )}
       </section>
-
 
       {risquesRetenus.length === 0 && (
         <section>

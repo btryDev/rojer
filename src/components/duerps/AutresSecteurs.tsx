@@ -32,7 +32,7 @@ export function AutresSecteurs({
         type="button"
         onClick={() => setOuvert((o) => !o)}
         aria-expanded={ouvert}
-        className={`board-surtitre group inline-flex items-center gap-2 text-[color:var(--board-slate-soft)] transition-colors hover:text-[color:var(--board-ink)]${
+        className={`board-surtitre group inline-flex items-center gap-2 text-[color:var(--board-slate-soft)] transition-colors hover:text-[color:var(--board-ink)] ${
           alignDroite ? "self-end" : ""
         }`}
       >

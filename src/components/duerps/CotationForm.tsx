@@ -108,7 +108,7 @@ export function CotationForm({
           // Une carte par question (2026-11-12) : la question en tête, les
           // réponses en tuiles dessous, la réponse retenue en bleu.
           <fieldset key={q.axe} className="carte-board m-0 flex min-w-0 flex-col gap-4 border-0 px-6 py-6 sm:px-7">
-            <legend className="sr-only">{titreAxe[q.axe] ?? q.axe}</legend>
+            <legend className="sr-only">{`${titreAxe[q.axe] ?? q.axe} : ${q.intitule}`}</legend>
             <div className="flex flex-col gap-1">
               <p className="board-surtitre m-0">
                 {titreAxe[q.axe] ?? q.axe} · question {i + 1} sur {nombreAxes}
@@ -187,7 +187,7 @@ export function CotationForm({
       <div className="grid gap-4 rounded-[22px] bg-[color:var(--board-slate-pale)] px-6 py-6 sm:grid-cols-[auto_1fr] sm:items-center sm:gap-8">
         <div className="flex items-baseline gap-3">
           <span
-            className={`text-[64px] font-semibold leading-none tabular-nums${
+            className={`text-[64px] font-semibold leading-none tabular-nums ${
               criticiteLive !== null
                 ? "text-[color:var(--board-ink)]"
                 : "text-[color:var(--board-slate)]"

@@ -1,3 +1,5 @@
+import { useId } from "react";
+
 /**
  * La marche à suivre d'une étape du DUERP, en rail (2026-11-12).
  *
@@ -29,12 +31,15 @@ export function MarcheASuivre({
   // Sur un fond creux (2026-11-12) : la surface `--board-slate-pale` des
   // sous-blocs, sans ombre ni rayon de carte — la consigne se détache des
   // cartes de contenu sans en devenir une.
+  const idTitre = useId();
   return (
     <section
-      aria-label={libelle}
+      aria-labelledby={idTitre}
       className="flex flex-col gap-4 rounded-[22px] bg-[color:var(--board-slate-pale)] px-6 py-5 sm:px-7"
     >
-      <p className="board-surtitre m-0">{libelle}</p>
+      <p id={idTitre} className="board-surtitre m-0">
+        {libelle}
+      </p>
     <ol
       className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-3 sm:gap-0"
     >
