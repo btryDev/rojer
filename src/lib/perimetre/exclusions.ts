@@ -209,7 +209,7 @@ export function refusAlEntree(): RefusAlEntree[] {
       // (GH 4, GH 5, GH 61, GH 66, GH U 16, GH W 5), et GH 61 § 5 comme
       // GH W 5 § 2 visent les OCCUPANTS. La même page le disait plus bas, à
       // l'établissement servi dans une tour. La phrase est désormais la sienne.
-      indication: `${REGLEMENT_IGH_NON_TRAITE} L'IGH seul, lui, n'est pas refusé : un employeur installé dans une tour relève du Code du travail, que le produit sert, hormis ce qui précède. C'est le cumul avec l'accueil du public qui ferme la porte.`,
+      indication: `${REGLEMENT_IGH_NON_TRAITE} L'IGH seul, lui, n'est pas refusé : un employeur installé dans une tour relève du Code du travail, que le produit sert, hormis ce qui précède. C'est le cumul avec l'accueil du public qui ferme la porte : à la création, et sur la fiche quand on coche l'un des deux sur un dossier qui a déjà l'autre. Un dossier déjà ERP et IGH reste ouvert.`,
     });
   }
 

@@ -37,7 +37,9 @@ function refusSiretAutreEntreprise(): EtablissementActionState {
 }
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import {
+  estErpEnIgh,
   etablissementSchema,
+  MESSAGE_ERP_EN_IGH,
   reponseSommeilSuivantLeType,
   typesErpAutresCoherents,
 } from "./schema";
@@ -254,6 +256,20 @@ export async function modifierEtablissement(
   });
   if (!avant) {
     return { status: "error", message: "Établissement introuvable" };
+  }
+
+  // ERP + IGH : refusé à l'onboarding (ADR-031), et désormais quand la fiche
+  // y FAIT PASSER un dossier — cocher IGH sur un ERP, ou ERP sur un IGH
+  // (décision de la propriétaire du 2026-11-12). Un dossier déjà dans ce cas
+  // n'est pas fermé : il garde sa fiche et son manque de couverture (axe
+  // `igh`), comme les autres refus de l'ADR-031. L'erreur va sur la case que
+  // la personne vient de cocher.
+  if (estErpEnIgh(parsed.data) && !estErpEnIgh(avant)) {
+    return {
+      status: "error",
+      message: "Formulaire invalide",
+      fieldErrors: { [avant.estIGH ? "estERP" : "estIGH"]: [MESSAGE_ERP_EN_IGH] },
+    };
   }
 
   // UN SITE APPARTIENT À L'ENTREPRISE DE SON SIREN (2026-10-26), dans le

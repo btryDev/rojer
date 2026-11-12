@@ -65,7 +65,10 @@ describe("etablissementSchema — typologie (ADR-004)", () => {
     expect(res.success).toBe(true);
   });
 
-  it("accepte ERP + IGH cumulés (régimes non exclusifs)", () => {
+  // Le schéma accepte le cumul : c'est `modifierEtablissement` qui refuse le
+  // PASSAGE à ERP + IGH (2026-11-12), pour qu'un dossier déjà dans ce cas
+  // garde sa fiche (`actions.test.ts`).
+  it("accepte ERP + IGH au schéma (le refus est dans l'action)", () => {
     const res = etablissementSchema.safeParse({
       ...base,
       estERP: true,

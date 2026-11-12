@@ -165,7 +165,9 @@ salariés au plus peut-elle être concernée ? » se tranche article par article
    (`entreprises/effectif.ts`) ; il se saisit dans Équipe. La borne refuse
    aussi ce qui fait croître dans Équipe — effectif, fiche ajoutée ou
    réintégrée ; baisser n'est jamais refusé.]
-2. **Un ERP situé dans un immeuble de grande hauteur.** L'IGH SEUL n'est pas
+2. **Un ERP situé dans un immeuble de grande hauteur.** [2026-11-12, ADR-031
+   amendée : refusé aussi quand la fiche y fait passer un dossier — cocher IGH
+   sur un ERP ou ERP sur un IGH ; un dossier déjà dans ce cas reste ouvert.] L'IGH SEUL n'est pas
    refusé — un employeur locataire d'une tour relève du Code du travail, que le
    produit sert entièrement.
 
@@ -548,7 +550,7 @@ nature réglementaire et de surface de risque ; la valeur ajoutée d'en garder l
 est nulle, la conservation reste à la charge de l'employeur hors de l'outil.
 
 ### Hors périmètre (à ce jour)
-- **ERP situé en IGH** (refusé à la création, ADR-031) ; sites industriels ;
+- **ERP situé en IGH** (refusé à la création, ADR-031 ; [2026-11-12] et sur la fiche quand un dossier y passe — un dossier déjà ERP + IGH reste ouvert, `modifierEtablissement`) ; sites industriels ;
   ~~équipements sportifs,~~ [2026-10-18 : les salles de sport (type X) sont dans la cible depuis le 2026-10-17, PR #66 ; les piscines restent dehors] piscines. La CLASSE d'IGH n'est plus demandée depuis le
   2026-09-03 (`GH 5` s'adresse aux « propriétaires » sans varier par classe,
   `GH 66` fait du classement l'affaire de l'usage principal de l'immeuble).
@@ -674,7 +676,9 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     bis : la borne se lit sur la somme des sites, et vaut dans Équipe ; ter :
     le filtre à l'accueil du 2026-10-18 est levé, tous les types d'ERP sont
     admis ; quater : le référentiel établi, validé par le préventeur, n'est
-    pas élargi — ce qui n'est pas suivi pour un type se déclare, axe `type_erp`)
+    pas élargi — ce qui n'est pas suivi pour un type se déclare, axe `type_erp`) ;
+    2026-11-12 : ERP + IGH refusé aussi au passage par la fiche, dossier déjà
+    dans ce cas laissé ouvert
 32. **032** — Une demande d'assureur entre par les prescriptions, et ne devient
     jamais du droit : marquage obligatoire sur les neuf surfaces qui l'affichent
 33. **033** — ~~Le DUERP est borné à cinq unités de travail, hors « Risques

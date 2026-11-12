@@ -12,6 +12,16 @@
   `src/lib/perimetre/couverture.ts`, `src/lib/referentiels/corpus/perimetre.ts`
 - **Amende** l'ADR-020, qu'elle ne renverse pas · **Découle de** l'ADR-025
 
+> **Amendée le 2026-11-12 — ERP + IGH refusé aussi quand la fiche y fait
+> passer un dossier** (décision de la propriétaire, relevée sur la préprod : la
+> fiche établissement laissait cocher IGH sur un ERP, ce que l'onboarding
+> refuse). `modifierEtablissement` refuse le PASSAGE au cumul — cocher IGH sur
+> un ERP ou ERP sur un IGH —, avec le message du parcours
+> (`MESSAGE_ERP_EN_IGH`), et n'enregistre rien. Un dossier déjà ERP + IGH n'est
+> pas fermé : il garde sa fiche et son manque de couverture (axe `igh`), comme
+> le dossier qui franchit la borne d'effectif. Le refus est dans l'action, pas
+> dans le schéma, parce qu'il dépend de l'état d'avant.
+
 > ~~**Amendée le 2026-10-18.** Le filtre à l'accueil (#68, décisions de la
 > propriétaire du 2026-10-17) refuse aussi des types d'ERP : J, U, les
 > établissements spéciaux PA, CTS, SG, OA, REF, GA, EF, et R quand il accueille
@@ -76,8 +86,10 @@ pour ce cas.
 **Le cumul ERP + IGH, et lui seul.** Un ERP dans un immeuble de grande hauteur
 relève du règlement de sécurité des IGH, jamais dépouillé. **L'IGH seul n'est pas
 refusé** : un employeur locataire de bureaux dans une tour relève du Code du
-travail, que le produit sert entièrement, et les obligations du règlement IGH
-pèsent sur l'exploitant de l'immeuble, pas sur lui. Conséquence utile : les neuf
+travail, que le produit sert entièrement~~, et les obligations du règlement IGH
+pèsent sur l'exploitant de l'immeuble, pas sur lui~~ [2026-11-12 : pas toutes —
+GH 61 § 5 et GH W 5 § 2 visent les occupants ; rayé comme dans le code le
+2026-10-12]. Conséquence utile : les neuf
 obligations `igh` du référentiel cessent d'être des lignes mortes.
 
 **L'ADR-020 n'est pas renversée.** Son mécanisme — ce qu'un DUERP ne couvre pas

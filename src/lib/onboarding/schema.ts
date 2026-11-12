@@ -6,6 +6,8 @@ import {
   TYPE_ERP,
   typesErpAutresSchema,
   questionSommeilPosee,
+  MESSAGE_ERP_EN_IGH,
+  estErpEnIgh,
 } from "@/lib/etablissements/schema";
 
 // Réexportée : la validation client du wizard la lit ici, au plus près du
@@ -315,14 +317,16 @@ export const onboardingSchema = z
     // Le seul cumul refusé (ADR-025 § 1) : un ERP en IGH relève du règlement
     // de sécurité des IGH, jamais dépouillé. L'IGH seul reste servi — un
     // employeur locataire d'une tour de bureaux relève du Code du travail, que
-    // le produit sert entièrement, et les obligations du règlement IGH pèsent
-    // sur l'exploitant de l'immeuble, pas sur lui.
-    if (val.estERP && val.estIGH) {
+    // le produit sert entièrement. ~~Les obligations du règlement IGH pèsent
+    // sur l'exploitant de l'immeuble, pas sur lui.~~ [2026-11-12, rayé comme
+    // dans `components/onboarding/validation.ts` le 2026-10-12 : GH 61 § 5 et
+    // GH W 5 § 2 visent les occupants ; le produit ne les porte pas et le dit.]
+    // La fiche refuse le PASSAGE à ce cumul (`modifierEtablissement`).
+    if (estErpEnIgh(val)) {
       ctx.addIssue({
         code: "custom",
         path: ["estIGH"],
-        message:
-          "Un établissement recevant du public situé dans un immeuble de grande hauteur relève du règlement de sécurité des IGH, que Rojer ne couvre pas.",
+        message: MESSAGE_ERP_EN_IGH,
       });
     }
 

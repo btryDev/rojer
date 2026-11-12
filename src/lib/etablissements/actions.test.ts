@@ -225,6 +225,7 @@ vi.mock("@/lib/calendrier/reconciliation", () => ({
 }));
 
 const { modifierEtablissement, supprimerEtablissement } = await import("./actions");
+const { MESSAGE_ERP_EN_IGH } = await import("./schema");
 
 /** Le formulaire poste toutes ses cases : les non cochées sont absentes. */
 
@@ -246,6 +247,8 @@ function formulaire(over: Record<string, string> = {}): FormData {
 beforeEach(() => {
   essai.noter.mockClear();
   h.db.etablissement.estERP = false;
+  h.db.etablissement.estIGH = false;
+  h.db.etablissement.adresse = "1 rue des Lilas";
   h.db.etablissement.typeErp = null;
   h.db.etablissement.typesErpAutres = [];
   h.db.etablissement.comporteLocauxSommeilPublic = null;
@@ -269,6 +272,44 @@ beforeEach(() => {
   h.db.crees = [];
   h.db.cookiePose = null;
   h.genererCalendrier.mockClear();
+});
+
+describe("modifierEtablissement — ERP + IGH (ADR-031, 2026-11-12)", () => {
+  // L'ERP de 5ᵉ catégorie, côté formulaire et côté dossier en base.
+  const ERP = { estERP: "on", typeErp: "N", categorieErp: "N5" };
+  const dossierErp = (): void => {
+    Object.assign(h.db.etablissement, { estERP: true, typeErp: "N", categorieErp: "N5" });
+  };
+
+  it.each([
+    { cas: "IGH coché sur un ERP", avant: dossierErp, champ: "estIGH" as const },
+    { cas: "ERP coché sur un IGH", avant: (): void => {
+      h.db.etablissement.estIGH = true;
+    }, champ: "estERP" as const },
+  ])("refuse $cas : rien n'est écrit, l'erreur est sur la case cochée", async ({ avant, champ }) => {
+    avant();
+    const res = await modifierEtablissement("etab-1", { status: "idle" }, formulaire({ ...ERP, estIGH: "on" }));
+    expect(res).toEqual({ status: "error", message: "Formulaire invalide", fieldErrors: { [champ]: [MESSAGE_ERP_EN_IGH] } });
+    expect(h.db.etablissement.estERP && h.db.etablissement.estIGH).toBe(false);
+    expect(h.genererCalendrier).not.toHaveBeenCalled();
+  });
+
+  it("laisse enregistrer un dossier déjà ERP + IGH (il n'est pas fermé)", async () => {
+    dossierErp();
+    h.db.etablissement.estIGH = true;
+    const res = await modifierEtablissement(
+      "etab-1",
+      { status: "idle" },
+      formulaire({ ...ERP, estIGH: "on", adresse: "2 rue des Lilas" }),
+    );
+    expect(res.status).toBe("success");
+    expect(h.db.etablissement.adresse).toBe("2 rue des Lilas");
+  });
+
+  it("accepte l'IGH seul", async () => {
+    const res = await modifierEtablissement("etab-1", { status: "idle" }, formulaire({ estIGH: "on" }));
+    expect(res.status).toBe("success");
+  });
 });
 
 describe("modifierEtablissement — recalcul des obligations", () => {

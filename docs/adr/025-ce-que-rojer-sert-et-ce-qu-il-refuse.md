@@ -62,8 +62,10 @@ déclare] :
    de sécurité des IGH, jamais dépouillé.
 
 **L'IGH seul n'est pas refusé.** Un employeur locataire de bureaux dans une tour
-relève du Code du travail, que le produit sert entièrement ; les obligations du
-règlement IGH pèsent sur l'exploitant de l'immeuble, pas sur lui.
+relève du Code du travail, que le produit sert entièrement ; ~~les obligations du
+règlement IGH pèsent sur l'exploitant de l'immeuble, pas sur lui~~ [2026-11-12 :
+pas toutes — GH 61 § 5 et GH W 5 § 2 visent les occupants, rayé comme dans le
+code le 2026-10-12 ; le produit ne les porte pas et le dit].
 
 **Tout le reste se déclare et ne se refuse pas** : ICPE, expositions spécialisées
 (ATEX, DRPCE, CEM, CMR, amiante, plomb, radon, rayonnements ionisants), types

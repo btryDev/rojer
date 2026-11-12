@@ -35,10 +35,10 @@ import { AideQuestionMatieres } from "./AideQuestionMatieres";
 import { CASE_A_COCHER } from "@/components/ui-kit/case-a-cocher";
 
 /** Le message de validation, à l'encre du signal et jamais en `destructive`. */
-function Erreur({ message }: { message?: string }) {
+function Erreur({ message, id }: { message?: string; id?: string }) {
   if (!message) return null;
   return (
-    <p className="m-0 mt-1.5 text-[12.5px] text-[color:var(--board-signal-ink)]">
+    <p id={id} className="m-0 mt-1.5 text-[12.5px] text-[color:var(--board-signal-ink)]">
       {message}
     </p>
   );
@@ -147,6 +147,9 @@ export function EtablissementForm({
   );
   const err = (champ: string) =>
     state.status === "error" ? state.fieldErrors?.[champ]?.[0] : undefined;
+  // Le refus ERP + IGH (2026-11-12), lu une fois par case.
+  const erreurErp = err("estERP");
+  const erreurIgh = err("estIGH");
 
   return (
     <form
@@ -386,6 +389,8 @@ export function EtablissementForm({
                   type="checkbox"
                   name="estERP"
                   checked={estERP === true}
+                  aria-invalid={Boolean(erreurErp)}
+                  aria-describedby={erreurErp ? "estERP-erreur" : undefined}
                   onChange={(e) => setEstERP(e.currentTarget.checked)}
                   className={CASE_A_COCHER}
                 />
@@ -400,6 +405,8 @@ export function EtablissementForm({
                   </p>
                 </div>
               </label>
+              {/* ERP coché sur un IGH : refusé (2026-11-12). */}
+              <Erreur id="estERP-erreur" message={erreurErp} />
 
               {estERP && (
                 /* TYPE ET CATÉGORIE PRENNENT LA LIGNE ENTIÈRE, ET C'EST UNE
@@ -658,6 +665,8 @@ export function EtablissementForm({
                   type="checkbox"
                   name="estIGH"
                   checked={estIGH === true}
+                  aria-invalid={Boolean(erreurIgh)}
+                  aria-describedby={erreurIgh ? "estIGH-erreur" : undefined}
                   onChange={(e) => setEstIGH(e.currentTarget.checked)}
                   className={CASE_A_COCHER}
                 />
@@ -674,6 +683,9 @@ export function EtablissementForm({
                   </p>
                 </div>
               </label>
+              {/* ERP + IGH refusé quand on y passe (2026-11-12) ; l'erreur
+                  va sur la case qu'on vient de cocher. */}
+              <Erreur id="estIGH-erreur" message={erreurIgh} />
 
               {/* LA QUESTION « CLASSE IGH » A ÉTÉ RETIRÉE LE 2026-09-03.
                   Elle était obligatoire, offrait les dix classes de R. 146-4,
