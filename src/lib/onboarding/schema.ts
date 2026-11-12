@@ -7,6 +7,7 @@ import {
   typesErpAutresSchema,
   questionSommeilPosee,
   MESSAGE_ERP_EN_IGH,
+  estErpEnIgh,
 } from "@/lib/etablissements/schema";
 
 // Réexportée : la validation client du wizard la lit ici, au plus près du
@@ -321,7 +322,7 @@ export const onboardingSchema = z
     // dans `components/onboarding/validation.ts` le 2026-10-12 : GH 61 § 5 et
     // GH W 5 § 2 visent les occupants ; le produit ne les porte pas et le dit.]
     // La fiche refuse le PASSAGE à ce cumul (`modifierEtablissement`).
-    if (val.estERP && val.estIGH) {
+    if (estErpEnIgh(val)) {
       ctx.addIssue({
         code: "custom",
         path: ["estIGH"],

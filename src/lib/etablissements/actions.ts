@@ -37,6 +37,7 @@ function refusSiretAutreEntreprise(): EtablissementActionState {
 }
 import { regenererApresMutation } from "@/lib/calendrier/regeneration-sure";
 import {
+  estErpEnIgh,
   etablissementSchema,
   MESSAGE_ERP_EN_IGH,
   reponseSommeilSuivantLeType,
@@ -263,7 +264,7 @@ export async function modifierEtablissement(
   // n'est pas fermé : il garde sa fiche et son manque de couverture (axe
   // `igh`), comme les autres refus de l'ADR-031. L'erreur va sur la case que
   // la personne vient de cocher.
-  if (parsed.data.estERP && parsed.data.estIGH && !(avant.estERP && avant.estIGH)) {
+  if (estErpEnIgh(parsed.data) && !estErpEnIgh(avant)) {
     return {
       status: "error",
       message: "Formulaire invalide",

@@ -276,6 +276,10 @@ const dateCivileOptionnelle = z
  * (`modifierEtablissement`, qui refuse le PASSAGE à ERP + IGH — décision de la
  * propriétaire du 2026-11-12).
  */
+/** Le cumul que l'ADR-031 refuse : un ERP situé dans un IGH. Une seule écriture de la règle. */
+export const estErpEnIgh = (r: { estERP?: boolean | null; estIGH?: boolean | null }): boolean =>
+  r.estERP === true && r.estIGH === true;
+
 export const MESSAGE_ERP_EN_IGH =
   "Un établissement recevant du public situé dans un immeuble de grande hauteur relève du règlement de sécurité des IGH, que Rojer ne couvre pas.";
 
@@ -511,5 +515,8 @@ export type EtablissementInput = z.infer<typeof etablissementSchema>;
 // (ADR-025 § 4, ADR-031)~~ [2026-10-26 : retiré avec `/etablissements/nouveau`.
 // Tout établissement naît du parcours d'onboarding, dont le schéma
 // (`onboardingSchema`) porte les refus de périmètre de l'ADR-031 et le filtre
-// à l'accueil. Ce schéma-ci ne sert plus qu'à modifier une fiche, où ces refus
-// ne s'appliquent pas — sauf le filtre, à la transition (`modifierEtablissement`).]
+// à l'accueil. Ce schéma-ci ne sert plus qu'à modifier une fiche, ~~où ces refus
+// ne s'appliquent pas — sauf le filtre, à la transition (`modifierEtablissement`)~~.]
+// [2026-11-12 : le filtre est levé depuis le 2026-11-03 ; à la fiche, l'effectif
+// ne s'écrit plus (Équipe porte la borne) et `modifierEtablissement` refuse le
+// PASSAGE à ERP + IGH (`estErpEnIgh`).]

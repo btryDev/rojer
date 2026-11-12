@@ -86,8 +86,10 @@ pour ce cas.
 **Le cumul ERP + IGH, et lui seul.** Un ERP dans un immeuble de grande hauteur
 relève du règlement de sécurité des IGH, jamais dépouillé. **L'IGH seul n'est pas
 refusé** : un employeur locataire de bureaux dans une tour relève du Code du
-travail, que le produit sert entièrement, et les obligations du règlement IGH
-pèsent sur l'exploitant de l'immeuble, pas sur lui. Conséquence utile : les neuf
+travail, que le produit sert entièrement~~, et les obligations du règlement IGH
+pèsent sur l'exploitant de l'immeuble, pas sur lui~~ [2026-11-12 : pas toutes —
+GH 61 § 5 et GH W 5 § 2 visent les occupants ; rayé comme dans le code le
+2026-10-12]. Conséquence utile : les neuf
 obligations `igh` du référentiel cessent d'être des lignes mortes.
 
 **L'ADR-020 n'est pas renversée.** Son mécanisme — ce qu'un DUERP ne couvre pas

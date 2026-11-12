@@ -15,7 +15,7 @@
 
 import { normaliserSiret, refusSiret } from "@/lib/etablissements/siret";
 import { evaluerScopeSecteur } from "@/lib/onboarding/scope";
-import { MESSAGE_ERP_EN_IGH, questionSommeilPosee } from "@/lib/etablissements/schema";
+import { estErpEnIgh, MESSAGE_ERP_EN_IGH, questionSommeilPosee } from "@/lib/etablissements/schema";
 import {
   MESSAGE_NOMBRE_DE_PERSONNES,
   nombreDePersonnesADemander,
@@ -229,7 +229,7 @@ export function validerTypologie(s: OnboardingState): Blocage | null {
   // règlement IGH pèsent sur l'exploitant de l'immeuble, pas sur lui.~~
   // [2026-10-12 : pas toutes — GH 61 § 5 et GH W 5 § 2 visent les occupants ;
   // le produit ne les porte pas et le dit (`REGLEMENT_IGH_NON_TRAITE`).]
-  if (s.estERP && s.estIGH)
+  if (estErpEnIgh(s))
     return {
       perimetre: true,
       message: MESSAGE_ERP_EN_IGH,

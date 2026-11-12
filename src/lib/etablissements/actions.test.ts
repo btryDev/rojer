@@ -248,6 +248,7 @@ beforeEach(() => {
   essai.noter.mockClear();
   h.db.etablissement.estERP = false;
   h.db.etablissement.estIGH = false;
+  h.db.etablissement.adresse = "1 rue des Lilas";
   h.db.etablissement.typeErp = null;
   h.db.etablissement.typesErpAutres = [];
   h.db.etablissement.comporteLocauxSommeilPublic = null;
@@ -291,6 +292,7 @@ describe("modifierEtablissement — ERP + IGH (ADR-031, 2026-11-12)", () => {
     const res = await modifierEtablissement("etab-1", { status: "idle" }, formulaire({ ...ERP, estIGH: "on" }));
     expect(res.status === "error" && res.fieldErrors).toEqual({ estERP: [MESSAGE_ERP_EN_IGH] });
     expect(h.db.etablissement.estERP).toBe(false);
+    expect(h.genererCalendrier).not.toHaveBeenCalled();
   });
 
   it("laisse enregistrer un dossier déjà ERP + IGH (il n'est pas fermé)", async () => {
@@ -304,6 +306,7 @@ describe("modifierEtablissement — ERP + IGH (ADR-031, 2026-11-12)", () => {
       formulaire({ ...ERP, estIGH: "on", adresse: "2 rue des Lilas" }),
     );
     expect(res.status).toBe("success");
+    expect(h.db.etablissement.adresse).toBe("2 rue des Lilas");
   });
 
   it("accepte l'IGH seul", async () => {
