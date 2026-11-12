@@ -6,6 +6,7 @@ import {
   TYPE_ERP,
   typesErpAutresSchema,
   questionSommeilPosee,
+  MESSAGE_ERP_EN_IGH,
 } from "@/lib/etablissements/schema";
 
 // Réexportée : la validation client du wizard la lit ici, au plus près du
@@ -321,8 +322,7 @@ export const onboardingSchema = z
       ctx.addIssue({
         code: "custom",
         path: ["estIGH"],
-        message:
-          "Un établissement recevant du public situé dans un immeuble de grande hauteur relève du règlement de sécurité des IGH, que Rojer ne couvre pas.",
+        message: MESSAGE_ERP_EN_IGH,
       });
     }
 

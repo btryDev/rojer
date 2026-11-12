@@ -674,6 +674,8 @@ export function EtablissementForm({
                   </p>
                 </div>
               </label>
+              {/* ERP + IGH refusé, comme à l'onboarding (2026-11-12). */}
+              <Erreur message={err("estIGH")} />
 
               {/* LA QUESTION « CLASSE IGH » A ÉTÉ RETIRÉE LE 2026-09-03.
                   Elle était obligatoire, offrait les dix classes de R. 146-4,

@@ -269,6 +269,15 @@ const dateCivileOptionnelle = z
   ])
   .optional();
 
+/**
+ * Le refus d'un ERP situé dans un IGH (ADR-031) : le règlement de sécurité
+ * des IGH n'est pas traité. Un seul texte pour les deux portes, l'onboarding
+ * et la fiche établissement (décision de la propriétaire du 2026-11-12 : la
+ * fiche ne doit pas laisser passer ce que l'onboarding refuse).
+ */
+export const MESSAGE_ERP_EN_IGH =
+  "Un établissement recevant du public situé dans un immeuble de grande hauteur relève du règlement de sécurité des IGH, que Rojer ne couvre pas.";
+
 export const etablissementSchema = z
   .object({
     raisonDisplay: z
@@ -477,6 +486,15 @@ export const etablissementSchema = z
     // IGH », « famille interdite hors habitation ». Aucune n'était fausse ;
     // elles gardaient la cohérence d'une donnée que plus personne ne saisit.
     // Un régime IGH ou habitation se déclare désormais par son seul booléen.
+
+    // ERP + IGH refusé ici comme à l'onboarding (ADR-031, 2026-11-12) : la
+    // fiche laissait passer ce cumul, qu'un dossier ouvert pouvait prendre
+    // après coup. La modification n'est pas enregistrée ; l'IGH seul reste
+    // accepté. Un dossier déjà dans ce cas doit décocher l'un des deux pour
+    // enregistrer sa fiche.
+    if (val.estERP && val.estIGH) {
+      ctx.addIssue({ code: "custom", path: ["estIGH"], message: MESSAGE_ERP_EN_IGH });
+    }
 
     // Un établissement doit relever d'au moins un régime ; si tout est à
     // false, on retombe implicitement sur « travail classique ».
