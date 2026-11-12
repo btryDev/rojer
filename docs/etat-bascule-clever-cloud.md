@@ -466,14 +466,44 @@ public). Adresses `@rojer.invalid` seulement, pour que les gardes de la charge
 et de la recette restent ouvertes. Sur l'instance :
 
     clever ssh --app app_9bbac77c-af66-4562-81a7-0257a21401ad
-    COMPTE_TEST_MOT_DE_PASSE=… sh scripts/demarrer-cc.sh lancer \
-      pnpm comptes-test --email testeur@rojer.invalid --ecrire          # compte vide → onboarding
-    COMPTE_TEST_MOT_DE_PASSE=… sh scripts/demarrer-cc.sh lancer \
-      pnpm comptes-test --email julien@rojer.invalid --situations --ecrire  # les 5 fiches du préventeur
+    # sur l'instance : charger l'environnement, `pnpm` n'est pas dans le PATH
+    set -a; . ~/applicationrc; set +a; cd ~/app_9bbac77c-af66-4562-81a7-0257a21401ad
+    L="sh scripts/demarrer-cc.sh lancer node_modules/.bin/tsx --import ./scripts/server-only-hors-next.mjs scripts/comptes-test.ts"
+    COMPTE_TEST_MOT_DE_PASSE=… $L --email testeur@rojer.invalid --ecrire               # compte vide → onboarding
+    COMPTE_TEST_MOT_DE_PASSE=… $L --email julien@rojer.invalid --situations --ecrire   # les 5 fiches du préventeur
 
 Sans `--ecrire`, à blanc. `--annuler` retire les fiches. Relancer remet le mot
 de passe. Ne marche pas sans e-mail : inviter un membre, lien prestataire,
 signature à distance, mot de passe oublié.
+
+[2026-11-12 : la commande `pnpm comptes-test` écrite ici d'abord (#301) ne
+marche pas sur l'instance — `pnpm` absent du PATH, environnement non chargé
+dans `clever ssh`. Relevé en créant les comptes.]
+
+Comptes posés le 2026-11-12 sur la préprod : `testeur@rojer.invalid` (vide),
+`julien@rojer.invalid` (5 fiches), `paloma@rojer.invalid` (vérification de
+l'ADR-057 : hôtel O + N de 5ᵉ et magasin M témoin, semé par un script
+jetable, hors dépôt).
+
+### À faire, une fois les tests finis (pas avant : les comptes servent)
+
+- Retirer `scripts/comptes-test.ts`, `scripts/situations-test/` et la commande
+  `comptes-test` de `package.json` (décision de la propriétaire, 2026-11-12).
+  `src/lib/onboarding/creation.ts` reste : c'est l'écriture de l'onboarding.
+- Retirer deux dépendances de développement mortes, relevées le même jour :
+  `@testing-library/jest-dom` (aucun matcher, absent de `vitest.setup.ts`) et
+  `@vitejs/plugin-react` (absent de `vitest.config.ts`) ; passer
+  `@types/qrcode` des `dependencies` aux `devDependencies`.
+
+### À faire à la bascule (Vercel coupé)
+
+- Retirer le pilote de stockage `supabase` : `src/lib/storage/supabase.ts`, sa
+  branche dans `storage/index.ts`, la valeur `supabase` de `STORAGE_DRIVER` et
+  les variables `SUPABASE_*` de `src/env.ts` et `.env.example`, la dépendance
+  `@supabase/supabase-js`. Il sert encore la production Vercel (`main`).
+- Retirer `vercel.json`.
+- Les tables `Intervention` et `CommentaireIntervention` (ADR-018, sans code)
+  attendent toujours leur migration de suppression.
 
 ## Règles de travail qui valent ici
 
