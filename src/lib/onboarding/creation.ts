@@ -5,7 +5,7 @@ import { sirenDuSiret } from "@/lib/etablissements/siret";
 import { EFFECTIF_MAX, typesErpAutresCoherents } from "@/lib/etablissements/schema";
 import { prendreQuota } from "@/lib/abonnements/quotas";
 import { accueillirSite } from "@/lib/entreprises/effectif";
-import type { ClientBorne } from "@/lib/auth/portee/client";
+import type { Compte, Db } from "@/lib/auth/compte";
 import type { OnboardingInput } from "./schema";
 
 // L'écriture du parcours d'onboarding, sortie de `finaliserOnboarding`
@@ -15,7 +15,7 @@ import type { OnboardingInput } from "./schema";
 //
 // Pas de `"use server"` : toute fonction exportée d'un fichier d'actions
 // devient un point d'entrée HTTP. Celle-ci reçoit le client BORNÉ au compte
-// (ADR-051) et l'identifiant de ce compte : l'action les tient de
+// (ADR-051) et ce compte : l'action les tient de
 // `requireCompteDOnboarding`, le script de `clientBorne` sur le compte qu'il a
 // vérifié.
 
@@ -53,7 +53,11 @@ async function avecUneReprise<T>(creer: () => Promise<T>): Promise<T> {
  * Lève `RefusEffectifEntreprise`, `RefusQuota` ou `RefusBorneEffectif` :
  * l'appelant les traduit.
  */
-export async function creerEtablissementOnboarding(db: ClientBorne, compteId: string, d: OnboardingInput) {
+export async function creerEtablissementOnboarding(
+  db: Db,
+  compte: Pick<Compte["compte"], "compteId">,
+  d: OnboardingInput,
+) {
   const siren = sirenDuSiret(d.siret);
   return avecUneReprise(() =>
     db.$transaction(async (tx) => {
@@ -64,10 +68,10 @@ export async function creerEtablissementOnboarding(db: ClientBorne, compteId: st
       // elle existe, rien n'y est écrit (`update: {}`) : sa raison sociale et
       // son effectif sont les siens, que le parcours affiche sans les lire.
       const entreprise = await tx.entreprise.upsert({
-        where: { compteId_siren: { compteId, siren } },
+        where: { compteId_siren: { compteId: compte.compteId, siren } },
         update: {},
         create: {
-          compteId,
+          compteId: compte.compteId,
           siren,
           raisonSociale: d.raisonSociale,
           // L'effectif de l'ENTREPRISE, apprentis non compris, demandé pour
@@ -88,7 +92,7 @@ export async function creerEtablissementOnboarding(db: ClientBorne, compteId: st
       if (entreprise.effectif > EFFECTIF_MAX) throw new RefusEffectifEntreprise();
 
       // Plafond d'établissements, sous le verrou du compte (ADR-053 § 14).
-      await prendreQuota(tx, compteId, "etablissements");
+      await prendreQuota(tx, compte.compteId, "etablissements");
 
       const etablissement = await tx.etablissement.create({
         data: {

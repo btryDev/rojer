@@ -103,7 +103,7 @@ export async function finaliserOnboarding(
 
   let result;
   try {
-    result = await creerEtablissementOnboarding(db, compte.compteId, d);
+    result = await creerEtablissementOnboarding(db, compte, d);
   } catch (err) {
     if (err instanceof RefusQuota) return { status: "error", message: err.motif };
     if (err instanceof RefusEffectifEntreprise) {

@@ -208,7 +208,7 @@ async function semer(compteId: string, db: ClientBorne, ecrire: boolean) {
       console.log(`${titre} : à créer, ${equipements.length} équipement(s).`);
       continue;
     }
-    const etab = await creerEtablissementOnboarding(db, compteId, onboarding!);
+    const etab = await creerEtablissementOnboarding(db, { compteId }, onboarding!);
     try {
       await completer(db, etab.id, equipements);
     } catch (err) {
