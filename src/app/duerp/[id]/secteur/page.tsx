@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { buttonVariants } from "@/components/ui/button";
 import { notFound } from "next/navigation";
 import { SecteurCard } from "@/components/duerps/SecteurCard";
 import { AutresSecteurs } from "@/components/duerps/AutresSecteurs";
@@ -29,102 +30,87 @@ export default async function SecteurPage({
       id: r.id,
       nom: r.nom,
       description: descriptionPourSecteur(r.id),
-      nombreUnites: r.unitesTravailSuggerees.length,
-      nombreRisques: r.risques.length,
       codesNaf: r.codesNaf,
     }));
 
   return (
     <div className="flex flex-col gap-8">
 
-      {/* Raccourci : importer un DUERP existant plutôt que reconstruire */}
-      <aside className="flex flex-wrap items-center justify-between gap-3 rounded-[22px] bg-[color:var(--board-slate-pale)] px-6 py-4">
-        <span className="text-[13.5px] leading-[1.55] text-[color:var(--board-slate-ink)]">
-          <strong>Déjà un DUERP ?</strong> Importez-le au format Excel plutôt
-          que de repartir de zéro.
-        </span>
-        <Link
-          data-ecriture
-          href={`/etablissements/${duerp.etablissementId}/duerp/import`}
-          className="board-surtitre text-[color:var(--board-blue-ink)] hover:underline"
-        >
-          Importer depuis Excel →
-        </Link>
-      </aside>
-
       {refRecommande ? (
         <>
-          <EnTeteEtape page="secteur">
-              À partir du code NAF{" "}
-              <span className="tabular-nums text-[color:var(--board-ink)]">
-                {duerp.etablissement.codeNaf}
-              </span>
-              , le secteur ci-dessous a été détecté. Confirmez pour charger
-              les unités et risques types.
-          </EnTeteEtape>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <EnTeteEtape page="secteur" titre="Quelle est votre activité ?">
+                À partir du code NAF{" "}
+                <span className="tabular-nums text-[color:var(--board-ink)]">
+                  {duerp.etablissement.codeNaf}
+                </span>
+                , le secteur ci-dessous a été détecté. Choisissez-le pour charger
+                les unités et risques types, ou choisissez-en un autre plus bas.
+            </EnTeteEtape>
+            {/* Le raccourci d'import, discret en haut à droite (2026-11-12) :
+                il occupait une bande pleine largeur avant le contenu. */}
+            <Link
+              data-ecriture
+              href={`/etablissements/${duerp.etablissementId}/duerp/import`}
+              className={buttonVariants({ variant: "boardClair", size: "boardSm" })}
+            >
+              Importer un DUERP Excel
+            </Link>
+          </div>
 
           <section className="carte-board px-7 py-6 sm:px-8">
             <p className="board-surtitre m-0 text-[color:var(--board-slate-soft)]">
               Secteur détecté
             </p>
 
-            <div className="mt-5 grid gap-8 sm:grid-cols-[1fr_auto] sm:items-end">
+            <div className="mt-5 flex flex-col gap-6">
               <div className="min-w-0">
-                <h3 className="board-titre m-0 text-[clamp(23px,2.1vw,30px)]">
+                <h3 className="board-titre m-0 text-[22px]">
                   {refRecommande.nom}
                 </h3>
                 <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                   {descriptionPourSecteur(refRecommande.id)}
                 </p>
-
-                <dl className="mt-7 flex flex-wrap gap-x-10 gap-y-4">
-                  <div className="flex items-baseline gap-2.5">
-                    <dt className="sr-only">Unités pré-remplies</dt>
-                    <dd className="m-0 text-[20px] tabular-nums text-[color:var(--board-ink)]">
-                      {String(refRecommande.unitesTravailSuggerees.length).padStart(2, "0")}
-                    </dd>
-                    <span className="text-[12.5px] text-[color:var(--board-slate-mid)]">
-                      unités pré-remplies
-                    </span>
-                  </div>
-                  <div className="flex items-baseline gap-2.5">
-                    <dt className="sr-only">Risques référencés</dt>
-                    <dd className="m-0 text-[20px] tabular-nums text-[color:var(--board-ink)]">
-                      {String(refRecommande.risques.length).padStart(2, "0")}
-                    </dd>
-                    <span className="text-[12.5px] text-[color:var(--board-slate-mid)]">
-                      risques référencés
-                    </span>
-                  </div>
-                </dl>
               </div>
 
-              <div className="flex flex-col items-stretch gap-3 sm:items-end">
+              <div className="flex justify-end">
                 <ConfirmerSecteurButton
                   duerpId={id}
                   secteurId={refRecommande.id}
                 />
-                <AutresSecteurs
-                  duerpId={id}
-                  secteurs={autresSecteurs}
-                  secteurChoisiId={secteurChoisi}
-                  alignDroite
-                />
               </div>
             </div>
           </section>
+
+          {/* Les autres secteurs, montrés d'emblée sous la carte (2026-11-12). */}
+          <AutresSecteurs
+            duerpId={id}
+            secteurs={autresSecteurs}
+            secteurChoisiId={secteurChoisi}
+          />
         </>
       ) : (
         <>
-          <EnTeteEtape page="secteur">
-              Le code NAF{" "}
-              <span className="tabular-nums text-[color:var(--board-ink)]">
-                {duerp.etablissement.codeNaf}
-              </span>{" "}
-              n&apos;est pas couvert par un référentiel dédié. Choisissez le
-              secteur le plus proche — vous pourrez décocher les risques non
-              applicables à l&apos;étape suivante.
-          </EnTeteEtape>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <EnTeteEtape page="secteur" titre="Quelle est votre activité ?">
+                Le code NAF{" "}
+                <span className="tabular-nums text-[color:var(--board-ink)]">
+                  {duerp.etablissement.codeNaf}
+                </span>{" "}
+                n&apos;est pas couvert par un référentiel dédié. Choisissez le
+                secteur le plus proche — vous pourrez décocher les risques non
+                applicables à l&apos;étape suivante.
+            </EnTeteEtape>
+            {/* Le raccourci d'import, discret en haut à droite (2026-11-12) :
+                il occupait une bande pleine largeur avant le contenu. */}
+            <Link
+              data-ecriture
+              href={`/etablissements/${duerp.etablissementId}/duerp/import`}
+              className={buttonVariants({ variant: "boardClair", size: "boardSm" })}
+            >
+              Importer un DUERP Excel
+            </Link>
+          </div>
 
           <section>
             <p className="board-surtitre m-0 mb-5 text-[color:var(--board-slate-soft)]">
@@ -138,10 +124,7 @@ export default async function SecteurPage({
                   secteurId={r.id}
                   nom={r.nom}
                   description={descriptionPourSecteur(r.id)}
-                  nombreUnites={r.unitesTravailSuggerees.length}
-                  nombreRisques={r.risques.length}
                   codesNaf={r.codesNaf}
-                  recommande={false}
                   dejaChoisi={secteurChoisi === r.id}
                 />
               ))}

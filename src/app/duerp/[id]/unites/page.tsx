@@ -3,9 +3,7 @@ import { notFound } from "next/navigation";
 import { AjouterUniteForm } from "@/components/duerps/AjouterUniteForm";
 import { UniteRow } from "@/components/duerps/UniteRow";
 import { ValiderEtapeBouton } from "@/components/duerps/ValiderEtapeBouton";
-import { LienRetour } from "@/components/duerps/LienRetour";
 import { EnTeteEtape } from "@/components/duerps/EnTeteEtape";
-import { questionsActivites } from "@/lib/activites/reponses";
 import { getDuerp } from "@/lib/duerps/queries";
 
 export default async function UnitesPage({
@@ -22,20 +20,6 @@ export default async function UnitesPage({
 
   return (
     <div className="flex flex-col gap-8">
-      {/* Le retour à l'étape précédente, en tête (2026-11-12) : tout le
-          monde ne devine pas que le fil des étapes se clique. */}
-      <nav>
-        <LienRetour
-          href={`/duerp/${id}/${
-            questionsActivites(duerp.referentielSecteurId, duerp.reponsesActivitesNonCouvertes).length > 0
-              ? "activites"
-              : "secteur"
-          }`}
-        >
-          Votre activité
-        </LienRetour>
-      </nav>
-
       {/* Allégé le 2026-11-11 : la définition d'une unité était dite deux
           fois (infobulle et paragraphe) ; elle est derrière le « ? ». */}
       <EnTeteEtape

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { AideEcran } from "@/components/ui-kit/AideEcran";
-import { FilUnite } from "@/components/duerps/FilUnite";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { AjouterMesureCustomForm } from "@/components/duerps/AjouterMesureCustomForm";
@@ -64,15 +63,6 @@ export default async function MesuresPage({
 
   return (
     <div className="flex flex-col gap-8">
-      <FilUnite
-        niveaux={[
-          { libelle: "Toutes les unités", href: `/duerp/${id}/risques` },
-          { libelle: risque.unite.nom, href: hrefUnite },
-          { libelle: risque.libelle, href: hrefCotation },
-          { libelle: "Mesures" },
-        ]}
-      />
-
       <header className="max-w-[var(--board-mesure)]">
         <div className="board-surtitre flex flex-wrap items-baseline gap-2">
           <span className="text-[color:var(--board-ink)]">

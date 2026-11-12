@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { LienRetour } from "@/components/duerps/LienRetour";
 import { EnTeteEtape } from "@/components/duerps/EnTeteEtape";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
@@ -53,12 +52,6 @@ export default async function TransversesPage({
 
   return (
     <div className="flex flex-col gap-8">
-      {/* Le retour à l'étape précédente, en tête (2026-11-12) : tout le
-          monde ne devine pas que le fil des étapes se clique. */}
-      <nav>
-        <LienRetour href={`/duerp/${id}/risques`}>Risques par unité</LienRetour>
-      </nav>
-
       <EnTeteEtape page="transverses" titre="Questions transverses">
         Ces questions couvrent des risques présents dans la plupart des
         entreprises, quel que soit le métier. Chaque « oui » ajoute

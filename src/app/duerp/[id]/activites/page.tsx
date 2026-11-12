@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { LienRetour } from "@/components/duerps/LienRetour";
 import { EnTeteEtape } from "@/components/duerps/EnTeteEtape";
 import { enteteEtape } from "@/lib/duerps/etapes";
 import { LIMITES_ESSAI } from "@/lib/abonnements/formules";
@@ -56,12 +55,6 @@ export default async function ActivitesPage({
 
   return (
     <div className="flex flex-col gap-8">
-      {/* Le retour à l'étape précédente, en tête (2026-11-12) : tout le
-          monde ne devine pas que le fil des étapes se clique. */}
-      <nav>
-        <LienRetour href={`/duerp/${id}/secteur`}>Secteur d&apos;activité</LienRetour>
-      </nav>
-
       {/* Allégé le 2026-11-11 : le titre parlait du référentiel, un mot de
           l'outil que le dirigeant ne connaît pas ; il dit maintenant ce qu'on
           attend de lui. Les deux paragraphes d'explication sont derrière le

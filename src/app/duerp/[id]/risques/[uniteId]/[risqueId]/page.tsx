@@ -1,4 +1,3 @@
-import { FilUnite } from "@/components/duerps/FilUnite";
 import { notFound } from "next/navigation";
 import { CotationForm } from "@/components/duerps/CotationForm";
 import { EvaluationProgression } from "@/components/duerps/EvaluationProgression";
@@ -25,7 +24,6 @@ export default async function CotationPage({
     .slice(idxCourant + 1)
     .find((r) => !r.cotationSaisie);
 
-  const hrefRetourUnite = `/duerp/${id}/risques/${uniteId}`;
   const hrefCotation = `/duerp/${id}/risques/${uniteId}/${risqueId}`;
   const hrefMesures = `/duerp/${id}/risques/${uniteId}/${risqueId}/mesures`;
   const hrefSuivant = suivant
@@ -34,14 +32,6 @@ export default async function CotationPage({
 
   return (
     <div className="flex flex-col gap-8">
-      <FilUnite
-        niveaux={[
-          { libelle: "Toutes les unités", href: `/duerp/${id}/risques` },
-          { libelle: risque.unite.nom, href: hrefRetourUnite },
-          { libelle: risque.libelle },
-        ]}
-      />
-
       <header className="max-w-[var(--board-mesure)]">
         <div className="board-surtitre flex flex-wrap items-baseline gap-2">
           <span className="text-[color:var(--board-ink)]">

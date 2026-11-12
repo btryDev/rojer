@@ -25,7 +25,7 @@ export function ConfirmerSecteurButton({
         });
       }}
     >
-      {pending ? "Application…" : "Confirmer et continuer →"}
+      {pending ? "Application…" : "Choisir ce secteur →"}
     </Button>
   );
 }
