@@ -27,7 +27,7 @@ const MODELES: Record<string, { nom: string; cle: string }> = {
 
 /** Les modules qui créent un élément plafonné. */
 const CREATEURS = [
-  "src/lib/onboarding/actions.ts",
+  "src/lib/onboarding/creation.ts",
   "src/lib/prestataires/actions.ts",
   "src/lib/permis-feu/actions.ts",
   "src/lib/plan-prevention/actions.ts",
@@ -61,7 +61,7 @@ const EXEMPTEES: Record<string, { motif: string; preuve: RegExp }> = {
     motif: "la signature d'un tiers par son lien : comptée à la demande (`emettreAccessToken`), comme une enveloppe",
     preuve: /^[^;]*etablissementId:\s*token\.etablissementId/,
   },
-  "src/lib/onboarding/actions.ts:batiments": {
+  "src/lib/onboarding/creation.ts:batiments": {
     motif: "la zone principale naît avec l'établissement (ADR-019), lui-même plafonné dans la même transaction",
     preuve: /^\s*:\s*\{\s*create:\s*\{\s*nom:\s*NOM_BATIMENT_PRINCIPAL/,
   },
