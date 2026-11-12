@@ -7,8 +7,6 @@ type SecteurOption = {
   id: string;
   nom: string;
   description: string;
-  nombreUnites: number;
-  nombreRisques: number;
   codesNaf: string[];
 };
 
@@ -51,8 +49,6 @@ export function AutresSecteurs({
               secteurId={r.id}
               nom={r.nom}
               description={r.description}
-              nombreUnites={r.nombreUnites}
-              nombreRisques={r.nombreRisques}
               codesNaf={r.codesNaf}
               recommande={false}
               dejaChoisi={secteurChoisiId === r.id}

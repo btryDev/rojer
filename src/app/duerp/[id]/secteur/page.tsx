@@ -29,8 +29,6 @@ export default async function SecteurPage({
       id: r.id,
       nom: r.nom,
       description: descriptionPourSecteur(r.id),
-      nombreUnites: r.unitesTravailSuggerees.length,
-      nombreRisques: r.risques.length,
       codesNaf: r.codesNaf,
     }));
 
@@ -76,27 +74,6 @@ export default async function SecteurPage({
                 <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                   {descriptionPourSecteur(refRecommande.id)}
                 </p>
-
-                <dl className="mt-7 flex flex-wrap gap-x-10 gap-y-4">
-                  <div className="flex items-baseline gap-2.5">
-                    <dt className="sr-only">Unités pré-remplies</dt>
-                    <dd className="m-0 text-[20px] tabular-nums text-[color:var(--board-ink)]">
-                      {String(refRecommande.unitesTravailSuggerees.length).padStart(2, "0")}
-                    </dd>
-                    <span className="text-[12.5px] text-[color:var(--board-slate-mid)]">
-                      unités pré-remplies
-                    </span>
-                  </div>
-                  <div className="flex items-baseline gap-2.5">
-                    <dt className="sr-only">Risques référencés</dt>
-                    <dd className="m-0 text-[20px] tabular-nums text-[color:var(--board-ink)]">
-                      {String(refRecommande.risques.length).padStart(2, "0")}
-                    </dd>
-                    <span className="text-[12.5px] text-[color:var(--board-slate-mid)]">
-                      risques référencés
-                    </span>
-                  </div>
-                </dl>
               </div>
 
               <div className="flex flex-col items-stretch gap-3 sm:items-end">
@@ -138,8 +115,6 @@ export default async function SecteurPage({
                   secteurId={r.id}
                   nom={r.nom}
                   description={descriptionPourSecteur(r.id)}
-                  nombreUnites={r.unitesTravailSuggerees.length}
-                  nombreRisques={r.risques.length}
                   codesNaf={r.codesNaf}
                   recommande={false}
                   dejaChoisi={secteurChoisi === r.id}
