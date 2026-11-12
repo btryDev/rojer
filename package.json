@@ -31,7 +31,8 @@
     "relecture": "tsx --import ./scripts/server-only-hors-next.mjs scripts/export-relecture.ts",
     "verification": "tsx --import ./scripts/server-only-hors-next.mjs scripts/export-verification.ts",
     "legifrance:verifier": "tsx --import ./scripts/server-only-hors-next.mjs scripts/verifier-corpus-legifrance.ts",
-    "visite:rendre": "tsx scripts/visites/rendre.tsx"
+    "visite:rendre": "tsx scripts/visites/rendre.tsx",
+    "comptes-test": "tsx --import ./scripts/server-only-hors-next.mjs scripts/comptes-test.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1160.0",
