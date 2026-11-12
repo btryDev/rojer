@@ -17,10 +17,6 @@ import { getOptionalUser } from "@/lib/auth/require-user";
 import { getEtatModules } from "@/lib/etablissements/modules";
 import { listerEtablissementsDuCompte } from "@/lib/etablissements/queries";
 import { chargerSidebarCounts } from "@/lib/navigation/sidebar-counts";
-import {
-  trouverReferentielParId,
-  trouverReferentielParNaf,
-} from "@/lib/referentiels";
 
 
 /**
@@ -65,13 +61,6 @@ export default async function DuerpLayout({
     listerEtablissementsDuCompte(),
     comptesDeLaSession(),
   ]);
-  // Secteur affiché dans le contexte : celui choisi dans le wizard en priorité,
-  // sinon suggestion par NAF (même règle que la page secteur elle-même).
-  const refChoisi = duerp.referentielSecteurId
-    ? trouverReferentielParId(duerp.referentielSecteurId)
-    : null;
-  const refParNaf = trouverReferentielParNaf(duerp.etablissement.codeNaf);
-  const ref = refChoisi ?? refParNaf;
 
   // Le fil des étapes, calculé pour chaque page : la mise en page ne sait pas
   // laquelle est ouverte, `FilDuDuerp` la lit sur l'adresse (2026-11-12).
@@ -87,12 +76,6 @@ export default async function DuerpLayout({
     .filter((e) => e.id !== "synthese")
     .every((e) => e.faite);
 
-  const effectif = duerp.entreprise.effectif;
-  const contexte = [
-    `NAF ${duerp.etablissement.codeNaf}`,
-    ...(ref ? [ref.nom] : []),
-    `${effectif} salarié${effectif > 1 ? "s" : ""}`,
-  ];
 
   return (
     // Mêmes largeurs que le shell d'établissement (2026-10-29).
@@ -139,13 +122,14 @@ export default async function DuerpLayout({
           description="Votre évaluation des risques, unité de travail par unité. Tout est enregistré au fur et à mesure : vous pouvez vous arrêter et reprendre."
           pied={<FilDuDuerp etapesParPage={etapesParPage} />}
         />
-        {/* Le contexte du document et sa sortie, au-dessus de l'étape : ce
-            que l'en-tête portait à droite, il ne le porte plus. */}
+        {/* ~~Le contexte du document (NAF · secteur · salariés)~~ retiré le
+            2026-11-12 (décision de la propriétaire) : le haut de la page est au
+            fil de la page. Reste la sortie, une fois le DUERP complété. */}
+        {complete && (
         <div className="px-[var(--board-gutter)] pt-6">
           <BarreDeListe
-            contexte={contexte}
             action={
-              complete ? (
+              (
               // Une balise <a>, pas un <Link> : Next précharge les <Link>, et le
               // préchargement lancerait le rendu du PDF — il prendrait une des
               // deux places d'export de l'utilisateur avant son clic.
@@ -158,10 +142,11 @@ export default async function DuerpLayout({
               >
                 PDF DUERP ↓
               </a>
-              ) : undefined
+              )
             }
           />
         </div>
+        )}
 
         {/* La saisie fermée (lecture seule, abonnement, site gelé) s'annonce
             dès l'ouverture, comme sur les autres pages du site (ADR-053 § 14). */}
