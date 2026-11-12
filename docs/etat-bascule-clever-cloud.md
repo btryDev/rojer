@@ -457,6 +457,24 @@ ses boutons disparaissent.
 - Supprimer les comptes et les adresses de test.
 - Noter ici la date, le commit déployé et le résultat (ou les écarts).
 
+## Comptes de test sur la préprod (2026-11-12, PR #300)
+
+Sans pilote d'e-mail ni offre lancée, les testeurs n'entrent pas par
+l'inscription : `scripts/comptes-test.ts` crée la personne, adresse confirmée,
+mot de passe tiré de `COMPTE_TEST_MOT_DE_PASSE` (jamais dans le dépôt, qui est
+public). Adresses `@rojer.invalid` seulement, pour que les gardes de la charge
+et de la recette restent ouvertes. Sur l'instance :
+
+    clever ssh --app app_9bbac77c-af66-4562-81a7-0257a21401ad
+    COMPTE_TEST_MOT_DE_PASSE=… sh scripts/demarrer-cc.sh lancer \
+      pnpm comptes-test --email testeur@rojer.invalid --ecrire          # compte vide → onboarding
+    COMPTE_TEST_MOT_DE_PASSE=… sh scripts/demarrer-cc.sh lancer \
+      pnpm comptes-test --email julien@rojer.invalid --situations --ecrire  # les 5 fiches du préventeur
+
+Sans `--ecrire`, à blanc. `--annuler` retire les fiches. Relancer remet le mot
+de passe. Ne marche pas sans e-mail : inviter un membre, lien prestataire,
+signature à distance, mot de passe oublié.
+
 ## Règles de travail qui valent ici
 
 - Ce fichier est **le même sur `main` et sur `cc`** : le modifier sur `main`
