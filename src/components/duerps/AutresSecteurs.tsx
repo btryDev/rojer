@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { SecteurCard } from "./SecteurCard";
 
 type SecteurOption = {
@@ -14,34 +15,32 @@ export function AutresSecteurs({
   duerpId,
   secteurs,
   secteurChoisiId,
-  alignDroite = false,
 }: {
   duerpId: string;
   secteurs: SecteurOption[];
   secteurChoisiId: string | null;
-  alignDroite?: boolean;
 }) {
   const [ouvert, setOuvert] = useState(false);
 
   return (
     <>
-      <button
-        data-ecriture
-        type="button"
-        onClick={() => setOuvert((o) => !o)}
-        aria-expanded={ouvert}
-        className={`board-surtitre group inline-flex items-center gap-2 text-[color:var(--board-slate-soft)] transition-colors hover:text-[color:var(--board-ink)] ${
-          alignDroite ? "self-end" : ""
-        }`}
-      >
-        {ouvert ? "Masquer les autres secteurs" : "Changer de secteur"}
-        <span aria-hidden className="text-[13px] leading-none">
-          {ouvert ? "−" : "+"}
-        </span>
-      </button>
+      <div>
+        <Button
+          data-ecriture
+          type="button"
+          variant="boardClair"
+          size="boardSm"
+          onClick={() => setOuvert((o) => !o)}
+          aria-expanded={ouvert}
+        >
+          {ouvert
+            ? "Masquer les autres secteurs"
+            : `Voir les autres secteurs (${secteurs.length})`}
+        </Button>
+      </div>
 
       {ouvert && (
-        <div className="col-span-full mt-8 grid gap-[22px] border-t border-[color:var(--board-slate-line)] pt-8 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-[22px] md:grid-cols-2 lg:grid-cols-3">
           {secteurs.map((r) => (
             <SecteurCard
               key={r.id}

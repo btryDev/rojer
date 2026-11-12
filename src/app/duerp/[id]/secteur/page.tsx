@@ -57,8 +57,8 @@ export default async function SecteurPage({
               <span className="tabular-nums text-[color:var(--board-ink)]">
                 {duerp.etablissement.codeNaf}
               </span>
-              , le secteur ci-dessous a été détecté. Confirmez pour charger
-              les unités et risques types.
+              , le secteur ci-dessous a été détecté. Choisissez-le pour charger
+              les unités et risques types, ou voyez les autres secteurs.
           </EnTeteEtape>
 
           <section className="carte-board px-7 py-6 sm:px-8">
@@ -66,7 +66,7 @@ export default async function SecteurPage({
               Secteur détecté
             </p>
 
-            <div className="mt-5 grid gap-8 sm:grid-cols-[1fr_auto] sm:items-end">
+            <div className="mt-5 flex flex-col gap-6">
               <div className="min-w-0">
                 <h3 className="board-titre m-0 text-[clamp(23px,2.1vw,30px)]">
                   {refRecommande.nom}
@@ -76,20 +76,23 @@ export default async function SecteurPage({
                 </p>
               </div>
 
-              <div className="flex flex-col items-stretch gap-3 sm:items-end">
+              <div className="flex justify-end">
                 <ConfirmerSecteurButton
                   duerpId={id}
                   secteurId={refRecommande.id}
                 />
-                <AutresSecteurs
-                  duerpId={id}
-                  secteurs={autresSecteurs}
-                  secteurChoisiId={secteurChoisi}
-                  alignDroite
-                />
               </div>
             </div>
           </section>
+
+          {/* Les autres secteurs, par un vrai bouton hors de la carte
+              (2026-11-12) : le lien « Changer de secteur » se perdait sous
+              le bouton de choix. */}
+          <AutresSecteurs
+            duerpId={id}
+            secteurs={autresSecteurs}
+            secteurChoisiId={secteurChoisi}
+          />
         </>
       ) : (
         <>
