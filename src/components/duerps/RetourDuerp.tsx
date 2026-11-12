@@ -25,19 +25,22 @@ export function RetourDuerp({ duerpId, donnees }: { duerpId: string; donnees: Do
   const base = `/duerp/${duerpId}`;
 
   if (page === "risques" && uniteId) {
+    const toutes = { libelle: "Toutes les unités", href: `${base}/risques` };
     const unite = donnees.unites[uniteId];
-    if (!unite) return null;
+    // Une unité ou un risque inconnus (données d'avant une mutation) : le
+    // fil s'arrête au dernier niveau connu, qui devient la page courante.
+    if (!unite) return <FilUnite niveaux={[toutes]} />;
     const libelleRisque = risqueId ? unite.risques[risqueId] : undefined;
     const niveaux: { libelle: string; href?: string }[] = [
-      { libelle: "Toutes les unités", href: `${base}/risques` },
-      { libelle: unite.nom, href: risqueId ? `${base}/risques/${uniteId}` : undefined },
+      toutes,
+      { libelle: unite.nom, href: libelleRisque ? `${base}/risques/${uniteId}` : undefined },
     ];
-    if (risqueId && libelleRisque)
+    if (libelleRisque)
       niveaux.push({
         libelle: libelleRisque,
         href: sous === "mesures" ? `${base}/risques/${uniteId}/${risqueId}` : undefined,
       });
-    if (sous === "mesures") niveaux.push({ libelle: "Mesures" });
+    if (libelleRisque && sous === "mesures") niveaux.push({ libelle: "Mesures" });
     return <FilUnite niveaux={niveaux} />;
   }
 

@@ -55,7 +55,6 @@ export default async function ActivitesPage({
 
   return (
     <div className="flex flex-col gap-8">
-
       {/* Allégé le 2026-11-11 : le titre parlait du référentiel, un mot de
           l'outil que le dirigeant ne connaît pas ; il dit maintenant ce qu'on
           attend de lui. Les deux paragraphes d'explication sont derrière le

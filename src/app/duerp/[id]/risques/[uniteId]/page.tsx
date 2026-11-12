@@ -84,7 +84,6 @@ export default async function RisquesUnitePage({
 
   return (
     <div className="flex flex-col gap-8">
-
       <EnTeteEtape page="risques" titre={unite.nom} niveau="detail">
         {unite.description}
       </EnTeteEtape>

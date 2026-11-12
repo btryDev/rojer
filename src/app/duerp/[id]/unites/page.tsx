@@ -20,7 +20,6 @@ export default async function UnitesPage({
 
   return (
     <div className="flex flex-col gap-8">
-
       {/* Allégé le 2026-11-11 : la définition d'une unité était dite deux
           fois (infobulle et paragraphe) ; elle est derrière le « ? ». */}
       <EnTeteEtape

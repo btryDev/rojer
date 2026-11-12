@@ -36,7 +36,6 @@ export default async function SecteurPage({
   return (
     <div className="flex flex-col gap-8">
 
-
       {refRecommande ? (
         <>
           <div className="flex flex-wrap items-start justify-between gap-4">
@@ -126,7 +125,6 @@ export default async function SecteurPage({
                   nom={r.nom}
                   description={descriptionPourSecteur(r.id)}
                   codesNaf={r.codesNaf}
-                  recommande={false}
                   dejaChoisi={secteurChoisi === r.id}
                 />
               ))}

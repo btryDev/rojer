@@ -10,7 +10,6 @@ type Props = {
   nom: string;
   description: string;
   codesNaf: string[];
-  recommande: boolean;
   dejaChoisi: boolean;
 };
 
@@ -40,6 +39,8 @@ export function SecteurCard({
           : ""
       }`}
     >
+      {/* Le secteur retenu se dit en mots, pas seulement par le liseré. */}
+      {dejaChoisi && <p className="board-surtitre m-0 mb-2">Secteur actuel</p>}
       <h3 className="board-titre m-0 text-[22px]">{nom}</h3>
       <p className="m-0 mt-2.5 text-[12.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
         {description}

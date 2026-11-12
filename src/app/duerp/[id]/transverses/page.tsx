@@ -52,7 +52,6 @@ export default async function TransversesPage({
 
   return (
     <div className="flex flex-col gap-8">
-
       <EnTeteEtape page="transverses" titre="Questions transverses">
         Ces questions couvrent des risques présents dans la plupart des
         entreprises, quel que soit le métier. Chaque « oui » ajoute

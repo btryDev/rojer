@@ -63,7 +63,6 @@ export default async function MesuresPage({
 
   return (
     <div className="flex flex-col gap-8">
-
       <header className="max-w-[var(--board-mesure)]">
         <div className="board-surtitre flex flex-wrap items-baseline gap-2">
           <span className="text-[color:var(--board-ink)]">

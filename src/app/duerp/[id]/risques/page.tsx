@@ -29,7 +29,6 @@ export default async function RisquesOverviewPage({
 
   return (
     <div className="flex flex-col gap-8">
-
       {/* Allégé le 2026-11-12 : la marche à suivre était une grille de quatre
           cartes d'explication, au même rang que la liste. C'est un rail sur
           le canevas ; la définition d'un risque est derrière le « ? ». */}

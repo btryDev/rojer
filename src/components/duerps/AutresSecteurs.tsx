@@ -23,7 +23,7 @@ export function AutresSecteurs({
 }) {
   if (secteurs.length === 0) return null;
   return (
-    <section aria-labelledby="autres-secteurs" className="flex flex-col gap-4">
+    <section data-ecriture aria-labelledby="autres-secteurs" className="flex flex-col gap-4">
       <h3 id="autres-secteurs" className="board-surtitre m-0">
         Autres secteurs
       </h3>
@@ -36,7 +36,6 @@ export function AutresSecteurs({
             nom={r.nom}
             description={r.description}
             codesNaf={r.codesNaf}
-            recommande={false}
             dejaChoisi={secteurChoisiId === r.id}
           />
         ))}

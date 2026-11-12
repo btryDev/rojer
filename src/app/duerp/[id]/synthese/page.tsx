@@ -115,7 +115,6 @@ export default async function SynthesePage({
 
   return (
     <div className="flex flex-col gap-8">
-
       {(majEchue || jamaisValide) && (
         <section
           role="alert"

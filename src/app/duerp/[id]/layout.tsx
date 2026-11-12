@@ -68,12 +68,9 @@ export default async function DuerpLayout({
     PAGES_DU_PARCOURS.map((page) => [page, etapesDuDuerp(duerp, page)]),
   ) as Record<EtapeId, ReturnType<typeof etapesDuDuerp>>;
 
-  // Le PDF ne se propose qu'un DUERP complété (2026-11-12, décision de la
-  // propriétaire) : les quatre étapes avant la synthèse faites. Télécharger
-  // un document à moitié rempli n'a pas de sens ; l'aperçu reste ouvert à la
-  // synthèse, où le DUERP se valide.
+  // Les noms des unités et des risques, pour le fil de retour (`RetourDuerp`).
   const donneesRetour: DonneesRetour = {
-    hrefActivite: etapesParPage.unites[0].href,
+    hrefActivite: etapesParPage.unites.find((e) => e.id === "activite")!.href,
     unites: Object.fromEntries(
       duerp.unites.map((u) => [
         u.id,
@@ -81,6 +78,11 @@ export default async function DuerpLayout({
       ]),
     ),
   };
+
+  // Le PDF ne se propose qu'un DUERP complété (2026-11-12, décision de la
+  // propriétaire) : les quatre étapes avant la synthèse faites. Télécharger
+  // un document à moitié rempli n'a pas de sens ; l'aperçu reste ouvert à la
+  // synthèse, où le DUERP se valide.
 
   const complete = etapesParPage.synthese
     .filter((e) => e.id !== "synthese")
@@ -135,7 +137,7 @@ export default async function DuerpLayout({
         {/* La barre du haut (2026-11-12) : le retour de la page tout à
             gauche, à la place de l'ancienne ligne « NAF · secteur ·
             salariés » ; à droite, le PDF une fois le DUERP complété. */}
-        <div className="flex min-h-[34px] flex-wrap items-center justify-between gap-3 px-[var(--board-gutter)] pt-6">
+        <div className="flex min-h-[34px] flex-wrap items-center gap-3 px-[var(--board-gutter)] pt-6">
           <RetourDuerp duerpId={id} donnees={donneesRetour} />
           {complete && (
             // Une balise <a>, pas un <Link> : Next précharge les <Link>, et le
