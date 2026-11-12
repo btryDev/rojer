@@ -7,7 +7,7 @@ import { SELECT_FAITS_ACTIVITE } from "@/lib/etablissements/faits-activite";
 import { reprendreFaitsDansDuerp } from "@/lib/etablissements/faits-activite-ecriture";
 import { assertEtablissementDuCompte, assertEtablissementOwnership } from "@/lib/auth/scope";
 import { construireEcrituresImport } from "./ecritures";
-import { verifierPlafondImport } from "../plafond-unites";
+import { avecValidations } from "../etapes-validees";
 import {
   LIBELLE_CHAMP_IMPORT,
   erreurDeFichier,
@@ -158,11 +158,9 @@ export async function commitImport(
   // transaction, ce qui forçait celle-ci à rester interactive et à payer un
   // aller-retour réseau par ligne du fichier.
   //
-  // Elles sont désormais lues **toutes**, et non plus les seules dont le nom
-  // figure dans le fichier : le plafond de l'ADR-033 se compte sur ce que le
-  // DUERP porte déjà, pas sur ce que l'import y reconnaît. Un filtre par nom
-  // aurait rendu la borne aveugle aux unités que le fichier ne mentionne pas
-  // — c'est-à-dire au cas courant.
+  // ~~Le plafond de l'ADR-033 se comptait ici~~ [2026-11-11 : levé, ADR-033
+  // amendée] ; elles servent au rattachement par nom et au compte des unités
+  // à naître pour la limite de l'essai.
   const unitesExistantes = duerpExistant
     ? await db.uniteTravail.findMany({
         where: { duerpId: duerpExistant.id },
@@ -170,14 +168,6 @@ export async function commitImport(
       })
     : [];
 
-  // Le plafond est vérifié **avant** la création du DUERP : un import refusé
-  // laisserait sinon derrière lui un document vide que personne n'a demandé,
-  // et que la prochaine ouverture réutiliserait en silence.
-  const borne = verifierPlafondImport(
-    unitesExistantes,
-    plan.unites.map((u) => u.nom),
-  );
-  if (!borne.ok) return { status: "error", message: borne.message };
   // Plafond d'imports, puis limite d'unités de l'essai (ADR-053 § 14), même
   // règle de comptage : refusés ici, AVANT la création du DUERP ; la
   // transaction les reprend sous verrou.
@@ -195,7 +185,7 @@ export async function commitImport(
   // Les identifiants sont générés ici, donc plus aucune écriture n'attend le
   // résultat d'une autre : les trois listes partent en autant de `createMany`,
   // dans une transaction séquentielle envoyée en un seul lot.
-  const resultat = construireEcrituresImport({
+  const ecritures = construireEcrituresImport({
     plan,
     unitesExistantes,
     duerpId,
@@ -203,11 +193,6 @@ export async function commitImport(
     genererId: (prefixe) => `${prefixe}_${randomUUID()}`,
     maintenant: new Date(),
   });
-
-  // Un refus arrive avant toute écriture, et il porte sa raison : le fichier
-  // reste au dirigeant, à lui de regrouper ses unités et de le redéposer.
-  if (!resultat.ok) return { status: "error", message: resultat.message };
-  const ecritures = resultat.ecritures;
 
   const nbRisquesCrees = ecritures.risques.length;
 
@@ -231,8 +216,8 @@ export async function commitImport(
       // `creerEnLotVerifie` (ADR-051) : les parents de chaque lot sont lus par
       // la transaction — les unités créées juste avant y sont vues.
       if (ecritures.unitesACreer.length > 0) {
-        // Limite d'unités de l'essai gratuit (ADR-053 § 14) : refus en bloc,
-        // comme l'ADR-033. Avant la création des unités, qu'elle compte : le
+        // Limite d'unités de l'essai gratuit (ADR-053 § 14) : refus en bloc —
+        // tronquer un document apporté ferait perdre des risques évalués. Avant la création des unités, qu'elle compte : le
         // verrou du compte est alors tenu jusqu'à la fin de l'import — pendant
         // l'essai seulement, où un import ne crée que quelques unités.
         await prendreQuota(tx, compte.compteId, "unitesTravail", ecritures.unitesACreer.length);
@@ -245,6 +230,19 @@ export async function commitImport(
         await creerEnLotVerifie(tx, "Action", ecritures.actions);
       }
       if (faits) await reprendreFaitsDansDuerp(tx, duerpId, faits);
+      // Des unités et des risques arrivent : leurs étapes sont à revalider
+      // (« si pas validé, pas fait », 2026-11-11).
+      if (duerpExistant?.etapesValidees) {
+        await tx.duerp.update({
+          where: { id: duerpId },
+          data: {
+            etapesValidees: avecValidations(duerpExistant.etapesValidees, {
+              unites: null,
+              risques: null,
+            }),
+          },
+        });
+      }
       // Le plafond annuel d'imports (ADR-053 § 14), en DERNIER : le verrou du
       // compte n'est tenu que jusqu'à la validation, pas pendant tout l'import.
       await prendreQuota(tx, compte.compteId, "importsDuerp");

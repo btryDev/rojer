@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { AideEcran } from "@/components/ui-kit/AideEcran";
+import { FilUnite } from "@/components/duerps/FilUnite";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
-import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { AjouterMesureCustomForm } from "@/components/duerps/AjouterMesureCustomForm";
 import { EvaluationProgression } from "@/components/duerps/EvaluationProgression";
 import { MesureReferentielToggle } from "@/components/duerps/MesureReferentielToggle";
@@ -62,18 +63,18 @@ export default async function MesuresPage({
     : undefined;
 
   return (
-    <div className="flex flex-col gap-[22px]">
-      <nav>
-        <Link
-          href={hrefUnite}
-          className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-[color:var(--board-slate-soft)] transition-colors hover:text-[color:var(--board-ink)]"
-        >
-          ← {risque.unite.nom}
-        </Link>
-      </nav>
+    <div className="flex flex-col gap-8">
+      <FilUnite
+        niveaux={[
+          { libelle: "Toutes les unités", href: `/duerp/${id}/risques` },
+          { libelle: risque.unite.nom, href: hrefUnite },
+          { libelle: risque.libelle, href: hrefCotation },
+          { libelle: "Mesures" },
+        ]}
+      />
 
       <header className="max-w-[var(--board-mesure)]">
-        <div className="board-eyebrow flex flex-wrap items-baseline gap-2 text-[10.5px] tracking-[0.18em]">
+        <div className="board-surtitre flex flex-wrap items-baseline gap-2">
           <span className="text-[color:var(--board-ink)]">
             Évaluation du risque
           </span>
@@ -86,10 +87,10 @@ export default async function MesuresPage({
             {String(risquesUnite.length).padStart(2, "0")}
           </span>
         </div>
-        <h2 className="board-titre m-0 mt-3 text-[clamp(23px,2.1vw,30px)]">
+        <h2 className="board-titre m-0 mt-3 text-[22px]">
           {risque.libelle}
         </h2>
-        <p className="board-eyebrow m-0 mt-3 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
+        <p className="board-surtitre m-0 mt-3 text-[color:var(--board-slate-soft)]">
           Criticité cotée{" "}
           <span className="tabular-nums text-[color:var(--board-ink)]">
             {String(risque.criticite).padStart(2, "0")} / 16
@@ -112,74 +113,41 @@ export default async function MesuresPage({
         hrefMesures={hrefMesures}
       />
 
-      <section aria-labelledby="partie-mesures" className="flex flex-col gap-[22px] pt-2">
-        <div className="flex flex-wrap items-baseline gap-3">
-          <span className="font-mono text-[18px] font-semibold tabular-nums text-[color:var(--board-blue-ink)]">
-            02
-          </span>
-          <h3
-            id="partie-mesures"
-            className="board-titre m-0 text-[22px]"
-          >
-            Mesures de prévention
-          </h3>
-          <span aria-hidden className="text-[color:var(--board-slate)]">
-            /
-          </span>
-          <span className="board-eyebrow inline-flex items-center text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
-            Types de mesures — existantes et prévues
-            <InfoTooltip variant="legal" align="left" label="Types de mesures — classement de Rojer">
-              <span className="block font-mono text-[9.5px] font-semibold uppercase tracking-[0.2em] opacity-70">
-                Art. L. 4121-2 · Code du travail
-              </span>
-              <span className="mt-2 block font-medium normal-case tracking-normal">
-                {ORDRE_SELON_L4121_2}{" "}
-                L&apos;ordre des types ci-dessous est un
-                classement de Rojer&nbsp;:
-              </span>
-              <span className="mt-1.5 block normal-case tracking-normal">
-                <span className="block">
-                  <span className="font-mono tabular-nums opacity-60">1.</span>{" "}
-                  Supprimer le risque
-                </span>
-                <span className="block">
-                  <span className="font-mono tabular-nums opacity-60">2.</span>{" "}
-                  Réduire à la source
-                </span>
-                <span className="block">
-                  <span className="font-mono tabular-nums opacity-60">3.</span>{" "}
-                  Protection collective
-                </span>
-                <span className="mt-1 block border-t border-white/20 pt-1">
-                  <span className="font-mono tabular-nums opacity-60">4.</span>{" "}
-                  EPI (individuelle)
-                </span>
-                <span className="block">
-                  <span className="font-mono tabular-nums opacity-60">5.</span>{" "}
-                  Formation / information
-                </span>
-                <span className="block">
-                  <span className="font-mono tabular-nums opacity-60">6.</span>{" "}
-                  Mesure organisationnelle
-                </span>
-              </span>
-              <span className="mt-2 block text-[11px] opacity-75">
+      <section aria-labelledby="partie-mesures" className="flex flex-col gap-6">
+        {/* Allégé le 2026-11-12 : le titre « 02 Mesures de prévention » doublait
+            la progression, et la hiérarchie de L. 4121-2 vivait dans une
+            infobulle. Une phrase, et le détail derrière le « ? ». */}
+        <h3 id="partie-mesures" className="sr-only">
+          Mesures de prévention
+        </h3>
+        <div className="flex max-w-[var(--board-mesure)] flex-col gap-1.5">
+          <div className="flex items-center gap-3">
+            <p className="m-0 text-[14.5px] font-medium leading-[1.55] text-[color:var(--board-ink)]">
+              Cochez les mesures déjà en place et celles que vous comptez
+              mettre en œuvre.
+            </p>
+            <AideEcran titre="Types de mesures — classement de Rojer">
+              <p className="m-0 font-semibold">Art. L. 4121-2 · Code du travail</p>
+              <p className="m-0 mt-2">
+                {`${ORDRE_SELON_L4121_2} L'ordre des types ci-dessous est un classement de Rojer :`}
+              </p>
+              <ol className="m-0 mt-2 pl-5">
+                <li>Supprimer le risque</li>
+                <li>Réduire à la source</li>
+                <li>Protection collective</li>
+                <li>EPI (individuelle)</li>
+                <li>Formation / information</li>
+                <li>Mesure organisationnelle</li>
+              </ol>
+              <p className="m-0 mt-2">
                 EPI et formation viennent en dernier, jamais en substitut des
                 trois premiers niveaux — classement de Rojer, que l&apos;article
                 n&apos;écrit pas.
-              </span>
-            </InfoTooltip>
-          </span>
-        </div>
-
-        <div className="max-w-[var(--board-mesure)] space-y-2.5">
-          <p className="m-0 text-[14.5px] font-medium leading-[1.55] text-[color:var(--board-ink)]">
-            Sélectionnez les mesures déjà en place et celles que vous comptez
-            mettre en œuvre.
-          </p>
+              </p>
+            </AideEcran>
+          </div>
           <p className="m-0 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-            Si votre inventaire diffère de la maîtrise que vous aviez cotée,
-            vous pourrez{" "}
+            Si votre inventaire diffère de la maîtrise cotée, vous pourrez{" "}
             <Link
               href={hrefCotation}
               className="font-medium text-[color:var(--board-blue-ink)] hover:underline"
@@ -195,7 +163,7 @@ export default async function MesuresPage({
           // échéance dépassée : encre de signal sur voile, jamais le champ
           // rose (charte, interdit 3).
           <div className="rounded-[22px] bg-[color:var(--board-signal-wash)] px-6 py-5">
-            <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-signal-ink)]">
+            <p className="board-surtitre m-0 text-[color:var(--board-signal-ink)]">
               {avecEpi
                 ? "Protection collective · art. L. 4121-2, 8°"
                 : "Réduction à la source · art. L. 4121-2, 3°"}
@@ -215,10 +183,10 @@ export default async function MesuresPage({
 
         <section className="carte-board overflow-clip">
           <div className="flex items-baseline justify-between gap-4 border-b border-[color:var(--board-slate-line)] px-7 py-5 sm:px-8">
-            <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
+            <p className="board-surtitre m-0 text-[color:var(--board-slate-soft)]">
               Mesures retenues
             </p>
-            <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] tabular-nums text-[color:var(--board-slate-soft)]">
+            <p className="board-surtitre m-0 tabular-nums text-[color:var(--board-slate-soft)]">
               {String(mesuresAffichees.length).padStart(2, "0")} au total
             </p>
           </div>
@@ -232,7 +200,7 @@ export default async function MesuresPage({
               <p className="m-0 flex flex-wrap items-baseline gap-2 border-b border-[color:var(--board-slate-line)] px-7 py-3 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)] sm:px-8">
                 <span
                   aria-hidden
-                  className="board-eyebrow text-[10px] tracking-[0.16em] text-[color:var(--board-blue-ink)]"
+                  className="board-surtitre text-[color:var(--board-blue-ink)]"
                 >
                   À faire
                 </span>
@@ -276,10 +244,10 @@ export default async function MesuresPage({
         {mesuresRefNonSelectionnees.length > 0 && (
           <section className="carte-board overflow-clip">
             <div className="flex items-baseline justify-between gap-4 border-b border-[color:var(--board-slate-line)] px-7 py-5 sm:px-8">
-              <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
+              <p className="board-surtitre m-0 text-[color:var(--board-slate-soft)]">
                 Mesures recommandées par le référentiel
               </p>
-              <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] tabular-nums text-[color:var(--board-slate-soft)]">
+              <p className="board-surtitre m-0 tabular-nums text-[color:var(--board-slate-soft)]">
                 {String(mesuresRefNonSelectionnees.length).padStart(2, "0")} à
                 envisager
               </p>
@@ -307,7 +275,7 @@ export default async function MesuresPage({
 
         <section data-ecriture className="carte-board overflow-clip">
           <div className="border-b border-[color:var(--board-slate-line)] px-7 py-5 sm:px-8">
-            <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
+            <p className="board-surtitre m-0 text-[color:var(--board-slate-soft)]">
               Ajouter une mesure personnalisée
             </p>
           </div>
@@ -320,19 +288,9 @@ export default async function MesuresPage({
       {/* Actions */}
       <div className="space-y-4 border-t border-[color:var(--board-slate-line)] pt-7">
         <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-          <Link
-            href={hrefUnite}
-            className={buttonVariants({ variant: "boardClair", size: "boardSm" })}
-          >
-            ← Retour à l&apos;unité
-          </Link>
-          <div className="flex flex-wrap items-center gap-3">
-            <Link
-              href={hrefCotation}
-              className={buttonVariants({ variant: "boardClair", size: "board" })}
-            >
-              ← Revoir la cotation
-            </Link>
+          {/* Les retours du bas sont partis (2026-11-12) : le fil du haut
+              mène à l'unité et à la cotation. */}
+          <div className="flex flex-wrap items-center gap-3 sm:ml-auto">
             {hrefSuivant ? (
               <Link
                 href={hrefSuivant}

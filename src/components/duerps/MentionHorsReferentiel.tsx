@@ -1,5 +1,8 @@
+import { AideEcran } from "@/components/ui-kit/AideEcran";
+
 /**
- * La mention « hors référentiel sectoriel », dans ses deux formats.
+ * La mention « hors référentiel sectoriel », sur la page d'une unité.
+ * ~~Format court sur la vue d'ensemble~~ (retiré le 2026-11-12).
  *
  * Pourquoi elle existe : quand une unité n'a pas d'équivalent dans le
  * référentiel sectoriel, la liste des risques proposés est vide. Sans un mot,
@@ -19,43 +22,32 @@
  * donc la surface creuse de l'ardoise, comme un sous-bloc.
  */
 
-/** Format court, pour une ligne de liste déjà dense. */
-export function LigneHorsReferentiel() {
-  return (
-    <p className="board-eyebrow m-0 mt-2 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
-      Unité sans modèle · aucun risque proposé d&apos;avance
-    </p>
-  );
-}
-
-/** Format développé, en tête de la fiche d'une unité. */
+/**
+ * Format développé, en tête de la fiche d'une unité. Une ligne (2026-11-12) :
+ * les trois paragraphes d'origine passent derrière le « ? ».
+ */
 export function MentionHorsReferentiel() {
   return (
     <section
       aria-label="Unité sans modèle"
-      className="rounded-[22px] bg-[color:var(--board-slate-pale)] px-7 py-6 sm:px-8"
+      className="flex flex-wrap items-center gap-3 rounded-[22px] bg-[color:var(--board-slate-pale)] px-7 py-4 sm:px-8"
     >
-      <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-        Unité sans modèle
+      <p className="m-0 text-[13.5px] leading-[1.55] text-[color:var(--board-slate-ink)]">
+        Pas de risques proposés pour cette unité&nbsp;: ajoutez les vôtres.
       </p>
-      <p className="m-0 mt-2.5 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
-        Rojer n&apos;a pas de modèle pour cette unité dans votre secteur
-        d&apos;activité : aucun risque ne vous est proposé d&apos;avance.
-        C&apos;est à vous de lister les risques, de les coter et de choisir
-        les mesures.
-      </p>
-      <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-        Ajoutez vos risques un par un depuis «&nbsp;Ajouter un risque
-        spécifique&nbsp;» plus bas. Chaque risque ajouté démarre sur une
-        cotation neutre — c&apos;est un point de départ à ajuster, pas une
-        appréciation. Si après examen l&apos;unité ne présente pas de risque
-        significatif, vous pouvez le déclarer et le justifier.
-      </p>
-      <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-        Le DUERP généré porte la mention que cette unité a été évaluée hors
-        référentiel sectoriel, afin que le lecteur du document sache d&apos;où
-        vient son contenu.
-      </p>
+      <AideEcran titre="Unité sans modèle">
+        <p className="m-0">
+          Rojer n&apos;a pas de modèle pour cette unité dans votre secteur :
+          c&apos;est à vous de lister les risques, de les coter et de choisir
+          les mesures. Chaque risque ajouté démarre sur une cotation neutre, à
+          ajuster.
+        </p>
+        <p className="m-0 mt-3">
+          Si l&apos;unité ne présente pas de risque significatif, vous pouvez
+          le déclarer et le justifier. Le DUERP indique que cette unité a été
+          évaluée hors référentiel sectoriel.
+        </p>
+      </AideEcran>
     </section>
   );
 }

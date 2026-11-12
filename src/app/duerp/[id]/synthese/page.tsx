@@ -1,17 +1,16 @@
 import Link from "next/link";
+import { LienRetour } from "@/components/duerps/LienRetour";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { CarteMiseAJour } from "@/components/duerps/CarteMiseAJour";
 import { mentionAConfirmer } from "@/lib/matching/effectif-entreprise";
 import { CreerVersionForm } from "@/components/duerps/CreerVersionForm";
 import { TransmissionSpstForm } from "@/components/duerps/TransmissionSpstForm";
-import { WizardSteps } from "@/components/duerps/WizardSteps";
 import {
   lireReponsesActivites,
 } from "@/lib/activites/reponses";
 import { CHAMP_ETAT, ENCRE_ETAT } from "@/lib/calendrier/etats";
 import { evaluerCouverture } from "@/lib/duerps/couverture";
-import { etapesDuDuerp } from "@/lib/duerps/etapes";
 import { getDuerp } from "@/lib/duerps/queries";
 import { construireSynthese } from "@/lib/duerps/synthese";
 import { LABEL_TYPE_MESURE } from "@/lib/mesures/labels";
@@ -41,7 +40,6 @@ export default async function SynthesePage({
   const duerp = await getDuerp(id);
   if (!duerp) notFound();
 
-  const etapes = etapesDuDuerp(duerp, "synthese");
 
   const synthese = construireSynthese(duerp.unites);
   const versions = await listerVersions(id);
@@ -117,8 +115,12 @@ export default async function SynthesePage({
   const etatMaj = majEchue && !majAnnuelleAConfirmer ? "enRetard" : "aPlanifier";
 
   return (
-    <div className="flex flex-col gap-[22px]">
-      <WizardSteps etapes={etapes} />
+    <div className="flex flex-col gap-8">
+      {/* Le retour à l'étape précédente, en tête (2026-11-12) : tout le
+          monde ne devine pas que le fil des étapes se clique. */}
+      <nav>
+        <LienRetour href={`/duerp/${id}/transverses`}>Questions transverses</LienRetour>
+      </nav>
 
       {(majEchue || jamaisValide) && (
         <section
@@ -128,7 +130,7 @@ export default async function SynthesePage({
         >
           <div className="flex flex-wrap items-baseline justify-between gap-3">
             <p
-              className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em]"
+              className="board-surtitre m-0"
               style={{ color: ENCRE_ETAT[etatMaj] }}
             >
               {jamaisValide
@@ -144,7 +146,7 @@ export default async function SynthesePage({
                 qu'il en existait un. */}
             {!jamaisValide && (
               <p
-                className="board-eyebrow m-0 text-[10px] tracking-[0.16em] tabular-nums"
+                className="board-surtitre m-0 tabular-nums"
                 style={{ color: ENCRE_ETAT[etatMaj] }}
               >
                 Effectif {duerp.entreprise.effectif} salarié
@@ -187,7 +189,7 @@ export default async function SynthesePage({
 
       {/* Couverture du dossier */}
       <section className="carte-board px-7 py-6 sm:px-8">
-        <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
+        <p className="board-surtitre m-0 text-[color:var(--board-slate-soft)]">
           Dossier DUERP
         </p>
         <h2 className="board-titre m-0 mt-2 text-[clamp(29px,3vw,39px)]">
@@ -217,7 +219,7 @@ export default async function SynthesePage({
         synthese.nbAlertesSousCotation > 0 ||
         synthese.nbAlertesHierarchie > 0) && (
         <section className="carte-board px-7 py-6 sm:px-8">
-          <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
+          <p className="board-surtitre m-0 text-[color:var(--board-slate-soft)]">
             Points à vérifier
           </p>
           <ul className="m-0 mt-3 list-none p-0">
@@ -258,7 +260,7 @@ export default async function SynthesePage({
       <section className="carte-board px-7 py-6 sm:px-8">
         <div className="flex flex-wrap items-baseline justify-between gap-4">
           <div className="min-w-0">
-            <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
+            <p className="board-surtitre m-0 text-[color:var(--board-slate-soft)]">
               Inventaire priorisé
             </p>
             <h3 className="board-titre m-0 mt-1.5 text-[22px]">
@@ -321,7 +323,7 @@ export default async function SynthesePage({
                         décroissant portent l'information, plus précisément
                         que quatre bandes. */}
                     <td data-label="Criticité" className={TD}>
-                      <span className="pastille-board bg-[color:var(--board-slate-pale)] font-mono text-[12px] tabular-nums text-[color:var(--board-slate-ink)]">
+                      <span className="pastille-board bg-[color:var(--board-slate-pale)] text-[12px] tabular-nums text-[color:var(--board-slate-ink)]">
                         {l.cotationSaisie ? `${l.criticite}/16` : "n.c."}
                       </span>
                     </td>
@@ -330,7 +332,7 @@ export default async function SynthesePage({
                         {l.libelle}
                       </span>
                       {(l.alerteSousCotation || l.alerteHierarchieBasse) && (
-                        <span className="mt-0.5 block font-mono text-[11px] uppercase tracking-[0.12em] text-[color:var(--board-signal-ink)]">
+                        <span className="board-surtitre mt-0.5 block text-[color:var(--board-signal-ink)]">
                           {l.alerteSousCotation && "⚑ Sous-cotation"}
                           {l.alerteSousCotation && l.alerteHierarchieBasse && " · "}
                           {l.alerteHierarchieBasse && "⚑ EPI seuls"}
@@ -345,7 +347,7 @@ export default async function SynthesePage({
                         </span>
                       )}
                     </td>
-                    <td data-label="G × P / M" className={`${TD} font-mono tabular-nums`}>
+                    <td data-label="G × P / M" className={`${TD} tabular-nums`}>
                       {l.gravite} × {l.probabilite} / {l.maitrise}
                     </td>
                     <td data-label="Mesures" className={`${TD} tabular-nums`}>
@@ -376,7 +378,7 @@ export default async function SynthesePage({
       <section className="carte-board px-7 py-6 sm:px-8">
         <div className="flex flex-wrap items-baseline justify-between gap-4">
           <div className="min-w-0">
-            <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
+            <p className="board-surtitre m-0 text-[color:var(--board-slate-soft)]">
               Plan d&apos;actions
             </p>
             <h3 className="board-titre m-0 mt-1.5 text-[22px]">
@@ -423,7 +425,7 @@ export default async function SynthesePage({
                     key={a.mesureId}
                     className="border-b border-[color:var(--board-slate-line)] align-top last:border-b-0"
                   >
-                    <td data-label="Échéance" className={`${TD} font-mono tabular-nums`}>
+                    <td data-label="Échéance" className={`${TD} tabular-nums`}>
                       {formatDate(a.echeance)}
                     </td>
                     <td data-label="Action" className={`${TD} text-[color:var(--board-ink)]`}>
@@ -454,8 +456,8 @@ export default async function SynthesePage({
         <section className="carte-board px-7 py-6 sm:px-8">
           <div className="flex flex-wrap items-baseline justify-between gap-3">
             <div className="min-w-0">
-              <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-                Périmètre du référentiel
+              <p className="board-surtitre m-0 text-[color:var(--board-slate-soft)]">
+                Votre activité
               </p>
               <h3 className="board-titre m-0 mt-1.5 text-[22px]">
                 Ce que le document ne traite pas
@@ -555,7 +557,7 @@ export default async function SynthesePage({
       <section className="carte-board px-7 py-6 sm:px-8">
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <div className="min-w-0">
-            <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
+            <p className="board-surtitre m-0 text-[color:var(--board-slate-soft)]">
               Versions figées
             </p>
             <h3 className="board-titre m-0 mt-1.5 text-[22px]">
@@ -591,7 +593,7 @@ export default async function SynthesePage({
                 className="flex flex-wrap items-center justify-between gap-4 border-t border-[color:var(--board-slate-line)] py-3.5"
               >
                 <div className="flex min-w-0 items-baseline gap-4">
-                  <span className="font-mono text-[18px] tabular-nums text-[color:var(--board-slate-soft)]">
+                  <span className="text-[18px] tabular-nums text-[color:var(--board-slate-soft)]">
                     v{v.numero}
                   </span>
                   <div className="min-w-0">
@@ -647,12 +649,6 @@ export default async function SynthesePage({
       </section>
 
       <div className="flex flex-wrap items-center justify-between gap-4 border-t border-[color:var(--board-slate-line)] pt-6">
-        <Link
-          href={`/duerp/${id}/transverses`}
-          className={buttonVariants({ variant: "boardClair", size: "board" })}
-        >
-          ← Étape précédente
-        </Link>
         <p className="m-0 text-[12.5px] text-[color:var(--board-slate-mid)]">
           Fait à {formaterDateFr(aujourdhui)}
         </p>
@@ -666,17 +662,17 @@ export default async function SynthesePage({
 // une dizaine d'utilitaires : les nommer une fois évite qu'ils divergent
 // d'un tableau à l'autre sur le même écran.
 const TH =
-  "board-eyebrow py-2 pr-4 text-[9.5px] font-semibold tracking-[0.12em] text-[color:var(--board-slate-soft)] last:pr-0";
+  "board-surtitre py-2 pr-4 last:pr-0";
 const TD =
   "py-2.5 pr-4 leading-[1.55] text-[color:var(--board-slate-ink)] last:pr-0";
 
 function Stat({ libelle, valeur }: { libelle: string; valeur: number }) {
   return (
     <div>
-      <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
+      <p className="board-surtitre m-0 text-[color:var(--board-slate-soft)]">
         {libelle}
       </p>
-      <p className="m-0 mt-1.5 font-mono text-[30px] tabular-nums leading-none tracking-[-0.02em] text-[color:var(--board-ink)]">
+      <p className="m-0 mt-1.5 text-[30px] tabular-nums leading-none tracking-[-0.02em] text-[color:var(--board-ink)]">
         {valeur}
       </p>
     </div>
@@ -707,7 +703,7 @@ function AlerteItem({
       : "text-[color:var(--board-slate-soft)]";
   return (
     <li className="flex items-start gap-3.5 border-t border-[color:var(--board-slate-line)] py-3">
-      <span aria-hidden className={`mt-0.5 font-mono text-[12.5px] ${encre}`}>
+      <span aria-hidden className={`mt-0.5 text-[12.5px] ${encre}`}>
         {ton === "alerte" ? "⚑" : "·"}
       </span>
       <div className="min-w-0 flex-1">

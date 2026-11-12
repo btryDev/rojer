@@ -39,7 +39,7 @@ Pas de LLM pour traiter les réponses, pas de reformulation automatique, pas de 
 
 ### Socle historique (les 4 blocs d'origine)
 
-1. **Évaluation des risques professionnels (DUERP)** — art. R. 4121-1 à R. 4121-4 et L. 4121-2 CT. Inventaire des risques par unité de travail — **cinq unités au plus, hors « Risques transverses »** (ADR-033) —, cotation, mesures de prévention, versioning obligatoire (mise à jour annuelle minimum, conservation 40 ans). Import XLSX/CSV d'un DUERP existant (parser déterministe, gabarit téléchargeable).
+1. **Évaluation des risques professionnels (DUERP)** — art. R. 4121-1 à R. 4121-4 et L. 4121-2 CT. Inventaire des risques par unité de travail — ~~**cinq unités au plus, hors « Risques transverses »** (ADR-033)~~ [2026-11-11 : plafond levé, ADR-033 amendée ; seule la limite de l'essai borne les unités (ADR-053)] —, cotation, mesures de prévention, versioning obligatoire (mise à jour annuelle minimum, conservation 40 ans). Import XLSX/CSV d'un DUERP existant (parser déterministe, gabarit téléchargeable).
 2. **Vérifications périodiques réglementaires** — art. R. 4323-22 et s. CT, règlement ERP (arrêté du 25 juin 1980), CCH. Calendrier généré automatiquement selon équipements et typologie ; périodicités hebdo → quinquennale ; réalisateur requis.
 3. **Registre de sécurité numérique** — art. R. 4323-25 CT (consignation des vérifications), R. 4323-26 (annexion des rapports d'un tiers) et R. 4323-27 (tenue sur tout support, via L. 8113-6 — c'est lui qui rend le registre numérique légal). L. 4711-5 n'institue rien : il autorise seulement à réunir plusieurs registres en un seul. Centralisation horodatée des rapports, liaison aux occurrences de vérification, export consolidé (ZIP + index PDF).
 4. **Plan d'actions de conformité** — art. L. 4121-2 CT. Actions correctives unifiées (issues du DUERP ou d'un rapport de vérification), hiérarchie des mesures, suivi jusqu'à la levée.
@@ -677,8 +677,9 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     pas élargi — ce qui n'est pas suivi pour un type se déclare, axe `type_erp`)
 32. **032** — Une demande d'assureur entre par les prescriptions, et ne devient
     jamais du droit : marquage obligatoire sur les neuf surfaces qui l'affichent
-33. **033** — Le DUERP est borné à cinq unités de travail, hors « Risques
-    transverses »
+33. **033** — ~~Le DUERP est borné à cinq unités de travail, hors « Risques
+    transverses »~~ [2026-11-11 : plafond levé, amendement en tête de l'ADR ;
+    la tarification (ADR-053) borne seule les unités]
 34. **034** — Une ligne de suivi ne porte que l'échéance ouverte ; l'historique,
     ce sont les rapports (**acceptée le 2026-09-10**, amende l'ADR-012). Au dépôt
     d'un rapport la ligne roule, le rapport garde l'échéance qu'il honorait,
@@ -791,6 +792,11 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     type déclaré (`typePorte`, `typeEpi`, exigé) ; GZ 15 sur l'installation
     de gaz seule ; référentiel `2026-11-07.1`, 206 inchangé ; migration en un
     seul déploiement, enum recréé])
+
+59. **059** — Une étape du DUERP n'est faite que validée : « Fait » =
+    validé par le dirigeant ET complet sur les données ; `Duerp.etapesValidees`
+    (2026-11-11). Amende la décision du 2026-10-12 sur les transverses sans la
+    renverser
 
 [2026-10-15, ménage des ADR : 037, 038 et 043 manquaient à cette liste ;
 **il n'existe pas d'ADR-044** — annoncée dans

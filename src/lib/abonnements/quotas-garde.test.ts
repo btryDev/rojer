@@ -36,6 +36,8 @@ const CREATEURS = [
   "src/lib/prescriptions/actions.ts",
   "src/lib/duerps/actions.ts",
   "src/lib/duerps/import/actions.ts",
+  // L'unité dédiée d'une activité hors référentiel (ADR-060), sous la porte.
+  "src/lib/activites/ajouts.ts",
   "src/lib/access-tokens/emission.ts",
   "src/lib/signatures/actions.ts",
 ];

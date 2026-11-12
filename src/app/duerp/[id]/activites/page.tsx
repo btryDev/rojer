@@ -1,15 +1,18 @@
 import Link from "next/link";
+import { LienRetour } from "@/components/duerps/LienRetour";
+import { EnTeteEtape } from "@/components/duerps/EnTeteEtape";
+import { enteteEtape } from "@/lib/duerps/etapes";
+import { LIMITES_ESSAI } from "@/lib/abonnements/formules";
 import { notFound, redirect } from "next/navigation";
-import { buttonVariants } from "@/components/ui/button";
 import { QuestionActiviteRow } from "@/components/duerps/QuestionActiviteRow";
-import { WizardSteps } from "@/components/duerps/WizardSteps";
+import { ValiderEtapeBouton } from "@/components/duerps/ValiderEtapeBouton";
 import { questionsActivites } from "@/lib/activites/reponses";
-import { etapesDuDuerp } from "@/lib/duerps/etapes";
 import { getDuerp } from "@/lib/duerps/queries";
+import { ajoutsParActivite } from "@/lib/activites/ajouts";
 import { trouverReferentielParId } from "@/lib/referentiels";
 
 /**
- * « Périmètre du référentiel » — les activités que le référentiel sectoriel
+ * « Précisez votre activité » (sous-étape de « Votre activité ») — les activités que le référentiel sectoriel
  * retenu ne couvre pas, et la question fermée qui demande au dirigeant s'il
  * les exerce (ADR-020).
  *
@@ -43,40 +46,80 @@ export default async function ActivitesPage({
     redirect(`/duerp/${id}/${duerp.referentielSecteurId ? "unites" : "secteur"}`);
   }
 
-  const etapes = etapesDuDuerp(duerp, "activites");
 
   const referentiel = duerp.referentielSecteurId
     ? trouverReferentielParId(duerp.referentielSecteurId)
     : undefined;
+  // Ce que les « oui » ont ajouté (ADR-060), lu sur le DUERP déjà chargé.
+  const ajouts = ajoutsParActivite(duerp.unites);
   const sansReponse = questions.filter((q) => q.exercee === undefined);
 
   return (
-    <div className="flex flex-col gap-[22px]">
-      <WizardSteps etapes={etapes} />
+    <div className="flex flex-col gap-8">
+      {/* Le retour à l'étape précédente, en tête (2026-11-12) : tout le
+          monde ne devine pas que le fil des étapes se clique. */}
+      <nav>
+        <LienRetour href={`/duerp/${id}/secteur`}>Secteur d&apos;activité</LienRetour>
+      </nav>
 
-      <header className="max-w-[var(--board-mesure)]">
-        <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-          Périmètre du référentiel
-        </p>
-        <h2 className="board-titre m-0 mt-3 text-[clamp(23px,2.1vw,30px)]">
-          Ce que {referentiel ? `le référentiel « ${referentiel.nom} »` : "le référentiel retenu"}{" "}
-          ne couvre pas
-        </h2>
-        <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-          Un référentiel sectoriel est bâti sur une activité type. Le vôtre ne
-          connaît ni les ateliers, ni les métiers annexes que vous exercez
-          peut-être en plus. Les questions ci-dessous servent uniquement à le
-          savoir.
-        </p>
-        <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-          Répondre «&nbsp;oui&nbsp;» ne bloque rien, n&apos;ajoute aucun risque
-          et n&apos;en retire aucun. Cela enregistre un fait sur le périmètre de
-          votre dossier, qui sera repris dans le DUERP généré : le lecteur du
-          document saura ce qu&apos;il ne traite pas.
-        </p>
-      </header>
+      {/* Allégé le 2026-11-11 : le titre parlait du référentiel, un mot de
+          l'outil que le dirigeant ne connaît pas ; il dit maintenant ce qu'on
+          attend de lui. Les deux paragraphes d'explication sont derrière le
+          « ? » — on ne les lit qu'une fois. */}
+      <EnTeteEtape
+        page="activites"
+        titre="Précisez votre activité"
+        aide={{
+          titre: "Pourquoi ces questions",
+          contenu: (
+            <>
+            <p className="m-0">
+              Les risques proposés pour votre secteur sont bâtis sur une activité
+              type. Ils ne connaissent ni les ateliers, ni les métiers annexes que
+              vous exercez peut-être en plus. Ces questions servent uniquement à
+              le savoir.
+            </p>
+            <p className="m-0 mt-3">
+              Répondre «&nbsp;oui&nbsp;» ajoute à votre DUERP l&apos;unité et
+              les risques de cette activité, à évaluer à l&apos;étape Risques.
+              Revenir à «&nbsp;non&nbsp;» les retire, sauf ce que vous avez
+              déjà complété. La réponse est aussi reprise dans le DUERP
+              généré.
+            </p>
+            <p className="m-0 mt-3">
+              Vous pouvez continuer sans répondre. Le document ne dira alors ni
+              que ces activités sont exercées, ni qu&apos;elles ne le sont pas.
+            </p>
+            </>
+          ),
+        }}
+      >
+          {referentiel ? (
+            <>
+              Secteur retenu&nbsp;: {referentiel.nom} (
+              <Link
+                href={`/duerp/${id}/secteur`}
+                className="text-[color:var(--board-blue-ink)] underline-offset-4 hover:underline"
+              >
+                changer
+              </Link>
+              ). Faites-vous aussi l&apos;une de ces choses&nbsp;?
+            </>
+          ) : (
+            <>
+              Faites-vous aussi l&apos;une de ces choses&nbsp;? (
+              <Link
+                href={`/duerp/${id}/secteur`}
+                className="text-[color:var(--board-blue-ink)] underline-offset-4 hover:underline"
+              >
+                changer de secteur
+              </Link>
+              )
+            </>
+          )}
+      </EnTeteEtape>
 
-      <ul className="m-0 flex list-none flex-col gap-3 p-0">
+      <ul className="carte-board m-0 flex list-none flex-col p-0">
         {questions.map((q) => (
           <QuestionActiviteRow
             key={q.activite.id}
@@ -84,38 +127,24 @@ export default async function ActivitesPage({
             activiteId={q.activite.id}
             question={q.activite.question}
             aide={q.activite.aide}
-            cequiManque={q.activite.cequiManque}
+            ajout={ajouts.get(q.activite.id)}
+            risquesAPenser={q.activite.aFaire.risques}
+            etapeRisques={enteteEtape("risques")}
+            limiteUnitesEssai={LIMITES_ESSAI.unitesTravail}
             exercee={q.exercee}
           />
         ))}
       </ul>
 
-      {/* Décompte, pas reproche : on rappelle ce qui n'a pas été tranché, sans
-          verdict sur le dossier et sans taux de complétude — un pourcentage
-          laisserait croire à une mesure de la qualité du DUERP. */}
-      {sansReponse.length > 0 && (
-        <p className="m-0 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-          {sansReponse.length} question{sansReponse.length > 1 ? "s" : ""}{" "}
-          sans
-          réponse. Vous pouvez continuer sans répondre&nbsp;: le document ne
-          dira alors ni que ces activités sont exercées, ni qu&apos;elles ne le
-          sont pas.
-        </p>
-      )}
-
-      <div className="flex flex-wrap items-center justify-between gap-4 border-t border-[color:var(--board-slate-line)] pt-6">
-        <Link
-          href={`/duerp/${id}/secteur`}
-          className={buttonVariants({ variant: "boardClair", size: "board" })}
-        >
-          ← Secteur d&apos;activité
-        </Link>
-        <Link
-          href={`/duerp/${id}/unites`}
-          className={buttonVariants({ variant: "board", size: "board" })}
-        >
-          Unités de travail →
-        </Link>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        {/* Décompte, pas reproche : aucun taux de complétude, qui laisserait
+            croire à une mesure de la qualité du DUERP. */}
+        <p className="m-0 text-[12.5px] text-[color:var(--board-slate-mid)]">
+            {sansReponse.length > 0
+              ? `${sansReponse.length} sans réponse — vous pouvez continuer.`
+              : "Toutes les questions ont une réponse."}
+          </p>
+        <ValiderEtapeBouton duerpId={id} etablissementId={duerp.etablissementId} etape="activite" />
       </div>
     </div>
   );

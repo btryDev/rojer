@@ -20,6 +20,12 @@ export type CadreEnTeteProps = {
   description: ReactNode;
   /** La bascule de vue de la page, et rien d'autre. */
   children?: ReactNode;
+  /**
+   * Un bandeau au pied de l'en-tête, pleine largeur, sous un filet
+   * (2026-11-12) : le fil des étapes du DUERP. Un repère, pas une commande
+   * — la règle « le hero ne porte que la bascule de vue » vise les commandes.
+   */
+  pied?: ReactNode;
 };
 
 /**
@@ -38,6 +44,7 @@ export function CadreEnTete({
   titre,
   description,
   children,
+  pied,
   avecPanneau,
   dessin,
 }: CadreEnTeteProps & {
@@ -83,6 +90,11 @@ export function CadreEnTete({
           style={fond ? { backgroundColor: fond } : undefined}
         >
           {dessin}
+        </div>
+      ) : null}
+      {pied ? (
+        <div className="col-span-full border-t border-[color:var(--board-slate-line)] px-[var(--board-gutter)] py-7">
+          {pied}
         </div>
       ) : null}
     </header>

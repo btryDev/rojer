@@ -6,6 +6,7 @@ import { ecrireReponseFermee } from "@/lib/duerps/ecrire-reponse-fermee";
 import { activitesDuSecteur } from "./reponses";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
 import { refuserSiGele } from "@/lib/abonnements/gel-saisie";
+import { synchroniserAjouts } from "./ajouts";
 
 /**
  * Cloisonnement : `duerpId` vient du client. `requireDuerp` remonte jusqu'à
@@ -16,9 +17,12 @@ import { refuserSiGele } from "@/lib/abonnements/gel-saisie";
 /**
  * Enregistre la réponse à une question d'activité hors couverture (ADR-020).
  *
- * Répondre « oui » ne bloque rien, n'ajoute aucun risque et n'en retire aucun :
- * ça enregistre un fait sur le périmètre du dossier, qui sera gravé dans la
- * prochaine version validée. Le mécanisme est déclaratif et fermé — la seule
+ * Répondre « oui » ne bloque rien : ça enregistre un fait sur le périmètre du
+ * dossier, qui sera gravé dans la prochaine version validée. ~~Il n'ajoute
+ * aucun risque et n'en retire aucun.~~ [2026-11-11, ADR-060 : un « oui »
+ * ajoute l'unité et les risques à évaluer que l'activité appelle, un « non »
+ * ou un retour au silence retire ceux que le dirigeant n'a pas touchés —
+ * `synchroniserAjouts`.] Le mécanisme est déclaratif et fermé — la seule
  * source est ce que le dirigeant répond, jamais une déduction sur son nom,
  * son NAF ou ses équipements.
  *
@@ -44,14 +48,14 @@ export async function repondreActivite(
   exercee: boolean | null,
 ): Promise<void> {
   await verifierSaisie();
-  const { db, duerp } = await requireDuerp(duerpId);
+  const { compte, db, duerp } = await requireDuerp(duerpId);
   // Le SQL brut échappe au gel du client borné (ADR-053 § 14).
   await refuserSiGele(duerp.etablissementId);
 
-  const connue = activitesDuSecteur(duerp.referentielSecteurId).some(
+  const activite = activitesDuSecteur(duerp.referentielSecteurId).find(
     (a) => a.id === activiteId,
   );
-  if (!connue) throw new Error(`Activité inconnue : ${activiteId}`);
+  if (!activite) throw new Error(`Activité inconnue : ${activiteId}`);
 
   const lignes = await ecrireReponseFermee(
     db,
@@ -68,6 +72,17 @@ export async function repondreActivite(
     throw new Error(`DUERP introuvable à l'écriture : ${duerpId}`);
   }
 
-  revalidatePath(`/duerp/${duerpId}/activites`);
-  revalidatePath(`/duerp/${duerpId}/synthese`);
+  // Après la réponse, jamais avant : une réponse enregistrée sans ses ajouts
+  // se rattrape au clic suivant (idempotent) ; des ajouts sans réponse
+  // laisseraient des risques que rien n'explique.
+  await synchroniserAjouts(db, {
+    duerpId,
+    compte,
+    activite,
+    exercee,
+  });
+
+  // Toutes les pages du DUERP et le fil des étapes de l'en-tête, qui lit les
+  // validations que les ajouts peuvent retirer (2026-11-12).
+  revalidatePath(`/duerp/${duerpId}`, "layout");
 }

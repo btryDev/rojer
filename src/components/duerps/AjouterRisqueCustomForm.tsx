@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useTransition, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { ChampBoard } from "@/components/ui-kit";
 import {
@@ -8,17 +8,33 @@ import {
   type RisqueActionState,
 } from "@/lib/risques/actions";
 
-export function AjouterRisqueCustomForm({ uniteId }: { uniteId: string }) {
-  const action = ajouterRisqueCustom.bind(null, uniteId);
-  const [state, formAction, pending] = useActionState<
-    RisqueActionState,
-    FormData
-  >(action, { status: "idle" });
-  const formRef = useRef<HTMLFormElement>(null);
-
-  useEffect(() => {
-    if (state.status === "success") formRef.current?.reset();
-  }, [state]);
+export function AjouterRisqueCustomForm({
+  uniteId,
+  surAjout,
+}: {
+  uniteId: string;
+  /** Appelé après un ajout réussi — la fenêtre qui porte le formulaire se ferme. */
+  surAjout?: () => void;
+}) {
+  const [, startTransition] = useTransition();
+  // La fenêtre se ferme depuis l'action elle-même, après un ajout réussi
+  // (2026-11-12) : un effet sur l'état ne se déclenchait pas de façon fiable
+  // une fois la page revalidée.
+  const [state, formAction, pending] = useActionState<RisqueActionState, FormData>(
+    async (prev, fd) => {
+      const resultat = await ajouterRisqueCustom(uniteId, prev, fd);
+      if (resultat.status === "success") surAjout?.();
+      return resultat;
+    },
+    { status: "idle" },
+  );
+  // `onSubmit` plutôt que `action` : React vide les champs après toute
+  // action de formulaire, refus compris ; la saisie doit survivre à un refus.
+  const soumettre = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    startTransition(() => formAction(fd));
+  };
 
   const erreurLibelle =
     state.status === "error" ? state.fieldErrors?.libelle?.[0] : undefined;
@@ -28,11 +44,8 @@ export function AjouterRisqueCustomForm({ uniteId }: { uniteId: string }) {
     // disparaît dès la première frappe, et un lecteur d'écran n'a plus rien
     // à annoncer. `ChampBoard` pose un vrai `<label>`, l'astérisque du
     // champ requis, et l'erreur en encre de signal.
-    <form ref={formRef} action={formAction}>
-      <p className="m-0 mb-3 text-[13.5px] font-medium text-[color:var(--board-ink)]">
-        Ajouter un risque spécifique à cette unité
-      </p>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <form onSubmit={soumettre}>
+      <div className="grid grid-cols-1 gap-4">
         <ChampBoard
           id="risque-custom-libelle"
           name="libelle"
@@ -44,10 +57,24 @@ export function AjouterRisqueCustomForm({ uniteId }: { uniteId: string }) {
         <ChampBoard
           id="risque-custom-description"
           name="description"
-          label="Description"
-          placeholder="Facultatif"
+          label="Précision (facultatif)"
+          placeholder="Dans quelle situation, sur quel poste…"
         />
       </div>
+      {/* Un refus sans champ (plafond, saisie fermée…) se disait nulle part ;
+          dans une fenêtre, il passerait pour un ajout réussi. */}
+      {state.status === "error" && !erreurLibelle && (
+        <p
+          role="alert"
+          className="m-0 mt-4 text-[12.5px] text-[color:var(--board-signal-ink)]"
+        >
+          {state.message}
+        </p>
+      )}
+      <p className="m-0 mt-4 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+        Il s&apos;ajoute aux risques retenus de l&apos;unité ; vous le coterez
+        ensuite comme les autres.
+      </p>
       <Button
         type="submit"
         variant="board"

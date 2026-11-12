@@ -908,6 +908,18 @@
     color: var(--board-blue-ink);
   }
 
+  /* Le sur-titre sans chasse fixe (2026-11-12, décision de la propriétaire) :
+     le DUERP quitte les capitales monospacées de `.board-eyebrow` ; le reste
+     de l'app les garde tant qu'il n'est pas repris. */
+  .board-surtitre {
+    font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--board-slate-soft);
+    font-variant-numeric: tabular-nums;
+  }
+
   /* Titrage de l'application — même voix que `.lp-titre` (Instrument Sans,
      grotesque serré), réglée pour des titres d'interface plutôt que pour
      une couverture : l'approche est un cran moins serrée et l'interligne

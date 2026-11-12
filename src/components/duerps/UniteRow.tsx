@@ -24,12 +24,10 @@ export function UniteRow({ id, nom, description, nombreRisques }: Props) {
     });
 
   return (
-    // La ligne devient une colonne, et la ligne d'origine descend d'un cran :
-    // la question a besoin de la largeur du `<li>`, alors que la colonne
-    // d'actions qui la déclenche est `shrink-0`. Sans ce niveau, la carte
-    // naîtrait dans une bande de 150 px collée au bord droit.
-    <li className="flex flex-col px-7 py-5 sm:px-8">
-      <div className="flex items-start justify-between gap-6">
+    // Une carte par unité (2026-11-12) : nom et description en haut, les
+    // gestes en pied de carte.
+    <li className="carte-board flex flex-col px-5 py-4 sm:px-6">
+      <div className="flex h-full flex-col justify-between gap-3">
         <div className="min-w-0 flex-1">
           {editing ? (
             <div className="flex flex-wrap items-center gap-2">
@@ -70,24 +68,28 @@ export function UniteRow({ id, nom, description, nombreRisques }: Props) {
             </div>
           ) : (
             <>
-              <p className="m-0 text-[16px] font-semibold leading-[1.3] tracking-[-0.01em] text-[color:var(--board-ink)]">
+              <p className="m-0 text-[15px] font-semibold leading-[1.3] tracking-[-0.01em] text-[color:var(--board-ink)]">
                 {nom}
               </p>
+              {/* Deux lignes au plus : la page doit tenir sur un écran
+                  (2026-11-12). Le texte entier reste dans `title`. */}
               {description && (
-                <p className="m-0 mt-1 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                <p
+                  title={description}
+                  className="m-0 mt-1 line-clamp-2 text-[12.5px] leading-[1.5] text-[color:var(--board-slate-mid)]"
+                >
                   {description}
                 </p>
               )}
-              <p className="board-eyebrow m-0 mt-2 text-[10px] tracking-[0.16em] tabular-nums text-[color:var(--board-slate-soft)]">
-                {nombreRisques === 0
-                  ? "Aucun risque renseigné"
-                  : `${String(nombreRisques).padStart(2, "0")} risque${nombreRisques > 1 ? "s" : ""} renseigné${nombreRisques > 1 ? "s" : ""}`}
-              </p>
+              {/* ~~Le compte de risques renseignés~~ (retiré le 2026-11-12) :
+                  les risques sont l'étape suivante, l'écran des unités n'en
+                  parle pas. `nombreRisques` sert encore à la confirmation de
+                  suppression. */}
             </>
           )}
         </div>
         {!editing && (
-          <div className="flex shrink-0 gap-1.5">
+          <div className="flex flex-wrap gap-1.5">
             <Button
               data-ecriture
               variant="boardClair"

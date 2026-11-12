@@ -42,7 +42,7 @@ export function CreerVersionForm({
       className="space-y-5 rounded-[22px] bg-[color:var(--board-slate-pale)] px-5 py-5"
     >
       <div>
-        <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
+        <p className="board-surtitre m-0 text-[color:var(--board-slate-soft)]">
           Nouvelle version
         </p>
         <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">

@@ -48,7 +48,7 @@ export function CarteMiseAJour({
 }) {
   return (
     <section className="carte-board px-7 py-6 sm:px-8">
-      <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
+      <p className="board-surtitre m-0 text-[color:var(--board-slate-soft)]">
         Code du travail · art. R. 4121-2
       </p>
       <h3 className="board-titre m-0 mt-1.5 text-[22px]">
@@ -65,7 +65,7 @@ export function CarteMiseAJour({
           >
             <span
               aria-hidden
-              className="mt-0.5 font-mono text-[12.5px] tabular-nums text-[color:var(--board-slate-soft)]"
+              className="mt-0.5 text-[12.5px] tabular-nums text-[color:var(--board-slate-soft)]"
             >
               {d.rang}
             </span>

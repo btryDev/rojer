@@ -1,28 +1,81 @@
 import type { Etape } from "@/components/duerps/WizardSteps";
 import { questionsActivites } from "@/lib/activites/reponses";
+import { questionsDetectionTransverses } from "@/lib/referentiels";
 import {
   etatEtapeTransverses,
   signalQuestionsARepondre,
   type EtatEtapeTransverses,
 } from "@/lib/transverses/etat";
+import {
+  ORDRE_DU_FIL,
+  lireEtapesValidees,
+  type EtapeFilId,
+  type EtapeValidable,
+} from "./etapes-validees";
+import { etatUnite, type RisqueEvalue } from "@/lib/risques/etat-unite";
 
-export type EtapeId =
-  | "secteur"
-  | "activites"
-  | "unites"
-  | "risques"
-  | "transverses"
-  | "synthese";
+/** Les pages du parcours — ce qu'une page passe pour dire où l'on est. */
+export const PAGES_DU_PARCOURS = [
+  "secteur",
+  "activites",
+  "unites",
+  "risques",
+  "transverses",
+  "synthese",
+] as const;
+export type EtapeId = (typeof PAGES_DU_PARCOURS)[number];
+
+/**
+ * La page d'un parcours → l'étape du fil qui la porte (`ORDRE_DU_FIL`).
+ * « Votre activité » regroupe deux pages, le secteur et ses précisions
+ * (2026-11-11) : la seconde n'existait que pour certains secteurs, le fil
+ * comptait donc 4 ou 5 étapes selon le cas. Il a toujours cinq étapes.
+ */
+const ETAPE_DE_LA_PAGE: Record<EtapeId, EtapeFilId> = {
+  secteur: "activite",
+  activites: "activite",
+  unites: "unites",
+  risques: "risques",
+  transverses: "transverses",
+  synthese: "synthese",
+};
+
+const LIBELLES_ETAPES: Record<EtapeFilId, string> = {
+  activite: "Votre activité",
+  unites: "Unités de travail",
+  risques: "Risques par unité",
+  transverses: "Questions transverses",
+  synthese: "Synthèse",
+};
+
+const numero = (id: EtapeFilId) =>
+  String(ORDRE_DU_FIL.indexOf(id) + 1).padStart(2, "0");
+
+/** « 01 · Votre activité » — le surtitre d'une page, aligné sur le fil. */
+export function enteteEtape(page: EtapeId): string {
+  const id = ETAPE_DE_LA_PAGE[page];
+  return `${numero(id)} · ${LIBELLES_ETAPES[id]}`;
+}
+
+/** Une part faite sur un total ; un total nul ne fait rien avancer. */
+function part(faits: number, total: number): number {
+  return total > 0 ? Math.min(1, faits / total) : 0;
+}
 
 export function construireEtapes(
   duerpId: string,
   etapeActuelle: EtapeId,
   progression: {
     secteurOk: boolean;
+    /** Au moins une unité de travail existe : ouvre les étapes suivantes. */
     unitesOk: boolean;
     risquesOk: boolean;
-    /** Toutes les questions du périmètre ont une réponse. */
-    activitesOk: boolean;
+    /**
+     * Les étapes que le dirigeant a validées (`Duerp.etapesValidees`,
+     * 2026-11-11) : « si pas validé, pas fait ». Ce que l'outil pré-remplit —
+     * les unités du secteur — ne coche jamais une étape à lui seul.
+     */
+    validees: Partial<Record<EtapeValidable, unknown>>;
     /** Au moins une version du DUERP est validée (figée). */
     versionValidee: boolean;
     /**
@@ -37,100 +90,94 @@ export function construireEtapes(
      * Le secteur retenu déclare-t-il des activités hors couverture (ADR-020) ?
      * Une liste vide n'est pas « ce secteur couvre tout » — c'est « la liste
      * n'a pas encore été instruite ». Dans les deux cas il n'y a rien à
-     * demander, donc l'étape ne s'affiche pas : un écran de questions vide
-     * vaudrait affirmation de couverture complète.
+     * demander : l'étape « Votre activité » se résume alors au secteur.
      */
     activitesPosees: boolean;
+    /**
+     * Ce qui est fait DANS chaque étape, de 0 à 1 (2026-11-11), validation
+     * comprise comme dernière part : le trait ne se ferme pas sans le geste.
+     * Seule l'étape courante le montre. Ce n'est pas un taux de complétude
+     * du DUERP — aucun pourcentage n'est affiché.
+     */
+    avancement?: Partial<Record<EtapeFilId, number>>;
   },
 ): Etape[] {
-  const atteinte = (id: EtapeId) => {
-    if (id === "secteur") return true;
-    // Le périmètre se déclare dès que le secteur est retenu, et avant les
-    // unités : savoir que la boucherie n'est pas couverte est précisément ce
-    // qui décide le dirigeant à en créer l'unité à la main.
-    if (id === "activites") return progression.secteurOk;
-    if (id === "unites") return progression.secteurOk;
-    if (id === "risques") return progression.unitesOk;
-    // Les étapes suivantes ne requièrent plus que « risques » soit complet :
-    // une unité peut légitimement être sans risque (cf. INRS ED 840) si
-    // l'évaluation conclut à l'absence de risque significatif — on laisse
-    // passer et on affiche simplement un avertissement dans l'UI.
-    if (id === "transverses") return progression.unitesOk;
-    // ~~`synthese ⇐ transverses.faite`~~ (relecture indépendante du
-    // 2026-10-12) : un DUERP déjà validé dont une question transverse est
-    // sans réponse voyait « Synthèse » grisée et « À venir », alors que la
-    // page reste atteignable et qu'une version se valide sans condition.
-    // L'étape transverses garde son signal ; elle ne verrouille plus rien.
-    if (id === "synthese") return progression.unitesOk;
-    return false;
+  // Les étapes après les unités ne requièrent plus que « risques » soit
+  // complet : une unité peut légitimement être sans risque (cf. INRS ED 840).
+  // ~~`synthese ⇐ transverses.faite`~~ (relecture indépendante du
+  // 2026-10-12) : la synthèse reste atteignable, l'étape transverses garde
+  // son signal et ne verrouille plus rien.
+  const atteinte = (id: EtapeFilId) =>
+    id === "activite"
+      ? true
+      : id === "unites"
+        ? progression.secteurOk
+        : progression.unitesOk;
+
+  // « Fait » = validé par le dirigeant ET complet sur les données
+  // (ADR-059). Ni l'un ni l'autre seul : le passage ne coche rien
+  // (2026-10-28), et ce que l'outil a pré-rempli non plus. Les précisions
+  // d'activité sont facultatives : valider sans y répondre fait l'étape.
+  const complete: Record<EtapeValidable, boolean> = {
+    activite: progression.secteurOk,
+    unites: progression.unitesOk,
+    risques: progression.risquesOk,
+    transverses: progression.transverses.faite,
   };
-  const liste: { id: EtapeId; libelle: string }[] = [
-    { id: "secteur", libelle: "Secteur d'activité" },
-    { id: "activites", libelle: "Périmètre du référentiel" },
-    { id: "unites", libelle: "Unités de travail" },
-    { id: "risques", libelle: "Risques par unité" },
-    { id: "transverses", libelle: "Questions transverses" },
-    { id: "synthese", libelle: "Synthèse" },
-  ];
-  // On masque l'étape « Secteur » quand elle a été résolue (auto depuis le NAF
-  // ou déjà traversée). Elle reste visible uniquement si elle est l'actuelle.
-  // Même traitement pour « Périmètre », à l'inverse : elle n'apparaît que si
-  // le secteur retenu a des questions à poser — ou si on y est déjà, pour ne
-  // pas afficher un fil d'étapes où l'étape courante n'existe pas.
-  const visibles = liste.filter((e) => {
-    if (e.id === "secteur") return etapeActuelle === "secteur";
-    if (e.id === "activites")
-      return progression.activitesPosees || etapeActuelle === "activites";
-    return true;
-  });
+  const faite = (id: EtapeFilId): boolean =>
+    id === "synthese"
+      ? progression.versionValidee
+      : complete[id] && Boolean(progression.validees[id]);
+
+  // Le secteur choisi, l'étape mène aux précisions s'il y en a : c'est la
+  // seule partie qui reste à faire. Le secteur se change depuis cette page.
+  const href = (id: EtapeFilId): string => {
+    if (id !== "activite") return `/duerp/${duerpId}/${id}`;
+    return progression.secteurOk && progression.activitesPosees
+      ? `/duerp/${duerpId}/activites`
+      : `/duerp/${duerpId}/secteur`;
+  };
+
   // L'étape transverse non faite le DIT, avec le compte et le chemin : sans
   // ce signal, une étape qui se décoche d'elle-même (une question ajoutée au
-  // référentiel) ~~ne se verrait que par la synthèse devenue « À venir »~~
-  // [2026-10-12 : la synthèse ne se verrouille plus] ne se verrait pas. Le
-  // lien mène à la première question sans réponse, sur l'écran du DUERP qui
-  // les pose TOUTES — Équipe (`equipe/risques`) ne pose que les faits
-  // d'activité, pas les questions sans fait (`q-routier`, `q-public`…).
-  // Pas de signal sur une étape « À venir » : le lien ouvrirait par le côté
-  // une étape que le fil tient fermée tant qu'aucune unité n'existe.
+  // référentiel) ne se verrait pas. Le lien mène à la première question sans
+  // réponse, sur l'écran du DUERP qui les pose TOUTES — Équipe
+  // (`equipe/risques`) ne pose que les faits d'activité, pas les questions
+  // sans fait (`q-routier`, `q-public`…). Pas de signal sur une étape
+  // « À faire » non atteinte : le lien ouvrirait par le côté une étape que le
+  // fil tient fermée tant qu'aucune unité n'existe.
+  const actuelle = ETAPE_DE_LA_PAGE[etapeActuelle];
   const { sansReponse } = progression.transverses;
   const signaler =
     sansReponse.length > 0 &&
-    (atteinte("transverses") || etapeActuelle === "transverses");
-  // « Fait » se lit sur les données, jamais sur le passage (2026-10-28) :
-  // l'ancien « Ouvert » disait seulement qu'une étape était accessible.
-  const faite = (id: EtapeId): boolean => {
-    switch (id) {
-      case "secteur":
-        return progression.secteurOk;
-      case "activites":
-        return progression.activitesOk;
-      case "unites":
-        return progression.unitesOk;
-      case "risques":
-        return progression.risquesOk;
-      case "transverses":
-        return progression.transverses.faite;
-      case "synthese":
-        return progression.versionValidee;
-    }
-  };
+    (atteinte("transverses") || actuelle === "transverses");
 
-  return visibles.map((e) => ({
-    id: e.id,
-    libelle: e.libelle,
-    href: `/duerp/${duerpId}/${e.id}`,
-    atteinte: atteinte(e.id),
-    faite: faite(e.id),
-    actuelle: e.id === etapeActuelle,
-    ...(e.id === "transverses" && signaler
-      ? {
-          signal: {
-            texte: signalQuestionsARepondre(sansReponse.length),
-            href: `/duerp/${duerpId}/transverses#${sansReponse[0]}`,
-          },
-        }
-      : {}),
-  }));
+  return ORDRE_DU_FIL.map((id) => {
+    const estFaite = faite(id);
+    return {
+      id,
+      libelle: LIBELLES_ETAPES[id],
+      href: href(id),
+      atteinte: atteinte(id),
+      faite: estFaite,
+      // Une étape faite est pleine. Seule l'étape courante montre sa part :
+      // un segment rempli ailleurs se lirait « fait » (2026-11-11).
+      avancement: estFaite
+        ? 1
+        : id === actuelle
+          ? (progression.avancement?.[id] ?? 0)
+          : 0,
+      actuelle: id === actuelle,
+      ...(id === "transverses" && signaler
+        ? {
+            signal: {
+              texte: signalQuestionsARepondre(sansReponse.length),
+              href: `/duerp/${duerpId}/transverses#${sansReponse[0]}`,
+            },
+          }
+        : {}),
+    };
+  });
 }
 
 /**
@@ -143,10 +190,12 @@ export function etapesDuDuerp(
   duerp: {
     id: string;
     referentielSecteurId: string | null;
+    etapesValidees: unknown;
     reponsesActivitesNonCouvertes: unknown;
     unites: (Parameters<typeof etatEtapeTransverses>[0]["unites"][number] & {
       estTransverse: boolean;
-      risques: readonly unknown[];
+      aucunRisqueJustif: string | null;
+      risques: readonly RisqueEvalue[];
     })[];
     reponsesTransverses: unknown;
     etablissement: Parameters<typeof etatEtapeTransverses>[0]["etablissement"];
@@ -156,19 +205,45 @@ export function etapesDuDuerp(
 ): Etape[] {
   const unites = duerp.unites.filter((u) => !u.estTransverse);
   const unitesOk = unites.length > 0;
+  // Une unité est évaluée selon la même règle que la vue d'ensemble
+  // (`etatUnite`, 2026-11-12) : déclarée sans risque, ou tous ses risques
+  // cotés et pourvus de mesures. Compter les seules unités « avec un risque »
+  // laissait l'étape à faire pour une unité déclarée sans risque — et le PDF
+  // n'était jamais proposé.
+  const unitesEvaluees = unites.filter((u) => etatUnite(u).terminee).length;
   const questions = questionsActivites(
     duerp.referentielSecteurId,
     duerp.reponsesActivitesNonCouvertes,
   );
+  const repondues = questions.filter((q) => q.exercee !== undefined).length;
+  const secteurOk = Boolean(duerp.referentielSecteurId);
+  const transverses = etatEtapeTransverses(duerp);
+  const nbTransverses = questionsDetectionTransverses.length;
+  const validees = lireEtapesValidees(duerp.etapesValidees);
+  // La validation compte pour une part de chaque étape, la dernière.
+  const v = (id: EtapeValidable) => (validees[id] ? 1 : 0);
+
   return construireEtapes(duerp.id, etapeActuelle, {
-    secteurOk: Boolean(duerp.referentielSecteurId),
+    secteurOk,
     unitesOk,
-    risquesOk: unitesOk && unites.every((u) => u.risques.length > 0),
-    activitesOk:
-      questions.length > 0 && questions.every((q) => q.exercee !== undefined),
+    validees,
+    risquesOk: unitesOk && unitesEvaluees === unites.length,
     versionValidee: duerp.versions.length > 0,
-    transverses: etatEtapeTransverses(duerp),
+    transverses,
     // Une question par activité du secteur : la liste dit aussi s'il en a.
     activitesPosees: questions.length > 0,
+    avancement: {
+      // Le secteur, chaque précision, puis la validation : une part chacun.
+      activite: part(
+        (secteurOk ? 1 : 0) + repondues + v("activite"),
+        2 + questions.length,
+      ),
+      unites: part((unitesOk ? 1 : 0) + v("unites"), 2),
+      risques: part(unitesEvaluees + v("risques"), unites.length + 1),
+      transverses: part(
+        nbTransverses - transverses.sansReponse.length + v("transverses"),
+        nbTransverses + 1,
+      ),
+    },
   });
 }

@@ -195,6 +195,14 @@ JetBrains Mono, 11 px, 500, `letter-spacing: .2em`, capitales,
 - **section** : `board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]`
 - **ligne / sous-bloc** : `board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]`
 
+### `.board-surtitre` (2026-11-12, DUERP)
+IBM Plex Sans, 12,5 px, 600, `--board-slate-soft`, chiffres tabulaires — le
+sur-titre **sans chasse fixe**, décision de la propriétaire. En place sur les
+pages du DUERP (`EnTeteEtape`, fil des étapes) ; le reste de l'app garde
+`.board-eyebrow` tant qu'il n'est pas repris. Sur le DUERP, le retour d'une
+page est `LienRetour` (bouton clair « ← … », en tête de page) plutôt que
+`FilRetour`.
+
 ### `.pastille-board` (l. 821)
 `inline-flex`, `gap: 7px`, `rounded-full`, `padding: 6px 13px`, `12px`, 600.
 **La forme, pas la couleur** : le couple champ/encre vient des jetons d'état ou

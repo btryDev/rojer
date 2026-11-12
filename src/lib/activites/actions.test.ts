@@ -88,11 +88,14 @@ const h = vi.hoisted(() => {
     },
   };
 
-  return { db, prisma, requireDuerp: vi.fn() };
+  return { db, prisma, requireDuerp: vi.fn(), synchroniserAjouts: vi.fn() };
 });
 
 vi.mock("@/lib/prisma", () => ({ prisma: h.prisma }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+// Les ajouts d'un « oui » (ADR-060) ont leurs tests (`ajouts.test.ts`) ; ici,
+// seulement l'ordre et les arguments de l'appel.
+vi.mock("./ajouts", () => ({ synchroniserAjouts: h.synchroniserAjouts }));
 // Les gardes rendent le client borné (ADR-051) : ici, le client simulé.
 vi.mock("@/lib/auth/scope", () => ({
   requireDuerp: async (id: string) => ({ db: await (await import("@/test/garde-simulee")).clientDuCompteSimule(), ...(await h.requireDuerp(id)) }),
@@ -115,8 +118,10 @@ beforeEach(() => {
   h.db.requetes = [];
   h.prisma.duerp.update.mockClear();
   h.requireDuerp.mockReset();
+  h.synchroniserAjouts.mockReset();
   h.requireDuerp.mockImplementation(async () => ({
     user: { id: "user-1" },
+    compte: { compteId: "user-1" },
     duerp: {
       id: DUERP,
       referentielSecteurId: h.db.referentielSecteurId,
@@ -301,5 +306,33 @@ describe("repondreActivite — refus", () => {
       "NEXT_NOT_FOUND",
     );
     expect(h.db.requetes).toHaveLength(0);
+  });
+});
+
+describe("repondreActivite — ajouts (ADR-060)", () => {
+  it("synchronise après l'écriture de la réponse, avec l'activité du référentiel", async () => {
+    h.synchroniserAjouts.mockImplementation(async () => {
+      // La réponse est déjà en base quand les ajouts sont faits.
+      expect(h.db.colonne).toEqual({ [VIANDE]: true });
+    });
+    await repondreActivite(DUERP, VIANDE, true);
+    expect(h.synchroniserAjouts).toHaveBeenCalledTimes(1);
+    const [, p] = h.synchroniserAjouts.mock.calls[0];
+    expect(p).toMatchObject({ duerpId: DUERP, compte: { compteId: "user-1" }, exercee: true });
+    expect(p.activite.id).toBe(VIANDE);
+    expect(p.activite.aFaire.risques.length).toBeGreaterThan(0);
+  });
+
+  it("« non » et silence passent aussi par la synchronisation", async () => {
+    await repondreActivite(DUERP, VIANDE, false);
+    await repondreActivite(DUERP, VIANDE, null);
+    expect(h.synchroniserAjouts.mock.calls.map(([, p]) => p.exercee)).toEqual([false, null]);
+  });
+
+  it("une réponse refusée n'ajoute rien", async () => {
+    await expect(repondreActivite(DUERP, "inconnue", true)).rejects.toThrow();
+    h.db.lignesTouchees = 0;
+    await expect(repondreActivite(DUERP, VIANDE, true)).rejects.toThrow();
+    expect(h.synchroniserAjouts).not.toHaveBeenCalled();
   });
 });

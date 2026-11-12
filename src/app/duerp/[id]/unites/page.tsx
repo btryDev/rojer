@@ -1,12 +1,11 @@
 import { PlafondDeCreation } from "@/components/quotas/PlafondDeCreation";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { buttonVariants } from "@/components/ui/button";
 import { AjouterUniteForm } from "@/components/duerps/AjouterUniteForm";
 import { UniteRow } from "@/components/duerps/UniteRow";
-import { WizardSteps } from "@/components/duerps/WizardSteps";
-import { InfoTooltip } from "@/components/ui/info-tooltip";
-import { etapesDuDuerp } from "@/lib/duerps/etapes";
+import { ValiderEtapeBouton } from "@/components/duerps/ValiderEtapeBouton";
+import { LienRetour } from "@/components/duerps/LienRetour";
+import { EnTeteEtape } from "@/components/duerps/EnTeteEtape";
+import { questionsActivites } from "@/lib/activites/reponses";
 import { getDuerp } from "@/lib/duerps/queries";
 
 export default async function UnitesPage({
@@ -20,50 +19,61 @@ export default async function UnitesPage({
 
   const unitesVisibles = duerp.unites.filter((u) => !u.estTransverse);
   const unitesOk = unitesVisibles.length > 0;
-  const etapes = etapesDuDuerp(duerp, "unites");
 
   return (
-    <div className="flex flex-col gap-[22px]">
-      <WizardSteps etapes={etapes} />
+    <div className="flex flex-col gap-8">
+      {/* Le retour à l'étape précédente, en tête (2026-11-12) : tout le
+          monde ne devine pas que le fil des étapes se clique. */}
+      <nav>
+        <LienRetour
+          href={`/duerp/${id}/${
+            questionsActivites(duerp.referentielSecteurId, duerp.reponsesActivitesNonCouvertes).length > 0
+              ? "activites"
+              : "secteur"
+          }`}
+        >
+          Votre activité
+        </LienRetour>
+      </nav>
 
-      <header className="max-w-[var(--board-mesure)]">
-        <p className="board-eyebrow m-0 inline-flex items-center text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-          Unités de travail
-          <InfoTooltip align="left">
-            Une « unité de travail » regroupe des salariés exposés aux mêmes
-            risques. Ça peut être un poste (ex. accueil), une zone (ex.
-            cuisine) ou une activité (ex. livraison). L&apos;évaluation se
-            fait unité par unité.
-          </InfoTooltip>
-        </p>
-        <h2 className="board-titre m-0 mt-3 text-[clamp(23px,2.1vw,30px)]">
-          Vérifiez, ajustez, complétez.
-        </h2>
-        <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-          Une unité regroupe des salariés exposés aux mêmes risques (un poste,
-          une zone, une activité). Les unités ci-dessous ont été pré-remplies
-          selon votre secteur. Vous pouvez les renommer, les supprimer, ou en
-          ajouter.
-        </p>
-      </header>
+      {/* Allégé le 2026-11-11 : la définition d'une unité était dite deux
+          fois (infobulle et paragraphe) ; elle est derrière le « ? ». */}
+      <EnTeteEtape
+        page="unites"
+        titre="Vérifiez vos unités de travail"
+        aide={{
+          titre: "Qu'est-ce qu'une unité de travail",
+          contenu: (
+            <p className="m-0">
+              Une unité de travail regroupe des salariés exposés aux mêmes
+              risques. Ça peut être un poste (ex. accueil), une zone (ex.
+              cuisine) ou une activité (ex. livraison). L&apos;évaluation se
+              fait unité par unité, à l&apos;étape suivante.
+            </p>
+          ),
+        }}
+      >
+        Proposées selon votre secteur. Renommez, supprimez ou ajoutez.
+      </EnTeteEtape>
 
-      <section className="carte-board overflow-clip">
-        <div className="flex items-baseline justify-between gap-4 border-b border-[color:var(--board-slate-line)] px-7 py-5 sm:px-8">
-          <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] tabular-nums text-[color:var(--board-slate-soft)]">
-            {String(unitesVisibles.length).padStart(2, "0")} unité
-            {unitesVisibles.length > 1 ? "s" : ""}
+      {/* Les unités en cartes (2026-11-12, demande de la propriétaire), sur
+          le canevas ; l'ajout en tête, dans une fenêtre. */}
+      <section aria-label="Unités de travail" className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="board-surtitre m-0">
+            {unitesVisibles.length} unité{unitesVisibles.length > 1 ? "s" : ""}
           </p>
-          <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
-            Modifiables
-          </p>
+          {/* La limite d'unités de l'essai, annoncée avant la saisie (ADR-053 § 14). */}
+          <PlafondDeCreation cle="unitesTravail">
+            <AjouterUniteForm duerpId={id} />
+          </PlafondDeCreation>
         </div>
-
         {unitesVisibles.length === 0 ? (
-          <p className="m-0 px-7 py-8 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)] sm:px-8">
+          <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
             Aucune unité de travail. Ajoutez-en au moins une pour continuer.
           </p>
         ) : (
-          <ul className="m-0 list-none divide-y divide-[color:var(--board-slate-line)] p-0">
+          <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 xl:grid-cols-3">
             {unitesVisibles.map((u) => (
               <UniteRow
                 key={u.id}
@@ -75,36 +85,13 @@ export default async function UnitesPage({
             ))}
           </ul>
         )}
-
-        <div className="border-t border-[color:var(--board-slate-line)]">
-          {/* La limite d'unités de l'essai, annoncée avant la saisie (ADR-053 § 14). */}
-          <PlafondDeCreation cle="unitesTravail" className="mx-6 mt-4">
-            <AjouterUniteForm duerpId={id} />
-          </PlafondDeCreation>
-        </div>
       </section>
 
-      <div className="flex items-center justify-end">
-        {/* Un vrai `disabled` plutôt qu'un `aria-disabled` posé sur un lien :
-            sans `role`, l'attribut n'est pas exposé (interdit 20). Le lien
-            reste un lien tant qu'il mène quelque part, et devient un bouton
-            inerte et annoncé comme tel quand aucune unité n'est saisie. */}
-        {unitesOk ? (
-          <Link
-            href={`/duerp/${id}/risques`}
-            className={buttonVariants({ variant: "board", size: "board" })}
-          >
-            Étape suivante : risques →
-          </Link>
-        ) : (
-          <button
-            type="button"
-            disabled
-            className={buttonVariants({ variant: "board", size: "board" })}
-          >
-            Étape suivante : risques →
-          </button>
-        )}
+      <div className="flex flex-wrap items-center justify-end gap-4">
+        {/* Valider, même sans rien changer, coche l'étape (2026-11-11) : les
+            unités pré-remplies par le secteur ne la cochent plus seules. Sans
+            unité, un vrai `disabled` (interdit 20). */}
+        <ValiderEtapeBouton duerpId={id} etablissementId={duerp.etablissementId} etape="unites" disabled={!unitesOk} />
       </div>
     </div>
   );

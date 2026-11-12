@@ -20,6 +20,8 @@ import {
   type ReponsesFaitsActivite,
 } from "@/lib/etablissements/faits-activite";
 import { questionsDetectionTransverses, risquesTransverses } from "@/lib/referentiels";
+
+const TOUTES_VALIDEES = { activite: true, unites: true, risques: true, transverses: true };
 import { etatEtapeTransverses, signalQuestionsARepondre } from "./etat";
 
 const TOUS_NON: ReponsesFaitsActivite = {
@@ -66,10 +68,10 @@ const etapes = (d: ReturnType<typeof duerp>, actuelle: "unites" | "transverses" 
   construireEtapes("d1", actuelle, {
     secteurOk: true,
     unitesOk: true,
+  validees: TOUTES_VALIDEES,
     risquesOk: true,
     transverses: etatEtapeTransverses(d),
     activitesPosees: false,
-    activitesOk: false,
     versionValidee: false,
   });
 
@@ -96,8 +98,10 @@ describe("étape « Questions transverses » — calculée, plus stockée (§ 17
 
   it("le signal est RENDU dans le fil d'étapes, en lien", () => {
     const html = renderToStaticMarkup(<WizardSteps etapes={etapes(ANCIEN)} />);
-    expect(html).toContain(
-      '<a class="mt-1.5 inline-block text-[12.5px] leading-[1.4] text-[color:var(--board-blue-ink)] underline-offset-4 hover:underline" href="/duerp/d1/transverses#q-operations-electriques">2 questions sans réponse →</a>',
+    // Le lien, son adresse et son texte — pas ses classes, qui suivent la
+    // forme du fil (au pied de l'en-tête depuis le 2026-11-12).
+    expect(html).toMatch(
+      /<a [^>]*href="\/duerp\/d1\/transverses#q-operations-electriques"[^>]*>2 questions sans réponse →<\/a>/,
     );
   });
 
@@ -163,10 +167,10 @@ describe("étape « Questions transverses » — calculée, plus stockée (§ 17
     const e = construireEtapes("d1", "unites", {
       secteurOk: true,
       unitesOk: false,
+      validees: {},
       risquesOk: false,
       transverses: etatEtapeTransverses(ANCIEN),
       activitesPosees: false,
-      activitesOk: false,
       versionValidee: false,
     }).find((x) => x.id === "transverses");
     expect(e?.atteinte).toBe(false);

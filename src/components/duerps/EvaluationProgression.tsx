@@ -35,10 +35,10 @@ export function EvaluationProgression({
     >
       {/* Bandeau */}
       <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-[color:var(--board-slate-line)] px-7 py-4 sm:px-8">
-        <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
+        <p className="board-surtitre m-0 text-[color:var(--board-slate-soft)]">
           Évaluation en deux temps
         </p>
-        <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
+        <p className="board-surtitre m-0 text-[color:var(--board-slate-soft)]">
           {etape === "cotation"
             ? "Partie 01 en cours"
             : "Partie 02 en cours"}
@@ -184,12 +184,12 @@ function SousPartie({
     <div className="flex items-start gap-4">
       <span
         aria-hidden
-        className={`flex size-10 shrink-0 items-center justify-center rounded-full font-mono text-[11.5px] font-semibold tabular-nums transition-colors ${MARQUE_STATUT[statut]}`}
+        className={`board-surtitre flex size-10 shrink-0 items-center justify-center rounded-full font-semibold tabular-nums transition-colors ${MARQUE_STATUT[statut]}`}
       >
         {numero}
       </span>
       <div className="min-w-0 flex-1">
-        <div className="board-eyebrow flex items-baseline gap-2 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
+        <div className="board-surtitre flex items-baseline gap-2 text-[color:var(--board-slate-soft)]">
           <span>{labelStatut}</span>
           <span aria-hidden className="text-[color:var(--board-slate)]">
             ·

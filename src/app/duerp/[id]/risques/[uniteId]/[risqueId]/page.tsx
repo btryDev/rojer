@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { FilUnite } from "@/components/duerps/FilUnite";
 import { notFound } from "next/navigation";
 import { CotationForm } from "@/components/duerps/CotationForm";
 import { EvaluationProgression } from "@/components/duerps/EvaluationProgression";
@@ -33,18 +33,17 @@ export default async function CotationPage({
     : undefined;
 
   return (
-    <div className="flex flex-col gap-[22px]">
-      <nav>
-        <Link
-          href={hrefRetourUnite}
-          className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-[color:var(--board-slate-soft)] transition-colors hover:text-[color:var(--board-ink)]"
-        >
-          ← {risque.unite.nom}
-        </Link>
-      </nav>
+    <div className="flex flex-col gap-8">
+      <FilUnite
+        niveaux={[
+          { libelle: "Toutes les unités", href: `/duerp/${id}/risques` },
+          { libelle: risque.unite.nom, href: hrefRetourUnite },
+          { libelle: risque.libelle },
+        ]}
+      />
 
       <header className="max-w-[var(--board-mesure)]">
-        <div className="board-eyebrow flex flex-wrap items-baseline gap-2 text-[10.5px] tracking-[0.18em]">
+        <div className="board-surtitre flex flex-wrap items-baseline gap-2">
           <span className="text-[color:var(--board-ink)]">
             Évaluation du risque
           </span>
@@ -63,7 +62,7 @@ export default async function CotationPage({
             {risque.cotationSaisie ? "déjà coté" : "à coter"}
           </span>
         </div>
-        <h2 className="board-titre m-0 mt-3 text-[clamp(23px,2.1vw,30px)]">
+        <h2 className="board-titre m-0 mt-3 text-[22px]">
           {risque.libelle}
         </h2>
         {risque.description && (
@@ -81,21 +80,10 @@ export default async function CotationPage({
         hrefMesures={hrefMesures}
       />
 
-      <section aria-labelledby="partie-cotation" className="flex flex-col gap-[22px] pt-2">
-        <div className="flex flex-wrap items-baseline gap-3">
-          <span className="font-mono text-[18px] font-semibold tabular-nums text-[color:var(--board-blue-ink)]">
-            01
-          </span>
-          <h3 id="partie-cotation" className="board-titre m-0 text-[22px]">
-            Cotation
-          </h3>
-          <span aria-hidden className="text-[color:var(--board-slate)]">
-            /
-          </span>
-          <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
-            3 questions — criticité calculée
-          </p>
-        </div>
+      <section aria-labelledby="partie-cotation" className="flex flex-col gap-6">
+        <h3 id="partie-cotation" className="sr-only">
+          Cotation
+        </h3>
 
         <CotationForm
           risqueId={risqueId}
@@ -112,7 +100,6 @@ export default async function CotationPage({
             exposeCMR: risque.exposeCMR,
           }}
           cotationSaisie={risque.cotationSaisie}
-          hrefRetourUnite={hrefRetourUnite}
           hrefMesures={hrefMesures}
           hrefSuivant={hrefSuivant}
         />

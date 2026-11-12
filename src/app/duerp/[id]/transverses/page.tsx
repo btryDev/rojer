@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { LienRetour } from "@/components/duerps/LienRetour";
+import { EnTeteEtape } from "@/components/duerps/EnTeteEtape";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { QuestionTransverseRow } from "@/components/duerps/QuestionTransverseRow";
@@ -7,8 +9,7 @@ import { FAITS_ACTIVITE, intituleDuFait } from "@/lib/etablissements/faits-activ
 import { CadreACompleter, ListeACompleter } from "@/components/ui-kit/CadreACompleter";
 import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
 import { faitsManquants } from "@/lib/etablissements/guide-par-module";
-import { WizardSteps } from "@/components/duerps/WizardSteps";
-import { etapesDuDuerp } from "@/lib/duerps/etapes";
+import { ValiderEtapeBouton } from "@/components/duerps/ValiderEtapeBouton";
 import { getDuerp } from "@/lib/duerps/queries";
 import { risquesTransverses } from "@/lib/referentiels";
 import {
@@ -39,7 +40,6 @@ export default async function TransversesPage({
     duerp.etablissement,
   );
 
-  const etapes = etapesDuDuerp(duerp, "transverses");
 
   const risquesParId = new Map(risquesTransverses.map((r) => [r.id, r]));
 
@@ -52,20 +52,19 @@ export default async function TransversesPage({
   const ancresACompleter = new Set(manques.map((f) => f.questionTransverse ?? f.champ));
 
   return (
-    <div className="flex flex-col gap-[22px]">
-      <WizardSteps etapes={etapes} />
+    <div className="flex flex-col gap-8">
+      {/* Le retour à l'étape précédente, en tête (2026-11-12) : tout le
+          monde ne devine pas que le fil des étapes se clique. */}
+      <nav>
+        <LienRetour href={`/duerp/${id}/risques`}>Risques par unité</LienRetour>
+      </nav>
 
-      <header className="max-w-[var(--board-mesure)]">
-        <h2 className="board-titre m-0 text-[clamp(23px,2.1vw,30px)]">
-          Questions transverses
-        </h2>
-        <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-          Ces questions couvrent des risques présents dans la plupart des
-          entreprises, quel que soit le métier. Chaque « oui » ajoute
-          automatiquement le risque correspondant à votre DUERP — vous pourrez
-          ensuite le coter comme les autres.
-        </p>
-      </header>
+      <EnTeteEtape page="transverses" titre="Questions transverses">
+        Ces questions couvrent des risques présents dans la plupart des
+        entreprises, quel que soit le métier. Chaque « oui » ajoute
+        automatiquement le risque correspondant à votre DUERP — vous pourrez
+        ensuite le coter comme les autres.
+      </EnTeteEtape>
 
       {manques.length > 0 ? (
         <CadreACompleter
@@ -160,23 +159,19 @@ export default async function TransversesPage({
         </section>
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-4 border-t border-[color:var(--board-slate-line)] pt-6">
-        <Link
-          href={`/duerp/${id}/risques`}
-          className={buttonVariants({ variant: "boardClair", size: "board" })}
-        >
-          ← Risques
-        </Link>
-        {/* Un lien, plus une validation : l'étape se calcule sur les
-            réponses (2026-10-12), cliquer « Terminer » ne la coche plus.
-            `ValiderTransversesButton` et `validerTransverses` sont retirés —
-            ils n'écrivaient plus que la colonne inerte. */}
-        <Link
-          href={`/duerp/${id}/synthese`}
-          className={buttonVariants({ variant: "board", size: "board" })}
-        >
-          Terminer — aller à la synthèse →
-        </Link>
+      <div className="flex flex-wrap items-center justify-end gap-4 border-t border-[color:var(--board-slate-line)] pt-6">
+        {/* ~~Un lien, plus une validation : l'étape se calcule sur les
+            réponses (2026-10-12), cliquer « Terminer » ne la coche plus.~~
+            [2026-11-11, « si pas validé, pas fait » : l'étape se valide de
+            nouveau, ET se calcule toujours sur les réponses — une question
+            sans réponse la laisse à faire, validée ou non. La colonne inerte
+            `transversesRepondues` n'est pas relue : `etapesValidees`.] */}
+        <ValiderEtapeBouton
+          duerpId={id}
+          etablissementId={duerp.etablissementId}
+          etape="transverses"
+          libelle="Valider — aller à la synthèse →"
+        />
       </div>
     </div>
   );

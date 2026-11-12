@@ -71,7 +71,7 @@ export default async function ImportDuerpPage({
         </PlafondDeCreation>
 
         <div className="rounded-[22px] bg-[color:var(--board-slate-pale)] px-7 py-5 sm:px-8">
-          <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
+          <p className="board-surtitre m-0 text-[color:var(--board-slate-soft)]">
             Format attendu
           </p>
           <ul className="m-0 mt-3 flex max-w-[var(--board-mesure)] list-none flex-col gap-1.5 p-0 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-ink)]">

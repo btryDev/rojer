@@ -15,6 +15,7 @@ function activite(id: string): ActiviteNonCouverte {
     question: `Exercez-vous ${id} ?`,
     cequiManque: `ce que le référentiel ne dit pas de ${id}.`,
     pourquoi: `pourquoi le référentiel s'arrête avant ${id}.`,
+    aFaire: { uniteExistante: "u", risques: [`risque de ${id}`] },
   };
 }
 

@@ -3,8 +3,7 @@ import { notFound } from "next/navigation";
 import { SecteurCard } from "@/components/duerps/SecteurCard";
 import { AutresSecteurs } from "@/components/duerps/AutresSecteurs";
 import { ConfirmerSecteurButton } from "@/components/duerps/ConfirmerSecteurButton";
-import { WizardSteps } from "@/components/duerps/WizardSteps";
-import { etapesDuDuerp } from "@/lib/duerps/etapes";
+import { EnTeteEtape } from "@/components/duerps/EnTeteEtape";
 import { getDuerp } from "@/lib/duerps/queries";
 import {
   referentielsSectoriels,
@@ -23,7 +22,6 @@ export default async function SecteurPage({
   const refRecommande = trouverReferentielParNaf(duerp.etablissement.codeNaf);
   const secteurChoisi = duerp.referentielSecteurId;
 
-  const etapes = etapesDuDuerp(duerp, "secteur");
 
   const autresSecteurs = referentielsSectoriels
     .filter((r) => r.id !== refRecommande?.id)
@@ -37,8 +35,7 @@ export default async function SecteurPage({
     }));
 
   return (
-    <div className="flex flex-col gap-[22px]">
-      <WizardSteps etapes={etapes} />
+    <div className="flex flex-col gap-8">
 
       {/* Raccourci : importer un DUERP existant plutôt que reconstruire */}
       <aside className="flex flex-wrap items-center justify-between gap-3 rounded-[22px] bg-[color:var(--board-slate-pale)] px-6 py-4">
@@ -49,7 +46,7 @@ export default async function SecteurPage({
         <Link
           data-ecriture
           href={`/etablissements/${duerp.etablissementId}/duerp/import`}
-          className="board-eyebrow text-[10px] tracking-[0.16em] text-[color:var(--board-blue-ink)] hover:underline"
+          className="board-surtitre text-[color:var(--board-blue-ink)] hover:underline"
         >
           Importer depuis Excel →
         </Link>
@@ -57,22 +54,17 @@ export default async function SecteurPage({
 
       {refRecommande ? (
         <>
-          <header className="max-w-[var(--board-mesure)]">
-            <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-              Secteur d&apos;activité
-            </p>
-            <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          <EnTeteEtape page="secteur">
               À partir du code NAF{" "}
-              <span className="font-mono tabular-nums text-[color:var(--board-ink)]">
+              <span className="tabular-nums text-[color:var(--board-ink)]">
                 {duerp.etablissement.codeNaf}
               </span>
               , le secteur ci-dessous a été détecté. Confirmez pour charger
               les unités et risques types.
-            </p>
-          </header>
+          </EnTeteEtape>
 
           <section className="carte-board px-7 py-6 sm:px-8">
-            <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
+            <p className="board-surtitre m-0 text-[color:var(--board-slate-soft)]">
               Secteur détecté
             </p>
 
@@ -88,7 +80,7 @@ export default async function SecteurPage({
                 <dl className="mt-7 flex flex-wrap gap-x-10 gap-y-4">
                   <div className="flex items-baseline gap-2.5">
                     <dt className="sr-only">Unités pré-remplies</dt>
-                    <dd className="m-0 font-mono text-[20px] tabular-nums text-[color:var(--board-ink)]">
+                    <dd className="m-0 text-[20px] tabular-nums text-[color:var(--board-ink)]">
                       {String(refRecommande.unitesTravailSuggerees.length).padStart(2, "0")}
                     </dd>
                     <span className="text-[12.5px] text-[color:var(--board-slate-mid)]">
@@ -97,7 +89,7 @@ export default async function SecteurPage({
                   </div>
                   <div className="flex items-baseline gap-2.5">
                     <dt className="sr-only">Risques référencés</dt>
-                    <dd className="m-0 font-mono text-[20px] tabular-nums text-[color:var(--board-ink)]">
+                    <dd className="m-0 text-[20px] tabular-nums text-[color:var(--board-ink)]">
                       {String(refRecommande.risques.length).padStart(2, "0")}
                     </dd>
                     <span className="text-[12.5px] text-[color:var(--board-slate-mid)]">
@@ -124,23 +116,18 @@ export default async function SecteurPage({
         </>
       ) : (
         <>
-          <header className="max-w-[var(--board-mesure)]">
-            <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-              Secteur d&apos;activité
-            </p>
-            <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+          <EnTeteEtape page="secteur">
               Le code NAF{" "}
-              <span className="font-mono tabular-nums text-[color:var(--board-ink)]">
+              <span className="tabular-nums text-[color:var(--board-ink)]">
                 {duerp.etablissement.codeNaf}
               </span>{" "}
               n&apos;est pas couvert par un référentiel dédié. Choisissez le
               secteur le plus proche — vous pourrez décocher les risques non
               applicables à l&apos;étape suivante.
-            </p>
-          </header>
+          </EnTeteEtape>
 
           <section>
-            <p className="board-eyebrow m-0 mb-5 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
+            <p className="board-surtitre m-0 mb-5 text-[color:var(--board-slate-soft)]">
               Secteurs disponibles
             </p>
             <div className="grid gap-[22px] md:grid-cols-2 lg:grid-cols-3">

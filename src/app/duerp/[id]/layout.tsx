@@ -10,6 +10,9 @@ import { BarreDeListe } from "@/components/ui-kit/BarreDeListe";
 import { BarreCompte } from "@/components/layout/BarreCompte";
 import { comptesDeLaSession } from "@/lib/auth/compte";
 import { getDuerp } from "@/lib/duerps/queries";
+import { PAGES_DU_PARCOURS, etapesDuDuerp, type EtapeId } from "@/lib/duerps/etapes";
+import { FilDuDuerp } from "@/components/duerps/FilDuDuerp";
+
 import { getOptionalUser } from "@/lib/auth/require-user";
 import { getEtatModules } from "@/lib/etablissements/modules";
 import { listerEtablissementsDuCompte } from "@/lib/etablissements/queries";
@@ -18,6 +21,7 @@ import {
   trouverReferentielParId,
   trouverReferentielParNaf,
 } from "@/lib/referentiels";
+
 
 /**
  * Shell V2 pour les pages DUERP — aligne /duerp/[id]/* sur le même
@@ -69,6 +73,20 @@ export default async function DuerpLayout({
   const refParNaf = trouverReferentielParNaf(duerp.etablissement.codeNaf);
   const ref = refChoisi ?? refParNaf;
 
+  // Le fil des étapes, calculé pour chaque page : la mise en page ne sait pas
+  // laquelle est ouverte, `FilDuDuerp` la lit sur l'adresse (2026-11-12).
+  const etapesParPage = Object.fromEntries(
+    PAGES_DU_PARCOURS.map((page) => [page, etapesDuDuerp(duerp, page)]),
+  ) as Record<EtapeId, ReturnType<typeof etapesDuDuerp>>;
+
+  // Le PDF ne se propose qu'un DUERP complété (2026-11-12, décision de la
+  // propriétaire) : les quatre étapes avant la synthèse faites. Télécharger
+  // un document à moitié rempli n'a pas de sens ; l'aperçu reste ouvert à la
+  // synthèse, où le DUERP se valide.
+  const complete = etapesParPage.synthese
+    .filter((e) => e.id !== "synthese")
+    .every((e) => e.faite);
+
   const effectif = duerp.entreprise.effectif;
   const contexte = [
     `NAF ${duerp.etablissement.codeNaf}`,
@@ -119,6 +137,7 @@ export default async function DuerpLayout({
         <EnTetePage
           item="duerp"
           description="Votre évaluation des risques, unité de travail par unité. Tout est enregistré au fur et à mesure : vous pouvez vous arrêter et reprendre."
+          pied={<FilDuDuerp etapesParPage={etapesParPage} />}
         />
         {/* Le contexte du document et sa sortie, au-dessus de l'étape : ce
             que l'en-tête portait à droite, il ne le porte plus. */}
@@ -126,6 +145,7 @@ export default async function DuerpLayout({
           <BarreDeListe
             contexte={contexte}
             action={
+              complete ? (
               // Une balise <a>, pas un <Link> : Next précharge les <Link>, et le
               // préchargement lancerait le rendu du PDF — il prendrait une des
               // deux places d'export de l'utilisateur avant son clic.
@@ -138,6 +158,7 @@ export default async function DuerpLayout({
               >
                 PDF DUERP ↓
               </a>
+              ) : undefined
             }
           />
         </div>

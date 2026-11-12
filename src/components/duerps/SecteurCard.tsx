@@ -46,7 +46,7 @@ export function SecteurCard({
           : ""
       } ${pending ? "opacity-60" : ""}`}
     >
-      <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
+      <p className="board-surtitre m-0 text-[color:var(--board-slate-soft)]">
         Secteur
       </p>
       <h3 className="board-titre m-0 mt-2.5 text-[22px]">{nom}</h3>
@@ -55,16 +55,16 @@ export function SecteurCard({
       </p>
 
       <dl className="mt-6 grid grid-cols-2 gap-y-2 border-t border-[color:var(--board-slate-line)] pt-4">
-        <dt className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
+        <dt className="board-surtitre m-0 text-[color:var(--board-slate-soft)]">
           Unités
         </dt>
-        <dd className="m-0 text-right font-mono text-[13.5px] tabular-nums text-[color:var(--board-ink)]">
+        <dd className="m-0 text-right text-[13.5px] tabular-nums text-[color:var(--board-ink)]">
           {nombreUnites}
         </dd>
-        <dt className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
+        <dt className="board-surtitre m-0 text-[color:var(--board-slate-soft)]">
           Risques
         </dt>
-        <dd className="m-0 text-right font-mono text-[13.5px] tabular-nums text-[color:var(--board-ink)]">
+        <dd className="m-0 text-right text-[13.5px] tabular-nums text-[color:var(--board-ink)]">
           {nombreRisques}
         </dd>
       </dl>
@@ -73,19 +73,19 @@ export function SecteurCard({
         {codesNaf.slice(0, 4).map((n) => (
           <span
             key={n}
-            className="rounded-full bg-[color:var(--board-slate-pale)] px-2.5 py-0.5 font-mono text-[10.5px] tabular-nums text-[color:var(--board-slate-mid)]"
+            className="board-surtitre rounded-full bg-[color:var(--board-slate-pale)] px-2.5 py-0.5 tabular-nums text-[color:var(--board-slate-mid)]"
           >
             {n}
           </span>
         ))}
         {codesNaf.length > 4 && (
-          <span className="self-center font-mono text-[10.5px] tabular-nums text-[color:var(--board-slate-soft)]">
+          <span className="board-surtitre self-center tabular-nums text-[color:var(--board-slate-soft)]">
             +{codesNaf.length - 4}
           </span>
         )}
       </div>
 
-      <span className="board-eyebrow mt-6 text-[10px] tracking-[0.16em] text-[color:var(--board-ink)] transition-transform group-hover:translate-x-1">
+      <span className="board-surtitre mt-6 text-[color:var(--board-ink)] transition-transform group-hover:translate-x-1">
         {pending
           ? "Application…"
           : dejaChoisi

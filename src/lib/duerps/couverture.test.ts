@@ -22,6 +22,7 @@ const secteurInstruit: Referentiel = {
       question: "Découpez-vous de la viande sur place ?",
       cequiManque: "Machines de découpe, travail au froid.",
       pourquoi: "Le référentiel décrit la vente, pas le laboratoire.",
+      aFaire: { uniteExistante: "u", risques: ["r"] },
     },
     {
       id: "tst-fournil",
@@ -29,6 +30,7 @@ const secteurInstruit: Referentiel = {
       question: "Cuisez-vous du pain sur place ?",
       cequiManque: "Farines, four, travail de nuit.",
       pourquoi: "Le référentiel décrit la vente, pas la fabrication.",
+      aFaire: { uniteExistante: "u", risques: ["r"] },
     },
   ],
 };
