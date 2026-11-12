@@ -6,5 +6,5 @@
 ALTER TABLE "UniteTravail" ADD COLUMN "activiteId" TEXT;
 ALTER TABLE "Risque" ADD COLUMN "activiteId" TEXT;
 
-CREATE UNIQUE INDEX "UniteTravail_duerpId_activiteId_key" ON "UniteTravail"("duerpId", "activiteId");
-CREATE UNIQUE INDEX "Risque_uniteId_activiteId_libelle_key" ON "Risque"("uniteId", "activiteId", "libelle");
+-- Les deux index uniques suivent, chacun CONCURRENTLY et seul dans son
+-- fichier (règle de `migrations-index.test.ts`) : 20261112090100 et 20261112090200.

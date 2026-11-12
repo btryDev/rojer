@@ -6,8 +6,10 @@ import "server-only";
 
 import { Prisma } from "@prisma/client";
 import type { Db } from "@/lib/auth/compte";
-import type { TransactionBornee } from "@/lib/auth/portee/client";
 import { creerEnLotVerifie } from "@/lib/auth/portee/lot-verifie";
+
+/** La transaction bornée, telle que `creerEnLotVerifie` la reçoit — sans importer les rouages du client. */
+type TransactionBornee = Parameters<typeof creerEnLotVerifie>[0];
 import { placesSousLePlafond } from "@/lib/abonnements/quotas";
 import { avecValidations } from "@/lib/duerps/etapes-validees";
 import type { ActiviteNonCouverte } from "@/lib/referentiels/types";

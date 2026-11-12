@@ -127,6 +127,8 @@ export const PAS_UNE_CLE_DE_COMPTE: Readonly<Record<string, string>> = {
   "Duerp.referentielSecteurId": "référentiel sectoriel, en TypeScript (ADR-003)",
   "UniteTravail.referentielUniteId": "référentiel sectoriel, en TypeScript (ADR-003)",
   "Risque.referentielId": "référentiel sectoriel, en TypeScript (ADR-003)",
+  "UniteTravail.activiteId": "activité hors référentiel du secteur, en TypeScript (ADR-003, ADR-060)",
+  "Risque.activiteId": "activité hors référentiel du secteur, en TypeScript (ADR-003, ADR-060)",
   "Action.referentielMesureId": "référentiel des mesures, en TypeScript (ADR-003)",
   "Verification.obligationId": "référentiel de conformité, en TypeScript (ADR-003)",
   "PrescriptionParticuliere.obligationId": "référentiel de conformité, en TypeScript (ADR-003)",
