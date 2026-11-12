@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { LienRetour } from "@/components/duerps/LienRetour";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { ValiderEtapeBouton } from "@/components/duerps/ValiderEtapeBouton";
@@ -30,11 +29,6 @@ export default async function RisquesOverviewPage({
 
   return (
     <div className="flex flex-col gap-8">
-      {/* Le retour à l'étape précédente, en tête (2026-11-12) : tout le
-          monde ne devine pas que le fil des étapes se clique. */}
-      <nav>
-        <LienRetour href={`/duerp/${id}/unites`}>Unités de travail</LienRetour>
-      </nav>
 
       {/* Allégé le 2026-11-12 : la marche à suivre était une grille de quatre
           cartes d'explication, au même rang que la liste. C'est un rail sur

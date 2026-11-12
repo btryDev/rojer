@@ -6,12 +6,12 @@ import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { EnTetePage } from "@/components/entete-page/EnTetePage";
-import { BarreDeListe } from "@/components/ui-kit/BarreDeListe";
 import { BarreCompte } from "@/components/layout/BarreCompte";
 import { comptesDeLaSession } from "@/lib/auth/compte";
 import { getDuerp } from "@/lib/duerps/queries";
 import { PAGES_DU_PARCOURS, etapesDuDuerp, type EtapeId } from "@/lib/duerps/etapes";
 import { FilDuDuerp } from "@/components/duerps/FilDuDuerp";
+import { RetourDuerp, type DonneesRetour } from "@/components/duerps/RetourDuerp";
 
 import { getOptionalUser } from "@/lib/auth/require-user";
 import { getEtatModules } from "@/lib/etablissements/modules";
@@ -72,6 +72,16 @@ export default async function DuerpLayout({
   // propriétaire) : les quatre étapes avant la synthèse faites. Télécharger
   // un document à moitié rempli n'a pas de sens ; l'aperçu reste ouvert à la
   // synthèse, où le DUERP se valide.
+  const donneesRetour: DonneesRetour = {
+    hrefActivite: etapesParPage.unites[0].href,
+    unites: Object.fromEntries(
+      duerp.unites.map((u) => [
+        u.id,
+        { nom: u.nom, risques: Object.fromEntries(u.risques.map((r) => [r.id, r.libelle])) },
+      ]),
+    ),
+  };
+
   const complete = etapesParPage.synthese
     .filter((e) => e.id !== "synthese")
     .every((e) => e.faite);
@@ -122,31 +132,23 @@ export default async function DuerpLayout({
           description="Votre évaluation des risques, unité de travail par unité. Tout est enregistré au fur et à mesure : vous pouvez vous arrêter et reprendre."
           pied={<FilDuDuerp etapesParPage={etapesParPage} />}
         />
-        {/* ~~Le contexte du document (NAF · secteur · salariés)~~ retiré le
-            2026-11-12 (décision de la propriétaire) : le haut de la page est au
-            fil de la page. Reste la sortie, une fois le DUERP complété. */}
-        {complete && (
-        <div className="px-[var(--board-gutter)] pt-6">
-          <BarreDeListe
-            action={
-              (
-              // Une balise <a>, pas un <Link> : Next précharge les <Link>, et le
-              // préchargement lancerait le rendu du PDF — il prendrait une des
-              // deux places d'export de l'utilisateur avant son clic.
-              <a
-                href={`/duerp/${id}/pdf/preview`}
-                className={buttonVariants({
-                  variant: "boardClair",
-                  size: "boardSm",
-                })}
-              >
-                PDF DUERP ↓
-              </a>
-              )
-            }
-          />
+        {/* La barre du haut (2026-11-12) : le retour de la page tout à
+            gauche, à la place de l'ancienne ligne « NAF · secteur ·
+            salariés » ; à droite, le PDF une fois le DUERP complété. */}
+        <div className="flex min-h-[34px] flex-wrap items-center justify-between gap-3 px-[var(--board-gutter)] pt-6">
+          <RetourDuerp duerpId={id} donnees={donneesRetour} />
+          {complete && (
+            // Une balise <a>, pas un <Link> : Next précharge les <Link>, et le
+            // préchargement lancerait le rendu du PDF — il prendrait une des
+            // deux places d'export de l'utilisateur avant son clic.
+            <a
+              href={`/duerp/${id}/pdf/preview`}
+              className={`${buttonVariants({ variant: "boardClair", size: "boardSm" })} ml-auto`}
+            >
+              PDF DUERP ↓
+            </a>
+          )}
         </div>
-        )}
 
         {/* La saisie fermée (lecture seule, abonnement, site gelé) s'annonce
             dès l'ouverture, comme sur les autres pages du site (ADR-053 § 14). */}
