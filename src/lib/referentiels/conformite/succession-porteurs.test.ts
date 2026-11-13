@@ -300,8 +300,9 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "sante-travail-salarie-vip": "salarie",
   "sante-travail-salarie-vip-adaptee": "salarie",
   "scene-erp-depoussierage-annuel": "equipement",
-  "scene-erp-materiels-installations-temporaires-annuelle": "etablissement",
-  "scene-erp-verifications-triennales-organisme-agree": "etablissement",
+  // 2026-11-13, ADR-057 « À trancher » : portées par la scène (dispersion).
+  "scene-erp-materiels-installations-temporaires-annuelle": "equipement",
+  "scene-erp-verifications-triennales-organisme-agree": "equipement",
   "secours-etablissement-materiel": "etablissement",
   "secours-etablissement-mesures": "etablissement",
   "secours-etablissement-signalement-chaleur-intense": "etablissement",

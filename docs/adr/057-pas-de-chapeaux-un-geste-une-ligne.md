@@ -277,9 +277,11 @@ n'a pas été discutée le 2026-11-05 :
 
 - `habitation-verification-annuelle-installations-securite` (art. 101 de
   l'arrêté du 31 janvier 1986 : désenfumage, VMC, alarme) ;
-- `scene-erp-verifications-triennales-organisme-agree` et
+- ~~`scene-erp-verifications-triennales-organisme-agree` et
   `scene-erp-materiels-installations-temporaires-annuelle` (nées d'une scène
-  déclarée) ;
+  déclarée) ;~~ [2026-11-13 : tranché, décision de la propriétaire — règle 1 :
+  portées par la scène, sous le même identifiant (dispersion), référentiel
+  `2026-11-13.1`. Deux scènes déclarées font deux lignes, cas rare accepté.]
 - `incendie-erp-5-sommeil-contrat-entretien-sdi` (un contrat, plutôt un écrit
   qu'un geste) ;
 - l'électricité Code du travail : elle ne vise que les lieux de travail ; un

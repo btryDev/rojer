@@ -133,13 +133,16 @@ describe("chapitre L — borne haute : ni scène hors du champ, ni ligne sans sc
   });
 });
 
-describe("chapitre L — une ligne par établissement, une par scène", () => {
-  it("deux scènes : deux dépoussiérages, une seule triennale, un seul matériel, une seule présence", () => {
+// ~~« une ligne par établissement, une par scène »~~ — 2026-11-13, ADR-057
+// § « À trancher » : la triennale et le matériel sont portés par la scène.
+// Seule la présence de 3ᵉ (un état, une personne) reste à l'établissement.
+describe("chapitre L — une ligne par scène, la présence par établissement", () => {
+  it("deux scènes : deux dépoussiérages, deux triennales, deux matériels, une seule présence", () => {
     const e = salle("L", "N3");
     const parc = [scene("a"), scene("b")];
     expect(nombre(e, parc, DEPOUSSIERAGE)).toBe(2);
-    expect(nombre(e, parc, TRIENNALE)).toBe(1);
-    expect(nombre(e, parc, MATERIEL)).toBe(1);
+    expect(nombre(e, parc, TRIENNALE)).toBe(2);
+    expect(nombre(e, parc, MATERIEL)).toBe(2);
     expect(nombre(e, parc, PRESENCE_N3)).toBe(1);
   });
 

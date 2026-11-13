@@ -2084,6 +2084,11 @@ describe("référentiel conformité — version et empreinte", () => {
     // ANNUEL, comme le texte ; références de la borne du livre II des lignes
     // AS 10 écrites une fois ; une phrase en double retirée. 210 + 0 − 0 = 210.
     { version: "2026-11-13.4", empreinte: "210-18c0e172ab706c2e" },
+    // ADR-057, § « À trancher » (2026-11-13, décision de la propriétaire) :
+    // L 57 § 1 a et L 13 § 5 passent de l'établissement à la scène, sous le
+    // même identifiant (dispersion). 210 + 0 − 0, relevée en appelant
+    // `empreinteReferentiel()` ; porteurs 105 / 91 / 14.
+    { version: "2026-11-13.5", empreinte: "210-4fb5e892190be95c" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
