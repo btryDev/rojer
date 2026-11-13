@@ -7,7 +7,7 @@
 
 ## Vision produit
 
-> **« Concentrez-vous sur votre activité, Rojer coordonne la prévention des risques de votre structure. »**
+> **« Concentrez-vous sur votre activité, Rojer ~~coordonne~~ construit et coordonne la prévention des risques de votre structure. »** [2026-11-13 : formule de la propriétaire, reprise sur la page d'accueil (#309)]
 
 **Rojer** (nom du produit, ex-DUERP.fr) est une application Next.js qui accompagne un **dirigeant de TPE/PME (non-expert)** dans le pilotage **continu** de sa conformité santé-sécurité réglementaire.
 
