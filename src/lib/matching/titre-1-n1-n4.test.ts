@@ -286,9 +286,8 @@ describe("revue indépendante du sous-lot C (2026-10-17) : ce qui a été corrig
   // ~~7. DF 9 : l'entretien est dit un autre geste, non suivi~~ — 2026-11-13,
   // décision de la propriétaire : la phrase quitte la description ; le manque
   // reste dans les notes internes et au corpus.
-  it("7. DF 9 : la description ne parle plus de l'entretien", () => {
-    expect(desc("incendie-erp-desenfumage-annuelle")).not.toMatch(/DF 9/);
-  });
+  // Aucune garde ne la remplace : la question de l'annonce du manque reste
+  // ouverte (relecture de #313).
   it("8. MS 72 : l'assiette (tout le personnel / le personnel désigné) est dite", () => {
     expect(notes("incendie-erp-personnel-designe-moyens-secours")).toContain("tout entier");
     expect(champ("MS 72", "reserve")).toContain("tout entier");

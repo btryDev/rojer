@@ -35,8 +35,9 @@ const { db, prisma } = await h;
 const client = prisma as unknown as ClientPasse;
 
 function poserEtablissement(
-  typeErp: "O" | "N",
+  typeErp: "O" | "N" | "L",
   equipements: EquipementFaux[],
+  categorieErp: "N3" | "N5" = "N5",
 ): EtablissementFaux {
   const etab: EtablissementFaux = {
     id: ETAB_ID,
@@ -49,7 +50,7 @@ function poserEtablissement(
     estHabitation: false,
     typeErp,
     typesErpAutres: [],
-    categorieErp: "N5",
+    categorieErp,
     classeIgh: null,
     familleHabitation: null,
     personnesPresentesHabituellement: 30,
@@ -215,5 +216,44 @@ describe("relecture du 2026-11-06 : le rapport le plus récent du même acte dat
       plan.aCreer.find((c) => c.equipementId === "vmc");
     expect(ligne?.obligationId).toBe("aeration-controle-installations-r4222-20");
     expect(ligne?.datePrevue.toISOString().slice(0, 10)).toBe("2027-10-01");
+  });
+});
+
+// 2026-11-13 (ADR-057, § « À trancher ») — L 57 § 1 a et L 13 § 5 passent de
+// l'établissement à la scène, sous le même identifiant : même chemin.
+describe("salle L de 3ᵉ catégorie : la triennale de scène d'établissement se disperse sur les scènes", () => {
+  const TRIENNALE_SCENE = "scene-erp-verifications-triennales-organisme-agree";
+  const scene = (id: string, createdAt: Date): EquipementFaux => ({
+    id,
+    libelle: `Scène ${id}`,
+    categorie: "SCENE",
+    caracteristiques: null,
+    actif: true,
+    createdAt,
+  });
+
+  it("chaque scène déclarée avant le rapport le reprend ; la ligne d'établissement est archivée", async () => {
+    poserEtablissement(
+      "L",
+      [scene("s1", new Date("2026-01-01T10:00:00Z")), scene("s2", new Date("2026-02-01T10:00:00Z"))],
+      "N3",
+    );
+    db.verifications = [
+      ligneEtablissement(TRIENNALE_SCENE, { realisateurRequis: ["organisme_agree"] }),
+    ];
+    const plan = planifier(await lireEntrees(client, ETAB_ID), MAINTENANT);
+    expect(plan.aArchiver.map((a) => a.id)).toContain("v-etab");
+    const lignes = lignesDe(plan, TRIENNALE_SCENE);
+    expect(lignes.map((l) => l.equipementId).sort()).toEqual(["s1", "s2"]);
+    for (const l of lignes) expect(l.datePrevue.toISOString().slice(0, 10)).toBe("2029-03-10");
+  });
+
+  it("une scène déclarée après le rapport n'en hérite pas (limite écrite dans `realisationDispersee`)", async () => {
+    poserEtablissement("L", [scene("tard", new Date("2026-06-01T10:00:00Z"))], "N3");
+    db.verifications = [
+      ligneEtablissement(TRIENNALE_SCENE, { realisateurRequis: ["organisme_agree"] }),
+    ];
+    const plan = planifier(await lireEntrees(client, ETAB_ID), MAINTENANT);
+    expect(lignesDe(plan, TRIENNALE_SCENE)[0].statut).toBe("a_planifier");
   });
 });
