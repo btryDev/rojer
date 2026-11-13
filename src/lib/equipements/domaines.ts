@@ -1,5 +1,20 @@
 import type { CategorieEquipement } from "@prisma/client";
 import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
+import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
+
+/**
+ * La famille sous laquelle un équipement se range à l'écran : un domaine du
+ * référentiel, ou une famille propre à l'écran qu'aucune obligation ne porte.
+ * Règle de rangement (décision de la propriétaire du 2026-11-13) : une
+ * famille = une installation. Le réseau de gaz est une installation comme le
+ * réseau électrique ; ce qui cuit, au gaz ou non, reste sous Cuisson.
+ */
+export type FamilleEquipement = DomaineObligation | "gaz";
+
+export const LABEL_FAMILLE_EQUIPEMENT: Record<FamilleEquipement, string> = {
+  ...LABEL_DOMAINE,
+  gaz: "Gaz",
+};
 
 /**
  * Le domaine sous lequel une catégorie d'équipement se range à l'écran
@@ -9,13 +24,14 @@ import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
  *
  * Table écrite, pas déduite : une catégorie dont les obligations relèvent de
  * plusieurs domaines se range là où le dirigeant la cherche. Le test vérifie
- * que le domaine choisi est bien l'un de ceux de ses obligations.
+ * que le domaine choisi est bien l'un de ceux de ses obligations, sauf pour
+ * les catégories de `RANGEES_HORS_DE_LEURS_OBLIGATIONS`.
  */
-export const DOMAINE_DE_CATEGORIE: Record<CategorieEquipement, DomaineObligation | null> = {
+export const FAMILLE_DE_CATEGORIE: Record<CategorieEquipement, FamilleEquipement | null> = {
   INSTALLATION_ELECTRIQUE: "electricite",
   EXTINCTEUR: "incendie",
   RIA: "incendie",
-  BAES: "incendie",
+  BAES: "electricite",
   ALARME_INCENDIE: "incendie",
   DESENFUMAGE: "incendie",
   VENTILATION: "aeration",
@@ -29,13 +45,31 @@ export const DOMAINE_DE_CATEGORIE: Record<CategorieEquipement, DomaineObligation
   INSTALLATION_FRIGORIFIQUE: "froid",
   COMPACTEUR_PRESSE_DECHETS_MOTORISE: "compactage_dechets",
   EPI: "epi",
-  INSTALLATION_GAZ: "cuisson_hotte",
+  INSTALLATION_GAZ: "gaz",
   DEFIBRILLATEUR: "secours",
   EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC: "eau_chaude_sanitaire",
   BUT_PANIER_SPORTIF: "etablissement_sportif",
   SCENE: "incendie",
   AUTRE: null,
 };
+
+/**
+ * Les catégories rangées à l'écran hors du domaine de leurs obligations. Le
+ * référentiel n'en est pas changé : rangement d'écran seulement.
+ */
+export const RANGEES_HORS_DE_LEURS_OBLIGATIONS: ReadonlySet<CategorieEquipement> = new Set([
+  // Retour d'un testeur du 2026-11-13 : le dirigeant cherche ses blocs de
+  // secours avec l'électricité — c'est un appareil électrique, posé et
+  // contrôlé par l'électricien. Ses obligations restent au domaine incendie
+  // (éclairage de sécurité : R. 4227-14 CT, EC du règlement de 1980).
+  "BAES",
+  // Même retour : une installation de gaz chauffe, produit l'eau chaude,
+  // stocke du propane — la ranger sous Cuisson la disait de cuisine. C'est un
+  // réseau, comme l'électricité. Ses obligations restent aux domaines cuisson
+  // (GZ 15) et incendie (PE 4 § 2, PO 1 § 3) ; les appareils de cuisson au
+  // gaz restent sous Cuisson.
+  "INSTALLATION_GAZ",
+]);
 
 /** Ce qu'un domaine pèse, pour le ranger. */
 export type PoidsDomaine = { libelle: string | null; enRetard: number; proche: number };

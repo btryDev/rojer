@@ -1,8 +1,7 @@
 import { notFound } from "next/navigation";
 import { AussiCouvertPar, ControlesDEnsembleDuDomaine } from "@/components/equipements/ControlesDEnsembleDuDomaine";
 import { controlesDEnsemble, type ControleDEnsemble } from "@/lib/equipements/controles-d-ensemble";
-import { DOMAINE_DE_CATEGORIE, comparerDomaines } from "@/lib/equipements/domaines";
-import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
+import { FAMILLE_DE_CATEGORIE, LABEL_FAMILLE_EQUIPEMENT, comparerDomaines, type FamilleEquipement } from "@/lib/equipements/domaines";
 import { CarteRepliable } from "@/components/ui-kit/CarteRepliable";
 import { instantDuRendu } from "@/lib/dates/instant-du-rendu";
 import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
@@ -346,14 +345,17 @@ export default async function EquipementsPage({
   // « Équipements de sécurité » signalait « à déclarer », sans les lignes
   // « à confirmer » : la carte dit « À confirmer ici », le domaine ne peut pas
   // dire « à déclarer » (relecture du 2026-11-06).
-  const presenceParDomaine = new Map<DomaineObligation | null, { total: number; aDeclarer: number }>();
+  const presenceParDomaine = new Map<FamilleEquipement | null, { total: number; aDeclarer: number }>();
   for (const l of lignesSecurite) {
-    const p = presenceParDomaine.get(l.domaine) ?? { total: 0, aDeclarer: 0 };
+    // Comptée dans la famille où elle s'affiche : celle de sa catégorie quand
+    // elle se pose sur une carte, sinon son domaine.
+    const groupe = l.cible.kind === "categorie" ? FAMILLE_DE_CATEGORIE[l.cible.categorie] : l.domaine;
+    const p = presenceParDomaine.get(groupe) ?? { total: 0, aDeclarer: 0 };
     p.total += 1;
     if (!l.aConfirmer && (l.etat === "aucun" || l.etat === "ancienne_case")) p.aDeclarer += 1;
-    presenceParDomaine.set(l.domaine, p);
+    presenceParDomaine.set(groupe, p);
   }
-  const aDeclarerDans = (domaine: DomaineObligation | null) =>
+  const aDeclarerDans = (domaine: FamilleEquipement | null) =>
     presenceParDomaine.get(domaine)?.aDeclarer ?? 0;
   // S'ouvre le premier domaine qui a du dépassé — contrôles d'ensemble
   // compris —, puis celui où un matériel exigé reste à déclarer, à défaut le
@@ -463,7 +465,7 @@ export default async function EquipementsPage({
             // 2026-10-24) ; le plus en peine s'ouvre.
             <CarteRepliable
               key={domaine ?? "autre"}
-              titre={domaine ? LABEL_DOMAINE[domaine] : "Autres équipements"}
+              titre={domaine ? LABEL_FAMILLE_EQUIPEMENT[domaine] : "Autres équipements"}
               compte={
                 nbAppareils > 0
                   ? `${nbAppareils} équipement${nbAppareils > 1 ? "s" : ""}`
@@ -547,9 +549,9 @@ function parDomaine<S extends { categorie: CategorieEquipement; appareils: Appar
   /** Les domaines d'un matériel exigé sans catégorie (ADR-057 § 4). */
   domainesEnPlus: readonly DomaineObligation[] = [],
 ) {
-  const groupes = new Map<DomaineObligation | null, S[]>();
+  const groupes = new Map<FamilleEquipement | null, S[]>();
   for (const s of sections) {
-    const d = DOMAINE_DE_CATEGORIE[s.categorie];
+    const d = FAMILLE_DE_CATEGORIE[s.categorie];
     groupes.set(d, [...(groupes.get(d) ?? []), s]);
   }
   for (const c of ensembles) if (!groupes.has(c.domaine)) groupes.set(c.domaine, []);
@@ -568,7 +570,7 @@ function parDomaine<S extends { categorie: CategorieEquipement; appareils: Appar
         sections: ss,
         propres,
         depassees: enRetard + propres.filter((c) => c.etat === "enRetard").length,
-        poids: { libelle: domaine ? LABEL_DOMAINE[domaine] : null, enRetard, proche: compte(ss, "proche") },
+        poids: { libelle: domaine ? LABEL_FAMILLE_EQUIPEMENT[domaine] : null, enRetard, proche: compte(ss, "proche") },
       };
     })
     .sort((a, b) => comparerDomaines(a.poids, b.poids));

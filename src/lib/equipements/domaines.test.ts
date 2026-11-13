@@ -1,18 +1,20 @@
 import { describe, expect, it } from "vitest";
 import { obligationsConformite } from "@/lib/referentiels/conformite";
-import { DOMAINE_DE_CATEGORIE, comparerDomaines } from "./domaines";
+import { FAMILLE_DE_CATEGORIE, RANGEES_HORS_DE_LEURS_OBLIGATIONS, comparerDomaines } from "./domaines";
 
-describe("le domaine d'une catégorie d'équipement", () => {
-  it("est l'un des domaines de ses obligations, quand elle en porte", () => {
+describe("la famille d'une catégorie d'équipement", () => {
+  it("est l'un des domaines de ses obligations, sauf exception déclarée — et une exception ne l'est jamais", () => {
     const ecarts: string[] = [];
-    for (const [categorie, domaine] of Object.entries(DOMAINE_DE_CATEGORIE)) {
-      const domaines = new Set(
+    for (const [categorie, famille] of Object.entries(FAMILLE_DE_CATEGORIE)) {
+      const domaines = new Set<string>(
         obligationsConformite
           .filter((o) => (o.categoriesEquipement ?? []).includes(categorie as never))
           .map((o) => o.domaine),
       );
-      if (domaines.size > 0 && (domaine === null || !domaines.has(domaine))) {
-        ecarts.push(`${categorie} → ${domaine} ∉ {${[...domaines].join(", ")}}`);
+      if (domaines.size === 0) continue;
+      const dedans = famille !== null && domaines.has(famille);
+      if (dedans === RANGEES_HORS_DE_LEURS_OBLIGATIONS.has(categorie as never)) {
+        ecarts.push(`${categorie} → ${famille} ; domaines {${[...domaines].join(", ")}}`);
       }
     }
     expect(ecarts).toEqual([]);
