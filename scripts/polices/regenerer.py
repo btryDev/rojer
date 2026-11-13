@@ -18,11 +18,13 @@ UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
 # (requête css2, préfixe des fichiers, variable CSS) — mêmes axes que l'ancien
 # next/font/google.
+# La famille générique suit le nom dans la variable : sans elle, un texte qui
+# lit `var(--font-body)` seul s'afficherait en serif pendant le chargement.
 FAMILLES = [
-    ("IBM+Plex+Sans:wght@400;500;600;700", "ibm-plex-sans", "--font-body"),
-    ("Instrument+Sans:wght@400..700", "instrument-sans", "--font-titre"),
-    ("JetBrains+Mono:wght@100..800", "jetbrains-mono", "--font-mono"),
-    ("Instrument+Serif:ital,wght@0,400;1,400", "instrument-serif", "--font-serif"),
+    ("IBM+Plex+Sans:wght@400;500;600;700", "ibm-plex-sans", "--font-body", "ui-sans-serif, system-ui, sans-serif"),
+    ("Instrument+Sans:wght@400..700", "instrument-sans", "--font-titre", "ui-sans-serif, system-ui, sans-serif"),
+    ("JetBrains+Mono:wght@100..800", "jetbrains-mono", "--font-mono", "ui-monospace, SFMono-Regular, monospace"),
+    ("Instrument+Serif:ital,wght@0,400;1,400", "instrument-serif", "--font-serif", "ui-serif, Georgia, serif"),
 ]
 
 
@@ -34,8 +36,11 @@ def lire(url: str) -> bytes:
     ).stdout
 
 
-blocs, variables = [], []
-for requete, prefixe, variable in FAMILLES:
+for ancien in DOSSIER.glob("*.woff2"):
+    ancien.unlink()  # tout est retéléchargé : fichiers et feuille restent d'accord
+
+blocs, variables, url_de = [], [], {}
+for requete, prefixe, variable, generique in FAMILLES:
     css = lire(f"https://fonts.googleapis.com/css2?family={requete}&display=swap").decode()
     nom = None
     for m in re.finditer(r"/\* ([\w-]+) \*/\s*@font-face \{(.*?)\}", css, re.S):
@@ -44,11 +49,17 @@ for requete, prefixe, variable in FAMILLES:
         style = re.search(r"font-style: (\w+)", corps).group(1)
         url = re.search(r"url\((\S+?)\)", corps).group(1)
         fichier = f"{prefixe}-{sous_ensemble}{'-italic' if style == 'italic' else ''}.woff2"
+        # Un nom de fichier, une seule URL : si Google servait un fichier par
+        # graisse, les graisses s'écraseraient en silence.
+        if url_de.setdefault(fichier, url) != url:
+            raise SystemExit(f"{fichier} : deux fichiers Google différents — nommer par graisse.")
         if not (DOSSIER / fichier).exists():
             (DOSSIER / fichier).write_bytes(lire(url))
         corps = corps.replace(url, f"./{fichier}")
-        blocs.append(f"/* {nom} — {sous_ensemble} */\n@font-face {{{corps}}}")
-    variables.append(f'  {variable}: "{nom}";')
+        blocs.append(f"/* {nom} — {sous_ensemble}{', italique' if style == 'italic' else ''} */\n@font-face {{{corps}}}")
+    if nom is None:
+        raise SystemExit(f"{requete} : aucune face lue dans la feuille de Google.")
+    variables.append(f'  {variable}: "{nom}", {generique};')
 
 FEUILLE.write_text(
     "/* GÉNÉRÉ par scripts/polices/regenerer.py — ne pas éditer à la main.\n"
