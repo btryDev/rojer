@@ -1720,7 +1720,7 @@ export const obligationsIncendie: Obligation[] = [
     realisateurs: ["personne_qualifiee"],
     criticite: 4,
     transmet: [],
-    typologies: { erp: { categories: ["N1", "N2", "N3", "N4"] } },
+    typologies: { erp: { categories: [...CATEGORIES_LIVRE_2] } },
     categoriesEquipement: ["COLONNE_SECHE"],
     geste: "verification_periodique",
     notesInternes:

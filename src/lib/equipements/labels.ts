@@ -94,7 +94,7 @@ export const PHRASE_FORMATION_EPI = `Rojer ne suit pas ${nonPorte("la formation 
  */
 export const PHRASE_PLAN_SCHEMATIQUE_CHAUFFAGE = `En établissement recevant du public des quatre premières catégories, Rojer ne suit pas non plus ${nonPorte("le plan schématique de l'installation, affiché en permanence et visiblement à proximité des chaudières et des générateurs d'air chaud à combustion")} (règlement de sécurité, art. CH 23 § 3 et CH 24 § 5).`;
 
-export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>> = {
+export const DESCRIPTION_CATEGORIE: Record<CategorieEquipement, string> = {
   INSTALLATION_ELECTRIQUE:
     "Tableau général, circuits terminaux, éventuel groupe électrogène de sécurité.",
   EXTINCTEUR:

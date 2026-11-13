@@ -609,7 +609,7 @@ export const obligationsConformite: Obligation[] = [
 // 2026-11-13) : la catégorie `ESCALIER_MECANIQUE` et les trois actes d'AS 10,
 // portés par l'appareil, ERP N1–N4 — `escalier-mecanique-erp-verification-
 // annuelle-as10`, `escalier-mecanique-erp-examen-chaines-cremailleres`
-// (semestrielle), `escalier-mecanique-erp-verification-remise-en-service-as10`
+// (~~semestrielle~~ [annuelle, 2026-11-13.4]), `escalier-mecanique-erp-verification-remise-en-service-as10`
 // (événementielle) ; `ESCALIER_MECANIQUE` entre aux catégories de
 // `incendie-erp-pe4-entretien-installations-techniques` (5ᵉ). 206 + 3 − 0 =
 // 209 ; par porteur, 99 + 3 = 102 équipement, 93 établissement, 14 salarié ;
@@ -625,7 +625,9 @@ export const obligationsConformite: Obligation[] = [
 // `obligationsConformite`, `porteurDe` et `estNiveauAudit`.
 // `2026-11-13.3` (revue de #311) : l'escalier mécanique de l'hôtel de 5ᵉ
 // entre à PO 1 § 3 ; 210 inchangé.
-export const REFERENTIEL_VERSION = "2026-11-13.3";
+// `2026-11-13.4` : l'examen des chaînes de l'escalier mécanique annuel (texte
+// d'AS 10 b), références AS 10 factorisées ; 210 inchangé.
+export const REFERENTIEL_VERSION = "2026-11-13.4";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

@@ -682,6 +682,14 @@ describe("référentiel conformité — anti-doublon", () => {
     // réalisation ; toute ligne porteuse d'une preuve est archivée, libellé
     // marqué (ADR-012). Constat en base avant le retrait : six lignes au
     // total, aucune preuve, aucune réalisation.
+    {
+      paire: [
+        "escalier-mecanique-erp-verification-annuelle-as10",
+        "escalier-mecanique-erp-examen-chaines-cremailleres",
+      ],
+      raison:
+        "Deux actes d'AS 10, tous deux annuels mais distincts (2026-11-13, décision de la propriétaire) : le a) est la vérification annuelle par une personne ou un organisme agréé (conformité, état de conservation, dispositifs de sécurité) ; le b) un examen supplémentaire des chaînes et crémaillères par l'entreprise d'entretien, « au milieu de la période annuelle ». Deux réalisateurs, deux dates, deux preuves.",
+    },
   ];
 
   const CLES_DECLAREES = new Set(
@@ -2071,6 +2079,11 @@ describe("référentiel conformité — version et empreinte", () => {
     // catégories de PO 1 § 3 (hôtel de 5ᵉ, « l'ensemble des installations
     // techniques »). Aucune obligation ajoutée ni retirée : 210 + 0 − 0 = 210.
     { version: "2026-11-13.3", empreinte: "210-e311a52cd4e44be4" },
+    // `2026-11-13.4` (décision de la propriétaire et simplification de #311) :
+    // l'examen des chaînes et crémaillères passe de ~~semestriel~~ à
+    // ANNUEL, comme le texte ; références de la borne du livre II des lignes
+    // AS 10 écrites une fois ; une phrase en double retirée. 210 + 0 − 0 = 210.
+    { version: "2026-11-13.4", empreinte: "210-18c0e172ab706c2e" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

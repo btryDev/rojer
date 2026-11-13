@@ -1,16 +1,10 @@
-// ~~Les trois pictogrammes que lucide n'a pas.~~ [2026-11-13 : ~~quatre,
-// l'escalier mécanique s'y ajoute~~ cinq, l'escalier mécanique et la colonne
-// sèche s'y ajoutent.]
-//
-// ~~Treize des seize catégories d'équipement trouvent leur dessin dans lucide
-// (l'extincteur, le ventilateur, le manomètre, le fût, le chariot…). Trois
-// n'y sont pas : la hotte professionnelle, l'ascenseur et le portail
-// motorisé.~~ [2026-11-13 : lucide n'a pas non plus l'escalier mécanique ni la
-// colonne sèche — cinq dessins ici.] Les laisser retomber sur une icône approchante — un chapeau de
-// cuisinier pour la hotte, une double flèche pour l'ascenseur, une barrière
-// pour le portail — était exactement ce qui avait fait retirer la première
-// planche de pictos : un dessin d'une autre famille, qui ne nomme pas la
-// chose et ne se distingue pas de sa voisine (« porte » et « portail »).
+// Les pictogrammes que lucide n'a pas : la hotte professionnelle,
+// l'ascenseur, le portail motorisé, l'escalier mécanique et la colonne sèche.
+// Les laisser retomber sur une icône approchante — un chapeau de cuisinier
+// pour la hotte, une double flèche pour l'ascenseur, une barrière pour le
+// portail — était exactement ce qui avait fait retirer la première planche
+// de pictos : un dessin d'une autre famille, qui ne nomme pas la chose et ne
+// se distingue pas de sa voisine (« porte » et « portail »).
 //
 // Ils sont donc dessinés ici, à la grille de lucide pour qu'on ne voie pas
 // la couture : 24 × 24, trait de 2, extrémités et jointures arrondies,

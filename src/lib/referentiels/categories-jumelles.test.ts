@@ -40,33 +40,38 @@ function enumDeLaMigration(): string[] {
 }
 
 /**
- * L'enum tel que les migrations le laissent : celui que la reprise recrée,
- * puis chaque `ADD VALUE … BEFORE / AFTER …` des migrations postérieures, dans leur
- * ordre. ~~La garde comparait l'enum recréé seul à la liste du code~~
- * [2026-11-13 : `ESCALIER_MECANIQUE` est ajouté après la reprise ; l'enum
- * recréé n'est plus le dernier mot, les ajouts qui le suivent le sont].
+ * Les `ADD VALUE` postérieurs à la reprise qui a recréé l'enum, dans l'ordre
+ * des migrations. [2026-11-13, simplification de #311 : la garde ne rejoue
+ * plus PostgreSQL ; elle vérifie chaque ajout contre la liste du code.]
  */
-function enumApresLesMigrations(): string[] {
-  const valeurs = enumDeLaMigration();
-  const apres = lireMigrations().filter((m) => m.nom > "20261107120100_categories_jumelles_reprise");
-  for (const { sql } of apres) {
-    for (const m of sansCommentaires(sql).matchAll(
-      /ALTER TYPE "CategorieEquipement" ADD VALUE (?:IF NOT EXISTS )?'([A-Z_]+)'(?: (BEFORE|AFTER) '([A-Z_]+)')?/g,
-    )) {
-      if (valeurs.includes(m[1])) continue;
-      const i = m[3] ? valeurs.indexOf(m[3]) : -1;
-      if (i < 0) valeurs.push(m[1]);
-      else valeurs.splice(m[2] === "AFTER" ? i + 1 : i, 0, m[1]);
-    }
-  }
-  return valeurs;
+function ajoutsApresLaReprise() {
+  return lireMigrations()
+    .filter((m) => m.nom > "20261107120100_categories_jumelles_reprise")
+    .flatMap(({ sql }) => [
+      ...sansCommentaires(sql).matchAll(
+        /ALTER TYPE "CategorieEquipement" ADD VALUE (?:IF NOT EXISTS )?'([A-Z_]+)'(?: (BEFORE|AFTER) '([A-Z_]+)')?/g,
+      ),
+    ])
+    .map(([, valeur, sens, ancre]) => ({ valeur, sens, ancre }));
 }
 
 describe("catégories jumelles — ADR-057 § 5", () => {
   it("l'enum du schéma, celui de la migration et la liste du code sont les mêmes, dans le même ordre", () => {
     expect(enumDuSchema()).toEqual([...CATEGORIES_EQUIPEMENT]);
-    // ~~`enumDeLaMigration()`~~ — 2026-11-13 : avec les ajouts postérieurs.
-    expect(enumApresLesMigrations()).toEqual([...CATEGORIES_EQUIPEMENT]);
+    // Les migrations portent les mêmes valeurs : l'enum recréé plus les ajouts.
+    const ajouts = ajoutsApresLaReprise();
+    expect(new Set([...enumDeLaMigration(), ...ajouts.map((a) => a.valeur)])).toEqual(new Set(CATEGORIES_EQUIPEMENT));
+  });
+
+  it("chaque ajout postérieur est rangé dans la base comme dans la liste du code", () => {
+    const ajouts = ajoutsApresLaReprise();
+    expect(ajouts.length).toBeGreaterThan(0);
+    for (const { valeur, sens, ancre } of ajouts) {
+      const i = CATEGORIES_EQUIPEMENT.indexOf(valeur as (typeof CATEGORIES_EQUIPEMENT)[number]);
+      expect(i, valeur).toBeGreaterThanOrEqual(0);
+      expect(ancre, `${valeur} : ADD VALUE sans BEFORE/AFTER, la base le range en dernier`).toBeDefined();
+      expect(CATEGORIES_EQUIPEMENT[sens === "AFTER" ? i - 1 : i + 1], valeur).toBe(ancre);
+    }
   });
 
   it("aucune ancienne valeur ne survit, et chacune a sa reprise", () => {
