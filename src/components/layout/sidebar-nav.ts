@@ -527,9 +527,10 @@ export function construireSections({
   // ─── Paramètres ────────────────────────────────────────────────────────
   //
   // Le réglage du dossier, et non une de ses matières : d'où la césure du
-  // rail. ~~Deux items seulement, et le second est la raison d'être de cette
-  // section~~ [2026-11-13 : trois, les zones y entrent — ADR-030 amendée] —
-  // « Connecter » n'était listé nulle part depuis que la fiche
+  // rail : la fiche, le découpage du lieu en zones (déclaré une fois, ADR-029 ;
+  // entré le 2026-11-13, ADR-030 amendée) et la connexion d'un assistant.
+  // ~~Deux items seulement, et le second est la raison d'être de cette
+  // section~~ [2026-11-13 : trois] — « Connecter » n'était listé nulle part depuis que la fiche
   // établissement est devenue la page d'entrée de « Paramètres », donc
   // atteignable seulement en tapant son URL.
   const parametres: NavItem[] = [
@@ -587,7 +588,8 @@ export function construireSections({
 // Le tableau de bord n'y figure pas : c'est l'écran d'atterrissage, et on
 // y revient par la marque en tête de rail — une entrée de plus l'aurait mis
 // au même rang que les quatre questions, alors qu'il les résume toutes.
-// « Paramètres » ferme la marche, sans panneau. « Comprendre » a quitté le
+// « Paramètres » ferme la marche~~, sans panneau~~ [2026-11-13 : avec son
+// panneau — fiche, zones, assistant ; il existe depuis le 2026-09-01]. « Comprendre » a quitté le
 // rail : le guide reste en ligne (`/guide`) mais n'est plus une des questions
 // du dirigeant — c'est une lecture, pas un endroit où l'on travaille, et une
 // entrée de rail permanente lui donnait le même rang qu'un registre tenu.

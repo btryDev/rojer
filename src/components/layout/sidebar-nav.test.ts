@@ -28,8 +28,9 @@ function itemsDe(titre: string, modules?: SidebarModules) {
   return section?.items ?? [];
 }
 
-/** L'axe du lieu — le parc, les zones, et les registres qui en consignent
- *  l'état (ADR-030). */
+/** L'axe du lieu — le parc, ~~les zones~~ [2026-11-13 : passées sous
+ *  Paramètres] les prescriptions, et les registres qui en consignent l'état
+ *  (ADR-030). */
 function equipementBatiment(modules?: SidebarModules) {
   return itemsDe("Équipement et bâtiment", modules);
 }
@@ -314,11 +315,15 @@ describe("construireRail — rail à deux niveaux", () => {
     // seulement en tapant son URL. Une entrée de rail qui déplace une page
     // sans lui en rendre une autre la supprime.
     // [2026-11-13 : les zones s'y ajoutent, ADR-030 amendée.]
-    expect(parametres?.items?.map((i) => i.id)).toEqual([
+    // Pas de liste exhaustive : ce qui doit tenir, c'est la fiche en tête
+    // (page d'entrée) et la présence de Connecter et des Zones.
+    const ids = parametres?.items?.map((i) => i.id) ?? [];
+    expect(ids[0]).toBe("fiche");
+    expect(ids).toEqual(expect.arrayContaining([
       "fiche",
       "batiments",
       "connecter",
-    ]);
+    ]));
     expect(idsVisibles()).toContain("connecter");
     expect(idsVisibles()).toContain("fiche");
     // La césure entre le dossier et son réglage est portée par la donnée,
