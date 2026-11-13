@@ -23,7 +23,10 @@ export const LABEL_CATEGORIE_EQUIPEMENT: Record<CategorieEquipement, string> = {
   // traitement d'air (CTA) »~~ ne font plus qu'une catégorie.
   VENTILATION: "Ventilation (VMC, CTA)",
   HOTTE_PRO: "Hotte professionnelle",
-  APPAREIL_CUISSON_ERP: "Appareil de cuisson ERP",
+  // « ERP » retiré du libellé le 2026-11-13 (décision de la propriétaire) : la
+  // catégorie sert aussi hors ERP (`cuisson-travail-appareils-entretien-
+  // verification`) ; le nom technique `APPAREIL_CUISSON_ERP` reste en base.
+  APPAREIL_CUISSON_ERP: "Appareil de cuisson",
   ASCENSEUR: "Ascenseur",
   // 2026-11-07, ADR-057 § 5 : ~~« Porte automatique »~~ et ~~« Portail
   // automatique »~~ ne font plus qu'une catégorie ; le type se déclare
