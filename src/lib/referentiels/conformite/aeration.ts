@@ -319,7 +319,7 @@ export const obligationsAeration: Obligation[] = [
         article: "CH 57",
         url:
           "https://www.legifrance.gouv.fr/codes/section_lc/JORFTEXT000000290033/LEGISCTA000020304588/",
-        note: "« Les installations doivent être entretenues régulièrement et maintenues en bon état de fonctionnement. En particulier, les conduits de fumée, les cheminées et tous les appareils doivent être ramonés et nettoyés une fois par an. » ARTICLE D'ENTRETIEN, non de vérification : le ramonage qu'il impose n'est PAS l'acte que cette obligation planifie, et il n'a pas de ligne à lui. Voir les notes internes — une scission est proposée, elle n'est pas faite.",
+        note: "« Les installations doivent être entretenues régulièrement et maintenues en bon état de fonctionnement. En particulier, les conduits de fumée, les cheminées et tous les appareils doivent être ramonés et nettoyés une fois par an. » ARTICLE D'ENTRETIEN, non de vérification : le ramonage qu'il impose n'est PAS l'acte que cette obligation planifie, et il n'a pas de ligne à lui. Voir les notes internes — ~~une scission est proposée, elle n'est pas faite~~ [tranché le 2026-10-17 : pas de scission, le ramonage n'est pas suivi ; 2026-11-13 : la description ne le dit plus].",
         versionConstatee: "1980-08-15",
       },
     ],

@@ -282,10 +282,14 @@ describe("revue indépendante du sous-lot G (2026-10-17) — chaque correction t
     expect(obligationParId(MATERIEL)!.description).toContain("Le texte ne dit pas qui doit faire vérifier");
   });
 
-  it("(5) le personnel désigné dit l'agent de 2ᵉ catégorie et le service de représentation jusqu'en 4ᵉ", () => {
+  // ~~(5) le personnel désigné dit l'agent de 2ᵉ catégorie et le service de
+  // représentation jusqu'en 4ᵉ~~ — 2026-11-13, décision de la propriétaire :
+  // une ligne suivie ne parle plus de ce qu'elle ne suit pas (agents, service
+  // de représentation) ; le manque reste dans les notes internes et au corpus.
+  it("(5) le personnel désigné ne parle plus des agents ni du service de représentation", () => {
     const d = obligationParId(PERSONNEL)!.description ?? "";
-    expect(d).toContain("un agent de sécurité incendie et deux personnes désignées");
-    expect(d).toContain("de la 1ʳᵉ à la 4ᵉ catégorie, il ajoute un service de représentation");
+    expect(d).not.toContain("service de représentation");
+    expect(d).not.toMatch(/Rojer ne suit/);
   });
 
   it("(6) L 5 est classé comme ses sœurs EC 4 et MS 3", async () => {
