@@ -283,8 +283,11 @@ describe("revue indépendante du sous-lot C (2026-10-17) : ce qui a été corrig
       expect(champ(ref, "historique"), ref).toContain("Champ `bloquePar` retiré");
     }
   });
-  it("7. DF 9 : l'entretien est dit un autre geste, non suivi", () => {
-    expect(desc("incendie-erp-desenfumage-annuelle")).toMatch(/DF 9 fait aussi ENTRETENIR[^.]*Rojer ne le suit pas/);
+  // ~~7. DF 9 : l'entretien est dit un autre geste, non suivi~~ — 2026-11-13,
+  // décision de la propriétaire : la phrase quitte la description ; le manque
+  // reste dans les notes internes et au corpus.
+  it("7. DF 9 : la description ne parle plus de l'entretien", () => {
+    expect(desc("incendie-erp-desenfumage-annuelle")).not.toMatch(/DF 9/);
   });
   it("8. MS 72 : l'assiette (tout le personnel / le personnel désigné) est dite", () => {
     expect(notes("incendie-erp-personnel-designe-moyens-secours")).toContain("tout entier");
