@@ -120,8 +120,8 @@ export function Hero({
             {/* Espace insécable avant le deux-points : sans elle, la ligne
                 peut casser juste avant, et le signe se retrouve seul en
                 début de ligne. */}
-            Rojer coordonne la prévention des risques de votre
-            structure&nbsp;: vérifications, rapports, registres, plan
+            Rojer construit et coordonne la prévention des risques de
+            votre structure&nbsp;: vérifications, rapports, registres, plan
             d&apos;actions.
           </p>
 

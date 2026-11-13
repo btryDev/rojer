@@ -55,8 +55,8 @@ export function SiteFooter({ compte }: { compte?: CompteLanding }) {
           <div>
             <Marque />
             <p className="mt-4 max-w-[36ch] text-[0.92rem] leading-[1.6] text-white/70">
-              Concentrez-vous sur votre activité, Rojer coordonne la prévention
-              des risques de votre structure.
+              Concentrez-vous sur votre activité, Rojer construit et coordonne
+              la prévention des risques de votre structure.
             </p>
             <p className="mt-8 text-[0.95rem] font-medium">Une question, un besoin particulier ?</p>
             {/* Pas d'adresse affichée (décision de la propriétaire,
