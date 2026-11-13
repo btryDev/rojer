@@ -85,14 +85,6 @@ export function libellesDepot(enInternePossible: boolean) {
           "Chaque vérification enregistrée met à jour la date de réalisation et recalcule la prochaine échéance.",
         titreSection: "Vérifications enregistrées",
         confirmation: "Vérification enregistrée.",
-        enAttenteTitre: "Cette vérification attend d'être enregistrée.",
-        enAttenteTexte:
-          "Faite en interne, elle s'enregistre par le formulaire, sans fichier. Faite par un prestataire, joignez son rapport. Dans les deux cas, la vérification est marquée comme réalisée et la prochaine échéance est recalculée automatiquement.",
-        enAttenteListe: [
-          "La date de la vérification",
-          "Le résultat constaté",
-          "Le rapport, si un prestataire l'a faite",
-        ],
       }
     : {
         titreDepot: "Déposer le rapport",
@@ -101,14 +93,6 @@ export function libellesDepot(enInternePossible: boolean) {
           "Un rapport additionnel met à jour la date de réalisation et régénère la prochaine échéance.",
         titreSection: "Rapports déposés",
         confirmation: "Rapport enregistré.",
-        enAttenteTitre: "Cette vérification attend son rapport.",
-        enAttenteTexte:
-          "Dès que vous téléversez le rapport du vérificateur, la vérification est marquée comme réalisée et la prochaine échéance est recalculée automatiquement.",
-        enAttenteListe: [
-          "Le fichier du rapport (PDF de préférence)",
-          "La date de réalisation",
-          "Le résultat constaté",
-        ],
       };
 }
 

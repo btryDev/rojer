@@ -1189,7 +1189,17 @@ export function heritageDesRetirees(
  * La DISPERSION d'une ligne d'établissement sur les appareils (ADR-057) : ce
  * qu'une ligne d'appareil reprend de la ligne d'établissement qu'elle
  * remplace, quand une obligation passe du porteur établissement au porteur
- * appareil (`PE 4 § 2`, `PO 1 § 3`, `R. 4222-20`, le 2026-11-05).
+ * appareil (`PE 4 § 2`, `PO 1 § 3`, `R. 4222-20`, le 2026-11-05 ;
+ * `L 57 § 1 a` et `L 13 § 5`, portés par la scène, le 2026-11-13).
+ *
+ * [2026-11-13, relecture] Limite connue pour les deux lignes de la scène :
+ * leur ligne d'établissement ne naissait qu'avec une scène déclarée, donc son
+ * rapport couvrait une scène — mais la garde de date s'applique quand même,
+ * et un rapport antidaté (fait avant la déclaration dans Rojer) n'est pas
+ * repris. La ligne naît « à planifier », avec le délai de grâce de l'ADR-040.
+ * Le prestataire attitré et le rendez-vous (ADR-049) ne suivent pas non plus,
+ * comme pour `PE 4 § 2`. Accepté : les bases ne portaient que des données
+ * factices à la bascule.
  *
  * C'est le sens que `heritageDesRetirees` refuse, à raison, pour une fusion
  * d'obligations : « un contrôle fait sur la VMC daterait la ligne de la hotte

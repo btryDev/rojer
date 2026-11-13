@@ -30,7 +30,6 @@ import { MentionAConfirmer } from "@/components/calendrier/MentionAConfirmer";
 import { BlocAConfirmer } from "@/components/calendrier/BlocAConfirmer";
 import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
 import {
-  MARQUAGE_CONTRACTUEL,
   MARQUAGE_CONTRACTUEL_LONG,
   estEcheanceContractuelle,
 } from "@/lib/prescriptions/sources";
@@ -923,51 +922,6 @@ export default async function VerificationDetailPage({
                 />
               )}
             </CarteFiche>
-          }
-          cote={
-            <section className="carte-board overflow-hidden bg-[color:var(--board-blue-pale)] px-7 py-7 sm:px-8">
-              <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-blue-ink)]">
-                En attente
-              </p>
-              <h2 className="board-titre m-0 mt-3 text-[22px]">
-                {mots.enAttenteTitre}
-              </h2>
-              <p className="m-0 mt-3 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
-                {mots.enAttenteTexte}
-              </p>
-              <ul className="m-0 mt-5 flex list-none flex-col gap-2 p-0 text-[13px] text-[color:var(--board-slate-ink)]">
-                {mots.enAttenteListe.map((item) => (
-                  <li key={item} className="flex items-start gap-2.5">
-                    <span
-                      aria-hidden
-                      className="mt-[7px] inline-block h-[3px] w-3 flex-none rounded-full bg-[color:var(--board-blue-strong)]"
-                    />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-              {/* Le repli disait « Obligation réglementaire » dès que
-                  `obligationId` ne résolvait pas — donc sur TOUTES les
-                  obligations sur mesure nées d'une prescription, dont celles
-                  qui viennent d'un assureur. C'est une référence légale
-                  fabriquée sur une ligne qui n'en a pas, exactement ce que
-                  l'ADR-032 interdit. Une ligne contractuelle dit ce qu'elle
-                  est ; les autres gardent le repli, qui reste vrai pour
-                  elles. */}
-              <p
-                className={
-                  "board-eyebrow m-0 mt-6 text-[10px] tracking-[0.16em] " +
-                  (contractuelle
-                    ? "text-[color:var(--board-amber-ink)]"
-                    : "text-[color:var(--board-blue-ink)]")
-                }
-              >
-                {contractuelle
-                  ? MARQUAGE_CONTRACTUEL
-                  : (obligation?.referencesLegales[0]?.reference ??
-                    "Obligation réglementaire")}
-              </p>
-            </section>
           }
         />
       )}

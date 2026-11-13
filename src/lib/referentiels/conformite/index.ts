@@ -627,7 +627,12 @@ export const obligationsConformite: Obligation[] = [
 // entre à PO 1 § 3 ; 210 inchangé.
 // `2026-11-13.4` : l'examen des chaînes de l'escalier mécanique annuel (texte
 // d'AS 10 b), références AS 10 factorisées ; 210 inchangé.
-export const REFERENTIEL_VERSION = "2026-11-13.4";
+// `2026-11-13.5` (`lot/scene-porteur-appareil`, ADR-057 § « À trancher »,
+// décision de la propriétaire) : L 57 § 1 a et L 13 § 5 passent de
+// l'établissement à la scène, sous le même identifiant (dispersion). 210 + 0
+// − 0 = 210 ; par porteur, 103 + 2 = 105 équipement, 93 − 2 = 91
+// établissement, 14 salarié — remesuré en appelant `porteurDe`.
+export const REFERENTIEL_VERSION = "2026-11-13.5";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

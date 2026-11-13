@@ -5,7 +5,7 @@
      du script. Pour le mettre à jour : pnpm verification --ecrire -->
 
 **Généré le** : 2026-11-13
-**Référentiel** : `2026-11-13.4`
+**Référentiel** : `2026-11-13.5`
 **Régénérer** : `pnpm verification --ecrire`
 
 Ce document répond à une question, et à une seule : **de quoi le
@@ -158,8 +158,8 @@ Aucun domaine n'est entièrement dépourvu de verbatim.
 
 |  | obl. | réf. | 5 | 4 | 3 | 2 | 1 | 0 | vérifiées à la source | sans ancre | lu entre |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `equipement` | 103 | 221 | 68 | 33 | 2 | · | · | · | 101 / 103 — 98 % | 22 / 221 | 2026-08-26 → 2026-11-13 |
-| `etablissement` | 93 | 210 | 51 | 41 | 1 | · | · | · | 92 / 93 — 99 % | 0 / 210 | 2026-08-26 → 2026-11-06 |
+| `equipement` | 105 | 228 | 70 | 33 | 2 | · | · | · | 103 / 105 — 98 % | 22 / 228 | 2026-08-26 → 2026-11-13 |
+| `etablissement` | 91 | 203 | 49 | 41 | 1 | · | · | · | 90 / 91 — 99 % | 0 / 203 | 2026-08-26 → 2026-11-06 |
 | `salarie` | 14 | 33 | · | 13 | · | 1 | · | · | 13 / 14 — 93 % | 1 / 33 | 2026-08-27 → 2026-10-07 |
 
 Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, mesuré au plancher — **5** première main, **4** agent + verbatim, **3** lu sans verbatim, **2** indirect, **1** sans trace, **0** non rattaché.
@@ -398,7 +398,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `elec-erp-presence-personne-qualifiee` | electricite | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-10-07 |
 | `elec-erp-presence-personne-qualifiee-scene-n3` | electricite | etablissement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-10-07 → 2026-10-17 |
 | `incendie-hotel-po-controle-annuel-electricite` | electricite | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-10-07 |
-| `scene-erp-materiels-installations-temporaires-annuelle` | electricite | etablissement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-10-17 |
+| `scene-erp-materiels-installations-temporaires-annuelle` | electricite | equipement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-10-17 |
 | `epi-etablissement-consigne-utilisation` | epi | etablissement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-09-04 |
 | `epi-maintien-etat-conformite` | epi | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-04 |
 | `epi-verification-generale-periodique` | epi | equipement | 5 | 5 · première main | 5 · première main | 0 / 5 | 2026-09-04 |
@@ -466,7 +466,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `incendie-travail-instructions-evacuation` | incendie | etablissement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-09-01 → 2026-09-27 |
 | `incendie-travail-moyens-lutte` | incendie | equipement | 3 | 5 · première main | 5 · première main | 1 / 3 | 2026-09-01 → 2026-10-07 |
 | `scene-erp-depoussierage-annuel` | incendie | equipement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-10-17 |
-| `scene-erp-verifications-triennales-organisme-agree` | incendie | etablissement | 4 | 5 · première main | 5 · première main | 0 / 4 | 2026-10-07 → 2026-10-17 |
+| `scene-erp-verifications-triennales-organisme-agree` | incendie | equipement | 4 | 5 · première main | 5 · première main | 0 / 4 | 2026-10-07 → 2026-10-17 |
 | `levage-epreuve-initiale-fonctionnement` | levage | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-08-26 → 2026-09-01 |
 | `levage-examen-adequation-mise-en-service` | levage | equipement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-08-26 → 2026-09-01 |
 | `levage-registre-securite-consignation` | levage | equipement | 3 | 5 · première main | 5 · première main | 0 / 3 | 2026-09-01 |

@@ -190,12 +190,31 @@ describe("chaque ligne dit sa temporalité (consigne de la propriétaire, 2026-1
   });
 });
 
-describe("CH 58 : la ligne dit ce qu'elle ne sert pas (décision Q4 de c6)", () => {
+// 2026-11-13, décision de la propriétaire : une ligne suivie ne dit plus, dans
+// sa description, ce qu'un article qu'elle cite fait faire d'autre et qu'elle
+// ne suit pas. Ce qui a été retiré ne revient pas.
+describe("une ligne suivie ne parle pas du geste voisin qu'elle ne suit pas", () => {
+  const RETIRES: Record<string, RegExp> = {
+    "incendie-erp-desenfumage-annuelle": /DF 9|ENTRETENIR/,
+    "aeration-erp-chauffage-ventilation-annuelle": /ramonage/,
+    "scene-erp-materiels-installations-temporaires-annuelle": /EL 23/,
+    "incendie-erp-personnel-designe-moyens-secours": /agents de sécurité incendie|Rojer ne suit/,
+    "incendie-erp-eclairage-securite-notice-registre": /lampes de rechange/,
+    "incendie-erp-5-sommeil-contrat-entretien-sdi": /avant l'ouverture/,
+  };
+  for (const [id, motif] of Object.entries(RETIRES)) {
+    it(id, () => {
+      expect(obligationsConformite.find((o) => o.id === id)?.description ?? "").not.toMatch(motif);
+    });
+  }
+});
+
+describe("CH 58 : ~~la ligne dit ce qu'elle ne sert pas~~ (décision Q4 de c6, raturée le 2026-11-13)", () => {
   const d = obligationsConformite.find((o) => o.id === "aeration-erp-chauffage-ventilation-annuelle")?.description ?? "";
-  it("le ramonage de CH 57 est dit non suivi", () => {
-    expect(d).toMatch(/ne suit pas le ramonage/);
-    expect(d).toContain("CH 57");
-  });
+  // ~~le ramonage de CH 57 est dit non suivi~~ — 2026-11-13, décision de la
+  // propriétaire (retour testeur) : une ligne suivie ne dit plus ce qu'un
+  // article qu'elle cite fait faire d'autre, et qu'elle ne suit pas — ça
+  // brouille le dirigeant. Le manque reste écrit dans les notes internes.
   it("la ligne ne naît que d'une VMC ou d'une CTA, et nomme le stockage des combustibles", () => {
     expect(d).toMatch(/quand une VMC ou une centrale de traitement d'air est déclarée/);
     expect(d).toContain("stockage des combustibles");
@@ -283,9 +302,11 @@ describe("revue indépendante du sous-lot C (2026-10-17) : ce qui a été corrig
       expect(champ(ref, "historique"), ref).toContain("Champ `bloquePar` retiré");
     }
   });
-  it("7. DF 9 : l'entretien est dit un autre geste, non suivi", () => {
-    expect(desc("incendie-erp-desenfumage-annuelle")).toMatch(/DF 9 fait aussi ENTRETENIR[^.]*Rojer ne le suit pas/);
-  });
+  // ~~7. DF 9 : l'entretien est dit un autre geste, non suivi~~ — 2026-11-13,
+  // décision de la propriétaire : la phrase quitte la description ; le manque
+  // reste dans les notes internes et au corpus.
+  // Aucune garde ne la remplace : la question de l'annonce du manque reste
+  // ouverte (relecture de #313).
   it("8. MS 72 : l'assiette (tout le personnel / le personnel désigné) est dite", () => {
     expect(notes("incendie-erp-personnel-designe-moyens-secours")).toContain("tout entier");
     expect(champ("MS 72", "reserve")).toContain("tout entier");
