@@ -347,14 +347,18 @@ export function construireSections({
       Icon: Wrench,
       count: counts?.equipements,
     },
+    // ~~Zones~~ [2026-11-13 : passées sous « Paramètres », ADR-030 amendée.]
+    //
+    // Les prescriptions particulières rejoignent le lieu (2026-11-13, ADR-030
+    // amendée, décision de la propriétaire) : un acte d'autorité ou une
+    // demande d'assureur renforce le rythme d'une vérification du parc ou en
+    // crée une sur mesure (ADR-035) — c'est le suivi des équipements qu'elles
+    // modifient, pas une personne.
     {
-      // Toujours présent, même sous une seule zone : c'est ici qu'on en déclare
-      // un second. Le reste de l'interface (sélecteurs, filtres, colonnes)
-      // n'apparaît qu'à partir de deux (ADR-019).
-      id: "batiments",
-      label: LABEL_ITEM.batiments,
-      href: href("/batiments"),
-      Icon: Warehouse,
+      id: "prescriptions",
+      label: "Prescriptions",
+      href: href("/prescriptions"),
+      Icon: FileText,
     },
     {
       id: "prestataires",
@@ -410,8 +414,9 @@ export function construireSections({
   //
   // L'axe des personnes et des actes de prévention (ADR-030). Le DUERP y est
   // en tête parce que c'est de lui que part l'évaluation ; l'équipe porte les
-  // titres nominatifs (ADR-023) ; les prescriptions sont les exigences reçues
-  // d'une autorité ou d'un assureur ; les deux opérations ponctuelles
+  // titres nominatifs (ADR-023) ; ~~les prescriptions sont les exigences reçues
+  // d'une autorité ou d'un assureur~~ [2026-11-13 : passées sous « Équipement
+  // et bâtiment », ADR-030 amendée] ; les deux opérations ponctuelles
   // (ADR-017) sont des actes de prévention datés, pas des registres.
   //
   // ~~« Ce que Rojer ne couvre pas » ferme la liste (ADR-025 § 8).~~
@@ -434,12 +439,6 @@ export function construireSections({
       Icon: IdCard,
       count: counts?.titresEnRetard,
       alert: (counts?.titresEnRetard ?? 0) > 0,
-    },
-    {
-      id: "prescriptions",
-      label: "Prescriptions",
-      href: href("/prescriptions"),
-      Icon: FileText,
     },
     ...operations,
   ];
@@ -528,8 +527,9 @@ export function construireSections({
   // ─── Paramètres ────────────────────────────────────────────────────────
   //
   // Le réglage du dossier, et non une de ses matières : d'où la césure du
-  // rail. Deux items seulement, et le second est la raison d'être de cette
-  // section — « Connecter » n'était listé nulle part depuis que la fiche
+  // rail. ~~Deux items seulement, et le second est la raison d'être de cette
+  // section~~ [2026-11-13 : trois, les zones y entrent — ADR-030 amendée] —
+  // « Connecter » n'était listé nulle part depuis que la fiche
   // établissement est devenue la page d'entrée de « Paramètres », donc
   // atteignable seulement en tapant son URL.
   const parametres: NavItem[] = [
@@ -538,6 +538,18 @@ export function construireSections({
       label: LABEL_ITEM.fiche,
       href: href("/modifier"),
       Icon: Settings,
+    },
+    {
+      // Les zones se déclarent une fois et se règlent rarement, comme la
+      // fiche : c'est le découpage du dossier, pas une matière qu'on suit
+      // (2026-11-13, ADR-030 amendée, décision de la propriétaire). Toujours
+      // présent, même sous une seule zone : c'est ici qu'on en déclare une
+      // seconde. Le reste de l'interface (sélecteurs, filtres, colonnes)
+      // n'apparaît qu'à partir de deux (ADR-019).
+      id: "batiments",
+      label: LABEL_ITEM.batiments,
+      href: href("/batiments"),
+      Icon: Warehouse,
     },
     {
       id: "connecter",
@@ -651,6 +663,7 @@ export function categorieDeItem(id: SidebarItemId): RailCategorieId | null {
       return "tableau";
     case "connecter":
     case "fiche":
+    case "batiments":
       return "parametres";
     // Le guide a retrouvé une entrée, sous l'axe qui parle du dossier. Il
     // avait perdu la sienne en août faute d'endroit juste : une lecture n'est
@@ -664,7 +677,7 @@ export function categorieDeItem(id: SidebarItemId): RailCategorieId | null {
     case "perimetre":
       return "documentation";
     case "equipements":
-    case "batiments":
+    case "prescriptions":
     case "prestataires":
     case "registre":
     case "accessibilite":
@@ -672,7 +685,6 @@ export function categorieDeItem(id: SidebarItemId): RailCategorieId | null {
       return "equipement-batiment";
     case "duerp":
     case "equipe":
-    case "prescriptions":
     case "permis-feu":
     case "plan-prevention":
       return "sante-securite";
@@ -713,8 +725,10 @@ export function construireRail(params: {
       alert: alerte(santeSecurite.items),
     },
     {
-      // Le lieu et ce qu'il contient — le parc, les zones, ceux qui y
-      // interviennent, et les registres qui en consignent l'état.
+      // Le lieu et ce qu'il contient — le parc, ~~les zones,~~ [2026-11-13 :
+      // passées sous « Paramètres »] les prescriptions qui en renforcent le
+      // suivi, ceux qui y interviennent, et les registres qui en consignent
+      // l'état.
       id: "equipement-batiment",
       label: LABEL_CATEGORIE["equipement-batiment"],
       labelCourt: "Équipement",
