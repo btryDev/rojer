@@ -3,19 +3,6 @@
   "regions": ["dub1"],
   "ignoreCommand": "git diff --quiet HEAD^ HEAD -- . ':(exclude)docs/' ':(exclude)*.md'",
   "git": {
-    "deploymentEnabled": {
-      "lot/*": false,
-      "doc/*": false,
-      "docs/*": false,
-      "report/*": false,
-      "fix/*": false,
-      "feat/*": false,
-      "spike/*": false,
-      "perf/*": false,
-      "worktree-*": false,
-      "integration/*": false,
-      "dependabot/*": false,
-      "cc": false
-    }
+    "deploymentEnabled": false
   }
 }
