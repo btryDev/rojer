@@ -290,9 +290,10 @@ describe("EquipementForm : la recherche de matériel (2026-10-14)", () => {
   // Revue du lot, point 3 : les articles déplacés de la page « Ce que Rojer
   // ne couvre pas » restent NOMMÉS à l'écran. Test de rendu, pas de donnée.
   // Éprouvé en retirant `<ReferencesMateriel>` de l'encart.
-  it("l'encart nomme les textes des articles déplacés : AS 10, R. 4323-63, R. 1321-60, arrêté du 10/09/2021", () => {
+  // ~~AS 10~~ — 2026-11-13 : l'escalier mécanique a sa catégorie ; l'entrée
+  // `escalier_mecanique` est retirée de la liste, AS 10 n'y est plus.
+  it("l'encart nomme les textes des articles déplacés : R. 4323-63, R. 1321-60, arrêté du 10/09/2021", () => {
     const attendus: [string, string[]][] = [
-      ["escalier_mecanique", ["art. AS 10"]],
       ["echelle", ["art. R. 4323-63"]],
       [
         "reservoir_eau",
@@ -362,9 +363,11 @@ describe("EquipementForm : la recherche de matériel (2026-10-14)", () => {
   });
 
   it("modifier un matériel non suivi : la clé revient, et choisir une catégorie l'efface", () => {
-    const c = rendre({ categorie: "AUTRE", materielNonCouvert: "escalier_mecanique" });
-    expect(cache(c, "materielNonCouvert")).toBe("escalier_mecanique");
-    expect(champ(c).value).toBe("Escalier mécanique ou trottoir roulant");
+    // ~~`escalier_mecanique`~~ — 2026-11-13 : retiré de la liste (catégorie
+    // `ESCALIER_MECANIQUE`) ; l'échelle tient le même rôle.
+    const c = rendre({ categorie: "AUTRE", materielNonCouvert: "echelle" });
+    expect(cache(c, "materielNonCouvert")).toBe("echelle");
+    expect(champ(c).value).toBe("Échelle, escabeau ou marchepied");
     chercher(c, "ascenseur");
     fireEvent.mouseDown(listeOptions()[0]);
     expect(cache(c, "categorie")).toBe("ASCENSEUR");

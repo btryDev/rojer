@@ -455,6 +455,7 @@ export const LIBELLE_CATEGORIE: Record<string, string> = {
     "eau chaude collective alimentant des douches ou des bains à remous ouverts au public",
   BUT_PANIER_SPORTIF: "but ou panier de sport de 10 kg ou plus",
   SCENE: "scène / installations scéniques",
+  ESCALIER_MECANIQUE: "escalier mécanique ou trottoir roulant",
   AUTRE: "autre",
 } satisfies Record<CategorieEquipement, string>;
 

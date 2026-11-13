@@ -730,6 +730,12 @@ export const CATEGORIES_EQUIPEMENT = [
   // (L 1 § 3), des catégories 1 à 4. C'est en déclarant la scène que le
   // dirigeant dit qu'il en a une : le produit ne pose aucune question.
   "SCENE",
+  // 2026-11-13, décision de la propriétaire : l'escalier mécanique et le
+  // trottoir roulant, que le chapitre IX du livre II réunit avec l'ascenseur
+  // et traite à part (AS 6 à AS 10). AS 10 leur donne trois actes en ERP des
+  // catégories 1 à 4 ; PE 4 § 2 les fait entretenir et vérifier en 5ᵉ. Ils
+  // étaient jusque-là un matériel non couvert (`materiels-non-couverts.ts`).
+  "ESCALIER_MECANIQUE",
   "AUTRE",
 ] as const;
 

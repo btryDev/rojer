@@ -1229,6 +1229,11 @@ describe("moteur matching — cartographie des catégories sans obligation", () 
       vides: [
         // Soupape de saisie : aucune obligation ne la cite, par construction.
         "AUTRE",
+        // ESCALIER_MECANIQUE, entrée le 2026-11-13 (décision de la
+        // propriétaire) : AS 10 ne vaut qu'en ERP des catégories 1 à 4, PE 4
+        // § 2 en 5ᵉ ; hors ERP, rien — aucun texte lu ne vise l'appareil, et
+        // l'aide de la catégorie le dit.
+        "ESCALIER_MECANIQUE",
         // DEFIBRILLATEUR, entrée le 2026-10-15 (décision de la propriétaire) :
         // sa maintenance (R. 157-4) et sa déclaration Géo'DAE ne visent que les
         // ERP des catégories 1 à 4 — le champ de R. 157-1 1°. Un DAE déclaré

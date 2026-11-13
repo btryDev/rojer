@@ -706,6 +706,11 @@ enum CategorieEquipement {
   // (L 57 § 3), une ligne par scène, et trois lignes d'établissement dues dès
   // qu'une scène est déclarée (L 57 § 1 a, L 13 § 5, L 57 § 7).
   SCENE
+  // 2026-11-13 : l'escalier mécanique ou le trottoir roulant (arrêté du
+  // 25 juin 1980, art. AS 10) — vérification annuelle, examen des chaînes et
+  // crémaillères à mi-période, vérification avant remise en service après
+  // transformation importante, en ERP des catégories 1 à 4 ; PE 4 § 2 en 5ᵉ.
+  ESCALIER_MECANIQUE
   AUTRE
 }
 

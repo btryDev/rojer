@@ -1,4 +1,5 @@
-// Les trois pictogrammes que lucide n'a pas.
+// ~~Les trois pictogrammes que lucide n'a pas.~~ [2026-11-13 : quatre,
+// l'escalier mécanique s'y ajoute.]
 //
 // Treize des seize catégories d'équipement trouvent leur dessin dans lucide
 // (l'extincteur, le ventilateur, le manomètre, le fût, le chariot…). Trois
@@ -73,6 +74,22 @@ export function PictoPortailAuto({ size = 24, ...props }: ProprietesPicto) {
       <rect x="6" y="9" width="12" height="6" />
       <path d="M12 9v6" />
       <path d="M2 21h20" />
+    </svg>
+  );
+}
+
+/**
+ * Escalier mécanique ou trottoir roulant (2026-11-13) : le profil de la
+ * volée, ses marches et la main courante parallèle. Les deux paliers plats
+ * disent l'appareil ; une diagonale seule aurait dit « en hausse », et des
+ * marches sans main courante, un escalier fixe, que rien ne vérifie.
+ */
+export function PictoEscalierMecanique({ size = 24, ...props }: ProprietesPicto) {
+  return (
+    <svg {...GRILLE} width={size} height={size} {...props}>
+      <path d="M2 20h5L17 9h5" />
+      <path d="M2 14h3L14 4h3" />
+      <path d="M10 16.7h2v-2.2h2v-2.2h2" />
     </svg>
   );
 }

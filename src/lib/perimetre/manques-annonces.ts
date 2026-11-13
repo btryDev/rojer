@@ -220,6 +220,9 @@ const DOMAINES: Record<CleDomaine, Domaine> = {
   // ~~escaliers_mecaniques (« Escaliers mécaniques et trottoirs roulants »,
   // AS 10)~~ — 2026-10-14, décision de la propriétaire : DÉPLACÉE dans la
   // liste des matériels non couverts, entrée `escalier_mecanique`.
+  // [2026-11-13, décision de la propriétaire : l'entrée est retirée à son
+  // tour ; AS 10 est porté par la catégorie `ESCALIER_MECANIQUE`, et AS 8 et
+  // AS 11 sont dits dans son aide (`DESCRIPTION_CATEGORIE.ESCALIER_MECANIQUE`).]
 };
 
 type Annonce = {
@@ -337,7 +340,8 @@ export const ANNONCES: Readonly<Record<string, Annonce>> = {
   // (`DESCRIPTION_CATEGORIE.INSTALLATION_GAZ`), leur nouvelle adresse au
   // corpus. La catégorie existe désormais, et GZ 15 s'y accroche.
   // ~~« AS 10 » (escaliers_mecaniques)~~ — 2026-10-14 : déplacé dans la liste
-  // des matériels non couverts (entrée `escalier_mecanique`).
+  // des matériels non couverts (entrée `escalier_mecanique`). [2026-11-13 :
+  // AS 10 est retenu, catégorie `ESCALIER_MECANIQUE` ; l'entrée est retirée.]
   // 2026-10-13, après revue : classés hors cadre puis annoncés, décision de
   // la propriétaire.
   "Arrêté 1986-01-31 art. 78-1": {

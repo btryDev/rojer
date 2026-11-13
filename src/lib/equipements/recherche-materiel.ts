@@ -117,6 +117,9 @@ export const SYNONYMES_CATEGORIE: Readonly<Record<CategorieEquipement, readonly 
   // 2026-10-17, sous-lot G : les mots de l'art. L 49 (scène, estrade, plateau,
   // piste) et ceux du bloc-scène (gril, cintres, machinerie scénique).
   SCENE: ["scène", "estrade", "plateau", "piste", "espace scénique", "bloc-scène", "gril", "cintres", "machinerie scénique", "salle de spectacle", "théâtre"],
+  // 2026-11-13 : les synonymes de l'ancienne entrée `escalier_mecanique` des
+  // matériels non couverts, repris tels quels avec la catégorie.
+  ESCALIER_MECANIQUE: ["escalier mécanique", "escalator", "trottoir roulant", "tapis roulant"],
   AUTRE: [],
 };
 

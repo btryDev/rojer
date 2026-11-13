@@ -39,6 +39,7 @@ import {
 import type { ComponentType } from "react";
 import {
   PictoAscenseur,
+  PictoEscalierMecanique,
   PictoHottePro,
   PictoPortailAuto,
 } from "@/components/equipements/pictos-categorie";
@@ -125,6 +126,10 @@ export const ICONE_CATEGORIE: Record<CategorieEquipement, Picto> = {
   // La scène (2026-10-17, sous-lot G) : les masques du théâtre, que lucide
   // nomme `Theater`. Aucune autre catégorie ne l'emploie.
   SCENE: Theater,
+  // L'escalier mécanique (2026-11-13) : lucide n'en dessine pas ; tracé à sa
+  // grille dans `pictos-categorie.tsx`, comme l'ascenseur, son voisin de
+  // chapitre (AS 6 à AS 10).
+  ESCALIER_MECANIQUE: PictoEscalierMecanique,
   AUTRE: Package,
 };
 

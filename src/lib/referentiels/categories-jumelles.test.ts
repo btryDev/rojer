@@ -15,6 +15,7 @@ import {
 } from "./types-communs";
 import { PROPRIETES_DE_TYPE, QUESTION_DE_TYPE } from "@/lib/equipements/type-appareil";
 import { equipementSchema } from "@/lib/equipements/schema";
+import { lireMigrations, sansCommentaires } from "@/lib/migrations-lecture";
 
 const RACINE = join(__dirname, "..", "..", "..");
 const MIGRATION = readFileSync(
@@ -38,10 +39,34 @@ function enumDeLaMigration(): string[] {
   return [...bloc.matchAll(/'([A-Z_]+)'/g)].map((m) => m[1]);
 }
 
+/**
+ * L'enum tel que les migrations le laissent : celui que la reprise recrée,
+ * puis chaque `ADD VALUE … BEFORE …` des migrations postérieures, dans leur
+ * ordre. ~~La garde comparait l'enum recréé seul à la liste du code~~
+ * [2026-11-13 : `ESCALIER_MECANIQUE` est ajouté après la reprise ; l'enum
+ * recréé n'est plus le dernier mot, les ajouts qui le suivent le sont].
+ */
+function enumApresLesMigrations(): string[] {
+  const valeurs = enumDeLaMigration();
+  const apres = lireMigrations().filter((m) => m.nom > "20261107120100_categories_jumelles_reprise");
+  for (const { sql } of apres) {
+    for (const m of sansCommentaires(sql).matchAll(
+      /ALTER TYPE "CategorieEquipement" ADD VALUE (?:IF NOT EXISTS )?'([A-Z_]+)'(?: BEFORE '([A-Z_]+)')?/g,
+    )) {
+      if (valeurs.includes(m[1])) continue;
+      const i = m[2] ? valeurs.indexOf(m[2]) : -1;
+      if (i < 0) valeurs.push(m[1]);
+      else valeurs.splice(i, 0, m[1]);
+    }
+  }
+  return valeurs;
+}
+
 describe("catégories jumelles — ADR-057 § 5", () => {
   it("l'enum du schéma, celui de la migration et la liste du code sont les mêmes, dans le même ordre", () => {
     expect(enumDuSchema()).toEqual([...CATEGORIES_EQUIPEMENT]);
-    expect(enumDeLaMigration()).toEqual([...CATEGORIES_EQUIPEMENT]);
+    // ~~`enumDeLaMigration()`~~ — 2026-11-13 : avec les ajouts postérieurs.
+    expect(enumApresLesMigrations()).toEqual([...CATEGORIES_EQUIPEMENT]);
   });
 
   it("aucune ancienne valeur ne survit, et chacune a sa reprise", () => {

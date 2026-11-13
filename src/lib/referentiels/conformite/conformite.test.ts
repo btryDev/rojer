@@ -2057,6 +2057,11 @@ describe("référentiel conformité — version et empreinte", () => {
     // Les quatre lignes des portes et portails automatiques : « (porte ou
     // portail automatique) » au lieu de « (porte automatique) ». Libellés seuls.
     { version: "2026-11-09.1", empreinte: "206-1f29963e1dbb0738" },
+    // `ref/escalier-mecanique` (2026-11-13, décision de la propriétaire) : la
+    // catégorie `ESCALIER_MECANIQUE`, les trois lignes d'AS 10, et la catégorie
+    // ajoutée à PE 4 § 2. 206 + 3 − 0 = 209, relevée en appelant
+    // `empreinteReferentiel()`.
+    { version: "2026-11-13.1", empreinte: "209-8f973501fb2e7f3f" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -2256,7 +2261,12 @@ describe("référentiel conformité — version et empreinte", () => {
       // ~~205~~ — 2026-11-06, `lot/pe27-plan-intervention` : 205 + 1
       // (`incendie-erp-5-plan-intervention-entree`, PE 27 § 6) − 0 = 206,
       // remesuré en appelant `obligationsConformite`.
-    ).toBe(206);
+      // ~~206~~ — 2026-11-13, `ref/escalier-mecanique` : 206 + 3
+      // (`escalier-mecanique-erp-verification-annuelle-as10`,
+      // `escalier-mecanique-erp-examen-chaines-cremailleres`,
+      // `escalier-mecanique-erp-verification-remise-en-service-as10`, AS 10)
+      // − 0 = 209, remesuré en appelant `obligationsConformite`.
+    ).toBe(209);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {
