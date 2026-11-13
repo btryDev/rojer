@@ -6,8 +6,9 @@
 #
 # Un merge ne déploie rien : l'application Clever Cloud n'est pas reliée à
 # GitHub. Ce script déploie le commit de tête de la branche de déploiement
-# (`cc` jusqu'à la bascule, `main` ensuite : BRANCHE=main), tel qu'il est sur
-# GitHub, et seulement si la CI l'a validé.
+# (~~`cc` jusqu'à la bascule, `main` ensuite : BRANCHE=main~~ [2026-11-13 :
+# `main` — `cc` est devenue `main`, Vercel ne déploie plus rien]), tel qu'il
+# est sur GitHub, et seulement si la CI l'a validé.
 #
 # Il refuse : un arbre modifié, un commit local absent de GitHub, une CI
 # absente, en cours ou en échec. Puis il ne croit pas le message de fin de
@@ -24,7 +25,7 @@
 # l'atteindre.
 #
 # Variables :
-#   BRANCHE                 branche déployée (défaut : cc)
+#   BRANCHE                 branche déployée (défaut : main)
 #   CC_APP_PREPROD          alias donné à la préproduction si le dossier n'est
 #                           pas encore relié (défaut : rojer-preprod)
 #   CC_APP_PROD             de même pour la production (défaut : rojer)
@@ -45,7 +46,7 @@ case "$cible" in
            url="${URL_PROD:-}" ;;
   *) echo "Usage : sh scripts/deployer-cc.sh preprod|prod" >&2; exit 2 ;;
 esac
-branche="${BRANCHE:-cc}"
+branche="${BRANCHE:-main}"
 
 refus() { echo "Refusé : $1" >&2; exit 1; }
 
@@ -56,9 +57,10 @@ command -v gh >/dev/null || refus "la CLI gh n'est pas installée : impossible d
 
 [ "$(git branch --show-current)" = "$branche" ] || refus "on n'est pas sur la branche $branche."
 # Un worktree a un FICHIER `.git`, que la CLI Clever Cloud ne sait pas lire
-# (« [ERROR] Could not find cc. », 2026-11-10) : il faut un clone.
+# (« [ERROR] Could not find cc. », 2026-11-10) : il faut le dépôt principal,
+# ou un clone.
 [ -d "$(git rev-parse --show-toplevel)/.git" ] ||
-  refus "ce dossier est un worktree : déployer depuis un clone (git clone --branch $branche --single-branch)."
+  refus "ce dossier est un worktree : déployer depuis le dépôt principal, sur $branche."
 [ -z "$(git status --porcelain)" ] || refus "l'arbre de travail est modifié."
 
 git fetch --quiet origin "$branche"

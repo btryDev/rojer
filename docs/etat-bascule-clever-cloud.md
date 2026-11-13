@@ -4,6 +4,17 @@
 mémoire locale des sessions, qui ne suit pas d'une machine à l'autre. Le
 mettre à jour (rayer, dater) à chaque étape franchie.
 
+> **[2026-11-13, décision de la propriétaire] `cc` est devenue `main`.** Il n'y
+> a plus qu'une branche. `main` a avancé jusqu'à la tête de `cc` (elle n'avait
+> aucun commit que `cc` n'eût pas), les PR ouvertes vers `cc` sont redirigées
+> vers `main`, la branche `cc` est supprimée. Vercel ne déploie plus rien
+> (`vercel.json`, `git.deploymentEnabled: false`, #312) ; le projet Vercel et
+> le code qui ne servait que lui (`vercel.json`, `scripts/migrer-en-production.sh`,
+> pilote de stockage Supabase) se retirent dans un second temps. On déploie
+> la préproduction par `pnpm deployer:preprod` depuis le dépôt principal. Tout
+> ce qui suit et parle de « deux branches », d'un flux `main` → `cc` ou d'un
+> report vers `cc` décrit l'état d'avant cette date.
+
 ## Deux branches, deux productions
 
 | | `main` | `cc` |
