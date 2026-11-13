@@ -55,7 +55,9 @@ type Demande =
   | { question: "activite"; adresse: string };
 
 function lireDemande(args: string[]): Demande {
-  const [question, ...adresses] = args;
+  const [question, ...saisies] = args;
+  // Better Auth écrit les adresses en minuscules : « Julien@… » ne trouverait rien.
+  const adresses = saisies.map((a) => a.toLowerCase());
   if (question !== "connexions" && question !== "activite") refus(USAGE);
   if (adresses.length === 0) refus(`quelle adresse ?\n${USAGE}`);
   if (adresses.length > MAX_ADRESSES) {
@@ -71,16 +73,23 @@ function lireDemande(args: string[]): Demande {
   return { question, adresses };
 }
 
-/** Toutes les paires nom/valeur du JSON de `clever env`, où qu'elles soient. */
+/**
+ * Les paires nom/valeur du JSON de `clever env` : les variables de
+ * l'application, puis celles de ses add-ons. La PREMIÈRE valeur d'un nom
+ * l'emporte, et celles d'une application liée en dépendance sont ignorées :
+ * la base lue est celle de l'add-on de Rojer, pas celle d'un voisin.
+ */
 function variables(noeud: unknown, vues = new Map<string, string>()): Map<string, string> {
   if (Array.isArray(noeud)) {
     for (const n of noeud) variables(n, vues);
   } else if (noeud && typeof noeud === "object") {
     const o = noeud as Record<string, unknown>;
     if (typeof o.name === "string" && typeof o.value === "string") {
-      vues.set(o.name, o.value);
+      if (!vues.has(o.name)) vues.set(o.name, o.value);
     } else {
-      for (const v of Object.values(o)) variables(v, vues);
+      for (const [cle, v] of Object.entries(o)) {
+        if (cle !== "fromDependencies") variables(v, vues);
+      }
     }
   }
   return vues;
@@ -117,7 +126,7 @@ const DATE = new Intl.DateTimeFormat("fr-FR", {
   dateStyle: "short",
   timeStyle: "short",
 });
-const dater = (d: Date | null) => (d ? DATE.format(d) : "jamais");
+const dater = (d: Date) => DATE.format(d);
 
 type Lecteur = Pick<Client, "query">;
 
@@ -134,7 +143,8 @@ async function connexions(db: Lecteur, adresses: string[]) {
   }>(
     `SELECT u.email,
             u."createdAt" AT TIME ZONE 'UTC' AS cree,
-            (SELECT count(*)::int FROM "Session" s WHERE s."userId" = u.id) AS sessions,
+            (SELECT count(*)::int FROM "Session" s
+              WHERE s."userId" = u.id AND s."expiresAt" > (now() AT TIME ZONE 'UTC')) AS sessions,
             (SELECT max(s."createdAt") FROM "Session" s WHERE s."userId" = u.id) AT TIME ZONE 'UTC' AS derniere
        FROM "User" u
       WHERE u.email = ANY($1::text[])`,
@@ -144,11 +154,17 @@ async function connexions(db: Lecteur, adresses: string[]) {
     const l = rows.find((x) => x.email === adresse);
     console.log(
       l
-        ? `${adresse} : compte créé le ${dater(l.cree)} ; ${l.sessions} session(s) ouverte(s), dernière connexion le ${dater(l.derniere)}.`
+        ? `${adresse} : compte créé le ${dater(l.cree)} ; ${l.sessions} session(s) en cours ; ` +
+            (l.derniere
+              ? `dernière connexion connue le ${dater(l.derniere)}.`
+              : "aucune connexion gardée en base.")
         : `${adresse} : aucun compte à cette adresse.`,
     );
   }
-  console.log("(Heure de Paris. Une session fermée ou expirée n'est plus comptée.)");
+  console.log(
+    "(Heure de Paris. Une session expirée n'est pas comptée « en cours ». Se déconnecter efface la " +
+      "session : « aucune connexion gardée » ne dit pas que la personne ne s'est jamais connectée.)",
+  );
 }
 
 type Nombres = {
@@ -167,14 +183,16 @@ async function activite(db: Lecteur, adresse: string) {
   const comptes = await db.query<{ compte: string; role: string }>(
     `SELECT m."compteId"::text AS compte, m.role
        FROM "Membre" m JOIN "User" u ON u.id = m."userId"
-      WHERE u.email = $1`,
+      WHERE u.email = $1
+      ORDER BY m."createdAt", m."compteId"`,
     [adresse],
   );
   if (comptes.rows.length === 0) {
     console.log(`${adresse} : aucun compte, ou membre d'aucun compte.`);
     return;
   }
-  for (const { compte, role } of comptes.rows) {
+  const plusieurs = comptes.rows.length > 1;
+  for (const [rang, { compte, role }] of comptes.rows.entries()) {
     const {
       rows: [n],
     } = await db.query<Nombres>(
@@ -193,6 +211,7 @@ async function activite(db: Lecteur, adresse: string) {
          (SELECT count(*)::int FROM "Salarie" WHERE "etablissementId" IN (SELECT id FROM etabs)) AS salaries,
          (SELECT count(*)::int FROM "Duerp" WHERE "etablissementId" IN (SELECT id FROM etabs)) AS duerps,
          GREATEST(
+           (SELECT max("updatedAt") FROM "Entreprise" WHERE "compteId" = $1::uuid),
            (SELECT max("updatedAt") FROM etabs),
            (SELECT max("updatedAt") FROM "Equipement" WHERE "etablissementId" IN (SELECT id FROM etabs)),
            (SELECT max("updatedAt") FROM "Verification" WHERE "etablissementId" IN (SELECT id FROM etabs)),
@@ -204,16 +223,28 @@ async function activite(db: Lecteur, adresse: string) {
       [compte],
     );
     console.log(
-      `${adresse} (${role}) : ${n.entreprises} entreprise(s), ${n.etablissements} établissement(s), ` +
+      `${adresse} (${role}${plusieurs ? `, compte ${rang + 1} sur ${comptes.rows.length}` : ""}) : ` +
+        `${n.entreprises} entreprise(s), ${n.etablissements} établissement(s), ` +
         `${n.equipements} équipement(s), ${n.verifications} vérification(s), ${n.rapports} rapport(s), ` +
         `${n.actions} action(s), ${n.salaries} salarié(s), ${n.duerps} DUERP ; ` +
-        `dernière écriture le ${dater(n.derniere)}.`,
+        (n.derniere ? `dernière écriture le ${dater(n.derniere)}.` : "aucune écriture."),
     );
   }
   console.log(
     "(Heure de Paris. Les nombres sont ceux du compte entier : ses autres membres y écrivent aussi, " +
       "et un jeu de données semé compte comme une écriture.)",
   );
+}
+
+/** La cause, sans l'adresse de la base si un message venait à la citer. */
+function echec(erreur: unknown): never {
+  const e = erreur as { code?: string; message?: string };
+  const cause = [e?.code, e?.message]
+    .filter(Boolean)
+    .join(" — ")
+    .replace(/postgres(ql)?:\/\/\S+/g, "postgresql://…");
+  console.error(`Lecture impossible : ${cause || "erreur inconnue"}.`);
+  process.exit(1);
 }
 
 async function lire(demande: Demande) {
@@ -225,6 +256,8 @@ async function lire(demande: Demande) {
     connectionTimeoutMillis: 20_000,
     statement_timeout: 15_000,
   });
+  // Une coupure en cours de lecture : dite en une ligne, pas en pile d'appels.
+  db.on("error", (erreur) => echec(erreur));
   await db.connect();
   try {
     // La base refuse ensuite toute écriture, quoi que fasse la suite de ce
@@ -241,10 +274,4 @@ async function lire(demande: Demande) {
 if (process.env.CC_APP_ID || process.env.INSTANCE_ID) {
   refus("ce script se lance depuis un poste, pas sur une instance Clever Cloud.");
 }
-lire(lireDemande(process.argv.slice(2))).catch((erreur: unknown) => {
-  // Le code ou le nom seuls : un message d'erreur entier peut citer l'hôte.
-  const quoi =
-    erreur instanceof Error ? ((erreur as { code?: string }).code ?? erreur.name) : "erreur inconnue";
-  console.error(`Lecture impossible : ${quoi}.`);
-  process.exit(1);
-});
+lire(lireDemande(process.argv.slice(2))).catch(echec);

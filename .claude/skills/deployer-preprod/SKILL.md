@@ -21,8 +21,8 @@ pnpm deployer:preprod        # = sh scripts/deployer-cc.sh preprod
 ```
 
 Rien d'autre à fournir. Le script connaît l'application (par son identifiant)
-et son adresse, relie le dossier à Clever Cloud s'il ne l'est pas, et refuse
-si l'alias du dossier désigne une autre application. `sh scripts/deployer-cc.sh
+et son adresse, relie le dossier à Clever Cloud s'il ne l'est pas, et ne
+déploie que sous l'alias que ce dossier donne à l'application de Rojer. `sh scripts/deployer-cc.sh
 preprod` marche sans `node_modules`.
 
 Où se placer : n'importe quel checkout de `cc` sans modification — un clone
