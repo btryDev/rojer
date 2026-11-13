@@ -932,6 +932,19 @@ Sorties générées côté serveur, en mode déterministe, avec mentions légale
 
 Les étapes 0 à 11 de `spec/PLAN.md` sont livrées. Le travail actuel dépasse le PLAN d'origine : marque Rojer, board à widgets, double sidebar, et les modules 5 à 12 ci-dessus. Reste notamment : e2e Playwright, polish/a11y/RGPD (étape 12), et les registres listés hors périmètre.
 
+## Préproduction Clever Cloud : déployer et lire
+
+Deux gestes, deux skills du dépôt, identiques sur tous les postes (2026-11-13) :
+
+- **Déployer** — skill `deployer-preprod` : `pnpm deployer:preprod`, depuis un
+  checkout propre de `cc`. Toute fusion dans `cc` se déploie ; le script est la
+  seule porte (`scripts/deployer-cc.sh`).
+- **Lire la base** — skill `lire-preprod` : `pnpm lire-preprod connexions|activite
+  <e-mail>`, lecture seule. Jamais Docker, `psql` ni `clever ssh`.
+
+Le compte Clever Cloud porte aussi RiskBoard : on n'y touche jamais, et toute
+commande `clever` désigne l'application de Rojer.
+
 ## Règles de conduite pour Claude Code
 
 1. **Lire le code existant avant d'écrire.** Ne rien casser sans raison.

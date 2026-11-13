@@ -90,3 +90,6 @@ Rojer-*.pdf
 
 # Banc du test de charge (scripts/charge/banc.sh) : certificats et sessions.
 .charge/
+
+# Lien local vers Clever Cloud (`clever link`, posé par scripts/deployer-cc.sh)
+.clever.json
