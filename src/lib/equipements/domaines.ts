@@ -19,6 +19,11 @@ export const LABEL_FAMILLE_EQUIPEMENT: Record<FamilleEquipement, string> = {
   // La famille range aussi l'escalier mécanique et le trottoir roulant
   // (2026-11-13), que le chapitre IX du livre II réunit avec l'ascenseur.
   ascenseur: "Ascenseurs et escaliers mécaniques",
+  // Les appareils rangés sous `incendie` (extincteurs, RIA, alarme,
+  // désenfumage) sont des moyens de secours : la famille le dit (décision de
+  // la propriétaire du 2026-11-13). Le domaine du calendrier garde « Incendie /
+  // sécurité » : il porte aussi des consignes, des exercices et le registre.
+  incendie: "Moyens de secours",
   gaz: "Gaz",
   scene: "Scène",
 };

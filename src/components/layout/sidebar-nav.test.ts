@@ -28,8 +28,9 @@ function itemsDe(titre: string, modules?: SidebarModules) {
   return section?.items ?? [];
 }
 
-/** L'axe du lieu — le parc, les zones, et les registres qui en consignent
- *  l'état (ADR-030). */
+/** L'axe du lieu — le parc, ~~les zones~~ [2026-11-13 : passées sous
+ *  Paramètres] les prescriptions, et les registres qui en consignent l'état
+ *  (ADR-030). */
 function equipementBatiment(modules?: SidebarModules) {
   return itemsDe("Équipement et bâtiment", modules);
 }
@@ -75,9 +76,26 @@ describe("deduireActif", () => {
     expect(deduireActif(`/etablissements/${ID}/modifier`, ID)).toBe("fiche");
   });
 
-  it("range les zones sous « Équipement et bâtiment » (ADR-019, ADR-030)", () => {
+  // 2026-11-13, ADR-030 amendée : les zones passent sous « Paramètres », les
+  // prescriptions sous « Équipement et bâtiment ».
+  it("range les zones sous « Paramètres » (ADR-019, ADR-030 amendée)", () => {
     expect(deduireActif(`/etablissements/${ID}/batiments`, ID)).toBe("batiments");
-    expect(categorieDeItem("batiments")).toBe("equipement-batiment");
+    expect(deduireActif(`/etablissements/${ID}/batiments/b1`, ID)).toBe("batiments");
+    expect(categorieDeItem("batiments")).toBe("parametres");
+    expect(itemsDe("Paramètres").map((i) => i.id)).toContain("batiments");
+    expect(equipementBatiment().map((i) => i.id)).not.toContain("batiments");
+  });
+
+  it("range les prescriptions sous « Équipement et bâtiment » (ADR-030 amendée)", () => {
+    expect(deduireActif(`/etablissements/${ID}/prescriptions`, ID)).toBe(
+      "prescriptions",
+    );
+    expect(deduireActif(`/etablissements/${ID}/prescriptions/p1`, ID)).toBe(
+      "prescriptions",
+    );
+    expect(categorieDeItem("prescriptions")).toBe("equipement-batiment");
+    expect(equipementBatiment().map((i) => i.id)).toContain("prescriptions");
+    expect(santeSecurite().map((i) => i.id)).not.toContain("prescriptions");
   });
 
   it("rattache les vérifications au calendrier", () => {
@@ -296,7 +314,16 @@ describe("construireRail — rail à deux niveaux", () => {
     // « Connecter », qui n'était plus listé nulle part — atteignable
     // seulement en tapant son URL. Une entrée de rail qui déplace une page
     // sans lui en rendre une autre la supprime.
-    expect(parametres?.items?.map((i) => i.id)).toEqual(["fiche", "connecter"]);
+    // [2026-11-13 : les zones s'y ajoutent, ADR-030 amendée.]
+    // Pas de liste exhaustive : ce qui doit tenir, c'est la fiche en tête
+    // (page d'entrée) et la présence de Connecter et des Zones.
+    const ids = parametres?.items?.map((i) => i.id) ?? [];
+    expect(ids[0]).toBe("fiche");
+    expect(ids).toEqual(expect.arrayContaining([
+      "fiche",
+      "batiments",
+      "connecter",
+    ]));
     expect(idsVisibles()).toContain("connecter");
     expect(idsVisibles()).toContain("fiche");
     // La césure entre le dossier et son réglage est portée par la donnée,

@@ -6,6 +6,21 @@
 - **Remplace** l'ADR-015 (et, avec elle, l'amendement de l'ADR-017 sur l'entrée
   « Opérations ») · **Découle de** l'ADR-025
 
+> **Amendée le 2026-11-13 — les zones passent sous « Paramètres », les
+> prescriptions sous « Équipement et bâtiment »** (décision de la
+> propriétaire). Deux entrées déplacées, la découpe ne bouge pas — c'est le
+> remède que cette ADR prévoit pour un rangement qui se révèle faux à
+> l'usage. Les **zones** se déclarent une fois et se règlent rarement : c'est
+> le découpage du dossier, comme la fiche établissement, pas une matière qu'on
+> suit ; le panneau « Paramètres » lit désormais Fiche établissement · Zones ·
+> Connecter un assistant. Les **prescriptions particulières** renforcent le
+> rythme d'une vérification du parc ou en créent une sur mesure (ADR-035) :
+> elles suivent le lieu et ses équipements, pas les personnes ; elles se
+> rangent après « Équipements ». La tuile du rail et la teinte de l'en-tête
+> suivent l'entrée (`categorieDeItem`) : `/batiments` s'allume sur
+> « Paramètres », en gris ; `/prescriptions` sur « Équipement et bâtiment »,
+> en glacier. `sidebar-nav.ts`, `sidebar-nav.test.ts`.
+
 ## Le problème
 
 L'ADR-015 a posé un rail dont chaque entrée est « une page d'entrée **et** un
@@ -36,10 +51,10 @@ et pourquoi.
 | Entrée | Nature | Page d'entrée | Ce qu'elle recueille |
 |---|---|---|---|
 | À faire | fonctionnelle | calendrier | calendrier, plan d'actions, ce qui doit être en place |
-| Santé-sécurité | thématique | DUERP | DUERP, équipe et titres, prescriptions, permis de feu, plans de prévention, ~~ce que Rojer ne couvre pas~~ [2026-10-25 : passée sous Documentation, ADR-025 § 8 amendée] |
-| Équipement et bâtiment | thématique | équipements | équipements, zones, prestataires, registre de sécurité, accessibilité, carnet sanitaire |
+| Santé-sécurité | thématique | DUERP | DUERP, équipe et titres, ~~prescriptions~~ [2026-11-13 : passées sous Équipement et bâtiment], permis de feu, plans de prévention, ~~ce que Rojer ne couvre pas~~ [2026-10-25 : passée sous Documentation, ADR-025 § 8 amendée] |
+| Équipement et bâtiment | thématique | équipements | équipements, ~~zones~~ [2026-11-13 : passées sous Paramètres], prescriptions [2026-11-13], prestataires, registre de sécurité, accessibilité, carnet sanitaire |
 | Documentation | thématique | documents obligatoires | documents obligatoires, préparer un contrôle, comprendre (le guide), ce que Rojer ne couvre pas [2026-10-25] |
-| Paramètres | fonctionnelle | fiche établissement | rien — entrée sans panneau |
+| Paramètres | fonctionnelle | fiche établissement | ~~rien — entrée sans panneau~~ [2026-11-13 : fiche établissement, zones, connecter un assistant — le panneau existe depuis le 2026-09-01 (`construireRail`), la case n'avait pas suivi] |
 
 **L'écart à la lettre de la directive est assumé et il est motivé.** Les trois
 axes sont thématiques — ils répondent à « de quoi s'agit-il ». « À faire » et

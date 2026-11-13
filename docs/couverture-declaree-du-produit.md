@@ -651,7 +651,7 @@ l'espace d'attente sécurisé ou l'appareil à combustible liquide.
 Où c'est dit. Les six premiers et `CO 10` : la rubrique « Règlement de
 sécurité, catégories 1 à 4 » de la page « Ce que Rojer ne couvre pas »
 (`perimetre/manques-annonces.ts`, ERP des catégories 1 à 4). `GC 15` et
-`PE 18` : l'aide de la catégorie « Appareil de cuisson ERP » ; CH 38 6° :
+`PE 18` : l'aide de la catégorie « Appareil de cuisson ~~ERP~~ » [2026-11-13 : libellé raccourci] ; CH 38 6° :
 l'aide de la catégorie « Centrale de traitement d'air » — phrases posées au
 rebase sur le sous-lot B, qui tient `labels.ts` (décision Q3 de c6).
 
