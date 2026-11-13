@@ -28,17 +28,9 @@ import {
   type DossierData,
 } from "./DossierConformiteDocument";
 import type { BlocEtatsPermanents } from "./mentions-etats-permanents";
+import { dossier, VIDE } from "./donnees-essai.test-utils";
 import { blocsMaterielsNonCouverts } from "./mentions-perimetre";
 
-const VIDE: BlocEtatsPermanents = {
-  chapeau: null,
-  compteur: null,
-  etats: [],
-  faits: [],
-  noteFaits: null,
-  vide: "Aucune obligation de ce type ne s'applique à cet établissement.",
-  nonEnPlaceParLesTitres: 0,
-};
 
 function lignes(n: number, prefixe: string) {
   return Array.from({ length: n }, (_, i) => ({
@@ -62,47 +54,6 @@ function bloc(nbEtats: number, nbFaits = 0): BlocEtatsPermanents {
   };
 }
 
-function dossier(etatsPermanents: BlocEtatsPermanents): DossierData {
-  return {
-    entreprise: "Btry",
-    siret: "12345678900011",
-    etablissement: "Le Comptoir",
-    adresse: "1 rue des Lilas",
-    effectifSurSite: 6,
-    codeNaf: "56.10A",
-    regimesTexte: "Établissement de travail, ERP type N cat. 5",
-    materielsNonCouverts: [],
-    regime: { estERP: true, estIGH: false },
-    genereLe: new Date("2026-09-01T10:00:00Z"),
-    couverture: null,
-    avertissementCalendrier: null,
-    calendrier: { etat: "a_jour" },
-    score: {
-      valeur: 100,
-      niveau: "indetermine",
-      libelle: "Reste à renseigner",
-      indetermines: 12,
-      indeterminationsCouverture: 0,
-    },
-    etatsPermanents,
-    duerp: null,
-    compteurs: {
-      verifsEnRetard: 0,
-      verifsPlanifiees: 0,
-      verifsRealisees12m: 0,
-      actionsOuvertes: 0,
-      actionsEnRetard: 0,
-      pointsOuverts: 0,
-      pointsEnRetard: 0,
-    },
-    rapportsRecents: [],
-    verifsEnRetard: [],
-    verifsAConfirmer: [],
-    verifsPourInformation: [],
-    actionsEnCours: [],
-    pointsEnCours: [],
-  };
-}
 
 /** Le nombre de pages d'un PDF, lu dans son catalogue d'objets. */
 function nombreDePages(pdf: Buffer): number {

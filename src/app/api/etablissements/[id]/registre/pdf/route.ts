@@ -12,7 +12,7 @@ import { reponsePdf } from "@/lib/pdf/reponse";
  * l'établissement, qui n'ont rien à faire dans les mains d'un tiers.
  */
 export async function GET(
-  _req: Request,
+  req: Request,
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
@@ -28,5 +28,6 @@ export async function GET(
     { type: "registre", props: { data } },
     `Registre_securite_${slugifyFilename(data.etablissement)}.pdf`,
     user.id,
+    req.signal,
   );
 }

@@ -32,7 +32,7 @@ import {
   construireRegistreData,
 } from "@/lib/pdf/builders";
 import { historiqueJusqua } from "@/lib/versions/historique";
-import { raisonEchecRendu, rendrePdf } from "@/lib/pdf/rendre";
+import { PdfAbandonne, raisonEchecRendu, rendrePdf } from "@/lib/pdf/rendre";
 import { slugifyFilename } from "@/lib/pdf/styles";
 import { contenuR4512_8 } from "@/lib/plan-prevention/contenu-r4512-8";
 import { annoncesZip, ligneHeuresRevisees } from "@/lib/plan-prevention/annonces-plan";
@@ -76,9 +76,6 @@ import { formaterMesure } from "@/lib/rendu/mesures";
 import { lignesPointDeReleve } from "@/lib/carnet-sanitaire/export";
 import { registreAuDossier } from "@/lib/accessibilite/registre-au-dossier";
 
-/** Les rendus du ZIP se journalisent sous leur origine (`export_pdf`). */
-const RENDU_DU_ZIP = { origine: "zip" } as const;
-
 /** Les dates de l'attestation d'un prestataire, telles que le ZIP les écrit. */
 function datesAttestationZip(p: {
   raisonSociale: string;
@@ -115,7 +112,7 @@ function datesAttestationZip(p: {
  *   08_Carnet_sanitaire_analyses/ — rapports de laboratoire déposés
  */
 export async function GET(
-  _req: Request,
+  req: Request,
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
@@ -135,7 +132,11 @@ export async function GET(
   if (liberer instanceof Response) return liberer;
   let archive: Awaited<ReturnType<typeof construireArchive>>;
   try {
-    archive = await construireArchive({ compte, db }, id, etablissement);
+    archive = await construireArchive({ compte, db }, id, etablissement, req.signal);
+  } catch (e) {
+    // Le client est parti : personne n'attend l'archive (lot pdf-b1).
+    if (e instanceof PdfAbandonne) return new Response(null, { status: 503, headers: { "Cache-Control": "no-store" } });
+    throw e;
   } finally {
     liberer();
   }
@@ -155,7 +156,12 @@ async function construireArchive(
   acces: AccesCompte,
   id: string,
   etablissement: Awaited<ReturnType<typeof requireEtablissement>>["etablissement"],
+  /** Le signal de la requête : un client parti arrête les mises en page. */
+  signal?: AbortSignal,
 ) {
+  // Les rendus du ZIP se journalisent sous leur origine (`export_pdf`), et
+  // s'arrêtent avec la requête.
+  const renduDuZip = { origine: "zip" as const, signal };
   const { db } = acces;
   // LA FRAÎCHEUR SE LIT AVANT TOUT LE RESTE, et elle ne répare rien.
   // Ce dossier part chez un tiers qui n'a aucun moyen de recouper ce
@@ -212,7 +218,17 @@ async function construireArchive(
   const echecs = new Map<string, string>();
   // Un document refusé par le garde-fou des PDF (`pdf/rendre.ts`) se dit
   // comme tel : « trop volumineux », pas « la génération a échoué ».
+  // UN CLIENT PARTI ARRÊTE L'ARCHIVE, pas seulement ses rendus (revue de
+  // code de B1, 2026-11-10) : sinon les lectures et l'assemblage continuent
+  // et gardent la place d'export pour personne. Vérifié avant chaque lecture
+  // et chaque jeu de fichiers, et relancé par `noterEchec` — un abandon n'est
+  // pas un échec de pièce.
+  const arreterSiParti = () => {
+    if (signal?.aborted) throw new PdfAbandonne();
+  };
   const noterEchec = (fichier: string, e: unknown, raison = "la génération a échoué") => {
+    if (e instanceof PdfAbandonne) throw e;
+    arreterSiParti();
     // Un refus du garde-fou a sa raison, et il est déjà journalisé par
     // `rendrePdf` (ligne `export_pdf`, niveau warn) : il ne se dit qu'une fois.
     const refus = raisonEchecRendu(e);
@@ -229,6 +245,7 @@ async function construireArchive(
   // réponse 500 : tout le dossier tombait pour une brique. Elle se note
   // comme les autres échecs, et la brique est dite « Non incluse ».
   const lire = async <T,>(fichier: string, repli: T, f: () => Promise<T>): Promise<T> => {
+    arreterSiParti();
     try {
       return await f();
     } catch (e) {
@@ -264,7 +281,7 @@ async function construireArchive(
       // retards doit encore les annoncer (revue du 2026-11-10).
       nbVerifsEnRetard = data.verifsEnRetard.length;
       inventaire = data.couverture ? faitInventaire(data.couverture) : null;
-      const buf = await rendrePdf({ type: "dossier-conformite", props: { data } }, RENDU_DU_ZIP);
+      const buf = await rendrePdf({ type: "dossier-conformite", props: { data } }, renduDuZip);
       zip.file(PIECES_ZIP.dossier, new Uint8Array(buf));
       // CE QUI EST IMPRIMÉ APRÈS : collectées avant, les échéances
       // contractuelles et les rythmes étaient annoncés « imprimés dans ce
@@ -332,7 +349,7 @@ async function construireArchive(
           snapshot: versionCourante.snapshot as unknown as DuerpSnapshot,
           historique,
         },
-      }, RENDU_DU_ZIP);
+      }, renduDuZip);
       zip.file(fichierDuerp(versionCourante.numero), new Uint8Array(buf));
     }
   } catch (e) {
@@ -355,7 +372,7 @@ async function construireArchive(
       // et pour 03_Registre_annexes/ (relecture du 2026-11-05). Avant le
       // rendu : les fichiers annexés vont au ZIP même si le PDF est refusé.
       annexesListees = data.annexes ?? [];
-      const buf = await rendrePdf({ type: "registre", props: { data } }, RENDU_DU_ZIP);
+      const buf = await rendrePdf({ type: "registre", props: { data } }, renduDuZip);
       zip.file(PIECES_ZIP.registre, new Uint8Array(buf));
       // Après le rendu, comme pour 01 : le README n'annonce que ce qui est
       // imprimé.
@@ -388,6 +405,7 @@ async function construireArchive(
   const annexesDeposees = await lire(PIECES_ZIP.annexes, [], () =>
     annexesDeposeesDuDossier(db, id, Object.keys(titreAnnexe)),
   );
+  arreterSiParti();
   const annexesZip = await joindreFichiers(
     zip,
     nomDeDossier(PIECES_ZIP.annexes),
@@ -406,7 +424,7 @@ async function construireArchive(
   try {
     const data = await construirePlanActionsData(db, id);
     if (data) {
-      const buf = await rendrePdf({ type: "plan-actions", props: { data } }, RENDU_DU_ZIP);
+      const buf = await rendrePdf({ type: "plan-actions", props: { data } }, renduDuZip);
       zip.file(PIECES_ZIP.plan, new Uint8Array(buf));
     }
   } catch (e) {
@@ -523,6 +541,7 @@ async function construireArchive(
     console.error("controle-zip : comptage des rapports de salarié en échec", e);
     rapportsSalariesEcartes = null;
   }
+  arreterSiParti();
   const rapportsZip = await joindreFichiers(
     zip,
     nomDeDossier(PIECES_ZIP.rapports),
@@ -691,6 +710,7 @@ async function construireArchive(
   const analysesAvecRapport = (carnetSan?.analyses ?? []).filter(
     (a): a is typeof a & { rapportCle: string } => Boolean(a.rapportCle),
   );
+  arreterSiParti();
   const analysesZip = await joindreFichiers(
     zip,
     nomDeDossier(PIECES_ZIP.analyses),

@@ -49,7 +49,7 @@ import "server-only";
 
 import { z } from "zod";
 import { ENVIRONNEMENTS_APP } from "@/lib/environnement";
-import { FORME_EXPORTS_SIMULTANES } from "@/lib/exports/limite";
+import { FORME_ENTIER_POSITIF } from "@/lib/exports/reglage-entier";
 import { etatStripe } from "@/lib/stripe/config";
 
 type Env = Record<string, string | undefined>;
@@ -61,6 +61,8 @@ const requise = (description: string) =>
   z.preprocess(vide, z.string({ error: `absente (${description})` }));
 
 const optionnelle = z.preprocess(vide, z.string().optional());
+/** Un réglage d'export : entier ≥ 1, même règle que sa lecture (`exports/reglage-entier.ts`). */
+const entierPositif = z.preprocess(vide, z.string().regex(FORME_ENTIER_POSITIF, "doit être un entier ≥ 1").optional());
 
 const urlHttp = z.string().refine((v) => {
   try {
@@ -124,10 +126,13 @@ const schema = z
     // de l'instance, environ 400 Mo par export lourd (audit Next.js, H3).
     // Une valeur fausse retombait en silence sur le défaut : elle arrête
     // désormais le démarrage (plan de bascule, 0.5).
-    EXPORTS_SIMULTANES: z.preprocess(
-      vide,
-      z.string().regex(FORME_EXPORTS_SIMULTANES, "doit être un entier ≥ 1").optional(),
-    ),
+    EXPORTS_SIMULTANES: entierPositif,
+    // Le rendu des PDF (`pdf/worker/reglages.ts`, ADR-059) : tas maximal en Mo
+    // et délai maximal en ms d'un rendu. Même règle que leur lecture.
+    EXPORT_TAS_MAX_MO: entierPositif,
+    EXPORT_DELAI_MAX_MS: entierPositif,
+    // Hors production, force la mise en page dans un processus enfant (`pdf/rendre.ts`).
+    PDF_WORKER: enumeration(["1"] as const),
 
     // API Légifrance (`legifrance/client.ts`, scripts).
     LEGIFRANCE_CLIENT_ID: optionnelle,

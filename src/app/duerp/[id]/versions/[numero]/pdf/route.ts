@@ -5,7 +5,7 @@ import { historiqueJusqua } from "@/lib/versions/historique";
 import type { DuerpSnapshot } from "@/lib/versions/snapshot";
 
 export async function GET(
-  _req: Request,
+  req: Request,
   context: { params: Promise<{ id: string; numero: string }> },
 ) {
   const { id, numero } = await context.params;
@@ -39,5 +39,6 @@ export async function GET(
     { type: "duerp", props: { snapshot, historique } },
     `DUERP_${safe}_v${numeroInt}.pdf`,
     user.id,
+    req.signal,
   );
 }

@@ -9,6 +9,14 @@ import {
 } from "@/lib/journal/export-pdf";
 import { elementDuDocument, NOM_DOCUMENT, type DemandePdf, type TypeDocument } from "./documents";
 import { poidsDuDocument, type PoidsPdf } from "./poids";
+import {
+  PdfAbandonne,
+  PdfDelaiDepasse,
+  PdfMemoireDepassee,
+  rendreDansUnProcessus,
+  workerDisponible,
+} from "./worker/lancer";
+import { delaiMaxMs, tasMaxMo } from "./worker/reglages";
 
 /**
  * LE SEUL ENDROIT QUI MET UN PDF EN PAGE (lot pdf-b0, 2026-11-10,
@@ -23,12 +31,14 @@ import { poidsDuDocument, type PoidsPdf } from "./poids";
  *   3. une ligne de journal (`journal/export-pdf.ts`).
  *
  * ⚠ LE GARDE-FOU EST UN PALLIATIF, NOMMÉ COMME TEL. Il borne la taille d'un
- * export mis en page dans le processus web ; ses seuils viennent du banc de
- * charge. Il ne rend pas le document, et il n'empêche pas tout : sous le
- * seuil, un export fige encore l'application le temps de son rendu (banc,
- * XS, 2026-11-10 : environ 7 s pour un registre d'un an). Il se retire ou se
- * relève quand le rendu sort du processus (plan, B1-B3) ou quand les gros
- * exports passent en tâche de fond (lien par mail + ZIP). Inscrit à
+ * export ; ses seuils viennent du banc de charge. Il ne rend pas le document.
+ * ~~Sous le seuil, un export fige encore l'application le temps de son
+ * rendu~~ [lot pdf-b1 : en production, la mise en page tourne dans un
+ * processus enfant (`mettreEnPage`, `worker/lancer.ts`) — le garde-fou devient
+ * le PREMIER filet, qui refuse sans rien lancer ; le processus de rendu est le
+ * second, qui confine un tas dépassé et laisse la boucle du serveur libre.] Il
+ * se relève quand le rendu hors processus est mesuré (B3), et se retire quand
+ * les gros exports passent en tâche de fond (lien par mail + ZIP). Inscrit à
  * `docs/chantiers-ouverts.md` § 23.
  */
 
@@ -73,8 +83,12 @@ export class PdfTropVolumineux extends Error {
   constructor(
     readonly type: TypeDocument,
     readonly poids: PoidsPdf,
+    options?: { cause?: unknown },
   ) {
-    super(`PDF « ${type} » trop volumineux (${poids.total} lignes, bloc de ${poids.plusGrosBloc})`);
+    super(
+      `PDF « ${type} » trop volumineux (${poids.total} lignes, bloc de ${poids.plusGrosBloc})`,
+      options,
+    );
     this.name = "PdfTropVolumineux";
   }
 }
@@ -87,21 +101,41 @@ export function messageTropVolumineux(type: TypeDocument): string {
   );
 }
 
+/** Les échecs de rendu attendus, nommés ; tout le reste est une panne. */
+type RefusDuRendu = "trop_volumineux" | "delai_depasse" | "abandonne";
+
+/** Le refus que porte une erreur de rendu, `null` pour une panne. */
+function refusDuRendu(e: unknown): RefusDuRendu | null {
+  if (e instanceof PdfTropVolumineux) return "trop_volumineux";
+  if (e instanceof PdfDelaiDepasse) return "delai_depasse";
+  if (e instanceof PdfAbandonne) return "abandonne";
+  return null;
+}
+
+const RAISON_DANS_LE_ZIP: Record<RefusDuRendu, string> = {
+  trop_volumineux: "document trop volumineux pour être généré en un seul PDF",
+  delai_depasse: "génération interrompue, délai dépassé",
+  abandonne: "génération abandonnée, la demande a été interrompue",
+};
+
 /**
  * La raison d'un échec de rendu dans le ZIP de contrôle (README) : nommée
  * pour un refus, `undefined` sinon — l'appelant garde alors la sienne.
  */
 export function raisonEchecRendu(e: unknown): string | undefined {
-  return e instanceof PdfTropVolumineux
-    ? "document trop volumineux pour être généré en un seul PDF"
-    : undefined;
+  const refus = refusDuRendu(e);
+  return refus ? RAISON_DANS_LE_ZIP[refus] : undefined;
 }
+
+export { PdfAbandonne, PdfDelaiDepasse };
 
 type OptionsRendu = {
   /** Réservé aux tests : la production lit toujours `SEUILS_PDF`. */
   seuils?: SeuilsPdf;
   /** D'où vient l'export : une route PDF ou le ZIP de contrôle (journal). */
   origine?: OrigineExportPdf;
+  /** Le signal de la requête : un client parti arrête le rendu. */
+  signal?: AbortSignal;
 };
 
 /**
@@ -147,13 +181,41 @@ export async function mettreEnPage(
 ): Promise<Buffer> {
   const journaliser = journal(demande, options.origine, seuilsDe(demande, options), performance.now());
   try {
-    const pdf = await renderToBuffer(elementDuDocument(demande));
+    const pdf = await rendreSelonLeLieu(demande, options);
     journaliser("ok", poids);
     return pdf;
   } catch (e) {
-    journaliser("echec", poids);
+    if (e instanceof PdfMemoireDepassee) {
+      journaliser("memoire_depassee", poids);
+      throw new PdfTropVolumineux(demande.type, poids, { cause: e });
+    }
+    journaliser(refusDuRendu(e) ?? "echec", poids);
     throw e;
   }
+}
+
+/**
+ * Où mettre en page. EN PRODUCTION, toujours dans un processus enfant, dont
+ * le paquet doit exister (`dist-pdf/pdf-worker.mjs`). HORS PRODUCTION, dans
+ * le processus, avec le code des documents à jour : un paquet construit au
+ * démarrage de `next dev` imprimerait l'ancienne version d'un document
+ * modifié depuis. `PDF_WORKER=1` force le processus enfant en local.
+ */
+async function rendreSelonLeLieu(demande: DemandePdf, options: OptionsRendu): Promise<Buffer> {
+  if (process.env.NODE_ENV === "production" || process.env.PDF_WORKER === "1") {
+    if (!workerDisponible()) {
+      throw new Error(
+        "pdf-worker introuvable (dist-pdf/pdf-worker.mjs) : `pnpm pdf-worker` le construit, " +
+          "le build CC aussi.",
+      );
+    }
+    return rendreDansUnProcessus(demande, {
+      tasMaxMo: tasMaxMo(),
+      delaiMaxMs: delaiMaxMs(),
+      signal: options.signal,
+    });
+  }
+  return renderToBuffer(elementDuDocument(demande));
 }
 
 function seuilsDe(demande: DemandePdf, options: OptionsRendu): SeuilsPdf {

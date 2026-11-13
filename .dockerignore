@@ -7,3 +7,6 @@ node_modules
 .env*
 storage
 .claude
+# Le paquet du rendu des PDF se construit dans l'image (build:cc) : un dist-pdf local
+# périmé ne doit pas y entrer (ADR-059).
+dist-pdf

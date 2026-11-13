@@ -9,7 +9,7 @@ import { reponsePdf } from "@/lib/pdf/reponse";
  * établissement par le builder — un identifiant d'autrui répond 404.
  */
 export async function GET(
-  _req: Request,
+  req: Request,
   context: { params: Promise<{ id: string; equipementId: string }> },
 ) {
   const { id, equipementId } = await context.params;
@@ -20,5 +20,6 @@ export async function GET(
     { type: "points-a-corriger", props: { data } },
     `Points_a_corriger_${slugifyFilename(data.appareil)}.pdf`,
     user.id,
+    req.signal,
   );
 }

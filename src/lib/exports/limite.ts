@@ -1,11 +1,17 @@
 import "server-only";
 
+import { lireEntierPositif } from "./reglage-entier";
+import { creerLimiteur, type Liberer, type Limiteur } from "@/lib/securite/limiteur";
+
 /**
  * Combien d'exports (PDF, ZIP de contrôle) le processus mène de front
  * (audit Next.js du 2026-10-14, H3).
  *
- * LA CAUSE. La mise en page `@react-pdf` est du calcul synchrone : pendant
- * qu'elle tourne, la boucle d'événements ne sert personne d'autre — mesuré
+ * LA CAUSE. ~~La mise en page `@react-pdf` est du calcul synchrone : pendant
+ * qu'elle tourne, la boucle d'événements ne sert personne d'autre~~
+ * [2026-11-10, ADR-059 : en production, la mise en page tourne dans un
+ * processus enfant ; la boucle reste libre. La file borne désormais la
+ * MÉMOIRE — un processus par export en cours, chacun avec son tas.] Mesuré avant l'ADR-059 :
  * jusqu'à 250 ms d'un tenant par PDF, 470 ms avec quatre ZIP lancés ensemble
  * (`scripts/mesure-exports.ts`). Et quatre ZIP construits ensemble montaient
  * le processus à 1,8 Go. Sur Vercel (Fluid Compute), une instance sert
@@ -49,28 +55,11 @@ export const REESSAYER_APRES_S = 5;
  */
 export const EXPORTS_PAR_DEMANDEUR_MAX = 2;
 
-/**
- * La forme admise de `EXPORTS_SIMULTANES` : un entier ≥ 1 écrit en chiffres.
- * UNE règle, lue ici et par `src/env.ts` au démarrage : les deux ne peuvent
- * pas se contredire (revue de la PR #127, 2026-10-30).
- */
-export const FORME_EXPORTS_SIMULTANES = /^[1-9]\d*$/;
-
-/**
- * La valeur de `EXPORTS_SIMULTANES` : absente, le défaut ; bien formée, sa
- * valeur ; mal formée, une erreur — jamais un repli silencieux, qui ferait
- * tourner l'instance avec un réglage qu'on croit autre.
- */
+/** La valeur de `EXPORTS_SIMULTANES` (règle commune : `reglage-entier.ts`). */
 export function exportsSimultanes(valeur = process.env.EXPORTS_SIMULTANES): number {
-  const v = valeur?.trim();
-  if (!v) return EXPORTS_SIMULTANES_DEFAUT;
-  if (!FORME_EXPORTS_SIMULTANES.test(v)) {
-    throw new Error("EXPORTS_SIMULTANES doit être un entier ≥ 1.");
-  }
-  return Number(v);
+  return lireEntierPositif("EXPORTS_SIMULTANES", valeur, EXPORTS_SIMULTANES_DEFAUT);
 }
 
-import { creerLimiteur, type Liberer, type Limiteur } from "@/lib/securite/limiteur";
 
 /** Le limiteur du processus, partagé par toutes les routes d'export. */
 const limiteur = creerLimiteur({
