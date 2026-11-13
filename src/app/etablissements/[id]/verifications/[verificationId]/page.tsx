@@ -30,7 +30,6 @@ import { MentionAConfirmer } from "@/components/calendrier/MentionAConfirmer";
 import { BlocAConfirmer } from "@/components/calendrier/BlocAConfirmer";
 import { marquesAConfirmerDuRendu } from "@/lib/etablissements/marques-du-rendu";
 import {
-  MARQUAGE_CONTRACTUEL,
   MARQUAGE_CONTRACTUEL_LONG,
   estEcheanceContractuelle,
 } from "@/lib/prescriptions/sources";
@@ -923,41 +922,6 @@ export default async function VerificationDetailPage({
                 />
               )}
             </CarteFiche>
-          }
-          cote={
-            <section className="carte-board overflow-hidden bg-[color:var(--board-blue-pale)] px-7 py-7 sm:px-8">
-              <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-blue-ink)]">
-                En attente
-              </p>
-              <h2 className="board-titre m-0 mt-3 text-[22px]">
-                {mots.enAttenteTitre}
-              </h2>
-              <p className="m-0 mt-3 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
-                {mots.enAttenteTexte}
-              </p>
-              <ul className="m-0 mt-5 flex list-none flex-col gap-2 p-0 text-[13px] text-[color:var(--board-slate-ink)]">
-                {mots.enAttenteListe.map((item) => (
-                  <li key={item} className="flex items-start gap-2.5">
-                    <span
-                      aria-hidden
-                      className="mt-[7px] inline-block h-[3px] w-3 flex-none rounded-full bg-[color:var(--board-blue-strong)]"
-                    />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-              {/* Une ligne contractuelle dit ce qu'elle est (ADR-032). Les
-                  autres ne citent plus rien ici (2026-11-13, retour testeur,
-                  décision de la propriétaire) : la première référence, prise
-                  sans égard à la catégorie, citait DF 10 « quatre premières
-                  catégories » sur un ERP de 5ᵉ. Les références se lisent dans
-                  « Ce qui fonde cette obligation ». */}
-              {contractuelle && (
-                <p className="board-eyebrow m-0 mt-6 text-[10px] tracking-[0.16em] text-[color:var(--board-amber-ink)]">
-                  {MARQUAGE_CONTRACTUEL}
-                </p>
-              )}
-            </section>
           }
         />
       )}
