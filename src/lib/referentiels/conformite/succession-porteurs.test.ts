@@ -25,7 +25,8 @@ import type { PorteurObligation } from "./types";
  *    l'obligation passe, SOUS LE MÊME IDENTIFIANT, au porteur appareil : chaque
  *    appareil reprend sa dernière réalisation s'il était déclaré à sa date
  *    (`realisationDispersee`). C'est le chemin de `PE 4 § 2`, `PO 1 § 3` et
- *    `R. 4222-20` ; le sens inverse (appareil → établissement) reste sans
+ *    `R. 4222-20` [2026-11-13 : et de `L 57 § 1 a` et `L 13 § 5`, portés par
+ *    la scène] ; le sens inverse (appareil → établissement) reste sans
  *    mécanisme, et ce fusible le garde.
  *
  * Tout le reste casse la continuité EN SILENCE : l'ancienne ligne est archivée

@@ -161,20 +161,20 @@ const FAMILLES_DECLAREES: {
   {
     famille: "scène déclarée (chapitre L) ↔ disposition d'un autre type ou visite de commission",
     motif:
-      "Les lignes d'établissement du chapitre L dues dès qu'une scène est déclarée — vérifications triennales par un organisme agréé (L 57 § 1 a), matériel des installations temporaires (L 13 § 5), présence d'une personne qualifiée en 3ᵉ catégorie (L 57 § 7) — sont bornées aux types L et P et à une scène déclarée (`siEquipementDeclare`, que la comparaison des conditions ne lit pas). Les dispositions des autres chapitres de type (M 31, O 21, M 44…), le tableau des secours d'un établissement sportif (code du sport, R. 322-4, type X, sous-lot E) et les visites de commission de GE 4 § 1 sont d'autres actes : un établissement qui groupe une salle et un hôtel ou un magasin les doit tous (GN 2 § 3). Paires nommées une à une (2026-10-17, sous-lot G).",
+      "Les lignes d'établissement du chapitre L dues dès qu'une scène est déclarée — ~~vérifications triennales par un organisme agréé (L 57 § 1 a), matériel des installations temporaires (L 13 § 5),~~ [2026-11-13 : portées par la scène, ADR-057 « À trancher » — elles ne sont plus des lignes d'établissement] présence d'une personne qualifiée en 3ᵉ catégorie (L 57 § 7) — sont bornées aux types L et P et à une scène déclarée (`siEquipementDeclare`, que la comparaison des conditions ne lit pas). Les dispositions des autres chapitres de type (M 31, O 21, M 44…), le tableau des secours d'un établissement sportif (code du sport, R. 322-4, type X, sous-lot E) et les visites de commission de GE 4 § 1 sont d'autres actes : un établissement qui groupe une salle et un hôtel ou un magasin les doit tous (GN 2 § 3). Paires nommées une à une (2026-10-17, sous-lot G).",
     cotes: [
       [
-        /^(elec-erp-presence-personne-qualifiee-scene-n3|scene-erp-verifications-triennales-organisme-agree|scene-erp-materiels-installations-temporaires-annuelle)$/,
+        /^(elec-erp-presence-personne-qualifiee-scene-n3)$/,
         /^incendie-erp-(hotel-consigne-chambres|hotel-plans-evacuation-niveaux|interdiction-fumer-affichee|schema-organisation-securite)$/,
       ],
       [
         // Rebase sur E (2026-10-17) : une salle L ou P qui est aussi un
         // établissement sportif X.
-        /^(elec-erp-presence-personne-qualifiee-scene-n3|scene-erp-verifications-triennales-organisme-agree|scene-erp-materiels-installations-temporaires-annuelle)$/,
+        /^(elec-erp-presence-personne-qualifiee-scene-n3)$/,
         /^sport-etablissement-secours-r322-4$/,
       ],
       [
-        /^(elec-erp-presence-personne-qualifiee-scene-n3|scene-erp-verifications-triennales-organisme-agree|scene-erp-materiels-installations-temporaires-annuelle)$/,
+        /^(elec-erp-presence-personne-qualifiee-scene-n3)$/,
         /^incendie-erp-visite-commission-(cat1-2-quinquennale|cat3-quinquennale|cat4-triennale|cat4-r-avec-hebergement-triennale|cat4-r-sans-hebergement-quinquennale)$/,
       ],
     ],
@@ -210,7 +210,7 @@ const FAMILLES_DECLAREES: {
       ],
       [
         /^incendie-erp-enseignement-exercices-evacuation$/,
-        /^(elec-erp-presence-personne-qualifiee-scene-n3|scene-erp-verifications-triennales-organisme-agree|scene-erp-materiels-installations-temporaires-annuelle|sport-etablissement-secours-r322-4)$/,
+        /^(elec-erp-presence-personne-qualifiee-scene-n3|sport-etablissement-secours-r322-4)$/,
       ],
       [
         /^incendie-erp-enseignement-exercices-evacuation$/,

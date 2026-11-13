@@ -11,8 +11,10 @@ import type { EquipementMatching, EtablissementMatching } from "./types";
  *
  * Pas de liste exhaustive : une borne basse (la salle L de 3ᵉ avec une scène,
  * la salle de danse P, L en type supplémentaire), une borne haute (5ᵉ
- * catégorie, autre type, salle SANS scène), et la couche voisine (une ligne
- * par établissement, une par scène). Chaque garde est éprouvée en cassant le
+ * catégorie, autre type, salle SANS scène), et la couche voisine (~~une ligne
+ * par établissement, une par scène~~ [2026-11-13, ADR-057 « À trancher » : une
+ * ligne par scène pour les trois contrôles, la présence de 3ᵉ par
+ * établissement]). Chaque garde est éprouvée en cassant le
  * référentiel (bloc « cassures »).
  *
  * L'exigence de la propriétaire (« on n'alourdit pas ») : une salle L ou P
@@ -172,11 +174,12 @@ describe("chapitre L — les gardes portent sur le référentiel lui-même", () 
   // `scene.ts` ou `electricite.ts` (commit de la revue), et rougit.
   const LIGNES = LIGNES_G.map((id) => obligationParId(id)!);
 
-  it("toute ligne d'établissement du sous-lot G n'est due que si une scène est déclarée", () => {
-    const sansScene = LIGNES.filter(
-      (o) =>
-        o.porteur === "etablissement" &&
-        !((o as { siEquipementDeclare?: readonly string[] }).siEquipementDeclare ?? []).includes("SCENE"),
+  it("toute ligne du sous-lot G n'est due que si une scène est déclarée : portée par la scène, ou d'établissement sous condition de scène", () => {
+    const sansScene = LIGNES.filter((o) =>
+      o.porteur === "equipement"
+        ? !(o.categoriesEquipement ?? []).includes("SCENE")
+        : o.porteur !== "etablissement" ||
+          !((o as { siEquipementDeclare?: readonly string[] }).siEquipementDeclare ?? []).includes("SCENE"),
     ).map((o) => o.id);
     expect(sansScene).toEqual([]);
   });
