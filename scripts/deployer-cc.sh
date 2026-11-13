@@ -61,7 +61,11 @@ command -v gh >/dev/null || refus "la CLI gh n'est pas installée : impossible d
 # ou un clone.
 [ -d "$(git rev-parse --show-toplevel)/.git" ] ||
   refus "ce dossier est un worktree : déployer depuis le dépôt principal, sur $branche."
-[ -z "$(git status --porcelain)" ] || refus "l'arbre de travail est modifié."
+# Les fichiers NON SUIVIS ne comptent pas : `clever deploy` pousse un commit,
+# ils n'en font pas partie, et le dépôt principal en porte toujours quelques-uns
+# (images de travail, notes). Un fichier suivi modifié, lui, arrête tout.
+[ -z "$(git status --porcelain --untracked-files=no)" ] ||
+  refus "l'arbre de travail est modifié (fichiers suivis)."
 
 git fetch --quiet origin "$branche"
 sha=$(git rev-parse HEAD)

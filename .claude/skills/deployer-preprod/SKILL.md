@@ -15,7 +15,7 @@ Clever Cloud n'existe pas encore.
 
 ## La commande
 
-Depuis le **dépôt principal**, sur `main`, sans modification et à jour :
+Depuis le **dépôt principal**, sur `main`, à jour et sans fichier suivi modifié :
 
 ```sh
 git pull --ff-only
@@ -35,7 +35,8 @@ refuse. Pas non plus un dossier temporaire qui disparaît avec la session.
 
 ## Ce que le script vérifie, et qu'il ne faut pas contourner
 
-- branche `main`, arbre propre, tête locale = `origin/main` ;
+- branche `main`, aucun fichier suivi modifié (les fichiers non suivis ne
+  gênent pas), tête locale = `origin/main` ;
 - CI du commit verte, job `build-cc` compris — si elle tourne encore, attendre ;
 - après le déploiement : le commit servi (`clever status`) est bien celui
   déployé, et l'application répond.
