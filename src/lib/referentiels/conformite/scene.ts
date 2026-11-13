@@ -155,7 +155,7 @@ export const obligationsScene: Obligation[] = [
     libelle:
       "Vérification annuelle par un organisme agréé du matériel d'éclairage de spectacle et d'effets scéniques monté pour une durée limitée (ERP des quatre premières catégories)",
     description:
-      "Dans une salle de type L — ou une salle de danse de type P pour ses aménagements de spectacle — des quatre premières catégories, le matériel des installations temporaires ou semi-permanentes d'éclairage de spectacle et d'effets scéniques doit justifier d'une vérification annuelle par un organisme agréé (art. L 13 § 5). Une installation semi-permanente est autorisée pour trois mois au plus. Le texte ne dit pas qui doit faire vérifier ce matériel quand il appartient à une compagnie ou à un prestataire. Les vérifications de l'installation elle-même, au premier montage puis à chaque montage, relèvent d'un autre article (EL 23), que Rojer ne suit pas.",
+      "Dans une salle de type L — ou une salle de danse de type P pour ses aménagements de spectacle — des quatre premières catégories, le matériel des installations temporaires ou semi-permanentes d'éclairage de spectacle et d'effets scéniques doit justifier d'une vérification annuelle par un organisme agréé (art. L 13 § 5). Une installation semi-permanente est autorisée pour trois mois au plus. Le texte ne dit pas qui doit faire vérifier ce matériel quand il appartient à une compagnie ou à un prestataire.",
     referencesLegales: [
       {
         source: "ARRETE",

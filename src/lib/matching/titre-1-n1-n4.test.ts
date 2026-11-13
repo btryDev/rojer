@@ -192,10 +192,10 @@ describe("chaque ligne dit sa temporalité (consigne de la propriétaire, 2026-1
 
 describe("CH 58 : la ligne dit ce qu'elle ne sert pas (décision Q4 de c6)", () => {
   const d = obligationsConformite.find((o) => o.id === "aeration-erp-chauffage-ventilation-annuelle")?.description ?? "";
-  it("le ramonage de CH 57 est dit non suivi", () => {
-    expect(d).toMatch(/ne suit pas le ramonage/);
-    expect(d).toContain("CH 57");
-  });
+  // ~~le ramonage de CH 57 est dit non suivi~~ — 2026-11-13, décision de la
+  // propriétaire (retour testeur) : une ligne suivie ne dit plus ce qu'un
+  // article qu'elle cite fait faire d'autre, et qu'elle ne suit pas — ça
+  // brouille le dirigeant. Le manque reste écrit dans les notes internes.
   it("la ligne ne naît que d'une VMC ou d'une CTA, et nomme le stockage des combustibles", () => {
     expect(d).toMatch(/quand une VMC ou une centrale de traitement d'air est déclarée/);
     expect(d).toContain("stockage des combustibles");
