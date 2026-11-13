@@ -946,27 +946,17 @@ export default async function VerificationDetailPage({
                   </li>
                 ))}
               </ul>
-              {/* Le repli disait « Obligation réglementaire » dès que
-                  `obligationId` ne résolvait pas — donc sur TOUTES les
-                  obligations sur mesure nées d'une prescription, dont celles
-                  qui viennent d'un assureur. C'est une référence légale
-                  fabriquée sur une ligne qui n'en a pas, exactement ce que
-                  l'ADR-032 interdit. Une ligne contractuelle dit ce qu'elle
-                  est ; les autres gardent le repli, qui reste vrai pour
-                  elles. */}
-              <p
-                className={
-                  "board-eyebrow m-0 mt-6 text-[10px] tracking-[0.16em] " +
-                  (contractuelle
-                    ? "text-[color:var(--board-amber-ink)]"
-                    : "text-[color:var(--board-blue-ink)]")
-                }
-              >
-                {contractuelle
-                  ? MARQUAGE_CONTRACTUEL
-                  : (obligation?.referencesLegales[0]?.reference ??
-                    "Obligation réglementaire")}
-              </p>
+              {/* Une ligne contractuelle dit ce qu'elle est (ADR-032). Les
+                  autres ne citent plus rien ici (2026-11-13, retour testeur,
+                  décision de la propriétaire) : la première référence, prise
+                  sans égard à la catégorie, citait DF 10 « quatre premières
+                  catégories » sur un ERP de 5ᵉ. Les références se lisent dans
+                  « Ce qui fonde cette obligation ». */}
+              {contractuelle && (
+                <p className="board-eyebrow m-0 mt-6 text-[10px] tracking-[0.16em] text-[color:var(--board-amber-ink)]">
+                  {MARQUAGE_CONTRACTUEL}
+                </p>
+              )}
             </section>
           }
         />
