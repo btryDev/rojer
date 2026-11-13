@@ -1,4 +1,4 @@
-import "./polices.css";
+import "../polices/polices.css";
 
 /**
  * Les quatre polices de l'application, posées sur `<html>` par la mise en
@@ -12,7 +12,8 @@ import "./polices.css";
  * next-font-loader). `polices.css` reprend les feuilles de Google Fonts
  * telles quelles — tous les sous-ensembles, chacun avec son unicode-range :
  * le navigateur ne charge que ceux dont la page a besoin, comme avant —, les
- * fichiers étant dans `polices/`. Régénérer : `scripts/polices/regenerer.py`.
+ * fichiers étant dans `src/polices/` (hors de `src/app`, où chaque dossier
+ * serait une route). Régénérer : `scripts/polices/regenerer.py`.
  *
  * Ce que `next/font` faisait en plus et que cette feuille ne fait pas : le
  * préchargement des fichiers et la police de secours aux métriques ajustées.

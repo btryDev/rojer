@@ -53,7 +53,7 @@ export function politiqueContenu(options: {
     ],
     "style-src": ["'self'", "'unsafe-inline'"],
     "img-src": ["'self'", "data:", "blob:"],
-    // Les polices sont hébergées dans le dépôt (`src/app/polices/`) : rien ne part chez Google.
+    // Les polices sont hébergées dans le dépôt (`src/polices/`) : rien ne part chez Google.
     "font-src": ["'self'", "data:"],
     "connect-src": [
       "'self'",

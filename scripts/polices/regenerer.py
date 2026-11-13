@@ -1,19 +1,19 @@
-"""Régénère les polices hébergées (src/app/polices/ et src/app/polices.css).
+"""Régénère les polices hébergées (src/polices/, dont src/polices/polices.css).
 
     python3 -I scripts/polices/regenerer.py
 
 Reprend, pour chaque famille, la feuille que Google Fonts sert à un
 navigateur récent (tous les sous-ensembles, chacun avec son unicode-range),
-télécharge chaque fichier WOFF2 dans src/app/polices/ et réécrit les URL en
-chemins relatifs. Le build ne télécharge plus rien (2026-11-13).
+télécharge chaque fichier WOFF2 dans src/polices/ et réécrit les URL en
+chemins relatifs. Hors de src/app : chaque dossier y serait une route. Le build ne télécharge plus rien (2026-11-13).
 """
 import re
 import subprocess
 from pathlib import Path
 
 RACINE = Path(__file__).resolve().parents[2]
-DOSSIER = RACINE / "src/app/polices"
-FEUILLE = RACINE / "src/app/polices.css"
+DOSSIER = RACINE / "src/polices"
+FEUILLE = DOSSIER / "polices.css"
 UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
 # (requête css2, préfixe des fichiers, variable CSS) — mêmes axes que l'ancien
@@ -46,14 +46,14 @@ for requete, prefixe, variable in FAMILLES:
         fichier = f"{prefixe}-{sous_ensemble}{'-italic' if style == 'italic' else ''}.woff2"
         if not (DOSSIER / fichier).exists():
             (DOSSIER / fichier).write_bytes(lire(url))
-        corps = corps.replace(url, f"./polices/{fichier}")
+        corps = corps.replace(url, f"./{fichier}")
         blocs.append(f"/* {nom} — {sous_ensemble} */\n@font-face {{{corps}}}")
     variables.append(f'  {variable}: "{nom}";')
 
 FEUILLE.write_text(
     "/* GÉNÉRÉ par scripts/polices/regenerer.py — ne pas éditer à la main.\n"
     " * Les feuilles de Google Fonts (css2, tous sous-ensembles), fichiers\n"
-    " * hébergés dans src/app/polices/ ; licences : src/app/polices/LICENCES.md. */\n\n"
+    " * hébergés à côté ; licences : LICENCES.md. */\n\n"
     + "\n\n".join(blocs)
     + "\n\n/* Posée sur <html> par la mise en page racine et global-error.tsx. */\n.polices {\n"
     + "\n".join(variables)
