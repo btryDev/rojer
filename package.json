@@ -32,7 +32,9 @@
     "verification": "tsx --import ./scripts/server-only-hors-next.mjs scripts/export-verification.ts",
     "legifrance:verifier": "tsx --import ./scripts/server-only-hors-next.mjs scripts/verifier-corpus-legifrance.ts",
     "visite:rendre": "tsx scripts/visites/rendre.tsx",
-    "comptes-test": "tsx --import ./scripts/server-only-hors-next.mjs scripts/comptes-test.ts"
+    "comptes-test": "tsx --import ./scripts/server-only-hors-next.mjs scripts/comptes-test.ts",
+    "deployer:preprod": "sh scripts/deployer-cc.sh preprod",
+    "lire-preprod": "tsx scripts/lire-preprod.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1160.0",
@@ -65,6 +67,7 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^20",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.0.1",
@@ -72,6 +75,7 @@
     "eslint-config-next": "16.4.1",
     "gsap": "3.12.5",
     "jsdom": "^29.0.2",
+    "pg": "^8.23.1",
     "playwright-core": "1.48.2",
     "prisma": "^6",
     "shadcn": "^4.3.1",

@@ -14,17 +14,33 @@
 # Clever Cloud — GestBAT a vu un push « réussi » ne lancer aucun build : il
 # relit le commit servi (`clever status`) et appelle l'application.
 #
+# Il se suffit à lui-même (2026-11-13) : la préproduction est désignée par son
+# IDENTIFIANT, écrit ici, et son adresse aussi. Rien à savoir par cœur, rien à
+# relier à la main — une session d'un autre poste avait dû deviner les deux.
+# Le dossier est relié à Clever Cloud au besoin (`clever link`, fichier local
+# `.clever.json`, ignoré par git), puis l'alias est RELU : s'il désigne une
+# autre application que celle attendue, refus. Le compte Clever Cloud porte
+# aussi RiskBoard ; ce script ne peut pas l'atteindre.
+#
 # Variables :
 #   BRANCHE                 branche déployée (défaut : cc)
-#   CC_APP_PREPROD          alias de l'application de préproduction (défaut : rojer-preprod)
-#   CC_APP_PROD             alias de l'application de production (défaut : rojer)
-#   URL_PREPROD, URL_PROD   adresse publique, pour l'appel de contrôle (requise)
+#   CC_APP_PREPROD          alias local de la préproduction (défaut : rojer-preprod)
+#   CC_APP_PROD             alias local de la production (défaut : rojer)
+#   CC_APP_PROD_ID          identifiant de l'application de production (requis
+#                           pour `prod` : elle n'existe pas encore, 2026-11-13)
+#   URL_PREPROD             adresse de la préproduction (défaut : la sienne)
+#   URL_PROD                adresse de la production (requise pour `prod`)
 set -eu
+
+APP_PREPROD_ID="app_9bbac77c-af66-4562-81a7-0257a21401ad"
+URL_PREPROD_DEFAUT="https://app-9bbac77c-af66-4562-81a7-0257a21401ad.cleverapps.io"
 
 cible="${1:-}"
 case "$cible" in
-  preprod) app="${CC_APP_PREPROD:-rojer-preprod}"; url="${URL_PREPROD:-}" ;;
-  prod)    app="${CC_APP_PROD:-rojer}";            url="${URL_PROD:-}" ;;
+  preprod) app="${CC_APP_PREPROD:-rojer-preprod}"; app_id="$APP_PREPROD_ID"
+           url="${URL_PREPROD:-$URL_PREPROD_DEFAUT}" ;;
+  prod)    app="${CC_APP_PROD:-rojer}"; app_id="${CC_APP_PROD_ID:-}"
+           url="${URL_PROD:-}" ;;
   *) echo "Usage : sh scripts/deployer-cc.sh preprod|prod" >&2; exit 2 ;;
 esac
 branche="${BRANCHE:-cc}"
@@ -33,7 +49,8 @@ refus() { echo "Refusé : $1" >&2; exit 1; }
 
 command -v clever >/dev/null || refus "la CLI clever n'est pas installée (npm i -g clever-tools)."
 command -v gh >/dev/null || refus "la CLI gh n'est pas installée : impossible de lire la CI."
-[ -n "$url" ] || refus "adresse de la cible absente (URL_PREPROD ou URL_PROD)."
+[ -n "$url" ] || refus "adresse de la cible absente (URL_PROD)."
+[ -n "$app_id" ] || refus "identifiant de l'application absent (CC_APP_PROD_ID)."
 
 [ "$(git branch --show-current)" = "$branche" ] || refus "on n'est pas sur la branche $branche."
 [ -z "$(git status --porcelain)" ] || refus "l'arbre de travail est modifié."
@@ -61,6 +78,21 @@ build=$(gh run list --commit "$sha" --workflow tests.yml --json databaseId --jq 
 etat_build=$(gh run view "$build" --json jobs --jq '.jobs[] | select(.name == "build-cc") | .conclusion')
 [ "$etat_build" = "success" ] || refus "le job build-cc de $court n'a pas réussi (« ${etat_build:-absent} »)."
 echo "CI verte pour $court, build Clever Cloud compris."
+
+# L'application que l'alias de CE dossier désigne, lue dans `.clever.json`.
+alias_relie() {
+  [ -f .clever.json ] || return 0
+  tr -d '\n' < .clever.json | tr '}' '\n' | grep "\"alias\": *\"$app\"" |
+    sed -E 's/.*"app_id": *"([^"]*)".*/\1/' | head -1
+}
+relie=$(alias_relie)
+if [ -z "$relie" ]; then
+  clever link "$app_id" --alias "$app" >/dev/null ||
+    refus "impossible de relier ce dossier à $app_id (clever login ?)."
+  relie=$(alias_relie)
+fi
+[ "$relie" = "$app_id" ] ||
+  refus "l'alias $app de ce dossier désigne « ${relie:-rien} », pas $app_id : ce n'est pas l'application attendue."
 
 echo "Déploiement de $court ($branche) sur ${app}…"
 # `rebuild` : un commit déjà poussé chez Clever Cloud est reconstruit au lieu
