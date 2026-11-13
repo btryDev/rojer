@@ -623,7 +623,9 @@ export const obligationsConformite: Obligation[] = [
 // porteur, 102 + 1 = 103 équipement, 93 établissement, 14 salarié ; 18 au
 // niveau audit, 192 suivies ; 23 domaines — remesuré en appelant
 // `obligationsConformite`, `porteurDe` et `estNiveauAudit`.
-export const REFERENTIEL_VERSION = "2026-11-13.2";
+// `2026-11-13.3` (revue de #311) : l'escalier mécanique de l'hôtel de 5ᵉ
+// entre à PO 1 § 3 ; 210 inchangé.
+export const REFERENTIEL_VERSION = "2026-11-13.3";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

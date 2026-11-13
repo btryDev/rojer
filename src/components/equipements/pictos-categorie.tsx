@@ -2,10 +2,11 @@
 // l'escalier mécanique s'y ajoute~~ cinq, l'escalier mécanique et la colonne
 // sèche s'y ajoutent.]
 //
-// Treize des seize catégories d'équipement trouvent leur dessin dans lucide
+// ~~Treize des seize catégories d'équipement trouvent leur dessin dans lucide
 // (l'extincteur, le ventilateur, le manomètre, le fût, le chariot…). Trois
 // n'y sont pas : la hotte professionnelle, l'ascenseur et le portail
-// motorisé. Les laisser retomber sur une icône approchante — un chapeau de
+// motorisé.~~ [2026-11-13 : lucide n'a pas non plus l'escalier mécanique ni la
+// colonne sèche — cinq dessins ici.] Les laisser retomber sur une icône approchante — un chapeau de
 // cuisinier pour la hotte, une double flèche pour l'ascenseur, une barrière
 // pour le portail — était exactement ce qui avait fait retirer la première
 // planche de pictos : un dessin d'une autre famille, qui ne nomme pas la

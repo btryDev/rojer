@@ -420,6 +420,11 @@ export const obligationsIncendie: Obligation[] = [
       "RIA",
       "INSTALLATION_GAZ",
       "COLONNE_SECHE",
+      // 2026-11-13, revue de #311 : PO 1 § 3 vise « l'ensemble des
+      // installations techniques » et n'excepte que l'ascenseur (AS 9) ; sans
+      // cette ligne, l'hôtel de 5ᵉ, que PE 4 exclut, n'avait rien pour son
+      // escalier mécanique.
+      "ESCALIER_MECANIQUE",
     ],
     geste: "verification_periodique",
     // ~~Une scission au sens de `succedeA` : la population « hôtel de 5ᵉ~~

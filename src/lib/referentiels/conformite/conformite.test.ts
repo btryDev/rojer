@@ -2067,6 +2067,10 @@ describe("référentiel conformité — version et empreinte", () => {
     // (MS 73 § 2, N1–N4), et la catégorie ajoutée à PE 4 § 2 et PO 1 § 3.
     // 209 + 1 − 0 = 210, relevée en appelant `empreinteReferentiel()`.
     { version: "2026-11-13.2", empreinte: "210-1eb1250d191530fd" },
+    // `2026-11-13.3` (revue de #311) : `ESCALIER_MECANIQUE` entre aux
+    // catégories de PO 1 § 3 (hôtel de 5ᵉ, « l'ensemble des installations
+    // techniques »). Aucune obligation ajoutée ni retirée : 210 + 0 − 0 = 210.
+    { version: "2026-11-13.3", empreinte: "210-e311a52cd4e44be4" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;

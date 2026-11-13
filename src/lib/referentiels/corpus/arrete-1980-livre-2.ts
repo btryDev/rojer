@@ -72,6 +72,11 @@ import {
 } from "./motifs-livre-2";
 import { ADRESSE_MANQUES_ANNONCES } from "./adresses";
 
+
+/** Phrase datée commune à MS 18 à MS 21 (colonnes sèches), écrite une fois. */
+const SUITE_COLONNE_SECHE_CATEGORIE =
+  " [2026-11-13 : la colonne sèche a sa catégorie d'équipement, `COLONNE_SECHE` ; sa vérification annuelle en ERP des catégories 1 à 4 (MS 73 § 2) est portée par `incendie-erp-colonne-seche-annuelle`, et en 5ᵉ par PE 4 § 2 et PO 1 § 3. L'installation elle-même reste une règle de dotation.]";
+
 export const ARRETE_1980_LIVRE_2: Corpus = {
   id: "arrete-1980-livre-2",
   intitule:
@@ -4423,7 +4428,7 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       citationCle: "§ 1. Des colonnes sèches doivent être installées dans les établissements, dès lors que des locaux à risques importants sont aménagés dans les étages dont le plancher bas est à plus de 18 mètres du niveau de la voie accessible aux engins des sapeurs-pompiers.",
       statut: "hors_perimetre",
       exclusion: "construction",
-      motif: MOTIF_DOTATION_MOYEN_DE_SECOURS + " Version future au 2027-06-01 (arrêté du 19 février 2026, art. 47) lue : même nature (installation, NF S61-759-1)." + " [2026-11-13 : la colonne sèche a sa catégorie d'équipement, `COLONNE_SECHE` ; sa vérification annuelle en ERP des catégories 1 à 4 (MS 73 § 2) est portée par `incendie-erp-colonne-seche-annuelle`, et en 5ᵉ par PE 4 § 2 et PO 1 § 3. L'installation elle-même reste une règle de dotation.]",
+      motif: MOTIF_DOTATION_MOYEN_DE_SECOURS + " Version future au 2027-06-01 (arrêté du 19 février 2026, art. 47) lue : même nature (installation, NF S61-759-1)." + SUITE_COLONNE_SECHE_CATEGORIE,
     },
     {
       ref: "MS 19",
@@ -4436,7 +4441,7 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       citationCle: "§ 1. Les raccords d'alimentation des colonnes sèches doivent être placés en des endroits facilement accessibles aux sapeurs-pompiers",
       statut: "hors_perimetre",
       exclusion: "construction",
-      motif: MOTIF_DOTATION_MOYEN_DE_SECOURS + " [2026-11-13 : la colonne sèche a sa catégorie d'équipement, `COLONNE_SECHE` ; sa vérification annuelle en ERP des catégories 1 à 4 (MS 73 § 2) est portée par `incendie-erp-colonne-seche-annuelle`, et en 5ᵉ par PE 4 § 2 et PO 1 § 3. L'installation elle-même reste une règle de dotation.]",
+      motif: MOTIF_DOTATION_MOYEN_DE_SECOURS + SUITE_COLONNE_SECHE_CATEGORIE,
     },
     {
       ref: "MS 20",
@@ -4449,7 +4454,7 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       citationCle: "Les prises d'incendie doivent être placées dans les cages d'escaliers ou dans leurs dispositifs d'accès.",
       statut: "hors_perimetre",
       exclusion: "construction",
-      motif: MOTIF_DOTATION_MOYEN_DE_SECOURS + " [2026-11-13 : la colonne sèche a sa catégorie d'équipement, `COLONNE_SECHE` ; sa vérification annuelle en ERP des catégories 1 à 4 (MS 73 § 2) est portée par `incendie-erp-colonne-seche-annuelle`, et en 5ᵉ par PE 4 § 2 et PO 1 § 3. L'installation elle-même reste une règle de dotation.]",
+      motif: MOTIF_DOTATION_MOYEN_DE_SECOURS + SUITE_COLONNE_SECHE_CATEGORIE,
     },
     {
       ref: "MS 21",
@@ -4462,7 +4467,7 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       citationCle: "Les colonnes sèches doivent être munies d'un dispositif de vidange et de purge d'air.",
       statut: "hors_perimetre",
       exclusion: "construction",
-      motif: MOTIF_DOTATION_MOYEN_DE_SECOURS + " [2026-11-13 : la colonne sèche a sa catégorie d'équipement, `COLONNE_SECHE` ; sa vérification annuelle en ERP des catégories 1 à 4 (MS 73 § 2) est portée par `incendie-erp-colonne-seche-annuelle`, et en 5ᵉ par PE 4 § 2 et PO 1 § 3. L'installation elle-même reste une règle de dotation.]",
+      motif: MOTIF_DOTATION_MOYEN_DE_SECOURS + SUITE_COLONNE_SECHE_CATEGORIE,
     },
     {
       ref: "MS 22",
