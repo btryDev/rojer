@@ -9,11 +9,15 @@ import { LABEL_DOMAINE } from "@/lib/calendrier/labels";
  * famille = une installation. Le réseau de gaz est une installation comme le
  * réseau électrique ; ce qui cuit, au gaz ou non, reste sous Cuisson.
  */
-export type FamilleEquipement = DomaineObligation | "gaz";
+export type FamilleEquipement = DomaineObligation | "gaz" | "scene";
 
 export const LABEL_FAMILLE_EQUIPEMENT: Record<FamilleEquipement, string> = {
   ...LABEL_DOMAINE,
+  // Le nom du domaine dit l'établissement ; la famille range des buts et
+  // des paniers (2026-11-13).
+  etablissement_sportif: "Équipements sportifs",
   gaz: "Gaz",
+  scene: "Scène",
 };
 
 /**
@@ -49,7 +53,7 @@ export const FAMILLE_DE_CATEGORIE: Record<CategorieEquipement, FamilleEquipement
   DEFIBRILLATEUR: "secours",
   EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC: "eau_chaude_sanitaire",
   BUT_PANIER_SPORTIF: "etablissement_sportif",
-  SCENE: "incendie",
+  SCENE: "scene",
   AUTRE: null,
 };
 
@@ -69,6 +73,10 @@ export const RANGEES_HORS_DE_LEURS_OBLIGATIONS: ReadonlySet<CategorieEquipement>
   // (GZ 15) et incendie (PE 4 § 2, PO 1 § 3) ; les appareils de cuisson au
   // gaz restent sous Cuisson.
   "INSTALLATION_GAZ",
+  // Même règle, même jour : une scène (plateau, accroches, éclairage
+  // scénique) est une installation à part entière. Ses obligations restent
+  // aux domaines incendie et électricité.
+  "SCENE",
 ]);
 
 /** Ce qu'un domaine pèse, pour le ranger. */
