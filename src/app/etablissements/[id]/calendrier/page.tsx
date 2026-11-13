@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { DOMAINE_DE_CATEGORIE, comparerDomaines, type PoidsDomaine } from "@/lib/equipements/domaines";
+import { FAMILLE_DE_CATEGORIE, LABEL_FAMILLE_EQUIPEMENT, comparerDomaines, type PoidsDomaine } from "@/lib/equipements/domaines";
 import type { CategorieEquipement } from "@prisma/client";
 import { notFound } from "next/navigation";
 import { ArrowUpRight, ChevronRight } from "lucide-react";
@@ -110,11 +110,6 @@ import {
 } from "@/lib/dates";
 import { obligationParId } from "@/lib/referentiels/conformite";
 import { estFormation } from "@/lib/referentiels/conformite/types";
-import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
-import {
-  domainesPresents,
-  estDomaineConnu,
-} from "@/lib/calendrier/domaines-presents";
 
 
 // Fuseau épinglé : sans lui, le numéro de jour et le mois d'une date
@@ -281,7 +276,6 @@ export default async function CalendrierPage({
 }: {
   params: Promise<{ id: string }>;
   searchParams: Promise<{
-    domaine?: string;
     urgent?: string;
     famille?: string;
     vue?: string;
@@ -291,7 +285,7 @@ export default async function CalendrierPage({
   }>;
 }) {
   const { id } = await params;
-  const { domaine, urgent, famille, batiment, annee, formation } = await searchParams;
+  const { urgent, famille, batiment, annee, formation } = await searchParams;
 
   // Rattrapage à l'affichage, AVANT toute lecture : un calendrier jamais
   // généré, périmé par un échec, ou calculé sur une version antérieure du
@@ -364,13 +358,6 @@ export default async function CalendrierPage({
     famille !== "personnel" && FAMILLES_FILTRABLES.includes(famille as FamilleEcheance)
       ? (famille as FamilleEcheance)
       : undefined;
-  // Le domaine est un attribut des contrôles : il n'a de sens que sur
-  // eux (filtre famille « Tout » ou « Contrôles »).
-  const filtreDomaine =
-    (!filtreFamille || filtreFamille === "controle") &&
-    estDomaineConnu(domaine)
-      ? (domaine as DomaineObligation)
-      : undefined;
   const filtreUrgent = urgent === "1";
   // « Personnel et formations » (décision de la propriétaire du 2026-10-24) :
   // les titres et visites des salariés (famille `personnel`) et les
@@ -378,9 +365,8 @@ export default async function CalendrierPage({
   const filtreFormation = formation === "1" || famille === "personnel";
 
   // Second temps : ce que le filtre borne.
-  const [verifsBruts, etat, verifsDuLieu] = await Promise.all([
+  const [verifsBruts, etat] = await Promise.all([
       listerVerifications(id, {
-        domaine: filtreDomaine,
         urgentsSeulement: filtreUrgent,
         batimentId: filtreBatiment,
       }),
@@ -388,12 +374,6 @@ export default async function CalendrierPage({
       // les occurrences sans date de tout le dossier au-dessus d'une liste
       // restreinte à un bâtiment.
       compterEtatCalendrier(id, aujourdhui, { batimentId: filtreBatiment }),
-      // Les lignes du lieu SANS filtre de domaine ni d'urgence : elles ne
-      // servent qu'à savoir quels domaines proposer au filtre. Les lire sur
-      // `verifsBruts` ferait disparaître de la liste des choix tous les
-      // domaines sauf celui qu'on vient de choisir. Dans le même
-      // `Promise.all`, donc sans allonger le rendu.
-      listerVerifications(id, { batimentId: filtreBatiment }),
     ]);
   const prudence = retenueParPrudence(marquesAConfirmer.parObligation);
   // La lecture par équipement suit le même bâtiment que le reste.
@@ -408,8 +388,8 @@ export default async function CalendrierPage({
     ),
   );
 
-  // Cohabitation des familles : le filtre famille partitionne, le
-  // domaine implique « contrôles », l'urgence garde le dépassé partout.
+  // Cohabitation des familles : le filtre famille partitionne, l'urgence
+  // garde le dépassé partout.
   //
   // Le flux des vérifications porte DEUX familles (ADR-016, ADR-023) : le
   // filtre s'y lit ligne par ligne, sur la famille déduite du porteur, et
@@ -427,14 +407,13 @@ export default async function CalendrierPage({
     return o !== undefined && estFormation(o);
   });
   // Les échéances du registre suivent le filtre famille — y compris la
-  // famille « controle » (analyses légionelles). Seul le filtre domaine
-  // les écarte : il qualifie le référentiel d'équipements, rien d'autre.
+  // famille « controle » (analyses légionelles).
   // Le bâtiment, lui, laisse passer ce qui concerne tout l'établissement
   // (ADR-019) : masquer la mise à jour du DUERP sous « Réserve » ferait
   // mentir le calendrier par omission.
   // Les échéances du registre (DUERP, permis de feu…) ne sont pas des
   // formations : le filtre Formations les écarte aussi.
-  const autresVisibles = filtreDomaine || filtreFormation
+  const autresVisibles = filtreFormation
     ? []
     : filtrerParBatiment(
         autresEcheances.filter(
@@ -749,10 +728,10 @@ export default async function CalendrierPage({
   {
     const poids = new Map<string, PoidsDomaine>();
     for (const g of groupesEquipement) {
-      const d = DOMAINE_DE_CATEGORIE[g.categorieCode as CategorieEquipement];
+      const d = FAMILLE_DE_CATEGORIE[g.categorieCode as CategorieEquipement];
       // Sans domaine (catégorie « Autre ») : un intitulé « Autres » quand
       // même, sinon le groupe se lirait sous le domaine précédent (revue).
-      g.domaine = d ? LABEL_DOMAINE[d] : AUTRES;
+      g.domaine = d ? LABEL_FAMILLE_EQUIPEMENT[d] : AUTRES;
       const cle = g.domaine;
       const p = poids.get(cle) ?? { libelle: d ? g.domaine : null, enRetard: 0, proche: 0 };
       p.enRetard += g.enRetard;
@@ -1156,14 +1135,9 @@ export default async function CalendrierPage({
       <FiltresCalendrier
         baseHref={baseHref}
         famillesDisponibles={famillesPresentes}
-        domaines={domainesPresents(verifsDuLieu).map((d) => ({
-          id: d,
-          label: LABEL_DOMAINE[d],
-        }))}
         batiments={batiments}
         filtres={{
           famille: filtreFamille,
-          domaine: filtreDomaine,
           urgent: filtreUrgent,
           formation: filtreFormation,
           batiment: filtreBatiment,
@@ -1412,8 +1386,8 @@ export default async function CalendrierPage({
                   Rien ne correspond à ces filtres
                 </p>
                 <p className="m-0 max-w-[560px] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-                  Vos échéances existent, mais aucune ne relève de la famille,
-                  du domaine ou de l&apos;urgence sélectionnés.
+                  Vos échéances existent, mais aucune ne correspond au type,
+                  à la zone ou à l&apos;urgence sélectionnés.
                 </p>
                 <Link
                   href={baseHref}
