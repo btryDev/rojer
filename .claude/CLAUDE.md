@@ -1,9 +1,13 @@
 # CLAUDE.md — Rojer, plateforme de pilotage de la prévention (TPE/PME)
 
-> **Bascule vers Clever Cloud en cours (2026-11-01).** `main` = production
+> **Bascule vers Clever Cloud en cours (2026-11-01).** ~~`main` = production
 > Vercel actuelle ; `cc` = future production (Better Auth, isolation des
-> comptes). Flux `main` → `cc` seulement. État, règles et reste à faire :
-> **`docs/etat-bascule-clever-cloud.md`** — à lire avant toute session.
+> comptes). Flux `main` → `cc` seulement.~~ [2026-11-13, décision de la
+> propriétaire : **`cc` est devenue `main`** — une seule branche, Better Auth
+> et isolation des comptes comprises. Vercel ne déploie plus rien ; la
+> préproduction est chez Clever Cloud, la production n'y existe pas encore.]
+> État, règles et reste à faire : **`docs/etat-bascule-clever-cloud.md`** — à
+> lire avant toute session.
 
 ## Vision produit
 
@@ -936,9 +940,9 @@ Les étapes 0 à 11 de `spec/PLAN.md` sont livrées. Le travail actuel dépasse 
 
 Deux gestes, deux skills du dépôt, identiques sur tous les postes (2026-11-13) :
 
-- **Déployer** — skill `deployer-preprod` : `pnpm deployer:preprod`, depuis un
-  checkout propre de `cc`. Toute fusion dans `cc` se déploie ; le script est la
-  seule porte (`scripts/deployer-cc.sh`).
+- **Déployer** — skill `deployer-preprod` : `pnpm deployer:preprod`, depuis le
+  dépôt principal sur `main` (jamais un worktree). Toute fusion dans `main` se
+  déploie ; le script est la seule porte (`scripts/deployer-cc.sh`).
 - **Lire la base** — skill `lire-preprod` : `pnpm lire-preprod connexions|activite
   <e-mail>`, lecture seule. Jamais Docker, `psql` ni `clever ssh`.
 

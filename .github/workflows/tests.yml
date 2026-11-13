@@ -64,13 +64,16 @@ jobs:
       - name: Lancer la suite
         run: pnpm vitest run --maxWorkers=2
 
-  # Le build Clever Cloud, sur la branche `cc` et ses PR (plan de bascule,
-  # § 5 bis). Sans lui, un commit qui casse `next build --webpack` ou le
+  # Le build Clever Cloud, sur la branche de déploiement et ses PR (plan de
+  # bascule, § 5 bis). [2026-11-13 : `cc` devient `main` ; `cc` reste nommée
+  # ici le temps que ses PR ouvertes soient redirigées, puis se retire.] Sans lui, un commit qui casse `next build --webpack` ou le
   # serveur autonome passerait la porte « CI verte » de
   # `scripts/deployer-cc.sh`, qui exige ce job nommément. Aucune base lue :
   # le build n'en joint aucune.
   build-cc:
-    if: github.ref == 'refs/heads/cc' || github.base_ref == 'cc'
+    if: >-
+      github.ref == 'refs/heads/main' || github.base_ref == 'main' ||
+      github.ref == 'refs/heads/cc' || github.base_ref == 'cc'
     runs-on: ubuntu-latest
 
     steps:
