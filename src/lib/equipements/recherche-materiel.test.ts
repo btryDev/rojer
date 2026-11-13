@@ -129,7 +129,11 @@ describe("la recherche de matériel (2026-10-14)", () => {
   it("trouve les matériels non suivis, et la chaudière des deux côtés", () => {
     expect(cles("chaudière")).toContain("chaudiere");
     expect(cles("escabeau")).toEqual(["echelle"]);
-    expect(cles("escalator")).toEqual(["escalier_mecanique"]);
+    // ~~`cles("escalator")` → `["escalier_mecanique"]`~~ — 2026-11-13 :
+    // l'escalier mécanique a sa catégorie ; « escalator » y mène.
+    expect(cles("escalator")).toEqual([]);
+    expect(cats("escalator")).toEqual(["ESCALIER_MECANIQUE"]);
+    expect(cats("trottoir roulant")).toEqual(["ESCALIER_MECANIQUE"]);
     expect(cles("clapet")).toEqual(["reservoir_eau"]);
     // Une catégorie suivie qu'on cherche ne fait pas surgir de matériel.
     expect(cles("extincteur")).toEqual([]);

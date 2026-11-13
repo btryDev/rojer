@@ -42,7 +42,39 @@
  *   https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000043818737/
  */
 
-import type { Obligation } from "./types";
+import type { Obligation, ReferenceLegale } from "./types";
+
+/**
+ * La borne du livre II (catégories 1 à 4), commune aux trois lignes d'AS 10 :
+ * PE 1 § 1 la fonde, GE 7 § 1 l'appuie — écrite une fois, à relire une fois
+ * le 2027-06-01 (revue de #311).
+ */
+const REFERENCES_BORNE_LIVRE_2_AS10: ReferenceLegale[] = [
+  {
+    source: "ARRETE",
+    reference:
+      "Arrêté du 25 juin 1980, art. PE 1 § 1 (le livre II, « Dispositions applicables aux établissements des quatre premières catégories », n'est pas applicable en 5ᵉ catégorie sauf renvoi exprès) — livre III",
+    article: "PE 1",
+    url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020374786",
+    note: "« Les dispositions du livre II ne sont pas applicables sauf celles relevant d'articles expressément mentionnés dans la suite du présent livre. » (§ 1, second alinéa). AS 10 est au livre II, dont le titre est « Livre II : Dispositions applicables aux établissements des quatre premières catégories. » : c'est le premier fondement de la restriction aux catégories 1 à 4. PE 1 relu le 2026-10-07 par l'API Légifrance (PISTE) en BAC À SABLE : LEGIARTI000020374786, en vigueur depuis le 1990-08-27, aucune version future ; le titre du livre relu le même jour sur le plan du texte (LEGISCTA000020303869), inchangé dans le plan au 2027-06-15.",
+    versionConstatee: "1990-08-27",
+  },
+  {
+    source: "ARRETE",
+    reference:
+      "Arrêté du 25 juin 1980, art. GE 7 § 1 (organismes agréés dans les établissements des 1re, 2e, 3e et 4e catégories)",
+    article: "GE 7",
+    url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020380174",
+    note: "Appuie la restriction aux quatre premières catégories, qu'AS 10 n'écrit pas et que PE 1 § 1 fonde d'abord : « § 1. Les vérifications techniques doivent être effectuées par des organismes agréés par le ministre de l'intérieur : […] -dans tous les établissements des 1re, 2e, 3e et 4e catégories, lorsque les dispositions du présent règlement l'imposent ». Relu le 2026-10-07 en bac à sable PISTE : version LEGIARTI000020380174 (2007-11-19), à abrogation différée au 2027-06-01 — la version suivante (LEGIARTI000053564573, arrêté du 19 février 2026) ne mentionne plus les catégories.",
+    versionConstatee: "2007-11-19",
+  },
+];
+
+const RELECTURE_GE7_AS10: Obligation["relectureDue"] = {
+    le: "2027-06-01",
+    motif:
+      "La restriction aux catégories 1 à 4 tient d'abord à PE 1 § 1 (le livre II n'est pas applicable en 5ᵉ catégorie sauf renvoi exprès) et au titre du livre II (« Dispositions applicables aux établissements des quatre premières catégories »), inchangé dans le plan du texte au 2027-06-15. GE 7 § 1, qui l'appuie en nommant les catégories, est réécrit au 1er juin 2027 (arrêté du 19 février 2026, LEGIARTI000053564573) : la nouvelle rédaction vise « les établissements soumis aux dispositions du présent livre » — le livre II — et garde la borne par ce renvoi. Relire GE 7, AS 10 et le titre du livre II en vigueur à cette date pour le confirmer.",
+  };
 
 export const obligationsAscenseurs: Obligation[] = [
   {
@@ -352,6 +384,116 @@ export const obligationsAscenseurs: Obligation[] = [
     },
     notesInternes:
       "CRÉÉE LE 2026-10-07 avec `ascenseur-erp-verification-quinquennale-as9`. Le corpus d'AS 9 disait depuis le 2026-09-04 que ce second titre « n'est porté par rien » parce que la nature événementielle n'avait « AUCUNE surface ». ~~aucune surface~~ [2026-10-07 : faux depuis l'ADR-037 (2026-09-21) — une obligation événementielle portée par un équipement se montre sur la fiche de l'appareil, `estDeclencheeParUnFait`, surface `faits` de `surfaces/obligations-sans-surface.ts`]. Le blocage étant levé, la ligne est encodée.\n\nNATURE : ÉVÉNEMENTIELLE (ADR-026), `periodicite: \"autre\"`. Le fait — une transformation importante — n'est pas observé par le produit : il ne date ni ne solde l'échéance, comme `froid-controle-etancheite-apres-modification`. Ce qu'est une « transformation importante » n'est pas défini par AS 9 ; le libellé reprend les mots du texte sans les préciser.\n\nUne seule phrase d'AS 9 porte deux titres ; la règle de résolution de `types.ts` (encoder celui qui oblige à refaire l'acte) aurait rangé la phrase entière en échéance récurrente et fait disparaître celui-ci. Deux lignes, chacune avec son titre, ne se recouvrent pas : même article, même appareil, périodicités différentes.",
+  },
+  // ---------------------------------------------------------------------------
+  // Escaliers mécaniques et trottoirs roulants — AS 10 (2026-11-13)
+  // ---------------------------------------------------------------------------
+  {
+    // CRÉÉE LE 2026-11-13 — décision de la propriétaire, sur le patron
+    // d'`ascenseur-erp-verification-quinquennale-as9`.
+    id: "escalier-mecanique-erp-verification-annuelle-as10",
+    domaine: "ascenseur",
+    libelle:
+      "Vérification annuelle de l'escalier mécanique ou du trottoir roulant par une personne ou un organisme agréé (ERP des quatre premières catégories)",
+    description:
+      "Dans un établissement recevant du public des 1re, 2e, 3e ou 4e catégories, l'exploitant fait procéder chaque année, par une personne ou un organisme agréé, à un examen du maintien de la conformité acquise lors de la mise en service ou après une transformation importante, à un examen de l'état de conservation des éléments de l'installation et à la vérification du fonctionnement des dispositifs de sécurité de l'escalier mécanique ou du trottoir roulant.",
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. AS 10 a) (vérification annuelle par une personne ou un organisme agréé)",
+        article: "AS 10",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020382709",
+        note: "« Avant leur remise en service suite à une transformation importante, les escaliers mécaniques et les trottoirs roulants doivent faire l'objet d'une vérification, fonctionnement compris, par une personne ou un organisme agréé, dans les conditions prévues à la section II du chapitre Ier du présent titre. En outre, l'exploitant est tenu de faire procéder : a) Annuellement, par une personne ou un organisme agréé : - à un examen du maintien de la conformité acquise lors de la mise en service ou après une transformation importante ; - à un examen de l'état de conservation des éléments de l'installation ; - à la vérification du fonctionnement des dispositifs de sécurité. b) Au milieu de la période annuelle ci-dessus, à un examen supplémentaire des chaînes et crémaillères, par le service ou l'entreprise chargé de l'entretien. » Relu le 2026-11-13 par l'API Légifrance (PISTE) en environnement BAC À SABLE : version LEGIARTI000020382709 en vigueur depuis le 2007-09-28, aucune version future.",
+        versionConstatee: "2007-09-28",
+      },
+      ...REFERENCES_BORNE_LIVRE_2_AS10,
+    ],
+    periodicite: "annuelle",
+    nature: "echeance_recurrente",
+    pieceAttendue: null,
+    usageEcran: null,
+    realisateurs: ["organisme_agree"],
+    criticite: 5,
+    transmet: [],
+    typologies: { erp: { categories: ["N1", "N2", "N3", "N4"] } },
+    categoriesEquipement: ["ESCALIER_MECANIQUE"],
+    relectureDue: RELECTURE_GE7_AS10,
+    notesInternes:
+      "CRÉÉE LE 2026-11-13, décision de la propriétaire : la catégorie `ESCALIER_MECANIQUE` entre au parc, et les trois actes d'AS 10 ont chacun leur ligne. AS 10 était `non_couvert` au corpus, annoncé dans l'entrée `escalier_mecanique` des matériels non couverts, faute de catégorie ; son motif refusait d'accrocher AS 10 à `ASCENSEUR` (« leurs régimes ne coïncident sur rien »). Une catégorie à part, donc, et non `ASCENSEUR`.\n\nTEXTE relu le 2026-11-13 par l'API Légifrance (PISTE, bac à sable) : LEGIARTI000020382709, en vigueur depuis le 2007-09-28, pas de version future.\n\nRESTRICTION N1–N4. AS 10 ne nomme aucune catégorie ; même fondement que les deux lignes d'AS 9 : la place de l'article au livre II, dont PE 1 § 1 écarte la 5ᵉ catégorie sauf renvoi exprès, appuyée par GE 7 § 1. `relectureDue` au 2027-06-01, comme AS 9. En 5ᵉ catégorie, l'appareil entre dans l'entretien triennal de PE 4 § 2 (« ascenseurs, moyens de secours, etc. », liste non limitative), `incendie-erp-pe4-entretien-installations-techniques`, où `ESCALIER_MECANIQUE` est ajoutée le même jour.\n\nHORS ERP : aucune ligne. Aucun texte lu ne vise l'appareil hors du règlement de sécurité ; l'aide de la catégorie le dit.\n\nRÉALISATEUR `organisme_agree` : « par une personne ou un organisme agréé ». Le référentiel n'a pas de valeur « personne agréée » ; `organisme_agree` porte le mot du texte, agréé.\n\nPAS DE `geste` : aucune autre ligne ne vise l'appareil sous la même typologie (PE 4 § 2 est en 5ᵉ seulement).\n\nCe qui n'est pas suivi, dit dans l'aide de la catégorie : l'entretien par un personnel spécialisé (AS 8, `non_couvert`), le registre technique et les pancartes d'arrêt (AS 11).",
+  },
+  {
+    // CRÉÉE LE 2026-11-13 — le b) d'AS 10.
+    id: "escalier-mecanique-erp-examen-chaines-cremailleres",
+    domaine: "ascenseur",
+    libelle:
+      "Examen des chaînes et crémaillères de l'escalier mécanique ou du trottoir roulant, au milieu de la période annuelle (ERP des quatre premières catégories)",
+    description:
+      "Dans un établissement recevant du public des 1re, 2e, 3e ou 4e catégories, l'exploitant fait procéder, au milieu de la période annuelle qui sépare deux vérifications annuelles, à un examen supplémentaire des chaînes et crémaillères de l'escalier mécanique ou du trottoir roulant, par le service ou l'entreprise chargé de l'entretien. Un examen par an : à programmer à mi-chemin entre deux vérifications annuelles, ce que Rojer ne date pas lui-même.",
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. AS 10 b) (examen supplémentaire des chaînes et crémaillères au milieu de la période annuelle)",
+        article: "AS 10",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020382709",
+        note: "« b) Au milieu de la période annuelle ci-dessus, à un examen supplémentaire des chaînes et crémaillères, par le service ou l'entreprise chargé de l'entretien. » Relu le 2026-11-13 en bac à sable PISTE (LEGIARTI000020382709, 2007-09-28).",
+        versionConstatee: "2007-09-28",
+      },
+      ...REFERENCES_BORNE_LIVRE_2_AS10,
+    ],
+    periodicite: "annuelle",
+    nature: "echeance_recurrente",
+    pieceAttendue: null,
+    usageEcran: null,
+    // L'entreprise d'entretien, comme pour les examens d'entretien de
+    // l'ascenseur (`ascenseur-examen-semestriel-secours`).
+    realisateurs: ["personne_qualifiee"],
+    criticite: 5,
+    transmet: [],
+    typologies: { erp: { categories: ["N1", "N2", "N3", "N4"] } },
+    categoriesEquipement: ["ESCALIER_MECANIQUE"],
+    relectureDue: RELECTURE_GE7_AS10,
+    notesInternes:
+      "CRÉÉE LE 2026-11-13, décision de la propriétaire, avec `escalier-mecanique-erp-verification-annuelle-as10` : le b) d'AS 10, un second acte, une seconde date, un autre réalisateur.\n\n~~RYTHME SEMESTRIEL, DÉCISION DE LA PROPRIÉTAIRE, ET IL SUR-APPLIQUE. Le texte demande UN examen supplémentaire « au milieu de la période annuelle » — à six mois de la vérification annuelle, une fois par an. Le modèle n'a pas de rythme « annuel décalé de six mois » ; semestriel, l'examen revient aussi à la date de la vérification annuelle : un examen de plus par an, fait par l'entreprise d'entretien, visible et sans organisme tiers. L'erreur inverse (annuelle) aurait pu tomber le même jour que la vérification et ôter au b) son sens. La description le dit au dirigeant. Réserve (2) d'AS 10 au corpus.~~ [2026-11-13, décision de la propriétaire : ANNUEL, comme le texte — « au milieu de la période annuelle », un examen par an. Le modèle ne sait pas décaler l'échéance de six mois : la description demande de le programmer à mi-chemin entre deux vérifications annuelles ; Rojer ne le date pas lui-même.]\n\nRÉALISATEUR `personne_qualifiee` : « par le service ou l'entreprise chargé de l'entretien » — comme les examens d'entretien de l'ascenseur (`ascenseur-examen-semestriel-secours`). Le service interne de l'établissement en fait partie ; le référentiel n'a pas de valeur plus juste.\n\nRESTRICTION N1–N4 : même fondement que la ligne annuelle (PE 1 § 1, GE 7 § 1).",
+  },
+  {
+    // CRÉÉE LE 2026-11-13 — premier titre d'AS 10, événementiel, sur le
+    // patron d'`ascenseur-erp-verification-remise-en-service-as9`.
+    id: "escalier-mecanique-erp-verification-remise-en-service-as10",
+    domaine: "ascenseur",
+    libelle:
+      "Vérification de l'escalier mécanique ou du trottoir roulant par une personne ou un organisme agréé avant sa remise en service après une transformation importante (ERP des quatre premières catégories)",
+    description:
+      "Dans un établissement recevant du public des 1re, 2e, 3e ou 4e catégories, un escalier mécanique ou un trottoir roulant qui a subi une transformation importante est vérifié, fonctionnement compris, par une personne ou un organisme agréé avant sa remise en service.",
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. AS 10 (vérification avant remise en service suite à une transformation importante)",
+        article: "AS 10",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020382709",
+        note: "« Avant leur remise en service suite à une transformation importante, les escaliers mécaniques et les trottoirs roulants doivent faire l'objet d'une vérification, fonctionnement compris, par une personne ou un organisme agréé, dans les conditions prévues à la section II du chapitre Ier du présent titre. » Relu le 2026-11-13 en bac à sable PISTE (LEGIARTI000020382709, 2007-09-28).",
+        versionConstatee: "2007-09-28",
+      },
+      ...REFERENCES_BORNE_LIVRE_2_AS10,
+    ],
+    periodicite: "autre",
+    nature: "evenementielle",
+    pieceAttendue: null,
+    usageEcran: null,
+    // Pas de `faitGenerateur`, comme pour AS 9 : facultatif hors
+    // établissement, et la garde des mots du texte lirait alors aussi le
+    // libellé, qui porte la borne « (ERP des quatre premières catégories) »
+    // — des mots que l'article n'écrit pas. Le fait est dit par la description.
+    realisateurs: ["organisme_agree"],
+    criticite: 5,
+    transmet: [],
+    typologies: { erp: { categories: ["N1", "N2", "N3", "N4"] } },
+    categoriesEquipement: ["ESCALIER_MECANIQUE"],
+    relectureDue: RELECTURE_GE7_AS10,
+    notesInternes:
+      "CRÉÉE LE 2026-11-13, décision de la propriétaire, sur le patron d'`ascenseur-erp-verification-remise-en-service-as9`.\n\nNATURE : ÉVÉNEMENTIELLE (ADR-026), `periodicite: \"autre\"`. Le fait — une transformation importante — n'est pas observé par le produit : il ne date ni ne solde l'échéance. Ce qu'est une « transformation importante » n'est pas défini par AS 10 ; le libellé reprend les mots du texte sans les préciser. La ligne se montre sur la fiche de l'appareil (ADR-037, surface `faits`).\n\nPAS DE `faitGenerateur`, comme AS 9 (facultatif hors établissement) : le libellé porte la borne des catégories, que la garde des mots du texte refuserait.\n\nRÉALISATEUR `organisme_agree` : « par une personne ou un organisme agréé », comme la ligne annuelle.",
   },
   {
     id: "ascenseur-carnet-entretien",

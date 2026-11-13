@@ -234,7 +234,7 @@ export const obligationsIncendie: Obligation[] = [
     libelle:
       "Entretien et vérification de l'installation, tous les trois ans au plus (ERP 5ᵉ catégorie)",
     description:
-      "Tous les trois ans au plus, l'exploitant procède ou fait procéder, par des techniciens compétents, aux opérations d'entretien et de vérification de l'ensemble des installations et équipements techniques de son établissement. Rojer suit cette obligation sur chaque installation déclarée que le texte vise : électricité, alarme, désenfumage, appareils de cuisson, installation de gaz, ascenseurs, extincteurs et robinets d'incendie armés. Le texte finit par « etc. » : la liste n'est pas limitative. Quand une autre vérification de la même installation a un rythme plus court — la vérification annuelle d'un extincteur, par exemple —, Rojer les suit sur une seule ligne, au rythme le plus court.",
+      "Tous les trois ans au plus, l'exploitant procède ou fait procéder, par des techniciens compétents, aux opérations d'entretien et de vérification de l'ensemble des installations et équipements techniques de son établissement. Rojer suit cette obligation sur chaque installation déclarée que le texte vise : électricité, alarme, désenfumage, appareils de cuisson, installation de gaz, ascenseurs, escaliers mécaniques et trottoirs roulants, extincteurs, robinets d'incendie armés et colonnes sèches. Le texte finit par « etc. » : la liste n'est pas limitative. Quand une autre vérification de la même installation a un rythme plus court — la vérification annuelle d'un extincteur, par exemple —, Rojer les suit sur une seule ligne, au rythme le plus court.",
     referencesLegales: [
       {
         source: "ARRETE",
@@ -321,8 +321,18 @@ export const obligationsIncendie: Obligation[] = [
     // apparaître que dans les équipements ». Les catégories sont l'ancien
     // contexte (les installations que le texte cite), plus `INSTALLATION_GAZ`
     // — PE 4 a absorbé l'ancienne ligne gaz, et la catégorie est née
-    // après la liste (2026-10-14). Pas d'autre élargissement : le texte finit
-    // par « etc. », la liste reste celle que le préventeur a relue.
+    // après la liste (2026-10-14). ~~Pas d'autre élargissement : le texte finit
+    // par « etc. », la liste reste celle que le préventeur a relue.~~
+    // [2026-11-13, décision de la propriétaire : `ESCALIER_MECANIQUE` entre,
+    // sa catégorie née le même jour. PE 4 § 2 (LEGIARTI000053027822, en
+    // vigueur depuis le 2026-07-01) cite « ascenseurs, moyens de secours,
+    // etc. » : la liste n'est pas limitative, et l'escalier mécanique est une
+    // installation technique de l'établissement, voisine de l'ascenseur au
+    // chapitre IX du livre II. Pas d'autre ligne en 5ᵉ sur l'appareil : sa
+    // ligne PE 4 est triennale, seule de son geste.]
+    // [2026-11-13, même décision : `COLONNE_SECHE` entre — un « moyen de
+    // secours » au sens de la même phrase. En 5ᵉ, sa vérification annuelle
+    // de MS 73 § 2 ne s'applique pas (livre II) : la ligne PE 4 est la sienne.]
     categoriesEquipement: [
       "INSTALLATION_ELECTRIQUE",
       "ALARME_INCENDIE",
@@ -332,11 +342,13 @@ export const obligationsIncendie: Obligation[] = [
       "EXTINCTEUR",
       "RIA",
       "INSTALLATION_GAZ",
+      "ESCALIER_MECANIQUE",
+      "COLONNE_SECHE",
     ],
     geste: "verification_periodique",
     notesInternes:
       NOTE_GROUPE_5E_RAYEE +
-      "PORTÉE PAR L'APPAREIL DEPUIS LE 2026-11-05 (ADR-057, décision de la propriétaire). Une ligne par installation déclarée des catégories visées. Sur un extincteur, un RIA, une alarme, un désenfumage ou un appareil de cuisson, la vérification annuelle ERP (sur-appliquée en 5ᵉ, voir ses notes) porte le même geste : une seule ligne, annuelle, qui cite les deux textes — PE 4 § 2 en devient le fondement en 5ᵉ catégorie. Sur l'installation électrique, l'ascenseur et l'installation de gaz, PE 4 § 2 fait sa propre ligne triennale : la vérification électrique du Code du travail et les contrôles de l'ascenseur restent distincts (décision de la propriétaire), et `GZ 15` ne vise que les catégories 1 à 4. La ligne d'établissement d'avant est archivée par la passe de reprise ; chaque appareil reprend son dernier rapport s'il était déclaré à sa date (`heritageDesRetirees`, dispersion).\n\n~~Porteur établissement (ADR-022) — c'est l'obligation qui a motivé le chantier.~~ [2026-11-05, ADR-057.]\n\nVersion relue sur Légifrance le 2026-08-27 : PE 4 est en vigueur dans sa rédaction du 2026-07-01 (arrêté du 1er décembre 2025). Le § 2 disait « En cours d'exploitation » ; il dit désormais « Tous les trois ans AU PLUS ». La périodicité triennale est donc écrite dans le texte, elle n'est plus déduite.\n\nChamp d'application, par renvoi : PE 2 § 3, dans sa version du 2026-01-01 (même arrêté), maintient « PE 4, PE 10 B, PE 24 § 1, PE 26 § 1 et PE 27 » pour les établissements recevant au plus 19 personnes. La rédaction antérieure ne maintenait que « PE 4 § 2 et § 3 ». Le champ s'est donc élargi, et l'argument tient a fortiori : l'obligation atteint les établissements qui ont le MOINS déclaré, ceux-là mêmes chez qui une décomposition par installation ne produirait aucune ligne.\n\n~~`equipementsEnContexte` n'est pas un déclencheur~~ [2026-11-05, ADR-057 : ce sont désormais les déclencheurs, `categoriesEquipement`] : ce sont les installations que le texte cite (« chauffage, éclairage, installations électriques, appareils de cuisson, circuits d'extraction, ascenseurs, moyens de secours »), affichées pour aider le dirigeant à voir ce qui est visé chez lui. Le texte finit par « etc. » — l'interface accompagne la liste de la mention « non limitative », et il ne faut pas la refermer.\n\nCe que cette ligne ne fait PAS : elle ne lève aucune des neuf sur-applications du Livre II — six ici, trois dans `electricite.ts`. Leurs notes annoncent « à reprendre lorsque le référentiel saura porter PE 4 § 2 » — le référentiel le sait désormais, mais savoir le porter n'est que la moitié de la condition. L'autre moitié est un point de droit, article par article : le Code du travail fonde-t-il chacune d'elles indépendamment du classement ERP ? Tant que cette relecture n'est pas faite sur Légifrance, retirer les lignes détruirait chez l'utilisateur des échéances dont on n'a pas établi qu'elles ne sont pas dues. Voir la note commune de ces neuf lignes.\n\nLe chapeau neuf de PE 4 (installations de gaz neuves ou modifiées, renvoi à PE 10 B, applicable au 2026-07-01) n'est pas encodé ici : c'est une vérification à la construction ou après travaux, pas une échéance récurrente. À instruire à part.",
+      "PORTÉE PAR L'APPAREIL DEPUIS LE 2026-11-05 (ADR-057, décision de la propriétaire). Une ligne par installation déclarée des catégories visées. Sur un extincteur, un RIA, une alarme, un désenfumage ou un appareil de cuisson, la vérification annuelle ERP (sur-appliquée en 5ᵉ, voir ses notes) porte le même geste : une seule ligne, annuelle, qui cite les deux textes — PE 4 § 2 en devient le fondement en 5ᵉ catégorie. Sur l'installation électrique, l'ascenseur et l'installation de gaz, PE 4 § 2 fait sa propre ligne triennale : la vérification électrique du Code du travail et les contrôles de l'ascenseur restent distincts (décision de la propriétaire), et `GZ 15` ne vise que les catégories 1 à 4. [2026-11-13 : l'escalier mécanique et le trottoir roulant (`ESCALIER_MECANIQUE`, décision de la propriétaire) s'y ajoutent, avec leur propre ligne triennale : AS 10 ne vise que les catégories 1 à 4.] [2026-11-13 : la colonne sèche (`COLONNE_SECHE`) aussi, avec sa propre ligne triennale : `incendie-erp-colonne-seche-annuelle` (MS 73 § 2) ne vise que les catégories 1 à 4.] La ligne d'établissement d'avant est archivée par la passe de reprise ; chaque appareil reprend son dernier rapport s'il était déclaré à sa date (`heritageDesRetirees`, dispersion).\n\n~~Porteur établissement (ADR-022) — c'est l'obligation qui a motivé le chantier.~~ [2026-11-05, ADR-057.]\n\nVersion relue sur Légifrance le 2026-08-27 : PE 4 est en vigueur dans sa rédaction du 2026-07-01 (arrêté du 1er décembre 2025). Le § 2 disait « En cours d'exploitation » ; il dit désormais « Tous les trois ans AU PLUS ». La périodicité triennale est donc écrite dans le texte, elle n'est plus déduite.\n\nChamp d'application, par renvoi : PE 2 § 3, dans sa version du 2026-01-01 (même arrêté), maintient « PE 4, PE 10 B, PE 24 § 1, PE 26 § 1 et PE 27 » pour les établissements recevant au plus 19 personnes. La rédaction antérieure ne maintenait que « PE 4 § 2 et § 3 ». Le champ s'est donc élargi, et l'argument tient a fortiori : l'obligation atteint les établissements qui ont le MOINS déclaré, ceux-là mêmes chez qui une décomposition par installation ne produirait aucune ligne.\n\n~~`equipementsEnContexte` n'est pas un déclencheur~~ [2026-11-05, ADR-057 : ce sont désormais les déclencheurs, `categoriesEquipement`] : ce sont les installations que le texte cite (« chauffage, éclairage, installations électriques, appareils de cuisson, circuits d'extraction, ascenseurs, moyens de secours »), affichées pour aider le dirigeant à voir ce qui est visé chez lui. Le texte finit par « etc. » — l'interface accompagne la liste de la mention « non limitative », et il ne faut pas la refermer.\n\nCe que cette ligne ne fait PAS : elle ne lève aucune des neuf sur-applications du Livre II — six ici, trois dans `electricite.ts`. Leurs notes annoncent « à reprendre lorsque le référentiel saura porter PE 4 § 2 » — le référentiel le sait désormais, mais savoir le porter n'est que la moitié de la condition. L'autre moitié est un point de droit, article par article : le Code du travail fonde-t-il chacune d'elles indépendamment du classement ERP ? Tant que cette relecture n'est pas faite sur Légifrance, retirer les lignes détruirait chez l'utilisateur des échéances dont on n'a pas établi qu'elles ne sont pas dues. Voir la note commune de ces neuf lignes.\n\nLe chapeau neuf de PE 4 (installations de gaz neuves ou modifiées, renvoi à PE 10 B, applicable au 2026-07-01) n'est pas encodé ici : c'est une vérification à la construction ou après travaux, pas une échéance récurrente. À instruire à part.",
   },
   {
     id: "incendie-hotel-po-controle-biennal-installations",
@@ -344,7 +356,7 @@ export const obligationsIncendie: Obligation[] = [
     libelle:
       "Entretien et contrôle de l'installation, tous les deux ans (hôtel de 5ᵉ catégorie)",
     description:
-      "Dans un hôtel de 5ᵉ catégorie, « l'ensemble des installations techniques doit être contrôlé par un technicien compétent tous les deux ans, à l'exception des installations électriques et des systèmes de détection incendie qui doivent être contrôlés annuellement » (PO 1 § 3). Comme tout établissement de 5ᵉ catégorie, l'hôtel fait aussi procéder, au plus tous les trois ans, aux opérations d'entretien et de vérification de l'ensemble de ses installations et équipements techniques (PE 4 § 2). Rojer suit ces deux textes sur chaque installation déclarée que le texte vise — désenfumage, appareils de cuisson, installation de gaz, extincteurs et robinets d'incendie armés —, au rythme le plus court : deux ans, ou moins quand une autre vérification de la même installation est plus fréquente. Le contrôle annuel des installations électriques et des systèmes de détection incendie n'est pas sur cette ligne : Rojer en suit l'échéance sur l'installation électrique et l'alarme déclarées. Le contrôle des ascenseurs relève d'autres dispositions. Le texte dit « l'ensemble des installations techniques » : la liste n'est pas limitative.",
+      "Dans un hôtel de 5ᵉ catégorie, « l'ensemble des installations techniques doit être contrôlé par un technicien compétent tous les deux ans, à l'exception des installations électriques et des systèmes de détection incendie qui doivent être contrôlés annuellement » (PO 1 § 3). Comme tout établissement de 5ᵉ catégorie, l'hôtel fait aussi procéder, au plus tous les trois ans, aux opérations d'entretien et de vérification de l'ensemble de ses installations et équipements techniques (PE 4 § 2). Rojer suit ces deux textes sur chaque installation déclarée que le texte vise — désenfumage, appareils de cuisson, installation de gaz, extincteurs, robinets d'incendie armés et colonnes sèches —, au rythme le plus court : deux ans, ou moins quand une autre vérification de la même installation est plus fréquente. Le contrôle annuel des installations électriques et des systèmes de détection incendie n'est pas sur cette ligne : Rojer en suit l'échéance sur l'installation électrique et l'alarme déclarées. Le contrôle des ascenseurs relève d'autres dispositions. Le texte dit « l'ensemble des installations techniques » : la liste n'est pas limitative.",
     referencesLegales: [
       {
         source: "ARRETE",
@@ -397,12 +409,22 @@ export const obligationsIncendie: Obligation[] = [
     // la détection incendie du biennal, contrôlée chaque année.]
     // [2026-11-05, ADR-057 : déclencheurs et non plus contexte — la ligne est
     // portée par l'appareil ; `INSTALLATION_GAZ` entre, comme pour PE 4 § 2.]
+    // [2026-11-13, décision de la propriétaire : `COLONNE_SECHE` entre. PO 1
+    // § 3 (LEGIARTI000024770707) : « L'ensemble des installations techniques
+    // doit être contrôlé par un technicien compétent tous les deux ans » ; la
+    // colonne sèche n'est ni électrique ni de détection, elle est au biennal.]
     categoriesEquipement: [
       "DESENFUMAGE",
       "APPAREIL_CUISSON_ERP",
       "EXTINCTEUR",
       "RIA",
       "INSTALLATION_GAZ",
+      "COLONNE_SECHE",
+      // 2026-11-13, revue de #311 : PO 1 § 3 vise « l'ensemble des
+      // installations techniques » et n'excepte que l'ascenseur (AS 9) ; sans
+      // cette ligne, l'hôtel de 5ᵉ, que PE 4 exclut, n'avait rien pour son
+      // escalier mécanique.
+      "ESCALIER_MECANIQUE",
     ],
     geste: "verification_periodique",
     // ~~Une scission au sens de `succedeA` : la population « hôtel de 5ᵉ~~
@@ -414,7 +436,7 @@ export const obligationsIncendie: Obligation[] = [
     // dispersent sur les appareils (`heritageDesRetirees`).]
     notesInternes:
       NOTE_GROUPE_5E_RAYEE +
-      "PORTÉE PAR L'APPAREIL DEPUIS LE 2026-11-05 (ADR-057, décision de la propriétaire) : une ligne par installation déclarée des catégories visées. Sur un extincteur, un RIA, un désenfumage ou un appareil de cuisson, la vérification annuelle ERP porte le même geste et l'emporte : une ligne annuelle qui cite PO 1 § 3. L'installation de gaz garde la ligne biennale.\n\n" +
+      "PORTÉE PAR L'APPAREIL DEPUIS LE 2026-11-05 (ADR-057, décision de la propriétaire) : une ligne par installation déclarée des catégories visées. Sur un extincteur, un RIA, un désenfumage ou un appareil de cuisson, la vérification annuelle ERP porte le même geste et l'emporte : une ligne annuelle qui cite PO 1 § 3. L'installation de gaz garde la ligne biennale. [2026-11-13 : la colonne sèche (`COLONNE_SECHE`) aussi — la vérification annuelle de MS 73 § 2 ne vaut qu'en catégories 1 à 4.]\n\n" +
       "Créée le 2026-10-13, décision de la propriétaire : l'hôtel entre dans la cible redéfinie le 2026-10-12 (ce que l'onboarding ne refuse pas), et le chapitre PO est le seul de ses manques à être encodé — exception assumée à « encodage terminé ». Le corpus portait PO 1 § 3 en `obligation_manquante` avec ce motif : « le référentiel ne sait pas porter \"l'ensemble\" ». Il le sait depuis l'ADR-022 : c'est exactement ce que fait `incendie-erp-pe4-entretien-installations-techniques`.\n\nUNE LIGNE, ET NON DEUX. ~~PO 8 § 1 applique PO 1 § 3 « en complément » de PE 4~~ [2026-10-13, revue : PO 8 § 1 applique SA section « en complément des articles PE 4, […] PO 1 (§ 3) », qui restent donc dus aux hôtels existants] : l'hôtel doit les deux. Mais les deux textes nomment le même acte — contrôler l'ensemble des installations techniques par un technicien compétent — à deux rythmes, trois ans au plus et deux ans. Le contrôle biennal satisfait le triennal ; deux lignes donneraient deux rendez-vous pour un contrôle. La ligne triennale exclut donc le type O (`typesExclus`), et celle-ci cite les deux textes. ~~Même raisonnement que la ligne CCH des ascenseurs, à laquelle AS 9 a été ajouté en contexte plutôt qu'en seconde ligne.~~ [2026-10-13, revue : précédent faux — le préventeur a levé ce refus le 2026-10-07 (« deux régimes, deux lignes », `ascenseurs.ts`). Ici les deux textes nomment le même acte et le même objet, à deux rythmes ; c'est la partition des extincteurs (`extincteurs-partition.test.ts`) : un acte, un rythme, celui qui est écrit le plus court.] La description ne dit pas que le biennal « tient lieu » du triennal — aucun texte ne le dit — : elle dit que Rojer suit les deux sur une ligne.\n\nCE QUE LE BIENNAL N'EMPORTE PAS. Le texte en excepte l'électricité et la détection incendie (annuelles) et renvoie l'ascenseur à AS 9. L'électricité a sa ligne depuis le 2026-08-26, ~~;~~ [2026-10-13, revue — mais portée par l'équipement : un hôtel qui n'a pas déclaré son installation électrique ne la voit pas, et la ligne triennale, qui la nommait, ne lui est plus servie ; la description le dit] ; la détection est servie par `incendie-erp-ssi-annuelle`, portée par l'alarme déclarée ; l'ascenseur reste suivi par les lignes du CCH — le préventeur borne AS 9 aux N1–N4 (C64), Rojer le suit.\n\nRELECTURE : PO 1 et PO 8 relus par l'API Légifrance le 2026-10-07 (C60), en vigueur depuis le 2011-10-30, texte inchangé. Non relus de nouveau pour cette ligne.",
   },
   // ---------------------------------------------------------------------------
@@ -1662,6 +1684,47 @@ export const obligationsIncendie: Obligation[] = [
     geste: "verification_periodique",
     notesInternes:
       "Amendement 2026-08-25 : la catégorie d'équipement `RIA` existe désormais (enum Prisma + migration 20260825130000). Un RIA déclaré déclenche l'obligation sans condition. La branche EXTINCTEUR bornée par `aRobinetsIncendieArmes` (forme non_infirmee, criticité 4) est TRANSITOIRE : elle protège les établissements existants qui ont répondu « oui » sur leurs extincteurs, jusqu'à la reprise de données (scripts/reprise-ria.ts) qui crée un équipement RIA à partir de chaque extincteur ainsi marqué. Critère de retrait de la branche : plus aucun équipement EXTINCTEUR ne porte la clé `aRobinetsIncendieArmes` en base — retirer alors « EXTINCTEUR » des catégories, la condition, et la question du formulaire. Un établissement qui aurait à la fois un extincteur « oui » et un RIA déclaré reçoit deux lignes d'ici là.\n\nSources relues ce jour : MS 73 § 2 (LEGIARTI000020317755) fonde la vérification annuelle des installations fixes ; MS 38 ne vise que les extincteurs et ne fonde pas les RIA ; MS 68 ne vise que le SSI. R. 4227-30 CT fonde la présence des RIA « si nécessaire » côté employeur, sans périodicité. En 5ᵉ catégorie, PE 4 § 2 (version au 01/07/2026) prévoit « tous les trois ans au plus » par techniciens compétents : l'annuelle est une sur-application assumée en N5, cohérente avec le traitement des extincteurs. La mention « contrôle visuel trimestriel » (norme NF S 62-201, non opposable) a été retirée.\n\nCRITÈRE DE RETRAIT SOLDÉ LE 2026-09-03, ET IL MANQUAIT UN TIERS. La note ci-dessus prescrivait trois retraits : « EXTINCTEUR » des catégories, la condition, ET LA QUESTION DU FORMULAIRE. Les deux premiers ont été faits le 2026-08-25 (commit ff87f4b), dont le message relate la reprise appliquée en production le jour même — cinq RIA créés, cinq lignes de calendrier réaffectées en conservant leurs statuts, plus aucun extincteur porteur de la clé, vérifié en base après écriture et sauvegarde ciblée prise avant. Le critère était donc rempli. Le troisième retrait a été oublié : la question « Votre établissement dispose-t-il de robinets d'incendie armés (RIA) ? » est restée posée sur CHAQUE extincteur déclaré, neuf jours durant, alors qu'elle ne bornait plus rien. Mesuré en appelant le moteur le 2026-09-03 : `true`, `false` et l'absence de réponse rendent le même jeu d'obligations, à l'identité près.\n\nCE QUE LE RETRAIT COÛTE, ET POURQUOI IL SE FAIT QUAND MÊME. Rien n'est perdu côté calcul — la catégorie `RIA` porte l'obligation seule depuis le 2026-08-25. Ce qui disparaît est une réponse historique éventuelle dans le JSON `caracteristiques` d'un extincteur ; le commit ff87f4b atteste qu'il n'en reste aucune en base, et `serialiserCaracteristiques` la retirerait de toute façon à la première édition de l'appareil. En regard, une question qui ne décide de rien est pire qu'absente : le dirigeant y répond en croyant que ça compte. C'est mot pour mot la raison qui a fait retirer `dessertLocauxSommeil` le 2026-09-01, et c'est la même règle. Les RIA se déclarent par leur catégorie propre.\n\nRÉSERVE AFFICHÉE — 2026-09-26 (C39). Même traitement que `incendie-erp-extincteurs-annuelle` : sur-application en 5ᵉ MAINTENUE, comportement inchangé. Ce qui change est ce que l'exploitant lit : chaque `reference` au livre II porte « — livre II, établissements des quatre premières catégories », et la description dit ce que le livre III porte en 5ᵉ, relu sur Légifrance le 2026-09-26 — PE 1 § 1 (en vigueur depuis le 27/08/1990), PE 4 (en vigueur depuis le 01/07/2026), PE 15 § 1 (depuis le 01/03/2006), PE 20 § 2 (depuis le 22/05/2004) —, sans y ajouter de renvoi que ces articles ne font pas. Garde : `conformite.test.ts`, « toute référence au livre II servie à un ERP de 5ᵉ dit son champ ».",
+  },
+  {
+    // CRÉÉE LE 2026-11-13 — décision de la propriétaire, sur le patron
+    // d'`incendie-erp-ria-annuelle`, mais bornée aux catégories 1 à 4.
+    id: "incendie-erp-colonne-seche-annuelle",
+    domaine: "incendie",
+    libelle: "Vérification annuelle des colonnes sèches en ERP (quatre premières catégories)",
+    description:
+      "Dans un établissement recevant du public des 1re, 2e, 3e ou 4e catégories, les colonnes sèches, installations fixes destinées aux sapeurs-pompiers (MS 18 à MS 21), sont vérifiées au moins une fois par an en cours d'exploitation (MS 73 § 2), dans les conditions de la section II du chapitre Ier du titre Ier du règlement de sécurité. En 5ᵉ catégorie, cet article ne s'applique pas : la colonne sèche est entretenue et vérifiée avec les autres moyens de secours, tous les trois ans au plus (PE 4 § 2), tous les deux ans dans un hôtel (PO 1 § 3).",
+    referencesLegales: [
+      {
+        source: "ARRETE",
+        reference: "Arrêté du 25 juin 1980, art. MS 73 (appareils et installations fixes) — livre II, établissements des quatre premières catégories",
+        article: "MS 73",
+        url:
+          "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020317755/",
+        note: "« § 1. Avant leur mise en service, les appareils et installations fixes doivent faire l'objet d'une vérification, fonctionnement compris, dans les conditions prévues à la section II du chapitre Ier du présent titre. » et « § 2. En cours d'exploitation, ces mêmes appareils ou installations ainsi que les appareils mobiles doivent être vérifiés, au moins une fois par an, dans les conditions prévues à la section II précitée. » LEGIARTI000020317755, version unique en vigueur depuis le 1980-08-15, relue le 2026-10-07 par l'API Légifrance (PISTE, bac à sable) ; texte du § 1 et du § 2 cité par la propriétaire le 2026-11-13.",
+        versionConstatee: "1980-08-15",
+      },
+      {
+        source: "ARRETE",
+        reference:
+          "Arrêté du 25 juin 1980, art. PE 1 § 1 (le livre II, « Dispositions applicables aux établissements des quatre premières catégories », n'est pas applicable en 5ᵉ catégorie sauf renvoi exprès) — livre III",
+        article: "PE 1",
+        url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000020374786",
+        note: "« Les dispositions du livre II ne sont pas applicables sauf celles relevant d'articles expressément mentionnés dans la suite du présent livre. » (§ 1, second alinéa). MS 73 est au livre II : c'est le fondement de la restriction aux catégories 1 à 4. Relu le 2026-10-07 en bac à sable PISTE (LEGIARTI000020374786, 1990-08-27).",
+        versionConstatee: "1990-08-27",
+      },
+    ],
+    periodicite: "annuelle",
+    nature: "echeance_recurrente",
+    pieceAttendue: null,
+    usageEcran: null,
+    realisateurs: ["personne_qualifiee"],
+    criticite: 4,
+    transmet: [],
+    typologies: { erp: { categories: [...CATEGORIES_LIVRE_2] } },
+    categoriesEquipement: ["COLONNE_SECHE"],
+    geste: "verification_periodique",
+    notesInternes:
+      "CRÉÉE LE 2026-11-13, décision de la propriétaire : la catégorie `COLONNE_SECHE` entre au parc. MS 73 § 2 fait vérifier « au moins une fois par an » les appareils et installations fixes ; la colonne sèche en est une (MS 18 à MS 21, au corpus `hors_perimetre` comme règles de dotation). Le registre de sécurité attendait déjà la catégorie (`registre/sections.ts`, fiches « Colonnes sèches »).\n\nPATRON : `incendie-erp-ria-annuelle` — même article, même réalisateur (`personne_qualifiee`), même criticité, même geste (`verification_periodique`).\n\nÉCART VOULU AVEC LE PATRON : LA BORNE N1–N4. La ligne RIA porte `typologies: { erp: true }` et sert l'annuelle en 5ᵉ par « sur-application assumée ». Celle-ci ne la recopie pas, sur décision de la propriétaire : MS 73 est au livre II, que PE 1 § 1 écarte en 5ᵉ catégorie sauf renvoi exprès, et aucun article du livre III n'y renvoie pour les colonnes sèches. En 5ᵉ, la colonne sèche reçoit l'entretien triennal de PE 4 § 2 (« moyens de secours, etc. ») et, à l'hôtel, le contrôle biennal de PO 1 § 3 — `COLONNE_SECHE` est ajoutée le même jour aux catégories de ces deux lignes. Pas de GE 7 cité : à la différence d'AS 9, MS 73 § 2 ne dit pas « organisme agréé ».\n\nLE GESTE NE FUSIONNE RIEN AUJOURD'HUI : la ligne (N1–N4) et celles de PE 4 § 2 et PO 1 § 3 (5ᵉ) ne se rencontrent sur aucun établissement. Le marquage est posé pour que la règle « un geste, une ligne » tienne si une typologie venait à se recouvrir.\n\nHORS ERP : rien, décision de la propriétaire. En habitation, l'art. 101 de l'arrêté du 31 janvier 1986 nomme les colonnes sèches dans une ligne d'établissement (`habitation-verification-annuelle-installations-securite`), non touchée.",
   },
   {
     id: "incendie-erp-5-visite-commission",

@@ -16,6 +16,9 @@ export const LABEL_FAMILLE_EQUIPEMENT: Record<FamilleEquipement, string> = {
   // Le nom du domaine dit l'établissement ; la famille range des buts et
   // des paniers (2026-11-13).
   etablissement_sportif: "Équipements sportifs",
+  // La famille range aussi l'escalier mécanique et le trottoir roulant
+  // (2026-11-13), que le chapitre IX du livre II réunit avec l'ascenseur.
+  ascenseur: "Ascenseurs et escaliers mécaniques",
   // Les appareils rangés sous `incendie` (extincteurs, RIA, alarme,
   // désenfumage) sont des moyens de secours : la famille le dit (décision de
   // la propriétaire du 2026-11-13). Le domaine du calendrier garde « Incendie /
@@ -40,6 +43,7 @@ export const FAMILLE_DE_CATEGORIE: Record<CategorieEquipement, FamilleEquipement
   INSTALLATION_ELECTRIQUE: "electricite",
   EXTINCTEUR: "incendie",
   RIA: "incendie",
+  COLONNE_SECHE: "incendie",
   BAES: "electricite",
   ALARME_INCENDIE: "incendie",
   DESENFUMAGE: "incendie",
@@ -59,6 +63,7 @@ export const FAMILLE_DE_CATEGORIE: Record<CategorieEquipement, FamilleEquipement
   EAU_CHAUDE_COLLECTIVE_DOUCHES_PUBLIC: "eau_chaude_sanitaire",
   BUT_PANIER_SPORTIF: "etablissement_sportif",
   SCENE: "scene",
+  ESCALIER_MECANIQUE: "ascenseur",
   AUTRE: null,
 };
 

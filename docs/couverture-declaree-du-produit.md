@@ -163,7 +163,7 @@ sixième `??` recopié.
 C'est la limite la plus importante de ce document, et la raison directe du
 retrait de la carte.
 
-~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ ~~Les 53 articles (2026-09-27, C45 après contre-lecture)~~ ~~Les 66 articles (2026-10-07, l'IGH, les équipements sous pression et le stockage de matières dangereuses en partie retirés)~~ ~~Les 70 articles (2026-10-13, quatre manques de la cible redéfinie annoncés)~~ ~~Les 72 articles (2026-10-13, six manques de la cible redéfinie annoncés)~~ ~~Les 73 articles (2026-10-13, sept manques de la cible redéfinie annoncés)~~ ~~Les 74 articles (2026-10-14, `L. 8222-1-1` dit sur la page Prestataires)~~ ~~Les 77 articles (2026-10-14, quatre articles cités par l'aide des catégories entrés au corpus)~~ ~~Les 78 articles (2026-10-14, intégration des deux lots : 73 + 1 + 4)~~ ~~Les 76 articles (2026-10-16, lecture des chapitres de types d'ERP : 78 − 6 + 4)~~ ~~Les 82 articles (2026-10-17, titre Ier lu en entier et motifs du titre II réécrits : 76 + 6 − 0)~~ ~~Les 89 articles (2026-10-17, corrections de la revue de `lot/ref-a-corpus-titre-1` : 82 + 7 − 0)~~ ~~Les 100 articles (2026-10-17, sous-lot B `lot/ref-b-hors-cadre` : 89 + 11 − 0)~~ ~~Les 102 articles (2026-10-17, revue de B : 100 + 2 − 0)~~ ~~Les 99 articles (2026-10-17, sous-lot F, légionelles au matériel : 102 + 0 − 3)~~ ~~Les 108 articles (2026-10-17, sous-lot C, rebasé sur F : 99 + 9 − 0)~~ ~~Les 110 articles (2026-10-17, sous-lot D : 108 + 2 − 0)~~ ~~Les 117 articles (2026-10-17, sous-lot E, code du sport, rebasé sur D : 110 + 7 − 0)~~ Les 125 articles (2026-10-17, sous-lot G, chapitre L, rebasé sur D et E : 117 + 8 − 0) ci-dessous sont ceux que le dépouillement a lus, qui imposent
+~~Les 27 articles~~ ~~Les 52 articles (2026-09-27, C45)~~ ~~Les 53 articles (2026-09-27, C45 après contre-lecture)~~ ~~Les 66 articles (2026-10-07, l'IGH, les équipements sous pression et le stockage de matières dangereuses en partie retirés)~~ ~~Les 70 articles (2026-10-13, quatre manques de la cible redéfinie annoncés)~~ ~~Les 72 articles (2026-10-13, six manques de la cible redéfinie annoncés)~~ ~~Les 73 articles (2026-10-13, sept manques de la cible redéfinie annoncés)~~ ~~Les 74 articles (2026-10-14, `L. 8222-1-1` dit sur la page Prestataires)~~ ~~Les 77 articles (2026-10-14, quatre articles cités par l'aide des catégories entrés au corpus)~~ ~~Les 78 articles (2026-10-14, intégration des deux lots : 73 + 1 + 4)~~ ~~Les 76 articles (2026-10-16, lecture des chapitres de types d'ERP : 78 − 6 + 4)~~ ~~Les 82 articles (2026-10-17, titre Ier lu en entier et motifs du titre II réécrits : 76 + 6 − 0)~~ ~~Les 89 articles (2026-10-17, corrections de la revue de `lot/ref-a-corpus-titre-1` : 82 + 7 − 0)~~ ~~Les 100 articles (2026-10-17, sous-lot B `lot/ref-b-hors-cadre` : 89 + 11 − 0)~~ ~~Les 102 articles (2026-10-17, revue de B : 100 + 2 − 0)~~ ~~Les 99 articles (2026-10-17, sous-lot F, légionelles au matériel : 102 + 0 − 3)~~ ~~Les 108 articles (2026-10-17, sous-lot C, rebasé sur F : 99 + 9 − 0)~~ ~~Les 110 articles (2026-10-17, sous-lot D : 108 + 2 − 0)~~ ~~Les 117 articles (2026-10-17, sous-lot E, code du sport, rebasé sur D : 110 + 7 − 0)~~ ~~Les 125 articles (2026-10-17, sous-lot G, chapitre L, rebasé sur D et E : 117 + 8 − 0)~~ Les 124 articles (2026-11-13, `ref/escalier-mecanique` : 125 + 0 − 1, AS 10 retenu) ci-dessous sont ceux que le dépouillement a lus, qui imposent
 quelque chose à un exploitant, et que le référentiel ne porte pas. **Rien ne les
 restreint aux établissements que leur chapitre vise** — sauf les ~~vingt-cinq
 annoncés le 2026-09-27~~ ~~trente-trois~~ trente-cinq annoncés (vingt-cinq le
@@ -275,7 +275,7 @@ formulaire d'équipement. [2026-10-12, `lot/suites-0810` : `R. 4412-11` et
 chimique » (décision de la propriétaire du 2026-10-08) ; les quatre autres
 gardent l'aide du stockage.]
 
-**Le mouvement du 2026-10-13 : 66 + 4 − 0 = 70.** `GZ 13`, `GZ 14`, `AS 10` et
+**Le mouvement du 2026-10-13 : 66 + 4 − 0 = 70.** `GZ 13`, `GZ 14`, AS 10 [2026-11-13 : retenu] et
 `Arrêté 23-02-2018 art. 26 § 3` passent d'`obligation_manquante` à
 `non_couvert`, adresse `ADRESSE_MANQUES_ANNONCES` : quatre des quinze manques
 entrés dans la cible le 2026-10-12, annoncés par décision de la propriétaire
@@ -373,11 +373,23 @@ référentiel », `lot/ref-g-chapitre-l`, rebasé sur D et E, mesuré en appelan
 `non_couvert`, annoncées — voir § 3, « Chapitre L (salles, type L) ». Aucune ne
 sort.
 
+**Puis 125 + 0 − 1 = 124** (2026-11-13, `ref/escalier-mecanique`, décision de
+la propriétaire, mesuré en appelant `articlesNonCouverts()`) : AS 10 sort de
+la liste — la catégorie `ESCALIER_MECANIQUE` existe, et ses trois actes ont
+chacun leur ligne (vérification annuelle, examen des chaînes et crémaillères,
+vérification avant remise en service), ERP des quatre premières catégories.
+L'entrée « Escalier mécanique ou trottoir roulant » des matériels non couverts
+est retirée ; `AS 8` reste `non_couvert`, son adresse passe à l'aide de la
+catégorie (`DESCRIPTION_CATEGORIE.ESCALIER_MECANIQUE`). Aucun article n'entre.
+Ses mentions plus haut et plus bas perdent leurs accents graves : la garde de
+ce document (`doc-couverture.test.ts`) les réserve aux articles non portés.
+
 ---
 
-## 3. Les 125 articles lus et non portés
+## 3. Les 124 articles lus et non portés
 
-[2026-10-17, sous-lot G : ~~117~~ → 125, voir la fin du § 2.]
+[2026-10-17, sous-lot G : ~~117~~ → 125, voir la fin du § 2.] [2026-11-13 :
+~~125~~ → 124, AS 10 retenu, voir la fin du § 2.]
 
 ~~Cinq familles~~ ~~Neuf familles (compte refait le 2026-09-26)~~ Dix-huit familles (compte refait le 2026-09-27, C45), une dixième étant sortie de la liste le 2026-09-01 (voir
 ci-dessous). Les motifs sont ceux du corpus, cités et non réécrits : ils ont
@@ -885,8 +897,9 @@ Leurs motifs sont ceux du corpus, complétés d'une note datée.
   pour mot. L'aide dit aussi l'entretien annuel de la chaudière (C. env.,
   R. 224-41-4 et s.), hors cadre.]
 - ~~**Escaliers mécaniques et trottoirs roulants** (ERP des quatre premières
-  catégories) — `AS 10`.~~ [2026-10-14 : déplacé dans la liste des matériels
-  non couverts, entrée « Escalier mécanique ou trottoir roulant ».]
+  catégories) — AS 10.~~ [2026-10-14 : déplacé dans la liste des matériels
+  non couverts, entrée « Escalier mécanique ou trottoir roulant ».] [2026-11-13 :
+  retenu, catégorie `ESCALIER_MECANIQUE` ; l'entrée est retirée.]
 - **Immeuble d'habitation** (dossiers qui déclarent le régime d'habitation),
   ajoutée le même jour après la revue — `Arrêté 1986-01-31 art. 78-1`
   (contrôle visuel annuel des boxes de stockage d'un parc couvert annexe, par
@@ -910,7 +923,7 @@ cuisson ; référentiel `2026-10-14.3`, commit `57fe1d3c`.]
 **[2026-10-14] Où vont désormais ces annonces.** Décision de la propriétaire :
 la page « Ce que Rojer ne couvre pas » ne porte plus le gaz, les escaliers
 mécaniques, l'eau ni l'échelle. Les trois articles du gaz sont dans l'aide de la
-catégorie « Installation de gaz » ; `AS 10`, `R. 4323-63`, `R. 1321-60` et les
+catégorie « Installation de gaz » ; AS 10 [2026-11-13 : retenu, il a quitté la liste], `R. 4323-63`, `R. 1321-60` et les
 cinq articles de l'arrêté du 10 septembre 2021 sont dans la liste des matériels
 non couverts (`src/lib/equipements/materiels-non-couverts.ts`, adresse
 `ADRESSE_MATERIELS_NON_COUVERTS`), que la recherche du formulaire d'équipement
@@ -1376,7 +1389,7 @@ l'annonce » : sept annoncées, cinq hors cadre ; manquantes **20** ;
 | `GZ 13` | ERP des quatre premières catégories | `categorie_equipement` | ~~Annoncé — Installations de gaz~~ Annoncé — aide de la catégorie « Installation de gaz » (2026-10-14, déplacé) |
 | `GZ 14` | ERP des quatre premières catégories | `categorie_equipement` | ~~Annoncé — Installations de gaz~~ Annoncé — aide de la catégorie « Installation de gaz » (2026-10-14, déplacé) |
 | `CO 61` | ERP des quatre premières catégories | `categorie_equipement` | Hors cadre (§ 7) |
-| `AS 10` | ERP des quatre premières catégories | `categorie_equipement` | ~~Annoncé — Escaliers mécaniques et trottoirs roulants~~ Annoncé — liste des matériels non couverts (2026-10-14, déplacé) |
+| `AS 10` | ERP des quatre premières catégories | `categorie_equipement` | ~~Annoncé — Escaliers mécaniques et trottoirs roulants~~ ~~Annoncé — liste des matériels non couverts (2026-10-14, déplacé)~~ Encodé (2026-11-13) : catégorie `ESCALIER_MECANIQUE`, `escalier-mecanique-erp-verification-annuelle-as10`, `escalier-mecanique-erp-examen-chaines-cremailleres`, `escalier-mecanique-erp-verification-remise-en-service-as10` |
 | `GC 18` | ERP des quatre premières catégories | `categorie_equipement` | Hors cadre (§ 7) |
 | `MS 71` | ERP des quatre premières catégories | `attribut_etablissement` | Hors cadre (§ 7) |
 | `Arrêté 23-02-2018 art. 26 § 3` | Habitation collective | `categorie_equipement` | ~~Annoncé — Installations de gaz~~ Annoncé — aide de la catégorie « Installation de gaz » (2026-10-14, déplacé) |

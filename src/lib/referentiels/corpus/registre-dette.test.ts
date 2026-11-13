@@ -408,7 +408,12 @@ describe("registre de dette — les réserves de lecture", () => {
     // `R 33` retenu avec sa réserve — le premier exercice dans le mois qui suit
     // la rentrée, que Rojer ne date pas ; les exercices de nuit sans ligne
     // propre. 118 + 1 − 0.
-    expect(n).toBe(119);
+    // 119 → 120 le 2026-11-13 (`ref/escalier-mecanique`), mesuré en appelant :
+    // `AS 10` retenu avec sa réserve — « transformation importante » non
+    // définie, l'examen des chaînes au rythme semestriel (un de plus que le
+    // texte), « personne ou organisme agréé » sur une seule valeur, la borne
+    // N1–N4 à relire au 2027-06-01, la lecture en bac à sable. 119 + 1 − 0.
+    expect(n).toBe(120);
     expect(reservesDeLecture().length).toBe(n);
   });
 });

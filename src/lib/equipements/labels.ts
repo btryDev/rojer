@@ -14,6 +14,8 @@ export const LABEL_CATEGORIE_EQUIPEMENT: Record<CategorieEquipement, string> = {
   INSTALLATION_ELECTRIQUE: "Installation électrique",
   EXTINCTEUR: "Extincteurs",
   RIA: "Robinets d'incendie armés (RIA)",
+  // 2026-11-13, décision de la propriétaire : le mot du règlement (MS 18).
+  COLONNE_SECHE: "Colonne sèche",
   BAES: "Éclairage de sécurité (BAES)",
   // 2026-10-07 : ~~« Alarme incendie / SSI »~~ — libellé demandé par le
   // préventeur (relecture du 2026-10-05). L'enum ne change pas.
@@ -69,6 +71,9 @@ export const LABEL_CATEGORIE_EQUIPEMENT: Record<CategorieEquipement, string> = {
   // scéniques »). L'art. L 49 appelle « espace scénique » la scène, l'estrade,
   // le plateau ou la piste qui permet un spectacle.
   SCENE: "Scène / installations scéniques",
+  // 2026-11-13, décision de la propriétaire : le libellé de l'entrée
+  // `escalier_mecanique` des matériels non couverts, repris tel quel.
+  ESCALIER_MECANIQUE: "Escalier mécanique ou trottoir roulant",
   AUTRE: "Autre équipement",
 };
 
@@ -92,13 +97,20 @@ export const PHRASE_FORMATION_EPI = `Rojer ne suit pas ${nonPorte("la formation 
  */
 export const PHRASE_PLAN_SCHEMATIQUE_CHAUFFAGE = `En établissement recevant du public des quatre premières catégories, Rojer ne suit pas non plus ${nonPorte("le plan schématique de l'installation, affiché en permanence et visiblement à proximité des chaudières et des générateurs d'air chaud à combustion")} (règlement de sécurité, art. CH 23 § 3 et CH 24 § 5).`;
 
-export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>> = {
+export const DESCRIPTION_CATEGORIE: Record<CategorieEquipement, string> = {
   INSTALLATION_ELECTRIQUE:
     "Tableau général, circuits terminaux, éventuel groupe électrogène de sécurité.",
   EXTINCTEUR:
     "Extincteurs portatifs (eau, CO₂, poudre) et mobiles.",
   RIA:
     "Robinets d'incendie armés : tuyau sur dévidoir, raccordé en permanence à l'eau, en coffret mural. Installation fixe (arrêté du 25 juin 1980, art. MS 14 à MS 17), vérifiée au moins une fois par an en ERP (MS 73 § 2).",
+  // 2026-11-13, décision de la propriétaire. MS 73 § 2 (relu le 2026-10-07,
+  // texte cité le 2026-11-13) porte la ligne annuelle en ERP N1–N4 ; PE 4 § 2
+  // et PO 1 § 3 en 5ᵉ. Hors ERP, aucune ligne d'appareil (décision) ; en
+  // habitation, la ligne d'établissement de l'art. 101 de l'arrêté du
+  // 31 janvier 1986 (`habitation-verification-annuelle-installations-securite`,
+  // non touchée) nomme déjà les colonnes sèches : l'aide le dit.
+  COLONNE_SECHE: `Colonne sèche : canalisation fixe, vide d'eau en temps normal, que les sapeurs-pompiers alimentent depuis l'extérieur pour disposer d'eau dans les étages (règlement de sécurité, art. MS 18 à MS 21). Dans un établissement recevant du public des quatre premières catégories, Rojer suit pour chaque colonne ${porte("la vérification annuelle des colonnes sèches")} (art. MS 73 § 2). En 5ᵉ catégorie, il suit ${porte("les opérations d'entretien et de vérification")} de la colonne, tous les trois ans au plus (art. PE 4 § 2) — tous les deux ans dans un hôtel (art. PO 1 § 3). Dans un immeuble d'habitation, la colonne sèche entre dans ${porte("la vérification annuelle des installations de sécurité")} de l'immeuble, que Rojer suit pour l'établissement et non colonne par colonne (arrêté du 31 janvier 1986, art. 101). Dans les autres cas, Rojer ne suit rien pour une colonne sèche.`,
   BAES:
     "Blocs autonomes d'éclairage de sécurité qui s'allument en cas de coupure.",
   ALARME_INCENDIE:
@@ -265,6 +277,17 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
   // de c6 du 2026-10-17). Les sièges (AM 18, L 28) et le gaz des salles (L 31)
   // sont annoncés dans l'aide du type L, pas ici : ils ne touchent pas la scène.
   SCENE: `Scène, estrade, plateau ou piste sur lesquels on donne des représentations, des concerts ou des spectacles (art. L 49), dans une salle de type L, ou dans une salle de danse de type P pour ses aménagements de spectacle (art. L 1 § 3), des catégories 1 à 4. Rojer suit pour chaque scène ${porte("le dépoussiérage annuel des cintres, grils, dessous, fosses et planchers techniques")} (art. L 57 § 3), et, pour l'établissement, les ${porte("vérifications techniques par un organisme agréé, au moins tous les trois ans")} (art. L 57 § 1 a), ${porte("la vérification annuelle par un organisme agréé du matériel d'éclairage de spectacle et d'effets scéniques monté pour une durée limitée")} (art. L 13 § 5) et, en 3ᵉ catégorie, ${porte("la présence d'une personne qualifiée en électricité pendant l'ouverture au public")} (art. L 57 § 7). Déclarez à part la machinerie qui lève des charges (perches, palans, porteuses) comme « Équipement de levage ». Rojer ne suit pas ${nonPorte("la commande d'un circuit de l'éclairage normal depuis un endroit habituellement surveillé pendant la présence du public, quand la salle a un espace scénique ou une cabine de projection (art. L 32 § 1), la vérification annuelle des déversoirs et des rideaux d'eau (art. L 57 § 1 b), l'inspection faite avant l'ouverture au public pour qu'aucun matériel suspendu ne puisse tomber (art. L 57 § 4), la manœuvre complète du dispositif d'obturation de la baie de scène avant l'entrée du public, à chaque représentation (art. L 63 § 4), l'examen par la commission de sécurité de tout programme qui emploie des artifices ou des flammes et, jusqu'à cinquante bougies, le membre du personnel désigné et équipé d'un moyen d'extinction (art. L 55), ni, avec des décors en matériaux M2 ou en bois M3 sur un espace scénique intégré, la présence du service de sécurité incendie pendant la présence du public, dont une personne désignée dans la salle (art. L 75 § 3)")}. Pour un établissement qui n'est déclaré ni de type L ni de type P, Rojer ne suit rien pour une scène.`,
+  // 2026-11-13, décision de la propriétaire. AS 10 (relu le 2026-11-13 par
+  // l'API Légifrance, bac à sable) porte trois lignes par appareil en ERP des
+  // catégories 1 à 4 ; PE 4 § 2 en 5ᵉ. Ce qui n'est pas suivi reprend les
+  // tournures de l'ancienne entrée `escalier_mecanique` des matériels non
+  // couverts : l'entretien par un personnel spécialisé (AS 8) et les
+  // pancartes d'arrêt (AS 11), plus le registre technique d'AS 11, que
+  // `ascenseur-carnet-entretien` ne porte que pour l'ascenseur. La phrase
+  // `nonPorte` d'AS 8 est l'ADRESSE de son entrée de corpus (`declareA`, cité
+  // mot pour mot). Hors ERP, aucun texte lu ne vise l'appareil : la dernière
+  // phrase le dit.
+  ESCALIER_MECANIQUE: `Escalier mécanique (escalator) ou trottoir roulant, dans un commerce ou une galerie marchande. Dans un établissement recevant du public des quatre premières catégories, Rojer suit pour chaque appareil ${porte("la vérification annuelle de l'escalier mécanique ou du trottoir roulant")} par une personne ou un organisme agréé, ${porte("l'examen des chaînes et crémaillères")} au milieu de la période annuelle, par l'entreprise chargée de l'entretien, et la vérification ${porte("avant sa remise en service après une transformation importante")} (règlement de sécurité, art. AS 10). En 5ᵉ catégorie, il suit ${porte("les opérations d'entretien et de vérification")} de l'appareil, tous les trois ans au plus (art. PE 4 § 2) — tous les deux ans dans un hôtel (art. PO 1 § 3). Rojer ne suit pas ${nonPorte("l'entretien des appareils par un personnel spécialisé de l'établissement ou d'une entreprise liée par un contrat d'entretien")} (art. AS 8), ni ${nonPorte("le registre technique des escaliers mécaniques et trottoirs roulants annexé au registre de sécurité")}, ni ${nonPorte("les pancartes et la signalisation qui portent à la connaissance du public l'arrêt d'un appareil dont un défaut compromet la sécurité")} (art. AS 11). Hors établissement recevant du public, Rojer ne suit rien pour cet appareil.`,
   AUTRE: "Autre équipement soumis à vérification périodique.",
 };
 

@@ -13,8 +13,9 @@
 //
 // RIEN N'Y EST NEUF. Chaque entrée reprend ce que le dépôt a déjà classé :
 // les annonces de la page « Ce que Rojer ne couvre pas » (`manques-annonces.ts`)
-// pour les escaliers mécaniques, l'eau et les échelles — DÉPLACÉES ici, pas
-// dupliquées —, le § 7 « Hors cadre » de `docs/couverture-declaree-du-produit.md`
+// pour ~~les escaliers mécaniques,~~ l'eau et les échelles — DÉPLACÉES ici, pas
+// dupliquées [2026-11-13 : l'escalier mécanique en est ressorti, il a sa
+// catégorie, `ESCALIER_MECANIQUE`] —, le § 7 « Hors cadre » de `docs/couverture-declaree-du-produit.md`
 // pour les autres, et les références telles que le corpus les cite. La seule
 // référence absente du corpus est celle de la chaudière (C. env.,
 // R. 224-41-4 et s.), hors cadre par décision du 2026-09-20 et relue sur
@@ -53,7 +54,8 @@ import type { CategorieEquipement } from "@/lib/referentiels/types-communs";
 
 export const CLES_MATERIELS_NON_COUVERTS = [
   "chaudiere",
-  "escalier_mecanique",
+  // ~~"escalier_mecanique"~~ — 2026-11-13, décision de la propriétaire :
+  // l'escalier mécanique a sa catégorie, `ESCALIER_MECANIQUE` (AS 10).
   "echelle",
   "echafaudage",
   "point_ancrage",
@@ -174,23 +176,30 @@ export const MATERIELS_NON_COUVERTS: readonly MaterielNonCouvert[] = [
         "Une chaudière au gaz fait partie de l'installation de gaz : déclarez plutôt l'installation, Rojer en suit la vérification annuelle dans un établissement recevant du public des quatre premières catégories (art. GZ 15).",
     },
   },
-  {
-    cle: "escalier_mecanique",
-    libelle: "Escalier mécanique ou trottoir roulant",
-    synonymes: ["escalier mécanique", "escalator", "trottoir roulant", "tapis roulant"],
-    // Reprise mot pour mot de la rubrique « Escaliers mécaniques et
-    // trottoirs roulants » de `manques-annonces.ts` (2026-10-13), déplacée.
-    phrase: `Rojer ne suit pas ${nonPorte("la vérification annuelle des escaliers mécaniques et des trottoirs roulants")} par une personne ou un organisme agréé, ni ${nonPorte("l'examen des chaînes et crémaillères au milieu de l'année")}, ni ${nonPorte("la vérification de l'escalier mécanique avant sa remise en service après une transformation importante")}, ni ${nonPorte("l'entretien des appareils par un personnel spécialisé de l'établissement ou d'une entreprise liée par un contrat d'entretien")}, ni ${nonPorte("les pancartes et la signalisation qui portent à la connaissance du public l'arrêt d'un appareil dont un défaut compromet la sécurité")}, que le règlement de sécurité impose aux établissements recevant du public des quatre premières catégories.`,
-    // 2026-10-17, sous-lot B : AS 8 (entretien) nommé à côté d'AS 10 ; revue
-    // du même jour : les pancartes d'arrêt de AS 11, comme dans l'aide de
-    // l'ascenseur. AS 11 reste un manque (registre technique, sous-lot C) :
-    // cité par son libellé, sans clé.
-    references: [
-      { libelle: "Arrêté du 25 juin 1980, art. AS 8", corpus: "AS 8" },
-      { libelle: "Arrêté du 25 juin 1980, art. AS 10", corpus: "AS 10" },
-      { libelle: "Arrêté du 25 juin 1980, art. AS 11" },
-    ],
-  },
+  // [2026-11-13, retirée — décision de la propriétaire : l'escalier mécanique
+  // et le trottoir roulant ont leur catégorie, `ESCALIER_MECANIQUE`. AS 10
+  // y est porté (trois lignes en ERP des catégories 1 à 4) et PE 4 § 2 en
+  // 5ᵉ ; ce que Rojer ne suit pas (AS 8, AS 11) est dit dans l'aide de la
+  // catégorie (`labels.ts`, `DESCRIPTION_CATEGORIE.ESCALIER_MECANIQUE`). Les
+  // appareils déjà déclarés en « Autre » avec cette clé sont repris par la
+  // migration `20261113120100_escalier_mecanique_reprise`. L'entrée était :]
+  // ~~{~~
+  // ~~  cle: "escalier_mecanique",~~
+  // ~~  libelle: "Escalier mécanique ou trottoir roulant",~~
+  // ~~  synonymes: ["escalier mécanique", "escalator", "trottoir roulant", "tapis roulant"],~~
+  // ~~  // Reprise mot pour mot de la rubrique « Escaliers mécaniques et~~
+  // ~~  // trottoirs roulants » de `manques-annonces.ts` (2026-10-13), déplacée.~~
+  // ~~  phrase: `Rojer ne suit pas ${nonPorte("la vérification annuelle des escaliers mécaniques et des trottoirs roulants")} par une personne ou un organisme agréé, ni ${nonPorte("l'examen des chaînes et crémaillères au milieu de l'année")}, ni ${nonPorte("la vérification de l'escalier mécanique avant sa remise en service après une transformation importante")}, ni ${nonPorte("l'entretien des appareils par un personnel spécialisé de l'établissement ou d'une entreprise liée par un contrat d'entretien")}, ni ${nonPorte("les pancartes et la signalisation qui portent à la connaissance du public l'arrêt d'un appareil dont un défaut compromet la sécurité")}, que le règlement de sécurité impose aux établissements recevant du public des quatre premières catégories.`,~~
+  // ~~  // 2026-10-17, sous-lot B : AS 8 (entretien) nommé à côté d'AS 10 ; revue~~
+  // ~~  // du même jour : les pancartes d'arrêt de AS 11, comme dans l'aide de~~
+  // ~~  // l'ascenseur. AS 11 reste un manque (registre technique, sous-lot C) :~~
+  // ~~  // cité par son libellé, sans clé.~~
+  // ~~  references: [~~
+  // ~~    { libelle: "Arrêté du 25 juin 1980, art. AS 8", corpus: "AS 8" },~~
+  // ~~    { libelle: "Arrêté du 25 juin 1980, art. AS 10", corpus: "AS 10" },~~
+  // ~~    { libelle: "Arrêté du 25 juin 1980, art. AS 11" },~~
+  // ~~  ],~~
+  // ~~},~~
   {
     cle: "echelle",
     libelle: "Échelle, escabeau ou marchepied",

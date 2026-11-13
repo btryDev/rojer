@@ -1,0 +1,23 @@
+-- ============================================================================
+-- Catégorie « Escalier mécanique ou trottoir roulant » — 2026-11-13, 1/2
+--
+-- Décision de la propriétaire du 2026-11-13 : l'escalier mécanique et le
+-- trottoir roulant entrent au parc. L'article AS 10 de l'arrêté du 25 juin
+-- 1980 (livre II, établissements des quatre premières catégories) leur impose
+-- une vérification annuelle par une personne ou un organisme agréé, un examen
+-- des chaînes et crémaillères au milieu de la période annuelle par l'entreprise
+-- d'entretien, et une vérification avant remise en service après une
+-- transformation importante. En 5ᵉ catégorie, l'appareil entre dans
+-- l'entretien triennal de PE 4 § 2. Jusqu'ici, l'appareil se déclarait comme
+-- matériel non couvert (catégorie 'AUTRE', clé `escalier_mecanique` dans
+-- `Equipement.materielNonCouvert`) et rien n'en sortait.
+--
+-- Ajout pur, inséré avant 'AUTRE' (l'ordre affiché vient de
+-- `CATEGORIES_EQUIPEMENT`, pas de l'enum : voir `equipements/labels.ts`,
+-- `ordreCategorie`). La reprise des appareils déjà déclarés est dans la
+-- migration suivante, `20261113120100_escalier_mecanique_reprise` :
+-- PostgreSQL refuse d'employer une valeur d'enum dans la transaction qui l'a
+-- ajoutée.
+-- ============================================================================
+
+ALTER TYPE "CategorieEquipement" ADD VALUE IF NOT EXISTS 'ESCALIER_MECANIQUE' BEFORE 'AUTRE';

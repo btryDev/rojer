@@ -1,13 +1,10 @@
-// Les trois pictogrammes que lucide n'a pas.
-//
-// Treize des seize catégories d'équipement trouvent leur dessin dans lucide
-// (l'extincteur, le ventilateur, le manomètre, le fût, le chariot…). Trois
-// n'y sont pas : la hotte professionnelle, l'ascenseur et le portail
-// motorisé. Les laisser retomber sur une icône approchante — un chapeau de
-// cuisinier pour la hotte, une double flèche pour l'ascenseur, une barrière
-// pour le portail — était exactement ce qui avait fait retirer la première
-// planche de pictos : un dessin d'une autre famille, qui ne nomme pas la
-// chose et ne se distingue pas de sa voisine (« porte » et « portail »).
+// Les pictogrammes que lucide n'a pas : la hotte professionnelle,
+// l'ascenseur, le portail motorisé, l'escalier mécanique et la colonne sèche.
+// Les laisser retomber sur une icône approchante — un chapeau de cuisinier
+// pour la hotte, une double flèche pour l'ascenseur, une barrière pour le
+// portail — était exactement ce qui avait fait retirer la première planche
+// de pictos : un dessin d'une autre famille, qui ne nomme pas la chose et ne
+// se distingue pas de sa voisine (« porte » et « portail »).
 //
 // Ils sont donc dessinés ici, à la grille de lucide pour qu'on ne voie pas
 // la couture : 24 × 24, trait de 2, extrémités et jointures arrondies,
@@ -73,6 +70,42 @@ export function PictoPortailAuto({ size = 24, ...props }: ProprietesPicto) {
       <rect x="6" y="9" width="12" height="6" />
       <path d="M12 9v6" />
       <path d="M2 21h20" />
+    </svg>
+  );
+}
+
+/**
+ * Escalier mécanique ou trottoir roulant (2026-11-13) : le profil de la
+ * volée, ses marches et la main courante parallèle. Les deux paliers plats
+ * disent l'appareil ; une diagonale seule aurait dit « en hausse », et des
+ * marches sans main courante, un escalier fixe, que rien ne vérifie.
+ */
+export function PictoEscalierMecanique({ size = 24, ...props }: ProprietesPicto) {
+  return (
+    <svg {...GRILLE} width={size} height={size} {...props}>
+      <path d="M2 20h5L17 9h5" />
+      <path d="M2 14h3L14 4h3" />
+      <path d="M10 16.7h2v-2.2h2v-2.2h2" />
+    </svg>
+  );
+}
+
+/**
+ * Colonne sèche (2026-11-13) : la conduite verticale, la prise d'étage qui
+ * en sort, et le raccord d'alimentation au pied, côté façade, où les
+ * sapeurs-pompiers branchent leurs tuyaux. Le raccord au pied est le détail
+ * qui compte : sans lui, une conduite et une vanne disent la plomberie. Les
+ * gouttes (`Droplets`) restent au RIA, toujours en eau.
+ */
+export function PictoColonneSeche({ size = 24, ...props }: ProprietesPicto) {
+  return (
+    <svg {...GRILLE} width={size} height={size} {...props}>
+      <path d="M12 2v16" />
+      <path d="M12 8h5" />
+      <circle cx="18.5" cy="8" r="1.5" />
+      <path d="M12 18v2a2 2 0 0 1-2 2H6" />
+      <circle cx="4.5" cy="20" r="1.5" />
+      <path d="M4.5 18.5v-1" />
     </svg>
   );
 }

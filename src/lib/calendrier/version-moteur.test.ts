@@ -588,7 +588,15 @@ const RELEVE = {
   // relevée en appelant.
   // [main] ~~de10984fbe6999b3~~ … ~~c21e2a827cf06f35~~ — 2026-11-07, lot C ;
   // sur main : 0ac56c67a8e4d6b0.
-  empreinte: "bd476b63f185b7ff",
+  // ~~bd476b63f185b7ff~~ — 2026-11-13, `ref/escalier-mecanique` : une valeur
+  // de plus à `CATEGORIES_EQUIPEMENT` (`types-communs.ts`), `ESCALIER_MECANIQUE`.
+  // NON : aucune règle du moteur ne change ; ce que la régénération écrit de
+  // neuf vient des obligations, scellées par l'empreinte du référentiel
+  // (`2026-11-13.1`). Empreinte recopiée, version inchangée.
+  // ~~a2ff149614a33d22~~ — même jour, même branche : `COLONNE_SECHE` entre à
+  // la même liste. NON, même raison (référentiel `2026-11-13.2`). Empreinte
+  // recopiée, version inchangée.
+  empreinte: "c3241249cff6c70a",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

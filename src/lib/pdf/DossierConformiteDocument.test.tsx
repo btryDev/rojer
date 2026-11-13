@@ -374,10 +374,11 @@ describe("les matériels non couverts déclarés s'impriment sous « Ce que ce d
     const t = textes({
       ...dossier(bloc(2)),
       couverture: sansManque,
-      materielsNonCouverts: blocsMaterielsNonCouverts(["escalier_mecanique", "echelle", "reservoir_eau"]),
+      // ~~"escalier_mecanique"~~ et ~~"art. AS 10"~~ — 2026-11-13 : l'entrée
+      // est retirée, l'escalier mécanique a sa catégorie.
+      materielsNonCouverts: blocsMaterielsNonCouverts(["echelle", "reservoir_eau"]),
     }).join("\n");
     for (const attendu of [
-      "art. AS 10",
       "art. R. 4323-63",
       "art. R. 1321-60",
       "Arrêté du 10 septembre 2021, art. 12",

@@ -605,7 +605,29 @@ export const obligationsConformite: Obligation[] = [
 // aussi le portail, réuni avec la porte depuis `2026-11-07.1` : « (porte ou
 // portail automatique) », le mot de R. 4224-12. Libellés seuls : 206 + 0 − 0
 // = 206 ; 99 / 93 / 14 ; 18 au niveau audit, 188 suivies.
-export const REFERENTIEL_VERSION = "2026-11-09.1";
+// `2026-11-13.1` (`ref/escalier-mecanique`, décision de la propriétaire du
+// 2026-11-13) : la catégorie `ESCALIER_MECANIQUE` et les trois actes d'AS 10,
+// portés par l'appareil, ERP N1–N4 — `escalier-mecanique-erp-verification-
+// annuelle-as10`, `escalier-mecanique-erp-examen-chaines-cremailleres`
+// (~~semestrielle~~ [annuelle, 2026-11-13.4]), `escalier-mecanique-erp-verification-remise-en-service-as10`
+// (événementielle) ; `ESCALIER_MECANIQUE` entre aux catégories de
+// `incendie-erp-pe4-entretien-installations-techniques` (5ᵉ). 206 + 3 − 0 =
+// 209 ; par porteur, 99 + 3 = 102 équipement, 93 établissement, 14 salarié ;
+// 18 au niveau audit, 191 suivies ; 23 domaines — remesuré en appelant
+// `obligationsConformite`, `porteurDe` et `estNiveauAudit`.
+// `2026-11-13.2` (`ref/escalier-mecanique`, second commit, décision de la
+// propriétaire du 2026-11-13) : la catégorie `COLONNE_SECHE` et
+// `incendie-erp-colonne-seche-annuelle` (MS 73 § 2), appareil, ERP N1–N4,
+// geste `verification_periodique` ; `COLONNE_SECHE` entre aux catégories de
+// PE 4 § 2 (5ᵉ) et de PO 1 § 3 (hôtel de 5ᵉ). 209 + 1 − 0 = 210 ; par
+// porteur, 102 + 1 = 103 équipement, 93 établissement, 14 salarié ; 18 au
+// niveau audit, 192 suivies ; 23 domaines — remesuré en appelant
+// `obligationsConformite`, `porteurDe` et `estNiveauAudit`.
+// `2026-11-13.3` (revue de #311) : l'escalier mécanique de l'hôtel de 5ᵉ
+// entre à PO 1 § 3 ; 210 inchangé.
+// `2026-11-13.4` : l'examen des chaînes de l'escalier mécanique annuel (texte
+// d'AS 10 b), références AS 10 factorisées ; 210 inchangé.
+export const REFERENTIEL_VERSION = "2026-11-13.4";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

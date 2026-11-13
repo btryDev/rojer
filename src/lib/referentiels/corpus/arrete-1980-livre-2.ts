@@ -70,7 +70,12 @@ import {
   SUITE_VERSION_FUTURE_CONSTRUCTION,
   SUITE_VERSION_FUTURE_REACTION_AU_FEU,
 } from "./motifs-livre-2";
-import { ADRESSE_MANQUES_ANNONCES, ADRESSE_MATERIELS_NON_COUVERTS } from "./adresses";
+import { ADRESSE_MANQUES_ANNONCES } from "./adresses";
+
+
+/** Phrase datée commune à MS 18 à MS 21 (colonnes sèches), écrite une fois. */
+const SUITE_COLONNE_SECHE_CATEGORIE =
+  " [2026-11-13 : la colonne sèche a sa catégorie d'équipement, `COLONNE_SECHE` ; sa vérification annuelle en ERP des catégories 1 à 4 (MS 73 § 2) est portée par `incendie-erp-colonne-seche-annuelle`, et en 5ᵉ par PE 4 § 2 et PO 1 § 3. L'installation elle-même reste une règle de dotation.]";
 
 export const ARRETE_1980_LIVRE_2: Corpus = {
   id: "arrete-1980-livre-2",
@@ -307,6 +312,11 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
         // 2026-10-17, sous-lot G : L 57 § 1 a est l'une des « dispositions du
         // présent règlement » qui l'imposent (deuxième tiret).
         "scene-erp-verifications-triennales-organisme-agree",
+        // 2026-11-13 : AS 10, même appui de la borne N1–N4 que les deux
+        // lignes d'AS 9.
+        "escalier-mecanique-erp-verification-annuelle-as10",
+        "escalier-mecanique-erp-examen-chaines-cremailleres",
+        "escalier-mecanique-erp-verification-remise-en-service-as10",
       ],
     },
     {
@@ -442,6 +452,9 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
         "incendie-erp-ssi-annuelle",
         "incendie-erp-ssi-triennale",
         "cuisson-erp-extinction-automatique-annuelle",
+        // 2026-11-13, décision de la propriétaire : la colonne sèche, une
+        // installation fixe (MS 18 à MS 21), catégorie `COLONNE_SECHE`, N1–N4.
+        "incendie-erp-colonne-seche-annuelle",
       ],
       prescrit:
         "La triennale du § 2 ne vise QUE les systèmes de sécurité incendie de catégories A et B et les sprinkleurs, par personne ou organisme agréé — relu le 2026-08-27, puis le 2026-10-07. Une obligation qui l'appliquerait aux SSI sans distinction de catégorie sur-couvrirait. Le § 2 fonde par ailleurs l'annuelle des dispositifs d'extinction automatique de cuisine, que GC 22 ne fonde pas.",
@@ -690,16 +703,27 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       modifiePar: {
         texte: "Arrêté du 4 juillet 2007 - art. Annexe, v. init.",
       },
-      luLe: "2026-09-04",
-      lecture: "agent_verbatim",
+      // ~~luLe: "2026-09-04", lecture: "agent_verbatim"~~ — relu le 2026-11-13
+      // par l'API Légifrance (PISTE), en BAC À SABLE : LEGIARTI000020382709,
+      // en vigueur depuis le 2007-09-28, aucune version future ; texte inchangé.
+      luLe: "2026-11-13",
+      lecture: "api_legifrance",
       prescrit:
         "Trois actes, tous à la charge de l'exploitant. Avant remise en service après une transformation importante : vérification, fonctionnement compris, par une personne ou un organisme agréé. ANNUELLEMENT, par une personne ou un organisme agréé : examen du maintien de la conformité acquise, examen de l'état de conservation des éléments, vérification du fonctionnement des dispositifs de sécurité. AU MILIEU DE LA PÉRIODE ANNUELLE : examen supplémentaire des chaînes et crémaillères, par le service ou l'entreprise chargé de l'entretien — donc un second rendez-vous, à six mois du premier, avec un réalisateur différent.",
       citationCle:
         "En outre, l'exploitant est tenu de faire procéder : a) Annuellement, par une personne ou un organisme agréé : – à un examen du maintien de la conformité acquise lors de la mise en service ou après une transformation importante ; – à un examen de l'état de conservation des éléments de l'installation ; – à la vérification du fonctionnement des dispositifs de sécurité. b) Au milieu de la période annuelle ci-dessus, à un examen supplémentaire des chaînes et crémaillères, par le service ou l'entreprise chargé de l'entretien.",
-      statut: "non_couvert",
-      declareA: ADRESSE_MATERIELS_NON_COUVERTS, // ~~ADRESSE_MANQUES_ANNONCES~~ — 2026-10-14, déplacé
-      motif:
-        "DEUX RYTHMES ÉCRITS, ET AUCUN OBJET POUR LES PORTER. L'annuelle du a) et l'examen à mi-période du b) sont l'un et l'autre chiffrés, avec chacun son réalisateur — organisme ou personne agréé pour le premier, service ou entreprise d'entretien pour le second. Ce serait deux obligations, sur le patron de `incendie-erp-extincteurs-annuelle` et de sa révision décennale : deux actes, deux dates, deux preuves.\n\nCE QUI MANQUE EST UNE CATÉGORIE D'ÉQUIPEMENT, et le constat du 2026-09-03 se confirme en cherchant à nouveau : ni « escalier mécanique » ni « trottoir roulant » n'apparaissent dans `src/`. Le chapitre IX en réunit trois — ascenseurs, escaliers mécaniques, trottoirs roulants — et le référentiel n'en connaît qu'un.\n\nCE QU'IL NE FAUT SURTOUT PAS FAIRE, et c'est pour cela que ce motif est écrit plutôt qu'une ligne encodée : accrocher AS 10 à `ASCENSEUR`. Le chapitre traite les deux familles séparément — AS 9 pour les ascenseurs, AS 10 pour les escaliers mécaniques et trottoirs roulants — et leurs régimes ne coïncident sur rien : cinq ans contre un an, organisme agréé seul contre deux réalisateurs, aucun examen intermédiaire contre un examen à six mois. Un propriétaire d'ascenseur recevrait trois rendez-vous qu'il ne doit pas, et un exploitant d'escalier mécanique n'en recevrait toujours aucun.\n\nCE QUE LE MANQUE COÛTE. Un escalier mécanique se rencontre en centre commercial et en grand magasin — le type M, l'un des trois secteurs cibles. C'est celui des quatre manques de ce lot qui touche le plus près de la cible.\n\nSON BLOCAGE, quand l'article était `obligation_manquante` : Aucune catégorie d'équipement `ESCALIER_MECANIQUE` ni `TROTTOIR_ROULANT` dans `CATEGORIES_EQUIPEMENT` — donc rien à déclarer au parc, et rien à quoi accrocher les deux lignes. La créer est faisable et sans invention (le nom serait celui du texte), mais elle touche l'énumération Prisma, le formulaire d'équipement et le seed : c'est un lot, pas un effet de bord de celui-ci.\n\n[2026-10-13 — ANNONCÉ, décision de la propriétaire du 2026-10-13 (grille C45 appliquée aux quinze manques entrés dans la cible le 2026-10-12). Passé de `obligation_manquante` à `non_couvert` : ~~nommé sur la page « Ce que Rojer ne couvre pas », domaine « Escaliers mécaniques et trottoirs roulants », à tout dossier ERP des quatre premières catégories~~. Rien n'est encodé ; la phrase de l'écran reste « une obligation que cet outil ne traite pas reste due si un texte l'impose ».] [2026-10-14 — ADRESSE DÉPLACÉE, décision de la propriétaire du 2026-10-14 : l'annonce quitte la page « Ce que Rojer ne couvre pas » pour la liste des matériels non couverts (`src/lib/equipements/materiels-non-couverts.ts`, entrée `escalier_mecanique`), que propose la recherche du formulaire d'équipement (`declareA` : `ADRESSE_MATERIELS_NON_COUVERTS`). Déplacée, pas dupliquée ; statut inchangé.]",
+      statut: "retenu",
+      // 2026-11-13, décision de la propriétaire : la catégorie
+      // `ESCALIER_MECANIQUE` existe ; les trois actes ont chacun leur ligne.
+      obligations: [
+        "escalier-mecanique-erp-verification-annuelle-as10",
+        "escalier-mecanique-erp-examen-chaines-cremailleres",
+        "escalier-mecanique-erp-verification-remise-en-service-as10",
+      ],
+      reserve:
+        "CE QUI RESTE OUVERT, AU 2026-11-13. (1) « Transformation importante » n'est défini ni par AS 10 ni par les articles lus avec lui : la ligne événementielle reprend les mots du texte sans les préciser, et le produit n'observe pas le fait — même réserve qu'AS 9. (2) ~~Le b) place UN examen des chaînes et crémaillères « au milieu de la période annuelle » : la ligne le porte en SEMESTRIELLE (décision de la propriétaire du 2026-11-13), ce qui fait revenir l'examen aussi à la date de la vérification annuelle — un examen de plus par an que le texte, fait par l'entreprise d'entretien. Le modèle n'a pas de rythme « annuel décalé de six mois ».~~ [2026-11-13, décision de la propriétaire : la ligne le porte en ANNUELLE, un examen par an comme le texte ; le décalage de six mois n'est pas daté par Rojer, la description demande de le programmer à mi-chemin.] (3) « Par une personne ou un organisme agréé » : le référentiel n'a qu'une valeur, `organisme_agree`, pour les deux ; elle dit « agréé », ce qui est le mot du texte. (4) La borne aux catégories 1 à 4 tient à PE 1 § 1 et au titre du livre II, appuyés par GE 7 § 1, réécrit au 2027-06-01 : `relectureDue` posé sur les trois lignes, comme sur AS 9. (5) La lecture du 2026-11-13 vient de l'environnement BAC À SABLE de PISTE ; son égalité avec la production n'a pas été vérifiée.",
+      historique:
+        "2026-11-13 — décision de la propriétaire : ~~`non_couvert`, `declareA` : `ADRESSE_MATERIELS_NON_COUVERTS` (entrée `escalier_mecanique` des matériels non couverts)~~ → `retenu`. La catégorie d'équipement qui manquait existe, `ESCALIER_MECANIQUE` (« Escalier mécanique ou trottoir roulant ») ; l'entrée des matériels non couverts est retirée et les appareils déclarés avec sa clé sont repris (migration `20261113120100_escalier_mecanique_reprise`). Trois lignes, sur le patron d'AS 9, bornées aux catégories 1 à 4 (PE 1 § 1, GE 7 § 1). En 5ᵉ catégorie, l'appareil entre dans l'entretien triennal de PE 4 § 2 (`incendie-erp-pe4-entretien-installations-techniques`), dont la liste finit par « etc. ». Motif de l'ancien classement, rayé : ~~DEUX RYTHMES ÉCRITS, ET AUCUN OBJET POUR LES PORTER. L'annuelle du a) et l'examen à mi-période du b) sont l'un et l'autre chiffrés, avec chacun son réalisateur — organisme ou personne agréé pour le premier, service ou entreprise d'entretien pour le second. Ce serait deux obligations, sur le patron de `incendie-erp-extincteurs-annuelle` et de sa révision décennale : deux actes, deux dates, deux preuves.\n\nCE QUI MANQUE EST UNE CATÉGORIE D'ÉQUIPEMENT, et le constat du 2026-09-03 se confirme en cherchant à nouveau : ni « escalier mécanique » ni « trottoir roulant » n'apparaissent dans `src/`. Le chapitre IX en réunit trois — ascenseurs, escaliers mécaniques, trottoirs roulants — et le référentiel n'en connaît qu'un.\n\nCE QU'IL NE FAUT SURTOUT PAS FAIRE, et c'est pour cela que ce motif est écrit plutôt qu'une ligne encodée : accrocher AS 10 à `ASCENSEUR`. Le chapitre traite les deux familles séparément — AS 9 pour les ascenseurs, AS 10 pour les escaliers mécaniques et trottoirs roulants — et leurs régimes ne coïncident sur rien : cinq ans contre un an, organisme agréé seul contre deux réalisateurs, aucun examen intermédiaire contre un examen à six mois. Un propriétaire d'ascenseur recevrait trois rendez-vous qu'il ne doit pas, et un exploitant d'escalier mécanique n'en recevrait toujours aucun.\n\nCE QUE LE MANQUE COÛTE. Un escalier mécanique se rencontre en centre commercial et en grand magasin — le type M, l'un des trois secteurs cibles. C'est celui des quatre manques de ce lot qui touche le plus près de la cible.\n\nSON BLOCAGE, quand l'article était `obligation_manquante` : Aucune catégorie d'équipement `ESCALIER_MECANIQUE` ni `TROTTOIR_ROULANT` dans `CATEGORIES_EQUIPEMENT` — donc rien à déclarer au parc, et rien à quoi accrocher les deux lignes. La créer est faisable et sans invention (le nom serait celui du texte), mais elle touche l'énumération Prisma, le formulaire d'équipement et le seed : c'est un lot, pas un effet de bord de celui-ci.\n\n[2026-10-13 — ANNONCÉ, décision de la propriétaire du 2026-10-13 (grille C45 appliquée aux quinze manques entrés dans la cible le 2026-10-12). Passé de `obligation_manquante` à `non_couvert` : ~~nommé sur la page « Ce que Rojer ne couvre pas », domaine « Escaliers mécaniques et trottoirs roulants », à tout dossier ERP des quatre premières catégories~~. Rien n'est encodé ; la phrase de l'écran reste « une obligation que cet outil ne traite pas reste due si un texte l'impose ».] [2026-10-14 — ADRESSE DÉPLACÉE, décision de la propriétaire du 2026-10-14 : l'annonce quitte la page « Ce que Rojer ne couvre pas » pour la liste des matériels non couverts (`src/lib/equipements/materiels-non-couverts.ts`, entrée `escalier_mecanique`), que propose la recherche du formulaire d'équipement (`declareA` : `ADRESSE_MATERIELS_NON_COUVERTS`). Déplacée, pas dupliquée ; statut inchangé.]~~ [2026-11-13 : la catégorie existe ; AS 10 n'est pas accroché à `ASCENSEUR` — l'escalier mécanique a la sienne, et ses trois actes ont leurs trois lignes, ce que ce motif demandait.]",
     },
     {
       ref: "GC 18",
@@ -3943,9 +3967,12 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       citationCle: "Les appareils doivent être entretenus par un personnel spécialisé et dûment qualifié appartenant soit à un service de l'établissement lui-même, soit à une entreprise exerçant régulièrement cette activité et avec laquelle il aura été signé un contrat d'entretien.",
       historique: "2026-10-17 — revue indépendante de `lot/ref-a-corpus-titre-1`, décision de c6 : « annoncer » ne s'encode que d'une façon, `non_couvert` ; même raison que AS 5, que c6 a nommé. Ancien classement : ~~statut obligation_manquante, cause categorie_equipement ; motif : ENTRETIEN des escaliers mécaniques et trottoirs roulants par un personnel spécialisé, interne ou sous contrat d'entretien. Aucun rythme. La vérification de ces appareils (AS 10) est déjà classée au corpus, et l'escalier mécanique figure parmi les matériels non couverts (`materiels-non-couverts.ts`). PROPOSITION (plan du 2026-10-17, § 3, sous-lot B) : nommer AS 8 avec AS 10 dans l'entrée de l'escalier mécanique, au matériel. Transitoirement au § 9.~~",
       statut: "non_couvert",
-      motif: "ENTRETIEN des escaliers mécaniques et trottoirs roulants par un personnel spécialisé, interne ou sous contrat d'entretien. Aucun rythme. La vérification de ces appareils (AS 10) est déjà annoncée au matériel (`materiels-non-couverts.ts`, entrée de l'escalier mécanique), faute de catégorie d'équipement. DÉCISION (plan du 2026-10-17, § 3, sous-lot B) : nommer AS 8 avec AS 10 dans cette entrée — une annonce, pas une ligne." + SUITE_ANNONCE_DECIDEE,
+      motif: "ENTRETIEN des escaliers mécaniques et trottoirs roulants par un personnel spécialisé, interne ou sous contrat d'entretien. Aucun rythme. ~~La vérification de ces appareils (AS 10) est déjà annoncée au matériel (`materiels-non-couverts.ts`, entrée de l'escalier mécanique), faute de catégorie d'équipement.~~ [2026-11-13 : la catégorie existe, `ESCALIER_MECANIQUE`, et AS 10 y est porté ; l'entrée des matériels non couverts est retirée.] DÉCISION (plan du 2026-10-17, § 3, sous-lot B) : nommer AS 8 avec AS 10 ~~dans cette entrée~~ [2026-11-13 : dans l'aide de la catégorie] — une annonce, pas une ligne." + SUITE_ANNONCE_DECIDEE,
       // ~~declareA: "Non déclaré au 2026-10-17 : l'annonce est prévue au sous-lot B, dans l'entrée « Escalier mécanique ou trottoir roulant » des matériels non couverts (`materiels-non-couverts.ts`), à côté d'AS 10."~~ — annoncé le 2026-10-17, sous-lot B.
-      declareA: ADRESSE_MATERIELS_NON_COUVERTS,
+      // ~~declareA: ADRESSE_MATERIELS_NON_COUVERTS~~ — 2026-11-13 : l'entrée
+      // `escalier_mecanique` est retirée ; l'annonce passe dans l'aide de la
+      // catégorie `ESCALIER_MECANIQUE`, citée mot pour mot.
+      declareA: "Formulaire de déclaration d'un équipement, aide de la catégorie « Escalier mécanique ou trottoir roulant » (`src/lib/equipements/labels.ts`, `DESCRIPTION_CATEGORIE.ESCALIER_MECANIQUE`) : « l'entretien des appareils par un personnel spécialisé de l'établissement ou d'une entreprise liée par un contrat d'entretien »",
     },
     {
       ref: "AS 11",
@@ -3959,7 +3986,7 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       historique: "2026-10-17 — sous-lot C (`lot/ref-c-incendie-n1-n4`) : ~~`obligation_manquante`, cause `libre`~~ → `retenu`. Rattaché (référence seule). Motif de la lecture, conservé tel qu'il était (version du sous-lot B) : « Pour les ascenseurs, escaliers mécaniques et trottoirs roulants (section 4), quatre obligations de l'exploitant : produire à la visite de réception le registre technique des appareils annexé au registre de sécurité ; y classer ensuite tous les documents remis après tout examen ou intervention ; en cas de défaut compromettant la sécurité, mettre l'appareil à l'arrêt et porter l'arrêt à la connaissance du public « par des pancartes et une signalisation placées bien en évidence » ; veiller à la propreté des cuvettes des gaines. La tenue du registre technique est l'acte de `ascenseur-carnet-entretien` (CCH R. 134-6 prime), où AS 11 n'est pas cité. PROPOSITION (constats du 2026-10-17, § 1 ; plan, § 3) : rattacher AS 11 à `ascenseur-carnet-entretien` (référence seule) au sous-lot C~~, et annoncer les pancartes d'arrêt dans l'aide de la catégorie « Ascenseur » au sous-lot B~~ [2026-10-17, fait au sous-lot B : les pancartes d'arrêt sont dites dans l'aide « Ascenseur » et dans l'entrée « Escalier mécanique ou trottoir roulant » des matériels non couverts]. La propreté des cuvettes est un état sans pièce (ligne de partage 3). Transitoirement au § 9, pour le seul registre technique. »",
       statut: "retenu",
       obligations: ["ascenseur-carnet-entretien"],
-      reserve: "Les pancartes d'arrêt sont dites au sous-lot B (aide « Ascenseur » et entrée « Escalier mécanique ou trottoir roulant » des matériels non couverts) ; la propreté des cuvettes est un état sans pièce (ligne de partage 3).",
+      reserve: "Les pancartes d'arrêt sont dites au sous-lot B (aide « Ascenseur » et ~~entrée « Escalier mécanique ou trottoir roulant » des matériels non couverts~~ [2026-11-13 : aide de la catégorie « Escalier mécanique ou trottoir roulant », `DESCRIPTION_CATEGORIE.ESCALIER_MECANIQUE` ; l'entrée des matériels non couverts est retirée]) ; la propreté des cuvettes est un état sans pièce (ligne de partage 3). [2026-11-13 : le registre technique n'est rattaché qu'à l'ascenseur (`ascenseur-carnet-entretien`) ; pour l'escalier mécanique et le trottoir roulant, il est dit non suivi dans l'aide de leur catégorie.]",
     },
     // ----- Titre Ier > Chapitre X — Appareils de cuisson — lu le 2026-10-17 -----
     {
@@ -4401,7 +4428,7 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       citationCle: "§ 1. Des colonnes sèches doivent être installées dans les établissements, dès lors que des locaux à risques importants sont aménagés dans les étages dont le plancher bas est à plus de 18 mètres du niveau de la voie accessible aux engins des sapeurs-pompiers.",
       statut: "hors_perimetre",
       exclusion: "construction",
-      motif: MOTIF_DOTATION_MOYEN_DE_SECOURS + " Version future au 2027-06-01 (arrêté du 19 février 2026, art. 47) lue : même nature (installation, NF S61-759-1).",
+      motif: MOTIF_DOTATION_MOYEN_DE_SECOURS + " Version future au 2027-06-01 (arrêté du 19 février 2026, art. 47) lue : même nature (installation, NF S61-759-1)." + SUITE_COLONNE_SECHE_CATEGORIE,
     },
     {
       ref: "MS 19",
@@ -4414,7 +4441,7 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       citationCle: "§ 1. Les raccords d'alimentation des colonnes sèches doivent être placés en des endroits facilement accessibles aux sapeurs-pompiers",
       statut: "hors_perimetre",
       exclusion: "construction",
-      motif: MOTIF_DOTATION_MOYEN_DE_SECOURS,
+      motif: MOTIF_DOTATION_MOYEN_DE_SECOURS + SUITE_COLONNE_SECHE_CATEGORIE,
     },
     {
       ref: "MS 20",
@@ -4427,7 +4454,7 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       citationCle: "Les prises d'incendie doivent être placées dans les cages d'escaliers ou dans leurs dispositifs d'accès.",
       statut: "hors_perimetre",
       exclusion: "construction",
-      motif: MOTIF_DOTATION_MOYEN_DE_SECOURS,
+      motif: MOTIF_DOTATION_MOYEN_DE_SECOURS + SUITE_COLONNE_SECHE_CATEGORIE,
     },
     {
       ref: "MS 21",
@@ -4440,7 +4467,7 @@ export const ARRETE_1980_LIVRE_2: Corpus = {
       citationCle: "Les colonnes sèches doivent être munies d'un dispositif de vidange et de purge d'air.",
       statut: "hors_perimetre",
       exclusion: "construction",
-      motif: MOTIF_DOTATION_MOYEN_DE_SECOURS,
+      motif: MOTIF_DOTATION_MOYEN_DE_SECOURS + SUITE_COLONNE_SECHE_CATEGORIE,
     },
     {
       ref: "MS 22",

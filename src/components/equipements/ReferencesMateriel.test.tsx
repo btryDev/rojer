@@ -10,11 +10,14 @@ import { materielNonCouvert } from "@/lib/equipements/materiels-non-couverts";
 afterEach(cleanup);
 
 describe("ReferencesMateriel", () => {
-  it("rend chaque texte du matériel, l'escalier mécanique avec AS 10", () => {
+  // ~~l'escalier mécanique avec AS 10~~ — 2026-11-13 : l'entrée
+  // `escalier_mecanique` est retirée (catégorie `ESCALIER_MECANIQUE`) ; la
+  // chaudière cite elle aussi l'arrêté du 25 juin 1980.
+  it("rend chaque texte du matériel, la chaudière avec CH 57", () => {
     const { container } = render(
-      <ReferencesMateriel references={materielNonCouvert("escalier_mecanique")!.references} />,
+      <ReferencesMateriel references={materielNonCouvert("chaudiere")!.references} />,
     );
-    expect(container.textContent).toContain("Arrêté du 25 juin 1980, art. AS 10");
+    expect(container.textContent).toContain("Arrêté du 25 juin 1980, art. CH 57");
   });
 
   it("l'eau : R. 1321-60 et les cinq articles de l'arrêté du 10 septembre 2021", () => {

@@ -146,6 +146,13 @@ describe("le geste — la structure du référentiel", () => {
       INSTALLATION_ELECTRIQUE: [PE4, "incendie-hotel-po-controle-annuel-electricite"],
       ASCENSEUR: [PE4],
       INSTALLATION_GAZ: [PE4, PO1],
+      // 2026-11-13, décision de la propriétaire : ~~PE 4 § 2 seul (5ᵉ)~~
+      // PE 4 § 2 (5ᵉ) et PO 1 § 3 (hôtel de 5ᵉ, revue de #311) ; les
+      // trois lignes d'AS 10 (N1–N4) ne portent pas de geste.
+      ESCALIER_MECANIQUE: [PE4, PO1],
+      // 2026-11-13, décision de la propriétaire : MS 73 § 2 (N1–N4) marqué
+      // comme le RIA ; PE 4 § 2 et PO 1 § 3 en 5ᵉ. Pas de ligne travail.
+      COLONNE_SECHE: ["incendie-erp-colonne-seche-annuelle", PE4, PO1],
     };
     for (const categorie of CATEGORIES_EQUIPEMENT) {
       const membres = membresSur(categorie);

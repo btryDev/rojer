@@ -73,7 +73,8 @@ const DEPLACES = [
   "GZ 13",
   "GZ 14",
   "Arrêté 23-02-2018 art. 26 § 3",
-  "AS 10",
+  // ~~"AS 10"~~ — 2026-11-13 : retenu (catégorie `ESCALIER_MECANIQUE`), il
+  // n'est plus `non_couvert` ; sorti de la liste des déplacés.
   "R. 4323-63",
   "R. 1321-60",
   "Arrêté 10-09-2021 art. 4",
@@ -137,7 +138,8 @@ describe("matériels non couverts : la liste et le corpus se citent (2026-10-14)
 
   it("borne basse : la liste porte bien les articles déplacés de la page", () => {
     const parRef = new Map(articles().map((a) => [a.ref, a] as const));
-    for (const ref of ["AS 10", "R. 4323-63", "R. 1321-60"]) {
+    // ~~"AS 10"~~ — 2026-11-13 : retenu, il n'est plus annoncé.
+    for (const ref of ["R. 4323-63", "R. 1321-60"]) {
       const a = parRef.get(ref);
       expect(a?.statut === "non_couvert" ? a.declareA : undefined, ref).toBe(
         ADRESSE_MATERIELS_NON_COUVERTS,
