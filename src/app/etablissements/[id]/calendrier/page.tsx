@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { DOMAINE_DE_CATEGORIE, comparerDomaines, type PoidsDomaine } from "@/lib/equipements/domaines";
+import { FAMILLE_DE_CATEGORIE, LABEL_FAMILLE_EQUIPEMENT, comparerDomaines, type PoidsDomaine } from "@/lib/equipements/domaines";
 import type { CategorieEquipement } from "@prisma/client";
 import { notFound } from "next/navigation";
 import { ArrowUpRight, ChevronRight } from "lucide-react";
@@ -749,10 +749,10 @@ export default async function CalendrierPage({
   {
     const poids = new Map<string, PoidsDomaine>();
     for (const g of groupesEquipement) {
-      const d = DOMAINE_DE_CATEGORIE[g.categorieCode as CategorieEquipement];
+      const d = FAMILLE_DE_CATEGORIE[g.categorieCode as CategorieEquipement];
       // Sans domaine (catégorie « Autre ») : un intitulé « Autres » quand
       // même, sinon le groupe se lirait sous le domaine précédent (revue).
-      g.domaine = d ? LABEL_DOMAINE[d] : AUTRES;
+      g.domaine = d ? LABEL_FAMILLE_EQUIPEMENT[d] : AUTRES;
       const cle = g.domaine;
       const p = poids.get(cle) ?? { libelle: d ? g.domaine : null, enRetard: 0, proche: 0 };
       p.enRetard += g.enRetard;
