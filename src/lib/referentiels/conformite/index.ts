@@ -615,7 +615,15 @@ export const obligationsConformite: Obligation[] = [
 // 209 ; par porteur, 99 + 3 = 102 équipement, 93 établissement, 14 salarié ;
 // 18 au niveau audit, 191 suivies ; 23 domaines — remesuré en appelant
 // `obligationsConformite`, `porteurDe` et `estNiveauAudit`.
-export const REFERENTIEL_VERSION = "2026-11-13.1";
+// `2026-11-13.2` (`ref/escalier-mecanique`, second commit, décision de la
+// propriétaire du 2026-11-13) : la catégorie `COLONNE_SECHE` et
+// `incendie-erp-colonne-seche-annuelle` (MS 73 § 2), appareil, ERP N1–N4,
+// geste `verification_periodique` ; `COLONNE_SECHE` entre aux catégories de
+// PE 4 § 2 (5ᵉ) et de PO 1 § 3 (hôtel de 5ᵉ). 209 + 1 − 0 = 210 ; par
+// porteur, 102 + 1 = 103 équipement, 93 établissement, 14 salarié ; 18 au
+// niveau audit, 192 suivies ; 23 domaines — remesuré en appelant
+// `obligationsConformite`, `porteurDe` et `estNiveauAudit`.
+export const REFERENTIEL_VERSION = "2026-11-13.2";
 
 /**
  * Les identifiants d'obligations retirées du référentiel.

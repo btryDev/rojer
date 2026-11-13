@@ -39,6 +39,7 @@ import {
 import type { ComponentType } from "react";
 import {
   PictoAscenseur,
+  PictoColonneSeche,
   PictoEscalierMecanique,
   PictoHottePro,
   PictoPortailAuto,
@@ -83,6 +84,10 @@ export const ICONE_CATEGORIE: Record<CategorieEquipement, Picto> = {
   // eau — d'où la goutte, et non la bonbonne : deux dessins identiques
   // rendraient les deux lignes indiscernables dans une liste d'équipements.
   RIA: Droplets,
+  // La colonne sèche (2026-11-13) : vide d'eau, alimentée par les pompiers
+  // depuis la façade. Lucide n'en dessine pas ; tracée à sa grille dans
+  // `pictos-categorie.tsx`, conduite et raccord au pied.
+  COLONNE_SECHE: PictoColonneSeche,
   BAES: Lightbulb,
   // Sonnerie d'alarme, et non la sirène : c'est le déclencheur manuel et le
   // bloc qui sonnent dans un ERP de 5e catégorie.

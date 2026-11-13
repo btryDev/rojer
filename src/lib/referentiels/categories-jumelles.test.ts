@@ -41,7 +41,7 @@ function enumDeLaMigration(): string[] {
 
 /**
  * L'enum tel que les migrations le laissent : celui que la reprise recrée,
- * puis chaque `ADD VALUE … BEFORE …` des migrations postérieures, dans leur
+ * puis chaque `ADD VALUE … BEFORE / AFTER …` des migrations postérieures, dans leur
  * ordre. ~~La garde comparait l'enum recréé seul à la liste du code~~
  * [2026-11-13 : `ESCALIER_MECANIQUE` est ajouté après la reprise ; l'enum
  * recréé n'est plus le dernier mot, les ajouts qui le suivent le sont].
@@ -51,12 +51,12 @@ function enumApresLesMigrations(): string[] {
   const apres = lireMigrations().filter((m) => m.nom > "20261107120100_categories_jumelles_reprise");
   for (const { sql } of apres) {
     for (const m of sansCommentaires(sql).matchAll(
-      /ALTER TYPE "CategorieEquipement" ADD VALUE (?:IF NOT EXISTS )?'([A-Z_]+)'(?: BEFORE '([A-Z_]+)')?/g,
+      /ALTER TYPE "CategorieEquipement" ADD VALUE (?:IF NOT EXISTS )?'([A-Z_]+)'(?: (BEFORE|AFTER) '([A-Z_]+)')?/g,
     )) {
       if (valeurs.includes(m[1])) continue;
-      const i = m[2] ? valeurs.indexOf(m[2]) : -1;
+      const i = m[3] ? valeurs.indexOf(m[3]) : -1;
       if (i < 0) valeurs.push(m[1]);
-      else valeurs.splice(i, 0, m[1]);
+      else valeurs.splice(m[2] === "AFTER" ? i + 1 : i, 0, m[1]);
     }
   }
   return valeurs;

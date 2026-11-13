@@ -14,6 +14,8 @@ export const LABEL_CATEGORIE_EQUIPEMENT: Record<CategorieEquipement, string> = {
   INSTALLATION_ELECTRIQUE: "Installation électrique",
   EXTINCTEUR: "Extincteurs",
   RIA: "Robinets d'incendie armés (RIA)",
+  // 2026-11-13, décision de la propriétaire : le mot du règlement (MS 18).
+  COLONNE_SECHE: "Colonne sèche",
   BAES: "Éclairage de sécurité (BAES)",
   // 2026-10-07 : ~~« Alarme incendie / SSI »~~ — libellé demandé par le
   // préventeur (relecture du 2026-10-05). L'enum ne change pas.
@@ -99,6 +101,13 @@ export const DESCRIPTION_CATEGORIE: Partial<Record<CategorieEquipement, string>>
     "Extincteurs portatifs (eau, CO₂, poudre) et mobiles.",
   RIA:
     "Robinets d'incendie armés : tuyau sur dévidoir, raccordé en permanence à l'eau, en coffret mural. Installation fixe (arrêté du 25 juin 1980, art. MS 14 à MS 17), vérifiée au moins une fois par an en ERP (MS 73 § 2).",
+  // 2026-11-13, décision de la propriétaire. MS 73 § 2 (relu le 2026-10-07,
+  // texte cité le 2026-11-13) porte la ligne annuelle en ERP N1–N4 ; PE 4 § 2
+  // et PO 1 § 3 en 5ᵉ. Hors ERP, aucune ligne d'appareil (décision) ; en
+  // habitation, la ligne d'établissement de l'art. 101 de l'arrêté du
+  // 31 janvier 1986 (`habitation-verification-annuelle-installations-securite`,
+  // non touchée) nomme déjà les colonnes sèches : l'aide le dit.
+  COLONNE_SECHE: `Colonne sèche : canalisation fixe, vide d'eau en temps normal, que les sapeurs-pompiers alimentent depuis l'extérieur pour disposer d'eau dans les étages (règlement de sécurité, art. MS 18 à MS 21). Dans un établissement recevant du public des quatre premières catégories, Rojer suit pour chaque colonne ${porte("la vérification annuelle des colonnes sèches")} (art. MS 73 § 2). En 5ᵉ catégorie, il suit ${porte("les opérations d'entretien et de vérification")} de la colonne, tous les trois ans au plus (art. PE 4 § 2) — tous les deux ans dans un hôtel (art. PO 1 § 3). Dans un immeuble d'habitation, la colonne sèche entre dans ${porte("la vérification annuelle des installations de sécurité")} de l'immeuble, que Rojer suit pour l'établissement et non colonne par colonne (arrêté du 31 janvier 1986, art. 101). Dans les autres cas, Rojer ne suit rien pour une colonne sèche.`,
   BAES:
     "Blocs autonomes d'éclairage de sécurité qui s'allument en cas de coupure.",
   ALARME_INCENDIE:

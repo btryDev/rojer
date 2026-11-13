@@ -1234,6 +1234,10 @@ describe("moteur matching — cartographie des catégories sans obligation", () 
         // § 2 en 5ᵉ ; hors ERP, rien — aucun texte lu ne vise l'appareil, et
         // l'aide de la catégorie le dit.
         "ESCALIER_MECANIQUE",
+        // COLONNE_SECHE, entrée le 2026-11-13 (décision de la propriétaire) :
+        // MS 73 § 2 en ERP N1–N4, PE 4 § 2 et PO 1 § 3 en 5ᵉ ; hors ERP, rien
+        // (l'habitation a sa ligne d'établissement, art. 101 de 1986).
+        "COLONNE_SECHE",
         // DEFIBRILLATEUR, entrée le 2026-10-15 (décision de la propriétaire) :
         // sa maintenance (R. 157-4) et sa déclaration Géo'DAE ne visent que les
         // ERP des catégories 1 à 4 — le champ de R. 157-1 1°. Un DAE déclaré

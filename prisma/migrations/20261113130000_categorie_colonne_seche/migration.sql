@@ -1,0 +1,21 @@
+-- ============================================================================
+-- Catégorie « Colonne sèche » — 2026-11-13
+--
+-- Décision de la propriétaire du 2026-11-13 : la colonne sèche entre au parc.
+-- MS 73 § 2 de l'arrêté du 25 juin 1980 (livre II, établissements des quatre
+-- premières catégories) fait vérifier les installations fixes de lutte
+-- contre l'incendie au moins une fois par an ; en 5ᵉ catégorie, PE 4 § 2
+-- range les « moyens de secours » dans l'entretien triennal, et PO 1 § 3 met
+-- les installations techniques de l'hôtel à deux ans. Le registre de sécurité
+-- attendait déjà cette catégorie (`src/lib/registre/sections.ts`, fiches
+-- « Colonnes sèches »).
+--
+-- Ajout pur, inséré APRÈS 'RIA' : la liste du code (`CATEGORIES_EQUIPEMENT`)
+-- la range à côté du robinet d'incendie armé, et l'enum du schéma, celui des
+-- migrations et la liste du code doivent dire le même ordre
+-- (`categories-jumelles.test.ts`). L'ordre affiché, lui, vient de la liste du
+-- code (`equipements/labels.ts`, `ordreCategorie`). Aucune ligne existante
+-- n'est touchée : la colonne sèche n'était pas un matériel non couvert.
+-- ============================================================================
+
+ALTER TYPE "CategorieEquipement" ADD VALUE IF NOT EXISTS 'COLONNE_SECHE' AFTER 'RIA';

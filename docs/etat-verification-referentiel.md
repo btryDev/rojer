@@ -5,7 +5,7 @@
      du script. Pour le mettre à jour : pnpm verification --ecrire -->
 
 **Généré le** : 2026-11-13
-**Référentiel** : `2026-11-13.1`
+**Référentiel** : `2026-11-13.2`
 **Régénérer** : `pnpm verification --ecrire`
 
 Ce document répond à une question, et à une seule : **de quoi le
@@ -83,18 +83,18 @@ repose sur un texte que personne n'a ouvert.
 
 ## 2. Où en est-on
 
-**209 obligations**, **462 références** — 123 obligations en citent plus d'une.
+**210 obligations**, **464 références** — 124 obligations en citent plus d'une.
 
 | degré | obligations (au plancher) | part | dont fondements | références | part |
 | --- | --- | --- | --- | --- | --- |
-| 5 · lu à la source, verbatim relevé | 118 | 56 % | 125 | 313 | 68 % |
-| 4 · lu à la source par un agent, verbatim rapporté | 87 | 42 % | 84 | 144 | 31 % |
+| 5 · lu à la source, verbatim relevé | 119 | 57 % | 126 | 315 | 68 % |
+| 4 · lu à la source par un agent, verbatim rapporté | 87 | 41 % | 84 | 144 | 31 % |
 | 3 · lu et daté, aucun verbatim | 3 | 1 % | 0 | 4 | 1 % |
 | 2 · lu ailleurs qu'à la source | 1 | 0 % | 0 | 1 | 0 % |
 | 1 · au corpus, aucune trace de lecture | 0 | 0 % | 0 | 0 | 0 % |
 | 0 · rien à ouvrir | 0 | 0 % | 0 | 0 | 0 % |
 
-**205 obligations sur 209 (98 %)** reposent, jusqu'à leur dernière référence de contexte, sur des textes lus à la source avec verbatim relevé.
+**206 obligations sur 210 (98 %)** reposent, jusqu'à leur dernière référence de contexte, sur des textes lus à la source avec verbatim relevé.
 
 **3 obligations (1 %)** citent au moins un texte ouvert et daté dont rien n'a été relevé. Ce n'est pas une lecture à refaire : c'est une lecture qu'on ne peut ni contrôler ni contredire sans rouvrir Légifrance.
 
@@ -108,11 +108,11 @@ repose sur un texte que personne n'a ouvert.
 
 | ancrage | références | part |
 | --- | --- | --- |
-| ancrée | 438 | 95 % |
+| ancrée | 440 | 95 % |
 | divergente | 1 | 0 % |
 | jamais constatée | 23 | 5 % |
 
-**9 obligations sur 209 (4 %) ne portent aucune version constatée, sur aucune de leurs références.** Le jour où l'un de leurs textes est modifié, rien dans le dépôt ne pourra le signaler : l'absence de repère se lit comme « à vérifier », jamais comme « à jour ».
+**9 obligations sur 210 (4 %) ne portent aucune version constatée, sur aucune de leurs références.** Le jour où l'un de leurs textes est modifié, rien dans le dépôt ne pourra le signaler : l'absence de repère se lit comme « à vérifier », jamais comme « à jour ».
 
 **1 obligation déclare une version que le corpus contredit** : `incendie-hotel-po-controle-annuel-electricite`. À trancher, pas à relire.
 
@@ -135,7 +135,7 @@ repose sur un texte que personne n'a ouvert.
 | `etablissement_sportif` | 2 | 5 | 2 | · | · | · | · | · | 2 / 2 — 100 % | 0 / 5 | 2026-10-17 |
 | `formation_securite` | 11 | 32 | 1 | 10 | · | · | · | · | 11 / 11 — 100 % | 0 / 32 | 2026-08-31 → 2026-09-27 |
 | `froid` | 8 | 16 | 8 | · | · | · | · | · | 8 / 8 — 100 % | 16 / 16 | 2026-08-26 → 2026-09-27 |
-| `incendie` | 62 | 158 | 50 | 11 | 1 | · | · | · | 61 / 62 — 98 % | 4 / 158 | 2026-08-26 → 2026-11-06 |
+| `incendie` | 63 | 160 | 51 | 11 | 1 | · | · | · | 62 / 63 — 98 % | 4 / 160 | 2026-08-26 → 2026-11-06 |
 | `information_travailleurs` | 2 | 2 | · | 2 | · | · | · | · | 2 / 2 — 100 % | 0 / 2 | 2026-08-31 → 2026-09-26 |
 | `levage` | 11 | 30 | 10 | 1 | · | · | · | · | 11 / 11 — 100 % | 0 / 30 | 2026-08-26 → 2026-09-02 |
 | `locaux_sociaux` | 4 | 4 | 2 | 2 | · | · | · | · | 4 / 4 — 100 % | 0 / 4 | 2026-08-31 → 2026-09-26 |
@@ -158,7 +158,7 @@ Aucun domaine n'est entièrement dépourvu de verbatim.
 
 |  | obl. | réf. | 5 | 4 | 3 | 2 | 1 | 0 | vérifiées à la source | sans ancre | lu entre |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `equipement` | 102 | 219 | 67 | 33 | 2 | · | · | · | 100 / 102 — 98 % | 22 / 219 | 2026-08-26 → 2026-11-13 |
+| `equipement` | 103 | 221 | 68 | 33 | 2 | · | · | · | 101 / 103 — 98 % | 22 / 221 | 2026-08-26 → 2026-11-13 |
 | `etablissement` | 93 | 210 | 51 | 41 | 1 | · | · | · | 92 / 93 — 99 % | 0 / 210 | 2026-08-26 → 2026-11-06 |
 | `salarie` | 14 | 33 | · | 13 | · | 1 | · | · | 13 / 14 — 93 % | 1 / 33 | 2026-08-27 → 2026-10-07 |
 
@@ -179,7 +179,7 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 | 2026-09-20 | 11 | 2 % | 4 |
 | 2026-09-26 | 23 | 5 % | 18 |
 | 2026-09-27 | 37 | 8 % | 35 |
-| 2026-10-07 | 41 | 9 % | 27 |
+| 2026-10-07 | 43 | 9 % | 28 |
 | 2026-10-13 | 2 | 0 % | 1 |
 | 2026-10-14 | 29 | 6 % | 12 |
 | 2026-10-16 | 16 | 3 % | 12 |
@@ -189,7 +189,7 @@ Colonnes numérotées : le nombre d'obligations à chaque rang de l'échelle, me
 | 2026-11-06 | 4 | 1 % | 4 |
 | 2026-11-13 | 3 | 1 % | 3 |
 
-462 des 462 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-11-13.
+464 des 464 références portent une date de lecture, toutes comprises entre 2026-08-26 et 2026-11-13.
 
 Ces dates ne sont pas un âge : elles disent quand quelqu'un a ouvert le
 texte, pas depuis quand la version lue est en vigueur. Une lecture d'hier
@@ -277,7 +277,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 
 ---
 
-## 8. Les 209 obligations
+## 8. Les 210 obligations
 
 | obligation | domaine | porteur | réf. | fondement | plancher | sans ancre | lu |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -425,6 +425,7 @@ Le total du corpus, les articles jamais lus et ceux qui imposent une obligation 
 | `incendie-erp-alarme-verification-hebdomadaire` | incendie | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-10-14 |
 | `incendie-erp-avis-controle-affiche` | incendie | etablissement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-10-16 |
 | `incendie-erp-baes-annuelle` | incendie | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-09-01 → 2026-09-27 |
+| `incendie-erp-colonne-seche-annuelle` | incendie | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-10-07 |
 | `incendie-erp-desenfumage-annuelle` | incendie | equipement | 2 | 5 · première main | 5 · première main | 0 / 2 | 2026-10-07 → 2026-10-17 |
 | `incendie-erp-desenfumage-triennale-mecanique-ssi` | incendie | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-10-07 |
 | `incendie-erp-eclairage-securite-autonomie-semestrielle` | incendie | equipement | 1 | 5 · première main | 5 · première main | 0 / 1 | 2026-09-01 |
@@ -496,7 +497,7 @@ demande le plus de travail.
 
 ---
 
-## 9. Les 462 références, une par une
+## 9. Les 464 références, une par une
 
 `prescrit` et `verbatim` sont les deux champs du corpus qui rendent une
 lecture relisible : ce que l'article impose, en une phrase, et la phrase
@@ -605,6 +606,8 @@ refaire pour la contredire.
 | `incendie-erp-desenfumage-annuelle` | contexte 1 | Arrêté du 25 juin 1980, art. DF 9 (entretien périodique du désenfumage par un personnel compétent) — livre II, établissements des quatre premières catégories | DF 9 | arrete-1980-livre-2 | retenu | 2026-10-17 | api_legifrance | — | ✓ | 2004-07-01 | 2004-07-01 | 5 · première main | ancrée |
 | `incendie-erp-desenfumage-triennale-mecanique-ssi` | fondement | Arrêté du 25 juin 1980, art. DF 10 § 3 (désenfumage mécanique et SSI de catégorie A ou B : vérifications tous les trois ans par un organisme agréé) — livre II, établissements des quatre premières catégories | DF 10 | arrete-1980-livre-2 | retenu | 2026-10-07 | api_legifrance | ✓ | ✓ | 2007-10-28 | 2007-10-28 | 5 · première main | ancrée |
 | `incendie-erp-ria-annuelle` | fondement | Arrêté du 25 juin 1980, art. MS 73 (appareils et installations fixes) — livre II, établissements des quatre premières catégories | MS 73 | arrete-1980-livre-2 | retenu | 2026-10-07 | api_legifrance | ✓ | ✓ | 1980-08-15 | 1980-08-15 | 5 · première main | ancrée |
+| `incendie-erp-colonne-seche-annuelle` | fondement | Arrêté du 25 juin 1980, art. MS 73 (appareils et installations fixes) — livre II, établissements des quatre premières catégories | MS 73 | arrete-1980-livre-2 | retenu | 2026-10-07 | api_legifrance | ✓ | ✓ | 1980-08-15 | 1980-08-15 | 5 · première main | ancrée |
+| `incendie-erp-colonne-seche-annuelle` | contexte 1 | Arrêté du 25 juin 1980, art. PE 1 § 1 (le livre II, « Dispositions applicables aux établissements des quatre premières catégories », n'est pas applicable en 5ᵉ catégorie sauf renvoi exprès) — livre III | PE 1 | arrete-1980-livre-3 | sans_objet | 2026-10-07 | api_legifrance | — | ✓ | 1990-08-27 | 1990-08-27 | 5 · première main | ancrée |
 | `incendie-erp-5-visite-commission` | fondement | CCH, art. R. 143-41 (visites périodiques de la commission) | CCH R. 143-41 | cch-registre-securite | retenu | 2026-08-26 | premiere_main | ✓ | ✓ | 2021-07-01 | 2021-07-01 | 5 · première main | ancrée |
 | `incendie-erp-5-visite-commission` | contexte 1 | Arrêté du 25 juin 1980, art. GE 4 — n'est PAS applicable en 5ᵉ catégorie | GE 4 | arrete-1980-livre-2 | retenu | 2026-09-01 | premiere_main | ✓ | ✓ | 2015-01-01 | 2015-01-01 | 5 · première main | ancrée |
 | `incendie-erp-5-visite-commission` | contexte 2 | Arrêté du 25 juin 1980, art. PE 37 (ERP de 5ᵉ catégorie avec locaux à sommeil) | PE 37 | arrete-1980-livre-3 | retenu | 2026-10-16 | api_legifrance | ✓ | ✓ | 2004-11-24 | 2004-11-24 | 5 · première main | ancrée |

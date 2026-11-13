@@ -2062,6 +2062,11 @@ describe("référentiel conformité — version et empreinte", () => {
     // ajoutée à PE 4 § 2. 206 + 3 − 0 = 209, relevée en appelant
     // `empreinteReferentiel()`.
     { version: "2026-11-13.1", empreinte: "209-8f973501fb2e7f3f" },
+    // `ref/escalier-mecanique`, second commit (2026-11-13, décision de la
+    // propriétaire) : la catégorie `COLONNE_SECHE`, sa vérification annuelle
+    // (MS 73 § 2, N1–N4), et la catégorie ajoutée à PE 4 § 2 et PO 1 § 3.
+    // 209 + 1 − 0 = 210, relevée en appelant `empreinteReferentiel()`.
+    { version: "2026-11-13.2", empreinte: "210-1eb1250d191530fd" },
   ];
   const DERNIERE = HISTORIQUE_EMPREINTES[HISTORIQUE_EMPREINTES.length - 1];
   const EMPREINTE_ATTENDUE = DERNIERE.empreinte;
@@ -2266,7 +2271,10 @@ describe("référentiel conformité — version et empreinte", () => {
       // `escalier-mecanique-erp-examen-chaines-cremailleres`,
       // `escalier-mecanique-erp-verification-remise-en-service-as10`, AS 10)
       // − 0 = 209, remesuré en appelant `obligationsConformite`.
-    ).toBe(209);
+      // ~~209~~ — 2026-11-13, même branche : 209 + 1
+      // (`incendie-erp-colonne-seche-annuelle`, MS 73 § 2) − 0 = 210,
+      // remesuré en appelant `obligationsConformite`.
+    ).toBe(210);
   });
 
   it("l'empreinte bouge quand une condition, une typologie ou une catégorie change", () => {

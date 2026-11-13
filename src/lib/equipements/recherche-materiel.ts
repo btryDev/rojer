@@ -93,6 +93,9 @@ export const SYNONYMES_CATEGORIE: Readonly<Record<CategorieEquipement, readonly 
   INSTALLATION_ELECTRIQUE: ["électricité", "tableau électrique", "TGBT", "disjoncteur", "groupe électrogène", "panneaux photovoltaïques", "onduleur", "borne de recharge", "IRVE"],
   EXTINCTEUR: ["extincteur"],
   RIA: ["robinet d'incendie", "RIA"],
+  // 2026-11-13 : le nom de l'installation, au singulier et au pluriel (la
+  // recherche ne ramène pas le pluriel au singulier).
+  COLONNE_SECHE: ["colonne sèche", "colonnes sèches"],
   BAES: ["éclairage de secours", "bloc de secours", "BAES"],
   ALARME_INCENDIE: ["alarme", "détecteur de fumée", "SSI", "déclencheur manuel"],
   DESENFUMAGE: ["exutoire", "trappe de désenfumage"],

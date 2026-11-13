@@ -1,5 +1,6 @@
-// ~~Les trois pictogrammes que lucide n'a pas.~~ [2026-11-13 : quatre,
-// l'escalier mécanique s'y ajoute.]
+// ~~Les trois pictogrammes que lucide n'a pas.~~ [2026-11-13 : ~~quatre,
+// l'escalier mécanique s'y ajoute~~ cinq, l'escalier mécanique et la colonne
+// sèche s'y ajoutent.]
 //
 // Treize des seize catégories d'équipement trouvent leur dessin dans lucide
 // (l'extincteur, le ventilateur, le manomètre, le fût, le chariot…). Trois
@@ -90,6 +91,26 @@ export function PictoEscalierMecanique({ size = 24, ...props }: ProprietesPicto)
       <path d="M2 20h5L17 9h5" />
       <path d="M2 14h3L14 4h3" />
       <path d="M10 16.7h2v-2.2h2v-2.2h2" />
+    </svg>
+  );
+}
+
+/**
+ * Colonne sèche (2026-11-13) : la conduite verticale, la prise d'étage qui
+ * en sort, et le raccord d'alimentation au pied, côté façade, où les
+ * sapeurs-pompiers branchent leurs tuyaux. Le raccord au pied est le détail
+ * qui compte : sans lui, une conduite et une vanne disent la plomberie. Les
+ * gouttes (`Droplets`) restent au RIA, toujours en eau.
+ */
+export function PictoColonneSeche({ size = 24, ...props }: ProprietesPicto) {
+  return (
+    <svg {...GRILLE} width={size} height={size} {...props}>
+      <path d="M12 2v16" />
+      <path d="M12 8h5" />
+      <circle cx="18.5" cy="8" r="1.5" />
+      <path d="M12 18v2a2 2 0 0 1-2 2H6" />
+      <circle cx="4.5" cy="20" r="1.5" />
+      <path d="M4.5 18.5v-1" />
     </svg>
   );
 }

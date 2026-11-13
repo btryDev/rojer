@@ -662,6 +662,10 @@ enum CategorieEquipement {
   INSTALLATION_ELECTRIQUE
   EXTINCTEUR
   RIA
+  // 2026-11-13 : la colonne sèche (arrêté du 25 juin 1980, MS 18 à MS 21),
+  // vérifiée au moins une fois par an en ERP des catégories 1 à 4 (MS 73
+  // § 2) ; PE 4 § 2 en 5ᵉ, PO 1 § 3 à l'hôtel de 5ᵉ. Rangée après le RIA.
+  COLONNE_SECHE
   BAES
   ALARME_INCENDIE
   DESENFUMAGE

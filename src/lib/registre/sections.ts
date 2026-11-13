@@ -68,8 +68,8 @@ export type SectionRegistre = {
   typologies?: TypologieApplication | readonly TypologieApplication[];
   /**
    * ⚠ Typé `readonly string[]` et non `CategorieEquipement[]` : le registre
-   * attend sept catégories qui n'existent pas encore dans l'enum (marquées
-   * « à créer » ci-dessous). Ce relâchement est **provisoire et assumé**, le
+   * attend ~~sept~~ six [2026-11-13 : `COLONNE_SECHE` est créée] catégories
+   * qui n'existent pas encore dans l'enum (marquées « à créer » ci-dessous). Ce relâchement est **provisoire et assumé**, le
    * temps du lot d'inventaire. Une fois les catégories ajoutées, resserrer le
    * type — le compilateur signalera alors toute fiche orpheline, ce qui est
    * précisément le garde-fou voulu.
@@ -255,7 +255,7 @@ export const SECTIONS_REGISTRE: readonly SectionRegistre[] = [
     id: "inv-colonnes-seches",
     partie: "2.1",
     titre: "Colonnes sèches",
-    categoriesEquipement: ["COLONNE_SECHE"], // à créer
+    categoriesEquipement: ["COLONNE_SECHE"], // ~~à créer~~ créée le 2026-11-13
     attendu: "Numéro, diamètre, emplacement.",
   },
   {
@@ -366,7 +366,7 @@ export const SECTIONS_REGISTRE: readonly SectionRegistre[] = [
     id: "verif-colonnes-seches",
     partie: "3.1",
     titre: "Colonnes sèches",
-    categoriesEquipement: ["COLONNE_SECHE"], // à créer
+    categoriesEquipement: ["COLONNE_SECHE"], // ~~à créer~~ créée le 2026-11-13
     attendu: "Vérificateur, date d'épreuve, état apparent et des accessoires, visa.",
   },
   {

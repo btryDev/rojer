@@ -593,7 +593,10 @@ const RELEVE = {
   // NON : aucune règle du moteur ne change ; ce que la régénération écrit de
   // neuf vient des obligations, scellées par l'empreinte du référentiel
   // (`2026-11-13.1`). Empreinte recopiée, version inchangée.
-  empreinte: "a2ff149614a33d22",
+  // ~~a2ff149614a33d22~~ — même jour, même branche : `COLONNE_SECHE` entre à
+  // la même liste. NON, même raison (référentiel `2026-11-13.2`). Empreinte
+  // recopiée, version inchangée.
+  empreinte: "c3241249cff6c70a",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

@@ -456,6 +456,7 @@ export const LIBELLE_CATEGORIE: Record<string, string> = {
   BUT_PANIER_SPORTIF: "but ou panier de sport de 10 kg ou plus",
   SCENE: "scène / installations scéniques",
   ESCALIER_MECANIQUE: "escalier mécanique ou trottoir roulant",
+  COLONNE_SECHE: "colonne sèche",
   AUTRE: "autre",
 } satisfies Record<CategorieEquipement, string>;
 

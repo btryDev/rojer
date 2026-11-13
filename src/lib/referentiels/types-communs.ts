@@ -634,6 +634,11 @@ export const CATEGORIES_EQUIPEMENT = [
   "INSTALLATION_ELECTRIQUE",
   "EXTINCTEUR",
   "RIA",
+  // 2026-11-13, décision de la propriétaire : la colonne sèche, installation
+  // fixe de lutte contre l'incendie comme le RIA, à côté de lui. MS 73 § 2 la
+  // fait vérifier chaque année en ERP des catégories 1 à 4 ; PE 4 § 2
+  // (« moyens de secours ») et PO 1 § 3 en 5ᵉ. Hors ERP : rien (décision).
+  "COLONNE_SECHE",
   "BAES",
   "ALARME_INCENDIE",
   "DESENFUMAGE",

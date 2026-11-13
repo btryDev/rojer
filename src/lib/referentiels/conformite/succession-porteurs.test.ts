@@ -99,6 +99,8 @@ const PORTEURS: Readonly<Record<string, PorteurObligation>> = {
   "escalier-mecanique-erp-verification-annuelle-as10": "equipement",
   "escalier-mecanique-erp-examen-chaines-cremailleres": "equipement",
   "escalier-mecanique-erp-verification-remise-en-service-as10": "equipement",
+  // 2026-11-13 : MS 73 § 2, la catégorie `COLONNE_SECHE`.
+  "incendie-erp-colonne-seche-annuelle": "equipement",
   "ascenseur-examen-annuel-securite": "equipement",
   // ~~"ascenseur-hotel-5-verification-quinquennale-as9": "equipement",~~
   // ~~"ascenseur-hotel-5-verification-remise-en-service-as9": "equipement",~~

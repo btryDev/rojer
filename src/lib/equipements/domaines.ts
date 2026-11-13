@@ -38,6 +38,7 @@ export const FAMILLE_DE_CATEGORIE: Record<CategorieEquipement, FamilleEquipement
   INSTALLATION_ELECTRIQUE: "electricite",
   EXTINCTEUR: "incendie",
   RIA: "incendie",
+  COLONNE_SECHE: "incendie",
   BAES: "electricite",
   ALARME_INCENDIE: "incendie",
   DESENFUMAGE: "incendie",
