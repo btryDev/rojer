@@ -55,6 +55,10 @@ command -v gh >/dev/null || refus "la CLI gh n'est pas installée : impossible d
 [ -n "$app_id" ] || refus "identifiant de l'application absent (CC_APP_PROD_ID)."
 
 [ "$(git branch --show-current)" = "$branche" ] || refus "on n'est pas sur la branche $branche."
+# Un worktree a un FICHIER `.git`, que la CLI Clever Cloud ne sait pas lire
+# (« [ERROR] Could not find cc. », 2026-11-10) : il faut un clone.
+[ -d "$(git rev-parse --show-toplevel)/.git" ] ||
+  refus "ce dossier est un worktree : déployer depuis un clone (git clone --branch $branche --single-branch)."
 [ -z "$(git status --porcelain)" ] || refus "l'arbre de travail est modifié."
 
 git fetch --quiet origin "$branche"

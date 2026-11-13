@@ -13,7 +13,7 @@ n'existe pas encore.
 
 ## La commande
 
-Depuis un checkout **propre** de `cc`, à jour :
+Depuis un **clone** propre de `cc`, à jour :
 
 ```sh
 git pull --ff-only
@@ -25,10 +25,11 @@ et son adresse, relie le dossier à Clever Cloud s'il ne l'est pas, et ne
 déploie que sous l'alias que ce dossier donne à l'application de Rojer. `sh scripts/deployer-cc.sh
 preprod` marche sans `node_modules`.
 
-Où se placer : n'importe quel checkout de `cc` sans modification — un clone
-dédié (`git clone --branch cc --single-branch <dépôt> rojer-deploiement`) ou un
-worktree. **Pas le worktree d'un lot en cours**, et pas un dossier temporaire
-qui disparaît avec la session.
+Où se placer : un clone dédié, sans modification, n'importe où sur le poste
+(`git clone --branch cc --single-branch <dépôt> rojer-deploiement`). **Pas un
+worktree** : la CLI Clever Cloud ne lit pas le `.git` d'un worktree, et le
+script le refuse. Pas non plus un dossier temporaire qui disparaît avec la
+session.
 
 ## Ce que le script vérifie, et qu'il ne faut pas contourner
 

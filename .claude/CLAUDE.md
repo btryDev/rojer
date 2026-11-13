@@ -937,7 +937,7 @@ Les étapes 0 à 11 de `spec/PLAN.md` sont livrées. Le travail actuel dépasse 
 Deux gestes, deux skills du dépôt, identiques sur tous les postes (2026-11-13) :
 
 - **Déployer** — skill `deployer-preprod` : `pnpm deployer:preprod`, depuis un
-  checkout propre de `cc`. Toute fusion dans `cc` se déploie ; le script est la
+  clone propre de `cc` (pas un worktree). Toute fusion dans `cc` se déploie ; le script est la
   seule porte (`scripts/deployer-cc.sh`).
 - **Lire la base** — skill `lire-preprod` : `pnpm lire-preprod connexions|activite
   <e-mail>`, lecture seule. Jamais Docker, `psql` ni `clever ssh`.
