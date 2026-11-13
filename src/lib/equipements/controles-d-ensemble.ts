@@ -5,7 +5,7 @@ import { obligationParId } from "@/lib/referentiels/conformite";
 import { aUnRendezVous, classerVerification, type RegistreLigne } from "@/lib/calendrier/etats";
 import { joindreDernieresRealisations } from "@/lib/rapports/joindre-realisations";
 import { STATUTS_ACTION_OUVERTE } from "@/lib/dates/retard";
-import { DOMAINE_DE_CATEGORIE } from "./domaines";
+import { FAMILLE_DE_CATEGORIE, type FamilleEquipement } from "./domaines";
 
 /** Un contrôle d'ensemble tel que la page Équipements le montre. */
 export type ControleDEnsemble = {
@@ -18,8 +18,8 @@ export type ControleDEnsemble = {
   pointsOuverts: number;
   /** Son domaine propre, celui sous lequel il se range en tête. */
   domaine: DomaineObligation;
-  /** Les autres domaines qu'il couvre (« Aussi couvert par »). */
-  aussi: DomaineObligation[];
+  /** Les autres familles d'équipement qu'il couvre (« Aussi couvert par »). */
+  aussi: FamilleEquipement[];
 };
 
 /**
@@ -68,7 +68,7 @@ export async function controlesDEnsemble(etablissementId: string, maintenant: Da
     // se tient sur « Ce qui doit être en place », pas ici.
     if (etat === "sansRendezVous") continue;
     const couverts = new Set(
-      categories.map((c) => DOMAINE_DE_CATEGORIE[c]).filter((d): d is DomaineObligation => d !== null),
+      categories.map((c) => FAMILLE_DE_CATEGORIE[c]).filter((d): d is FamilleEquipement => d !== null),
     );
     couverts.delete(o.domaine);
     out.push({

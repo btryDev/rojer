@@ -1,9 +1,15 @@
 "use client";
 
 // Filtres du calendrier — un seul point d'entrée : le bouton « Filtres »
-// ouvre un panneau à trois groupes explicites (type d'échéance, domaine
-// des contrôles, urgence), et les filtres actifs restent visibles en
-// chips retirables à côté du bouton.
+// ouvre un panneau à groupes explicites (type d'échéance, zone, urgence),
+// et les filtres actifs restent visibles en chips retirables à côté du
+// bouton.
+//
+// Pas de filtre par domaine (retiré le 2026-11-13, décision de la
+// propriétaire) : il suivait le domaine de l'obligation, pas la famille de
+// l'équipement — une installation de gaz sortait sous « Cuisson » ou
+// « Incendie ». « Tout ce qui concerne une installation » se lit dans la vue
+// « Par équipement ».
 //
 // Les options sont de vrais inputs (radio, case à cocher) : cocher
 // s'applique immédiatement, le panneau reste ouvert et l'on peut régler
@@ -27,7 +33,6 @@ import { nomDeZone } from "@/lib/batiments/nom-zone";
 
 export type FiltresActifs = {
   famille?: FamilleEcheance;
-  domaine?: string;
   urgent: boolean;
   /**
    * « Personnel et formations » (2026-10-24) : la famille `personnel` et les
@@ -42,7 +47,6 @@ function construireHref(
   baseHref: string,
   filtres: {
     famille?: string;
-    domaine?: string;
     urgent?: boolean;
     formation?: boolean;
     batiment?: string;
@@ -62,7 +66,6 @@ function construireHref(
 ): string {
   const p = new URLSearchParams();
   if (filtres.famille) p.set("famille", filtres.famille);
-  if (filtres.domaine) p.set("domaine", filtres.domaine);
   if (filtres.urgent) p.set("urgent", "1");
   if (filtres.formation) p.set("formation", "1");
   if (filtres.batiment) p.set("batiment", filtres.batiment);
@@ -184,14 +187,12 @@ function Chip({
 export function FiltresCalendrier({
   baseHref,
   famillesDisponibles,
-  domaines,
   batiments = [],
   filtres,
 }: {
   baseHref: string;
   /** Familles ayant au moins une échéance — les seules proposées. */
   famillesDisponibles: FamilleEcheance[];
-  domaines: { id: string; label: string }[];
   /** Le groupe « Zone » n'apparaît qu'à partir de deux (ADR-029). */
   batiments?: { id: string; nom: string }[];
   filtres: FiltresActifs;
@@ -229,7 +230,6 @@ export function FiltresCalendrier({
   const multiBatiments = batiments.length > 1;
   const nbActifs =
     (f.famille ? 1 : 0) +
-    (f.domaine ? 1 : 0) +
     (f.urgent ? 1 : 0) +
     (f.formation ? 1 : 0) +
     (f.batiment ? 1 : 0);
@@ -260,21 +260,7 @@ export function FiltresCalendrier({
       famille,
       // Un type d'échéance remplace « Personnel et formations » : même groupe.
       formation: false,
-      // Quitter les contrôles lâche leur domaine.
-      domaine: famille && famille !== "controle" ? undefined : f.domaine,
     });
-
-  const choisirDomaine = (domaine?: string) =>
-    appliquer({
-      ...f,
-      // Choisir un domaine recentre sur les contrôles : c'est leur
-      // attribut, le panneau le montre en cochant les deux.
-      famille: domaine ? "controle" : f.famille,
-      domaine,
-    });
-
-  const labelDomaine = (id: string | undefined) =>
-    domaines.find((d) => d.id === id)?.label ?? id;
 
   const choisirBatiment = (batiment?: string) => appliquer({ ...f, batiment });
   const nomBatiment = (id: string | undefined) => {
@@ -327,10 +313,10 @@ export function FiltresCalendrier({
             aria-label="Filtres du calendrier"
             className="absolute right-0 top-full z-30 mt-2 w-[min(92vw,880px)] max-h-[80vh] overflow-y-auto rounded-[18px] bg-[color:var(--board-card)] p-2.5 shadow-[0_1px_2px_rgba(13,18,36,.06),0_18px_44px_-16px_rgba(13,18,36,.28)] ring-1 ring-[color:rgba(13,18,36,.08)]"
           >
-            {/* À l'horizontale (2026-10-24, demande de la propriétaire) : trois
-                colonnes dès l'écran moyen — type, domaine, le reste —, au lieu
+            {/* À l'horizontale (2026-10-24, demande de la propriétaire) : deux
+                colonnes dès l'écran moyen — type, le reste —, au lieu
                 d'une colonne qu'il fallait faire défiler. */}
-            <div className="grid gap-x-2 md:grid-cols-3">
+            <div className="grid gap-x-2 md:grid-cols-2">
             <div>
             <fieldset className="m-0 border-0 p-0">
               <TitreGroupe>Type d&apos;échéance</TitreGroupe>
@@ -369,30 +355,6 @@ export function FiltresCalendrier({
               >
                 Personnel et formations
               </Option>
-            </fieldset>
-            </div>
-            <div>
-            <fieldset className="m-0 border-0 p-0">
-              <TitreGroupe>Domaine des contrôles</TitreGroupe>
-              <Option
-                forme="radio"
-                name="filtre-domaine"
-                actif={!f.domaine}
-                onChoisir={() => choisirDomaine(undefined)}
-              >
-                Tous les domaines
-              </Option>
-              {domaines.map((d) => (
-                <Option
-                  key={d.id}
-                  forme="radio"
-                  name="filtre-domaine"
-                  actif={f.domaine === d.id}
-                  onChoisir={() => choisirDomaine(d.id)}
-                >
-                  {d.label}
-                </Option>
-              ))}
             </fieldset>
             </div>
             <div>
@@ -466,11 +428,6 @@ export function FiltresCalendrier({
           icone={<MarqueurFamille famille={f.famille} className="size-3" />}
         >
           {LABEL_FAMILLE[f.famille]}
-        </Chip>
-      ) : null}
-      {f.domaine ? (
-        <Chip onRetirer={() => choisirDomaine(undefined)}>
-          {labelDomaine(f.domaine)}
         </Chip>
       ) : null}
       {f.urgent ? (
