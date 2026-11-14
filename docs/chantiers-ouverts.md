@@ -3397,6 +3397,37 @@ n'ouvre l'accès aux données d'un autre compte. Chemins : `cc` sauf mention.
 - ~~Dernière entrée de `X-Forwarded-For` à vérifier chez Clever Cloud~~ —
   au plan de bascule (points 3 et 6), #276.
 
+### 22.8 Vérification du modèle multi-comptes (2026-11-10)
+Relecture de l'isolation entre comptes et entre membres, faite après l'audit.
+Tient : appartenance relue à chaque appel, compte actif traité comme une
+préférence, rôle par compte, 404 pour un autre compte, invitations, gestes
+sur les membres d'un autre compte, caches.
+- ~~Un geste du propriétaire (portail Stripe, souscription, changement de
+  formule, suppression d'une entreprise ou d'un établissement) relisait le
+  compte actif après la garde du rôle : un autre onglet le faisait passer sur
+  un compte où la personne n'est que membre ou lectrice~~ — #279 (la garde
+  rend le compte vérifié ; garde de code dans `saisie-gardee.test.ts`).
+- ~~Même course pour une écriture ouverte par `verifierSaisie` : écrire sur
+  un compte impayé depuis un autre onglet~~ — #281 (saisie fermée portée par
+  le client borné, test à deux onglets), session stripe.
+- ~~Une action sans identifiant (quitter, inviter, abonnement, essai,
+  onboarding) s'appliquait en silence au compte actif d'un autre onglet~~ —
+  #282 (champ `compteAttendu`, compte nommé dans les confirmations, garde
+  `compte-attendu-garde.test.ts`).
+
+Reste ouvert, sans donnée en jeu :
+- `verifierSaisie` pourrait rendre le compte jugé : `inviterMembre` ne
+  relirait plus le compte, et « compte changé » passerait avant le message
+  sur le rôle, qui peut aujourd'hui s'afficher à sa place.
+- Test à deux onglets dans un navigateur (quitter, changer de formule,
+  onboarding) : pas fait, à jouer en préproduction.
+- Avant le lancement de l'offre, `deposerFichier` écrit le fichier avant
+  l'écriture bornée : un membre en lecture seule qui gagne la course laisse
+  un fichier orphelin.
+- Bonnes pratiques absentes, à décider : journal des changements
+  d'appartenance, e-mail à la personne retirée d'un compte, nouvelle
+  authentification avant un geste sensible du propriétaire.
+
 ## 23. Les PDF trop volumineux — un garde-fou, pas une solution (2026-11-10)
 
 Lot `lot/pdf-b0`, sur `lot/pdf-a1`. Le plan du chantier est
