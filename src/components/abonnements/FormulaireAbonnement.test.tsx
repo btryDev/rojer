@@ -33,6 +33,7 @@ const OFFRES: Offres = [
 const base = { offres: OFFRES, quand: "Quand.", compteId: "c1", libelle: "Changer de formule" } as const;
 const formuleEnvoyee = (c: HTMLElement) => (c.querySelector('input[name="formule"]') as HTMLInputElement).value;
 const principal = () => screen.getByRole("button", { name: base.libelle }) as HTMLButtonElement;
+const accepter = () => fireEvent.click(screen.getByRole("checkbox", { name: /conditions générales/ }));
 
 afterEach(cleanup);
 
@@ -42,6 +43,7 @@ describe("FormulaireAbonnement", () => {
       <FormulaireAbonnement {...base} mode="changer" courante={{ formule: "pro", periodicite: "annuel" }} />,
     );
     expect(formuleEnvoyee(container)).toBe("rojer_pro_annuel");
+    accepter();
     expect(principal().disabled).toBe(true);
     fireEvent.click(screen.getByRole("radio", { name: /Mensuel/ }));
     expect(formuleEnvoyee(container)).toBe("rojer_pro_mensuel");
@@ -51,7 +53,19 @@ describe("FormulaireAbonnement", () => {
   it("sans formule en cours : Essentiel mensuel, bouton ouvert", () => {
     const { container } = render(<FormulaireAbonnement {...base} mode="enregistrer" />);
     expect(formuleEnvoyee(container)).toBe("rojer_essentiel_mensuel");
+    accepter();
     expect(principal().disabled).toBe(false);
+  });
+
+  it("la case des conditions, jamais cochée d'avance : les deux boutons restent fermés sans elle (revue du 2026-11-16)", () => {
+    render(<FormulaireAbonnement {...base} mode="enregistrer" proposerPayerMaintenant />);
+    const caseConditions = screen.getByRole("checkbox", { name: /conditions générales/ }) as HTMLInputElement;
+    expect(caseConditions.checked).toBe(false);
+    expect(caseConditions.name).toBe("accepte");
+    const payer = screen.getByRole("button", { name: "Payer maintenant" }) as HTMLButtonElement;
+    expect([principal().disabled, payer.disabled]).toEqual([true, true]);
+    accepter();
+    expect([principal().disabled, payer.disabled]).toEqual([false, false]);
   });
 
   it("pendant l'essai : « Payer maintenant » porte immediat=oui et dit le montant du jour, TTC", () => {
