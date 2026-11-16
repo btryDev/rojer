@@ -8,6 +8,7 @@ description: Lire la base de la préproduction Clever Cloud de Rojer, en lecture
 ```sh
 pnpm lire-preprod connexions julien@rojer.invalid testeur@rojer.invalid
 pnpm lire-preprod activite julien@rojer.invalid
+pnpm lire-preprod abonnement julien@rojer.invalid
 ```
 
 - `connexions` : le compte existe-t-il, depuis quand, combien de sessions
@@ -15,6 +16,11 @@ pnpm lire-preprod activite julien@rojer.invalid
 - `activite` : ce que porte le compte de cette personne — entreprises,
   établissements, équipements, vérifications, rapports, actions, salariés,
   DUERP — en nombres, et la date de la dernière écriture.
+- `abonnement` : la copie de l'abonnement que Rojer garde pour ce compte
+  (état, formule, dates), où en est sa relecture chez Stripe, et les
+  événements reçus pour ce client. À lire AVANT de conclure qu'une page ne
+  voit pas un abonnement : le 2026-11-16, c'était une autre session du
+  navigateur, pas la synchronisation.
 
 Depuis n'importe quel checkout qui a ses `node_modules` et la CLI `clever`
 connectée. Heures de Paris.

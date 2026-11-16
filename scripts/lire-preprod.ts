@@ -3,11 +3,14 @@
  *
  *   pnpm lire-preprod connexions julien@rojer.invalid [autre@…]
  *   pnpm lire-preprod activite julien@rojer.invalid
+ *   pnpm lire-preprod abonnement julien@rojer.invalid
  *
  * `connexions` : le compte existe-t-il, depuis quand, combien de sessions
  * ouvertes, date de la dernière. `activite` : ce que le compte de cette
  * personne porte (entreprises, établissements, équipements…), en nombres, et
- * la date de la dernière écriture.
+ * la date de la dernière écriture. `abonnement` : la copie de l'abonnement
+ * que Rojer garde pour ce compte (état, formule, dates), où en est sa
+ * relecture chez Stripe, et les événements reçus pour ce client.
  *
  * POURQUOI CE SCRIPT (2026-11-13). Sans recette écrite, chaque session
  * improvisait : l'une a lancé Docker pour y trouver `psql`, tronqué puis
@@ -43,7 +46,8 @@ const MAX_ADRESSES = 5;
 
 const USAGE =
   "Usage : pnpm lire-preprod connexions <e-mail> [<e-mail>…]\n" +
-  "        pnpm lire-preprod activite <e-mail>";
+  "        pnpm lire-preprod activite <e-mail>\n" +
+  "        pnpm lire-preprod abonnement <e-mail>";
 
 function refus(message: string): never {
   console.error(`Refusé : ${message}`);
@@ -52,13 +56,13 @@ function refus(message: string): never {
 
 type Demande =
   | { question: "connexions"; adresses: string[] }
-  | { question: "activite"; adresse: string };
+  | { question: "activite" | "abonnement"; adresse: string };
 
 function lireDemande(args: string[]): Demande {
   const [question, ...saisies] = args;
   // Better Auth écrit les adresses en minuscules : « Julien@… » ne trouverait rien.
   const adresses = saisies.map((a) => a.toLowerCase());
-  if (question !== "connexions" && question !== "activite") refus(USAGE);
+  if (question !== "connexions" && question !== "activite" && question !== "abonnement") refus(USAGE);
   if (adresses.length === 0) refus(`quelle adresse ?\n${USAGE}`);
   if (adresses.length > MAX_ADRESSES) {
     refus(`${MAX_ADRESSES} adresses au plus : ce script répond pour des comptes nommés.`);
@@ -66,8 +70,8 @@ function lireDemande(args: string[]): Demande {
   for (const a of adresses) {
     if (!/^[^\s@]+@[^\s@]+$/.test(a)) refus(`« ${a} » n'est pas une adresse.`);
   }
-  if (question === "activite") {
-    if (adresses.length !== 1) refus("activite : une seule adresse.");
+  if (question === "activite" || question === "abonnement") {
+    if (adresses.length !== 1) refus(`${question} : une seule adresse.`);
     return { question, adresse: adresses[0] };
   }
   return { question, adresses };
@@ -236,6 +240,123 @@ async function activite(db: Lecteur, adresse: string) {
   );
 }
 
+type LigneAbonnement = {
+  role: string;
+  ligne: boolean;
+  client: string | null;
+  abonnement_lie: boolean;
+  statut: string | null;
+  formule: string | null;
+  fin_essai: Date | null;
+  fin_periode: Date | null;
+  resilie: boolean | null;
+  fin_prevue: Date | null;
+  essai_utilise: Date | null;
+  debut_payant: Date | null;
+  relue: Date | null;
+  creee: Date | null;
+  modifiee: Date | null;
+};
+
+const ouDate = (d: Date | null) => (d ? dater(d) : "—");
+
+/**
+ * La copie de l'abonnement du compte, sa relecture et ses événements. Aucun
+ * identifiant Stripe n'est affiché : il ne sert qu'à relier les trois tables.
+ */
+async function abonnement(db: Lecteur, adresse: string) {
+  const { rows } = await db.query<LigneAbonnement>(
+    `SELECT m.role,
+            a.id IS NOT NULL AS ligne,
+            a."stripeCustomerId" AS client,
+            a."stripeSubscriptionId" IS NOT NULL AS abonnement_lie,
+            a.statut, a.formule,
+            a."finEssai" AT TIME ZONE 'UTC' AS fin_essai,
+            a."finPeriode" AT TIME ZONE 'UTC' AS fin_periode,
+            a."resilieEnFinDePeriode" AS resilie,
+            a."finPrevueLe" AT TIME ZONE 'UTC' AS fin_prevue,
+            a."essaiUtiliseLe" AT TIME ZONE 'UTC' AS essai_utilise,
+            a."debutPayantLe" AT TIME ZONE 'UTC' AS debut_payant,
+            a."relueLe" AT TIME ZONE 'UTC' AS relue,
+            a."createdAt" AT TIME ZONE 'UTC' AS creee,
+            a."updatedAt" AT TIME ZONE 'UTC' AS modifiee
+       FROM "Membre" m
+       JOIN "User" u ON u.id = m."userId"
+       LEFT JOIN "Abonnement" a ON a."compteId" = m."compteId"
+      WHERE u.email = $1
+      ORDER BY m."createdAt", m."compteId"`,
+    [adresse],
+  );
+  if (rows.length === 0) {
+    console.log(`${adresse} : aucun compte, ou membre d'aucun compte.`);
+    return;
+  }
+  for (const [rang, l] of rows.entries()) {
+    const titre = `${adresse} (${l.role}${rows.length > 1 ? `, compte ${rang + 1} sur ${rows.length}` : ""})`;
+    if (!l.ligne || !l.client) {
+      console.log(`${titre} : aucune ligne d'abonnement pour ce compte.`);
+      continue;
+    }
+    console.log(
+      `${titre} : état ${l.statut ?? "VIDE"} ; formule ${l.formule ?? "VIDE"} ; ` +
+        `abonnement Stripe ${l.abonnement_lie ? "lié" : "NON LIÉ"} ; fin d'essai ${ouDate(l.fin_essai)} ; ` +
+        `fin de période ${ouDate(l.fin_periode)} ; résiliation en fin de période ${l.resilie ? "oui" : "non"} ; ` +
+        `fin prévue ${ouDate(l.fin_prevue)} ; essai utilisé ${ouDate(l.essai_utilise)} ; ` +
+        `premier paiement ${ouDate(l.debut_payant)} ; relue chez Stripe ${ouDate(l.relue)} ; ` +
+        `ligne créée ${ouDate(l.creee)}, modifiée ${ouDate(l.modifiee)}.`,
+    );
+    const {
+      rows: [s],
+    } = await db.query<{
+      demandes: number;
+      traitees: number;
+      tentatives: number;
+      erreur: string | null;
+      echec: Date | null;
+      synchronise: Date | null;
+      bail: Date | null;
+    }>(
+      `SELECT demandes, traitees, tentatives, "derniereErreur" AS erreur,
+              "echecDurableLe" AT TIME ZONE 'UTC' AS echec,
+              "synchroniseLe" AT TIME ZONE 'UTC' AS synchronise,
+              "bailJusquAu" AT TIME ZONE 'UTC' AS bail
+         FROM "SynchronisationStripe" WHERE "customerId" = $1`,
+      [l.client],
+    );
+    console.log(
+      s
+        ? `  relecture : ${s.demandes} demandée(s), ${s.traitees} traitée(s), ${s.tentatives} tentative(s) en échec ; ` +
+            `dernière réussie ${ouDate(s.synchronise)} ; bail jusqu'au ${ouDate(s.bail)} ; ` +
+            `dernière erreur ${s.erreur ?? "aucune"} ; échec durable ${ouDate(s.echec)}.`
+        : "  relecture : jamais demandée pour ce client.",
+    );
+    const { rows: evenements } = await db.query<{
+      type: string;
+      recus: number;
+      non_traites: number;
+      dernier: Date;
+      erreur: string | null;
+    }>(
+      `SELECT type, count(*)::int AS recus,
+              count(*) FILTER (WHERE "traiteLe" IS NULL)::int AS non_traites,
+              max("recuLe") AT TIME ZONE 'UTC' AS dernier,
+              max("derniereErreur") AS erreur
+         FROM "EvenementStripe" WHERE "clientStripe" = $1
+        GROUP BY type ORDER BY max("recuLe")`,
+      [l.client],
+    );
+    if (evenements.length === 0) console.log("  événements : aucun rattaché à ce client.");
+    for (const e of evenements) {
+      console.log(
+        `  événement ${e.type} : ${e.recus} reçu(s), ${e.non_traites} non traité(s), dernier le ${dater(e.dernier)}` +
+          (e.erreur ? ` ; erreur ${e.erreur}` : "") +
+          ".",
+      );
+    }
+  }
+  console.log("(Heure de Paris. « VIDE » : la colonne n'a jamais été écrite depuis Stripe.)");
+}
+
 /** La cause, sans l'adresse de la base si un message venait à la citer. */
 function echec(erreur: unknown): never {
   const e = erreur as { code?: string; message?: string };
@@ -264,7 +385,8 @@ async function lire(demande: Demande) {
     // fichier ; rien n'est validé, la transaction est toujours annulée.
     await db.query("BEGIN TRANSACTION READ ONLY");
     if (demande.question === "connexions") await connexions(db, demande.adresses);
-    else await activite(db, demande.adresse);
+    else if (demande.question === "activite") await activite(db, demande.adresse);
+    else await abonnement(db, demande.adresse);
   } finally {
     await db.query("ROLLBACK").catch(() => undefined);
     await db.end();
