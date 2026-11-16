@@ -4,11 +4,11 @@ import { EFFECTIF_MAX } from "@/lib/etablissements/schema";
 import { Check, OctagonX } from "lucide-react";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { ChampBoard, SectionChamps } from "@/components/ui-kit";
-import { BlocCreux } from "@/components/ui-kit/fiche";
 import { evaluerScopeSecteur } from "@/lib/onboarding/scope";
 import { MESSAGE_EFFECTIF_REPRIS, entrepriseRattachee } from "@/lib/onboarding/rattachement";
 import { refusEffectif, refusEffectifEntreprise, refusSommeDesSites } from "./validation";
 import type { StepProps } from "./types";
+import { EnSavoirPlus } from "./EnSavoirPlus";
 
 const SUGGESTIONS_NAF = [
   { code: "56.10A", libelle: "Restauration" },
@@ -374,26 +374,44 @@ export function StepIdentite({
                   CSE et le règlement intérieur (L. 2311-2 renvoie à L. 1111-2,
                   dont L. 1111-3 écarte les apprentis). Un seul champ
                   « salariés + apprentis » servait aux deux. */}
-              <ChampBoard
-                id="effectifEntreprise"
-                name="effectifEntreprise"
-                label="Salariés de l'entreprise"
-                requis
-                inputMode="numeric"
-                value={state.effectifEntreprise}
-                onChange={(e) => update({ effectifEntreprise: e.target.value })}
-                readOnly={rattachee !== null}
-                placeholder="8"
-                aide="Tous établissements confondus, apprentis non compris (art. L. 1111-3). C'est sur lui que se comptent les seuils du comité social et économique, du règlement intérieur et de la mise à jour annuelle du document unique. À partir de 50, le document unique alimente aussi un programme annuel de prévention (art. L. 4121-3-1) que l'outil ne porte pas."
-                erreur={
-                  refusEntreprise ? undefined : messagePour("effectifEntreprise")
-                }
-                aria-describedby={
-                  refusEntreprise
-                    ? "effectifEntreprise-aide effectifEntreprise-refus"
-                    : undefined
-                }
-              />
+              <div>
+                <ChampBoard
+                  id="effectifEntreprise"
+                  name="effectifEntreprise"
+                  label="Salariés de l'entreprise"
+                  requis
+                  inputMode="numeric"
+                  value={state.effectifEntreprise}
+                  onChange={(e) => update({ effectifEntreprise: e.target.value })}
+                  readOnly={rattachee !== null}
+                  placeholder="8"
+                  aide="Tous vos établissements, apprentis non compris."
+                  erreur={
+                    refusEntreprise ? undefined : messagePour("effectifEntreprise")
+                  }
+                  aria-describedby={
+                    refusEntreprise
+                      ? "effectifEntreprise-aide effectifEntreprise-refus"
+                      : undefined
+                  }
+                />
+                {/* 2026-11-16 : l'aide tient en une phrase ; les seuils et
+                    leurs articles passent derrière « En savoir plus ». Le
+                    repère de seuil qui suivait l'effectif saisi, dans un bloc
+                    à part, y entre aussi — trois lignes d'articles sous un
+                    nombre qu'on vient de taper. */}
+                <EnSavoirPlus>
+                  <p>
+                    Apprentis non compris (art. L. 1111-3). C&apos;est sur cet
+                    effectif que se comptent les seuils du comité social et
+                    économique, du règlement intérieur et de la mise à jour
+                    annuelle du document unique. À partir de 50, le document
+                    unique alimente aussi un programme annuel de prévention
+                    (art. L. 4121-3-1) que l&apos;outil ne porte pas.
+                  </p>
+                  {repere ? <p>{repere}</p> : null}
+                </EnSavoirPlus>
+              </div>
             </div>
 
             {/* Le REFUS. Il ferme la porte — à partir de cinquante travailleurs
@@ -444,19 +462,6 @@ export function StepIdentite({
               </div>
             ) : null}
 
-            {/* Rappel de seuil : un repère de lecture, pas un état. Le creux
-                ardoise le pose sans lui prêter de couleur — un fond vert y
-                dirait « fait », un fond ambre « attention ». */}
-            {repere ? (
-              <BlocCreux>
-                <strong className="block text-[13.5px] font-semibold text-[color:var(--board-ink)]">
-                  {repere.titre}
-                </strong>
-                <span className="mt-1 block max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                  {repere.corps}
-                </span>
-              </BlocCreux>
-            ) : null}
           </div>
         </SectionChamps>
       </section>
@@ -474,9 +479,7 @@ export function StepIdentite({
  * `refusEffectif` (`validation.ts`) : un seul texte, une seule fois, et dans
  * le registre du refus.
  */
-function repereEffectif(
-  v: string,
-): { titre: string; corps: string } | null {
+function repereEffectif(v: string): string | null {
   // Entier seulement : « 50,5 salariés » n'est pas un effectif, et une saisie
   // non entière est de toute façon refusée au passage d'étape. Le repère se
   // tait plutôt que de commenter un nombre qui ne veut rien dire.
@@ -486,17 +489,13 @@ function repereEffectif(
   const n = Number(v);
   if (!Number.isInteger(n) || n < 0) return null;
   if (n < 11) {
-    return {
-      titre: `${n} salarié${n > 1 ? "s" : ""}`,
-      corps:
-        "Sous onze salariés : pas de comité social et économique (art. L. 2311-2), et la mise à jour annuelle du document unique ne s'applique pas (art. R. 4121-2, 1°). Ces seuils se comptent sur l'entreprise, apprentis non compris (art. L. 1111-3).",
-    };
+    return (
+      "Sous onze salariés : pas de comité social et économique (art. L. 2311-2), et la mise à jour annuelle du document unique ne s'applique pas (art. R. 4121-2, 1°)."
+    );
   }
   // Au-delà d'EFFECTIF_MAX, l'appelant n'arrive jamais ici : `refusEffectif`
   // a déjà répondu, et c'est lui qui porte le texte.
-  return {
-    titre: `${n} salariés`,
-    corps:
-      "À partir de onze salariés : un comité social et économique est mis en place si cet effectif est atteint pendant douze mois consécutifs (art. L. 2311-2), et le document unique est mis à jour au moins chaque année (art. R. 4121-2, 1°). Ces seuils se comptent sur l'entreprise, apprentis non compris (art. L. 1111-3).",
-  };
+  return (
+    "À partir de onze salariés : un comité social et économique est mis en place si cet effectif est atteint pendant douze mois consécutifs (art. L. 2311-2), et le document unique est mis à jour au moins chaque année (art. R. 4121-2, 1°)."
+  );
 }

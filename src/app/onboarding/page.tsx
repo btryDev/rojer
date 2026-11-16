@@ -1,4 +1,5 @@
-import { PlafondDeCreation } from "@/components/quotas/PlafondDeCreation";
+import { motifDuPlafond } from "@/components/quotas/PlafondDeCreation";
+import { FermerLaSaisie } from "@/components/quotas/FermerLaSaisie";
 import { WizardShell } from "@/components/onboarding/WizardShell";
 import { redirect } from "next/navigation";
 import { aiguillageSansCompte, compteDeLaPage } from "@/lib/auth/compte";
@@ -41,15 +42,20 @@ export default async function OnboardingPage() {
   // Le compte où l'établissement se rangera : posté avec le parcours, et nommé
   // au résumé quand la personne en a plusieurs (`compte-attendu.ts`).
   const { compteId, nomCompte } = await compteDeLaPage();
-  // Le plafond d'établissements, annoncé avant le parcours (ADR-053 § 14).
+  // Le plafond d'établissements, annoncé avant le parcours (ADR-053 § 14) —
+  // DANS la colonne de l'assistant, au-dessus de l'étape (2026-11-16, tests
+  // en préprod) : posé en tête de page, au-dessus d'un assistant plein écran,
+  // le bandeau paraissait coupé.
+  const plafond = await motifDuPlafond({ cle: "etablissements" });
   return (
-    <PlafondDeCreation cle="etablissements" className="mx-auto mt-6 w-full max-w-3xl px-4">
+    <FermerLaSaisie motif={plafond} sansBandeau>
       <WizardShell
         email={user.email}
         entreprisesConnues={entreprisesConnues}
         compteId={compteId}
         nomCompte={nomCompte}
+        plafond={plafond}
       />
-    </PlafondDeCreation>
+    </FermerLaSaisie>
   );
 }
