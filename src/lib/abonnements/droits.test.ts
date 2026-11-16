@@ -52,10 +52,14 @@ describe("droitsDe", () => {
     const message = (l: LigneAbonnement | null) => droitsDe(l, EXIGE).bandeau?.message;
     expect(message(null)).toMatch(/^Démarrez votre essai gratuit/);
     expect(message(ligne({ statut: null }))).toMatch(/^Démarrez votre essai gratuit/);
+    for (const statut of ["unpaid", "incomplete"]) {
+      expect(message(ligne({ statut })), statut).toMatch(/^Une facture attend son paiement.*consultables\.$/);
+      expect(message(ligne({ statut, debutPayantLe: new Date("2026-01-01") })), statut).toMatch(/et exportables\.$/);
+    }
     for (const statut of ["paused", "canceled", "incomplete_expired"]) {
       expect(message(ligne({ statut })), statut).toMatch(/^Votre essai est terminé/);
     }
-    expect(message(ligne({ statut: "unpaid", debutPayantLe: new Date("2026-01-01") }))).toMatch(/^Votre abonnement n'est plus actif/);
+    expect(message(ligne({ statut: "canceled", debutPayantLe: new Date("2026-01-01") }))).toMatch(/^Votre abonnement n'est plus actif/);
   });
 
   it("l'état dit au dirigeant : un compte qui n'a jamais payé a un essai terminé, pas un abonnement suspendu", () => {

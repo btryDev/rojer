@@ -167,10 +167,23 @@ export async function ouvrirCheckoutCarte(
  * compris. `null` sinon.
  */
 export async function factureARegler(stripe: Stripe, derniere: Stripe.Subscription["latest_invoice"]): Promise<string | null> {
+  return (await factureOuverte(stripe, derniere))?.hosted_invoice_url ?? null;
+}
+
+/**
+ * La dernière facture si elle attend encore un paiement : `open`, ou
+ * `uncollectible` (marquée irrécouvrable à la fin des relances, toujours
+ * payable sur sa page hébergée — audit du 2026-11-16).
+ */
+async function factureOuverte(stripe: Stripe, derniere: Stripe.Subscription["latest_invoice"]): Promise<Stripe.Invoice | null> {
   if (!derniere) return null;
   const facture = typeof derniere === "string" ? await stripe.invoices.retrieve(derniere) : derniere;
-  return facture.status === "open" ? (facture.hosted_invoice_url ?? null) : null;
+  return facture.status === "open" || facture.status === "uncollectible" ? facture : null;
 }
+
+/** La facture porte-t-elle ce prix, et lui seul ? */
+const factureDuPrix = (f: Stripe.Invoice, priceId: string) =>
+  f.lines.data.length > 0 && f.lines.data.every((l) => l.pricing?.price_details?.price === priceId);
 
 /**
  * Appliquer la formule choisie et la carte enregistrée à l'abonnement qui
@@ -192,13 +205,31 @@ export async function factureARegler(stripe: Stripe, derniere: Stripe.Subscripti
 export async function appliquerFormule(
   stripe: Stripe,
   abonnement: Stripe.Subscription,
-  choix: { priceId: string; paymentMethodId: string; immediat: boolean; choisiLe: number; idempotence?: string },
+  choix: {
+    priceId: string;
+    paymentMethodId: string;
+    immediat: boolean;
+    choisiLe: number;
+    idempotence?: string;
+    /** Le taux de TVA en vigueur (`tauxDeTva`) : reposé, pour qu'un abonnement né sous un ancien taux paie le prix affiché. */
+    tauxTva?: string | null;
+  },
 ): Promise<string | null> {
   if (choix.choisiLe < Number(abonnement.metadata?.rojerChoixLe ?? 0)) return null;
   const enPause = abonnement.status === "paused";
   if (enPause) {
-    const enAttente = await factureARegler(stripe, abonnement.latest_invoice);
-    if (enAttente) return enAttente;
+    // Une reprise précédente attend son paiement : on la renvoie si elle est
+    // de la formule choisie ; sinon elle est annulée, et la reprise se fait
+    // au prix affiché (audit du 2026-11-16).
+    const enAttente = await factureOuverte(stripe, abonnement.latest_invoice);
+    if (enAttente && factureDuPrix(enAttente, choix.priceId)) return enAttente.hosted_invoice_url ?? null;
+    if (enAttente) await stripe.invoices.voidInvoice(enAttente.id!);
+  }
+  // Payer maintenant : l'essai est relu juste avant. Un autre onglet a pu le
+  // finir et payer entre-temps ; on ne finit pas deux fois un essai.
+  if (choix.immediat && abonnement.status === "trialing") {
+    const frais = await stripe.subscriptions.retrieve(abonnement.id);
+    if (frais.status !== "trialing") return null;
   }
   const item = abonnement.items.data[0];
   const pmActuel = idStripe(abonnement.default_payment_method);
@@ -215,6 +246,7 @@ export async function appliquerFormule(
       metadata: { rojerChoixLe: String(choix.choisiLe) },
       expand: ["latest_invoice"],
       ...(finEssai ? { trial_end: "now" as const } : {}),
+      ...(choix.tauxTva ? { default_tax_rates: [choix.tauxTva] } : {}),
     },
     cle("maj"),
   );

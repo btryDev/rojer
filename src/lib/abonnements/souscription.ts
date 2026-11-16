@@ -12,7 +12,7 @@ import "server-only";
 // la formule posée par Rojer à sa création), puis les abonnements du client.
 
 import type Stripe from "stripe";
-import { abonnementsDuClient, appliquerFormule, prixDesFormules } from "@/lib/stripe/parcours";
+import { abonnementsDuClient, appliquerFormule, prixDesFormules, tauxDeTva } from "@/lib/stripe/parcours";
 import { abonnementCourant, idStripe, synchroniserClientStripe } from "@/lib/stripe/synchronisation";
 import { SANS_PAIEMENT_ENCORE } from "./droits";
 import { estLookupKey } from "./formules";
@@ -57,7 +57,8 @@ export async function finaliserCarte(
   const { courant } = abonnementCourant(await abonnementsDuClient(stripe, customerId));
   // Déjà payant (une première finalisation est passée) ou terminé : rien à faire.
   if (!courant || !SANS_PAIEMENT_ENCORE.has(courant.status)) return RIEN;
-  const prix = (await prixDesFormules(stripe)).get(formule);
+  const [catalogue, tauxTva] = await Promise.all([prixDesFormules(stripe), tauxDeTva(stripe)]);
+  const prix = catalogue.get(formule);
   if (!prix) throw new Error("prix introuvable");
 
   await stripe.customers.update(customerId, { invoice_settings: { default_payment_method: paymentMethodId } });
@@ -66,6 +67,7 @@ export async function finaliserCarte(
     priceId: prix.priceId,
     paymentMethodId,
     immediat,
+    tauxTva,
     choisiLe: session.created,
     idempotence: `carte-${session.id}`,
   });

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import Stripe from "stripe";
 import { redirigeVers } from "@/test/redirection";
 
 // S'abonner : jamais un second abonnement payant ; la carte d'un essai ou
@@ -194,6 +195,25 @@ describe("sAbonnerAction", () => {
     expect(m.appliquerFormule.mock.calls[3][2].idempotence).toBe("formule-sub_trialing-200-price_pa-maintenant");
   });
 
+  it("deux onglets : le second refusé par Stripe (idempotence, 409) n'annonce pas d'échec, la page relit l'état", async () => {
+    m.abonnementsDuClient.mockResolvedValue([abonnement("trialing")]);
+    m.carteParDefaut.mockResolvedValue("pm_1");
+    for (const e of [
+      new Stripe.errors.StripeIdempotencyError({ message: "Keys for idempotent requests can only be used with the same parameters" }),
+      Object.assign(new Error("en cours"), { statusCode: 409 }),
+    ]) {
+      m.appliquerFormule.mockRejectedValueOnce(e);
+      expect(await redirigeVers(sAbonnerAction(formulaire("rojer_pro_annuel", true)))).toBe("/compte/abonnement");
+    }
+  });
+
+  it("le taux de TVA en vigueur accompagne la formule appliquée", async () => {
+    m.abonnementsDuClient.mockResolvedValue([abonnement("trialing")]);
+    m.carteParDefaut.mockResolvedValue("pm_1");
+    await redirigeVers(sAbonnerAction(formulaire()));
+    expect(m.appliquerFormule.mock.calls[0][2].tauxTva).toBe("txr_tva");
+  });
+
   it("résiliation prévue pendant l'essai : on ne change pas une formule qui s'arrête", async () => {
     m.carteParDefaut.mockResolvedValue("pm_1");
     for (const fin of [{ cancel_at_period_end: true }, { cancel_at: 1_800_000_000 }]) {
@@ -244,8 +264,11 @@ describe("reglerFactureAction", () => {
       expect(await redirigeVers(reglerFactureAction(poste()))).toBe("/compte/abonnement?facture=aucune");
     }
     expect(m.factureARegler).not.toHaveBeenCalled();
-    m.abonnementsDuClient.mockResolvedValue([abonnement("past_due")]);
-    expect(await redirigeVers(reglerFactureAction(poste()))).toBe("/compte/abonnement?facture=aucune");
+  });
+
+  it("impayé sans facture payable trouvée : la page ne dit pas « à jour »", async () => {
+    m.abonnementsDuClient.mockResolvedValue([abonnement("unpaid")]);
+    expect(await redirigeVers(reglerFactureAction(poste()))).toBe("/compte/abonnement?facture=introuvable");
   });
 
   it("Stripe injoignable : page d'erreur", async () => {

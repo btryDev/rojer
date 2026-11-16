@@ -58,7 +58,9 @@ export function droitsDe(ligne: LigneAbonnement | null, ctx: ContexteDroits): Dr
         // un essai fini sans abonnement, un abonnement qui a cessé.
         message: !ligne?.statut
           ? "Démarrez votre essai gratuit pour saisir dans Rojer : vos dossiers restent consultables."
-          : !ligne.debutPayantLe
+          : A_REGLER.has(ligne.statut)
+            ? `Une facture attend son paiement : réglez-la depuis la page Abonnement pour rouvrir la saisie. Vos dossiers restent consultables${ligne.debutPayantLe ? " et exportables" : ""}.`
+            : !ligne.debutPayantLe
             ? "Votre essai est terminé : choisissez une formule pour reprendre la saisie. Vos dossiers restent consultables."
             : "Votre abonnement n'est plus actif : vos dossiers restent consultables et exportables, la saisie est fermée.",
       },

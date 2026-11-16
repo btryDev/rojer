@@ -205,7 +205,8 @@ export default async function AbonnementPage({
   // Essai avec une carte déjà enregistrée : la formule est choisie, l'abonnement
   // démarrera seul à la fin de l'essai ; on peut encore en changer.
   const carteEnregistree =
-    geste === "abonner" && ligne?.statut === "trialing" && c ? await carteDuCompte(c.db, c.compte.compteId) : false;
+    // En pause aussi : une carte posée au portail est prélevée directement.
+    geste === "abonner" && c ? await carteDuCompte(c.db, c.compte.compteId) : false;
   // Changer de formule : un abonnement qui paie, pour son propriétaire.
   const { options: optionsChangement, baisse } =
     // Une résiliation prévue : on ne change pas une formule qui s'arrête.
@@ -265,7 +266,7 @@ export default async function AbonnementPage({
         )}
 
         {/* Un geste réservé aux abonnés y renvoie (`exigerUnPaiement`) : on dit pourquoi on est là. */}
-        {immediat === "1" && (geste === "abonner" || geste === "souscrire") && (
+        {immediat === "1" && (geste === "abonner" || geste === "souscrire") && !(enEssai && resiliationPrevue) && (
           <div className="mt-6">
             <MessageFormulaire ton="info">
               Valider un document, exporter le registre ou le dossier de contrôle, publier le registre
@@ -345,6 +346,8 @@ export default async function AbonnementPage({
                 ? "Le premier paiement est en cours : les fonctions réservées aux abonnés s'ouvrent dès qu'il est confirmé. Inutile de payer de nouveau."
                 : facture === "aucune"
                 ? "Aucune facture n'attend de paiement : votre abonnement est à jour."
+                : facture === "introuvable"
+                ? "Aucune facture payable n'a été trouvée. Vérifiez votre carte depuis « Gérer mon abonnement » ; si le problème reste, écrivez-nous."
                 : abonnement === "en-cours"
                 ? "Un abonnement est déjà en cours pour ce compte : gérez-le ici plutôt que d'en souscrire un second."
                 : abonnement === "formule-choisie"
@@ -358,7 +361,7 @@ export default async function AbonnementPage({
             <h2 id="titre-gerer" className="board-titre m-0 text-[22px]">
               {geste === "essai"
                 ? "Essai gratuit"
-                : geste === "abonner" && enEssai && !payerMaintenant
+                : geste === "abonner" && enEssai && (resiliationPrevue || !payerMaintenant)
                   ? resiliationPrevue
                     ? "Fin de l'essai"
                     : carteEnregistree
@@ -428,7 +431,7 @@ export default async function AbonnementPage({
             ) : (
               (geste === "abonner" || geste === "souscrire") && (
                 <>
-                  {carteEnregistree && formule && (
+                  {carteEnregistree && enEssai && !payerMaintenant && formule && (
                     <p className="m-0 mt-2 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                       Votre carte est enregistrée. Après l&apos;essai{finEssai} : {FORMULES[formule.formule].libelle},
                       facturation {LIBELLE_PERIODICITE[formule.periodicite].adjectif}.
@@ -448,7 +451,9 @@ export default async function AbonnementPage({
                     <form action={ouvrirPortailAction} className="mt-6">
                       <ChampCompteAttendu compteId={compteId} />
                       <p className="m-0 mb-3 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                        Carte, factures, résiliation avant la fin de l&apos;essai : sur la page sécurisée de Stripe.
+                        {enEssai
+                          ? "Carte, factures, résiliation avant la fin de l'essai : sur la page sécurisée de Stripe."
+                          : "Carte, factures, résiliation : sur la page sécurisée de Stripe."}
                       </p>
                       <Button type="submit" variant="boardClair" size="board">
                         Gérer mon abonnement

@@ -22,8 +22,8 @@ import {
 
 const api = {
   customers: { create: vi.fn() },
-  subscriptions: { create: vi.fn(), update: vi.fn(), resume: vi.fn() },
-  invoices: { retrieve: vi.fn() },
+  subscriptions: { create: vi.fn(), update: vi.fn(), resume: vi.fn(), retrieve: vi.fn() },
+  invoices: { retrieve: vi.fn(), voidInvoice: vi.fn() },
   subscriptionSchedules: { create: vi.fn(), retrieve: vi.fn(), update: vi.fn(), release: vi.fn() },
   checkout: { sessions: { create: vi.fn(), list: vi.fn(), expire: vi.fn() } },
   prices: { list: vi.fn() },
@@ -95,6 +95,7 @@ describe("parcours Stripe", () => {
     const choix = { priceId: "price_pa", paymentMethodId: "pm_1", immediat: false, choisiLe: 100, idempotence: "carte-cs_1" };
     api.subscriptions.update.mockResolvedValue({ latest_invoice: null });
     api.subscriptions.resume.mockResolvedValue({ latest_invoice: null });
+    api.subscriptions.retrieve.mockResolvedValue({ status: "trialing" });
 
     expect(await appliquerFormule(stripe, sub("trialing"), choix)).toBeNull();
     expect(api.subscriptions.update).toHaveBeenLastCalledWith(
@@ -128,13 +129,43 @@ describe("parcours Stripe", () => {
     expect(await appliquerFormule(stripe, sub("trialing", { metadata: { rojerChoixLe: "200" } }), choix)).toBeNull();
     expect(api.subscriptions.update).not.toHaveBeenCalled();
 
-    const enAttente = { status: "open", hosted_invoice_url: "https://invoice.stripe.com/i/1" };
+    const ligneDe = (price: string) => ({ pricing: { price_details: { price } } });
+    const enAttente = { id: "in_1", status: "open", hosted_invoice_url: "https://invoice.stripe.com/i/1", lines: { data: [ligneDe("price_pa")] } };
     expect(await appliquerFormule(stripe, sub("paused", { latest_invoice: enAttente }), choix)).toBe("https://invoice.stripe.com/i/1");
     expect(api.subscriptions.update).not.toHaveBeenCalled();
     expect(api.subscriptions.resume).not.toHaveBeenCalledWith("sub_1", expect.anything(), expect.anything());
 
+    api.subscriptions.retrieve.mockResolvedValue({ status: "trialing" });
     api.subscriptions.update.mockResolvedValue({ latest_invoice: enAttente });
     expect(await appliquerFormule(stripe, sub("trialing"), { ...choix, immediat: true })).toBe("https://invoice.stripe.com/i/1");
+  });
+
+  it("pause dont la facture en attente est d'une autre formule : annulée, la reprise se fait au prix choisi (audit du 2026-11-16)", async () => {
+    const sub = (o: Record<string, unknown> = {}) =>
+      ({ id: "sub_1", status: "paused", default_payment_method: "pm_1", metadata: {}, latest_invoice: null, items: { data: [{ id: "si_1", price: { id: "price_pa" } }] }, ...o }) as unknown as Stripe.Subscription;
+    const choix = { priceId: "price_em", paymentMethodId: "pm_1", immediat: true, choisiLe: 100 };
+    api.subscriptions.update.mockResolvedValue({ latest_invoice: null });
+    api.subscriptions.resume.mockResolvedValue({ latest_invoice: null });
+    api.invoices.voidInvoice.mockClear();
+    for (const status of ["open", "uncollectible"]) {
+      const autre = { id: `in_${status}`, status, hosted_invoice_url: "https://invoice.stripe.com/i/autre", lines: { data: [{ pricing: { price_details: { price: "price_pa" } } }] } };
+      expect(await appliquerFormule(stripe, sub({ latest_invoice: autre }), choix)).toBeNull();
+      expect(api.invoices.voidInvoice).toHaveBeenLastCalledWith(`in_${status}`);
+    }
+    expect(api.subscriptions.resume).toHaveBeenCalled();
+  });
+
+  it("payer maintenant : l'essai relu juste avant ; déjà fini par un autre onglet, rien n'est refait ; le taux en vigueur est reposé", async () => {
+    const sub = { id: "sub_1", status: "trialing", default_payment_method: "pm_1", metadata: {}, latest_invoice: null, items: { data: [{ id: "si_1", price: { id: "price_em" } }] } } as unknown as Stripe.Subscription;
+    const choix = { priceId: "price_pa", paymentMethodId: "pm_1", immediat: true, choisiLe: 100, tauxTva: "txr_ttc" };
+    api.subscriptions.update.mockClear();
+    api.subscriptions.retrieve.mockResolvedValue({ status: "active" });
+    expect(await appliquerFormule(stripe, sub, choix)).toBeNull();
+    expect(api.subscriptions.update).not.toHaveBeenCalled();
+    api.subscriptions.retrieve.mockResolvedValue({ status: "trialing" });
+    api.subscriptions.update.mockResolvedValue({ latest_invoice: null });
+    await appliquerFormule(stripe, sub, choix);
+    expect(api.subscriptions.update.mock.lastCall?.[1]).toMatchObject({ trial_end: "now", default_tax_rates: ["txr_ttc"] });
   });
 
   it("monter : tout de suite, prorata facturé, appliquée seulement si payée ; une baisse planifiée est abandonnée d'abord", async () => {

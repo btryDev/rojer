@@ -117,17 +117,22 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
       // par Stripe (changer de formule pendant l'essai, reprendre une pause).
       const carte = await carteParDefaut(stripe, ligne.stripeCustomerId);
       if (carte) {
-        const prix = (await prixDesFormules(stripe)).get(formule);
+        const [catalogue, tauxTva] = await Promise.all([prixDesFormules(stripe), tauxDeTva(stripe)]);
+        const prix = catalogue.get(formule);
         if (!prix) throw new Error("prix introuvable");
         const paye = immediat || courant.status === "paused";
         const aRegler = await appliquerFormule(stripe, courant, {
           priceId: prix.priceId,
           paymentMethodId: carte,
           immediat: paye,
+          tauxTva,
           choisiLe: Math.floor(Date.now() / 1000),
-          // Le même choix envoyé de deux onglets ne se joue qu'une fois ; le
-          // dernier choix appliqué (`rojerChoixLe`) entre dans la clé, pour
-          // qu'un retour au même choix plus tard ne soit pas pris pour un rejeu.
+          // Le même choix envoyé de deux onglets ne se joue qu'une fois : le
+          // second reçoit de Stripe un refus d'idempotence (paramètres
+          // différents d'une seconde) ou un 409, et la page relit l'état
+          // (`dejaEnCours` plus bas). Le dernier choix appliqué
+          // (`rojerChoixLe`) entre dans la clé, pour qu'un retour au même
+          // choix plus tard ne soit pas pris pour un rejeu.
           idempotence: `formule-${courant.id}-${courant.metadata?.rojerChoixLe ?? "0"}-${prix.priceId}-${paye ? "maintenant" : "fin-essai"}`,
         });
         await synchroniserClientStripe(stripe, ligne.stripeCustomerId).catch(() => null);
@@ -159,7 +164,10 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
         annulation: base,
       });
     }
-  } catch {
+  } catch (e) {
+    // Le même geste parti d'un autre onglet est passé ou passe : rien n'a
+    // échoué, la page relit l'état (jamais « rien ne vous a été facturé »).
+    if (dejaEnCours(e)) redirect(PAGE_ABONNEMENT);
     redirect(`${PAGE_ABONNEMENT}?stripe=indisponible`);
   }
   redirect(url ?? `${PAGE_ABONNEMENT}?abonnement=en-cours`);
@@ -174,14 +182,17 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
 export async function reglerFactureAction(formData: FormData): Promise<void> {
   const proprietaire = await verifierProprietaire();
   const { stripe, ligne } = await clientDuCompte(proprietaire, formData);
-  let url: string | null = null;
+  let cible = `${PAGE_ABONNEMENT}?facture=aucune`;
   try {
     const { courant } = abonnementCourant(await abonnementsDuClient(stripe, ligne.stripeCustomerId));
-    if (courant && A_REGLER.has(courant.status)) url = await factureARegler(stripe, courant.latest_invoice);
+    if (courant && A_REGLER.has(courant.status)) {
+      // Un impayé sans facture payable trouvée : ce n'est pas « à jour ».
+      cible = (await factureARegler(stripe, courant.latest_invoice)) ?? `${PAGE_ABONNEMENT}?facture=introuvable`;
+    }
   } catch {
     redirect(`${PAGE_ABONNEMENT}?stripe=indisponible`);
   }
-  redirect(url ?? `${PAGE_ABONNEMENT}?facture=aucune`);
+  redirect(cible);
 }
 
 /**
