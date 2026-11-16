@@ -8,6 +8,9 @@
 // libellé du bouton, présence du portail et de « Payer maintenant ».
 
 import { A_REGLER, type Geste } from "./droits";
+import type { CleFormule, Periodicite } from "./formules";
+
+type Choix = { formule: CleFormule; periodicite: Periodicite };
 
 export type EntreeVue = {
   geste: Geste | null;
@@ -116,4 +119,18 @@ function formulaire(e: EntreeVue): Extract<VueAbonnement, { cas: "formulaire" }>
       ? `Carte, factures, résiliation${enEssai ? " avant la fin de l'essai" : ""} : ${STRIPE}.`
       : null,
   };
+}
+
+/**
+ * La formule présélectionnée dans le formulaire : celle de l'abonnement quand
+ * on la change ; sinon l'offre choisie sur la page publique (2026-11-16),
+ * sinon celle de l'abonnement qui court sans payer encore.
+ */
+export function preselection(
+  vue: VueAbonnement,
+  { abonnement, offreChoisie, geste }: { abonnement: Choix | null; offreChoisie: Choix | null; geste: Geste | null },
+): Choix | null {
+  if (vue.cas !== "formulaire") return null;
+  if (vue.mode === "changer") return abonnement;
+  return offreChoisie ?? (geste === "abonner" ? abonnement : null);
 }

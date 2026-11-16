@@ -143,8 +143,16 @@ export const auth = betterAuth({
     // Un mot de passe réinitialisé ferme toutes les sessions ouvertes.
     revokeSessionsOnPasswordReset: true,
     resetPasswordTokenExpiresIn: 60 * 60,
-    sendResetPassword: ({ user, token }) =>
-      envoyer(user.email, "Rojer — réinitialiser votre mot de passe", {
+    // Un compte pas encore activé reçoit le lien d'ACTIVATION à la place : il
+    // y choisit son mot de passe en une fois, au lieu de le choisir ici puis
+    // de nouveau à l'activation (revue du 2026-11-16). La réponse de la page
+    // ne change pas.
+    sendResetPassword: async ({ user, token }) => {
+      if (!user.emailVerified) {
+        await auth.api.sendVerificationEmail({ body: { email: user.email } });
+        return;
+      }
+      await envoyer(user.email, "Rojer — réinitialiser votre mot de passe", {
         titre: "Choisir un nouveau mot de passe",
         paragraphes: ["Vous avez demandé à changer le mot de passe de votre compte Rojer."],
         bouton: { libelle: "Choisir mon mot de passe", url: lienReinitialisation(token) },
@@ -152,7 +160,8 @@ export const auth = betterAuth({
         apres: [
           "Si vous n'êtes pas à l'origine de cette demande, ignorez ce message : votre mot de passe ne change pas.",
         ],
-      }),
+      });
+    },
     // Une adresse déjà inscrite reçoit la même réponse qu'une nouvelle (pas
     // d'énumération) ; si son compte n'est pas encore confirmé — lien de 24 h
     // expiré —, elle reçoit un nouveau lien au lieu de n'avoir rien. Déjà

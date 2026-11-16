@@ -24,8 +24,11 @@ export function FormulaireMotDePasse({
   libelleBouton,
   libelleEnCours,
   lienInvalide,
+  identifiant = null,
 }: {
   token: string | null;
+  /** L'adresse du compte, pour le gestionnaire de mots de passe (champ caché). */
+  identifiant?: string | null;
   action: (prev: AuthActionState, formData: FormData) => Promise<AuthActionState>;
   libelleChamp: string;
   libelleBouton: string;
@@ -52,6 +55,9 @@ export function FormulaireMotDePasse({
   return (
     <form action={action} className="flex flex-col gap-5">
       <input type="hidden" name="token" value={token} />
+      {/* Le gestionnaire de mots de passe enregistre le mot de passe sous
+          cette adresse : sans elle, il l'enregistrerait sans identifiant. */}
+      {identifiant && <input type="email" name="username" autoComplete="username" value={identifiant} readOnly hidden />}
       {/* Un seul champ, avec un œil (retours de test du 2026-11-16). */}
       <ChampMotDePasse label={libelleChamp} />
 

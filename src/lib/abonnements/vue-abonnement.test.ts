@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { besoinDeLaCarte, vueAbonnement, type EntreeVue } from "./vue-abonnement";
+import { besoinDeLaCarte, preselection, vueAbonnement, type EntreeVue } from "./vue-abonnement";
 
 // Ce que la page Abonnement montre, état par état (audit du 2026-11-16).
 
@@ -84,5 +84,31 @@ describe("vueAbonnement", () => {
     for (const statut of ["past_due", "unpaid", "incomplete"]) {
       expect(vueAbonnement(entree({ geste: "portail", statut }))).toMatchObject({ factureEnAttente: true });
     }
+  });
+});
+
+describe("preselection", () => {
+  const pro = { formule: "pro", periodicite: "annuel" } as const;
+  const essentiel = { formule: "essentiel", periodicite: "mensuel" } as const;
+
+  it("changer de formule : celle de l'abonnement, l'offre de la page publique ignorée", () => {
+    const v = vueAbonnement(entree({ carteEnregistree: true }));
+    expect(preselection(v, { abonnement: essentiel, offreChoisie: pro, geste: "abonner" })).toEqual(essentiel);
+  });
+
+  it("enregistrer ou payer : l'offre choisie sur la page publique d'abord, sinon l'abonnement", () => {
+    const v = vueAbonnement(entree({}));
+    expect(preselection(v, { abonnement: essentiel, offreChoisie: pro, geste: "abonner" })).toEqual(pro);
+    expect(preselection(v, { abonnement: essentiel, offreChoisie: null, geste: "abonner" })).toEqual(essentiel);
+  });
+
+  it("souscrire après une résiliation : l'offre choisie, sinon rien (l'ancienne formule ne se ressert pas d'office)", () => {
+    const v = vueAbonnement(entree({ geste: "souscrire", statut: "canceled" }));
+    expect(preselection(v, { abonnement: pro, offreChoisie: null, geste: "souscrire" })).toBeNull();
+    expect(preselection(v, { abonnement: pro, offreChoisie: essentiel, geste: "souscrire" })).toEqual(essentiel);
+  });
+
+  it("hors formulaire : rien", () => {
+    expect(preselection(vueAbonnement(entree({ geste: "portail", statut: "active" })), { abonnement: pro, offreChoisie: pro, geste: "portail" })).toBeNull();
   });
 });

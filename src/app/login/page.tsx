@@ -2,7 +2,6 @@ import Link from "next/link";
 import { cheminDeRetour } from "@/lib/auth/chemin-de-retour";
 import { LoginForm } from "./LoginForm";
 import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
-import { ConnecteAvec } from "@/components/compte/ConnecteAvec";
 import { getOptionalUser } from "@/lib/auth/require-user";
 
 export const metadata = {
@@ -63,16 +62,12 @@ export default async function LoginPage({
           </MessageFormulaire>
         ) : null}
 
+        {/* L'en-tête porte déjà l'adresse, la sortie et le lien vers le dossier. */}
         {ouverte?.email ? (
-          <div className="mt-6 flex flex-col gap-2">
-            <MessageFormulaire ton="info">
-              Ce navigateur est déjà connecté. Pour utiliser une autre adresse, déconnectez-vous d&apos;abord.{" "}
-              <Link href="/entreprises" className="font-semibold underline underline-offset-4">
-                Aller à mon dossier
-              </Link>
-            </MessageFormulaire>
-            <ConnecteAvec email={ouverte.email} />
-          </div>
+          <MessageFormulaire ton="info" className="mt-6">
+            Ce navigateur est déjà connecté avec {ouverte.email}. Pour utiliser une autre adresse, déconnectez-vous
+            d&apos;abord, en haut de la page.
+          </MessageFormulaire>
         ) : null}
 
         <div className="carte-board mt-7 px-7 py-6 sm:px-8">

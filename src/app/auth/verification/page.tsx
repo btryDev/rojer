@@ -2,6 +2,7 @@ import { activerCompteAction } from "@/lib/auth/actions";
 import { LIEN_ACTIVATION_INVALIDE } from "@/lib/auth/mot-de-passe";
 import { FormulaireMotDePasse } from "../FormulaireMotDePasse";
 import { getOptionalUser } from "@/lib/auth/require-user";
+import { adresseDuJeton } from "@/lib/auth/adresse-du-jeton";
 import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
 
 export const metadata = {
@@ -20,9 +21,12 @@ export default async function ActivationPage({
   searchParams: Promise<{ token?: string }>;
 }) {
   const { token } = await searchParams;
-  // Une session d'une autre adresse ouverte dans ce navigateur (un compte
-  // qu'on active n'en a pas) : l'activation la fermera, on le dit avant.
+  // L'adresse du lien (affichage seulement) et la session ouverte : si une
+  // AUTRE adresse est connectée, l'activation fermera sa session, on le dit
+  // avant. Le même compte, déjà activé et connecté, n'est pas concerné.
+  const adresse = adresseDuJeton(token);
   const ouverte = await getOptionalUser();
+  const autreSession = ouverte?.email && adresse && ouverte.email.toLowerCase() !== adresse ? ouverte.email : null;
   return (
     // Même enveloppe que /login et /auth/reinitialisation.
     <main className="flex min-h-[calc(100vh-56px)] flex-col justify-center bg-[color:var(--board-canvas)] px-6 py-14 sm:px-10">
@@ -37,16 +41,17 @@ export default async function ActivationPage({
           Votre adresse sera confirmée et votre compte activé avec ce mot de passe.
         </p>
 
-        {ouverte?.email && token ? (
+        {autreSession ? (
           <MessageFormulaire ton="info" className="mt-6">
-            Ce navigateur est connecté avec {ouverte.email}. Activer ce compte-ci fermera cette session : vous vous
-            connecterez ensuite avec le compte activé.
+            Ce navigateur est connecté avec {autreSession}. Activer le compte de {adresse} fermera cette session : vous
+            vous connecterez ensuite avec le compte activé.
           </MessageFormulaire>
         ) : null}
 
         <div className="carte-board mt-7 px-7 py-6 sm:px-8">
           <FormulaireMotDePasse
             token={token ?? null}
+            identifiant={adresse}
             action={activerCompteAction}
             libelleChamp="Mot de passe"
             libelleBouton="Activer mon compte →"

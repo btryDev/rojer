@@ -44,7 +44,7 @@ export async function AppHeader() {
                 {dashboardLabel} →
               </Link>
               <span
-                className="board-eyebrow m-0 hidden max-w-[220px] truncate text-[9.5px] tracking-[0.16em] text-[color:var(--board-slate-soft)] sm:inline"
+                className="board-eyebrow m-0 max-w-[130px] truncate text-[9.5px] tracking-[0.16em] text-[color:var(--board-slate-soft)] sm:max-w-[220px]"
                 title={user.email ?? ""}
               >
                 {user.email}

@@ -9,6 +9,7 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import { estLookupKey, formuleDeLookupKey, type CleFormule, type Periodicite } from "./formules";
+import { DUREE_ESSAI_JOURS } from "@/lib/stripe/parcours";
 
 export const COOKIE_OFFRE_CHOISIE = "rojer-offre-choisie";
 
@@ -20,8 +21,8 @@ export async function retenirOffreChoisie(valeur: FormDataEntryValue | null): Pr
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    // Le temps de l'essai, et un peu plus.
-    maxAge: 60 * 60 * 24 * 45,
+    // Le temps de l'essai, et deux semaines de plus (activation tardive).
+    maxAge: 60 * 60 * 24 * (DUREE_ESSAI_JOURS + 14),
   });
 }
 

@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import type { CompteLanding } from "./compte";
 import { BoutonContact } from "./BoutonContact";
 import { SEGMENT, SEGMENTS } from "./segment";
-import { enEuros, OFFRES, parMoisSurUnAn, type Offre, type Periode } from "./tarif-donnees";
+import { enEuros, OFFRES, parMoisSurUnAn, PERIODICITE_DE, type Offre, type Periode } from "./tarif-donnees";
 import { lookupKey } from "@/lib/abonnements/formules";
 
 /** Les deux teintes d'une carte : claire, ou d'encre pour l'offre mise en avant. */
@@ -123,7 +123,7 @@ export function TarifOffres({
 
               {o.prix ? (
                 <Link
-                  href={compte?.href ?? (o.formule ? `/signup?offre=${lookupKey(o.formule, periode === "an" ? "annuel" : "mensuel")}` : "/signup")}
+                  href={compte?.href ?? (o.formule ? `/signup?offre=${lookupKey(o.formule, PERIODICITE_DE[periode])}` : "/signup")}
                   className={cn("lp-btn mt-auto justify-center", t.bouton)}
                 >
                   {compte?.label ?? o.cta}

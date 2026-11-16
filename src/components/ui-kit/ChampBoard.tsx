@@ -29,6 +29,8 @@ export function ChampBoard({
   requis,
   className,
   champClassName,
+  aideAvant = false,
+  suffixe,
   ...props
 }: {
   id: string;
@@ -41,6 +43,10 @@ export function ChampBoard({
   requis?: boolean;
   /** Une classe de plus sur le champ lui-même — l'anneau « à compléter ». */
   champClassName?: string;
+  /** L'aide AVANT le champ : une règle à lire avant de taper (mot de passe). */
+  aideAvant?: boolean;
+  /** Un bouton posé dans le champ, à droite (l'œil du mot de passe). */
+  suffixe?: ReactNode;
 } & InputHTMLAttributes<HTMLInputElement>) {
   const idAide = aide ? `${id}-aide` : undefined;
   const idErreur = erreur ? `${id}-erreur` : undefined;
@@ -52,15 +58,23 @@ export function ChampBoard({
         {label}
         {requis && " *"}
       </label>
-      <input
-        id={id}
-        className={champClassName ? `champ-board ${champClassName}` : "champ-board"}
-        aria-invalid={Boolean(erreur)}
-        aria-describedby={decrit}
-        required={requis}
-        {...props}
-      />
-      {aide && (
+      {aide && aideAvant && (
+        <p id={idAide} className="m-0 mb-1.5 text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+          {aide}
+        </p>
+      )}
+      <div className={suffixe ? "relative" : undefined}>
+        <input
+          id={id}
+          className={[ "champ-board", champClassName, suffixe ? "pr-11" : null ].filter(Boolean).join(" ")}
+          aria-invalid={Boolean(erreur)}
+          aria-describedby={decrit}
+          required={requis}
+          {...props}
+        />
+        {suffixe && <div className="absolute inset-y-0 right-0 flex w-11 items-center justify-center">{suffixe}</div>}
+      </div>
+      {aide && !aideAvant && (
         <p
           id={idAide}
           className="m-0 mt-1.5 text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]"

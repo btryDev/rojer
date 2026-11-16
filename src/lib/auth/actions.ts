@@ -27,7 +27,7 @@ import {
 import { cheminDeRetour } from "./chemin-de-retour";
 import { erreurMotDePasse, LIEN_ACTIVATION_INVALIDE, LONGUEUR_MAX_MOT_DE_PASSE } from "./mot-de-passe";
 import { avecActivation } from "./activation";
-import { retenirOffreChoisie } from "@/lib/abonnements/offre-choisie";
+import { COOKIE_OFFRE_CHOISIE, retenirOffreChoisie } from "@/lib/abonnements/offre-choisie";
 
 const emailSchema = z.string().email("Adresse e-mail invalide");
 
@@ -131,7 +131,8 @@ function envoiImpossible(): boolean {
 
 /**
  * La règle d'un NOUVEAU mot de passe, en un endroit pour les trois portes
- * (inscription, réinitialisation, changement) : longueur, puis fuites connues
+ * (activation, réinitialisation, changement — l'inscription n'en choisit
+ * plus depuis le 2026-11-16) : longueur, puis fuites connues
  * (`mot-de-passe-divulgue.ts`, appel réseau — à placer après les refus
  * gratuits et la limitation de débit). Rend le message, ou `null`.
  */
@@ -186,7 +187,7 @@ export async function signInAction(
     // encore activé n'a pas de mot de passe connu : la phrase y renvoie.
     return {
       error:
-        "Identifiants invalides. Compte créé récemment ? Activez-le d'abord par le lien de l'e-mail « Rojer — confirmez votre adresse » : vous y choisirez votre mot de passe.",
+        "Identifiants invalides. Compte créé récemment ? Activez-le d'abord par le lien de l'e-mail « Rojer — confirmez votre adresse » : vous y choisirez votre mot de passe. Lien expiré ? Refaites l'inscription avec la même adresse pour en obtenir un nouveau.",
     };
   }
 
@@ -275,7 +276,7 @@ export async function definirMotDePasseAction(
   _prev: AuthActionState,
   formData: FormData,
 ): Promise<AuthActionState> {
-  // Un seul champ, avec un œil (retours de test du 2026-11-16).
+  // Un seul champ : plus de confirmation à comparer (2026-11-16).
   const motDePasse = String(formData.get("password") ?? "");
   const invalide = erreurMotDePasse(motDePasse);
   if (invalide) return { error: invalide };
@@ -337,6 +338,8 @@ export async function activerCompteAction(
   // compte qu'on active n'en a jamais) : elle se ferme, pour qu'on se
   // connecte avec le compte qu'on vient d'activer et non qu'on agisse sur
   // l'autre sans le voir (retours de test du 2026-11-16 ; la page l'annonce).
+  // Seulement s'il y en a une : fermer efface aussi l'offre choisie à
+  // l'inscription, qu'on garde pour ce navigateur.
   if (applique && (await getOptionalUser())) await fermerLaSession();
   redirect(applique ? "/login?confirmed=1" : "/login?confirmation=deja");
 }
@@ -369,7 +372,11 @@ async function fermerLaSession() {
   // L'établissement choisi au sélecteur ne survit pas à la déconnexion (audit
   // Next.js, B3) : revalidé à chaque lecture (`scope.ts`), mais rien ne
   // justifie de le laisser traîner sur un poste partagé.
-  (await cookies()).delete(COOKIE_ETABLISSEMENT_ACTIF);
+  // L'offre choisie sur la page publique non plus : elle ne passe pas au
+  // compte suivant de ce navigateur (revue du 2026-11-16).
+  const jar = await cookies();
+  jar.delete(COOKIE_ETABLISSEMENT_ACTIF);
+  jar.delete(COOKIE_OFFRE_CHOISIE);
   revalidatePath("/", "layout");
 }
 
@@ -391,9 +398,6 @@ export async function changerMotDePasseAction(
   const actuel = String(formData.get("actuel") ?? "");
   const nouveau = String(formData.get("password") ?? "");
   if (!actuel) return { error: "Saisissez votre mot de passe actuel" };
-  if (nouveau !== String(formData.get("confirm") ?? "")) {
-    return { error: "Les deux mots de passe ne correspondent pas" };
-  }
   const invalide = erreurMotDePasse(nouveau);
   if (invalide) return { error: invalide };
 

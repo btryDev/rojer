@@ -13,9 +13,9 @@ import "server-only";
 
 import { prisma } from "@/lib/prisma";
 import { ajouterJours } from "@/lib/dates";
+import { JOURS_AVANT_PURGE } from "./inscription";
 
-/** Le délai annoncé sur la page d'attente. */
-export const JOURS_AVANT_PURGE = 30;
+export { JOURS_AVANT_PURGE };
 
 export async function purgerComptesNonActives(maintenant: Date): Promise<{ supprimes: number }> {
   const { count } = await prisma.user.deleteMany({

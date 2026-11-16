@@ -89,7 +89,7 @@ export default async function EssaiPage() {
           <FriseEssai
             etapes={[
               { quand: "Aujourd'hui", quoi: "Votre essai commence. Vous mettez votre établissement en place." },
-              { quand: formaterDateLongueFr(veille), quoi: "Un e-mail vous rappelle la fin de l'essai." },
+              { quand: formaterDateLongueFr(veille), quoi: "Veille de la fin : pensez à choisir votre formule." },
               {
                 quand: formaterDateLongueFr(fin),
                 quoi: "Fin de l'essai. Pour continuer, choisissez une formule ; sinon, rien n'est prélevé et vos dossiers restent consultables.",
@@ -99,8 +99,9 @@ export default async function EssaiPage() {
 
           {autreFormule && (
             <MessageFormulaire ton="info">
-              Vous avez choisi {autreFormule}. L&apos;essai se fait sur {essentiel.libelle} ; {autreFormule}{" "}
-              s&apos;appliquera à sa fin, ou tout de suite si vous payez maintenant depuis la page Abonnement.
+              Vous avez choisi {autreFormule}. L&apos;essai se fait sur {essentiel.libelle} ; pour passer à{" "}
+              {autreFormule}, enregistrez-la depuis la page Abonnement, où elle sera présélectionnée — pour la fin de
+              l&apos;essai, ou tout de suite en payant maintenant.
             </MessageFormulaire>
           )}
 

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
-import { contexteDroits, offreLancee } from "@/lib/abonnements/saisie";
-import { JOURS_AVANT_PURGE } from "@/lib/auth/comptes-non-actives";
+import { contexteDroits, offreLancee } from "@/lib/abonnements/lancement";
+import { JOURS_AVANT_PURGE } from "@/lib/auth/inscription";
 import { DUREE_ESSAI_JOURS } from "@/lib/stripe/parcours";
 
 export const metadata = {

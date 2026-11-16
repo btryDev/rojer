@@ -15,8 +15,8 @@ export default async function SignupPage({
   searchParams: Promise<{ next?: string; offre?: string }>;
 }) {
   const { next: nextBrut, offre: offreBrute } = await searchParams;
-  // L'offre choisie sur la page publique : transmise telle quelle, l'action
-  // la juge (`offre-choisie.ts`).
+  // L'offre choisie sur la page publique : seule une clé connue passe au
+  // formulaire (l'action la rejuge, `offre-choisie.ts`).
   const offre = estLookupKey(offreBrute) ? offreBrute : null;
   const next = nextBrut === undefined ? undefined : cheminDeRetour(nextBrut);
 

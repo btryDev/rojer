@@ -7,9 +7,8 @@ import { ChampCompteAttendu } from "@/components/compte/ChampCompteAttendu";
 import { requireUser } from "@/lib/auth/require-user";
 import { abonnementDuCompte, contexteDroits, offreLancee } from "@/lib/abonnements/saisie";
 import { droitsDe, gesteAbonnement, libelleStatut, OUVRENT, resiliationPrevue } from "@/lib/abonnements/droits";
-import { besoinDeLaCarte, vueAbonnement } from "@/lib/abonnements/vue-abonnement";
+import { besoinDeLaCarte, preselection, vueAbonnement } from "@/lib/abonnements/vue-abonnement";
 import { lireOffreChoisie } from "@/lib/abonnements/offre-choisie";
-import { ConnecteAvec } from "@/components/compte/ConnecteAvec";
 import { formaterDateLongueFr } from "@/lib/dates";
 import { dateDeSuppressionPrevue } from "@/lib/abonnements/suppression";
 import { buttonVariants } from "@/components/ui/button";
@@ -223,7 +222,7 @@ export default async function AbonnementPage({
   // La formule présélectionnée : celle de l'abonnement quand elle est
   // choisie ; avant, celle choisie sur la page publique (`offre-choisie.ts`).
   const offreChoisie = vue.cas === "formulaire" && vue.mode !== "changer" ? await lireOffreChoisie() : null;
-  const preselection = vue.cas === "formulaire" && vue.mode === "changer" ? formule : (offreChoisie ?? (geste === "abonner" ? formule : null));
+  const courante = preselection(vue, { abonnement: formule, offreChoisie, geste });
   // Changer de formule : un abonnement qui paie, pour son propriétaire ; pas
   // une formule qui s'arrête.
   const { options: optionsChangement, baisse } =
@@ -236,8 +235,7 @@ export default async function AbonnementPage({
       <div className="mx-auto w-full max-w-[560px]">
         <FilRetour provenance={null} canonique={{ href: "/entreprises", label: "Mon dossier" }} />
         <h1 className="board-titre m-0 mt-6 text-[clamp(29px,3vw,39px)]">Abonnement</h1>
-        <NomDuCompte nom={nomCompte} />
-        {user.email && <ConnecteAvec email={user.email} className="mt-2" />}
+        <NomDuCompte nom={nomCompte} email={user.email} />
         <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           Vos dossiers restent toujours consultables, quel que soit l&apos;état de l&apos;abonnement.
         </p>
@@ -425,7 +423,7 @@ export default async function AbonnementPage({
                   mode={vue.mode}
                   libelle={vue.libelle}
                   quand={vue.quand}
-                  courante={preselection}
+                  courante={courante}
                   proposerPayerMaintenant={vue.proposerPayerMaintenant}
                 />
                 {vue.portail && (

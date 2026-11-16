@@ -15,9 +15,12 @@
 // gardées pour l'écran d'essai et la page Abonnement — `offre-choisie.ts`].
 
 import { ESPACE_UNITE, formaterNombreFr } from "@/lib/rendu/mesures";
-import type { CleFormule } from "@/lib/abonnements/formules";
+import type { CleFormule, Periodicite } from "@/lib/abonnements/formules";
 
 export type Periode = "mois" | "an";
+
+/** La période de la page tarifs, dans le vocabulaire des abonnements (`formules.ts`). */
+export const PERIODICITE_DE: Record<Periode, Periodicite> = { mois: "mensuel", an: "annuel" };
 
 export type Offre = {
   nom: string;

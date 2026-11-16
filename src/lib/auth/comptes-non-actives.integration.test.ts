@@ -3,7 +3,9 @@
 // plus de trente jours, sans aucun lien — et leurs sessions avec elles.
 //
 // SAUTÉ PAR DÉFAUT : il ne tourne que si `ISOLATION_INTEGRATION_URL` pointe
-// une base LOCALE migrée. Il n'efface que ce qu'il crée.
+// une base LOCALE migrée. La purge s'applique à toute la base de test : elle
+// efface aussi les personnes non confirmées d'autres tests, inscrites avant
+// le 2026-12-01 — la base d'intégration n'en garde pas.
 
 import { randomUUID } from "node:crypto";
 import { afterAll, describe, expect, it, vi } from "vitest";
