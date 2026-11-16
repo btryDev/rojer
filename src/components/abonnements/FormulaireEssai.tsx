@@ -18,7 +18,7 @@ export function FormulaireEssai({ disponible, compteId }: { disponible: boolean;
   const [accepte, setAccepte] = useState(false);
 
   return (
-    <form action={envoyer} className="mt-8 flex flex-col gap-4">
+    <form action={envoyer} className="flex flex-col gap-4">
       <ChampCompteAttendu compteId={compteId} />
       <label className="flex max-w-[var(--board-mesure)] items-start gap-3 text-[14px] leading-[1.5]">
         <input

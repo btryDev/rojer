@@ -52,8 +52,8 @@ export default async function EssaiPage() {
   // Le jour civil, pas 30 × 24 h : un changement d'heure ne décale pas la date.
   const fin = ajouterJours(instantDuRendu(), DUREE_ESSAI_JOURS);
 
-  // La veille de la fin : le jour du rappel par e-mail (`rappels.ts`).
-  const veille = ajouterJours(fin, -1);
+  const finTexte = formaterDateLongueFr(fin);
+  const filet = <hr className="m-0 border-0 border-t border-[color:var(--board-slate-line)]" />;
 
   // 2026-11-16, décision de la propriétaire (piste A) : plus de rail d'encre.
   // Une carte centrée, un seul geste : le récapitulatif de l'essai, sa frise
@@ -66,32 +66,26 @@ export default async function EssaiPage() {
       </header>
 
       <main className="flex flex-1 justify-center px-[var(--board-gutter)] pb-16 pt-4">
-        <div className="carte-board flex w-full max-w-[560px] flex-col gap-6 self-start px-6 py-8 sm:px-9 sm:py-9">
+        <div className="carte-board flex w-full max-w-[560px] flex-col gap-6 self-start px-7 py-8 sm:px-8">
           <h1 className="board-titre m-0 text-[clamp(28px,3vw,34px)]">Votre essai gratuit</h1>
 
           <dl className="m-0 grid grid-cols-[auto_minmax(0,1fr)] gap-x-5 gap-y-2.5 text-[14px] leading-[1.45]">
-            <dt className="text-[color:var(--board-slate-mid)]">Formule</dt>
-            <dd className="m-0 font-medium">{essentiel.libelle}</dd>
-            <dt className="text-[color:var(--board-slate-mid)]">Durée</dt>
-            <dd className="m-0 font-medium">{`${DUREE_ESSAI_JOURS} jours, jusqu'au ${formaterDateLongueFr(fin)}`}</dd>
-            <dt className="text-[color:var(--board-slate-mid)]">Carte bancaire</dt>
-            <dd className="m-0 font-medium">Non demandée</dd>
-            {mensuel ? (
-              <>
-                <dt className="text-[color:var(--board-slate-mid)]">Ensuite</dt>
-                <dd className="m-0 font-medium">À partir de {prixTTC(mensuel, "mensuel")}</dd>
-              </>
-            ) : null}
+            <Ligne terme="Formule">{essentiel.libelle}</Ligne>
+            <Ligne terme="Durée">{`${DUREE_ESSAI_JOURS} jours, jusqu'au ${finTexte}`}</Ligne>
+            <Ligne terme="Carte bancaire">Non demandée</Ligne>
+            {mensuel ? <Ligne terme="Ensuite">{`À partir de ${prixTTC(mensuel, "mensuel")}`}</Ligne> : null}
           </dl>
 
-          <hr className="m-0 border-0 border-t border-[color:var(--board-slate-line)]" />
+          {filet}
 
           <FriseEssai
             etapes={[
               { quand: "Aujourd'hui", quoi: "Votre essai commence. Vous mettez votre établissement en place." },
-              { quand: formaterDateLongueFr(veille), quoi: "Un e-mail vous rappelle la fin de l'essai." },
+              // Sans date : le rappel part d'une tâche quotidienne, dans les 36 h
+              // qui précèdent la fin (`rappels.ts`) — la veille ou l'avant-veille.
+              { quand: "Avant la fin", quoi: "Un e-mail vous rappelle la fin de l'essai." },
               {
-                quand: formaterDateLongueFr(fin),
+                quand: finTexte,
                 quoi: "Fin de l'essai. Pour continuer, choisissez une formule ; sinon, rien n'est prélevé et vos dossiers restent consultables.",
               },
             ]}
@@ -104,16 +98,22 @@ export default async function EssaiPage() {
             </MessageFormulaire>
           )}
 
-          <hr className="m-0 border-0 border-t border-[color:var(--board-slate-line)]" />
+          {filet}
 
-          {/* `FormulaireEssai` porte sa marge haute (`mt-8`) : on la neutralise
-              ici, l'écart de la carte suffit. */}
-          <div className="-mt-8">
-            <FormulaireEssai disponible={mensuel !== undefined} compteId={compteId} />
-          </div>
+          <FormulaireEssai disponible={mensuel !== undefined} compteId={compteId} />
         </div>
       </main>
     </div>
+  );
+}
+
+/** Une ligne du récapitulatif : le terme en gris, la valeur en encre. */
+function Ligne({ terme, children }: { terme: string; children: React.ReactNode }) {
+  return (
+    <>
+      <dt className="text-[color:var(--board-slate-mid)]">{terme}</dt>
+      <dd className="m-0 font-medium">{children}</dd>
+    </>
   );
 }
 
