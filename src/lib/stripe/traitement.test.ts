@@ -17,13 +17,13 @@ vi.mock("./synchronisation", async (reel) => ({
 }));
 vi.mock("@/lib/abonnements/souscription", () => ({ finaliserCarte: vi.fn().mockResolvedValue({ issue: "rien" }) }));
 vi.mock("./parcours", () => ({ rendrePlanningEchu: vi.fn().mockResolvedValue(undefined), carteQuiAPaye: vi.fn().mockResolvedValue(undefined) }));
-vi.mock("@/lib/alertes", () => ({ alerter: vi.fn().mockResolvedValue(undefined) }));
+vi.mock("@/lib/alertes", () => ({ alerter: vi.fn().mockResolvedValue(undefined), alerterUneFoisParJour: vi.fn().mockResolvedValue(undefined) }));
 
 import * as evenements from "./evenements";
 import * as file from "./file";
 import { synchroniserSousBail } from "./synchronisation";
 import { finaliserCarte } from "@/lib/abonnements/souscription";
-import { alerter } from "@/lib/alertes";
+import { alerter, alerterUneFoisParJour } from "@/lib/alertes";
 import { carteQuiAPaye, rendrePlanningEchu } from "./parcours";
 import { EVENEMENTS_ECOUTES } from "./webhook";
 import { aiguillageDe, aiguiller, traiterLaFile, traiterLaFileIci } from "./traitement";
@@ -70,16 +70,14 @@ describe("aiguillageDe : le client de l'objet relu, et les effets propres à l'o
     await expect(aiguillageDe(faux, "v1.customer.subscription.updated", "sub_1")).rejects.toThrow("lock");
   });
 
-  it("paiement réussi : la carte qui a payé est rangée (une fois, à l'événement) ; un échec fait retenter (2026-11-16)", async () => {
-    api.invoices.retrieve.mockResolvedValue({ customer: "cus_1", parent: { subscription_details: { subscription: "sub_1" } } });
+  it("paiement réussi : la carte qui a payé est rangée ; un échec ne bloque pas la copie, il se signale (2026-11-16)", async () => {
     expect(await aiguillageDe(faux, "v1.invoice.paid", "in_1")).toEqual({ clientStripe: "cus_1" });
-    expect(carteQuiAPaye).toHaveBeenCalledWith(faux, "sub_1");
+    expect(carteQuiAPaye).toHaveBeenCalledWith(faux, "in_1");
     vi.mocked(carteQuiAPaye).mockRejectedValueOnce(new Error("indisponible"));
-    await expect(aiguillageDe(faux, "v1.invoice.paid", "in_1")).rejects.toThrow("indisponible");
-    // Facture hors abonnement, ou paiement en échec : rien.
+    expect(await aiguillageDe(faux, "v1.invoice.paid", "in_1")).toEqual({ clientStripe: "cus_1" });
+    expect(alerterUneFoisParJour).toHaveBeenCalledWith("carte:cus_1", expect.stringMatching(/carte/), expect.any(Array), expect.any(Date));
+    // Paiement en échec : rien à ranger.
     vi.mocked(carteQuiAPaye).mockClear();
-    api.invoices.retrieve.mockResolvedValue({ customer: "cus_1", parent: null });
-    await aiguillageDe(faux, "v1.invoice.paid", "in_2");
     await aiguillageDe(faux, "v1.invoice.payment_failed", "in_3");
     expect(carteQuiAPaye).not.toHaveBeenCalled();
   });

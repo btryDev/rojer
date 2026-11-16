@@ -21,7 +21,7 @@ import { carteQuiAPaye,
 } from "./parcours";
 
 const api = {
-  customers: { create: vi.fn(), update: vi.fn() },
+  customers: { create: vi.fn(), update: vi.fn(), retrieve: vi.fn() },
   subscriptions: { create: vi.fn(), update: vi.fn(), resume: vi.fn(), retrieve: vi.fn() },
   invoices: { retrieve: vi.fn(), voidInvoice: vi.fn(), pay: vi.fn() },
   subscriptionSchedules: { create: vi.fn(), retrieve: vi.fn(), update: vi.fn(), release: vi.fn() },
@@ -261,29 +261,47 @@ describe("parcours Stripe", () => {
     expect(api.subscriptions.update.mock.lastCall?.[1]).toMatchObject({ trial_end: "now", default_tax_rates: ["txr_ttc"] });
   });
 
-  it("carte qui a payé : reportée sur le client, retirée de l'abonnement ; réglage posé s'il manque ; rien sinon (2026-11-16)", async () => {
-    const maj = api.customers.update;
-    maj.mockClear();
+  it("carte qui a payé : celle du paiement de la facture devient celle du client ; la carte fixée quitte l'abonnement ; réglage posé s'il manque (2026-11-16)", async () => {
+    const facture = (pm: string | null) => ({
+      id: "in_1",
+      customer: "cus_1",
+      parent: { subscription_details: { subscription: "sub_1" } },
+      payments: { data: pm ? [{ status: "paid", payment: { payment_intent: { payment_method: pm } } }] : [] },
+    });
     const reglee = { payment_settings: { save_default_payment_method: "on_subscription" } };
-    api.subscriptions.update.mockClear();
-    api.subscriptions.retrieve.mockResolvedValue({ id: "sub_1", customer: "cus_1", status: "active", default_payment_method: "pm_payee", ...reglee });
-    await carteQuiAPaye(stripe, "sub_1");
-    expect(maj).toHaveBeenCalledWith("cus_1", { invoice_settings: { default_payment_method: "pm_payee" } });
+    const etat = (pmClient: string, sub: object) => {
+      api.customers.retrieve.mockResolvedValue({ id: "cus_1", invoice_settings: { default_payment_method: pmClient } });
+      api.subscriptions.retrieve.mockResolvedValue({ id: "sub_1", status: "active", ...sub });
+    };
+    // Payée sur la page de la facture avec une autre carte : elle devient celle du client ; la carte fixée est retirée.
+    api.invoices.retrieve.mockResolvedValue(facture("pm_nouvelle"));
+    etat("pm_refusee", { ...reglee, default_payment_method: "pm_nouvelle" });
+    await carteQuiAPaye(stripe, "in_1");
+    expect(api.invoices.retrieve).toHaveBeenCalledWith("in_1", { expand: ["payments.data.payment.payment_intent"] });
+    expect(api.customers.update).toHaveBeenCalledWith("cus_1", { invoice_settings: { default_payment_method: "pm_nouvelle" } });
     expect(api.subscriptions.update).toHaveBeenLastCalledWith("sub_1", { default_payment_method: "" });
-    // Né de Checkout, sans carte fixée ni réglage : le réglage seul.
-    maj.mockClear();
-    api.subscriptions.retrieve.mockResolvedValue({ id: "sub_1", customer: "cus_1", status: "active", default_payment_method: null, payment_settings: null });
-    await carteQuiAPaye(stripe, "sub_1");
-    expect(maj).not.toHaveBeenCalled();
+    // Renouvellement ordinaire (la carte du client a payé) : le client n'est pas réécrit ; seule la carte fixée part.
+    vi.clearAllMocks();
+    api.invoices.retrieve.mockResolvedValue(facture("pm_c"));
+    etat("pm_c", { ...reglee, default_payment_method: "pm_c" });
+    await carteQuiAPaye(stripe, "in_1");
+    expect(api.customers.update).not.toHaveBeenCalled();
+    expect(api.subscriptions.update).toHaveBeenLastCalledWith("sub_1", { default_payment_method: "" });
+    // Né de Checkout, sans réglage : posé.
+    vi.clearAllMocks();
+    etat("pm_c", { default_payment_method: null, payment_settings: null });
+    await carteQuiAPaye(stripe, "in_1");
     expect(api.subscriptions.update).toHaveBeenLastCalledWith("sub_1", { payment_settings: { save_default_payment_method: "on_subscription" } });
-    // Rien à ranger, ou terminé : aucune écriture.
-    api.subscriptions.update.mockClear();
-    api.subscriptions.retrieve.mockResolvedValue({ id: "sub_1", customer: "cus_1", status: "active", default_payment_method: null, ...reglee });
-    await carteQuiAPaye(stripe, "sub_1");
-    api.subscriptions.retrieve.mockResolvedValue({ id: "sub_1", customer: "cus_1", status: "canceled", default_payment_method: "pm_x" });
-    await carteQuiAPaye(stripe, "sub_1");
+    // Rien à ranger, terminé, ou facture hors abonnement : aucune écriture.
+    vi.clearAllMocks();
+    etat("pm_c", { ...reglee, default_payment_method: null });
+    await carteQuiAPaye(stripe, "in_1");
+    etat("pm_c", { status: "canceled", default_payment_method: "pm_x" });
+    await carteQuiAPaye(stripe, "in_1");
+    api.invoices.retrieve.mockResolvedValue({ ...facture("pm_x"), parent: null });
+    await carteQuiAPaye(stripe, "in_1");
     expect(api.subscriptions.update).not.toHaveBeenCalled();
-    expect(maj).not.toHaveBeenCalled();
+    expect(api.customers.update).not.toHaveBeenCalled();
   });
 
   it("monter : tout de suite, prorata facturé, appliquée seulement si payée ; une baisse planifiée est abandonnée d'abord", async () => {
@@ -363,6 +381,14 @@ describe("parcours Stripe", () => {
     api.subscriptionSchedules.retrieve.mockResolvedValue({ status: "active", created: Math.floor(Date.now() / 1000) - 5, current_phase: { start_date: passe }, phases: [{ start_date: passe }] });
     await rendrePlanningEchu(stripe, { schedule: "sub_sched_4" } as unknown as Stripe.Subscription);
     expect(api.subscriptionSchedules.release).not.toHaveBeenCalled();
+    // Release refusé : déjà rendu par un événement voisin, rien ; encore actif (429), l'erreur remonte (2026-11-16).
+    const echu = { status: "active", created: passe, current_phase: { start_date: passe }, phases: [{ start_date: passe - 10 }, { start_date: passe }] };
+    api.subscriptionSchedules.release.mockRejectedValueOnce(new Error("déjà rendu"));
+    api.subscriptionSchedules.retrieve.mockResolvedValueOnce(echu).mockResolvedValueOnce({ ...echu, status: "released" });
+    await rendrePlanningEchu(stripe, { schedule: "sub_sched_5" } as unknown as Stripe.Subscription);
+    api.subscriptionSchedules.release.mockRejectedValueOnce(new Error("lock"));
+    api.subscriptionSchedules.retrieve.mockResolvedValueOnce(echu).mockResolvedValueOnce(echu);
+    await expect(rendrePlanningEchu(stripe, { schedule: "sub_sched_5" } as unknown as Stripe.Subscription)).rejects.toThrow("lock");
   });
 
   it("la baisse prévue : la phase qui suit celle en cours SELON STRIPE (horloge de simulation comprise) ; sans planning, rien", async () => {

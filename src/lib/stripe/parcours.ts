@@ -445,31 +445,40 @@ export async function planifierBaisse(
 /**
  * Une seule carte, celle du CLIENT (2026-11-16) : le portail ne change
  * qu'elle, et une carte fixée sur l'abonnement passerait avant au
- * renouvellement. Rojer n'en fixe jamais ; Stripe en fixe une à chaque
- * paiement réussi (`save_default_payment_method: on_subscription`) et à la
- * souscription par Checkout. Appelée UNE fois par paiement réussi
- * (`invoice.paid`), sur l'abonnement relu à cet instant : la carte fixée est
- * celle qui vient de payer ; elle devient celle du client et quitte
- * l'abonnement. Jamais à chaque relecture : un état périmé, ou une relecture
- * en retard, rendrait la carte d'avant un changement fait au portail
- * (relectures du 2026-11-16). Le réglage `on_subscription` est posé sur
- * l'abonnement qui ne l'a pas (né de Checkout). Une erreur remonte :
- * l'événement est retenté par la file. Sans clé d'idempotence : ces
- * écritures posent une valeur.
+ * renouvellement. Appelée au paiement réussi d'une facture d'abonnement
+ * (`invoice.paid`) :
+ * - la carte qui a RÉELLEMENT payé cette facture (son paiement, lu chez
+ *   Stripe) devient celle du client si elle en diffère — une carte payée sur
+ *   la page d'une facture remplace celle qui avait été refusée. Un
+ *   renouvellement ordinaire paie avec la carte du client : rien à écrire ;
+ * - la carte que Stripe fixe sur l'abonnement à chaque paiement
+ *   (`save_default_payment_method: on_subscription`, gardé : c'est lui qui
+ *   rattache au client une carte saisie sur la page d'une facture) en est
+ *   retirée ; le réglage est posé sur l'abonnement né de Checkout.
+ * Limite écrite : un changement fait au portail entre ce paiement et un
+ * nouvel essai de cet événement serait remplacé par la carte qui a payé.
+ * Sans clé d'idempotence : ces écritures posent une valeur.
  */
-export async function carteQuiAPaye(stripe: Stripe, abonnementId: string): Promise<void> {
-  const abonnement = await stripe.subscriptions.retrieve(abonnementId);
-  if (abonnement.status === "canceled" || abonnement.status === "incomplete_expired") return;
-  const carte = idStripe(abonnement.default_payment_method);
-  const reglage = abonnement.payment_settings?.save_default_payment_method === "on_subscription";
-  if (!carte && reglage) return;
-  if (carte) {
-    await stripe.customers.update(idStripe(abonnement.customer)!, { invoice_settings: { default_payment_method: carte } });
+export async function carteQuiAPaye(stripe: Stripe, factureId: string): Promise<void> {
+  const facture = await stripe.invoices.retrieve(factureId, { expand: ["payments.data.payment.payment_intent"] });
+  const abonnementId = idStripe(facture.parent?.subscription_details?.subscription);
+  const clientId = idStripe(facture.customer);
+  if (!abonnementId || !clientId) return;
+  const intention = facture.payments?.data.find((p) => p.status === "paid")?.payment.payment_intent;
+  const carte = intention && typeof intention === "object" ? idStripe(intention.payment_method) : null;
+  const [client, abonnement] = await Promise.all([stripe.customers.retrieve(clientId), stripe.subscriptions.retrieve(abonnementId)]);
+  if (client.deleted || abonnement.status === "canceled" || abonnement.status === "incomplete_expired") return;
+  if (carte && carte !== idStripe(client.invoice_settings?.default_payment_method)) {
+    await stripe.customers.update(clientId, { invoice_settings: { default_payment_method: carte } });
   }
-  await stripe.subscriptions.update(abonnement.id, {
-    ...(carte ? { default_payment_method: "" } : {}),
-    ...(reglage ? {} : { payment_settings: { save_default_payment_method: "on_subscription" as const } }),
-  });
+  const fixee = idStripe(abonnement.default_payment_method);
+  const reglage = abonnement.payment_settings?.save_default_payment_method === "on_subscription";
+  if (fixee || !reglage) {
+    await stripe.subscriptions.update(abonnement.id, {
+      ...(fixee ? { default_payment_method: "" } : {}),
+      ...(reglage ? {} : { payment_settings: { save_default_payment_method: "on_subscription" as const } }),
+    });
+  }
 }
 
 /**
@@ -490,7 +499,17 @@ export async function rendrePlanningEchu(stripe: Stripe, abonnement: Stripe.Subs
   const derniere = planning.phases.at(-1);
   if (!enCours || !derniere || planning.status !== "active") return;
   const aPorteUneBaisse = planning.phases.length > 1 || planning.created < Math.floor(Date.now() / 1000) - 300;
-  if (aPorteUneBaisse && enCours.start_date >= derniere.start_date) await stripe.subscriptionSchedules.release(id);
+  if (!aPorteUneBaisse || enCours.start_date < derniere.start_date) return;
+  try {
+    await stripe.subscriptionSchedules.release(id);
+  } catch (e) {
+    // Déjà rendu par un événement voisin (deux notifications du même passage
+    // de phase) : rien à refaire. Sinon (429 au passage de phase, répétition
+    // du 2026-11-16) l'erreur remonte, et la file retente l'événement.
+    const relu = await stripe.subscriptionSchedules.retrieve(id).catch(() => null);
+    if (relu && relu.status !== "active") return;
+    throw e;
+  }
 }
 
 /** Renoncer à une baisse planifiée : l'abonnement reste sur sa formule. */

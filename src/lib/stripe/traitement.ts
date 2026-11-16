@@ -18,7 +18,7 @@ import "server-only";
 // qu'il tourne le fait repasser une fois.
 
 import type Stripe from "stripe";
-import { alerter } from "@/lib/alertes";
+import { alerter, alerterUneFoisParJour } from "@/lib/alertes";
 import { finaliserCarte } from "@/lib/abonnements/souscription";
 import {
   type Aiguillage,
@@ -77,12 +77,19 @@ export async function aiguillageDe(stripe: Stripe, type: string, objetId: string
       return suivi ? { clientStripe: idStripe(session.customer) } : { clientStripe: null, motif: "session sans abonnement" };
     }
     case "v1.invoice.paid": {
-      const facture = await stripe.invoices.retrieve(objetId, {}, OPTIONS_WEBHOOK);
-      // La carte qui vient de payer devient celle du client (`carteQuiAPaye`) ;
-      // un échec fait retenter l'événement.
-      const abonnementId = idStripe(facture.parent?.subscription_details?.subscription);
-      if (abonnementId) await carteQuiAPaye(stripe, abonnementId);
-      return { clientStripe: idStripe(facture.customer) };
+      const client = idStripe((await stripe.invoices.retrieve(objetId, {}, OPTIONS_WEBHOOK)).customer);
+      // La carte qui a payé devient celle du client (`carteQuiAPaye`). Sans
+      // bloquer la copie d'un paiement réussi (revue du 2026-11-16) : un
+      // échec se signale, une fois par jour, pour un geste à la main.
+      await carteQuiAPaye(stripe, objetId).catch(async (e) => {
+        console.error(`stripe : carte de la facture ${objetId} non rangée — ${motifDErreur(e)}`);
+        await alerterUneFoisParJour(`carte:${client ?? objetId}`, "carte du client non mise à jour après un paiement", [
+          `facture ${objetId}, client ${client ?? "inconnu"}`,
+          motifDErreur(e),
+          "Dans Stripe : poser par défaut sur le client la carte qui a payé cette facture, et la retirer de l'abonnement ; sinon le prochain prélèvement peut partir sur l'ancienne carte.",
+        ], new Date());
+      });
+      return { clientStripe: client };
     }
     case "v1.invoice.payment_failed":
     case "v1.invoice.payment_action_required":

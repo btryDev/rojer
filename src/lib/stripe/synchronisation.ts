@@ -36,8 +36,6 @@ import { idStripe } from "./ids";
 import { formuleDuPrix } from "@/lib/abonnements/formules";
 import { OUVRENT } from "@/lib/abonnements/droits";
 
-/** L'identifiant d'une référence Stripe, développée ou non. */
-
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**

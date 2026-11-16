@@ -61,7 +61,9 @@ export async function finaliserCarte(
   // remettrait par défaut une carte remplacée depuis, ni sa formule (même
   // règle que `appliquerFormule`, `rojerChoixLe`), ni une facture sans
   // rapport avec elle.
-  if (courant && session.created < Number(courant.metadata?.rojerChoixLe ?? 0)) return RIEN;
+  // Marge d'une minute : `rojerChoixLe` vient aussi de l'horloge du serveur
+  // (`sAbonnerAction`), qui peut avancer sur celle de Stripe.
+  if (courant && session.created + 60 < Number(courant.metadata?.rojerChoixLe ?? 0)) return RIEN;
   // Déjà payant (une première finalisation est passée) ou terminé : rien à
   // faire — sauf une facture qui attend encore (la notification a fini
   // l'essai, ou repris la pause, la première ; la banque demande une
