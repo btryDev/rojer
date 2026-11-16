@@ -402,7 +402,7 @@ export function StepIdentite({
                     nombre qu'on vient de taper. */}
                 <EnSavoirPlus>
                   <p>
-                    Apprentis non compris (art. L. 1111-3). C&apos;est sur cet
+                    Les apprentis ne comptent pas (art. L. 1111-3). C&apos;est sur cet
                     effectif que se comptent les seuils du comité social et
                     économique, du règlement intérieur et de la mise à jour
                     annuelle du document unique. À partir de 50, le document

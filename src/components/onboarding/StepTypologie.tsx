@@ -115,8 +115,9 @@ export function StepTypologie({
               Compter à la main un nombre que trois blocs plus bas
               contredisent revient à annoncer un parcours plus court qu'il
               ne l'est ; on dit donc la règle, pas le total. */}
-          Trois questions. Votre classement d&apos;ERP figure sur votre arrêté
-          d&apos;ouverture ou au procès-verbal de la commission de sécurité.
+          Trois questions ; chaque « oui » en ouvre une ou deux de plus. Votre
+          classement d&apos;ERP figure sur votre arrêté d&apos;ouverture ou au
+          procès-verbal de la commission de sécurité.
         </p>
       </div>
 
@@ -523,12 +524,12 @@ export function StepTypologie({
                     marqués « extrêmement inflammable ».
                   </p>
                 }
-                detail={<AideQuestionMatieres />}
+                detail={<AideQuestionMatieres id="manipuleMatieresR422722-detail" />}
               />
               <select
                 id="manipuleMatieresR422722"
                 aria-label={QUESTION_MATIERES}
-                aria-describedby="manipuleMatieresR422722-aide"
+                aria-describedby="manipuleMatieresR422722-aide manipuleMatieresR422722-detail"
                 value={state.manipuleMatieresR422722}
                 onChange={(e) =>
                   update({ manipuleMatieresR422722: e.currentTarget.value })

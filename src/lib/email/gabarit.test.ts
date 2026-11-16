@@ -25,11 +25,12 @@ describe("e-mails de compte : la mise en page (2026-11-16)", () => {
     );
   });
 
-  it("le HTML porte le titre, le bouton vers le lien, le lien en clair et la validité", () => {
+  it("le HTML porte le titre, le bouton vers le lien et la validité, sans le lien en clair", () => {
     const html = htmlMailCompte(MESSAGE);
     expect(html).toContain("Activez votre compte Rojer");
     expect(html).toContain('href="https://rojer.fr/auth/verification?token=a&amp;b=c"');
     expect(html).toContain(">Activer mon compte</a>");
+    expect(html.match(/rojer\.fr\/auth\/verification/g)).toHaveLength(1);
     expect(html).toContain("Le lien est valable 24 heures.");
     expect(html).toContain("ignorez ce message.");
   });
@@ -45,6 +46,12 @@ describe("e-mails de compte : la mise en page (2026-11-16)", () => {
 
   it("seul un lien http(s) devient un bouton", () => {
     expect(() => htmlMailCompte({ ...MESSAGE, bouton: { libelle: "x", url: "javascript:alert(1)" } })).toThrow();
+  });
+
+  it("un lien qui n'est pas http(s) : le message part en texte seul", () => {
+    const m = mailCompte({ ...MESSAGE, bouton: { libelle: "x", url: "rojer.fr/auth/verification" } });
+    expect(m.html).toBeUndefined();
+    expect(m.text).toContain("rojer.fr/auth/verification");
   });
 
   it("mailCompte rend les deux formes", () => {
