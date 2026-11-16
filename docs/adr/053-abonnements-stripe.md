@@ -574,5 +574,11 @@ posée avant l'envoi, rendue si rien n'est parti).]
   électronique (émission obligatoire pour les PME au 1er septembre 2027) :
   hors code, à voir avec l'expert-comptable (notes, § 6). [2026-11-09 : la
   TVA est un taux fixe de 20 % posé sur chaque abonnement, sans lequel
-  aucun abonnement ne se crée (notes, § 12).]
+  aucun abonnement ne se crée (notes, § 12).] [2026-11-14, décision de la
+  propriétaire (« b ») : **les prix sont TTC**. 29 €, 89 €, 295 € et 899 €
+  s'entendent TVA de 20 % comprise ; le taux est « inclusif » et les prix
+  « taxe incluse » chez Stripe. Rojer ne retient qu'un taux inclusif
+  (`estTauxDeTva`, `src/lib/stripe/tva.ts`) : un taux « en sus » laissé au
+  compte n'est jamais posé. Écrans, page publique et conditions disent
+  « TTC ». Un abonnement déjà créé garde son taux — aucun en production.]
 - La suppression de compte, qui n'existe pas encore.

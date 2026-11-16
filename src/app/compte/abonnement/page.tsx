@@ -17,7 +17,7 @@ import { FinalisationCarte } from "@/components/abonnements/FinalisationCarte";
 import { ChangerDeFormule, type OptionDeFormule } from "@/components/abonnements/ChangerDeFormule";
 import { sensDuChangement } from "@/lib/abonnements/changement";
 import { depassements } from "@/lib/abonnements/quotas";
-import { eurosHT } from "@/lib/abonnements/affichage";
+import { euros } from "@/lib/abonnements/affichage";
 import { baissePrevue } from "@/lib/stripe/parcours";
 import { carteParDefaut } from "@/lib/abonnements/souscription";
 import { clientStripe } from "@/lib/stripe/client";
@@ -117,7 +117,7 @@ async function changementsPossibles(
           sens,
           effet: effetDuChangement(sens, actuelle, cle, finPeriode),
           libelle: libelleDe(cle),
-          prix: montant ? `${eurosHT(montant)} HT par ${LIBELLE_PERIODICITE[f.periodicite].unite}` : null,
+          prix: montant ? `${euros(montant)} TTC par ${LIBELLE_PERIODICITE[f.periodicite].unite}` : null,
           depassements: sens === "baisse" ? await depassements(db, compteId, cle) : [],
         };
       }),

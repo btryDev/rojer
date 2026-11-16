@@ -50,7 +50,7 @@ export function Tarif({ compte }: { compte?: CompteLanding }) {
         </Reveal>
 
         <p className="mt-5 text-center text-[0.78rem] text-[color:var(--board-slate-soft)]">
-          Prix hors taxes. Essai sans carte bancaire. L&apos;expert donne un
+          Prix TTC, TVA de 20 % incluse. Essai sans carte bancaire. L&apos;expert donne un
           conseil technique de prévention, jamais un avis juridique.
         </p>
 

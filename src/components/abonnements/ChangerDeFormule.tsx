@@ -14,7 +14,7 @@ import { formaterDateLongueFr } from "@/lib/dates";
 export type OptionDeFormule = {
   cle: string;
   libelle: string;
-  /** « 89 € HT par mois », ou `null` si le prix manque. */
+  /** « 89 € TTC par mois », ou `null` si le prix manque. */
   prix: string | null;
   sens: "montee" | "baisse";
   /** Ce que fait ce changement, dit avant le clic (le cas du rythme compris). */

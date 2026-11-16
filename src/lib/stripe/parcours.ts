@@ -401,10 +401,10 @@ let cacheTva: { lu: number; id: string } | undefined;
  */
 export async function tauxDeTva(stripe: Stripe, maintenant = Date.now()): Promise<string | null> {
   if (cacheTva && maintenant - cacheTva.lu < DUREE_CACHE_PRIX_MS) return cacheTva.id;
-  const { data } = await stripe.taxRates.list({ active: true, inclusive: false, limit: 100 });
+  const { data } = await stripe.taxRates.list({ active: true, inclusive: true, limit: 100 });
   const conformes = tauxConformes(data);
   if (conformes.length === 0) {
-    console.error("stripe : aucun taux de TVA actif (20 %, France, type TVA, en sus du prix) — abonnements refusés");
+    console.error("stripe : aucun taux de TVA actif (20 %, France, type TVA, incluse dans le prix) — abonnements refusés");
     return null;
   }
   if (conformes.length > 1) console.error(`stripe : ${conformes.length} taux de TVA conformes, le plus ancien est retenu`);

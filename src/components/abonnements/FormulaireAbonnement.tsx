@@ -8,7 +8,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { sAbonnerAction } from "@/lib/abonnements/actions";
 import { ChampCompteAttendu } from "@/components/compte/ChampCompteAttendu";
-import { eurosHT } from "@/lib/abonnements/affichage";
+import { euros } from "@/lib/abonnements/affichage";
 import { LIBELLE_PERIODICITE, PERIODICITES, type CleFormule, type Periodicite } from "@/lib/abonnements/formules";
 
 export type OffreAffichee = {
@@ -102,7 +102,7 @@ export function FormulaireAbonnement({
                     <span className="text-[color:var(--board-slate-mid)]">Prix indisponible pour le moment</span>
                   ) : (
                     <>
-                      <strong className="text-[20px] tabular-nums">{eurosHT(prix)}</strong> HT par{" "}
+                      <strong className="text-[20px] tabular-nums">{euros(prix)}</strong> TTC par{" "}
                       {LIBELLE_PERIODICITE[periodicite].unite}
                     </>
                   )}

@@ -263,12 +263,12 @@ describe("parcours Stripe", () => {
     expect(api.prices.list).toHaveBeenCalledTimes(2);
   });
 
-  it("la TVA : le taux actif, 20 %, France, type TVA, en sus du prix — le plus ancien ; aucun = null ; gardé dix minutes", async () => {
+  it("la TVA : le taux actif, 20 %, France, type TVA, incluse dans le prix (prix TTC, 2026-11-14) — le plus ancien ; aucun = null ; gardé dix minutes", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     const taux = (id: string, autres: object = {}) => ({
       id,
       active: true,
-      inclusive: false,
+      inclusive: true,
       percentage: 20,
       country: "FR",
       tax_type: "vat",
@@ -277,7 +277,7 @@ describe("parcours Stripe", () => {
     });
     api.taxRates.list.mockResolvedValue({
       data: [
-        taux("txr_ttc", { inclusive: true }),
+        taux("txr_ht", { inclusive: false }),
         taux("txr_10", { percentage: 10 }),
         taux("txr_be", { country: "BE" }),
         taux("txr_sales", { tax_type: "sales_tax" }),
@@ -287,12 +287,12 @@ describe("parcours Stripe", () => {
       ],
     });
     expect(await tauxDeTva(stripe, 0)).toBe("txr_ancien");
-    expect(api.taxRates.list).toHaveBeenCalledWith({ active: true, inclusive: false, limit: 100 });
+    expect(api.taxRates.list).toHaveBeenCalledWith({ active: true, inclusive: true, limit: 100 });
     await tauxDeTva(stripe, 5 * 60_000);
     expect(api.taxRates.list).toHaveBeenCalledTimes(1);
 
     oublierLesPrix();
-    api.taxRates.list.mockResolvedValue({ data: [taux("txr_ttc", { inclusive: true })] });
+    api.taxRates.list.mockResolvedValue({ data: [taux("txr_ht", { inclusive: false })] });
     expect(await tauxDeTva(stripe, 0)).toBeNull();
     // Absent : relu à chaque appel, pour que le taux créé entre-temps serve aussitôt.
     await tauxDeTva(stripe, 1000);

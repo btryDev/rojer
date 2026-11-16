@@ -62,7 +62,7 @@ export async function installerProduits(stripe: Stripe): Promise<Record<CleFormu
   return produits;
 }
 
-/** Le prix existant convient-il tel quel ? Montant, devise, intervalle, produit, HT. */
+/** Le prix existant convient-il tel quel ? Montant, devise, intervalle, produit, TTC (2026-11-14). */
 export function prixConforme(p: Stripe.Price, produitId: string, montant: number, periodicite: Periodicite): boolean {
   return (
     p.active &&
@@ -71,7 +71,7 @@ export function prixConforme(p: Stripe.Price, produitId: string, montant: number
     p.currency === DEVISE &&
     p.recurring?.interval === INTERVALLE_STRIPE[periodicite] &&
     (p.recurring?.interval_count ?? 1) === 1 &&
-    p.tax_behavior === "exclusive"
+    p.tax_behavior === "inclusive"
   );
 }
 
@@ -101,7 +101,7 @@ export async function installerPrix(stripe: Stripe, produits: Record<CleFormule,
         currency: DEVISE,
         unit_amount: montant,
         recurring: { interval: INTERVALLE_STRIPE[periodicite] },
-        tax_behavior: "exclusive",
+        tax_behavior: "inclusive",
         lookup_key: cle,
         transfer_lookup_key: true,
         nickname: `${FORMULES[formule].libelle} ${periodicite}`,
@@ -119,7 +119,7 @@ export async function installerPrix(stripe: Stripe, produits: Record<CleFormule,
  * (pourcentage, pays) : un autre taux se crée, l'ancien s'archive.
  */
 export async function installerTva(stripe: Stripe): Promise<{ taux: Stripe.TaxRate; cree: boolean }> {
-  const { data } = await stripe.taxRates.list({ active: true, inclusive: false, limit: 100 });
+  const { data } = await stripe.taxRates.list({ active: true, inclusive: true, limit: 100 });
   const existant = tauxConformes(data)[0];
   if (existant) return { taux: existant, cree: false };
   const taux = await stripe.taxRates.create({
@@ -129,7 +129,7 @@ export async function installerTva(stripe: Stripe): Promise<{ taux: Stripe.TaxRa
     percentage: TVA.pourcentage,
     country: TVA.pays,
     tax_type: TVA.type,
-    inclusive: false,
+    inclusive: true,
   });
   return { taux, cree: true };
 }

@@ -46,7 +46,7 @@ function Prix({ offre, periode, t }: { offre: Offre; periode: Periode; t: (typeo
         <span className="lp-titre text-[2.9rem] leading-none tracking-[-0.05em] text-current tabular-nums">
           {enEuros(offre.prix[periode])}
         </span>
-        <span className={cn("text-[0.85rem]", t.discret)}>HT / {periode}</span>
+        <span className={cn("text-[0.85rem]", t.discret)}>TTC / {periode}</span>
       </p>
       <p className={cn("mt-1 text-[0.8rem]", t.tresDiscret)}>
         {periode === "mois" ? "Sans engagement" : `Soit ≈ ${parMoisSurUnAn(offre.prix.an)} par mois`}
