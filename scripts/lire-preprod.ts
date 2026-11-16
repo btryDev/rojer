@@ -64,7 +64,8 @@ function refus(message: string): never {
 type Demande =
   | { question: "connexions"; adresses: string[] }
   | { question: "activite" | "abonnement"; adresse: string }
-  | { question: "taches" | "base" };
+  | { question: "taches" }
+  | { question: "base" };
 
 function lireDemande(args: string[]): Demande {
   const [question, ...saisies] = args;
