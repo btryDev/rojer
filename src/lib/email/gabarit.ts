@@ -87,11 +87,11 @@ export function htmlMailCompte(m: MailCompte): string {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;font-family:${POLICE};">
 <tr><td align="center" style="padding:0 0 20px;">
 <table role="presentation" align="center" cellpadding="0" cellspacing="0"><tr>
-<td style="background:${COULEURS.bleuPale};border-radius:999px;padding:8px 18px;font-size:17px;line-height:1;font-weight:600;letter-spacing:-0.02em;color:${COULEURS.bleu};">Rojer</td>
+<td style="background:${COULEURS.bleuPale};border-radius:999px;padding:8px 18px;font-size:17px;line-height:1;font-weight:600;letter-spacing:-0.02em;color:${COULEURS.encre};">Rojer</td>
 </tr></table>
 </td></tr>
 <tr><td align="center" style="background:${COULEURS.carte};border-radius:20px;padding:36px 32px 32px;border:1px solid ${COULEURS.filet};text-align:center;">
-<h1 style="margin:0 0 14px;font-size:26px;line-height:1.2;font-weight:600;letter-spacing:-0.03em;color:${COULEURS.encre};">${echapperHtml(m.titre)}</h1>
+<h1 style="margin:0 0 22px;font-size:26px;line-height:1.2;font-weight:600;letter-spacing:-0.03em;color:${COULEURS.encre};">${echapperHtml(m.titre)}</h1>
 ${m.paragraphes.map((p) => paragraphe(p)).join("\n")}
 <table role="presentation" align="center" cellpadding="0" cellspacing="0" style="margin:12px auto 14px;">
 <tr><td style="border-radius:999px;background:${COULEURS.encre};">
