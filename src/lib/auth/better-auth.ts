@@ -14,7 +14,7 @@ import { motifErreur, publicAppUrl, refusUrlPublique, sendMail } from "@/lib/ema
 import { mailCompte, type MailCompte } from "@/lib/email/gabarit";
 import { ENTETE_IP_CLIENT } from "./entete-ip";
 import { cleLimite, consommer, LIMITES, type Limite } from "@/lib/securite/limite-debit";
-import { lienInvitation, lienReinitialisation, lienVerification } from "./liens-compte";
+import { lienConnexion, lienInvitation, lienMotDePasseOublie, lienReinitialisation, lienVerification } from "./liens-compte";
 import { LONGUEUR_MAX_MOT_DE_PASSE, LONGUEUR_MIN_MOT_DE_PASSE } from "./mot-de-passe";
 
 /**
@@ -155,11 +155,29 @@ export const auth = betterAuth({
       }),
     // Une adresse déjà inscrite reçoit la même réponse qu'une nouvelle (pas
     // d'énumération) ; si son compte n'est pas encore confirmé — lien de 24 h
-    // expiré —, elle reçoit un nouveau lien au lieu de n'avoir rien.
+    // expiré —, elle reçoit un nouveau lien au lieu de n'avoir rien. Déjà
+    // actif : un message qui le dit et mène à la connexion (retours de test
+    // du 2026-11-16 — la page annonçait un lien qui ne partait jamais). Envoi
+    // détaché et plafonné, comme le lien : la réponse ne change pas.
     onExistingUserSignUp: async ({ user }) => {
       if (!user.emailVerified) {
         await auth.api.sendVerificationEmail({ body: { email: user.email } });
+        return;
       }
+      await envoyer(
+        user.email,
+        "Rojer — vous avez déjà un compte",
+        {
+          titre: "Vous avez déjà un compte Rojer",
+          paragraphes: [
+            "Une inscription vient d'être demandée avec cette adresse, qui a déjà un compte actif. Connectez-vous avec votre mot de passe habituel.",
+            `Mot de passe oublié ? Choisissez-en un nouveau : ${lienMotDePasseOublie()}`,
+          ],
+          bouton: { libelle: "Me connecter", url: lienConnexion() },
+          apres: ["Si vous n'êtes pas à l'origine de cette demande, ignorez ce message : rien n'a changé sur votre compte."],
+        },
+        { action: "verification-envoi", limite: LIMITES.verificationEnvoiAdresse },
+      );
     },
   },
   emailVerification: {

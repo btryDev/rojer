@@ -11,6 +11,7 @@ import type { CompteLanding } from "./compte";
 import { BoutonContact } from "./BoutonContact";
 import { SEGMENT, SEGMENTS } from "./segment";
 import { enEuros, OFFRES, parMoisSurUnAn, type Offre, type Periode } from "./tarif-donnees";
+import { lookupKey } from "@/lib/abonnements/formules";
 
 /** Les deux teintes d'une carte : claire, ou d'encre pour l'offre mise en avant. */
 const TEINTE = {
@@ -121,7 +122,10 @@ export function TarifOffres({
               </ul>
 
               {o.prix ? (
-                <Link href={compte?.href ?? "/signup"} className={cn("lp-btn mt-auto justify-center", t.bouton)}>
+                <Link
+                  href={compte?.href ?? (o.formule ? `/signup?offre=${lookupKey(o.formule, periode === "an" ? "annuel" : "mensuel")}` : "/signup")}
+                  className={cn("lp-btn mt-auto justify-center", t.bouton)}
+                >
                   {compte?.label ?? o.cta}
                 </Link>
               ) : (

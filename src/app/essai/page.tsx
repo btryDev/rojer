@@ -6,8 +6,9 @@ import { requireUser } from "@/lib/auth/require-user";
 import { aiguillageEssai, PRIX_D_ESSAI } from "@/lib/abonnements/essai";
 import { CLES_FORMULES, FORMULES, lookupKey } from "@/lib/abonnements/formules";
 import { prixTTC } from "@/lib/abonnements/affichage";
-import { LogOut } from "lucide-react";
-import { signOutAction } from "@/lib/auth/actions";
+import { ConnecteAvec } from "@/components/compte/ConnecteAvec";
+import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
+import { lireOffreChoisie } from "@/lib/abonnements/offre-choisie";
 import { clientStripe } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
 import { DUREE_ESSAI_JOURS, prixDesFormules } from "@/lib/stripe/parcours";
@@ -25,7 +26,7 @@ export const metadata = {
  * plus d'essai à démarrer est renvoyé à l'onboarding.
  */
 export default async function EssaiPage() {
-  await requireUser();
+  const user = await requireUser();
   const invitation = await aiguillageSansCompte();
   if (invitation) redirect(invitation);
   if ((await aiguillageEssai()) === null) redirect("/onboarding");
@@ -44,6 +45,9 @@ export default async function EssaiPage() {
   }
 
   const essentiel = FORMULES[CLES_FORMULES[0]];
+  // L'offre choisie sur la page publique : l'essai reste sur Essentiel, on le dit.
+  const offre = await lireOffreChoisie();
+  const autreFormule = offre && offre.formule !== CLES_FORMULES[0] ? FORMULES[offre.formule].libelle : null;
   const mensuel = prix.get(PRIX_D_ESSAI)?.montantCentimes;
   const annuel = prix.get(lookupKey(CLES_FORMULES[0], "annuel"))?.montantCentimes;
   // Le jour civil, pas 30 × 24 h : un changement d'heure ne décale pas la date.
@@ -74,15 +78,8 @@ export default async function EssaiPage() {
           <Link href="/" className="text-[16px] font-semibold leading-none tracking-[-0.025em] lg:hidden">
             Rojer
           </Link>
-          <form action={signOutAction} className="ml-auto">
-            <button
-              type="submit"
-              className="inline-flex items-center gap-1.5 text-[12.5px] text-[color:var(--board-slate-mid)] underline decoration-[color:var(--board-slate)] decoration-dotted underline-offset-4 transition-colors hover:text-[color:var(--board-ink)]"
-            >
-              <LogOut aria-hidden className="size-3.5" />
-              Déconnexion
-            </button>
-          </form>
+          {/* Le compte qui recevra l'essai, dit en clair (retours de test du 2026-11-16). */}
+          {user.email && <ConnecteAvec email={user.email} className="ml-auto justify-end" />}
         </div>
         <div className="w-full max-w-[760px]">
           <h1 className="board-titre m-0 text-[clamp(30px,3.4vw,44px)] leading-[1.08]">
@@ -106,6 +103,13 @@ export default async function EssaiPage() {
               dossiers restent consultables et la saisie s&apos;arrête.
             </p>
           </section>
+
+          {autreFormule && (
+            <MessageFormulaire ton="info" className="mt-6 max-w-[var(--board-mesure)]">
+              Vous avez choisi {autreFormule}. L&apos;essai se fait sur {essentiel.libelle} ; {autreFormule}{" "}
+              s&apos;appliquera à sa fin, ou tout de suite si vous payez maintenant depuis la page Abonnement.
+            </MessageFormulaire>
+          )}
 
           <FormulaireEssai disponible={mensuel !== undefined} compteId={compteId} />
         </div>

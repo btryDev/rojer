@@ -9,10 +9,13 @@
 // les y comparera.
 //
 // « Choisir Pro » mène, comme « Essayer 30 jours », à la création de compte
-// (l'essai se fait sur Essentiel) : quand l'abonnement en libre-service
-// existera (`cc`), le lien devra porter l'offre choisie.
+// (l'essai se fait sur Essentiel) ; ~~quand l'abonnement en libre-service
+// existera (`cc`), le lien devra porter l'offre choisie~~ [2026-11-16 : le
+// lien porte l'offre et la période (`/signup?offre=rojer_pro_annuel`),
+// gardées pour l'écran d'essai et la page Abonnement — `offre-choisie.ts`].
 
 import { ESPACE_UNITE, formaterNombreFr } from "@/lib/rendu/mesures";
+import type { CleFormule } from "@/lib/abonnements/formules";
 
 export type Periode = "mois" | "an";
 
@@ -27,6 +30,8 @@ export type Offre = {
   prix: { mois: number; an: number } | null;
   points: string[];
   cta: string;
+  /** La formule que la carte vend en libre-service ; absente : sur devis. */
+  formule?: CleFormule;
 };
 
 export const OFFRES: Offre[] = [
@@ -42,6 +47,7 @@ export const OFFRES: Offre[] = [
       "20 signatures par an, 2 Go de documents",
     ],
     cta: "Essayer 30 jours",
+    formule: "essentiel",
   },
   {
     nom: "Pro",
@@ -57,6 +63,7 @@ export const OFFRES: Offre[] = [
       "Connecter un assistant IA",
     ],
     cta: "Choisir Pro",
+    formule: "pro",
   },
   {
     nom: "Sur mesure",

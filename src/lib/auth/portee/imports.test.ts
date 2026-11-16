@@ -86,6 +86,11 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous"; 
     // condition relue, puis l'ordre des suppressions).
     valeur: ["$transaction(hors tableau)"],
   },
+  "src/lib/auth/comptes-non-actives.ts": {
+    motif:
+      "inscriptions jamais activées, effacées après trente jours par la tâche quotidienne hors session (2026-11-16) : des personnes qui n'ont jamais pu se connecter, donc d'aucun compte",
+    usages: ["prisma.user.deleteMany"],
+  },
   "src/lib/securite/limite-debit.ts": {
     motif: "compteurs techniques, hors de tout compte",
     usages: ["prisma.$executeRaw", "prisma.$queryRaw"],

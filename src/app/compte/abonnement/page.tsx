@@ -8,6 +8,8 @@ import { requireUser } from "@/lib/auth/require-user";
 import { abonnementDuCompte, contexteDroits, offreLancee } from "@/lib/abonnements/saisie";
 import { droitsDe, gesteAbonnement, libelleStatut, OUVRENT, resiliationPrevue } from "@/lib/abonnements/droits";
 import { besoinDeLaCarte, vueAbonnement } from "@/lib/abonnements/vue-abonnement";
+import { lireOffreChoisie } from "@/lib/abonnements/offre-choisie";
+import { ConnecteAvec } from "@/components/compte/ConnecteAvec";
 import { formaterDateLongueFr } from "@/lib/dates";
 import { dateDeSuppressionPrevue } from "@/lib/abonnements/suppression";
 import { buttonVariants } from "@/components/ui/button";
@@ -183,7 +185,7 @@ export default async function AbonnementPage({
 }) {
   // Sans compte encore (rien créé), la page se lit quand même : aucun
   // abonnement (ADR-054). `requireCompte` renverrait à l'onboarding.
-  await requireUser();
+  const user = await requireUser();
   const c = await getOptionalCompte();
   const { saisie, stripe, paiement, abonnement, carte, immediat, formule: formuleChange0, compte: compteChange, facture } =
     await searchParams;
@@ -218,6 +220,10 @@ export default async function AbonnementPage({
     c && besoinDeLaCarte(entree) ? carteDuCompte(c.db, c.compte.compteId) : Promise.resolve(false),
   ]);
   const vue = vueAbonnement({ ...entree, carteEnregistree });
+  // La formule présélectionnée : celle de l'abonnement quand elle est
+  // choisie ; avant, celle choisie sur la page publique (`offre-choisie.ts`).
+  const offreChoisie = vue.cas === "formulaire" && vue.mode !== "changer" ? await lireOffreChoisie() : null;
+  const preselection = vue.cas === "formulaire" && vue.mode === "changer" ? formule : (offreChoisie ?? (geste === "abonner" ? formule : null));
   // Changer de formule : un abonnement qui paie, pour son propriétaire ; pas
   // une formule qui s'arrête.
   const { options: optionsChangement, baisse } =
@@ -231,6 +237,7 @@ export default async function AbonnementPage({
         <FilRetour provenance={null} canonique={{ href: "/entreprises", label: "Mon dossier" }} />
         <h1 className="board-titre m-0 mt-6 text-[clamp(29px,3vw,39px)]">Abonnement</h1>
         <NomDuCompte nom={nomCompte} />
+        {user.email && <ConnecteAvec email={user.email} className="mt-2" />}
         <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           Vos dossiers restent toujours consultables, quel que soit l&apos;état de l&apos;abonnement.
         </p>
@@ -418,7 +425,7 @@ export default async function AbonnementPage({
                   mode={vue.mode}
                   libelle={vue.libelle}
                   quand={vue.quand}
-                  courante={geste === "abonner" ? formule : null}
+                  courante={preselection}
                   proposerPayerMaintenant={vue.proposerPayerMaintenant}
                 />
                 {vue.portail && (

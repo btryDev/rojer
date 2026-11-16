@@ -31,6 +31,7 @@ import { contexteDroits, offreLancee } from "@/lib/abonnements/lancement";
 import { oublierLesAnciens } from "@/lib/stripe/evenements";
 import { motifDErreur } from "@/lib/stripe/synchronisation";
 import { prendreLeJour, terminerLeJour } from "./jour";
+import { purgerComptesNonActives } from "@/lib/auth/comptes-non-actives";
 
 function horlogeReelle(): Date {
   return new Date();
@@ -64,6 +65,8 @@ export async function lancerTachesQuotidiennes(maintenant: Date) {
   const menage = async () => ({
     fichiersALiberer: await tenter("fichiers à libérer", () => libererFichiersEnAttente()),
     tracesPurgees: await tenter("traces de comptes supprimés", () => purgerTracesEchues(maintenant)),
+    // Les inscriptions jamais activées, au bout de trente jours (2026-11-16).
+    comptesNonActives: await tenter("inscriptions jamais activées", () => purgerComptesNonActives(maintenant)),
     // Le rapprochement avec Stripe : tout client dont l'abonnement court est
     // relu par la file (un événement peut ne jamais être créé).
     // L'état de la file d'abord : le rapprochement relance les échecs durables

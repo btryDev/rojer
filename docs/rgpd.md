@@ -289,6 +289,11 @@ le secret de l'application d'authentification et les codes de secours,
 **chiffrés** par le secret du serveur, effacés quand elle est désactivée.
 `Entreprise.userId` est une clé étrangère vers `User`.
 
+[2026-11-16 : l'inscription ne demande plus de mot de passe — un mot de passe
+tiré au hasard, jamais montré, est remplacé à l'activation par celui que
+choisit qui tient la boîte. Une inscription jamais activée est effacée au bout
+de 30 jours (§ 4).]
+
 ### 2.8 Demandes d'assistance (« Besoin d'aide ? », ADR-050, 2026-10-24)
 
 Le dirigeant peut demander l'aide d'un expert depuis l'application
@@ -347,6 +352,7 @@ ne dit pas :
 | Donnée | Base active | Archivage | Fondement |
 |---|---|---|---|
 | Entreprise / Établissement | Durée de l'activité | + 1 an | Restauration d'un compte fermé par erreur |
+| **Inscription jamais activée** (`User` non confirmé, ses sessions) — 2026-11-16 | **30 jours** depuis l'inscription, puis effacée par la tâche quotidienne (`auth/comptes-non-actives.ts`) ; la page d'attente l'annonce | — | Minimisation : une adresse mal tapée est souvent celle d'un tiers. Un compte non activé n'a jamais pu se connecter, il ne porte rien d'autre |
 | **Trace d'un compte supprimé faute d'abonnement** (`CompteSupprime`, ADR-058) : nom du compte, adresses des propriétaires, acceptations des conditions (adresse, version, empreinte, contexte, date), dates des avertissements et de la suppression — aucune donnée métier | — | **5 ans** après la suppression, puis effacée par la tâche quotidienne | Preuve en cas de contentieux (archivage intermédiaire, référentiel CNIL) ; prescription de droit commun, art. 2224 C. civ. — décision de la propriétaire du 2026-11-09 |
 | **Versions de DUERP** | — | **40 ans** | `R. 4121-4` CT (loi du 2 août 2021) — **obligation** |
 | **Rapports et attestations de vérification** | Exploitation courante | **5 ans au moins**, et en tout état de cause les **deux dernières** vérifications | `D. 4711-3` CT — **obligation** |

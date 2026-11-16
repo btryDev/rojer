@@ -4,19 +4,20 @@ import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { ChampBoard } from "@/components/ui-kit/ChampBoard";
 import { signUpAction, type AuthActionState } from "@/lib/auth/actions";
-import {
-  AIDE_MOT_DE_PASSE,
-  LONGUEUR_MIN_MOT_DE_PASSE,
-} from "@/lib/auth/mot-de-passe";
 import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
 
 const initialState: AuthActionState = {};
 
-export function SignupForm() {
+/**
+ * L'adresse seule (retours de test du 2026-11-16) : le mot de passe se
+ * choisit à l'activation, par le lien reçu (`activation.ts`).
+ */
+export function SignupForm({ offre = null }: { offre?: string | null }) {
   const [state, action, pending] = useActionState(signUpAction, initialState);
 
   return (
     <form action={action} className="flex flex-col gap-5">
+      {offre && <input type="hidden" name="offre" value={offre} />}
       <ChampBoard
         id="email"
         name="email"
@@ -25,20 +26,7 @@ export function SignupForm() {
         autoComplete="email"
         required
         placeholder="vous@exemple.fr"
-      />
-
-      {/* La contrainte passe en `aide` : posée là, elle est lue avec le champ
-          par un lecteur d'écran (aria-describedby) au lieu de flotter à côté
-          en petites capitales. */}
-      <ChampBoard
-        id="password"
-        name="password"
-        type="password"
-        label="Mot de passe"
-        autoComplete="new-password"
-        required
-        minLength={LONGUEUR_MIN_MOT_DE_PASSE}
-        aide={AIDE_MOT_DE_PASSE}
+        aide="Un lien d'activation part à cette adresse : vous y choisirez votre mot de passe. Vérifiez-la bien."
       />
 
       <MessageFormulaire ton="alerte">{state.error}</MessageFormulaire>

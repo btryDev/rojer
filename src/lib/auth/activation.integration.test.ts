@@ -28,6 +28,7 @@ vi.mock("next/navigation", () => ({
 }));
 vi.mock("@/lib/auth/require-user", () => ({
   lireSessionCourante: async () => null,
+  getOptionalUser: async () => null,
   requireUser: async () => {
     throw new Error("pas de session ici");
   },

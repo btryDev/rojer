@@ -3,6 +3,7 @@ import { cheminDeRetour } from "@/lib/auth/chemin-de-retour";
 import { SignupForm } from "./SignupForm";
 import { contexteDroits, offreLancee } from "@/lib/abonnements/saisie";
 import { DUREE_ESSAI_JOURS } from "@/lib/stripe/parcours";
+import { estLookupKey } from "@/lib/abonnements/formules";
 
 export const metadata = {
   title: "Créer un compte — Rojer",
@@ -11,9 +12,12 @@ export const metadata = {
 export default async function SignupPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string; offre?: string }>;
 }) {
-  const { next: nextBrut } = await searchParams;
+  const { next: nextBrut, offre: offreBrute } = await searchParams;
+  // L'offre choisie sur la page publique : transmise telle quelle, l'action
+  // la juge (`offre-choisie.ts`).
+  const offre = estLookupKey(offreBrute) ? offreBrute : null;
   const next = nextBrut === undefined ? undefined : cheminDeRetour(nextBrut);
 
   return (
@@ -35,7 +39,7 @@ export default async function SignupPage({
         </p>
 
         <div className="carte-board mt-7 px-7 py-6 sm:px-8">
-          <SignupForm />
+          <SignupForm offre={offre} />
         </div>
 
         <p className="m-0 mt-6 text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">

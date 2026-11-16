@@ -2,6 +2,8 @@ import Link from "next/link";
 import { cheminDeRetour } from "@/lib/auth/chemin-de-retour";
 import { LoginForm } from "./LoginForm";
 import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
+import { ConnecteAvec } from "@/components/compte/ConnecteAvec";
+import { getOptionalUser } from "@/lib/auth/require-user";
 
 export const metadata = {
   title: "Connexion — Rojer",
@@ -21,6 +23,9 @@ export default async function LoginPage({
   // Filtré dès la page : le lien vers /signup le recopie, et l'action le
   // refiltre de toute façon (le champ caché se modifie à la main).
   const next = nextBrut === undefined ? undefined : cheminDeRetour(nextBrut);
+  // Déjà connecté·e : on le dit, avec la sortie, plutôt que de montrer le
+  // formulaire comme si personne ne l'était (retours de test du 2026-11-16).
+  const ouverte = await getOptionalUser();
 
   return (
     // Colonne étroite centrée : c'est le seul cas où `mx-auto max-w-*` tient
@@ -56,6 +61,18 @@ export default async function LoginPage({
           <MessageFormulaire ton="info" className="mt-6">
             Mot de passe changé. Vos autres sessions ont été fermées : connectez-vous avec le nouveau.
           </MessageFormulaire>
+        ) : null}
+
+        {ouverte?.email ? (
+          <div className="mt-6 flex flex-col gap-2">
+            <MessageFormulaire ton="info">
+              Ce navigateur est déjà connecté. Pour utiliser une autre adresse, déconnectez-vous d&apos;abord.{" "}
+              <Link href="/entreprises" className="font-semibold underline underline-offset-4">
+                Aller à mon dossier
+              </Link>
+            </MessageFormulaire>
+            <ConnecteAvec email={ouverte.email} />
+          </div>
         ) : null}
 
         <div className="carte-board mt-7 px-7 py-6 sm:px-8">

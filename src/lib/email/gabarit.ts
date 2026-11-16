@@ -24,7 +24,7 @@ export type MailCompte = {
   paragraphes: readonly string[];
   bouton: { libelle: string; url: string };
   /** La durée de validité du lien : « une heure », « 24 heures »… */
-  validite: string;
+  validite?: string;
   /** Les phrases après le bouton (« Si vous n'êtes pas à l'origine… »). */
   apres: readonly string[];
 };
@@ -109,7 +109,7 @@ ${m.paragraphes.map((p) => paragraphe(p)).join("\n")}
 <a href="${href}" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:999px;">${echapperHtml(m.bouton.libelle)}</a>
 </td></tr>
 </table>
-${note(`Le lien est valable ${m.validite}.`)}
+${m.validite ? note(`Le lien est valable ${m.validite}.`) : ""}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0 24px;">
 <tr><td align="center" style="background:${COULEURS.canvas};border-radius:12px;padding:14px 16px;text-align:center;">
 <p style="margin:0 0 4px;font-size:13px;line-height:1.5;color:${COULEURS.doux};">Le bouton ne s'ouvre pas&nbsp;? Copiez ce lien dans votre navigateur&nbsp;:</p>
@@ -138,7 +138,7 @@ export function texteMailCompte(m: MailCompte): string {
     "",
     ...m.paragraphes,
     "",
-    `Ouvrez ce lien (valable ${m.validite}) :`,
+    m.validite ? `Ouvrez ce lien (valable ${m.validite}) :` : "Ouvrez ce lien :",
     m.bouton.url,
     "",
     ...m.apres,

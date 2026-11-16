@@ -1,6 +1,8 @@
 import { activerCompteAction } from "@/lib/auth/actions";
 import { LIEN_ACTIVATION_INVALIDE } from "@/lib/auth/mot-de-passe";
 import { FormulaireMotDePasse } from "../FormulaireMotDePasse";
+import { getOptionalUser } from "@/lib/auth/require-user";
+import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
 
 export const metadata = {
   title: "Activer votre compte — Rojer",
@@ -18,6 +20,9 @@ export default async function ActivationPage({
   searchParams: Promise<{ token?: string }>;
 }) {
   const { token } = await searchParams;
+  // Une session d'une autre adresse ouverte dans ce navigateur (un compte
+  // qu'on active n'en a pas) : l'activation la fermera, on le dit avant.
+  const ouverte = await getOptionalUser();
   return (
     // Même enveloppe que /login et /auth/reinitialisation.
     <main className="flex min-h-[calc(100vh-56px)] flex-col justify-center bg-[color:var(--board-canvas)] px-6 py-14 sm:px-10">
@@ -31,6 +36,13 @@ export default async function ActivationPage({
         <p className="m-0 mt-3 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           Votre adresse sera confirmée et votre compte activé avec ce mot de passe.
         </p>
+
+        {ouverte?.email && token ? (
+          <MessageFormulaire ton="info" className="mt-6">
+            Ce navigateur est connecté avec {ouverte.email}. Activer ce compte-ci fermera cette session : vous vous
+            connecterez ensuite avec le compte activé.
+          </MessageFormulaire>
+        ) : null}
 
         <div className="carte-board mt-7 px-7 py-6 sm:px-8">
           <FormulaireMotDePasse

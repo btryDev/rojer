@@ -347,10 +347,11 @@ describe("on peut sortir de la mise en place", () => {
     ).toBe("Bistrot du marché");
   });
 
-  it("la déconnexion est atteignable depuis l'écran", async () => {
+  it("la déconnexion est atteignable depuis l'écran, et l'adresse connectée se lit à côté (2026-11-16)", async () => {
     render(<WizardShell compteId={null} nomCompte={null} email="paul@exemple.fr" entreprisesConnues={[]} />);
 
-    screen.getAllByRole("button", { name: /Déconnexion/ })[0].click();
+    expect(screen.getAllByText("paul@exemple.fr").length).toBeGreaterThan(0);
+    screen.getAllByRole("button", { name: /Se déconnecter/ })[0].click();
     await souffler();
 
     expect(appels).toEqual(["deconnexion"]);

@@ -6,10 +6,10 @@ import { BandeauAbonnement } from "@/components/abonnements/BandeauAbonnement";
 import { useActionState, useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, LogOut, ShieldCheck } from "lucide-react";
+import { Check, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useConfirmation } from "@/components/ui-kit/Confirmation";
-import { signOutAction } from "@/lib/auth/actions";
+import { ConnecteAvec } from "@/components/compte/ConnecteAvec";
 import { StepIdentite } from "./StepIdentite";
 import { StepTypologie } from "./StepTypologie";
 import { StepResume } from "./StepResume";
@@ -330,21 +330,7 @@ export function WizardShell({
         <div className="mt-auto flex flex-col gap-5">
           {email ? (
             <div className="border-t border-white/15 pt-5">
-              <p
-                className="m-0 truncate font-mono text-[10px] uppercase tracking-[0.16em] text-white/45"
-                title={email}
-              >
-                {email}
-              </p>
-              <form action={signOutAction} data-saisie-ouverte>
-                <button
-                  type="submit"
-                  className="mt-2 inline-flex items-center gap-2 text-[12.5px] text-white/70 underline decoration-white/30 decoration-dotted underline-offset-4 transition-colors hover:text-white"
-                >
-                  <LogOut aria-hidden className="size-3.5" />
-                  Déconnexion
-                </button>
-              </form>
+              <ConnecteAvec email={email} sombre />
             </div>
           ) : null}
 
@@ -374,15 +360,7 @@ export function WizardShell({
               le point de rupture : elle se redonne ici, sinon la sortie
               n'existe que sur grand écran. */}
           {email ? (
-            <form action={signOutAction} data-saisie-ouverte>
-              <button
-                type="submit"
-                className="inline-flex items-center gap-1.5 text-[12.5px] text-[color:var(--board-slate-mid)] underline decoration-[color:var(--board-slate)] decoration-dotted underline-offset-4 transition-colors hover:text-[color:var(--board-ink)]"
-              >
-                <LogOut aria-hidden className="size-3.5" />
-                Déconnexion
-              </button>
-            </form>
+            <ConnecteAvec email={email} className="justify-end text-right" />
           ) : null}
         </div>
 

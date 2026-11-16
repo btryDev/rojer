@@ -4,6 +4,7 @@
 // direct (`auth.api.*`) — aucune route HTTP de Better Auth n'est montée.
 // E-mail et mot de passe, adresse confirmée avant toute session.
 
+import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -13,7 +14,7 @@ import { envoiEnService, motifErreur, refusUrlPublique } from "@/lib/email";
 import { COOKIE_ETABLISSEMENT_ACTIF } from "@/lib/auth/scope";
 import { auth, VERROU_DOUBLE_AUTH_MINUTES } from "./better-auth";
 import { MESSAGE_MOT_DE_PASSE_DIVULGUE, motDePasseDivulgue } from "./mot-de-passe-divulgue";
-import { entetesDeSession, requireUser } from "./require-user";
+import { entetesDeSession, getOptionalUser, requireUser } from "./require-user";
 import { codeSaisi, donneesActivation, type DonneesActivation } from "./double-authentification";
 import { ipPourLimite } from "@/lib/securite/ip-client";
 import {
@@ -26,6 +27,7 @@ import {
 import { cheminDeRetour } from "./chemin-de-retour";
 import { erreurMotDePasse, LIEN_ACTIVATION_INVALIDE, LONGUEUR_MAX_MOT_DE_PASSE } from "./mot-de-passe";
 import { avecActivation } from "./activation";
+import { retenirOffreChoisie } from "@/lib/abonnements/offre-choisie";
 
 const emailSchema = z.string().email("Adresse e-mail invalide");
 
@@ -36,17 +38,17 @@ const connexionSchema = z.object({
   password: z.string().min(1, "Saisissez votre mot de passe"),
 });
 
-// Inscription : la règle des douze caractères, vérifiée ici, côté serveur
-// (audit OWASP B4) — l'attribut `minLength` du formulaire n'est qu'un confort.
-const nouveauMotDePasse = z.string().superRefine((valeur, ctx) => {
-  const erreur = erreurMotDePasse(valeur);
-  if (erreur) ctx.addIssue({ code: "custom", message: erreur });
-});
+// Inscription : l'adresse seule (retours de test du 2026-11-16). Le mot de
+// passe se choisit à l'activation, par qui tient la boîte (`activation.ts`) ;
+// celui de l'inscription n'a jamais servi — l'activation l'écrasait.
+const inscriptionSchema = z.object({ email: emailSchema });
 
-const inscriptionSchema = z.object({
-  email: emailSchema,
-  password: nouveauMotDePasse,
-});
+/**
+ * Le mot de passe que Better Auth exige à l'inscription : tiré au hasard,
+ * jamais montré ni envoyé, remplacé à l'activation. Personne ne peut donc se
+ * connecter à un compte avant de l'avoir activé.
+ */
+const motDePasseProvisoire = () => randomBytes(32).toString("base64url");
 
 /**
  * Consomme une tentative par IP et, quand on l'a, par compte visé (audit OWASP
@@ -180,7 +182,12 @@ export async function signInAction(
           : "Votre adresse n'est pas encore confirmée : un nouveau lien part vers votre boîte (cinq au plus par heure). Ouvrez le plus récent pour activer votre compte.",
       };
     }
-    return { error: "Identifiants invalides" };
+    // Le même message qu'un compte existe ou non. Un compte créé et pas
+    // encore activé n'a pas de mot de passe connu : la phrase y renvoie.
+    return {
+      error:
+        "Identifiants invalides. Compte créé récemment ? Activez-le d'abord par le lien de l'e-mail « Rojer — confirmez votre adresse » : vous y choisirez votre mot de passe.",
+    };
   }
 
   const next = cheminDeRetour(formData.get("next"));
@@ -198,10 +205,7 @@ export async function signUpAction(
   _prev: AuthActionState,
   formData: FormData,
 ): Promise<AuthActionState> {
-  const parsed = inscriptionSchema.safeParse({
-    email: formData.get("email"),
-    password: formData.get("password"),
-  });
+  const parsed = inscriptionSchema.safeParse({ email: formData.get("email") });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Champs invalides" };
   }
@@ -210,12 +214,13 @@ export async function signUpAction(
   if (limite) return { error: limite };
 
   if (envoiImpossible()) return { error: ENVOI_IMPOSSIBLE };
-  const refus = await refusNouveauMotDePasse(parsed.data.password);
-  if (refus) return { error: refus };
+  // L'offre choisie sur la page publique, gardée pour l'essai et la page
+  // Abonnement (même navigateur) ; une valeur inconnue est ignorée.
+  await retenirOffreChoisie(formData.get("offre"));
   try {
     await auth.api.signUpEmail({
       // Le nom n'est demandé nulle part : l'adresse en tient lieu.
-      body: { email: parsed.data.email, password: parsed.data.password, name: parsed.data.email },
+      body: { email: parsed.data.email, password: motDePasseProvisoire(), name: parsed.data.email },
       headers: await headers(),
     });
   } catch (e) {
@@ -270,11 +275,8 @@ export async function definirMotDePasseAction(
   _prev: AuthActionState,
   formData: FormData,
 ): Promise<AuthActionState> {
+  // Un seul champ, avec un œil (retours de test du 2026-11-16).
   const motDePasse = String(formData.get("password") ?? "");
-  const confirmation = String(formData.get("confirm") ?? "");
-  if (motDePasse !== confirmation) {
-    return { error: "Les deux mots de passe ne correspondent pas" };
-  }
   const invalide = erreurMotDePasse(motDePasse);
   if (invalide) return { error: invalide };
 
@@ -312,10 +314,6 @@ export async function activerCompteAction(
   formData: FormData,
 ): Promise<AuthActionState> {
   const motDePasse = String(formData.get("password") ?? "");
-  const confirmation = String(formData.get("confirm") ?? "");
-  if (motDePasse !== confirmation) {
-    return { error: "Les deux mots de passe ne correspondent pas" };
-  }
   const invalide = erreurMotDePasse(motDePasse);
   if (invalide) return { error: invalide };
   if (motDePasse.length > LONGUEUR_MAX_MOT_DE_PASSE) return { error: MOT_DE_PASSE_TROP_LONG };
@@ -335,6 +333,11 @@ export async function activerCompteAction(
     if (isAPIError(e)) return { error: LIEN_ACTIVATION_INVALIDE };
     throw e;
   }
+  // Une session d'une AUTRE adresse restait ouverte dans ce navigateur (un
+  // compte qu'on active n'en a jamais) : elle se ferme, pour qu'on se
+  // connecte avec le compte qu'on vient d'activer et non qu'on agisse sur
+  // l'autre sans le voir (retours de test du 2026-11-16 ; la page l'annonce).
+  if (applique && (await getOptionalUser())) await fermerLaSession();
   redirect(applique ? "/login?confirmed=1" : "/login?confirmation=deja");
 }
 
@@ -352,6 +355,12 @@ export async function activerCompteAction(
  * encore en base.
  */
 export async function signOutAction() {
+  await fermerLaSession();
+  redirect("/login");
+}
+
+/** Ferme la session du navigateur, s'il y en a une, et efface ses cookies sensibles. */
+async function fermerLaSession() {
   try {
     await auth.api.signOut({ headers: await entetesDeSession() });
   } catch (e) {
@@ -362,7 +371,6 @@ export async function signOutAction() {
   // justifie de le laisser traîner sur un poste partagé.
   (await cookies()).delete(COOKIE_ETABLISSEMENT_ACTIF);
   revalidatePath("/", "layout");
-  redirect("/login");
 }
 
 // ---------------------------------------------------------------------------

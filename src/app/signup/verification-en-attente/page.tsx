@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
+import { contexteDroits, offreLancee } from "@/lib/abonnements/saisie";
+import { JOURS_AVANT_PURGE } from "@/lib/auth/comptes-non-actives";
+import { DUREE_ESSAI_JOURS } from "@/lib/stripe/parcours";
 
 export const metadata = {
   title: "Vérifiez votre e-mail — Rojer",
@@ -11,6 +14,7 @@ export default async function VerificationEnAttentePage({
   searchParams: Promise<{ email?: string }>;
 }) {
   const { email } = await searchParams;
+  const essai = offreLancee(contexteDroits());
 
   return (
     // Colonne étroite centrée, comme les autres écrans d'authentification —
@@ -45,7 +49,8 @@ export default async function VerificationEnAttentePage({
                 Ouvrez-le pour activer votre compte : vous y choisirez votre
                 mot de passe, puis vous vous connecterez avec. Rien reçu ? Une
                 nouvelle inscription avec la même adresse en renvoie un — cinq
-                au plus par heure.
+                au plus par heure. Un compte non activé est supprimé au bout de{" "}
+                {JOURS_AVANT_PURGE} jours.
               </p>
             </div>
           </div>
@@ -65,12 +70,16 @@ export default async function VerificationEnAttentePage({
           <Etape
             numero={2}
             titre="Cliquez sur le lien"
-            corps="Vous serez redirigé·e automatiquement ici, connecté·e."
+            corps="Vous y choisirez votre mot de passe, puis vous vous connecterez avec."
           />
           <Etape
             numero={3}
-            titre="Ouvrez votre dossier"
-            corps="Premier établissement, équipements, calendrier. 10 minutes."
+            titre={essai ? "Démarrez votre essai" : "Ouvrez votre dossier"}
+            corps={
+              essai
+                ? `${DUREE_ESSAI_JOURS} jours gratuits, sans carte bancaire. Puis premier établissement, équipements, calendrier : 10 minutes.`
+                : "Premier établissement, équipements, calendrier. 10 minutes."
+            }
           />
         </ol>
 
@@ -82,12 +91,12 @@ export default async function VerificationEnAttentePage({
             J&apos;ai déjà cliqué · Me connecter →
           </Link>
           <span className="text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-            Mail absent ?{" "}
+            Mail absent, ou ce n&apos;est pas la bonne adresse ?{" "}
             <Link
               href="/signup"
               className="font-semibold text-[color:var(--board-blue-ink)] underline decoration-[color:var(--board-blue-soft)] underline-offset-4 transition-colors hover:decoration-[color:var(--board-blue-ink)]"
             >
-              Réessayer
+              Recommencer l&apos;inscription
             </Link>
           </span>
         </div>
