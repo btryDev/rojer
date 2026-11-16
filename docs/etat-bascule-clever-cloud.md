@@ -193,6 +193,10 @@ Gestes de la propriétaire (Clever Cloud) :
    lui, la route répond 404 et rien ne tourne ; `ALERTES_EMAIL` =
    `paloma.sanchez@btry.fr` (échec durable de la file Stripe, litige,
    remboursement ; sans elle, les alertes ne vont qu'au journal).
+   [2026-11-16] Et `TEMOIN_TACHES_URL` : l'adresse d'un témoin par
+   battement (healthchecks.io ou équivalent, période 1 jour, grâce 2 h),
+   appelée par la tâche du jour finie — seul signal d'une crontab arrêtée
+   (`taches/temoin.ts`, `docs/lancement-abonnements.md` § 7).
 3. Questions au support : chiffrement au repos, restauration à un instant
    donné (PITR), durée de conservation des sauvegardes.
 

@@ -154,6 +154,10 @@ const schema = z
     // Les alertes d'exploitation (`lib/alertes.ts`) : échec durable de la
     // file Stripe, litige, remboursement. Absente, elles ne vont qu'au journal.
     ALERTES_EMAIL: z.preprocess(vide, z.string().email("doit être une adresse e-mail").optional()),
+    // Le témoin des tâches (`taches/temoin.ts`) : l'adresse d'un service de
+    // surveillance par battement, appelée chaque jour quand la tâche du jour a
+    // fini. Absente, une crontab arrêtée ne se signale pas.
+    TEMOIN_TACHES_URL: z.preprocess(vide, z.string().url("doit être une adresse https").startsWith("https://", "doit être une adresse https").optional()),
   });
 
 /**
@@ -245,6 +249,11 @@ export function avertissementsEnvironnement(env: Env = process.env): string[] {
   }
   if (stripe.active && !vide(env.ALERTES_EMAIL)) {
     avertissements.push("Stripe actif sans ALERTES_EMAIL : les alertes (échecs durables, litiges, remboursements) ne vont qu'au journal.");
+  }
+  if (stripe.active && !vide(env.TEMOIN_TACHES_URL)) {
+    avertissements.push(
+      "Stripe actif sans TEMOIN_TACHES_URL : une crontab arrêtée ne se signale pas (ni file Stripe, ni rappels, ni suppressions).",
+    );
   }
   return avertissements;
 }
