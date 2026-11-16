@@ -9,6 +9,7 @@ import "server-only";
 // clients ou deux essais est la ligne `Abonnement` réservée en base avant
 // l'appel (lot de branchement).
 
+import { createHash } from "node:crypto";
 import type Stripe from "stripe";
 import { OPTIONS_RELECTURE } from "./client";
 import { idStripe } from "./synchronisation";
@@ -148,6 +149,12 @@ export async function ouvrirCheckoutCarte(
   await expirerSessionsOuvertes(stripe, customerId);
   const session = await stripe.checkout.sessions.create({
     mode: "setup",
+    // À ESSAYER à la prochaine répétition (revue du 2026-11-16) :
+    // `allowed_payment_method_types: ["card"]`, pour qu'un prélèvement SEPA
+    // activé par erreur dans le tableau de bord ne laisse pas la facture « en
+    // traitement » et le client sur sa page. Non posé tant que Stripe ne l'a
+    // pas accepté sur une vraie session : une erreur ici fermerait tout
+    // enregistrement de carte.
     customer: customerId,
     currency: "eur",
     metadata,
@@ -242,32 +249,80 @@ export async function appliquerFormule(
   const finEssai = choix.immediat && abonnement.status === "trialing";
   if (item?.price.id === choix.priceId && pmActuel === choix.paymentMethodId && !finEssai && !enPause) return null;
 
-  const cle = (etape: string) => (choix.idempotence ? { idempotencyKey: `${choix.idempotence}-${etape}` } : {});
   // Le taux en vigueur est reposé : un abonnement né sous un ancien taux
   // paie le prix affiché.
   const taux = await tauxEnVigueur(stripe);
+  const decision = {
+    items: item ? [{ id: item.id, price: choix.priceId }] : [{ price: choix.priceId }],
+    default_payment_method: choix.paymentMethodId,
+    // Stripe refuse `proration_behavior` sur un abonnement en pause
+    // (« Resume the subscription first », répétition en local du
+    // 2026-11-16) : la reprise qui suit le porte, et ne facture que la
+    // nouvelle période.
+    ...(enPause ? {} : { proration_behavior: "none" as const }),
+    ...(finEssai ? { trial_end: "now" as const } : {}),
+    ...(taux ? { default_tax_rates: [taux] } : {}),
+  };
+  // La clé d'idempotence porte l'EMPREINTE de la décision (formule, carte,
+  // fin d'essai, TVA, prorata) : le même choix rejoué — deux onglets, un
+  // événement relivré — retombe sur la même clé ; un geste rejoué après un
+  // changement du code (paramètres différents) en prend une neuve au lieu
+  // d'échouer pour toujours (`StripeIdempotencyError`, répétition du
+  // 2026-11-16). L'état relu juste avant protège ce cas-là.
+  // La TVA n'y entre pas : elle est LUE (cache, réseau), pas choisie, et un
+  // chemin qui l'aurait manquée prendrait une autre clé que l'autre, pour un
+  // même choix (revue du 2026-11-16).
+  const choisi = { ...decision, default_tax_rates: undefined };
+  const empreinte = createHash("sha256").update(JSON.stringify(choisi)).digest("hex").slice(0, 12);
+  const cle = (etape: string) => (choix.idempotence ? { idempotencyKey: `${choix.idempotence}-${empreinte}-${etape}` } : {});
   const misAJour = await stripe.subscriptions.update(
     abonnement.id,
-    {
-      items: item ? [{ id: item.id, price: choix.priceId }] : [{ price: choix.priceId }],
-      default_payment_method: choix.paymentMethodId,
-      proration_behavior: "none",
-      metadata: { rojerChoixLe: String(choix.choisiLe) },
-      expand: ["latest_invoice"],
-      ...(finEssai ? { trial_end: "now" as const } : {}),
-      ...(taux ? { default_tax_rates: [taux] } : {}),
-    },
+    { ...decision, metadata: { rojerChoixLe: String(choix.choisiLe) }, expand: ["latest_invoice"] },
     cle("maj"),
   );
   if (!enPause) return finEssai ? factureARegler(stripe, misAJour.latest_invoice) : null;
-  // Reprise : la période repart à aujourd'hui (le défaut de l'API) et se paie ;
-  // l'abonnement reste en pause tant que cette facture n'est pas réglée.
+  // Reprise : la période repart à aujourd'hui (le défaut de l'API). Stripe
+  // crée la facture de la reprise sans la prélever (constaté en local le
+  // 2026-11-16 : `open`, jamais tentée) ; on la règle avec la carte qu'on
+  // vient de poser. Refusée ou à authentifier : sa page, où le client la
+  // règle. L'abonnement reste en pause tant qu'elle n'est pas payée.
   const repris = await stripe.subscriptions.resume(
     abonnement.id,
     { proration_behavior: "none", expand: ["latest_invoice"] },
     cle("reprise"),
   );
-  return factureARegler(stripe, repris.latest_invoice);
+  return reglerLaFacture(stripe, repris.latest_invoice, choix.paymentMethodId);
+}
+
+/**
+ * Régler tout de suite une facture ouverte avec la carte donnée : `null` si
+ * elle est payée (ou s'il n'y a rien à régler), sinon l'adresse de sa page
+ * (carte refusée, authentification demandée).
+ */
+async function reglerLaFacture(
+  stripe: Stripe,
+  derniere: Stripe.Subscription["latest_invoice"],
+  paymentMethodId: string,
+): Promise<string | null> {
+  const facture = await factureOuverte(stripe, derniere);
+  if (!facture?.id) return null;
+  try {
+    // Une clé tirée de la FACTURE : les deux chemins qui finalisent la même
+    // carte (retour de Checkout, webhook) règlent la même facture sous la
+    // même clé — un seul règlement (revue du 2026-11-16).
+    const payee = await stripe.invoices.pay(facture.id, { payment_method: paymentMethodId }, { idempotencyKey: `payer-${facture.id}` });
+    return payee.status === "paid" ? null : (payee.hosted_invoice_url ?? facture.hosted_invoice_url ?? null);
+  } catch (e) {
+    // Le même règlement en cours ailleurs (409) : on ne sait pas encore s'il
+    // passe — l'erreur remonte, l'appelant relit la page sans rien annoncer
+    // (`dejaEnCours`, `finaliserCarteAction`).
+    if ((e as { statusCode?: number })?.statusCode === 409) throw e;
+    // Sinon, la facture fait foi : déjà payée (par l'autre chemin), rien à
+    // faire ; encore ouverte (carte refusée, 3-D Secure), sa page.
+    const relue = await stripe.invoices.retrieve(facture.id).catch(() => null);
+    if (relue?.status === "paid") return null;
+    return relue?.hosted_invoice_url ?? facture.hosted_invoice_url ?? null;
+  }
 }
 
 /**

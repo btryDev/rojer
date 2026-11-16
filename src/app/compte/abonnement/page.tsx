@@ -409,7 +409,12 @@ export default async function AbonnementPage({
                 <FinalisationCarte sessionId={carte} />
               </div>
             )}
-            {vue.cas === "formulaire" && (
+            {/* Juste après un paiement, la copie de l'abonnement peut retarder de
+                quelques secondes sur Stripe : la page ne repropose pas de payer
+                (répétition du 2026-11-16 — « Payer et m'abonner » restait affiché
+                à côté de « Paiement terminé »). Le serveur refuse de toute façon
+                un second paiement. */}
+            {vue.cas === "formulaire" && paiement !== "termine" && (
               <>
                 {vue.rappelApresEssai && formule && (
                   <p className="m-0 mt-2 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">

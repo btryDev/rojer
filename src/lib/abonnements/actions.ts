@@ -9,7 +9,7 @@ import { publicAppUrl } from "@/lib/email";
 import { memeCompteQueLaPage } from "@/lib/auth/compte-attendu";
 import { clientStripe } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
-import { abonnementCourant, synchroniserClientStripe } from "@/lib/stripe/synchronisation";
+import { abonnementCourant, motifDErreur, synchroniserClientStripe } from "@/lib/stripe/synchronisation";
 import {
   abonnementsDuClient,
   annulerBaisse,
@@ -167,6 +167,7 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
     // Le même geste parti d'un autre onglet est passé ou passe : rien n'a
     // échoué, la page relit l'état (jamais « rien ne vous a été facturé »).
     if (dejaEnCours(e)) redirect(PAGE_ABONNEMENT);
+    console.error(`abonnement : s'abonner en échec — ${motifDErreur(e)}`);
     redirect(`${PAGE_ABONNEMENT}?stripe=indisponible`);
   }
   redirect(url ?? `${PAGE_ABONNEMENT}?abonnement=en-cours`);
@@ -215,10 +216,8 @@ export async function finaliserCarteAction(sessionId: string): Promise<void> {
   } catch (e) {
     // Le webhook applique la même session au même instant (clé d'idempotence
     // partagée) : ce n'est pas un échec, la page relira l'état.
-    if (e instanceof Stripe.errors.StripeIdempotencyError || (e as { statusCode?: number })?.statusCode === 409) {
-      redirect(PAGE_ABONNEMENT);
-    }
-    console.error(`abonnement : finalisation de la carte en échec — ${e instanceof Error ? e.name : "erreur"}`);
+    if (dejaEnCours(e)) redirect(PAGE_ABONNEMENT);
+    console.error(`abonnement : finalisation de la carte en échec — ${motifDErreur(e)}`);
     redirect(`${PAGE_ABONNEMENT}?stripe=indisponible`);
   }
   if (issue.issue === "aRegler") redirect(issue.url);
@@ -284,7 +283,7 @@ export async function changerFormuleAction(formData: FormData): Promise<void> {
     // Un double clic : le premier envoi est passé (clé d'idempotence, ou
     // planning déjà créé) — la page relit l'état, sans erreur.
     if (dejaEnCours(e)) redirect(PAGE_ABONNEMENT);
-    console.error(`abonnement : changement de formule en échec — ${e instanceof Error ? e.name : "erreur"}`);
+    console.error(`abonnement : changement de formule en échec — ${motifDErreur(e)}`);
     redirect(`${PAGE_ABONNEMENT}?stripe=indisponible`);
   }
   redirect(cible);
