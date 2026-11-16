@@ -9,7 +9,7 @@ import { prixTTC } from "@/lib/abonnements/affichage";
 import { ConnecteAvec } from "@/components/compte/ConnecteAvec";
 import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
 import { lireOffreChoisie } from "@/lib/abonnements/offre-choisie";
-import { clientStripe } from "@/lib/stripe/client";
+import { clientStripeLecture } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
 import { DUREE_ESSAI_JOURS, prixDesFormules } from "@/lib/stripe/parcours";
 import { ajouterJours, formaterDateLongueFr } from "@/lib/dates";
@@ -39,7 +39,7 @@ export default async function EssaiPage() {
   if (!config.active) redirect("/onboarding");
   let prix: Awaited<ReturnType<typeof prixDesFormules>> = new Map();
   try {
-    prix = await prixDesFormules(clientStripe(config));
+    prix = await prixDesFormules(clientStripeLecture(config));
   } catch {
     // Stripe ne répond pas : l'écran le dit, le bouton reste fermé.
   }

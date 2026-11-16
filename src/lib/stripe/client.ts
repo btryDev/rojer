@@ -37,6 +37,17 @@ const nouveauClient = (config: ConfigActive, options: Stripe.RequestOptions) =>
 
 let client: Stripe | undefined;
 let clientWebhook: Stripe | undefined;
+let clientLecture: Stripe | undefined;
+
+/**
+ * Le client de TOUTE lecture faite au rendu d'une page (Abonnement, essai) :
+ * 5 s, sans relance — la lecture a sa réponse de repli. Avec le client
+ * ordinaire (10 s, deux relances), un Stripe lent tenait la page une
+ * demi-minute (audit du 2026-11-16). Le client ordinaire reste aux gestes.
+ */
+export function clientStripeLecture(config: ConfigActive): Stripe {
+  return (clientLecture ??= nouveauClient(config, { ...OPTIONS_RELECTURE, maxNetworkRetries: 0 }));
+}
 
 /** Le client Stripe d'une configuration active (`configurationStripe`, seule décision). */
 export function clientStripe(config: ConfigActive): Stripe {
