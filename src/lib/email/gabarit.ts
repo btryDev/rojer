@@ -60,13 +60,24 @@ function urlSure(url: string): string {
   return echapperHtml(url);
 }
 
+/**
+ * Le texte échappé, avec les espaces insécables de la typographie française :
+ * après « et avant », :, ?, ! et ; — un guillemet ou un deux-points ne finit
+ * jamais seul sur sa ligne.
+ */
+function typographie(texte: string): string {
+  return echapperHtml(texte)
+    .replace(/« /g, "«&nbsp;")
+    .replace(/ (»|:|\?|!|;)/g, "&nbsp;$1");
+}
+
 function paragraphe(texte: string): string {
-  return `<p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:${COULEURS.texte};">${echapperHtml(texte)}</p>`;
+  return `<p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:${COULEURS.texte};">${typographie(texte)}</p>`;
 }
 
 /** Les phrases secondaires : plus petites, toutes à la même taille. */
 function note(texte: string): string {
-  return `<p style="margin:0 0 8px;font-size:13px;line-height:1.5;color:${COULEURS.doux};">${echapperHtml(texte)}</p>`;
+  return `<p style="margin:0 0 8px;font-size:13px;line-height:1.5;color:${COULEURS.doux};">${typographie(texte)}</p>`;
 }
 
 export function htmlMailCompte(m: MailCompte): string {
@@ -109,7 +120,7 @@ ${note(`Le lien est valable ${m.validite}.`)}
 ${m.apres.map(note).join("\n")}
 </div>
 </td></tr>
-<tr><td align="center" style="padding:18px 8px 0;font-size:12px;line-height:1.5;color:${COULEURS.doux};text-align:center;">Envoyé par Rojer après une action sur votre compte. Ne&nbsp;répondez pas à ce&nbsp;message.</td></tr>
+<tr><td align="center" style="padding:18px 8px 0;font-size:12px;line-height:1.5;color:${COULEURS.doux};text-align:center;">Envoyé par Rojer. Ne&nbsp;répondez pas à ce&nbsp;message.</td></tr>
 </table>
 </td></tr>
 </table>
