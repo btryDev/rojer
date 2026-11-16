@@ -30,6 +30,8 @@ import { AideQuestionMatieres } from "@/components/etablissements/AideQuestionMa
 import type { StepProps } from "./types";
 import { nombreDePersonnesDemande } from "./validation";
 import { AideTypesErp } from "@/components/etablissements/AideTypesErp";
+import { aidesDesTypes } from "@/lib/etablissements/aide-type-erp";
+import { EnSavoirPlus } from "./EnSavoirPlus";
 import { AideEcran } from "@/components/ui-kit";
 
 /**
@@ -95,6 +97,7 @@ export function StepTypologie({
    * catégorie, pour la même raison que le sommeil apparaît sous le type.
    */
   const poseNombre = nombreDePersonnesDemande(state);
+  const typesDeclares = [state.typeErp, ...state.typesErpAutres];
 
   return (
     <div className="flex flex-col gap-[22px]">
@@ -112,11 +115,9 @@ export function StepTypologie({
               Compter à la main un nombre que trois blocs plus bas
               contredisent revient à annoncer un parcours plus court qu'il
               ne l'est ; on dit donc la règle, pas le total. */}
-          Trois questions. Chaque « oui » en ouvre une ou deux de plus. Votre
-          classement figure sur votre arrêté d&apos;ouverture ou au
-          procès-verbal de la commission de sécurité, quand il y en a un —
-          nous ne le devinons
-          pas à votre place.
+          Trois questions ; chaque « oui » en ouvre une ou deux de plus. Votre
+          classement d&apos;ERP figure sur votre arrêté d&apos;ouverture ou au
+          procès-verbal de la commission de sécurité.
         </p>
       </div>
 
@@ -183,7 +184,8 @@ export function StepTypologie({
                     // mémoire à l'ADR-004. Le type J est entré au modèle le
                     // 2026-09-03 avec le dépouillement de GN 1 ; la liste
                     // est désormais celle du texte, et la phrase le dit.
-                    aide="Les vingt-deux types du règlement de sécurité, dans l'ordre de l'article GN 1 : d'abord les établissements installés dans un bâtiment, puis les établissements spéciaux."
+                    aide="Exemples : N pour un restaurant, M pour un magasin, W pour des bureaux."
+                    detail="Les vingt-deux types du règlement de sécurité, dans l'ordre de l'article GN 1 : d'abord les établissements installés dans un bâtiment, puis les établissements spéciaux."
                   />
                   <select
                     id="typeErp"
@@ -256,7 +258,8 @@ export function StepTypologie({
                 <div className="flex flex-col gap-3">
                   <SousQuestion
                     question="Quelle est votre catégorie ?"
-                    aide="Elle se compte sur l'effectif du public, majoré de celui du personnel qui n'occupe pas des locaux indépendants dotés de leurs propres dégagements (art. R. 143-19 CCH) — pas sur vos seuls salariés : un restaurant de huit salariés qui peut accueillir quatre cents personnes à la fois est en 3ᵉ catégorie (de 301 à 700 personnes)."
+                    aide="Elle dépend du public que vous pouvez accueillir, pas de vos seuls salariés. Exemple : un restaurant de huit salariés qui peut recevoir quatre cents personnes est en 3ᵉ catégorie."
+                    detail="Elle se compte sur l'effectif du public, majoré de celui du personnel qui n'occupe pas des locaux indépendants dotés de leurs propres dégagements (art. R. 143-19 CCH) — pas sur vos seuls salariés : un restaurant de huit salariés qui peut accueillir quatre cents personnes à la fois est en 3ᵉ catégorie (de 301 à 700 personnes)."
                   />
                   <select
                     id="categorieErp"
@@ -285,7 +288,14 @@ export function StepTypologie({
                   )}
                   {/* 2026-10-17, contrôle visuel de c6 : SOUS la catégorie,
                       dont le choix la fait apparaître (N1 à N4). */}
-                  <AideTypesErp types={[state.typeErp, ...state.typesErpAutres]} categorieErp={state.categorieErp} />
+                  {/* 2026-11-16 : derrière un livre, comme toute aide longue
+                      du parcours ; elle reste dans la page et sur « Ce que
+                      Rojer ne couvre pas ». */}
+                  {aidesDesTypes(typesDeclares, state.categorieErp).length > 0 ? (
+                    <EnSavoirPlus libelle="Ce que Rojer ne suit pas pour ce type">
+                      <AideTypesErp types={typesDeclares} categorieErp={state.categorieErp} />
+                    </EnSavoirPlus>
+                  ) : null}
                 </div>
 
                 {/* Locaux à sommeil — posée au parcours depuis le 2026-09-09,
@@ -311,7 +321,8 @@ export function StepTypologie({
                   <div className="flex flex-col gap-3">
                     <SousQuestion
                       question="Votre établissement héberge-t-il du public pour la nuit ?"
-                      aide={AIDE_LOCAUX_SOMMEIL}
+                      aide="Exemples : chambres d'hôtel, chambres d'hôtes, gîte. Un logement de fonction ne compte pas."
+                      detail={AIDE_LOCAUX_SOMMEIL}
                     />
                     <select
                       id="comporteLocauxSommeilPublic"
@@ -355,7 +366,8 @@ export function StepTypologie({
                   <div className="flex flex-col gap-3">
                     <SousQuestion
                       question={QUESTION_NOMBRE_DE_PERSONNES}
-                      aide={AIDE_NOMBRE_DE_PERSONNES}
+                      aide="Salariés et public ensemble. Exemple : six salariés et quarante clients, cela fait quarante-six."
+                      detail={AIDE_NOMBRE_DE_PERSONNES}
                     />
                     <input
                       id="personnesPresentesHabituellement"
@@ -494,9 +506,7 @@ export function StepTypologie({
                 Ce qui se fait dans vos locaux
               </h3>
               <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-                Une question dont la réponse ajoute ou retire des
-                obligations. Si vous hésitez, laissez « Je ne sais pas encore » :
-                les lignes concernées s&apos;afficheront « à confirmer », et vous
+                Si vous hésitez, laissez « Je ne sais pas encore » : vous
                 pourrez répondre plus tard sur la fiche de l&apos;établissement.
               </p>
             </div>
@@ -509,13 +519,17 @@ export function StepTypologie({
               <SousQuestion
                 question={QUESTION_MATIERES}
                 aide={
-                  <AideQuestionMatieres id="manipuleMatieresR422722-aide" />
+                  <p id="manipuleMatieresR422722-aide" className="m-0">
+                    Exemples : bouteilles de propane ou de butane, aérosols
+                    marqués « extrêmement inflammable ».
+                  </p>
                 }
+                detail={<AideQuestionMatieres id="manipuleMatieresR422722-detail" />}
               />
               <select
                 id="manipuleMatieresR422722"
                 aria-label={QUESTION_MATIERES}
-                aria-describedby="manipuleMatieresR422722-aide"
+                aria-describedby="manipuleMatieresR422722-aide manipuleMatieresR422722-detail"
                 value={state.manipuleMatieresR422722}
                 onChange={(e) =>
                   update({ manipuleMatieresR422722: e.currentTarget.value })
@@ -540,6 +554,7 @@ export function StepTypologie({
 function SousQuestion({
   question,
   aide,
+  detail,
 }: {
   question: string;
   /**
@@ -547,6 +562,11 @@ function SousQuestion({
    * conteneur `div` : un `p` ne peut pas en contenir d'autres.
    */
   aide?: React.ReactNode;
+  /**
+   * Le détail, derrière « En savoir plus » (2026-11-16) : à l'écran, une
+   * phrase et un exemple ; le texte complet, exact, à un clic.
+   */
+  detail?: React.ReactNode;
 }) {
   return (
     <div className="border-t border-[color:var(--board-slate-line)] pt-5">
@@ -556,6 +576,13 @@ function SousQuestion({
       {aide ? (
         <div className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           {aide}
+        </div>
+      ) : null}
+      {detail ? (
+        <div className="max-w-[var(--board-mesure)]">
+          <EnSavoirPlus>
+            {typeof detail === "string" ? <p>{detail}</p> : detail}
+          </EnSavoirPlus>
         </div>
       ) : null}
     </div>

@@ -8,6 +8,25 @@ import { refusQuota, type CleQuotaComptee } from "@/lib/abonnements/quotas";
 import { stockagePlein } from "@/lib/abonnements/stockage";
 import { FermerLaSaisie } from "./FermerLaSaisie";
 
+/**
+ * Le motif du plafond atteint, ou `null`. Lu par `PlafondDeCreation`, et par
+ * la page qui annonce le plafond ailleurs qu'en tête (l'onboarding, dont
+ * l'assistant occupe tout l'écran).
+ */
+export async function motifDuPlafond({
+  cle,
+  etStockage = false,
+}: {
+  cle?: CleQuotaComptee;
+  etStockage?: boolean;
+}): Promise<string | null> {
+  const c = await getOptionalCompte();
+  return c && c.compte.role !== "lecture"
+    ? ((cle ? await refusQuota(c.db, c.compte.compteId, cle) : null) ??
+        (etStockage ? await stockagePlein(c.db, c.compte.compteId) : null))
+    : null;
+}
+
 export async function PlafondDeCreation({
   cle,
   etStockage = false,
@@ -21,12 +40,7 @@ export async function PlafondDeCreation({
   className?: string;
   children: React.ReactNode;
 }) {
-  const c = await getOptionalCompte();
-  const motif =
-    c && c.compte.role !== "lecture"
-      ? ((cle ? await refusQuota(c.db, c.compte.compteId, cle) : null) ??
-        (etStockage ? await stockagePlein(c.db, c.compte.compteId) : null))
-      : null;
+  const motif = await motifDuPlafond({ cle, etStockage });
   return (
     <FermerLaSaisie motif={motif} className={className}>
       {children}

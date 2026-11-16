@@ -2,6 +2,7 @@
 
 import type { EntrepriseConnue } from "@/lib/onboarding/rattachement";
 import { DemandeAide } from "@/components/assistance/DemandeAide";
+import { BandeauAbonnement } from "@/components/abonnements/BandeauAbonnement";
 import { useActionState, useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -73,7 +74,10 @@ export function WizardShell({
   entreprisesConnues,
   compteId,
   nomCompte,
+  plafond = null,
 }: {
+  /** Le plafond d'établissements atteint, annoncé en tête de colonne. */
+  plafond?: string | null;
   email?: string | null;
   /** Les entreprises du compte (une par SIREN), pour rattacher un nouvel établissement. */
   entreprisesConnues: readonly EntrepriseConnue[];
@@ -381,6 +385,10 @@ export function WizardShell({
             </form>
           ) : null}
         </div>
+
+        {plafond ? (
+          <BandeauAbonnement bandeau={{ ton: "ferme", message: plafond }} className="mb-6" />
+        ) : null}
 
         {/* Progression */}
         <div className="mb-8">
