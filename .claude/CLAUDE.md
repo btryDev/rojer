@@ -768,7 +768,10 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
 53. **053** — L'abonnement est porté par le compte ; Stripe en garde la
     vérité, Rojer une copie écrite depuis un webhook signé, après relecture
     de l'abonnement. Un impayé ferme la saisie, jamais la lecture ni
-    l'export (2026-11-02, branche `lot/abonnements-stripe`)
+    l'export (2026-11-02, branche `lot/abonnements-stripe`) [2026-11-16,
+    § 9 amendé : l'essai se compte chez Rojer, rien chez Stripe avant
+    « S'abonner », qui ouvre Checkout en mode abonnement ; plus de pause, ni
+    de carte enregistrée sans payer — `docs/plan-essai-chez-rojer.md`]
 54. **054** — Plusieurs personnes travaillent sur le même compte : plugin
     `organization` de Better Auth, la racine de l'isolation passe de
     `userId` à `compteId`, trois rôles (propriétaire, membre, lecture

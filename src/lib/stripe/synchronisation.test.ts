@@ -14,7 +14,7 @@ vi.mock("./file", () => ({
 }));
 vi.mock("@/lib/alertes", () => ({ alerter: vi.fn() }));
 
-import { abonnementCourant, colonnesDe, horlogeDeSuppression, ListeTronquee, premierEssai, premierPaiement, synchroniserClientStripe, toutLister } from "./synchronisation";
+import { abonnementCourant, colonnesDe, horlogeDeSuppression, ListeTronquee, premierPaiement, synchroniserClientStripe, toutLister } from "./synchronisation";
 
 const abo = (o: Partial<Stripe.Subscription> & { id: string; prix?: string }) =>
   ({
@@ -76,10 +76,10 @@ describe("colonnesDe", () => {
     expect(colonnesDe(abo({ id: "sub_2", prix: "suivi_annuel" })).formule).toBeNull();
   });
 
-  it("recopie l'état, la formule et les dates (secondes Stripe → dates)", () => {
+  it("recopie l'état, la formule et les dates (secondes Stripe → dates) — jamais la fin d'essai, comptée chez Rojer (2026-11-16)", () => {
     const s = abo({
       id: "sub_1",
-      status: "trialing",
+      status: "active",
       prix: "rojer_pro_annuel",
       trial_end: 1_790_000_000,
       cancel_at_period_end: true,
@@ -87,11 +87,10 @@ describe("colonnesDe", () => {
     });
     expect(colonnesDe(s)).toEqual({
       stripeSubscriptionId: "sub_1",
-      statut: "trialing",
+      statut: "active",
       formule: "rojer_pro_annuel",
       stripePriceId: "price_rojer_pro_annuel",
       finPeriode: new Date(1_800_000_000_000),
-      finEssai: new Date(1_790_000_000_000),
       resilieEnFinDePeriode: true,
       finPrevueLe: new Date(1_800_000_000_000),
     });
@@ -99,14 +98,6 @@ describe("colonnesDe", () => {
 
   it("sans abonnement : des colonnes vides, jamais un état inventé", () => {
     expect(colonnesDe(null)).toMatchObject({ stripeSubscriptionId: null, statut: null, resilieEnFinDePeriode: false });
-  });
-});
-
-describe("premierEssai", () => {
-  it("le premier essai pris, sur quelque abonnement que ce soit", () => {
-    expect(premierEssai([abo({ id: "a", trial_start: 300 }), abo({ id: "b" }), abo({ id: "c", trial_start: 200 })]))
-      .toEqual(new Date(200_000));
-    expect(premierEssai([abo({ id: "a" })])).toBeNull();
   });
 });
 
@@ -179,7 +170,7 @@ describe("horloge de la suppression (ADR-058)", () => {
   const sub = (o: object) => o as unknown as Stripe.Subscription;
 
   it("ouvert : vide, avertissements et date de suppression avec — un réabonnement repart de zéro", () => {
-    for (const status of ["trialing", "active", "past_due"]) {
+    for (const status of ["active", "past_due"]) {
       expect(horlogeDeSuppression(sub({ status }), notee, relue)).toEqual({
         sansAbonnementDepuis: null,
         suppressionPrevueLe: null,
@@ -189,12 +180,9 @@ describe("horloge de la suppression (ADR-058)", () => {
     }
   });
 
-  it("fermé : la fin chez Stripe, sinon la fin d'essai d'une pause, sinon la date notée, sinon la relecture ; les avertissements ne sont pas touchés", () => {
+  it("fermé : la fin chez Stripe, sinon la date notée (la fin de l'essai, posée à son démarrage), sinon la relecture ; les avertissements ne sont pas touchés", () => {
     expect(horlogeDeSuppression(sub({ status: "canceled", ended_at: 1_790_000_000 }), notee, relue)).toEqual({
       sansAbonnementDepuis: new Date(1_790_000_000 * 1000),
-    });
-    expect(horlogeDeSuppression(sub({ status: "paused", ended_at: null, trial_end: 1_780_000_000 }), null, relue)).toEqual({
-      sansAbonnementDepuis: new Date(1_780_000_000 * 1000),
     });
     expect(horlogeDeSuppression(sub({ status: "unpaid", ended_at: null }), notee, relue)).toEqual({ sansAbonnementDepuis: notee });
     expect(horlogeDeSuppression(sub({ status: "unpaid", ended_at: null }), null, relue)).toEqual({ sansAbonnementDepuis: relue });

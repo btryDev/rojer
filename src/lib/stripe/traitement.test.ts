@@ -15,14 +15,12 @@ vi.mock("./synchronisation", async (reel) => ({
   ...(await reel<typeof import("./synchronisation")>()),
   synchroniserSousBail: vi.fn(),
 }));
-vi.mock("@/lib/abonnements/souscription", () => ({ finaliserCarte: vi.fn().mockResolvedValue({ issue: "rien" }) }));
 vi.mock("./parcours", () => ({ rendrePlanningEchu: vi.fn().mockResolvedValue(undefined), carteQuiAPaye: vi.fn().mockResolvedValue(undefined) }));
 vi.mock("@/lib/alertes", () => ({ alerter: vi.fn().mockResolvedValue(undefined), alerterUneFoisParJour: vi.fn().mockResolvedValue(undefined) }));
 
 import * as evenements from "./evenements";
 import * as file from "./file";
 import { synchroniserSousBail } from "./synchronisation";
-import { finaliserCarte } from "@/lib/abonnements/souscription";
 import { alerter, alerterUneFoisParJour } from "@/lib/alertes";
 import { carteQuiAPaye, rendrePlanningEchu } from "./parcours";
 import { EVENEMENTS_ECOUTES } from "./webhook";
@@ -82,10 +80,11 @@ describe("aiguillageDe : le client de l'objet relu, et les effets propres à l'o
     expect(carteQuiAPaye).not.toHaveBeenCalled();
   });
 
-  it("session de carte : la formule s'applique, la relecture suit par la file", async () => {
-    api.checkout.sessions.retrieve.mockResolvedValue({ mode: "setup", customer: "cus_1" });
+  it("session d'abonnement : la relecture suit par la file ; une session « setup » (d'avant le 2026-11-16) n'est plus suivie", async () => {
+    api.checkout.sessions.retrieve.mockResolvedValue({ mode: "subscription", customer: "cus_1" });
     expect(await aiguillageDe(faux, "v1.checkout.session.completed", "cs_1")).toEqual({ clientStripe: "cus_1" });
-    expect(finaliserCarte).toHaveBeenCalledWith(faux, expect.objectContaining({ mode: "setup" }), { synchroniser: false });
+    api.checkout.sessions.retrieve.mockResolvedValue({ mode: "setup", customer: "cus_1" });
+    expect(await aiguillageDe(faux, "v1.checkout.session.completed", "cs_1")).toMatchObject({ clientStripe: null });
   });
 
   it("sans client à suivre (paiement ponctuel, type non suivi, objet absent) : un motif, rien d'autre", async () => {

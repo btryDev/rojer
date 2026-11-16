@@ -25,11 +25,17 @@ import { compteEnEssai, noterEssaiEntreprise, sirenEssayeAilleurs } from "./essa
 beforeEach(() => h.table.clear());
 
 describe("un essai par entreprise", () => {
-  it("seul un compte en essai est concerné", async () => {
-    const db = (statut: string | null) =>
-      ({ abonnement: { findUnique: async () => (statut ? { statut } : null) } }) as unknown as Db;
-    expect(await compteEnEssai(db("trialing"), "c1")).toBe(true);
-    for (const s of ["active", "paused", "past_due", null]) expect(await compteEnEssai(db(s), "c1")).toBe(false);
+  it("seul un compte en essai est concerné — compté chez Rojer : jamais abonné, fin à venir (2026-11-16)", async () => {
+    const maintenant = new Date("2026-11-20T10:00:00Z");
+    const plus = (j: number) => new Date(maintenant.getTime() + j * 86_400_000);
+    const db = (ligne: { statut: string | null; finEssai: Date | null } | null) =>
+      ({ abonnement: { findUnique: async () => ligne } }) as unknown as Db;
+    expect(await compteEnEssai(db({ statut: null, finEssai: plus(10) }), "c1", maintenant)).toBe(true);
+    expect(await compteEnEssai(db({ statut: null, finEssai: plus(-1) }), "c1", maintenant)).toBe(false);
+    for (const statut of ["active", "past_due", "canceled"]) {
+      expect(await compteEnEssai(db({ statut, finEssai: plus(10) }), "c1", maintenant), statut).toBe(false);
+    }
+    expect(await compteEnEssai(db(null), "c1", maintenant)).toBe(false);
   });
 
   it("un SIREN neuf, ou noté par ce même compte, reste essayable", async () => {

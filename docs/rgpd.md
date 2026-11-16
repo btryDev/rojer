@@ -539,6 +539,12 @@ ni le mot de passe, ni l'adresse, ni aucun identifiant du compte
 (`auth/mot-de-passe-divulgue.ts`). Les sous-traitants de Clever Cloud
 (hébergement, base, Cellar, Mailpace) entreront dans cette liste à la bascule.]
 
+[2026-11-16, ADR-053 § 9 amendé : **Stripe** (paiement des abonnements) ne
+reçoit rien pendant l'essai, compté chez Rojer. Le client Stripe — adresse
+du propriétaire, puis nom, adresse de facturation et carte saisis sur la page
+de Stripe — naît au moment de s'abonner. Stripe est à ajouter à cette liste
+avec les sous-traitants de Clever Cloud, à la bascule.]
+
 ~~Aucun autre.~~ [2026-10-30 : aucun autre à ce jour, hormis l'appel ci-dessus.] Pas de LLM, pas d'analytics tiers, pas de CDN hors UE. Le principe
 « zéro IA » du produit a une conséquence directe : **le produit** n'envoie
 aucune donnée à un service d'inférence, pour aucun traitement.

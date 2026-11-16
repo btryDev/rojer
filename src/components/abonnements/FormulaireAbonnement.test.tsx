@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
 /**
- * Le formulaire de l'abonnement (audit du 2026-11-16) : il part de la
- * formule en cours — un clic sans rien changer ne remplace pas Pro annuel
- * par Essentiel mensuel —, et le montant prélevé aujourd'hui est dit avant
- * tout paiement immédiat.
+ * Le formulaire « S'abonner » (ADR-053 § 9, amendé le 2026-11-16) : une
+ * formule et un rythme, un seul bouton vers la page de Stripe, et le montant
+ * prélevé aujourd'hui dit avant le clic.
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
@@ -30,44 +29,34 @@ const OFFRES: Offres = [
   },
 ];
 
-const base = { offres: OFFRES, quand: "Quand.", compteId: "c1", libelle: "Changer de formule" } as const;
+const base = { offres: OFFRES, quand: "Quand.", compteId: "c1" } as const;
 const formuleEnvoyee = (c: HTMLElement) => (c.querySelector('input[name="formule"]') as HTMLInputElement).value;
-const principal = () => screen.getByRole("button", { name: base.libelle }) as HTMLButtonElement;
+const bouton = () => screen.getByRole("button", { name: "Continuer vers le paiement" }) as HTMLButtonElement;
 
 afterEach(cleanup);
 
 describe("FormulaireAbonnement", () => {
-  it("part de la formule et du rythme en cours ; le bouton reste fermé tant que rien ne change", () => {
-    const { container } = render(
-      <FormulaireAbonnement {...base} mode="changer" courante={{ formule: "pro", periodicite: "annuel" }} />,
-    );
+  it("sans présélection : Essentiel mensuel, un seul bouton, ouvert, et le montant du jour TTC", () => {
+    const { container } = render(<FormulaireAbonnement {...base} />);
+    expect(formuleEnvoyee(container)).toBe("rojer_essentiel_mensuel");
+    expect(bouton().disabled).toBe(false);
+    expect(screen.getAllByRole("button")).toHaveLength(1);
+    expect(screen.getByText(/Prélevé aujourd.hui : 29\s€ TTC/)).toBeTruthy();
+    expect(container.querySelector('input[name="immediat"]')).toBeNull();
+  });
+
+  it("part de la présélection (offre choisie, abonnement passé) ; le montant suit la sélection", () => {
+    const { container } = render(<FormulaireAbonnement {...base} courante={{ formule: "pro", periodicite: "annuel" }} />);
     expect(formuleEnvoyee(container)).toBe("rojer_pro_annuel");
-    expect(principal().disabled).toBe(true);
+    expect(screen.getByText(/Prélevé aujourd.hui : 899\s€ TTC/)).toBeTruthy();
     fireEvent.click(screen.getByRole("radio", { name: /Mensuel/ }));
     expect(formuleEnvoyee(container)).toBe("rojer_pro_mensuel");
-    expect(principal().disabled).toBe(false);
+    expect(screen.getByText(/Prélevé aujourd.hui : 89\s€ TTC/)).toBeTruthy();
   });
 
-  it("sans formule en cours : Essentiel mensuel, bouton ouvert", () => {
-    const { container } = render(<FormulaireAbonnement {...base} mode="enregistrer" />);
-    expect(formuleEnvoyee(container)).toBe("rojer_essentiel_mensuel");
-    expect(principal().disabled).toBe(false);
-  });
-
-  it("pendant l'essai : « Payer maintenant » porte immediat=oui et dit le montant du jour, TTC", () => {
-    render(<FormulaireAbonnement {...base} mode="enregistrer" courante={{ formule: "pro", periodicite: "mensuel" }} proposerPayerMaintenant />);
-    const payer = screen.getByRole("button", { name: "Payer maintenant" });
-    expect(payer.getAttribute("name")).toBe("immediat");
-    expect(payer.getAttribute("value")).toBe("oui");
-    expect(screen.getByText(/lève les limites de l'essai/).textContent).toMatch(/89\s€ TTC prélevés aussitôt pour le premier mois/);
-  });
-
-  it("paiement imposé : le montant prélevé aujourd'hui est écrit, selon la sélection ; immediat=oui envoyé ; pas de second bouton", () => {
-    render(<FormulaireAbonnement {...base} mode="payer" courante={{ formule: "essentiel", periodicite: "mensuel" }} />);
-    expect(screen.getByText(/Prélevé aujourd'hui/).textContent).toMatch(/29\s€ TTC, pour le premier mois/);
-    fireEvent.click(screen.getByRole("radio", { name: /Annuel/ }));
-    expect(screen.getByText(/Prélevé aujourd'hui/).textContent).toMatch(/295\s€ TTC, pour la première année/);
-    expect(screen.queryByRole("button", { name: "Payer maintenant" })).toBeNull();
-    expect((document.querySelector('input[name="immediat"]') as HTMLInputElement).value).toBe("oui");
+  it("prix indisponible : le bouton reste fermé", () => {
+    const sansPrix: Offres = OFFRES.map((o) => ({ ...o, prix: { mensuel: { ...o.prix.mensuel, centimes: null }, annuel: o.prix.annuel } }));
+    render(<FormulaireAbonnement {...base} offres={sansPrix} />);
+    expect(bouton().disabled).toBe(true);
   });
 });

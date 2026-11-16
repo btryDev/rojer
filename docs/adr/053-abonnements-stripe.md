@@ -255,6 +255,11 @@ et sans croire une information qui ne vient pas de Stripe.
    carte fixée sur l'abonnement. L'état de l'essai tenu à deux endroits
    n'était jamais d'accord avec lui-même. Amende les §§ 8 (formule de
    l'essai), 9 et 10.]
+[2026-11-16 : le § 10 ci-dessous est en partie périmé — « Payer
+   maintenant », l'enregistrement de la carte sans payer (Checkout « setup »)
+   et l'application de la formule par le serveur ont disparu ; voir
+   l'amendement du § 9. Le choix de la formule dans Rojer et le changement
+   de formule d'un abonné restent.]
 10. [2026-11-06, amendé — grille du 2026-11-05 : **s'abonner se fait dans
    Rojer**. Le propriétaire choisit la formule et le rythme (mensuel,
    annuel) sur la page de l'abonnement ; la carte s'enregistre ensuite sur

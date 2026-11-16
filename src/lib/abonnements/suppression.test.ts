@@ -267,9 +267,9 @@ describe("suppression d'un compte sans abonnement (ADR-058)", () => {
     const stripe = {
       subscriptions: { cancel, list: () => ({ autoPagingToArray: m.abonnements }) },
     } as unknown as Parameters<typeof supprimerComptesEchus>[1];
-    for (const ouvert of ["active", "trialing", "past_due"]) {
+    for (const ouvert of ["active", "past_due"]) {
       m.abonnements.mockResolvedValue([
-        { id: "sub_vieux", status: "paused" },
+        { id: "sub_vieux", status: "canceled" },
         { id: "sub_neuf", status: ouvert },
       ]);
       expect(await supprimerComptesEchus(MAINTENANT, stripe)).toMatchObject({ supprimes: 0, reportes: 1 });

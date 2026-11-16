@@ -15,7 +15,7 @@ faite se raye et se date (règle 11).
 | « S'abonner » | Page de Stripe : formule choisie, carte, 3-D Secure, conditions, adresse | client Stripe créé à ce moment | Checkout, mode abonnement, paiement immédiat |
 | Abonné | Portail (carte, factures, résiliation) ; changement de formule dans Rojer | copie relue, comme aujourd'hui | abonnement |
 
-## Lot 0 — Avant de commencer
+## ~~Lot 0 — Avant de commencer~~ [fait le 2026-11-17 : #329 fusionnée (a219f37a) ; #330 en attente chez la session parallèle, points 4 et 5 à part]
 
 1. Fusionner ce qui reste utile de la PR #329, réduit : `carteQuiAPaye`
    (la carte qui a payé devient celle du client), `rendrePlanningEchu`
@@ -25,7 +25,7 @@ faite se raye et se date (règle 11).
    Checkout) ; points 4 et 5 dans leur propre PR, indépendante.
 3. PR #327 (horloges de test) : fermée sans fusion, après la répétition.
 
-## Lot 1 — Données (une migration)
+## ~~Lot 1 — Données (une migration)~~ [codé le 2026-11-17, branche `lot/essai-chez-rojer-v2` : migration `20261117090000_essai_chez_rojer`, script `scripts/reprendre-essais-stripe.ts` ; statut vide pendant l'essai, plutôt que `trialing` écrit par Rojer]
 
 - `Abonnement.stripeCustomerId` devient facultatif : la ligne naît à
   l'essai, sans client Stripe. L'unicité reste.
@@ -37,7 +37,7 @@ faite se raye et se date (règle 11).
   garde `essaiUtiliseLe` et `finEssai`. Aucune production à reprendre.
 - Gardes à relancer : `migrations-rls`, `tenancy-*`, `scope.integration`.
 
-## Lot 2 — L'essai chez Rojer
+## ~~Lot 2 — L'essai chez Rojer~~ [codé le 2026-11-17 ; s'y ajoute `essai-entreprise.ts`, qui lisait `trialing` — la règle d'un essai par SIREN ne jouait plus]
 
 - `essai.ts` : `demarrerEssaiDuCompte` n'appelle plus Stripe — écrit la
   ligne (dates, preuve d'acceptation) dans une transaction. Disparaissent le
@@ -55,7 +55,7 @@ faite se raye et se date (règle 11).
 - `essai-entreprise.ts` (un essai par SIREN) : inchangé dans sa règle, relu
   pour ne plus supposer un abonnement Stripe.
 
-## Lot 3 — « S'abonner »
+## ~~Lot 3 — « S'abonner »~~ [codé le 2026-11-17 ; la carte seule sur Checkout est un réglage du tableau de bord, pas du code — `docs/lancement-abonnements.md` § 4]
 
 - `sAbonnerAction` : une seule branche. Pas d'abonnement payant en cours →
   client Stripe créé s'il manque, puis `ouvrirCheckout` (mode abonnement).
@@ -71,7 +71,7 @@ faite se raye et se date (règle 11).
   « payer / changer / enregistrer ».
 - L'offre choisie sur la page publique (cookie) présélectionne la formule.
 
-## Lot 4 — Suppression de l'ancien système
+## ~~Lot 4 — Suppression de l'ancien système~~ [fait le 2026-11-17 ; reste `scripts/reprendre-debut-payant.ts`, script de reprise daté qui nomme `paused` dans sa requête]
 
 À retirer, avec leurs tests, puis une recherche de contrôle sur chaque nom :
 
@@ -90,7 +90,7 @@ Contrôle : `grep` sur `paused`, `trial_end`, `trial_settings`, `setup`,
 `immediat`, `rojerChoixLe`, `finaliserCarte`, `appliquerFormule` — plus
 aucune occurrence hors des documents datés.
 
-## Lot 5 — Documents
+## ~~Lot 5 — Documents~~ [fait le 2026-11-17 ; conditions générales : texte provisoire, à reprendre avec le juriste]
 
 - ADR-053 : §§ 8 à 10 rayés là où ils ne sont plus vrais, renvoi à
   l'amendement du § 9.

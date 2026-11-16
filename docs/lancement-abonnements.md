@@ -83,8 +83,14 @@ leur clé et écarte un prix dont l'intervalle contredit la clé.
   intelligentes ; **si toutes les tentatives échouent : marquer l'abonnement
   comme impayé** (Rojer ferme alors la saisie, lecture et export restent).
 - **E-mails clients** : envoyer les factures et reçus ; e-mails de carte
-  expirée et d'échec de paiement ; **rappel 7 jours avant la fin d'un essai
-  gratuit** (celui de la veille est envoyé par Rojer). **Ne pas activer**
+  expirée et d'échec de paiement ; ~~**rappel 7 jours avant la fin d'un essai
+  gratuit** (celui de la veille est envoyé par Rojer)~~ [2026-11-16, ADR-053
+  § 9 amendé : l'essai se compte chez Rojer, Stripe n'en connaît plus ;
+  Rojer envoie les rappels J-7 et J-1 — réglage de Stripe sans objet] ;
+  **e-mail de confirmation demandée par la banque (3-D Secure) lors d'un
+  renouvellement : activer** (Stripe envoie au client le lien de la page où il
+  confirme — sinon le renouvellement reste en attente sans que le client le
+  sache). **Ne pas activer**
   « Envoyer des e-mails concernant les renouvellements à venir » : Stripe
   l'enverrait aussi chaque mois aux abonnés mensuels ; le rappel des
   annuels, 30 jours avant l'échéance, est envoyé par Rojer (2026-11-10).
@@ -99,6 +105,18 @@ Billing > Portail client, configuration par défaut :
 - le client peut modifier : nom, e-mail, adresse, numéro de TVA ;
 - lien des conditions : celui de l'étape 1.3.
 
+[2026-11-16] **Informations publiques du compte** (Paramètres > Entreprise) :
+l'adresse des **conditions générales est OBLIGATOIRE** — sans elle, Stripe
+refuse d'ouvrir Checkout (« You cannot collect consent to your terms of
+service »), donc personne ne peut s'abonner. Constaté sur un compte de test
+non activé le 2026-11-16, où le champ n'est pas proposé : à vérifier sur le
+bac à sable de la préproduction avant la répétition.
+
+[2026-11-16] **Moyens de paiement de Checkout** (Paramètres > Moyens de
+paiement) : **carte bancaire seulement** — Klarna, Bancontact et Satispay,
+proposés par défaut, sont à désactiver (Rojer ne gère ni le paiement
+fractionné ni les prélèvements différés). Vérifier à l'écran sur Checkout.
+
 ## 5. Webhook — propriétaire, tableau de bord
 
 Développeurs > Webhooks > nouvelle destination :
@@ -106,7 +124,8 @@ Développeurs > Webhooks > nouvelle destination :
 - charge utile **légère** (« thin ») ;
 - événements (`EVENEMENTS_ECOUTES`, `src/lib/stripe/webhook.ts`) :
   `v1.checkout.session.completed`, `v1.customer.subscription.created`,
-  `.updated`, `.deleted`, `.paused`, `.resumed`, `.trial_will_end`,
+  `.updated`, `.deleted` (~~`.paused`, `.resumed`, `.trial_will_end`~~
+  [2026-11-16 : plus d'essai ni de pause chez Stripe, ADR-053 § 9 amendé]),
   `v1.invoice.paid`, `v1.invoice.payment_failed`,
   `v1.invoice.payment_action_required`, et depuis le 2026-11-10
   `v1.charge.dispute.created`, `v1.charge.refunded` ;
@@ -131,7 +150,7 @@ sur la préproduction, où fermer la saisie ne gêne personne.
    | Subscriptions, et Subscription schedules s'ils sont listés à part | écriture |
    | Checkout Sessions | écriture |
    | Customer portal | écriture |
-   | Invoices | ~~lecture~~ écriture [2026-11-16 : la reprise d'une pause annule une facture en attente d'une autre formule, `invoices.voidInvoice`] |
+   | Invoices | ~~lecture~~ ~~écriture [2026-11-16 : la reprise d'une pause annule une facture en attente d'une autre formule, `invoices.voidInvoice`]~~ lecture [2026-11-16, ADR-053 § 9 amendé : plus de pause, Rojer n'écrit plus aucune facture] |
    | Prices, Products | lecture |
    | Tax Rates | lecture |
    | SetupIntents | lecture |
@@ -145,10 +164,16 @@ sur la préproduction, où fermer la saisie ne gêne personne.
    test vers l'URL de préproduction), `TACHES_SECRET`,
    `ABONNEMENT_EXIGE=oui`. Redémarrer ; journaux sans avertissement
    « Stripe », crontab installée (« Importing cronjobs »).
-4. Parcours : créer un compte, démarrer l'essai ; choisir une formule avec la
-   carte de test `4242 4242 4242 4242`, « tout de suite » : facture avec la
-   TVA et les mentions, page Abonnement « actif », webhook livré (200) ;
-   résilier depuis le portail. Carte `4000 0000 0000 0341` : l'impayé.
+4. Parcours : créer un compte, démarrer l'essai (rien chez Stripe) ;
+   « S'abonner » avec la carte de test `4242 4242 4242 4242` : facture avec
+   la TVA et les mentions, page Abonnement « actif », webhook livré (200) ;
+   carte `4000 0025 0000 3155` (confirmation de la banque) : la confirmation
+   se fait sur Checkout ; résilier depuis le portail. Carte
+   `4000 0000 0000 0341` (changée au portail, puis renouvellement) :
+   l'impayé, puis « Régler la facture en attente ». Essai fini sans
+   abonnement : reculer `finEssai` de la ligne en base de test, la saisie se
+   ferme. Comptes de test d'avant le 2026-11-16 (essais tenus chez Stripe) :
+   `scripts/reprendre-essais-stripe.ts`, à blanc puis `--appliquer`.
 5. Dans le tableau de bord de test, ouvrir les journaux de la clé
    restreinte : aucune erreur 403. S'il y en a, ajouter la permission. Puis
    **« Dupliquer la clé » vers le mode réel** (méthode documentée par
