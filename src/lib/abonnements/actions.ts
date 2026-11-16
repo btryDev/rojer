@@ -123,7 +123,6 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
         const paye = immediat || courant.status === "paused";
         const aRegler = await appliquerFormule(stripe, courant, {
           priceId: prix.priceId,
-          paymentMethodId: carte,
           immediat: paye,
           choisiLe: Math.floor(Date.now() / 1000),
           // Le même choix envoyé de deux onglets ne se joue qu'une fois : le

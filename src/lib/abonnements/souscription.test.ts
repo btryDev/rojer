@@ -50,7 +50,6 @@ describe("finaliserCarte", () => {
     expect(api.customers.update).toHaveBeenCalledWith("cus_1", { invoice_settings: { default_payment_method: "pm_1" } });
     expect(m.appliquerFormule).toHaveBeenCalledWith(stripe, expect.objectContaining({ id: "sub_1" }), {
       priceId: "price_pa",
-      paymentMethodId: "pm_1",
       immediat: false,
       choisiLe: 1000,
       idempotence: "carte-cs_1",

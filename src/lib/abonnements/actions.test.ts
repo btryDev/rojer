@@ -130,7 +130,7 @@ describe("sAbonnerAction", () => {
     m.abonnementsDuClient.mockResolvedValue([abonnement("trialing")]);
     m.carteParDefaut.mockResolvedValue("pm_1");
     expect(await redirigeVers(sAbonnerAction(formulaire()))).toBe("https://rojer.test/compte/abonnement?abonnement=formule-choisie");
-    expect(m.appliquerFormule).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ id: "sub_trialing" }), expect.objectContaining({ priceId: "price_pa", paymentMethodId: "pm_1", immediat: false }));
+    expect(m.appliquerFormule).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ id: "sub_trialing" }), expect.objectContaining({ priceId: "price_pa", immediat: false }));
     expect(m.ouvrirCheckoutCarte).not.toHaveBeenCalled();
   });
 

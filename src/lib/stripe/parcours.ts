@@ -66,6 +66,11 @@ export async function demarrerEssai(
       items: [{ price: priceId }],
       default_tax_rates: [tauxTva],
       trial_period_days: DUREE_ESSAI_JOURS,
+      // Chaque paiement réussi fixe sa carte sur l'abonnement : une carte
+      // payée sur la page d'une facture sert ainsi au mois suivant. La
+      // relecture la reporte sur le client et la retire de l'abonnement
+      // (`carteAuClient`, synchronisation.ts) : une seule carte, celle du
+      // client, que le portail change.
       payment_settings: { save_default_payment_method: "on_subscription" },
       trial_settings: { end_behavior: { missing_payment_method: "pause" } },
       metadata,
@@ -222,7 +227,6 @@ export async function appliquerFormule(
   abonnement: Stripe.Subscription,
   choix: {
     priceId: string;
-    paymentMethodId: string;
     immediat: boolean;
     choisiLe: number;
     idempotence?: string;
@@ -293,26 +297,25 @@ export async function appliquerFormule(
   if (!enPause) return finEssai ? factureARegler(stripe, misAJour.latest_invoice) : null;
   // Reprise : la période repart à aujourd'hui (le défaut de l'API). Stripe
   // crée la facture de la reprise sans la prélever (constaté en local le
-  // 2026-11-16 : `open`, jamais tentée) ; on la règle avec la carte qu'on
-  // vient de poser. Refusée ou à authentifier : sa page, où le client la
+  // 2026-11-16 : `open`, jamais tentée) ; on la règle avec la carte du
+  // client, que l'appelant vient de poser. Refusée ou à authentifier : sa page, où le client la
   // règle. L'abonnement reste en pause tant qu'elle n'est pas payée.
   const repris = await stripe.subscriptions.resume(
     abonnement.id,
     { proration_behavior: "none", expand: ["latest_invoice"] },
     cle("reprise"),
   );
-  return reglerLaFacture(stripe, repris.latest_invoice, choix.paymentMethodId);
+  return reglerLaFacture(stripe, repris.latest_invoice);
 }
 
 /**
- * Régler tout de suite une facture ouverte avec la carte donnée : `null` si
+ * Régler tout de suite une facture ouverte avec la carte du client : `null` si
  * elle est payée (ou s'il n'y a rien à régler), sinon l'adresse de sa page
  * (carte refusée, authentification demandée).
  */
 async function reglerLaFacture(
   stripe: Stripe,
   derniere: Stripe.Subscription["latest_invoice"],
-  paymentMethodId: string,
 ): Promise<string | null> {
   const facture = await factureOuverte(stripe, derniere);
   if (!facture?.id) return null;
@@ -320,7 +323,7 @@ async function reglerLaFacture(
     // Une clé tirée de la FACTURE : les deux chemins qui finalisent la même
     // carte (retour de Checkout, webhook) règlent la même facture sous la
     // même clé — un seul règlement (revue du 2026-11-16).
-    const payee = await stripe.invoices.pay(facture.id, { payment_method: paymentMethodId }, { idempotencyKey: `payer-${facture.id}` });
+    const payee = await stripe.invoices.pay(facture.id, {}, { idempotencyKey: `payer-${facture.id}` });
     return payee.status === "paid" ? null : (payee.hosted_invoice_url ?? facture.hosted_invoice_url ?? null);
   } catch (e) {
     // Le même règlement en cours ailleurs (409) : on ne sait pas encore s'il

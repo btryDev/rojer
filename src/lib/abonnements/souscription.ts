@@ -70,7 +70,6 @@ export async function finaliserCarte(
   const immediat = session.metadata?.immediat === "oui" || courant.status === "paused";
   const aRegler = await appliquerFormule(stripe, courant, {
     priceId: prix.priceId,
-    paymentMethodId,
     immediat,
     choisiLe: session.created,
     idempotence: `carte-${session.id}`,
