@@ -16,8 +16,11 @@ const m = vi.hoisted(() => ({
   alerter: vi.fn(),
   uneFoisParJour: vi.fn(),
   configuration: null as string | null,
+  battre: vi.fn(async () => true),
 }));
 vi.mock("next/server", () => ({ after: (f: () => Promise<unknown>) => m.apres.push(f) }));
+vi.mock("./temoin", () => ({ battre: m.battre }));
+vi.mock("@/lib/stripe/controles", () => ({ controlerLesReglagesStripe: vi.fn() }));
 vi.mock("./jour", () => ({ prendreLeJour: m.prendreLeJour, terminerLeJour: m.terminerLeJour }));
 vi.mock("@/lib/stripe/traitement", () => ({ traiterLaFileIci: m.file, etatDeLaFile: vi.fn() }));
 vi.mock("@/lib/stripe/rapprochement", () => ({ rapprocher: vi.fn() }));
@@ -161,6 +164,8 @@ describe("tâches quotidiennes", () => {
     // Deux jours qu'aucun autre test n'a vus finis (le dernier jour fini est mémorisé).
     await lancerTachesDuJour(new Date(Date.UTC(2026, 10, 20, 8, 30)));
     expect(m.uneFoisParJour).not.toHaveBeenCalled();
+    // Tout passe : le battement du jour part vers le témoin extérieur ; en échec, non.
+    expect(m.battre).toHaveBeenCalledTimes(1);
     m.rappels.mockRejectedValue(new Error("panne"));
     m.avertir.mockRejectedValue(new Error("panne"));
     await lancerTachesDuJour(new Date(Date.UTC(2026, 10, 21, 8, 30)));
@@ -169,6 +174,7 @@ describe("tâches quotidiennes", () => {
     expect(cle).toMatch(/^taches:/);
     expect(sujet).toBe("tâches quotidiennes en échec");
     expect(lignes[0]).toBe("En échec : rappelsVeilleFinEssai, avertissementsAvantSuppression.");
+    expect(m.battre).toHaveBeenCalledTimes(1);
   });
 
   it("une configuration de travers se signale chaque jour par e-mail ; rien quand tout va bien", async () => {

@@ -82,6 +82,10 @@ leur clé et écarte un prix dont l'intervalle contredit la clé.
 - **Relances** (Billing > Récupération des revenus) : nouvelles tentatives
   intelligentes ; **si toutes les tentatives échouent : marquer l'abonnement
   comme impayé** (Rojer ferme alors la saisie, lecture et export restent).
+  [2026-11-16 : fenêtre des tentatives d'**un mois au plus** — tant que
+  Stripe ne marque pas l'abonnement impayé, la saisie reste ouverte ; la
+  tâche quotidienne signale un impayé de plus de 35 jours, et un portail
+  dont le changement de formule est ouvert (`stripe/controles.ts`).]
 - **E-mails clients** : envoyer les factures et reçus ; e-mails de carte
   expirée et d'échec de paiement ; **rappel 7 jours avant la fin d'un essai
   gratuit** (celui de la veille est envoyé par Rojer). **Ne pas activer**
@@ -130,7 +134,7 @@ sur la préproduction, où fermer la saisie ne gêne personne.
    | Customers | écriture |
    | Subscriptions, et Subscription schedules s'ils sont listés à part | écriture |
    | Checkout Sessions | écriture |
-   | Customer portal | écriture |
+   | Customer portal | écriture [2026-11-16 : la tâche quotidienne relit aussi sa configuration, `billingPortal.configurations.list` — vérifier l'absence de 403 à la répétition] |
    | Invoices | ~~lecture~~ écriture [2026-11-16 : la reprise d'une pause annule une facture en attente d'une autre formule, `invoices.voidInvoice`] |
    | Prices, Products | lecture |
    | Tax Rates | lecture |
@@ -163,6 +167,7 @@ sur la préproduction, où fermer la saisie ne gêne personne.
 | `STRIPE_WEBHOOK_SECRET` | le `whsec_…` de la destination réelle (étape 5) |
 | `TACHES_SECRET` | `openssl rand -base64 32` (crontab de chaque minute : file Stripe, tâches du jour) |
 | `ALERTES_EMAIL` | `paloma.sanchez@btry.fr` (échec durable de la file Stripe, litige, remboursement) |
+| `TEMOIN_TACHES_URL` | [2026-11-16] l'adresse d'un témoin par battement (healthchecks.io ou Better Stack Heartbeat : période 1 jour, délai de grâce 2 h, alerte par e-mail) — la tâche du jour l'appelle quand elle a fini sans échec ; une crontab arrêtée ne se signale que par lui (`taches/temoin.ts`) |
 | `ABONNEMENT_EXIGE` | **ne pas la poser encore** (étape 9) |
 
 Redémarrer, puis lire les journaux du démarrage : aucun avertissement

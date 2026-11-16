@@ -23,7 +23,7 @@ import { depassements } from "@/lib/abonnements/quotas";
 import { prixTTC } from "@/lib/abonnements/affichage";
 import { baissePrevue } from "@/lib/stripe/parcours";
 import { carteParDefaut } from "@/lib/abonnements/souscription";
-import { clientStripe } from "@/lib/stripe/client";
+import { clientStripeLecture } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
 import { PAGE_ESSAI } from "@/lib/abonnements/essai";
 import {
@@ -66,7 +66,7 @@ async function carteDuCompte(db: Db, compteId: string): Promise<boolean> {
   if (!config.active) return false;
   const ligne = await db.abonnement.findUnique({ where: { compteId }, select: { stripeCustomerId: true } });
   if (!ligne) return false;
-  return carteParDefaut(clientStripe(config), ligne.stripeCustomerId).then((c) => c !== null, () => false);
+  return carteParDefaut(clientStripeLecture(config), ligne.stripeCustomerId).then((c) => c !== null, () => false);
 }
 
 /** Ce que fait un changement de formule, dit avant le clic — le changement de rythme compris. */
@@ -99,7 +99,7 @@ async function changementsPossibles(
 ): Promise<{ options: OptionDeFormule[]; baisse: { libelle: string; le: Date } | null }> {
   const config = configurationStripe();
   if (!config.active) return { options: [], baisse: null };
-  const stripe = clientStripe(config);
+  const stripe = clientStripeLecture(config);
   const [prix, ligne] = await Promise.all([
     prixDesFormules(stripe).catch(() => new Map()),
     db.abonnement.findUnique({ where: { compteId }, select: { stripeSubscriptionId: true } }),
@@ -144,7 +144,7 @@ async function changementsPossibles(
 /** Les formules et leurs prix lus chez Stripe ; sans réponse, les prix manquent et le bouton reste fermé. */
 async function offresAffichees(): Promise<OffreAffichee[]> {
   const config = configurationStripe();
-  const prix = config.active ? await prixDesFormules(clientStripe(config)).catch(() => new Map()) : new Map();
+  const prix = config.active ? await prixDesFormules(clientStripeLecture(config)).catch(() => new Map()) : new Map();
   return CLES_FORMULES.map((f) => ({
     formule: f,
     libelle: FORMULES[f].libelle,
