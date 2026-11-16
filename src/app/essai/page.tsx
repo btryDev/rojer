@@ -1,10 +1,10 @@
-import Link from "next/link";
+import { Marque } from "@/components/marque/Marque";
 import { redirect } from "next/navigation";
 import { FormulaireEssai } from "@/components/abonnements/FormulaireEssai";
 import { aiguillageSansCompte, compteDeLaPage } from "@/lib/auth/compte";
 import { requireUser } from "@/lib/auth/require-user";
 import { aiguillageEssai, PRIX_D_ESSAI } from "@/lib/abonnements/essai";
-import { CLES_FORMULES, FORMULES, lookupKey } from "@/lib/abonnements/formules";
+import { CLES_FORMULES, FORMULES } from "@/lib/abonnements/formules";
 import { prixTTC } from "@/lib/abonnements/affichage";
 import { ConnecteAvec } from "@/components/compte/ConnecteAvec";
 import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
@@ -49,71 +49,107 @@ export default async function EssaiPage() {
   const offre = await lireOffreChoisie();
   const autreFormule = offre && offre.formule !== CLES_FORMULES[0] ? FORMULES[offre.formule].libelle : null;
   const mensuel = prix.get(PRIX_D_ESSAI)?.montantCentimes;
-  const annuel = prix.get(lookupKey(CLES_FORMULES[0], "annuel"))?.montantCentimes;
   // Le jour civil, pas 30 × 24 h : un changement d'heure ne décale pas la date.
   const fin = ajouterJours(instantDuRendu(), DUREE_ESSAI_JOURS);
 
+  // La veille de la fin : le jour du rappel par e-mail (`rappels.ts`).
+  const veille = ajouterJours(fin, -1);
+
+  // 2026-11-16, décision de la propriétaire (piste A) : plus de rail d'encre.
+  // Une carte centrée, un seul geste : le récapitulatif de l'essai, sa frise
+  // datée (aujourd'hui, le rappel, la fin), les conditions et le bouton.
   return (
-    <div className="grid min-h-screen grid-cols-1 bg-[color:var(--board-canvas)] text-[color:var(--board-ink)] lg:grid-cols-[320px_1fr]">
-      {/* Le même rail que la mise en place : l'essai en est l'étape d'avant. */}
-      <aside className="hidden flex-col gap-8 bg-[color:var(--board-ink)] px-7 py-8 text-white lg:flex">
-        <Link
-          href="/"
-          className="text-[17px] font-semibold leading-none tracking-[-0.025em] text-white transition-colors hover:text-white/75"
-        >
-          Rojer
-        </Link>
-        <h2 className="board-titre m-0 text-[26px] text-white">Votre essai gratuit</h2>
-        <ul className="m-0 flex list-none flex-col gap-4 p-0 text-[13px] leading-[1.5] text-white/75">
-          <li>{DUREE_ESSAI_JOURS} jours de la formule {essentiel.libelle}.</li>
-          <li>Aucune carte bancaire demandée.</li>
-          <li>Votre dossier se crée pendant l&apos;essai : vous passez ensuite à sa mise en place.</li>
-        </ul>
-      </aside>
+    <div className="flex min-h-screen flex-col bg-[color:var(--board-canvas)] text-[color:var(--board-ink)]">
+      <header className="flex flex-wrap items-center justify-between gap-3 px-[var(--board-gutter)] py-5">
+        <Marque />
+        {user.email && <ConnecteAvec email={user.email} className="justify-end" />}
+      </header>
 
-      <main className="flex flex-col px-[var(--board-gutter)] py-10">
-        {/* La sortie, à toutes les tailles ; la marque, sur téléphone seulement,
-            où le rail est replié (comme `WizardShell`). */}
-        <div className="mb-8 flex items-center justify-between">
-          <Link href="/" className="text-[16px] font-semibold leading-none tracking-[-0.025em] lg:hidden">
-            Rojer
-          </Link>
-          {/* Le compte qui recevra l'essai, dit en clair (retours de test du 2026-11-16). */}
-          {user.email && <ConnecteAvec email={user.email} className="ml-auto justify-end" />}
-        </div>
-        <div className="w-full max-w-[760px]">
-          <h1 className="board-titre m-0 text-[clamp(30px,3.4vw,44px)] leading-[1.08]">
-            Essayez Rojer jusqu&apos;au {formaterDateLongueFr(fin)}.
-          </h1>
-          <p className="m-0 mt-4 max-w-[var(--board-mesure)] text-[15px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-            {DUREE_ESSAI_JOURS} jours pour mettre votre dossier en place avec la formule {essentiel.libelle},
-            sans carte bancaire.
-          </p>
+      <main className="flex flex-1 justify-center px-[var(--board-gutter)] pb-16 pt-4">
+        <div className="carte-board flex w-full max-w-[560px] flex-col gap-6 self-start px-6 py-8 sm:px-9 sm:py-9">
+          <h1 className="board-titre m-0 text-[clamp(28px,3vw,34px)]">Votre essai gratuit</h1>
 
-          <section className="mt-8 max-w-[var(--board-mesure)]" aria-labelledby="titre-ensuite">
-            <h2 id="titre-ensuite" className="m-0 text-[14px] font-semibold">
-              Ensuite
-            </h2>
-            <p className="m-0 mt-2 text-[14px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-              {mensuel && annuel
-                ? `${essentiel.libelle} : ${prixTTC(mensuel, "mensuel")}, ou ${prixTTC(annuel, "annuel")}. `
-                : null}
-              Vous choisissez votre formule et le paiement mensuel ou annuel au moment de vous abonner. Rien
-              n&apos;est prélevé sans que vous l&apos;ayez demandé ; sans abonnement à la fin de l&apos;essai, vos
-              dossiers restent consultables et la saisie s&apos;arrête.
-            </p>
-          </section>
+          <dl className="m-0 grid grid-cols-[auto_minmax(0,1fr)] gap-x-5 gap-y-2.5 text-[14px] leading-[1.45]">
+            <dt className="text-[color:var(--board-slate-mid)]">Formule</dt>
+            <dd className="m-0 font-medium">{essentiel.libelle}</dd>
+            <dt className="text-[color:var(--board-slate-mid)]">Durée</dt>
+            <dd className="m-0 font-medium">{`${DUREE_ESSAI_JOURS} jours, jusqu'au ${formaterDateLongueFr(fin)}`}</dd>
+            <dt className="text-[color:var(--board-slate-mid)]">Carte bancaire</dt>
+            <dd className="m-0 font-medium">Non demandée</dd>
+            {mensuel ? (
+              <>
+                <dt className="text-[color:var(--board-slate-mid)]">Ensuite</dt>
+                <dd className="m-0 font-medium">À partir de {prixTTC(mensuel, "mensuel")}</dd>
+              </>
+            ) : null}
+          </dl>
+
+          <hr className="m-0 border-0 border-t border-[color:var(--board-slate-line)]" />
+
+          <FriseEssai
+            etapes={[
+              { quand: "Aujourd'hui", quoi: "Votre essai commence. Vous mettez votre établissement en place." },
+              { quand: formaterDateLongueFr(veille), quoi: "Un e-mail vous rappelle la fin de l'essai." },
+              {
+                quand: formaterDateLongueFr(fin),
+                quoi: "Fin de l'essai. Pour continuer, choisissez une formule ; sinon, rien n'est prélevé et vos dossiers restent consultables.",
+              },
+            ]}
+          />
 
           {autreFormule && (
-            <MessageFormulaire ton="info" className="mt-6 max-w-[var(--board-mesure)]">
+            <MessageFormulaire ton="info">
               Vous avez choisi {autreFormule}. L&apos;essai se fait sur {essentiel.libelle} ; {autreFormule}{" "}
               s&apos;appliquera à sa fin, ou tout de suite si vous payez maintenant depuis la page Abonnement.
             </MessageFormulaire>
           )}
 
-          <FormulaireEssai disponible={mensuel !== undefined} compteId={compteId} />
+          <hr className="m-0 border-0 border-t border-[color:var(--board-slate-line)]" />
+
+          {/* `FormulaireEssai` porte sa marge haute (`mt-8`) : on la neutralise
+              ici, l'écart de la carte suffit. */}
+          <div className="-mt-8">
+            <FormulaireEssai disponible={mensuel !== undefined} compteId={compteId} />
+          </div>
         </div>
       </main>
     </div>
+  );
+}
+
+/**
+ * La frise de l'essai : trois jalons datés, une vraie suite. Le point de
+ * 12 px est centré sur la première ligne (20 px) ; le trait part 4 px sous un
+ * point et s'arrête 4 px avant le suivant. Le jalon en cours est plein.
+ */
+function FriseEssai({ etapes }: { etapes: readonly { quand: string; quoi: string }[] }) {
+  return (
+    <ol aria-label="Comment se passe l'essai" className="m-0 flex list-none flex-col p-0">
+      {etapes.map((e, i) => {
+        const derniere = i === etapes.length - 1;
+        return (
+          <li key={e.quand} className={`relative grid grid-cols-[12px_minmax(0,1fr)] gap-x-4 ${derniere ? "" : "pb-[22px]"}`}>
+            {!derniere && (
+              <span
+                aria-hidden
+                className="absolute bottom-0 left-[5px] top-5 w-0.5 rounded-full bg-[color:var(--board-slate-line)]"
+              />
+            )}
+            <span
+              aria-hidden
+              className={`mt-1 size-3 rounded-full ${
+                i === 0
+                  ? "bg-[color:var(--board-ink)]"
+                  : "bg-[color:var(--board-card)] shadow-[inset_0_0_0_2px_var(--board-blue-soft)]"
+              }`}
+            />
+            <div>
+              <p className="m-0 text-[14px] font-semibold leading-5">{e.quand}</p>
+              <p className="m-0 mt-0.5 text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">{e.quoi}</p>
+            </div>
+          </li>
+        );
+      })}
+    </ol>
   );
 }

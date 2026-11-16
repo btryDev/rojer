@@ -36,9 +36,8 @@ const COULEURS = {
   texte: "#4d5d6b",
   doux: "#5c7182",
   filet: "#dfe8ee",
-  // Le couple canonique de la charte (`docs/charte-board.md` § 1.3) :
-  // champ bleu glacier, encre de la famille.
-  bleuPale: "#d8eef9",
+  // La pastille de la marque, comme `Marque` dans l'app : `--board-sky`.
+  bleuPale: "#b2daf2",
   bleu: "#376881",
 } as const;
 
