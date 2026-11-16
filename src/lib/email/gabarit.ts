@@ -36,6 +36,9 @@ const COULEURS = {
   texte: "#4d5d6b",
   doux: "#5c7182",
   filet: "#dfe8ee",
+  // Le couple canonique de la charte (`docs/charte-board.md` § 1.3) :
+  // champ bleu glacier, encre de la famille.
+  bleuPale: "#d8eef9",
   bleu: "#376881",
 } as const;
 
@@ -84,7 +87,7 @@ export function htmlMailCompte(m: MailCompte): string {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;font-family:${POLICE};">
 <tr><td style="padding:0 0 20px;">
 <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-<td style="background:${COULEURS.bleu};border-radius:999px;padding:8px 18px;font-size:17px;line-height:1;font-weight:600;letter-spacing:-0.02em;color:#ffffff;">Rojer</td>
+<td style="background:${COULEURS.bleuPale};border-radius:999px;padding:8px 18px;font-size:17px;line-height:1;font-weight:600;letter-spacing:-0.02em;color:${COULEURS.bleu};">Rojer</td>
 </tr></table>
 </td></tr>
 <tr><td style="background:${COULEURS.carte};border-radius:20px;padding:36px 32px 32px;border:1px solid ${COULEURS.filet};">
