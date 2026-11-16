@@ -40,15 +40,13 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Rang d'un état pour retenir l'abonnement courant : celui qui paie d'abord,
- * puis l'impayé ou suspendu, puis celui qui attend son premier paiement,
+ * puis l'impayé, puis celui qui attend son premier paiement,
  * puis les terminés. Un état inconnu passe avec les impayés.
  */
 const RANGS: Record<string, number> = {
   active: 0,
-  trialing: 0,
   past_due: 0,
   unpaid: 1,
-  paused: 1,
   incomplete: 2,
   canceled: 3,
   incomplete_expired: 3,
@@ -80,7 +78,6 @@ export function colonnesDe(s: Stripe.Subscription | null) {
     formule: item ? formuleDuPrix(item.price) : null,
     stripePriceId: item?.price.id ?? null,
     finPeriode: date(item?.current_period_end),
-    finEssai: date(s?.trial_end),
     resilieEnFinDePeriode: s?.cancel_at_period_end ?? false,
     finPrevueLe: date(s?.cancel_at),
   };
@@ -88,8 +85,8 @@ export function colonnesDe(s: Stripe.Subscription | null) {
 
 /**
  * Depuis quand le compte est sans abonnement ouvert (ADR-058) : la fin chez
- * Stripe (`ended_at` ; une pause de fin d'essai n'en a pas, c'est
- * `trial_end`), sinon la date déjà notée, sinon `relueLe` (un impayé
+ * Stripe (`ended_at`), sinon la date déjà notée (la fin de l'essai, posée à
+ * son démarrage), sinon `relueLe` (un impayé
  * définitif n'a pas de date chez Stripe). Ouvert : vide, et les
  * avertissements avant suppression avec — un compte qui se réabonne repart
  * de zéro. Fermé : les avertissements ne sont pas touchés.
@@ -104,8 +101,7 @@ export function horlogeDeSuppression(
   if (s && OUVRENT.has(s.status)) {
     return { sansAbonnementDepuis: null, suppressionPrevueLe: null, avertiSuppression30Le: null, avertiSuppression7Le: null };
   }
-  const fin = date(s?.ended_at) ?? (s?.status === "paused" ? date(s.trial_end) : null);
-  return { sansAbonnementDepuis: fin ?? dejaNotee ?? relueLe };
+  return { sansAbonnementDepuis: date(s?.ended_at) ?? dejaNotee ?? relueLe };
 }
 
 /**
@@ -139,12 +135,6 @@ export async function toutLister<T>(liste: { autoPagingToArray(o: { limit: numbe
   const tous = await liste.autoPagingToArray({ limit: max });
   if (tous.length >= max) throw new ListeTronquee(max);
   return tous;
-}
-
-/** Le premier essai pris par ce client, sur quelque abonnement que ce soit. */
-export function premierEssai(abonnements: Stripe.Subscription[]): Date | null {
-  const debuts = abonnements.map((s) => s.trial_start).filter((t): t is number => !!t);
-  return debuts.length ? date(Math.min(...debuts)) : null;
 }
 
 /** Ce que le client Stripe RELU désigne : un compte, ou (avant l'ADR-054) son propriétaire. */
@@ -364,7 +354,9 @@ async function relireEtEcrire(stripe: Stripe, bail: Bail, relueLe: Date, strict:
     ...colonnesDe(courant),
     ...horlogeDeSuppression(courant, ligne?.sansAbonnementDepuis ?? null, relueLe),
     relueLe,
-    essaiUtiliseLe: ligne?.essaiUtiliseLe ?? premierEssai(abonnements),
+    // L'essai et sa fin se comptent chez Rojer (ADR-053 § 9, amendé le
+    // 2026-11-16) : la relecture ne les écrit pas, elle les garde.
+    essaiUtiliseLe: ligne?.essaiUtiliseLe ?? null,
   };
   // Dans la transaction, une erreur l'annule entière : la création d'une
   // ligne que l'essai vient de poser (`essai.ts`, même client) fait relire

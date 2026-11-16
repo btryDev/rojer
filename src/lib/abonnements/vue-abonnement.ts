@@ -3,9 +3,9 @@
 // booléens bloc par bloc — elle lit une variante et l'affiche. Fonction pure,
 // testée état par état (`vue-abonnement.test.ts`).
 //
-// Les gestes viennent de `gesteAbonnement` (droits.ts) ; cette fonction en
-// précise la présentation : titre, mode du formulaire, phrase « quand »,
-// libellé du bouton, présence du portail et de « Payer maintenant ».
+// Les gestes viennent de `gesteAbonnement` (droits.ts). Depuis l'ADR-053 § 9
+// amendé (2026-11-16), « s'abonner » est un seul geste — Checkout, paiement
+// immédiat — pendant l'essai, après lui, ou après une résiliation.
 
 import { A_REGLER, type Geste } from "./droits";
 import type { CleFormule, Periodicite } from "./formules";
@@ -15,53 +15,27 @@ type Choix = { formule: CleFormule; periodicite: Periodicite };
 export type EntreeVue = {
   geste: Geste | null;
   statut: string | null;
-  /** Une fin est prévue (`resiliationPrevue`). */
-  resiliationPrevue: boolean;
-  /** Une carte par défaut chez Stripe (lue seulement quand `besoinDeLaCarte`). */
-  carteEnregistree: boolean;
-  /** `?immediat=1` : un document officiel attend un paiement. */
-  immediat: boolean;
-  /** `?carte=` : retour de Checkout « carte », la finalisation s'affiche. */
-  retourCarte: boolean;
-  /** « , le 16 décembre 2026 », ou vide. */
-  finEssai: string;
+  /** L'essai court encore (`enEssai`, droits.ts). */
+  enEssai: boolean;
+  /** `?document=1` : un document officiel attend l'abonnement. */
+  documentAttend: boolean;
 };
-
-/**
- * `payer` : le bouton principal paie tout de suite (paiement imposé, pause,
- * nouvelle souscription) ; `changer` : essai avec carte, la formule de fin
- * d'essai se change ; `enregistrer` : essai sans carte, la carte et la
- * formule s'enregistrent pour la fin de l'essai.
- */
-export type ModeFormulaire = "payer" | "changer" | "enregistrer";
 
 export type VueAbonnement =
   | { cas: "aucune" }
   | { cas: "membre"; titre: string }
   | { cas: "essai"; titre: string }
-  | { cas: "finalisation"; titre: string }
-  | { cas: "essai-resilie"; titre: string }
   | { cas: "portail"; titre: string; factureEnAttente: boolean }
   | {
       cas: "formulaire";
       titre: string;
-      mode: ModeFormulaire;
-      libelle: string;
+      /** Ce qui se passe ensuite, en une phrase. */
       quand: string;
-      proposerPayerMaintenant: boolean;
-      /** La phrase « un document officiel attend » (`?immediat=1`). */
+      /** La phrase « un document officiel attend » (`?document=1`). */
       annoncerDocument: boolean;
-      /** Le rappel « Après l'essai : Pro, facturation mensuelle ». */
-      rappelApresEssai: boolean;
-      /** Le portail en second geste (carte, factures, résiliation), avec sa phrase ; `null` : pas de portail. */
-      portail: string | null;
     };
 
-const STRIPE = "sur la page sécurisée de Stripe";
-
-/** La carte du compte ne sert qu'au formulaire d'un abonnement qui court sans payer. */
-export const besoinDeLaCarte = (e: Pick<EntreeVue, "geste" | "statut" | "resiliationPrevue" | "retourCarte">) =>
-  e.geste === "abonner" && !e.retourCarte && !(e.statut === "trialing" && e.resiliationPrevue);
+const STRIPE = "sur la page sécurisée de Stripe, notre prestataire de paiement";
 
 export function vueAbonnement(e: EntreeVue): VueAbonnement {
   switch (e.geste) {
@@ -72,70 +46,28 @@ export function vueAbonnement(e: EntreeVue): VueAbonnement {
     case "essai":
       return { cas: "essai", titre: "Essai gratuit" };
     case "portail":
-      // Retour de Checkout alors que la notification a déjà fini l'essai et
-      // que la facture attend (confirmation de la banque) : la finalisation
-      // renvoie le client sur sa page (répétition du 2026-11-16).
-      if (e.retourCarte && A_REGLER.has(e.statut ?? "")) return { cas: "finalisation", titre: "S'abonner" };
       return { cas: "portail", titre: "Gérer", factureEnAttente: A_REGLER.has(e.statut ?? "") };
     case "abonner":
-      if (e.retourCarte) return { cas: "finalisation", titre: "S'abonner" };
-      if (e.statut === "trialing" && e.resiliationPrevue) return { cas: "essai-resilie", titre: "Fin de l'essai" };
-      return formulaire(e);
-    case "souscrire":
-      return formulaire(e);
+      return {
+        cas: "formulaire",
+        titre: "S'abonner",
+        quand: e.enEssai
+          ? `Le paiement se fait ${STRIPE}. S'abonner met fin à votre essai et lève ses limites.`
+          : `Le paiement se fait ${STRIPE}.`,
+        annoncerDocument: e.documentAttend,
+      };
   }
 }
 
-function formulaire(e: EntreeVue): Extract<VueAbonnement, { cas: "formulaire" }> {
-  const enEssai = e.statut === "trialing";
-  const souscrire = e.geste === "souscrire";
-  const mode: ModeFormulaire = souscrire || e.immediat || e.statut === "paused" ? "payer" : e.carteEnregistree ? "changer" : "enregistrer";
-  const carte = e.carteEnregistree && !souscrire;
-  const parMode = {
-    payer: {
-      titre: "S'abonner",
-      libelle: carte ? "Payer et m'abonner" : "Continuer vers le paiement",
-      quand: souscrire
-        ? `Le paiement se fait ${STRIPE}, notre prestataire de paiement.`
-        : carte
-          ? "Le premier paiement est prélevé aussitôt sur votre carte enregistrée, et votre abonnement démarre."
-          : `Votre carte s'enregistre ${STRIPE} ; le premier paiement est prélevé aussitôt et votre abonnement démarre.`,
-    },
-    changer: {
-      titre: "Changer de formule",
-      libelle: "Changer de formule",
-      quand: `La formule choisie s'applique à la fin de votre essai${e.finEssai}, et rien n'est prélevé avant ; d'ici là, les limites de l'essai restent.`,
-    },
-    enregistrer: {
-      titre: "Après l'essai",
-      libelle: "Enregistrer ma formule",
-      quand: `Votre carte s'enregistre ${STRIPE}. Rien n'est prélevé avant la fin de votre essai${e.finEssai}.`,
-    },
-  }[mode];
-  return {
-    cas: "formulaire",
-    ...parMode,
-    mode,
-    proposerPayerMaintenant: enEssai && mode !== "payer",
-    annoncerDocument: e.immediat && mode === "payer",
-    rappelApresEssai: mode === "changer",
-    portail: carte
-      ? `Carte, factures, résiliation${enEssai ? " avant la fin de l'essai" : ""} : ${STRIPE}.`
-      : null,
-  };
-}
-
 /**
- * La formule présélectionnée dans le formulaire : celle de l'abonnement quand
- * on la change ; sinon l'offre choisie sur la page publique (2026-11-16),
- * sinon celle de l'abonnement — y compris un abonnement résilié, qu'on
- * reprend le plus souvent tel quel (répétition du 2026-11-16).
+ * La formule présélectionnée dans le formulaire : l'offre choisie sur la page
+ * publique (2026-11-16), sinon celle d'un abonnement passé (résilié), qu'on
+ * reprend le plus souvent telle quelle (répétition du 2026-11-16).
  */
 export function preselection(
   vue: VueAbonnement,
-  { abonnement, offreChoisie, geste }: { abonnement: Choix | null; offreChoisie: Choix | null; geste: Geste | null },
+  { abonnement, offreChoisie }: { abonnement: Choix | null; offreChoisie: Choix | null },
 ): Choix | null {
   if (vue.cas !== "formulaire") return null;
-  if (vue.mode === "changer") return abonnement;
-  return offreChoisie ?? (geste === "abonner" || geste === "souscrire" ? abonnement : null);
+  return offreChoisie ?? abonnement;
 }

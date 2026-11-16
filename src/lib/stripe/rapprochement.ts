@@ -22,14 +22,20 @@ export async function rapprocher(maintenant: Date): Promise<{ demandes: number }
   let apres: string | undefined;
   for (;;) {
     const lot = await prisma.abonnement.findMany({
-      where: { OR: [{ statut: null }, { statut: { notIn: TERMINES } }], ...(apres ? { stripeCustomerId: { gt: apres } } : {}) },
+      // Un compte en essai n'a pas de client Stripe (ADR-053 § 9, amendé le
+      // 2026-11-16) : rien à relire.
+      where: {
+        OR: [{ statut: null }, { statut: { notIn: TERMINES } }],
+        stripeCustomerId: apres ? { gt: apres } : { not: null },
+      },
       orderBy: { stripeCustomerId: "asc" },
       take: PAR_LOT,
       select: { stripeCustomerId: true },
     });
-    await demanderSynchronisations(lot.map((l) => l.stripeCustomerId), maintenant);
-    demandes += lot.length;
+    const clients = lot.flatMap((l) => (l.stripeCustomerId ? [l.stripeCustomerId] : []));
+    await demanderSynchronisations(clients, maintenant);
+    demandes += clients.length;
     if (lot.length < PAR_LOT) return { demandes };
-    apres = lot[lot.length - 1].stripeCustomerId;
+    apres = clients.at(-1);
   }
 }

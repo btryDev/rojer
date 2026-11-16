@@ -84,10 +84,10 @@ export default async function EssaiPage() {
               // Sans date : le rappel part d'une tâche quotidienne, dans les 36 h
               // qui précèdent la fin (`rappels.ts`) — la veille ou l'avant-veille.
               // Sans promesse d'envoi non plus (garde `sans-qualification`).
-              { quand: "Avant la fin", quoi: "Pensez à choisir votre formule." },
+              { quand: "Quand vous voulez", quoi: "Abonnez-vous depuis la page Abonnement : l'essai s'arrête et ses limites sont levées." },
               {
                 quand: finTexte,
-                quoi: "Fin de l'essai. Pour continuer, choisissez une formule ; sinon, rien n'est prélevé et vos dossiers restent consultables.",
+                quoi: "Fin de l'essai. Pour continuer à saisir, abonnez-vous ; sinon, rien n'est prélevé et vos dossiers restent consultables.",
               },
             ]}
           />

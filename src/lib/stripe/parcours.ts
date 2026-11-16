@@ -9,7 +9,6 @@ import "server-only";
 // clients ou deux essais est la ligne `Abonnement` réservée en base avant
 // l'appel (lot de branchement).
 
-import { createHash } from "node:crypto";
 import type Stripe from "stripe";
 import { OPTIONS_RELECTURE } from "./client";
 import { idStripe } from "./ids";
@@ -40,44 +39,6 @@ export async function creerClientStripe(
     { idempotencyKey: `client-${idempotence}` },
   );
   return client.id;
-}
-
-/**
- * L'essai gratuit (§ 9) : 30 jours, sans moyen de paiement ; à la fin sans
- * carte, l'abonnement se met en pause (saisie fermée, lecture ouverte). La
- * carte se pose dans le portail (moyen de paiement par défaut du client).
- * La formule et le taux de TVA entrent dans la clé : un retour en arrière
- * pour choisir une autre formule, ou un taux changé entre deux essais, n'est
- * pas refusé par Stripe comme une requête rejouée différemment.
- */
-export async function demarrerEssai(
-  stripe: Stripe,
-  {
-    customerId,
-    priceId,
-    tauxTva,
-    metadata,
-    idempotence,
-  }: { customerId: string; priceId: string; tauxTva: string; metadata: Metadonnees; idempotence: string },
-): Promise<Stripe.Subscription> {
-  return stripe.subscriptions.create(
-    {
-      customer: customerId,
-      items: [{ price: priceId }],
-      default_tax_rates: [tauxTva],
-      trial_period_days: DUREE_ESSAI_JOURS,
-      // Chaque paiement réussi fixe sa carte sur l'abonnement : une carte
-      // payée sur la page d'une facture sert ainsi au mois suivant. La
-      // relecture la reporte sur le client et la retire de l'abonnement
-      // (`carteQuiAPaye`, au paiement réussi, qui pose aussi ce réglage sur
-      // les abonnements nés de Checkout) : une seule carte, celle du client,
-      // que le portail change.
-      payment_settings: { save_default_payment_method: "on_subscription" },
-      trial_settings: { end_behavior: { missing_payment_method: "pause" } },
-      metadata,
-    },
-    { idempotencyKey: `essai-${idempotence}-${priceId}-${tauxTva}` },
-  );
 }
 
 /**
@@ -143,36 +104,6 @@ export async function expirerSessionsOuvertes(stripe: Stripe, customerId: string
 }
 
 /**
- * La carte d'un client qui a déjà un abonnement (essai, en pause) : Checkout
- * en mode « setup » — la page hébergée enregistre la carte sans rien
- * prélever. La formule choisie voyage dans les métadonnées de la session,
- * relue à son retour (`abonnements/souscription.ts`).
- */
-export async function ouvrirCheckoutCarte(
-  stripe: Stripe,
-  { customerId, metadata, succes, annulation }: { customerId: string; metadata: Metadonnees; succes: string; annulation: string },
-) {
-  await expirerSessionsOuvertes(stripe, customerId);
-  const session = await stripe.checkout.sessions.create({
-    mode: "setup",
-    // À ESSAYER à la prochaine répétition (revue du 2026-11-16) :
-    // `allowed_payment_method_types: ["card"]`, pour qu'un prélèvement SEPA
-    // activé par erreur dans le tableau de bord ne laisse pas la facture « en
-    // traitement » et le client sur sa page. Non posé tant que Stripe ne l'a
-    // pas accepté sur une vraie session : une erreur ici fermerait tout
-    // enregistrement de carte.
-    customer: customerId,
-    currency: "eur",
-    metadata,
-    setup_intent_data: { metadata },
-    success_url: succes,
-    cancel_url: annulation,
-  });
-  if (!session.url) throw new Error("session Checkout sans adresse");
-  return session.url;
-}
-
-/**
  * L'adresse de la dernière facture d'un abonnement si elle attend un
  * paiement (`open`) : carte refusée, authentification demandée, impayé.
  * La page hébergée de la facture se règle avec une autre carte, 3-D Secure
@@ -193,155 +124,7 @@ async function factureOuverte(stripe: Stripe, derniere: Stripe.Subscription["lat
   return facture.status === "open" || facture.status === "uncollectible" ? facture : null;
 }
 
-/**
- * La facture est-elle celle du prix choisi, TVA comprise ? Ce prix seul sur
- * ses lignes, et un total égal au sous-total : une facture d'avant les prix
- * TTC (TVA en sus) ne se reprend pas telle quelle.
- */
-const factureAuPrixAffiche = (f: Stripe.Invoice, priceId: string) =>
-  f.lines.data.length > 0 &&
-  f.lines.data.every((l) => l.pricing?.price_details?.price === priceId) &&
-  f.total === f.subtotal;
-
-/** Le taux de TVA en vigueur, sans échouer : sans réponse, l'abonnement garde le sien. */
 const tauxEnVigueur = (stripe: Stripe) => tauxDeTva(stripe).catch(() => null);
-
-/**
- * Appliquer la formule choisie (la carte est celle du client) à l'abonnement qui
- * court encore sans payer : l'essai continue (`proration_behavior: none`,
- * rien n'est facturé avant sa fin), sauf `immediat` — l'essai s'arrête et le
- * premier mois est prélevé tout de suite (valider un document légal pendant
- * l'essai, décision du 2026-11-05) ; un abonnement en pause reprend et paie.
- *
- * Rejouée (retour de Checkout, webhook, rechargement), elle ne refait rien :
- * - même session : clés d'idempotence dérivées de la session ; un appel
- *   concurrent reçoit un 409 de Stripe, rejoué plus tard sans effet ;
- * - session plus ancienne que la dernière appliquée (`rojerChoixLe` posé sur
- *   l'abonnement) : ignorée, le dernier choix l'emporte ;
- * - pause dont la reprise attend déjà un paiement : on renvoie la facture en
- *   attente au lieu d'en créer une autre.
- * Rend l'adresse d'une facture à régler (paiement refusé, authentification
- * demandée), ou `null`.
- */
-export async function appliquerFormule(
-  stripe: Stripe,
-  abonnement: Stripe.Subscription,
-  choix: {
-    priceId: string;
-    immediat: boolean;
-    choisiLe: number;
-    idempotence?: string;
-  },
-): Promise<string | null> {
-  if (choix.choisiLe < Number(abonnement.metadata?.rojerChoixLe ?? 0)) return null;
-  const enPause = abonnement.status === "paused";
-  if (enPause) {
-    // Une reprise précédente attend son paiement : on la renvoie si elle est
-    // de la formule choisie ; sinon elle est annulée, et la reprise se fait
-    // au prix affiché (audit du 2026-11-16).
-    const enAttente = await factureOuverte(stripe, abonnement.latest_invoice);
-    if (enAttente && factureAuPrixAffiche(enAttente, choix.priceId)) return enAttente.hosted_invoice_url ?? null;
-    if (enAttente) await stripe.invoices.voidInvoice(enAttente.id!);
-  }
-  // Payer maintenant : l'essai est relu juste avant. Un autre chemin (la
-  // notification de Checkout, un autre onglet) a pu le finir : on ne le finit
-  // pas deux fois, mais sa facture, si elle attend encore (carte refusée,
-  // confirmation demandée par la banque), est renvoyée. Sans quoi le client
-  // lisait « Paiement terminé » sans avoir payé (répétition du 2026-11-16,
-  // carte 3-D Secure : la notification avait fini l'essai la première).
-  if (choix.immediat && !enPause) {
-    const frais = abonnement.status === "trialing" ? await stripe.subscriptions.retrieve(abonnement.id) : abonnement;
-    if (frais.status !== "trialing") return factureARegler(stripe, frais.latest_invoice);
-  }
-  const item = abonnement.items.data[0];
-  // Une seule carte, celle du CLIENT (`invoice_settings`), que le portail
-  // change : une carte fixée sur l'abonnement passerait avant elle au
-  // renouvellement, et un client qui change de carte resterait prélevé sur
-  // l'ancienne (répétition dans le temps du 2026-11-16, doc Stripe « Subscription
-  // invoices »). L'appelant a posé la carte sur le client ; on retire celle de
-  // l'abonnement.
-  const pmActuel = idStripe(abonnement.default_payment_method);
-  const finEssai = choix.immediat && abonnement.status === "trialing";
-  if (item?.price.id === choix.priceId && !pmActuel && !finEssai && !enPause) return null;
-
-  // Le taux en vigueur est reposé : un abonnement né sous un ancien taux
-  // paie le prix affiché.
-  const taux = await tauxEnVigueur(stripe);
-  const decision = {
-    items: item ? [{ id: item.id, price: choix.priceId }] : [{ price: choix.priceId }],
-    default_payment_method: "",
-    // Stripe refuse `proration_behavior` sur un abonnement en pause
-    // (« Resume the subscription first », répétition en local du
-    // 2026-11-16) : la reprise qui suit le porte, et ne facture que la
-    // nouvelle période.
-    ...(enPause ? {} : { proration_behavior: "none" as const }),
-    ...(finEssai ? { trial_end: "now" as const } : {}),
-    ...(taux ? { default_tax_rates: [taux] } : {}),
-  };
-  // La clé d'idempotence porte l'EMPREINTE de la décision (formule,
-  // fin d'essai, TVA, prorata) : le même choix rejoué — deux onglets, un
-  // événement relivré — retombe sur la même clé ; un geste rejoué après un
-  // changement du code (paramètres différents) en prend une neuve au lieu
-  // d'échouer pour toujours (`StripeIdempotencyError`, répétition du
-  // 2026-11-16). L'état relu juste avant protège ce cas-là.
-  // La TVA n'y entre pas : elle est LUE (cache, réseau), pas choisie, et un
-  // chemin qui l'aurait manquée prendrait une autre clé que l'autre, pour un
-  // même choix (revue du 2026-11-16).
-  const choisi = { ...decision, default_tax_rates: undefined };
-  const empreinte = createHash("sha256").update(JSON.stringify(choisi)).digest("hex").slice(0, 12);
-  const cle = (etape: string) => (choix.idempotence ? { idempotencyKey: `${choix.idempotence}-${empreinte}-${etape}` } : {});
-  const misAJour = await stripe.subscriptions.update(
-    abonnement.id,
-    { ...decision, metadata: { rojerChoixLe: String(choix.choisiLe) }, expand: ["latest_invoice"] },
-    cle("maj"),
-  );
-  if (!enPause) return finEssai ? factureARegler(stripe, misAJour.latest_invoice) : null;
-  // Reprise : la période repart à aujourd'hui (le défaut de l'API). Stripe
-  // crée la facture de la reprise sans la prélever (constaté en local le
-  // 2026-11-16 : `open`, jamais tentée) ; on la règle avec la carte du
-  // client, que l'appelant vient de poser. Refusée ou à authentifier : sa page, où le client la
-  // règle. L'abonnement reste en pause tant qu'elle n'est pas payée.
-  const repris = await stripe.subscriptions.resume(
-    abonnement.id,
-    { proration_behavior: "none", expand: ["latest_invoice"] },
-    cle("reprise"),
-  );
-  return reglerLaFacture(stripe, repris.latest_invoice);
-}
-
-/**
- * Régler tout de suite une facture ouverte avec la carte du client, hors
- * session (le défaut de Stripe) : le mandat vient d'être donné en
- * enregistrant la carte, et ce règlement part aussi de la notification,
- * client absent. Si la banque demande malgré tout une confirmation, la page
- * de la facture la sert : `null` si
- * elle est payée (ou s'il n'y a rien à régler), sinon l'adresse de sa page
- * (carte refusée, authentification demandée).
- */
-async function reglerLaFacture(
-  stripe: Stripe,
-  derniere: Stripe.Subscription["latest_invoice"],
-): Promise<string | null> {
-  const facture = await factureOuverte(stripe, derniere);
-  if (!facture?.id) return null;
-  try {
-    // Une clé tirée de la FACTURE : les deux chemins qui finalisent la même
-    // carte (retour de Checkout, webhook) règlent la même facture sous la
-    // même clé — un seul règlement (revue du 2026-11-16).
-    const payee = await stripe.invoices.pay(facture.id, {}, { idempotencyKey: `payer-${facture.id}` });
-    return payee.status === "paid" ? null : (payee.hosted_invoice_url ?? facture.hosted_invoice_url ?? null);
-  } catch (e) {
-    // Le même règlement en cours ailleurs (409) : on ne sait pas encore s'il
-    // passe — l'erreur remonte, l'appelant relit la page sans rien annoncer
-    // (`dejaEnCours`, `finaliserCarteAction`).
-    if ((e as { statusCode?: number })?.statusCode === 409) throw e;
-    // Sinon, la facture fait foi : déjà payée (par l'autre chemin), rien à
-    // faire ; encore ouverte (carte refusée, 3-D Secure), sa page.
-    const relue = await stripe.invoices.retrieve(facture.id).catch(() => null);
-    if (relue?.status === "paid") return null;
-    return relue?.hosted_invoice_url ?? facture.hosted_invoice_url ?? null;
-  }
-}
 
 /**
  * Monter de formule (ADR-053 § 10, client qui paie) : tout de suite, la
@@ -394,14 +177,6 @@ export async function planifierBaisse(
 ): Promise<void> {
   const item = abonnement.items.data[0];
   if (!item) return;
-  // Stripe refuse un planning sur un abonnement réglé pour se mettre en pause à
-  // la fin de l'essai (réglage de l'essai, §§ 8-9) : une fois payant, il ne
-  // sert plus, on le rend à sa valeur par défaut.
-  if (abonnement.trial_settings?.end_behavior?.missing_payment_method === "pause") {
-    await stripe.subscriptions.update(abonnement.id, {
-      trial_settings: { end_behavior: { missing_payment_method: "create_invoice" } },
-    });
-  }
   const existant = idStripe(abonnement.schedule);
   const planning = existant
     ? await stripe.subscriptionSchedules.retrieve(existant)

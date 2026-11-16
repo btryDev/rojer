@@ -36,14 +36,15 @@ export function formuleDesPlafonds(formule: string | null | undefined): CleFormu
 }
 
 /**
- * L'essai d'un compte : `en_cours` (Stripe le dit `trialing`), ou
- * `paiement_attendu` — le compte n'a JAMAIS payé (`debutPayantLe` vide) : un
- * premier paiement en échec à la fin de l'essai (`past_due`) garde la saisie
- * ouverte, il n'ouvre pas les volumes de la formule. `null` : il a payé.
+ * L'essai d'un compte : `en_cours` — jamais abonné, l'essai se compte chez
+ * Rojer (ADR-053 § 9, amendé le 2026-11-16) —, ou `paiement_attendu` — un
+ * abonnement existe mais n'a JAMAIS payé (`debutPayantLe` vide : premier
+ * paiement en échec ou à confirmer), il n'ouvre pas les volumes de la
+ * formule. `null` : il a payé.
  */
 export type Essai = "en_cours" | "paiement_attendu" | null;
 export function essaiDe(ligne: { statut: string | null; debutPayantLe: Date | null } | null): Essai {
-  if (ligne?.statut === "trialing") return "en_cours";
+  if (ligne && ligne.statut === null) return "en_cours";
   return ligne?.debutPayantLe ? null : "paiement_attendu";
 }
 
@@ -63,7 +64,7 @@ export function motifDuRefus(regime: Regime, cle: CleQuota): string {
   const couvre = LIBELLES_PLAFONDS[cle](plafond);
   if (regime.essai && estLimiteDEssai(cle))
     return regime.essai === "en_cours"
-      ? `L'essai gratuit couvre ${couvre} : pour en ajouter, payez votre formule maintenant depuis la page Abonnement de votre compte — le premier paiement lève les limites de l'essai.`
+      ? `L'essai gratuit couvre ${couvre} : pour en ajouter, abonnez-vous depuis la page Abonnement de votre compte — l'abonnement lève les limites de l'essai.`
       : `Tant que votre premier paiement n'est pas confirmé, Rojer garde les limites de l'essai (${couvre}) : réglez votre abonnement depuis la page Abonnement de votre compte.`;
   const plus = CLES_FORMULES.find((f) => {
     const q = FORMULES[f].quotas[cle];

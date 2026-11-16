@@ -19,7 +19,6 @@ import "server-only";
 
 import type Stripe from "stripe";
 import { alerter, alerterUneFoisParJour } from "@/lib/alertes";
-import { finaliserCarte } from "@/lib/abonnements/souscription";
 import {
   type Aiguillage,
   type EvenementAAiguiller,
@@ -55,10 +54,7 @@ export async function aiguillageDe(stripe: Stripe, type: string, objetId: string
   switch (type) {
     case "v1.customer.subscription.created":
     case "v1.customer.subscription.updated":
-    case "v1.customer.subscription.deleted":
-    case "v1.customer.subscription.paused":
-    case "v1.customer.subscription.resumed":
-    case "v1.customer.subscription.trial_will_end": {
+    case "v1.customer.subscription.deleted": {
       const abonnement = await stripe.subscriptions.retrieve(objetId, {}, OPTIONS_WEBHOOK);
       // Une baisse vient de prendre effet : son planning est rendu (sinon le
       // portail refuserait la résiliation pendant une période). Un refus de
@@ -68,13 +64,11 @@ export async function aiguillageDe(stripe: Stripe, type: string, objetId: string
       return { clientStripe: idStripe(abonnement.customer), abonnementId: abonnement.id };
     }
     case "v1.checkout.session.completed": {
-      const session = await stripe.checkout.sessions.retrieve(objetId, { expand: ["setup_intent"] }, OPTIONS_WEBHOOK);
-      // La carte d'un abonnement qui court sans payer : la formule choisie
-      // s'applique ici si le retour de Checkout ne l'a pas déjà fait. La
-      // relecture suit, par la file.
-      if (session.mode === "setup") await finaliserCarte(stripe, session, { synchroniser: false });
-      const suivi = session.mode === "subscription" || session.mode === "setup";
-      return suivi ? { clientStripe: idStripe(session.customer) } : { clientStripe: null, motif: "session sans abonnement" };
+      const session = await stripe.checkout.sessions.retrieve(objetId, {}, OPTIONS_WEBHOOK);
+      // S'abonner (Checkout en mode abonnement) : la relecture suit, par la file.
+      return session.mode === "subscription"
+        ? { clientStripe: idStripe(session.customer) }
+        : { clientStripe: null, motif: "session sans abonnement" };
     }
     case "v1.invoice.paid": {
       const client = idStripe((await stripe.invoices.retrieve(objetId, {}, OPTIONS_WEBHOOK)).customer);
