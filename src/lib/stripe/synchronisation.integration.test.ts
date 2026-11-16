@@ -188,14 +188,31 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
       );
     });
 
-    it("une carte fixée sur l'abonnement est reportée sur le client et retirée de l'abonnement (2026-11-16)", async () => {
+    it("une carte fixée sur l'abonnement : retirée ; la plus récente des deux devient celle du client (2026-11-16)", async () => {
+      const avecCarte = (pmClient: string | null, crees: Record<string, number>) => {
+        const s = stripe(A, [abo({ id: "sub_1", status: "active", created: 1, default_payment_method: "pm_abo" } as never)], {
+          id: "cus_A",
+          metadata: { compteId: A },
+          invoice_settings: { default_payment_method: pmClient },
+        });
+        (s as unknown as { paymentMethods: object }).paymentMethods = { retrieve: async (id: string) => ({ id, created: crees[id] }) };
+        return s;
+      };
+      // Le client n'a pas de carte : celle de l'abonnement devient la sienne.
       cartes.length = 0;
-      const actif = stripe(A, [abo({ id: "sub_1", status: "active", created: 1, default_payment_method: "pm_payee" } as never)]);
-      expect(await synchroniserClientStripe(actif, "cus_A", { maintenant: () => new Date(1000) })).toEqual({ issue: "ecrit" });
+      await synchroniserClientStripe(avecCarte(null, {}), "cus_A", { maintenant: () => new Date(1000) });
       expect(cartes).toEqual([
-        { objet: "cus_A", params: { invoice_settings: { default_payment_method: "pm_payee" } } },
+        { objet: "cus_A", params: { invoice_settings: { default_payment_method: "pm_abo" } } },
         { objet: "sub_1", params: { default_payment_method: "" } },
       ]);
+      // Carte de l'abonnement plus récente (payée sur la page d'une facture) : elle remplace celle du client.
+      cartes.length = 0;
+      await synchroniserClientStripe(avecCarte("pm_client", { pm_abo: 200, pm_client: 100 }), "cus_A", { maintenant: () => new Date(2000) });
+      expect(cartes[0]).toEqual({ objet: "cus_A", params: { invoice_settings: { default_payment_method: "pm_abo" } } });
+      // Carte du client plus récente (choisie au portail) : gardée ; seule celle de l'abonnement est retirée.
+      cartes.length = 0;
+      await synchroniserClientStripe(avecCarte("pm_client", { pm_abo: 100, pm_client: 200 }), "cus_A", { maintenant: () => new Date(3000) });
+      expect(cartes).toEqual([{ objet: "sub_1", params: { default_payment_method: "" } }]);
       // Sans carte sur l'abonnement, ou terminé : rien.
       cartes.length = 0;
       await synchroniserClientStripe(stripe(A, [abo({ id: "sub_1", status: "active", created: 1 })]), "cus_A", { maintenant: () => new Date(2000) });

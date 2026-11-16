@@ -335,7 +335,7 @@ async function relireEtEcrire(stripe: Stripe, bail: Bail, relueLe: Date, strict:
   const { courant, plusieurs } = abonnementCourant(abonnements);
   const designe = compteDuClientStripe(client.value, courant);
   if (!designe) return terminer(bail, relueLe, SANS_COMPTE);
-  if (!supprime && courant) await carteAuClient(stripe, customerId, courant);
+  if (!client.value.deleted && courant) await carteAuClient(stripe, client.value, courant);
   // Un client d'avant l'ADR-054 : le compte dont la personne est l'unique
   // propriétaire ; aucun, ou plusieurs, ne se devinent pas.
   const compteId = "compteId" in designe ? designe.compteId : await compteDontEstProprietaire(designe.proprietaire);
@@ -435,30 +435,44 @@ async function relireEtEcrire(stripe: Stripe, bail: Bail, relueLe: Date, strict:
 }
 
 /**
- * Une seule carte, celle du CLIENT (2026-11-16). Stripe en fixe une sur
- * l'abonnement quand le client règle une facture sur sa page (réglage
- * `save_default_payment_method: on_subscription`) ou souscrit par Checkout ;
- * elle passerait ensuite avant celle que le client choisit dans le portail.
- * La relecture la reporte sur le client et la retire de l'abonnement :
- * c'est la dernière carte utilisée, donc la bonne. Sans réponse de Stripe,
- * la relecture continue ; la suivante recommencera.
+ * Une seule carte, celle du CLIENT (2026-11-16) : le portail ne change
+ * qu'elle, et une carte fixée sur l'abonnement passerait avant au
+ * renouvellement. Stripe en fixe une sur l'abonnement quand le client règle
+ * une facture sur sa page (`save_default_payment_method: on_subscription`)
+ * ou souscrit par Checkout ; un abonnement d'avant ce jour en porte une.
+ * La relecture la retire de l'abonnement, et garde comme carte du client la
+ * plus RÉCENTE des deux (date de création chez Stripe) : une carte payée sur
+ * la page d'une facture remplace l'ancienne ; un choix plus récent fait au
+ * portail n'est pas écrasé. Sans réponse de Stripe, la relecture continue ;
+ * la suivante recommencera.
  */
-async function carteAuClient(stripe: Stripe, customerId: string, courant: Stripe.Subscription): Promise<void> {
-  const carte = idStripe(courant.default_payment_method);
-  if (!carte || !OUVRENT.has(courant.status)) return;
+async function carteAuClient(stripe: Stripe, client: Stripe.Customer, courant: Stripe.Subscription): Promise<void> {
+  const carteAbonnement = idStripe(courant.default_payment_method);
+  if (!carteAbonnement || !OUVRENT.has(courant.status)) return;
+  const carteClient = idStripe(client.invoice_settings?.default_payment_method);
   try {
-    await stripe.customers.update(
-      customerId,
-      { invoice_settings: { default_payment_method: carte } },
-      { ...OPTIONS_WEBHOOK, idempotencyKey: `carte-client-${courant.id}-${carte}` },
-    );
+    let reporter = carteClient === null;
+    if (carteClient && carteClient !== carteAbonnement) {
+      const [abonnement, duClient] = await Promise.all([
+        stripe.paymentMethods.retrieve(carteAbonnement, {}, OPTIONS_WEBHOOK),
+        stripe.paymentMethods.retrieve(carteClient, {}, OPTIONS_WEBHOOK),
+      ]);
+      reporter = abonnement.created > duClient.created;
+    }
+    if (reporter) {
+      await stripe.customers.update(
+        client.id,
+        { invoice_settings: { default_payment_method: carteAbonnement } },
+        { ...OPTIONS_WEBHOOK, idempotencyKey: `carte-client-${courant.id}-${carteAbonnement}` },
+      );
+    }
     await stripe.subscriptions.update(
       courant.id,
       { default_payment_method: "" },
-      { ...OPTIONS_WEBHOOK, idempotencyKey: `carte-abonnement-${courant.id}-${carte}` },
+      { ...OPTIONS_WEBHOOK, idempotencyKey: `carte-abonnement-${courant.id}-${carteAbonnement}` },
     );
   } catch (e) {
-    console.error(`stripe : carte de l'abonnement non reportée sur le client ${customerId} — ${motifDErreur(e)}`);
+    console.error(`stripe : carte de l'abonnement non reportée sur le client ${client.id} — ${motifDErreur(e)}`);
   }
 }
 
