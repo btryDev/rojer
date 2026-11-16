@@ -23,6 +23,7 @@ import { prixTTC } from "@/lib/abonnements/affichage";
 import { baissePrevue } from "@/lib/stripe/parcours";
 import { clientStripeLecture } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
+import { synchroniserClientStripe } from "@/lib/stripe/synchronisation";
 import { PAGE_ESSAI } from "@/lib/abonnements/essai";
 import {
   CLES_FORMULES,
@@ -82,6 +83,21 @@ function effetDuChangement(sens: "montee" | "baisse", actuelle: string | null, v
  * chacune, son sens (montée tout de suite, baisse en fin de période) et ce qui
  * dépasserait ; et la baisse déjà planifiée. Sans réponse de Stripe : rien.
  */
+/**
+ * Au retour de Checkout (`?paiement=termine`) : la copie de l'abonnement est
+ * relue chez Stripe AVANT l'affichage. Sans cela, la page montrait encore
+ * « Essai terminé » et le bandeau de saisie fermée à qui venait de payer, le
+ * temps que la notification arrive (répétition du 2026-11-17). Sans réponse
+ * de Stripe, la page s'affiche quand même ; la notification suivra.
+ */
+async function relireApresPaiement(db: Db, compteId: string): Promise<void> {
+  const config = configurationStripe();
+  if (!config.active) return;
+  const ligne = await db.abonnement.findUnique({ where: { compteId }, select: { stripeCustomerId: true } });
+  if (!ligne?.stripeCustomerId) return;
+  await synchroniserClientStripe(clientStripeLecture(config), ligne.stripeCustomerId).catch(() => null);
+}
+
 async function changementsPossibles(
   db: Db,
   compteId: string,
@@ -183,6 +199,7 @@ export default async function AbonnementPage({
   const formuleChange = formuleChange0 && formuleChange0 in MESSAGES_FORMULE ? (formuleChange0 as keyof typeof MESSAGES_FORMULE) : null;
   const ctx = contexteDroits();
   const ouvert = offreLancee(ctx);
+  if (c && paiement === "termine") await relireApresPaiement(c.db, c.compte.compteId);
   // Une seule lecture : la ligne sert à l'état affiché et aux droits.
   const ligne = c ? await abonnementDuCompte(c.db, c.compte.compteId) : null;
   const droits = droitsDe(ligne, ctx);
@@ -314,7 +331,9 @@ export default async function AbonnementPage({
           </MessageFormulaire>
           <MessageFormulaire ton="info">
             {paiement === "termine"
-              ? "Paiement terminé. Votre abonnement s'affiche ici dans quelques secondes : rechargez la page s'il n'apparaît pas."
+              ? phase.type === "abonne"
+                ? "Paiement reçu : votre abonnement est actif."
+                : "Paiement terminé. Votre abonnement s'affiche ici dans quelques secondes : rechargez la page s'il n'apparaît pas."
               : formuleChange
                 ? MESSAGES_FORMULE[formuleChange]
                 : paiementEnConfirmation
