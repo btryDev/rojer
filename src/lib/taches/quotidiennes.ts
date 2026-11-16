@@ -31,6 +31,8 @@ import { contexteDroits, offreLancee, offreOuverteParErreur } from "@/lib/abonne
 import { oublierLesAnciens } from "@/lib/stripe/evenements";
 import { motifDErreur } from "@/lib/stripe/synchronisation";
 import { prendreLeJour, terminerLeJour } from "./jour";
+import { battre } from "./temoin";
+import { controlerLesReglagesStripe } from "@/lib/stripe/controles";
 import { purgerComptesNonActives } from "@/lib/auth/comptes-non-actives";
 
 function horlogeReelle(): Date {
@@ -77,6 +79,10 @@ export async function lancerTachesQuotidiennes(maintenant: Date) {
     // des abonnements qui courent, qu'il ne faut pas taire.
     ...(config.active ? { fileStripe: await tenter("état de la file Stripe", () => signalerLaFile(maintenant)) } : {}),
     ...(config.active ? { rapprochement: await tenter("rapprochement Stripe", () => rapprocher(maintenant)) } : {}),
+    // Les réglages du tableau de bord dont Rojer dépend (portail, relances).
+    ...(config.active
+      ? { reglagesStripe: await tenter("réglages Stripe", () => controlerLesReglagesStripe(clientStripe(config), maintenant)) }
+      : {}),
     evenementsOublies: await tenter("ménage des événements Stripe", () => oublierLesAnciens(maintenant)),
   });
   // L'offre pas lancée (ou retirée) : la saisie est ouverte à tous, rien ne
@@ -159,6 +165,10 @@ export async function lancerTachesDuJour(maintenant: Date) {
       `En échec : ${enEchec.join(", ")}.`,
       "Elles seront rejouées demain à 9 h. Lire les journaux de l'application ; relancer à la main si elles ne peuvent pas attendre.",
     ], maintenant);
+  } else {
+    // Le battement du jour, vers le témoin extérieur (`temoin.ts`) : sans
+    // lui, une crontab arrêtée ne se signale jamais.
+    await battre();
   }
   console.info(`tâches du ${jour} : ${JSON.stringify(bilan)}`);
   return { etat: "faite" as const, jour, bilan };
