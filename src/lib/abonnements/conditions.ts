@@ -9,7 +9,7 @@
 
 export type Section = { titre: string; paragraphes: string[] };
 
-export const VERSION_CONDITIONS = "2026-11-provisoire";
+export const VERSION_CONDITIONS = "2026-11-provisoire-ttc";
 
 export const CONDITIONS: Section[] = [
   {
@@ -34,7 +34,7 @@ export const CONDITIONS: Section[] = [
   {
     titre: "Abonnement et paiement",
     paragraphes: [
-      "L'abonnement est mensuel ou annuel, payable d'avance. Les prix sont indiqués hors taxes. Le paiement et les factures sont gérés par Stripe.",
+      "L'abonnement est mensuel ou annuel, payable d'avance. Les prix sont indiqués toutes taxes comprises (TVA de 20 % incluse). Le paiement et les factures sont gérés par Stripe.",
       "En cas d'impayé, la saisie est fermée ; la consultation et l'export de vos données restent toujours ouverts.",
     ],
   },

@@ -347,10 +347,11 @@ describe("on peut sortir de la mise en place", () => {
     ).toBe("Bistrot du marché");
   });
 
-  it("la déconnexion est atteignable depuis l'écran", async () => {
+  it("la déconnexion est atteignable depuis l'écran, et l'adresse connectée se lit à côté (2026-11-16)", async () => {
     render(<WizardShell compteId={null} nomCompte={null} email="paul@exemple.fr" entreprisesConnues={[]} />);
 
-    screen.getAllByRole("button", { name: /Déconnexion/ })[0].click();
+    expect(screen.getAllByText("paul@exemple.fr").length).toBeGreaterThan(0);
+    screen.getAllByRole("button", { name: /Se déconnecter/ })[0].click();
     await souffler();
 
     expect(appels).toEqual(["deconnexion"]);
@@ -438,7 +439,7 @@ describe("plusieurs types d'ERP au parcours (ADR-045, lot 3)", () => {
 
   it("un lien replié, rien de coché, et rien de posté hors le témoin", async () => {
     await allerEtape2AvecType("N");
-    expect(document.querySelector("details")!.open).toBe(false);
+    expect(document.querySelector<HTMLDetailsElement>("details.group")!.open).toBe(false);
     expect(document.querySelectorAll('input[type="hidden"][name="typesErpAutres"]').length).toBe(0);
     expect(document.querySelector(`input[type="hidden"][name="${CHAMP_TEMOIN_TYPES_ERP_AUTRES}"]`)).not.toBeNull();
   });
@@ -488,7 +489,7 @@ describe("plusieurs types d'ERP au parcours (ADR-045, lot 3)", () => {
     choisir(/Type d'ERP/, "O");
     await souffler();
     expect(postes()).toEqual(["M"]);
-    expect(document.querySelector("details")!.open).toBe(true);
+    expect(document.querySelector<HTMLDetailsElement>("details.group")!.open).toBe(true);
   });
 
   it("décocher O retire la question et la réponse", async () => {

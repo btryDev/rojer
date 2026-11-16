@@ -11,9 +11,8 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { ChampBoard } from "@/components/ui-kit/ChampBoard";
+import { ChampMotDePasse } from "@/components/ui-kit/ChampMotDePasse";
 import type { AuthActionState } from "@/lib/auth/actions";
-import { AIDE_MOT_DE_PASSE, LONGUEUR_MIN_MOT_DE_PASSE } from "@/lib/auth/mot-de-passe";
 import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
 
 const etatInitial: AuthActionState = {};
@@ -25,8 +24,11 @@ export function FormulaireMotDePasse({
   libelleBouton,
   libelleEnCours,
   lienInvalide,
+  identifiant = null,
 }: {
   token: string | null;
+  /** L'adresse du compte, pour le gestionnaire de mots de passe (champ caché). */
+  identifiant?: string | null;
   action: (prev: AuthActionState, formData: FormData) => Promise<AuthActionState>;
   libelleChamp: string;
   libelleBouton: string;
@@ -53,30 +55,12 @@ export function FormulaireMotDePasse({
   return (
     <form action={action} className="flex flex-col gap-5">
       <input type="hidden" name="token" value={token} />
-      <ChampBoard
-        id="password"
-        name="password"
-        type="password"
-        label={libelleChamp}
-        autoComplete="new-password"
-        required
-        minLength={LONGUEUR_MIN_MOT_DE_PASSE}
-        aide={AIDE_MOT_DE_PASSE}
-      />
+      {/* Le gestionnaire de mots de passe enregistre le mot de passe sous
+          cette adresse : sans elle, il l'enregistrerait sans identifiant. */}
+      {identifiant && <input type="email" name="username" autoComplete="username" value={identifiant} readOnly hidden />}
+      {/* Un seul champ, avec un œil (retours de test du 2026-11-16). */}
+      <ChampMotDePasse label={libelleChamp} />
 
-      <ChampBoard
-        id="confirm"
-        name="confirm"
-        type="password"
-        label="Confirmer le mot de passe"
-        autoComplete="new-password"
-        required
-        minLength={LONGUEUR_MIN_MOT_DE_PASSE}
-      />
-
-      {/* La comparaison des deux saisies est faite à la soumission, sur le
-          formulaire entier : l'erreur porte sur la paire, pas sur l'un des
-          deux champs. */}
       <MessageFormulaire ton="alerte">{error}</MessageFormulaire>
 
       <Button type="submit" variant="board" size="board" disabled={pending} className="w-full">

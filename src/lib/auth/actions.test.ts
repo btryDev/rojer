@@ -33,6 +33,9 @@ const h = vi.hoisted(() => ({
   divulgue: vi.fn<(mdp: string) => Promise<boolean | null>>(),
   entetes: new Headers({ "x-forwarded-for": "203.0.113.7" }),
   cookiesEffaces: [] as string[],
+  cookiesPoses: [] as { nom: string; valeur: string }[],
+  /** La session déjà ouverte dans le navigateur (activation d'une autre adresse). */
+  sessionOuverte: null as null | { id: string; email: string },
   limite: vi.fn<
     (demandes: { cle: string }[]) => Promise<
       { ok: true } | { ok: false; reessayerDansSecondes: number }
@@ -44,11 +47,16 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("next/navigation", () => ({ redirect: h.redirect }));
 vi.mock("next/headers", () => ({
   headers: async () => h.entetes,
-  cookies: async () => ({ delete: (nom: string) => h.cookiesEffaces.push(nom) }),
+  cookies: async () => ({
+    delete: (nom: string) => h.cookiesEffaces.push(nom),
+    set: (nom: string, valeur: string) => h.cookiesPoses.push({ nom, valeur }),
+    get: () => undefined,
+  }),
 }));
 vi.mock("./better-auth", () => ({ auth: { api: h.auth }, VERROU_DOUBLE_AUTH_MINUTES: 15 }));
 vi.mock("./require-user", () => ({
   requireUser: async () => h.user,
+  getOptionalUser: async () => h.sessionOuverte,
   entetesDeSession: async () => h.entetes,
 }));
 // Jamais d'appel réseau en test : le service Pwned Passwords est doublé.
@@ -126,6 +134,8 @@ beforeEach(() => {
   h.limite.mockClear();
   h.limite.mockResolvedValue({ ok: true });
   h.cookiesEffaces = [];
+  h.cookiesPoses = [];
+  h.sessionOuverte = null;
   vi.unstubAllEnvs();
 });
 
@@ -166,7 +176,7 @@ describe("connexion : le champ `next` ne mène que dans l'application (C1)", () 
 describe("liens envoyés par mail : aucune adresse ne vient du formulaire (C3)", () => {
   const forge = { origin: "https://evil.tld", callbackURL: "https://evil.tld", redirectTo: "https://evil.tld" };
 
-  it("inscription et mot de passe oublié ne passent que l'adresse et le mot de passe", async () => {
+  it("inscription et mot de passe oublié ne passent que l'adresse (et le mot de passe provisoire)", async () => {
     vi.stubEnv("PUBLIC_APP_URL", "https://app.rojer.fr");
     await expect(
       signUpAction({}, formulaire({ email: "a@exemple.fr", password: "motdepasse-solide", ...forge })),
@@ -223,19 +233,21 @@ describe("réponses de Better Auth traduites pour l'écran", () => {
       new APIError("UNAUTHORIZED", { code: "INVALID_EMAIL_OR_PASSWORD", message: "x" }),
     );
     const r = await signInAction({}, formulaire({ email: "a@exemple.fr", password: "x" }));
-    expect(r.error).toBe("Identifiants invalides");
+    // Le même message qu'un compte existe ou non ; il renvoie à l'activation
+    // un compte créé et pas encore activé (pas de mot de passe connu).
+    expect(r.error).toMatch(/^Identifiants invalides\. Compte créé récemment \? Activez-le d'abord/);
   });
 
   it("inscription d'une adresse déjà inscrite : même suite qu'une nouvelle", async () => {
     vi.stubEnv("PUBLIC_APP_URL", "https://app.rojer.fr");
     const nouvelle = await cibleDeRedirection(
-      signUpAction({}, formulaire({ email: "a@exemple.fr", password: "douze-caract" })),
+      signUpAction({}, formulaire({ email: "a@exemple.fr" })),
     );
     h.auth.signUpEmail.mockRejectedValue(
       new APIError("UNPROCESSABLE_ENTITY", { code: "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL", message: "x" }),
     );
     const existante = await cibleDeRedirection(
-      signUpAction({}, formulaire({ email: "a@exemple.fr", password: "douze-caract" })),
+      signUpAction({}, formulaire({ email: "a@exemple.fr" })),
     );
     expect(existante).toBe(nouvelle);
     expect(nouvelle).toBe("/signup/verification-en-attente?email=a%40exemple.fr");
@@ -244,7 +256,7 @@ describe("réponses de Better Auth traduites pour l'écran", () => {
   it("inscription en échec pour une autre raison : un message, pas de redirection", async () => {
     vi.stubEnv("PUBLIC_APP_URL", "https://app.rojer.fr");
     h.auth.signUpEmail.mockRejectedValue(new APIError("BAD_REQUEST", { code: "FAILED_TO_CREATE_USER", message: "x" }));
-    const r = await signUpAction({}, formulaire({ email: "a@exemple.fr", password: "douze-caract" }));
+    const r = await signUpAction({}, formulaire({ email: "a@exemple.fr" }));
     expect(r.error).toMatch(/n'a pas abouti/);
   });
 
@@ -252,30 +264,42 @@ describe("réponses de Better Auth traduites pour l'écran", () => {
     h.auth.resetPassword.mockRejectedValue(new APIError("BAD_REQUEST", { code: "INVALID_TOKEN", message: "x" }));
     const r = await definirMotDePasseAction(
       {},
-      formulaire({ password: "douze-caract", confirm: "douze-caract", token: "mort" }),
+      formulaire({ password: "douze-caract", token: "mort" }),
     );
     expect(r.error).toMatch(/invalide ou a expiré/);
   });
 });
 
 /**
- * Douze caractères au moins, vérifiés côté serveur à l'inscription et à la
- * réinitialisation (audit OWASP B4, 2026-10-14) ; aucune règle à la connexion.
+ * Douze caractères au moins, vérifiés côté serveur à l'activation, à la
+ * réinitialisation et au changement (audit OWASP B4, 2026-10-14) ; aucune
+ * règle à la connexion, ni à l'inscription, qui n'en choisit plus (2026-11-16).
  */
 describe("mot de passe : douze caractères (B4)", () => {
-  it("l'inscription refuse onze caractères, avec un message clair, sans appeler le fournisseur", async () => {
+  it("l'inscription ne demande pas de mot de passe : un provisoire tiré au hasard, jamais celui d'un formulaire (2026-11-16)", async () => {
     vi.stubEnv("PUBLIC_APP_URL", "https://app.rojer.fr");
-    const r = await signUpAction({}, formulaire({ email: "a@exemple.fr", password: "onze-caract" }));
-    expect(r.error).toMatch(/au moins 12 caractères/);
-    expect(h.auth.signUpEmail).not.toHaveBeenCalled();
+    h.divulgue.mockClear();
+    await expect(signUpAction({}, formulaire({ email: "a@exemple.fr" }))).rejects.toThrow("NEXT_REDIRECT");
+    await expect(
+      signUpAction({}, formulaire({ email: "b@exemple.fr", password: "onze-caract" })),
+    ).rejects.toThrow("NEXT_REDIRECT");
+    const [a, b] = h.auth.signUpEmail.mock.calls.map((c) => c[0].body.password as string);
+    expect(a).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(b).not.toBe("onze-caract");
+    expect(a).not.toBe(b);
+    // Pas d'appel au service des fuites : rien de choisi par la personne.
+    expect(h.divulgue).not.toHaveBeenCalled();
   });
 
-  it("l'inscription accepte douze caractères", async () => {
+  it("l'inscription garde l'offre choisie sur la page publique, et elle seule", async () => {
     vi.stubEnv("PUBLIC_APP_URL", "https://app.rojer.fr");
-    await expect(
-      signUpAction({}, formulaire({ email: "a@exemple.fr", password: "douze-caract" })),
-    ).rejects.toThrow("NEXT_REDIRECT");
-    expect(h.auth.signUpEmail).toHaveBeenCalled();
+    await expect(signUpAction({}, formulaire({ email: "a@exemple.fr", offre: "rojer_pro_annuel" }))).rejects.toThrow(
+      "NEXT_REDIRECT",
+    );
+    await expect(signUpAction({}, formulaire({ email: "a@exemple.fr", offre: "rojer_inconnue" }))).rejects.toThrow(
+      "NEXT_REDIRECT",
+    );
+    expect(h.cookiesPoses).toEqual([{ nom: "rojer-offre-choisie", valeur: "rojer_pro_annuel" }]);
   });
 
   it("la connexion n'impose aucune longueur : un compte de l'ancienne règle entre", async () => {
@@ -288,25 +312,23 @@ describe("mot de passe : douze caractères (B4)", () => {
   it("la réinitialisation refuse onze caractères côté serveur", async () => {
     const r = await definirMotDePasseAction(
       {},
-      formulaire({ password: "onze-caract", confirm: "onze-caract", token: "t" }),
+      formulaire({ password: "onze-caract", token: "t" }),
     );
     expect(r.error).toMatch(/au moins 12 caractères/);
     expect(h.auth.resetPassword).not.toHaveBeenCalled();
   });
 
-  it("la réinitialisation refuse deux saisies différentes", async () => {
-    const r = await definirMotDePasseAction(
-      {},
-      formulaire({ password: "douze-caract", confirm: "douze-caracX", token: "t" }),
-    );
-    expect(r.error).toMatch(/ne correspondent pas/);
-    expect(h.auth.resetPassword).not.toHaveBeenCalled();
+  it("la réinitialisation n'a qu'un champ : une confirmation envoyée quand même est ignorée (2026-11-16)", async () => {
+    await expect(
+      definirMotDePasseAction({}, formulaire({ password: "douze-caract", confirm: "autre-chose-x", token: "t" })),
+    ).rejects.toThrow("NEXT_REDIRECT");
+    expect(h.auth.resetPassword).toHaveBeenCalledWith({ body: { newPassword: "douze-caract", token: "t" } });
   });
 
   it("la réinitialisation sans jeton ne va pas plus loin", async () => {
     const r = await definirMotDePasseAction(
       {},
-      formulaire({ password: "douze-caract", confirm: "douze-caract" }),
+      formulaire({ password: "douze-caract" }),
     );
     expect(r.error).toMatch(/invalide ou a expiré/);
     expect(h.auth.resetPassword).not.toHaveBeenCalled();
@@ -316,7 +338,7 @@ describe("mot de passe : douze caractères (B4)", () => {
     const cible = await cibleDeRedirection(
       definirMotDePasseAction(
         {},
-        formulaire({ password: "douze-caract", confirm: "douze-caract", token: "jeton-du-lien" }),
+        formulaire({ password: "douze-caract", token: "jeton-du-lien" }),
       ),
     );
     expect(h.auth.resetPassword).toHaveBeenCalledWith({
@@ -390,7 +412,7 @@ describe("limitation de débit des parcours d'entrée", () => {
   it("inscription et réinitialisation : refusées avant le fournisseur", async () => {
     vi.stubEnv("PUBLIC_APP_URL", "https://app.rojer.fr");
     h.limite.mockResolvedValue(refus);
-    const i = await signUpAction({}, formulaire({ email: "a@exemple.fr", password: "douze-caract" }));
+    const i = await signUpAction({}, formulaire({ email: "a@exemple.fr" }));
     const o = await requestPasswordResetAction({}, formulaire({ email: "a@exemple.fr" }));
     expect(i.error).toMatch(/Trop de tentatives/);
     expect(o.error).toMatch(/Trop de tentatives/);
@@ -400,32 +422,24 @@ describe("limitation de débit des parcours d'entrée", () => {
 });
 
 describe("mots de passe divulgués (ASVS V6.2.12)", () => {
-  it("refusés à l'inscription et à la réinitialisation, avant Better Auth", async () => {
-    vi.stubEnv("PUBLIC_APP_URL", "https://app.rojer.fr");
+  it("refusés à la réinitialisation, avant Better Auth (l'inscription n'en choisit plus)", async () => {
     h.divulgue.mockResolvedValue(true);
-    const i = await signUpAction({}, formulaire({ email: "a@exemple.fr", password: "motdepasse123" }));
-    const r = await definirMotDePasseAction(
-      {},
-      formulaire({ password: "motdepasse123", confirm: "motdepasse123", token: "t" }),
-    );
-    expect(i.error).toMatch(/fuites de données/);
+    const r = await definirMotDePasseAction({}, formulaire({ password: "motdepasse123", token: "t" }));
     expect(r.error).toMatch(/fuites de données/);
-    expect(h.auth.signUpEmail).not.toHaveBeenCalled();
     expect(h.auth.resetPassword).not.toHaveBeenCalled();
   });
 
   it("service injoignable : on laisse passer (indéterminé)", async () => {
-    vi.stubEnv("PUBLIC_APP_URL", "https://app.rojer.fr");
     h.divulgue.mockResolvedValue(null);
-    await expect(
-      signUpAction({}, formulaire({ email: "a@exemple.fr", password: "douze-caract" })),
-    ).rejects.toThrow("NEXT_REDIRECT");
-    expect(h.auth.signUpEmail).toHaveBeenCalled();
+    await expect(definirMotDePasseAction({}, formulaire({ password: "douze-caract", token: "t" }))).rejects.toThrow(
+      "NEXT_REDIRECT",
+    );
+    expect(h.auth.resetPassword).toHaveBeenCalled();
   });
 });
 
 describe("changer de mot de passe (lot 3a)", () => {
-  const champs = { actuel: "ancien-mot-de-passe", password: "nouveau-mot-de-passe", confirm: "nouveau-mot-de-passe" };
+  const champs = { actuel: "ancien-mot-de-passe", password: "nouveau-mot-de-passe" };
 
   it("exige l'actuel, ferme les autres sessions", async () => {
     const r = await changerMotDePasseAction({}, formulaire(champs));
@@ -436,13 +450,10 @@ describe("changer de mot de passe (lot 3a)", () => {
     });
   });
 
-  it("refuse sans l'actuel, deux saisies différentes, onze caractères, un mot de passe divulgué", async () => {
+  it("refuse sans l'actuel, onze caractères, un mot de passe divulgué ; un seul champ, plus de confirmation (2026-11-16)", async () => {
     expect((await changerMotDePasseAction({}, formulaire({ ...champs, actuel: "" }))).error).toMatch(/actuel/);
-    expect((await changerMotDePasseAction({}, formulaire({ ...champs, confirm: "autre-chose-xx" }))).error).toMatch(
-      /ne correspondent pas/,
-    );
     expect(
-      (await changerMotDePasseAction({}, formulaire({ ...champs, password: "onze-caract", confirm: "onze-caract" })))
+      (await changerMotDePasseAction({}, formulaire({ ...champs, password: "onze-caract" })))
         .error,
     ).toMatch(/au moins 12/);
     h.divulgue.mockResolvedValue(true);
@@ -691,10 +702,24 @@ describe("activation du compte au retour du lien de confirmation", () => {
     );
   });
 
-  it("refuse avant Better Auth : saisies différentes, trop court, sans jeton, divulgué, limite atteinte", async () => {
-    expect((await activer({ password: "douze-caract", confirm: "douze-caracX", token: "t" })).error).toMatch(
-      /ne correspondent pas/,
-    );
+  it("une session d'une autre adresse ouverte dans le navigateur : fermée à l'activation (2026-11-16)", async () => {
+    h.auth.verifyEmail.mockResolvedValue({ status: true });
+    h.sessionOuverte = { id: "u-autre", email: "autre@exemple.fr" };
+    expect(await cibleDeRedirection(activer({ password: "douze-caract", token: "jeton" }))).toBe("/login?confirmed=1");
+    expect(h.auth.signOut).toHaveBeenCalledTimes(1);
+    expect(h.cookiesEffaces).toContain("etablissement-actif");
+  });
+
+  it("sans session ouverte, ou lien déjà utilisé : aucune session n'est touchée", async () => {
+    h.auth.verifyEmail.mockResolvedValue({ status: true });
+    await cibleDeRedirection(activer({ password: "douze-caract", token: "jeton" }));
+    h.sessionOuverte = { id: "u-autre", email: "autre@exemple.fr" };
+    h.activationAppliquee = false;
+    await cibleDeRedirection(activer({ password: "douze-caract", token: "vieux" }));
+    expect(h.auth.signOut).not.toHaveBeenCalled();
+  });
+
+  it("refuse avant Better Auth : trop court, sans jeton, divulgué, limite atteinte", async () => {
     expect((await activer({ password: "onze-caract", confirm: "onze-caract", token: "t" })).error).toMatch(
       /au moins 12 caractères/,
     );

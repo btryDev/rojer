@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cheminDeRetour } from "@/lib/auth/chemin-de-retour";
 import { LoginForm } from "./LoginForm";
 import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
+import { getOptionalUser } from "@/lib/auth/require-user";
 
 export const metadata = {
   title: "Connexion — Rojer",
@@ -21,6 +22,9 @@ export default async function LoginPage({
   // Filtré dès la page : le lien vers /signup le recopie, et l'action le
   // refiltre de toute façon (le champ caché se modifie à la main).
   const next = nextBrut === undefined ? undefined : cheminDeRetour(nextBrut);
+  // Déjà connecté·e : on le dit, avec la sortie, plutôt que de montrer le
+  // formulaire comme si personne ne l'était (retours de test du 2026-11-16).
+  const ouverte = await getOptionalUser();
 
   return (
     // Colonne étroite centrée : c'est le seul cas où `mx-auto max-w-*` tient
@@ -55,6 +59,14 @@ export default async function LoginPage({
         {reinitialise === "1" ? (
           <MessageFormulaire ton="info" className="mt-6">
             Mot de passe changé. Vos autres sessions ont été fermées : connectez-vous avec le nouveau.
+          </MessageFormulaire>
+        ) : null}
+
+        {/* L'en-tête porte déjà l'adresse, la sortie et le lien vers le dossier. */}
+        {ouverte?.email ? (
+          <MessageFormulaire ton="info" className="mt-6">
+            Ce navigateur est déjà connecté avec {ouverte.email}. Pour utiliser une autre adresse, déconnectez-vous
+            d&apos;abord, en haut de la page.
           </MessageFormulaire>
         ) : null}
 

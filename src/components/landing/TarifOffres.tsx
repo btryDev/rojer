@@ -10,7 +10,8 @@ import { cn } from "@/lib/utils";
 import type { CompteLanding } from "./compte";
 import { BoutonContact } from "./BoutonContact";
 import { SEGMENT, SEGMENTS } from "./segment";
-import { enEuros, OFFRES, parMoisSurUnAn, type Offre, type Periode } from "./tarif-donnees";
+import { enEuros, OFFRES, parMoisSurUnAn, PERIODICITE_DE, type Offre, type Periode } from "./tarif-donnees";
+import { lookupKey } from "@/lib/abonnements/formules";
 
 /** Les deux teintes d'une carte : claire, ou d'encre pour l'offre mise en avant. */
 const TEINTE = {
@@ -46,7 +47,7 @@ function Prix({ offre, periode, t }: { offre: Offre; periode: Periode; t: (typeo
         <span className="lp-titre text-[2.9rem] leading-none tracking-[-0.05em] text-current tabular-nums">
           {enEuros(offre.prix[periode])}
         </span>
-        <span className={cn("text-[0.85rem]", t.discret)}>HT / {periode}</span>
+        <span className={cn("text-[0.85rem]", t.discret)}>TTC / {periode}</span>
       </p>
       <p className={cn("mt-1 text-[0.8rem]", t.tresDiscret)}>
         {periode === "mois" ? "Sans engagement" : `Soit ≈ ${parMoisSurUnAn(offre.prix.an)} par mois`}
@@ -121,7 +122,10 @@ export function TarifOffres({
               </ul>
 
               {o.prix ? (
-                <Link href={compte?.href ?? "/signup"} className={cn("lp-btn mt-auto justify-center", t.bouton)}>
+                <Link
+                  href={compte?.href ?? (o.formule ? `/signup?offre=${lookupKey(o.formule, PERIODICITE_DE[periode])}` : "/signup")}
+                  className={cn("lp-btn mt-auto justify-center", t.bouton)}
+                >
                   {compte?.label ?? o.cta}
                 </Link>
               ) : (

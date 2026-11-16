@@ -3,8 +3,8 @@
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { ChampBoard } from "@/components/ui-kit/ChampBoard";
+import { ChampMotDePasse } from "@/components/ui-kit/ChampMotDePasse";
 import { changerMotDePasseAction, type AuthActionState } from "@/lib/auth/actions";
-import { AIDE_MOT_DE_PASSE, LONGUEUR_MIN_MOT_DE_PASSE } from "@/lib/auth/mot-de-passe";
 import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
 
 const etatInitial: AuthActionState = {};
@@ -21,25 +21,8 @@ export function ChangerMotDePasseForm() {
         autoComplete="current-password"
         required
       />
-      <ChampBoard
-        id="password"
-        name="password"
-        type="password"
-        label="Nouveau mot de passe"
-        autoComplete="new-password"
-        required
-        minLength={LONGUEUR_MIN_MOT_DE_PASSE}
-        aide={AIDE_MOT_DE_PASSE}
-      />
-      <ChampBoard
-        id="confirm"
-        name="confirm"
-        type="password"
-        label="Confirmer le nouveau mot de passe"
-        autoComplete="new-password"
-        required
-        minLength={LONGUEUR_MIN_MOT_DE_PASSE}
-      />
+      {/* Un seul champ, avec un œil, comme à l'activation (2026-11-16). */}
+      <ChampMotDePasse label="Nouveau mot de passe" />
       <MessageFormulaire ton="alerte">{state.error}</MessageFormulaire>
       <MessageFormulaire ton="info">{state.message}</MessageFormulaire>
       <Button type="submit" variant="board" size="board" disabled={pending} className="w-full">

@@ -29,6 +29,7 @@ vi.mock("@/lib/abonnements/suppression", () => ({
   purgerTracesEchues: m.traces,
 }));
 vi.mock("@/lib/stripe/config", () => ({ configurationStripe: () => ({ active: false }) }));
+vi.mock("@/lib/auth/comptes-non-actives", () => ({ purgerComptesNonActives: vi.fn().mockResolvedValue({ supprimes: 0 }) }));
 vi.mock("@/lib/stripe/client", () => ({ clientStripe: vi.fn(), clientStripeWebhook: vi.fn() }));
 
 import { appelAutorise, lancerTachesDuJour, lancerTachesQuotidiennes, secretDesTaches } from "./quotidiennes";
@@ -95,6 +96,7 @@ describe("tâches quotidiennes", () => {
       suppressions: { supprimes: 0, reportes: 0 },
       fichiersALiberer: { liberes: 3, echecs: 0, restants: 0 },
       tracesPurgees: { effacees: 1 },
+      comptesNonActives: { supprimes: 0 },
       evenementsOublies: undefined,
     });
     // Sans Stripe actif, la suppression reçoit `null` (elle ne supprime rien).
@@ -125,6 +127,7 @@ describe("tâches quotidiennes", () => {
       offreLancee: false,
       fichiersALiberer: { liberes: 3, echecs: 0, restants: 0 },
       tracesPurgees: { effacees: 1 },
+      comptesNonActives: { supprimes: 0 },
       evenementsOublies: undefined,
     });
     expect(m.rappels).not.toHaveBeenCalled();

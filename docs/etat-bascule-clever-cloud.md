@@ -266,10 +266,13 @@ sont pas ouverts) — **la liste de lancement, dans l'ordre :
   admise, et seulement si `APP_ENV=production` est posée : sans `APP_ENV`,
   aucune clé Stripe n'est acceptée. Une clé refusée ferme les abonnements,
   pas le serveur, et le démarrage le signale.
-- Le contenu et les prix des formules ne sont pas arrêtés (brouillon de la
+- ~~Le contenu et les prix des formules ne sont pas arrêtés~~ [2026-11-16 :
+  arrêtés par la grille du 2026-11-05, prix TTC depuis le 2026-11-14] (brouillon de la
   session « pricing » : branche `docs/offres-abonnement`).
 - **TVA** (2026-11-09) : créer dans le tableau de bord de production un taux
-  de TVA de 20 %, pays France, type TVA, « en sus du prix » (exclusif). Sans
+  de TVA de 20 %, pays France, type TVA, ~~« en sus du prix » (exclusif)~~
+  [2026-11-14 : « compris dans le prix » (inclusif) — prix TTC], et les
+  prix « taxe incluse » (`tax_behavior: inclusive`). Sans
   lui, aucun essai ni abonnement ne se crée (notes du chantier, § 12).
 - **Tâche quotidienne** (2026-11-09) : poser `TACHES_SECRET`
   (`openssl rand -base64 32`) sur l'application. La crontab

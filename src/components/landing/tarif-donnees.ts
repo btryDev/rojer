@@ -1,6 +1,6 @@
 // Les cartes d'offres de la page publique : grille tarifaire du 2026-11-05
 // (PDF `docs/marketing/rojer-offres-abonnement-2026-11.pdf`, branche
-// `docs/offres-abonnement`, ab9caea3), prix HT.
+// `docs/offres-abonnement`, ab9caea3), prix ~~HT~~ TTC (2026-11-14).
 //
 // ⚠︎ Les quotas de la grille vivent aussi dans `src/lib/abonnements/
 // formules.ts` (branche `cc`, ADR-053), qui les applique ; les prix, eux,
@@ -9,12 +9,18 @@
 // les y comparera.
 //
 // « Choisir Pro » mène, comme « Essayer 30 jours », à la création de compte
-// (l'essai se fait sur Essentiel) : quand l'abonnement en libre-service
-// existera (`cc`), le lien devra porter l'offre choisie.
+// (l'essai se fait sur Essentiel) ; ~~quand l'abonnement en libre-service
+// existera (`cc`), le lien devra porter l'offre choisie~~ [2026-11-16 : le
+// lien porte l'offre et la période (`/signup?offre=rojer_pro_annuel`),
+// gardées pour l'écran d'essai et la page Abonnement — `offre-choisie.ts`].
 
 import { ESPACE_UNITE, formaterNombreFr } from "@/lib/rendu/mesures";
+import type { CleFormule, Periodicite } from "@/lib/abonnements/formules";
 
 export type Periode = "mois" | "an";
+
+/** La période de la page tarifs, dans le vocabulaire des abonnements (`formules.ts`). */
+export const PERIODICITE_DE: Record<Periode, Periodicite> = { mois: "mensuel", an: "annuel" };
 
 export type Offre = {
   nom: string;
@@ -27,6 +33,8 @@ export type Offre = {
   prix: { mois: number; an: number } | null;
   points: string[];
   cta: string;
+  /** La formule que la carte vend en libre-service ; absente : sur devis. */
+  formule?: CleFormule;
 };
 
 export const OFFRES: Offre[] = [
@@ -42,6 +50,7 @@ export const OFFRES: Offre[] = [
       "20 signatures par an, 2 Go de documents",
     ],
     cta: "Essayer 30 jours",
+    formule: "essentiel",
   },
   {
     nom: "Pro",
@@ -57,6 +66,7 @@ export const OFFRES: Offre[] = [
       "Connecter un assistant IA",
     ],
     cta: "Choisir Pro",
+    formule: "pro",
   },
   {
     nom: "Sur mesure",

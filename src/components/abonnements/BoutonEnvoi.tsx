@@ -10,15 +10,28 @@ export function BoutonEnvoi({
   variant,
   disabled,
   describedBy,
+  name,
+  value,
 }: {
   children: React.ReactNode;
   variant: "board" | "boardClair";
   disabled?: boolean;
   describedBy?: string;
+  /** Un bouton qui porte une valeur au formulaire (deux gestes, un formulaire). */
+  name?: string;
+  value?: string;
 }) {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" variant={variant} size="board" disabled={disabled || pending} aria-describedby={describedBy}>
+    <Button
+      type="submit"
+      variant={variant}
+      size="board"
+      name={name}
+      value={value}
+      disabled={disabled || pending}
+      aria-describedby={describedBy}
+    >
       {pending ? "Un instant…" : children}
     </Button>
   );

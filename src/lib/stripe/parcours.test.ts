@@ -22,8 +22,8 @@ import {
 
 const api = {
   customers: { create: vi.fn() },
-  subscriptions: { create: vi.fn(), update: vi.fn(), resume: vi.fn() },
-  invoices: { retrieve: vi.fn() },
+  subscriptions: { create: vi.fn(), update: vi.fn(), resume: vi.fn(), retrieve: vi.fn() },
+  invoices: { retrieve: vi.fn(), voidInvoice: vi.fn() },
   subscriptionSchedules: { create: vi.fn(), retrieve: vi.fn(), update: vi.fn(), release: vi.fn() },
   checkout: { sessions: { create: vi.fn(), list: vi.fn(), expire: vi.fn() } },
   prices: { list: vi.fn() },
@@ -32,6 +32,8 @@ const api = {
 const stripe = api as unknown as Stripe;
 
 beforeEach(() => {
+  // Sans taux de TVA lisible : chaque fonction garde celui de l'abonnement (un test en pose un).
+  api.taxRates.list.mockReset();
   vi.clearAllMocks();
   oublierLesPrix();
 });
@@ -95,6 +97,7 @@ describe("parcours Stripe", () => {
     const choix = { priceId: "price_pa", paymentMethodId: "pm_1", immediat: false, choisiLe: 100, idempotence: "carte-cs_1" };
     api.subscriptions.update.mockResolvedValue({ latest_invoice: null });
     api.subscriptions.resume.mockResolvedValue({ latest_invoice: null });
+    api.subscriptions.retrieve.mockResolvedValue({ status: "trialing" });
 
     expect(await appliquerFormule(stripe, sub("trialing"), choix)).toBeNull();
     expect(api.subscriptions.update).toHaveBeenLastCalledWith(
@@ -128,13 +131,76 @@ describe("parcours Stripe", () => {
     expect(await appliquerFormule(stripe, sub("trialing", { metadata: { rojerChoixLe: "200" } }), choix)).toBeNull();
     expect(api.subscriptions.update).not.toHaveBeenCalled();
 
-    const enAttente = { status: "open", hosted_invoice_url: "https://invoice.stripe.com/i/1" };
+    const ligneDe = (price: string) => ({ pricing: { price_details: { price } } });
+    const enAttente = { id: "in_1", status: "open", subtotal: 8_900, total: 8_900, hosted_invoice_url: "https://invoice.stripe.com/i/1", lines: { data: [ligneDe("price_pa")] } };
     expect(await appliquerFormule(stripe, sub("paused", { latest_invoice: enAttente }), choix)).toBe("https://invoice.stripe.com/i/1");
     expect(api.subscriptions.update).not.toHaveBeenCalled();
     expect(api.subscriptions.resume).not.toHaveBeenCalledWith("sub_1", expect.anything(), expect.anything());
 
+    api.subscriptions.retrieve.mockResolvedValue({ status: "trialing" });
     api.subscriptions.update.mockResolvedValue({ latest_invoice: enAttente });
     expect(await appliquerFormule(stripe, sub("trialing"), { ...choix, immediat: true })).toBe("https://invoice.stripe.com/i/1");
+  });
+
+  it("baisse planifiée : les phases portent le taux en vigueur, sinon celui de l'abonnement", async () => {
+    api.taxRates.list.mockResolvedValue({
+      data: [{ id: "txr_ttc", active: true, inclusive: true, percentage: 20, country: "FR", tax_type: "vat", created: 1 }],
+    });
+    api.subscriptions.update.mockResolvedValue({});
+    api.subscriptionSchedules.create.mockResolvedValue({ id: "sub_sched_3", current_phase: { start_date: 100, end_date: 200 }, phases: [] });
+    api.subscriptionSchedules.update.mockResolvedValue({});
+    const sub = {
+      id: "sub_1",
+      status: "active",
+      schedule: null,
+      default_tax_rates: [{ id: "txr_ancien" }],
+      items: { data: [{ id: "si_1", price: { id: "price_pm" }, quantity: 1 }] },
+    } as unknown as Stripe.Subscription;
+    await planifierBaisse(stripe, sub, { priceId: "price_em", intervalle: "month" });
+    const phases = api.subscriptionSchedules.update.mock.lastCall?.[1].phases;
+    expect(phases.map((p: { default_tax_rates: string[] }) => p.default_tax_rates)).toEqual([["txr_ttc"], ["txr_ttc"]]);
+  });
+
+  it("une facture d'avant les prix TTC (TVA en sus) n'est jamais reprise telle quelle", async () => {
+    const sub = (o: Record<string, unknown> = {}) =>
+      ({ id: "sub_1", status: "paused", default_payment_method: "pm_1", metadata: {}, latest_invoice: null, items: { data: [{ id: "si_1", price: { id: "price_pa" } }] }, ...o }) as unknown as Stripe.Subscription;
+    api.subscriptions.update.mockResolvedValue({ latest_invoice: null });
+    api.subscriptions.resume.mockResolvedValue({ latest_invoice: null });
+    api.invoices.voidInvoice.mockClear();
+    const enSus = { id: "in_ht", status: "open", subtotal: 8_900, total: 10_680, hosted_invoice_url: "https://invoice.stripe.com/i/ht", lines: { data: [{ pricing: { price_details: { price: "price_pa" } } }] } };
+    expect(await appliquerFormule(stripe, sub({ latest_invoice: enSus }), { priceId: "price_pa", paymentMethodId: "pm_1", immediat: true, choisiLe: 100 })).toBeNull();
+    expect(api.invoices.voidInvoice).toHaveBeenCalledWith("in_ht");
+  });
+
+  it("pause dont la facture en attente est d'une autre formule : annulée, la reprise se fait au prix choisi (audit du 2026-11-16)", async () => {
+    const sub = (o: Record<string, unknown> = {}) =>
+      ({ id: "sub_1", status: "paused", default_payment_method: "pm_1", metadata: {}, latest_invoice: null, items: { data: [{ id: "si_1", price: { id: "price_pa" } }] }, ...o }) as unknown as Stripe.Subscription;
+    const choix = { priceId: "price_em", paymentMethodId: "pm_1", immediat: true, choisiLe: 100 };
+    api.subscriptions.update.mockResolvedValue({ latest_invoice: null });
+    api.subscriptions.resume.mockResolvedValue({ latest_invoice: null });
+    api.invoices.voidInvoice.mockClear();
+    for (const status of ["open", "uncollectible"]) {
+      const autre = { id: `in_${status}`, status, hosted_invoice_url: "https://invoice.stripe.com/i/autre", lines: { data: [{ pricing: { price_details: { price: "price_pa" } } }] } };
+      expect(await appliquerFormule(stripe, sub({ latest_invoice: autre }), choix)).toBeNull();
+      expect(api.invoices.voidInvoice).toHaveBeenLastCalledWith(`in_${status}`);
+    }
+    expect(api.subscriptions.resume).toHaveBeenCalled();
+  });
+
+  it("payer maintenant : l'essai relu juste avant ; déjà fini par un autre onglet, rien n'est refait ; le taux en vigueur est reposé", async () => {
+    const sub = { id: "sub_1", status: "trialing", default_payment_method: "pm_1", metadata: {}, latest_invoice: null, items: { data: [{ id: "si_1", price: { id: "price_em" } }] } } as unknown as Stripe.Subscription;
+    const choix = { priceId: "price_pa", paymentMethodId: "pm_1", immediat: true, choisiLe: 100 };
+    api.taxRates.list.mockResolvedValue({
+      data: [{ id: "txr_ttc", active: true, inclusive: true, percentage: 20, country: "FR", tax_type: "vat", created: 1 }],
+    });
+    api.subscriptions.update.mockClear();
+    api.subscriptions.retrieve.mockResolvedValue({ status: "active" });
+    expect(await appliquerFormule(stripe, sub, choix)).toBeNull();
+    expect(api.subscriptions.update).not.toHaveBeenCalled();
+    api.subscriptions.retrieve.mockResolvedValue({ status: "trialing" });
+    api.subscriptions.update.mockResolvedValue({ latest_invoice: null });
+    await appliquerFormule(stripe, sub, choix);
+    expect(api.subscriptions.update.mock.lastCall?.[1]).toMatchObject({ trial_end: "now", default_tax_rates: ["txr_ttc"] });
   });
 
   it("monter : tout de suite, prorata facturé, appliquée seulement si payée ; une baisse planifiée est abandonnée d'abord", async () => {
@@ -263,12 +329,12 @@ describe("parcours Stripe", () => {
     expect(api.prices.list).toHaveBeenCalledTimes(2);
   });
 
-  it("la TVA : le taux actif, 20 %, France, type TVA, en sus du prix — le plus ancien ; aucun = null ; gardé dix minutes", async () => {
+  it("la TVA : le taux actif, 20 %, France, type TVA, incluse dans le prix (prix TTC, 2026-11-14) — le plus ancien ; aucun = null ; gardé dix minutes", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     const taux = (id: string, autres: object = {}) => ({
       id,
       active: true,
-      inclusive: false,
+      inclusive: true,
       percentage: 20,
       country: "FR",
       tax_type: "vat",
@@ -277,7 +343,7 @@ describe("parcours Stripe", () => {
     });
     api.taxRates.list.mockResolvedValue({
       data: [
-        taux("txr_ttc", { inclusive: true }),
+        taux("txr_ht", { inclusive: false }),
         taux("txr_10", { percentage: 10 }),
         taux("txr_be", { country: "BE" }),
         taux("txr_sales", { tax_type: "sales_tax" }),
@@ -287,12 +353,12 @@ describe("parcours Stripe", () => {
       ],
     });
     expect(await tauxDeTva(stripe, 0)).toBe("txr_ancien");
-    expect(api.taxRates.list).toHaveBeenCalledWith({ active: true, inclusive: false, limit: 100 });
+    expect(api.taxRates.list).toHaveBeenCalledWith({ active: true, inclusive: true, limit: 100 });
     await tauxDeTva(stripe, 5 * 60_000);
     expect(api.taxRates.list).toHaveBeenCalledTimes(1);
 
     oublierLesPrix();
-    api.taxRates.list.mockResolvedValue({ data: [taux("txr_ttc", { inclusive: true })] });
+    api.taxRates.list.mockResolvedValue({ data: [taux("txr_ht", { inclusive: false })] });
     expect(await tauxDeTva(stripe, 0)).toBeNull();
     // Absent : relu à chaque appel, pour que le taux créé entre-temps serve aussitôt.
     await tauxDeTva(stripe, 1000);

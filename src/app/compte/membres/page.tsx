@@ -47,7 +47,7 @@ export default async function MembresPage({
       <div className="mx-auto w-full max-w-[640px]">
         <FilRetour provenance={null} canonique={{ href: "/entreprises", label: "Mon dossier" }} />
         <h1 className="board-titre m-0 mt-6 text-[clamp(29px,3vw,39px)]">Membres du compte</h1>
-        <NomDuCompte nom={nomCompte} />
+        <NomDuCompte nom={nomCompte} email={user.email} />
         <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           Les personnes qui travaillent sur vos dossiers. Chacune voit tous les établissements du compte, selon son
           rôle. Les prestataires n&apos;en font pas partie : ils accèdent par un lien.

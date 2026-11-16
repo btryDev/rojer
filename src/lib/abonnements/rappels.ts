@@ -23,6 +23,7 @@ import { FORMULES, formuleDeLookupKey } from "./formules";
 import type Stripe from "stripe";
 import { OPTIONS_WEBHOOK } from "@/lib/stripe/client";
 import { baissePrevue } from "@/lib/stripe/parcours";
+import { resiliationDemandee } from "./droits";
 
 /**
  * L'essai finit dans les 36 heures : la tâche passe une fois par jour, et la
@@ -163,7 +164,7 @@ export function messageRenouvellementAnnuel(
 async function formuleAuRenouvellement(stripe: Stripe, abonnementId: string, formule: string | null, echeance: Date) {
   const abonnement = await stripe.subscriptions.retrieve(abonnementId, {}, OPTIONS_WEBHOOK);
   // Une résiliation que la copie n'a pas encore reçue : rien ne se renouvelle.
-  if (abonnement.cancel_at_period_end || abonnement.cancel_at) return null;
+  if (resiliationDemandee(abonnement)) return null;
   const baisse = await baissePrevue(stripe, abonnement);
   // La baisse prend effet à l'échéance (une heure de marge : la copie et le
   // planning ne datent pas toujours à la seconde près).

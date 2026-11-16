@@ -15,6 +15,15 @@ export function lienReinitialisation(token: string): string {
   return `${publicAppUrl()}/auth/reinitialisation?token=${encodeURIComponent(token)}`;
 }
 
+/** La connexion, et le mot de passe oublié : pour qui se réinscrit avec un compte déjà actif. */
+export function lienConnexion(): string {
+  return `${publicAppUrl()}/login`;
+}
+
+export function lienMotDePasseOublie(): string {
+  return `${publicAppUrl()}/login/mot-de-passe-oublie`;
+}
+
 /** L'invitation à rejoindre un compte (ADR-054 § 5). */
 export function lienInvitation(invitationId: string): string {
   return `${publicAppUrl()}/invitation/${encodeURIComponent(invitationId)}`;

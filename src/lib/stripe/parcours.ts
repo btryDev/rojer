@@ -159,12 +159,39 @@ export async function ouvrirCheckoutCarte(
   return session.url;
 }
 
-/** L'adresse de la facture à régler d'un abonnement, si sa dernière facture attend un paiement (refus, 3DS). */
-async function factureARegler(stripe: Stripe, derniere: Stripe.Subscription["latest_invoice"]): Promise<string | null> {
+/**
+ * L'adresse de la dernière facture d'un abonnement si elle attend un
+ * paiement (`open`) : carte refusée, authentification demandée, impayé.
+ * La page hébergée de la facture se règle avec une autre carte, 3-D Secure
+ * compris. `null` sinon.
+ */
+export async function factureARegler(stripe: Stripe, derniere: Stripe.Subscription["latest_invoice"]): Promise<string | null> {
+  return (await factureOuverte(stripe, derniere))?.hosted_invoice_url ?? null;
+}
+
+/**
+ * La dernière facture si elle attend encore un paiement : `open`, ou
+ * `uncollectible` (marquée irrécouvrable à la fin des relances, toujours
+ * payable sur sa page hébergée — audit du 2026-11-16).
+ */
+async function factureOuverte(stripe: Stripe, derniere: Stripe.Subscription["latest_invoice"]): Promise<Stripe.Invoice | null> {
   if (!derniere) return null;
   const facture = typeof derniere === "string" ? await stripe.invoices.retrieve(derniere) : derniere;
-  return facture.status === "open" ? (facture.hosted_invoice_url ?? null) : null;
+  return facture.status === "open" || facture.status === "uncollectible" ? facture : null;
 }
+
+/**
+ * La facture est-elle celle du prix choisi, TVA comprise ? Ce prix seul sur
+ * ses lignes, et un total égal au sous-total : une facture d'avant les prix
+ * TTC (TVA en sus) ne se reprend pas telle quelle.
+ */
+const factureAuPrixAffiche = (f: Stripe.Invoice, priceId: string) =>
+  f.lines.data.length > 0 &&
+  f.lines.data.every((l) => l.pricing?.price_details?.price === priceId) &&
+  f.total === f.subtotal;
+
+/** Le taux de TVA en vigueur, sans échouer : sans réponse, l'abonnement garde le sien. */
+const tauxEnVigueur = (stripe: Stripe) => tauxDeTva(stripe).catch(() => null);
 
 /**
  * Appliquer la formule choisie et la carte enregistrée à l'abonnement qui
@@ -186,13 +213,29 @@ async function factureARegler(stripe: Stripe, derniere: Stripe.Subscription["lat
 export async function appliquerFormule(
   stripe: Stripe,
   abonnement: Stripe.Subscription,
-  choix: { priceId: string; paymentMethodId: string; immediat: boolean; choisiLe: number; idempotence?: string },
+  choix: {
+    priceId: string;
+    paymentMethodId: string;
+    immediat: boolean;
+    choisiLe: number;
+    idempotence?: string;
+  },
 ): Promise<string | null> {
   if (choix.choisiLe < Number(abonnement.metadata?.rojerChoixLe ?? 0)) return null;
   const enPause = abonnement.status === "paused";
   if (enPause) {
-    const enAttente = await factureARegler(stripe, abonnement.latest_invoice);
-    if (enAttente) return enAttente;
+    // Une reprise précédente attend son paiement : on la renvoie si elle est
+    // de la formule choisie ; sinon elle est annulée, et la reprise se fait
+    // au prix affiché (audit du 2026-11-16).
+    const enAttente = await factureOuverte(stripe, abonnement.latest_invoice);
+    if (enAttente && factureAuPrixAffiche(enAttente, choix.priceId)) return enAttente.hosted_invoice_url ?? null;
+    if (enAttente) await stripe.invoices.voidInvoice(enAttente.id!);
+  }
+  // Payer maintenant : l'essai est relu juste avant. Un autre onglet a pu le
+  // finir et payer entre-temps ; on ne finit pas deux fois un essai.
+  if (choix.immediat && abonnement.status === "trialing") {
+    const frais = await stripe.subscriptions.retrieve(abonnement.id);
+    if (frais.status !== "trialing") return null;
   }
   const item = abonnement.items.data[0];
   const pmActuel = idStripe(abonnement.default_payment_method);
@@ -200,6 +243,9 @@ export async function appliquerFormule(
   if (item?.price.id === choix.priceId && pmActuel === choix.paymentMethodId && !finEssai && !enPause) return null;
 
   const cle = (etape: string) => (choix.idempotence ? { idempotencyKey: `${choix.idempotence}-${etape}` } : {});
+  // Le taux en vigueur est reposé : un abonnement né sous un ancien taux
+  // paie le prix affiché.
+  const taux = await tauxEnVigueur(stripe);
   const misAJour = await stripe.subscriptions.update(
     abonnement.id,
     {
@@ -209,6 +255,7 @@ export async function appliquerFormule(
       metadata: { rojerChoixLe: String(choix.choisiLe) },
       expand: ["latest_invoice"],
       ...(finEssai ? { trial_end: "now" as const } : {}),
+      ...(taux ? { default_tax_rates: [taux] } : {}),
     },
     cle("maj"),
   );
@@ -234,6 +281,9 @@ export async function monterDeFormule(stripe: Stripe, abonnement: Stripe.Subscri
   const item = abonnement.items.data[0];
   if (!item || item.price.id === priceId) return null;
   // La mise à jour d'abord : si elle échoue, la baisse prévue reste intacte.
+  // Le taux de TVA n'y est pas reposé : une mise à jour en attente de
+  // paiement (`pending_if_incomplete`) n'accepte que les articles et le
+  // prorata. Seuls des abonnements de test sont nés sous l'ancien taux.
   const misAJour = await stripe.subscriptions.update(
     abonnement.id,
     {
@@ -286,7 +336,9 @@ export async function planifierBaisse(
   const enCours = planning.current_phase ?? planning.phases[0];
   // La TVA de l'abonnement, reposée sur chaque phase : la documentation de
   // Stripe ne dit pas qu'une phase qui l'omet la garde.
-  const tva = (abonnement.default_tax_rates ?? []).map((t) => t.id);
+  // Le taux en vigueur, sinon celui de l'abonnement.
+  const enVigueur = await tauxEnVigueur(stripe);
+  const tva = enVigueur ? [enVigueur] : (abonnement.default_tax_rates ?? []).map((t) => t.id);
   const taxes = tva.length > 0 ? { default_tax_rates: tva } : {};
   try {
     await stripe.subscriptionSchedules.update(planning.id, {
@@ -401,10 +453,10 @@ let cacheTva: { lu: number; id: string } | undefined;
  */
 export async function tauxDeTva(stripe: Stripe, maintenant = Date.now()): Promise<string | null> {
   if (cacheTva && maintenant - cacheTva.lu < DUREE_CACHE_PRIX_MS) return cacheTva.id;
-  const { data } = await stripe.taxRates.list({ active: true, inclusive: false, limit: 100 });
+  const { data } = await stripe.taxRates.list({ active: true, inclusive: true, limit: 100 });
   const conformes = tauxConformes(data);
   if (conformes.length === 0) {
-    console.error("stripe : aucun taux de TVA actif (20 %, France, type TVA, en sus du prix) — abonnements refusés");
+    console.error("stripe : aucun taux de TVA actif (20 %, France, type TVA, incluse dans le prix) — abonnements refusés");
     return null;
   }
   if (conformes.length > 1) console.error(`stripe : ${conformes.length} taux de TVA conformes, le plus ancien est retenu`);

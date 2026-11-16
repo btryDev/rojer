@@ -56,15 +56,19 @@ leur clé et écarte un prix dont l'intervalle contredit la clé.
 | Pro | `rojer_pro_mensuel` | 89,00 € | tous les mois |
 | Pro | `rojer_pro_annuel` | 899,00 € | tous les ans |
 
-- Prix récurrents, en EUR, **hors taxe** (« Inclure la taxe dans le prix » :
-  non — `tax_behavior: exclusive`).
+- Prix récurrents, en EUR, ~~**hors taxe** (« Inclure la taxe dans le prix » :
+  non — `tax_behavior: exclusive`)~~ [2026-11-14, décision de la
+  propriétaire : **TTC**, TVA de 20 % comprise — « Inclure la taxe dans le
+  prix » : oui, `tax_behavior: inclusive`. Pro mensuel = 74,17 € HT +
+  14,83 € de TVA = 89 €.].
 - La clé se saisit dans les options avancées du prix. Y ajouter les
   métadonnées `formule` (`essentiel` ou `pro`) et `periodicite` (`mensuel`
   ou `annuel`) : si un prix est remplacé un jour, l'ancien perd sa clé, et
   ce sont elles qui gardent leur formule à ses abonnés (`formuleDuPrix`).
 - **Taux de TVA** (`dashboard.stripe.com/tax-rates`) : 20 %, type TVA, **pays
-  France** (le champ Pays, pas seulement la Région), « exclusif » (en sus du
-  prix). Sans lui, aucun essai ni abonnement ne démarre (journal : « aucun
+  France** (le champ Pays, pas seulement la Région), ~~« exclusif » (en sus du
+  prix)~~ [2026-11-14 : « inclusif » (compris dans le prix) ; Rojer ne
+  retient qu'un taux inclusif, `estTauxDeTva`]. Sans lui, aucun essai ni abonnement ne démarre (journal : « aucun
   taux de TVA actif »).
 - « Sur mesure » : sur devis, sans prix dans Stripe — un client sur mesure se
   traite à la main le jour où il arrive (décision à prendre ce jour-là).
@@ -188,7 +192,8 @@ NODE_ENV=production sh scripts/demarrer-cc.sh lancer pnpm tsx --import ./scripts
 1. Poser `ABONNEMENT_EXIGE=oui`, redémarrer. Dès lors, un compte sans essai
    ni abonnement ne saisit plus (lecture seule ; l'export aussi pour un compte
    qui a déjà payé, ADR-053 § 15) : les comptes
-   existants voient « Choisissez une formule ».
+   existants voient ~~« Choisissez une formule »~~ [2026-11-16 : « Démarrez
+   votre essai gratuit pour saisir dans Rojer »].
 2. Relancer `reprendre-tailles-fichiers.ts --appliquer` (un dépôt fait
    entre-temps sans session lisible n'a pas laissé sa taille).
 3. Vérifier en réel, tout de suite : un compte de test démarre l'essai ;

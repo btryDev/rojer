@@ -15,7 +15,7 @@ const api = {
 const creerClient = vi.fn(() => api as unknown as Stripe);
 const ENV = { STRIPE_SECRET_KEY: "sk_test_abc", PUBLIC_APP_URL: "https://rojer.example" };
 
-const TAUX_TVA = { id: "txr_tva", active: true, inclusive: false, percentage: 20, country: "FR", tax_type: "vat", created: 1 };
+const TAUX_TVA = { id: "txr_tva", active: true, inclusive: true, percentage: 20, country: "FR", tax_type: "vat", created: 1 };
 
 const produit = (formule: string, libelle: string) => ({ id: `prod_${formule}`, name: libelle, metadata: { formule } });
 const PRODUITS = [produit("essentiel", "Essentiel"), produit("pro", "Pro")];
@@ -31,7 +31,7 @@ function prixConformeA(cle: string, montant?: number) {
     unit_amount: montant ?? MONTANTS_CENTIMES[formule][periodicite],
     currency: "eur",
     recurring: { interval: periodicite === "mensuel" ? "month" : "year", interval_count: 1 },
-    tax_behavior: "exclusive",
+    tax_behavior: "inclusive",
   };
 }
 
@@ -63,12 +63,12 @@ describe("installation d'un compte Stripe de test", () => {
     expect(api.billingPortal.configurations.create).not.toHaveBeenCalled();
   });
 
-  it("TVA : sans taux conforme (ici un taux TTC), un taux 20 % France de type TVA, en sus du prix, est créé", async () => {
-    api.taxRates.list.mockResolvedValue({ data: [{ ...TAUX_TVA, id: "txr_ttc", inclusive: true }] });
+  it("TVA : sans taux conforme (ici un taux en sus du prix), un taux 20 % France de type TVA, inclus dans le prix, est créé", async () => {
+    api.taxRates.list.mockResolvedValue({ data: [{ ...TAUX_TVA, id: "txr_ht", inclusive: false }] });
     const r = await installer(ENV, creerClient);
     expect(r.ok && r.tva).toEqual({ taux: expect.objectContaining({ id: "txr_neuf" }), cree: true });
     expect(api.taxRates.create).toHaveBeenCalledWith(
-      expect.objectContaining({ percentage: 20, country: "FR", tax_type: "vat", inclusive: false }),
+      expect.objectContaining({ percentage: 20, country: "FR", tax_type: "vat", inclusive: true }),
     );
   });
 
@@ -90,10 +90,21 @@ describe("installation d'un compte Stripe de test", () => {
         currency: "eur",
         unit_amount: 89_900,
         recurring: { interval: "year" },
-        tax_behavior: "exclusive",
+        tax_behavior: "inclusive",
         lookup_key: "rojer_pro_annuel",
         transfer_lookup_key: true,
       }),
+    );
+  });
+
+  it("un prix hors taxes (d'avant les prix TTC, 2026-11-14) est remplacé par un prix TTC qui reprend sa clé", async () => {
+    api.prices.list.mockResolvedValue({
+      data: LOOKUP_KEYS.map((k) => (k === "rojer_pro_mensuel" ? { ...prixConformeA(k), tax_behavior: "exclusive" } : prixConformeA(k))),
+    });
+    await installer(ENV, creerClient);
+    expect(api.prices.create).toHaveBeenCalledTimes(1);
+    expect(api.prices.create).toHaveBeenCalledWith(
+      expect.objectContaining({ lookup_key: "rojer_pro_mensuel", tax_behavior: "inclusive", transfer_lookup_key: true }),
     );
   });
 

@@ -14,6 +14,7 @@ import {
   abonnementsDuClient,
   annulerBaisse,
   appliquerFormule,
+  factureARegler,
   monterDeFormule,
   ouvrirCheckout,
   ouvrirCheckoutCarte,
@@ -24,7 +25,7 @@ import {
 } from "@/lib/stripe/parcours";
 import { carteParDefaut, finaliserCarte, type IssueCarte } from "./souscription";
 import { demarrerEssaiDuCompte, PAGE_ESSAI, type EtatEssai } from "./essai";
-import { aNomProvisoire, abonnementEnCours, SANS_PAIEMENT_ENCORE } from "./droits";
+import { A_REGLER, aNomProvisoire, abonnementEnCours, resiliationDemandee, SANS_PAIEMENT_ENCORE } from "./droits";
 import { INTERVALLE_STRIPE, estLookupKey, formuleDeLookupKey, formuleDuPrix } from "./formules";
 import { sensDuChangement } from "./changement";
 import { depassements } from "./quotas";
@@ -63,8 +64,9 @@ async function clientDuCompte({ compte, db }: Proprietaire, formData: FormData |
 }
 
 /**
- * Le portail Stripe : ajouter une carte, changer de formule (l'essai continue),
- * reprendre, résilier, télécharger les factures. Le nom de l'entreprise passe
+ * Le portail Stripe : la carte, les factures, reprendre, résilier (le
+ * changement de formule se fait dans Rojer, `sAbonnerAction` et
+ * `changerFormuleAction`). Le nom de l'entreprise passe
  * sur le client Stripe juste avant : la facture le porte.
  */
 export async function ouvrirPortailAction(formData: FormData): Promise<void> {
@@ -109,9 +111,14 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
     if (courant && SANS_PAIEMENT_ENCORE.has(courant.status)) {
       // Une carte est déjà enregistrée : la formule s'applique sans repasser
       // par Stripe (changer de formule pendant l'essai, reprendre une pause).
-      const carte = await carteParDefaut(stripe, ligne.stripeCustomerId);
-      if (carte) {
-        const prix = (await prixDesFormules(stripe)).get(formule);
+      const [carte, catalogue] = await Promise.all([carteParDefaut(stripe, ligne.stripeCustomerId), prixDesFormules(stripe)]);
+      if (resiliationDemandee(courant)) {
+        // Une résiliation est prévue (portail, pendant l'essai) : on ne
+        // change pas une formule qui s'arrête — même règle que
+        // `changerFormuleAction`.
+        url = `${base}?formule=resiliation-prevue`;
+      } else if (carte) {
+        const prix = catalogue.get(formule);
         if (!prix) throw new Error("prix introuvable");
         const paye = immediat || courant.status === "paused";
         const aRegler = await appliquerFormule(stripe, courant, {
@@ -119,6 +126,13 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
           paymentMethodId: carte,
           immediat: paye,
           choisiLe: Math.floor(Date.now() / 1000),
+          // Le même choix envoyé de deux onglets ne se joue qu'une fois : le
+          // second reçoit de Stripe un refus d'idempotence (paramètres
+          // différents d'une seconde) ou un 409, et la page relit l'état
+          // (`dejaEnCours` plus bas). Le dernier choix appliqué
+          // (`rojerChoixLe`) entre dans la clé, pour qu'un retour au même
+          // choix plus tard ne soit pas pris pour un rejeu.
+          idempotence: `formule-${courant.id}-${courant.metadata?.rojerChoixLe ?? "0"}-${prix.priceId}-${paye ? "maintenant" : "fin-essai"}`,
         });
         await synchroniserClientStripe(stripe, ligne.stripeCustomerId).catch(() => null);
         url = aRegler ?? `${base}${paye ? "?paiement=termine" : "?abonnement=formule-choisie"}`;
@@ -129,6 +143,11 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
         succes: `${base}?carte={CHECKOUT_SESSION_ID}`,
         annulation: base,
       });
+    } else if (courant?.status === "incomplete") {
+      // Un premier paiement resté en attente (Checkout abandonné à
+      // l'authentification) : on le termine, au lieu d'attendre que Stripe
+      // l'expire (environ 23 heures).
+      url = await versLaFactureEnAttente(stripe, courant);
     } else if (courant && abonnementEnCours(courant.status)) {
       await synchroniserClientStripe(stripe, ligne.stripeCustomerId).catch(() => null);
     } else {
@@ -144,10 +163,40 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
         annulation: base,
       });
     }
-  } catch {
+  } catch (e) {
+    // Le même geste parti d'un autre onglet est passé ou passe : rien n'a
+    // échoué, la page relit l'état (jamais « rien ne vous a été facturé »).
+    if (dejaEnCours(e)) redirect(PAGE_ABONNEMENT);
     redirect(`${PAGE_ABONNEMENT}?stripe=indisponible`);
   }
   redirect(url ?? `${PAGE_ABONNEMENT}?abonnement=en-cours`);
+}
+
+/**
+ * La page hébergée de la facture qui attend ; sans facture payable trouvée,
+ * la page de l'abonnement le dit (ce n'est jamais « à jour »).
+ */
+async function versLaFactureEnAttente(stripe: Stripe, courant: Stripe.Subscription): Promise<string> {
+  return (await factureARegler(stripe, courant.latest_invoice)) ?? `${PAGE_ABONNEMENT}?facture=introuvable`;
+}
+
+/**
+ * Régler la facture en attente (impayé, premier paiement à authentifier) :
+ * la page hébergée de la facture, où une autre carte peut servir. Changer
+ * de carte au portail ne relance pas une facture déjà marquée impayée
+ * (audit du 2026-11-16). Rien à régler : la page de l'abonnement.
+ */
+export async function reglerFactureAction(formData: FormData): Promise<void> {
+  const proprietaire = await verifierProprietaire();
+  const { stripe, ligne } = await clientDuCompte(proprietaire, formData);
+  let cible = `${PAGE_ABONNEMENT}?facture=aucune`;
+  try {
+    const { courant } = abonnementCourant(await abonnementsDuClient(stripe, ligne.stripeCustomerId));
+    if (courant && A_REGLER.has(courant.status)) cible = await versLaFactureEnAttente(stripe, courant);
+  } catch {
+    redirect(`${PAGE_ABONNEMENT}?stripe=indisponible`);
+  }
+  redirect(cible);
 }
 
 /**
@@ -205,7 +254,7 @@ export async function changerFormuleAction(formData: FormData): Promise<void> {
     const item = courant?.items.data[0];
     if (!courant || courant.status !== "active" || !item) {
       cible = `${PAGE_ABONNEMENT}?formule=impossible`;
-    } else if (courant.cancel_at_period_end || courant.cancel_at) {
+    } else if (resiliationDemandee(courant)) {
       // Une résiliation est prévue : on ne change pas une formule qui s'arrête.
       cible = `${PAGE_ABONNEMENT}?formule=resiliation-prevue`;
     } else {

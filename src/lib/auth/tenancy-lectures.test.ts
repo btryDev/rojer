@@ -118,7 +118,7 @@ const EXEMPTIONS = new Map<string, Exemption>([
   ],
   [
     "lib/auth/actions.ts:signOutAction",
-    { garde: "auth.api.signOut", raison: "Déconnexion : ne lit aucune donnée de dossier." },
+    { garde: "fermerLaSession", raison: "Déconnexion (`auth.api.signOut` dans `fermerLaSession`) : ne lit aucune donnée de dossier." },
   ],
   [
     "lib/auth/actions.ts:fermerSessionsAction",

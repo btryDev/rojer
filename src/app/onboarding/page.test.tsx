@@ -16,6 +16,7 @@ const h = vi.hoisted(() => ({
   compte: null as unknown,
   invitations: [] as { id: string }[],
   props: null as Record<string, unknown> | null,
+  plafond: null as string | null,
 }));
 
 vi.mock("next/navigation", () => ({ redirect: (u: string) => h.redirect(u) }));
@@ -31,6 +32,9 @@ vi.mock("@/lib/auth/compte", () => ({
 }));
 vi.mock("@/lib/entreprises/queries", () => ({
   listerEntreprisesConnues: () => h.connues(),
+}));
+vi.mock("@/components/quotas/PlafondDeCreation", () => ({
+  motifDuPlafond: async () => h.plafond,
 }));
 vi.mock("@/components/onboarding/WizardShell", () => ({
   WizardShell: (props: Record<string, unknown>) => {
@@ -51,6 +55,7 @@ beforeEach(() => {
   h.props = null;
   h.compte = { compte: { compteId: "c1", role: "owner" } };
   h.invitations = [];
+  h.plafond = null;
 });
 
 describe("/onboarding", () => {
@@ -86,5 +91,13 @@ describe("/onboarding", () => {
     h.connues.mockResolvedValue([]);
     await OnboardingPage();
     expect(h.redirect).not.toHaveBeenCalled();
+  });
+
+  it("le plafond atteint s'annonce dans l'assistant, pas au-dessus (2026-11-16)", async () => {
+    h.connues.mockResolvedValue([]);
+    h.plafond = "Votre essai compte un établissement au plus.";
+    const element = (await OnboardingPage()) as { props: Record<string, unknown> };
+    expect(element.props).toMatchObject({ motif: h.plafond, sansBandeau: true });
+    expect(assistant(element)).toMatchObject({ plafond: h.plafond });
   });
 });

@@ -11,9 +11,10 @@ import { oublierAppareilsDeConfiance } from "./appareils-de-confiance";
 import { poserMotDePasseAvantConfirmation } from "./activation";
 import { prisma } from "@/lib/prisma";
 import { motifErreur, publicAppUrl, refusUrlPublique, sendMail } from "@/lib/email";
+import { mailCompte, type MailCompte } from "@/lib/email/gabarit";
 import { ENTETE_IP_CLIENT } from "./entete-ip";
 import { cleLimite, consommer, LIMITES, type Limite } from "@/lib/securite/limite-debit";
-import { lienInvitation, lienReinitialisation, lienVerification } from "./liens-compte";
+import { lienConnexion, lienInvitation, lienMotDePasseOublie, lienReinitialisation, lienVerification } from "./liens-compte";
 import { LONGUEUR_MAX_MOT_DE_PASSE, LONGUEUR_MIN_MOT_DE_PASSE } from "./mot-de-passe";
 
 /**
@@ -86,7 +87,7 @@ function adresseApp(): string | undefined {
 async function envoyer(
   to: string,
   subject: string,
-  lignes: string[],
+  message: MailCompte,
   plafond?: { action: string; limite: Limite },
 ): Promise<void> {
   // Sans `after()` de Next : Better Auth l'appelle aussi hors requête (script
@@ -108,7 +109,8 @@ async function envoyer(
         return;
       }
     }
-    await sendMail({ to, subject, text: lignes.join("\n") });
+    // Mis en page depuis le 2026-11-16 (`email/gabarit.ts`), le texte brut à côté.
+    await sendMail({ to, subject, ...mailCompte(message) });
   })().catch((e: unknown) => {
     console.error(
       JSON.stringify({ type: "envoi_mail_compte_echoue", sujet: subject, motif: motifErreur(e) }),
@@ -141,22 +143,50 @@ export const auth = betterAuth({
     // Un mot de passe réinitialisé ferme toutes les sessions ouvertes.
     revokeSessionsOnPasswordReset: true,
     resetPasswordTokenExpiresIn: 60 * 60,
-    sendResetPassword: ({ user, token }) =>
-      envoyer(user.email, "Rojer — réinitialiser votre mot de passe", [
-        "Bonjour,",
-        "",
-        "Pour choisir un nouveau mot de passe, ouvrez ce lien (valable une heure) :",
-        lienReinitialisation(token),
-        "",
-        "Si vous n'êtes pas à l'origine de cette demande, ignorez ce message : votre mot de passe ne change pas.",
-      ]),
+    // Un compte pas encore activé reçoit le lien d'ACTIVATION à la place : il
+    // y choisit son mot de passe en une fois, au lieu de le choisir ici puis
+    // de nouveau à l'activation (revue du 2026-11-16). La réponse de la page
+    // ne change pas.
+    sendResetPassword: async ({ user, token }) => {
+      if (!user.emailVerified) {
+        await auth.api.sendVerificationEmail({ body: { email: user.email } });
+        return;
+      }
+      await envoyer(user.email, "Rojer — réinitialiser votre mot de passe", {
+        titre: "Choisir un nouveau mot de passe",
+        paragraphes: ["Vous avez demandé à changer le mot de passe de votre compte Rojer."],
+        bouton: { libelle: "Choisir mon mot de passe", url: lienReinitialisation(token) },
+        validite: "une heure",
+        apres: [
+          "Si vous n'êtes pas à l'origine de cette demande, ignorez ce message : votre mot de passe ne change pas.",
+        ],
+      });
+    },
     // Une adresse déjà inscrite reçoit la même réponse qu'une nouvelle (pas
     // d'énumération) ; si son compte n'est pas encore confirmé — lien de 24 h
-    // expiré —, elle reçoit un nouveau lien au lieu de n'avoir rien.
+    // expiré —, elle reçoit un nouveau lien au lieu de n'avoir rien. Déjà
+    // actif : un message qui le dit et mène à la connexion (retours de test
+    // du 2026-11-16 — la page annonçait un lien qui ne partait jamais). Envoi
+    // détaché et plafonné, comme le lien : la réponse ne change pas.
     onExistingUserSignUp: async ({ user }) => {
       if (!user.emailVerified) {
         await auth.api.sendVerificationEmail({ body: { email: user.email } });
+        return;
       }
+      await envoyer(
+        user.email,
+        "Rojer — vous avez déjà un compte",
+        {
+          titre: "Vous avez déjà un compte Rojer",
+          paragraphes: [
+            "Une inscription vient d'être demandée avec cette adresse, qui a déjà un compte actif. Connectez-vous avec votre mot de passe habituel.",
+            `Mot de passe oublié ? Choisissez-en un nouveau : ${lienMotDePasseOublie()}`,
+          ],
+          bouton: { libelle: "Me connecter", url: lienConnexion() },
+          apres: ["Si vous n'êtes pas à l'origine de cette demande, ignorez ce message : rien n'a changé sur votre compte."],
+        },
+        { action: "verification-envoi", limite: LIMITES.verificationEnvoiAdresse },
+      );
     },
   },
   emailVerification: {
@@ -175,14 +205,15 @@ export const auth = betterAuth({
       envoyer(
         user.email,
         "Rojer — confirmez votre adresse",
-        [
-          "Bonjour,",
-          "",
-          "Pour confirmer votre adresse et activer votre compte Rojer, ouvrez ce lien (valable 24 heures) ; vous y choisirez votre mot de passe :",
-          lienVerification(token),
-          "",
-          "Si vous n'avez pas créé de compte, ignorez ce message.",
-        ],
+        {
+          titre: "Activez votre compte Rojer",
+          paragraphes: [
+            "Confirmez votre adresse pour activer votre compte. Vous choisirez ensuite votre mot de passe.",
+          ],
+          bouton: { libelle: "Activer mon compte", url: lienVerification(token) },
+          validite: "24 heures",
+          apres: ["Si vous n'avez pas créé de compte, ignorez ce message."],
+        },
         { action: "verification-envoi", limite: LIMITES.verificationEnvoiAdresse },
       ),
   },
@@ -246,17 +277,18 @@ export const auth = betterAuth({
       cancelPendingInvitationsOnReInvite: true,
       requireEmailVerificationOnInvitation: true,
       sendInvitationEmail: ({ id, email, role, organization, inviter }) =>
-        envoyer(email, "Rojer — invitation à rejoindre un compte", [
-          "Bonjour,",
-          "",
-          `${(inviter.user.name && nomPourEmail(inviter.user.name)) || "Un propriétaire du compte"} vous invite à travailler sur le compte Rojer « ${nomPourEmail(organization.name)} », en tant que ${libelleRole(role)}.`,
-          "",
-          "Pour accepter, ouvrez ce lien (valable 7 jours) :",
-          lienInvitation(id),
-          "",
-          `Si vous n'avez pas encore de compte Rojer, créez-le avec cette adresse : ${email}.`,
-          "Si vous ne vous attendiez pas à cette invitation, ignorez ce message.",
-        ]),
+        envoyer(email, "Rojer — invitation à rejoindre un compte", {
+          titre: "Invitation à rejoindre un compte Rojer",
+          paragraphes: [
+            `${(inviter.user.name && nomPourEmail(inviter.user.name)) || "Un propriétaire du compte"} vous invite à travailler sur le compte Rojer « ${nomPourEmail(organization.name)} », en tant que ${libelleRole(role)}.`,
+          ],
+          bouton: { libelle: "Voir l'invitation", url: lienInvitation(id) },
+          validite: "7 jours",
+          apres: [
+            `Si vous n'avez pas encore de compte Rojer, créez-le avec cette adresse : ${email}.`,
+            "Si vous ne vous attendiez pas à cette invitation, ignorez ce message.",
+          ],
+        }),
       organizationHooks: {
         // Un rôle, et l'un des trois (ADR-054 § 2) : le plugin accepterait
         // « member,lecture », que `estRole` écarte ensuite sans un mot.

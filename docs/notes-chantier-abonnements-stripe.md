@@ -785,13 +785,15 @@ art. 293 B du CGI »).
 
 **TVA : un taux fixe de 20 %, pas Stripe Tax.** Tous les clients sont des
 entreprises françaises (cible, SIRET obligatoire) : le taux normal (art. 278
-du CGI) en sus des prix HT (`tax_behavior: exclusive`, déjà posé sur les
-prix). Stripe Tax coûte un pourcentage par transaction et ne sert qu'à vendre
+du CGI) ~~en sus des prix HT (`tax_behavior: exclusive`, déjà posé sur les
+prix)~~ [2026-11-14, décision de la propriétaire : compris dans des prix
+TTC — taux « inclusif », prix `tax_behavior: inclusive` ; ADR-053]. Stripe Tax coûte un pourcentage par transaction et ne sert qu'à vendre
 hors de France ou à des particuliers.
 
 - Le taux vit chez Stripe, créé une fois (tableau de bord en production,
   `scripts/stripe-installer-test.ts` en test), reconnu à ses attributs :
-  actif, en sus du prix, 20 %, pays `FR`, type `vat` (`src/lib/stripe/tva.ts`).
+  actif, ~~en sus du prix~~ [2026-11-14 : compris dans le prix], 20 %, pays
+  `FR`, type `vat` (`src/lib/stripe/tva.ts`).
   Le plus ancien sert s'il y en a plusieurs. Un taux ne se modifie pas chez
   Stripe : un changement de taux = un nouveau taux, l'ancien archivé, et une
   reprise des abonnements en cours (à écrire ce jour-là).

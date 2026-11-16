@@ -112,10 +112,13 @@ function Explication({ id, motif, alerte }: { id: string; motif: string | null; 
 export function FermerLaSaisie({
   motif,
   className = "mb-4",
+  sansBandeau = false,
   children,
 }: {
   motif: string | null;
   className?: string;
+  /** Le bandeau est rendu par l'enfant, à sa place (l'onboarding, plein écran). */
+  sansBandeau?: boolean;
   children: React.ReactNode;
 }) {
   const zone = useRef<HTMLDivElement>(null);
@@ -123,7 +126,7 @@ export function FermerLaSaisie({
   const alerte = useVerrou(motif, () => zone.current, (form) => zone.current?.contains(form) ?? false, id);
   return (
     <div ref={zone} data-zone-saisie data-saisie-fermee={motif ? "" : undefined} className="contents">
-      {motif ? <BandeauAbonnement bandeau={{ ton: "ferme", message: motif }} className={className} /> : null}
+      {motif && !sansBandeau ? <BandeauAbonnement bandeau={{ ton: "ferme", message: motif }} className={className} /> : null}
       <Explication id={id} motif={motif} alerte={alerte} />
       {children}
     </div>

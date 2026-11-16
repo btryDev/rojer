@@ -16,6 +16,8 @@ vi.mock("./LoginForm", () => ({
   },
 }));
 vi.mock("../signup/SignupForm", () => ({ SignupForm: () => null }));
+// Personne de connecté : la page montre le formulaire seul.
+vi.mock("@/lib/auth/require-user", () => ({ getOptionalUser: async () => null }));
 
 const { default: LoginPage } = await import("./page");
 const { default: SignupPage } = await import("../signup/page");

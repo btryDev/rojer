@@ -25,7 +25,7 @@ import { CLES_FORMULES, FORMULES, INTERVALLE_STRIPE, PERIODICITES, lookupKey, LO
 
 type Env = Record<string, string | undefined>;
 
-/** Montants HT en centimes d'euro (voir l'en-tête). */
+/** Montants TTC en centimes d'euro, TVA de 20 % comprise (2026-11-14 ; voir l'en-tête). */
 export const MONTANTS_CENTIMES = {
   essentiel: { mensuel: 2_900, annuel: 29_500 },
   pro: { mensuel: 8_900, annuel: 89_900 },
@@ -62,7 +62,7 @@ export async function installerProduits(stripe: Stripe): Promise<Record<CleFormu
   return produits;
 }
 
-/** Le prix existant convient-il tel quel ? Montant, devise, intervalle, produit, HT. */
+/** Le prix existant convient-il tel quel ? Montant, devise, intervalle, produit, TTC (2026-11-14). */
 export function prixConforme(p: Stripe.Price, produitId: string, montant: number, periodicite: Periodicite): boolean {
   return (
     p.active &&
@@ -71,7 +71,7 @@ export function prixConforme(p: Stripe.Price, produitId: string, montant: number
     p.currency === DEVISE &&
     p.recurring?.interval === INTERVALLE_STRIPE[periodicite] &&
     (p.recurring?.interval_count ?? 1) === 1 &&
-    p.tax_behavior === "exclusive"
+    p.tax_behavior === "inclusive"
   );
 }
 
@@ -101,7 +101,7 @@ export async function installerPrix(stripe: Stripe, produits: Record<CleFormule,
         currency: DEVISE,
         unit_amount: montant,
         recurring: { interval: INTERVALLE_STRIPE[periodicite] },
-        tax_behavior: "exclusive",
+        tax_behavior: "inclusive",
         lookup_key: cle,
         transfer_lookup_key: true,
         nickname: `${FORMULES[formule].libelle} ${periodicite}`,
@@ -119,7 +119,7 @@ export async function installerPrix(stripe: Stripe, produits: Record<CleFormule,
  * (pourcentage, pays) : un autre taux se crée, l'ancien s'archive.
  */
 export async function installerTva(stripe: Stripe): Promise<{ taux: Stripe.TaxRate; cree: boolean }> {
-  const { data } = await stripe.taxRates.list({ active: true, inclusive: false, limit: 100 });
+  const { data } = await stripe.taxRates.list({ active: true, inclusive: true, limit: 100 });
   const existant = tauxConformes(data)[0];
   if (existant) return { taux: existant, cree: false };
   const taux = await stripe.taxRates.create({
@@ -129,7 +129,7 @@ export async function installerTva(stripe: Stripe): Promise<{ taux: Stripe.TaxRa
     percentage: TVA.pourcentage,
     country: TVA.pays,
     tax_type: TVA.type,
-    inclusive: false,
+    inclusive: true,
   });
   return { taux, cree: true };
 }
@@ -222,14 +222,16 @@ export const REGLAGES_MANUELS = [
 function recapitulatif(r: Extract<Installation, { ok: true }>): string {
   const lignes = ["Compte Stripe de test préparé.", "", "Produits :"];
   for (const f of CLES_FORMULES) lignes.push(`  ${r.produits[f].name.padEnd(10)} ${r.produits[f].id}`);
-  lignes.push("", "Prix (montants HT) :");
+  lignes.push("", "Prix (montants TTC) :");
   for (const p of r.prix) {
     const montant = ((p.prix.unit_amount ?? 0) / 100).toFixed(2).replace(".", ",");
     const etat = p.cree ? "créé" : "gardé";
     lignes.push(`  ${p.lookupKey.padEnd(22)} ${p.prix.id}  ${montant} € / ${p.prix.recurring?.interval}  (${etat})`);
   }
   lignes.push("", `TVA : ${r.tva.taux.id} (${r.tva.taux.percentage} %, ${r.tva.cree ? "créé" : "gardé"})`);
-  if (r.tva.cree) lignes.push("  Les abonnements de test créés avant ce taux n'ont pas de TVA : en recréer pour voir des factures complètes.");
+  if (r.tva.cree) {
+    lignes.push("  Les abonnements de test créés avant ce taux gardent l'ancien (TVA en sus du prix) : en recréer pour voir des factures TTC.");
+  }
   lignes.push("", `Portail client : ${r.portail.id} (${r.portail.cree ? "créée" : "mise à jour"})`);
   if (!r.portail.parDefaut) {
     lignes.push(
