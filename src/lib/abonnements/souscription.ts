@@ -12,8 +12,9 @@ import "server-only";
 // la formule posée par Rojer à sa création), puis les abonnements du client.
 
 import type Stripe from "stripe";
-import { abonnementsDuClient, appliquerFormule, prixDesFormules } from "@/lib/stripe/parcours";
-import { abonnementCourant, idStripe, synchroniserClientStripe } from "@/lib/stripe/synchronisation";
+import { abonnementsDuClient, appliquerFormule, factureARegler, prixDesFormules } from "@/lib/stripe/parcours";
+import { idStripe } from "@/lib/stripe/ids";
+import { abonnementCourant, synchroniserClientStripe } from "@/lib/stripe/synchronisation";
 import { SANS_PAIEMENT_ENCORE } from "./droits";
 import { estLookupKey } from "./formules";
 
@@ -55,8 +56,22 @@ export async function finaliserCarte(
   if (!estLookupKey(formule) || !paymentMethodId) return RIEN;
 
   const { courant } = abonnementCourant(await abonnementsDuClient(stripe, customerId));
-  // Déjà payant (une première finalisation est passée) ou terminé : rien à faire.
-  if (!courant || !SANS_PAIEMENT_ENCORE.has(courant.status)) return RIEN;
+  // Une session plus ancienne que le dernier choix appliqué (une notification
+  // relivrée en retard, un vieil onglet) : rien — ni sa carte, qui
+  // remettrait par défaut une carte remplacée depuis, ni sa formule (même
+  // règle que `appliquerFormule`, `rojerChoixLe`), ni une facture sans
+  // rapport avec elle.
+  // Marge d'une minute : `rojerChoixLe` vient aussi de l'horloge du serveur
+  // (`sAbonnerAction`), qui peut avancer sur celle de Stripe.
+  if (courant && session.created + 60 < Number(courant.metadata?.rojerChoixLe ?? 0)) return RIEN;
+  // Déjà payant (une première finalisation est passée) ou terminé : rien à
+  // faire — sauf une facture qui attend encore (la notification a fini
+  // l'essai, ou repris la pause, la première ; la banque demande une
+  // confirmation) : le client y est renvoyé (répétition du 2026-11-16).
+  if (!courant || !SANS_PAIEMENT_ENCORE.has(courant.status)) {
+    const enAttente = courant ? await factureARegler(stripe, courant.latest_invoice) : null;
+    return enAttente ? { issue: "aRegler", url: enAttente } : RIEN;
+  }
   const prix = (await prixDesFormules(stripe)).get(formule);
   if (!prix) throw new Error("prix introuvable");
 
@@ -64,7 +79,6 @@ export async function finaliserCarte(
   const immediat = session.metadata?.immediat === "oui" || courant.status === "paused";
   const aRegler = await appliquerFormule(stripe, courant, {
     priceId: prix.priceId,
-    paymentMethodId,
     immediat,
     choisiLe: session.created,
     idempotence: `carte-${session.id}`,

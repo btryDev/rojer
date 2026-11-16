@@ -18,7 +18,7 @@ import "server-only";
 // qu'il tourne le fait repasser une fois.
 
 import type Stripe from "stripe";
-import { alerter } from "@/lib/alertes";
+import { alerter, alerterUneFoisParJour } from "@/lib/alertes";
 import { finaliserCarte } from "@/lib/abonnements/souscription";
 import {
   type Aiguillage,
@@ -30,8 +30,9 @@ import {
   prendre,
 } from "./evenements";
 import { clientsDus, enEchecDurable } from "./file";
-import { rendrePlanningEchu } from "./parcours";
-import { idStripe, motifDErreur, synchroniserSousBail } from "./synchronisation";
+import { carteQuiAPaye, rendrePlanningEchu } from "./parcours";
+import { idStripe } from "./ids";
+import { motifDErreur, synchroniserSousBail } from "./synchronisation";
 import { OPTIONS_WEBHOOK } from "./client";
 
 const EVENEMENTS_PAR_TOUR = 20;
@@ -60,9 +61,10 @@ export async function aiguillageDe(stripe: Stripe, type: string, objetId: string
     case "v1.customer.subscription.trial_will_end": {
       const abonnement = await stripe.subscriptions.retrieve(objetId, {}, OPTIONS_WEBHOOK);
       // Une baisse vient de prendre effet : son planning est rendu (sinon le
-      // portail refuserait la résiliation pendant une période). Sans effet
-      // sur l'aiguillage s'il échoue : la prochaine notification le refera.
-      if (abonnement.schedule) await rendrePlanningEchu(stripe, abonnement).catch(() => {});
+      // portail refuserait la résiliation pendant une période). Un refus de
+      // Stripe (429 au passage de phase, répétition du 2026-11-16) fait
+      // échouer l'événement, que la file retente — il était ignoré.
+      if (abonnement.schedule) await rendrePlanningEchu(stripe, abonnement);
       return { clientStripe: idStripe(abonnement.customer), abonnementId: abonnement.id };
     }
     case "v1.checkout.session.completed": {
@@ -74,7 +76,21 @@ export async function aiguillageDe(stripe: Stripe, type: string, objetId: string
       const suivi = session.mode === "subscription" || session.mode === "setup";
       return suivi ? { clientStripe: idStripe(session.customer) } : { clientStripe: null, motif: "session sans abonnement" };
     }
-    case "v1.invoice.paid":
+    case "v1.invoice.paid": {
+      const client = idStripe((await stripe.invoices.retrieve(objetId, {}, OPTIONS_WEBHOOK)).customer);
+      // La carte qui a payé devient celle du client (`carteQuiAPaye`). Sans
+      // bloquer la copie d'un paiement réussi (revue du 2026-11-16) : un
+      // échec se signale, une fois par jour, pour un geste à la main.
+      await carteQuiAPaye(stripe, objetId).catch(async (e) => {
+        console.error(`stripe : carte de la facture ${objetId} non rangée — ${motifDErreur(e)}`);
+        await alerterUneFoisParJour(`carte:${client ?? objetId}`, "carte du client non mise à jour après un paiement", [
+          `facture ${objetId}, client ${client ?? "inconnu"}`,
+          motifDErreur(e),
+          "Dans Stripe : poser par défaut sur le client la carte qui a payé cette facture, et la retirer de l'abonnement ; sinon le prochain prélèvement peut partir sur l'ancienne carte.",
+        ], new Date());
+      });
+      return { clientStripe: client };
+    }
     case "v1.invoice.payment_failed":
     case "v1.invoice.payment_action_required":
       return { clientStripe: idStripe((await stripe.invoices.retrieve(objetId, {}, OPTIONS_WEBHOOK)).customer) };

@@ -72,6 +72,10 @@ export function vueAbonnement(e: EntreeVue): VueAbonnement {
     case "essai":
       return { cas: "essai", titre: "Essai gratuit" };
     case "portail":
+      // Retour de Checkout alors que la notification a déjà fini l'essai et
+      // que la facture attend (confirmation de la banque) : la finalisation
+      // renvoie le client sur sa page (répétition du 2026-11-16).
+      if (e.retourCarte && A_REGLER.has(e.statut ?? "")) return { cas: "finalisation", titre: "S'abonner" };
       return { cas: "portail", titre: "Gérer", factureEnAttente: A_REGLER.has(e.statut ?? "") };
     case "abonner":
       if (e.retourCarte) return { cas: "finalisation", titre: "S'abonner" };

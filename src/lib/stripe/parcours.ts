@@ -12,7 +12,7 @@ import "server-only";
 import { createHash } from "node:crypto";
 import type Stripe from "stripe";
 import { OPTIONS_RELECTURE } from "./client";
-import { idStripe } from "./synchronisation";
+import { idStripe } from "./ids";
 import { INTERVALLE_STRIPE, LOOKUP_KEYS, formuleDeLookupKey } from "@/lib/abonnements/formules";
 import { tauxConformes } from "./tva";
 
@@ -66,6 +66,12 @@ export async function demarrerEssai(
       items: [{ price: priceId }],
       default_tax_rates: [tauxTva],
       trial_period_days: DUREE_ESSAI_JOURS,
+      // Chaque paiement réussi fixe sa carte sur l'abonnement : une carte
+      // payée sur la page d'une facture sert ainsi au mois suivant. La
+      // relecture la reporte sur le client et la retire de l'abonnement
+      // (`carteQuiAPaye`, au paiement réussi, qui pose aussi ce réglage sur
+      // les abonnements nés de Checkout) : une seule carte, celle du client,
+      // que le portail change.
       payment_settings: { save_default_payment_method: "on_subscription" },
       trial_settings: { end_behavior: { missing_payment_method: "pause" } },
       metadata,
@@ -201,7 +207,7 @@ const factureAuPrixAffiche = (f: Stripe.Invoice, priceId: string) =>
 const tauxEnVigueur = (stripe: Stripe) => tauxDeTva(stripe).catch(() => null);
 
 /**
- * Appliquer la formule choisie et la carte enregistrée à l'abonnement qui
+ * Appliquer la formule choisie (la carte est celle du client) à l'abonnement qui
  * court encore sans payer : l'essai continue (`proration_behavior: none`,
  * rien n'est facturé avant sa fin), sauf `immediat` — l'essai s'arrête et le
  * premier mois est prélevé tout de suite (valider un document légal pendant
@@ -222,7 +228,6 @@ export async function appliquerFormule(
   abonnement: Stripe.Subscription,
   choix: {
     priceId: string;
-    paymentMethodId: string;
     immediat: boolean;
     choisiLe: number;
     idempotence?: string;
@@ -238,23 +243,33 @@ export async function appliquerFormule(
     if (enAttente && factureAuPrixAffiche(enAttente, choix.priceId)) return enAttente.hosted_invoice_url ?? null;
     if (enAttente) await stripe.invoices.voidInvoice(enAttente.id!);
   }
-  // Payer maintenant : l'essai est relu juste avant. Un autre onglet a pu le
-  // finir et payer entre-temps ; on ne finit pas deux fois un essai.
-  if (choix.immediat && abonnement.status === "trialing") {
-    const frais = await stripe.subscriptions.retrieve(abonnement.id);
-    if (frais.status !== "trialing") return null;
+  // Payer maintenant : l'essai est relu juste avant. Un autre chemin (la
+  // notification de Checkout, un autre onglet) a pu le finir : on ne le finit
+  // pas deux fois, mais sa facture, si elle attend encore (carte refusée,
+  // confirmation demandée par la banque), est renvoyée. Sans quoi le client
+  // lisait « Paiement terminé » sans avoir payé (répétition du 2026-11-16,
+  // carte 3-D Secure : la notification avait fini l'essai la première).
+  if (choix.immediat && !enPause) {
+    const frais = abonnement.status === "trialing" ? await stripe.subscriptions.retrieve(abonnement.id) : abonnement;
+    if (frais.status !== "trialing") return factureARegler(stripe, frais.latest_invoice);
   }
   const item = abonnement.items.data[0];
+  // Une seule carte, celle du CLIENT (`invoice_settings`), que le portail
+  // change : une carte fixée sur l'abonnement passerait avant elle au
+  // renouvellement, et un client qui change de carte resterait prélevé sur
+  // l'ancienne (répétition dans le temps du 2026-11-16, doc Stripe « Subscription
+  // invoices »). L'appelant a posé la carte sur le client ; on retire celle de
+  // l'abonnement.
   const pmActuel = idStripe(abonnement.default_payment_method);
   const finEssai = choix.immediat && abonnement.status === "trialing";
-  if (item?.price.id === choix.priceId && pmActuel === choix.paymentMethodId && !finEssai && !enPause) return null;
+  if (item?.price.id === choix.priceId && !pmActuel && !finEssai && !enPause) return null;
 
   // Le taux en vigueur est reposé : un abonnement né sous un ancien taux
   // paie le prix affiché.
   const taux = await tauxEnVigueur(stripe);
   const decision = {
     items: item ? [{ id: item.id, price: choix.priceId }] : [{ price: choix.priceId }],
-    default_payment_method: choix.paymentMethodId,
+    default_payment_method: "",
     // Stripe refuse `proration_behavior` sur un abonnement en pause
     // (« Resume the subscription first », répétition en local du
     // 2026-11-16) : la reprise qui suit le porte, et ne facture que la
@@ -263,7 +278,7 @@ export async function appliquerFormule(
     ...(finEssai ? { trial_end: "now" as const } : {}),
     ...(taux ? { default_tax_rates: [taux] } : {}),
   };
-  // La clé d'idempotence porte l'EMPREINTE de la décision (formule, carte,
+  // La clé d'idempotence porte l'EMPREINTE de la décision (formule,
   // fin d'essai, TVA, prorata) : le même choix rejoué — deux onglets, un
   // événement relivré — retombe sur la même clé ; un geste rejoué après un
   // changement du code (paramètres différents) en prend une neuve au lieu
@@ -283,26 +298,29 @@ export async function appliquerFormule(
   if (!enPause) return finEssai ? factureARegler(stripe, misAJour.latest_invoice) : null;
   // Reprise : la période repart à aujourd'hui (le défaut de l'API). Stripe
   // crée la facture de la reprise sans la prélever (constaté en local le
-  // 2026-11-16 : `open`, jamais tentée) ; on la règle avec la carte qu'on
-  // vient de poser. Refusée ou à authentifier : sa page, où le client la
+  // 2026-11-16 : `open`, jamais tentée) ; on la règle avec la carte du
+  // client, que l'appelant vient de poser. Refusée ou à authentifier : sa page, où le client la
   // règle. L'abonnement reste en pause tant qu'elle n'est pas payée.
   const repris = await stripe.subscriptions.resume(
     abonnement.id,
     { proration_behavior: "none", expand: ["latest_invoice"] },
     cle("reprise"),
   );
-  return reglerLaFacture(stripe, repris.latest_invoice, choix.paymentMethodId);
+  return reglerLaFacture(stripe, repris.latest_invoice);
 }
 
 /**
- * Régler tout de suite une facture ouverte avec la carte donnée : `null` si
+ * Régler tout de suite une facture ouverte avec la carte du client, hors
+ * session (le défaut de Stripe) : le mandat vient d'être donné en
+ * enregistrant la carte, et ce règlement part aussi de la notification,
+ * client absent. Si la banque demande malgré tout une confirmation, la page
+ * de la facture la sert : `null` si
  * elle est payée (ou s'il n'y a rien à régler), sinon l'adresse de sa page
  * (carte refusée, authentification demandée).
  */
 async function reglerLaFacture(
   stripe: Stripe,
   derniere: Stripe.Subscription["latest_invoice"],
-  paymentMethodId: string,
 ): Promise<string | null> {
   const facture = await factureOuverte(stripe, derniere);
   if (!facture?.id) return null;
@@ -310,7 +328,7 @@ async function reglerLaFacture(
     // Une clé tirée de la FACTURE : les deux chemins qui finalisent la même
     // carte (retour de Checkout, webhook) règlent la même facture sous la
     // même clé — un seul règlement (revue du 2026-11-16).
-    const payee = await stripe.invoices.pay(facture.id, { payment_method: paymentMethodId }, { idempotencyKey: `payer-${facture.id}` });
+    const payee = await stripe.invoices.pay(facture.id, {}, { idempotencyKey: `payer-${facture.id}` });
     return payee.status === "paid" ? null : (payee.hosted_invoice_url ?? facture.hosted_invoice_url ?? null);
   } catch (e) {
     // Le même règlement en cours ailleurs (409) : on ne sait pas encore s'il
@@ -425,6 +443,45 @@ export async function planifierBaisse(
 }
 
 /**
+ * Une seule carte, celle du CLIENT (2026-11-16) : le portail ne change
+ * qu'elle, et une carte fixée sur l'abonnement passerait avant au
+ * renouvellement. Appelée au paiement réussi d'une facture d'abonnement
+ * (`invoice.paid`) :
+ * - la carte qui a RÉELLEMENT payé cette facture (son paiement, lu chez
+ *   Stripe) devient celle du client si elle en diffère — une carte payée sur
+ *   la page d'une facture remplace celle qui avait été refusée. Un
+ *   renouvellement ordinaire paie avec la carte du client : rien à écrire ;
+ * - la carte que Stripe fixe sur l'abonnement à chaque paiement
+ *   (`save_default_payment_method: on_subscription`, gardé : c'est lui qui
+ *   rattache au client une carte saisie sur la page d'une facture) en est
+ *   retirée ; le réglage est posé sur l'abonnement né de Checkout.
+ * Limite écrite : un changement fait au portail entre ce paiement et un
+ * nouvel essai de cet événement serait remplacé par la carte qui a payé.
+ * Sans clé d'idempotence : ces écritures posent une valeur.
+ */
+export async function carteQuiAPaye(stripe: Stripe, factureId: string): Promise<void> {
+  const facture = await stripe.invoices.retrieve(factureId, { expand: ["payments.data.payment.payment_intent"] });
+  const abonnementId = idStripe(facture.parent?.subscription_details?.subscription);
+  const clientId = idStripe(facture.customer);
+  if (!abonnementId || !clientId) return;
+  const intention = facture.payments?.data.find((p) => p.status === "paid")?.payment.payment_intent;
+  const carte = intention && typeof intention === "object" ? idStripe(intention.payment_method) : null;
+  const [client, abonnement] = await Promise.all([stripe.customers.retrieve(clientId), stripe.subscriptions.retrieve(abonnementId)]);
+  if (client.deleted || abonnement.status === "canceled" || abonnement.status === "incomplete_expired") return;
+  if (carte && carte !== idStripe(client.invoice_settings?.default_payment_method)) {
+    await stripe.customers.update(clientId, { invoice_settings: { default_payment_method: carte } });
+  }
+  const fixee = idStripe(abonnement.default_payment_method);
+  const reglage = abonnement.payment_settings?.save_default_payment_method === "on_subscription";
+  if (fixee || !reglage) {
+    await stripe.subscriptions.update(abonnement.id, {
+      ...(fixee ? { default_payment_method: "" } : {}),
+      ...(reglage ? {} : { payment_settings: { save_default_payment_method: "on_subscription" as const } }),
+    });
+  }
+}
+
+/**
  * Le planning d'une baisse a fait son office (la nouvelle formule court, plus
  * de phase à venir) : on le rend, sinon il resterait attaché une période
  * entière et le portail refuserait toute résiliation (doc du portail).
@@ -442,7 +499,17 @@ export async function rendrePlanningEchu(stripe: Stripe, abonnement: Stripe.Subs
   const derniere = planning.phases.at(-1);
   if (!enCours || !derniere || planning.status !== "active") return;
   const aPorteUneBaisse = planning.phases.length > 1 || planning.created < Math.floor(Date.now() / 1000) - 300;
-  if (aPorteUneBaisse && enCours.start_date >= derniere.start_date) await stripe.subscriptionSchedules.release(id);
+  if (!aPorteUneBaisse || enCours.start_date < derniere.start_date) return;
+  try {
+    await stripe.subscriptionSchedules.release(id);
+  } catch (e) {
+    // Déjà rendu par un événement voisin (deux notifications du même passage
+    // de phase) : rien à refaire. Sinon (429 au passage de phase, répétition
+    // du 2026-11-16) l'erreur remonte, et la file retente l'événement.
+    const relu = await stripe.subscriptionSchedules.retrieve(id).catch(() => null);
+    if (relu && relu.status !== "active") return;
+    throw e;
+  }
 }
 
 /** Renoncer à une baisse planifiée : l'abonnement reste sur sa formule. */

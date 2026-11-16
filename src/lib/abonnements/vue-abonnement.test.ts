@@ -15,6 +15,13 @@ const entree = (o: Partial<EntreeVue>): EntreeVue => ({
 });
 
 describe("vueAbonnement", () => {
+  it("retour de Checkout, la notification passée avant et la facture qui attend (3-D Secure) : la finalisation, qui renvoie à la facture (2026-11-16)", () => {
+    expect(vueAbonnement(entree({ geste: "portail", statut: "past_due", retourCarte: true }))).toMatchObject({ cas: "finalisation" });
+    // Sans retour de Checkout, ou payé : la gestion habituelle.
+    expect(vueAbonnement(entree({ geste: "portail", statut: "past_due" }))).toMatchObject({ cas: "portail", factureEnAttente: true });
+    expect(vueAbonnement(entree({ geste: "portail", statut: "active", retourCarte: true }))).toMatchObject({ cas: "portail", factureEnAttente: false });
+  });
+
   it("sans offre, membre, essai à démarrer", () => {
     expect(vueAbonnement(entree({ geste: null }))).toEqual({ cas: "aucune" });
     expect(vueAbonnement(entree({ geste: "membre" }))).toMatchObject({ cas: "membre" });

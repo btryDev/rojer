@@ -32,11 +32,9 @@ import { type Bail, clore, demanderSynchronisation, echouer, prendreBail, rendre
 import { clientDuClientStripe } from "@/lib/auth/compte-hors-session";
 import { compteDontEstProprietaire } from "@/lib/auth/membres";
 import { OPTIONS_WEBHOOK } from "./client";
+import { idStripe } from "./ids";
 import { formuleDuPrix } from "@/lib/abonnements/formules";
 import { OUVRENT } from "@/lib/abonnements/droits";
-
-/** L'identifiant d'une référence Stripe, développée ou non. */
-export const idStripe = (v: string | { id: string } | null | undefined) => (typeof v === "string" ? v : (v?.id ?? null));
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

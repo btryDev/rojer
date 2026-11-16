@@ -5,12 +5,14 @@ vi.mock("server-only", () => ({}));
 const m = vi.hoisted(() => ({
   abonnementsDuClient: vi.fn(),
   appliquerFormule: vi.fn(),
+  factureARegler: vi.fn(),
   prixDesFormules: vi.fn(),
   synchroniser: vi.fn(),
 }));
 vi.mock("@/lib/stripe/parcours", () => ({
   abonnementsDuClient: m.abonnementsDuClient,
   appliquerFormule: m.appliquerFormule,
+  factureARegler: m.factureARegler,
   prixDesFormules: m.prixDesFormules,
 }));
 vi.mock("@/lib/stripe/synchronisation", async (reel) => ({
@@ -48,7 +50,6 @@ describe("finaliserCarte", () => {
     expect(api.customers.update).toHaveBeenCalledWith("cus_1", { invoice_settings: { default_payment_method: "pm_1" } });
     expect(m.appliquerFormule).toHaveBeenCalledWith(stripe, expect.objectContaining({ id: "sub_1" }), {
       priceId: "price_pa",
-      paymentMethodId: "pm_1",
       immediat: false,
       choisiLe: 1000,
       idempotence: "carte-cs_1",
@@ -83,6 +84,27 @@ describe("finaliserCarte", () => {
       expect(await finaliserCarte(stripe, "cs_1"), status).toEqual({ issue: "rien" });
     }
     expect(m.appliquerFormule).not.toHaveBeenCalled();
+  });
+
+  it("la notification a déjà fini l'essai ou repris la pause : la facture qui attend (3-D Secure) est rendue (2026-11-16)", async () => {
+    m.abonnementsDuClient.mockResolvedValue([{ ...abonnement("past_due"), latest_invoice: "in_1" }]);
+    m.factureARegler.mockResolvedValueOnce("https://invoice.stripe.com/i/1");
+    expect(await finaliserCarte(stripe, "cs_1")).toEqual({ issue: "aRegler", url: "https://invoice.stripe.com/i/1" });
+    expect(m.factureARegler).toHaveBeenCalledWith(stripe, "in_1");
+    expect(m.appliquerFormule).not.toHaveBeenCalled();
+    // Facture déjà payée (l'autre chemin a abouti) : rien.
+    m.factureARegler.mockResolvedValueOnce(null);
+    expect(await finaliserCarte(stripe, "cs_1")).toEqual({ issue: "rien" });
+  });
+
+  it("session plus ancienne que le dernier choix appliqué (notification relivrée) : ni carte ni formule", async () => {
+    m.abonnementsDuClient.mockResolvedValue([{ ...abonnement("trialing"), metadata: { rojerChoixLe: "2000" } }]);
+    expect(await finaliserCarte(stripe, "cs_1")).toEqual({ issue: "rien" });
+    expect(api.customers.update).not.toHaveBeenCalled();
+    expect(m.appliquerFormule).not.toHaveBeenCalled();
+    // La même session rejouée (même instant) s'applique encore : le rejeu reste sans effet chez Stripe.
+    m.abonnementsDuClient.mockResolvedValue([{ ...abonnement("trialing"), metadata: { rojerChoixLe: "1000" } }]);
+    expect(await finaliserCarte(stripe, "cs_1")).toEqual({ issue: "appliquee", immediat: false });
   });
 
   it("pause : la carte et la formule s'appliquent, et la reprise se paie (immédiat)", async () => {
