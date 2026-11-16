@@ -84,11 +84,9 @@ describe("finaliserCarte", () => {
       expect(await finaliserCarte(stripe, "cs_1"), status).toEqual({ issue: "rien" });
     }
     expect(m.appliquerFormule).not.toHaveBeenCalled();
-    expect(m.factureARegler).not.toHaveBeenCalled();
   });
 
-  it("« payer maintenant » dont la notification a déjà fini l'essai : la facture qui attend (3-D Secure) est rendue (2026-11-16)", async () => {
-    api.checkout.sessions.retrieve.mockResolvedValue(session({ metadata: { compteId: "c1", formule: "rojer_pro_annuel", immediat: "oui" } }));
+  it("la notification a déjà fini l'essai ou repris la pause : la facture qui attend (3-D Secure) est rendue (2026-11-16)", async () => {
     m.abonnementsDuClient.mockResolvedValue([{ ...abonnement("past_due"), latest_invoice: "in_1" }]);
     m.factureARegler.mockResolvedValueOnce("https://invoice.stripe.com/i/1");
     expect(await finaliserCarte(stripe, "cs_1")).toEqual({ issue: "aRegler", url: "https://invoice.stripe.com/i/1" });

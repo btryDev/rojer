@@ -207,35 +207,33 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
       expect(refuse).toHaveBeenCalledOnce();
     });
 
-    it("une carte fixée sur l'abonnement : retirée ; la plus récente des deux devient celle du client (2026-11-16)", async () => {
-      const avecCarte = (pmClient: string | null, crees: Record<string, number>) => {
-        const s = stripe(A, [abo({ id: "sub_1", status: "active", created: 1, default_payment_method: "pm_abo" } as never)], {
+    it("une carte fixée sur l'abonnement (le dernier paiement) devient celle du client et quitte l'abonnement ; le réglage manquant est posé (2026-11-16)", async () => {
+      const avec = (sub: object, pmClient: string | null) =>
+        stripe(A, [abo({ id: "sub_1", status: "active", created: 1, ...sub } as never)], {
           id: "cus_A",
           metadata: { compteId: A },
           invoice_settings: { default_payment_method: pmClient },
         });
-        (s as unknown as { paymentMethods: object }).paymentMethods = { retrieve: async (id: string) => ({ id, created: crees[id] }) };
-        return s;
-      };
-      // Le client n'a pas de carte : celle de l'abonnement devient la sienne.
+      const reglee = { payment_settings: { save_default_payment_method: "on_subscription" } };
+      // Carte de l'abonnement ≠ carte du client : reportée, quelle que soit sa date ; retirée de l'abonnement.
       cartes.length = 0;
-      await synchroniserClientStripe(avecCarte(null, {}), "cus_A", { maintenant: () => new Date(1000) });
+      await synchroniserClientStripe(avec({ ...reglee, default_payment_method: "pm_payee" }, "pm_ancienne"), "cus_A", { maintenant: () => new Date(1000) });
       expect(cartes).toEqual([
-        { objet: "cus_A", params: { invoice_settings: { default_payment_method: "pm_abo" } } },
+        { objet: "cus_A", params: { invoice_settings: { default_payment_method: "pm_payee" } } },
         { objet: "sub_1", params: { default_payment_method: "" } },
       ]);
-      // Carte de l'abonnement plus récente (payée sur la page d'une facture) : elle remplace celle du client.
+      // La même carte des deux côtés : seulement retirée de l'abonnement.
       cartes.length = 0;
-      await synchroniserClientStripe(avecCarte("pm_client", { pm_abo: 200, pm_client: 100 }), "cus_A", { maintenant: () => new Date(2000) });
-      expect(cartes[0]).toEqual({ objet: "cus_A", params: { invoice_settings: { default_payment_method: "pm_abo" } } });
-      // Carte du client plus récente (choisie au portail) : gardée ; seule celle de l'abonnement est retirée.
-      cartes.length = 0;
-      await synchroniserClientStripe(avecCarte("pm_client", { pm_abo: 100, pm_client: 200 }), "cus_A", { maintenant: () => new Date(3000) });
+      await synchroniserClientStripe(avec({ ...reglee, default_payment_method: "pm_x" }, "pm_x"), "cus_A", { maintenant: () => new Date(2000) });
       expect(cartes).toEqual([{ objet: "sub_1", params: { default_payment_method: "" } }]);
-      // Sans carte sur l'abonnement, ou terminé : rien.
+      // Né de Checkout, sans le réglage : posé, pour qu'une carte payée sur la page d'une facture serve ensuite.
       cartes.length = 0;
-      await synchroniserClientStripe(stripe(A, [abo({ id: "sub_1", status: "active", created: 1 })]), "cus_A", { maintenant: () => new Date(2000) });
-      await synchroniserClientStripe(stripe(A, [abo({ id: "sub_1", status: "canceled", created: 1, default_payment_method: "pm_x" } as never)]), "cus_A", { maintenant: () => new Date(3000) });
+      await synchroniserClientStripe(avec({}, "pm_x"), "cus_A", { maintenant: () => new Date(3000) });
+      expect(cartes).toEqual([{ objet: "sub_1", params: { payment_settings: { save_default_payment_method: "on_subscription" } } }]);
+      // Rien à ranger, ou abonnement terminé : aucun appel.
+      cartes.length = 0;
+      await synchroniserClientStripe(avec(reglee, "pm_x"), "cus_A", { maintenant: () => new Date(4000) });
+      await synchroniserClientStripe(stripe(A, [abo({ id: "sub_1", status: "canceled", created: 1, default_payment_method: "pm_x" } as never)]), "cus_A", { maintenant: () => new Date(5000) });
       expect(cartes).toEqual([]);
     });
 

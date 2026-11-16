@@ -12,7 +12,7 @@ import "server-only";
 import { createHash } from "node:crypto";
 import type Stripe from "stripe";
 import { OPTIONS_RELECTURE } from "./client";
-import { idStripe } from "./synchronisation";
+import { idStripe } from "./ids";
 import { INTERVALLE_STRIPE, LOOKUP_KEYS, formuleDeLookupKey } from "@/lib/abonnements/formules";
 import { tauxConformes } from "./tva";
 
@@ -69,8 +69,9 @@ export async function demarrerEssai(
       // Chaque paiement réussi fixe sa carte sur l'abonnement : une carte
       // payée sur la page d'une facture sert ainsi au mois suivant. La
       // relecture la reporte sur le client et la retire de l'abonnement
-      // (`carteAuClient`, synchronisation.ts) : une seule carte, celle du
-      // client, que le portail change.
+      // (`carteAuClient`, synchronisation.ts, qui pose aussi ce réglage sur
+      // les abonnements nés de Checkout) : une seule carte, celle du client,
+      // que le portail change.
       payment_settings: { save_default_payment_method: "on_subscription" },
       trial_settings: { end_behavior: { missing_payment_method: "pause" } },
       metadata,
@@ -206,7 +207,7 @@ const factureAuPrixAffiche = (f: Stripe.Invoice, priceId: string) =>
 const tauxEnVigueur = (stripe: Stripe) => tauxDeTva(stripe).catch(() => null);
 
 /**
- * Appliquer la formule choisie et la carte enregistrée à l'abonnement qui
+ * Appliquer la formule choisie (la carte est celle du client) à l'abonnement qui
  * court encore sans payer : l'essai continue (`proration_behavior: none`,
  * rien n'est facturé avant sa fin), sauf `immediat` — l'essai s'arrête et le
  * premier mois est prélevé tout de suite (valider un document légal pendant
@@ -277,7 +278,7 @@ export async function appliquerFormule(
     ...(finEssai ? { trial_end: "now" as const } : {}),
     ...(taux ? { default_tax_rates: [taux] } : {}),
   };
-  // La clé d'idempotence porte l'EMPREINTE de la décision (formule, carte,
+  // La clé d'idempotence porte l'EMPREINTE de la décision (formule,
   // fin d'essai, TVA, prorata) : le même choix rejoué — deux onglets, un
   // événement relivré — retombe sur la même clé ; un geste rejoué après un
   // changement du code (paramètres différents) en prend une neuve au lieu
@@ -309,7 +310,9 @@ export async function appliquerFormule(
 }
 
 /**
- * Régler tout de suite une facture ouverte avec la carte du client : `null` si
+ * Régler tout de suite une facture ouverte avec la carte du client, en sa
+ * présence (`off_session: false` : il vient de cliquer ; la banque peut
+ * demander une confirmation, servie par la page de la facture) : `null` si
  * elle est payée (ou s'il n'y a rien à régler), sinon l'adresse de sa page
  * (carte refusée, authentification demandée).
  */
@@ -323,7 +326,7 @@ async function reglerLaFacture(
     // Une clé tirée de la FACTURE : les deux chemins qui finalisent la même
     // carte (retour de Checkout, webhook) règlent la même facture sous la
     // même clé — un seul règlement (revue du 2026-11-16).
-    const payee = await stripe.invoices.pay(facture.id, {}, { idempotencyKey: `payer-${facture.id}` });
+    const payee = await stripe.invoices.pay(facture.id, { off_session: false }, { idempotencyKey: `payer-${facture.id}` });
     return payee.status === "paid" ? null : (payee.hosted_invoice_url ?? facture.hosted_invoice_url ?? null);
   } catch (e) {
     // Le même règlement en cours ailleurs (409) : on ne sait pas encore s'il

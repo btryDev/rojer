@@ -56,11 +56,11 @@ export async function finaliserCarte(
 
   const { courant } = abonnementCourant(await abonnementsDuClient(stripe, customerId));
   // Déjà payant (une première finalisation est passée) ou terminé : rien à
-  // faire — sauf « Payer maintenant » dont la facture attend encore (la
-  // notification a fini l'essai la première, la banque demande une
+  // faire — sauf une facture qui attend encore (la notification a fini
+  // l'essai, ou repris la pause, la première ; la banque demande une
   // confirmation) : le client y est renvoyé (répétition du 2026-11-16).
   if (!courant || !SANS_PAIEMENT_ENCORE.has(courant.status)) {
-    const enAttente = courant && session.metadata?.immediat === "oui" ? await factureARegler(stripe, courant.latest_invoice) : null;
+    const enAttente = courant ? await factureARegler(stripe, courant.latest_invoice) : null;
     return enAttente ? { issue: "aRegler", url: enAttente } : RIEN;
   }
   // Une session plus ancienne que le dernier choix appliqué (une notification

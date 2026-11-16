@@ -206,7 +206,7 @@ describe("parcours Stripe", () => {
     api.invoices.pay.mockResolvedValueOnce({ status: "paid" });
     expect(await appliquerFormule(stripe, sub, choix)).toBeNull();
     // Une clé tirée de la facture : les deux chemins qui finalisent la même carte la règlent une fois.
-    expect(api.invoices.pay).toHaveBeenLastCalledWith("in_r", {}, { idempotencyKey: "payer-in_r" });
+    expect(api.invoices.pay).toHaveBeenLastCalledWith("in_r", { off_session: false }, { idempotencyKey: "payer-in_r" });
     api.invoices.pay.mockRejectedValueOnce(Object.assign(new Error("card_declined"), { type: "StripeCardError" }));
     api.invoices.retrieve.mockResolvedValueOnce({ ...reprise });
     expect(await appliquerFormule(stripe, sub, choix)).toBe("https://invoice.stripe.com/i/r");
