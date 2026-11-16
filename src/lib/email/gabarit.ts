@@ -4,7 +4,7 @@
  * quelques phrases, UN bouton, sa validité, le lien en clair (le secours
  * d'usage quand un bouton ne s'ouvre pas — retiré puis remis le même jour,
  * décision de la propriétaire), une ligne de pied. La marque sur une
- * pastille bleue (même jour).
+ * pastille bleue, le contenu centré (même jour).
  *
  * Le texte brut reste envoyé à côté, dans la forme d'avant (bonjour, phrases,
  * « Ouvrez ce lien (valable …) : », le lien, la suite) ; les phrases ont été
@@ -85,31 +85,31 @@ export function htmlMailCompte(m: MailCompte): string {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${COULEURS.canvas};">
 <tr><td align="center" style="padding:40px 16px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;font-family:${POLICE};">
-<tr><td style="padding:0 0 20px;">
-<table role="presentation" cellpadding="0" cellspacing="0"><tr>
+<tr><td align="center" style="padding:0 0 20px;">
+<table role="presentation" align="center" cellpadding="0" cellspacing="0"><tr>
 <td style="background:${COULEURS.bleuPale};border-radius:999px;padding:8px 18px;font-size:17px;line-height:1;font-weight:600;letter-spacing:-0.02em;color:${COULEURS.bleu};">Rojer</td>
 </tr></table>
 </td></tr>
-<tr><td style="background:${COULEURS.carte};border-radius:20px;padding:36px 32px 32px;border:1px solid ${COULEURS.filet};">
+<tr><td align="center" style="background:${COULEURS.carte};border-radius:20px;padding:36px 32px 32px;border:1px solid ${COULEURS.filet};text-align:center;">
 <h1 style="margin:0 0 14px;font-size:26px;line-height:1.2;font-weight:600;letter-spacing:-0.03em;color:${COULEURS.encre};">${echapperHtml(m.titre)}</h1>
 ${m.paragraphes.map((p) => paragraphe(p)).join("\n")}
-<table role="presentation" cellpadding="0" cellspacing="0" style="margin:12px 0 14px;">
+<table role="presentation" align="center" cellpadding="0" cellspacing="0" style="margin:12px auto 14px;">
 <tr><td style="border-radius:999px;background:${COULEURS.encre};">
 <a href="${href}" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:999px;">${echapperHtml(m.bouton.libelle)}</a>
 </td></tr>
 </table>
 ${note(`Le lien est valable ${m.validite}.`)}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0 24px;">
-<tr><td style="background:${COULEURS.canvas};border-radius:12px;padding:14px 16px;">
-<p style="margin:0 0 4px;font-size:13px;line-height:1.5;color:${COULEURS.doux};">Le bouton ne s'ouvre pas ? Copiez ce lien dans votre navigateur :</p>
+<tr><td align="center" style="background:${COULEURS.canvas};border-radius:12px;padding:14px 16px;text-align:center;">
+<p style="margin:0 0 4px;font-size:13px;line-height:1.5;color:${COULEURS.doux};">Le bouton ne s'ouvre pas&nbsp;? Copiez ce lien dans votre navigateur&nbsp;:</p>
 <p style="margin:0;font-size:13px;line-height:1.5;word-break:break-all;"><a href="${href}" style="color:${COULEURS.bleu};">${href}</a></p>
 </td></tr>
 </table>
-<div style="border-top:1px solid ${COULEURS.filet};padding-top:16px;">
+<div style="border-top:1px solid ${COULEURS.filet};padding-top:16px;text-align:center;">
 ${m.apres.map(note).join("\n")}
 </div>
 </td></tr>
-<tr><td style="padding:18px 4px 0;font-size:12px;line-height:1.5;color:${COULEURS.doux};">Envoyé par Rojer à la suite d'une action sur votre compte. Ne répondez pas à ce message.</td></tr>
+<tr><td align="center" style="padding:18px 8px 0;font-size:12px;line-height:1.5;color:${COULEURS.doux};text-align:center;">Envoyé par Rojer après une action sur votre compte. Ne&nbsp;répondez pas à ce&nbsp;message.</td></tr>
 </table>
 </td></tr>
 </table>
