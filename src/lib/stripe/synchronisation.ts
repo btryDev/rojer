@@ -216,7 +216,9 @@ const AUTRE_CLIENT = { issue: "ignore", motif: "le compte est lié à un autre c
 /** Un motif écrit par Rojer : la nature de l'erreur, jamais son message (qui peut citer des données). */
 export function motifDErreur(e: unknown): string {
   if (e instanceof Stripe.errors.StripeError) {
-    return `API Stripe : ${e.type}${e.statusCode ? ` ${e.statusCode}` : ""}${e.code ? ` (${e.code})` : ""}`;
+    // L'identifiant de requête retrouve le refus dans le tableau de bord de
+    // Stripe (son message exact) ; il ne porte aucune donnée (2026-11-16).
+    return `API Stripe : ${e.type}${e.statusCode ? ` ${e.statusCode}` : ""}${e.code ? ` (${e.code})` : ""}${e.requestId ? ` [${e.requestId}]` : ""}`;
   }
   if (e instanceof ListeTronquee) return `liste Stripe tronquée (${e.max})`;
   const code = codePrisma(e);

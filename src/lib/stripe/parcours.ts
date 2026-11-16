@@ -251,7 +251,11 @@ export async function appliquerFormule(
     {
       items: item ? [{ id: item.id, price: choix.priceId }] : [{ price: choix.priceId }],
       default_payment_method: choix.paymentMethodId,
-      proration_behavior: "none",
+      // Stripe refuse `proration_behavior` sur un abonnement en pause
+      // (« Resume the subscription first », répétition en local du
+      // 2026-11-16) : la reprise qui suit le porte, et ne facture que la
+      // nouvelle période.
+      ...(enPause ? {} : { proration_behavior: "none" as const }),
       metadata: { rojerChoixLe: String(choix.choisiLe) },
       expand: ["latest_invoice"],
       ...(finEssai ? { trial_end: "now" as const } : {}),

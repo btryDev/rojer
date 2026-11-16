@@ -116,6 +116,10 @@ describe("parcours Stripe", () => {
     expect(api.subscriptions.update.mock.lastCall?.[1]).toMatchObject({ trial_end: "now" });
 
     await appliquerFormule(stripe, sub("paused"), choix);
+    // En pause, Stripe refuse `proration_behavior` sur la mise à jour (répétition locale du 2026-11-16) :
+    // seule la reprise le porte.
+    expect(api.subscriptions.update.mock.lastCall?.[1]).not.toHaveProperty("proration_behavior");
+    expect(api.subscriptions.update.mock.lastCall?.[1]).toMatchObject({ items: [{ id: "si_1", price: "price_pa" }], default_payment_method: "pm_1" });
     expect(api.subscriptions.resume).toHaveBeenCalledWith("sub_1", { proration_behavior: "none", expand: ["latest_invoice"] }, { idempotencyKey: "carte-cs_1-reprise" });
 
     api.subscriptions.update.mockClear();
