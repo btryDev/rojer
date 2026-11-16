@@ -223,11 +223,38 @@ et sans croire une information qui ne vient pas de Stripe.
    essai peut apprendre, refus après refus, qu'un SIREN a déjà eu un essai
    Rojer ailleurs — une information commerciale, pas personnelle, sans
    aucun accès au dossier.]
-9. **L'essai est un abonnement Stripe créé par l'API** :
+9. ~~**L'essai est un abonnement Stripe créé par l'API** :
    `trial_period_days=30`, sans moyen de paiement,
    `trial_settings.end_behavior.missing_payment_method=pause`. Pendant
    l'essai, la saisie est ouverte (`trialing`) ; à la fin sans carte, l'état
-   `paused` ferme la saisie, jamais la lecture ni l'export (§ 3).
+   `paused` ferme la saisie, jamais la lecture ni l'export (§ 3).~~
+   [2026-11-16, décision de la propriétaire, **à coder** (plan :
+   `docs/plan-essai-chez-rojer.md`) : **l'essai se compte chez Rojer, Stripe
+   n'entre qu'au moment de payer.**
+   - L'essai est une date posée par Rojer au démarrage (`essaiUtiliseLe`,
+     `finEssai` = + 30 jours) : ni client ni abonnement Stripe. Passé
+     `finEssai` sans abonnement, la saisie se ferme, jamais la lecture ni
+     l'export (§ 3) ; l'horloge des douze mois part de `finEssai`.
+   - Un seul geste, « S'abonner » : Checkout en mode abonnement, sur la page
+     de Stripe, qui porte la carte, la confirmation de la banque, les
+     conditions générales et l'adresse de facturation. Discret pendant
+     l'essai (page Abonnement, message d'une limite de l'essai), obligatoire
+     après. Le premier paiement est immédiat : s'abonner pendant l'essai le
+     termine, sans report des jours restants.
+   - Disparaissent : l'abonnement d'essai chez Stripe, la pause et sa
+     reprise, la carte enregistrée sans payer (Checkout « setup »),
+     « Enregistrer ma formule » et « Payer maintenant », l'application de la
+     formule et la fin d'essai depuis le serveur. Plus de prélèvement
+     automatique à la fin de l'essai : le client revient s'abonner, les
+     rappels (7 jours, veille) partent de Rojer.
+   - La preuve d'acceptation des conditions au paiement est celle de Stripe
+     (session Checkout) ; Rojer garde la sienne au démarrage de l'essai.
+   Pourquoi : la répétition du 2026-11-16 (horloge de simulation) a trouvé
+   trois défauts, tous dans le passage de l'essai au payant fait par Rojer —
+   course entre le retour de Checkout et la notification, 3-D Secure,
+   carte fixée sur l'abonnement. L'état de l'essai tenu à deux endroits
+   n'était jamais d'accord avec lui-même. Amende les §§ 8 (formule de
+   l'essai), 9 et 10.]
 10. [2026-11-06, amendé — grille du 2026-11-05 : **s'abonner se fait dans
    Rojer**. Le propriétaire choisit la formule et le rythme (mensuel,
    annuel) sur la page de l'abonnement ; la carte s'enregistre ensuite sur
