@@ -10,6 +10,7 @@ import "server-only";
 // jamais une charge utile reçue ni une donnée de l'utilisateur.
 
 import { envoiEnService, motifErreur, sendMail } from "@/lib/email";
+import { cleJourCivil } from "@/lib/dates";
 
 export function adresseDesAlertes(env: Record<string, string | undefined> = process.env): string | null {
   return env.ALERTES_EMAIL?.trim() || null;
@@ -24,4 +25,31 @@ export async function alerter(sujet: string, lignes: string[]): Promise<void> {
   } catch (e) {
     console.error(`alerte non envoyée — ${motifErreur(e)}`);
   }
+}
+
+/** Les alertes déjà parties aujourd'hui, par clé (ce processus). */
+const parties = new Map<string, string>();
+
+/**
+ * Une alerte qui se répéterait à chaque relecture (événements Stripe en
+ * rafale, rapprochement, reprise d'un jour) : une fois par jour civil et par
+ * clé, pour ce processus — chaque instance peut donc en envoyer une
+ * (revue du 2026-11-16 : un double abonnement envoyait un e-mail par
+ * événement). Le problème qui dure se redit le lendemain.
+ */
+export async function alerterUneFoisParJour(
+  cle: string,
+  sujet: string,
+  lignes: string[],
+  maintenant: Date = new Date(),
+): Promise<void> {
+  const jour = cleJourCivil(maintenant);
+  if (parties.get(cle) === jour) return;
+  parties.set(cle, jour);
+  await alerter(sujet, lignes);
+}
+
+/** Pour les tests. */
+export function oublierLesAlertesDuJour() {
+  parties.clear();
 }

@@ -373,10 +373,11 @@ async function abonnement(db: Lecteur, adresse: string) {
  * compte : des dates et des nombres.
  */
 async function taches(db: Lecteur) {
-  const { rows: jours } = await db.query<{ jour: string; finie: Date | null; erreurs: number }>(
+  const { rows: jours } = await db.query<{ jour: string; finie: Date | null; erreurs: number; config: number }>(
     `SELECT jour, "termineeLe" AT TIME ZONE 'UTC' AS finie,
             (SELECT count(*)::int FROM jsonb_each(COALESCE(bilan::jsonb, '{}'::jsonb)) b
-              WHERE b.value @> '{"erreur": true}'::jsonb) AS erreurs
+              WHERE b.value @> '{"erreur": true}'::jsonb) AS erreurs,
+            COALESCE((bilan::jsonb #>> '{configuration,problemes}')::int, 0) AS config
        FROM "TacheQuotidienne" ORDER BY jour DESC LIMIT 5`,
   );
   if (jours.length === 0) console.log("Tâches du jour : aucune exécution enregistrée.");
@@ -384,23 +385,33 @@ async function taches(db: Lecteur) {
     console.log(
       `Tâches du ${j.jour} : ${j.finie ? `finies le ${dater(j.finie)}` : "PAS FINIES"}` +
         (j.erreurs > 0 ? ` — ${j.erreurs} tâche(s) en échec` : "") +
+        (j.config > 0 ? " — configuration à corriger" : "") +
         ".",
     );
   }
   const {
     rows: [f],
-  } = await db.query<{ recu: Date | null; traite: Date | null; attente: number; bloques: number; durables: number }>(
+  } = await db.query<{
+    recu: Date | null;
+    traite: Date | null;
+    attente: number;
+    bloques: number;
+    durables: number;
+    clients: number;
+  }>(
     `SELECT max("recuLe") AT TIME ZONE 'UTC' AS recu,
             max("traiteLe") AT TIME ZONE 'UTC' AS traite,
             count(*) FILTER (WHERE "traiteLe" IS NULL AND "echecDurableLe" IS NULL)::int AS attente,
             count(*) FILTER (WHERE "traiteLe" IS NULL AND "echecDurableLe" IS NULL
                              AND "recuLe" < (now() AT TIME ZONE 'UTC') - interval '1 hour')::int AS bloques,
-            count(*) FILTER (WHERE "echecDurableLe" IS NOT NULL)::int AS durables
+            count(*) FILTER (WHERE "echecDurableLe" IS NOT NULL)::int AS durables,
+            (SELECT count(*)::int FROM "SynchronisationStripe" WHERE "echecDurableLe" IS NOT NULL) AS clients
        FROM "EvenementStripe"`,
+    // « Plus d'une heure » : le seuil de `etatDesEvenements` (stripe/evenements.ts), qui alerte chaque jour.
   );
   console.log(
-    `File Stripe : dernier événement reçu ${f.recu ? dater(f.recu) : "—"}, traité ${f.traite ? dater(f.traite) : "—"} ; ` +
-      `${f.attente} en attente dont ${f.bloques} depuis plus d'une heure ; ${f.durables} en échec durable.`,
+    `File Stripe : dernier événement reçu ${ouDate(f.recu)}, traité ${ouDate(f.traite)} ; ` +
+      `${f.attente} en attente dont ${f.bloques} depuis plus d'une heure ; ${f.durables} événement(s) et ${f.clients} client(s) en échec durable.`,
   );
   console.log(
     "(Heure de Paris. Les tâches du jour se lancent dès 9 h : « PAS FINIES » après midi, ou aucun jour récent, veut dire que le cron ne tourne plus.)",

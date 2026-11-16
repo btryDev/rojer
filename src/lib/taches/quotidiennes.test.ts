@@ -14,18 +14,19 @@ const m = vi.hoisted(() => ({
   file: vi.fn(),
   apres: [] as (() => Promise<unknown>)[],
   alerter: vi.fn(),
-  configuration: [] as string[],
+  uneFoisParJour: vi.fn(),
+  configuration: null as string | null,
 }));
 vi.mock("next/server", () => ({ after: (f: () => Promise<unknown>) => m.apres.push(f) }));
 vi.mock("./jour", () => ({ prendreLeJour: m.prendreLeJour, terminerLeJour: m.terminerLeJour }));
 vi.mock("@/lib/stripe/traitement", () => ({ traiterLaFileIci: m.file, etatDeLaFile: vi.fn() }));
 vi.mock("@/lib/stripe/rapprochement", () => ({ rapprocher: vi.fn() }));
 vi.mock("@/lib/stripe/evenements", () => ({ oublierLesAnciens: vi.fn().mockResolvedValue(undefined) }));
-vi.mock("@/lib/alertes", () => ({ alerter: m.alerter }));
+vi.mock("@/lib/alertes", () => ({ alerter: m.alerter, alerterUneFoisParJour: m.uneFoisParJour }));
 vi.mock("@/lib/abonnements/lancement", () => ({
   contexteDroits: () => ({}),
   offreLancee: () => m.lancee.v,
-  avertissementsDeConfiguration: () => m.configuration,
+  offreOuverteParErreur: () => m.configuration,
 }));
 vi.mock("@/lib/abonnements/rappels", () => ({ rappelerLaVeilleDeLaFinDEssai: m.rappels, rappelerLeRenouvellementAnnuel: m.renouvellement }));
 vi.mock("@/lib/abonnements/suppression", () => ({
@@ -49,7 +50,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.unstubAllEnvs();
   m.lancee.v = true;
-  m.configuration = [];
+  m.configuration = null;
   m.rappels.mockResolvedValue({ envoyes: 2, echecs: 0 });
   m.renouvellement.mockResolvedValue({ envoyes: 1, echecs: 0 });
   m.avertir.mockResolvedValue({ j30: { envoyes: 0, echecs: 0 }, j7: { envoyes: 0, echecs: 0 }, membresPrevenus: 0 });
@@ -145,23 +146,35 @@ describe("tâches quotidiennes", () => {
     expect(m.supprimer).not.toHaveBeenCalled();
   });
 
-  it("une tâche qui échoue n'empêche pas les suivantes, et se signale par e-mail (2026-11-16)", async () => {
+  it("une tâche qui échoue n'empêche pas les suivantes", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     m.rappels.mockRejectedValue(new Error("panne"));
     const bilan = await lancerTachesQuotidiennes(aParis(9));
     expect(bilan).toMatchObject({ rappelsVeilleFinEssai: { erreur: true } });
     expect(m.avertir).toHaveBeenCalled();
     expect(m.supprimer).toHaveBeenCalled();
-    expect(m.alerter).toHaveBeenCalledWith("tâche quotidienne en échec : rappel de fin d'essai", [
-      "erreur inattendue",
-      expect.stringMatching(/rejouée demain/),
-    ]);
+  });
+
+  it("les tâches en échec du jour : UN e-mail qui les nomme toutes ; aucun quand tout passe (2026-11-16)", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    // Deux jours qu'aucun autre test n'a vus finis (le dernier jour fini est mémorisé).
+    await lancerTachesDuJour(new Date(Date.UTC(2026, 10, 20, 8, 30)));
+    expect(m.uneFoisParJour).not.toHaveBeenCalled();
+    m.rappels.mockRejectedValue(new Error("panne"));
+    m.avertir.mockRejectedValue(new Error("panne"));
+    await lancerTachesDuJour(new Date(Date.UTC(2026, 10, 21, 8, 30)));
+    expect(m.uneFoisParJour).toHaveBeenCalledTimes(1);
+    const [cle, sujet, lignes] = m.uneFoisParJour.mock.calls[0];
+    expect(cle).toMatch(/^taches:/);
+    expect(sujet).toBe("tâches quotidiennes en échec");
+    expect(lignes[0]).toBe("En échec : rappelsVeilleFinEssai, avertissementsAvantSuppression.");
   });
 
   it("une configuration de travers se signale chaque jour par e-mail ; rien quand tout va bien", async () => {
     await lancerTachesQuotidiennes(aParis(9));
     expect(m.alerter).not.toHaveBeenCalledWith("configuration à corriger", expect.anything());
-    m.configuration = ["ABONNEMENT_EXIGE=oui alors que Stripe est désactivé"];
+    m.configuration = "ABONNEMENT_EXIGE=oui alors que Stripe est désactivé";
     expect(await lancerTachesQuotidiennes(aParis(9))).toMatchObject({ configuration: { problemes: 1 } });
     expect(m.alerter).toHaveBeenCalledWith("configuration à corriger", ["ABONNEMENT_EXIGE=oui alors que Stripe est désactivé"]);
   });

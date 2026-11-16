@@ -21,18 +21,17 @@ import {
   purgerTracesEchues,
   supprimerComptesEchus,
 } from "@/lib/abonnements/suppression";
-import { alerter } from "@/lib/alertes";
+import { alerter, alerterUneFoisParJour } from "@/lib/alertes";
 import { composantesCiviles, cleJourCivil } from "@/lib/dates";
 import { clientStripe, clientStripeWebhook } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
 import { rapprocher } from "@/lib/stripe/rapprochement";
 import { etatDeLaFile, traiterLaFileIci } from "@/lib/stripe/traitement";
-import { contexteDroits, offreLancee } from "@/lib/abonnements/lancement";
+import { contexteDroits, offreLancee, offreOuverteParErreur } from "@/lib/abonnements/lancement";
 import { oublierLesAnciens } from "@/lib/stripe/evenements";
 import { motifDErreur } from "@/lib/stripe/synchronisation";
 import { prendreLeJour, terminerLeJour } from "./jour";
 import { purgerComptesNonActives } from "@/lib/auth/comptes-non-actives";
-import { avertissementsDeConfiguration } from "@/lib/abonnements/lancement";
 
 function horlogeReelle(): Date {
   return new Date();
@@ -96,16 +95,14 @@ export async function lancerTachesQuotidiennes(maintenant: Date) {
 }
 
 /**
- * Les réglages qui font, sans bruit, tourner Rojer de travers : l'offre
- * exigée alors que Stripe est refusé (la saisie s'ouvre à tous, gratuitement)
- * ; Stripe actif sans adresse d'alerte (les alertes ne vont qu'au journal).
- * Les mêmes avertissements que le démarrage (`avertissementsEnvironnement`),
- * par e-mail quand une adresse existe.
+ * L'offre exigée alors que Stripe est refusé : la saisie s'ouvre à tous,
+ * gratuitement, sans bruit — dit chaque jour par e-mail, en plus du
+ * démarrage (`offreOuverteParErreur`).
  */
-async function signalerLaConfiguration(env: Record<string, string | undefined> = process.env) {
-  const problemes = avertissementsDeConfiguration(env);
-  if (problemes.length > 0) await alerter("configuration à corriger", problemes);
-  return { problemes: problemes.length };
+async function signalerLaConfiguration() {
+  const probleme = offreOuverteParErreur();
+  if (probleme) await alerter("configuration à corriger", [probleme]);
+  return { problemes: probleme ? 1 : 0 };
 }
 
 /** L'état de la file Stripe, et une alerte s'il reste des événements bloqués ou des échecs durables. */
@@ -150,6 +147,19 @@ export async function lancerTachesDuJour(maintenant: Date) {
   if (jeton === null) return { etat: "en-cours-ailleurs" as const, jour };
   const bilan = await lancerTachesQuotidiennes(maintenant);
   if (await terminerLeJour(jour, jeton, new Date(), bilan)) jourFiniVuIci = jour;
+  // Les tâches en échec, en UN e-mail pour le jour (une panne de base les fait
+  // toutes échouer ensemble ; un jour repris ne le renvoie pas). Le jour est
+  // quand même marqué fait : elles attendent demain, et un humain le sait
+  // (revue de la mécanique, 2026-11-16 — l'échec n'allait qu'au journal).
+  const enEchec = Object.entries(bilan)
+    .filter(([, v]) => typeof v === "object" && v !== null && "erreur" in v)
+    .map(([cle]) => cle);
+  if (enEchec.length > 0) {
+    await alerterUneFoisParJour(`taches:${jour}`, "tâches quotidiennes en échec", [
+      `En échec : ${enEchec.join(", ")}.`,
+      "Elles seront rejouées demain à 9 h. Lire les journaux de l'application ; relancer à la main si elles ne peuvent pas attendre.",
+    ], maintenant);
+  }
   console.info(`tâches du ${jour} : ${JSON.stringify(bilan)}`);
   return { etat: "faite" as const, jour, bilan };
 }
@@ -159,14 +169,8 @@ async function tenter<T>(nom: string, tache: () => Promise<T>): Promise<T | { er
     return await tache();
   } catch (e) {
     // Un motif écrit par Rojer, jamais le message reçu (qui peut citer des
-    // données). Le jour est quand même marqué fait : la tâche attend demain,
-    // et un humain le sait (revue de la mécanique, 2026-11-16 — l'échec
-    // n'allait qu'au journal).
-    const motif = motifDErreur(e);
-    await alerter(`tâche quotidienne en échec : ${nom}`, [
-      motif,
-      "Elle sera rejouée demain à 9 h. Lire les journaux de l'application ; relancer à la main si elle ne peut pas attendre.",
-    ]);
+    // données). L'alerte, une seule pour le jour, part de `lancerTachesDuJour`.
+    console.error(`tâche quotidienne « ${nom} » en échec — ${motifDErreur(e)}`);
     return { erreur: true };
   }
 }

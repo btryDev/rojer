@@ -136,6 +136,9 @@ describe("variables Stripe (ADR-053)", () => {
     ]);
     const sansStripe = { ...BASE, NODE_ENV: "production", APP_ENV: "production", PUBLIC_APP_URL: "https://rojer.fr", ABONNEMENT_EXIGE: "oui" };
     expect(avertissementsEnvironnement(sansStripe)).toEqual([expect.stringMatching(/ABONNEMENT_EXIGE=oui alors que Stripe est désactivé/)]);
+    // Une clé refusée : son motif une fois, puis l'offre ouverte — sans le redire dedans.
+    const refusee = avertissementsEnvironnement({ ...prod, STRIPE_SECRET_KEY: "sk_test_abc", ABONNEMENT_EXIGE: "oui", TACHES_SECRET: "x".repeat(32), ALERTES_EMAIL: "a@b.fr" });
+    expect(refusee).toEqual([expect.stringMatching(/clé Stripe de test refusée/), expect.stringMatching(/^ABONNEMENT_EXIGE=oui/)]);
   });
 });
 

@@ -23,7 +23,7 @@ vi.unmock("@/lib/auth/membres");
 vi.mock("@/lib/auth/better-auth", () => ({ auth: {} }));
 vi.mock("@/lib/auth/require-user", () => ({ lireSessionCourante: async () => null }));
 // Les alertes sont relevées, jamais envoyées.
-const alertes = vi.hoisted(() => ({ alerter: vi.fn(async () => undefined) }));
+const alertes = vi.hoisted(() => ({ alerter: vi.fn(async () => undefined), alerterUneFoisParJour: vi.fn(async () => undefined) }));
 vi.mock("@/lib/alertes", () => alertes);
 
 const URL_BASE = process.env.STRIPE_INTEGRATION_URL;
@@ -172,14 +172,16 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
       expect(alertes.alerter).toHaveBeenCalledWith("client Stripe non enregistré", ["client cus_X", expect.stringMatching(/il facture/)]);
     });
 
-    it("deux abonnements en cours pour un client : la copie s'écrit, et un humain est prévenu (2026-11-16)", async () => {
-      alertes.alerter.mockClear();
+    it("deux abonnements en cours pour un client : la copie s'écrit, et un humain est prévenu, une fois par jour (2026-11-16)", async () => {
+      alertes.alerterUneFoisParJour.mockClear();
       const deux = stripe(A, [abo({ id: "sub_1", status: "active", created: 1 }), abo({ id: "sub_2", status: "active", created: 2 })]);
-      expect(await synchroniserClientStripe(deux, "cus_A", { maintenant: () => new Date(1000) })).toEqual({ issue: "ecrit" });
-      expect(alertes.alerter).toHaveBeenCalledWith("plusieurs abonnements en cours pour un même client", [
-        "client cus_A",
-        expect.stringMatching(/paie peut-être deux fois/),
-      ]);
+      expect(await synchroniserClientStripe(deux, "cus_A", { maintenant: () => new Date(1000) })).toEqual({ issue: "ecrit", plusieurs: true });
+      expect(alertes.alerterUneFoisParJour).toHaveBeenCalledWith(
+        "plusieurs:cus_A",
+        "plusieurs abonnements en cours pour un même client",
+        ["client cus_A", expect.stringMatching(/paie peut-être deux fois/)],
+        new Date(1000),
+      );
     });
 
     it("un client d'avant l'ADR-054 (metadata.userId) écrit au compte dont la personne est propriétaire", async () => {

@@ -19,26 +19,13 @@ export function contexteDroits(): ContexteDroits {
 export const offreLancee = (ctx: ContexteDroits) => ctx.stripeActif && ctx.exige;
 
 /**
- * Ce qui, dans la configuration, fait tourner l'offre de travers sans
- * empêcher de servir (revue de la mécanique, 2026-11-16) — lu au démarrage
- * (`env.ts`) et chaque jour par la tâche quotidienne, qui l'envoie par
- * e-mail. Vide : rien à dire.
+ * L'offre exigée alors que Stripe est refusé : la saisie s'ouvre à tous,
+ * sans abonnement et sans bruit (revue de la mécanique, 2026-11-16). Lu au
+ * démarrage (`env.ts`) et chaque jour par la tâche quotidienne, qui l'envoie
+ * par e-mail. `null` : rien à dire.
  */
-export function avertissementsDeConfiguration(env: Env = process.env): string[] {
-  const stripe = etatStripe(env);
-  const problemes: string[] = [];
-  if (abonnementExige(env) && !stripe.active) {
-    problemes.push(
-      `ABONNEMENT_EXIGE=oui alors que Stripe est désactivé${stripe.motif ? ` (${stripe.motif})` : ""} : la saisie reste ouverte à tous, sans abonnement (abonnements/droits.ts).`,
-    );
-  }
-  if (stripe.active && !env.TACHES_SECRET?.trim()) {
-    problemes.push(
-      "Stripe actif sans TACHES_SECRET : la route des tâches répond 404, la file Stripe n'est pas reprise et les tâches quotidiennes ne tournent pas.",
-    );
-  }
-  if (stripe.active && !env.ALERTES_EMAIL?.trim()) {
-    problemes.push("Stripe actif sans ALERTES_EMAIL : les alertes (échecs durables, litiges, remboursements) ne vont qu'au journal.");
-  }
-  return problemes;
+export function offreOuverteParErreur(env: Env = process.env): string | null {
+  return abonnementExige(env) && !etatStripe(env).active
+    ? "ABONNEMENT_EXIGE=oui alors que Stripe est désactivé : la saisie reste ouverte à tous, sans abonnement (abonnements/droits.ts)."
+    : null;
 }
