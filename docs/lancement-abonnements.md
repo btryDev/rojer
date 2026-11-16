@@ -151,10 +151,12 @@ sur la préproduction, où fermer la saisie ne gêne personne.
    test) pour jouer la fin naturelle d'un essai, un renouvellement, la suite
    d'un impayé. Retirer la variable après la répétition. Limites : les tâches
    que Rojer date lui-même (rappels, suppression à 12 mois, purge à 30 jours)
-   suivent l'heure réelle, pas l'horloge — elles ne se répètent pas ainsi ;
+   et le bandeau « Votre essai se termine le… » suivent l'heure réelle, pas
+   l'horloge — ils ne se répètent pas ainsi (le bandeau n'apparaît pas en
+   avançant l'horloge : ce n'est pas un défaut) ;
    supprimer une horloge supprime ses clients (la copie de Rojer garde alors
    un client mort) ; une tentative d'essai ratée peut laisser une horloge
-   orpheline.]
+   orpheline (parfois un client), sans conséquence.]
    [2026-11-16 : la RÉPÉTITION complète, d'après la page « Testing Stripe
    Billing » et la liste « Go-live » de Stripe, un compte neuf par cas :
    (a) les huit cas joués en local le 2026-11-16 (paiement immédiat,

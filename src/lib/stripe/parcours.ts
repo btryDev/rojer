@@ -48,8 +48,8 @@ export async function creerClientStripe(
   // tableau de bord de test. Son nom ne porte aucune donnée personnelle.
   // Sans clé d'idempotence : `frozen_time` change à chaque tentative, et une
   // clé réutilisée bloquerait la reprise 24 h (revue du 2026-11-16). Une
-  // tentative ratée laisse au pire une horloge orpheline dans le compte de
-  // test ; le client prend une clé par horloge, et la réservation de la ligne
+  // tentative ratée laisse au pire une horloge, parfois un client, orphelins
+  // dans le compte de test (sans abonnement, ignorés par la copie) ; le client prend une clé par horloge, et la réservation de la ligne
   // `Abonnement` (essai.ts) garde un seul client par compte.
   const testClock = horloge
     ? (
