@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { droitsDe, gesteAbonnement, type ContexteDroits, type LigneAbonnement } from "./droits";
+import { droitsDe, gesteAbonnement, libelleStatut, type ContexteDroits, type LigneAbonnement } from "./droits";
 
 const MAINTENANT = new Date("2026-11-03T10:00:00Z");
 const EXIGE: ContexteDroits = { stripeActif: true, exige: true, maintenant: MAINTENANT };
@@ -46,6 +46,25 @@ describe("droitsDe", () => {
       /consultables et exportables/,
     );
     expect(droitsDe(ligne({ statut: "paused" }), EXIGE).bandeau?.message).not.toMatch(/exportables/);
+  });
+
+  it("saisie fermée : la phrase dit le cas — jamais d'essai, essai fini, abonnement cessé (audit du 2026-11-16)", () => {
+    const message = (l: LigneAbonnement | null) => droitsDe(l, EXIGE).bandeau?.message;
+    expect(message(null)).toMatch(/^Démarrez votre essai gratuit/);
+    expect(message(ligne({ statut: null }))).toMatch(/^Démarrez votre essai gratuit/);
+    for (const statut of ["paused", "canceled", "incomplete_expired"]) {
+      expect(message(ligne({ statut })), statut).toMatch(/^Votre essai est terminé/);
+    }
+    expect(message(ligne({ statut: "unpaid", debutPayantLe: new Date("2026-01-01") }))).toMatch(/^Votre abonnement n'est plus actif/);
+  });
+
+  it("l'état dit au dirigeant : un compte qui n'a jamais payé a un essai terminé, pas un abonnement suspendu", () => {
+    expect(libelleStatut(null)).toBe("Aucun abonnement");
+    expect(libelleStatut("paused")).toBe("Essai terminé");
+    expect(libelleStatut("canceled")).toBe("Essai terminé");
+    expect(libelleStatut("paused", new Date("2026-01-01"))).toBe("Suspendu");
+    expect(libelleStatut("canceled", new Date("2026-01-01"))).toBe("Résilié");
+    expect(libelleStatut("trialing")).toBe("Essai en cours");
   });
 
   it("paiement échoué : saisie ouverte, alerte", () => {

@@ -272,6 +272,21 @@ et sans croire une information qui ne vient pas de Stripe.
    trial_update_behavior = continue_trial` ; par défaut, le portail y met
    fin). **Checkout** ne sert qu'à souscrire de nouveau après une
    résiliation ; Rojer le refuse tant qu'un abonnement n'est pas terminé.
+   [2026-11-16, audit des parcours, plan validé par la propriétaire :
+   (a) **payer maintenant pendant l'essai** est un geste visible de la page
+   (« Payer maintenant », `immediat` du formulaire) et non plus seulement
+   l'adresse `?immediat=1` d'un document officiel : choisir une formule sans
+   payer ne vaut que pour la fin de l'essai, et les limites de l'essai
+   restent (le message de plafond y renvoie) ; le montant TTC prélevé est
+   écrit avant le clic. (b) Le formulaire part de la formule en cours. (c)
+   Une facture qui attend (`past_due`, `unpaid`, `incomplete`) se règle
+   depuis Rojer (« Régler la facture en attente », `reglerFactureAction`,
+   page hébergée de la facture) ; un `incomplete` n'est plus « déjà en
+   cours ». (d) Une résiliation prévue pendant l'essai ferme le changement
+   de formule, comme pour un abonnement qui paie. (e) Après l'essai,
+   `/entreprises` aiguille (dossier existant ou onboarding). Le portail
+   n'a pas `subscription_update` : il sert à la carte, aux factures et à la
+   résiliation.]
 11. **Les formules vivent en TypeScript** (`abonnements/formules.ts`, comme
    les référentiels, ADR-003) : la `lookup_key` du prix Stripe → formule,
    périodicité, quotas. Les **prix** restent chez Stripe, qui les facture.

@@ -160,7 +160,13 @@ export async function ouvrirCheckoutCarte(
 }
 
 /** L'adresse de la facture à régler d'un abonnement, si sa dernière facture attend un paiement (refus, 3DS). */
-async function factureARegler(stripe: Stripe, derniere: Stripe.Subscription["latest_invoice"]): Promise<string | null> {
+/**
+ * L'adresse de la dernière facture d'un abonnement si elle attend un
+ * paiement (`open`) : carte refusée, authentification demandée, impayé.
+ * La page hébergée de la facture se règle avec une autre carte, 3-D Secure
+ * compris. `null` sinon.
+ */
+export async function factureARegler(stripe: Stripe, derniere: Stripe.Subscription["latest_invoice"]): Promise<string | null> {
   if (!derniere) return null;
   const facture = typeof derniere === "string" ? await stripe.invoices.retrieve(derniere) : derniere;
   return facture.status === "open" ? (facture.hosted_invoice_url ?? null) : null;

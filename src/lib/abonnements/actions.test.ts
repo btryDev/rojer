@@ -24,6 +24,7 @@ const m = vi.hoisted(() => ({
   planifierBaisse: vi.fn(),
   annulerBaisse: vi.fn(),
   depassements: vi.fn(),
+  factureARegler: vi.fn(),
 }));
 vi.mock("next/navigation", () => ({ redirect: m.redirect }));
 vi.mock("@/lib/email", () => ({ publicAppUrl: () => "https://rojer.test" }));
@@ -32,6 +33,7 @@ vi.mock("@/lib/stripe/config", () => ({ configurationStripe: () => ({ active: tr
 vi.mock("@/lib/stripe/parcours", () => ({
   abonnementsDuClient: m.abonnementsDuClient,
   appliquerFormule: m.appliquerFormule,
+  factureARegler: m.factureARegler,
   monterDeFormule: m.monterDeFormule,
   planifierBaisse: m.planifierBaisse,
   annulerBaisse: m.annulerBaisse,
@@ -64,6 +66,7 @@ import {
   changerFormuleAction,
   finaliserCarteAction,
   ouvrirPortailAction,
+  reglerFactureAction,
   sAbonnerAction,
 } from "./actions";
 import { CHAMP_COMPTE_ATTENDU } from "@/lib/auth/compte-attendu";
@@ -76,7 +79,15 @@ const formulaire = (formule = "rojer_pro_annuel", immediat = false) => {
   if (immediat) f.set("immediat", "oui");
   return f;
 };
-const abonnement = (status: string, created = 1) => ({ id: `sub_${status}`, status, created, items: { data: [] } });
+const abonnement = (status: string, created = 1, autres: object = {}) => ({
+  id: `sub_${status}`,
+  status,
+  created,
+  items: { data: [] },
+  latest_invoice: `in_${status}`,
+  metadata: {},
+  ...autres,
+});
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -90,6 +101,7 @@ beforeEach(() => {
   m.appliquerFormule.mockResolvedValue(null);
   m.monterDeFormule.mockResolvedValue(null);
   m.depassements.mockResolvedValue([]);
+  m.factureARegler.mockResolvedValue(null);
 });
 
 describe("sAbonnerAction", () => {
@@ -157,9 +169,88 @@ describe("sAbonnerAction", () => {
     expect(m.ouvrirCheckout).not.toHaveBeenCalled();
   });
 
+  it("« Payer maintenant » pendant l'essai, carte enregistrée : l'essai s'arrête, le premier paiement part", async () => {
+    m.abonnementsDuClient.mockResolvedValue([abonnement("trialing")]);
+    m.carteParDefaut.mockResolvedValue("pm_1");
+    expect(await redirigeVers(sAbonnerAction(formulaire("rojer_pro_annuel", true)))).toBe(
+      "https://rojer.test/compte/abonnement?paiement=termine",
+    );
+    expect(m.appliquerFormule.mock.calls[0][2].immediat).toBe(true);
+  });
+
+  it("deux onglets : la clé d'idempotence tient au dernier choix appliqué, à la formule et au moment du paiement", async () => {
+    m.carteParDefaut.mockResolvedValue("pm_1");
+    m.abonnementsDuClient.mockResolvedValue([abonnement("trialing", 1, { metadata: { rojerChoixLe: "100" } })]);
+    await redirigeVers(sAbonnerAction(formulaire()));
+    await redirigeVers(sAbonnerAction(formulaire()));
+    const [a, b] = m.appliquerFormule.mock.calls.map((c) => c[2].idempotence);
+    expect(a).toBe("formule-sub_trialing-100-price_pa-fin-essai");
+    expect(b).toBe(a);
+    // Un choix appliqué depuis : le retour au même choix n'est pas pris pour un rejeu.
+    m.abonnementsDuClient.mockResolvedValue([abonnement("trialing", 1, { metadata: { rojerChoixLe: "200" } })]);
+    await redirigeVers(sAbonnerAction(formulaire()));
+    expect(m.appliquerFormule.mock.calls[2][2].idempotence).not.toBe(a);
+    await redirigeVers(sAbonnerAction(formulaire("rojer_pro_annuel", true)));
+    expect(m.appliquerFormule.mock.calls[3][2].idempotence).toBe("formule-sub_trialing-200-price_pa-maintenant");
+  });
+
+  it("résiliation prévue pendant l'essai : on ne change pas une formule qui s'arrête", async () => {
+    m.carteParDefaut.mockResolvedValue("pm_1");
+    for (const fin of [{ cancel_at_period_end: true }, { cancel_at: 1_800_000_000 }]) {
+      m.abonnementsDuClient.mockResolvedValue([abonnement("trialing", 1, fin)]);
+      expect(await redirigeVers(sAbonnerAction(formulaire("rojer_pro_annuel", true)))).toBe(
+        "https://rojer.test/compte/abonnement?formule=resiliation-prevue",
+      );
+    }
+    expect(m.appliquerFormule).not.toHaveBeenCalled();
+    expect(m.ouvrirCheckoutCarte).not.toHaveBeenCalled();
+  });
+
+  it("premier paiement resté en attente (incomplete) : vers sa facture, ni Checkout ni « déjà en cours »", async () => {
+    m.abonnementsDuClient.mockResolvedValue([abonnement("incomplete"), abonnement("canceled", 0)]);
+    m.factureARegler.mockResolvedValue("https://invoice.stripe.com/i/2");
+    expect(await redirigeVers(sAbonnerAction(formulaire()))).toBe("https://invoice.stripe.com/i/2");
+    expect(m.factureARegler).toHaveBeenCalledWith(expect.anything(), "in_incomplete");
+    expect(m.ouvrirCheckout).not.toHaveBeenCalled();
+    // Plus de facture ouverte (expirée entre-temps) : la page le dit, rien n'est ouvert.
+    m.factureARegler.mockResolvedValue(null);
+    expect(await redirigeVers(sAbonnerAction(formulaire()))).toBe("https://rojer.test/compte/abonnement?abonnement=en-cours");
+  });
+
   it("une formule hors catalogue : rien", async () => {
     expect(await redirigeVers(sAbonnerAction(formulaire("rojer_surmesure_mensuel")))).toBe("/compte/abonnement");
     expect(m.abonnementsDuClient).not.toHaveBeenCalled();
+  });
+});
+
+describe("reglerFactureAction", () => {
+  const poste = () => {
+    const f = new FormData();
+    f.set(CHAMP_COMPTE_ATTENDU, "c1");
+    return f;
+  };
+
+  it("impayé, ou premier paiement en attente : vers la facture ouverte", async () => {
+    m.factureARegler.mockResolvedValue("https://invoice.stripe.com/i/3");
+    for (const statut of ["past_due", "unpaid", "incomplete"]) {
+      m.abonnementsDuClient.mockResolvedValue([abonnement(statut)]);
+      expect(await redirigeVers(reglerFactureAction(poste()))).toBe("https://invoice.stripe.com/i/3");
+    }
+  });
+
+  it("rien à régler (à jour, essai, terminé, facture déjà payée) : la page le dit", async () => {
+    for (const statut of ["active", "trialing", "canceled"]) {
+      m.abonnementsDuClient.mockResolvedValue([abonnement(statut)]);
+      expect(await redirigeVers(reglerFactureAction(poste()))).toBe("/compte/abonnement?facture=aucune");
+    }
+    expect(m.factureARegler).not.toHaveBeenCalled();
+    m.abonnementsDuClient.mockResolvedValue([abonnement("past_due")]);
+    expect(await redirigeVers(reglerFactureAction(poste()))).toBe("/compte/abonnement?facture=aucune");
+  });
+
+  it("Stripe injoignable : page d'erreur", async () => {
+    m.abonnementsDuClient.mockRejectedValue(new Error("injoignable"));
+    expect(await redirigeVers(reglerFactureAction(poste()))).toBe("/compte/abonnement?stripe=indisponible");
   });
 });
 
@@ -261,6 +352,7 @@ describe("un autre onglet a changé de compte (audit du 2026-11-10)", () => {
     ["changer de formule", changerFormuleAction],
     ["garder sa formule", annulerBaisseAction],
     ["ouvrir le portail", ouvrirPortailAction],
+    ["régler la facture", reglerFactureAction],
   ])("%s : rien chez Stripe, la page rendue sur le compte actif le dit", async (_geste, action) => {
     m.abonnementsDuClient.mockResolvedValue([abonnement("trialing")]);
     expect(await redirigeVers(action(dUnAutreCompte()))).toBe("/compte/abonnement?compte=change");

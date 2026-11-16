@@ -6,13 +6,14 @@ import { MESSAGE_COMPTE_CHANGE } from "@/lib/auth/compte-attendu";
 import { ChampCompteAttendu } from "@/components/compte/ChampCompteAttendu";
 import { requireUser } from "@/lib/auth/require-user";
 import { abonnementDuCompte, contexteDroits, offreLancee } from "@/lib/abonnements/saisie";
-import { droitsDe, gesteAbonnement, libelleStatut, OUVRENT } from "@/lib/abonnements/droits";
+import { A_REGLER, droitsDe, gesteAbonnement, libelleStatut, OUVRENT } from "@/lib/abonnements/droits";
 import { formaterDateLongueFr } from "@/lib/dates";
 import { dateDeSuppressionPrevue } from "@/lib/abonnements/suppression";
 import { Button, buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
-import { ouvrirPortailAction } from "@/lib/abonnements/actions";
+import { ouvrirPortailAction, reglerFactureAction } from "@/lib/abonnements/actions";
 import { FormulaireAbonnement, type OffreAffichee } from "@/components/abonnements/FormulaireAbonnement";
+import { BoutonEnvoi } from "@/components/abonnements/BoutonEnvoi";
 import { FinalisationCarte } from "@/components/abonnements/FinalisationCarte";
 import { ChangerDeFormule, type OptionDeFormule } from "@/components/abonnements/ChangerDeFormule";
 import { sensDuChangement } from "@/lib/abonnements/changement";
@@ -176,13 +177,15 @@ export default async function AbonnementPage({
     immediat?: string;
     formule?: string;
     compte?: string;
+    facture?: string;
   }>;
 }) {
   // Sans compte encore (rien créé), la page se lit quand même : aucun
   // abonnement (ADR-054). `requireCompte` renverrait à l'onboarding.
   await requireUser();
   const c = await getOptionalCompte();
-  const { saisie, stripe, paiement, abonnement, carte, immediat, formule: formuleChange0, compte: compteChange } = await searchParams;
+  const { saisie, stripe, paiement, abonnement, carte, immediat, formule: formuleChange0, compte: compteChange, facture } =
+    await searchParams;
   // Le compte que montre la page : ses gestes le postent (`ChampCompteAttendu`).
   const { compteId, nomCompte } = await compteDeLaPage();
   const formuleChange = formuleChange0 && formuleChange0 in MESSAGES_FORMULE ? (formuleChange0 as keyof typeof MESSAGES_FORMULE) : null;
@@ -210,6 +213,12 @@ export default async function AbonnementPage({
       ? await changementsPossibles(c.db, c.compte.compteId, ligne.formule, ligne.finPeriode)
       : { options: [], baisse: null };
   const finEssai = ligne?.finEssai ? `, le ${formaterDateLongueFr(ligne.finEssai)}` : "";
+  // Une résiliation demandée au portail pendant l'essai : plus de formule à
+  // choisir, l'essai s'arrête à sa date (audit du 2026-11-16).
+  const resiliationPrevue = !!(ligne?.resilieEnFinDePeriode || ligne?.finPrevueLe);
+  const enEssai = ligne?.statut === "trialing";
+  // Une facture attend : impayé, ou premier paiement non abouti.
+  const factureEnAttente = geste === "portail" && A_REGLER.has(ligne?.statut ?? "");
   const quand =
     geste === "souscrire"
       ? "Le paiement se fait sur la page sécurisée de Stripe, notre prestataire de paiement."
@@ -218,7 +227,7 @@ export default async function AbonnementPage({
           ? "Le premier paiement est prélevé aussitôt sur votre carte enregistrée, et votre abonnement démarre."
           : "Votre carte s'enregistre sur la page sécurisée de Stripe ; le premier paiement est prélevé aussitôt et votre abonnement démarre."
         : carteEnregistree
-          ? `La nouvelle formule s'applique tout de suite. Rien n'est prélevé avant la fin de votre essai${finEssai}.`
+          ? `La formule choisie s'applique à la fin de votre essai${finEssai}, et rien n'est prélevé avant ; d'ici là, les limites de l'essai restent.`
           : `Votre carte s'enregistre sur la page sécurisée de Stripe. Rien n'est prélevé avant la fin de votre essai${finEssai}.`;
 
   return (
@@ -260,8 +269,8 @@ export default async function AbonnementPage({
           <div className="mt-6">
             <MessageFormulaire ton="info">
               Valider un document, exporter le registre ou le dossier de contrôle, publier le registre
-              d&apos;accessibilité ou demander une signature à un tiers est réservé aux abonnés. Abonnez-vous : le
-              premier mois est prélevé aussitôt, et vous pouvez le faire tout de suite.
+              d&apos;accessibilité ou demander une signature à un tiers est réservé aux abonnés. En payant
+              maintenant, votre abonnement démarre aujourd&apos;hui et les limites de l&apos;essai sont levées.
             </MessageFormulaire>
           </div>
         )}
@@ -275,7 +284,7 @@ export default async function AbonnementPage({
           {ouvert ? (
             <dl className="m-0 mt-4 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-[14px]">
               <dt className="text-[color:var(--board-slate-mid)]">Abonnement</dt>
-              <dd className="m-0 font-semibold">{libelleStatut(ligne?.statut ?? null)}</dd>
+              <dd className="m-0 font-semibold">{libelleStatut(ligne?.statut ?? null, ligne?.debutPayantLe ?? null)}</dd>
               {ligne?.formule && (
                 <>
                   <dt className="text-[color:var(--board-slate-mid)]">Formule</dt>
@@ -334,6 +343,8 @@ export default async function AbonnementPage({
                 ? MESSAGES_FORMULE[formuleChange]
                 : paiementEnConfirmation
                 ? "Le premier paiement est en cours : les fonctions réservées aux abonnés s'ouvrent dès qu'il est confirmé. Inutile de payer de nouveau."
+                : facture === "aucune"
+                ? "Aucune facture n'attend de paiement : votre abonnement est à jour."
                 : abonnement === "en-cours"
                 ? "Un abonnement est déjà en cours pour ce compte : gérez-le ici plutôt que d'en souscrire un second."
                 : abonnement === "formule-choisie"
@@ -345,7 +356,17 @@ export default async function AbonnementPage({
         {geste && (
           <section className="carte-board mt-5 px-7 py-6 sm:px-8" aria-labelledby="titre-gerer">
             <h2 id="titre-gerer" className="board-titre m-0 text-[22px]">
-              {geste === "abonner" || geste === "souscrire" ? "S'abonner" : "Gérer"}
+              {geste === "essai"
+                ? "Essai gratuit"
+                : geste === "abonner" && enEssai && !payerMaintenant
+                  ? resiliationPrevue
+                    ? "Fin de l'essai"
+                    : carteEnregistree
+                      ? "Changer de formule"
+                      : "Après l'essai"
+                  : geste === "abonner" || geste === "souscrire"
+                    ? "S'abonner"
+                    : "Gérer"}
             </h2>
             {geste === "membre" && (
               <p className="m-0 mt-2 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
@@ -365,32 +386,52 @@ export default async function AbonnementPage({
             {geste === "portail" && optionsChangement.length > 0 && (
               <ChangerDeFormule options={optionsChangement} baisse={baisse} compteId={compteId} />
             )}
+            {factureEnAttente && (
+              <form action={reglerFactureAction} className="mt-2 mb-6">
+                <ChampCompteAttendu compteId={compteId} />
+                <p className="m-0 mb-4 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                  Une facture attend son paiement. Réglez-la sur la page sécurisée de Stripe, avec la même carte ou
+                  une autre : la saisie se rouvre dès qu&apos;elle est payée.
+                </p>
+                <BoutonEnvoi variant="board">Régler la facture en attente</BoutonEnvoi>
+              </form>
+            )}
             {geste === "portail" && (
               <form action={ouvrirPortailAction} className={optionsChangement.length > 0 ? "mt-6" : undefined}>
                 <ChampCompteAttendu compteId={compteId} />
                 <p className="m-0 mt-2 mb-5 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                  Changer de carte, résilier, télécharger vos factures : sur la page sécurisée de Stripe, notre
-                  prestataire de paiement.
+                  Carte, factures, résiliation : sur la page sécurisée de Stripe, notre prestataire de paiement.
                   {baisse
                     ? " Un changement de formule est prévu : pour résilier, choisissez d'abord « Garder ma formule »."
                     : null}
+                </p>
+                <Button type="submit" variant={factureEnAttente ? "boardClair" : "board"} size="board">
+                  Gérer mon abonnement
+                </Button>
+              </form>
+            )}
+            {geste === "abonner" && enEssai && resiliationPrevue && !carte ? (
+              <form action={ouvrirPortailAction} className="mt-2">
+                <ChampCompteAttendu compteId={compteId} />
+                <p className="m-0 mb-5 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                  Vous avez résilié : votre essai s&apos;arrête{finEssai}, et rien ne sera prélevé. Pour changer
+                  d&apos;avis, reprenez votre abonnement depuis « Gérer mon abonnement ».
                 </p>
                 <Button type="submit" variant="board" size="board">
                   Gérer mon abonnement
                 </Button>
               </form>
-            )}
-            {carte && geste === "abonner" ? (
+            ) : carte && geste === "abonner" ? (
               <div className="mt-3">
                 <FinalisationCarte sessionId={carte} />
               </div>
             ) : (
               (geste === "abonner" || geste === "souscrire") && (
                 <>
-                  {carteEnregistree && (
+                  {carteEnregistree && formule && (
                     <p className="m-0 mt-2 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                      Votre carte est enregistrée : votre abonnement démarre à la fin de l&apos;essai{finEssai}. Vous
-                      pouvez encore changer de formule.
+                      Votre carte est enregistrée. Après l&apos;essai{finEssai} : {FORMULES[formule.formule].libelle},
+                      facturation {LIBELLE_PERIODICITE[formule.periodicite].adjectif}.
                     </p>
                   )}
                   <FormulaireAbonnement
@@ -398,13 +439,19 @@ export default async function AbonnementPage({
                     quand={quand}
                     immediat={payerMaintenant}
                     compteId={compteId}
-                    libelle={payerMaintenant ? "Payer et m'abonner" : carteEnregistree ? "Changer de formule" : "Continuer vers le paiement"}
+                    courante={geste === "abonner" ? formule : null}
+                    inchangeeFermee={carteEnregistree && !payerMaintenant}
+                    payerMaintenant={enEssai && !payerMaintenant}
+                    libelle={payerMaintenant ? "Payer et m'abonner" : carteEnregistree ? "Changer de formule" : "Enregistrer ma formule"}
                   />
                   {carteEnregistree && (
-                    <form action={ouvrirPortailAction} className="mt-4">
+                    <form action={ouvrirPortailAction} className="mt-6">
                       <ChampCompteAttendu compteId={compteId} />
+                      <p className="m-0 mb-3 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                        Carte, factures, résiliation avant la fin de l&apos;essai : sur la page sécurisée de Stripe.
+                      </p>
                       <Button type="submit" variant="boardClair" size="board">
-                        Changer de carte, voir mes factures
+                        Gérer mon abonnement
                       </Button>
                     </form>
                   )}

@@ -192,7 +192,8 @@ NODE_ENV=production sh scripts/demarrer-cc.sh lancer pnpm tsx --import ./scripts
 1. Poser `ABONNEMENT_EXIGE=oui`, redémarrer. Dès lors, un compte sans essai
    ni abonnement ne saisit plus (lecture seule ; l'export aussi pour un compte
    qui a déjà payé, ADR-053 § 15) : les comptes
-   existants voient « Choisissez une formule ».
+   existants voient ~~« Choisissez une formule »~~ [2026-11-16 : « Démarrez
+   votre essai gratuit pour saisir dans Rojer »].
 2. Relancer `reprendre-tailles-fichiers.ts --appliquer` (un dépôt fait
    entre-temps sans session lisible n'a pas laissé sa taille).
 3. Vérifier en réel, tout de suite : un compte de test démarre l'essai ;

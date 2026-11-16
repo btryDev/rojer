@@ -108,8 +108,8 @@ describe("aiguillageEssai", () => {
 });
 
 describe("demarrerEssaiDuCompte", () => {
-  it("dans l'ordre : client, ligne réservée, preuve d'acceptation, essai, relecture — puis l'onboarding", async () => {
-    expect(await redirigeVers(demarrerEssaiDuCompte(true, new FormData()))).toBe("/onboarding");
+  it("dans l'ordre : client, ligne réservée, preuve d'acceptation, essai, relecture — puis /entreprises, qui aiguille (dossier existant ou onboarding)", async () => {
+    expect(await redirigeVers(demarrerEssaiDuCompte(true, new FormData()))).toBe("/entreprises");
     expect(m.ordre).toEqual(["client", "réservation", "verrou", "acceptation", "essai", "relecture"]);
     expect(db.abonnement.updateMany.mock.calls[0][0]).toMatchObject({
       where: { compteId: "c1", essaiUtiliseLe: null, stripeSubscriptionId: null },
@@ -151,7 +151,7 @@ describe("demarrerEssaiDuCompte", () => {
 
   it("une réservation interrompue reprend avec son client, sans en créer un autre", async () => {
     db.abonnement.findUnique.mockResolvedValue({ stripeCustomerId: "cus_ancien", stripeSubscriptionId: null, essaiUtiliseLe: null });
-    expect(await redirigeVers(demarrerEssaiDuCompte(true, new FormData()))).toBe("/onboarding");
+    expect(await redirigeVers(demarrerEssaiDuCompte(true, new FormData()))).toBe("/entreprises");
     expect(m.creerClientStripe).not.toHaveBeenCalled();
     expect(db.abonnement.create).not.toHaveBeenCalled();
     expect(m.demarrerEssai).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ customerId: "cus_ancien" }));
@@ -160,7 +160,7 @@ describe("demarrerEssaiDuCompte", () => {
   it("double clic : la réservation déjà posée par l'autre envoi l'emporte, son client sert à l'essai", async () => {
     db.abonnement.create.mockRejectedValueOnce({ code: "P2002" });
     db.abonnement.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({ stripeCustomerId: "cus_enregistre" });
-    expect(await redirigeVers(demarrerEssaiDuCompte(true, new FormData()))).toBe("/onboarding");
+    expect(await redirigeVers(demarrerEssaiDuCompte(true, new FormData()))).toBe("/entreprises");
     expect(m.demarrerEssai).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ customerId: "cus_enregistre" }));
   });
 
@@ -181,11 +181,11 @@ describe("demarrerEssaiDuCompte", () => {
     expect(rendu).toEqual({ where: { compteId: "c1", essaiUtiliseLe: expect.any(Date) }, data: { essaiUtiliseLe: null } });
   });
 
-  it("réponse perdue, l'essai existe chez Stripe : on le relit, on ne rend rien, l'onboarding", async () => {
+  it("réponse perdue, l'essai existe chez Stripe : on le relit, on ne rend rien, /entreprises", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     m.demarrerEssai.mockRejectedValue(new Error("délai dépassé"));
     m.listeAbonnements.mockResolvedValue([{ id: "sub_1" }]);
-    expect(await redirigeVers(demarrerEssaiDuCompte(true, new FormData()))).toBe("/onboarding");
+    expect(await redirigeVers(demarrerEssaiDuCompte(true, new FormData()))).toBe("/entreprises");
     expect(m.ordre).not.toContain("verrou rendu");
     expect(m.synchroniserClientStripe).toHaveBeenCalledWith(expect.anything(), "cus_1");
   });
@@ -210,7 +210,7 @@ describe("demarrerEssaiDuCompte", () => {
     db.abonnement.findUnique.mockResolvedValue({ stripeCustomerId: "cus_1", stripeSubscriptionId: null, essaiUtiliseLe: ancien });
     db.abonnement.updateMany.mockResolvedValueOnce({ count: 0 }).mockResolvedValueOnce({ count: 1 });
     m.listeAbonnements.mockResolvedValue([{ id: "sub_1" }]);
-    expect(await redirigeVers(demarrerEssaiDuCompte(true, new FormData()))).toBe("/onboarding");
+    expect(await redirigeVers(demarrerEssaiDuCompte(true, new FormData()))).toBe("/entreprises");
     expect(m.demarrerEssai).not.toHaveBeenCalled();
     expect(db.abonnement.updateMany.mock.calls[1][0].where).toMatchObject({ essaiUtiliseLe: { lt: expect.any(Date) } });
   });
@@ -251,10 +251,10 @@ describe("demarrerEssaiDuCompte", () => {
     expect(m.demarrerEssai).not.toHaveBeenCalled();
   });
 
-  it("la relecture échoue après l'essai créé : pas d'échec annoncé, l'onboarding, le verrou gardé", async () => {
+  it("la relecture échoue après l'essai créé : pas d'échec annoncé, /entreprises, le verrou gardé", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     m.synchroniserClientStripe.mockRejectedValue(new Error("panne"));
-    expect(await redirigeVers(demarrerEssaiDuCompte(true, new FormData()))).toBe("/onboarding");
+    expect(await redirigeVers(demarrerEssaiDuCompte(true, new FormData()))).toBe("/entreprises");
     expect(m.ordre).not.toContain("verrou rendu");
   });
 

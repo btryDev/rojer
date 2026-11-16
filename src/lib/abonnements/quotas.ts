@@ -63,7 +63,7 @@ export function motifDuRefus(regime: Regime, cle: CleQuota): string {
   const couvre = LIBELLES_PLAFONDS[cle](plafond);
   if (regime.essai && estLimiteDEssai(cle))
     return regime.essai === "en_cours"
-      ? `L'essai gratuit couvre ${couvre} : choisissez votre formule depuis la page Abonnement de votre compte pour en ajouter.`
+      ? `L'essai gratuit couvre ${couvre} : pour en ajouter, payez votre formule maintenant depuis la page Abonnement de votre compte — le premier paiement lève les limites de l'essai.`
       : `Tant que votre premier paiement n'est pas confirmé, Rojer garde les limites de l'essai (${couvre}) : réglez votre abonnement depuis la page Abonnement de votre compte.`;
   const plus = CLES_FORMULES.find((f) => {
     const q = FORMULES[f].quotas[cle];

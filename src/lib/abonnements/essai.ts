@@ -190,7 +190,9 @@ async function relireEtContinuer(stripe: Stripe, customerId: string): Promise<ne
   } catch (e) {
     console.error(`essai : relecture différée au webhook — ${e instanceof Error ? e.name : "erreur"}`);
   }
-  redirect("/onboarding");
+  // `/entreprises` aiguille : le dossier s'il existe déjà (un compte qui
+  // démarre son essai après coup), sinon l'onboarding (audit du 2026-11-16).
+  redirect("/entreprises");
 }
 
 function echec(e: unknown): EtatEssai {

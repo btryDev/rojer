@@ -54,9 +54,13 @@ export function droitsDe(ligne: LigneAbonnement | null, ctx: ContexteDroits): Dr
       saisie: false,
       bandeau: {
         ton: "ferme",
-        message: ligne?.statut
-          ? `Votre abonnement n'est plus actif : vos dossiers restent consultables${ligne.debutPayantLe ? " et exportables" : ""}, la saisie est fermée.`
-          : "Choisissez une formule pour saisir dans Rojer : vos dossiers restent consultables.",
+        // Trois cas, trois phrases (audit du 2026-11-16) : jamais d'essai,
+        // un essai fini sans abonnement, un abonnement qui a cessé.
+        message: !ligne?.statut
+          ? "Démarrez votre essai gratuit pour saisir dans Rojer : vos dossiers restent consultables."
+          : !ligne.debutPayantLe
+            ? "Votre essai est terminé : choisissez une formule pour reprendre la saisie. Vos dossiers restent consultables."
+            : "Votre abonnement n'est plus actif : vos dossiers restent consultables et exportables, la saisie est fermée.",
       },
     };
   }
@@ -64,7 +68,10 @@ export function droitsDe(ligne: LigneAbonnement | null, ctx: ContexteDroits): Dr
   if (ligne.statut === "past_due") {
     return {
       saisie: true,
-      bandeau: { ton: "alerte", message: "Le dernier paiement a échoué : mettez à jour votre moyen de paiement." },
+      bandeau: {
+        ton: "alerte",
+        message: "Le dernier paiement a échoué : réglez la facture en attente depuis la page Abonnement, avec la même carte ou une autre.",
+      },
     };
   }
   const fin = ligne.finPrevueLe ?? (ligne.resilieEnFinDePeriode ? ligne.finPeriode : null);
@@ -92,9 +99,14 @@ const LIBELLES: Record<string, string> = {
   incomplete_expired: "Paiement non abouti",
 };
 
-/** L'état Stripe dit au dirigeant ; un état inconnu se dit comme tel. */
-export function libelleStatut(statut: string | null): string {
+/**
+ * L'état Stripe dit au dirigeant ; un état inconnu se dit comme tel. Un
+ * compte qui n'a jamais payé n'a pas été « suspendu » ni « résilié » : son
+ * essai est terminé.
+ */
+export function libelleStatut(statut: string | null, debutPayantLe: Date | null = null): string {
   if (!statut) return "Aucun abonnement";
+  if (!debutPayantLe && (statut === "paused" || statut === "canceled")) return "Essai terminé";
   return LIBELLES[statut] ?? "État inconnu";
 }
 
@@ -116,6 +128,9 @@ export const nomProvisoire = (email: string) => email;
 /** Le client Stripe porte-t-il encore ce nom provisoire (ou aucun) ? */
 export const aNomProvisoire = (c: { name?: string | null; email?: string | null }) =>
   !c.name || (!!c.email && c.name === nomProvisoire(c.email));
+
+/** Les états où une facture attend d'être réglée : impayé, premier paiement non abouti. */
+export const A_REGLER: ReadonlySet<string> = new Set(["past_due", "unpaid", "incomplete"]);
 
 /** Les états où l'abonnement court sans payer encore (essai, pause) : on s'y abonne. */
 export const SANS_PAIEMENT_ENCORE: ReadonlySet<string> = new Set(["trialing", "paused"]);
