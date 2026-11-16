@@ -174,7 +174,7 @@ export async function signInAction(
   // valable sept jours en base, sans cookie pour la porter — et la page
   // laissait croire qu'on travaillait encore sur l'autre compte. Le geste
   // dit qu'on change de compte : un mot de passe faux laisse déconnecté.
-  if (await getOptionalUser()) await fermerLaSession();
+  if (await getOptionalUser()) await fermerLaSession({ effacerOffre: false });
 
   let resultat: Awaited<ReturnType<typeof auth.api.signInEmail>>;
   try {
@@ -345,9 +345,9 @@ export async function activerCompteAction(
   // compte qu'on active n'en a jamais) : elle se ferme, pour qu'on se
   // connecte avec le compte qu'on vient d'activer et non qu'on agisse sur
   // l'autre sans le voir (retours de test du 2026-11-16 ; la page l'annonce).
-  // Seulement s'il y en a une : fermer efface aussi l'offre choisie à
-  // l'inscription, qu'on garde pour ce navigateur.
-  if (applique && (await getOptionalUser())) await fermerLaSession();
+  // L'offre choisie à l'inscription reste : elle est celle du compte qu'on
+  // vient d'activer.
+  if (applique && (await getOptionalUser())) await fermerLaSession({ effacerOffre: false });
   redirect(applique ? "/login?confirmed=1" : "/login?confirmation=deja");
 }
 
@@ -369,8 +369,13 @@ export async function signOutAction() {
   redirect("/login");
 }
 
-/** Ferme la session du navigateur, s'il y en a une, et efface ses cookies sensibles. */
-async function fermerLaSession() {
+/**
+ * Ferme la session du navigateur, s'il y en a une, et efface ses cookies
+ * sensibles. L'offre choisie à l'inscription ne s'efface qu'à la déconnexion
+ * volontaire : changer de compte (connexion, activation) la garde, elle est
+ * celle de la dernière inscription faite ici (revue du 2026-11-16).
+ */
+async function fermerLaSession({ effacerOffre = true }: { effacerOffre?: boolean } = {}) {
   try {
     await auth.api.signOut({ headers: await entetesDeSession() });
   } catch (e) {
@@ -383,7 +388,7 @@ async function fermerLaSession() {
   // compte suivant de ce navigateur (revue du 2026-11-16).
   const jar = await cookies();
   jar.delete(COOKIE_ETABLISSEMENT_ACTIF);
-  jar.delete(COOKIE_OFFRE_CHOISIE);
+  if (effacerOffre) jar.delete(COOKIE_OFFRE_CHOISIE);
   revalidatePath("/", "layout");
 }
 
