@@ -24,6 +24,8 @@
 #                          Lié à un nom d'hôte, jamais à NODE_ENV : sans
 #                          certificat, tout autre hôte est refusé
 #   BASE_POOL              connexions par instance (défaut 5 ; plan § 5)
+#   BASE_INACTIVITE_MAX    secondes avant que Prisma lâche une connexion
+#                          inactive (défaut 50 ; voir plus bas)
 #   PORT                   défaut 8080, celui que Clever Cloud attend
 set -eu
 
@@ -58,7 +60,15 @@ if [ -z "$hote" ]; then
   exit 1
 fi
 
-parametres="connection_limit=${BASE_POOL:-5}"
+# Une connexion inactive est lâchée par Prisma avant que le réseau de Clever
+# Cloud ne la coupe (2026-11-16) : des « Error in PostgreSQL connection: kind:
+# Closed » au journal, 83 en 30 h, à la minute du cron. Le serveur ne ferme
+# rien (`idle_session_timeout = 0`, sondes TCP à 2 h, `pnpm lire-preprod
+# base`) ; c'est la liaison qui coupe, entre une et cinq minutes d'inactivité
+# — la connexion du cron, servie chaque minute, n'est jamais touchée, et
+# Prisma 6 garde une connexion inactive 300 s par défaut. 50 s : sous la
+# minute.
+parametres="connection_limit=${BASE_POOL:-5}&max_idle_connection_lifetime=${BASE_INACTIVITE_MAX:-50}"
 if [ -n "${BASE_CA_PEM:-}" ]; then
   # Une variable sur une ligne porte souvent des « \n » littéraux : on les
   # rend (un PEM ne contient jamais de barre oblique inverse), puis on exige

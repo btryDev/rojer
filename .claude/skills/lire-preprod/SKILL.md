@@ -10,6 +10,7 @@ pnpm lire-preprod connexions julien@rojer.invalid testeur@rojer.invalid
 pnpm lire-preprod activite julien@rojer.invalid
 pnpm lire-preprod abonnement julien@rojer.invalid
 pnpm lire-preprod taches
+pnpm lire-preprod base
 ```
 
 - `connexions` : le compte existe-t-il, depuis quand, combien de sessions
@@ -26,6 +27,9 @@ pnpm lire-preprod taches
   quand, combien en échec) et la file Stripe (dernier événement reçu et
   traité, en attente, en échec durable). Un cron arrêté ne s'alerte pas
   lui-même : c'est ici qu'on le voit.
+- `base` : les réglages du serveur qui ferment des connexions
+  (`idle_session_timeout`, sondes TCP…) et l'âge des connexions inactives
+  de l'application. Aucune donnée.
 
 Depuis n'importe quel checkout qui a ses `node_modules` et la CLI `clever`
 connectée. Heures de Paris.

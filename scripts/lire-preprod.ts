@@ -5,6 +5,7 @@
  *   pnpm lire-preprod activite julien@rojer.invalid
  *   pnpm lire-preprod abonnement julien@rojer.invalid
  *   pnpm lire-preprod taches
+ *   pnpm lire-preprod base
  *
  * `connexions` : le compte existe-t-il, depuis quand, combien de sessions
  * ouvertes, date de la dernière. `activite` : ce que le compte de cette
@@ -52,7 +53,8 @@ const USAGE =
   "Usage : pnpm lire-preprod connexions <e-mail> [<e-mail>…]\n" +
   "        pnpm lire-preprod activite <e-mail>\n" +
   "        pnpm lire-preprod abonnement <e-mail>\n" +
-  "        pnpm lire-preprod taches";
+  "        pnpm lire-preprod taches\n" +
+  "        pnpm lire-preprod base";
 
 function refus(message: string): never {
   console.error(`Refusé : ${message}`);
@@ -62,12 +64,12 @@ function refus(message: string): never {
 type Demande =
   | { question: "connexions"; adresses: string[] }
   | { question: "activite" | "abonnement"; adresse: string }
-  | { question: "taches" };
+  | { question: "taches" | "base" };
 
 function lireDemande(args: string[]): Demande {
   const [question, ...saisies] = args;
-  if (question === "taches") {
-    if (saisies.length > 0) refus("taches : aucune adresse.");
+  if (question === "taches" || question === "base") {
+    if (saisies.length > 0) refus(`${question} : aucune adresse.`);
     return { question };
   }
   // Better Auth écrit les adresses en minuscules : « Julien@… » ne trouverait rien.
@@ -418,6 +420,38 @@ async function taches(db: Lecteur) {
   );
 }
 
+/**
+ * Les réglages du serveur qui ferment des connexions (2026-11-16 : des
+ * « Error in PostgreSQL connection: kind: Closed » au journal, à la minute du
+ * cron), et l'âge des connexions de l'application ouvertes en ce moment.
+ * Aucune donnée : des réglages et des durées.
+ */
+async function reglagesDeLaBase(db: Lecteur) {
+  for (const reglage of [
+    "server_version",
+    "idle_session_timeout",
+    "idle_in_transaction_session_timeout",
+    "statement_timeout",
+    "tcp_keepalives_idle",
+    "tcp_keepalives_interval",
+    "tcp_keepalives_count",
+    "max_connections",
+  ]) {
+    const { rows } = await db.query<{ v: string }>(`SELECT current_setting($1, true) AS v`, [reglage]);
+    console.log(`${reglage} = ${rows[0]?.v ?? "—"}`);
+  }
+  const { rows } = await db.query<{ etat: string | null; n: number; inactive_max: number | null }>(
+    `SELECT state AS etat, count(*)::int AS n,
+            max(extract(epoch FROM now() - state_change))::int AS inactive_max
+       FROM pg_stat_activity
+      WHERE datname = current_database() AND pid <> pg_backend_pid()
+      GROUP BY state ORDER BY state`,
+  );
+  for (const r of rows) {
+    console.log(`connexions ${r.etat ?? "?"} : ${r.n}${r.inactive_max !== null ? ` (la plus ancienne dans cet état : ${r.inactive_max} s)` : ""}`);
+  }
+}
+
 /** La cause, sans l'adresse de la base si un message venait à la citer. */
 function echec(erreur: unknown): never {
   const e = erreur as { code?: string; message?: string };
@@ -447,6 +481,7 @@ async function lire(demande: Demande) {
     await db.query("BEGIN TRANSACTION READ ONLY");
     if (demande.question === "connexions") await connexions(db, demande.adresses);
     else if (demande.question === "taches") await taches(db);
+    else if (demande.question === "base") await reglagesDeLaBase(db);
     else if (demande.question === "activite") await activite(db, demande.adresse);
     else await abonnement(db, demande.adresse);
   } finally {

@@ -53,7 +53,7 @@ describe("demarrer-cc.sh : l'URL de la base", () => {
     const r = lancer({ POSTGRESQL_ADDON_URI: ADDON, BASE_CA_PEM: CA });
     expect(r.code).toBe(0);
     const m = r.sortie.match(
-      /^postgresql:\/\/u:\*\*\*@bxyz-postgresql\.services\.clever-cloud\.com:5432\/bxyz\?connection_limit=5&sslmode=require&sslcert=(.+)&sslaccept=strict$/,
+      /^postgresql:\/\/u:\*\*\*@bxyz-postgresql\.services\.clever-cloud\.com:5432\/bxyz\?connection_limit=5&max_idle_connection_lifetime=50&sslmode=require&sslcert=(.+)&sslaccept=strict$/,
     );
     expect(m).not.toBeNull();
     expect(r.sortie).not.toContain("secret");
@@ -84,7 +84,7 @@ describe("demarrer-cc.sh : l'URL de la base", () => {
   it("en clair seulement vers l'hôte nommé, et vers lui seul", () => {
     const local = lancer({ POSTGRESQL_ADDON_URI: "postgresql://r:r@db:5432/r", BASE_EN_CLAIR_HOTE: "db" });
     expect(local.code).toBe(0);
-    expect(local.sortie).toBe("postgresql://r:***@db:5432/r?connection_limit=5&sslmode=disable");
+    expect(local.sortie).toBe("postgresql://r:***@db:5432/r?connection_limit=5&max_idle_connection_lifetime=50&sslmode=disable");
 
     // Le nom d'un autre hôte n'ouvre pas la porte à l'add-on.
     const autre = lancer({ POSTGRESQL_ADDON_URI: ADDON, BASE_EN_CLAIR_HOTE: "db" });
@@ -121,7 +121,14 @@ describe("demarrer-cc.sh : l'URL de la base", () => {
   it("le pool se règle par BASE_POOL", () => {
     const r = lancer({ POSTGRESQL_ADDON_URI: ADDON, BASE_CA_PEM: CA, BASE_POOL: "8" });
     expect(r.code).toBe(0);
-    expect(r.sortie).toMatch(/\?connection_limit=8&/);
+    expect(r.sortie).toMatch(/\?connection_limit=8&max_idle_connection_lifetime=50&/);
+  });
+
+  it("une connexion inactive est lâchée avant que la liaison la coupe : 50 s, réglable par BASE_INACTIVITE_MAX (2026-11-16)", () => {
+    expect(lancer({ POSTGRESQL_ADDON_URI: ADDON, BASE_CA_PEM: CA }).sortie).toMatch(/&max_idle_connection_lifetime=50&/);
+    expect(lancer({ POSTGRESQL_ADDON_URI: ADDON, BASE_CA_PEM: CA, BASE_INACTIVITE_MAX: "30" }).sortie).toMatch(
+      /&max_idle_connection_lifetime=30&/,
+    );
   });
 
   it("lancer : toute commande reçoit la même base", () => {
@@ -133,7 +140,7 @@ describe("demarrer-cc.sh : l'URL de la base", () => {
       'echo "$DATABASE_URL|$DIRECT_URL"',
     );
     expect(r.code).toBe(0);
-    const url = "postgresql://r:r@db:5432/r?connection_limit=5&sslmode=disable";
+    const url = "postgresql://r:r@db:5432/r?connection_limit=5&max_idle_connection_lifetime=50&sslmode=disable";
     expect(r.sortie).toBe(`${url}|${url}`);
     expect(lancer({ POSTGRESQL_ADDON_URI: ADDON, BASE_CA_PEM: CA }, "lancer").code).toBe(2);
   });
