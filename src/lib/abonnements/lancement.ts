@@ -17,3 +17,15 @@ export function contexteDroits(): ContexteDroits {
 
 /** L'offre est lancée et Stripe est actif : seule condition pour lire l'abonnement. */
 export const offreLancee = (ctx: ContexteDroits) => ctx.stripeActif && ctx.exige;
+
+/**
+ * L'offre exigée alors que Stripe est refusé : la saisie s'ouvre à tous,
+ * sans abonnement et sans bruit (revue de la mécanique, 2026-11-16). Lu au
+ * démarrage (`env.ts`) et chaque jour par la tâche quotidienne, qui l'envoie
+ * par e-mail. `null` : rien à dire.
+ */
+export function offreOuverteParErreur(env: Env = process.env): string | null {
+  return abonnementExige(env) && !etatStripe(env).active
+    ? "ABONNEMENT_EXIGE=oui alors que Stripe est désactivé : la saisie reste ouverte à tous, sans abonnement (abonnements/droits.ts)."
+    : null;
+}

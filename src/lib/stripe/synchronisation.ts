@@ -27,7 +27,7 @@ import "server-only";
 
 import Stripe from "stripe";
 import type { Prisma } from "@prisma/client";
-import { alerter } from "@/lib/alertes";
+import { alerter, alerterUneFoisParJour } from "@/lib/alertes";
 import { type Bail, clore, demanderSynchronisation, echouer, prendreBail, rendreBail, verrouillerSousBail } from "./file";
 import { clientDuClientStripe } from "@/lib/auth/compte-hors-session";
 import { compteDontEstProprietaire } from "@/lib/auth/membres";
@@ -179,8 +179,10 @@ export const codePrisma = (e: unknown) => {
 };
 
 export type Synchronisation =
-  | { issue: "ecrit" | "inchange"; facturesEnEchecDurable?: true }
-  | { issue: "ignore"; motif: string; alerte?: true }
+  /** `plusieurs` : deux abonnements en cours pour ce client (à signaler). */
+  | { issue: "ecrit" | "inchange"; facturesEnEchecDurable?: true; plusieurs?: true }
+  /** `journalSeul` : un cas attendu, qui ne mérite pas d'e-mail. */
+  | { issue: "ignore"; motif: string; alerte?: true; journalSeul?: true }
   /** Une autre relecture tient le client : la demande est notée, elle la couvrira ou la suivra. */
   | { issue: "en_file" };
 
@@ -188,7 +190,20 @@ const ECRIT = { issue: "ecrit" } as const;
 const INCHANGE = { issue: "inchange" } as const;
 const EN_FILE = { issue: "en_file" } as const;
 const SANS_COMPTE = { issue: "ignore", motif: "client Stripe sans compte Rojer (metadata.compteId)" } as const;
-const INTROUVABLE = { issue: "ignore", motif: "compte Rojer introuvable", alerte: true } as const;
+const INTROUVABLE = { issue: "ignore", motif: "compte Rojer introuvable", alerte: true, journalSeul: true } as const;
+/**
+ * Le même, quand l'abonnement relu court encore : Stripe facture un client
+ * dont Rojer n'a plus le compte. Ce n'est plus le cas normal (un compte
+ * supprimé faute d'abonnement n'en a pas d'ouvert) : il se signale (revue de
+ * la mécanique, 2026-11-16).
+ */
+const INTROUVABLE_QUI_PAIE = {
+  issue: "ignore",
+  motif: "compte Rojer introuvable alors que l'abonnement Stripe court encore (il facture) : résilier chez Stripe ou rattacher le client",
+  alerte: true,
+} as const;
+const introuvable = (courant: Stripe.Subscription | null) =>
+  courant && OUVRENT.has(courant.status) ? INTROUVABLE_QUI_PAIE : INTROUVABLE;
 /** Un client d'avant l'ADR-054 dont la personne n'est propriétaire d'aucun compte, ou de plusieurs : il paie peut-être et n'est jamais relu. */
 const PROPRIETAIRE_AMBIGU = {
   issue: "ignore",
@@ -265,9 +280,18 @@ export async function synchroniserSousBail(
     // Un compte introuvable a pour cas normal un compte supprimé faute
     // d'abonnement (ADR-058), dont les événements de résiliation arrivent
     // après : journal seulement. Les conflits de liaison, eux, se signalent.
-    if (issue.issue === "ignore" && issue.alerte && issue.motif !== INTROUVABLE.motif) {
+    if (issue.issue === "ignore" && issue.alerte && !issue.journalSeul) {
       await alerter("client Stripe non enregistré", [`client ${customerId}`, issue.motif]);
     } else if (issue.issue === "ignore" && issue.alerte) console.error(`stripe : client ${customerId} — ${issue.motif}`);
+    // Deux abonnements en cours : le client paie peut-être deux fois. Le
+    // parcours l'empêche ; s'il arrive, un humain doit en résilier un —
+    // une fois par jour, pas à chaque relecture (revue du 2026-11-16).
+    if (issue.issue !== "ignore" && issue.issue !== "en_file" && issue.plusieurs) {
+      await alerterUneFoisParJour(`plusieurs:${customerId}`, "plusieurs abonnements en cours pour un même client", [
+        `client ${customerId}`,
+        "Le client paie peut-être deux fois : garder l'abonnement voulu dans Stripe, résilier l'autre, rembourser s'il y a lieu.",
+      ], maintenant());
+    }
     if (issue.issue !== "ignore" && issue.issue !== "en_file" && issue.facturesEnEchecDurable) {
       await alerterEchecDurable(customerId, "API Stripe : factures illisibles (premier paiement)");
     }
@@ -312,8 +336,10 @@ async function relireEtEcrire(stripe: Stripe, bail: Bail, relueLe: Date, strict:
   // Un client d'avant l'ADR-054 : le compte dont la personne est l'unique
   // propriétaire ; aucun, ou plusieurs, ne se devinent pas.
   const compteId = "compteId" in designe ? designe.compteId : await compteDontEstProprietaire(designe.proprietaire);
-  if (!compteId) return terminer(bail, relueLe, "compteId" in designe ? INTROUVABLE : PROPRIETAIRE_AMBIGU);
-  if (plusieurs) console.error(`stripe : plusieurs abonnements en cours pour un même client (${customerId})`);
+  if (!compteId) return terminer(bail, relueLe, "compteId" in designe ? introuvable(courant) : PROPRIETAIRE_AMBIGU);
+  // Deux abonnements en cours : remonté dans l'issue, signalé par
+  // `synchroniserSousBail` après l'écriture (revue du 2026-11-16).
+  const signale = <T extends { issue: "ecrit" | "inchange" }>(i: T) => (plusieurs ? { ...i, plusieurs: true as const } : i);
 
   const db = clientDuClientStripe(compteId);
   const ligne = await db.abonnement.findUnique({
@@ -378,7 +404,7 @@ async function relireEtEcrire(stripe: Stripe, bail: Bail, relueLe: Date, strict:
     });
   try {
     try {
-      return await ecrire(ligne !== null);
+      return signale(await ecrire(ligne !== null));
     } catch (e) {
       if (ligne || codePrisma(e) !== "P2002") throw e;
       // Unicité à la création : la ligne du compte existe maintenant, ou ce
@@ -386,7 +412,7 @@ async function relireEtEcrire(stripe: Stripe, bail: Bail, relueLe: Date, strict:
       const creee = await db.abonnement.findUnique({ where: { compteId }, select: { stripeCustomerId: true } });
       if (!creee) return terminer(bail, relueLe, DEJA_LIE);
       if (creee.stripeCustomerId !== customerId) return terminer(bail, relueLe, AUTRE_CLIENT);
-      return await ecrire(true);
+      return signale(await ecrire(true));
     }
   } catch (e) {
     if (e instanceof BailPerdu) return EN_FILE;
@@ -396,7 +422,7 @@ async function relireEtEcrire(stripe: Stripe, bail: Bail, relueLe: Date, strict:
     switch (codePrisma(e)) {
       case "P2003":
       case "P2025":
-        return terminer(bail, relueLe, INTROUVABLE);
+        return terminer(bail, relueLe, introuvable(courant));
       case "P2002":
         return terminer(bail, relueLe, DEJA_LIE);
       default:

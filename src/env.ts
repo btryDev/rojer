@@ -51,6 +51,7 @@ import { z } from "zod";
 import { ENVIRONNEMENTS_APP } from "@/lib/environnement";
 import { FORME_EXPORTS_SIMULTANES } from "@/lib/exports/limite";
 import { etatStripe } from "@/lib/stripe/config";
+import { offreOuverteParErreur } from "@/lib/abonnements/lancement";
 
 type Env = Record<string, string | undefined>;
 
@@ -230,10 +231,20 @@ export function avertissementsEnvironnement(env: Env = process.env): string[] {
   // serveur (ADR-053 § 7) : le démarrage le dit à qui déploie.
   const stripe = etatStripe(env);
   if (!stripe.active && stripe.motif) avertissements.push(stripe.motif);
-  if (env.ABONNEMENT_EXIGE?.trim().toLowerCase() === "oui" && !stripe.active) {
+  // L'offre exigée sans Stripe : relue aussi chaque jour par la tâche
+  // quotidienne, et envoyée par e-mail.
+  const ouverte = offreOuverteParErreur(env);
+  if (ouverte) avertissements.push(ouverte);
+  // Ces deux-là ne peuvent se dire qu'ici : sans TACHES_SECRET la tâche
+  // quotidienne ne tourne pas, sans ALERTES_EMAIL aucun e-mail ne part
+  // (revue du 2026-11-16) ; `pnpm lire-preprod taches` en est le témoin.
+  if (stripe.active && !vide(env.TACHES_SECRET)) {
     avertissements.push(
-      "ABONNEMENT_EXIGE=oui alors que Stripe est désactivé : la saisie reste ouverte à tous (abonnements/droits.ts).",
+      "Stripe actif sans TACHES_SECRET : la route des tâches répond 404, la file Stripe n'est pas reprise et les tâches quotidiennes ne tournent pas.",
     );
+  }
+  if (stripe.active && !vide(env.ALERTES_EMAIL)) {
+    avertissements.push("Stripe actif sans ALERTES_EMAIL : les alertes (échecs durables, litiges, remboursements) ne vont qu'au journal.");
   }
   return avertissements;
 }

@@ -121,8 +121,9 @@ sur la préproduction, où fermer la saisie ne gêne personne.
 1. Compte Stripe en mode **test** : `scripts/stripe-installer-test.ts`
    (produits, prix, TVA, portail), et les réglages des étapes 1 à 5 en test.
 2. **Clé restreinte de test** aux permissions ci-dessous (relevées sur les
-   appels du code le 2026-11-09 ; Stripe ne publie pas la liste exacte des
-   noms de son écran) :
+   appels du code le 2026-11-09 ; [2026-11-16 : complétées par la
+   revue de la mécanique — litiges, remboursements, annulation de facture] ;
+   Stripe ne publie pas la liste exacte des noms de son écran) :
 
    | Ressource | Accès |
    |---|---|
@@ -130,11 +131,13 @@ sur la préproduction, où fermer la saisie ne gêne personne.
    | Subscriptions, et Subscription schedules s'ils sont listés à part | écriture |
    | Checkout Sessions | écriture |
    | Customer portal | écriture |
-   | Invoices | lecture |
+   | Invoices | ~~lecture~~ écriture [2026-11-16 : la reprise d'une pause annule une facture en attente d'une autre formule, `invoices.voidInvoice`] |
    | Prices, Products | lecture |
    | Tax Rates | lecture |
    | SetupIntents | lecture |
    | PaymentMethods | lecture |
+   | Disputes | lecture [2026-11-16 : les litiges, lus depuis le 2026-11-10 — `disputes.retrieve`, `traitement.ts`] |
+   | Charges | lecture [2026-11-16 : les remboursements, `charges.retrieve`, `traitement.ts`] |
 
    Tout le reste : aucun. La clé ne se colle jamais dans une conversation.
 3. Variables de la **préproduction** : `APP_ENV=preview`,

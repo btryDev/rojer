@@ -4,13 +4,17 @@
  *   pnpm lire-preprod connexions julien@rojer.invalid [autre@…]
  *   pnpm lire-preprod activite julien@rojer.invalid
  *   pnpm lire-preprod abonnement julien@rojer.invalid
+ *   pnpm lire-preprod taches
  *
  * `connexions` : le compte existe-t-il, depuis quand, combien de sessions
  * ouvertes, date de la dernière. `activite` : ce que le compte de cette
  * personne porte (entreprises, établissements, équipements…), en nombres, et
  * la date de la dernière écriture. `abonnement` : la copie de l'abonnement
  * que Rojer garde pour ce compte (état, formule, dates), où en est sa
- * relecture chez Stripe, et les événements reçus pour ce client.
+ * relecture chez Stripe, et les événements reçus pour ce client. `taches` :
+ * le témoin du cron (2026-11-16) — les dernières tâches du jour finies, et
+ * la file Stripe (dernier événement reçu, traité, en attente). Un cron
+ * arrêté ne peut pas le dire lui-même : ses alertes partent de lui.
  *
  * POURQUOI CE SCRIPT (2026-11-13). Sans recette écrite, chaque session
  * improvisait : l'une a lancé Docker pour y trouver `psql`, tronqué puis
@@ -47,7 +51,8 @@ const MAX_ADRESSES = 5;
 const USAGE =
   "Usage : pnpm lire-preprod connexions <e-mail> [<e-mail>…]\n" +
   "        pnpm lire-preprod activite <e-mail>\n" +
-  "        pnpm lire-preprod abonnement <e-mail>";
+  "        pnpm lire-preprod abonnement <e-mail>\n" +
+  "        pnpm lire-preprod taches";
 
 function refus(message: string): never {
   console.error(`Refusé : ${message}`);
@@ -56,10 +61,15 @@ function refus(message: string): never {
 
 type Demande =
   | { question: "connexions"; adresses: string[] }
-  | { question: "activite" | "abonnement"; adresse: string };
+  | { question: "activite" | "abonnement"; adresse: string }
+  | { question: "taches" };
 
 function lireDemande(args: string[]): Demande {
   const [question, ...saisies] = args;
+  if (question === "taches") {
+    if (saisies.length > 0) refus("taches : aucune adresse.");
+    return { question };
+  }
   // Better Auth écrit les adresses en minuscules : « Julien@… » ne trouverait rien.
   const adresses = saisies.map((a) => a.toLowerCase());
   if (question !== "connexions" && question !== "activite" && question !== "abonnement") refus(USAGE);
@@ -357,6 +367,57 @@ async function abonnement(db: Lecteur, adresse: string) {
   console.log("(Heure de Paris. « VIDE » : la colonne n'a jamais été écrite depuis Stripe.)");
 }
 
+/**
+ * Le témoin du cron : les cinq derniers jours de tâches (fini à quelle heure,
+ * avec ou sans tâche en échec) et l'état de la file Stripe. Aucune donnée de
+ * compte : des dates et des nombres.
+ */
+async function taches(db: Lecteur) {
+  const { rows: jours } = await db.query<{ jour: string; finie: Date | null; erreurs: number; config: number }>(
+    `SELECT jour, "termineeLe" AT TIME ZONE 'UTC' AS finie,
+            (SELECT count(*)::int FROM jsonb_each(COALESCE(bilan::jsonb, '{}'::jsonb)) b
+              WHERE b.value @> '{"erreur": true}'::jsonb) AS erreurs,
+            COALESCE((bilan::jsonb #>> '{configuration,problemes}')::int, 0) AS config
+       FROM "TacheQuotidienne" ORDER BY jour DESC LIMIT 5`,
+  );
+  if (jours.length === 0) console.log("Tâches du jour : aucune exécution enregistrée.");
+  for (const j of jours) {
+    console.log(
+      `Tâches du ${j.jour} : ${j.finie ? `finies le ${dater(j.finie)}` : "PAS FINIES"}` +
+        (j.erreurs > 0 ? ` — ${j.erreurs} tâche(s) en échec` : "") +
+        (j.config > 0 ? " — configuration à corriger" : "") +
+        ".",
+    );
+  }
+  const {
+    rows: [f],
+  } = await db.query<{
+    recu: Date | null;
+    traite: Date | null;
+    attente: number;
+    bloques: number;
+    durables: number;
+    clients: number;
+  }>(
+    `SELECT max("recuLe") AT TIME ZONE 'UTC' AS recu,
+            max("traiteLe") AT TIME ZONE 'UTC' AS traite,
+            count(*) FILTER (WHERE "traiteLe" IS NULL AND "echecDurableLe" IS NULL)::int AS attente,
+            count(*) FILTER (WHERE "traiteLe" IS NULL AND "echecDurableLe" IS NULL
+                             AND "recuLe" < (now() AT TIME ZONE 'UTC') - interval '1 hour')::int AS bloques,
+            count(*) FILTER (WHERE "echecDurableLe" IS NOT NULL)::int AS durables,
+            (SELECT count(*)::int FROM "SynchronisationStripe" WHERE "echecDurableLe" IS NOT NULL) AS clients
+       FROM "EvenementStripe"`,
+    // « Plus d'une heure » : le seuil de `etatDesEvenements` (stripe/evenements.ts), qui alerte chaque jour.
+  );
+  console.log(
+    `File Stripe : dernier événement reçu ${ouDate(f.recu)}, traité ${ouDate(f.traite)} ; ` +
+      `${f.attente} en attente dont ${f.bloques} depuis plus d'une heure ; ${f.durables} événement(s) et ${f.clients} client(s) en échec durable.`,
+  );
+  console.log(
+    "(Heure de Paris. Les tâches du jour se lancent dès 9 h : « PAS FINIES » après midi, ou aucun jour récent, veut dire que le cron ne tourne plus.)",
+  );
+}
+
 /** La cause, sans l'adresse de la base si un message venait à la citer. */
 function echec(erreur: unknown): never {
   const e = erreur as { code?: string; message?: string };
@@ -385,6 +446,7 @@ async function lire(demande: Demande) {
     // fichier ; rien n'est validé, la transaction est toujours annulée.
     await db.query("BEGIN TRANSACTION READ ONLY");
     if (demande.question === "connexions") await connexions(db, demande.adresses);
+    else if (demande.question === "taches") await taches(db);
     else if (demande.question === "activite") await activite(db, demande.adresse);
     else await abonnement(db, demande.adresse);
   } finally {

@@ -21,13 +21,13 @@ import {
   purgerTracesEchues,
   supprimerComptesEchus,
 } from "@/lib/abonnements/suppression";
-import { alerter } from "@/lib/alertes";
+import { alerter, alerterUneFoisParJour } from "@/lib/alertes";
 import { composantesCiviles, cleJourCivil } from "@/lib/dates";
 import { clientStripe, clientStripeWebhook } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
 import { rapprocher } from "@/lib/stripe/rapprochement";
 import { etatDeLaFile, traiterLaFileIci } from "@/lib/stripe/traitement";
-import { contexteDroits, offreLancee } from "@/lib/abonnements/lancement";
+import { contexteDroits, offreLancee, offreOuverteParErreur } from "@/lib/abonnements/lancement";
 import { oublierLesAnciens } from "@/lib/stripe/evenements";
 import { motifDErreur } from "@/lib/stripe/synchronisation";
 import { prendreLeJour, terminerLeJour } from "./jour";
@@ -62,6 +62,10 @@ export function appelAutorise(entete: string | null, secret: string): boolean {
  */
 export async function lancerTachesQuotidiennes(maintenant: Date) {
   const config = configurationStripe();
+  // Une configuration qui ouvre Rojer à tous par erreur, ou qui le rend
+  // muet : dit chaque jour, pas seulement au démarrage (revue de la
+  // mécanique, 2026-11-16).
+  const configuration = await signalerLaConfiguration();
   const menage = async () => ({
     fichiersALiberer: await tenter("fichiers à libérer", () => libererFichiersEnAttente()),
     tracesPurgees: await tenter("traces de comptes supprimés", () => purgerTracesEchues(maintenant)),
@@ -78,15 +82,27 @@ export async function lancerTachesQuotidiennes(maintenant: Date) {
   // L'offre pas lancée (ou retirée) : la saisie est ouverte à tous, rien ne
   // se rappelle ni ne se supprime — un compte ne lirait nulle part ce que
   // l'e-mail lui annonce.
-  if (!offreLancee(contexteDroits())) return { offreLancee: false as const, ...(await menage()) };
+  if (!offreLancee(contexteDroits())) return { offreLancee: false as const, configuration, ...(await menage()) };
   const stripe = config.active ? clientStripe(config) : null;
   return {
+    configuration,
     rappelsVeilleFinEssai: await tenter("rappel de fin d'essai", () => rappelerLaVeilleDeLaFinDEssai(maintenant)),
     rappelsRenouvellementAnnuel: await tenter("rappel de renouvellement annuel", () => rappelerLeRenouvellementAnnuel(maintenant, stripe)),
     avertissementsAvantSuppression: await tenter("avertissements avant suppression", () => avertirAvantSuppression(maintenant)),
     suppressions: await tenter("suppressions", () => supprimerComptesEchus(maintenant, stripe)),
     ...(await menage()),
   };
+}
+
+/**
+ * L'offre exigée alors que Stripe est refusé : la saisie s'ouvre à tous,
+ * gratuitement, sans bruit — dit chaque jour par e-mail, en plus du
+ * démarrage (`offreOuverteParErreur`).
+ */
+async function signalerLaConfiguration() {
+  const probleme = offreOuverteParErreur();
+  if (probleme) await alerter("configuration à corriger", [probleme]);
+  return { problemes: probleme ? 1 : 0 };
 }
 
 /** L'état de la file Stripe, et une alerte s'il reste des événements bloqués ou des échecs durables. */
@@ -131,6 +147,19 @@ export async function lancerTachesDuJour(maintenant: Date) {
   if (jeton === null) return { etat: "en-cours-ailleurs" as const, jour };
   const bilan = await lancerTachesQuotidiennes(maintenant);
   if (await terminerLeJour(jour, jeton, new Date(), bilan)) jourFiniVuIci = jour;
+  // Les tâches en échec, en UN e-mail pour le jour (une panne de base les fait
+  // toutes échouer ensemble ; un jour repris ne le renvoie pas). Le jour est
+  // quand même marqué fait : elles attendent demain, et un humain le sait
+  // (revue de la mécanique, 2026-11-16 — l'échec n'allait qu'au journal).
+  const enEchec = Object.entries(bilan)
+    .filter(([, v]) => typeof v === "object" && v !== null && "erreur" in v)
+    .map(([cle]) => cle);
+  if (enEchec.length > 0) {
+    await alerterUneFoisParJour(`taches:${jour}`, "tâches quotidiennes en échec", [
+      `En échec : ${enEchec.join(", ")}.`,
+      "Elles seront rejouées demain à 9 h. Lire les journaux de l'application ; relancer à la main si elles ne peuvent pas attendre.",
+    ], maintenant);
+  }
   console.info(`tâches du ${jour} : ${JSON.stringify(bilan)}`);
   return { etat: "faite" as const, jour, bilan };
 }
@@ -139,7 +168,8 @@ async function tenter<T>(nom: string, tache: () => Promise<T>): Promise<T | { er
   try {
     return await tache();
   } catch (e) {
-    // Un motif écrit par Rojer, jamais le message reçu (qui peut citer des données).
+    // Un motif écrit par Rojer, jamais le message reçu (qui peut citer des
+    // données). L'alerte, une seule pour le jour, part de `lancerTachesDuJour`.
     console.error(`tâche quotidienne « ${nom} » en échec — ${motifDErreur(e)}`);
     return { erreur: true };
   }
