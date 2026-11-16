@@ -18,6 +18,7 @@ const m = vi.hoisted(() => ({
   tauxDeTva: vi.fn(),
   synchroniser: vi.fn(async () => ({ issue: "ecrit" })),
   clientStripeDuCompte: vi.fn(),
+  ouvrirAuGel: vi.fn(),
   monterDeFormule: vi.fn(),
   planifierBaisse: vi.fn(),
   annulerBaisse: vi.fn(),
@@ -47,7 +48,7 @@ vi.mock("./client-stripe", () => ({ clientStripeDuCompte: m.clientStripeDuCompte
 vi.mock("./quotas", () => ({ depassements: m.depassements }));
 vi.mock("./essai", () => ({ PAGE_ESSAI: "/essai", demarrerEssaiDuCompte: vi.fn() }));
 // `ouvrirAuGel` (l'essai) : sans la chaîne de la session, que ce test remplace par ./saisie.
-vi.mock("./gel-saisie", () => ({ ouvrirAuGel: vi.fn() }));
+vi.mock("./gel-saisie", () => ({ ouvrirAuGel: m.ouvrirAuGel }));
 vi.mock("./saisie", () => ({
   PAGE_ABONNEMENT: "/compte/abonnement",
   verifierProprietaire: async () => ({
@@ -105,6 +106,8 @@ describe("sAbonnerAction", () => {
     m.abonnementsDuClient.mockResolvedValue([]);
     expect(await redirigeVers(sAbonnerAction(formulaire()))).toBe("https://checkout.stripe.test/abonnement");
     expect(m.clientStripeDuCompte).toHaveBeenCalledWith(expect.anything(), expect.anything(), { compteId: "c1", email: "a@b.fr", enregistre: null });
+    // La saisie est fermée après l'essai : s'abonner écrit quand même (répétition du 2026-11-17).
+    expect(m.ouvrirAuGel).toHaveBeenCalled();
     expect(m.ouvrirCheckout).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({ customerId: "cus_neuf", priceId: "price_pa", tauxTva: "txr_tva", succes: "https://rojer.test/compte/abonnement?paiement=termine" }),

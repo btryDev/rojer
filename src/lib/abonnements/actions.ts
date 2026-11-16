@@ -109,6 +109,11 @@ export async function ouvrirPortailAction(formData: FormData): Promise<void> {
  */
 export async function sAbonnerAction(formData: FormData): Promise<void> {
   const proprietaire = await verifierProprietaire();
+  // S'abonner se fait AUSSI quand la saisie est fermée (essai fini, abonnement
+  // terminé) : le client Stripe s'écrit alors sur la ligne d'abonnement
+  // (répétition locale du 2026-11-17 — sans cela, impossible de s'abonner
+  // après l'essai).
+  ouvrirAuGel();
   const { stripe, db, ligne, compteId } = await clientDuCompte(proprietaire, formData);
   const formule = String(formData.get("formule") ?? "");
   if (!estLookupKey(formule)) redirect(PAGE_ABONNEMENT);

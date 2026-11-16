@@ -42,8 +42,9 @@ const SQL_BRUT_ECRIT: Record<string, string> = {
  * déclaration ou une photo, demander de l'aide.
  */
 const OUVERTS_AU_GEL: Record<string, string[]> = {
-  // L'essai s'écrit quand la saisie est encore fermée (ADR-053 § 3).
-  "src/lib/abonnements/actions.ts": ["demarrerEssaiAction"],
+  // L'essai s'écrit quand la saisie est encore fermée (ADR-053 § 3) ; s'abonner
+  // aussi, après l'essai ou une résiliation (le client Stripe s'écrit sur la ligne).
+  "src/lib/abonnements/actions.ts": ["demarrerEssaiAction", "sAbonnerAction"],
   "src/lib/assistance/actions.ts": ["demanderAssistance"],
   "src/lib/batiments/actions.ts": ["supprimerBatiment"],
   "src/lib/equipements/actions.ts": ["supprimerEquipement"],
