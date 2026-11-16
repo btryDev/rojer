@@ -188,6 +188,25 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
       );
     });
 
+    it("un planning de baisse échu est rendu à la relecture ; un refus passager n'empêche pas l'écriture (2026-11-16)", async () => {
+      const release = vi.fn().mockResolvedValue({});
+      const avecPlanning = (rel: typeof release) => {
+        const s = stripe(A, [abo({ id: "sub_1", status: "active", created: 1, schedule: "sub_sched_1" } as never)]);
+        (s as unknown as { subscriptionSchedules: object }).subscriptionSchedules = {
+          // Phase en cours = la dernière (la baisse court) : le planning a fait son office.
+          retrieve: async () => ({ id: "sub_sched_1", status: "active", created: 0, current_phase: { start_date: 200 }, phases: [{ start_date: 100 }, { start_date: 200 }] }),
+          release: rel,
+        };
+        return s;
+      };
+      expect(await synchroniserClientStripe(avecPlanning(release), "cus_A", { maintenant: () => new Date(1000) })).toMatchObject({ issue: expect.stringMatching(/ecrit|inchange/) });
+      expect(release).toHaveBeenCalledWith("sub_sched_1");
+      // Stripe répond 429 (l'abonnement change au même instant) : la copie s'écrit quand même, la relecture suivante recommencera.
+      const refuse = vi.fn().mockRejectedValue(Object.assign(new Error("lock"), { statusCode: 429 }));
+      expect(await synchroniserClientStripe(avecPlanning(refuse), "cus_A", { maintenant: () => new Date(2000) })).toMatchObject({ issue: expect.stringMatching(/ecrit|inchange/) });
+      expect(refuse).toHaveBeenCalledOnce();
+    });
+
     it("une carte fixée sur l'abonnement : retirée ; la plus récente des deux devient celle du client (2026-11-16)", async () => {
       const avecCarte = (pmClient: string | null, crees: Record<string, number>) => {
         const s = stripe(A, [abo({ id: "sub_1", status: "active", created: 1, default_payment_method: "pm_abo" } as never)], {

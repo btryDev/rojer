@@ -30,7 +30,6 @@ import {
   prendre,
 } from "./evenements";
 import { clientsDus, enEchecDurable } from "./file";
-import { rendrePlanningEchu } from "./parcours";
 import { idStripe, motifDErreur, synchroniserSousBail } from "./synchronisation";
 import { OPTIONS_WEBHOOK } from "./client";
 
@@ -58,11 +57,9 @@ export async function aiguillageDe(stripe: Stripe, type: string, objetId: string
     case "v1.customer.subscription.paused":
     case "v1.customer.subscription.resumed":
     case "v1.customer.subscription.trial_will_end": {
+      // Le planning d'une baisse échue est rendu par la relecture qui suit
+      // (`entretenir`, synchronisation.ts) : elle se retente, celle-ci non.
       const abonnement = await stripe.subscriptions.retrieve(objetId, {}, OPTIONS_WEBHOOK);
-      // Une baisse vient de prendre effet : son planning est rendu (sinon le
-      // portail refuserait la résiliation pendant une période). Sans effet
-      // sur l'aiguillage s'il échoue : la prochaine notification le refera.
-      if (abonnement.schedule) await rendrePlanningEchu(stripe, abonnement).catch(() => {});
       return { clientStripe: idStripe(abonnement.customer), abonnementId: abonnement.id };
     }
     case "v1.checkout.session.completed": {

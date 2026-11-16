@@ -15,14 +15,12 @@ vi.mock("./synchronisation", async (reel) => ({
   ...(await reel<typeof import("./synchronisation")>()),
   synchroniserSousBail: vi.fn(),
 }));
-vi.mock("./parcours", () => ({ rendrePlanningEchu: vi.fn().mockResolvedValue(undefined) }));
 vi.mock("@/lib/abonnements/souscription", () => ({ finaliserCarte: vi.fn().mockResolvedValue({ issue: "rien" }) }));
 vi.mock("@/lib/alertes", () => ({ alerter: vi.fn().mockResolvedValue(undefined) }));
 
 import * as evenements from "./evenements";
 import * as file from "./file";
 import { synchroniserSousBail } from "./synchronisation";
-import { rendrePlanningEchu } from "./parcours";
 import { finaliserCarte } from "@/lib/abonnements/souscription";
 import { alerter } from "@/lib/alertes";
 import { EVENEMENTS_ECOUTES } from "./webhook";
@@ -57,11 +55,10 @@ describe("aiguillageDe : le client de l'objet relu, et les effets propres à l'o
     expect(await aiguillageDe(faux, type, "obj_1")).toMatchObject({ clientStripe: "cus_1" });
   });
 
-  it("abonnement : relu avec les options courtes du webhook ; son identifiant suit (client supprimé) ; un planning échu est rendu", async () => {
+  it("abonnement : relu avec les options courtes du webhook ; son identifiant suit (client supprimé)", async () => {
     api.subscriptions.retrieve.mockResolvedValue({ id: "sub_1", customer: { id: "cus_1" }, schedule: "sub_sched_1" });
     expect(await aiguillageDe(faux, "v1.customer.subscription.updated", "sub_1")).toEqual({ clientStripe: "cus_1", abonnementId: "sub_1" });
     expect(api.subscriptions.retrieve).toHaveBeenCalledWith("sub_1", {}, expect.objectContaining({ maxNetworkRetries: 0 }));
-    expect(rendrePlanningEchu).toHaveBeenCalledOnce();
   });
 
   it("session de carte : la formule s'applique, la relecture suit par la file", async () => {
