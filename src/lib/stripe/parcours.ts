@@ -245,16 +245,22 @@ export async function appliquerFormule(
     if (frais.status !== "trialing") return null;
   }
   const item = abonnement.items.data[0];
+  // Une seule carte, celle du CLIENT (`invoice_settings`), que le portail
+  // change : une carte fixée sur l'abonnement passerait avant elle au
+  // renouvellement, et un client qui change de carte resterait prélevé sur
+  // l'ancienne (répétition dans le temps du 2026-11-16, doc Stripe « Subscription
+  // invoices »). L'appelant a posé la carte sur le client ; on retire celle de
+  // l'abonnement.
   const pmActuel = idStripe(abonnement.default_payment_method);
   const finEssai = choix.immediat && abonnement.status === "trialing";
-  if (item?.price.id === choix.priceId && pmActuel === choix.paymentMethodId && !finEssai && !enPause) return null;
+  if (item?.price.id === choix.priceId && !pmActuel && !finEssai && !enPause) return null;
 
   // Le taux en vigueur est reposé : un abonnement né sous un ancien taux
   // paie le prix affiché.
   const taux = await tauxEnVigueur(stripe);
   const decision = {
     items: item ? [{ id: item.id, price: choix.priceId }] : [{ price: choix.priceId }],
-    default_payment_method: choix.paymentMethodId,
+    default_payment_method: "",
     // Stripe refuse `proration_behavior` sur un abonnement en pause
     // (« Resume the subscription first », répétition en local du
     // 2026-11-16) : la reprise qui suit le porte, et ne facture que la

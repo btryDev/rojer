@@ -88,6 +88,8 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
       ...o,
     }) as unknown as Stripe.Subscription;
 
+  // Les reports de carte sur le client (`carteAuClient`) : relevés, jamais envoyés.
+  const cartes: { objet: string; params: object }[] = [];
   const stripe = (
     compteId: string,
     abonnements: Stripe.Subscription[] | Error,
@@ -101,9 +103,11 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
           await attendre;
           return client ?? { id, metadata: { compteId } };
         },
+        update: async (id: string, params: object) => (cartes.push({ objet: id, params }), { id }),
       },
       invoices: { list: () => ({ autoPagingToArray: async () => factures }) },
       subscriptions: {
+        update: async (id: string, params: object) => (cartes.push({ objet: id, params }), { id }),
         list: () => ({
           autoPagingToArray: async () => {
             if (abonnements instanceof Error) throw abonnements;
@@ -182,6 +186,21 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
         ["client cus_A", expect.stringMatching(/paie peut-être deux fois/)],
         new Date(1000),
       );
+    });
+
+    it("une carte fixée sur l'abonnement est reportée sur le client et retirée de l'abonnement (2026-11-16)", async () => {
+      cartes.length = 0;
+      const actif = stripe(A, [abo({ id: "sub_1", status: "active", created: 1, default_payment_method: "pm_payee" } as never)]);
+      expect(await synchroniserClientStripe(actif, "cus_A", { maintenant: () => new Date(1000) })).toEqual({ issue: "ecrit" });
+      expect(cartes).toEqual([
+        { objet: "cus_A", params: { invoice_settings: { default_payment_method: "pm_payee" } } },
+        { objet: "sub_1", params: { default_payment_method: "" } },
+      ]);
+      // Sans carte sur l'abonnement, ou terminé : rien.
+      cartes.length = 0;
+      await synchroniserClientStripe(stripe(A, [abo({ id: "sub_1", status: "active", created: 1 })]), "cus_A", { maintenant: () => new Date(2000) });
+      await synchroniserClientStripe(stripe(A, [abo({ id: "sub_1", status: "canceled", created: 1, default_payment_method: "pm_x" } as never)]), "cus_A", { maintenant: () => new Date(3000) });
+      expect(cartes).toEqual([]);
     });
 
     it("un client d'avant l'ADR-054 (metadata.userId) écrit au compte dont la personne est propriétaire", async () => {

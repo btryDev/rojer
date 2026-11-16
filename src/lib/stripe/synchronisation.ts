@@ -335,6 +335,7 @@ async function relireEtEcrire(stripe: Stripe, bail: Bail, relueLe: Date, strict:
   const { courant, plusieurs } = abonnementCourant(abonnements);
   const designe = compteDuClientStripe(client.value, courant);
   if (!designe) return terminer(bail, relueLe, SANS_COMPTE);
+  if (!supprime && courant) await carteAuClient(stripe, customerId, courant);
   // Un client d'avant l'ADR-054 : le compte dont la personne est l'unique
   // propriétaire ; aucun, ou plusieurs, ne se devinent pas.
   const compteId = "compteId" in designe ? designe.compteId : await compteDontEstProprietaire(designe.proprietaire);
@@ -430,6 +431,34 @@ async function relireEtEcrire(stripe: Stripe, bail: Bail, relueLe: Date, strict:
       default:
         throw e;
     }
+  }
+}
+
+/**
+ * Une seule carte, celle du CLIENT (2026-11-16). Stripe en fixe une sur
+ * l'abonnement quand le client règle une facture sur sa page (réglage
+ * `save_default_payment_method: on_subscription`) ou souscrit par Checkout ;
+ * elle passerait ensuite avant celle que le client choisit dans le portail.
+ * La relecture la reporte sur le client et la retire de l'abonnement :
+ * c'est la dernière carte utilisée, donc la bonne. Sans réponse de Stripe,
+ * la relecture continue ; la suivante recommencera.
+ */
+async function carteAuClient(stripe: Stripe, customerId: string, courant: Stripe.Subscription): Promise<void> {
+  const carte = idStripe(courant.default_payment_method);
+  if (!carte || !OUVRENT.has(courant.status)) return;
+  try {
+    await stripe.customers.update(
+      customerId,
+      { invoice_settings: { default_payment_method: carte } },
+      { ...OPTIONS_WEBHOOK, idempotencyKey: `carte-client-${courant.id}-${carte}` },
+    );
+    await stripe.subscriptions.update(
+      courant.id,
+      { default_payment_method: "" },
+      { ...OPTIONS_WEBHOOK, idempotencyKey: `carte-abonnement-${courant.id}-${carte}` },
+    );
+  } catch (e) {
+    console.error(`stripe : carte de l'abonnement non reportée sur le client ${customerId} — ${motifDErreur(e)}`);
   }
 }
 

@@ -104,7 +104,7 @@ describe("parcours Stripe", () => {
       "sub_1",
       {
         items: [{ id: "si_1", price: "price_pa" }],
-        default_payment_method: "pm_1",
+        default_payment_method: "",
         proration_behavior: "none",
         metadata: { rojerChoixLe: "100" },
         expand: ["latest_invoice"],
@@ -119,14 +119,18 @@ describe("parcours Stripe", () => {
     // En pause, Stripe refuse `proration_behavior` sur la mise à jour (répétition locale du 2026-11-16) :
     // seule la reprise le porte.
     expect(api.subscriptions.update.mock.lastCall?.[1]).not.toHaveProperty("proration_behavior");
-    expect(api.subscriptions.update.mock.lastCall?.[1]).toMatchObject({ items: [{ id: "si_1", price: "price_pa" }], default_payment_method: "pm_1" });
+    expect(api.subscriptions.update.mock.lastCall?.[1]).toMatchObject({ items: [{ id: "si_1", price: "price_pa" }], default_payment_method: "" });
     expect(api.subscriptions.resume).toHaveBeenCalledWith("sub_1", { proration_behavior: "none", expand: ["latest_invoice"] }, {
       idempotencyKey: expect.stringMatching(/^carte-cs_1-[0-9a-f]{12}-reprise$/),
     });
 
     api.subscriptions.update.mockClear();
-    await appliquerFormule(stripe, sub("trialing", { default_payment_method: "pm_1", items: { data: [{ id: "si_1", price: { id: "price_pa" } }] } }), choix);
+    // Déjà la formule choisie, et aucune carte fixée sur l'abonnement : rien à faire.
+    await appliquerFormule(stripe, sub("trialing", { items: { data: [{ id: "si_1", price: { id: "price_pa" } }] } }), choix);
     expect(api.subscriptions.update).not.toHaveBeenCalled();
+    // Une carte fixée sur l'abonnement (d'avant le 2026-11-16) : retirée, la carte du client fait foi.
+    await appliquerFormule(stripe, sub("trialing", { default_payment_method: "pm_ancienne", items: { data: [{ id: "si_1", price: { id: "price_pa" } }] } }), choix);
+    expect(api.subscriptions.update.mock.lastCall?.[1]).toMatchObject({ default_payment_method: "" });
   });
 
   it("rejeu : un choix plus ancien que le dernier appliqué ne fait rien ; une pause dont la reprise attend un paiement renvoie sa facture", async () => {
