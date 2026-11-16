@@ -6,14 +6,12 @@ const m = vi.hoisted(() => ({
   abonnementsDuClient: vi.fn(),
   appliquerFormule: vi.fn(),
   prixDesFormules: vi.fn(),
-  tauxDeTva: vi.fn(async () => "txr_ttc"),
   synchroniser: vi.fn(),
 }));
 vi.mock("@/lib/stripe/parcours", () => ({
   abonnementsDuClient: m.abonnementsDuClient,
   appliquerFormule: m.appliquerFormule,
   prixDesFormules: m.prixDesFormules,
-  tauxDeTva: m.tauxDeTva,
 }));
 vi.mock("@/lib/stripe/synchronisation", async (reel) => ({
   ...(await reel<typeof import("@/lib/stripe/synchronisation")>()),
@@ -52,7 +50,6 @@ describe("finaliserCarte", () => {
       priceId: "price_pa",
       paymentMethodId: "pm_1",
       immediat: false,
-      tauxTva: "txr_ttc",
       choisiLe: 1000,
       idempotence: "carte-cs_1",
     });

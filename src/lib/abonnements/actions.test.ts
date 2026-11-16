@@ -207,13 +207,6 @@ describe("sAbonnerAction", () => {
     }
   });
 
-  it("le taux de TVA en vigueur accompagne la formule appliquée", async () => {
-    m.abonnementsDuClient.mockResolvedValue([abonnement("trialing")]);
-    m.carteParDefaut.mockResolvedValue("pm_1");
-    await redirigeVers(sAbonnerAction(formulaire()));
-    expect(m.appliquerFormule.mock.calls[0][2].tauxTva).toBe("txr_tva");
-  });
-
   it("résiliation prévue pendant l'essai : on ne change pas une formule qui s'arrête", async () => {
     m.carteParDefaut.mockResolvedValue("pm_1");
     for (const fin of [{ cancel_at_period_end: true }, { cancel_at: 1_800_000_000 }]) {
@@ -234,7 +227,7 @@ describe("sAbonnerAction", () => {
     expect(m.ouvrirCheckout).not.toHaveBeenCalled();
     // Plus de facture ouverte (expirée entre-temps) : la page le dit, rien n'est ouvert.
     m.factureARegler.mockResolvedValue(null);
-    expect(await redirigeVers(sAbonnerAction(formulaire()))).toBe("https://rojer.test/compte/abonnement?abonnement=en-cours");
+    expect(await redirigeVers(sAbonnerAction(formulaire()))).toBe("/compte/abonnement?facture=introuvable");
   });
 
   it("une formule hors catalogue : rien", async () => {

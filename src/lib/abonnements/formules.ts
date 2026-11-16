@@ -18,9 +18,9 @@ export type Periodicite = (typeof PERIODICITES)[number];
 
 /** Ce que l'écran dit d'une périodicité : « facturation mensuelle », « par mois ». */
 export const LIBELLE_PERIODICITE = {
-  mensuel: { adjectif: "mensuelle", unite: "mois" },
-  annuel: { adjectif: "annuelle", unite: "an" },
-} as const satisfies Record<Periodicite, { adjectif: string; unite: string }>;
+  mensuel: { adjectif: "mensuelle", unite: "mois", premiere: "le premier mois" },
+  annuel: { adjectif: "annuelle", unite: "an", premiere: "la première année" },
+} as const satisfies Record<Periodicite, { adjectif: string; unite: string; premiere: string }>;
 
 /** L'intervalle Stripe d'une périodicité (prix récurrent). */
 export const INTERVALLE_STRIPE = { mensuel: "month", annuel: "year" } as const satisfies Record<Periodicite, string>;

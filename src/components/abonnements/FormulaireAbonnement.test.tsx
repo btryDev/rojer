@@ -30,7 +30,7 @@ const OFFRES: Offres = [
   },
 ];
 
-const base = { offres: OFFRES, quand: "Quand.", compteId: "c1", libelle: "Changer de formule" };
+const base = { offres: OFFRES, quand: "Quand.", compteId: "c1", libelle: "Changer de formule" } as const;
 const formuleEnvoyee = (c: HTMLElement) => (c.querySelector('input[name="formule"]') as HTMLInputElement).value;
 const principal = () => screen.getByRole("button", { name: base.libelle }) as HTMLButtonElement;
 
@@ -39,7 +39,7 @@ afterEach(cleanup);
 describe("FormulaireAbonnement", () => {
   it("part de la formule et du rythme en cours ; le bouton reste fermé tant que rien ne change", () => {
     const { container } = render(
-      <FormulaireAbonnement {...base} immediat={false} courante={{ formule: "pro", periodicite: "annuel" }} inchangeeFermee />,
+      <FormulaireAbonnement {...base} mode="changer" courante={{ formule: "pro", periodicite: "annuel" }} />,
     );
     expect(formuleEnvoyee(container)).toBe("rojer_pro_annuel");
     expect(principal().disabled).toBe(true);
@@ -49,24 +49,25 @@ describe("FormulaireAbonnement", () => {
   });
 
   it("sans formule en cours : Essentiel mensuel, bouton ouvert", () => {
-    const { container } = render(<FormulaireAbonnement {...base} immediat={false} />);
+    const { container } = render(<FormulaireAbonnement {...base} mode="enregistrer" />);
     expect(formuleEnvoyee(container)).toBe("rojer_essentiel_mensuel");
     expect(principal().disabled).toBe(false);
   });
 
   it("pendant l'essai : « Payer maintenant » porte immediat=oui et dit le montant du jour, TTC", () => {
-    render(<FormulaireAbonnement {...base} immediat={false} courante={{ formule: "pro", periodicite: "mensuel" }} payerMaintenant />);
+    render(<FormulaireAbonnement {...base} mode="enregistrer" courante={{ formule: "pro", periodicite: "mensuel" }} proposerPayerMaintenant />);
     const payer = screen.getByRole("button", { name: "Payer maintenant" });
     expect(payer.getAttribute("name")).toBe("immediat");
     expect(payer.getAttribute("value")).toBe("oui");
     expect(screen.getByText(/lève les limites de l'essai/).textContent).toMatch(/89\s€ TTC prélevés aussitôt pour le premier mois/);
   });
 
-  it("paiement imposé : le montant prélevé aujourd'hui est écrit, selon la sélection ; pas de second bouton", () => {
-    render(<FormulaireAbonnement {...base} immediat courante={{ formule: "essentiel", periodicite: "mensuel" }} payerMaintenant />);
+  it("paiement imposé : le montant prélevé aujourd'hui est écrit, selon la sélection ; immediat=oui envoyé ; pas de second bouton", () => {
+    render(<FormulaireAbonnement {...base} mode="payer" courante={{ formule: "essentiel", periodicite: "mensuel" }} />);
     expect(screen.getByText(/Prélevé aujourd'hui/).textContent).toMatch(/29\s€ TTC, pour le premier mois/);
     fireEvent.click(screen.getByRole("radio", { name: /Annuel/ }));
     expect(screen.getByText(/Prélevé aujourd'hui/).textContent).toMatch(/295\s€ TTC, pour la première année/);
     expect(screen.queryByRole("button", { name: "Payer maintenant" })).toBeNull();
+    expect((document.querySelector('input[name="immediat"]') as HTMLInputElement).value).toBe("oui");
   });
 });

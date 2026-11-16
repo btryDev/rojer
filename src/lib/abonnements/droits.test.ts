@@ -63,12 +63,16 @@ describe("droitsDe", () => {
   });
 
   it("l'état dit au dirigeant : un compte qui n'a jamais payé a un essai terminé, pas un abonnement suspendu", () => {
+    const paye = new Date("2026-01-01");
     expect(libelleStatut(null)).toBe("Aucun abonnement");
-    expect(libelleStatut("paused")).toBe("Essai terminé");
-    expect(libelleStatut("canceled")).toBe("Essai terminé");
-    expect(libelleStatut("paused", new Date("2026-01-01"))).toBe("Suspendu");
-    expect(libelleStatut("canceled", new Date("2026-01-01"))).toBe("Résilié");
-    expect(libelleStatut("trialing")).toBe("Essai en cours");
+    for (const statut of ["paused", "canceled", "incomplete_expired"]) {
+      expect(libelleStatut({ statut, debutPayantLe: null }), statut).toBe("Essai terminé");
+    }
+    expect(libelleStatut({ statut: "paused", debutPayantLe: paye })).toBe("Suspendu");
+    expect(libelleStatut({ statut: "canceled", debutPayantLe: paye })).toBe("Résilié");
+    // Une facture attend : l'état le dit, comme le bandeau.
+    expect(libelleStatut({ statut: "unpaid", debutPayantLe: null })).toBe("Impayé");
+    expect(libelleStatut({ statut: "trialing", debutPayantLe: null })).toBe("Essai en cours");
   });
 
   it("paiement échoué : saisie ouverte, alerte", () => {

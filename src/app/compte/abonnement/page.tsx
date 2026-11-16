@@ -6,10 +6,11 @@ import { MESSAGE_COMPTE_CHANGE } from "@/lib/auth/compte-attendu";
 import { ChampCompteAttendu } from "@/components/compte/ChampCompteAttendu";
 import { requireUser } from "@/lib/auth/require-user";
 import { abonnementDuCompte, contexteDroits, offreLancee } from "@/lib/abonnements/saisie";
-import { A_REGLER, droitsDe, gesteAbonnement, libelleStatut, OUVRENT } from "@/lib/abonnements/droits";
+import { droitsDe, gesteAbonnement, libelleStatut, OUVRENT, resiliationPrevue } from "@/lib/abonnements/droits";
+import { besoinDeLaCarte, vueAbonnement } from "@/lib/abonnements/vue-abonnement";
 import { formaterDateLongueFr } from "@/lib/dates";
 import { dateDeSuppressionPrevue } from "@/lib/abonnements/suppression";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
 import { ouvrirPortailAction, reglerFactureAction } from "@/lib/abonnements/actions";
 import { FormulaireAbonnement, type OffreAffichee } from "@/components/abonnements/FormulaireAbonnement";
@@ -18,7 +19,7 @@ import { FinalisationCarte } from "@/components/abonnements/FinalisationCarte";
 import { ChangerDeFormule, type OptionDeFormule } from "@/components/abonnements/ChangerDeFormule";
 import { sensDuChangement } from "@/lib/abonnements/changement";
 import { depassements } from "@/lib/abonnements/quotas";
-import { euros } from "@/lib/abonnements/affichage";
+import { prixTTC } from "@/lib/abonnements/affichage";
 import { baissePrevue } from "@/lib/stripe/parcours";
 import { carteParDefaut } from "@/lib/abonnements/souscription";
 import { clientStripe } from "@/lib/stripe/client";
@@ -118,7 +119,7 @@ async function changementsPossibles(
           sens,
           effet: effetDuChangement(sens, actuelle, cle, finPeriode),
           libelle: libelleDe(cle),
-          prix: montant ? `${euros(montant)} TTC par ${LIBELLE_PERIODICITE[f.periodicite].unite}` : null,
+          prix: montant ? prixTTC(montant, f.periodicite) : null,
           depassements: sens === "baisse" ? await depassements(db, compteId, cle) : [],
         };
       }),
@@ -197,39 +198,32 @@ export default async function AbonnementPage({
   // Sans compte encore, `role` est nul : l'essai reste proposé.
   const geste = gesteAbonnement({ ouvert, role: c?.compte.role ?? null, ligne });
   const formule = formuleDeLookupKey(ligne?.formule);
-  const offres = geste === "abonner" || geste === "souscrire" ? await offresAffichees() : [];
   // Vient de payer, la confirmation de Stripe n'est pas encore là : la page le
   // dit et ne propose jamais de payer une seconde fois (le geste est le portail).
   const paiementEnConfirmation = ligne?.statut === "active" && !ligne.debutPayantLe;
-  const payerMaintenant = immediat === "1" || ligne?.statut === "paused";
-  // Essai avec une carte déjà enregistrée : la formule est choisie, l'abonnement
-  // démarrera seul à la fin de l'essai ; on peut encore en changer.
-  const carteEnregistree =
-    // En pause aussi : une carte posée au portail est prélevée directement.
-    geste === "abonner" && c ? await carteDuCompte(c.db, c.compte.compteId) : false;
-  // Changer de formule : un abonnement qui paie, pour son propriétaire.
+  const finPrevue = ligne ? resiliationPrevue(ligne) : false;
+  const finEssai = ligne?.finEssai ? `, le ${formaterDateLongueFr(ligne.finEssai)}` : "";
+  const entree = {
+    geste,
+    statut: ligne?.statut ?? null,
+    resiliationPrevue: finPrevue,
+    immediat: immediat === "1",
+    retourCarte: !!carte,
+    finEssai,
+  };
+  // Les lectures chez Stripe, ensemble : les offres (formulaire) et la carte
+  // du compte (seulement là où elle change le geste).
+  const [offres, carteEnregistree] = await Promise.all([
+    geste === "abonner" || geste === "souscrire" ? offresAffichees() : Promise.resolve([]),
+    c && besoinDeLaCarte(entree) ? carteDuCompte(c.db, c.compte.compteId) : Promise.resolve(false),
+  ]);
+  const vue = vueAbonnement({ ...entree, carteEnregistree });
+  // Changer de formule : un abonnement qui paie, pour son propriétaire ; pas
+  // une formule qui s'arrête.
   const { options: optionsChangement, baisse } =
-    // Une résiliation prévue : on ne change pas une formule qui s'arrête.
-    geste === "portail" && ligne?.statut === "active" && !ligne.resilieEnFinDePeriode && !ligne.finPrevueLe && c
+    geste === "portail" && ligne?.statut === "active" && !finPrevue && c
       ? await changementsPossibles(c.db, c.compte.compteId, ligne.formule, ligne.finPeriode)
       : { options: [], baisse: null };
-  const finEssai = ligne?.finEssai ? `, le ${formaterDateLongueFr(ligne.finEssai)}` : "";
-  // Une résiliation demandée au portail pendant l'essai : plus de formule à
-  // choisir, l'essai s'arrête à sa date (audit du 2026-11-16).
-  const resiliationPrevue = !!(ligne?.resilieEnFinDePeriode || ligne?.finPrevueLe);
-  const enEssai = ligne?.statut === "trialing";
-  // Une facture attend : impayé, ou premier paiement non abouti.
-  const factureEnAttente = geste === "portail" && A_REGLER.has(ligne?.statut ?? "");
-  const quand =
-    geste === "souscrire"
-      ? "Le paiement se fait sur la page sécurisée de Stripe, notre prestataire de paiement."
-      : payerMaintenant
-        ? carteEnregistree
-          ? "Le premier paiement est prélevé aussitôt sur votre carte enregistrée, et votre abonnement démarre."
-          : "Votre carte s'enregistre sur la page sécurisée de Stripe ; le premier paiement est prélevé aussitôt et votre abonnement démarre."
-        : carteEnregistree
-          ? `La formule choisie s'applique à la fin de votre essai${finEssai}, et rien n'est prélevé avant ; d'ici là, les limites de l'essai restent.`
-          : `Votre carte s'enregistre sur la page sécurisée de Stripe. Rien n'est prélevé avant la fin de votre essai${finEssai}.`;
 
   return (
     <main className="flex min-h-[calc(100vh-56px)] flex-col bg-[color:var(--board-canvas)] px-6 py-14 sm:px-10">
@@ -266,7 +260,7 @@ export default async function AbonnementPage({
         )}
 
         {/* Un geste réservé aux abonnés y renvoie (`exigerUnPaiement`) : on dit pourquoi on est là. */}
-        {immediat === "1" && (geste === "abonner" || geste === "souscrire") && !(enEssai && resiliationPrevue) && (
+        {vue.cas === "formulaire" && vue.annoncerDocument && (
           <div className="mt-6">
             <MessageFormulaire ton="info">
               Valider un document, exporter le registre ou le dossier de contrôle, publier le registre
@@ -285,7 +279,7 @@ export default async function AbonnementPage({
           {ouvert ? (
             <dl className="m-0 mt-4 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-[14px]">
               <dt className="text-[color:var(--board-slate-mid)]">Abonnement</dt>
-              <dd className="m-0 font-semibold">{libelleStatut(ligne?.statut ?? null, ligne?.debutPayantLe ?? null)}</dd>
+              <dd className="m-0 font-semibold">{libelleStatut(ligne)}</dd>
               {ligne?.formule && (
                 <>
                   <dt className="text-[color:var(--board-slate-mid)]">Formule</dt>
@@ -356,27 +350,17 @@ export default async function AbonnementPage({
           </MessageFormulaire>
         </div>
 
-        {geste && (
+        {vue.cas !== "aucune" && (
           <section className="carte-board mt-5 px-7 py-6 sm:px-8" aria-labelledby="titre-gerer">
             <h2 id="titre-gerer" className="board-titre m-0 text-[22px]">
-              {geste === "essai"
-                ? "Essai gratuit"
-                : geste === "abonner" && enEssai && (resiliationPrevue || !payerMaintenant)
-                  ? resiliationPrevue
-                    ? "Fin de l'essai"
-                    : carteEnregistree
-                      ? "Changer de formule"
-                      : "Après l'essai"
-                  : geste === "abonner" || geste === "souscrire"
-                    ? "S'abonner"
-                    : "Gérer"}
+              {vue.titre}
             </h2>
-            {geste === "membre" && (
+            {vue.cas === "membre" && (
               <p className="m-0 mt-2 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                 Seul le propriétaire du compte gère l&apos;abonnement.
               </p>
             )}
-            {geste === "essai" && (
+            {vue.cas === "essai" && (
               <>
                 <p className="m-0 mt-2 mb-5 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                   {DUREE_ESSAI_JOURS} jours gratuits de la formule {FORMULES[CLES_FORMULES[0]].libelle}, sans carte bancaire.
@@ -386,86 +370,88 @@ export default async function AbonnementPage({
                 </Link>
               </>
             )}
-            {geste === "portail" && optionsChangement.length > 0 && (
-              <ChangerDeFormule options={optionsChangement} baisse={baisse} compteId={compteId} />
-            )}
-            {factureEnAttente && (
-              <form action={reglerFactureAction} className="mt-2 mb-6">
-                <ChampCompteAttendu compteId={compteId} />
-                <p className="m-0 mb-4 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                  Une facture attend son paiement. Réglez-la sur la page sécurisée de Stripe, avec la même carte ou
-                  une autre : la saisie se rouvre dès qu&apos;elle est payée.
-                </p>
-                <BoutonEnvoi variant="board">Régler la facture en attente</BoutonEnvoi>
-              </form>
-            )}
-            {geste === "portail" && (
-              <form action={ouvrirPortailAction} className={optionsChangement.length > 0 ? "mt-6" : undefined}>
-                <ChampCompteAttendu compteId={compteId} />
-                <p className="m-0 mt-2 mb-5 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+            {vue.cas === "portail" && (
+              <>
+                {optionsChangement.length > 0 && <ChangerDeFormule options={optionsChangement} baisse={baisse} compteId={compteId} />}
+                {vue.factureEnAttente && (
+                  <form action={reglerFactureAction} className="mt-2 mb-6">
+                    <ChampCompteAttendu compteId={compteId} />
+                    <p className="m-0 mb-4 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                      Une facture attend son paiement. Réglez-la sur la page sécurisée de Stripe, avec la même carte
+                      ou une autre : la saisie se rouvre dès qu&apos;elle est payée.
+                    </p>
+                    <BoutonEnvoi variant="board">Régler la facture en attente</BoutonEnvoi>
+                  </form>
+                )}
+                <FormulairePortail
+                  compteId={compteId}
+                  variant={vue.factureEnAttente ? "boardClair" : "board"}
+                  className={optionsChangement.length > 0 ? "mt-6" : "mt-2"}
+                >
                   Carte, factures, résiliation : sur la page sécurisée de Stripe, notre prestataire de paiement.
-                  {baisse
-                    ? " Un changement de formule est prévu : pour résilier, choisissez d'abord « Garder ma formule »."
-                    : null}
-                </p>
-                <Button type="submit" variant={factureEnAttente ? "boardClair" : "board"} size="board">
-                  Gérer mon abonnement
-                </Button>
-              </form>
+                  {baisse ? " Un changement de formule est prévu : pour résilier, choisissez d'abord « Garder ma formule »." : null}
+                </FormulairePortail>
+              </>
             )}
-            {geste === "abonner" && enEssai && resiliationPrevue && !carte ? (
-              <form action={ouvrirPortailAction} className="mt-2">
-                <ChampCompteAttendu compteId={compteId} />
-                <p className="m-0 mb-5 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                  Vous avez résilié : votre essai s&apos;arrête{finEssai}, et rien ne sera prélevé. Pour changer
-                  d&apos;avis, reprenez votre abonnement depuis « Gérer mon abonnement ».
-                </p>
-                <Button type="submit" variant="board" size="board">
-                  Gérer mon abonnement
-                </Button>
-              </form>
-            ) : carte && geste === "abonner" ? (
+            {vue.cas === "essai-resilie" && (
+              <FormulairePortail compteId={compteId} variant="board" className="mt-2">
+                Vous avez résilié : votre essai s&apos;arrête{finEssai}, et rien ne sera prélevé. Pour changer d&apos;avis,
+                reprenez votre abonnement depuis « Gérer mon abonnement ».
+              </FormulairePortail>
+            )}
+            {vue.cas === "finalisation" && carte && (
               <div className="mt-3">
                 <FinalisationCarte sessionId={carte} />
               </div>
-            ) : (
-              (geste === "abonner" || geste === "souscrire") && (
-                <>
-                  {carteEnregistree && enEssai && !payerMaintenant && formule && (
-                    <p className="m-0 mt-2 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                      Votre carte est enregistrée. Après l&apos;essai{finEssai} : {FORMULES[formule.formule].libelle},
-                      facturation {LIBELLE_PERIODICITE[formule.periodicite].adjectif}.
-                    </p>
-                  )}
-                  <FormulaireAbonnement
-                    offres={offres}
-                    quand={quand}
-                    immediat={payerMaintenant}
-                    compteId={compteId}
-                    courante={geste === "abonner" ? formule : null}
-                    inchangeeFermee={carteEnregistree && !payerMaintenant}
-                    payerMaintenant={enEssai && !payerMaintenant}
-                    libelle={payerMaintenant ? "Payer et m'abonner" : carteEnregistree ? "Changer de formule" : "Enregistrer ma formule"}
-                  />
-                  {carteEnregistree && (
-                    <form action={ouvrirPortailAction} className="mt-6">
-                      <ChampCompteAttendu compteId={compteId} />
-                      <p className="m-0 mb-3 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                        {enEssai
-                          ? "Carte, factures, résiliation avant la fin de l'essai : sur la page sécurisée de Stripe."
-                          : "Carte, factures, résiliation : sur la page sécurisée de Stripe."}
-                      </p>
-                      <Button type="submit" variant="boardClair" size="board">
-                        Gérer mon abonnement
-                      </Button>
-                    </form>
-                  )}
-                </>
-              )
+            )}
+            {vue.cas === "formulaire" && (
+              <>
+                {vue.rappelApresEssai && formule && (
+                  <p className="m-0 mt-2 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                    Votre carte est enregistrée. Après l&apos;essai{finEssai} : {FORMULES[formule.formule].libelle},
+                    facturation {LIBELLE_PERIODICITE[formule.periodicite].adjectif}.
+                  </p>
+                )}
+                <FormulaireAbonnement
+                  offres={offres}
+                  compteId={compteId}
+                  mode={vue.mode}
+                  libelle={vue.libelle}
+                  quand={vue.quand}
+                  courante={geste === "abonner" ? formule : null}
+                  proposerPayerMaintenant={vue.proposerPayerMaintenant}
+                />
+                {vue.portail && (
+                  <FormulairePortail compteId={compteId} variant="boardClair" className="mt-6">
+                    {vue.portail}
+                  </FormulairePortail>
+                )}
+              </>
             )}
           </section>
         )}
       </div>
     </main>
+  );
+}
+
+/** Le portail Stripe (carte, factures, résiliation), avec la phrase qui dit ce qu'on y fait. */
+function FormulairePortail({
+  compteId,
+  variant,
+  className,
+  children,
+}: {
+  compteId: string | null;
+  variant: "board" | "boardClair";
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <form action={ouvrirPortailAction} className={className}>
+      <ChampCompteAttendu compteId={compteId} />
+      <p className="m-0 mb-5 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">{children}</p>
+      <BoutonEnvoi variant={variant}>Gérer mon abonnement</BoutonEnvoi>
+    </form>
   );
 }

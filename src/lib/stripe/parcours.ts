@@ -159,7 +159,6 @@ export async function ouvrirCheckoutCarte(
   return session.url;
 }
 
-/** L'adresse de la facture à régler d'un abonnement, si sa dernière facture attend un paiement (refus, 3DS). */
 /**
  * L'adresse de la dernière facture d'un abonnement si elle attend un
  * paiement (`open`) : carte refusée, authentification demandée, impayé.
@@ -181,9 +180,18 @@ async function factureOuverte(stripe: Stripe, derniere: Stripe.Subscription["lat
   return facture.status === "open" || facture.status === "uncollectible" ? facture : null;
 }
 
-/** La facture porte-t-elle ce prix, et lui seul ? */
-const factureDuPrix = (f: Stripe.Invoice, priceId: string) =>
-  f.lines.data.length > 0 && f.lines.data.every((l) => l.pricing?.price_details?.price === priceId);
+/**
+ * La facture est-elle celle du prix choisi, TVA comprise ? Ce prix seul sur
+ * ses lignes, et un total égal au sous-total : une facture d'avant les prix
+ * TTC (TVA en sus) ne se reprend pas telle quelle.
+ */
+const factureAuPrixAffiche = (f: Stripe.Invoice, priceId: string) =>
+  f.lines.data.length > 0 &&
+  f.lines.data.every((l) => l.pricing?.price_details?.price === priceId) &&
+  f.total === f.subtotal;
+
+/** Le taux de TVA en vigueur, sans échouer : sans réponse, l'abonnement garde le sien. */
+const tauxEnVigueur = (stripe: Stripe) => tauxDeTva(stripe).catch(() => null);
 
 /**
  * Appliquer la formule choisie et la carte enregistrée à l'abonnement qui
@@ -211,8 +219,6 @@ export async function appliquerFormule(
     immediat: boolean;
     choisiLe: number;
     idempotence?: string;
-    /** Le taux de TVA en vigueur (`tauxDeTva`) : reposé, pour qu'un abonnement né sous un ancien taux paie le prix affiché. */
-    tauxTva?: string | null;
   },
 ): Promise<string | null> {
   if (choix.choisiLe < Number(abonnement.metadata?.rojerChoixLe ?? 0)) return null;
@@ -222,7 +228,7 @@ export async function appliquerFormule(
     // de la formule choisie ; sinon elle est annulée, et la reprise se fait
     // au prix affiché (audit du 2026-11-16).
     const enAttente = await factureOuverte(stripe, abonnement.latest_invoice);
-    if (enAttente && factureDuPrix(enAttente, choix.priceId)) return enAttente.hosted_invoice_url ?? null;
+    if (enAttente && factureAuPrixAffiche(enAttente, choix.priceId)) return enAttente.hosted_invoice_url ?? null;
     if (enAttente) await stripe.invoices.voidInvoice(enAttente.id!);
   }
   // Payer maintenant : l'essai est relu juste avant. Un autre onglet a pu le
@@ -237,6 +243,9 @@ export async function appliquerFormule(
   if (item?.price.id === choix.priceId && pmActuel === choix.paymentMethodId && !finEssai && !enPause) return null;
 
   const cle = (etape: string) => (choix.idempotence ? { idempotencyKey: `${choix.idempotence}-${etape}` } : {});
+  // Le taux en vigueur est reposé : un abonnement né sous un ancien taux
+  // paie le prix affiché.
+  const taux = await tauxEnVigueur(stripe);
   const misAJour = await stripe.subscriptions.update(
     abonnement.id,
     {
@@ -246,7 +255,7 @@ export async function appliquerFormule(
       metadata: { rojerChoixLe: String(choix.choisiLe) },
       expand: ["latest_invoice"],
       ...(finEssai ? { trial_end: "now" as const } : {}),
-      ...(choix.tauxTva ? { default_tax_rates: [choix.tauxTva] } : {}),
+      ...(taux ? { default_tax_rates: [taux] } : {}),
     },
     cle("maj"),
   );
@@ -272,6 +281,9 @@ export async function monterDeFormule(stripe: Stripe, abonnement: Stripe.Subscri
   const item = abonnement.items.data[0];
   if (!item || item.price.id === priceId) return null;
   // La mise à jour d'abord : si elle échoue, la baisse prévue reste intacte.
+  // Le taux de TVA n'y est pas reposé : une mise à jour en attente de
+  // paiement (`pending_if_incomplete`) n'accepte que les articles et le
+  // prorata. Seuls des abonnements de test sont nés sous l'ancien taux.
   const misAJour = await stripe.subscriptions.update(
     abonnement.id,
     {
@@ -324,7 +336,9 @@ export async function planifierBaisse(
   const enCours = planning.current_phase ?? planning.phases[0];
   // La TVA de l'abonnement, reposée sur chaque phase : la documentation de
   // Stripe ne dit pas qu'une phase qui l'omet la garde.
-  const tva = (abonnement.default_tax_rates ?? []).map((t) => t.id);
+  // Le taux en vigueur, sinon celui de l'abonnement.
+  const enVigueur = await tauxEnVigueur(stripe);
+  const tva = enVigueur ? [enVigueur] : (abonnement.default_tax_rates ?? []).map((t) => t.id);
   const taxes = tva.length > 0 ? { default_tax_rates: tva } : {};
   try {
     await stripe.subscriptionSchedules.update(planning.id, {

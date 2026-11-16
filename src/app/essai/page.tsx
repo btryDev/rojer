@@ -5,7 +5,7 @@ import { aiguillageSansCompte, compteDeLaPage } from "@/lib/auth/compte";
 import { requireUser } from "@/lib/auth/require-user";
 import { aiguillageEssai, PRIX_D_ESSAI } from "@/lib/abonnements/essai";
 import { CLES_FORMULES, FORMULES, lookupKey } from "@/lib/abonnements/formules";
-import { euros } from "@/lib/abonnements/affichage";
+import { prixTTC } from "@/lib/abonnements/affichage";
 import { LogOut } from "lucide-react";
 import { signOutAction } from "@/lib/auth/actions";
 import { clientStripe } from "@/lib/stripe/client";
@@ -99,7 +99,7 @@ export default async function EssaiPage() {
             </h2>
             <p className="m-0 mt-2 text-[14px] leading-[1.6] text-[color:var(--board-slate-mid)]">
               {mensuel && annuel
-                ? `${essentiel.libelle} : ${euros(mensuel)} TTC par mois, ou ${euros(annuel)} TTC par an. `
+                ? `${essentiel.libelle} : ${prixTTC(mensuel, "mensuel")}, ou ${prixTTC(annuel, "annuel")}. `
                 : null}
               Vous choisissez votre formule et le paiement mensuel ou annuel au moment de vous abonner. Rien
               n&apos;est prélevé sans que vous l&apos;ayez demandé ; sans abonnement à la fin de l&apos;essai, vos
