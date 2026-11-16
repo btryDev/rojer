@@ -36,7 +36,8 @@ export function identiteAPoser(
  */
 export async function poserIdentiteDeFacturation(stripe: Stripe, db: Db, customerId: string): Promise<void> {
   const client = await stripe.customers.retrieve(customerId);
-  if (client.deleted) return;
+  // Le cas courant, une fois le client payant : rien ne manque, rien à lire.
+  if (client.deleted || (!aNomProvisoire(client) && client.address?.line1?.trim())) return;
   const entreprise = await db.entreprise.findFirst({
     orderBy: { createdAt: "asc" },
     select: { raisonSociale: true, adresse: true },

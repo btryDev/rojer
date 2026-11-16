@@ -22,8 +22,7 @@ import { clientStripe } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
 import { abonnementsDuClient, creerClientStripe, demarrerEssai, prixDesFormules, tauxDeTva } from "@/lib/stripe/parcours";
 import { codePrisma, synchroniserClientStripe } from "@/lib/stripe/synchronisation";
-import { VERSION_CONDITIONS } from "./conditions";
-import { empreinteConditions } from "./conditions-empreinte";
+import { enregistrerAcceptation } from "./acceptation";
 import { essaiDisponible, gesteAbonnement, nomProvisoire } from "./droits";
 import { CLES_FORMULES, lookupKey } from "./formules";
 import { PAGE_ABONNEMENT, PAGE_MEMBRES, abonnementDuCompte, contexteDroits, offreLancee } from "./saisie";
@@ -112,12 +111,8 @@ export async function demarrerEssaiDuCompte(accepte: boolean, formData: FormData
     }
   }
 
-  // La preuve d'acceptation, avant l'essai. Un journal : jamais effacée, même
-  // si l'essai échoue — une acceptation sans essai ne nuit à personne, un
-  // essai sans preuve, si.
-  await db.acceptationConditions.create({
-    data: { compteId, userId: user.id, version: VERSION_CONDITIONS, empreinte: empreinteConditions(), contexte: "essai" },
-  });
+  // La preuve d'acceptation, avant l'essai, jamais effacée même s'il échoue.
+  await enregistrerAcceptation(db, { compteId, userId: user.id }, "essai");
   try {
     await demarrerEssai(stripe, { customerId, priceId: prix.priceId, tauxTva, metadata: { compteId }, idempotence: compteId });
   } catch (e) {

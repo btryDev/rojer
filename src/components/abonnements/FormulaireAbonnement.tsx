@@ -8,9 +8,8 @@
 // La formule en cours est présélectionnée : un clic sans rien changer ne
 // remplace pas Pro par Essentiel.
 
-import Link from "next/link";
 import { useState } from "react";
-import { CASE_A_COCHER } from "@/components/ui-kit/case-a-cocher";
+import { CaseConditions } from "./CaseConditions";
 import { BoutonEnvoi } from "./BoutonEnvoi";
 import { sAbonnerAction } from "@/lib/abonnements/actions";
 import { ChampCompteAttendu } from "@/components/compte/ChampCompteAttendu";
@@ -56,7 +55,6 @@ export function FormulaireAbonnement({
   // Une copie en retard d'un webhook n'enferme donc personne dans
   // « cochez la case » sans case (revue du 2026-11-16).
   const [accepte, setAccepte] = useState(false);
-  const bloque = !accepte;
   const [periodicite, setPeriodicite] = useState<Periodicite>(courante?.periodicite ?? "mensuel");
   const [choisie, setChoisie] = useState<CleFormule>(
     courante && offres.some((o) => o.formule === courante.formule) ? courante.formule : offres[0].formule,
@@ -149,30 +147,13 @@ export function FormulaireAbonnement({
           Prélevé aujourd&apos;hui : {preleve}, pour {premiere}.
         </p>
       )}
-      {/* Jamais cochée d'avance ; le serveur refuse sans elle (`sAbonnerAction`). */}
-      <label className="flex max-w-[var(--board-mesure)] items-start gap-3 text-[14px] leading-[1.5]">
-        <input
-          type="checkbox"
-          name="accepte"
-          value="oui"
-          checked={accepte}
-          onChange={(e) => setAccepte(e.target.checked)}
-          className={CASE_A_COCHER}
-        />
-        <span>
-          J&apos;accepte les{" "}
-          <Link href="/conditions" target="_blank" className="underline underline-offset-4">
-            conditions générales
-          </Link>{" "}
-          (s&apos;ouvrent dans un nouvel onglet).
-        </span>
-      </label>
+      <CaseConditions accepte={accepte} onChange={setAccepte} />
       <div className="flex flex-wrap items-center gap-3">
-        <BoutonEnvoi variant="board" disabled={preleve === null || bloque || (mode === "changer" && inchangee)}>
+        <BoutonEnvoi variant="board" disabled={preleve === null || !accepte || (mode === "changer" && inchangee)}>
           {libelle}
         </BoutonEnvoi>
         {proposerPayerMaintenant && (
-          <BoutonEnvoi variant="boardClair" name="immediat" value="oui" disabled={preleve === null || bloque} describedBy="payer-maintenant">
+          <BoutonEnvoi variant="boardClair" name="immediat" value="oui" disabled={preleve === null || !accepte} describedBy="payer-maintenant">
             Payer maintenant
           </BoutonEnvoi>
         )}

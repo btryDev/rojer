@@ -11,15 +11,17 @@ import "server-only";
 // n'est appelé (le démarrage le signale, `env.ts`). L'appel ne porte rien :
 // ni donnée, ni bilan — une requête vide.
 
+import { fetchAvecDelai } from "@/lib/reseau/delai";
+
 export function adresseDuTemoin(env: Record<string, string | undefined> = process.env): string | null {
   return env.TEMOIN_TACHES_URL?.trim() || null;
 }
 
 /** Donne le battement du jour. Ne lève jamais : un témoin injoignable alertera de lui-même. */
-export async function battre(url: string | null = adresseDuTemoin(), envoyer: typeof fetch = fetch): Promise<boolean> {
+export async function battre(url: string | null = adresseDuTemoin(), envoyer: typeof fetch = fetchAvecDelai(10_000)): Promise<boolean> {
   if (!url) return false;
   try {
-    const r = await envoyer(url, { method: "GET", signal: AbortSignal.timeout(10_000), cache: "no-store" });
+    const r = await envoyer(url, { cache: "no-store" });
     // Une adresse mal recopiée ou révoquée répond 404 : le témoin n'est alors
     // jamais armé, et rien d'autre ne le dirait.
     if (!r.ok) console.error(`témoin des tâches : réponse ${r.status}, vérifier TEMOIN_TACHES_URL`);

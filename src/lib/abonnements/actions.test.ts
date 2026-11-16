@@ -342,6 +342,8 @@ describe("changerFormuleAction", () => {
     m.abonnementsDuClient.mockResolvedValue([actif("rojer_essentiel_mensuel")]);
     expect(await redirigeVers(changerFormuleAction(formulaire("rojer_pro_annuel")))).toBe("/compte/abonnement?formule=changee");
     expect(m.monterDeFormule).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ id: "sub_actif" }), "price_pa");
+    // Elle prélève tout de suite : la facture porte le nom et l'adresse, posés avant.
+    expect(m.poserIdentite.mock.invocationCallOrder[0]).toBeLessThan(m.monterDeFormule.mock.invocationCallOrder[0]);
     m.monterDeFormule.mockResolvedValue("https://invoice.stripe.com/i/3");
     expect(await redirigeVers(changerFormuleAction(formulaire("rojer_pro_annuel")))).toBe("https://invoice.stripe.com/i/3");
     expect(m.planifierBaisse).not.toHaveBeenCalled();

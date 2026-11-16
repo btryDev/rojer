@@ -32,8 +32,7 @@ import { depassements } from "./quotas";
 import { PAGE_ABONNEMENT, verifierProprietaire, verifierRole, type Proprietaire } from "./saisie";
 import { ouvrirAuGel } from "./gel-saisie";
 import { poserIdentiteDeFacturation } from "./identite-facturation";
-import { VERSION_CONDITIONS } from "./conditions";
-import { empreinteConditions } from "./conditions-empreinte";
+import { enregistrerAcceptation } from "./acceptation";
 
 /**
  * Démarrer l'essai (écran « Votre essai gratuit »). Le rôle d'abord : le
@@ -77,10 +76,13 @@ export async function ouvrirPortailAction(formData: FormData): Promise<void> {
   const { stripe, db, ligne } = await clientDuCompte(proprietaire, formData);
   let url: string;
   try {
-    // Le nom et l'adresse de la facture, là où ils manquent encore : ce
-    // qu'un client a saisi au paiement ou au portail ne s'écrase pas.
-    await poserIdentiteDeFacturation(stripe, db, ligne.stripeCustomerId);
-    url = await ouvrirPortail(stripe, { customerId: ligne.stripeCustomerId, retour: `${publicAppUrl()}${PAGE_ABONNEMENT}` });
+    // Le nom et l'adresse de la facture, là où ils manquent encore (ce
+    // qu'un client a saisi au paiement ou au portail ne s'écrase pas), en
+    // même temps que la session : la redirection attend les deux.
+    [, url] = await Promise.all([
+      poserIdentiteDeFacturation(stripe, db, ligne.stripeCustomerId),
+      ouvrirPortail(stripe, { customerId: ligne.stripeCustomerId, retour: `${publicAppUrl()}${PAGE_ABONNEMENT}` }),
+    ]);
   } catch {
     redirect(`${PAGE_ABONNEMENT}?stripe=indisponible`);
   }
@@ -109,54 +111,55 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
   let url: string | null = null;
   try {
     const { courant } = abonnementCourant(await abonnementsDuClient(stripe, ligne.stripeCustomerId));
-    if (courant && SANS_PAIEMENT_ENCORE.has(courant.status) && resiliationDemandee(courant)) {
-      // Une résiliation est prévue (portail, pendant l'essai) : on ne
-      // change pas une formule qui s'arrête — même règle que
-      // `changerFormuleAction`.
-      url = `${base}?formule=resiliation-prevue`;
-    } else if (courant && SANS_PAIEMENT_ENCORE.has(courant.status) && !accepte) {
-      // Le passage au payant engage le client : les conditions en vigueur
-      // s'acceptent ici, Checkout ne les demande pas en mode « carte »
-      // (audit du 2026-11-16).
-      url = `${base}?conditions=requises`;
-    } else if (courant && SANS_PAIEMENT_ENCORE.has(courant.status)) {
-      // La preuve d'abord (un journal, comme à l'essai : une acceptation sans
-      // paiement ne nuit à personne), puis, ensemble, le nom et l'adresse que
-      // la facture portera, la carte et le prix.
-      await enregistrerAcceptation(proprietaire, "abonnement");
-      const [, carte, catalogue] = await Promise.all([
-        poserIdentiteDeFacturation(stripe, db, ligne.stripeCustomerId),
-        carteParDefaut(stripe, ligne.stripeCustomerId),
-        prixDesFormules(stripe),
-      ]);
-      // Une carte est déjà enregistrée : la formule s'applique sans repasser
-      // par Stripe (changer de formule pendant l'essai, reprendre une pause).
-      if (carte) {
-        const prix = catalogue.get(formule);
-        if (!prix) throw new Error("prix introuvable");
-        const paye = immediat || courant.status === "paused";
-        const aRegler = await appliquerFormule(stripe, courant, {
-          priceId: prix.priceId,
-          paymentMethodId: carte,
-          immediat: paye,
-          choisiLe: Math.floor(Date.now() / 1000),
-          // Le même choix envoyé de deux onglets ne se joue qu'une fois : le
-          // second reçoit de Stripe un refus d'idempotence (paramètres
-          // différents d'une seconde) ou un 409, et la page relit l'état
-          // (`dejaEnCours` plus bas). Le dernier choix appliqué
-          // (`rojerChoixLe`) entre dans la clé, pour qu'un retour au même
-          // choix plus tard ne soit pas pris pour un rejeu.
-          idempotence: `formule-${courant.id}-${courant.metadata?.rojerChoixLe ?? "0"}-${prix.priceId}-${paye ? "maintenant" : "fin-essai"}`,
+    if (courant && SANS_PAIEMENT_ENCORE.has(courant.status)) {
+      if (resiliationDemandee(courant)) {
+        // Une résiliation est prévue (portail, pendant l'essai) : on ne
+        // change pas une formule qui s'arrête — même règle que
+        // `changerFormuleAction`.
+        url = `${base}?formule=resiliation-prevue`;
+      } else if (!accepte) {
+        // Le passage au payant engage le client : les conditions en vigueur
+        // s'acceptent ici, Checkout ne les demande pas en mode « carte »
+        // (audit du 2026-11-16).
+        url = `${base}?conditions=requises`;
+      } else {
+        // La preuve d'abord (`acceptation.ts`), puis, ensemble, le nom et
+        // l'adresse que la facture portera, la carte et le prix.
+        await enregistrerAcceptation(db, { compteId, userId: proprietaire.user.id }, "abonnement");
+        const [, carte, catalogue] = await Promise.all([
+          poserIdentiteDeFacturation(stripe, db, ligne.stripeCustomerId),
+          carteParDefaut(stripe, ligne.stripeCustomerId),
+          prixDesFormules(stripe),
+        ]);
+        // Une carte est déjà enregistrée : la formule s'applique sans repasser
+        // par Stripe (changer de formule pendant l'essai, reprendre une pause).
+        if (carte) {
+          const prix = catalogue.get(formule);
+          if (!prix) throw new Error("prix introuvable");
+          const paye = immediat || courant.status === "paused";
+          const aRegler = await appliquerFormule(stripe, courant, {
+            priceId: prix.priceId,
+            paymentMethodId: carte,
+            immediat: paye,
+            choisiLe: Math.floor(Date.now() / 1000),
+            // Le même choix envoyé de deux onglets ne se joue qu'une fois : le
+            // second reçoit de Stripe un refus d'idempotence (paramètres
+            // différents d'une seconde) ou un 409, et la page relit l'état
+            // (`dejaEnCours` plus bas). Le dernier choix appliqué
+            // (`rojerChoixLe`) entre dans la clé, pour qu'un retour au même
+            // choix plus tard ne soit pas pris pour un rejeu.
+            idempotence: `formule-${courant.id}-${courant.metadata?.rojerChoixLe ?? "0"}-${prix.priceId}-${paye ? "maintenant" : "fin-essai"}`,
+          });
+          await synchroniserClientStripe(stripe, ligne.stripeCustomerId).catch(() => null);
+          url = aRegler ?? `${base}${paye ? "?paiement=termine" : "?abonnement=formule-choisie"}`;
+        } else url = await ouvrirCheckoutCarte(stripe, {
+          customerId: ligne.stripeCustomerId,
+          metadata: { compteId, formule, immediat: immediat ? "oui" : "non" },
+          // `{CHECKOUT_SESSION_ID}` : remplacé par Stripe au retour.
+          succes: `${base}?carte={CHECKOUT_SESSION_ID}`,
+          annulation: base,
         });
-        await synchroniserClientStripe(stripe, ligne.stripeCustomerId).catch(() => null);
-        url = aRegler ?? `${base}${paye ? "?paiement=termine" : "?abonnement=formule-choisie"}`;
-      } else url = await ouvrirCheckoutCarte(stripe, {
-        customerId: ligne.stripeCustomerId,
-        metadata: { compteId, formule, immediat: immediat ? "oui" : "non" },
-        // `{CHECKOUT_SESSION_ID}` : remplacé par Stripe au retour.
-        succes: `${base}?carte={CHECKOUT_SESSION_ID}`,
-        annulation: base,
-      });
+      }
     } else if (courant?.status === "incomplete") {
       // Un premier paiement resté en attente (Checkout abandonné à
       // l'authentification) : on le termine, au lieu d'attendre que Stripe
@@ -165,12 +168,15 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
     } else if (courant && abonnementEnCours(courant.status)) {
       await synchroniserClientStripe(stripe, ligne.stripeCustomerId).catch(() => null);
     } else {
-      const [catalogue, tauxTva] = await Promise.all([prixDesFormules(stripe), tauxDeTva(stripe)]);
-      const prix = catalogue.get(formule);
-      if (!prix || !tauxTva) throw new Error("prix ou TVA introuvable");
       // Checkout demande l'adresse (`billing_address_collection`) : celle de
       // l'entreprise la préremplit, le client la corrige s'il le faut.
-      await poserIdentiteDeFacturation(stripe, db, ligne.stripeCustomerId);
+      const [, catalogue, tauxTva] = await Promise.all([
+        poserIdentiteDeFacturation(stripe, db, ligne.stripeCustomerId),
+        prixDesFormules(stripe),
+        tauxDeTva(stripe),
+      ]);
+      const prix = catalogue.get(formule);
+      if (!prix || !tauxTva) throw new Error("prix ou TVA introuvable");
       url = await ouvrirCheckout(stripe, {
         customerId: ligne.stripeCustomerId,
         priceId: prix.priceId,
@@ -188,18 +194,6 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
     redirect(`${PAGE_ABONNEMENT}?stripe=indisponible`);
   }
   redirect(url ?? `${PAGE_ABONNEMENT}?abonnement=en-cours`);
-}
-
-/**
- * La preuve d'acceptation des conditions (ADR-053 § 8) : version et
- * empreinte du texte accepté, par le propriétaire. Un journal, jamais effacé
- * — comme à l'essai (`essai.ts`). Le réabonnement par Checkout n'en écrit
- * pas : Stripe garde la case cochée sur la session.
- */
-async function enregistrerAcceptation({ user, compte, db }: Proprietaire, contexte: "abonnement"): Promise<void> {
-  await db.acceptationConditions.create({
-    data: { compteId: compte.compteId, userId: user.id, version: VERSION_CONDITIONS, empreinte: empreinteConditions(), contexte },
-  });
 }
 
 /**
@@ -290,6 +284,8 @@ export async function changerFormuleAction(formData: FormData): Promise<void> {
       const prix = (await prixDesFormules(stripe)).get(formule);
       if (!prix) throw new Error("prix introuvable");
       if (sens === "montee") {
+        // La montée prélève tout de suite : la facture porte le nom et l'adresse.
+        await poserIdentiteDeFacturation(stripe, db, ligne.stripeCustomerId);
         const aRegler = await monterDeFormule(stripe, courant, prix.priceId);
         await synchroniserClientStripe(stripe, ligne.stripeCustomerId).catch(() => null);
         cible = aRegler ?? `${PAGE_ABONNEMENT}?formule=changee`;

@@ -439,7 +439,8 @@ export default async function AbonnementPage({
                   libelle={vue.libelle}
                   quand={vue.quand}
                   courante={courante}
-                  proposerPayerMaintenant={vue.proposerPayerMaintenant}                />
+                  proposerPayerMaintenant={vue.proposerPayerMaintenant}
+                />
                 {vue.portail && (
                   <FormulairePortail compteId={compteId} variant="boardClair" className="mt-6">
                     {vue.portail}

@@ -23,7 +23,7 @@ describe("témoin des tâches", () => {
   it("un appel vide à l'adresse ; un témoin injoignable ne lève pas", async () => {
     const envoyer = vi.fn(async () => new Response(null, { status: 200 }));
     expect(await battre("https://hc-ping.com/x", envoyer as never)).toBe(true);
-    expect(envoyer).toHaveBeenCalledWith("https://hc-ping.com/x", expect.objectContaining({ method: "GET" }));
+    expect(envoyer).toHaveBeenCalledWith("https://hc-ping.com/x", expect.anything());
     vi.spyOn(console, "error").mockImplementation(() => {});
     expect(await battre("https://hc-ping.com/x", (async () => Promise.reject(new Error("réseau"))) as never)).toBe(false);
   });

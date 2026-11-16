@@ -4,13 +4,12 @@
 // se fait sur Essentiel : la formule et la périodicité se choisissent en
 // s'abonnant.
 
-import Link from "next/link";
 import { useActionState, useState } from "react";
+import { CaseConditions } from "./CaseConditions";
 import { Button } from "@/components/ui/button";
 import { demarrerEssaiAction } from "@/lib/abonnements/actions";
 import { ChampCompteAttendu } from "@/components/compte/ChampCompteAttendu";
 import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
-import { CASE_A_COCHER } from "@/components/ui-kit/case-a-cocher";
 
 /** `compteId` : le compte que montre la page, `null` si la personne n'en a encore aucun. */
 export function FormulaireEssai({ disponible, compteId }: { disponible: boolean; compteId: string | null }) {
@@ -20,23 +19,7 @@ export function FormulaireEssai({ disponible, compteId }: { disponible: boolean;
   return (
     <form action={envoyer} className="flex flex-col gap-4">
       <ChampCompteAttendu compteId={compteId} />
-      <label className="flex max-w-[var(--board-mesure)] items-start gap-3 text-[14px] leading-[1.5]">
-        <input
-          type="checkbox"
-          name="accepte"
-          value="oui"
-          checked={accepte}
-          onChange={(e) => setAccepte(e.target.checked)}
-          className={CASE_A_COCHER}
-        />
-        <span>
-          J&apos;accepte les{" "}
-          <Link href="/conditions" target="_blank" className="underline underline-offset-4">
-            conditions générales
-          </Link>{" "}
-          (s&apos;ouvrent dans un nouvel onglet).
-        </span>
-      </label>
+      <CaseConditions accepte={accepte} onChange={setAccepte} />
       <MessageFormulaire ton="alerte">{etat.status === "error" ? etat.message : null}</MessageFormulaire>
       <MessageFormulaire ton="info">
         {disponible ? null : "L'essai ne peut pas démarrer pour le moment : réessayez dans quelques minutes."}

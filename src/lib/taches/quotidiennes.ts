@@ -77,11 +77,13 @@ export async function lancerTachesQuotidiennes(maintenant: Date) {
     // relu par la file (un événement peut ne jamais être créé).
     // L'état de la file d'abord : le rapprochement relance les échecs durables
     // des abonnements qui courent, qu'il ne faut pas taire.
-    ...(config.active ? { fileStripe: await tenter("état de la file Stripe", () => signalerLaFile(maintenant)) } : {}),
-    ...(config.active ? { rapprochement: await tenter("rapprochement Stripe", () => rapprocher(maintenant)) } : {}),
-    // Les réglages du tableau de bord dont Rojer dépend (portail, relances).
+    // Puis les réglages du tableau de bord dont Rojer dépend (portail, relances).
     ...(config.active
-      ? { reglagesStripe: await tenter("réglages Stripe", () => controlerLesReglagesStripe(clientStripe(config), maintenant)) }
+      ? {
+          fileStripe: await tenter("état de la file Stripe", () => signalerLaFile(maintenant)),
+          rapprochement: await tenter("rapprochement Stripe", () => rapprocher(maintenant)),
+          reglagesStripe: await tenter("réglages Stripe", () => controlerLesReglagesStripe(clientStripe(config), maintenant)),
+        }
       : {}),
     evenementsOublies: await tenter("ménage des événements Stripe", () => oublierLesAnciens(maintenant)),
   });

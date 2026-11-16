@@ -26,7 +26,7 @@ import { toutLister } from "./synchronisation";
 /** Au-delà, un impayé n'est plus « en relance » : la fenêtre de Stripe est réglée à un mois au plus (§ 3). */
 export const IMPAYE_TROP_LONG_JOURS = 35;
 /** Au plus, par alerte. */
-const LISTES = 20;
+const AU_PLUS_LISTES = 20;
 
 /** Ce qui ne va pas dans la configuration par défaut du portail ; vide : rien. */
 export function defautsDuPortail(c: Stripe.BillingPortal.Configuration | null): string[] {
@@ -40,7 +40,7 @@ export function defautsDuPortail(c: Stripe.BillingPortal.Configuration | null): 
 }
 
 /** Un impayé : l'abonnement, son client, et l'échéance (secondes) de sa plus ancienne facture ouverte. */
-export type Impaye = { id: string; client: string | null; depuis: number | null };
+export type Impaye = { id: string; client: string; depuis: number | null };
 
 /** Les impayés plus vieux que `IMPAYE_TROP_LONG_JOURS` jours. */
 export function impayesTropLongs(impayes: Impaye[], maintenant: Date): Impaye[] {
@@ -78,8 +78,8 @@ async function controlerLesImpayes(stripe: Stripe, maintenant: Date): Promise<nu
   const anciens = impayesTropLongs(await lireImpayes(stripe), maintenant);
   if (anciens.length > 0) {
     await alerterUneFoisParJour("reglages:impayes", "impayés qui gardent la saisie ouverte", [
-      `${anciens.length} abonnement(s) impayé(s) depuis plus de ${IMPAYE_TROP_LONG_JOURS} jours (${LISTES} au plus listés) :`,
-      ...anciens.slice(0, LISTES).map((i) => `${i.id} — client ${i.client ?? "inconnu"}`),
+      `${anciens.length} abonnement(s) impayé(s) depuis plus de ${IMPAYE_TROP_LONG_JOURS} jours (${AU_PLUS_LISTES} au plus listés) :`,
+      ...anciens.slice(0, AU_PLUS_LISTES).map((i) => `${i.id} — client ${i.client}`),
       "Leur saisie reste ouverte tant que Stripe ne les marque pas impayés : Billing > Récupération des revenus, « si toutes les tentatives échouent : marquer l'abonnement comme impayé », fenêtre d'un mois au plus (docs/lancement-abonnements.md § 3).",
     ], maintenant);
   }

@@ -40,10 +40,10 @@ let clientWebhook: Stripe | undefined;
 let clientLecture: Stripe | undefined;
 
 /**
- * Le client des lectures faites AU RENDU d'une page (la page Abonnement :
- * prix, carte, baisse prévue) : 5 s, sans relance. Avec le client ordinaire
- * (10 s, deux relances), un Stripe lent tenait la page une demi-minute ;
- * chaque lecture y a déjà sa réponse de repli (audit du 2026-11-16).
+ * Le client de TOUTE lecture faite au rendu d'une page (Abonnement, essai) :
+ * 5 s, sans relance — la lecture a sa réponse de repli. Avec le client
+ * ordinaire (10 s, deux relances), un Stripe lent tenait la page une
+ * demi-minute (audit du 2026-11-16). Le client ordinaire reste aux gestes.
  */
 export function clientStripeLecture(config: ConfigActive): Stripe {
   return (clientLecture ??= nouveauClient(config, { ...OPTIONS_RELECTURE, maxNetworkRetries: 0 }));
