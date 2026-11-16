@@ -155,6 +155,29 @@ sur la préproduction, où fermer la saisie ne gêne personne.
    supprimer une horloge supprime ses clients (la copie de Rojer garde alors
    un client mort) ; une tentative d'essai ratée peut laisser une horloge
    orpheline.]
+   [2026-11-16 : la RÉPÉTITION complète, d'après la page « Testing Stripe
+   Billing » et la liste « Go-live » de Stripe, un compte neuf par cas :
+   (a) les huit cas joués en local le 2026-11-16 (paiement immédiat,
+   formule en cours, reprise d'une pause, impayé, résiliation pendant
+   l'essai, montée et baisse, deux onglets, réabonnement) ;
+   (b) avec les horloges : fin NATURELLE de l'essai avec carte, puis deux
+   prélèvements mensuels (avancer d'un mois, deux fois : deux factures
+   payées, échéance qui avance chez Rojer) ; renouvellement annuel ; carte
+   qui échoue au renouvellement, relances jusqu'à l'impayé (saisie
+   fermée) ; baisse appliquée en fin de période ; résiliation qui se
+   termine ;
+   (c) 3-D Secure, carte `4000 0027 6000 3184` : au premier paiement, à
+   « Payer maintenant » avec une carte déjà enregistrée (paiement hors
+   session → page de la facture), au renouvellement ; authentification
+   réussie puis refusée ;
+   (d) un litige, carte de test de litige de Stripe : l'alerte part ; un
+   remboursement depuis le tableau de bord : l'alerte part ;
+   (e) un événement RENVOYÉ depuis le tableau de bord (doublon) : rien ne
+   change chez Rojer.
+   Au lancement, de la liste « Go-live » : produits et prix recréés en
+   production (les objets de test n'y passent pas), webhook de production
+   créé, abonnement de la propriétaire à la liste des annonces de l'API
+   Stripe.]
 4. Parcours : créer un compte, démarrer l'essai ; choisir une formule avec la
    carte de test `4242 4242 4242 4242`, « tout de suite » : facture avec la
    TVA et les mentions, page Abonnement « actif », webhook livré (200) ;
