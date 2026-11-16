@@ -102,9 +102,9 @@ describe("preselection", () => {
     expect(preselection(v, { abonnement: essentiel, offreChoisie: null, geste: "abonner" })).toEqual(essentiel);
   });
 
-  it("souscrire après une résiliation : l'offre choisie, sinon rien (l'ancienne formule ne se ressert pas d'office)", () => {
+  it("souscrire après une résiliation : l'offre choisie, sinon l'ancienne formule (répétition du 2026-11-16)", () => {
     const v = vueAbonnement(entree({ geste: "souscrire", statut: "canceled" }));
-    expect(preselection(v, { abonnement: pro, offreChoisie: null, geste: "souscrire" })).toBeNull();
+    expect(preselection(v, { abonnement: pro, offreChoisie: null, geste: "souscrire" })).toEqual(pro);
     expect(preselection(v, { abonnement: pro, offreChoisie: essentiel, geste: "souscrire" })).toEqual(essentiel);
   });
 

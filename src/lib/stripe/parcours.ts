@@ -300,9 +300,16 @@ async function reglerLaFacture(
   try {
     const payee = await stripe.invoices.pay(facture.id, { payment_method: paymentMethodId }, options);
     return payee.status === "paid" ? null : (payee.hosted_invoice_url ?? facture.hosted_invoice_url ?? null);
-  } catch {
-    // Refus de la carte, 3-D Secure : le client règle sur la page de la facture.
-    return facture.hosted_invoice_url ?? null;
+  } catch (e) {
+    // Le même règlement est en cours ailleurs — le retour de Checkout et le
+    // webhook finalisent la même carte au même instant (répétition du
+    // 2026-11-16) : rien n'a échoué, la page relira l'état.
+    if ((e as { statusCode?: number })?.statusCode === 409) return null;
+    // Sinon, la facture fait foi : déjà payée (par l'autre chemin), rien à
+    // faire ; encore ouverte (carte refusée, 3-D Secure), sa page.
+    const relue = await stripe.invoices.retrieve(facture.id).catch(() => null);
+    if (relue?.status === "paid") return null;
+    return relue?.hosted_invoice_url ?? facture.hosted_invoice_url ?? null;
   }
 }
 

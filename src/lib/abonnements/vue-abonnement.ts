@@ -124,7 +124,8 @@ function formulaire(e: EntreeVue): Extract<VueAbonnement, { cas: "formulaire" }>
 /**
  * La formule présélectionnée dans le formulaire : celle de l'abonnement quand
  * on la change ; sinon l'offre choisie sur la page publique (2026-11-16),
- * sinon celle de l'abonnement qui court sans payer encore.
+ * sinon celle de l'abonnement — y compris un abonnement résilié, qu'on
+ * reprend le plus souvent tel quel (répétition du 2026-11-16).
  */
 export function preselection(
   vue: VueAbonnement,
@@ -132,5 +133,5 @@ export function preselection(
 ): Choix | null {
   if (vue.cas !== "formulaire") return null;
   if (vue.mode === "changer") return abonnement;
-  return offreChoisie ?? (geste === "abonner" ? abonnement : null);
+  return offreChoisie ?? (geste === "abonner" || geste === "souscrire" ? abonnement : null);
 }

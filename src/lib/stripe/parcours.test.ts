@@ -205,7 +205,15 @@ describe("parcours Stripe", () => {
       idempotencyKey: expect.stringMatching(/^carte-cs_9-[0-9a-f]{12}-paiement$/),
     });
     api.invoices.pay.mockRejectedValueOnce(Object.assign(new Error("card_declined"), { type: "StripeCardError" }));
+    api.invoices.retrieve.mockResolvedValueOnce({ ...reprise });
     expect(await appliquerFormule(stripe, sub, choix)).toBe("https://invoice.stripe.com/i/r");
+    // Le même règlement en cours ailleurs (retour de Checkout et webhook ensemble) : rien d'échoué.
+    api.invoices.pay.mockRejectedValueOnce(Object.assign(new Error("conflit"), { statusCode: 409 }));
+    expect(await appliquerFormule(stripe, sub, choix)).toBeNull();
+    // Déjà payée par l'autre chemin : rien à régler.
+    api.invoices.pay.mockRejectedValueOnce(Object.assign(new Error("invoice_already_paid"), { statusCode: 400 }));
+    api.invoices.retrieve.mockResolvedValueOnce({ ...reprise, status: "paid" });
+    expect(await appliquerFormule(stripe, sub, choix)).toBeNull();
   });
 
   it("la clé d'idempotence suit la décision : même choix, même clé ; paramètres changés (code, formule), clé neuve", async () => {
