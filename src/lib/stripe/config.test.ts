@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { configurationStripe, etatStripe } from "./config";
+import { configurationStripe, etatStripe, horlogeDeTestActive } from "./config";
 
 // Valeurs volontairement courtes et fausses : rien qu'un détecteur de secrets
 // puisse prendre pour une vraie clé.
@@ -105,5 +105,21 @@ describe("configurationStripe", () => {
         expect(motif).not.toContain(valeur);
       }
     }
+  });
+});
+
+describe("horlogeDeTestActive (2026-11-16)", () => {
+  const horloge = { STRIPE_HORLOGE_TEST: "oui" };
+  it("clé de test, hors production, variable à oui : active", () => {
+    expect(horlogeDeTestActive({ ...avec(PREVIEW, TEST, WH), ...horloge })).toBe(true);
+    expect(horlogeDeTestActive({ ...avec(DEV, TEST_RESTREINTE, WH), STRIPE_HORLOGE_TEST: " OUI " })).toBe(true);
+  });
+  it("sans la variable, avec une clé de production, en production, ou Stripe refusé : jamais", () => {
+    expect(horlogeDeTestActive(avec(PREVIEW, TEST, WH))).toBe(false);
+    expect(horlogeDeTestActive({ ...avec(PREVIEW, TEST, WH), STRIPE_HORLOGE_TEST: "non" })).toBe(false);
+    expect(horlogeDeTestActive({ ...avec(PROD, LIVE_RESTREINTE, WH), ...horloge })).toBe(false);
+    expect(horlogeDeTestActive({ ...avec(PROD, TEST, WH), ...horloge })).toBe(false);
+    expect(horlogeDeTestActive({ ...avec(INDETERMINE, TEST, WH), ...horloge })).toBe(false);
+    expect(horlogeDeTestActive({ ...avec(PREVIEW), ...horloge })).toBe(false);
   });
 });

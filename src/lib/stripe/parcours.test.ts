@@ -28,6 +28,7 @@ const api = {
   checkout: { sessions: { create: vi.fn(), list: vi.fn(), expire: vi.fn() } },
   prices: { list: vi.fn() },
   taxRates: { list: vi.fn() },
+  testHelpers: { testClocks: { create: vi.fn() } },
 };
 const stripe = api as unknown as Stripe;
 
@@ -61,6 +62,22 @@ describe("parcours Stripe", () => {
       metadata: { compteId: "c1" },
     });
     expect(DUREE_ESSAI_JOURS).toBe(30);
+  });
+
+  it("horloge de simulation : une horloge neuve par client, arrêtée à maintenant, et le client rattaché ; sans elle, rien (2026-11-16)", async () => {
+    api.customers.create.mockClear();
+    api.testHelpers.testClocks.create.mockResolvedValue({ id: "clock_1" });
+    await creerClientStripe(stripe, { email: "a@b.fr", nom: "a@b.fr", metadata: { compteId: "c1" }, idempotence: "c1234567-xx", horloge: true });
+    expect(api.testHelpers.testClocks.create).toHaveBeenCalledWith(
+      { frozen_time: expect.any(Number), name: "Rojer — compte c1234567" },
+      { idempotencyKey: "horloge-c1234567-xx" },
+    );
+    expect(api.customers.create.mock.lastCall?.[0]).toMatchObject({ test_clock: "clock_1" });
+    expect(api.customers.create.mock.lastCall?.[1]).toEqual({ idempotencyKey: "client-c1234567-xx-horloge" });
+    api.testHelpers.testClocks.create.mockClear();
+    await creerClientStripe(stripe, { email: "a@b.fr", nom: "a@b.fr", metadata: { compteId: "c1" }, idempotence: "c1" });
+    expect(api.testHelpers.testClocks.create).not.toHaveBeenCalled();
+    expect(api.customers.create.mock.lastCall?.[0]).not.toHaveProperty("test_clock");
   });
 
   it("Checkout exige l'acceptation des conditions générales, et expire d'abord les sessions encore ouvertes", async () => {

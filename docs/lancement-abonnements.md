@@ -145,6 +145,11 @@ sur la préproduction, où fermer la saisie ne gêne personne.
    test vers l'URL de préproduction), `TACHES_SECRET`,
    `ABONNEMENT_EXIGE=oui`. Redémarrer ; journaux sans avertissement
    « Stripe », crontab installée (« Importing cronjobs »).
+   [2026-11-16 : `STRIPE_HORLOGE_TEST=oui` en préproduction (clé de test
+   seulement) : chaque client créé à l'essai reçoit une horloge de simulation,
+   qu'on avance dans le tableau de bord de test (Facturation → Horloges de
+   test) pour jouer la fin naturelle d'un essai, un renouvellement, la suite
+   d'un impayé. Retirer la variable après la répétition.]
 4. Parcours : créer un compte, démarrer l'essai ; choisir une formule avec la
    carte de test `4242 4242 4242 4242`, « tout de suite » : facture avec la
    TVA et les mentions, page Abonnement « actif », webhook livré (200) ;

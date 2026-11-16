@@ -19,7 +19,7 @@ import { redirect } from "next/navigation";
 import { getOptionalCompte, requireCompteDOnboarding, type Db } from "@/lib/auth/compte";
 import { MESSAGE_COMPTE_CHANGE } from "@/lib/auth/compte-attendu";
 import { clientStripe } from "@/lib/stripe/client";
-import { configurationStripe } from "@/lib/stripe/config";
+import { configurationStripe, horlogeDeTestActive } from "@/lib/stripe/config";
 import { abonnementsDuClient, creerClientStripe, demarrerEssai, prixDesFormules, tauxDeTva } from "@/lib/stripe/parcours";
 import { codePrisma, synchroniserClientStripe } from "@/lib/stripe/synchronisation";
 import { VERSION_CONDITIONS } from "./conditions";
@@ -215,6 +215,7 @@ async function reserverClient(
     nom: nomProvisoire(email),
     metadata: { compteId },
     idempotence: compteId,
+    horloge: horlogeDeTestActive(),
   });
   try {
     await db.abonnement.create({ data: { compteId, stripeCustomerId: customerId } });

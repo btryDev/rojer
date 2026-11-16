@@ -87,3 +87,18 @@ export function etatStripe(env: Env = process.env): EtatStripe {
 function refus(motif: string): ConfigurationStripe {
   return { active: false, motif: `abonnements désactivés — ${motif}` };
 }
+
+/**
+ * Les horloges de simulation de Stripe (2026-11-16, répétition des parcours
+ * dans le temps) : avec `STRIPE_HORLOGE_TEST=oui`, chaque client Stripe créé
+ * à l'essai reçoit sa propre horloge, qu'on avance depuis le tableau de bord
+ * de test (fin d'essai, renouvellement, relances d'un impayé). Seulement avec
+ * une clé de TEST, et jamais dans une production déclarée : une clé de
+ * production n'a pas d'horloge, et un client de production rattaché à une
+ * horloge n'existe pas.
+ */
+export function horlogeDeTestActive(env: Env = process.env): boolean {
+  if (posee(env.STRIPE_HORLOGE_TEST)?.toLowerCase() !== "oui") return false;
+  const c = configurationStripe(env);
+  return c.active && c.mode === "test" && environnementApp(env) !== "production";
+}

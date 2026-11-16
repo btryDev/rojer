@@ -140,6 +140,10 @@ const schema = z
     // pas le serveur (signalé par `avertissementsEnvironnement`).
     STRIPE_SECRET_KEY: optionnelle,
     STRIPE_WEBHOOK_SECRET: optionnelle,
+    // Horloges de simulation (2026-11-16) : `oui`, chaque client créé à
+    // l'essai reçoit son horloge — clé de test, hors production, seulement
+    // (`horlogeDeTestActive`).
+    STRIPE_HORLOGE_TEST: optionnelle,
     // Le lancement de l'offre (ADR-053 § 3) : `oui`, sans abonnement valide
     // la saisie se ferme ; absente ou `non`, elle reste ouverte à tous.
     // Espaces et casse tolérés : `abonnementExige` lit la même forme.

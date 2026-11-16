@@ -33,11 +33,30 @@ export async function creerClientStripe(
     adresse,
     metadata,
     idempotence,
-  }: { email: string; nom: string; adresse?: Stripe.AddressParam; metadata: Metadonnees; idempotence: string },
+    horloge = false,
+  }: {
+    email: string;
+    nom: string;
+    adresse?: Stripe.AddressParam;
+    metadata: Metadonnees;
+    idempotence: string;
+    /** Rattacher le client à une horloge de simulation neuve (`horlogeDeTestActive`, mode test seulement). */
+    horloge?: boolean;
+  },
 ): Promise<string> {
+  // Une horloge par client, arrêtée à maintenant : on l'avance depuis le
+  // tableau de bord de test. Son nom ne porte aucune donnée personnelle.
+  const testClock = horloge
+    ? (
+        await stripe.testHelpers.testClocks.create(
+          { frozen_time: Math.floor(Date.now() / 1000), name: `Rojer — compte ${idempotence.slice(0, 8)}` },
+          { idempotencyKey: `horloge-${idempotence}` },
+        )
+      ).id
+    : undefined;
   const client = await stripe.customers.create(
-    { email, name: nom, address: adresse, preferred_locales: ["fr"], metadata },
-    { idempotencyKey: `client-${idempotence}` },
+    { email, name: nom, address: adresse, preferred_locales: ["fr"], metadata, ...(testClock ? { test_clock: testClock } : {}) },
+    { idempotencyKey: `client-${idempotence}${testClock ? "-horloge" : ""}` },
   );
   return client.id;
 }

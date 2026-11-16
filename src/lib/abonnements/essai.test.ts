@@ -3,6 +3,7 @@ import { redirigeVers } from "@/test/redirection";
 
 vi.mock("server-only", () => ({}));
 const m = vi.hoisted(() => ({
+  horloge: { v: false },
   redirect: vi.fn((url: string) => {
     throw Object.assign(new Error("NEXT_REDIRECT"), { url });
   }),
@@ -24,7 +25,7 @@ vi.mock("@/lib/auth/compte", () => ({
   getOptionalCompte: m.getOptionalCompte,
   requireCompteDOnboarding: m.requireCompteDOnboarding,
 }));
-vi.mock("@/lib/stripe/config", () => ({ configurationStripe: m.configurationStripe }));
+vi.mock("@/lib/stripe/config", () => ({ configurationStripe: m.configurationStripe, horlogeDeTestActive: () => m.horloge.v }));
 vi.mock("@/lib/stripe/client", () => ({ clientStripe: m.clientStripe }));
 vi.mock("@/lib/stripe/parcours", () => ({
   abonnementsDuClient: m.listeAbonnements,
@@ -115,6 +116,7 @@ describe("demarrerEssaiDuCompte", () => {
       where: { compteId: "c1", essaiUtiliseLe: null, stripeSubscriptionId: null },
     });
     expect(m.creerClientStripe).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ metadata: { compteId: "c1" }, idempotence: "c1" }));
+    expect(m.creerClientStripe.mock.lastCall?.[1].horloge).toBe(false);
     expect(m.demarrerEssai).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ customerId: "cus_1", priceId: "price_e", tauxTva: "txr_tva", metadata: { compteId: "c1" } }));
     expect(db.acceptationConditions.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ compteId: "c1", userId: "u1", contexte: "essai", version: expect.any(String), empreinte: expect.stringMatching(/^[0-9a-f]{64}$/) }),
