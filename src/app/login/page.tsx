@@ -65,8 +65,7 @@ export default async function LoginPage({
         {/* L'en-tête porte déjà l'adresse, la sortie et le lien vers le dossier. */}
         {ouverte?.email ? (
           <MessageFormulaire ton="info" className="mt-6">
-            Ce navigateur est déjà connecté avec {ouverte.email}. Pour utiliser une autre adresse, déconnectez-vous
-            d&apos;abord, en haut de la page.
+            Ce navigateur est déjà connecté avec {ouverte.email}. Se connecter ci-dessous ferme cette session.
           </MessageFormulaire>
         ) : null}
 

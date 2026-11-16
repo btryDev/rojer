@@ -169,6 +169,13 @@ export async function signInAction(
   });
   if (limite) return { error: limite };
 
+  // Une session à la fois par navigateur (revue du 2026-11-16) : se
+  // connecter ferme d'abord celle qui est ouverte. Sinon elle restait
+  // valable sept jours en base, sans cookie pour la porter — et la page
+  // laissait croire qu'on travaillait encore sur l'autre compte. Le geste
+  // dit qu'on change de compte : un mot de passe faux laisse déconnecté.
+  if (await getOptionalUser()) await fermerLaSession();
+
   let resultat: Awaited<ReturnType<typeof auth.api.signInEmail>>;
   try {
     resultat = await auth.api.signInEmail({ body: parsed.data, headers: await headers() });
