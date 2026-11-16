@@ -108,6 +108,8 @@ describe("variables Stripe (ADR-053)", () => {
       PUBLIC_APP_URL: "https://rojer.fr",
       STRIPE_SECRET_KEY: "sk_test_abc",
       STRIPE_WEBHOOK_SECRET: "whsec_abc",
+      TACHES_SECRET: "x".repeat(32),
+      ALERTES_EMAIL: "alertes@exemple.fr",
     };
     expect(() => validerEnvironnement(prod)).not.toThrow();
     expect(avertissementsEnvironnement(prod)).toEqual([expect.stringMatching(/clé Stripe de test refusée/)]);
@@ -117,6 +119,23 @@ describe("variables Stripe (ADR-053)", () => {
     expect(() => validerEnvironnement(malFormee)).not.toThrow();
     expect(avertissementsEnvironnement(malFormee)).toEqual([expect.stringMatching(/forme d'une clé Stripe/)]);
     expect(avertissementsEnvironnement(malFormee).join()).not.toContain("pk_live_abc");
+  });
+
+  it("Stripe actif sans tâches ni alertes, offre exigée sans Stripe : signalés (2026-11-16)", () => {
+    const prod = {
+      ...BASE,
+      NODE_ENV: "production",
+      APP_ENV: "production",
+      PUBLIC_APP_URL: "https://rojer.fr",
+      STRIPE_SECRET_KEY: "rk_live_abc",
+      STRIPE_WEBHOOK_SECRET: "whsec_abc",
+    };
+    expect(avertissementsEnvironnement(prod)).toEqual([
+      expect.stringMatching(/sans TACHES_SECRET/),
+      expect.stringMatching(/sans ALERTES_EMAIL/),
+    ]);
+    const sansStripe = { ...BASE, NODE_ENV: "production", APP_ENV: "production", PUBLIC_APP_URL: "https://rojer.fr", ABONNEMENT_EXIGE: "oui" };
+    expect(avertissementsEnvironnement(sansStripe)).toEqual([expect.stringMatching(/ABONNEMENT_EXIGE=oui alors que Stripe est désactivé/)]);
   });
 });
 

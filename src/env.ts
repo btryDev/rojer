@@ -51,6 +51,7 @@ import { z } from "zod";
 import { ENVIRONNEMENTS_APP } from "@/lib/environnement";
 import { FORME_EXPORTS_SIMULTANES } from "@/lib/exports/limite";
 import { etatStripe } from "@/lib/stripe/config";
+import { avertissementsDeConfiguration } from "@/lib/abonnements/lancement";
 
 type Env = Record<string, string | undefined>;
 
@@ -230,11 +231,9 @@ export function avertissementsEnvironnement(env: Env = process.env): string[] {
   // serveur (ADR-053 § 7) : le démarrage le dit à qui déploie.
   const stripe = etatStripe(env);
   if (!stripe.active && stripe.motif) avertissements.push(stripe.motif);
-  if (env.ABONNEMENT_EXIGE?.trim().toLowerCase() === "oui" && !stripe.active) {
-    avertissements.push(
-      "ABONNEMENT_EXIGE=oui alors que Stripe est désactivé : la saisie reste ouverte à tous (abonnements/droits.ts).",
-    );
-  }
+  // Le reste — offre exigée sans Stripe, Stripe sans tâches ni alertes — est
+  // aussi relu chaque jour par la tâche quotidienne, et envoyé par e-mail.
+  avertissements.push(...avertissementsDeConfiguration(env));
   return avertissements;
 }
 

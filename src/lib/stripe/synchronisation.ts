@@ -189,6 +189,19 @@ const INCHANGE = { issue: "inchange" } as const;
 const EN_FILE = { issue: "en_file" } as const;
 const SANS_COMPTE = { issue: "ignore", motif: "client Stripe sans compte Rojer (metadata.compteId)" } as const;
 const INTROUVABLE = { issue: "ignore", motif: "compte Rojer introuvable", alerte: true } as const;
+/**
+ * Le même, quand l'abonnement relu court encore : Stripe facture un client
+ * dont Rojer n'a plus le compte. Ce n'est plus le cas normal (un compte
+ * supprimé faute d'abonnement n'en a pas d'ouvert) : il se signale (revue de
+ * la mécanique, 2026-11-16).
+ */
+const INTROUVABLE_QUI_PAIE = {
+  issue: "ignore",
+  motif: "compte Rojer introuvable alors que l'abonnement Stripe court encore (il facture) : résilier chez Stripe ou rattacher le client",
+  alerte: true,
+} as const;
+const introuvable = (courant: Stripe.Subscription | null) =>
+  courant && OUVRENT.has(courant.status) ? INTROUVABLE_QUI_PAIE : INTROUVABLE;
 /** Un client d'avant l'ADR-054 dont la personne n'est propriétaire d'aucun compte, ou de plusieurs : il paie peut-être et n'est jamais relu. */
 const PROPRIETAIRE_AMBIGU = {
   issue: "ignore",
@@ -312,8 +325,16 @@ async function relireEtEcrire(stripe: Stripe, bail: Bail, relueLe: Date, strict:
   // Un client d'avant l'ADR-054 : le compte dont la personne est l'unique
   // propriétaire ; aucun, ou plusieurs, ne se devinent pas.
   const compteId = "compteId" in designe ? designe.compteId : await compteDontEstProprietaire(designe.proprietaire);
-  if (!compteId) return terminer(bail, relueLe, "compteId" in designe ? INTROUVABLE : PROPRIETAIRE_AMBIGU);
-  if (plusieurs) console.error(`stripe : plusieurs abonnements en cours pour un même client (${customerId})`);
+  if (!compteId) return terminer(bail, relueLe, "compteId" in designe ? introuvable(courant) : PROPRIETAIRE_AMBIGU);
+  // Deux abonnements en cours : le client paie peut-être deux fois. Le
+  // parcours l'empêche ; s'il arrive, un humain doit en résilier un (revue
+  // de la mécanique, 2026-11-16 — n'allait qu'au journal).
+  if (plusieurs) {
+    await alerter("plusieurs abonnements en cours pour un même client", [
+      `client ${customerId}`,
+      "Le client paie peut-être deux fois : garder l'abonnement voulu dans Stripe, résilier l'autre, rembourser s'il y a lieu.",
+    ]);
+  }
 
   const db = clientDuClientStripe(compteId);
   const ligne = await db.abonnement.findUnique({
@@ -396,7 +417,7 @@ async function relireEtEcrire(stripe: Stripe, bail: Bail, relueLe: Date, strict:
     switch (codePrisma(e)) {
       case "P2003":
       case "P2025":
-        return terminer(bail, relueLe, INTROUVABLE);
+        return terminer(bail, relueLe, introuvable(courant));
       case "P2002":
         return terminer(bail, relueLe, DEJA_LIE);
       default:

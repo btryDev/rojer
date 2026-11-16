@@ -9,6 +9,7 @@ description: Lire la base de la préproduction Clever Cloud de Rojer, en lecture
 pnpm lire-preprod connexions julien@rojer.invalid testeur@rojer.invalid
 pnpm lire-preprod activite julien@rojer.invalid
 pnpm lire-preprod abonnement julien@rojer.invalid
+pnpm lire-preprod taches
 ```
 
 - `connexions` : le compte existe-t-il, depuis quand, combien de sessions
@@ -21,6 +22,10 @@ pnpm lire-preprod abonnement julien@rojer.invalid
   événements reçus pour ce client. À lire AVANT de conclure qu'une page ne
   voit pas un abonnement : le 2026-11-16, c'était une autre session du
   navigateur, pas la synchronisation.
+- `taches` : le témoin du cron — les cinq derniers jours de tâches (finies
+  quand, combien en échec) et la file Stripe (dernier événement reçu et
+  traité, en attente, en échec durable). Un cron arrêté ne s'alerte pas
+  lui-même : c'est ici qu'on le voit.
 
 Depuis n'importe quel checkout qui a ses `node_modules` et la CLI `clever`
 connectée. Heures de Paris.

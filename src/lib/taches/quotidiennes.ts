@@ -32,6 +32,7 @@ import { oublierLesAnciens } from "@/lib/stripe/evenements";
 import { motifDErreur } from "@/lib/stripe/synchronisation";
 import { prendreLeJour, terminerLeJour } from "./jour";
 import { purgerComptesNonActives } from "@/lib/auth/comptes-non-actives";
+import { avertissementsDeConfiguration } from "@/lib/abonnements/lancement";
 
 function horlogeReelle(): Date {
   return new Date();
@@ -62,6 +63,10 @@ export function appelAutorise(entete: string | null, secret: string): boolean {
  */
 export async function lancerTachesQuotidiennes(maintenant: Date) {
   const config = configurationStripe();
+  // Une configuration qui ouvre Rojer à tous par erreur, ou qui le rend
+  // muet : dit chaque jour, pas seulement au démarrage (revue de la
+  // mécanique, 2026-11-16).
+  const configuration = await signalerLaConfiguration();
   const menage = async () => ({
     fichiersALiberer: await tenter("fichiers à libérer", () => libererFichiersEnAttente()),
     tracesPurgees: await tenter("traces de comptes supprimés", () => purgerTracesEchues(maintenant)),
@@ -78,15 +83,29 @@ export async function lancerTachesQuotidiennes(maintenant: Date) {
   // L'offre pas lancée (ou retirée) : la saisie est ouverte à tous, rien ne
   // se rappelle ni ne se supprime — un compte ne lirait nulle part ce que
   // l'e-mail lui annonce.
-  if (!offreLancee(contexteDroits())) return { offreLancee: false as const, ...(await menage()) };
+  if (!offreLancee(contexteDroits())) return { offreLancee: false as const, configuration, ...(await menage()) };
   const stripe = config.active ? clientStripe(config) : null;
   return {
+    configuration,
     rappelsVeilleFinEssai: await tenter("rappel de fin d'essai", () => rappelerLaVeilleDeLaFinDEssai(maintenant)),
     rappelsRenouvellementAnnuel: await tenter("rappel de renouvellement annuel", () => rappelerLeRenouvellementAnnuel(maintenant, stripe)),
     avertissementsAvantSuppression: await tenter("avertissements avant suppression", () => avertirAvantSuppression(maintenant)),
     suppressions: await tenter("suppressions", () => supprimerComptesEchus(maintenant, stripe)),
     ...(await menage()),
   };
+}
+
+/**
+ * Les réglages qui font, sans bruit, tourner Rojer de travers : l'offre
+ * exigée alors que Stripe est refusé (la saisie s'ouvre à tous, gratuitement)
+ * ; Stripe actif sans adresse d'alerte (les alertes ne vont qu'au journal).
+ * Les mêmes avertissements que le démarrage (`avertissementsEnvironnement`),
+ * par e-mail quand une adresse existe.
+ */
+async function signalerLaConfiguration(env: Record<string, string | undefined> = process.env) {
+  const problemes = avertissementsDeConfiguration(env);
+  if (problemes.length > 0) await alerter("configuration à corriger", problemes);
+  return { problemes: problemes.length };
 }
 
 /** L'état de la file Stripe, et une alerte s'il reste des événements bloqués ou des échecs durables. */
@@ -139,8 +158,15 @@ async function tenter<T>(nom: string, tache: () => Promise<T>): Promise<T | { er
   try {
     return await tache();
   } catch (e) {
-    // Un motif écrit par Rojer, jamais le message reçu (qui peut citer des données).
-    console.error(`tâche quotidienne « ${nom} » en échec — ${motifDErreur(e)}`);
+    // Un motif écrit par Rojer, jamais le message reçu (qui peut citer des
+    // données). Le jour est quand même marqué fait : la tâche attend demain,
+    // et un humain le sait (revue de la mécanique, 2026-11-16 — l'échec
+    // n'allait qu'au journal).
+    const motif = motifDErreur(e);
+    await alerter(`tâche quotidienne en échec : ${nom}`, [
+      motif,
+      "Elle sera rejouée demain à 9 h. Lire les journaux de l'application ; relancer à la main si elle ne peut pas attendre.",
+    ]);
     return { erreur: true };
   }
 }
