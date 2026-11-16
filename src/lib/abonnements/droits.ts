@@ -87,7 +87,9 @@ export function droitsDe(ligne: LigneAbonnement | null, ctx: ContexteDroits): Dr
       saisie: true,
       bandeau: {
         ton: "alerte",
-        message: "Le dernier paiement a échoué : réglez la facture en attente depuis la page Abonnement, avec la même carte ou une autre.",
+        // Refus de la carte ou confirmation demandée par la banque (3-D
+        // Secure) : la page de la facture chez Stripe sert les deux.
+        message: "Un paiement n'a pas abouti : réglez la facture en attente depuis la page Abonnement. Votre banque peut vous y demander une confirmation.",
       },
     };
   }
@@ -108,7 +110,7 @@ export function droitsDe(ligne: LigneAbonnement | null, ctx: ContexteDroits): Dr
 const LIBELLES: Record<string, string> = {
   trialing: "Essai en cours",
   active: "Actif",
-  past_due: "Paiement en échec",
+  past_due: "Paiement à régler",
   unpaid: "Impayé",
   canceled: "Résilié",
   paused: "Suspendu",

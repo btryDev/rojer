@@ -248,8 +248,12 @@ describe("parcours Stripe", () => {
       data: [{ id: "txr_ttc", active: true, inclusive: true, percentage: 20, country: "FR", tax_type: "vat", created: 1 }],
     });
     api.subscriptions.update.mockClear();
-    api.subscriptions.retrieve.mockResolvedValue({ status: "active" });
+    api.subscriptions.retrieve.mockResolvedValue({ status: "active", latest_invoice: { status: "paid" } });
     expect(await appliquerFormule(stripe, sub, choix)).toBeNull();
+    expect(api.subscriptions.update).not.toHaveBeenCalled();
+    // Fini par l'autre chemin, facture encore à régler (confirmation de la banque) : sa page, pas « terminé » (2026-11-16).
+    api.subscriptions.retrieve.mockResolvedValue({ status: "past_due", latest_invoice: { status: "open", hosted_invoice_url: "https://invoice.stripe.com/i/2" } });
+    expect(await appliquerFormule(stripe, sub, choix)).toBe("https://invoice.stripe.com/i/2");
     expect(api.subscriptions.update).not.toHaveBeenCalled();
     api.subscriptions.retrieve.mockResolvedValue({ status: "trialing" });
     api.subscriptions.update.mockResolvedValue({ latest_invoice: null });

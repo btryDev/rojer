@@ -238,11 +238,15 @@ export async function appliquerFormule(
     if (enAttente && factureAuPrixAffiche(enAttente, choix.priceId)) return enAttente.hosted_invoice_url ?? null;
     if (enAttente) await stripe.invoices.voidInvoice(enAttente.id!);
   }
-  // Payer maintenant : l'essai est relu juste avant. Un autre onglet a pu le
-  // finir et payer entre-temps ; on ne finit pas deux fois un essai.
-  if (choix.immediat && abonnement.status === "trialing") {
-    const frais = await stripe.subscriptions.retrieve(abonnement.id);
-    if (frais.status !== "trialing") return null;
+  // Payer maintenant : l'essai est relu juste avant. Un autre chemin (la
+  // notification de Checkout, un autre onglet) a pu le finir : on ne le finit
+  // pas deux fois, mais sa facture, si elle attend encore (carte refusée,
+  // confirmation demandée par la banque), est renvoyée. Sans quoi le client
+  // lisait « Paiement terminé » sans avoir payé (répétition du 2026-11-16,
+  // carte 3-D Secure : la notification avait fini l'essai la première).
+  if (choix.immediat && !enPause) {
+    const frais = abonnement.status === "trialing" ? await stripe.subscriptions.retrieve(abonnement.id) : abonnement;
+    if (frais.status !== "trialing") return factureARegler(stripe, frais.latest_invoice);
   }
   const item = abonnement.items.data[0];
   // Une seule carte, celle du CLIENT (`invoice_settings`), que le portail

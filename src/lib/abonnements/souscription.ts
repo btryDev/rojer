@@ -12,7 +12,7 @@ import "server-only";
 // la formule posée par Rojer à sa création), puis les abonnements du client.
 
 import type Stripe from "stripe";
-import { abonnementsDuClient, appliquerFormule, prixDesFormules } from "@/lib/stripe/parcours";
+import { abonnementsDuClient, appliquerFormule, factureARegler, prixDesFormules } from "@/lib/stripe/parcours";
 import { abonnementCourant, idStripe, synchroniserClientStripe } from "@/lib/stripe/synchronisation";
 import { SANS_PAIEMENT_ENCORE } from "./droits";
 import { estLookupKey } from "./formules";
@@ -55,8 +55,14 @@ export async function finaliserCarte(
   if (!estLookupKey(formule) || !paymentMethodId) return RIEN;
 
   const { courant } = abonnementCourant(await abonnementsDuClient(stripe, customerId));
-  // Déjà payant (une première finalisation est passée) ou terminé : rien à faire.
-  if (!courant || !SANS_PAIEMENT_ENCORE.has(courant.status)) return RIEN;
+  // Déjà payant (une première finalisation est passée) ou terminé : rien à
+  // faire — sauf « Payer maintenant » dont la facture attend encore (la
+  // notification a fini l'essai la première, la banque demande une
+  // confirmation) : le client y est renvoyé (répétition du 2026-11-16).
+  if (!courant || !SANS_PAIEMENT_ENCORE.has(courant.status)) {
+    const enAttente = courant && session.metadata?.immediat === "oui" ? await factureARegler(stripe, courant.latest_invoice) : null;
+    return enAttente ? { issue: "aRegler", url: enAttente } : RIEN;
+  }
   const prix = (await prixDesFormules(stripe)).get(formule);
   if (!prix) throw new Error("prix introuvable");
 

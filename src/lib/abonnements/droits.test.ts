@@ -75,10 +75,10 @@ describe("droitsDe", () => {
     expect(libelleStatut({ statut: "trialing", debutPayantLe: null })).toBe("Essai en cours");
   });
 
-  it("paiement échoué : saisie ouverte, alerte", () => {
+  it("paiement à régler (refus ou confirmation de la banque) : saisie ouverte, alerte", () => {
     expect(droitsDe(ligne({ statut: "past_due" }), EXIGE)).toEqual({
       saisie: true,
-      bandeau: { ton: "alerte", message: expect.stringMatching(/paiement a échoué/) },
+      bandeau: { ton: "alerte", message: expect.stringMatching(/paiement n.a pas abouti.*confirmation/) },
     });
   });
 

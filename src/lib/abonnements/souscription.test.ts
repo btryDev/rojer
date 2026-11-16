@@ -5,12 +5,14 @@ vi.mock("server-only", () => ({}));
 const m = vi.hoisted(() => ({
   abonnementsDuClient: vi.fn(),
   appliquerFormule: vi.fn(),
+  factureARegler: vi.fn(),
   prixDesFormules: vi.fn(),
   synchroniser: vi.fn(),
 }));
 vi.mock("@/lib/stripe/parcours", () => ({
   abonnementsDuClient: m.abonnementsDuClient,
   appliquerFormule: m.appliquerFormule,
+  factureARegler: m.factureARegler,
   prixDesFormules: m.prixDesFormules,
 }));
 vi.mock("@/lib/stripe/synchronisation", async (reel) => ({
@@ -83,6 +85,19 @@ describe("finaliserCarte", () => {
       expect(await finaliserCarte(stripe, "cs_1"), status).toEqual({ issue: "rien" });
     }
     expect(m.appliquerFormule).not.toHaveBeenCalled();
+    expect(m.factureARegler).not.toHaveBeenCalled();
+  });
+
+  it("« payer maintenant » dont la notification a déjà fini l'essai : la facture qui attend (3-D Secure) est rendue (2026-11-16)", async () => {
+    api.checkout.sessions.retrieve.mockResolvedValue(session({ metadata: { compteId: "c1", formule: "rojer_pro_annuel", immediat: "oui" } }));
+    m.abonnementsDuClient.mockResolvedValue([{ ...abonnement("past_due"), latest_invoice: "in_1" }]);
+    m.factureARegler.mockResolvedValueOnce("https://invoice.stripe.com/i/1");
+    expect(await finaliserCarte(stripe, "cs_1")).toEqual({ issue: "aRegler", url: "https://invoice.stripe.com/i/1" });
+    expect(m.factureARegler).toHaveBeenCalledWith(stripe, "in_1");
+    expect(m.appliquerFormule).not.toHaveBeenCalled();
+    // Facture déjà payée (l'autre chemin a abouti) : rien.
+    m.factureARegler.mockResolvedValueOnce(null);
+    expect(await finaliserCarte(stripe, "cs_1")).toEqual({ issue: "rien" });
   });
 
   it("pause : la carte et la formule s'appliquent, et la reprise se paie (immédiat)", async () => {
