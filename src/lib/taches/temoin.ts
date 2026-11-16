@@ -20,6 +20,9 @@ export async function battre(url: string | null = adresseDuTemoin(), envoyer: ty
   if (!url) return false;
   try {
     const r = await envoyer(url, { method: "GET", signal: AbortSignal.timeout(10_000), cache: "no-store" });
+    // Une adresse mal recopiée ou révoquée répond 404 : le témoin n'est alors
+    // jamais armé, et rien d'autre ne le dirait.
+    if (!r.ok) console.error(`témoin des tâches : réponse ${r.status}, vérifier TEMOIN_TACHES_URL`);
     return r.ok;
   } catch {
     console.error("témoin des tâches injoignable");

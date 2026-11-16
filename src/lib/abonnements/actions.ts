@@ -120,13 +120,17 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
       // (audit du 2026-11-16).
       url = `${base}?conditions=requises`;
     } else if (courant && SANS_PAIEMENT_ENCORE.has(courant.status)) {
-      // La preuve d'abord (un journal, comme à l'essai), puis le nom et
-      // l'adresse que la facture portera.
+      // La preuve d'abord (un journal, comme à l'essai : une acceptation sans
+      // paiement ne nuit à personne), puis, ensemble, le nom et l'adresse que
+      // la facture portera, la carte et le prix.
       await enregistrerAcceptation(proprietaire, "abonnement");
-      await poserIdentiteDeFacturation(stripe, db, ligne.stripeCustomerId);
+      const [, carte, catalogue] = await Promise.all([
+        poserIdentiteDeFacturation(stripe, db, ligne.stripeCustomerId),
+        carteParDefaut(stripe, ligne.stripeCustomerId),
+        prixDesFormules(stripe),
+      ]);
       // Une carte est déjà enregistrée : la formule s'applique sans repasser
       // par Stripe (changer de formule pendant l'essai, reprendre une pause).
-      const [carte, catalogue] = await Promise.all([carteParDefaut(stripe, ligne.stripeCustomerId), prixDesFormules(stripe)]);
       if (carte) {
         const prix = catalogue.get(formule);
         if (!prix) throw new Error("prix introuvable");

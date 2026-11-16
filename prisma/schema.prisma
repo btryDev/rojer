@@ -2609,8 +2609,10 @@ model AcceptationConditions {
   user       User     @relation(fields: [userId], references: [id], onDelete: Restrict)
   version    String
   empreinte  String
-  /// `essai` (l'écran « Votre essai gratuit ») ; l'acceptation au paiement est
-  /// gardée par Stripe, sur la session Checkout.
+  /// `essai` (l'écran « Votre essai gratuit ») ; ~~l'acceptation au paiement est
+  /// gardée par Stripe, sur la session Checkout~~ [2026-11-16 : `abonnement`
+  /// au passage payant depuis l'essai ou une pause (`sAbonnerAction`) ; seul
+  /// le réabonnement par Checkout reste gardé par Stripe, sur sa session].
   contexte   String
   accepteeLe DateTime @default(now())
 

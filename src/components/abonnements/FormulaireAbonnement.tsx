@@ -36,7 +36,6 @@ export function FormulaireAbonnement({
   quand,
   courante = null,
   proposerPayerMaintenant = false,
-  demanderAcceptation = false,
 }: {
   offres: OffreAffichee[];
   /** Le compte que montre la page (`ChampCompteAttendu`). */
@@ -51,15 +50,13 @@ export function FormulaireAbonnement({
   courante?: { formule: CleFormule; periodicite: Periodicite } | null;
   /** « Payer maintenant » à côté du bouton principal (essai en cours). */
   proposerPayerMaintenant?: boolean;
-  /**
-   * La case des conditions générales : un abonnement qui court sans payer
-   * (essai, pause) passe au payant ici. Une nouvelle souscription n'en a
-   * pas : Checkout la demande lui-même.
-   */
-  demanderAcceptation?: boolean;
 }) {
+  // La case des conditions générales, toujours : c'est Stripe relu, pas la
+  // copie de la page, qui dit au serveur si elle est exigée (essai, pause).
+  // Une copie en retard d'un webhook n'enferme donc personne dans
+  // « cochez la case » sans case (revue du 2026-11-16).
   const [accepte, setAccepte] = useState(false);
-  const bloque = demanderAcceptation && !accepte;
+  const bloque = !accepte;
   const [periodicite, setPeriodicite] = useState<Periodicite>(courante?.periodicite ?? "mensuel");
   const [choisie, setChoisie] = useState<CleFormule>(
     courante && offres.some((o) => o.formule === courante.formule) ? courante.formule : offres[0].formule,
@@ -152,27 +149,24 @@ export function FormulaireAbonnement({
           Prélevé aujourd&apos;hui : {preleve}, pour {premiere}.
         </p>
       )}
-      {demanderAcceptation && (
-        // Le passage au payant engage : les conditions s'acceptent ici, jamais
-        // cochées d'avance (le serveur refuse sans elles, `sAbonnerAction`).
-        <label className="flex max-w-[var(--board-mesure)] items-start gap-3 text-[14px] leading-[1.5]">
-          <input
-            type="checkbox"
-            name="accepte"
-            value="oui"
-            checked={accepte}
-            onChange={(e) => setAccepte(e.target.checked)}
-            className={CASE_A_COCHER}
-          />
-          <span>
-            J&apos;accepte les{" "}
-            <Link href="/conditions" target="_blank" className="underline underline-offset-4">
-              conditions générales
-            </Link>{" "}
-            (s&apos;ouvrent dans un nouvel onglet).
-          </span>
-        </label>
-      )}
+      {/* Jamais cochée d'avance ; le serveur refuse sans elle (`sAbonnerAction`). */}
+      <label className="flex max-w-[var(--board-mesure)] items-start gap-3 text-[14px] leading-[1.5]">
+        <input
+          type="checkbox"
+          name="accepte"
+          value="oui"
+          checked={accepte}
+          onChange={(e) => setAccepte(e.target.checked)}
+          className={CASE_A_COCHER}
+        />
+        <span>
+          J&apos;accepte les{" "}
+          <Link href="/conditions" target="_blank" className="underline underline-offset-4">
+            conditions générales
+          </Link>{" "}
+          (s&apos;ouvrent dans un nouvel onglet).
+        </span>
+      </label>
       <div className="flex flex-wrap items-center gap-3">
         <BoutonEnvoi variant="board" disabled={preleve === null || bloque || (mode === "changer" && inchangee)}>
           {libelle}

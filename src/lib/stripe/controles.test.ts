@@ -14,9 +14,8 @@ import { IMPAYE_TROP_LONG_JOURS, controlerLesReglagesStripe, defautsDuPortail, i
 const portail = (features: object) => ({ features }) as unknown as Stripe.BillingPortal.Configuration;
 const BON = { subscription_update: { enabled: false }, subscription_cancel: { enabled: true, mode: "at_period_end" } };
 const MAINTENANT = new Date("2026-12-31T12:00:00Z");
-const jours = (n: number) => Math.floor(MAINTENANT.getTime() / 1000) - n * 86_400;
-const impaye = (id: string, depuisJours: number, status = "past_due") =>
-  ({ id, status, customer: "cus_1", latest_invoice: { created: jours(depuisJours), due_date: null } }) as unknown as Stripe.Subscription;
+const ilYa = (n: number) => Math.floor(MAINTENANT.getTime() / 1000) - n * 86_400;
+const liste = <T,>(data: T[]) => ({ autoPagingToArray: async () => data });
 
 beforeEach(() => vi.clearAllMocks());
 
@@ -34,32 +33,46 @@ describe("defautsDuPortail", () => {
 });
 
 describe("impayesTropLongs", () => {
-  it("au-delà du seuil seulement, et seulement `past_due`", () => {
-    expect(
-      impayesTropLongs([impaye("sub_a", IMPAYE_TROP_LONG_JOURS + 1), impaye("sub_b", 10), impaye("sub_c", 90, "unpaid")], MAINTENANT),
-    ).toEqual(["sub_a"]);
+  it("au-delà du seuil seulement ; sans facture ouverte, rien", () => {
+    const i = (id: string, depuis: number | null) => ({ id, client: "cus_1", depuis });
+    expect(impayesTropLongs([i("sub_a", ilYa(IMPAYE_TROP_LONG_JOURS + 1)), i("sub_b", ilYa(10)), i("sub_c", null)], MAINTENANT).map((x) => x.id)).toEqual(["sub_a"]);
   });
 });
 
 describe("controlerLesReglagesStripe", () => {
-  const stripe = (config: object | null, abonnements: Stripe.Subscription[]) =>
+  /** `factures` : les échéances (en jours) des factures ouvertes de chaque abonnement impayé. */
+  const stripe = (config: object | null, factures: Record<string, number[]>, { portailEnPanne = false } = {}) =>
     ({
-      billingPortal: { configurations: { list: vi.fn(async () => ({ data: config ? [config] : [] })) } },
-      subscriptions: { list: vi.fn(() => ({ autoPagingToArray: async () => abonnements })) },
+      billingPortal: {
+        configurations: { list: vi.fn(async () => (portailEnPanne ? Promise.reject(new Error("403")) : { data: config ? [config] : [] })) },
+      },
+      subscriptions: { list: vi.fn(() => liste(Object.keys(factures).map((id) => ({ id, customer: "cus_1" })))) },
+      invoices: {
+        list: vi.fn(({ subscription }: { subscription: string }) =>
+          liste(factures[subscription].map((j) => ({ created: ilYa(j), due_date: null }))),
+        ),
+      },
     }) as unknown as Stripe;
 
   it("tout en règle : aucune alerte", async () => {
-    expect(await controlerLesReglagesStripe(stripe(portail(BON), [impaye("sub_b", 10)]), MAINTENANT)).toEqual({ portail: 0, impayesTropLongs: 0 });
+    expect(await controlerLesReglagesStripe(stripe(portail(BON), { sub_b: [10] }), MAINTENANT)).toEqual({ portail: 0, impayesTropLongs: 0 });
     expect(m.uneFoisParJour).not.toHaveBeenCalled();
   });
 
-  it("un portail de travers et un impayé qui dure : une alerte chacun, par jour, avec des identifiants seulement", async () => {
-    const bilan = await controlerLesReglagesStripe(
-      stripe(portail({ ...BON, subscription_update: { enabled: true } }), [impaye("sub_a", 60)]),
-      MAINTENANT,
-    );
+  it("un mensuel impayé depuis trois mois : daté par sa PLUS ANCIENNE facture ouverte, pas par la dernière", async () => {
+    expect(await controlerLesReglagesStripe(stripe(portail(BON), { sub_a: [5, 35 + 1, 66] }), MAINTENANT)).toEqual({ portail: 0, impayesTropLongs: 1 });
+    expect(m.uneFoisParJour.mock.calls[0][0]).toBe("reglages:impayes");
+    expect(m.uneFoisParJour.mock.calls[0][2].join("\n")).toContain("sub_a — client cus_1");
+  });
+
+  it("un portail de travers : son alerte, à côté de celle des impayés", async () => {
+    const bilan = await controlerLesReglagesStripe(stripe(portail({ ...BON, subscription_update: { enabled: true } }), { sub_a: [60] }), MAINTENANT);
     expect(bilan).toEqual({ portail: 1, impayesTropLongs: 1 });
-    expect(m.uneFoisParJour.mock.calls.map((c) => c[0])).toEqual(["reglages:portail", "reglages:impayes"]);
-    expect(m.uneFoisParJour.mock.calls[1][2].join("\n")).toContain("sub_a — client cus_1");
+    expect(m.uneFoisParJour.mock.calls.map((c) => c[0]).sort()).toEqual(["reglages:impayes", "reglages:portail"]);
+  });
+
+  it("un contrôle en échec n'empêche pas l'autre ; l'échec remonte ensuite", async () => {
+    await expect(controlerLesReglagesStripe(stripe(null, { sub_a: [60] }, { portailEnPanne: true }), MAINTENANT)).rejects.toThrow("403");
+    expect(m.uneFoisParJour.mock.calls.map((c) => c[0])).toEqual(["reglages:impayes"]);
   });
 });
