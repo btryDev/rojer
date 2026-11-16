@@ -18,7 +18,10 @@ import "server-only";
 
 import type Stripe from "stripe";
 import { alerterUneFoisParJour } from "@/lib/alertes";
-import { idStripe, toutLister } from "./synchronisation";
+import { toutLister } from "./synchronisation";
+
+/** L'identifiant du client d'un abonnement (référence développée ou non). */
+const clientDe = (s: Stripe.Subscription | undefined) => (typeof s?.customer === "string" ? s.customer : (s?.customer?.id ?? null));
 
 /** Au-delà, un impayé n'est plus « en relance » : la fenêtre de Stripe est réglée à un mois au plus (§ 3). */
 export const IMPAYE_TROP_LONG_JOURS = 35;
@@ -66,7 +69,7 @@ export async function controlerLesReglagesStripe(stripe: Stripe, maintenant: Dat
       `${anciens.length} abonnement(s) impayé(s) depuis plus de ${IMPAYE_TROP_LONG_JOURS} jours (20 au plus listés) :`,
       ...anciens.slice(0, 20).map((id) => {
         const s = impayes.find((a) => a.id === id);
-        return `${id} — client ${idStripe(s?.customer) ?? "inconnu"}`;
+        return `${id} — client ${clientDe(s) ?? "inconnu"}`;
       }),
       "Leur saisie reste ouverte tant que Stripe ne les marque pas impayés : Billing > Récupération des revenus, « si toutes les tentatives échouent : marquer l'abonnement comme impayé », fenêtre d'un mois au plus (docs/lancement-abonnements.md § 3).",
     ], maintenant);
