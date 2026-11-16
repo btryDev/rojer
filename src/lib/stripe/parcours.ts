@@ -69,7 +69,7 @@ export async function demarrerEssai(
       // Chaque paiement réussi fixe sa carte sur l'abonnement : une carte
       // payée sur la page d'une facture sert ainsi au mois suivant. La
       // relecture la reporte sur le client et la retire de l'abonnement
-      // (`carteAuClient`, synchronisation.ts, qui pose aussi ce réglage sur
+      // (`carteQuiAPaye`, au paiement réussi, qui pose aussi ce réglage sur
       // les abonnements nés de Checkout) : une seule carte, celle du client,
       // que le portail change.
       payment_settings: { save_default_payment_method: "on_subscription" },
@@ -310,9 +310,11 @@ export async function appliquerFormule(
 }
 
 /**
- * Régler tout de suite une facture ouverte avec la carte du client, en sa
- * présence (`off_session: false` : il vient de cliquer ; la banque peut
- * demander une confirmation, servie par la page de la facture) : `null` si
+ * Régler tout de suite une facture ouverte avec la carte du client, hors
+ * session (le défaut de Stripe) : le mandat vient d'être donné en
+ * enregistrant la carte, et ce règlement part aussi de la notification,
+ * client absent. Si la banque demande malgré tout une confirmation, la page
+ * de la facture la sert : `null` si
  * elle est payée (ou s'il n'y a rien à régler), sinon l'adresse de sa page
  * (carte refusée, authentification demandée).
  */
@@ -326,7 +328,7 @@ async function reglerLaFacture(
     // Une clé tirée de la FACTURE : les deux chemins qui finalisent la même
     // carte (retour de Checkout, webhook) règlent la même facture sous la
     // même clé — un seul règlement (revue du 2026-11-16).
-    const payee = await stripe.invoices.pay(facture.id, { off_session: false }, { idempotencyKey: `payer-${facture.id}` });
+    const payee = await stripe.invoices.pay(facture.id, {}, { idempotencyKey: `payer-${facture.id}` });
     return payee.status === "paid" ? null : (payee.hosted_invoice_url ?? facture.hosted_invoice_url ?? null);
   } catch (e) {
     // Le même règlement en cours ailleurs (409) : on ne sait pas encore s'il
@@ -438,6 +440,36 @@ export async function planifierBaisse(
     }
     throw e;
   }
+}
+
+/**
+ * Une seule carte, celle du CLIENT (2026-11-16) : le portail ne change
+ * qu'elle, et une carte fixée sur l'abonnement passerait avant au
+ * renouvellement. Rojer n'en fixe jamais ; Stripe en fixe une à chaque
+ * paiement réussi (`save_default_payment_method: on_subscription`) et à la
+ * souscription par Checkout. Appelée UNE fois par paiement réussi
+ * (`invoice.paid`), sur l'abonnement relu à cet instant : la carte fixée est
+ * celle qui vient de payer ; elle devient celle du client et quitte
+ * l'abonnement. Jamais à chaque relecture : un état périmé, ou une relecture
+ * en retard, rendrait la carte d'avant un changement fait au portail
+ * (relectures du 2026-11-16). Le réglage `on_subscription` est posé sur
+ * l'abonnement qui ne l'a pas (né de Checkout). Une erreur remonte :
+ * l'événement est retenté par la file. Sans clé d'idempotence : ces
+ * écritures posent une valeur.
+ */
+export async function carteQuiAPaye(stripe: Stripe, abonnementId: string): Promise<void> {
+  const abonnement = await stripe.subscriptions.retrieve(abonnementId);
+  if (abonnement.status === "canceled" || abonnement.status === "incomplete_expired") return;
+  const carte = idStripe(abonnement.default_payment_method);
+  const reglage = abonnement.payment_settings?.save_default_payment_method === "on_subscription";
+  if (!carte && reglage) return;
+  if (carte) {
+    await stripe.customers.update(idStripe(abonnement.customer)!, { invoice_settings: { default_payment_method: carte } });
+  }
+  await stripe.subscriptions.update(abonnement.id, {
+    ...(carte ? { default_payment_method: "" } : {}),
+    ...(reglage ? {} : { payment_settings: { save_default_payment_method: "on_subscription" as const } }),
+  });
 }
 
 /**

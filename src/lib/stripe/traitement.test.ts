@@ -16,6 +16,7 @@ vi.mock("./synchronisation", async (reel) => ({
   synchroniserSousBail: vi.fn(),
 }));
 vi.mock("@/lib/abonnements/souscription", () => ({ finaliserCarte: vi.fn().mockResolvedValue({ issue: "rien" }) }));
+vi.mock("./parcours", () => ({ rendrePlanningEchu: vi.fn().mockResolvedValue(undefined), carteQuiAPaye: vi.fn().mockResolvedValue(undefined) }));
 vi.mock("@/lib/alertes", () => ({ alerter: vi.fn().mockResolvedValue(undefined) }));
 
 import * as evenements from "./evenements";
@@ -23,6 +24,7 @@ import * as file from "./file";
 import { synchroniserSousBail } from "./synchronisation";
 import { finaliserCarte } from "@/lib/abonnements/souscription";
 import { alerter } from "@/lib/alertes";
+import { carteQuiAPaye, rendrePlanningEchu } from "./parcours";
 import { EVENEMENTS_ECOUTES } from "./webhook";
 import { aiguillageDe, aiguiller, traiterLaFile, traiterLaFileIci } from "./traitement";
 
@@ -55,10 +57,31 @@ describe("aiguillageDe : le client de l'objet relu, et les effets propres à l'o
     expect(await aiguillageDe(faux, type, "obj_1")).toMatchObject({ clientStripe: "cus_1" });
   });
 
-  it("abonnement : relu avec les options courtes du webhook ; son identifiant suit (client supprimé)", async () => {
+  it("abonnement : relu avec les options courtes du webhook ; son identifiant suit (client supprimé) ; un planning échu est rendu", async () => {
     api.subscriptions.retrieve.mockResolvedValue({ id: "sub_1", customer: { id: "cus_1" }, schedule: "sub_sched_1" });
     expect(await aiguillageDe(faux, "v1.customer.subscription.updated", "sub_1")).toEqual({ clientStripe: "cus_1", abonnementId: "sub_1" });
     expect(api.subscriptions.retrieve).toHaveBeenCalledWith("sub_1", {}, expect.objectContaining({ maxNetworkRetries: 0 }));
+    expect(rendrePlanningEchu).toHaveBeenCalledOnce();
+  });
+
+  it("planning refusé par Stripe (429 au passage de phase) : l'événement échoue, la file le retentera (2026-11-16)", async () => {
+    api.subscriptions.retrieve.mockResolvedValue({ id: "sub_1", customer: "cus_1", schedule: "sub_sched_1" });
+    vi.mocked(rendrePlanningEchu).mockRejectedValueOnce(Object.assign(new Error("lock"), { statusCode: 429 }));
+    await expect(aiguillageDe(faux, "v1.customer.subscription.updated", "sub_1")).rejects.toThrow("lock");
+  });
+
+  it("paiement réussi : la carte qui a payé est rangée (une fois, à l'événement) ; un échec fait retenter (2026-11-16)", async () => {
+    api.invoices.retrieve.mockResolvedValue({ customer: "cus_1", parent: { subscription_details: { subscription: "sub_1" } } });
+    expect(await aiguillageDe(faux, "v1.invoice.paid", "in_1")).toEqual({ clientStripe: "cus_1" });
+    expect(carteQuiAPaye).toHaveBeenCalledWith(faux, "sub_1");
+    vi.mocked(carteQuiAPaye).mockRejectedValueOnce(new Error("indisponible"));
+    await expect(aiguillageDe(faux, "v1.invoice.paid", "in_1")).rejects.toThrow("indisponible");
+    // Facture hors abonnement, ou paiement en échec : rien.
+    vi.mocked(carteQuiAPaye).mockClear();
+    api.invoices.retrieve.mockResolvedValue({ customer: "cus_1", parent: null });
+    await aiguillageDe(faux, "v1.invoice.paid", "in_2");
+    await aiguillageDe(faux, "v1.invoice.payment_failed", "in_3");
+    expect(carteQuiAPaye).not.toHaveBeenCalled();
   });
 
   it("session de carte : la formule s'applique, la relecture suit par la file", async () => {

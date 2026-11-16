@@ -3,7 +3,7 @@ import type Stripe from "stripe";
 
 vi.mock("server-only", () => ({}));
 
-import {
+import { carteQuiAPaye,
   DUREE_ESSAI_JOURS,
   creerClientStripe,
   demarrerEssai,
@@ -21,7 +21,7 @@ import {
 } from "./parcours";
 
 const api = {
-  customers: { create: vi.fn() },
+  customers: { create: vi.fn(), update: vi.fn() },
   subscriptions: { create: vi.fn(), update: vi.fn(), resume: vi.fn(), retrieve: vi.fn() },
   invoices: { retrieve: vi.fn(), voidInvoice: vi.fn(), pay: vi.fn() },
   subscriptionSchedules: { create: vi.fn(), retrieve: vi.fn(), update: vi.fn(), release: vi.fn() },
@@ -206,7 +206,7 @@ describe("parcours Stripe", () => {
     api.invoices.pay.mockResolvedValueOnce({ status: "paid" });
     expect(await appliquerFormule(stripe, sub, choix)).toBeNull();
     // Une clé tirée de la facture : les deux chemins qui finalisent la même carte la règlent une fois.
-    expect(api.invoices.pay).toHaveBeenLastCalledWith("in_r", { off_session: false }, { idempotencyKey: "payer-in_r" });
+    expect(api.invoices.pay).toHaveBeenLastCalledWith("in_r", {}, { idempotencyKey: "payer-in_r" });
     api.invoices.pay.mockRejectedValueOnce(Object.assign(new Error("card_declined"), { type: "StripeCardError" }));
     api.invoices.retrieve.mockResolvedValueOnce({ ...reprise });
     expect(await appliquerFormule(stripe, sub, choix)).toBe("https://invoice.stripe.com/i/r");
@@ -259,6 +259,31 @@ describe("parcours Stripe", () => {
     api.subscriptions.update.mockResolvedValue({ latest_invoice: null });
     await appliquerFormule(stripe, sub, choix);
     expect(api.subscriptions.update.mock.lastCall?.[1]).toMatchObject({ trial_end: "now", default_tax_rates: ["txr_ttc"] });
+  });
+
+  it("carte qui a payé : reportée sur le client, retirée de l'abonnement ; réglage posé s'il manque ; rien sinon (2026-11-16)", async () => {
+    const maj = api.customers.update;
+    maj.mockClear();
+    const reglee = { payment_settings: { save_default_payment_method: "on_subscription" } };
+    api.subscriptions.update.mockClear();
+    api.subscriptions.retrieve.mockResolvedValue({ id: "sub_1", customer: "cus_1", status: "active", default_payment_method: "pm_payee", ...reglee });
+    await carteQuiAPaye(stripe, "sub_1");
+    expect(maj).toHaveBeenCalledWith("cus_1", { invoice_settings: { default_payment_method: "pm_payee" } });
+    expect(api.subscriptions.update).toHaveBeenLastCalledWith("sub_1", { default_payment_method: "" });
+    // Né de Checkout, sans carte fixée ni réglage : le réglage seul.
+    maj.mockClear();
+    api.subscriptions.retrieve.mockResolvedValue({ id: "sub_1", customer: "cus_1", status: "active", default_payment_method: null, payment_settings: null });
+    await carteQuiAPaye(stripe, "sub_1");
+    expect(maj).not.toHaveBeenCalled();
+    expect(api.subscriptions.update).toHaveBeenLastCalledWith("sub_1", { payment_settings: { save_default_payment_method: "on_subscription" } });
+    // Rien à ranger, ou terminé : aucune écriture.
+    api.subscriptions.update.mockClear();
+    api.subscriptions.retrieve.mockResolvedValue({ id: "sub_1", customer: "cus_1", status: "active", default_payment_method: null, ...reglee });
+    await carteQuiAPaye(stripe, "sub_1");
+    api.subscriptions.retrieve.mockResolvedValue({ id: "sub_1", customer: "cus_1", status: "canceled", default_payment_method: "pm_x" });
+    await carteQuiAPaye(stripe, "sub_1");
+    expect(api.subscriptions.update).not.toHaveBeenCalled();
+    expect(maj).not.toHaveBeenCalled();
   });
 
   it("monter : tout de suite, prorata facturé, appliquée seulement si payée ; une baisse planifiée est abandonnée d'abord", async () => {

@@ -33,12 +33,10 @@ import { clientDuClientStripe } from "@/lib/auth/compte-hors-session";
 import { compteDontEstProprietaire } from "@/lib/auth/membres";
 import { OPTIONS_WEBHOOK } from "./client";
 import { idStripe } from "./ids";
-import { rendrePlanningEchu } from "./parcours";
 import { formuleDuPrix } from "@/lib/abonnements/formules";
 import { OUVRENT } from "@/lib/abonnements/droits";
 
 /** L'identifiant d'une référence Stripe, développée ou non. */
-export { idStripe } from "./ids";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -351,13 +349,6 @@ async function relireEtEcrire(stripe: Stripe, bail: Bail, relueLe: Date, strict:
     select: { stripeCustomerId: true, essaiUtiliseLe: true, debutPayantLe: true, sansAbonnementDepuis: true },
   });
   if (ligne && ligne.stripeCustomerId !== customerId) return terminer(bail, relueLe, AUTRE_CLIENT);
-  // Les rangements chez Stripe, une fois la copie écrite pour CE compte
-  // (revue du 2026-11-16 : pas avant les contrôles de liaison).
-  const client_ = client.value;
-  const apresEcriture = async <T>(issue: T): Promise<T> => {
-    if (!client_.deleted && courant) await entretenir(stripe, client_, courant);
-    return issue;
-  };
 
   // Le premier paiement confirmé, lu tant que la ligne n'en a pas. En échec :
   // l'état s'écrit quand même ; depuis la file, le client est retenté plus
@@ -415,7 +406,7 @@ async function relireEtEcrire(stripe: Stripe, bail: Bail, relueLe: Date, strict:
     });
   try {
     try {
-      return await apresEcriture(signale(await ecrire(ligne !== null)));
+      return signale(await ecrire(ligne !== null));
     } catch (e) {
       if (ligne || codePrisma(e) !== "P2002") throw e;
       // Unicité à la création : la ligne du compte existe maintenant, ou ce
@@ -423,7 +414,7 @@ async function relireEtEcrire(stripe: Stripe, bail: Bail, relueLe: Date, strict:
       const creee = await db.abonnement.findUnique({ where: { compteId }, select: { stripeCustomerId: true } });
       if (!creee) return terminer(bail, relueLe, DEJA_LIE);
       if (creee.stripeCustomerId !== customerId) return terminer(bail, relueLe, AUTRE_CLIENT);
-      return await apresEcriture(signale(await ecrire(true)));
+      return signale(await ecrire(true));
     }
   } catch (e) {
     if (e instanceof BailPerdu) return EN_FILE;
@@ -440,61 +431,6 @@ async function relireEtEcrire(stripe: Stripe, bail: Bail, relueLe: Date, strict:
         throw e;
     }
   }
-}
-
-/**
- * Deux rangements chez Stripe, refaits à chaque relecture écrite (chaque
- * événement du client, et le rapprochement quotidien) : un échec passager —
- * Stripe répond 429 quand l'abonnement change au même instant — se journalise
- * et se rattrape à la suivante, au plus tard le lendemain, sans toucher à la
- * copie déjà écrite. Ne lève jamais. Répétition dans le temps du 2026-11-16 :
- * un `release` refusé pendant le passage de phase n'était retenté que sur une
- * notification d'abonnement, et le planning restait attaché une période.
- */
-async function entretenir(stripe: Stripe, client: Stripe.Customer, courant: Stripe.Subscription): Promise<void> {
-  await carteAuClient(stripe, client, courant).catch((e) =>
-    console.error(`stripe : carte de l'abonnement non reportée sur le client ${client.id} — ${motifDErreur(e)}`),
-  );
-  if (courant.schedule) {
-    await rendrePlanningEchu(stripe, courant).catch((e) =>
-      console.error(`stripe : planning échu non rendu pour le client ${client.id} — ${motifDErreur(e)}`),
-    );
-  }
-}
-
-/**
- * Une seule carte, celle du CLIENT (2026-11-16) : le portail ne change
- * qu'elle, et une carte fixée sur l'abonnement passerait avant au
- * renouvellement. Rojer n'en fixe jamais ; Stripe en fixe une à chaque
- * paiement réussi (`save_default_payment_method: on_subscription`) et à la
- * souscription par Checkout. Cette carte est donc toujours la DERNIÈRE qui a
- * payé : elle devient celle du client, et quitte l'abonnement. Pas de
- * comparaison de dates : la date de création d'une carte n'est pas celle du
- * choix (revue du 2026-11-16). Limite connue : un changement fait au portail
- * entre un paiement et sa relecture (quelques secondes, plus si la relecture
- * échoue) est remplacé par la carte qui vient de payer.
- *
- * Le réglage `on_subscription` est aussi posé sur l'abonnement qui ne l'a pas
- * (né de Checkout) : sans lui, une carte payée sur la page d'une facture ne
- * servirait pas au mois suivant. Sans clé d'idempotence : ces écritures
- * posent une valeur ; une clé réutilisée rendrait la réponse d'hier sans agir.
- */
-async function carteAuClient(stripe: Stripe, client: Stripe.Customer, courant: Stripe.Subscription): Promise<void> {
-  if (courant.status === "canceled" || courant.status === "incomplete_expired") return;
-  const carte = idStripe(courant.default_payment_method);
-  const reglage = courant.payment_settings?.save_default_payment_method === "on_subscription";
-  if (!carte && reglage) return;
-  if (carte && carte !== idStripe(client.invoice_settings?.default_payment_method)) {
-    await stripe.customers.update(client.id, { invoice_settings: { default_payment_method: carte } }, OPTIONS_WEBHOOK);
-  }
-  await stripe.subscriptions.update(
-    courant.id,
-    {
-      ...(carte ? { default_payment_method: "" } : {}),
-      ...(reglage ? {} : { payment_settings: { save_default_payment_method: "on_subscription" as const } }),
-    },
-    OPTIONS_WEBHOOK,
-  );
 }
 
 /** Clôt la relecture d'un client sans rien écrire (rien à suivre, ou conflit signalé). */

@@ -88,8 +88,6 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
       ...o,
     }) as unknown as Stripe.Subscription;
 
-  // Les reports de carte sur le client (`carteAuClient`) : relevés, jamais envoyés.
-  const cartes: { objet: string; params: object }[] = [];
   const stripe = (
     compteId: string,
     abonnements: Stripe.Subscription[] | Error,
@@ -103,11 +101,9 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
           await attendre;
           return client ?? { id, metadata: { compteId } };
         },
-        update: async (id: string, params: object) => (cartes.push({ objet: id, params }), { id }),
       },
       invoices: { list: () => ({ autoPagingToArray: async () => factures }) },
       subscriptions: {
-        update: async (id: string, params: object) => (cartes.push({ objet: id, params }), { id }),
         list: () => ({
           autoPagingToArray: async () => {
             if (abonnements instanceof Error) throw abonnements;
@@ -186,55 +182,6 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
         ["client cus_A", expect.stringMatching(/paie peut-être deux fois/)],
         new Date(1000),
       );
-    });
-
-    it("un planning de baisse échu est rendu à la relecture ; un refus passager n'empêche pas l'écriture (2026-11-16)", async () => {
-      const release = vi.fn().mockResolvedValue({});
-      const avecPlanning = (rel: typeof release) => {
-        const s = stripe(A, [abo({ id: "sub_1", status: "active", created: 1, schedule: "sub_sched_1" } as never)]);
-        (s as unknown as { subscriptionSchedules: object }).subscriptionSchedules = {
-          // Phase en cours = la dernière (la baisse court) : le planning a fait son office.
-          retrieve: async () => ({ id: "sub_sched_1", status: "active", created: 0, current_phase: { start_date: 200 }, phases: [{ start_date: 100 }, { start_date: 200 }] }),
-          release: rel,
-        };
-        return s;
-      };
-      expect(await synchroniserClientStripe(avecPlanning(release), "cus_A", { maintenant: () => new Date(1000) })).toMatchObject({ issue: expect.stringMatching(/ecrit|inchange/) });
-      expect(release).toHaveBeenCalledWith("sub_sched_1");
-      // Stripe répond 429 (l'abonnement change au même instant) : la copie s'écrit quand même, la relecture suivante recommencera.
-      const refuse = vi.fn().mockRejectedValue(Object.assign(new Error("lock"), { statusCode: 429 }));
-      expect(await synchroniserClientStripe(avecPlanning(refuse), "cus_A", { maintenant: () => new Date(2000) })).toMatchObject({ issue: expect.stringMatching(/ecrit|inchange/) });
-      expect(refuse).toHaveBeenCalledOnce();
-    });
-
-    it("une carte fixée sur l'abonnement (le dernier paiement) devient celle du client et quitte l'abonnement ; le réglage manquant est posé (2026-11-16)", async () => {
-      const avec = (sub: object, pmClient: string | null) =>
-        stripe(A, [abo({ id: "sub_1", status: "active", created: 1, ...sub } as never)], {
-          id: "cus_A",
-          metadata: { compteId: A },
-          invoice_settings: { default_payment_method: pmClient },
-        });
-      const reglee = { payment_settings: { save_default_payment_method: "on_subscription" } };
-      // Carte de l'abonnement ≠ carte du client : reportée, quelle que soit sa date ; retirée de l'abonnement.
-      cartes.length = 0;
-      await synchroniserClientStripe(avec({ ...reglee, default_payment_method: "pm_payee" }, "pm_ancienne"), "cus_A", { maintenant: () => new Date(1000) });
-      expect(cartes).toEqual([
-        { objet: "cus_A", params: { invoice_settings: { default_payment_method: "pm_payee" } } },
-        { objet: "sub_1", params: { default_payment_method: "" } },
-      ]);
-      // La même carte des deux côtés : seulement retirée de l'abonnement.
-      cartes.length = 0;
-      await synchroniserClientStripe(avec({ ...reglee, default_payment_method: "pm_x" }, "pm_x"), "cus_A", { maintenant: () => new Date(2000) });
-      expect(cartes).toEqual([{ objet: "sub_1", params: { default_payment_method: "" } }]);
-      // Né de Checkout, sans le réglage : posé, pour qu'une carte payée sur la page d'une facture serve ensuite.
-      cartes.length = 0;
-      await synchroniserClientStripe(avec({}, "pm_x"), "cus_A", { maintenant: () => new Date(3000) });
-      expect(cartes).toEqual([{ objet: "sub_1", params: { payment_settings: { save_default_payment_method: "on_subscription" } } }]);
-      // Rien à ranger, ou abonnement terminé : aucun appel.
-      cartes.length = 0;
-      await synchroniserClientStripe(avec(reglee, "pm_x"), "cus_A", { maintenant: () => new Date(4000) });
-      await synchroniserClientStripe(stripe(A, [abo({ id: "sub_1", status: "canceled", created: 1, default_payment_method: "pm_x" } as never)]), "cus_A", { maintenant: () => new Date(5000) });
-      expect(cartes).toEqual([]);
     });
 
     it("un client d'avant l'ADR-054 (metadata.userId) écrit au compte dont la personne est propriétaire", async () => {

@@ -30,7 +30,9 @@ import {
   prendre,
 } from "./evenements";
 import { clientsDus, enEchecDurable } from "./file";
-import { idStripe, motifDErreur, synchroniserSousBail } from "./synchronisation";
+import { carteQuiAPaye, rendrePlanningEchu } from "./parcours";
+import { idStripe } from "./ids";
+import { motifDErreur, synchroniserSousBail } from "./synchronisation";
 import { OPTIONS_WEBHOOK } from "./client";
 
 const EVENEMENTS_PAR_TOUR = 20;
@@ -57,9 +59,12 @@ export async function aiguillageDe(stripe: Stripe, type: string, objetId: string
     case "v1.customer.subscription.paused":
     case "v1.customer.subscription.resumed":
     case "v1.customer.subscription.trial_will_end": {
-      // Le planning d'une baisse échue est rendu par la relecture qui suit
-      // (`entretenir`, synchronisation.ts) : elle se retente, celle-ci non.
       const abonnement = await stripe.subscriptions.retrieve(objetId, {}, OPTIONS_WEBHOOK);
+      // Une baisse vient de prendre effet : son planning est rendu (sinon le
+      // portail refuserait la résiliation pendant une période). Un refus de
+      // Stripe (429 au passage de phase, répétition du 2026-11-16) fait
+      // échouer l'événement, que la file retente — il était ignoré.
+      if (abonnement.schedule) await rendrePlanningEchu(stripe, abonnement);
       return { clientStripe: idStripe(abonnement.customer), abonnementId: abonnement.id };
     }
     case "v1.checkout.session.completed": {
@@ -71,7 +76,14 @@ export async function aiguillageDe(stripe: Stripe, type: string, objetId: string
       const suivi = session.mode === "subscription" || session.mode === "setup";
       return suivi ? { clientStripe: idStripe(session.customer) } : { clientStripe: null, motif: "session sans abonnement" };
     }
-    case "v1.invoice.paid":
+    case "v1.invoice.paid": {
+      const facture = await stripe.invoices.retrieve(objetId, {}, OPTIONS_WEBHOOK);
+      // La carte qui vient de payer devient celle du client (`carteQuiAPaye`) ;
+      // un échec fait retenter l'événement.
+      const abonnementId = idStripe(facture.parent?.subscription_details?.subscription);
+      if (abonnementId) await carteQuiAPaye(stripe, abonnementId);
+      return { clientStripe: idStripe(facture.customer) };
+    }
     case "v1.invoice.payment_failed":
     case "v1.invoice.payment_action_required":
       return { clientStripe: idStripe((await stripe.invoices.retrieve(objetId, {}, OPTIONS_WEBHOOK)).customer) };
