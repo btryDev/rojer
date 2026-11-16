@@ -26,6 +26,8 @@ const m = vi.hoisted(() => ({
   annulerBaisse: vi.fn(),
   depassements: vi.fn(),
   factureARegler: vi.fn(),
+  poserIdentite: vi.fn(async () => {}),
+  accepter: vi.fn(async () => ({})),
 }));
 vi.mock("next/navigation", () => ({ redirect: m.redirect }));
 vi.mock("@/lib/email", () => ({ publicAppUrl: () => "https://rojer.test" }));
@@ -50,14 +52,17 @@ vi.mock("@/lib/stripe/synchronisation", async (reel) => ({
 }));
 vi.mock("./souscription", () => ({ finaliserCarte: m.finaliserCarte, carteParDefaut: m.carteParDefaut }));
 vi.mock("./quotas", () => ({ depassements: m.depassements }));
+vi.mock("./identite-facturation", () => ({ poserIdentiteDeFacturation: m.poserIdentite }));
+vi.mock("./conditions-empreinte", () => ({ empreinteConditions: () => "empreinte" }));
 vi.mock("./essai", () => ({ PAGE_ESSAI: "/essai", demarrerEssaiDuCompte: vi.fn() }));
 // `ouvrirAuGel` (l'essai) : sans la chaîne de la session, que ce test remplace par ./saisie.
 vi.mock("./gel-saisie", () => ({ ouvrirAuGel: vi.fn() }));
 vi.mock("./saisie", () => ({
   PAGE_ABONNEMENT: "/compte/abonnement",
   verifierProprietaire: async () => ({
+    user: { id: "u1" },
     compte: { compteId: "c1" },
-    db: { abonnement: { findUnique: async () => m.ligne } },
+    db: { abonnement: { findUnique: async () => m.ligne }, acceptationConditions: { create: m.accepter } },
   }),
   verifierRole: async () => {},
 }));
@@ -73,11 +78,12 @@ import {
 import { CHAMP_COMPTE_ATTENDU } from "@/lib/auth/compte-attendu";
 
 /** Un formulaire posté depuis une page qui montrait `c1`, le compte vérifié des tests. */
-const formulaire = (formule = "rojer_pro_annuel", immediat = false) => {
+const formulaire = (formule = "rojer_pro_annuel", immediat = false, accepte = true) => {
   const f = new FormData();
   f.set(CHAMP_COMPTE_ATTENDU, "c1");
   f.set("formule", formule);
   if (immediat) f.set("immediat", "oui");
+  if (accepte) f.set("accepte", "oui");
   return f;
 };
 const abonnement = (status: string, created = 1, autres: object = {}) => ({
@@ -118,6 +124,36 @@ describe("sAbonnerAction", () => {
     expect(m.ouvrirCheckout).not.toHaveBeenCalled();
   });
 
+  it("essai ou pause sans la case des conditions : rien chez Stripe, rien d'écrit, la page le dit", async () => {
+    for (const statut of ["trialing", "paused"]) {
+      m.abonnementsDuClient.mockResolvedValue([abonnement(statut)]);
+      expect(await redirigeVers(sAbonnerAction(formulaire("rojer_pro_annuel", false, false)))).toBe(
+        "https://rojer.test/compte/abonnement?conditions=requises",
+      );
+    }
+    for (const f of [m.accepter, m.poserIdentite, m.carteParDefaut, m.ouvrirCheckoutCarte, m.appliquerFormule]) expect(f).not.toHaveBeenCalled();
+  });
+
+  it("essai ou pause, case cochée : la preuve d'acceptation, puis le nom et l'adresse de la facture, avant tout appel qui prélève", async () => {
+    m.abonnementsDuClient.mockResolvedValue([abonnement("trialing")]);
+    m.carteParDefaut.mockResolvedValue("pm_1");
+    await redirigeVers(sAbonnerAction(formulaire()));
+    expect(m.accepter).toHaveBeenCalledWith({
+      data: { compteId: "c1", userId: "u1", version: expect.any(String), empreinte: "empreinte", contexte: "abonnement" },
+    });
+    expect(m.poserIdentite).toHaveBeenCalledWith(expect.anything(), expect.anything(), "cus_1");
+    expect(m.accepter.mock.invocationCallOrder[0]).toBeLessThan(m.appliquerFormule.mock.invocationCallOrder[0]);
+    expect(m.poserIdentite.mock.invocationCallOrder[0]).toBeLessThan(m.appliquerFormule.mock.invocationCallOrder[0]);
+  });
+
+  it("nom et adresse de la facture impossibles à poser (Stripe muet) : rien ne se prélève", async () => {
+    m.abonnementsDuClient.mockResolvedValue([abonnement("trialing")]);
+    m.carteParDefaut.mockResolvedValue("pm_1");
+    m.poserIdentite.mockRejectedValueOnce(new Stripe.errors.StripeConnectionError({ message: "x" }));
+    expect(await redirigeVers(sAbonnerAction(formulaire("rojer_pro_annuel", true)))).toBe("/compte/abonnement?stripe=indisponible");
+    expect(m.appliquerFormule).not.toHaveBeenCalled();
+  });
+
   it("immédiat (un document attend) et pause : la carte aussi, avec `immediat` pour la première", async () => {
     m.abonnementsDuClient.mockResolvedValue([abonnement("trialing")]);
     await redirigeVers(sAbonnerAction(formulaire("rojer_pro_annuel", true)));
@@ -146,6 +182,10 @@ describe("sAbonnerAction", () => {
   it("abonnement terminé partout : Checkout souscrit, au nom du compte", async () => {
     expect(await redirigeVers(sAbonnerAction(formulaire()))).toBe("https://checkout.stripe.test/abonnement");
     expect(m.ouvrirCheckout).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ customerId: "cus_1", priceId: "price_pa", tauxTva: "txr_tva", metadata: { compteId: "c1" } }));
+    // Checkout demande lui-même les conditions : pas de case ici, pas de preuve écrite par Rojer.
+    expect(await redirigeVers(sAbonnerAction(formulaire("rojer_pro_annuel", false, false)))).toBe("https://checkout.stripe.test/abonnement");
+    expect(m.accepter).not.toHaveBeenCalled();
+    expect(m.poserIdentite).toHaveBeenCalledWith(expect.anything(), expect.anything(), "cus_1");
   });
 
   it("sans taux de TVA chez Stripe : pas de Checkout, page d'erreur — aucun abonnement sans TVA", async () => {

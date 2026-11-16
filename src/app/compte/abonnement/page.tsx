@@ -23,7 +23,7 @@ import { depassements } from "@/lib/abonnements/quotas";
 import { prixTTC } from "@/lib/abonnements/affichage";
 import { baissePrevue } from "@/lib/stripe/parcours";
 import { carteParDefaut } from "@/lib/abonnements/souscription";
-import { clientStripe } from "@/lib/stripe/client";
+import { clientStripeLecture } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
 import { PAGE_ESSAI } from "@/lib/abonnements/essai";
 import {
@@ -66,7 +66,7 @@ async function carteDuCompte(db: Db, compteId: string): Promise<boolean> {
   if (!config.active) return false;
   const ligne = await db.abonnement.findUnique({ where: { compteId }, select: { stripeCustomerId: true } });
   if (!ligne) return false;
-  return carteParDefaut(clientStripe(config), ligne.stripeCustomerId).then((c) => c !== null, () => false);
+  return carteParDefaut(clientStripeLecture(config), ligne.stripeCustomerId).then((c) => c !== null, () => false);
 }
 
 /** Ce que fait un changement de formule, dit avant le clic — le changement de rythme compris. */
@@ -99,7 +99,7 @@ async function changementsPossibles(
 ): Promise<{ options: OptionDeFormule[]; baisse: { libelle: string; le: Date } | null }> {
   const config = configurationStripe();
   if (!config.active) return { options: [], baisse: null };
-  const stripe = clientStripe(config);
+  const stripe = clientStripeLecture(config);
   const [prix, ligne] = await Promise.all([
     prixDesFormules(stripe).catch(() => new Map()),
     db.abonnement.findUnique({ where: { compteId }, select: { stripeSubscriptionId: true } }),
@@ -144,7 +144,7 @@ async function changementsPossibles(
 /** Les formules et leurs prix lus chez Stripe ; sans réponse, les prix manquent et le bouton reste fermé. */
 async function offresAffichees(): Promise<OffreAffichee[]> {
   const config = configurationStripe();
-  const prix = config.active ? await prixDesFormules(clientStripe(config)).catch(() => new Map()) : new Map();
+  const prix = config.active ? await prixDesFormules(clientStripeLecture(config)).catch(() => new Map()) : new Map();
   return CLES_FORMULES.map((f) => ({
     formule: f,
     libelle: FORMULES[f].libelle,
@@ -180,13 +180,14 @@ export default async function AbonnementPage({
     formule?: string;
     compte?: string;
     facture?: string;
+    conditions?: string;
   }>;
 }) {
   // Sans compte encore (rien créé), la page se lit quand même : aucun
   // abonnement (ADR-054). `requireCompte` renverrait à l'onboarding.
   const user = await requireUser();
   const c = await getOptionalCompte();
-  const { saisie, stripe, paiement, abonnement, carte, immediat, formule: formuleChange0, compte: compteChange, facture } =
+  const { saisie, stripe, paiement, abonnement, carte, immediat, formule: formuleChange0, compte: compteChange, facture, conditions } =
     await searchParams;
   // Le compte que montre la page : ses gestes le postent (`ChampCompteAttendu`).
   const { compteId, nomCompte } = await compteDeLaPage();
@@ -244,6 +245,15 @@ export default async function AbonnementPage({
         {compteChange === "change" && (
           <div className="mt-6">
             <MessageFormulaire ton="alerte">{MESSAGE_COMPTE_CHANGE}</MessageFormulaire>
+          </div>
+        )}
+
+        {/* S'abonner sans la case des conditions (`sAbonnerAction`) : rien n'a été fait. */}
+        {conditions === "requises" && (
+          <div className="mt-6">
+            <MessageFormulaire ton="alerte">
+              Rien n&apos;a été enregistré : cochez la case pour accepter les conditions générales, puis recommencez.
+            </MessageFormulaire>
           </div>
         )}
 
@@ -430,6 +440,7 @@ export default async function AbonnementPage({
                   quand={vue.quand}
                   courante={courante}
                   proposerPayerMaintenant={vue.proposerPayerMaintenant}
+                  demanderAcceptation={geste === "abonner"}
                 />
                 {vue.portail && (
                   <FormulairePortail compteId={compteId} variant="boardClair" className="mt-6">

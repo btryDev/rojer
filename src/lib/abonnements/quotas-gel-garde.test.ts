@@ -43,7 +43,9 @@ const SQL_BRUT_ECRIT: Record<string, string> = {
  */
 const OUVERTS_AU_GEL: Record<string, string[]> = {
   // L'essai s'écrit quand la saisie est encore fermée (ADR-053 § 3).
-  "src/lib/abonnements/actions.ts": ["demarrerEssaiAction"],
+  // S'abonner écrit la preuve d'acceptation des conditions, souvent quand la
+  // saisie est fermée (essai fini, pause) : c'est le geste qui la rouvre.
+  "src/lib/abonnements/actions.ts": ["demarrerEssaiAction", "sAbonnerAction"],
   "src/lib/assistance/actions.ts": ["demanderAssistance"],
   "src/lib/batiments/actions.ts": ["supprimerBatiment"],
   "src/lib/equipements/actions.ts": ["supprimerEquipement"],

@@ -8,7 +8,9 @@
 // La formule en cours est présélectionnée : un clic sans rien changer ne
 // remplace pas Pro par Essentiel.
 
+import Link from "next/link";
 import { useState } from "react";
+import { CASE_A_COCHER } from "@/components/ui-kit/case-a-cocher";
 import { BoutonEnvoi } from "./BoutonEnvoi";
 import { sAbonnerAction } from "@/lib/abonnements/actions";
 import { ChampCompteAttendu } from "@/components/compte/ChampCompteAttendu";
@@ -34,6 +36,7 @@ export function FormulaireAbonnement({
   quand,
   courante = null,
   proposerPayerMaintenant = false,
+  demanderAcceptation = false,
 }: {
   offres: OffreAffichee[];
   /** Le compte que montre la page (`ChampCompteAttendu`). */
@@ -48,7 +51,15 @@ export function FormulaireAbonnement({
   courante?: { formule: CleFormule; periodicite: Periodicite } | null;
   /** « Payer maintenant » à côté du bouton principal (essai en cours). */
   proposerPayerMaintenant?: boolean;
+  /**
+   * La case des conditions générales : un abonnement qui court sans payer
+   * (essai, pause) passe au payant ici. Une nouvelle souscription n'en a
+   * pas : Checkout la demande lui-même.
+   */
+  demanderAcceptation?: boolean;
 }) {
+  const [accepte, setAccepte] = useState(false);
+  const bloque = demanderAcceptation && !accepte;
   const [periodicite, setPeriodicite] = useState<Periodicite>(courante?.periodicite ?? "mensuel");
   const [choisie, setChoisie] = useState<CleFormule>(
     courante && offres.some((o) => o.formule === courante.formule) ? courante.formule : offres[0].formule,
@@ -141,12 +152,33 @@ export function FormulaireAbonnement({
           Prélevé aujourd&apos;hui : {preleve}, pour {premiere}.
         </p>
       )}
+      {demanderAcceptation && (
+        // Le passage au payant engage : les conditions s'acceptent ici, jamais
+        // cochées d'avance (le serveur refuse sans elles, `sAbonnerAction`).
+        <label className="flex max-w-[var(--board-mesure)] items-start gap-3 text-[14px] leading-[1.5]">
+          <input
+            type="checkbox"
+            name="accepte"
+            value="oui"
+            checked={accepte}
+            onChange={(e) => setAccepte(e.target.checked)}
+            className={CASE_A_COCHER}
+          />
+          <span>
+            J&apos;accepte les{" "}
+            <Link href="/conditions" target="_blank" className="underline underline-offset-4">
+              conditions générales
+            </Link>{" "}
+            (s&apos;ouvrent dans un nouvel onglet).
+          </span>
+        </label>
+      )}
       <div className="flex flex-wrap items-center gap-3">
-        <BoutonEnvoi variant="board" disabled={preleve === null || (mode === "changer" && inchangee)}>
+        <BoutonEnvoi variant="board" disabled={preleve === null || bloque || (mode === "changer" && inchangee)}>
           {libelle}
         </BoutonEnvoi>
         {proposerPayerMaintenant && (
-          <BoutonEnvoi variant="boardClair" name="immediat" value="oui" disabled={preleve === null} describedBy="payer-maintenant">
+          <BoutonEnvoi variant="boardClair" name="immediat" value="oui" disabled={preleve === null || bloque} describedBy="payer-maintenant">
             Payer maintenant
           </BoutonEnvoi>
         )}
