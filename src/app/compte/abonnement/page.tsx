@@ -6,7 +6,7 @@ import { MESSAGE_COMPTE_CHANGE } from "@/lib/auth/compte-attendu";
 import { ChampCompteAttendu } from "@/components/compte/ChampCompteAttendu";
 import { requireUser } from "@/lib/auth/require-user";
 import { abonnementDuCompte, contexteDroits, offreLancee } from "@/lib/abonnements/saisie";
-import { droitsDe, enEssai, gesteAbonnement, libelleStatut, OUVRENT, resiliationPrevue } from "@/lib/abonnements/droits";
+import { droitsDe, gesteAbonnement, libelleStatut, OUVRENT, phaseDuCompte, resiliationPrevue } from "@/lib/abonnements/droits";
 import { preselection, vueAbonnement } from "@/lib/abonnements/vue-abonnement";
 import { lireOffreChoisie } from "@/lib/abonnements/offre-choisie";
 import { formaterDateLongueFr } from "@/lib/dates";
@@ -34,7 +34,8 @@ import {
   pointsDeFormule,
 } from "@/lib/abonnements/formules";
 import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
-import { DUREE_ESSAI_JOURS, prixDesFormules } from "@/lib/stripe/parcours";
+import { prixDesFormules } from "@/lib/stripe/parcours";
+import { DUREE_ESSAI_JOURS } from "@/lib/abonnements/formules";
 
 /** Une date déjà passée (suppression reportée d'une passe à l'autre) ne s'affiche pas : la suppression est imminente. */
 function dateDeSuppressionAffichee(le: Date, maintenant = new Date()): string {
@@ -192,7 +193,8 @@ export default async function AbonnementPage({
   // dit et ne propose jamais de payer une seconde fois (le geste est le portail).
   const paiementEnConfirmation = ligne?.statut === "active" && !ligne.debutPayantLe;
   const finPrevue = ligne ? resiliationPrevue(ligne) : false;
-  const essaiEnCours = enEssai(ligne, ctx.maintenant);
+  const phase = phaseDuCompte(ligne, ctx.maintenant);
+  const essaiEnCours = phase.type === "essai";
   const vue = vueAbonnement({ geste, statut: ligne?.statut ?? null, enEssai: essaiEnCours, documentAttend: document === "1" });
   // Les offres (Stripe) et la formule choisie sur la page publique
   // (`offre-choisie.ts`), ensemble ; la présélection, sinon, reprend celle
@@ -272,14 +274,14 @@ export default async function AbonnementPage({
                   </dd>
                 </>
               )}
-              {ligne?.finEssai && !ligne.statut && (
+              {phase.type === "essai" && (
                 <>
                   <dt className="text-[color:var(--board-slate-mid)]">Fin de l&apos;essai</dt>
-                  <dd className="m-0">{formaterDateLongueFr(ligne.finEssai)}</dd>
+                  <dd className="m-0">{formaterDateLongueFr(phase.fin)}</dd>
                 </>
               )}
               {/* Seul un abonnement qui court a une période en cours : ni un
-                  abonnement terminé, ni une pause ou un impayé, où Stripe
+                  abonnement terminé, ni un impayé, où Stripe
                   n'avance plus la période. */}
               {ligne?.finPeriode && OUVRENT.has(ligne.statut ?? "") && (
                 <>

@@ -45,7 +45,7 @@ export function formuleDesPlafonds(formule: string | null | undefined): CleFormu
 export type Essai = "en_cours" | "paiement_attendu" | null;
 export function essaiDe(
   ligne: { statut: string | null; debutPayantLe: Date | null; finEssai: Date | null } | null,
-  maintenant = new Date(),
+  maintenant: Date,
 ): Essai {
   if (enEssai(ligne, maintenant)) return "en_cours";
   return ligne?.debutPayantLe ? null : "paiement_attendu";
@@ -154,8 +154,9 @@ type LignePlafonds = {
 
 /** Le régime et l'année des plafonds, d'une ligne d'abonnement. */
 function plafondsDeLaLigne(ligne: LignePlafonds) {
-  const regime: Regime = { formule: formuleDesPlafonds(ligne?.formule), essai: essaiDe(ligne) };
-  return { regime, debutAnnee: debutDeLAnnee(ligne?.debutPayantLe, new Date(), ligne?.essaiUtiliseLe) };
+  const maintenant = new Date();
+  const regime: Regime = { formule: formuleDesPlafonds(ligne?.formule), essai: essaiDe(ligne, maintenant) };
+  return { regime, debutAnnee: debutDeLAnnee(ligne?.debutPayantLe, maintenant, ligne?.essaiUtiliseLe) };
 }
 
 /** Le régime et l'année des plafonds du compte (client borné, jamais le brut). */

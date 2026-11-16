@@ -35,6 +35,7 @@ import { OPTIONS_WEBHOOK } from "./client";
 import { idStripe } from "./ids";
 import { formuleDuPrix } from "@/lib/abonnements/formules";
 import { OUVRENT } from "@/lib/abonnements/droits";
+import { laPlusRecente } from "@/lib/calendrier/echeance-de-ligne";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -84,11 +85,8 @@ export function colonnesDe(s: Stripe.Subscription | null) {
 }
 
 /**
- * Depuis quand le compte est sans abonnement ouvert (ADR-058) : la plus
- * tardive de la fin chez Stripe (`ended_at`) et de la date déjà notée (la
- * fin de l'essai, posée à son démarrage : une souscription abandonnée
- * pendant l'essai ne l'avance pas — relecture du 2026-11-17), sinon
- * `relueLe` (un impayé
+ * Depuis quand le compte est sans abonnement ouvert (ADR-058) : la fin chez
+ * Stripe (`ended_at`), sinon la date déjà notée, sinon `relueLe` (un impayé
  * définitif n'a pas de date chez Stripe). Ouvert : vide, et les
  * avertissements avant suppression avec — un compte qui se réabonne repart
  * de zéro. Fermé : les avertissements ne sont pas touchés.
@@ -97,15 +95,17 @@ export function horlogeDeSuppression(
   s: Stripe.Subscription | null,
   dejaNotee: Date | null,
   relueLe: Date,
+  // L'horloge ne part jamais avant la fin de l'essai (compté chez Rojer,
+  // ADR-053 § 9 amendé) : une souscription abandonnée pendant l'essai ne
+  // l'avance pas (relecture du 2026-11-17).
+  finEssai: Date | null = null,
 ):
   | { sansAbonnementDepuis: Date }
   | { sansAbonnementDepuis: null; suppressionPrevueLe: null; avertiSuppression30Le: null; avertiSuppression7Le: null } {
   if (s && OUVRENT.has(s.status)) {
     return { sansAbonnementDepuis: null, suppressionPrevueLe: null, avertiSuppression30Le: null, avertiSuppression7Le: null };
   }
-  const fin = date(s?.ended_at);
-  const plusTardive = fin && dejaNotee ? (fin > dejaNotee ? fin : dejaNotee) : (fin ?? dejaNotee);
-  return { sansAbonnementDepuis: plusTardive ?? relueLe };
+  return { sansAbonnementDepuis: laPlusRecente(date(s?.ended_at) ?? dejaNotee ?? relueLe, finEssai)! };
 }
 
 /**
@@ -222,7 +222,7 @@ class BailPerdu extends Error {}
 
 type Tx = Prisma.TransactionClient;
 type Donnees = ReturnType<typeof colonnesDe> &
-  ReturnType<typeof horlogeDeSuppression> & { relueLe: Date; essaiUtiliseLe: Date | null };
+  ReturnType<typeof horlogeDeSuppression> & { relueLe: Date };
 
 async function mettreAJour(tx: Tx, compteId: string, customerId: string, donnees: Donnees) {
   const { count } = await tx.abonnement.updateMany({
@@ -338,7 +338,7 @@ async function relireEtEcrire(stripe: Stripe, bail: Bail, relueLe: Date, strict:
   const db = clientDuClientStripe(compteId);
   const ligne = await db.abonnement.findUnique({
     where: { compteId },
-    select: { stripeCustomerId: true, essaiUtiliseLe: true, debutPayantLe: true, sansAbonnementDepuis: true },
+    select: { stripeCustomerId: true, finEssai: true, debutPayantLe: true, sansAbonnementDepuis: true },
   });
   if (ligne && ligne.stripeCustomerId !== customerId) return terminer(bail, relueLe, AUTRE_CLIENT);
 
@@ -356,15 +356,12 @@ async function relireEtEcrire(stripe: Stripe, bail: Bail, relueLe: Date, strict:
 
   const donnees: Donnees = {
     ...colonnesDe(courant),
-    ...horlogeDeSuppression(courant, ligne?.sansAbonnementDepuis ?? null, relueLe),
+    ...horlogeDeSuppression(courant, ligne?.sansAbonnementDepuis ?? null, relueLe, ligne?.finEssai ?? null),
     relueLe,
-    // L'essai et sa fin se comptent chez Rojer (ADR-053 § 9, amendé le
-    // 2026-11-16) : la relecture ne les écrit pas, elle les garde.
-    essaiUtiliseLe: ligne?.essaiUtiliseLe ?? null,
   };
-  // Dans la transaction, une erreur l'annule entière : la création d'une
-  // ligne que l'essai vient de poser (`essai.ts`, même client) fait relire
-  // la ligne, puis réécrire en mise à jour, une fois.
+  // Dans la transaction, une erreur l'annule entière : une ligne créée entre
+  // la lecture et l'écriture (un démarrage d'essai, une réservation de
+  // client) fait relire la ligne, puis réécrire en mise à jour, une fois.
   const ecrire = (existe: boolean) =>
     db.$transaction(async (tx) => {
       // Le jeton d'abord, ligne verrouillée jusqu'au commit : un bail repris

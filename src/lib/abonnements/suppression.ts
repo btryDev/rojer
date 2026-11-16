@@ -19,7 +19,7 @@ import { getStorage } from "@/lib/storage";
 import { OPTIONS_WEBHOOK } from "@/lib/stripe/client";
 import { expirerSessionsOuvertes } from "@/lib/stripe/parcours";
 import { synchroniserClientStripe } from "@/lib/stripe/synchronisation";
-import { OUVRENT } from "./droits";
+import { HORS_ABONNEMENT_OUVERT, OUVRENT } from "./droits";
 import { alerter } from "@/lib/alertes";
 import { adressesDesProprietaires } from "./rappels";
 import { PAGE_ABONNEMENT } from "./saisie";
@@ -50,7 +50,7 @@ const dans = (maintenant: Date, jours: number) => ajouterJours(maintenant, jours
 export function dateDeSuppressionPrevue(sansAbonnementDepuis: Date, suppressionPrevueLe: Date | null, maintenant: Date): Date {
   return suppressionPrevueLe ?? plusTard(finDuDelai(sansAbonnementDepuis), dans(maintenant, 30));
 }
-const FERME = { OR: [{ statut: null }, { statut: { notIn: [...OUVRENT] } }] };
+const FERME = HORS_ABONNEMENT_OUVERT;
 
 export type Avertissement = "j30" | "j7";
 

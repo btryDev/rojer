@@ -23,7 +23,7 @@ import { FORMULES, formuleDeLookupKey } from "./formules";
 import type Stripe from "stripe";
 import { OPTIONS_WEBHOOK } from "@/lib/stripe/client";
 import { baissePrevue } from "@/lib/stripe/parcours";
-import { OUVRENT, resiliationDemandee } from "./droits";
+import { HORS_ABONNEMENT_OUVERT, PREAVIS_ESSAI_MS, resiliationDemandee } from "./droits";
 
 /**
  * L'essai finit dans les 36 heures : la tâche passe une fois par jour, et la
@@ -31,8 +31,8 @@ import { OUVRENT, resiliationDemandee } from "./droits";
  * le message donne la date.
  */
 export const FENETRE_VEILLE_MS = 36 * 3_600_000;
-/** Le rappel d'une semaine : l'essai finit dans les 7 jours, au-delà de la veille. */
-export const FENETRE_SEMAINE_MS = 7 * 24 * 3_600_000;
+/** Le rappel d'une semaine : l'essai finit dans les 7 jours (le préavis du bandeau), au-delà de la veille. */
+export const FENETRE_SEMAINE_MS = PREAVIS_ESSAI_MS;
 
 export type BilanRappels = { envoyes: number; echecs: number; horsService?: true };
 
@@ -89,8 +89,10 @@ async function rappelerLaFinDEssai(
   if (!envoiEnService()) return { envoyes: 0, echecs: 0, horsService: true };
   const lignes = await prisma.abonnement.findMany({
     where: {
+      // La règle de `phaseDuCompte` (« essai ») en base : jamais payé, sans
+      // abonnement ouvert, fin dans la fenêtre.
       debutPayantLe: null,
-      OR: [{ statut: null }, { statut: { notIn: [...OUVRENT] } }],
+      ...HORS_ABONNEMENT_OUVERT,
       [marque]: null,
       finEssai: { gt: new Date(maintenant.getTime() + depuisMs), lte: new Date(maintenant.getTime() + jusquAMs) },
     },

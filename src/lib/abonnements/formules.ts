@@ -13,6 +13,9 @@
 // sont pas encore.
 // « Sur mesure » se vend sur devis : il n'a pas de clé en libre-service.
 
+/** La durée de l'essai gratuit, compté chez Rojer (ADR-053 § 9, amendé le 2026-11-16). */
+export const DUREE_ESSAI_JOURS = 30;
+
 export const PERIODICITES = ["mensuel", "annuel"] as const;
 export type Periodicite = (typeof PERIODICITES)[number];
 

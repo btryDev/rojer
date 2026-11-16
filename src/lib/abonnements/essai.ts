@@ -14,13 +14,12 @@ import { redirect } from "next/navigation";
 import { getOptionalCompte, requireCompteDOnboarding } from "@/lib/auth/compte";
 import { MESSAGE_COMPTE_CHANGE } from "@/lib/auth/compte-attendu";
 import { configurationStripe } from "@/lib/stripe/config";
-import { DUREE_ESSAI_JOURS } from "@/lib/stripe/parcours";
 import { codePrisma } from "@/lib/stripe/synchronisation";
 import { ajouterJours } from "@/lib/dates";
 import { VERSION_CONDITIONS } from "./conditions";
 import { empreinteConditions } from "./conditions-empreinte";
 import { essaiDisponible, gesteAbonnement } from "./droits";
-import { CLES_FORMULES, lookupKey } from "./formules";
+import { CLES_FORMULES, DUREE_ESSAI_JOURS, lookupKey } from "./formules";
 import { PAGE_ABONNEMENT, PAGE_MEMBRES, abonnementDuCompte, contexteDroits, offreLancee } from "./saisie";
 
 export const PAGE_ESSAI = "/essai";

@@ -12,8 +12,7 @@ import { clientStripeDuCompte } from "./client-stripe";
 
 const stripe = {} as Stripe;
 const db = { abonnement: { findUnique: vi.fn(), updateMany: vi.fn() } };
-const lire = (stripeCustomerId: string | null) => ({ stripeCustomerId });
-const appel = () => clientStripeDuCompte(stripe, db as never, { compteId: "c1", email: "a@b.fr" });
+const appel = (enregistre: string | null) => clientStripeDuCompte(stripe, db as never, { compteId: "c1", email: "a@b.fr", enregistre });
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -22,15 +21,14 @@ beforeEach(() => {
 });
 
 describe("clientStripeDuCompte", () => {
-  it("déjà un client : le même, rien de créé", async () => {
-    db.abonnement.findUnique.mockResolvedValue(lire("cus_1"));
-    expect(await appel()).toEqual({ customerId: "cus_1", neuf: false });
+  it("déjà un client enregistré : le même, rien de créé ni relu", async () => {
+    expect(await appel("cus_1")).toBe("cus_1");
     expect(m.creerClientStripe).not.toHaveBeenCalled();
+    expect(db.abonnement.findUnique).not.toHaveBeenCalled();
   });
 
   it("essai sans client : créé (clé du compte et de l'adresse), réservé par une écriture conditionnelle", async () => {
-    db.abonnement.findUnique.mockResolvedValue(lire(null));
-    expect(await appel()).toEqual({ customerId: "cus_neuf", neuf: true });
+    expect(await appel(null)).toBe("cus_neuf");
     expect(m.creerClientStripe).toHaveBeenCalledWith(
       stripe,
       expect.objectContaining({ email: "a@b.fr", metadata: { compteId: "c1" }, idempotence: expect.stringMatching(/^c1-[0-9a-f]{12}$/) }),
@@ -39,14 +37,8 @@ describe("clientStripeDuCompte", () => {
   });
 
   it("deux onglets : l'autre a réservé le premier — on reprend le client enregistré", async () => {
-    db.abonnement.findUnique.mockResolvedValueOnce(lire(null)).mockResolvedValueOnce(lire("cus_autre"));
     db.abonnement.updateMany.mockResolvedValue({ count: 0 });
-    expect(await appel()).toEqual({ customerId: "cus_autre", neuf: false });
-  });
-
-  it("sans ligne (jamais d'essai) : une erreur — `sAbonnerAction` renvoie à l'essai avant", async () => {
-    db.abonnement.findUnique.mockResolvedValue(null);
-    await expect(appel()).rejects.toThrow();
-    expect(m.creerClientStripe).not.toHaveBeenCalled();
+    db.abonnement.findUnique.mockResolvedValue({ stripeCustomerId: "cus_autre" });
+    expect(await appel(null)).toBe("cus_autre");
   });
 });

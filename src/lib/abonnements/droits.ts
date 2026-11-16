@@ -45,22 +45,53 @@ export type ContexteDroits = {
 
 /** Les états Stripe qui ouvrent la saisie, et dont la période court. */
 export const OUVRENT: ReadonlySet<string> = new Set(["active", "past_due"]);
+/** Les états où une facture attend d'être réglée : impayé, premier paiement non abouti. */
+export const A_REGLER: ReadonlySet<string> = new Set(["past_due", "unpaid", "incomplete"]);
 
 /**
- * L'essai, compté chez Rojer (ADR-053 § 9, amendé le 2026-11-16) : une fin
- * d'essai à venir, posée au démarrage, et aucun paiement jamais confirmé
- * (`debutPayantLe`). Un abonnement qui paie ou est à régler (`OUVRENT`) se
- * lit d'abord (`droitsDe`) ; une souscription abandonnée à la confirmation
- * de la banque (`incomplete`, puis `incomplete_expired`) ne coupe pas
- * l'essai (relecture du 2026-11-17).
+ * Le même filtre en base : sans abonnement qui paie ou est à régler — `statut`
+ * vide compris, que `notIn` écarterait (rappels, suppression).
  */
-export const enEssai = (
-  l: (Pick<LigneAbonnement, "statut" | "finEssai"> & { debutPayantLe?: Date | null }) | null,
+export const HORS_ABONNEMENT_OUVERT = { OR: [{ statut: null }, { statut: { notIn: [...OUVRENT] } }] };
+
+/** Une fin d'essai s'annonce une semaine avant (bandeau, et rappel J-7). */
+export const PREAVIS_ESSAI_MS = 7 * 24 * 60 * 60_000;
+
+/**
+ * Où en est un compte — LA lecture, dont tout le reste découle (droits,
+ * libellé, limites de l'essai, page Abonnement ; relecture du 2026-11-17) :
+ * - `abonne` : un abonnement Stripe qui paie ou est à régler (`OUVRENT`) ;
+ * - `essai` : l'essai compté chez Rojer (ADR-053 § 9, amendé le
+ *   2026-11-16) — une fin à venir, aucun paiement jamais confirmé ; une
+ *   souscription abandonnée à la confirmation de la banque (`incomplete`,
+ *   `incomplete_expired`) ne le coupe pas ;
+ * - `facture-en-attente` : impayé, premier paiement non abouti, hors essai ;
+ * - `sans-essai`, `essai-termine` (jamais payé), `abonnement-termine` (a payé).
+ * Un état que Stripe ajouterait demain tombe dans un état fermé.
+ */
+export type Phase =
+  | { type: "sans-essai" }
+  | { type: "essai"; fin: Date }
+  | { type: "abonne"; statut: string }
+  | { type: "facture-en-attente" }
+  | { type: "essai-termine" }
+  | { type: "abonnement-termine" };
+
+export function phaseDuCompte(
+  l: Pick<LigneAbonnement, "statut" | "finEssai" | "debutPayantLe"> | null,
   maintenant: Date,
-) =>
-  !!l && !l.debutPayantLe && !OUVRENT.has(l.statut ?? "") && !!l.finEssai && l.finEssai.getTime() > maintenant.getTime();
-/** Une fin d'essai s'annonce une semaine avant. */
-const PREAVIS_ESSAI_MS = 7 * 24 * 60 * 60_000;
+): Phase {
+  if (!l) return { type: "sans-essai" };
+  if (l.statut && OUVRENT.has(l.statut)) return { type: "abonne", statut: l.statut };
+  if (!l.debutPayantLe && l.finEssai && l.finEssai.getTime() > maintenant.getTime()) return { type: "essai", fin: l.finEssai };
+  if (l.statut && A_REGLER.has(l.statut)) return { type: "facture-en-attente" };
+  if (!l.statut && !l.finEssai) return { type: "sans-essai" };
+  return { type: l.debutPayantLe ? "abonnement-termine" : "essai-termine" };
+}
+
+/** L'essai court-il ? (`phaseDuCompte`) */
+export const enEssai = (l: Pick<LigneAbonnement, "statut" | "finEssai" | "debutPayantLe"> | null, maintenant: Date) =>
+  phaseDuCompte(l, maintenant).type === "essai";
 
 /** Une fin est prévue (résiliation en fin de période, ou date posée) : sur la copie de Rojer… */
 export const resiliationPrevue = (l: Pick<LigneAbonnement, "finPrevueLe" | "resilieEnFinDePeriode">) =>
@@ -69,43 +100,30 @@ export const resiliationPrevue = (l: Pick<LigneAbonnement, "finPrevueLe" | "resi
 export const resiliationDemandee = (s: { cancel_at_period_end: boolean; cancel_at: number | null }) =>
   s.cancel_at_period_end || !!s.cancel_at;
 
-/**
- * Où en est un compte dont la saisie est fermée — une seule classification,
- * lue par le bandeau et par le libellé d'état (audit du 2026-11-16) :
- * jamais d'essai ; une facture attend ; un essai fini sans jamais payer ;
- * un abonnement qui a cessé.
- */
-export type SituationFermee = "sans-essai" | "facture-en-attente" | "essai-termine" | "abonnement-termine";
-export function situationFermee(ligne: Pick<LigneAbonnement, "statut" | "debutPayantLe" | "finEssai"> | null): SituationFermee {
-  if (!ligne || (!ligne.statut && !ligne.finEssai)) return "sans-essai";
-  if (!ligne.statut) return "essai-termine";
-  if (A_REGLER.has(ligne.statut)) return "facture-en-attente";
-  return ligne.debutPayantLe ? "abonnement-termine" : "essai-termine";
-}
-
 const consultables = (paye: boolean) => `Vos dossiers restent consultables${paye ? " et exportables" : ""}.`;
 
 export function droitsDe(ligne: LigneAbonnement | null, ctx: ContexteDroits): Droits {
   if (!ctx.stripeActif || !ctx.exige) return { saisie: true, bandeau: null };
-
-  if (ligne && enEssai(ligne, ctx.maintenant)) {
-    const fin = ligne.finEssai!;
-    const proche = fin.getTime() - ctx.maintenant.getTime() <= PREAVIS_ESSAI_MS;
-    return { saisie: true, bandeau: proche ? { ton: "info", message: `Votre essai se termine le ${jour(fin)}.` } : null };
+  const phase = phaseDuCompte(ligne, ctx.maintenant);
+  const paye = !!ligne?.debutPayantLe;
+  const ferme = (message: string): Droits => ({ saisie: false, bandeau: { ton: "ferme", message } });
+  switch (phase.type) {
+    case "essai": {
+      const proche = phase.fin.getTime() - ctx.maintenant.getTime() <= PREAVIS_ESSAI_MS;
+      return { saisie: true, bandeau: proche ? { ton: "info", message: `Votre essai se termine le ${jour(phase.fin)}.` } : null };
+    }
+    case "sans-essai":
+      return ferme("Démarrez votre essai gratuit pour saisir dans Rojer : vos dossiers restent consultables.");
+    case "facture-en-attente":
+      return ferme(`Une facture attend son paiement : réglez-la depuis la page Abonnement pour rouvrir la saisie. ${consultables(paye)}`);
+    case "essai-termine":
+      return ferme(`Votre essai est terminé : abonnez-vous pour reprendre la saisie. ${consultables(false)}`);
+    case "abonnement-termine":
+      return ferme("Votre abonnement n'est plus actif : vos dossiers restent consultables et exportables, la saisie est fermée.");
+    case "abonne":
+      break;
   }
-
-  if (!ligne?.statut || !OUVRENT.has(ligne.statut)) {
-    const paye = !!ligne?.debutPayantLe;
-    const message = {
-      "sans-essai": "Démarrez votre essai gratuit pour saisir dans Rojer : vos dossiers restent consultables.",
-      "facture-en-attente": `Une facture attend son paiement : réglez-la depuis la page Abonnement pour rouvrir la saisie. ${consultables(paye)}`,
-      "essai-termine": `Votre essai est terminé : abonnez-vous pour reprendre la saisie. ${consultables(false)}`,
-      "abonnement-termine": "Votre abonnement n'est plus actif : vos dossiers restent consultables et exportables, la saisie est fermée.",
-    }[situationFermee(ligne)];
-    return { saisie: false, bandeau: { ton: "ferme", message } };
-  }
-
-  if (ligne.statut === "past_due") {
+  if (phase.statut === "past_due") {
     return {
       saisie: true,
       bandeau: {
@@ -116,7 +134,7 @@ export function droitsDe(ligne: LigneAbonnement | null, ctx: ContexteDroits): Dr
       },
     };
   }
-  const fin = resiliationPrevue(ligne) ? (ligne.finPrevueLe ?? ligne.finPeriode) : null;
+  const fin = ligne && resiliationPrevue(ligne) ? (ligne.finPrevueLe ?? ligne.finPeriode) : null;
   if (fin) {
     return { saisie: true, bandeau: { ton: "info", message: `Votre abonnement prend fin le ${jour(fin)}.` } };
   }
@@ -133,18 +151,16 @@ const LIBELLES: Record<string, string> = {
 };
 
 /**
- * L'état Stripe dit au dirigeant ; un état inconnu se dit comme tel. Un
- * compte qui n'a jamais payé n'a été ni « suspendu » ni « résilié » : son
- * essai est terminé (`situationFermee`, comme le bandeau).
+ * L'état dit au dirigeant (`phaseDuCompte`) ; un état inconnu se dit comme
+ * tel. Un compte qui n'a jamais payé n'a pas été « résilié » : son essai est
+ * terminé.
  */
 export function libelleStatut(ligne: Pick<LigneAbonnement, "statut" | "debutPayantLe" | "finEssai"> | null, maintenant: Date): string {
-  // Un paiement en attente pendant l'essai : l'essai court toujours, la page
-  // dit la facture à régler à part (`vueAbonnement`).
-  const statut = ligne?.statut ?? null;
-  if (enEssai(ligne, maintenant)) return "Essai en cours";
-  if (!statut) return ligne?.finEssai ? "Essai terminé" : "Aucun abonnement";
-  if (!OUVRENT.has(statut) && situationFermee(ligne) === "essai-termine") return "Essai terminé";
-  return LIBELLES[statut] ?? "État inconnu";
+  const phase = phaseDuCompte(ligne, maintenant);
+  if (phase.type === "essai") return "Essai en cours";
+  if (phase.type === "essai-termine") return "Essai terminé";
+  if (phase.type === "sans-essai") return "Aucun abonnement";
+  return LIBELLES[ligne?.statut ?? ""] ?? "État inconnu";
 }
 
 /** Les états dont on ne revient pas : on souscrit un nouvel abonnement (Checkout). */
@@ -160,14 +176,12 @@ export const abonnementEnCours = (statut: string | null) => statut !== null && !
 export const essaiDisponible = (ligne: { essaiUtiliseLe: Date | null; statut: string | null } | null) =>
   !ligne?.essaiUtiliseLe && !ligne?.statut;
 
-/** Le nom posé sur le client Stripe à l'essai, avant de connaître l'entreprise. */
+/** Le nom posé sur le client Stripe à sa création (au moment de s'abonner), avant que Checkout ne prenne le vrai. */
 export const nomProvisoire = (email: string) => email;
 /** Le client Stripe porte-t-il encore ce nom provisoire (ou aucun) ? */
 export const aNomProvisoire = (c: { name?: string | null; email?: string | null }) =>
   !c.name || (!!c.email && c.name === nomProvisoire(c.email));
 
-/** Les états où une facture attend d'être réglée : impayé, premier paiement non abouti. */
-export const A_REGLER: ReadonlySet<string> = new Set(["past_due", "unpaid", "incomplete"]);
 
 export type Geste = "membre" | "essai" | "abonner" | "portail";
 

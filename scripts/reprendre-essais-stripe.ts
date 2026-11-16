@@ -30,6 +30,8 @@
 import { PrismaClient } from "@prisma/client";
 import { clientStripe } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
+import { colonnesDe } from "@/lib/stripe/synchronisation";
+import { abonnementEnCours } from "@/lib/abonnements/droits";
 
 const appliquer = process.argv.includes("--appliquer");
 const prisma = new PrismaClient();
@@ -55,7 +57,7 @@ async function main() {
       if (l.stripeCustomerId) await stripe.customers.update(l.stripeCustomerId, { metadata: { compteId: "", userId: "" } });
       if (l.stripeSubscriptionId) {
         const s = await stripe.subscriptions.retrieve(l.stripeSubscriptionId);
-        if (s.status !== "canceled" && s.status !== "incomplete_expired") {
+        if (abonnementEnCours(s.status)) {
           await stripe.subscriptions.update(s.id, { metadata: { compteId: "", userId: "" } });
           await stripe.subscriptions.cancel(s.id);
         }
@@ -64,13 +66,7 @@ async function main() {
         where: { id: l.id },
         data: {
           stripeCustomerId: null,
-          stripeSubscriptionId: null,
-          statut: null,
-          formule: null,
-          stripePriceId: null,
-          finPeriode: null,
-          resilieEnFinDePeriode: false,
-          finPrevueLe: null,
+          ...colonnesDe(null),
           sansAbonnementDepuis: l.finEssai,
           suppressionPrevueLe: null,
           avertiSuppression30Le: null,

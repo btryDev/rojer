@@ -19,6 +19,11 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
+// La ligne lue par la garde de saisie (`abonnementDuCompte`, mise en cache) : ici, lue directement.
+vi.mock("./saisie", () => ({
+  abonnementDuCompte: (db: { abonnement: { findUnique: () => unknown } }) => db.abonnement.findUnique(),
+}));
+
 import type { Db } from "@/lib/auth/compte";
 import { compteEnEssai, noterEssaiEntreprise, sirenEssayeAilleurs } from "./essai-entreprise";
 

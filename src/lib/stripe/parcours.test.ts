@@ -4,7 +4,6 @@ import type Stripe from "stripe";
 vi.mock("server-only", () => ({}));
 
 import { carteQuiAPaye,
-  DUREE_ESSAI_JOURS,
   creerClientStripe,
   oublierLesPrix,
   annulerBaisse,
@@ -36,14 +35,13 @@ beforeEach(() => {
 });
 
 describe("parcours Stripe", () => {
-  it("le client : une clé d'idempotence dérivée du compte ; l'essai dure 30 jours (compté chez Rojer)", async () => {
+  it("le client : une clé d'idempotence dérivée du compte", async () => {
     api.customers.create.mockResolvedValue({ id: "cus_1" });
     expect(await creerClientStripe(stripe, { email: "a@b.fr", nom: "Bistrot SARL", metadata: { compteId: "c1" }, idempotence: "c1" })).toBe("cus_1");
     expect(api.customers.create).toHaveBeenCalledWith(
       { email: "a@b.fr", name: "Bistrot SARL", address: undefined, preferred_locales: ["fr"], metadata: { compteId: "c1" } },
       { idempotencyKey: "client-c1" },
     );
-    expect(DUREE_ESSAI_JOURS).toBe(30);
   });
 
   it("Checkout exige l'acceptation des conditions générales, et expire d'abord les sessions encore ouvertes", async () => {

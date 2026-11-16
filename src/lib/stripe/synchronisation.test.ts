@@ -180,20 +180,17 @@ describe("horloge de la suppression (ADR-058)", () => {
     }
   });
 
-  it("fermé : la plus tardive de la fin chez Stripe et de la date notée (la fin de l'essai), sinon la relecture ; les avertissements ne sont pas touchés", () => {
-    expect(horlogeDeSuppression(sub({ status: "canceled", ended_at: 1_790_000_000 }), null, relue)).toEqual({
+  it("fermé : la fin chez Stripe, sinon la date notée, sinon la relecture — jamais avant la fin de l'essai ; les avertissements ne sont pas touchés", () => {
+    expect(horlogeDeSuppression(sub({ status: "canceled", ended_at: 1_790_000_000 }), notee, relue)).toEqual({
       sansAbonnementDepuis: new Date(1_790_000_000 * 1000),
-    });
-    // Une souscription abandonnée pendant l'essai (fin chez Stripe plus tôt) n'avance pas la fin de l'essai notée.
-    expect(horlogeDeSuppression(sub({ status: "incomplete_expired", ended_at: 1_790_000_000 }), notee, relue)).toEqual({
-      sansAbonnementDepuis: notee,
-    });
-    // Résilié après la date notée : la fin chez Stripe.
-    expect(horlogeDeSuppression(sub({ status: "canceled", ended_at: 1_800_000_000 }), notee, relue)).toEqual({
-      sansAbonnementDepuis: new Date(1_800_000_000 * 1000),
     });
     expect(horlogeDeSuppression(sub({ status: "unpaid", ended_at: null }), notee, relue)).toEqual({ sansAbonnementDepuis: notee });
     expect(horlogeDeSuppression(sub({ status: "unpaid", ended_at: null }), null, relue)).toEqual({ sansAbonnementDepuis: relue });
     expect(horlogeDeSuppression(null, null, relue)).toEqual({ sansAbonnementDepuis: relue });
+    // Une souscription abandonnée pendant l'essai (relecture du 2026-11-17) : l'horloge part de la fin de l'essai.
+    const finEssai = new Date("2027-02-01T00:00:00Z");
+    expect(horlogeDeSuppression(sub({ status: "incomplete_expired", ended_at: 1_790_000_000 }), null, relue, finEssai)).toEqual({
+      sansAbonnementDepuis: finEssai,
+    });
   });
 });

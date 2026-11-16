@@ -58,7 +58,7 @@ async function clientDuCompte({ compte, db }: Proprietaire, formData: FormData |
   if (!config.active) redirect(PAGE_ABONNEMENT);
   const ligne = await db.abonnement.findUnique({
     where: { compteId: compte.compteId },
-    select: { stripeCustomerId: true, statut: true },
+    select: { stripeCustomerId: true },
   });
   if (!ligne) redirect(PAGE_ESSAI);
   return { stripe: clientStripe(config), db, ligne, compteId: compte.compteId };
@@ -118,11 +118,8 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
   // `null` : un abonnement court déjà (notre copie retardait).
   let url: string | null = null;
   try {
-    const { customerId, neuf } = ligne.stripeCustomerId
-      ? { customerId: ligne.stripeCustomerId, neuf: false }
-      : await clientStripeDuCompte(stripe, db, { compteId, email });
-    // Un client tout juste créé n'a aucun abonnement : rien à relire.
-    const { courant } = neuf ? { courant: null } : abonnementCourant(await abonnementsDuClient(stripe, customerId));
+    const customerId = await clientStripeDuCompte(stripe, db, { compteId, email, enregistre: ligne.stripeCustomerId });
+    const { courant } = abonnementCourant(await abonnementsDuClient(stripe, customerId));
     if (courant?.status === "incomplete") {
       // Un premier paiement resté en attente (Checkout abandonné à la
       // confirmation de la banque) : on le termine, au lieu d'attendre que

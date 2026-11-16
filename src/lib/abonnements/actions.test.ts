@@ -88,7 +88,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   m.ligne.statut = "canceled";
   m.ligne.stripeCustomerId = "cus_1";
-  m.clientStripeDuCompte.mockResolvedValue({ customerId: "cus_neuf", neuf: true });
+  m.clientStripeDuCompte.mockImplementation(async (_s: unknown, _d: unknown, o: { enregistre: string | null }) => o.enregistre ?? "cus_neuf");
   m.abonnementsDuClient.mockResolvedValue([abonnement("canceled")]);
   m.prixDesFormules.mockResolvedValue(new Map([["rojer_pro_annuel", { priceId: "price_pa" }], ["rojer_essentiel_mensuel", { priceId: "price_em" }]]));
   m.tauxDeTva.mockResolvedValue("txr_tva");
@@ -104,9 +104,7 @@ describe("sAbonnerAction", () => {
     m.ligne.stripeCustomerId = null;
     m.abonnementsDuClient.mockResolvedValue([]);
     expect(await redirigeVers(sAbonnerAction(formulaire()))).toBe("https://checkout.stripe.test/abonnement");
-    expect(m.clientStripeDuCompte).toHaveBeenCalledWith(expect.anything(), expect.anything(), { compteId: "c1", email: "a@b.fr" });
-    // Un client tout juste créé n'a aucun abonnement : pas de relecture inutile.
-    expect(m.abonnementsDuClient).not.toHaveBeenCalled();
+    expect(m.clientStripeDuCompte).toHaveBeenCalledWith(expect.anything(), expect.anything(), { compteId: "c1", email: "a@b.fr", enregistre: null });
     expect(m.ouvrirCheckout).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({ customerId: "cus_neuf", priceId: "price_pa", tauxTva: "txr_tva", succes: "https://rojer.test/compte/abonnement?paiement=termine" }),

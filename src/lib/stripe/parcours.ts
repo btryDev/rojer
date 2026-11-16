@@ -6,8 +6,9 @@ import "server-only";
 // clé d'idempotence, dérivée du COMPTE (jamais de la personne : avec
 // l'ADR-054, une personne peut ouvrir deux comptes). Ces clés n'arrêtent qu'un
 // double clic : Stripe ne les garde que 24 heures. La vraie garde contre deux
-// clients ou deux essais est la ligne `Abonnement` réservée en base avant
-// l'appel (lot de branchement).
+// clients est la ligne `Abonnement` qui réserve le client
+// (`abonnements/client-stripe.ts`). Plus d'essai chez Stripe : il se compte
+// chez Rojer (ADR-053 § 9, amendé le 2026-11-16).
 
 import type Stripe from "stripe";
 import { OPTIONS_RELECTURE } from "./client";
@@ -15,7 +16,6 @@ import { idStripe } from "./ids";
 import { INTERVALLE_STRIPE, LOOKUP_KEYS, formuleDeLookupKey } from "@/lib/abonnements/formules";
 import { tauxConformes } from "./tva";
 
-export const DUREE_ESSAI_JOURS = 30;
 
 export type Metadonnees = Record<string, string>;
 
@@ -42,16 +42,16 @@ export async function creerClientStripe(
 }
 
 /**
- * Le portail (§ 10) : ajouter une carte, changer de formule (réglé pour
- * garder l'essai, `trial_update_behavior: continue_trial`), reprendre,
- * résilier, télécharger les factures.
+ * Le portail (§ 10) : changer de carte, résilier, télécharger les factures
+ * (le changement de formule se fait dans Rojer, qui contrôle les plafonds).
  */
 export async function ouvrirPortail(stripe: Stripe, { customerId, retour }: { customerId: string; retour: string }) {
   return (await stripe.billingPortal.sessions.create({ customer: customerId, return_url: retour })).url;
 }
 
 /**
- * Souscrire de nouveau après une résiliation (§ 10) : Checkout hébergé, case
+ * S'abonner — le seul chemin (ADR-053 § 9, amendé le 2026-11-16), pendant
+ * l'essai, après lui ou après une résiliation : Checkout hébergé, case
  * des conditions générales (exige leur URL dans les réglages publics Stripe),
  * numéro de TVA. L'APPELANT refuse tant qu'un abonnement n'est pas terminé :
  * deux onglets, ce seraient deux abonnements.

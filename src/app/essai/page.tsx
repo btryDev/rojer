@@ -11,7 +11,8 @@ import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
 import { lireOffreChoisie } from "@/lib/abonnements/offre-choisie";
 import { clientStripe } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
-import { DUREE_ESSAI_JOURS, prixDesFormules } from "@/lib/stripe/parcours";
+import { prixDesFormules } from "@/lib/stripe/parcours";
+import { DUREE_ESSAI_JOURS } from "@/lib/abonnements/formules";
 import { ajouterJours, formaterDateLongueFr } from "@/lib/dates";
 import { instantDuRendu } from "@/lib/dates/instant-du-rendu";
 
