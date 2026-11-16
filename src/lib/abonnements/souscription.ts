@@ -63,6 +63,11 @@ export async function finaliserCarte(
     const enAttente = courant && session.metadata?.immediat === "oui" ? await factureARegler(stripe, courant.latest_invoice) : null;
     return enAttente ? { issue: "aRegler", url: enAttente } : RIEN;
   }
+  // Une session plus ancienne que le dernier choix appliqué (une notification
+  // relivrée en retard, un vieil onglet) : ni sa carte ni sa formule. Elle
+  // remettrait par défaut une carte remplacée depuis (même règle que
+  // `appliquerFormule`, `rojerChoixLe`).
+  if (session.created < Number(courant.metadata?.rojerChoixLe ?? 0)) return RIEN;
   const prix = (await prixDesFormules(stripe)).get(formule);
   if (!prix) throw new Error("prix introuvable");
 

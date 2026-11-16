@@ -99,6 +99,16 @@ describe("finaliserCarte", () => {
     expect(await finaliserCarte(stripe, "cs_1")).toEqual({ issue: "rien" });
   });
 
+  it("session plus ancienne que le dernier choix appliqué (notification relivrée) : ni carte ni formule", async () => {
+    m.abonnementsDuClient.mockResolvedValue([{ ...abonnement("trialing"), metadata: { rojerChoixLe: "2000" } }]);
+    expect(await finaliserCarte(stripe, "cs_1")).toEqual({ issue: "rien" });
+    expect(api.customers.update).not.toHaveBeenCalled();
+    expect(m.appliquerFormule).not.toHaveBeenCalled();
+    // La même session rejouée (même instant) s'applique encore : le rejeu reste sans effet chez Stripe.
+    m.abonnementsDuClient.mockResolvedValue([{ ...abonnement("trialing"), metadata: { rojerChoixLe: "1000" } }]);
+    expect(await finaliserCarte(stripe, "cs_1")).toEqual({ issue: "appliquee", immediat: false });
+  });
+
   it("pause : la carte et la formule s'appliquent, et la reprise se paie (immédiat)", async () => {
     m.abonnementsDuClient.mockResolvedValue([abonnement("paused")]);
     expect(await finaliserCarte(stripe, "cs_1")).toEqual({ issue: "appliquee", immediat: true });
