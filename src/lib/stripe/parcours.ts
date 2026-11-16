@@ -46,17 +46,22 @@ export async function creerClientStripe(
 ): Promise<string> {
   // Une horloge par client, arrêtée à maintenant : on l'avance depuis le
   // tableau de bord de test. Son nom ne porte aucune donnée personnelle.
+  // Sans clé d'idempotence : `frozen_time` change à chaque tentative, et une
+  // clé réutilisée bloquerait la reprise 24 h (revue du 2026-11-16). Une
+  // tentative ratée laisse au pire une horloge orpheline dans le compte de
+  // test ; le client prend une clé par horloge, et la réservation de la ligne
+  // `Abonnement` (essai.ts) garde un seul client par compte.
   const testClock = horloge
     ? (
-        await stripe.testHelpers.testClocks.create(
-          { frozen_time: Math.floor(Date.now() / 1000), name: `Rojer — compte ${idempotence.slice(0, 8)}` },
-          { idempotencyKey: `horloge-${idempotence}` },
-        )
+        await stripe.testHelpers.testClocks.create({
+          frozen_time: Math.floor(Date.now() / 1000),
+          name: `Rojer — compte ${idempotence.slice(0, 8)}`,
+        })
       ).id
     : undefined;
   const client = await stripe.customers.create(
     { email, name: nom, address: adresse, preferred_locales: ["fr"], metadata, ...(testClock ? { test_clock: testClock } : {}) },
-    { idempotencyKey: `client-${idempotence}${testClock ? "-horloge" : ""}` },
+    { idempotencyKey: testClock ? `client-${idempotence}-${testClock}` : `client-${idempotence}` },
   );
   return client.id;
 }

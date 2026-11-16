@@ -68,12 +68,10 @@ describe("parcours Stripe", () => {
     api.customers.create.mockClear();
     api.testHelpers.testClocks.create.mockResolvedValue({ id: "clock_1" });
     await creerClientStripe(stripe, { email: "a@b.fr", nom: "a@b.fr", metadata: { compteId: "c1" }, idempotence: "c1234567-xx", horloge: true });
-    expect(api.testHelpers.testClocks.create).toHaveBeenCalledWith(
-      { frozen_time: expect.any(Number), name: "Rojer — compte c1234567" },
-      { idempotencyKey: "horloge-c1234567-xx" },
-    );
+    expect(api.testHelpers.testClocks.create).toHaveBeenCalledWith({ frozen_time: expect.any(Number), name: "Rojer — compte c1234567" });
     expect(api.customers.create.mock.lastCall?.[0]).toMatchObject({ test_clock: "clock_1" });
-    expect(api.customers.create.mock.lastCall?.[1]).toEqual({ idempotencyKey: "client-c1234567-xx-horloge" });
+    // Une clé par horloge : une reprise (nouvelle horloge) n'est pas refusée comme une requête rejouée autrement.
+    expect(api.customers.create.mock.lastCall?.[1]).toEqual({ idempotencyKey: "client-c1234567-xx-clock_1" });
     api.testHelpers.testClocks.create.mockClear();
     await creerClientStripe(stripe, { email: "a@b.fr", nom: "a@b.fr", metadata: { compteId: "c1" }, idempotence: "c1" });
     expect(api.testHelpers.testClocks.create).not.toHaveBeenCalled();
