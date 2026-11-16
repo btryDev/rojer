@@ -5,37 +5,34 @@ import "server-only";
 // elle, et non la clé d'idempotence (24 heures), qui empêche un second
 // client — deux onglets reprennent le client enregistré.
 
+import { createHash } from "node:crypto";
 import type Stripe from "stripe";
 import type { Db } from "@/lib/auth/compte";
 import { creerClientStripe } from "@/lib/stripe/parcours";
-import { codePrisma } from "@/lib/stripe/synchronisation";
 import { nomProvisoire } from "./droits";
 
 export async function clientStripeDuCompte(
   stripe: Stripe,
   db: Db,
   { compteId, email }: { compteId: string; email: string },
-): Promise<string> {
+): Promise<{ customerId: string; neuf: boolean }> {
+  // La ligne existe toujours ici : sans elle, `sAbonnerAction` renvoie à l'essai.
   const ligne = await db.abonnement.findUnique({ where: { compteId }, select: { stripeCustomerId: true } });
-  if (ligne?.stripeCustomerId) return ligne.stripeCustomerId;
+  if (!ligne) throw new Error("ligne d'abonnement absente");
+  if (ligne.stripeCustomerId) return { customerId: ligne.stripeCustomerId, neuf: false };
   const customerId = await creerClientStripe(stripe, {
     email,
     nom: nomProvisoire(email),
     metadata: { compteId },
-    idempotence: compteId,
+    // L'adresse entre dans la clé : une adresse changée dans les 24 heures ne
+    // bute pas sur une requête rejouée différemment (relecture du
+    // 2026-11-17) ; la réservation ci-dessous garde un seul client lié.
+    idempotence: `${compteId}-${createHash("sha256").update(email).digest("hex").slice(0, 12)}`,
   });
-  if (ligne) {
-    await db.abonnement.updateMany({ where: { compteId, stripeCustomerId: null }, data: { stripeCustomerId: customerId } });
-  } else {
-    // Un compte sans ligne (jamais d'essai) : elle naît avec son client.
-    try {
-      await db.abonnement.create({ data: { compteId, stripeCustomerId: customerId } });
-    } catch (e) {
-      if (codePrisma(e) !== "P2002") throw e;
-      await db.abonnement.updateMany({ where: { compteId, stripeCustomerId: null }, data: { stripeCustomerId: customerId } });
-    }
-  }
+  const pris = await db.abonnement.updateMany({ where: { compteId, stripeCustomerId: null }, data: { stripeCustomerId: customerId } });
+  if (pris.count === 1) return { customerId, neuf: true };
+  // Un autre onglet a réservé le sien d'abord : on le reprend.
   const reservee = await db.abonnement.findUnique({ where: { compteId }, select: { stripeCustomerId: true } });
   if (!reservee?.stripeCustomerId) throw new Error("client Stripe non réservé");
-  return reservee.stripeCustomerId;
+  return { customerId: reservee.stripeCustomerId, neuf: false };
 }

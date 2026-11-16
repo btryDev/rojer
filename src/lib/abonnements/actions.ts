@@ -118,8 +118,11 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
   // `null` : un abonnement court déjà (notre copie retardait).
   let url: string | null = null;
   try {
-    const customerId = ligne.stripeCustomerId ?? (await clientStripeDuCompte(stripe, db, { compteId, email }));
-    const { courant } = abonnementCourant(await abonnementsDuClient(stripe, customerId));
+    const { customerId, neuf } = ligne.stripeCustomerId
+      ? { customerId: ligne.stripeCustomerId, neuf: false }
+      : await clientStripeDuCompte(stripe, db, { compteId, email });
+    // Un client tout juste créé n'a aucun abonnement : rien à relire.
+    const { courant } = neuf ? { courant: null } : abonnementCourant(await abonnementsDuClient(stripe, customerId));
     if (courant?.status === "incomplete") {
       // Un premier paiement resté en attente (Checkout abandonné à la
       // confirmation de la banque) : on le termine, au lieu d'attendre que

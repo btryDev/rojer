@@ -35,7 +35,12 @@ function faux(formule: string | null, nombre: number, debutPayantLe: Date | null
   const compte = () => ({ count: vi.fn().mockResolvedValue(nombre) });
   const tx = {
     $queryRaw: vi.fn(),
-    abonnement: { findUnique: vi.fn().mockResolvedValue(formule === null ? null : { formule, statut, debutPayantLe }) },
+    // L'essai (`statut` vide, ADR-053 § 9 amendé) : une fin à venir.
+    abonnement: {
+      findUnique: vi
+        .fn()
+        .mockResolvedValue(formule === null ? null : { formule, statut, debutPayantLe, finEssai: statut === null ? new Date(Date.now() + 10 * 86_400_000) : null }),
+    },
     etablissement: compte(),
     prestataire: compte(),
     equipement: compte(),
@@ -306,7 +311,7 @@ describe("l'essai gratuit : ses limites priment sur la formule essayée", () => 
 
   it("utilisateurs : un seul pendant l'essai, même sur Pro", async () => {
     lancer();
-    const brut = { abonnement: { findUnique: vi.fn().mockResolvedValue({ formule: "rojer_pro_mensuel", statut: null }) }, membre: { count: vi.fn().mockResolvedValue(1) } };
+    const brut = { abonnement: { findUnique: vi.fn().mockResolvedValue({ formule: "rojer_pro_mensuel", statut: null, finEssai: new Date(Date.now() + 10 * 86_400_000) }) }, membre: { count: vi.fn().mockResolvedValue(1) } };
     expect(await limitesMembresDuPlugin(brut as never, "c1")).toEqual({ membres: 1, invitations: 0 });
   });
 });
@@ -344,7 +349,8 @@ describe("gelesDuCompte : qui est gelé après une baisse", () => {
   it("rien de gelé : tout tient, offre non lancée, ou compte qui n'a jamais payé (l'essai bloque, il ne gèle pas)", async () => {
     lancer();
     expect(await gelesDuCompte(compte(paye, 1, 10), "c1")).toBeUndefined();
-    expect(await gelesDuCompte(compte({ ...paye, statut: null }, 3, 3), "c1")).toBeUndefined();
+    // L'essai (ADR-053 § 9 amendé) : jamais payé, fin à venir.
+    expect(await gelesDuCompte(compte({ ...paye, statut: null, debutPayantLe: null, finEssai: new Date(Date.now() + 10 * 86_400_000) }, 3, 3), "c1")).toBeUndefined();
     expect(await gelesDuCompte(compte({ ...paye, statut: "past_due", debutPayantLe: null }, 3, 3), "c1")).toBeUndefined();
     lancer(false);
     const db = compte(paye, 3, 3);
@@ -379,8 +385,9 @@ describe("etatDeSaisieDuCompte : le gel et la saisie fermée, d'une seule lectur
     for (const statut of ["active", "past_due"]) expect((await etatDeSaisieDuCompte(compte(ligne(statut)), "c1")).saisieFermee).toBe(false);
     // L'essai, compté chez Rojer (2026-11-16) : en cours, ouvert ; fini, fermé.
     const dans = (j: number) => new Date(Date.now() + j * 86_400_000);
-    expect((await etatDeSaisieDuCompte(compte({ ...ligne(null), finEssai: dans(10) }), "c1")).saisieFermee).toBe(false);
-    for (const l of [ligne("unpaid"), ligne("canceled"), { ...ligne(null), finEssai: dans(-1) }, null]) {
+    const essai = (fin: Date) => ({ ...ligne(null), debutPayantLe: null, finEssai: fin });
+    expect((await etatDeSaisieDuCompte(compte(essai(dans(10))), "c1")).saisieFermee).toBe(false);
+    for (const l of [ligne("unpaid"), ligne("canceled"), essai(dans(-1)), null]) {
       const db = compte(l);
       expect((await etatDeSaisieDuCompte(db, "c1")).saisieFermee).toBe(true);
       expect(db.abonnement.findUnique).toHaveBeenCalledOnce();

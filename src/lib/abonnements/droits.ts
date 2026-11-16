@@ -47,13 +47,18 @@ export type ContexteDroits = {
 export const OUVRENT: ReadonlySet<string> = new Set(["active", "past_due"]);
 
 /**
- * L'essai, compté chez Rojer (ADR-053 § 9, amendé le 2026-11-16) : une ligne
- * sans copie d'abonnement Stripe (`statut` vide : jamais abonné) et une fin
- * d'essai posée au démarrage. S'abonner pendant l'essai le termine (le
- * `statut` arrive avec l'abonnement).
+ * L'essai, compté chez Rojer (ADR-053 § 9, amendé le 2026-11-16) : une fin
+ * d'essai à venir, posée au démarrage, et aucun paiement jamais confirmé
+ * (`debutPayantLe`). Un abonnement qui paie ou est à régler (`OUVRENT`) se
+ * lit d'abord (`droitsDe`) ; une souscription abandonnée à la confirmation
+ * de la banque (`incomplete`, puis `incomplete_expired`) ne coupe pas
+ * l'essai (relecture du 2026-11-17).
  */
-export const enEssai = (l: Pick<LigneAbonnement, "statut" | "finEssai"> | null, maintenant: Date) =>
-  !!l && l.statut === null && !!l.finEssai && l.finEssai.getTime() > maintenant.getTime();
+export const enEssai = (
+  l: (Pick<LigneAbonnement, "statut" | "finEssai"> & { debutPayantLe?: Date | null }) | null,
+  maintenant: Date,
+) =>
+  !!l && !l.debutPayantLe && !OUVRENT.has(l.statut ?? "") && !!l.finEssai && l.finEssai.getTime() > maintenant.getTime();
 /** Une fin d'essai s'annonce une semaine avant. */
 const PREAVIS_ESSAI_MS = 7 * 24 * 60 * 60_000;
 
@@ -133,6 +138,8 @@ const LIBELLES: Record<string, string> = {
  * essai est terminé (`situationFermee`, comme le bandeau).
  */
 export function libelleStatut(ligne: Pick<LigneAbonnement, "statut" | "debutPayantLe" | "finEssai"> | null, maintenant: Date): string {
+  // Un paiement en attente pendant l'essai : l'essai court toujours, la page
+  // dit la facture à régler à part (`vueAbonnement`).
   const statut = ligne?.statut ?? null;
   if (enEssai(ligne, maintenant)) return "Essai en cours";
   if (!statut) return ligne?.finEssai ? "Essai terminé" : "Aucun abonnement";

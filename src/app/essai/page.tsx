@@ -81,9 +81,8 @@ export default async function EssaiPage() {
           <FriseEssai
             etapes={[
               { quand: "Aujourd'hui", quoi: "Votre essai commence. Vous mettez votre établissement en place." },
-              // Sans date : le rappel part d'une tâche quotidienne, dans les 36 h
-              // qui précèdent la fin (`rappels.ts`) — la veille ou l'avant-veille.
-              // Sans promesse d'envoi non plus (garde `sans-qualification`).
+              // S'abonner se fait à tout moment, sans date ; les rappels (J-7,
+              // veille) ne sont pas promis ici (garde `sans-qualification`).
               { quand: "Quand vous voulez", quoi: "Abonnez-vous depuis la page Abonnement : l'essai s'arrête et ses limites sont levées." },
               {
                 quand: finTexte,

@@ -8,13 +8,16 @@
 //
 // Pour chaque ligne dont l'abonnement Stripe est encore un essai (`trialing`)
 // ou une pause de fin d'essai (`paused`) et qui n'a jamais payé :
-// 1. l'abonnement Stripe est résilié tout de suite (rien n'est facturé) ;
-// 2. la ligne est délestée de Stripe : plus de client ni d'abonnement liés,
+// 1. le client et l'abonnement Stripe perdent leur `compteId` : leurs
+//    notifications (dont la résiliation qui suit) ne désignent plus le
+//    compte, la relecture les ignore sans alerte (client sans compte) ;
+// 2. l'abonnement Stripe est résilié tout de suite (rien n'est facturé) ;
+// 3. la ligne est délestée de Stripe : plus de client ni d'abonnement liés,
 //    `statut` vide ; la date de l'essai et sa fin sont gardées, l'horloge de
 //    suppression repart de la fin de l'essai. Le compte se retrouve « en
 //    essai » ou « essai terminé » selon sa date, et s'abonne par Checkout,
 //    avec un client neuf. Le client Stripe d'avant reste chez Stripe, non
-//    relié : ses notifications tardives sont ignorées (client sans compte).
+//    relié.
 //
 // `--dry-run` par défaut : compte les lignes concernées, n'appelle pas
 // Stripe, n'écrit rien. La base lue est celle de `DATABASE_URL`, affichée en
@@ -36,7 +39,7 @@ async function main() {
   console.log(`base : ${(process.env.DATABASE_URL ?? "").replace(/(:\/\/[^:]+:)[^@]+@/, "$1***@")}`);
   const lignes = await prisma.abonnement.findMany({
     where: { statut: { in: ESSAIS_STRIPE }, debutPayantLe: null },
-    select: { id: true, stripeSubscriptionId: true, finEssai: true },
+    select: { id: true, stripeCustomerId: true, stripeSubscriptionId: true, finEssai: true },
   });
   console.log(`essais tenus chez Stripe : ${lignes.length}`);
   if (!appliquer) return console.log("(essai à blanc : relancer avec --appliquer pour résilier chez Stripe et délester les lignes)");
@@ -49,9 +52,13 @@ async function main() {
   let echecs = 0;
   for (const l of lignes) {
     try {
+      if (l.stripeCustomerId) await stripe.customers.update(l.stripeCustomerId, { metadata: { compteId: "", userId: "" } });
       if (l.stripeSubscriptionId) {
         const s = await stripe.subscriptions.retrieve(l.stripeSubscriptionId);
-        if (s.status !== "canceled" && s.status !== "incomplete_expired") await stripe.subscriptions.cancel(s.id);
+        if (s.status !== "canceled" && s.status !== "incomplete_expired") {
+          await stripe.subscriptions.update(s.id, { metadata: { compteId: "", userId: "" } });
+          await stripe.subscriptions.cancel(s.id);
+        }
       }
       await prisma.abonnement.update({
         where: { id: l.id },

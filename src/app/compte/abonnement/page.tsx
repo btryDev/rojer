@@ -194,10 +194,11 @@ export default async function AbonnementPage({
   const finPrevue = ligne ? resiliationPrevue(ligne) : false;
   const essaiEnCours = enEssai(ligne, ctx.maintenant);
   const vue = vueAbonnement({ geste, statut: ligne?.statut ?? null, enEssai: essaiEnCours, documentAttend: document === "1" });
-  const offres = vue.cas === "formulaire" ? await offresAffichees() : [];
-  // La formule présélectionnée : celle choisie sur la page publique
-  // (`offre-choisie.ts`), sinon celle d'un abonnement passé.
-  const offreChoisie = vue.cas === "formulaire" ? await lireOffreChoisie() : null;
+  // Les offres (Stripe) et la formule choisie sur la page publique
+  // (`offre-choisie.ts`), ensemble ; la présélection, sinon, reprend celle
+  // d'un abonnement passé.
+  const [offres, offreChoisie] =
+    vue.cas === "formulaire" ? await Promise.all([offresAffichees(), lireOffreChoisie()]) : [[], null];
   const courante = preselection(vue, { abonnement: formule, offreChoisie });
   // Changer de formule : un abonnement qui paie, pour son propriétaire ; pas
   // une formule qui s'arrête.

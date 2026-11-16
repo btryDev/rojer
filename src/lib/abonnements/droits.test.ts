@@ -38,6 +38,15 @@ describe("droitsDe", () => {
     });
   });
 
+  it("une souscription abandonnée pendant l'essai (confirmation de la banque) ne coupe pas l'essai ; un paiement confirmé, si (relecture du 2026-11-17)", () => {
+    for (const statut of ["incomplete", "incomplete_expired", "canceled"]) {
+      const l = ligne({ statut, finEssai: jours(20), debutPayantLe: null });
+      expect(droitsDe(l, EXIGE).saisie, statut).toBe(true);
+      expect(libelleStatut(l, MAINTENANT), statut).toBe("Essai en cours");
+    }
+    expect(droitsDe(ligne({ statut: "canceled", finEssai: jours(20), debutPayantLe: jours(-5) }), EXIGE).saisie).toBe(false);
+  });
+
   it("exigé : un état inconnu de Stripe ferme la saisie plutôt que de l'ouvrir", () => {
     expect(droitsDe(ligne({ statut: "nouvel_etat" }), EXIGE)).toMatchObject({ saisie: false, bandeau: { ton: "ferme" } });
   });

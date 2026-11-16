@@ -84,9 +84,11 @@ export function colonnesDe(s: Stripe.Subscription | null) {
 }
 
 /**
- * Depuis quand le compte est sans abonnement ouvert (ADR-058) : la fin chez
- * Stripe (`ended_at`), sinon la date déjà notée (la fin de l'essai, posée à
- * son démarrage), sinon `relueLe` (un impayé
+ * Depuis quand le compte est sans abonnement ouvert (ADR-058) : la plus
+ * tardive de la fin chez Stripe (`ended_at`) et de la date déjà notée (la
+ * fin de l'essai, posée à son démarrage : une souscription abandonnée
+ * pendant l'essai ne l'avance pas — relecture du 2026-11-17), sinon
+ * `relueLe` (un impayé
  * définitif n'a pas de date chez Stripe). Ouvert : vide, et les
  * avertissements avant suppression avec — un compte qui se réabonne repart
  * de zéro. Fermé : les avertissements ne sont pas touchés.
@@ -101,7 +103,9 @@ export function horlogeDeSuppression(
   if (s && OUVRENT.has(s.status)) {
     return { sansAbonnementDepuis: null, suppressionPrevueLe: null, avertiSuppression30Le: null, avertiSuppression7Le: null };
   }
-  return { sansAbonnementDepuis: date(s?.ended_at) ?? dejaNotee ?? relueLe };
+  const fin = date(s?.ended_at);
+  const plusTardive = fin && dejaNotee ? (fin > dejaNotee ? fin : dejaNotee) : (fin ?? dejaNotee);
+  return { sansAbonnementDepuis: plusTardive ?? relueLe };
 }
 
 /**

@@ -41,7 +41,7 @@ async function main() {
   let ecrits = 0;
   let echecs = 0;
   for (const { stripeCustomerId } of lignes) {
-    if (!stripeCustomerId) continue;
+    if (!stripeCustomerId) continue; // pour le typage : la requête les écarte
     try {
       await synchroniserClientStripe(stripe, stripeCustomerId);
       ecrits++;

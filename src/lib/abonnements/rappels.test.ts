@@ -47,10 +47,11 @@ beforeEach(() => {
 });
 
 describe("rappel de la veille de la fin de l'essai", () => {
-  it("cherche les essais (jamais abonnés : statut vide) sans rappel qui finissent dans les 36 heures", async () => {
+  it("cherche les essais (jamais payé, pas d'abonnement qui paie) sans rappel qui finissent dans les 36 heures", async () => {
     await rappelerLaVeilleDeLaFinDEssai(MAINTENANT);
     expect(m.findMany.mock.calls[0][0].where).toEqual({
-      statut: null,
+      debutPayantLe: null,
+      OR: [{ statut: null }, { statut: { notIn: ["active", "past_due"] } }],
       rappelVeilleEssaiLe: null,
       finEssai: { gt: MAINTENANT, lte: new Date(MAINTENANT.getTime() + FENETRE_VEILLE_MS) },
     });
@@ -60,7 +61,8 @@ describe("rappel de la veille de la fin de l'essai", () => {
   it("le rappel d'une semaine (envoyé par Rojer depuis le 2026-11-16) : au-delà de la veille, dans les 7 jours, sa propre marque", async () => {
     await rappelerLaSemaineDeLaFinDEssai(MAINTENANT);
     expect(m.findMany.mock.calls[0][0].where).toEqual({
-      statut: null,
+      debutPayantLe: null,
+      OR: [{ statut: null }, { statut: { notIn: ["active", "past_due"] } }],
       rappelSemaineEssaiLe: null,
       finEssai: { gt: new Date(MAINTENANT.getTime() + FENETRE_VEILLE_MS), lte: new Date(MAINTENANT.getTime() + FENETRE_SEMAINE_MS) },
     });

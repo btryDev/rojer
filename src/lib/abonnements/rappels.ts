@@ -23,7 +23,7 @@ import { FORMULES, formuleDeLookupKey } from "./formules";
 import type Stripe from "stripe";
 import { OPTIONS_WEBHOOK } from "@/lib/stripe/client";
 import { baissePrevue } from "@/lib/stripe/parcours";
-import { resiliationDemandee } from "./droits";
+import { OUVRENT, resiliationDemandee } from "./droits";
 
 /**
  * L'essai finit dans les 36 heures : la tâche passe une fois par jour, et la
@@ -75,8 +75,10 @@ export const rappelerLaSemaineDeLaFinDEssai = (maintenant: Date) =>
   rappelerLaFinDEssai(maintenant, "rappelSemaineEssaiLe", FENETRE_VEILLE_MS, FENETRE_SEMAINE_MS);
 
 /**
- * Envoie le rappel aux comptes dont l'essai (compté chez Rojer : jamais
- * abonné, `statut` vide) finit dans la fenêtre ]depuis, jusqu'à].
+ * Envoie le rappel aux comptes dont l'essai (compté chez Rojer, `enEssai` :
+ * jamais payé, pas d'abonnement qui paie ou à régler) finit dans la fenêtre
+ * ]depuis, jusqu'à]. Limite écrite : un paiement fait sur Checkout dont la
+ * notification n'est pas encore arrivée laisse partir le rappel.
  */
 async function rappelerLaFinDEssai(
   maintenant: Date,
@@ -87,7 +89,8 @@ async function rappelerLaFinDEssai(
   if (!envoiEnService()) return { envoyes: 0, echecs: 0, horsService: true };
   const lignes = await prisma.abonnement.findMany({
     where: {
-      statut: null,
+      debutPayantLe: null,
+      OR: [{ statut: null }, { statut: { notIn: [...OUVRENT] } }],
       [marque]: null,
       finEssai: { gt: new Date(maintenant.getTime() + depuisMs), lte: new Date(maintenant.getTime() + jusquAMs) },
     },

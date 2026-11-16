@@ -24,7 +24,7 @@ export const MESSAGE_ENTREPRISE_DEJA_ESSAYEE =
  * compte chez Rojer (ADR-053 § 9, amendé le 2026-11-16) : `enEssai`.
  */
 export async function compteEnEssai(db: Db, compteId: string, maintenant = new Date()): Promise<boolean> {
-  const ligne = await db.abonnement.findUnique({ where: { compteId }, select: { statut: true, finEssai: true } });
+  const ligne = await db.abonnement.findUnique({ where: { compteId }, select: { statut: true, finEssai: true, debutPayantLe: true } });
   return enEssai(ligne, maintenant);
 }
 
