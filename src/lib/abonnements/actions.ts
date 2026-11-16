@@ -216,9 +216,7 @@ export async function finaliserCarteAction(sessionId: string): Promise<void> {
   } catch (e) {
     // Le webhook applique la même session au même instant (clé d'idempotence
     // partagée) : ce n'est pas un échec, la page relira l'état.
-    if (e instanceof Stripe.errors.StripeIdempotencyError || (e as { statusCode?: number })?.statusCode === 409) {
-      redirect(PAGE_ABONNEMENT);
-    }
+    if (dejaEnCours(e)) redirect(PAGE_ABONNEMENT);
     console.error(`abonnement : finalisation de la carte en échec — ${motifDErreur(e)}`);
     redirect(`${PAGE_ABONNEMENT}?stripe=indisponible`);
   }

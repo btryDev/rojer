@@ -149,6 +149,12 @@ export async function ouvrirCheckoutCarte(
   await expirerSessionsOuvertes(stripe, customerId);
   const session = await stripe.checkout.sessions.create({
     mode: "setup",
+    // À ESSAYER à la prochaine répétition (revue du 2026-11-16) :
+    // `allowed_payment_method_types: ["card"]`, pour qu'un prélèvement SEPA
+    // activé par erreur dans le tableau de bord ne laisse pas la facture « en
+    // traitement » et le client sur sa page. Non posé tant que Stripe ne l'a
+    // pas accepté sur une vraie session : une erreur ici fermerait tout
+    // enregistrement de carte.
     customer: customerId,
     currency: "eur",
     metadata,
@@ -263,7 +269,11 @@ export async function appliquerFormule(
   // changement du code (paramètres différents) en prend une neuve au lieu
   // d'échouer pour toujours (`StripeIdempotencyError`, répétition du
   // 2026-11-16). L'état relu juste avant protège ce cas-là.
-  const empreinte = createHash("sha256").update(JSON.stringify(decision)).digest("hex").slice(0, 12);
+  // La TVA n'y entre pas : elle est LUE (cache, réseau), pas choisie, et un
+  // chemin qui l'aurait manquée prendrait une autre clé que l'autre, pour un
+  // même choix (revue du 2026-11-16).
+  const choisi = { ...decision, default_tax_rates: undefined };
+  const empreinte = createHash("sha256").update(JSON.stringify(choisi)).digest("hex").slice(0, 12);
   const cle = (etape: string) => (choix.idempotence ? { idempotencyKey: `${choix.idempotence}-${empreinte}-${etape}` } : {});
   const misAJour = await stripe.subscriptions.update(
     abonnement.id,
@@ -281,7 +291,7 @@ export async function appliquerFormule(
     { proration_behavior: "none", expand: ["latest_invoice"] },
     cle("reprise"),
   );
-  return reglerLaFacture(stripe, repris.latest_invoice, choix.paymentMethodId, cle("paiement"));
+  return reglerLaFacture(stripe, repris.latest_invoice, choix.paymentMethodId);
 }
 
 /**
@@ -293,18 +303,20 @@ async function reglerLaFacture(
   stripe: Stripe,
   derniere: Stripe.Subscription["latest_invoice"],
   paymentMethodId: string,
-  options: { idempotencyKey?: string },
 ): Promise<string | null> {
   const facture = await factureOuverte(stripe, derniere);
   if (!facture?.id) return null;
   try {
-    const payee = await stripe.invoices.pay(facture.id, { payment_method: paymentMethodId }, options);
+    // Une clé tirée de la FACTURE : les deux chemins qui finalisent la même
+    // carte (retour de Checkout, webhook) règlent la même facture sous la
+    // même clé — un seul règlement (revue du 2026-11-16).
+    const payee = await stripe.invoices.pay(facture.id, { payment_method: paymentMethodId }, { idempotencyKey: `payer-${facture.id}` });
     return payee.status === "paid" ? null : (payee.hosted_invoice_url ?? facture.hosted_invoice_url ?? null);
   } catch (e) {
-    // Le même règlement est en cours ailleurs — le retour de Checkout et le
-    // webhook finalisent la même carte au même instant (répétition du
-    // 2026-11-16) : rien n'a échoué, la page relira l'état.
-    if ((e as { statusCode?: number })?.statusCode === 409) return null;
+    // Le même règlement en cours ailleurs (409) : on ne sait pas encore s'il
+    // passe — l'erreur remonte, l'appelant relit la page sans rien annoncer
+    // (`dejaEnCours`, `finaliserCarteAction`).
+    if ((e as { statusCode?: number })?.statusCode === 409) throw e;
     // Sinon, la facture fait foi : déjà payée (par l'autre chemin), rien à
     // faire ; encore ouverte (carte refusée, 3-D Secure), sa page.
     const relue = await stripe.invoices.retrieve(facture.id).catch(() => null);

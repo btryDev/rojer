@@ -201,15 +201,15 @@ describe("parcours Stripe", () => {
     api.subscriptions.resume.mockResolvedValue({ latest_invoice: reprise });
     api.invoices.pay.mockResolvedValueOnce({ status: "paid" });
     expect(await appliquerFormule(stripe, sub, choix)).toBeNull();
-    expect(api.invoices.pay).toHaveBeenLastCalledWith("in_r", { payment_method: "pm_1" }, {
-      idempotencyKey: expect.stringMatching(/^carte-cs_9-[0-9a-f]{12}-paiement$/),
-    });
+    // Une clé tirée de la facture : les deux chemins qui finalisent la même carte la règlent une fois.
+    expect(api.invoices.pay).toHaveBeenLastCalledWith("in_r", { payment_method: "pm_1" }, { idempotencyKey: "payer-in_r" });
     api.invoices.pay.mockRejectedValueOnce(Object.assign(new Error("card_declined"), { type: "StripeCardError" }));
     api.invoices.retrieve.mockResolvedValueOnce({ ...reprise });
     expect(await appliquerFormule(stripe, sub, choix)).toBe("https://invoice.stripe.com/i/r");
-    // Le même règlement en cours ailleurs (retour de Checkout et webhook ensemble) : rien d'échoué.
+    // Le même règlement en cours ailleurs (409) : on ne sait pas encore s'il passe — l'erreur remonte,
+    // l'appelant relit la page sans rien annoncer.
     api.invoices.pay.mockRejectedValueOnce(Object.assign(new Error("conflit"), { statusCode: 409 }));
-    expect(await appliquerFormule(stripe, sub, choix)).toBeNull();
+    await expect(appliquerFormule(stripe, sub, choix)).rejects.toThrow("conflit");
     // Déjà payée par l'autre chemin : rien à régler.
     api.invoices.pay.mockRejectedValueOnce(Object.assign(new Error("invoice_already_paid"), { statusCode: 400 }));
     api.invoices.retrieve.mockResolvedValueOnce({ ...reprise, status: "paid" });
@@ -227,6 +227,14 @@ describe("parcours Stripe", () => {
     const [a, b, c] = api.subscriptions.update.mock.calls.map((x) => x[2].idempotencyKey);
     expect(a).toBe(b);
     expect(c).not.toBe(a);
+    // La TVA, lue et non choisie, n'entre pas dans la clé : un chemin qui l'aurait manquée garde la même.
+    api.taxRates.list.mockResolvedValueOnce({
+      data: [{ id: "txr_ttc", active: true, inclusive: true, percentage: 20, country: "FR", tax_type: "vat", created: 1 }],
+    });
+    oublierLesPrix();
+    await appliquerFormule(stripe, sub, choix);
+    expect(api.subscriptions.update.mock.lastCall?.[1]).toMatchObject({ default_tax_rates: ["txr_ttc"] });
+    expect(api.subscriptions.update.mock.lastCall?.[2].idempotencyKey).toBe(a);
   });
 
   it("payer maintenant : l'essai relu juste avant ; déjà fini par un autre onglet, rien n'est refait ; le taux en vigueur est reposé", async () => {

@@ -43,9 +43,6 @@ function dateDeSuppressionAffichee(le: Date, maintenant = new Date()): string {
   return le.getTime() > maintenant.getTime() ? `le ${formaterDateLongueFr(le)}` : "très prochainement";
 }
 
-/** La page sans paramètre : recharger après un paiement relit l'état. */
-const PAGE_ABONNEMENT_SEULE = "/compte/abonnement";
-
 export const metadata = {
   title: "Abonnement — Rojer",
 };
@@ -417,14 +414,6 @@ export default async function AbonnementPage({
                 (répétition du 2026-11-16 — « Payer et m'abonner » restait affiché
                 à côté de « Paiement terminé »). Le serveur refuse de toute façon
                 un second paiement. */}
-            {vue.cas === "formulaire" && paiement === "termine" && (
-              <p className="m-0 mt-2 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                Paiement reçu : votre abonnement s&apos;affiche ici dans quelques secondes.{" "}
-                <Link href={PAGE_ABONNEMENT_SEULE} className="font-semibold underline underline-offset-4">
-                  Recharger la page
-                </Link>
-              </p>
-            )}
             {vue.cas === "formulaire" && paiement !== "termine" && (
               <>
                 {vue.rappelApresEssai && formule && (
