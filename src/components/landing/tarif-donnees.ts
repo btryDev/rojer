@@ -1,6 +1,6 @@
 // Les cartes d'offres de la page publique : grille tarifaire du 2026-11-05
 // (PDF `docs/marketing/rojer-offres-abonnement-2026-11.pdf`, branche
-// `docs/offres-abonnement`, ab9caea3), prix HT.
+// `docs/offres-abonnement`, ab9caea3), prix ~~HT~~ TTC (2026-11-14).
 //
 // ⚠︎ Les quotas de la grille vivent aussi dans `src/lib/abonnements/
 // formules.ts` (branche `cc`, ADR-053), qui les applique ; les prix, eux,
