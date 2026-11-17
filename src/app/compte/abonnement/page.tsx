@@ -92,14 +92,14 @@ function effetDuChangement(sens: "montee" | "baisse", actuelle: string | null, v
  * relit rien, ne masque pas le formulaire et n'annonce aucun paiement (revue
  * du 2026-11-17).
  */
-async function relireApresPaiement(db: Db, compteId: string, session: string | undefined): Promise<boolean> {
+async function relireApresPaiement(db: Db, compteId: string, session: string | undefined, maintenant: Date): Promise<boolean> {
   const config = configurationStripe();
   if (!config.active || !session || !/^cs_[A-Za-z0-9_]+$/.test(session)) return false;
   const ligne = await db.abonnement.findUnique({ where: { compteId }, select: { stripeCustomerId: true } });
   if (!ligne?.stripeCustomerId) return false;
   const stripe = clientStripeLecture(config);
   const payee = await stripe.checkout.sessions.retrieve(session).catch(() => null);
-  const recente = payee && payee.created * 1000 > Date.now() - RETOUR_DE_PAIEMENT_MS;
+  const recente = payee && payee.created * 1000 > maintenant.getTime() - RETOUR_DE_PAIEMENT_MS;
   if (!payee || !recente || payee.status !== "complete" || idStripe(payee.customer) !== ligne.stripeCustomerId) return false;
   await synchroniserClientStripe(stripe, ligne.stripeCustomerId, { attendreMs: 5_000 }).catch(() => null);
   return true;
@@ -216,7 +216,7 @@ export default async function AbonnementPage({
   const ouvert = offreLancee(ctx);
   // Le retour de Checkout ne compte que s'il est vérifié chez Stripe.
   const paiement =
-    c && paiement0 === "termine" && (await relireApresPaiement(c.db, c.compte.compteId, session)) ? "termine" : undefined;
+    c && paiement0 === "termine" && (await relireApresPaiement(c.db, c.compte.compteId, session, ctx.maintenant)) ? "termine" : undefined;
   // Une seule lecture : la ligne sert à l'état affiché et aux droits.
   const ligne = c ? await abonnementDuCompte(c.db, c.compte.compteId) : null;
   const droits = droitsDe(ligne, ctx);
