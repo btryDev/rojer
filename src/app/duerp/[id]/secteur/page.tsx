@@ -97,9 +97,10 @@ export default async function SecteurPage({
                 <span className="tabular-nums text-[color:var(--board-ink)]">
                   {duerp.etablissement.codeNaf}
                 </span>{" "}
-                n&apos;est pas couvert par un référentiel dédié. Choisissez le
-                secteur le plus proche — vous pourrez décocher les risques non
-                applicables à l&apos;étape suivante.
+                n&apos;a pas de modèle de risques dédié. Choisissez le secteur
+                le plus proche : à l&apos;étape suivante, décochez les risques
+                qui ne vous concernent pas et ajoutez ceux propres à votre
+                métier avec « + Ajouter un risque ».
             </EnTeteEtape>
             {/* Le raccourci d'import, discret en haut à droite (2026-11-12) :
                 il occupait une bande pleine largeur avant le contenu. */}
