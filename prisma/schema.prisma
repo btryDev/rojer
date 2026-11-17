@@ -4,7 +4,9 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  // En prod (Supabase) : URL via pooler PgBouncer (port 6543) pour le runtime.
+  // ~~En prod (Supabase) : URL via pooler PgBouncer (port 6543) pour le runtime.~~
+  // [2026-11-17 : Supabase retiré (PR #337) ; chez Clever Cloud, pas de pooler : `scripts/demarrer-cc.sh` construit
+  // DATABASE_URL depuis l'add-on et pose DIRECT_URL à la même valeur.]
   url       = env("DATABASE_URL")
   // URL directe (port 5432) pour les migrations — Prisma Migrate a besoin
   // de prepared statements que PgBouncer ne supporte pas en mode transaction.

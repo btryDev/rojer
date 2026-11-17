@@ -13,7 +13,8 @@
  * version validée — `DuerpVersion.duerp` est en `onDelete: Restrict`
  * (conservation de quarante ans), et `--vraiment` échoue alors en P2003 sur
  * `DuerpVersion_duerpId_fkey`. Non corrigé : `docs/dette-chantier-porteur-
- * echeance.md` § 7.1.] Le compte Supabase, lui, n'est pas touché :
+ * echeance.md` § 7.1.] Le compte ~~Supabase~~ [2026-11-17 : Better Auth,
+ * ADR-052], lui, n'est pas touché :
  * l'utilisateur reste connecté, et l'application le renvoie à `/onboarding`
  * parce qu'il n'a plus d'entreprise (`app/entreprises/page.tsx:15`).
  *
@@ -50,9 +51,10 @@
  *
  * **On désigne un dossier par son `userId`, pas par une adresse e-mail**, et la
  * première rédaction de ce script se trompait sur ce point : elle interrogeait
- * `auth.users`, qui n'existe pas dans la base locale. L'identité vit chez
+ * `auth.users`, qui n'existe pas dans la base locale. ~~L'identité vit chez
  * Supabase, seul le dossier est ici — la seule clé commune aux deux mondes est
- * l'UUID que `Entreprise.compteId` porte. Sans argument, le script liste les
+ * l'UUID que `Entreprise.compteId` porte.~~ [2026-11-17 : l'identité est dans
+ * la même base depuis Better Auth (ADR-052), table `User`.] Sans argument, le script liste les
  * dossiers présents avec leur `userId` : c'est là qu'on lit celui qu'on veut.
  */
 

@@ -1227,7 +1227,7 @@ async function main(): Promise<void> {
 
   // Version validée. Le snapshot est construit ici plutôt qu'appelé :
   // `construireSnapshot` commence par `requireUser()`, qui lit les cookies
-  // Supabase et n'a pas de sens hors d'une requête. La forme, elle, est celle
+  // ~~Supabase~~ de session [2026-11-17 : Better Auth] et n'a pas de sens hors d'une requête. La forme, elle, est celle
   // de `DuerpSnapshot` — c'est le type qui tient le contrat, pas la fonction.
   const pourSnapshot = await prisma.uniteTravail.findMany({
     where: { duerpId: duerp.id },
@@ -1655,7 +1655,8 @@ async function main(): Promise<void> {
   //
   // Le moteur et le générateur sont appelés ICI parce qu'ils sont purs ;
   // `regenererSansInvalider` ne l'est pas — elle commence par
-  // `assertEtablissementOwnership`, qui lit la session Supabase. Sur une base
+  // `assertEtablissementOwnership`, qui lit la session ~~Supabase~~ [2026-11-17 :
+  // Better Auth]. Sur une base
   // vierge il n'y a rien à réconcilier : l'ensemble des couples applicables EST
   // le plan de création.
   //

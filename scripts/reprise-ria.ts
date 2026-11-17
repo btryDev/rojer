@@ -24,7 +24,7 @@
 //
 // La base pointée par `.env` est la PRODUCTION. Le script tourne en
 // `--dry-run` par défaut et n'écrit qu'avec `--appliquer`. Faire un snapshot
-// Supabase avant. Une fois qu'aucun extincteur ne porte plus la clé, retirer
+// ~~Supabase~~ [2026-11-17 : de la base visée, Supabase retiré] avant. Une fois qu'aucun extincteur ne porte plus la clé, retirer
 // la branche EXTINCTEUR de l'obligation (cf. notesInternes de
 // `incendie-erp-ria-annuelle`) et la question du formulaire.
 //

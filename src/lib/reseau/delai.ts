@@ -11,8 +11,8 @@
 // ENTIÈRE, corps compris : un téléchargement lent compte.
 //
 // Un abandon lève une `DOMException` « TimeoutError » : les appelants qui
-// traitent déjà la panne réseau (supabase-js rend une erreur, le client
-// Légifrance la reprend) la traitent sans rien de plus.
+// traitent déjà la panne réseau (~~supabase-js rend une erreur,~~ le client
+// Légifrance la reprend) la traitent sans rien de plus. [2026-11-17 : Supabase retiré (PR #337).]
 
 export function fetchAvecDelai(delaiMs: number, base?: typeof fetch): typeof fetch {
   return (entree, init) => {

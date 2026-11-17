@@ -23,7 +23,7 @@ const h = vi.hoisted(() => {
     );
   const prisma = new Proxy({}, { get: (_t, nom: string) => table(nom) });
   const put = vi.fn(async () => {
-    throw new Error("Stockage Supabase : échec de l'écriture (Invalid Compact JWS)");
+    throw new Error("Stockage : échec de l'écriture");
   });
   return { prisma, ecritures, put };
 });
