@@ -228,9 +228,16 @@ type Tx = Prisma.TransactionClient;
 type Donnees = ReturnType<typeof colonnesDe> &
   ReturnType<typeof horlogeDeSuppression> & { relueLe: Date };
 
+/**
+ * L'écriture de la copie, sous le bail vérifié et verrouillé dans la même
+ * transaction (`verrouillerSousBail`) : la relecture qui écrit est la plus
+ * récente. ~~Second rempart sur `relueLe`~~ [2026-11-17, revue d'ensemble :
+ * retiré — il comparait les horloges de deux serveurs et pouvait écarter une
+ * relecture plus fraîche, laissant « paiement en attente » à qui avait payé.]
+ */
 async function mettreAJour(tx: Tx, compteId: string, customerId: string, donnees: Donnees) {
   const { count } = await tx.abonnement.updateMany({
-    where: { compteId, stripeCustomerId: customerId, OR: [{ relueLe: null }, { relueLe: { lt: donnees.relueLe } }] },
+    where: { compteId, stripeCustomerId: customerId },
     data: donnees,
   });
   return count === 1 ? ECRIT : INCHANGE;

@@ -18,7 +18,7 @@ import { FormulaireAbonnement, type OffreAffichee } from "@/components/abonnemen
 import { BoutonEnvoi } from "@/components/abonnements/BoutonEnvoi";
 import { ChangerDeFormule, type OptionDeFormule } from "@/components/abonnements/ChangerDeFormule";
 import { sensDuChangement } from "@/lib/abonnements/changement";
-import { depassements } from "@/lib/abonnements/quotas";
+import { depassementsDe, stocksDuCompte } from "@/lib/abonnements/quotas";
 import { prixTTC } from "@/lib/abonnements/affichage";
 import { baissePrevue } from "@/lib/stripe/parcours";
 import { clientStripeLecture } from "@/lib/stripe/client";
@@ -129,23 +129,23 @@ async function changementsPossibles(
     const f = formuleDeLookupKey(cle);
     return f ? `${FORMULES[f.formule].libelle}, ${LIBELLE_PERIODICITE[f.periodicite].adjectif}` : cle;
   };
-  const options = await Promise.all(
-    CLES_FORMULES.flatMap((f) => PERIODICITES.map((p) => lookupKey(f, p)))
-      .map((cle) => ({ cle, sens: sensDuChangement(actuelle, cle) }))
-      .filter((o): o is { cle: string; sens: "montee" | "baisse" } => o.sens === "montee" || o.sens === "baisse")
-      .map(async ({ cle, sens }) => {
-        const f = formuleDeLookupKey(cle)!;
-        const montant = prix.get(cle)?.montantCentimes;
-        return {
-          cle,
-          sens,
-          effet: effetDuChangement(sens, actuelle, cle, finPeriode),
-          libelle: libelleDe(cle),
-          prix: montant ? prixTTC(montant, f.periodicite) : null,
-          depassements: sens === "baisse" ? await depassements(db, compteId, cle) : [],
-        };
-      }),
-  );
+  const visees = CLES_FORMULES.flatMap((f) => PERIODICITES.map((p) => lookupKey(f, p)))
+    .map((cle) => ({ cle, sens: sensDuChangement(actuelle, cle) }))
+    .filter((o): o is { cle: string; sens: "montee" | "baisse" } => o.sens === "montee" || o.sens === "baisse");
+  // Les stocks du compte, comptés une fois pour toutes les baisses proposées.
+  const stocks = visees.some((o) => o.sens === "baisse") ? await stocksDuCompte(db, compteId) : null;
+  const options = visees.map(({ cle, sens }) => {
+    const f = formuleDeLookupKey(cle)!;
+    const montant = prix.get(cle)?.montantCentimes;
+    return {
+      cle,
+      sens,
+      effet: effetDuChangement(sens, actuelle, cle, finPeriode),
+      libelle: libelleDe(cle),
+      prix: montant ? prixTTC(montant, f.periodicite) : null,
+      depassements: sens === "baisse" && stocks ? depassementsDe(stocks, cle) : [],
+    };
+  });
   let baisse: { libelle: string; le: Date } | null = null;
   let baisseCle: string | null = null;
   if (ligne?.stripeSubscriptionId) {

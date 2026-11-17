@@ -18,10 +18,10 @@ import { clesDesEtablissements } from "@/lib/suppression/fichiers";
 import { getStorage } from "@/lib/storage";
 import { OPTIONS_WEBHOOK } from "@/lib/stripe/client";
 import { expirerSessionsOuvertes } from "@/lib/stripe/parcours";
-import { synchroniserClientStripe } from "@/lib/stripe/synchronisation";
-import { HORS_ABONNEMENT_OUVERT, OUVRENT } from "./droits";
+import { synchroniserClientStripe, toutLister } from "@/lib/stripe/synchronisation";
+import { HORS_ABONNEMENT_OUVERT, OUVRENT, TERMINES } from "./droits";
 import { alerter } from "@/lib/alertes";
-import { adressesDesProprietaires } from "./rappels";
+import { ecrireAuxProprietaires } from "./rappels";
 import { PAGE_ABONNEMENT } from "./saisie";
 
 export const MOIS_SANS_ABONNEMENT = 12;
@@ -117,25 +117,6 @@ export function messageAuxMembres(nomDuCompte: string, suppressionLe: Date): { s
 type Bilan = { envoyes: number; echecs: number };
 
 /** Envoie un message à tous les propriétaires ; rend le nombre d'e-mails partis et s'il y a eu un échec. */
-async function ecrireAuxProprietaires(compteId: string, message: { subject: string; text: string }, contexte: string) {
-  let partis = 0;
-  let echec = false;
-  try {
-    for (const to of await adressesDesProprietaires(compteId)) {
-      try {
-        await sendMail({ to, ...message });
-        partis++;
-      } catch (e) {
-        echec = true;
-        console.error(`${contexte} non envoyé (compte ${compteId}) — ${motifErreur(e)}`);
-      }
-    }
-  } catch (e) {
-    echec = true;
-    console.error(`${contexte} : propriétaires illisibles (compte ${compteId}) — ${motifErreur(e)}`);
-  }
-  return { partis, echec };
-}
 
 /**
  * Les deux avertissements. J-30 : la date de suppression se pose (douze mois
@@ -326,9 +307,8 @@ export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | n
       let abonnements: Stripe.Subscription[];
       try {
         await expirerSessionsOuvertes(stripe, stripeCustomerId);
-        abonnements = await stripe.subscriptions
-          .list({ customer: stripeCustomerId, status: "all", limit: 100 }, OPTIONS_WEBHOOK)
-          .autoPagingToArray({ limit: 10_000 });
+        // Une liste tronquée n'est pas un état complet : `toutLister` le refuse.
+        abonnements = await toutLister(stripe.subscriptions.list({ customer: stripeCustomerId, status: "all", limit: 100 }, OPTIONS_WEBHOOK), 1000);
       } catch (e) {
         if (!introuvable(e)) throw e;
         if (!(await clientSupprime(stripe, stripeCustomerId))) {
@@ -363,7 +343,7 @@ export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | n
         continue;
       }
       for (const s of abonnements) {
-        if (s.status !== "canceled" && s.status !== "incomplete_expired") await stripe.subscriptions.cancel(s.id);
+        if (!TERMINES.has(s.status)) await stripe.subscriptions.cancel(s.id);
       }
     } catch (e) {
       bilan.reportes++;

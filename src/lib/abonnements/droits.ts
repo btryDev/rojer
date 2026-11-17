@@ -176,7 +176,7 @@ export function libelleStatut(ligne: Pick<LigneAbonnement, "statut" | "debutPaya
 }
 
 /** Les états dont on ne revient pas : on souscrit un nouvel abonnement (Checkout). */
-const TERMINES = new Set(["canceled", "incomplete_expired"]);
+export const TERMINES: ReadonlySet<string> = new Set(["canceled", "incomplete_expired"]);
 /** Un abonnement Stripe qui court encore (payé, impayé, premier paiement en attente) : on le gère, on n'en ajoute pas. */
 export const abonnementEnCours = (statut: string | null) => statut !== null && !TERMINES.has(statut);
 

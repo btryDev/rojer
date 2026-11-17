@@ -84,7 +84,7 @@ describe("aiguillageDe : le client de l'objet relu, et les effets propres à l'o
     expect(carteQuiAPaye).not.toHaveBeenCalled();
   });
 
-  it("session d'abonnement : la relecture suit par la file ; une session « setup » (d'avant le 2026-11-16) n'est plus suivie", async () => {
+  it("session d'abonnement : la relecture suit par la file ; une session sans abonnement n'est pas suivie", async () => {
     api.checkout.sessions.retrieve.mockResolvedValue({ mode: "subscription", customer: "cus_1" });
     expect(await aiguillageDe(faux, "v1.checkout.session.completed", "cs_1")).toEqual({ clientStripe: "cus_1" });
     // Une autre session restée ouverte (second onglet) ne peut plus être payée ;
@@ -92,7 +92,7 @@ describe("aiguillageDe : le client de l'objet relu, et les effets propres à l'o
     expect(expirerSessionsOuvertes).toHaveBeenCalledWith(faux, "cus_1");
     vi.mocked(expirerSessionsOuvertes).mockRejectedValueOnce(new Error("injoignable"));
     expect(await aiguillageDe(faux, "v1.checkout.session.completed", "cs_1")).toEqual({ clientStripe: "cus_1" });
-    api.checkout.sessions.retrieve.mockResolvedValue({ mode: "setup", customer: "cus_1" });
+    api.checkout.sessions.retrieve.mockResolvedValue({ mode: "payment", customer: "cus_1" });
     expect(await aiguillageDe(faux, "v1.checkout.session.completed", "cs_1")).toMatchObject({ clientStripe: null });
   });
 

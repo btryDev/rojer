@@ -32,6 +32,7 @@ import { clientStripe } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
 import { colonnesDe } from "@/lib/stripe/synchronisation";
 import { motifDErreur } from "@/lib/stripe/synchronisation";
+import { TERMINES } from "@/lib/abonnements/droits";
 
 const appliquer = process.argv.includes("--appliquer");
 const prisma = new PrismaClient();
@@ -60,7 +61,7 @@ async function main() {
       // Stripe fait foi : la copie peut retarder. Un abonnement qui n'est plus
       // un essai ni sa pause (il paie, ou attend un paiement) n'est pas repris
       // — la ligne est laissée telle quelle, la relecture la mettra à jour.
-      if (s && !ESSAIS_STRIPE.includes(s.status) && s.status !== "canceled" && s.status !== "incomplete_expired") {
+      if (s && !ESSAIS_STRIPE.includes(s.status) && !TERMINES.has(s.status)) {
         laisses++;
         console.error(`ligne ${l.id} laissée : l'abonnement Stripe est « ${s.status} », plus un essai`);
         continue;

@@ -321,14 +321,23 @@ const STOCKS = ["etablissements", "membres", "prestataires"] as const satisfies 
  * l'excédent sera gelé. Vide : rien ne dépasse.
  */
 export async function depassements(db: Db, compteId: string, formule: string): Promise<Depassement[]> {
-  const cible: Regime = { formule: formuleDesPlafonds(formule), essai: null };
-  const nombres = await Promise.all(
+  return depassementsDe(await stocksDuCompte(db, compteId), formule);
+}
+
+/** Ce que le compte utilise de chaque stock, compté une fois (page Abonnement : plusieurs formules visées). */
+export async function stocksDuCompte(db: Db, compteId: string): Promise<number[]> {
+  return Promise.all(
     STOCKS.map(async (cle) => {
       if (cle !== "membres") return dejaUtilisesDuCompte(db, cle, new Date());
       const [membres, invitations] = await Promise.all([membresDuCompte(compteId), invitationsDuCompte(compteId)]);
       return membres.length + invitations.length;
     }),
   );
+}
+
+/** Les dépassements d'une formule visée, à partir des stocks déjà comptés. */
+export function depassementsDe(nombres: number[], formule: string): Depassement[] {
+  const cible: Regime = { formule: formuleDesPlafonds(formule), essai: null };
   return STOCKS.flatMap((quota, i) => {
     const plafond = plafondDe(cible, quota);
     return plafond !== null && nombres[i] > plafond ? [{ quota, utilise: nombres[i], plafond }] : [];

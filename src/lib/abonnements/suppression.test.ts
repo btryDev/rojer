@@ -32,10 +32,34 @@ vi.mock("@/lib/email", () => ({
   publicAppUrl: () => "https://rojer.test",
   motifErreur: (e: unknown) => (e instanceof Error ? e.message : "erreur"),
 }));
-vi.mock("./rappels", () => ({ adressesDesProprietaires: m.adresses }));
+// La boucle d'envoi aux propriétaires vit dans rappels.ts (revue du
+// 2026-11-17) : la même, branchée sur les adresses et l'envoi simulés.
+vi.mock("./rappels", () => ({
+  adressesDesProprietaires: m.adresses,
+  ecrireAuxProprietaires: async (compteId: string, message: { subject: string; text: string }) => {
+    let partis = 0;
+    let echec = false;
+    try {
+      for (const to of await m.adresses(compteId)) {
+        try {
+          await m.sendMail({ to, ...message });
+          partis++;
+        } catch {
+          echec = true;
+        }
+      }
+    } catch {
+      echec = true;
+    }
+    return { partis, echec };
+  },
+}));
 vi.mock("./saisie", () => ({ PAGE_ABONNEMENT: "/compte/abonnement" }));
 vi.mock("@/lib/stripe/client", () => ({ OPTIONS_WEBHOOK: {} }));
-vi.mock("@/lib/stripe/synchronisation", () => ({ synchroniserClientStripe: m.synchroniser }));
+vi.mock("@/lib/stripe/synchronisation", async (reel) => ({
+  toutLister: (await reel<typeof import("@/lib/stripe/synchronisation")>()).toutLister,
+  synchroniserClientStripe: m.synchroniser,
+}));
 vi.mock("@/lib/suppression/fichiers", () => ({ clesDesEtablissements: vi.fn() }));
 vi.mock("@/lib/storage", () => ({ getStorage: () => m.stockage }));
 const { alerter } = vi.hoisted(() => ({ alerter: vi.fn() }));

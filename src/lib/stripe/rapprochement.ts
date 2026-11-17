@@ -20,13 +20,19 @@ import type Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
 import { demanderSynchronisations } from "./file";
 import { idStripe } from "./ids";
+import { TERMINES } from "@/lib/abonnements/droits";
 import { toutLister } from "./synchronisation";
 
-/** Statuts terminés chez Stripe : plus rien n'y change. */
-const TERMINES = ["canceled", "incomplete_expired"];
 const PAR_LOT = 500;
 
 const NES_DEPUIS_S = 3 * 24 * 3600;
+/**
+ * Les demandes du rapprochement sont datées un quart d'heure plus tard : la
+ * file sert par date, et une relecture née d'un paiement (9 h 05) ne doit pas
+ * attendre derrière tous les comptes demandés à 9 h (revue du 2026-11-17).
+ * Une demande déjà en file garde sa date (`LEAST`).
+ */
+const DECALAGE_MS = 15 * 60_000;
 
 /** Les clients des abonnements créés chez Stripe ces trois derniers jours, une fois chacun. */
 async function clientsDesAbonnementsRecents(stripe: Stripe, maintenant: Date): Promise<string[]> {
@@ -36,8 +42,9 @@ async function clientsDesAbonnementsRecents(stripe: Stripe, maintenant: Date): P
 }
 
 export async function rapprocher(maintenant: Date, stripe: Stripe): Promise<{ demandes: number }> {
+  const plusTard = new Date(maintenant.getTime() + DECALAGE_MS);
   const recents = await clientsDesAbonnementsRecents(stripe, maintenant);
-  await demanderSynchronisations(recents, maintenant);
+  await demanderSynchronisations(recents, plusTard);
   let demandes = recents.length;
   let apres: string | undefined;
   for (;;) {
@@ -45,7 +52,7 @@ export async function rapprocher(maintenant: Date, stripe: Stripe): Promise<{ de
       // Un compte en essai n'a pas de client Stripe (ADR-053 § 9, amendé le
       // 2026-11-16) : rien à relire.
       where: {
-        OR: [{ statut: null }, { statut: { notIn: TERMINES } }],
+        OR: [{ statut: null }, { statut: { notIn: [...TERMINES] } }],
         stripeCustomerId: apres ? { gt: apres } : { not: null },
       },
       orderBy: { stripeCustomerId: "asc" },
@@ -53,7 +60,7 @@ export async function rapprocher(maintenant: Date, stripe: Stripe): Promise<{ de
       select: { stripeCustomerId: true },
     });
     const clients = lot.flatMap((l) => (l.stripeCustomerId ? [l.stripeCustomerId] : []));
-    await demanderSynchronisations(clients, maintenant);
+    await demanderSynchronisations(clients, plusTard);
     demandes += clients.length;
     if (lot.length < PAR_LOT) return { demandes };
     apres = clients.at(-1);

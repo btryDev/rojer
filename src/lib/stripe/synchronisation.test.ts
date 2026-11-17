@@ -20,8 +20,6 @@ const abo = (o: Partial<Stripe.Subscription> & { id: string; prix?: string }) =>
   ({
     status: "active",
     created: 1,
-    trial_end: null,
-    trial_start: null,
     cancel_at: null,
     cancel_at_period_end: false,
     items: { data: [{ current_period_end: 1_800_000_000, price: { id: `price_${o.prix ?? "x"}`, lookup_key: o.prix ?? null } }] },
@@ -81,7 +79,6 @@ describe("colonnesDe", () => {
       id: "sub_1",
       status: "active",
       prix: "rojer_pro_annuel",
-      trial_end: 1_790_000_000,
       cancel_at_period_end: true,
       cancel_at: 1_800_000_000,
     });
