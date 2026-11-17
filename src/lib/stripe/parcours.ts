@@ -133,9 +133,18 @@ const tauxEnVigueur = (stripe: Stripe) => tauxDeTva(stripe).catch(() => null);
  * l'abonnement garde l'ancienne, et la facture attend (rendue à régler). Une
  * baisse déjà planifiée est abandonnée d'abord : le dernier choix l'emporte.
  */
-export async function monterDeFormule(stripe: Stripe, abonnement: Stripe.Subscription, priceId: string): Promise<string | null> {
+export async function monterDeFormule(
+  stripe: Stripe,
+  abonnement: Stripe.Subscription,
+  { priceId, intervalle }: { priceId: string; intervalle: "month" | "year" },
+): Promise<string | null> {
   const item = abonnement.items.data[0];
   if (!item || item.price.id === priceId) return null;
+  // Le rythme change (mois ↔ année) : la période repart aujourd'hui, comme la
+  // page l'annonce. Stripe garde sinon la date d'origine de l'abonnement
+  // (répétition du 2026-11-17 : passé à l'année le 10 juin, payé jusqu'au
+  // 10 avril suivant).
+  const rythmeChange = item.price.recurring?.interval !== intervalle;
   // La mise à jour d'abord : si elle échoue, la baisse prévue reste intacte.
   // Le taux de TVA n'y est pas reposé : une mise à jour en attente de
   // paiement (`pending_if_incomplete`) n'accepte que les articles et le
@@ -145,6 +154,8 @@ export async function monterDeFormule(stripe: Stripe, abonnement: Stripe.Subscri
     {
       items: [{ id: item.id, price: priceId }],
       proration_behavior: "always_invoice",
+      // Version d'API « dahlia » : un objet, `{ type }`.
+      ...(rythmeChange ? { billing_cycle_anchor: { type: "now" as const } } : {}),
       payment_behavior: "pending_if_incomplete",
       expand: ["latest_invoice"],
     },
@@ -250,8 +261,10 @@ export async function carteQuiAPaye(stripe: Stripe, factureId: string): Promise<
   if (client.deleted || abonnement.status === "canceled" || abonnement.status === "incomplete_expired") return;
   if (carte && carte !== idStripe(client.invoice_settings?.default_payment_method)) {
     // Rattachée au client, ou rien : une carte à usage unique ne se pose pas.
-    const moyen = await stripe.paymentMethods.retrieve(carte);
-    if (idStripe(moyen.customer) === clientId) {
+    // Illisible (retirée entre-temps) : comme une carte à usage unique — le
+    // rangement de l'abonnement, plus bas, se fait quand même.
+    const moyen = await stripe.paymentMethods.retrieve(carte).catch(() => null);
+    if (moyen && idStripe(moyen.customer) === clientId) {
       await stripe.customers.update(clientId, { invoice_settings: { default_payment_method: carte } });
     }
   }

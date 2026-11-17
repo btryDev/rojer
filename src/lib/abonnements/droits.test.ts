@@ -68,7 +68,7 @@ describe("droitsDe", () => {
     expect(message(null)).toMatch(/^Démarrez votre essai gratuit/);
     expect(message(ligne({ statut: null }))).toMatch(/^Démarrez votre essai gratuit/);
     for (const statut of ["unpaid", "incomplete"]) {
-      expect(message(ligne({ statut })), statut).toMatch(/^Une facture attend son paiement.*consultables\.$/);
+      expect(message(ligne({ statut })), statut).toMatch(/^Votre dernier paiement n.est pas passé.*rouvrir la saisie.*consultables\.$/);
       expect(message(ligne({ statut, debutPayantLe: new Date("2026-01-01") })), statut).toMatch(/et exportables\.$/);
     }
     for (const statut of ["canceled", "incomplete_expired"]) {

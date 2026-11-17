@@ -115,7 +115,7 @@ export function droitsDe(ligne: LigneAbonnement | null, ctx: ContexteDroits): Dr
     case "sans-essai":
       return ferme("Démarrez votre essai gratuit pour saisir dans Rojer : vos dossiers restent consultables.");
     case "facture-en-attente":
-      return ferme(`Une facture attend son paiement : réglez-la depuis la page Abonnement pour rouvrir la saisie. ${consultables(paye)}`);
+      return ferme(`Votre dernier paiement n'est pas passé : depuis la page Abonnement, changez de carte ou confirmez le paiement pour rouvrir la saisie. ${consultables(paye)}`);
     case "essai-termine":
       return ferme(`Votre essai est terminé : abonnez-vous pour reprendre la saisie. ${consultables(false)}`);
     case "abonnement-termine":

@@ -178,6 +178,9 @@ export async function reglerFactureAction(formData: FormData): Promise<void> {
   try {
     const { courant } = abonnementCourant(await abonnementsDuClient(stripe, customerId));
     if (courant?.status === "incomplete") cible = await versLaFactureEnAttente(stripe, courant);
+    // Un impayé arrivé ici (onglet resté sur l'ancien bouton « Régler la
+    // facture ») : la page, qui propose le portail — jamais « à jour ».
+    else if (courant && abonnementEnCours(courant.status) && courant.status !== "active") cible = PAGE_ABONNEMENT;
   } catch {
     redirect(`${PAGE_ABONNEMENT}?stripe=indisponible`);
   }
@@ -218,7 +221,7 @@ export async function changerFormuleAction(formData: FormData): Promise<void> {
       const prix = (await prixDesFormules(stripe)).get(formule);
       if (!prix) throw new Error("prix introuvable");
       if (sens === "montee") {
-        const aRegler = await monterDeFormule(stripe, courant, prix.priceId);
+        const aRegler = await monterDeFormule(stripe, courant, { priceId: prix.priceId, intervalle: INTERVALLE_STRIPE[visee.periodicite] });
         await synchroniserClientStripe(stripe, customerId).catch(() => null);
         cible = aRegler ?? `${PAGE_ABONNEMENT}?formule=changee`;
       } else if (sens === "baisse") {

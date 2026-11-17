@@ -138,24 +138,34 @@ describe("parcours Stripe", () => {
   });
 
   it("monter : tout de suite, prorata facturé, appliquée seulement si payée ; une baisse planifiée est abandonnée d'abord", async () => {
-    const sub = { id: "sub_1", schedule: "sub_sched_1", items: { data: [{ id: "si_1", price: { id: "price_em" } }] } } as unknown as Stripe.Subscription;
+    const sub = { id: "sub_1", schedule: "sub_sched_1", items: { data: [{ id: "si_1", price: { id: "price_em", recurring: { interval: "month" } } }] } } as unknown as Stripe.Subscription;
+    const pm = { priceId: "price_pm", intervalle: "month" as const };
     api.subscriptions.update.mockResolvedValue({ latest_invoice: { status: "paid" } });
-    expect(await monterDeFormule(stripe, sub, "price_pm")).toBeNull();
+    expect(await monterDeFormule(stripe, sub, pm)).toBeNull();
     expect(api.subscriptionSchedules.release).toHaveBeenCalledWith("sub_sched_1");
     // La mise à jour d'abord : si elle échoue, la baisse prévue reste intacte.
     expect(api.subscriptions.update.mock.invocationCallOrder.at(-1)).toBeLessThan(api.subscriptionSchedules.release.mock.invocationCallOrder.at(-1)!);
     api.subscriptionSchedules.release.mockClear();
     api.subscriptions.update.mockRejectedValueOnce(new Error("refus"));
-    await expect(monterDeFormule(stripe, sub, "price_pm")).rejects.toThrow("refus");
+    await expect(monterDeFormule(stripe, sub, pm)).rejects.toThrow("refus");
     expect(api.subscriptionSchedules.release).not.toHaveBeenCalled();
     api.subscriptions.update.mockResolvedValue({ latest_invoice: { status: "paid" } });
     expect(api.subscriptions.update).toHaveBeenLastCalledWith(
       "sub_1",
-      { items: [{ id: "si_1", price: "price_pm" }], proration_behavior: "always_invoice", payment_behavior: "pending_if_incomplete", expand: ["latest_invoice"] },
+      {
+        items: [{ id: "si_1", price: "price_pm" }],
+        proration_behavior: "always_invoice",
+        payment_behavior: "pending_if_incomplete",
+        expand: ["latest_invoice"],
+      },
       { idempotencyKey: "monter-sub_1-price_em-price_pm" },
     );
     api.subscriptions.update.mockResolvedValue({ latest_invoice: { status: "open", hosted_invoice_url: "https://invoice.stripe.com/i/2" } });
-    expect(await monterDeFormule(stripe, { ...sub, schedule: null } as unknown as Stripe.Subscription, "price_pm")).toBe("https://invoice.stripe.com/i/2");
+    expect(await monterDeFormule(stripe, { ...sub, schedule: null } as unknown as Stripe.Subscription, pm)).toBe("https://invoice.stripe.com/i/2");
+    // Le rythme change (mois → année) : la période repart aujourd'hui (répétition du 2026-11-17).
+    api.subscriptions.update.mockResolvedValue({ latest_invoice: { status: "paid" } });
+    await monterDeFormule(stripe, { ...sub, schedule: null } as unknown as Stripe.Subscription, { priceId: "price_ea", intervalle: "year" });
+    expect(api.subscriptions.update.mock.calls.at(-1)?.[1]).toMatchObject({ billing_cycle_anchor: { type: "now" }, proration_behavior: "always_invoice" });
   });
 
   it("baisser : un planning — la période en cours, puis la nouvelle formule une période, puis rendu à lui-même ; annuler = rendre", async () => {

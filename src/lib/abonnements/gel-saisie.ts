@@ -10,8 +10,8 @@ import { PAGE_DU_GEL } from "@/lib/auth/portee/gel";
 
 /**
  * Les gestes qu'un gel laisse ouverts (ADR-053 § 14) : supprimer, retirer un
- * accès, une page publique ou une déclaration, demander de l'aide — liste
- * fermée, `quotas-gel-garde.test.ts`.
+ * accès, une page publique ou une déclaration, demander de l'aide, démarrer
+ * l'essai, s'abonner — liste fermée, `quotas-gel-garde.test.ts`.
  */
 export { ouvrirAuGel } from "@/lib/auth/portee/gel";
 import { gelesDuCompte } from "./quotas";

@@ -28,7 +28,9 @@ export const transactionEnCours = new AsyncLocalStorage<object>();
 /**
  * Les gestes qu'un gel, ou une saisie fermée, laissent ouverts, liste fermée
  * (`quotas-gel-garde.test.ts`) : supprimer, retirer un accès ou une page
- * publique, demander de l'aide, démarrer l'essai (ADR-053 § 3).
+ * publique, demander de l'aide, démarrer l'essai, s'abonner (ADR-053 § 3 ;
+ * s'abonner depuis le 2026-11-17 — le client Stripe s'écrit sur la ligne
+ * d'abonnement d'un compte dont la saisie est fermée).
  */
 const ouvertAuGel = new AsyncLocalStorage<true>();
 /**

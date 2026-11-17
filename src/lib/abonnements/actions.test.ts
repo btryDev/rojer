@@ -180,8 +180,15 @@ describe("reglerFactureAction", () => {
     expect(await redirigeVers(reglerFactureAction(poste()))).toBe("https://invoice.stripe.com/i/3");
   });
 
-  it("rien à confirmer (à jour, terminé ; un impayé se règle au portail) : la page le dit", async () => {
-    for (const statut of ["active", "canceled", "past_due", "unpaid"]) {
+  it("un impayé arrivé ici (onglet resté sur l'ancien bouton) : la page, jamais « à jour »", async () => {
+    for (const statut of ["past_due", "unpaid"]) {
+      m.abonnementsDuClient.mockResolvedValue([abonnement(statut)]);
+      expect(await redirigeVers(reglerFactureAction(poste()))).toBe("/compte/abonnement");
+    }
+  });
+
+  it("rien à confirmer (à jour, terminé) : la page le dit", async () => {
+    for (const statut of ["active", "canceled"]) {
       m.abonnementsDuClient.mockResolvedValue([abonnement(statut)]);
       expect(await redirigeVers(reglerFactureAction(poste()))).toBe("/compte/abonnement?facture=aucune");
     }
@@ -205,7 +212,7 @@ describe("changerFormuleAction", () => {
   it("montée : tout de suite ; une facture à régler renvoie vers elle", async () => {
     m.abonnementsDuClient.mockResolvedValue([actif("rojer_essentiel_mensuel")]);
     expect(await redirigeVers(changerFormuleAction(formulaire("rojer_pro_annuel")))).toBe("/compte/abonnement?formule=changee");
-    expect(m.monterDeFormule).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ id: "sub_actif" }), "price_pa");
+    expect(m.monterDeFormule).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ id: "sub_actif" }), { priceId: "price_pa", intervalle: "year" });
     m.monterDeFormule.mockResolvedValue("https://invoice.stripe.com/i/3");
     expect(await redirigeVers(changerFormuleAction(formulaire("rojer_pro_annuel")))).toBe("https://invoice.stripe.com/i/3");
     expect(m.planifierBaisse).not.toHaveBeenCalled();

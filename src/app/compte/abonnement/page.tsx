@@ -5,7 +5,7 @@ import { compteDeLaPage, getOptionalCompte, type Db } from "@/lib/auth/compte";
 import { MESSAGE_COMPTE_CHANGE } from "@/lib/auth/compte-attendu";
 import { ChampCompteAttendu } from "@/components/compte/ChampCompteAttendu";
 import { requireUser } from "@/lib/auth/require-user";
-import { abonnementDuCompte, contexteDroits, offreLancee } from "@/lib/abonnements/saisie";
+import { PAGE_ABONNEMENT, abonnementDuCompte, contexteDroits, offreLancee } from "@/lib/abonnements/saisie";
 import { droitsDe, gesteAbonnement, libelleStatut, OUVRENT, phaseDuCompte, resiliationPrevue } from "@/lib/abonnements/droits";
 import { preselection, vueAbonnement } from "@/lib/abonnements/vue-abonnement";
 import { lireOffreChoisie } from "@/lib/abonnements/offre-choisie";
@@ -79,11 +79,6 @@ function effetDuChangement(sens: "montee" | "baisse", actuelle: string | null, v
 }
 
 /**
- * Les formules vers lesquelles un abonnement qui paie peut aller, avec, pour
- * chacune, son sens (montée tout de suite, baisse en fin de période) et ce qui
- * dépasserait ; et la baisse déjà planifiée. Sans réponse de Stripe : rien.
- */
-/**
  * Au retour de Checkout (`?paiement=termine`) : la copie de l'abonnement est
  * relue chez Stripe AVANT l'affichage. Sans cela, la page montrait encore
  * « Essai terminé » et le bandeau de saisie fermée à qui venait de payer, le
@@ -98,6 +93,11 @@ async function relireApresPaiement(db: Db, compteId: string): Promise<void> {
   await synchroniserClientStripe(clientStripeLecture(config), ligne.stripeCustomerId, { attendreMs: 5_000 }).catch(() => null);
 }
 
+/**
+ * Les formules vers lesquelles un abonnement qui paie peut aller, avec, pour
+ * chacune, son sens (montée tout de suite, baisse en fin de période) et ce qui
+ * dépasserait ; et la baisse déjà planifiée. Sans réponse de Stripe : rien.
+ */
 async function changementsPossibles(
   db: Db,
   compteId: string,
@@ -332,9 +332,19 @@ export default async function AbonnementPage({
           </MessageFormulaire>
           <MessageFormulaire ton="info">
             {paiement === "termine"
-              ? phase.type === "abonne"
+              ? phase.type === "abonne" && phase.statut === "active"
                 ? "Paiement reçu : votre abonnement est actif."
-                : "Paiement terminé. Votre abonnement s'affiche ici dans quelques secondes : rechargez la page s'il n'apparaît pas."
+                : phase.type === "abonne"
+                  ? null
+                  : (
+                      <>
+                        Paiement terminé. Votre abonnement s&apos;affiche ici dans quelques secondes :{" "}
+                        <Link href={PAGE_ABONNEMENT} className="underline">
+                          actualiser la page
+                        </Link>
+                        .
+                      </>
+                    )
               : formuleChange
                 ? MESSAGES_FORMULE[formuleChange]
                 : paiementEnConfirmation
