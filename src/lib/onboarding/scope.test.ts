@@ -47,48 +47,12 @@ describe("evaluerScopeSecteur — les trois secteurs instruits", () => {
 });
 
 describe("evaluerScopeSecteur — hors des trois secteurs, elle constate", () => {
-  it.each([
-    ["43.22A", "BTP"],
-    ["86.10Z", "santé"],
-    ["20.15Z", "chimique"],
-  ])("nomme la famille d'activité de %s", (naf, mot) => {
-    const r = evaluerScopeSecteur(naf);
-    expect(r.status).toBe("sans_referentiel");
-    if (r.status === "sans_referentiel") expect(r.constat).toContain(mot);
-  });
-
-  it("reste utilisable sur une division qu'elle ne sait pas nommer (96.02A coiffure)", () => {
-    const r = evaluerScopeSecteur("96.02A");
-    expect(r.status).toBe("sans_referentiel");
-    if (r.status === "sans_referentiel") {
-      expect(r.constat).toContain("Aucun référentiel de risques types");
-    }
-  });
-
-  it("dit ce qui marche quand même, et pas seulement ce qui manque", () => {
-    // La phrase existe pour empêcher la lecture « votre secteur est refusé ».
-    // Ce qui est absent, c'est le pré-remplissage du document unique ; le
-    // référentiel de conformité, lui, ne lit jamais le code NAF.
-    const r = evaluerScopeSecteur("43.22A");
-    if (r.status !== "sans_referentiel") throw new Error("état inattendu");
-    expect(r.consequence).toContain("Vous pouvez créer votre dossier");
-    expect(r.consequence).toContain("registre de sécurité");
-  });
-
-  it("ne parle plus de refus, d'interdiction ni de fiabilité du document", () => {
-    // Les anciennes phrases disaient « la plateforme ne peut pas produire un
-    // DUERP fiable » — un jugement sur le droit, et faux : aucun texte ne
-    // définit le document unique par secteur. `L. 4121-3` et `R. 4121-1`
-    // disent « évaluez les risques », sans nommer ni secteur ni liste.
-    const interdits =
-      /refus|ne peut pas|impossible|non couvert par la plateforme|fiable/i;
-    for (const naf of ["43.22A", "86.10Z", "96.02A", "55.10Z"]) {
-      const r = evaluerScopeSecteur(naf);
-      if (r.status !== "sans_referentiel") throw new Error(naf);
-      expect(r.constat, naf).not.toMatch(interdits);
-      expect(r.consequence, naf).not.toMatch(interdits);
-    }
-  });
+  it.each(["43.22A", "86.10Z", "20.15Z", "96.02A"])(
+    "rend « sans_referentiel » pour %s, sans phrase : l'onboarding n'affiche plus rien (2026-11-17)",
+    (naf) => {
+      expect(evaluerScopeSecteur(naf)).toEqual({ status: "sans_referentiel" });
+    },
+  );
 
   it("signale un format invalide (xxx) — la seule saisie encore fautive", () => {
     expect(evaluerScopeSecteur("xxx").status).toBe("format_invalide");

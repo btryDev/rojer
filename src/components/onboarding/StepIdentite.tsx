@@ -262,18 +262,16 @@ export function StepIdentite({
                   // faisait dire à la technologie d'assistance qu'il y avait
                   // une saisie à corriger, alors qu'il n'y a rien à corriger.
                   aria-invalid={Boolean(erreurNaf)}
-                  // Les trois messages de ce champ lui sont chaînés, et non
-                  // le seul premier : le panneau « secteur non couvert »
-                  // annonce que l'inscription ne peut pas aboutir. Le champ
-                  // passait « invalide » sans que rien ne dise pourquoi.
+                  // Les messages de ce champ lui sont chaînés. Un code hors
+                  // des trois secteurs n'affiche plus rien (2026-11-17) :
+                  // l'encadré laissait croire que Rojer ne faisait pas le
+                  // DUERP de ce métier ; c'est l'écran du choix du secteur
+                  // qui le dit, au moment où il compte.
                   aria-describedby={
                     [
                       erreurNaf ? "codeNaf-erreur" : null,
                       scope?.status === "ok" && !erreurNaf
                         ? "codeNaf-secteur"
-                        : null,
-                      scope?.status === "sans_referentiel" && !erreurNaf
-                        ? "codeNaf-sans-referentiel"
                         : null,
                     ]
                       .filter(Boolean)
@@ -300,28 +298,6 @@ export function StepIdentite({
                     <Check aria-hidden className="size-3.5" />
                     Secteur reconnu : {scope.secteurNom}
                   </p>
-                ) : null}
-                {/* Ambre, et non plus l'encre signal : rien n'est en faute
-                    et rien ne bloque. Le rouge disait « corrigez ce champ »
-                    et fermait la porte ; l'ambre dit « sachez ceci », comme
-                    le bandeau de couverture le fait pour une question
-                    ouverte. `role="status"` et non `role="alert"`, pour la
-                    même raison — ce n'est pas une erreur à annoncer, c'est un
-                    fait à lire. */}
-                {scope?.status === "sans_referentiel" && !erreurNaf ? (
-                  <div
-                    id="codeNaf-sans-referentiel"
-                    role="status"
-                    className="mt-2 rounded-[18px] bg-[color:var(--board-amber-wash)] px-3.5 py-3 text-[12.5px] leading-[1.5] text-[color:var(--board-amber-ink)] shadow-[inset_0_0_0_1px_var(--board-amber)]"
-                  >
-                    <p className="m-0 font-semibold">
-                      Pas de référentiel de risques types pour ce secteur
-                    </p>
-                    <p className="m-0 mt-1">{scope.constat}</p>
-                    <p className="m-0 mt-2 text-[color:var(--board-slate-ink)]">
-                      {scope.consequence}
-                    </p>
-                  </div>
                 ) : null}
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {SUGGESTIONS_NAF.map((s) => (

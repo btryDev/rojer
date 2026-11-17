@@ -38,77 +38,12 @@
  * (`lib/perimetre/couverture.ts`, axe `secteur_duerp`), qui reprend le constat
  * en permanence sur le dossier — pas seulement au moment de la saisie.
  *
- * La source de vérité reste `trouverReferentielParNaf` (lib/referentiels) ; on
- * se contente de nommer la famille d'activité quand on sait la nommer.
+ * La source de vérité reste `trouverReferentielParNaf` (lib/referentiels).
  */
 
 import { trouverReferentielParNaf } from "@/lib/referentiels";
 
-const NAF_REGEX = /^(\d{2})\.?\d{2}[A-Z]?$/;
-
-// Familles pour lesquelles aucun référentiel sectoriel n'est instruit —
-// permet de nommer l'activité à l'utilisateur plutôt que de lui servir un
-// « non couvert » anonyme. Clé = division NAF à 2 chiffres.
-//
-// Cette table ne décide de rien : elle ne sert qu'à écrire une phrase. Une
-// division absente donne la même issue, avec une phrase plus générale.
-const SANS_REFERENTIEL_NOMME: Record<string, string> = {
-  "01": "agriculture",
-  "02": "sylviculture",
-  "03": "pêche",
-  "05": "industries extractives",
-  "06": "industries extractives",
-  "07": "industries extractives",
-  "08": "industries extractives",
-  "09": "industries extractives",
-  "10": "industrie agro-alimentaire",
-  "11": "industrie des boissons",
-  "12": "industrie du tabac",
-  "13": "industrie textile",
-  "14": "industrie de l'habillement",
-  "15": "industrie du cuir",
-  "16": "industrie du bois",
-  "17": "industrie du papier",
-  "18": "imprimerie",
-  "19": "cokéfaction, raffinage",
-  "20": "industrie chimique",
-  "21": "industrie pharmaceutique",
-  "22": "plasturgie, caoutchouc",
-  "23": "métallurgie, verre, céramique",
-  "24": "métallurgie",
-  "25": "travail des métaux",
-  "26": "électronique, informatique (fabrication)",
-  "27": "fabrication électrique",
-  "28": "fabrication de machines",
-  "29": "industrie automobile",
-  "30": "fabrication de transports",
-  "31": "fabrication de meubles",
-  "32": "autres industries",
-  "33": "réparation industrielle",
-  "35": "énergie",
-  "36": "eau",
-  "37": "assainissement",
-  "38": "déchets",
-  "39": "dépollution",
-  "41": "construction",
-  "42": "génie civil",
-  "43": "travaux de construction spécialisés (BTP)",
-  "49": "transport terrestre",
-  "50": "transport maritime",
-  "51": "transport aérien",
-  "52": "logistique",
-  "53": "poste, courrier",
-  "55": "hébergement (hôtellerie)",
-  "84": "administration publique",
-  "85": "enseignement",
-  "86": "santé",
-  "87": "hébergement médico-social",
-  "88": "action sociale",
-  "90": "arts et spectacle",
-  "91": "bibliothèques, musées",
-  "92": "jeux de hasard",
-  "93": "sports, loisirs",
-};
+const NAF_REGEX = /^\d{2}\.?\d{2}[A-Z]?$/;
 
 export type ScopeResult =
   /** Un référentiel sectoriel couvre ce code : le DUERP sera pré-rempli. */
@@ -121,24 +56,20 @@ export type ScopeResult =
       /**
        * Aucun référentiel sectoriel n'est instruit pour ce code.
        *
-       * **Ne bloque rien.** Le dossier se crée, le référentiel de conformité
-       * fonctionne normalement — il ne lit pas le NAF —, et c'est le document
-       * unique, et lui seul, qui partira sans base pré-chargée. Les deux
-       * champs ci-dessous sont des phrases à afficher, jamais un motif de
-       * refus.
+       * **Ne bloque rien, et ne s'affiche plus à l'onboarding** (2026-11-17,
+       * décision de la propriétaire) : l'encadré « Pas de référentiel de
+       * risques types pour ce secteur » laissait croire que Rojer ne faisait
+       * pas le DUERP de ce métier, alors que le DUERP part du secteur le plus
+       * proche et se complète par « + Ajouter un risque ». Le constat se dit
+       * au choix du secteur (`duerp/[id]/secteur`) et sur le dossier (axe
+       * `secteur_duerp`).
        */
       status: "sans_referentiel";
-      /** Le fait, en une phrase : ce que le produit n'a pas pour ce code. */
-      constat: string;
-      /** Ce que ça change concrètement pour le dossier — et ce que ça ne
-       *  change pas. */
-      consequence: string;
     };
 
 export function evaluerScopeSecteur(codeNaf: string): ScopeResult {
   const naf = codeNaf.trim().toUpperCase();
-  const m = NAF_REGEX.exec(naf);
-  if (!m) return { status: "format_invalide" };
+  if (!NAF_REGEX.test(naf)) return { status: "format_invalide" };
 
   const ref = trouverReferentielParNaf(naf);
   if (ref) {
@@ -149,14 +80,5 @@ export function evaluerScopeSecteur(codeNaf: string): ScopeResult {
     };
   }
 
-  const division = m[1];
-  const familleNommee = SANS_REFERENTIEL_NOMME[division];
-  return {
-    status: "sans_referentiel",
-    constat: familleNommee
-      ? `Votre activité relève de ${familleNommee}. Aucun référentiel de risques types n'est encore instruit pour ce secteur.`
-      : "Aucun référentiel de risques types n'est encore instruit pour ce code d'activité.",
-    consequence:
-      "Vous pouvez créer votre dossier : le suivi des obligations, le calendrier des vérifications et le registre de sécurité ne dépendent pas de votre code d'activité — ils se déclenchent sur vos équipements et sur votre typologie d'établissement. Seul le document unique démarrera sans unités de travail ni risques pré-remplis : vous choisirez le secteur le plus proche, ou vous les saisirez vous-même. Votre dossier indiquera en permanence que ce point n'est pas couvert.",
-  };
+  return { status: "sans_referentiel" };
 }
