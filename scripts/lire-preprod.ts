@@ -306,18 +306,24 @@ async function abonnement(db: Lecteur, adresse: string) {
   }
   for (const [rang, l] of rows.entries()) {
     const titre = `${adresse} (${l.role}${rows.length > 1 ? `, compte ${rang + 1} sur ${rows.length}` : ""})`;
-    if (!l.ligne || !l.client) {
+    // ~~Sans client Stripe : « aucune ligne »~~ [2026-11-17 : faux depuis
+    // l'essai compté chez Rojer — une ligne d'essai n'a pas de client
+    // Stripe ; elle se lit comme les autres.]
+    if (!l.ligne) {
       console.log(`${titre} : aucune ligne d'abonnement pour ce compte.`);
       continue;
     }
     console.log(
-      `${titre} : état ${l.statut ?? "VIDE"} ; formule ${l.formule ?? "VIDE"} ; ` +
+      `${titre} : client Stripe ${l.client ? "oui" : "aucun (essai compté chez Rojer)"} ; ` +
+        `état ${l.statut ?? "VIDE"} ; formule ${l.formule ?? "VIDE"} ; ` +
         `abonnement Stripe ${l.abonnement_lie ? "lié" : "NON LIÉ"} ; fin d'essai ${ouDate(l.fin_essai)} ; ` +
         `fin de période ${ouDate(l.fin_periode)} ; résiliation en fin de période ${l.resilie ? "oui" : "non"} ; ` +
         `fin prévue ${ouDate(l.fin_prevue)} ; essai utilisé ${ouDate(l.essai_utilise)} ; ` +
         `premier paiement ${ouDate(l.debut_payant)} ; relue chez Stripe ${ouDate(l.relue)} ; ` +
         `ligne créée ${ouDate(l.creee)}, modifiée ${ouDate(l.modifiee)}.`,
     );
+    // Sans client Stripe, rien en file ni chez Stripe à lire.
+    if (!l.client) continue;
     const {
       rows: [s],
     } = await db.query<{
