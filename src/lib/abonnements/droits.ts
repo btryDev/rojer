@@ -128,9 +128,9 @@ export function droitsDe(ligne: LigneAbonnement | null, ctx: ContexteDroits): Dr
       saisie: true,
       bandeau: {
         ton: "alerte",
-        // Refus de la carte ou confirmation demandée par la banque (3-D
-        // Secure) : la page de la facture chez Stripe sert les deux.
-        message: "Un paiement n'a pas abouti : réglez la facture en attente depuis la page Abonnement. Votre banque peut vous y demander une confirmation.",
+        // Carte refusée ou confirmation demandée par la banque (3-D Secure) :
+        // le portail de Stripe sert les deux (répétition du 2026-11-17).
+        message: "Votre dernier paiement n'est pas passé : depuis la page Abonnement, changez de carte ou confirmez le paiement.",
       },
     };
   }

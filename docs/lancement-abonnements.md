@@ -174,7 +174,9 @@ sur la préproduction, où fermer la saisie ne gêne personne.
    carte `4000 0025 0000 3155` (confirmation de la banque) : la confirmation
    se fait sur Checkout ; résilier depuis le portail. Carte
    `4000 0000 0000 0341` (changée au portail, puis renouvellement) :
-   l'impayé, puis « Régler la facture en attente ». Essai fini sans
+   l'impayé, puis « Changer de carte et payer » (le portail enregistre la
+   nouvelle carte et paie la facture ; carte `4000 0027 6000 3184` : la
+   confirmation de la banque s'y fait aussi). Essai fini sans
    abonnement : reculer `finEssai` de la ligne en base de test, la saisie se
    ferme. Comptes de test d'avant le 2026-11-16 (essais tenus chez Stripe) :
    `scripts/reprendre-essais-stripe.ts`, à blanc puis `--appliquer`.

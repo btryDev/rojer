@@ -25,7 +25,7 @@ import {
 } from "@/lib/stripe/parcours";
 import { clientStripeDuCompte } from "./client-stripe";
 import { demarrerEssaiDuCompte, PAGE_ESSAI, type EtatEssai } from "./essai";
-import { A_REGLER, aNomProvisoire, abonnementEnCours, resiliationDemandee } from "./droits";
+import { aNomProvisoire, abonnementEnCours, resiliationDemandee } from "./droits";
 import { INTERVALLE_STRIPE, estLookupKey, formuleDeLookupKey, formuleDuPrix } from "./formules";
 import { sensDuChangement } from "./changement";
 import { depassements } from "./quotas";
@@ -164,10 +164,12 @@ async function versLaFactureEnAttente(stripe: Stripe, courant: Stripe.Subscripti
 }
 
 /**
- * Régler la facture en attente (impayé, premier paiement à authentifier) :
- * la page hébergée de la facture, où une autre carte peut servir. Changer
- * de carte au portail ne relance pas une facture déjà marquée impayée
- * (audit du 2026-11-16). Rien à régler : la page de l'abonnement.
+ * Confirmer un premier paiement resté en attente (`incomplete` : la banque
+ * demande une confirmation) : la page hébergée de sa facture. Un impayé, lui,
+ * se règle au portail (`ouvrirPortailAction`), qui enregistre la nouvelle
+ * carte et relance la facture — la page de la facture n'enregistre pas une
+ * carte saisie sans la case « sauvegarder » (répétition du 2026-11-17). Rien
+ * à confirmer : la page de l'abonnement.
  */
 export async function reglerFactureAction(formData: FormData): Promise<void> {
   const proprietaire = await verifierProprietaire();
@@ -175,7 +177,7 @@ export async function reglerFactureAction(formData: FormData): Promise<void> {
   let cible = `${PAGE_ABONNEMENT}?facture=aucune`;
   try {
     const { courant } = abonnementCourant(await abonnementsDuClient(stripe, customerId));
-    if (courant && A_REGLER.has(courant.status)) cible = await versLaFactureEnAttente(stripe, courant);
+    if (courant?.status === "incomplete") cible = await versLaFactureEnAttente(stripe, courant);
   } catch {
     redirect(`${PAGE_ABONNEMENT}?stripe=indisponible`);
   }

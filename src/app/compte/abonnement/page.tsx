@@ -203,6 +203,7 @@ export default async function AbonnementPage({
   // Une seule lecture : la ligne sert à l'état affiché et aux droits.
   const ligne = c ? await abonnementDuCompte(c.db, c.compte.compteId) : null;
   const droits = droitsDe(ligne, ctx);
+  const saisieFermee = !droits.saisie;
   // Sans compte encore, `role` est nul : l'essai reste proposé.
   const geste = gesteAbonnement({ ouvert, role: c?.compte.role ?? null, ligne });
   const formule = formuleDeLookupKey(ligne?.formule);
@@ -371,24 +372,42 @@ export default async function AbonnementPage({
             {vue.cas === "portail" && (
               <>
                 {optionsChangement.length > 0 && <ChangerDeFormule options={optionsChangement} baisse={baisse} compteId={compteId} />}
-                {vue.factureEnAttente && (
+                {vue.aRegler === "premier-paiement" && (
                   <form action={reglerFactureAction} className="mt-2 mb-6">
                     <ChampCompteAttendu compteId={compteId} />
                     <p className="m-0 mb-4 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                      Une facture attend son paiement. Réglez-la sur la page sécurisée de Stripe, avec la même carte
-                      ou une autre : la saisie se rouvre dès qu&apos;elle est payée.
+                      Votre banque demande de confirmer le premier paiement. Confirmez-le sur la page sécurisée de Stripe.
                     </p>
-                    <BoutonEnvoi variant="board">Régler la facture en attente</BoutonEnvoi>
+                    <BoutonEnvoi variant="board">Confirmer le paiement</BoutonEnvoi>
                   </form>
                 )}
-                <FormulairePortail
-                  compteId={compteId}
-                  variant={vue.factureEnAttente ? "boardClair" : "board"}
-                  className={optionsChangement.length > 0 ? "mt-6" : "mt-2"}
-                >
-                  Carte, factures, résiliation : sur la page sécurisée de Stripe, notre prestataire de paiement.
-                  {baisse ? " Un changement de formule est prévu : pour résilier, choisissez d'abord « Garder ma formule »." : null}
-                </FormulairePortail>
+                {/* Un impayé : le portail de Stripe, où la carte se change (il
+                    l'enregistre et la met par défaut) et la facture se paie ou
+                    se confirme. La page de la facture, elle, n'enregistre pas
+                    une carte saisie sans la case « sauvegarder » : la carte
+                    refusée restait celle du mois suivant (répétition du
+                    2026-11-17). */}
+                {vue.aRegler === "impaye" ? (
+                  <FormulairePortail
+                    compteId={compteId}
+                    variant="board"
+                    libelle="Changer de carte et payer"
+                    className={optionsChangement.length > 0 ? "mt-6" : "mt-2"}
+                  >
+                    Votre dernier paiement n&apos;est pas passé. Changez de carte, ou confirmez le paiement si votre banque
+                    le demande : il est relancé aussitôt, sur la page sécurisée de Stripe.
+                    {saisieFermee ? " La saisie se rouvre dès qu'il est passé." : null}
+                  </FormulairePortail>
+                ) : (
+                  <FormulairePortail
+                    compteId={compteId}
+                    variant={vue.aRegler ? "boardClair" : "board"}
+                    className={optionsChangement.length > 0 ? "mt-6" : "mt-2"}
+                  >
+                    Carte, factures, résiliation : sur la page sécurisée de Stripe, notre prestataire de paiement.
+                    {baisse ? " Un changement de formule est prévu : pour résilier, choisissez d'abord « Garder ma formule »." : null}
+                  </FormulairePortail>
+                )}
               </>
             )}
             {/* Juste après un paiement, si la copie de l'abonnement retarde
@@ -410,11 +429,13 @@ export default async function AbonnementPage({
 function FormulairePortail({
   compteId,
   variant,
+  libelle = "Gérer mon abonnement",
   className,
   children,
 }: {
   compteId: string | null;
   variant: "board" | "boardClair";
+  libelle?: string;
   className?: string;
   children: React.ReactNode;
 }) {
@@ -422,7 +443,7 @@ function FormulairePortail({
     <form action={ouvrirPortailAction} className={className}>
       <ChampCompteAttendu compteId={compteId} />
       <p className="m-0 mb-5 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">{children}</p>
-      <BoutonEnvoi variant={variant}>Gérer mon abonnement</BoutonEnvoi>
+      <BoutonEnvoi variant={variant}>{libelle}</BoutonEnvoi>
     </form>
   );
 }

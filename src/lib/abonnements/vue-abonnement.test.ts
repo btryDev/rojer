@@ -37,11 +37,12 @@ describe("vueAbonnement", () => {
     expect(vueAbonnement(entree({ documentAttend: true }))).toMatchObject({ cas: "formulaire", annoncerDocument: true });
   });
 
-  it("abonné : la gestion ; une facture à régler le dit", () => {
-    expect(vueAbonnement(entree({ geste: "portail", statut: "active" }))).toEqual({ cas: "portail", titre: "Gérer", factureEnAttente: false });
-    for (const statut of ["past_due", "unpaid", "incomplete"]) {
-      expect(vueAbonnement(entree({ geste: "portail", statut })), statut).toMatchObject({ factureEnAttente: true });
+  it("abonné : la gestion ; un impayé se règle au portail, un premier paiement à confirmer sur sa facture", () => {
+    expect(vueAbonnement(entree({ geste: "portail", statut: "active" }))).toEqual({ cas: "portail", titre: "Gérer", aRegler: null });
+    for (const statut of ["past_due", "unpaid"]) {
+      expect(vueAbonnement(entree({ geste: "portail", statut })), statut).toMatchObject({ aRegler: "impaye" });
     }
+    expect(vueAbonnement(entree({ geste: "portail", statut: "incomplete" }))).toMatchObject({ aRegler: "premier-paiement" });
   });
 });
 

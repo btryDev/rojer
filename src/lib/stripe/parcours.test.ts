@@ -79,11 +79,12 @@ describe("parcours Stripe", () => {
   });
 
   it("carte qui a payé : celle du paiement de la facture devient celle du client ; la carte fixée quitte l'abonnement ; réglage posé s'il manque (2026-11-16)", async () => {
-    const facture = (pm: string | null) => ({
+    // La carte du paiement, rattachée au client (`customer`) ou à usage unique (`null`).
+    const facture = (pm: string | null, rattacheeA: string | null = "cus_1") => ({
       id: "in_1",
       customer: "cus_1",
       parent: { subscription_details: { subscription: "sub_1" } },
-      payments: { data: pm ? [{ status: "paid", payment: { payment_intent: { payment_method: pm } } }] : [] },
+      payments: { data: pm ? [{ status: "paid", payment: { payment_intent: { payment_method: { id: pm, customer: rattacheeA } } } }] : [] },
     });
     const reglee = { payment_settings: { save_default_payment_method: "on_subscription" } };
     const etat = (pmClient: string, sub: object) => {
@@ -94,9 +95,17 @@ describe("parcours Stripe", () => {
     api.invoices.retrieve.mockResolvedValue(facture("pm_nouvelle"));
     etat("pm_refusee", { ...reglee, default_payment_method: "pm_nouvelle" });
     await carteQuiAPaye(stripe, "in_1");
-    expect(api.invoices.retrieve).toHaveBeenCalledWith("in_1", { expand: ["payments.data.payment.payment_intent"] });
+    expect(api.invoices.retrieve).toHaveBeenCalledWith("in_1", { expand: ["payments.data.payment.payment_intent.payment_method"] });
     expect(api.customers.update).toHaveBeenCalledWith("cus_1", { invoice_settings: { default_payment_method: "pm_nouvelle" } });
     expect(api.subscriptions.update).toHaveBeenLastCalledWith("sub_1", { default_payment_method: "" });
+    // Payée sur la page de la facture sans « sauvegarder » : la carte n'est
+    // rattachée à personne, Stripe refuserait — le client n'est pas réécrit
+    // (répétition du 2026-11-17).
+    vi.clearAllMocks();
+    api.invoices.retrieve.mockResolvedValue(facture("pm_usage_unique", null));
+    etat("pm_refusee", { ...reglee, default_payment_method: null });
+    await carteQuiAPaye(stripe, "in_1");
+    expect(api.customers.update).not.toHaveBeenCalled();
     // Renouvellement ordinaire (la carte du client a payé) : le client n'est pas réécrit ; seule la carte fixée part.
     vi.clearAllMocks();
     api.invoices.retrieve.mockResolvedValue(facture("pm_c"));

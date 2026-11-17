@@ -311,9 +311,17 @@ et sans croire une information qui ne vient pas de Stripe.
    payer ne vaut que pour la fin de l'essai, et les limites de l'essai
    restent (le message de plafond y renvoie) ; le montant TTC prélevé est
    écrit avant le clic. (b) Le formulaire part de la formule en cours. (c)
-   Une facture qui attend (`past_due`, `unpaid`, `incomplete`) se règle
+   ~~Une facture qui attend (`past_due`, `unpaid`, `incomplete`) se règle
    depuis Rojer (« Régler la facture en attente », `reglerFactureAction`,
-   page hébergée de la facture) ; un `incomplete` n'est plus « déjà en
+   page hébergée de la facture)~~ [2026-11-17, répétition : la page de la
+   facture n'enregistre pas une carte saisie sans la case « sauvegarder »
+   (règle de Stripe : pour un abonnement, seulement si le client n'a aucune
+   carte par défaut) — la carte refusée restait celle du mois suivant. Un
+   impayé (`past_due`, `unpaid`) se règle au portail (« Changer de carte et
+   payer ») : il enregistre la carte, la met par défaut et paie la facture,
+   confirmation de la banque comprise — vérifié en répétition. Seul un
+   premier paiement à confirmer (`incomplete`) va encore à la page de sa
+   facture (« Confirmer le paiement »)] ; un `incomplete` n'est plus « déjà en
    cours ». (d) Une résiliation prévue pendant l'essai ferme le changement
    de formule, comme pour un abonnement qui paie. (e) Après l'essai,
    `/entreprises` aiguille (dossier existant ou onboarding). Le portail

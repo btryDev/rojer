@@ -100,7 +100,7 @@ describe("droitsDe", () => {
   it("paiement à régler (refus ou confirmation de la banque) : saisie ouverte, alerte", () => {
     expect(droitsDe(ligne({ statut: "past_due" }), EXIGE)).toEqual({
       saisie: true,
-      bandeau: { ton: "alerte", message: expect.stringMatching(/paiement n.a pas abouti.*confirmation/) },
+      bandeau: { ton: "alerte", message: expect.stringMatching(/n.est pas passé.*changez de carte ou confirmez le paiement/) },
     });
   });
 

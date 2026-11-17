@@ -174,24 +174,22 @@ describe("reglerFactureAction", () => {
     return f;
   };
 
-  it("impayé, ou premier paiement en attente : vers la facture ouverte", async () => {
+  it("premier paiement à confirmer : vers sa facture", async () => {
     m.factureARegler.mockResolvedValue("https://invoice.stripe.com/i/3");
-    for (const statut of ["past_due", "unpaid", "incomplete"]) {
-      m.abonnementsDuClient.mockResolvedValue([abonnement(statut)]);
-      expect(await redirigeVers(reglerFactureAction(poste()))).toBe("https://invoice.stripe.com/i/3");
-    }
+    m.abonnementsDuClient.mockResolvedValue([abonnement("incomplete")]);
+    expect(await redirigeVers(reglerFactureAction(poste()))).toBe("https://invoice.stripe.com/i/3");
   });
 
-  it("rien à régler (à jour, terminé, facture déjà payée) : la page le dit", async () => {
-    for (const statut of ["active", "canceled"]) {
+  it("rien à confirmer (à jour, terminé ; un impayé se règle au portail) : la page le dit", async () => {
+    for (const statut of ["active", "canceled", "past_due", "unpaid"]) {
       m.abonnementsDuClient.mockResolvedValue([abonnement(statut)]);
       expect(await redirigeVers(reglerFactureAction(poste()))).toBe("/compte/abonnement?facture=aucune");
     }
     expect(m.factureARegler).not.toHaveBeenCalled();
   });
 
-  it("impayé sans facture payable trouvée : la page ne dit pas « à jour »", async () => {
-    m.abonnementsDuClient.mockResolvedValue([abonnement("unpaid")]);
+  it("premier paiement sans facture payable trouvée : la page ne dit pas « à jour »", async () => {
+    m.abonnementsDuClient.mockResolvedValue([abonnement("incomplete")]);
     expect(await redirigeVers(reglerFactureAction(poste()))).toBe("/compte/abonnement?facture=introuvable");
   });
 

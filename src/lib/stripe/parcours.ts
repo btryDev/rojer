@@ -223,24 +223,29 @@ export async function planifierBaisse(
  * renouvellement. Appelée au paiement réussi d'une facture d'abonnement
  * (`invoice.paid`) :
  * - la carte qui a RÉELLEMENT payé cette facture (son paiement, lu chez
- *   Stripe) devient celle du client si elle en diffère — une carte payée sur
- *   la page d'une facture remplace celle qui avait été refusée. Un
- *   renouvellement ordinaire paie avec la carte du client : rien à écrire ;
+ *   Stripe) devient celle du client si elle en diffère et lui est rattachée.
+ *   Une carte saisie sur la page d'une facture sans la case « sauvegarder »
+ *   n'est rattachée à personne : Stripe refuse d'en faire la carte du client,
+ *   rien à écrire (répétition du 2026-11-17 — c'est pourquoi un impayé se
+ *   règle au portail, qui enregistre la carte). Un renouvellement ordinaire
+ *   paie avec la carte du client : rien à écrire non plus ;
  * - la carte que Stripe fixe sur l'abonnement à chaque paiement
- *   (`save_default_payment_method: on_subscription`, gardé : c'est lui qui
- *   rattache au client une carte saisie sur la page d'une facture) en est
- *   retirée ; le réglage est posé sur l'abonnement né de Checkout.
+ *   (`save_default_payment_method: on_subscription`) en est retirée : elle
+ *   passerait devant celle du client ; le réglage est posé sur l'abonnement
+ *   né de Checkout.
  * Limite écrite : un changement fait au portail entre ce paiement et un
  * nouvel essai de cet événement serait remplacé par la carte qui a payé.
  * Sans clé d'idempotence : ces écritures posent une valeur.
  */
 export async function carteQuiAPaye(stripe: Stripe, factureId: string): Promise<void> {
-  const facture = await stripe.invoices.retrieve(factureId, { expand: ["payments.data.payment.payment_intent"] });
+  const facture = await stripe.invoices.retrieve(factureId, { expand: ["payments.data.payment.payment_intent.payment_method"] });
   const abonnementId = idStripe(facture.parent?.subscription_details?.subscription);
   const clientId = idStripe(facture.customer);
   if (!abonnementId || !clientId) return;
   const intention = facture.payments?.data.find((p) => p.status === "paid")?.payment.payment_intent;
-  const carte = intention && typeof intention === "object" ? idStripe(intention.payment_method) : null;
+  const moyen = intention && typeof intention === "object" ? intention.payment_method : null;
+  // Rattachée au client, ou rien : une carte à usage unique ne se pose pas.
+  const carte = moyen && typeof moyen === "object" && idStripe(moyen.customer) === clientId ? moyen.id : null;
   const [client, abonnement] = await Promise.all([stripe.customers.retrieve(clientId), stripe.subscriptions.retrieve(abonnementId)]);
   if (client.deleted || abonnement.status === "canceled" || abonnement.status === "incomplete_expired") return;
   if (carte && carte !== idStripe(client.invoice_settings?.default_payment_method)) {

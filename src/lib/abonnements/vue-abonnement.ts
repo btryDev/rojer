@@ -25,7 +25,17 @@ export type VueAbonnement =
   | { cas: "aucune" }
   | { cas: "membre"; titre: string }
   | { cas: "essai"; titre: string }
-  | { cas: "portail"; titre: string; factureEnAttente: boolean }
+  | {
+      cas: "portail";
+      titre: string;
+      /**
+       * Un paiement à régler : un impayé (`past_due`, `unpaid`) se règle au
+       * portail de Stripe, qui enregistre la nouvelle carte et relance la
+       * facture ; un premier paiement à confirmer (`incomplete`), sur la page
+       * de sa facture (répétition du 2026-11-17).
+       */
+      aRegler: "impaye" | "premier-paiement" | null;
+    }
   | {
       cas: "formulaire";
       titre: string;
@@ -46,7 +56,11 @@ export function vueAbonnement(e: EntreeVue): VueAbonnement {
     case "essai":
       return { cas: "essai", titre: "Essai gratuit" };
     case "portail":
-      return { cas: "portail", titre: "Gérer", factureEnAttente: A_REGLER.has(e.statut ?? "") };
+      return {
+        cas: "portail",
+        titre: "Gérer",
+        aRegler: e.statut === "incomplete" ? "premier-paiement" : A_REGLER.has(e.statut ?? "") ? "impaye" : null,
+      };
     case "abonner":
       return {
         cas: "formulaire",
