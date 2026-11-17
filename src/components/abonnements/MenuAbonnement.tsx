@@ -11,6 +11,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
 
 import { SOUS_PAGES_ABONNEMENT } from "@/lib/abonnements/sous-pages";
 
@@ -22,7 +23,8 @@ const STYLES = {
     repos: "text-[color:var(--board-slate-ink)] hover:bg-[color:var(--board-slate-pale)]",
   },
   pastilles: {
-    nav: "-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 lg:hidden",
+    // `relative` : la rangée est le repère d'`offsetLeft` (défilement vers l'entrée ouverte).
+    nav: "relative -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 lg:hidden",
     lien: "whitespace-nowrap rounded-full px-4 py-2 text-[14px]",
     actif: "bg-[color:var(--board-ink)] font-semibold text-white",
     repos:
@@ -32,12 +34,21 @@ const STYLES = {
 
 export function MenuAbonnement() {
   const chemin = usePathname();
+  const pastilles = useRef<HTMLElement>(null);
+  // Sur téléphone, la rangée défile : la pastille de la page ouverte est
+  // amenée en vue, sans faire bouger la page (contrôle mobile du 2026-11-17 :
+  // « Paiement et factures » restait hors de l'écran).
+  useEffect(() => {
+    const nav = pastilles.current;
+    const actif = nav?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (nav && actif) nav.scrollLeft = actif.offsetLeft - (nav.clientWidth - actif.offsetWidth) / 2;
+  }, [chemin]);
   return (
     <>
       {(["carte", "pastilles"] as const).map((forme) => {
         const s = STYLES[forme];
         return (
-          <nav key={forme} aria-label="Abonnement" className={s.nav}>
+          <nav key={forme} ref={forme === "pastilles" ? pastilles : undefined} aria-label="Abonnement" className={s.nav}>
             {SOUS_PAGES_ABONNEMENT.map((p) => (
               <Link
                 key={p.href}
