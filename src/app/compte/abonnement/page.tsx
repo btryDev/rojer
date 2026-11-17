@@ -384,25 +384,22 @@ export default async function AbonnementPage({
                     une carte saisie sans la case « sauvegarder » : la carte
                     refusée restait celle du mois suivant (répétition du
                     2026-11-17). */}
-                <FormulairePortail
-                  compteId={compteId}
-                  variant="board"
-                  libelle={vue.aRegler ? "Changer de carte et payer" : undefined}
-                  className={optionsChangement.length > 0 ? "mt-6" : "mt-2"}
-                >
-                  {vue.aRegler ? (
-                    <>
-                      Votre dernier paiement n&apos;est pas passé. Changez de carte, ou confirmez le paiement si votre
-                      banque le demande : il est relancé aussitôt, sur la page sécurisée de Stripe.
-                      {!droits.saisie ? " La saisie se rouvre dès qu'il est passé." : null}
-                    </>
-                  ) : (
-                    <>
-                      Carte, factures, résiliation : sur la page sécurisée de Stripe, notre prestataire de paiement.
-                      {baisse ? " Un changement de formule est prévu : pour résilier, choisissez d'abord « Garder ma formule »." : null}
-                    </>
-                  )}
-                </FormulairePortail>
+                {vue.aRegler ? (
+                  <FormulairePortail
+                    compteId={compteId}
+                    libelle="Changer de carte et payer"
+                    className={optionsChangement.length > 0 ? "mt-6" : "mt-2"}
+                  >
+                    Votre dernier paiement n&apos;est pas passé. Changez de carte, ou confirmez le paiement si votre
+                    banque le demande : il est relancé aussitôt, sur la page sécurisée de Stripe.
+                    {!droits.saisie ? " La saisie se rouvre dès qu'il est passé." : null}
+                  </FormulairePortail>
+                ) : (
+                  <FormulairePortail compteId={compteId} className={optionsChangement.length > 0 ? "mt-6" : "mt-2"}>
+                    Carte, factures, résiliation : sur la page sécurisée de Stripe, notre prestataire de paiement.
+                    {baisse ? " Un changement de formule est prévu : pour résilier, choisissez d'abord « Garder ma formule »." : null}
+                  </FormulairePortail>
+                )}
               </>
             )}
             {/* Juste après un paiement, la vue ne propose pas de payer
@@ -449,13 +446,11 @@ function messageDeLaPage(p: {
 /** Le portail Stripe (carte, factures, résiliation), avec la phrase qui dit ce qu'on y fait. */
 function FormulairePortail({
   compteId,
-  variant,
   libelle = "Gérer mon abonnement",
   className,
   children,
 }: {
   compteId: string | null;
-  variant: "board" | "boardClair";
   libelle?: string;
   className?: string;
   children: React.ReactNode;
@@ -464,7 +459,7 @@ function FormulairePortail({
     <form action={ouvrirPortailAction} className={className}>
       <ChampCompteAttendu compteId={compteId} />
       <p className="m-0 mb-5 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">{children}</p>
-      <BoutonEnvoi variant={variant}>{libelle}</BoutonEnvoi>
+      <BoutonEnvoi variant="board">{libelle}</BoutonEnvoi>
     </form>
   );
 }

@@ -29,7 +29,7 @@ import {
   prendre,
 } from "./evenements";
 import { clientsDus, enEchecDurable } from "./file";
-import { carteQuiAPaye, expirerSessionsOuvertes, rendreBaisseApresMontee, rendrePlanningEchu } from "./parcours";
+import { carteQuiAPaye, expirerSessionsOuvertes, rendrePlanningEchu } from "./parcours";
 import { idStripe } from "./ids";
 import { motifDErreur, synchroniserSousBail } from "./synchronisation";
 import { OPTIONS_WEBHOOK } from "./client";
@@ -79,15 +79,7 @@ export async function aiguillageDe(stripe: Stripe, type: string, objetId: string
       return { clientStripe: client };
     }
     case "v1.invoice.paid": {
-      const facture = await stripe.invoices.retrieve(objetId, {}, OPTIONS_WEBHOOK);
-      const client = idStripe(facture.customer);
-      // La facture d'une montée de formule payée : la baisse prévue, gardée
-      // tant que la montée attendait son paiement, est rendue. Un échec fait
-      // réessayer la notification (la baisse ne doit pas défaire la montée).
-      const abonnementMonte = idStripe(facture.parent?.subscription_details?.subscription);
-      if (facture.billing_reason === "subscription_update" && abonnementMonte) {
-        await rendreBaisseApresMontee(stripe, abonnementMonte, facture.created);
-      }
+      const client = idStripe((await stripe.invoices.retrieve(objetId, {}, OPTIONS_WEBHOOK)).customer);
       // La carte qui a payé devient celle du client (`carteQuiAPaye`). Sans
       // bloquer la copie d'un paiement réussi (revue du 2026-11-16) : un
       // échec se signale, une fois par jour, pour un geste à la main.

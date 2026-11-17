@@ -134,16 +134,23 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
       const [catalogue, tauxTva] = await Promise.all([prixDesFormules(stripe), tauxDeTva(stripe)]);
       const prix = catalogue.get(formule);
       if (!prix || !tauxTva) throw new Error("prix ou TVA introuvable");
-      url = await ouvrirCheckout(stripe, {
-        customerId,
-        priceId: prix.priceId,
-        tauxTva,
-        metadata: { compteId },
-        // Stripe remplace `{CHECKOUT_SESSION_ID}` : la page ne croit ce retour
-        // que pour une session payée de ce client (`relireApresPaiement`).
-        succes: `${base}?paiement=termine&session={CHECKOUT_SESSION_ID}`,
-        annulation: base,
-      });
+      // La marque d'abord : la suppression du compte (ADR-058) la lit sous
+      // verrou et attend une heure, le temps que la page expire. Plus de
+      // ligne (compte effacé entre-temps) : pas de paiement.
+      const marque = await db.abonnement.updateMany({ where: { compteId }, data: { paiementOuvertLe: new Date() } });
+      url =
+        marque.count !== 1
+          ? PAGE_ABONNEMENT
+          : await ouvrirCheckout(stripe, {
+              customerId,
+              priceId: prix.priceId,
+              tauxTva,
+              metadata: { compteId },
+              // Stripe remplace `{CHECKOUT_SESSION_ID}` : la page ne croit ce
+              // retour que pour une session payée de ce client.
+              succes: `${base}?paiement=termine&session={CHECKOUT_SESSION_ID}`,
+              annulation: base,
+            });
     }
   } catch (e) {
     // Le même geste parti d'un autre onglet est passé ou passe : rien n'a

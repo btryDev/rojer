@@ -64,7 +64,11 @@ deux fois.
    propriétaire peut réabonner (décision du 2026-11-09, usage des éditeurs
    qui préviennent toute l'équipe). Leur envoi ne retient pas la suppression.
 4. **La suppression** (`lib/abonnements/suppression.ts`), un compte à la fois,
-   par la tâche quotidienne :
+   par la tâche quotidienne. [2026-11-17 : jamais pendant un paiement —
+   « S'abonner » écrit `Abonnement.paiementOuvertLe` avant d'ouvrir Checkout,
+   dont la page expire au bout d'une heure ; la suppression le lit sous le
+   verrou de la ligne et attend le lendemain si la page a moins d'une heure.
+   Les sessions Checkout ne sont plus lues ni expirées par la suppression.]
    - chez Stripe, qui fait foi : les sessions Checkout ouvertes expirent ;
      un abonnement OUVERT chez Stripe (notre copie en retard d'un webhook)
      annule la suppression et fait relire la copie ; un premier paiement en

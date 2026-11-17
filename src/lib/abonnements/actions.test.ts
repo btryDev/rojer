@@ -23,6 +23,7 @@ const m = vi.hoisted(() => ({
   planifierBaisse: vi.fn(),
   annulerBaisse: vi.fn(),
   depassements: vi.fn(),
+  marquer: vi.fn(async () => ({ count: 1 })),
 }));
 vi.mock("next/navigation", () => ({ redirect: m.redirect }));
 vi.mock("@/lib/email", () => ({ publicAppUrl: () => "https://rojer.test" }));
@@ -52,7 +53,7 @@ vi.mock("./saisie", () => ({
   verifierProprietaire: async () => ({
     user: { id: "u1", email: "a@b.fr" },
     compte: { compteId: "c1" },
-    db: { abonnement: { findUnique: async () => m.ligne } },
+    db: { abonnement: { findUnique: async () => m.ligne, updateMany: m.marquer } },
   }),
   verifierRole: async () => {},
 }));
@@ -72,14 +73,12 @@ const formulaire = (formule = "rojer_pro_annuel") => {
   f.set("formule", formule);
   return f;
 };
-const abonnement = (status: string, created = 1, autres: object = {}) => ({
+const abonnement = (status: string, created = 1) => ({
   id: `sub_${status}`,
   status,
   created,
   items: { data: [] },
-  latest_invoice: `in_${status}`,
   metadata: {},
-  ...autres,
 });
 
 beforeEach(() => {
@@ -108,6 +107,15 @@ describe("sAbonnerAction", () => {
       expect.anything(),
       expect.objectContaining({ customerId: "cus_neuf", priceId: "price_pa", tauxTva: "txr_tva", succes: "https://rojer.test/compte/abonnement?paiement=termine&session={CHECKOUT_SESSION_ID}" }),
     );
+    // La marque du paiement ouvert, AVANT Checkout : la suppression du compte l'attend (ADR-058).
+    expect(m.marquer).toHaveBeenCalledWith({ where: { compteId: "c1" }, data: { paiementOuvertLe: expect.any(Date) } });
+    expect(m.marquer.mock.invocationCallOrder[0]).toBeLessThan(m.ouvrirCheckout.mock.invocationCallOrder[0]);
+  });
+
+  it("le compte a été effacé entre-temps (plus de ligne à marquer) : pas de paiement", async () => {
+    m.marquer.mockResolvedValueOnce({ count: 0 });
+    expect(await redirigeVers(sAbonnerAction(formulaire()))).toBe("/compte/abonnement");
+    expect(m.ouvrirCheckout).not.toHaveBeenCalled();
   });
 
   it("abonnement terminé partout : Checkout souscrit, au nom du compte", async () => {

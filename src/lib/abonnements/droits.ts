@@ -67,10 +67,9 @@ export const PREAVIS_ESSAI_MS = 7 * 24 * 60 * 60_000;
  * libellé, limites de l'essai, page Abonnement ; relecture du 2026-11-17) :
  * - `abonne` : un abonnement Stripe qui paie ou est à régler (`OUVRENT`) ;
  * - `essai` : l'essai compté chez Rojer (ADR-053 § 9, amendé le
- *   2026-11-16) — une fin à venir, aucun paiement jamais confirmé ; une
- *   souscription abandonnée à la confirmation de la banque (`incomplete`,
- *   `incomplete_expired`) ne le coupe pas ;
- * - `facture-en-attente` : impayé, premier paiement non abouti, hors essai ;
+ *   2026-11-16) — une fin à venir, aucun paiement jamais confirmé, quel que
+ *   soit l'état d'une souscription qui n'a pas abouti ;
+ * - `facture-en-attente` : un paiement à régler (`A_REGLER`), hors essai ;
  * - `sans-essai`, `essai-termine` (jamais payé), `abonnement-termine` (a payé).
  * Un état que Stripe ajouterait demain tombe dans un état fermé.
  */

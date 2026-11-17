@@ -4,7 +4,6 @@ import type Stripe from "stripe";
 vi.mock("server-only", () => ({}));
 
 import { carteQuiAPaye,
-  rendreBaisseApresMontee,
   creerClientStripe,
   oublierLesPrix,
   annulerBaisse,
@@ -55,6 +54,7 @@ describe("parcours Stripe", () => {
       customer: "cus_1",
       consent_collection: { terms_of_service: "required" },
       allowed_payment_method_types: ["card"],
+      expires_at: expect.any(Number),
       subscription_data: { metadata: { userId: "u1" }, default_tax_rates: ["txr_tva"] },
     });
     expect(api.checkout.sessions.list).toHaveBeenCalledWith({ customer: "cus_1", status: "open", limit: 10 }, expect.anything());
@@ -139,30 +139,6 @@ describe("parcours Stripe", () => {
     expect(api.customers.update).not.toHaveBeenCalled();
   });
 
-  it("montée payée : la baisse gardée est rendue ; pas une baisse posée après la facture, ni hors de Rojer, ni une montée encore en attente", async () => {
-    api.subscriptionSchedules.release.mockReset().mockResolvedValue({});
-    const sub = (o: object = {}) => ({ id: "sub_1", schedule: "sched_1", pending_update: null, metadata: { compteId: "c1" }, ...o });
-    api.subscriptionSchedules.retrieve.mockResolvedValue({ id: "sched_1", status: "active", created: 100 });
-    api.subscriptions.retrieve.mockResolvedValue(sub());
-    await rendreBaisseApresMontee(stripe, "sub_1", 200);
-    expect(api.subscriptionSchedules.release).toHaveBeenCalledWith("sched_1", {}, expect.anything());
-    api.subscriptionSchedules.release.mockClear();
-    // Baisse planifiée APRÈS la facture (notification en retard) : gardée.
-    await rendreBaisseApresMontee(stripe, "sub_1", 50);
-    // Montée encore en attente, abonnement hors de Rojer, pas de planning : rien.
-    api.subscriptions.retrieve.mockResolvedValue(sub({ pending_update: { expires_at: 1 } }));
-    await rendreBaisseApresMontee(stripe, "sub_1", 200);
-    api.subscriptions.retrieve.mockResolvedValue(sub({ metadata: {} }));
-    await rendreBaisseApresMontee(stripe, "sub_1", 200);
-    api.subscriptions.retrieve.mockResolvedValue(sub({ schedule: null }));
-    await rendreBaisseApresMontee(stripe, "sub_1", 200);
-    expect(api.subscriptionSchedules.release).not.toHaveBeenCalled();
-    // Le rendu échoue et le planning est toujours actif : l'erreur remonte (la notification sera retentée).
-    api.subscriptions.retrieve.mockResolvedValue(sub());
-    api.subscriptionSchedules.release.mockRejectedValueOnce(new Error("réseau"));
-    await expect(rendreBaisseApresMontee(stripe, "sub_1", 200)).rejects.toThrow("réseau");
-  });
-
   it("monter : tout de suite, prorata facturé, appliquée seulement si payée ; une baisse planifiée est abandonnée d'abord", async () => {
     const sub = { id: "sub_1", schedule: "sub_sched_1", items: { data: [{ id: "si_1", price: { id: "price_em", recurring: { interval: "month" } } }] } } as unknown as Stripe.Subscription;
     const pm = { priceId: "price_pm", intervalle: "month" as const };
@@ -188,11 +164,11 @@ describe("parcours Stripe", () => {
     );
     api.subscriptions.update.mockResolvedValue({ latest_invoice: { status: "open", hosted_invoice_url: "https://invoice.stripe.com/i/2" } });
     expect(await monterDeFormule(stripe, { ...sub, schedule: null } as unknown as Stripe.Subscription, pm)).toBe("https://invoice.stripe.com/i/2");
-    // Montée seulement en attente de son paiement : la baisse prévue reste (revue du 2026-11-17).
+    // Montée en attente de son paiement : la baisse prévue est rendue quand même — le dernier choix l'emporte.
     api.subscriptionSchedules.release.mockClear();
     api.subscriptions.update.mockResolvedValue({ pending_update: { expires_at: 1 }, latest_invoice: { status: "open", hosted_invoice_url: "https://invoice.stripe.com/i/3" } });
     expect(await monterDeFormule(stripe, { ...sub, latest_invoice: "in_9" } as unknown as Stripe.Subscription, pm)).toBe("https://invoice.stripe.com/i/3");
-    expect(api.subscriptionSchedules.release).not.toHaveBeenCalled();
+    expect(api.subscriptionSchedules.release).toHaveBeenCalledWith("sub_sched_1");
     expect(api.subscriptions.update.mock.calls.at(-1)?.[2]).toEqual({ idempotencyKey: "monter-sub_1-price_em-price_pm-in_9" });
     // Le rythme change (mois → année) : la période repart aujourd'hui (répétition du 2026-11-17).
     api.subscriptions.update.mockResolvedValue({ latest_invoice: { status: "paid" } });

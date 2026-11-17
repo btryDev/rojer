@@ -313,9 +313,8 @@ et sans croire une information qui ne vient pas de Stripe.
    une période, puis rendu) ; refusée tant que le compte a plus
    d'utilisateurs que la formule visée ; ce qui dépasse d'autre passe en
    lecture seule (§ 14), annoncé avant le clic. Une montée abandonne une
-   baisse planifiée [2026-11-17 : une montée encore en attente de son
-   paiement la garde ; sa facture payée, la baisse est rendue
-   (`rendreBaisseApresMontee`)] ; « Garder ma formule » la rend. Tant qu'une baisse est
+   baisse planifiée [2026-11-17 : même encore en attente de son paiement —
+   le dernier choix l'emporte, la page le montre] ; « Garder ma formule » la rend. Tant qu'une baisse est
    planifiée, une invitation qu'elle ne permettrait pas est refusée
    (`refusInvitationBaissePrevue`) : sans cela, on inviterait après l'avoir
    planifiée et on garderait trop d'utilisateurs — ils ne sont jamais

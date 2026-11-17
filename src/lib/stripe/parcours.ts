@@ -11,7 +11,7 @@ import "server-only";
 // § 9) : Stripe ne voit qu'un abonnement payé, ouvert par Checkout.
 
 import type Stripe from "stripe";
-import { OPTIONS_RELECTURE, OPTIONS_WEBHOOK } from "./client";
+import { OPTIONS_RELECTURE } from "./client";
 import { idStripe } from "./ids";
 import { INTERVALLE_STRIPE, LOOKUP_KEYS, formuleDeLookupKey } from "@/lib/abonnements/formules";
 import { tauxConformes } from "./tva";
@@ -56,6 +56,9 @@ export async function ouvrirPortail(stripe: Stripe, { customerId, retour }: { cu
  * numéro de TVA. L'APPELANT refuse tant qu'un abonnement n'est pas terminé :
  * deux onglets, ce seraient deux abonnements.
  */
+/** La durée de vie d'une page de paiement Checkout, en secondes. */
+export const DUREE_PAGE_DE_PAIEMENT_S = 3600;
+
 export async function ouvrirCheckout(
   stripe: Stripe,
   {
@@ -83,6 +86,10 @@ export async function ouvrirCheckout(
     billing_address_collection: "required",
     success_url: succes,
     cancel_url: annulation,
+    // Une heure pour payer (Stripe : 30 min à 24 h). La suppression d'un
+    // compte attend une heure après l'ouverture d'un paiement
+    // (`paiementOuvertLe`) : la page ne peut plus être payée au-delà.
+    expires_at: Math.floor(Date.now() / 1000) + DUREE_PAGE_DE_PAIEMENT_S,
   });
   if (!session.url) throw new Error("session Checkout sans adresse");
   return session.url;
@@ -109,18 +116,12 @@ export async function expirerSessionsOuvertes(stripe: Stripe, customerId: string
   await Promise.all(ouvertes.data.map((s) => stripe.checkout.sessions.expire(s.id, {}, options)));
 }
 
-/** Les sessions Checkout ouvertes du client (un paiement peut y être en cours). */
-export async function sessionsOuvertes(stripe: Stripe, customerId: string, options: Stripe.RequestOptions = OPTIONS_RELECTURE) {
-  return (await stripe.checkout.sessions.list({ customer: customerId, status: "open", limit: 10 }, options)).data;
-}
-
 /**
- * L'adresse de la dernière facture d'un abonnement si elle attend un
- * paiement (`open`) : carte refusée, authentification demandée, impayé.
- * La page hébergée de la facture se règle avec une autre carte, 3-D Secure
- * compris. `null` sinon.
+ * L'adresse de la facture d'une montée de formule qui attend son paiement
+ * (`open`) : la banque demande une confirmation, ou la carte est refusée.
+ * `null` sinon. (Un impayé se règle au portail, pas ici.)
  */
-export async function factureARegler(stripe: Stripe, derniere: Stripe.Subscription["latest_invoice"]): Promise<string | null> {
+async function factureARegler(stripe: Stripe, derniere: Stripe.Subscription["latest_invoice"]): Promise<string | null> {
   return (await factureOuverte(stripe, derniere))?.hosted_invoice_url ?? null;
 }
 
@@ -174,12 +175,14 @@ export async function monterDeFormule(
     // renouvellement (dans les 24 h de la première) n'est pas un rejeu.
     { idempotencyKey: `monter-${abonnement.id}-${item.price.id}-${priceId}-${idStripe(abonnement.latest_invoice) ?? "sans-facture"}` },
   );
-  // La montée est faite : rendre la baisse prévue ne doit pas la faire passer
-  // pour un échec. Si Stripe refuse, la page montre encore la baisse et
-  // propose « Garder ma formule ». Une montée seulement EN ATTENTE de son
-  // paiement (`pending_update`) n'est pas faite : la baisse prévue reste, elle
-  // vaudra si la facture n'est jamais payée (revue du 2026-11-17).
-  const planning = misAJour.pending_update ? null : idStripe(abonnement.schedule);
+  // Monter, c'est le dernier choix : la baisse prévue est rendue, même si la
+  // montée attend encore son paiement — la page le montre (plus de baisse
+  // prévue, une facture à régler). ~~Une montée en attente gardait la
+  // baisse, rendue au paiement~~ [2026-11-17, simplification : la garder
+  // supposait de dater le planning contre la facture, et un planning
+  // réutilisé par une baisse suivante trompait cette date.] Si Stripe
+  // refuse, la page montre encore la baisse et propose « Garder ma formule ».
+  const planning = idStripe(abonnement.schedule);
   if (planning) {
     try {
       await stripe.subscriptionSchedules.release(planning);
@@ -188,32 +191,6 @@ export async function monterDeFormule(
     }
   }
   return factureARegler(stripe, misAJour.latest_invoice);
-}
-
-/**
- * Une montée restée en attente de son paiement (`pending_update`) a gardé la
- * baisse prévue (`monterDeFormule`). Sa facture payée, la montée s'applique :
- * la baisse est rendue, le dernier choix l'emporte (revue du 2026-11-17 —
- * sans cela, la baisse défaisait la montée payée au renouvellement).
- */
-export async function rendreBaisseApresMontee(stripe: Stripe, abonnementId: string, factureCreeeLe: number): Promise<void> {
-  const abonnement = await stripe.subscriptions.retrieve(abonnementId, {}, OPTIONS_WEBHOOK);
-  const id = idStripe(abonnement.schedule);
-  // Un abonnement de Rojer seulement (Checkout pose `compteId`), sans montée
-  // encore en attente.
-  if (!id || abonnement.pending_update || !abonnement.metadata?.compteId) return;
-  const planning = await stripe.subscriptionSchedules.retrieve(id, {}, OPTIONS_WEBHOOK);
-  // Une baisse planifiée APRÈS cette montée est le dernier choix : une
-  // notification en retard ne la défait pas (relecture du 2026-11-17).
-  if (planning.status !== "active" || planning.created > factureCreeeLe) return;
-  try {
-    await stripe.subscriptionSchedules.release(id, {}, OPTIONS_WEBHOOK);
-  } catch (e) {
-    // Déjà rendu par une notification voisine : rien à refaire ; sinon,
-    // l'erreur du rendu remonte (la notification sera retentée).
-    const relu = await stripe.subscriptionSchedules.retrieve(id, {}, OPTIONS_WEBHOOK).catch(() => null);
-    if (!relu || relu.status === "active" || relu.status === "not_started") throw e;
-  }
 }
 
 /**

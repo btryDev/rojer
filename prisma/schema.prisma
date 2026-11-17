@@ -2488,6 +2488,11 @@ model Abonnement {
   /// Rappel d'une semaine avant la fin de l'essai, envoyé par Rojer : même
   /// garde que celui de la veille.
   rappelSemaineEssaiLe     DateTime?
+  /// La dernière page de paiement Stripe ouverte par « S'abonner » : la
+  /// suppression du compte (ADR-058) attend une heure après, le temps que
+  /// la page expire (`expires_at` de Checkout) — un paiement n'aboutit
+  /// jamais sur un compte effacé.
+  paiementOuvertLe         DateTime?
   /// L'échéance annuelle dont le renouvellement a été rappelé par Rojer, 30
   /// jours avant (décision du 2026-11-10 : les annuels seulement, l'e-mail de
   /// Stripe partirait aussi chaque mois). Posée AVANT l'envoi par une
