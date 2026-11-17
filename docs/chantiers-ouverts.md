@@ -3500,3 +3500,26 @@ rendu.]
 - **Vérifié le 2026-11-10** : aucun import de rapports en masse. Les rapports
   se déposent un par un (`uploadRapport`, `src/lib/rapports/actions.ts`) ; le
   seul import est celui du DUERP.
+
+## 24. Titres d'onglet et mesure côté navigateur (2026-11-17)
+
+Relevés en passant la liste de contrôle de production de Next.js
+(nextjs.org/docs/app/guides/production-checklist, mise à jour du
+2026-11-06) et une liste de performance React. Sans urgence.
+
+- **Un titre d'onglet par page.** Une cinquantaine de pages de l'app
+  (calendrier, équipements, DUERP, fiche salarié…) n'ont pas de `metadata` :
+  elles héritent toutes de « Rojer — Conformité santé-sécurité TPE/PME »
+  (`app/layout.tsx`, `title` sans modèle). Plusieurs onglets ouverts ne se
+  distinguent pas, et c'est le critère WCAG 2.4.2 (page titrée). À faire :
+  un modèle `%s · Rojer` à la racine, puis un `metadata` (ou
+  `generateMetadata` pour les fiches) sur chaque page d'entrée. Les pages
+  d'erreur ont déjà le leur.
+- **Mesurer les Core Web Vitals sur la préprod.** Rien n'est mesuré côté
+  navigateur (ni Lighthouse, ni `useReportWebVitals`, ni
+  `@next/bundle-analyzer`) ; `docs/plan-test-de-charge.md` ne couvre que le
+  serveur. Lighthouse en navigation privée sur les pages lourdes (calendrier,
+  tableau de bord, équipements). Le React Compiler (`reactCompiler: true`,
+  Next 16) n'est à envisager que si cette mesure montre une lenteur
+  d'interface : 165 composants client, 30 mémoïsations manuelles ciblées,
+  aucune lenteur rapportée.
