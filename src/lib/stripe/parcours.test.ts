@@ -58,6 +58,9 @@ describe("parcours Stripe", () => {
       subscription_data: { metadata: { userId: "u1" }, default_tax_rates: ["txr_tva"] },
     });
     expect(api.checkout.sessions.list).toHaveBeenCalledWith({ customer: "cus_1", status: "open", limit: 10 }, expect.anything());
+    // Préproduction, compte Stripe non activé : pas d'acceptation demandée sur Checkout.
+    await ouvrirCheckout(stripe, { customerId: "cus_1", priceId: "price_e", tauxTva: "txr_tva", metadata: {}, succes: "s", annulation: "a", conditions: false });
+    expect(api.checkout.sessions.create.mock.calls.at(-1)?.[0]).not.toHaveProperty("consent_collection");
     expect(api.checkout.sessions.expire).toHaveBeenCalledWith("cs_ancienne", {}, expect.anything());
     expect(api.checkout.sessions.expire.mock.invocationCallOrder[0]).toBeLessThan(api.checkout.sessions.create.mock.invocationCallOrder[0]);
   });

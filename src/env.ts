@@ -147,6 +147,15 @@ const schema = z
       (v) => (typeof v === "string" ? v.trim().toLowerCase() || undefined : v),
       z.enum(["oui", "non"]).optional(),
     ),
+    // L'acceptation des conditions générales sur la page Checkout (ADR-053
+    // § 8). `non` : un compte Stripe de test non activé, qui ne peut pas
+    // porter l'adresse des conditions (préproduction, 2026-11-17) — Rojer
+    // garde la preuve d'acceptation du démarrage de l'essai. Refusée en
+    // production (`configurationStripe`). Absente ou `oui` : exigée.
+    STRIPE_CONDITIONS_SUR_CHECKOUT: z.preprocess(
+      (v) => (typeof v === "string" ? v.trim().toLowerCase() || undefined : v),
+      z.enum(["oui", "non"]).optional(),
+    ),
 
     // Les tâches (`taches/quotidiennes.ts`, `clevercloud/cron.json`, chaque
     // minute) : le secret que la crontab présente. Absente, la route répond 404.
@@ -249,6 +258,11 @@ export function avertissementsEnvironnement(env: Env = process.env): string[] {
   }
   if (stripe.active && !vide(env.ALERTES_EMAIL)) {
     avertissements.push("Stripe actif sans ALERTES_EMAIL : les alertes (échecs durables, litiges, remboursements) ne vont qu'au journal.");
+  }
+  if (stripe.active && String(vide(env.STRIPE_CONDITIONS_SUR_CHECKOUT) ?? "").toLowerCase() === "non") {
+    avertissements.push(
+      "STRIPE_CONDITIONS_SUR_CHECKOUT=non : la page de paiement ne demande pas l'acceptation des conditions générales (compte Stripe de test non activé).",
+    );
   }
   if (stripe.active && !vide(env.TEMOIN_TACHES_URL)) {
     avertissements.push(

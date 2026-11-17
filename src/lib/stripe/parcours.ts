@@ -68,7 +68,17 @@ export async function ouvrirCheckout(
     metadata,
     succes,
     annulation,
-  }: { customerId: string; priceId: string; tauxTva: string; metadata: Metadonnees; succes: string; annulation: string },
+    conditions = true,
+  }: {
+    customerId: string;
+    priceId: string;
+    tauxTva: string;
+    metadata: Metadonnees;
+    succes: string;
+    annulation: string;
+    /** Faire accepter les conditions générales (refusé sans adresse au compte Stripe). */
+    conditions?: boolean;
+  },
 ) {
   await expirerSessionsOuvertes(stripe, customerId);
   const session = await stripe.checkout.sessions.create({
@@ -80,7 +90,7 @@ export async function ouvrirCheckout(
     allowed_payment_method_types: ["card"],
     line_items: [{ price: priceId, quantity: 1 }],
     subscription_data: { metadata, default_tax_rates: [tauxTva] },
-    consent_collection: { terms_of_service: "required" },
+    ...(conditions ? { consent_collection: { terms_of_service: "required" as const } } : {}),
     tax_id_collection: { enabled: true },
     customer_update: { name: "auto", address: "auto" },
     billing_address_collection: "required",

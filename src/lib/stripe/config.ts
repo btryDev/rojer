@@ -25,7 +25,14 @@ const FORME_SECRET_WEBHOOK_STRIPE = /^whsec_\S+$/;
 export type ModeStripe = "test" | "live";
 
 export type ConfigurationStripe =
-  | { active: true; cle: string; secretWebhook: string; mode: ModeStripe }
+  | {
+      active: true;
+      cle: string;
+      secretWebhook: string;
+      mode: ModeStripe;
+      /** Checkout fait accepter les conditions générales (`STRIPE_CONDITIONS_SUR_CHECKOUT`). */
+      conditionsSurCheckout: boolean;
+    }
   /** `motif` nul : rien n'est posé, les abonnements sont désactivés sciemment. */
   | { active: false; motif: string | null };
 
@@ -72,8 +79,14 @@ export function configurationStripe(env: Env = process.env): ConfigurationStripe
   if (mode === "live" && !restreinte) {
     return refus("clé Stripe de production non restreinte : utiliser une clé restreinte (rk_live_)");
   }
+  // Sans acceptation des conditions sur Checkout : un compte de test non
+  // activé seulement — jamais en production, ni avec une clé de production.
+  const conditionsSurCheckout = posee(env.STRIPE_CONDITIONS_SUR_CHECKOUT)?.toLowerCase() !== "non";
+  if (!conditionsSurCheckout && (production || mode === "live")) {
+    return refus("STRIPE_CONDITIONS_SUR_CHECKOUT=non refusée en production : Checkout doit faire accepter les conditions générales");
+  }
 
-  return { active: true, cle, secretWebhook, mode };
+  return { active: true, cle, secretWebhook, mode, conditionsSurCheckout };
 }
 
 /** La décision, sans secret : ce qu'un écran ou un journal peut recevoir. */
