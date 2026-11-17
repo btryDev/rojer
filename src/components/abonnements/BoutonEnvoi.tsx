@@ -13,6 +13,7 @@ export function BoutonEnvoi({
   name,
   value,
   carte,
+  discret = false,
 }: {
   children: React.ReactNode;
   variant: "board" | "boardClair";
@@ -22,6 +23,11 @@ export function BoutonEnvoi({
    * d'encre.
    */
   carte?: "claire" | "encre";
+  /**
+   * Dans une carte, un geste secondaire, en lien : s'abonner plus tôt à la
+   * formule de l'essai (2026-11-17) — rien n'y pousse, il reste possible.
+   */
+  discret?: boolean;
   disabled?: boolean;
   describedBy?: string;
   /** Un bouton qui porte une valeur au formulaire (deux gestes, un formulaire). */
@@ -37,7 +43,11 @@ export function BoutonEnvoi({
         value={value}
         disabled={disabled || pending}
         aria-describedby={describedBy}
-        className={`lp-btn w-full justify-center disabled:cursor-not-allowed disabled:opacity-45 ${carte === "encre" ? "lp-btn-blanc" : "lp-btn-ink"}`}
+        className={
+          discret
+            ? "w-full cursor-pointer bg-transparent py-1 text-center text-[0.88rem] font-semibold text-current underline underline-offset-4 disabled:cursor-not-allowed disabled:opacity-45"
+            : `lp-btn w-full justify-center disabled:cursor-not-allowed disabled:opacity-45 ${carte === "encre" ? "lp-btn-blanc" : "lp-btn-ink"}`
+        }
       >
         {pending ? "Un instant…" : children}
       </button>

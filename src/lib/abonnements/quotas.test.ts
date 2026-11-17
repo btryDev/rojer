@@ -269,7 +269,7 @@ describe("l'essai gratuit : ses limites priment sur la formule essayée", () => 
     const essai = (n: number) => faux("rojer_essentiel_mensuel", n, null, null);
     await prendreQuota(essai(4).txc, "c1", "equipements");
     await expect(prendreQuota(essai(5).txc, "c1", "equipements")).rejects.toThrow(
-      "Votre essai gratuit couvre 5 équipements : pour en ajouter, ajoutez un moyen de paiement depuis la page Abonnement de votre compte, et vous passez aux limites complètes de votre formule.",
+      "Votre essai gratuit couvre 5 équipements : pour en ajouter, abonnez-vous dès maintenant depuis la page Abonnement de votre compte — votre essai s'arrête, et vous passez aux limites complètes de votre formule.",
     );
     await expect(prendreQuota(essai(1).txc, "c1", "zones")).rejects.toThrow(/couvre 1 zone :/);
     await expect(prendreQuota(essai(1).txc, "c1", "prescriptions")).rejects.toThrow(/couvre 1 prescription particulière :/);

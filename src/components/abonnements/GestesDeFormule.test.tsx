@@ -30,7 +30,7 @@ describe("GesteSAbonner", () => {
     expect((screen.getByRole("button", { name: "S'abonner à Pro" }) as HTMLButtonElement).disabled).toBe(false);
   });
 
-  it("pendant l'essai : garder sa formule ou passer à une autre, et l'essai s'arrête", () => {
+  it("pendant l'essai : sa formule gratuite jusqu'à la fin, s'y abonner plus tôt en geste discret ; une autre formule ; l'essai s'arrête et c'est prélevé aujourd'hui (2026-11-17)", () => {
     const fin = new Date("2026-12-16T12:00:00Z");
     render(
       <>
@@ -38,10 +38,12 @@ describe("GesteSAbonner", () => {
         <GesteSAbonner cle="rojer_pro_mensuel" libelle="Pro" centimes={7_900} periodicite="mensuel" compteId="c1" carte="encre" essai={{ fin, sienne: false }} />
       </>,
     );
-    expect(screen.getByRole("button", { name: "Garder Essentiel" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Passer à Pro" })).toBeTruthy();
-    expect(screen.getByText(/Gratuite jusqu.au 16 décembre 2026/)).toBeTruthy();
-    expect(screen.getAllByText(/L'essai s'arrête/)).toHaveLength(2);
+    const plusTot = screen.getByRole("button", { name: "M'abonner dès maintenant" });
+    // Un lien, pas le bouton plein de la carte : rien n'y pousse.
+    expect(plusTot.className).not.toMatch(/lp-btn/);
+    expect(screen.getByRole("button", { name: "Passer à Pro" }).className).toMatch(/lp-btn/);
+    expect(screen.getByText("Votre formule, gratuite jusqu'au 16 décembre 2026.")).toBeTruthy();
+    expect(screen.getAllByText(/^Prélevé aujourd.hui : .* Votre essai s'arrête, ses limites sont levées\.$/)).toHaveLength(2);
   });
 
   it("prix indisponible : le bouton reste fermé", () => {

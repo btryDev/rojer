@@ -19,9 +19,11 @@ export const NOTE_FORTE = "m-0 text-[0.82rem] font-semibold leading-[1.45]";
 
 /**
  * S'abonner à une formule et un rythme : Checkout, premier paiement immédiat,
- * dit avant le clic. Pendant l'essai, le dirigeant se voit déjà sur la
- * formule de l'essai (retour de test du 2026-11-17) : il la garde, ou passe
- * à une autre — et l'essai s'arrête dans les deux cas (ADR-053 § 9).
+ * dit avant le clic (ADR-053 § 9). Pendant l'essai, le dirigeant est déjà sur
+ * la formule de l'essai, gratuite jusqu'à sa fin : rien à faire d'ici là —
+ * s'y abonner plus tôt reste possible, en geste discret, et arrête l'essai
+ * (décision de la propriétaire du 2026-11-17). Une autre formule n'a pas
+ * d'essai : la choisir l'arrête aussi.
  */
 export function GesteSAbonner({
   cle,
@@ -49,16 +51,16 @@ export function GesteSAbonner({
       <input type="hidden" name="formule" value={cle} />
       <ChampCompteAttendu compteId={compteId} />
       {essai?.sienne ? (
-        <p className={NOTE_FORTE}>Gratuite jusqu&apos;au {formaterDateLongueFr(essai.fin)}.</p>
+        <p className={NOTE_FORTE}>Votre formule, gratuite jusqu&apos;au {formaterDateLongueFr(essai.fin)}.</p>
       ) : null}
       <p className={NOTE}>
         {centimes === null
           ? "Prix indisponible pour le moment."
           : `Prélevé aujourd'hui : ${euros(centimes)} TTC, pour ${LIBELLE_PERIODICITE[periodicite].premiere}.`}
-        {essai && centimes !== null ? " L'essai s'arrête, les limites complètes de la formule s'appliquent." : null}
+        {essai && centimes !== null ? " Votre essai s'arrête, ses limites sont levées." : null}
       </p>
-      <BoutonEnvoi variant="board" carte={carte} disabled={centimes === null}>
-        {essai ? (essai.sienne ? `Garder ${libelle}` : `Passer à ${libelle}`) : <>S&apos;abonner à {libelle}</>}
+      <BoutonEnvoi variant="board" carte={carte} discret={!!essai?.sienne} disabled={centimes === null}>
+        {essai ? (essai.sienne ? "M'abonner dès maintenant" : `Passer à ${libelle}`) : <>S&apos;abonner à {libelle}</>}
       </BoutonEnvoi>
     </form>
   );

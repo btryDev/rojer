@@ -91,8 +91,8 @@ async function Plafonds({ etat, db, compteId }: { etat: EtatDeLAbonnement; db: D
   const suite =
     regime.essai === "en_cours"
       ? {
-          texte: `Ce sont les limites de l'essai. Avec un moyen de paiement, vous passez aux limites complètes de la formule ${FORMULES[FORMULE_D_ESSAI].libelle}.`,
-          geste: "Ajouter un moyen de paiement",
+          texte: `Ce sont les limites de l'essai. En vous abonnant dès maintenant, vous passez aux limites complètes de la formule ${FORMULES[FORMULE_D_ESSAI].libelle} ; votre essai s'arrête.`,
+          geste: "Voir les offres",
         }
       : regime.essai === "paiement_attendu"
         ? { texte: "Abonnez-vous pour passer aux limites complètes de votre formule.", geste: "M'abonner" }

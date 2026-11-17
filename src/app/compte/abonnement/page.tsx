@@ -196,7 +196,7 @@ function CarteEtat({ etat, vue }: { etat: EtatDeLAbonnement; vue: VueAbonnement 
           </h2>
           {affiche.detail ? <p className={TEXTE_AIDE}>{affiche.detail}</p> : null}
         </div>
-        <GesteDuCas vue={vue} />
+        <GesteDuCas vue={vue} enEssai={etat.phase.type === "essai"} />
       </div>
       {affiche.frise ? <FrisePeriode frise={affiche.frise} maintenant={ctx.maintenant} /> : null}
       {affiche.suppressionImminente ? (
@@ -206,8 +206,12 @@ function CarteEtat({ etat, vue }: { etat: EtatDeLAbonnement; vue: VueAbonnement 
   );
 }
 
-/** Le geste que la carte propose : un lien vers la sous-page qui le porte, ou l'essai. */
-function GesteDuCas({ vue }: { vue: VueAbonnement }) {
+/**
+ * Le geste que la carte propose : un lien vers la sous-page qui le porte, ou
+ * l'essai. Pendant l'essai, rien n'y pousse à payer (2026-11-17) : les offres,
+ * en lien clair ; s'abonner plus tôt y reste possible.
+ */
+function GesteDuCas({ vue, enEssai }: { vue: VueAbonnement; enEssai: boolean }) {
   const plein = buttonVariants({ variant: "board", size: "board" });
   const clair = buttonVariants({ variant: "boardClair", size: "board" });
   switch (vue.cas) {
@@ -219,8 +223,8 @@ function GesteDuCas({ vue }: { vue: VueAbonnement }) {
       );
     case "formulaire":
       return (
-        <Link href={PAGE_FORMULES} className={plein}>
-          M&apos;abonner
+        <Link href={PAGE_FORMULES} className={enEssai ? clair : plein}>
+          {enEssai ? "Voir les offres" : "M'abonner"}
         </Link>
       );
     case "portail":

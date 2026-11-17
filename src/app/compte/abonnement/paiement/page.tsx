@@ -65,19 +65,19 @@ export default async function PaiementPage() {
           ) : phase.type === "essai" ? (
             <>
               {/* L'essai se lit comme un abonnement qui court (retour de
-                  test du 2026-11-17) : pour le dirigeant, il a Essentiel ;
-                  qu'il n'y ait rien chez Stripe ne le regarde pas. Ce qui
-                  manque, c'est un moyen de paiement pour la suite. */}
+                  test du 2026-11-17) : pour le dirigeant, il a Essentiel.
+                  Rien à payer ni à saisir pendant l'essai : la carte se
+                  donne en s'abonnant, à sa fin (ADR-053 § 9). */}
               <Recap
                 lignes={[
                   ["Formule", `${FORMULES[FORMULE_D_ESSAI].libelle}, gratuite jusqu'au ${formaterDateLongueFr(phase.fin)}`],
                   ["Prochain prélèvement", "Aucun pendant l'essai"],
-                  ["Moyen de paiement", `À ajouter pour continuer après le ${formaterDateLongueFr(phase.fin)}`],
                 ]}
               />
-              <Link href={PAGE_FORMULES} className={`${buttonVariants({ variant: "board", size: "board" })} w-fit`}>
-                Ajouter un moyen de paiement
-              </Link>
+              <p className={TEXTE_AIDE}>
+                À la fin de l&apos;essai, abonnez-vous pour continuer : nous vous le rappellerons par e-mail, une semaine puis
+                la veille.
+              </p>
             </>
           ) : (
             <>
