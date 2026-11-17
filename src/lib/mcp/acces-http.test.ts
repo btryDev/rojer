@@ -50,11 +50,11 @@ describe("lireConfigAccesHttp", () => {
     expect(config).toBeNull();
   });
 
-  it("déclare le domaine de déploiement Vercel parmi les hôtes autorisés", () => {
+  it("déclare l'hôte de PUBLIC_APP_URL parmi les hôtes autorisés", () => {
     const config = lireConfigAccesHttp(
-      env({ VERCEL_URL: "rojer-abc123.vercel.app" }),
+      env({ PUBLIC_APP_URL: "https://app.rojer.fr" }),
     );
-    expect(config?.hotesAutorises).toContain("rojer-abc123.vercel.app");
+    expect(config?.hotesAutorises).toContain("app.rojer.fr");
     // localhost reste accepté pour le développement.
     expect(config?.hotesAutorises).toContain("localhost");
   });

@@ -19,8 +19,7 @@ import "server-only";
 //     `DATABASE_URL` et `BETTER_AUTH_SECRET` ; en production, `PUBLIC_APP_URL`
 //     aussi — sans elle, l'authentification n'a pas d'origine de confiance et
 //     aucun lien d'e-mail ne peut se construire.]
-//   - `APP_ENV`, seulement pour un serveur de production qui n'est pas sur
-//     Vercel (pas de `VERCEL_ENV`) : sans elle, l'environnement est
+//   - `APP_ENV`, pour tout serveur de production : sans elle, l'environnement est
 //     indéterminé et la réparation du calendrier ne s'exécute jamais
 //     (`lib/environnement.ts`) — une dégradation silencieuse, que le démarrage
 //     rend visible à qui déploie.
@@ -95,7 +94,6 @@ const schema = z
 
     // Environnement de l'application (`lib/environnement.ts`).
     APP_ENV: enumeration(ENVIRONNEMENTS_APP),
-    VERCEL_ENV: optionnelle,
 
     // URL publique, e-mail.
     PUBLIC_APP_URL: z.preprocess(vide, urlHttp.optional()),
@@ -221,7 +219,7 @@ export function validerEnvironnement(env: Env = process.env): EnvValide {
 
 /**
  * Ce qui se signale sans empêcher de servir. `APP_ENV` absente d'une
- * production qui ne se dit pas Vercel : l'environnement est alors
+ * production : l'environnement est alors
  * « indéterminé », et `lib/environnement.ts` en tire déjà le défaut sûr — la
  * réparation automatique du calendrier ne s'exécute pas. Rien d'autre n'en
  * dépend. En faire une faute fermait TOUTE la prod (500 partout) dès que
@@ -231,9 +229,9 @@ export function validerEnvironnement(env: Env = process.env): EnvValide {
  */
 export function avertissementsEnvironnement(env: Env = process.env): string[] {
   const avertissements: string[] = [];
-  if (vide(env.NODE_ENV) === "production" && !vide(env.APP_ENV) && !vide(env.VERCEL_ENV)) {
+  if (vide(env.NODE_ENV) === "production" && !vide(env.APP_ENV)) {
     avertissements.push(
-      "APP_ENV absente : un serveur de production hors Vercel doit dire ce qu'il est " +
+      "APP_ENV absente : un serveur de production doit dire ce qu'il est " +
         "(production | preview | development). Sans elle, la réparation automatique " +
         "du calendrier ne s'exécute pas (lib/environnement.ts).",
     );

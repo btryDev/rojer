@@ -10,7 +10,10 @@ mettre à jour (rayer, dater) à chaque étape franchie.
 > vers `main`, la branche `cc` est supprimée. Vercel ne déploie plus rien
 > (`vercel.json`, `git.deploymentEnabled: false`, #312) ; le projet Vercel et
 > le code qui ne servait que lui (`vercel.json`, `scripts/migrer-en-production.sh`,
-> pilote de stockage Supabase) se retirent dans un second temps. On déploie
+> pilote de stockage Supabase) se retirent dans un second temps. [2026-11-17,
+> PR #337 : code retiré — ces trois-là, et la lecture de `VERCEL_ENV`, des
+> hôtes `VERCEL_URL` du MCP et les `maxDuration`. Reste le projet Vercel,
+> côté propriétaire.] On déploie
 > la préproduction par `pnpm deployer:preprod` depuis le dépôt principal. Tout
 > ce qui suit et parle de « deux branches », d'un flux `main` → `cc` ou d'un
 > report vers `cc` décrit l'état d'avant cette date.

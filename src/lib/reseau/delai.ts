@@ -1,9 +1,8 @@
 // Délai maximal des appels sortants (audit Next.js du 2026-10-14, M9).
 //
 // Sans délai, un service tiers qui accepte la connexion puis ne répond plus
-// garde la requête de l'utilisateur ouverte jusqu'au plafond de la plateforme
-// (`maxDuration` sur Vercel) — et, sur un Node permanent comme chez Clever
-// Cloud, sans autre plafond que celui du reverse proxy, en retenant la
+// garde la requête de l'utilisateur ouverte — sur un Node permanent comme chez
+// Clever Cloud, sans autre plafond que celui du reverse proxy, en retenant la
 // mémoire et la connexion à la base de la requête en attente.
 //
 // `fetchAvecDelai` enveloppe un `fetch` : chaque appel reçoit un signal qui

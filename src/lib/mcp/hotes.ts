@@ -40,15 +40,13 @@ function hoteDeLApplication(env: NodeJS.ProcessEnv): string | null {
  *   1. `MCP_HOTES`, déclarés à la main (liste séparée par des virgules) ;
  *   2. l'hôte de `PUBLIC_APP_URL` — l'adresse publique de l'application, déjà
  *      exigée en production pour les liens et QR codes (`email/index.ts`) ;
- *   3. les domaines que Vercel pose lui-même (`VERCEL_PROJECT_PRODUCTION_URL`,
- *      `VERCEL_URL`) ;
+ *   3. ~~les domaines que Vercel pose lui-même~~ [2026-11-17 : retirés avec
+ *      Vercel] ;
  *   4. la boucle locale, pour le développement.
  *
- * Le 2 existe pour la bascule Clever Cloud (audit Next.js du 2026-10-14, H5) :
- * hors Vercel, il n'y a ni 3 ni rien d'autre, et une production sans
- * `MCP_HOTES` refusait son propre hôte. Elle sert désormais le domaine de
- * `PUBLIC_APP_URL` sans configuration de plus ; `MCP_HOTES` ne sert plus qu'à
- * ajouter un domaine (un sous-domaine `mcp.` par exemple).
+ * Le 2 (audit Next.js du 2026-10-14, H5) sert le domaine de `PUBLIC_APP_URL`
+ * sans configuration de plus ; `MCP_HOTES` ne sert qu'à ajouter un domaine
+ * (un sous-domaine `mcp.` par exemple).
  */
 export function lireHotesAutorises(env: NodeJS.ProcessEnv): string[] {
   const declares =
@@ -59,15 +57,10 @@ export function lireHotesAutorises(env: NodeJS.ProcessEnv): string[] {
 
   const application = hoteDeLApplication(env);
 
-  const vercel = [env.VERCEL_PROJECT_PRODUCTION_URL, env.VERCEL_URL]
-    .filter((v): v is string => Boolean(v))
-    .map(versHote);
-
   return [
     ...new Set([
       ...declares,
       ...(application ? [application] : []),
-      ...vercel,
       ...BOUCLE_LOCALE,
     ]),
   ];

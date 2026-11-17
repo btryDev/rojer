@@ -19,20 +19,6 @@ import { creerHandlerMcpHttp } from "@/lib/mcp/http";
 // une réponse mise en cache serait ici une fuite entre requêtes.
 export const dynamic = "force-dynamic";
 
-// Plafond d'exécution (audit du 2026-09-27). Aucun échange de ce serveur ne
-// dure plus de quelques secondes : des lectures bornées à un établissement.
-// Sans plafond déclaré, la plateforme applique le sien — 300 s —, et c'est
-// ce qu'ont duré les 143 flux `subscriptions/listen` restés ouverts. La
-// cause est corrigée dans `@/lib/mcp/http` ; ce plafond borne ce qu'on n'a
-// pas prévu.
-//
-// VERCEL SEULEMENT (audit Next.js du 2026-10-14, H5). `maxDuration` est lu par
-// la plateforme, pas par Next : sur un Node permanent (Clever Cloud), il n'a
-// aucun effet. Ce qui en tient lieu là-bas : la fin de flux de `@/lib/mcp/http`
-// (la cause), les délais des appels sortants (`fetchAvecDelai`, M9) et le
-// délai du reverse proxy CC. Gardé : il sert tant que la prod est sur Vercel.
-export const maxDuration = 60;
-
 const config = lireConfigAccesHttp();
 
 const handler = creerHandlerMcpHttp({

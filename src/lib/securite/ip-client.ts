@@ -21,9 +21,6 @@
 // le client a envoyé lui-même : les lire laisserait un attaquant changer
 // d'« adresse » à chaque requête et contourner la limite.
 //
-// - **Vercel** écrase `X-Forwarded-For` avec l'adresse du client, « to prevent
-//   IP spoofing » (documentation Vercel, en-têtes de requête) : une seule
-//   entrée, la dernière est la bonne.
 // - **Clever Cloud** : le répartiteur « adds this header to each request », et
 //   « the first address in this list is your end user's original IP address »
 //   (FAQ Clever Cloud). S'il AJOUTE à une valeur reçue du client, seule la

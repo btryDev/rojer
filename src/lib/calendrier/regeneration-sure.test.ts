@@ -113,7 +113,7 @@ describe("assurerCalendrierAJour — la réparation à l'affichage", () => {
   it("ne répare rien depuis une preview, qui porte le référentiel de sa branche", async () => {
     // Revue du 2026-09-14 : ouvrir le tableau de bord d'une preview branchée
     // sur la base de production recalculait les dossiers réels.
-    vi.stubEnv("VERCEL_ENV", "preview");
+    vi.stubEnv("APP_ENV", "preview");
     calendrierDesynchronise.mockResolvedValue(true);
 
     await expect(assurerCalendrierAJour("etab-1")).resolves.toBe(false);
@@ -121,13 +121,8 @@ describe("assurerCalendrierAJour — la réparation à l'affichage", () => {
     expect(regenererSansInvalider).not.toHaveBeenCalled();
   });
 
-  it("ne répare rien depuis une préversion hors Vercel (APP_ENV), ni dans le doute", async () => {
-    // Audit Next.js du 2026-10-14, H5 : chez Clever Cloud `VERCEL_ENV`
-    // n'existe pas, et la garde qui ne lisait qu'elle laissait écrire.
+  it("ne répare rien dans le doute", async () => {
     calendrierDesynchronise.mockResolvedValue(true);
-
-    vi.stubEnv("APP_ENV", "preview");
-    await expect(assurerCalendrierAJour("etab-1")).resolves.toBe(false);
 
     // Production sans rien qui dise ce qu'elle est : indéterminé, pas d'écriture.
     vi.stubEnv("APP_ENV", "");

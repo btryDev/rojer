@@ -71,7 +71,7 @@ export function configurationStripe(env: Env = process.env): ConfigurationStripe
   if (mode === "test" && production) {
     return refus("clé Stripe de test refusée en production : aucun paiement n'y serait encaissé");
   }
-  // Un serveur de production sans APP_ENV (ni VERCEL_ENV) est indéterminé
+  // Un serveur de production sans APP_ENV est indéterminé
   // (`environnementApp` → null) : il est peut-être la production.
   if (mode === "test" && environnement === null) {
     return refus("clé Stripe de test refusée : serveur de production qui ne déclare pas son environnement (APP_ENV)");

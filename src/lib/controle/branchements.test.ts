@@ -37,10 +37,9 @@ describe("branchements des fichiers déposés", () => {
     expect(zip).toMatch(/rapportsDeposesDuDossier\(db, id\)/);
   });
 
-  it("le ZIP répond en flux, avec une durée maximale posée", () => {
+  it("le ZIP répond en flux", () => {
     expect(zip).toMatch(/new NextResponse\(zipEnFlux\(archive\.zip\)/);
     expect(zip).not.toMatch(/generateAsync/);
-    expect(zip).toMatch(/export const maxDuration = \d+;/);
   });
 
   it("le ZIP ne lit aucun fichier déposé avant le flux, et tient une place d'export (H3)", () => {

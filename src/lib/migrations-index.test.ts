@@ -14,8 +14,8 @@ import {
  * Une migration ne verrouille pas une table qui existe déjà (plan
  * performance, 2026-10-28).
  *
- * En production, `scripts/migrer-en-production.sh` passe `migrate deploy`
- * après la compilation et avant la mise en ligne, pendant que la version
+ * En production, `migrate deploy` passe au démarrage (`CC_PRE_RUN_HOOK`,
+ * Clever Cloud) avant la mise en ligne, pendant que la version
  * précédente sert encore les requêtes. Une instruction qui prend un verrou
  * lourd sur une table vivante — un index construit en bloquant les
  * écritures, un `DROP INDEX`, une contrainte qui bâtit son index ou relit
