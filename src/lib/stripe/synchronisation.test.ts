@@ -135,6 +135,30 @@ describe("synchroniserClientStripe — le compte vient de Stripe relu, jamais de
   });
 });
 
+describe("retour de Checkout : attendre le bail tenu par un webhook (répétition du 2026-11-17)", () => {
+  const sansCompte = {
+    customers: { retrieve: vi.fn().mockResolvedValue({ id: "cus_1", metadata: {} }) },
+    subscriptions: { list: vi.fn().mockReturnValue({ autoPagingToArray: vi.fn().mockResolvedValue([]) }) },
+  } as unknown as Stripe;
+
+  it("bail pris par une autre relecture : sans attente, « en file » ; avec attente, relu dès qu'il se libère", async () => {
+    const file = await import("./file");
+    vi.mocked(file.prendreBail).mockResolvedValueOnce(null);
+    expect(await synchroniserClientStripe(sansCompte, "cus_1")).toEqual({ issue: "en_file" });
+    vi.mocked(file.prendreBail).mockResolvedValueOnce(null).mockResolvedValueOnce(null);
+    expect(await synchroniserClientStripe(sansCompte, "cus_1", { attendreMs: 2_000 })).toMatchObject({ issue: "ignore" });
+  });
+
+  it("bail jamais libéré : « en file » au bout du délai, sans dépasser", async () => {
+    const file = await import("./file");
+    vi.mocked(file.prendreBail).mockResolvedValue(null);
+    const debut = Date.now();
+    expect(await synchroniserClientStripe(sansCompte, "cus_1", { attendreMs: 600 })).toEqual({ issue: "en_file" });
+    expect(Date.now() - debut).toBeLessThan(1_000);
+    vi.mocked(file.prendreBail).mockReset().mockResolvedValue({ customerId: "cus_1", jeton: 1, demandes: 1, tentatives: 0, abonnementId: null });
+  });
+});
+
 describe("échec durable des factures (premier paiement) : signalé", () => {
   it("depuis la file, la neuvième relecture aux factures illisibles alerte", async () => {
     const file = await import("./file");

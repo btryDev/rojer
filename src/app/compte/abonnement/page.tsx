@@ -95,7 +95,7 @@ async function relireApresPaiement(db: Db, compteId: string): Promise<void> {
   if (!config.active) return;
   const ligne = await db.abonnement.findUnique({ where: { compteId }, select: { stripeCustomerId: true } });
   if (!ligne?.stripeCustomerId) return;
-  await synchroniserClientStripe(clientStripeLecture(config), ligne.stripeCustomerId).catch(() => null);
+  await synchroniserClientStripe(clientStripeLecture(config), ligne.stripeCustomerId, { attendreMs: 5_000 }).catch(() => null);
 }
 
 async function changementsPossibles(
@@ -348,7 +348,7 @@ export default async function AbonnementPage({
           </MessageFormulaire>
         </div>
 
-        {vue.cas !== "aucune" && (
+        {vue.cas !== "aucune" && !(vue.cas === "formulaire" && paiement === "termine") && (
           <section className="carte-board mt-5 px-7 py-6 sm:px-8" aria-labelledby="titre-gerer">
             <h2 id="titre-gerer" className="board-titre m-0 text-[22px]">
               {vue.titre}
@@ -391,12 +391,12 @@ export default async function AbonnementPage({
                 </FormulairePortail>
               </>
             )}
-            {/* Juste après un paiement, la copie de l'abonnement peut retarder de
-                quelques secondes sur Stripe : la page ne repropose pas de payer
-                (répétition du 2026-11-16 — « Payer et m'abonner » restait affiché
-                à côté de « Paiement terminé »). Le serveur refuse de toute façon
-                un second paiement. */}
-            {vue.cas === "formulaire" && paiement !== "termine" && (
+            {/* Juste après un paiement, si la copie de l'abonnement retarde
+                encore sur Stripe, la page ne repropose pas de payer : la carte
+                entière est masquée (répétitions des 2026-11-16 et 17 — bouton
+                de paiement, puis carte vide, à côté de « Paiement terminé »).
+                Le serveur refuse de toute façon un second paiement. */}
+            {vue.cas === "formulaire" && (
               <FormulaireAbonnement offres={offres} compteId={compteId} quand={vue.quand} courante={courante} />
             )}
           </section>

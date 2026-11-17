@@ -244,7 +244,16 @@ type OptionsSynchro = {
    * viendra à la relecture suivante.
    */
   strict?: boolean;
+  /**
+   * Un geste qui doit montrer l'état relu (retour de Checkout) : si une autre
+   * relecture tient le bail, l'attendre jusqu'à ce délai puis relire, au lieu
+   * de rendre `en_file` — sinon la page s'affiche avant la relecture
+   * (répétition du 2026-11-17 : « Essai en cours » juste après avoir payé).
+   */
+  attendreMs?: number;
 };
+
+const PAS_D_ATTENTE_MS = 250;
 
 /**
  * Demande la relecture du client, puis la fait si personne ne la tient
@@ -257,7 +266,12 @@ export async function synchroniserClientStripe(
   options: OptionsSynchro = {},
 ): Promise<Synchronisation> {
   await demanderSynchronisation(customerId, (options.maintenant ?? horlogeReelle)());
-  return synchroniserSousBail(stripe, customerId, options);
+  const limite = Date.now() + (options.attendreMs ?? 0);
+  for (;;) {
+    const issue = await synchroniserSousBail(stripe, customerId, options);
+    if (issue.issue !== "en_file" || Date.now() + PAS_D_ATTENTE_MS > limite) return issue;
+    await new Promise((r) => setTimeout(r, PAS_D_ATTENTE_MS));
+  }
 }
 
 /** La relecture d'un client déjà demandé, sous son bail. La porte de la file. */
