@@ -138,7 +138,7 @@ export function NavLink({
   auChoix,
 }: {
   item: NavItem;
-  actif: SidebarItemId;
+  actif: SidebarItemId | null;
   /** Referme le panneau au clic : le repli à chaque navigation (`AppSidebar`)
    *  ne voit pas un lien vers la page où l'on est déjà, l'adresse ne
    *  changeant pas — le panneau restait ouvert, on croyait n'avoir rien fait. */

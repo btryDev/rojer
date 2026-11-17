@@ -44,7 +44,7 @@ export function NavigationMobile({
   /** Catégorie de la page courante. */
   catActive: RailCategorieId | null;
   /** Entrée de la page courante. */
-  actif: SidebarItemId;
+  actif: SidebarItemId | null;
   /** Catégorie dont la feuille est ouverte. */
   ouverte: RailCategorieId | null;
   surChoisir: (id: RailCategorieId | null) => void;

@@ -1,4 +1,4 @@
-import { FilRetour } from "@/components/ui-kit/FilRetour";
+import { PageDuCompte } from "@/components/compte/PageDuCompte";
 import { NomDuCompte } from "@/components/compte/NomDuCompte";
 import { BandeauAbonnement } from "@/components/abonnements/BandeauAbonnement";
 import { compteDeLaPage, getOptionalCompte, type Db } from "@/lib/auth/compte";
@@ -247,15 +247,12 @@ export default async function AbonnementPage({
       : { options: [], baisse: null };
 
   return (
-    <main className="flex min-h-[calc(100vh-56px)] flex-col bg-[color:var(--board-canvas)] px-6 py-14 sm:px-10">
-      <div className="mx-auto w-full max-w-[560px]">
-        <FilRetour provenance={null} canonique={{ href: "/entreprises", label: "Mon dossier" }} />
-        <h1 className="board-titre m-0 mt-6 text-[clamp(29px,3vw,39px)]">Abonnement</h1>
+    <PageDuCompte
+      titre="Abonnement"
+      description="Sans abonnement, vos dossiers restent consultables douze mois, puis le compte est supprimé, après deux e-mails d'avertissement."
+    >
+      <div className="max-w-[560px]">
         <NomDuCompte nom={nomCompte} email={user.email} />
-        <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-          Sans abonnement, vos dossiers restent consultables douze mois, puis le compte est supprimé, après deux
-          e-mails d&apos;avertissement.
-        </p>
 
         {/* Un geste parti d'un onglet resté sur un autre compte (`clientDuCompte`) : refusé. */}
         {compteChange === "change" && (
@@ -411,7 +408,7 @@ export default async function AbonnementPage({
           </section>
         )}
       </div>
-    </main>
+    </PageDuCompte>
   );
 }
 

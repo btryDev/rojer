@@ -91,7 +91,7 @@ export default async function DuerpLayout({
 
   return (
     // Mêmes largeurs que le shell d'établissement (2026-10-29).
-    <div className="relative grid min-h-screen grid-cols-1 md:h-dvh md:grid-cols-[auto_1fr] md:overflow-hidden">
+    <div className="relative grid min-h-screen grid-cols-1 [--reserve-gelule:72px] md:h-dvh md:grid-cols-[auto_1fr] md:overflow-hidden">
       <AppSidebar
         etablissement={{
           id: etab.id,

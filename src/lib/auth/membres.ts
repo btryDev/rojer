@@ -11,6 +11,7 @@ import "server-only";
 // portée connue.
 
 import { randomUUID } from "node:crypto";
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { auth } from "./better-auth";
 import { lireSessionCourante } from "./require-user";
@@ -180,15 +181,19 @@ export async function invitationAdresseeA(
 
 export type CompteDeLaPersonne = { compteId: string; nom: string; role: Role };
 
-/** Les comptes dont la personne est membre, le plus ancien d'abord (le choix du compte, ADR-054 § 7). */
-export async function comptesDeLaPersonne(userId: string): Promise<CompteDeLaPersonne[]> {
+/**
+ * Les comptes dont la personne est membre, le plus ancien d'abord (le choix du
+ * compte, ADR-054 § 7). Mémoïsé sur le rendu : la gélule (`comptesDeLaSession`)
+ * et la page Membres le lisent dans le même rendu (2026-11-17).
+ */
+export const comptesDeLaPersonne = cache(async function comptesDeLaPersonne(userId: string): Promise<CompteDeLaPersonne[]> {
   const lignes = await prisma.membre.findMany({
     where: { userId },
     orderBy: [{ createdAt: "asc" }, { id: "asc" }],
     select: { compteId: true, role: true, compte: { select: { name: true } } },
   });
   return lignes.flatMap((l) => (estRole(l.role) ? [{ compteId: l.compteId, nom: l.compte.name, role: l.role }] : []));
-}
+});
 
 /**
  * Les invitations en attente qu'une personne a envoyées pour un compte tombent

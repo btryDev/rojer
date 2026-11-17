@@ -364,19 +364,20 @@ export const COOKIE_ETABLISSEMENT_ACTIF = "etablissement-actif";
  * Hors rendu RSC (actions serveur), il s'exécute à chaque appel.
  */
 export const getOptionalUserEtablissement = cache(
-  async function getOptionalUserEtablissement(): Promise<{
-    id: string;
-    raisonDisplay: string;
-    entrepriseId: string;
-  } | null> {
+  async function getOptionalUserEtablissement() {
     const session = await getOptionalCompte();
     if (!session) return null;
     const { compte, db } = session;
 
+    // Ce que la barre latérale affiche, pour les pages du compte qui la
+    // montrent sur l'établissement actif (`compte/layout.tsx`, 2026-11-17).
     const champs = {
       id: true,
       raisonDisplay: true,
       entrepriseId: true,
+      adresse: true,
+      effectifSurSite: true,
+      estERP: true,
     } as const;
 
     const demande = (await cookies()).get(COOKIE_ETABLISSEMENT_ACTIF)?.value;

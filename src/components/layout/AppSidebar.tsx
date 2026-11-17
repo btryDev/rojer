@@ -88,7 +88,8 @@ export function AppSidebar({
   enAttente = false,
 }: {
   etablissement: Etablissement;
-  /** Item actif. Si omis, déduit automatiquement depuis `usePathname()`. */
+  /** Item actif. Si omis, déduit automatiquement depuis `usePathname()` —
+   *  aucun hors du dossier de l'établissement (`deduireActif`). */
   active?: SidebarActive;
   counts?: SidebarCounts;
   /** État des registres pour cet établissement. Omis, aucun n'est qualifié. */
@@ -103,7 +104,7 @@ export function AppSidebar({
   // Le panneau ne dépend pas des filtres d'écran ; la query ne sert qu'à
   // détecter une navigation (un changement de filtre en est une).
   const searchParams = useSearchParams();
-  const actif: SidebarItemId =
+  const actif: SidebarItemId | null =
     active ?? deduireActif(pathname ?? "", etablissement.id);
 
   const rail = construireRail({
@@ -112,7 +113,7 @@ export function AppSidebar({
     modules,
   });
 
-  const catActive = categorieDeItem(actif);
+  const catActive = actif ? categorieDeItem(actif) : null;
   // Le panneau ouvert : celui de la catégorie cliquée au rail, ou aucun. Il
   // se referme à chaque navigation — ajustement pendant le rendu (et non
   // dans un effet) pour ne pas provoquer de rendu en cascade. L'URL entière,
