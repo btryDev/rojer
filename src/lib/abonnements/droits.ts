@@ -103,6 +103,9 @@ export const enEssai = (l: Pick<LigneAbonnement, "statut" | "finEssai" | "debutP
 /** Une fin est prévue (résiliation en fin de période, ou date posée) : sur la copie de Rojer… */
 export const resiliationPrevue = (l: Pick<LigneAbonnement, "finPrevueLe" | "resilieEnFinDePeriode">) =>
   !!l.finPrevueLe || l.resilieEnFinDePeriode;
+/** La date de la fin prévue (`cancel_at`, sinon la fin de période), ou rien : seule écriture de cette règle. */
+export const finPrevueDe = (l: Pick<LigneAbonnement, "finPrevueLe" | "resilieEnFinDePeriode" | "finPeriode">) =>
+  resiliationPrevue(l) ? (l.finPrevueLe ?? l.finPeriode) : null;
 /** … et sur l'abonnement relu chez Stripe (`cancel_at_period_end`, `cancel_at`) : la même règle. */
 export const resiliationDemandee = (s: { cancel_at_period_end: boolean; cancel_at: number | null }) =>
   s.cancel_at_period_end || !!s.cancel_at;
@@ -143,7 +146,7 @@ export function droitsDe(ligne: LigneAbonnement | null, ctx: ContexteDroits): Dr
       },
     };
   }
-  const fin = ligne && resiliationPrevue(ligne) ? (ligne.finPrevueLe ?? ligne.finPeriode) : null;
+  const fin = ligne ? finPrevueDe(ligne) : null;
   if (fin) {
     return { saisie: true, bandeau: { ton: "info", message: `Votre abonnement prend fin le ${jour(fin)}.` } };
   }

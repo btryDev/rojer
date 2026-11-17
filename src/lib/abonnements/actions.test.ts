@@ -11,7 +11,8 @@ const m = vi.hoisted(() => ({
   redirect: vi.fn((url: string) => {
     throw Object.assign(new Error("NEXT_REDIRECT"), { url });
   }),
-  ligne: { stripeCustomerId: "cus_1" as string | null, statut: "canceled" as string | null },
+  ligne: { stripeCustomerId: "cus_1" as string | null, statut: "canceled" as string | null, stripeSubscriptionId: "sub_du_compte" as string | null },
+  ouvrirPortail: vi.fn(async () => "https://portail.stripe.test/session"),
   abonnementsDuClient: vi.fn(),
   ouvrirCheckout: vi.fn(),
   prixDesFormules: vi.fn(),
@@ -27,7 +28,7 @@ const m = vi.hoisted(() => ({
 }));
 vi.mock("next/navigation", () => ({ redirect: m.redirect }));
 vi.mock("@/lib/email", () => ({ publicAppUrl: () => "https://rojer.test" }));
-vi.mock("@/lib/stripe/client", () => ({ clientStripe: () => ({}) }));
+vi.mock("@/lib/stripe/client", () => ({ clientStripe: () => ({ customers: { retrieve: async () => ({ deleted: true }) } }) }));
 vi.mock("@/lib/stripe/config", () => ({ configurationStripe: () => ({ active: true }) }));
 vi.mock("@/lib/stripe/parcours", () => ({
   abonnementsDuClient: m.abonnementsDuClient,
@@ -35,7 +36,7 @@ vi.mock("@/lib/stripe/parcours", () => ({
   planifierBaisse: m.planifierBaisse,
   annulerBaisse: m.annulerBaisse,
   ouvrirCheckout: m.ouvrirCheckout,
-  ouvrirPortail: vi.fn(),
+  ouvrirPortail: m.ouvrirPortail,
   prixDesFormules: m.prixDesFormules,
   tauxDeTva: m.tauxDeTva,
 }));
@@ -258,5 +259,30 @@ describe("sans client Stripe (essai) : les gestes sur un abonnement n'ont rien �
     m.ligne.statut = null;
     expect(await redirigeVers(action(formulaire()))).toBe("/compte/abonnement");
     expect(m.abonnementsDuClient).not.toHaveBeenCalled();
+  });
+});
+
+describe("ouvrirPortailAction : résilier (2026-11-17)", () => {
+  const formulairePortail = (geste?: string) => {
+    const f = new FormData();
+    f.set(CHAMP_COMPTE_ATTENDU, "c1");
+    if (geste) f.set("geste", geste);
+    // Un identifiant posté à la main ne compte pas : seul celui de la copie du compte vérifié sert.
+    f.set("subscription", "sub_d_un_autre");
+    return f;
+  };
+
+  it("« Résilier » ouvre le portail sur la résiliation de l'abonnement du compte vérifié", async () => {
+    expect(await redirigeVers(ouvrirPortailAction(formulairePortail("resilier")))).toBe("https://portail.stripe.test/session");
+    expect(m.ouvrirPortail).toHaveBeenCalledWith(expect.anything(), {
+      customerId: "cus_1",
+      retour: "https://rojer.test/compte/abonnement",
+      resilier: "sub_du_compte",
+    });
+  });
+
+  it("sans le geste : le portail ordinaire", async () => {
+    await redirigeVers(ouvrirPortailAction(formulairePortail()));
+    expect(m.ouvrirPortail).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ resilier: null }));
   });
 });

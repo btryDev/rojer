@@ -7,16 +7,15 @@ import { FrisePeriode } from "@/components/abonnements/FrisePeriode";
 import { JaugeDePlafond } from "@/components/abonnements/JaugeDePlafond";
 import { MenuAbonnement } from "@/components/abonnements/MenuAbonnement";
 import { RecapPaiement } from "@/components/abonnements/RecapPaiement";
-import { NomDuCompte } from "@/components/compte/NomDuCompte";
 import { PageDuCompte } from "@/components/compte/PageDuCompte";
 import { buttonVariants } from "@/components/ui/button";
-import { PastilleFiche } from "@/components/ui-kit/fiche/PastilleFiche";
+import { PastilleAbonnement } from "@/components/abonnements/PastilleAbonnement";
 import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
 import { MESSAGE_COMPTE_CHANGE } from "@/lib/auth/compte-attendu";
 import type { Db } from "@/lib/auth/compte";
 import { getOptionalCompte } from "@/lib/auth/compte";
 import { PAGE_ESSAI } from "@/lib/abonnements/essai";
-import { etatAffiche, type EtatAbonnement } from "@/lib/abonnements/etat-affiche";
+import { etatAffiche } from "@/lib/abonnements/etat-affiche";
 import { DUREE_ESSAI_JOURS } from "@/lib/abonnements/formules";
 import { etatDeLAbonnement, type EtatDeLAbonnement } from "@/lib/abonnements/page-abonnement";
 import { utilisationDuCompte } from "@/lib/abonnements/quotas";
@@ -88,15 +87,6 @@ const MESSAGES_FORMULE = {
   gardee: "Vous gardez votre formule actuelle.",
 } as const;
 
-/** La pastille de la charte (`PastilleFiche`) pour chaque état que l'abonnement emprunte au calendrier. */
-const TON_PASTILLE = {
-  enRetard: "retard",
-  proche: "proche",
-  faite: "fait",
-  lointain: "bleu",
-  aPlanifier: "neutre",
-} as const satisfies Record<EtatAbonnement, string>;
-
 export default async function AbonnementPage({
   searchParams,
 }: {
@@ -130,9 +120,6 @@ export default async function AbonnementPage({
       description="Votre formule, où vous en êtes de la période, et ce qu'il reste à faire."
       menu={<MenuAbonnement />}
     >
-      <div>
-        <NomDuCompte nom={etat.nomCompte} email={etat.user.email} />
-      </div>
 
       {/* Un geste parti d'un onglet resté sur un autre compte (`clientDuCompte`) : refusé. */}
       {compteChange === "change" && <MessageFormulaire ton="alerte">{MESSAGE_COMPTE_CHANGE}</MessageFormulaire>}
@@ -203,7 +190,7 @@ function CarteEtat({ etat, vue }: { etat: EtatDeLAbonnement; vue: VueAbonnement 
     <section className="carte-board px-7 py-7 sm:px-8" aria-labelledby="titre-etat">
       <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-5">
         <div className="flex min-w-0 flex-col items-start gap-2.5">
-          <PastilleFiche ton={TON_PASTILLE[affiche.pastille.etat]}>{affiche.pastille.libelle}</PastilleFiche>
+          <PastilleAbonnement pastille={affiche.pastille} />
           <h2 id="titre-etat" className="board-titre m-0 text-[clamp(34px,4vw,46px)] leading-none tracking-[-0.04em]">
             {affiche.titre}
           </h2>
@@ -233,14 +220,14 @@ function GesteDuCas({ vue }: { vue: VueAbonnement }) {
     case "formulaire":
       return (
         <Link href={PAGE_FORMULES} className={plein}>
-          Choisir une formule
+          M&apos;abonner
         </Link>
       );
     case "portail":
       return vue.situation === "a-jour" ? (
         <div className="flex flex-wrap gap-2.5">
           <Link href={PAGE_FORMULES} className={clair}>
-            Changer de formule
+            Changer d&apos;offre
           </Link>
           <Link href={PAGE_PAIEMENT} className={clair}>
             Paiement et factures

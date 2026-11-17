@@ -33,7 +33,6 @@ export const etatDeLAbonnement = cache(async () => {
   const entree: EntreeVue = {
     geste,
     statut: ligne?.statut ?? null,
-    enEssai: phase.type === "essai",
     finPrevue,
     documentAttend: false,
     paiementTermine: false,

@@ -118,8 +118,17 @@ export const LIMITES_ESSAI = {
   // par la porte, sous le verrou du compte.
   signaturesParAn: 1,
 } as const satisfies Partial<Quotas>;
-/** De la plus petite à la plus grande : la première est celle du refus par défaut. */
+/** De la plus petite à la plus grande (`sensDuChangement`, `motifDuRefus` y cherchent la suivante). */
 export const CLES_FORMULES = Object.keys(FORMULES) as CleFormule[];
+
+/**
+ * La formule de l'essai gratuit : Essentiel, avec les limites de l'essai qui
+ * priment (`LIMITES_ESSAI`). Pendant l'essai, la ligne d'abonnement ne porte
+ * aucune formule — Stripe n'en connaît aucune avant « S'abonner » (ADR-053
+ * § 9, amendé le 2026-11-16) : c'est d'ici qu'on la lit, pour les plafonds
+ * comme pour l'écran.
+ */
+export const FORMULE_D_ESSAI: CleFormule = "essentiel";
 
 /** La `lookup_key` du prix Stripe d'une formule et d'une périodicité. */
 export const lookupKey = (formule: CleFormule, periodicite: Periodicite) => `rojer_${formule}_${periodicite}`;
@@ -167,18 +176,3 @@ export const LIBELLES_PLAFONDS = {
   importsDuerp: (n: number) => `${pluriel(n, "import de DUERP", "imports de DUERP")} par an`,
   stockageGo: (n: number) => `${n} Go de stockage`,
 } as const satisfies Partial<Record<keyof Quotas, (n: number) => string>>;
-
-/** Ce qui distingue une formule à l'écran, tiré des quotas — rien de non livré. */
-export function pointsDeFormule(f: CleFormule): string[] {
-  const q: Quotas = FORMULES[f].quotas;
-  const usage =
-    q.permisDeFeuParAn === null
-      ? "Permis de feu et plans de prévention sans limite"
-      : `${q.permisDeFeuParAn} permis de feu et ${q.plansDePreventionParAn ?? "∞"} plans de prévention par an`;
-  return [
-    q.etablissements === null ? "Établissements sans limite" : LIBELLES_PLAFONDS.etablissements(q.etablissements),
-    q.membres === null ? "Utilisateurs sans limite" : LIBELLES_PLAFONDS.membres(q.membres),
-    "Tous les modules de Rojer",
-    usage,
-  ];
-}

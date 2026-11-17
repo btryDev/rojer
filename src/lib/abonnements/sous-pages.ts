@@ -13,7 +13,7 @@ export const PAGE_PAIEMENT = `${PAGE_ABONNEMENT}/paiement`;
 
 export const SOUS_PAGES_ABONNEMENT = [
   { href: PAGE_ABONNEMENT, libelle: "Vue d'ensemble" },
-  { href: PAGE_FORMULES, libelle: "Formules" },
+  { href: PAGE_FORMULES, libelle: "Abonnement" },
   { href: PAGE_UTILISATION, libelle: "Utilisation" },
   { href: PAGE_PAIEMENT, libelle: "Paiement et factures" },
 ] as const;

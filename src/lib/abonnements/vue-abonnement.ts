@@ -12,15 +12,10 @@
 // situation d'un abonnement qui court (`situation`), décidées ici une fois.
 
 import { A_REGLER, type Geste } from "./droits";
-import type { CleFormule, Periodicite } from "./formules";
-
-type Choix = { formule: CleFormule; periodicite: Periodicite };
 
 export type EntreeVue = {
   geste: Geste | null;
   statut: string | null;
-  /** L'essai court encore (`enEssai`, droits.ts). */
-  enEssai: boolean;
   /** Une fin est prévue sur l'abonnement qui court (`resiliationPrevue`, droits.ts). */
   finPrevue: boolean;
   /** `?document=1` : un document officiel attend l'abonnement. */
@@ -48,61 +43,39 @@ export const GESTE_DU_PORTAIL: Record<SituationPortail, string> = {
   "a-jour": "Gérer le paiement",
 };
 
+/** Ce que fait le portail, dit avant le clic, de la même façon sur toutes les sous-pages. */
+export const CE_QUE_FAIT_LE_PORTAIL: Record<SituationPortail, string> = {
+  "a-regler": "Changez de carte, ou confirmez le paiement si votre banque le demande : il est relancé aussitôt.",
+  "fin-prevue": "Reprendre l'abonnement annule la fin prévue ; rien n'est prélevé avant la date de renouvellement.",
+  "a-jour": "Changer de carte, télécharger vos factures, modifier l'adresse de facturation ou résilier.",
+};
+
 export type VueAbonnement =
   /** L'offre n'est pas lancée : rien à gérer, tout Rojer reste ouvert. */
   | { cas: "fermee" }
   /** Rien à proposer pour l'instant (retour de paiement, copie en retard). */
   | { cas: "aucune" }
-  | { cas: "membre"; titre: string }
-  | { cas: "essai"; titre: string }
-  | { cas: "portail"; titre: string; situation: SituationPortail }
-  | {
-      cas: "formulaire";
-      titre: string;
-      /** Ce qui se passe ensuite, en une phrase. */
-      quand: string;
-      /** La phrase « un document officiel attend » (`?document=1`). */
-      annoncerDocument: boolean;
-    };
-
-const STRIPE = "sur la page sécurisée de Stripe, notre prestataire de paiement";
+  | { cas: "membre" }
+  | { cas: "essai" }
+  | { cas: "portail"; situation: SituationPortail }
+  /** S'abonner ; `annoncerDocument` : un document officiel attend (`?document=1`). */
+  | { cas: "formulaire"; annoncerDocument: boolean };
 
 export function vueAbonnement(e: EntreeVue): VueAbonnement {
   switch (e.geste) {
     case null:
       return { cas: "fermee" };
     case "membre":
-      return { cas: "membre", titre: "Gérer" };
+      return { cas: "membre" };
     case "essai":
-      return { cas: "essai", titre: "Essai gratuit" };
+      return { cas: "essai" };
     case "portail":
       return {
         cas: "portail",
-        titre: "Gérer",
         situation: A_REGLER.has(e.statut ?? "") ? "a-regler" : e.finPrevue ? "fin-prevue" : "a-jour",
       };
     case "abonner":
       if (e.paiementTermine) return { cas: "aucune" };
-      return {
-        cas: "formulaire",
-        titre: "S'abonner",
-        quand: e.enEssai
-          ? `Le paiement se fait ${STRIPE}. S'abonner met fin à votre essai et lève ses limites.`
-          : `Le paiement se fait ${STRIPE}.`,
-        annoncerDocument: e.documentAttend,
-      };
+      return { cas: "formulaire", annoncerDocument: e.documentAttend };
   }
-}
-
-/**
- * La formule présélectionnée dans le formulaire : l'offre choisie sur la page
- * publique (2026-11-16), sinon celle d'un abonnement passé (résilié), qu'on
- * reprend le plus souvent telle quelle (répétition du 2026-11-16).
- */
-export function preselection(
-  vue: VueAbonnement,
-  { abonnement, offreChoisie }: { abonnement: Choix | null; offreChoisie: Choix | null },
-): Choix | null {
-  if (vue.cas !== "formulaire") return null;
-  return offreChoisie ?? abonnement;
 }

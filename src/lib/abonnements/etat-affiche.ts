@@ -4,10 +4,11 @@
 // de la seule copie locale de l'abonnement — aucune lecture chez Stripe.
 // Fonction pure, testée phase par phase (`etat-affiche.test.ts`).
 
-import { ajouterAns, ajouterMois } from "@/lib/dates";
+import { ajouterAns, ajouterMois, formaterDateLongueFr, joursCivilsEntre } from "@/lib/dates";
 import type { RegistreLigne } from "@/lib/calendrier/etats";
-import { A_REGLER, essaiProche, libelleStatut, phaseDuCompte, resiliationPrevue, type LigneAbonnement } from "./droits";
-import { CLES_FORMULES, DUREE_ESSAI_JOURS, FORMULES, LIBELLE_PERIODICITE, formuleDeLookupKey } from "./formules";
+import { pluriel } from "@/lib/rendu/pluriel";
+import { A_REGLER, essaiProche, finPrevueDe, libelleStatut, phaseDuCompte, resiliationPrevue, type LigneAbonnement } from "./droits";
+import { DUREE_ESSAI_JOURS, FORMULE_D_ESSAI, FORMULES, LIBELLE_PERIODICITE, formuleDeLookupKey } from "./formules";
 
 /** Les états du calendrier que l'abonnement emprunte, pour leurs couleurs (`CHAMP_ETAT`, `ENCRE_ETAT`). */
 export type EtatAbonnement = Extract<RegistreLigne, "enRetard" | "proche" | "lointain" | "faite" | "aPlanifier">;
@@ -55,11 +56,14 @@ export function etatAffiche(ligne: LigneAffichee | null, maintenant: Date, suppr
     case "essai": {
       const proche = essaiProche(phase.fin, maintenant);
       const etat = proche ? "proche" : "lointain";
+      // Le reste de l'essai se dit dans la pastille (retour de test du
+      // 2026-11-17 : « on ne voit pas qu'on est dans la période d'essai »).
+      // En jours civils, comme la date de la phrase (`joursCivilsEntre`).
+      const jours = Math.max(1, joursCivilsEntre(maintenant, phase.fin));
       return {
-        // L'essai se fait sur la première formule (`FormulaireEssai`).
-        titre: FORMULES[CLES_FORMULES[0]].libelle,
-        detail: `Essai gratuit de ${DUREE_ESSAI_JOURS} jours, sans carte bancaire`,
-        pastille: { libelle, etat },
+        titre: FORMULES[FORMULE_D_ESSAI].libelle,
+        detail: `Essai gratuit de la formule ${FORMULES[FORMULE_D_ESSAI].libelle} jusqu'au ${formaterDateLongueFr(phase.fin)}, sans carte bancaire`,
+        pastille: { libelle: `Essai en cours, ${pluriel(jours, "jour restant", "jours restants")}`, etat },
         frise: ligne?.essaiUtiliseLe
           ? { debut: ligne.essaiUtiliseLe, fin: phase.fin, libelleDebut: "Début de l'essai", libelleFin: "Fin de l'essai", etat }
           : null,
@@ -126,7 +130,7 @@ function periodeEnCours(
   const debut = periodicite === "annuel" ? ajouterAns(ligne.finPeriode, -1) : ajouterMois(ligne.finPeriode, -1);
   return {
     debut,
-    fin: finPrevue ? (ligne.finPrevueLe ?? ligne.finPeriode) : ligne.finPeriode,
+    fin: finPrevueDe(ligne) ?? ligne.finPeriode,
     libelleDebut: "Début de la période",
     libelleFin: aRegler ? "Fin de la période" : finPrevue ? "Fin de l'abonnement" : "Prochain prélèvement",
     etat: aRegler ? "enRetard" : finPrevue ? "proche" : "lointain",

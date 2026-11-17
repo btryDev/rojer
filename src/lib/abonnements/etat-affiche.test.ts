@@ -31,7 +31,8 @@ describe("etatAffiche", () => {
   it("essai loin de sa fin : la première formule, la frise de l'essai, rien à faire", () => {
     const e = etatAffiche(ligne({ essaiUtiliseLe: jour("2026-11-10"), finEssai: jour("2026-12-10") }), MAINTENANT, null);
     expect(e.titre).toBe("Essentiel");
-    expect(e.pastille).toEqual({ libelle: "Essai en cours", etat: "lointain" });
+    expect(e.pastille).toEqual({ libelle: "Essai en cours, 23 jours restants", etat: "lointain" });
+    expect(e.detail).toMatch(/formule Essentiel jusqu.au 10 décembre 2026/);
     expect(e.frise).toMatchObject({ debut: jour("2026-11-10"), fin: jour("2026-12-10"), libelleFin: "Fin de l'essai", etat: "lointain" });
   });
 

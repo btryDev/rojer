@@ -19,7 +19,7 @@ import { ajouterJours } from "@/lib/dates";
 import { VERSION_CONDITIONS } from "./conditions";
 import { empreinteConditions } from "./conditions-empreinte";
 import { essaiDisponible, gesteAbonnement } from "./droits";
-import { CLES_FORMULES, DUREE_ESSAI_JOURS, lookupKey } from "./formules";
+import { DUREE_ESSAI_JOURS, FORMULE_D_ESSAI, lookupKey } from "./formules";
 import { PAGE_ABONNEMENT, PAGE_MEMBRES, abonnementDuCompte, contexteDroits, offreLancee } from "./saisie";
 
 export const PAGE_ESSAI = "/essai";
@@ -44,10 +44,10 @@ export type EtatEssai = { status: "idle" } | { status: "error"; message: string 
 const erreur = (message: string): EtatEssai => ({ status: "error", message });
 
 /**
- * Le prix affiché sur l'écran d'essai (la plus petite formule, mensuelle) :
+ * Le prix affiché sur l'écran d'essai (la formule de l'essai, mensuelle) :
  * la formule et le rythme se choisissent en s'abonnant.
  */
-export const PRIX_D_ESSAI = lookupKey(CLES_FORMULES[0], "mensuel");
+export const PRIX_D_ESSAI = lookupKey(FORMULE_D_ESSAI, "mensuel");
 
 /**
  * Démarre l'essai du compte de la personne connectée, puis l'envoie à son

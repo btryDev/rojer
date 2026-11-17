@@ -3,24 +3,19 @@ import Link from "next/link";
 import { BoutonEnvoi } from "@/components/abonnements/BoutonEnvoi";
 import { CarteAbonnement, OffreFermee, TEXTE_AIDE } from "@/components/abonnements/CarteAbonnement";
 import { MenuAbonnement } from "@/components/abonnements/MenuAbonnement";
-import { RecapPaiement } from "@/components/abonnements/RecapPaiement";
+import { Recap, RecapPaiement } from "@/components/abonnements/RecapPaiement";
 import { ChampCompteAttendu } from "@/components/compte/ChampCompteAttendu";
 import { PageDuCompte } from "@/components/compte/PageDuCompte";
 import { buttonVariants } from "@/components/ui/button";
 import { ouvrirPortailAction } from "@/lib/abonnements/actions";
+import { FORMULE_D_ESSAI, FORMULES } from "@/lib/abonnements/formules";
 import { etatDeLAbonnement } from "@/lib/abonnements/page-abonnement";
+import { formaterDateLongueFr } from "@/lib/dates";
 import { PAGE_FORMULES } from "@/lib/abonnements/sous-pages";
-import { GESTE_DU_PORTAIL, type SituationPortail } from "@/lib/abonnements/vue-abonnement";
+import { CE_QUE_FAIT_LE_PORTAIL, GESTE_DU_PORTAIL } from "@/lib/abonnements/vue-abonnement";
 
 export const metadata = {
   title: "Paiement et factures — Rojer",
-};
-
-/** Ce que fait le portail, dit avant le clic, selon la situation (`vueAbonnement`). */
-const CE_QUE_FAIT_LE_PORTAIL: Record<SituationPortail, string> = {
-  "a-regler": "Changez de carte, ou confirmez le paiement si votre banque le demande : il est relancé aussitôt.",
-  "fin-prevue": "Reprendre l'abonnement annule la fin prévue ; rien n'est prélevé avant la date de renouvellement.",
-  "a-jour": "Changer de carte, télécharger vos factures, modifier l'adresse de facturation ou résilier.",
 };
 
 /**
@@ -32,7 +27,7 @@ const CE_QUE_FAIT_LE_PORTAIL: Record<SituationPortail, string> = {
  * portail au clic (`ouvrirPortailAction`, qui seul crée la session).
  */
 export default async function PaiementPage() {
-  const { compteId, ligne, formule, droits, vue } = await etatDeLAbonnement();
+  const { compteId, ligne, formule, droits, vue, phase } = await etatDeLAbonnement();
   const aRegler = vue.cas === "portail" && vue.situation === "a-regler";
 
   return (
@@ -67,13 +62,30 @@ export default async function PaiementPage() {
                 <BoutonEnvoi variant="board">{GESTE_DU_PORTAIL[vue.situation]}</BoutonEnvoi>
               </form>
             </>
+          ) : phase.type === "essai" ? (
+            <>
+              {/* L'essai se lit comme un abonnement qui court (retour de
+                  test du 2026-11-17) : pour le dirigeant, il a Essentiel ;
+                  qu'il n'y ait rien chez Stripe ne le regarde pas. Ce qui
+                  manque, c'est un moyen de paiement pour la suite. */}
+              <Recap
+                lignes={[
+                  ["Formule", `${FORMULES[FORMULE_D_ESSAI].libelle}, gratuite jusqu'au ${formaterDateLongueFr(phase.fin)}`],
+                  ["Prochain prélèvement", "Aucun pendant l'essai"],
+                  ["Moyen de paiement", `À ajouter pour continuer après le ${formaterDateLongueFr(phase.fin)}`],
+                ]}
+              />
+              <Link href={PAGE_FORMULES} className={`${buttonVariants({ variant: "board", size: "board" })} w-fit`}>
+                Ajouter un moyen de paiement
+              </Link>
+            </>
           ) : (
             <>
               <p className={TEXTE_AIDE}>
                 Aucune carte enregistrée et aucune facture en cours : rien ne vous est prélevé tant que vous ne vous abonnez pas.
               </p>
               <Link href={PAGE_FORMULES} className={`${buttonVariants({ variant: "board", size: "board" })} w-fit`}>
-                Choisir une formule
+                M&apos;abonner
               </Link>
             </>
           )}

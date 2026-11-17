@@ -6,7 +6,7 @@ import { MenuAbonnement } from "@/components/abonnements/MenuAbonnement";
 import { PageDuCompte } from "@/components/compte/PageDuCompte";
 import { buttonVariants } from "@/components/ui/button";
 import type { Db } from "@/lib/auth/compte";
-import { CLES_FORMULES, FORMULES } from "@/lib/abonnements/formules";
+import { CLES_FORMULES, FORMULE_D_ESSAI, FORMULES } from "@/lib/abonnements/formules";
 import { etatDeLAbonnement, type EtatDeLAbonnement } from "@/lib/abonnements/page-abonnement";
 import { PAR_AN, plafondStockageOctets, utilisationDuCompte, type CleQuota, type Utilisation } from "@/lib/abonnements/quotas";
 import { PAGE_FORMULES } from "@/lib/abonnements/sous-pages";
@@ -83,11 +83,22 @@ async function Plafonds({ etat, db, compteId }: { etat: EtatDeLAbonnement; db: D
         : "Comptés sur les douze derniers mois.";
   const intro = regime.essai
     ? regime.essai === "en_cours"
-      ? "Les limites de l'essai priment sur la formule essayée. Elles sont levées dès l'abonnement."
+      ? `Les limites de l'essai priment sur celles de la formule ${FORMULES[FORMULE_D_ESSAI].libelle}.`
       : "Sans abonnement payé, les limites de l'essai restent appliquées."
     : `Formule ${FORMULES[regime.formule].libelle}. Un plafond atteint n'efface rien : la création suivante est refusée.`;
-  // Une formule au-dessus existe : on la propose au propriétaire.
-  const plusGrande = CLES_FORMULES.indexOf(regime.formule) < CLES_FORMULES.length - 1;
+  // Ce qu'on propose au propriétaire, sous les jauges : sortir de l'essai, ou
+  // une formule au-dessus s'il en existe une.
+  const suite =
+    regime.essai === "en_cours"
+      ? {
+          texte: `Ce sont les limites de l'essai. Avec un moyen de paiement, vous passez aux limites complètes de la formule ${FORMULES[FORMULE_D_ESSAI].libelle}.`,
+          geste: "Ajouter un moyen de paiement",
+        }
+      : regime.essai === "paiement_attendu"
+        ? { texte: "Abonnez-vous pour passer aux limites complètes de votre formule.", geste: "M'abonner" }
+        : CLES_FORMULES.indexOf(regime.formule) < CLES_FORMULES.length - 1
+          ? { texte: "Besoin de plus de sites, de personnes ou de documents ?", geste: "Voir les offres" }
+          : null;
 
   return (
     <CarteAbonnement titre="Ce que vous utilisez">
@@ -105,13 +116,11 @@ async function Plafonds({ etat, db, compteId }: { etat: EtatDeLAbonnement; db: D
           {g.avecStockage ? <JaugeDePlafond utilisation={stockage} unite="Go" /> : null}
         </div>
       ))}
-      {etat.vue.cas !== "membre" && (regime.essai || plusGrande) ? (
+      {etat.vue.cas !== "membre" && suite ? (
         <div className="mt-3 flex flex-wrap items-center justify-between gap-4 rounded-[22px] bg-[color:var(--board-slate-pale)] px-5 py-4">
-          <p className="m-0 text-[14px] leading-[1.5] text-[color:var(--board-slate-ink)]">
-            {regime.essai ? "L'abonnement lève les limites de l'essai." : "Besoin de plus de sites, de personnes ou de documents ?"}
-          </p>
+          <p className="m-0 text-[14px] leading-[1.5] text-[color:var(--board-slate-ink)]">{suite.texte}</p>
           <Link href={PAGE_FORMULES} className={buttonVariants({ variant: "boardClair", size: "board" })}>
-            Voir les formules
+            {suite.geste}
           </Link>
         </div>
       ) : null}

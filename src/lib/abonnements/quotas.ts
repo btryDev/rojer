@@ -11,7 +11,7 @@ import { invitationsDuCompte, membresDuCompte } from "@/lib/auth/membres";
 import { creerEnLotVerifie } from "@/lib/auth/portee/lot-verifie";
 import { lienActif } from "@/lib/access-tokens/revocation";
 import type { Geles } from "@/lib/auth/portee/gel";
-import { CLES_FORMULES, FORMULES, LIBELLES_PLAFONDS, LIMITES_ESSAI, formuleDeLookupKey, type CleFormule } from "./formules";
+import { CLES_FORMULES, FORMULE_D_ESSAI, FORMULES, LIBELLES_PLAFONDS, LIMITES_ESSAI, formuleDeLookupKey, type CleFormule } from "./formules";
 import { contexteDroits, offreLancee } from "./lancement";
 import { droitsDe, enEssai } from "./droits";
 
@@ -27,14 +27,14 @@ export const estAnnuelle = (cle: CleQuota): cle is CleAnnuelle => (PAR_AN as rea
 
 const lancee = () => offreLancee(contexteDroits());
 
-/** La formule qui fixe les plafonds : celle de l'abonnement, sinon la plus petite. */
+/** La formule qui fixe les plafonds : celle de l'abonnement, sinon celle de l'essai. */
 export function formuleDesPlafonds(formule: string | null | undefined): CleFormule {
   const connue = formuleDeLookupKey(formule)?.formule;
   if (connue) return connue;
   // Sans formule : un essai compté chez Rojer, rien d'anormal. Une formule
   // non vide et inconnue : un prix Stripe sans clé connue, à signaler.
   if (formule) console.error(JSON.stringify({ type: "quotas_formule_inconnue", formule }));
-  return CLES_FORMULES[0];
+  return FORMULE_D_ESSAI;
 }
 
 /**
@@ -68,7 +68,7 @@ export function motifDuRefus(regime: Regime, cle: CleQuota): string {
   const couvre = LIBELLES_PLAFONDS[cle](plafond);
   if (regime.essai && estLimiteDEssai(cle))
     return regime.essai === "en_cours"
-      ? `L'essai gratuit couvre ${couvre} : pour en ajouter, abonnez-vous depuis la page Abonnement de votre compte — l'abonnement lève les limites de l'essai.`
+      ? `Votre essai gratuit couvre ${couvre} : pour en ajouter, ajoutez un moyen de paiement depuis la page Abonnement de votre compte, et vous passez aux limites complètes de votre formule.`
       : `Sans abonnement payé, Rojer garde les limites de l'essai (${couvre}) : abonnez-vous depuis la page Abonnement de votre compte.`;
   const plus = CLES_FORMULES.find((f) => {
     const q = FORMULES[f].quotas[cle];
