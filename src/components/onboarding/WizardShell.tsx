@@ -260,7 +260,7 @@ export function WizardShell({
           marque en toutes lettres. La mise en place est le premier écran
           de l'application, pas son antichambre — un rail au dessin propre
           se lirait comme un autre produit. */}
-      <aside className="hidden flex-col gap-8 bg-[color:var(--board-ink)] px-7 py-8 text-white lg:flex">
+      <aside className="hidden flex-col gap-8 bg-[color:var(--board-ink)] px-7 py-8 text-white lg:sticky lg:top-0 lg:flex lg:h-dvh lg:overflow-y-auto">
         <Link
           href="/"
           className="text-[17px] font-semibold leading-none tracking-[-0.025em] text-white transition-colors hover:text-white/75"
