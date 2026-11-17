@@ -41,7 +41,7 @@ export class LocalFileStorage implements FileStorage {
     try {
       return await fs.readFile(full);
     } catch (err: unknown) {
-      // Même contrat que le pilote Supabase : une clé absente est
+      // Même contrat que le pilote S3 : une clé absente est
       // `FichierIntrouvable`, que les routes traduisent en « introuvable ».
       if ((err as NodeJS.ErrnoException)?.code === "ENOENT")
         throw new FichierIntrouvable(key);

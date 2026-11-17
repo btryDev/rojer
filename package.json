@@ -45,7 +45,6 @@
     "@modelcontextprotocol/server": "^2.4.0",
     "@prisma/client": "^6",
     "@react-pdf/renderer": "^4.5.1",
-    "@supabase/supabase-js": "^2.104.0",
     "@types/qrcode": "^1.5.6",
     "better-auth": "1.7.14",
     "class-variance-authority": "^0.7.1",

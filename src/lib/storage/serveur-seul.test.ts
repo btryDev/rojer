@@ -1,4 +1,4 @@
-// Le stockage est serveur seulement : `index.ts` et `supabase.ts` importent
+// Le stockage est serveur seulement : `index.ts` et `s3.ts` importent
 // `server-only` (Next fait échouer le build d'un composant client qui les
 // tire), et aucun fichier "use client" ne les importe directement — relevé
 // ici, sans dépendre d'un build.
@@ -21,7 +21,7 @@ function sources(dossier: string): string[] {
 }
 
 describe("le stockage ne sort pas du serveur", () => {
-  it.each(["index.ts", "supabase.ts", "s3.ts"])("%s importe « server-only » en tête", (f) => {
+  it.each(["index.ts", "s3.ts"])("%s importe « server-only » en tête", (f) => {
     const source = readFileSync(join(RACINE, "src", "lib", "storage", f), "utf8");
     const premierImport = source.split("\n").find((l) => l.startsWith("import "));
     expect(premierImport).toBe('import "server-only";');

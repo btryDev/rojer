@@ -17,7 +17,7 @@ import { cleRapport } from "./index";
 import { clePiecePrestataire } from "@/lib/prestataires/storage";
 import { LocalFileStorage } from "./local";
 import { segmentCleStockage } from "./noms";
-import { SupabaseFileStorage, type BucketStockage, type ClientStockage } from "./supabase";
+import { S3FileStorage, type ClientS3 } from "./s3";
 
 const NOMS = ["rapport..pdf", "..", "...pdf", "a...b..pdf", "../../etc/passwd", "..\\..\\x.pdf"];
 
@@ -26,12 +26,9 @@ const CONSTRUCTEURS: [string, (nom: string) => string][] = [
   ["clePiecePrestataire", (nom) => clePiecePrestataire("etab-1", "pre-1", "urssaf", nom)],
 ];
 
-function supabase(): SupabaseFileStorage {
-  const bucket = {
-    upload: async (chemin: string) => ({ data: { path: chemin }, error: null }),
-  } as unknown as BucketStockage;
-  const c: ClientStockage = { storage: { from: () => bucket } };
-  return new SupabaseFileStorage(c, "b");
+function s3(): S3FileStorage {
+  const c: ClientS3 = { send: async () => ({}) };
+  return new S3FileStorage(c, "b", 5_000);
 }
 
 const dossiers: string[] = [];
@@ -50,7 +47,7 @@ describe.each(CONSTRUCTEURS)("%s", (_nom, cle) => {
     await expect(
       new LocalFileStorage(racine).put(k, Buffer.from("x"), "application/pdf"),
     ).resolves.toBeUndefined();
-    await expect(supabase().put(k, Buffer.from("x"), "application/pdf")).resolves.toBeUndefined();
+    await expect(s3().put(k, Buffer.from("x"), "application/pdf")).resolves.toBeUndefined();
   });
 
   it("garde l'extension et le nom lisible", () => {
@@ -75,14 +72,14 @@ describe.each(CONSTRUCTEURS)("%s", (_nom, cle) => {
 });
 
 describe("la garde des pilotes n'est pas desserrée", () => {
-  it("une clé qui remonte reste refusée, en local comme chez Supabase", async () => {
+  it("une clé qui remonte reste refusée, en local comme sur S3", async () => {
     const racine = await fs.mkdtemp(path.join(os.tmpdir(), "rojer-cles-"));
     dossiers.push(racine);
     await expect(
       new LocalFileStorage(racine).put("rapports/../x.pdf", Buffer.from("x"), "application/pdf"),
     ).rejects.toThrow(/invalide/);
     await expect(
-      supabase().put("rapports/../x.pdf", Buffer.from("x"), "application/pdf"),
+      s3().put("rapports/../x.pdf", Buffer.from("x"), "application/pdf"),
     ).rejects.toThrow(/invalide/);
   });
 });

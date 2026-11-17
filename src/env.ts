@@ -104,13 +104,11 @@ const schema = z
     SIGNATURE_MAIL_FROM: optionnelle,
 
     // Stockage des fichiers (`storage/index.ts`).
-    STORAGE_DRIVER: enumeration(["local", "supabase", "s3"] as const),
+    STORAGE_DRIVER: enumeration(["local", "s3"] as const),
     STORAGE_BUCKET: optionnelle,
     STORAGE_LOCAL_PATH: optionnelle,
-    SUPABASE_SERVICE_ROLE_KEY: optionnelle,
-    // URL du projet Supabase, pour le seul stockage Supabase (Vercel), d'ici
-    // la bascule ; l'authentification ne la lit plus (ADR-052).
-    NEXT_PUBLIC_SUPABASE_URL: z.preprocess(vide, urlHttp.optional()),
+    // ~~SUPABASE_SERVICE_ROLE_KEY, NEXT_PUBLIC_SUPABASE_URL~~ [2026-11-17 :
+    // pilote de stockage Supabase retiré, Vercel coupé.]
     // Cellar (Clever Cloud) : injectées par l'add-on (`storage/s3.ts`).
     CELLAR_ADDON_HOST: optionnelle,
     CELLAR_ADDON_KEY_ID: optionnelle,

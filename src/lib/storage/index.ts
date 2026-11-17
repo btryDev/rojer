@@ -5,16 +5,13 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
-import { createClient } from "@supabase/supabase-js";
 import { S3Client } from "@aws-sdk/client-s3";
 import { LocalFileStorage } from "./local";
-import { SupabaseFileStorage, type ClientStockage } from "./supabase";
 import { S3FileStorage, pointDAcces, refusDuPointDAcces, type ClientS3 } from "./s3";
 import { StockageNonConfigure } from "./erreurs";
-import { diagnostic, formeDeLaCle, nettoyer, refusDeLaCle } from "./cle-service";
+import { nettoyer } from "./nettoyer";
 import { segmentCleStockage } from "./noms";
 import type { FileStorage } from "./types";
-import { fetchAvecDelai } from "@/lib/reseau/delai";
 
 export type { FileStorage, StorageKey } from "./types";
 export {
@@ -35,9 +32,8 @@ export {
  *     lecture seule et éphémère, et aucun fichier n'y survit (2026-09-27,
  *     `lot/stockage-supabase`). Refus sur le patron de `email/index.ts` et de
  *     son driver `console`.
- *   - `supabase` : Supabase Storage, bucket privé `STORAGE_BUCKET`, clé
- *     `SUPABASE_SERVICE_ROLE_KEY` (serveur seulement), URL du projet
- *     `NEXT_PUBLIC_SUPABASE_URL` (l'authentification ne la lit plus, ADR-052).
+ *   - ~~`supabase` : Supabase Storage~~ [2026-11-17 : pilote retiré, Vercel
+ *     coupé ; `docs/etat-bascule-clever-cloud.md`].
  *
  *   - `s3` : Cellar, le stockage objet de Clever Cloud (2026-10-30, plan de
  *     bascule 0.7), bucket privé `STORAGE_BUCKET`, accès par les variables
@@ -56,7 +52,7 @@ export {
  * une panne : l'écran dit `MESSAGE_ECHEC_ENREGISTREMENT`, rien n'est écrit en
  * base. Le pilote S3 (Cellar) prend le même délai, par opération entière
  * (signal d'abandon, `s3.ts`), sans second essai : le pire cas reste une
- * minute, comme pour Supabase.
+ * minute.
  */
 export const DELAI_STOCKAGE_MS = 60_000;
 
@@ -65,12 +61,6 @@ const VARIABLES_S3 = [
   "CELLAR_ADDON_HOST",
   "CELLAR_ADDON_KEY_ID",
   "CELLAR_ADDON_KEY_SECRET",
-] as const;
-
-const VARIABLES_SUPABASE = [
-  "STORAGE_BUCKET",
-  "SUPABASE_SERVICE_ROLE_KEY",
-  "NEXT_PUBLIC_SUPABASE_URL",
 ] as const;
 
 /** Le motif quand des variables d'un pilote manquent, ou `null`. Nomme, ne cite jamais. */
@@ -95,27 +85,18 @@ function refusDuStockage(): string | null {
     return process.env.NODE_ENV === "production"
       ? `STORAGE_DRIVER vaut « local »${process.env.STORAGE_DRIVER ? "" : " (non défini)"} en production : ` +
           "le disque du serveur est en lecture seule et éphémère, aucun fichier " +
-          "déposé n'y survivrait. Poser STORAGE_DRIVER=supabase (Vercel) ou " +
-          "STORAGE_DRIVER=s3 (Clever Cloud) et leurs variables " +
+          "déposé n'y survivrait. Poser STORAGE_DRIVER=s3 et ses variables " +
           "(docs/deploiement-stockage.md)."
       : null;
   }
-  if (driver === "supabase") {
+  if (driver === "s3") {
     // Nettoyées avant d'être jugées : une variable faite d'un seul retour à la
     // ligne est « manquante », pas présente.
-    const manque = variablesManquantes("supabase", VARIABLES_SUPABASE);
-    if (manque) return manque;
-    // La FORME de la clé, jugée avant tout appel : une clé mal collée ou d'un
-    // autre format partait jusqu'à Storage, qui répondait « Invalid Compact
-    // JWS » (production, 2026-09-27). `cle-service.ts`.
-    return refusDeLaCle(formeDeLaCle(nettoyer(process.env.SUPABASE_SERVICE_ROLE_KEY)));
-  }
-  if (driver === "s3") {
     const manque = variablesManquantes("s3", VARIABLES_S3);
     if (manque) return manque;
     return refusDuPointDAcces(nettoyer(process.env.CELLAR_ADDON_HOST));
   }
-  return `Driver de stockage non supporté : ${driver}. Utiliser « local » (développement), « supabase » ou « s3 ».`;
+  return `Driver de stockage non supporté : ${driver}. Utiliser « local » (développement) ou « s3 ».`;
 }
 
 /**
@@ -133,31 +114,13 @@ export function getStorage(): FileStorage {
   if (_storage) return _storage;
   const refus = refusDuStockage();
   if (refus) {
-    // Le motif nomme la variable et la FORME de la clé, jamais sa valeur ; il
+    // Le motif nomme la variable, jamais sa valeur ; il
     // va au journal du serveur, l'écran dit `MESSAGE_DEPOT_NON_CONFIGURE`.
     console.error(`[stockage] non configuré : ${refus}`);
     throw new StockageNonConfigure(refus);
   }
 
   const driver = process.env.STORAGE_DRIVER ?? "local";
-  if (driver === "supabase") {
-    const cle = nettoyer(process.env.SUPABASE_SERVICE_ROLE_KEY);
-    const url = nettoyer(process.env.NEXT_PUBLIC_SUPABASE_URL);
-    console.info(
-      `[stockage] pilote supabase, bucket « ${nettoyer(process.env.STORAGE_BUCKET)} », ` +
-        `clé : ${diagnostic(formeDeLaCle(cle))}`,
-    );
-    const client = createClient(url, cle, {
-      auth: { persistSession: false, autoRefreshToken: false },
-      global: { fetch: fetchAvecDelai(DELAI_STOCKAGE_MS) },
-    });
-    // Sans conversion : le client supabase-js satisfait `ClientStockage` tel
-    // quel, et le compilateur le vérifie à chaque montée de version.
-    const stockage: ClientStockage = client;
-    _storage = new SupabaseFileStorage(stockage, nettoyer(process.env.STORAGE_BUCKET));
-    return _storage;
-  }
-
   if (driver === "s3") {
     const bucket = nettoyer(process.env.STORAGE_BUCKET);
     console.info(`[stockage] pilote s3 (Cellar), bucket « ${bucket} »`);

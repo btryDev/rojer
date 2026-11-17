@@ -80,7 +80,7 @@ describe("validerEnvironnement", () => {
       validerEnvironnement({ ...BASE, EMAIL_DRIVER: "mailpace", MAILPACE_API_KEY: "cle" }),
     ).not.toThrow();
     expect(() =>
-      validerEnvironnement({ ...BASE, STORAGE_DRIVER: "supabase", PUBLIC_APP_URL: "https://rojer.fr" }),
+      validerEnvironnement({ ...BASE, STORAGE_DRIVER: "s3", PUBLIC_APP_URL: "https://rojer.fr" }),
     ).not.toThrow();
   });
 

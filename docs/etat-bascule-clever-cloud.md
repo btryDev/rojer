@@ -515,11 +515,13 @@ jetable, hors dépôt).
 
 ### À faire à la bascule (Vercel coupé)
 
-- Retirer le pilote de stockage `supabase` : `src/lib/storage/supabase.ts`, sa
+- ~~Retirer le pilote de stockage `supabase` : `src/lib/storage/supabase.ts`, sa
   branche dans `storage/index.ts`, la valeur `supabase` de `STORAGE_DRIVER` et
   les variables `SUPABASE_*` de `src/env.ts` et `.env.example`, la dépendance
-  `@supabase/supabase-js`. Il sert encore la production Vercel (`main`).
-- Retirer `vercel.json`.
+  `@supabase/supabase-js`. Il sert encore la production Vercel (`main`).~~
+  [2026-11-17, PR #337 : retiré, avec la clé de service (`cle-service.ts`
+  devient `nettoyer.ts`, seule `nettoyer` sert encore le pilote s3).]
+- ~~Retirer `vercel.json`.~~ [2026-11-17, PR #337 : retiré.]
 - Les tables `Intervention` et `CommentaireIntervention` (ADR-018, sans code)
   attendent toujours leur migration de suppression.
 

@@ -89,7 +89,7 @@ function motifS3(e: unknown): string {
 export class S3FileStorage implements FileStorage {
   /**
    * `delaiMs` borne l'opération ENTIÈRE, lecture du corps comprise, comme
-   * `fetchAvecDelai` pour Supabase : le `requestTimeout` du SDK s'arrête aux
+   * `fetchAvecDelai` : le `requestTimeout` du SDK s'arrête aux
    * en-têtes de la réponse et, sans `throwOnRequestTimeout`, ne fait que
    * journaliser. Un signal d'abandon par opération coupe la requête et son
    * corps.
