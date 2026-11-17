@@ -5,6 +5,14 @@
   l'utilisateur, pas à Rojer » ; douze mois de lecture, puis suppression ;
   e-mails J-30 et J-7), et 2026-11-09 (« pourquoi on ne le fait pas
   maintenant ? »)
+- Confirmée le 2026-11-17 par la propriétaire, après comparaison : les
+  éditeurs effacent 30 à 90 jours après la fin (Basecamp 30, Formstack et
+  ChartMogul 60, DocuClipper 90) ; la CNIL exige une durée fixée (Discord
+  sanctionné pour une conservation jusqu'à la fermeture du compte) et admet
+  au plus deux ans pour un compte inactif. Douze mois est retenu. Les textes
+  qui promettaient l'inverse sont corrigés le même jour : conditions
+  générales (version `2026-11-17-provisoire`), page Abonnement, écran
+  d'essai, grille des tarifs.
 - Complète : ADR-053 (abonnements), ADR-054 (comptes et membres)
 - Amende : la règle 10 de CLAUDE.md (rayée le 2026-11-09, #258)
 

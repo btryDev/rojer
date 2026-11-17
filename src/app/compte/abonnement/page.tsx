@@ -257,7 +257,8 @@ export default async function AbonnementPage({
         <h1 className="board-titre m-0 mt-6 text-[clamp(29px,3vw,39px)]">Abonnement</h1>
         <NomDuCompte nom={nomCompte} email={user.email} />
         <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-          Vos dossiers restent toujours consultables, quel que soit l&apos;état de l&apos;abonnement.
+          Sans abonnement, vos dossiers restent consultables douze mois, puis le compte est supprimé, après deux
+          e-mails d&apos;avertissement.
         </p>
 
         {/* Un geste parti d'un onglet resté sur un autre compte (`clientDuCompte`) : refusé. */}

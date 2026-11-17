@@ -87,7 +87,7 @@ export default async function EssaiPage() {
               { quand: "Quand vous voulez", quoi: "Abonnez-vous depuis la page Abonnement : l'essai s'arrête et ses limites sont levées." },
               {
                 quand: finTexte,
-                quoi: "Fin de l'essai. Pour continuer à saisir, abonnez-vous ; sinon, rien n'est prélevé et vos dossiers restent consultables.",
+                quoi: "Fin de l'essai. Pour continuer à saisir, abonnez-vous ; sinon, rien n'est prélevé et vos dossiers restent consultables douze mois.",
               },
             ]}
           />

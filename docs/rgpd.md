@@ -351,10 +351,10 @@ ne dit pas :
 
 | Donnée | Base active | Archivage | Fondement |
 |---|---|---|---|
-| Entreprise / Établissement | Durée de l'activité | + 1 an | Restauration d'un compte fermé par erreur |
+| Entreprise / Établissement | Durée de l'activité ; [2026-11-17] sans abonnement, **12 mois** puis suppression avec le compte, après deux e-mails (J-30, J-7) — ADR-058 | ~~+ 1 an~~ [2026-11-17 : aucun archivage après la suppression du compte ; seule la trace `CompteSupprime` reste] | ~~Restauration d'un compte fermé par erreur~~ Limitation de la conservation (art. 5.1.e RGPD) ; décision de la propriétaire, confirmée le 2026-11-17 |
 | **Inscription jamais activée** (`User` non confirmé, ses sessions) — 2026-11-16 | **30 jours** depuis l'inscription, puis effacée par la tâche quotidienne (`auth/comptes-non-actives.ts`) ; la page d'attente l'annonce | — | Minimisation : une adresse mal tapée est souvent celle d'un tiers. Un compte non activé n'a jamais pu se connecter, il ne porte rien d'autre |
 | **Trace d'un compte supprimé faute d'abonnement** (`CompteSupprime`, ADR-058) : nom du compte, adresses des propriétaires, acceptations des conditions (adresse, version, empreinte, contexte, date), dates des avertissements et de la suppression — aucune donnée métier | — | **5 ans** après la suppression, puis effacée par la tâche quotidienne | Preuve en cas de contentieux (archivage intermédiaire, référentiel CNIL) ; prescription de droit commun, art. 2224 C. civ. — décision de la propriétaire du 2026-11-09 |
-| **Versions de DUERP** | — | **40 ans** | `R. 4121-4` CT (loi du 2 août 2021) — **obligation** |
+| **Versions de DUERP** | — | ~~**40 ans**~~ [2026-11-17, ADR-058 : tant que le compte vit ; supprimées avec lui, 12 mois après la fin de l'abonnement. Les 40 ans sont l'obligation de l'EMPLOYEUR, que l'export lui permet de tenir (CLAUDE.md, règle 10)] | `R. 4121-4` CT (loi du 2 août 2021) — **obligation de l'employeur** |
 | **Rapports et attestations de vérification** | Exploitation courante | **5 ans au moins**, et en tout état de cause les **deux dernières** vérifications | `D. 4711-3` CT — **obligation** |
 | **Salarié — identité et poste** | Durée de la relation de travail | Jusqu'à l'expiration des délais de prescription applicables | Référentiel CNIL, « gestion du dossier professionnel » (recommandation) |
 | **Salarié — titres et échéances** | Durée de la relation de travail | ~~Jusqu'au terme du délai de prescription de l'action en responsabilité~~ **Aucune durée fixée** : les titres restent jusqu'à ce que l'employeur les supprime, et la suppression est définitive | Pendant l'emploi : obligation légale de l'employeur (6.1.c, audit E8). Copie d'une attestation médicale : « pendant toute sa durée de validité » (`R. 4323-56`, `R. 4544-11-1`). ~~`D. 4711-3` par analogie~~ — décision de la propriétaire, 2026-09-27 : aucune conservation par analogie |
@@ -379,10 +379,15 @@ d'exploitation, pas une obligation, et il doit se dire comme tel.
 
 ### 4.2 Les 40 ans du DUERP
 
-Les versions figées (`DuerpVersion.snapshot`) sont conservées **40 ans**
-(`R. 4121-4`). Concrètement :
+~~Les versions figées (`DuerpVersion.snapshot`) sont conservées **40 ans**
+(`R. 4121-4`).~~ [2026-11-17 : la conservation 40 ans est l'obligation de
+l'employeur (décision du 2026-11-05 et 06, ADR-058, confirmée le 2026-11-17).
+Rojer garde les versions tant que le compte vit ; un compte sans abonnement
+depuis 12 mois est supprimé avec elles, après deux e-mails qui le disent et
+rappellent de les télécharger.] Concrètement, tant que le compte vit :
 
-- une `DuerpVersion` ne peut jamais être supprimée avant ce terme ;
+- une `DuerpVersion` ne peut jamais être supprimée par un geste de
+  l'utilisateur (`supprimerEntreprise` le refuse) ;
 - même sur demande d'effacement, elles sont exclues du périmètre — exception de
   l'**article 17.3.b du RGPD**, respect d'une obligation légale ;
 - les risques et unités de travail suivent, puisqu'ils font partie du snapshot.
