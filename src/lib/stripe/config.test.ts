@@ -39,6 +39,7 @@ describe("configurationStripe", () => {
       cle: TEST,
       secretWebhook: WH,
       mode: "test",
+      conditionsSurCheckout: true,
     });
     expect(configurationStripe(avec(PREVIEW, TEST_RESTREINTE, WH))).toMatchObject({ active: true, mode: "test" });
 
@@ -65,6 +66,17 @@ describe("configurationStripe", () => {
     for (const cle of [TEST, TEST_RESTREINTE]) {
       expect(motifDe(avec(PROD, cle, WH))).toMatch(/de test refusée en production/);
     }
+  });
+
+  it("sans acceptation des conditions sur Checkout : en préproduction seulement, jamais en production", () => {
+    expect(configurationStripe({ ...avec(PREVIEW, TEST_RESTREINTE, WH), STRIPE_CONDITIONS_SUR_CHECKOUT: "non" })).toMatchObject({
+      active: true,
+      conditionsSurCheckout: false,
+    });
+    expect(configurationStripe({ ...avec(PROD, LIVE_RESTREINTE, WH), STRIPE_CONDITIONS_SUR_CHECKOUT: "non" })).toMatchObject({
+      active: false,
+      motif: expect.stringMatching(/refusée en production/),
+    });
   });
 
   it("la clé et le secret du webhook vont par deux", () => {

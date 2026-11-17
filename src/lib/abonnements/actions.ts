@@ -60,7 +60,7 @@ async function clientDuCompte({ compte, db }: Proprietaire, formData: FormData |
     select: { stripeCustomerId: true },
   });
   if (!ligne) redirect(PAGE_ESSAI);
-  return { stripe: clientStripe(config), db, ligne, compteId: compte.compteId };
+  return { stripe: clientStripe(config), db, ligne, compteId: compte.compteId, conditionsSurCheckout: config.conditionsSurCheckout };
 }
 
 /** Les gestes sur un abonnement Stripe (portail, facture, formule) : sans client, rien à gérer. */
@@ -112,7 +112,7 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
   // (répétition locale du 2026-11-17 — sans cela, impossible de s'abonner
   // après l'essai).
   ouvrirAuGel();
-  const { stripe, db, ligne, compteId } = await clientDuCompte(proprietaire, formData);
+  const { stripe, db, ligne, compteId, conditionsSurCheckout } = await clientDuCompte(proprietaire, formData);
   const formule = String(formData.get("formule") ?? "");
   if (!estLookupKey(formule)) redirect(PAGE_ABONNEMENT);
   const email = proprietaire.user.email;
@@ -150,6 +150,7 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
               // retour que pour une session payée de ce client.
               succes: `${base}?paiement=termine&session={CHECKOUT_SESSION_ID}`,
               annulation: base,
+              conditions: conditionsSurCheckout,
             });
     }
   } catch (e) {
