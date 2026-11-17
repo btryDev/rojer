@@ -8,6 +8,7 @@ import { ChampCompteAttendu } from "@/components/compte/ChampCompteAttendu";
 import { PageDuCompte } from "@/components/compte/PageDuCompte";
 import { buttonVariants } from "@/components/ui/button";
 import { ouvrirPortailAction } from "@/lib/abonnements/actions";
+import { PAGE_ESSAI } from "@/lib/abonnements/essai";
 import { FORMULE_D_ESSAI, FORMULES } from "@/lib/abonnements/formules";
 import { etatDeLAbonnement } from "@/lib/abonnements/page-abonnement";
 import { formaterDateLongueFr } from "@/lib/dates";
@@ -80,6 +81,17 @@ export default async function PaiementPage() {
               </p>
               <Link href={PAGE_FORMULES} className={`${buttonVariants({ variant: "boardClair", size: "board" })} w-fit`}>
                 Voir les offres
+              </Link>
+            </>
+          ) : vue.cas === "essai" ? (
+            // L'essai n'est pas encore démarré : c'est le premier geste, pas
+            // « M'abonner » (relecture du 2026-11-17).
+            <>
+              <p className={TEXTE_AIDE}>
+                Aucune carte enregistrée : l&apos;essai gratuit se démarre sans carte, et rien ne vous est prélevé.
+              </p>
+              <Link href={PAGE_ESSAI} className={`${buttonVariants({ variant: "board", size: "board" })} w-fit`}>
+                Démarrer mon essai gratuit
               </Link>
             </>
           ) : (

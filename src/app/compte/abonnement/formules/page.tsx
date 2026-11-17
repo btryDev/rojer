@@ -189,7 +189,9 @@ function Resiliation({
   finPeriode: Date | null;
   baissePrevue: boolean;
 }) {
-  const fin = finPeriode ? `le ${formaterDateLongueFr(finPeriode)}` : "à la fin de la période payée";
+  // Sans date connue (copie en retard), la phrase se passe de date.
+  const le = finPeriode ? ` le ${formaterDateLongueFr(finPeriode)}` : "";
+  const fin = finPeriode ? `le ${formaterDateLongueFr(finPeriode)}` : "à la date prévue";
   return (
     <CarteAbonnement titre={situation === "fin-prevue" ? "Fin de l'abonnement prévue" : "Résilier l'abonnement"}>
       <form action={ouvrirPortailAction} className="flex flex-col items-start gap-4">
@@ -198,7 +200,7 @@ function Resiliation({
         <p className={TEXTE_AIDE}>
           {situation === "fin-prevue"
             ? `Votre abonnement prend fin ${fin}, sans nouveau prélèvement. Vous pouvez le reprendre jusqu'à cette date.`
-            : `Votre abonnement court jusqu'à la fin de la période payée, ${fin}, sans remboursement. Ensuite, la saisie se ferme ; vos dossiers restent consultables et exportables douze mois.`}
+            : `Votre abonnement court jusqu'à la fin de la période payée${finPeriode ? "," : ""}${le}, sans remboursement. Ensuite, la saisie se ferme ; vos dossiers restent consultables et exportables douze mois.`}
         </p>
         {baissePrevue ? (
           <p id="resiliation-bloquee" className="m-0 text-[14px] font-semibold leading-[1.5] text-[color:var(--board-ink)]">
@@ -245,6 +247,14 @@ function RienAChanger({ vue }: { vue: VueAbonnement }) {
           Démarrer mon essai gratuit
         </Link>
       </div>
+    );
+  // Une fin prévue se reprend dans la section du bas de cette page : un seul
+  // geste « Reprendre », pas deux (relecture du 2026-11-17).
+  if (vue.cas === "portail" && vue.situation === "fin-prevue")
+    return (
+      <p className={TEXTE_AIDE}>
+        Votre abonnement prend fin à la date prévue : reprenez-le, plus bas sur cette page, pour changer de formule.
+      </p>
     );
   if (vue.cas === "portail" && vue.situation !== "a-jour")
     return (
@@ -310,8 +320,7 @@ async function CartesPourSAbonner({
 /** Ce que fait un changement de formule, dit avant le clic — le changement de rythme compris. */
 function effetDuChangement(sens: "montee" | "baisse", actuelle: string | null, visee: string, finPeriode: Date | null): string {
   if (sens === "baisse") {
-    const fin = finPeriode ? `le ${formaterDateLongueFr(finPeriode)}` : "à la fin de la période payée";
-    return `À la fin de votre période payée, ${fin}, sans remboursement de la période en cours.`;
+    return `À la fin de votre période payée${finPeriode ? `, le ${formaterDateLongueFr(finPeriode)}` : ""}, sans remboursement de la période en cours.`;
   }
   const de = formuleDeLookupKey(actuelle)?.periodicite;
   const vers = formuleDeLookupKey(visee)?.periodicite;

@@ -4,7 +4,8 @@ import "server-only";
 // 2026-11-16) : le choix se perdait, et l'écran d'essai ne parlait que
 // d'Essentiel. Un cookie du navigateur, posé à l'inscription : l'essai se fait
 // toujours sur Essentiel (ADR-053 § 8) ; ce choix ne fait que se dire sur
-// l'écran d'essai et se présélectionner sur la page Abonnement. Rien n'est
+// l'écran d'essai, et donner le rythme (mensuel, annuel) montré d'abord sur la
+// page Abonnement — les cartes y sont toutes visibles (2026-11-17). Rien n'est
 // facturé sur sa foi. Une valeur inconnue est ignorée.
 
 import { cookies } from "next/headers";

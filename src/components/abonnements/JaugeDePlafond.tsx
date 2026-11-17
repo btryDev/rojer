@@ -1,4 +1,5 @@
 import type { CleQuota, Utilisation } from "@/lib/abonnements/quotas";
+import { CHAMP_ETAT } from "@/lib/calendrier/etats";
 
 /** Le nom de chaque plafond sur une jauge (`LIBELLES_PLAFONDS` les compte : « 3 établissements »). */
 export const NOM_DU_PLAFOND: Record<CleQuota, string> = {
@@ -56,7 +57,10 @@ export function JaugeDePlafond({
             className="h-full rounded-full"
             style={{
               width: `${plafond > 0 ? Math.min(100, (utilise / plafond) * 100) : 100}%`,
-              background: plein ? "var(--board-amber-ink)" : "var(--board-blue-strong)",
+              // La couleur dit l'état, jamais le volume (charte) : la paille
+              // de « proche » quand le plafond est atteint, sinon une encre
+              // neutre.
+              background: plein ? CHAMP_ETAT.proche : "var(--board-slate-mid)",
             }}
           />
         </div>

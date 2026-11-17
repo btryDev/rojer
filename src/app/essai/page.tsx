@@ -95,7 +95,7 @@ export default async function EssaiPage() {
           {autreFormule && (
             <MessageFormulaire ton="info">
               Vous avez choisi {autreFormule}. L&apos;essai se fait sur {essentiel.libelle} ; pour passer à{" "}
-              {autreFormule}, abonnez-vous depuis la page Abonnement, où elle sera présélectionnée.
+              {autreFormule}, abonnez-vous depuis la page Abonnement.
             </MessageFormulaire>
           )}
 

@@ -288,6 +288,10 @@ async function Resumes({ etat, vue, db, compteId }: { etat: EtatDeLAbonnement; v
           <p className={TEXTE_AIDE}>Le paiement et les factures sont gérés par le propriétaire du compte.</p>
         ) : vue.cas === "portail" && etat.ligne ? (
           <RecapPaiement ligne={etat.ligne} formule={etat.formule} situation={vue.situation} />
+        ) : vue.cas === "aucune" ? (
+          // Retour d'un paiement dont la copie retarde : ne pas dire « aucune
+          // carte » à qui vient de payer (relecture du 2026-11-17).
+          <p className={TEXTE_AIDE}>Votre paiement est en cours d&apos;enregistrement : il s&apos;affichera ici dans un instant.</p>
         ) : (
           <p className={TEXTE_AIDE}>
             Aucune carte enregistrée : rien ne vous est demandé tant que vous ne vous abonnez pas

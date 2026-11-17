@@ -20,8 +20,8 @@ import { vueAbonnement, type EntreeVue } from "./vue-abonnement";
  * AVANT d'appeler cette fonction : la ligne lue ici est alors la nouvelle.
  */
 export const etatDeLAbonnement = cache(async () => {
-  const user = await requireUser();
-  const [c, { compteId, nomCompte }] = await Promise.all([getOptionalCompte(), compteDeLaPage()]);
+  await requireUser();
+  const [c, { compteId }] = await Promise.all([getOptionalCompte(), compteDeLaPage()]);
   const ctx = contexteDroits();
   const ouvert = offreLancee(ctx);
   // Une seule lecture : la ligne sert à l'état affiché et aux droits.
@@ -38,17 +38,13 @@ export const etatDeLAbonnement = cache(async () => {
     paiementTermine: false,
   };
   return {
-    user,
     c,
     /** Le compte que montre la page : ses gestes le postent (`ChampCompteAttendu`). */
     compteId,
-    nomCompte,
     ctx,
     ligne,
     droits: droitsDe(ligne, ctx),
-    geste,
     formule: formuleDeLookupKey(ligne?.formule),
-    finPrevue,
     phase,
     /** La variante de la page, décidée une fois (`vueAbonnement`). */
     vue: vueAbonnement(entree),

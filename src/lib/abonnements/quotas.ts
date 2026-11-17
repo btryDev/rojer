@@ -399,12 +399,6 @@ export async function utilisationDuCompte(
   return { regime, lignes, annee: { type: "repart", le } };
 }
 
-/** Le plafond de stockage du régime, en octets (`null` : sans limite). */
-export const plafondStockageOctets = (regime: Regime): number | null => {
-  const go = plafondDe(regime, "stockageGo");
-  return go === null ? null : go * 1e9;
-};
-
 /** Les dépassements d'une formule visée, à partir des stocks déjà comptés. */
 export function depassementsDe(nombres: number[], formule: string): Depassement[] {
   const cible: Regime = { formule: formuleDesPlafonds(formule), essai: null };
