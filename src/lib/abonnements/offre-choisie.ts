@@ -8,8 +8,7 @@ import "server-only";
 // facturé sur sa foi. Une valeur inconnue est ignorée.
 
 import { cookies } from "next/headers";
-import { estLookupKey, formuleDeLookupKey, type CleFormule, type Periodicite } from "./formules";
-import { DUREE_ESSAI_JOURS } from "@/lib/stripe/parcours";
+import { DUREE_ESSAI_JOURS, estLookupKey, formuleDeLookupKey, type CleFormule, type Periodicite } from "./formules";
 
 export const COOKIE_OFFRE_CHOISIE = "rojer-offre-choisie";
 

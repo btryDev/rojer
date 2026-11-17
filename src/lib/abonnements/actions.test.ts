@@ -2,25 +2,23 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import Stripe from "stripe";
 import { redirigeVers } from "@/test/redirection";
 
-// S'abonner : jamais un second abonnement payant ; la carte d'un essai ou
-// d'une pause passe par Checkout « setup », avec la formule choisie ; après
-// une résiliation, Checkout souscrit.
+// S'abonner (ADR-053 § 9, amendé le 2026-11-16) : jamais un second
+// abonnement ; pendant l'essai, après lui ou après une résiliation, Checkout
+// en mode abonnement ; le client Stripe naît à ce moment s'il manque.
 
 vi.mock("server-only", () => ({}));
 const m = vi.hoisted(() => ({
   redirect: vi.fn((url: string) => {
     throw Object.assign(new Error("NEXT_REDIRECT"), { url });
   }),
-  ligne: { stripeCustomerId: "cus_1", statut: "canceled" as string | null },
+  ligne: { stripeCustomerId: "cus_1" as string | null, statut: "canceled" as string | null },
   abonnementsDuClient: vi.fn(),
   ouvrirCheckout: vi.fn(),
-  ouvrirCheckoutCarte: vi.fn(),
   prixDesFormules: vi.fn(),
   tauxDeTva: vi.fn(),
   synchroniser: vi.fn(async () => ({ issue: "ecrit" })),
-  finaliserCarte: vi.fn(),
-  carteParDefaut: vi.fn(),
-  appliquerFormule: vi.fn(),
+  clientStripeDuCompte: vi.fn(),
+  ouvrirAuGel: vi.fn(),
   monterDeFormule: vi.fn(),
   planifierBaisse: vi.fn(),
   annulerBaisse: vi.fn(),
@@ -33,13 +31,11 @@ vi.mock("@/lib/stripe/client", () => ({ clientStripe: () => ({}) }));
 vi.mock("@/lib/stripe/config", () => ({ configurationStripe: () => ({ active: true }) }));
 vi.mock("@/lib/stripe/parcours", () => ({
   abonnementsDuClient: m.abonnementsDuClient,
-  appliquerFormule: m.appliquerFormule,
   factureARegler: m.factureARegler,
   monterDeFormule: m.monterDeFormule,
   planifierBaisse: m.planifierBaisse,
   annulerBaisse: m.annulerBaisse,
   ouvrirCheckout: m.ouvrirCheckout,
-  ouvrirCheckoutCarte: m.ouvrirCheckoutCarte,
   ouvrirPortail: vi.fn(),
   prixDesFormules: m.prixDesFormules,
   tauxDeTva: m.tauxDeTva,
@@ -48,14 +44,15 @@ vi.mock("@/lib/stripe/synchronisation", async (reel) => ({
   ...(await reel<typeof import("@/lib/stripe/synchronisation")>()),
   synchroniserClientStripe: m.synchroniser,
 }));
-vi.mock("./souscription", () => ({ finaliserCarte: m.finaliserCarte, carteParDefaut: m.carteParDefaut }));
+vi.mock("./client-stripe", () => ({ clientStripeDuCompte: m.clientStripeDuCompte }));
 vi.mock("./quotas", () => ({ depassements: m.depassements }));
 vi.mock("./essai", () => ({ PAGE_ESSAI: "/essai", demarrerEssaiDuCompte: vi.fn() }));
 // `ouvrirAuGel` (l'essai) : sans la chaîne de la session, que ce test remplace par ./saisie.
-vi.mock("./gel-saisie", () => ({ ouvrirAuGel: vi.fn() }));
+vi.mock("./gel-saisie", () => ({ ouvrirAuGel: m.ouvrirAuGel }));
 vi.mock("./saisie", () => ({
   PAGE_ABONNEMENT: "/compte/abonnement",
   verifierProprietaire: async () => ({
+    user: { id: "u1", email: "a@b.fr" },
     compte: { compteId: "c1" },
     db: { abonnement: { findUnique: async () => m.ligne } },
   }),
@@ -65,7 +62,6 @@ vi.mock("./saisie", () => ({
 import {
   annulerBaisseAction,
   changerFormuleAction,
-  finaliserCarteAction,
   ouvrirPortailAction,
   reglerFactureAction,
   sAbonnerAction,
@@ -73,11 +69,10 @@ import {
 import { CHAMP_COMPTE_ATTENDU } from "@/lib/auth/compte-attendu";
 
 /** Un formulaire posté depuis une page qui montrait `c1`, le compte vérifié des tests. */
-const formulaire = (formule = "rojer_pro_annuel", immediat = false) => {
+const formulaire = (formule = "rojer_pro_annuel") => {
   const f = new FormData();
   f.set(CHAMP_COMPTE_ATTENDU, "c1");
   f.set("formule", formule);
-  if (immediat) f.set("immediat", "oui");
   return f;
 };
 const abonnement = (status: string, created = 1, autres: object = {}) => ({
@@ -93,54 +88,30 @@ const abonnement = (status: string, created = 1, autres: object = {}) => ({
 beforeEach(() => {
   vi.clearAllMocks();
   m.ligne.statut = "canceled";
+  m.ligne.stripeCustomerId = "cus_1";
+  m.clientStripeDuCompte.mockImplementation(async (_s: unknown, _d: unknown, o: { enregistre: string | null }) => o.enregistre ?? "cus_neuf");
   m.abonnementsDuClient.mockResolvedValue([abonnement("canceled")]);
   m.prixDesFormules.mockResolvedValue(new Map([["rojer_pro_annuel", { priceId: "price_pa" }], ["rojer_essentiel_mensuel", { priceId: "price_em" }]]));
   m.tauxDeTva.mockResolvedValue("txr_tva");
   m.ouvrirCheckout.mockResolvedValue("https://checkout.stripe.test/abonnement");
-  m.ouvrirCheckoutCarte.mockResolvedValue("https://checkout.stripe.test/carte");
-  m.carteParDefaut.mockResolvedValue(null);
-  m.appliquerFormule.mockResolvedValue(null);
   m.monterDeFormule.mockResolvedValue(null);
   m.depassements.mockResolvedValue([]);
   m.factureARegler.mockResolvedValue(null);
 });
 
 describe("sAbonnerAction", () => {
-  it("pendant l'essai : la carte par Checkout « setup », la formule choisie dans les métadonnées, retour avec la session", async () => {
-    m.abonnementsDuClient.mockResolvedValue([abonnement("trialing")]);
-    expect(await redirigeVers(sAbonnerAction(formulaire()))).toBe("https://checkout.stripe.test/carte");
-    expect(m.ouvrirCheckoutCarte).toHaveBeenCalledWith(expect.anything(), {
-      customerId: "cus_1",
-      metadata: { compteId: "c1", formule: "rojer_pro_annuel", immediat: "non" },
-      succes: "https://rojer.test/compte/abonnement?carte={CHECKOUT_SESSION_ID}",
-      annulation: "https://rojer.test/compte/abonnement",
-    });
-    expect(m.ouvrirCheckout).not.toHaveBeenCalled();
-  });
-
-  it("immédiat (un document attend) et pause : la carte aussi, avec `immediat` pour la première", async () => {
-    m.abonnementsDuClient.mockResolvedValue([abonnement("trialing")]);
-    await redirigeVers(sAbonnerAction(formulaire("rojer_pro_annuel", true)));
-    expect(m.ouvrirCheckoutCarte.mock.calls[0][1].metadata.immediat).toBe("oui");
-    m.abonnementsDuClient.mockResolvedValue([abonnement("paused")]);
-    expect(await redirigeVers(sAbonnerAction(formulaire()))).toBe("https://checkout.stripe.test/carte");
-  });
-
-  it("essai avec une carte déjà enregistrée : la formule s'applique sans repasser par Stripe, l'essai continue", async () => {
-    m.abonnementsDuClient.mockResolvedValue([abonnement("trialing")]);
-    m.carteParDefaut.mockResolvedValue("pm_1");
-    expect(await redirigeVers(sAbonnerAction(formulaire()))).toBe("https://rojer.test/compte/abonnement?abonnement=formule-choisie");
-    expect(m.appliquerFormule).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ id: "sub_trialing" }), expect.objectContaining({ priceId: "price_pa", immediat: false }));
-    expect(m.ouvrirCheckoutCarte).not.toHaveBeenCalled();
-  });
-
-  it("pause avec une carte : reprise payée tout de suite ; une facture à régler renvoie vers elle", async () => {
-    m.abonnementsDuClient.mockResolvedValue([abonnement("paused")]);
-    m.carteParDefaut.mockResolvedValue("pm_1");
-    expect(await redirigeVers(sAbonnerAction(formulaire()))).toBe("https://rojer.test/compte/abonnement?paiement=termine");
-    expect(m.appliquerFormule.mock.calls[0][2].immediat).toBe(true);
-    m.appliquerFormule.mockResolvedValue("https://invoice.stripe.com/i/1");
-    expect(await redirigeVers(sAbonnerAction(formulaire()))).toBe("https://invoice.stripe.com/i/1");
+  it("pendant l'essai (aucun client Stripe encore) : le client naît, puis Checkout en mode abonnement, paiement immédiat", async () => {
+    m.ligne.statut = null;
+    m.ligne.stripeCustomerId = null;
+    m.abonnementsDuClient.mockResolvedValue([]);
+    expect(await redirigeVers(sAbonnerAction(formulaire()))).toBe("https://checkout.stripe.test/abonnement");
+    expect(m.clientStripeDuCompte).toHaveBeenCalledWith(expect.anything(), expect.anything(), { compteId: "c1", email: "a@b.fr", enregistre: null });
+    // La saisie est fermée après l'essai : s'abonner écrit quand même (répétition du 2026-11-17).
+    expect(m.ouvrirAuGel).toHaveBeenCalled();
+    expect(m.ouvrirCheckout).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ customerId: "cus_neuf", priceId: "price_pa", tauxTva: "txr_tva", succes: "https://rojer.test/compte/abonnement?paiement=termine" }),
+    );
   });
 
   it("abonnement terminé partout : Checkout souscrit, au nom du compte", async () => {
@@ -160,7 +131,6 @@ describe("sAbonnerAction", () => {
       expect(await redirigeVers(sAbonnerAction(formulaire()))).toBe("/compte/abonnement?abonnement=en-cours");
     }
     expect(m.ouvrirCheckout).not.toHaveBeenCalled();
-    expect(m.ouvrirCheckoutCarte).not.toHaveBeenCalled();
     expect(m.synchroniser).toHaveBeenCalledWith(expect.anything(), "cus_1");
   });
 
@@ -170,53 +140,14 @@ describe("sAbonnerAction", () => {
     expect(m.ouvrirCheckout).not.toHaveBeenCalled();
   });
 
-  it("« Payer maintenant » pendant l'essai, carte enregistrée : l'essai s'arrête, le premier paiement part", async () => {
-    m.abonnementsDuClient.mockResolvedValue([abonnement("trialing")]);
-    m.carteParDefaut.mockResolvedValue("pm_1");
-    expect(await redirigeVers(sAbonnerAction(formulaire("rojer_pro_annuel", true)))).toBe(
-      "https://rojer.test/compte/abonnement?paiement=termine",
-    );
-    expect(m.appliquerFormule.mock.calls[0][2].immediat).toBe(true);
-  });
-
-  it("deux onglets : la clé d'idempotence tient au dernier choix appliqué, à la formule et au moment du paiement", async () => {
-    m.carteParDefaut.mockResolvedValue("pm_1");
-    m.abonnementsDuClient.mockResolvedValue([abonnement("trialing", 1, { metadata: { rojerChoixLe: "100" } })]);
-    await redirigeVers(sAbonnerAction(formulaire()));
-    await redirigeVers(sAbonnerAction(formulaire()));
-    const [a, b] = m.appliquerFormule.mock.calls.map((c) => c[2].idempotence);
-    expect(a).toBe("formule-sub_trialing-100-price_pa-fin-essai");
-    expect(b).toBe(a);
-    // Un choix appliqué depuis : le retour au même choix n'est pas pris pour un rejeu.
-    m.abonnementsDuClient.mockResolvedValue([abonnement("trialing", 1, { metadata: { rojerChoixLe: "200" } })]);
-    await redirigeVers(sAbonnerAction(formulaire()));
-    expect(m.appliquerFormule.mock.calls[2][2].idempotence).not.toBe(a);
-    await redirigeVers(sAbonnerAction(formulaire("rojer_pro_annuel", true)));
-    expect(m.appliquerFormule.mock.calls[3][2].idempotence).toBe("formule-sub_trialing-200-price_pa-maintenant");
-  });
-
   it("deux onglets : le second refusé par Stripe (idempotence, 409) n'annonce pas d'échec, la page relit l'état", async () => {
-    m.abonnementsDuClient.mockResolvedValue([abonnement("trialing")]);
-    m.carteParDefaut.mockResolvedValue("pm_1");
     for (const e of [
       new Stripe.errors.StripeIdempotencyError({ message: "Keys for idempotent requests can only be used with the same parameters" }),
       Object.assign(new Error("en cours"), { statusCode: 409 }),
     ]) {
-      m.appliquerFormule.mockRejectedValueOnce(e);
-      expect(await redirigeVers(sAbonnerAction(formulaire("rojer_pro_annuel", true)))).toBe("/compte/abonnement");
+      m.ouvrirCheckout.mockRejectedValueOnce(e);
+      expect(await redirigeVers(sAbonnerAction(formulaire()))).toBe("/compte/abonnement");
     }
-  });
-
-  it("résiliation prévue pendant l'essai : on ne change pas une formule qui s'arrête", async () => {
-    m.carteParDefaut.mockResolvedValue("pm_1");
-    for (const fin of [{ cancel_at_period_end: true }, { cancel_at: 1_800_000_000 }]) {
-      m.abonnementsDuClient.mockResolvedValue([abonnement("trialing", 1, fin)]);
-      expect(await redirigeVers(sAbonnerAction(formulaire("rojer_pro_annuel", true)))).toBe(
-        "https://rojer.test/compte/abonnement?formule=resiliation-prevue",
-      );
-    }
-    expect(m.appliquerFormule).not.toHaveBeenCalled();
-    expect(m.ouvrirCheckoutCarte).not.toHaveBeenCalled();
   });
 
   it("premier paiement resté en attente (incomplete) : vers sa facture, ni Checkout ni « déjà en cours »", async () => {
@@ -243,24 +174,29 @@ describe("reglerFactureAction", () => {
     return f;
   };
 
-  it("impayé, ou premier paiement en attente : vers la facture ouverte", async () => {
+  it("premier paiement à confirmer : vers sa facture", async () => {
     m.factureARegler.mockResolvedValue("https://invoice.stripe.com/i/3");
-    for (const statut of ["past_due", "unpaid", "incomplete"]) {
+    m.abonnementsDuClient.mockResolvedValue([abonnement("incomplete")]);
+    expect(await redirigeVers(reglerFactureAction(poste()))).toBe("https://invoice.stripe.com/i/3");
+  });
+
+  it("un impayé arrivé ici (onglet resté sur l'ancien bouton) : la page, jamais « à jour »", async () => {
+    for (const statut of ["past_due", "unpaid"]) {
       m.abonnementsDuClient.mockResolvedValue([abonnement(statut)]);
-      expect(await redirigeVers(reglerFactureAction(poste()))).toBe("https://invoice.stripe.com/i/3");
+      expect(await redirigeVers(reglerFactureAction(poste()))).toBe("/compte/abonnement");
     }
   });
 
-  it("rien à régler (à jour, essai, terminé, facture déjà payée) : la page le dit", async () => {
-    for (const statut of ["active", "trialing", "canceled"]) {
+  it("rien à confirmer (à jour, terminé) : la page le dit", async () => {
+    for (const statut of ["active", "canceled"]) {
       m.abonnementsDuClient.mockResolvedValue([abonnement(statut)]);
       expect(await redirigeVers(reglerFactureAction(poste()))).toBe("/compte/abonnement?facture=aucune");
     }
     expect(m.factureARegler).not.toHaveBeenCalled();
   });
 
-  it("impayé sans facture payable trouvée : la page ne dit pas « à jour »", async () => {
-    m.abonnementsDuClient.mockResolvedValue([abonnement("unpaid")]);
+  it("premier paiement sans facture payable trouvée : la page ne dit pas « à jour »", async () => {
+    m.abonnementsDuClient.mockResolvedValue([abonnement("incomplete")]);
     expect(await redirigeVers(reglerFactureAction(poste()))).toBe("/compte/abonnement?facture=introuvable");
   });
 
@@ -270,38 +206,13 @@ describe("reglerFactureAction", () => {
   });
 });
 
-describe("finaliserCarteAction", () => {
-  it("applique la session du client du compte ; la page dit « enregistré » ou « payé » selon le cas", async () => {
-    m.finaliserCarte.mockResolvedValue({ issue: "appliquee", immediat: false });
-    expect(await redirigeVers(finaliserCarteAction("cs_test_123"))).toBe("/compte/abonnement?abonnement=formule-choisie");
-    expect(m.finaliserCarte).toHaveBeenCalledWith(expect.anything(), "cs_test_123", { customerId: "cus_1" });
-    m.finaliserCarte.mockResolvedValue({ issue: "appliquee", immediat: true });
-    expect(await redirigeVers(finaliserCarteAction("cs_test_123"))).toBe("/compte/abonnement?paiement=termine");
-    m.finaliserCarte.mockResolvedValue({ issue: "aRegler", url: "https://invoice.stripe.com/i/1" });
-    expect(await redirigeVers(finaliserCarteAction("cs_test_123"))).toBe("https://invoice.stripe.com/i/1");
-  });
-
-  it("le webhook applique la même session au même instant (409) : pas d'erreur affichée", async () => {
-    vi.spyOn(console, "error").mockImplementation(() => {});
-    m.finaliserCarte.mockRejectedValue(Object.assign(new Error("en cours"), { statusCode: 409 }));
-    expect(await redirigeVers(finaliserCarteAction("cs_test_123"))).toBe("/compte/abonnement");
-    m.finaliserCarte.mockRejectedValue(new Error("panne"));
-    expect(await redirigeVers(finaliserCarteAction("cs_test_123"))).toBe("/compte/abonnement?stripe=indisponible");
-  });
-
-  it("un identifiant qui n'est pas une session Checkout : rien n'est appelé", async () => {
-    expect(await redirigeVers(finaliserCarteAction("../evil"))).toBe("/compte/abonnement");
-    expect(m.finaliserCarte).not.toHaveBeenCalled();
-  });
-});
-
 describe("changerFormuleAction", () => {
   const actif = (lookup: string) => ({ id: "sub_actif", status: "active", created: 1, items: { data: [{ id: "si_1", price: { id: "p", lookup_key: lookup } }] } });
 
   it("montée : tout de suite ; une facture à régler renvoie vers elle", async () => {
     m.abonnementsDuClient.mockResolvedValue([actif("rojer_essentiel_mensuel")]);
     expect(await redirigeVers(changerFormuleAction(formulaire("rojer_pro_annuel")))).toBe("/compte/abonnement?formule=changee");
-    expect(m.monterDeFormule).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ id: "sub_actif" }), "price_pa");
+    expect(m.monterDeFormule).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ id: "sub_actif" }), { priceId: "price_pa", intervalle: "year" });
     m.monterDeFormule.mockResolvedValue("https://invoice.stripe.com/i/3");
     expect(await redirigeVers(changerFormuleAction(formulaire("rojer_pro_annuel")))).toBe("https://invoice.stripe.com/i/3");
     expect(m.planifierBaisse).not.toHaveBeenCalled();
@@ -340,8 +251,8 @@ describe("changerFormuleAction", () => {
     expect(await redirigeVers(changerFormuleAction(formulaire("rojer_pro_annuel")))).toBe("/compte/abonnement");
   });
 
-  it("hors d'un abonnement à jour (essai, impayé) : rien ; formule hors catalogue : rien", async () => {
-    for (const status of ["trialing", "past_due"]) {
+  it("hors d'un abonnement à jour (impayé, premier paiement en attente) : rien ; formule hors catalogue : rien", async () => {
+    for (const status of ["incomplete", "past_due"]) {
       m.abonnementsDuClient.mockResolvedValue([{ ...actif("rojer_essentiel_mensuel"), status }]);
       expect(await redirigeVers(changerFormuleAction(formulaire("rojer_pro_annuel"))), status).toBe("/compte/abonnement?formule=impossible");
     }
@@ -370,10 +281,9 @@ describe("un autre onglet a changé de compte (audit du 2026-11-10)", () => {
     ["ouvrir le portail", ouvrirPortailAction],
     ["régler la facture", reglerFactureAction],
   ])("%s : rien chez Stripe, la page rendue sur le compte actif le dit", async (_geste, action) => {
-    m.abonnementsDuClient.mockResolvedValue([abonnement("trialing")]);
     expect(await redirigeVers(action(dUnAutreCompte()))).toBe("/compte/abonnement?compte=change");
     expect(m.abonnementsDuClient).not.toHaveBeenCalled();
-    for (const f of [m.ouvrirCheckout, m.ouvrirCheckoutCarte, m.appliquerFormule, m.monterDeFormule, m.planifierBaisse, m.annulerBaisse])
+    for (const f of [m.ouvrirCheckout, m.clientStripeDuCompte, m.monterDeFormule, m.planifierBaisse, m.annulerBaisse])
       expect(f).not.toHaveBeenCalled();
   });
 
@@ -381,6 +291,20 @@ describe("un autre onglet a changé de compte (audit du 2026-11-10)", () => {
     const f = new FormData();
     f.set("formule", "rojer_pro_annuel");
     expect(await redirigeVers(sAbonnerAction(f))).toBe("/compte/abonnement?compte=change");
-    expect(m.ouvrirCheckoutCarte).not.toHaveBeenCalled();
+    expect(m.ouvrirCheckout).not.toHaveBeenCalled();
+  });
+});
+
+describe("sans client Stripe (essai) : les gestes sur un abonnement n'ont rien à gérer", () => {
+  it.each([
+    ["changer de formule", changerFormuleAction],
+    ["garder sa formule", annulerBaisseAction],
+    ["ouvrir le portail", ouvrirPortailAction],
+    ["régler la facture", reglerFactureAction],
+  ])("%s : la page de l'abonnement, rien chez Stripe", async (_geste, action) => {
+    m.ligne.stripeCustomerId = null;
+    m.ligne.statut = null;
+    expect(await redirigeVers(action(formulaire()))).toBe("/compte/abonnement");
+    expect(m.abonnementsDuClient).not.toHaveBeenCalled();
   });
 });

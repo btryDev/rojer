@@ -1,14 +1,14 @@
 import "server-only";
-// Le rappel de la VEILLE de la fin de l'essai (ADR-053, décision du
-// 2026-11-06 : J-7 et J-1). Celui des 7 jours, Stripe l'envoie lui-même
-// (réglage du tableau de bord, avec le lien de résiliation que les réseaux de
-// cartes exigent) ; Stripe n'en envoie pas la veille, d'où celui-ci.
+// Les rappels de la fin de l'essai (ADR-053, décision du 2026-11-06 : J-7 et
+// J-1). Depuis que l'essai se compte chez Rojer (§ 9, amendé le 2026-11-16),
+// Rojer envoie les deux : Stripe n'a plus d'essai à annoncer.
 //
 // Joué par la tâche quotidienne (`lib/taches/quotidiennes.ts`), hors de toute
 // session : il lit les abonnements de TOUS les comptes, d'où le client brut
 // (`portee/imports.test.ts`). Il n'écrit que sa propre marque.
 //
-// AU PLUS une fois par essai : la marque `rappelVeilleEssaiLe` est posée
+// AU PLUS une fois par essai et par rappel : la marque (`rappelSemaineEssaiLe`,
+// `rappelVeilleEssaiLe`) est posée
 // AVANT l'envoi par une écriture conditionnelle (deux instances, une passe
 // rejouée pendant un déploiement : une seule gagne). Si aucun e-mail ne part,
 // elle est rendue à vide et la passe suivante réessaie — si l'essai n'est pas
@@ -23,7 +23,7 @@ import { FORMULES, formuleDeLookupKey } from "./formules";
 import type Stripe from "stripe";
 import { OPTIONS_WEBHOOK } from "@/lib/stripe/client";
 import { baissePrevue } from "@/lib/stripe/parcours";
-import { resiliationDemandee } from "./droits";
+import { HORS_ABONNEMENT_OUVERT, PREAVIS_ESSAI_MS, resiliationDemandee } from "./droits";
 
 /**
  * L'essai finit dans les 36 heures : la tâche passe une fois par jour, et la
@@ -31,11 +31,13 @@ import { resiliationDemandee } from "./droits";
  * le message donne la date.
  */
 export const FENETRE_VEILLE_MS = 36 * 3_600_000;
+/** Le rappel d'une semaine : l'essai finit dans les 7 jours (le préavis du bandeau), au-delà de la veille. */
+export const FENETRE_SEMAINE_MS = PREAVIS_ESSAI_MS;
 
 export type BilanRappels = { envoyes: number; echecs: number; horsService?: true };
 
 /** Le message, en texte seul comme les autres e-mails de Rojer. */
-export function messageVeilleFinEssai(finEssai: Date, url: string): { subject: string; text: string } {
+export function messageFinEssai(finEssai: Date, url: string): { subject: string; text: string } {
   const date = formaterDateLongueFr(finEssai);
   return {
     subject: `Votre essai gratuit de Rojer se termine le ${date}`,
@@ -44,9 +46,7 @@ export function messageVeilleFinEssai(finEssai: Date, url: string): { subject: s
       "",
       `Votre essai gratuit de Rojer se termine le ${date}.`,
       "",
-      "Si vous avez déjà choisi votre formule et enregistré une carte, votre abonnement démarre à cette date : vous n'avez rien à faire.",
-      "",
-      `Sinon, choisissez votre formule pour continuer sans interruption : ${url}`,
+      `Pour continuer sans interruption, abonnez-vous depuis votre espace : ${url}`,
       "",
       // La règle du bandeau (`droits.ts`) : un compte qui n'a jamais payé garde
       // la lecture, pas l'export officiel (ADR-053 § 15).
@@ -66,19 +66,35 @@ export async function adressesDesProprietaires(compteId: string): Promise<string
   return membres.map((m) => m.user.email).filter((e): e is string => Boolean(e));
 }
 
+/** Le rappel de la veille : l'essai finit dans les 36 heures. */
+export const rappelerLaVeilleDeLaFinDEssai = (maintenant: Date) =>
+  rappelerLaFinDEssai(maintenant, "rappelVeilleEssaiLe", 0, FENETRE_VEILLE_MS);
+
+/** Le rappel d'une semaine : l'essai finit dans les 7 jours, pas dans les 36 heures. */
+export const rappelerLaSemaineDeLaFinDEssai = (maintenant: Date) =>
+  rappelerLaFinDEssai(maintenant, "rappelSemaineEssaiLe", FENETRE_VEILLE_MS, FENETRE_SEMAINE_MS);
+
 /**
- * Envoie le rappel aux comptes dont l'essai finit dans la fenêtre, sans
- * résiliation prévue (un essai qu'on a choisi d'arrêter n'a rien à rappeler).
+ * Envoie le rappel aux comptes dont l'essai (compté chez Rojer, `enEssai` :
+ * jamais payé, pas d'abonnement qui paie ou à régler) finit dans la fenêtre
+ * ]depuis, jusqu'à]. Limite écrite : un paiement fait sur Checkout dont la
+ * notification n'est pas encore arrivée laisse partir le rappel.
  */
-export async function rappelerLaVeilleDeLaFinDEssai(maintenant: Date): Promise<BilanRappels> {
+async function rappelerLaFinDEssai(
+  maintenant: Date,
+  marque: "rappelVeilleEssaiLe" | "rappelSemaineEssaiLe",
+  depuisMs: number,
+  jusquAMs: number,
+): Promise<BilanRappels> {
   if (!envoiEnService()) return { envoyes: 0, echecs: 0, horsService: true };
   const lignes = await prisma.abonnement.findMany({
     where: {
-      statut: "trialing",
-      rappelVeilleEssaiLe: null,
-      resilieEnFinDePeriode: false,
-      finPrevueLe: null,
-      finEssai: { gt: maintenant, lte: new Date(maintenant.getTime() + FENETRE_VEILLE_MS) },
+      // La règle de `phaseDuCompte` (« essai ») en base : jamais payé, sans
+      // abonnement ouvert, fin dans la fenêtre.
+      debutPayantLe: null,
+      ...HORS_ABONNEMENT_OUVERT,
+      [marque]: null,
+      finEssai: { gt: new Date(maintenant.getTime() + depuisMs), lte: new Date(maintenant.getTime() + jusquAMs) },
     },
     select: { id: true, compteId: true, finEssai: true },
   });
@@ -87,11 +103,11 @@ export async function rappelerLaVeilleDeLaFinDEssai(maintenant: Date): Promise<B
   for (const ligne of lignes) {
     if (!ligne.finEssai) continue;
     const prise = await prisma.abonnement.updateMany({
-      where: { id: ligne.id, rappelVeilleEssaiLe: null },
-      data: { rappelVeilleEssaiLe: maintenant },
+      where: { id: ligne.id, [marque]: null },
+      data: { [marque]: maintenant },
     });
     if (prise.count !== 1) continue;
-    const message = messageVeilleFinEssai(ligne.finEssai, url);
+    const message = messageFinEssai(ligne.finEssai, url);
     let partis = 0;
     let echec = false;
     try {
@@ -114,7 +130,7 @@ export async function rappelerLaVeilleDeLaFinDEssai(maintenant: Date): Promise<B
     // parti la garde — réessayer enverrait un doublon à qui l'a reçu.
     if (partis === 0 && echec) {
       await prisma.abonnement
-        .updateMany({ where: { id: ligne.id, rappelVeilleEssaiLe: maintenant }, data: { rappelVeilleEssaiLe: null } })
+        .updateMany({ where: { id: ligne.id, [marque]: maintenant }, data: { [marque]: null } })
         .catch(() => {});
     }
   }

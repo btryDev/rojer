@@ -1,19 +1,14 @@
 "use client";
-// S'abonner (ADR-053 § 10) : la formule et le rythme se choisissent ici, la
-// carte se saisit ensuite sur la page sécurisée de Stripe. Rien n'est prélevé
-// avant la fin de l'essai, sauf le paiement immédiat — imposé (`immediat` :
-// un document officiel attend, ou un abonnement en pause reprend) ou choisi
-// (« Payer maintenant », pendant l'essai : il lève les limites de l'essai).
-// Le montant prélevé aujourd'hui est dit avant le clic (audit du 2026-11-16).
-// La formule en cours est présélectionnée : un clic sans rien changer ne
-// remplace pas Pro par Essentiel.
+// S'abonner (ADR-053 § 9, amendé le 2026-11-16) : la formule et le rythme se
+// choisissent ici, puis la page sécurisée de Stripe (Checkout) prend la
+// carte, la confirmation de la banque, les conditions et l'adresse. Le
+// premier paiement est immédiat, et son montant est dit avant le clic.
 
 import { useState } from "react";
 import { BoutonEnvoi } from "./BoutonEnvoi";
 import { sAbonnerAction } from "@/lib/abonnements/actions";
 import { ChampCompteAttendu } from "@/components/compte/ChampCompteAttendu";
 import { euros } from "@/lib/abonnements/affichage";
-import type { ModeFormulaire } from "@/lib/abonnements/vue-abonnement";
 import { LIBELLE_PERIODICITE, PERIODICITES, type CleFormule, type Periodicite } from "@/lib/abonnements/formules";
 
 export type OffreAffichee = {
@@ -29,39 +24,28 @@ const majuscule = (t: string) => t.replace(/^./, (c) => c.toUpperCase());
 export function FormulaireAbonnement({
   offres,
   compteId,
-  mode,
-  libelle,
   quand,
   courante = null,
-  proposerPayerMaintenant = false,
 }: {
   offres: OffreAffichee[];
   /** Le compte que montre la page (`ChampCompteAttendu`). */
   compteId: string | null;
-  /** Ce que fait le bouton principal (`vueAbonnement`). */
-  mode: ModeFormulaire;
-  /** Le texte du bouton : il dit ce qui se passe au clic. */
-  libelle: string;
-  /** Ce qui se passe ensuite, en une phrase. */
+  /** Ce qui se passe ensuite, en une phrase (`vueAbonnement`). */
   quand: string;
-  /** La formule et le rythme en cours : présélectionnés. */
+  /** La formule et le rythme présélectionnés. */
   courante?: { formule: CleFormule; periodicite: Periodicite } | null;
-  /** « Payer maintenant » à côté du bouton principal (essai en cours). */
-  proposerPayerMaintenant?: boolean;
 }) {
   const [periodicite, setPeriodicite] = useState<Periodicite>(courante?.periodicite ?? "mensuel");
   const [choisie, setChoisie] = useState<CleFormule>(
     courante && offres.some((o) => o.formule === courante.formule) ? courante.formule : offres[0].formule,
   );
   const prixChoisi = (offres.find((o) => o.formule === choisie) ?? offres[0]).prix[periodicite];
-  const inchangee = courante !== null && courante.formule === choisie && courante.periodicite === periodicite;
   const preleve = prixChoisi.centimes === null ? null : `${euros(prixChoisi.centimes)} TTC`;
   const premiere = LIBELLE_PERIODICITE[periodicite].premiere;
 
   return (
     <form action={sAbonnerAction} className="mt-5 flex flex-col gap-6">
       <input type="hidden" name="formule" value={prixChoisi.cle} />
-      {mode === "payer" && <input type="hidden" name="immediat" value="oui" />}
       <ChampCompteAttendu compteId={compteId} />
 
       <fieldset className="m-0 border-0 p-0">
@@ -136,26 +120,16 @@ export function FormulaireAbonnement({
       </fieldset>
 
       <p className="m-0 max-w-[var(--board-mesure)] text-[14px] leading-[1.6] text-[color:var(--board-slate-mid)]">{quand}</p>
-      {mode === "payer" && preleve && (
+      {preleve && (
         <p className="m-0 text-[14.5px] font-semibold">
           Prélevé aujourd&apos;hui : {preleve}, pour {premiere}.
         </p>
       )}
       <div className="flex flex-wrap items-center gap-3">
-        <BoutonEnvoi variant="board" disabled={preleve === null || (mode === "changer" && inchangee)}>
-          {libelle}
+        <BoutonEnvoi variant="board" disabled={preleve === null}>
+          Continuer vers le paiement
         </BoutonEnvoi>
-        {proposerPayerMaintenant && (
-          <BoutonEnvoi variant="boardClair" name="immediat" value="oui" disabled={preleve === null} describedBy="payer-maintenant">
-            Payer maintenant
-          </BoutonEnvoi>
-        )}
       </div>
-      {proposerPayerMaintenant && preleve && (
-        <p id="payer-maintenant" className="m-0 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-          Payer maintenant lève les limites de l&apos;essai : {preleve} prélevés aussitôt pour {premiere}.
-        </p>
-      )}
     </form>
   );
 }

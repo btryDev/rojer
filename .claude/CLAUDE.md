@@ -768,7 +768,10 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
 53. **053** — L'abonnement est porté par le compte ; Stripe en garde la
     vérité, Rojer une copie écrite depuis un webhook signé, après relecture
     de l'abonnement. Un impayé ferme la saisie, jamais la lecture ni
-    l'export (2026-11-02, branche `lot/abonnements-stripe`)
+    l'export (2026-11-02, branche `lot/abonnements-stripe`) [2026-11-16,
+    § 9 amendé : l'essai se compte chez Rojer, rien chez Stripe avant
+    « S'abonner », qui ouvre Checkout en mode abonnement ; plus de pause, ni
+    de carte enregistrée sans payer — `docs/plan-essai-chez-rojer.md`]
 54. **054** — Plusieurs personnes travaillent sur le même compte : plugin
     `organization` de Better Auth, la racine de l'isolation passe de
     `userId` à `compteId`, trois rôles (propriétaire, membre, lecture
@@ -1012,6 +1015,21 @@ commande `clever` désigne l'application de Rojer.
       **Aucun merge sans CI verte.** Un gros lot (moteur, schéma, refonte) peut
       la lancer une fois en local avant la PR — une seule, jamais en même temps
       qu'une autre tâche lourde (build, revue, autre suite).
+
+13. **Une prémisse tombée rouvre la décision ; la troisième rustine arrête
+    le code** (décision de la propriétaire du 2026-11-16).
+    - Une décision qui retire une prémisse d'un ADR rouvre tout le
+      paragraphe : l'amendement nomme la prémisse tombée et compare au moins
+      l'option « si on repartait de zéro » avant d'ajouter un mécanisme.
+    - À la troisième correction d'un cas limite sur une même fonction, on
+      s'arrête : avant la quatrième, une revue d'ensemble se demande s'il
+      faut un montage plus simple.
+
+    Pourquoi : l'essai Stripe (ADR-053 §§ 8-10) a perdu ses deux raisons
+    d'être le 2026-11-05 et a été gardé en empilant des couches — une
+    quinzaine de correctifs sur `appliquerFormule` jusqu'à la répétition du
+    2026-11-16, qui a ramené à l'essai compté chez Rojer et à Checkout en
+    mode abonnement (ADR-053 § 9 amendé).
 
 ## Ce qu'il ne faut pas faire
 

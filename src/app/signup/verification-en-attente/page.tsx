@@ -2,7 +2,7 @@ import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { contexteDroits, offreLancee } from "@/lib/abonnements/lancement";
 import { JOURS_AVANT_PURGE } from "@/lib/auth/inscription";
-import { DUREE_ESSAI_JOURS } from "@/lib/stripe/parcours";
+import { DUREE_ESSAI_JOURS } from "@/lib/abonnements/formules";
 
 export const metadata = {
   title: "Vérifiez votre e-mail — Rojer",

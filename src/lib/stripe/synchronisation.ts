@@ -35,20 +35,19 @@ import { OPTIONS_WEBHOOK } from "./client";
 import { idStripe } from "./ids";
 import { formuleDuPrix } from "@/lib/abonnements/formules";
 import { OUVRENT } from "@/lib/abonnements/droits";
+import { laPlusRecente } from "@/lib/calendrier/echeance-de-ligne";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Rang d'un état pour retenir l'abonnement courant : celui qui paie d'abord,
- * puis l'impayé ou suspendu, puis celui qui attend son premier paiement,
+ * puis l'impayé, puis celui qui attend son premier paiement,
  * puis les terminés. Un état inconnu passe avec les impayés.
  */
 const RANGS: Record<string, number> = {
   active: 0,
-  trialing: 0,
   past_due: 0,
   unpaid: 1,
-  paused: 1,
   incomplete: 2,
   canceled: 3,
   incomplete_expired: 3,
@@ -80,7 +79,6 @@ export function colonnesDe(s: Stripe.Subscription | null) {
     formule: item ? formuleDuPrix(item.price) : null,
     stripePriceId: item?.price.id ?? null,
     finPeriode: date(item?.current_period_end),
-    finEssai: date(s?.trial_end),
     resilieEnFinDePeriode: s?.cancel_at_period_end ?? false,
     finPrevueLe: date(s?.cancel_at),
   };
@@ -88,8 +86,7 @@ export function colonnesDe(s: Stripe.Subscription | null) {
 
 /**
  * Depuis quand le compte est sans abonnement ouvert (ADR-058) : la fin chez
- * Stripe (`ended_at` ; une pause de fin d'essai n'en a pas, c'est
- * `trial_end`), sinon la date déjà notée, sinon `relueLe` (un impayé
+ * Stripe (`ended_at`), sinon la date déjà notée, sinon `relueLe` (un impayé
  * définitif n'a pas de date chez Stripe). Ouvert : vide, et les
  * avertissements avant suppression avec — un compte qui se réabonne repart
  * de zéro. Fermé : les avertissements ne sont pas touchés.
@@ -98,14 +95,17 @@ export function horlogeDeSuppression(
   s: Stripe.Subscription | null,
   dejaNotee: Date | null,
   relueLe: Date,
+  // L'horloge ne part jamais avant la fin de l'essai (compté chez Rojer,
+  // ADR-053 § 9 amendé) : une souscription abandonnée pendant l'essai ne
+  // l'avance pas (relecture du 2026-11-17).
+  finEssai: Date | null = null,
 ):
   | { sansAbonnementDepuis: Date }
   | { sansAbonnementDepuis: null; suppressionPrevueLe: null; avertiSuppression30Le: null; avertiSuppression7Le: null } {
   if (s && OUVRENT.has(s.status)) {
     return { sansAbonnementDepuis: null, suppressionPrevueLe: null, avertiSuppression30Le: null, avertiSuppression7Le: null };
   }
-  const fin = date(s?.ended_at) ?? (s?.status === "paused" ? date(s.trial_end) : null);
-  return { sansAbonnementDepuis: fin ?? dejaNotee ?? relueLe };
+  return { sansAbonnementDepuis: laPlusRecente(date(s?.ended_at) ?? dejaNotee ?? relueLe, finEssai)! };
 }
 
 /**
@@ -139,12 +139,6 @@ export async function toutLister<T>(liste: { autoPagingToArray(o: { limit: numbe
   const tous = await liste.autoPagingToArray({ limit: max });
   if (tous.length >= max) throw new ListeTronquee(max);
   return tous;
-}
-
-/** Le premier essai pris par ce client, sur quelque abonnement que ce soit. */
-export function premierEssai(abonnements: Stripe.Subscription[]): Date | null {
-  const debuts = abonnements.map((s) => s.trial_start).filter((t): t is number => !!t);
-  return debuts.length ? date(Math.min(...debuts)) : null;
 }
 
 /** Ce que le client Stripe RELU désigne : un compte, ou (avant l'ADR-054) son propriétaire. */
@@ -228,7 +222,7 @@ class BailPerdu extends Error {}
 
 type Tx = Prisma.TransactionClient;
 type Donnees = ReturnType<typeof colonnesDe> &
-  ReturnType<typeof horlogeDeSuppression> & { relueLe: Date; essaiUtiliseLe: Date | null };
+  ReturnType<typeof horlogeDeSuppression> & { relueLe: Date };
 
 async function mettreAJour(tx: Tx, compteId: string, customerId: string, donnees: Donnees) {
   const { count } = await tx.abonnement.updateMany({
@@ -250,7 +244,16 @@ type OptionsSynchro = {
    * viendra à la relecture suivante.
    */
   strict?: boolean;
+  /**
+   * Un geste qui doit montrer l'état relu (retour de Checkout) : si une autre
+   * relecture tient le bail, l'attendre jusqu'à ce délai puis relire, au lieu
+   * de rendre `en_file` — sinon la page s'affiche avant la relecture
+   * (répétition du 2026-11-17 : « Essai en cours » juste après avoir payé).
+   */
+  attendreMs?: number;
 };
+
+const PAS_D_ATTENTE_MS = 250;
 
 /**
  * Demande la relecture du client, puis la fait si personne ne la tient
@@ -263,7 +266,12 @@ export async function synchroniserClientStripe(
   options: OptionsSynchro = {},
 ): Promise<Synchronisation> {
   await demanderSynchronisation(customerId, (options.maintenant ?? horlogeReelle)());
-  return synchroniserSousBail(stripe, customerId, options);
+  const limite = Date.now() + (options.attendreMs ?? 0);
+  for (;;) {
+    const issue = await synchroniserSousBail(stripe, customerId, options);
+    if (issue.issue !== "en_file" || Date.now() + PAS_D_ATTENTE_MS > limite) return issue;
+    await new Promise((r) => setTimeout(r, PAS_D_ATTENTE_MS));
+  }
 }
 
 /** La relecture d'un client déjà demandé, sous son bail. La porte de la file. */
@@ -344,7 +352,7 @@ async function relireEtEcrire(stripe: Stripe, bail: Bail, relueLe: Date, strict:
   const db = clientDuClientStripe(compteId);
   const ligne = await db.abonnement.findUnique({
     where: { compteId },
-    select: { stripeCustomerId: true, essaiUtiliseLe: true, debutPayantLe: true, sansAbonnementDepuis: true },
+    select: { stripeCustomerId: true, finEssai: true, debutPayantLe: true, sansAbonnementDepuis: true },
   });
   if (ligne && ligne.stripeCustomerId !== customerId) return terminer(bail, relueLe, AUTRE_CLIENT);
 
@@ -362,13 +370,12 @@ async function relireEtEcrire(stripe: Stripe, bail: Bail, relueLe: Date, strict:
 
   const donnees: Donnees = {
     ...colonnesDe(courant),
-    ...horlogeDeSuppression(courant, ligne?.sansAbonnementDepuis ?? null, relueLe),
+    ...horlogeDeSuppression(courant, ligne?.sansAbonnementDepuis ?? null, relueLe, ligne?.finEssai ?? null),
     relueLe,
-    essaiUtiliseLe: ligne?.essaiUtiliseLe ?? premierEssai(abonnements),
   };
-  // Dans la transaction, une erreur l'annule entière : la création d'une
-  // ligne que l'essai vient de poser (`essai.ts`, même client) fait relire
-  // la ligne, puis réécrire en mise à jour, une fois.
+  // Dans la transaction, une erreur l'annule entière : une ligne créée entre
+  // la lecture et l'écriture (un démarrage d'essai, une réservation de
+  // client) fait relire la ligne, puis réécrire en mise à jour, une fois.
   const ecrire = (existe: boolean) =>
     db.$transaction(async (tx) => {
       // Le jeton d'abord, ligne verrouillée jusqu'au commit : un bail repris

@@ -196,22 +196,29 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
       expect(await synchroniserClientStripe(s, "cus_F")).toMatchObject({ issue: "ignore", alerte: true, motif: expect.stringMatching(/metadata\.userId/) });
     });
 
-    it("crée la ligne du compte que désigne le client Stripe relu, puis la met à jour", async () => {
-      const essai = 1_780_000_000;
-      const s1 = stripe(A, [abo({ id: "sub_1", status: "trialing", created: 1, trial_start: essai })]);
+    it("crée la ligne du compte que désigne le client Stripe relu, puis la met à jour ; l'essai, compté chez Rojer, n'est jamais écrit", async () => {
+      const s1 = stripe(A, [abo({ id: "sub_1", status: "incomplete", created: 1, trial_start: 1_780_000_000 })]);
       expect(await synchroniserClientStripe(s1, "cus_A", { maintenant: () => new Date(1000) })).toEqual({ issue: "ecrit" });
       expect(await ligne(A)).toMatchObject({
         stripeCustomerId: "cus_A",
         stripeSubscriptionId: "sub_1",
-        statut: "trialing",
+        statut: "incomplete",
         formule: "rojer_essentiel_mensuel",
-        essaiUtiliseLe: new Date(essai * 1000),
+        essaiUtiliseLe: null,
+        finEssai: null,
       });
 
       const s2 = stripe(A, [abo({ id: "sub_1", status: "active", created: 1 })]);
       expect(await synchroniserClientStripe(s2, "cus_A", { maintenant: () => new Date(2000) })).toEqual({ issue: "ecrit" });
-      // L'essai consommé le reste, même quand l'abonnement relu n'en a plus.
-      expect(await ligne(A)).toMatchObject({ statut: "active", essaiUtiliseLe: new Date(essai * 1000) });
+      expect(await ligne(A)).toMatchObject({ statut: "active", essaiUtiliseLe: null });
+    });
+
+    it("l'essai posé par Rojer (début, fin) survit à la relecture (ADR-053 § 9, amendé le 2026-11-16)", async () => {
+      const debut = new Date("2026-11-01T00:00:00Z");
+      const fin = new Date("2026-12-01T00:00:00Z");
+      await prisma.abonnement.create({ data: { compteId: A, stripeCustomerId: "cus_A", essaiUtiliseLe: debut, finEssai: fin, sansAbonnementDepuis: fin } });
+      await synchroniserClientStripe(stripe(A, [abo({ id: "sub_1", status: "active", created: 1 })]), "cus_A", { maintenant: () => new Date(1000) });
+      expect(await ligne(A)).toMatchObject({ statut: "active", essaiUtiliseLe: debut, finEssai: fin, sansAbonnementDepuis: null });
     });
 
     it("une relecture plus ancienne que la dernière écrite n'écrase rien (livraisons croisées)", async () => {
@@ -237,7 +244,7 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
       expect(await ligne(A)).toMatchObject({ stripeCustomerId: "cus_A", statut: "active" });
     });
 
-    it("un abonnement neuf en attente de paiement ne remplace pas celui qui paie ; l'essai d'un ancien abonnement compte", async () => {
+    it("un abonnement neuf en attente de paiement ne remplace pas celui qui paie", async () => {
       const s = stripe(A, [
         abo({ id: "sub_essai", status: "canceled", created: 5, trial_start: 1_700_000_000 }),
         abo({ id: "sub_paye", status: "active", created: 10 }),
@@ -247,7 +254,6 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
       expect(await ligne(A)).toMatchObject({
         stripeSubscriptionId: "sub_paye",
         statut: "active",
-        essaiUtiliseLe: new Date(1_700_000_000_000),
       });
     });
 

@@ -1,121 +1,69 @@
 import { describe, expect, it } from "vitest";
-import { besoinDeLaCarte, preselection, vueAbonnement, type EntreeVue } from "./vue-abonnement";
+import { preselection, vueAbonnement, type EntreeVue } from "./vue-abonnement";
 
-// Ce que la page Abonnement montre, état par état (audit du 2026-11-16).
+// Ce que la page Abonnement montre, état par état (audit du 2026-11-16 ;
+// ADR-053 § 9 amendé le même jour : un seul geste, « s'abonner »).
 
 const entree = (o: Partial<EntreeVue>): EntreeVue => ({
   geste: "abonner",
-  statut: "trialing",
-  resiliationPrevue: false,
-  carteEnregistree: false,
-  immediat: false,
-  retourCarte: false,
-  finEssai: ", le 16 décembre 2026",
+  statut: null,
+  enEssai: true,
+  documentAttend: false,
+  paiementTermine: false,
   ...o,
 });
 
 describe("vueAbonnement", () => {
-  it("retour de Checkout, la notification passée avant et la facture qui attend (3-D Secure) : la finalisation, qui renvoie à la facture (2026-11-16)", () => {
-    expect(vueAbonnement(entree({ geste: "portail", statut: "past_due", retourCarte: true }))).toMatchObject({ cas: "finalisation" });
-    // Sans retour de Checkout, ou payé : la gestion habituelle.
-    expect(vueAbonnement(entree({ geste: "portail", statut: "past_due" }))).toMatchObject({ cas: "portail", factureEnAttente: true });
-    expect(vueAbonnement(entree({ geste: "portail", statut: "active", retourCarte: true }))).toMatchObject({ cas: "portail", factureEnAttente: false });
-  });
-
   it("sans offre, membre, essai à démarrer", () => {
     expect(vueAbonnement(entree({ geste: null }))).toEqual({ cas: "aucune" });
     expect(vueAbonnement(entree({ geste: "membre" }))).toMatchObject({ cas: "membre" });
-    expect(vueAbonnement(entree({ geste: "essai", statut: null }))).toMatchObject({ cas: "essai", titre: "Essai gratuit" });
+    expect(vueAbonnement(entree({ geste: "essai" }))).toMatchObject({ cas: "essai", titre: "Essai gratuit" });
   });
 
-  it("essai sans carte : enregistrer la formule pour la fin de l'essai, ou payer maintenant ; pas de portail", () => {
-    expect(vueAbonnement(entree({}))).toMatchObject({
-      cas: "formulaire",
-      titre: "Après l'essai",
-      mode: "enregistrer",
-      libelle: "Enregistrer ma formule",
-      proposerPayerMaintenant: true,
-      annoncerDocument: false,
-      rappelApresEssai: false,
-      portail: null,
-    });
+  it("pendant l'essai : s'abonner, et la phrase dit que l'essai s'arrête et ses limites tombent", () => {
+    const v = vueAbonnement(entree({}));
+    expect(v).toMatchObject({ cas: "formulaire", titre: "S'abonner", annoncerDocument: false });
+    expect(v.cas === "formulaire" && v.quand).toMatch(/page sécurisée de Stripe.*met fin à votre essai/);
   });
 
-  it("essai avec carte : changer la formule de fin d'essai, payer maintenant, le portail pour résilier avant la fin", () => {
-    const v = vueAbonnement(entree({ carteEnregistree: true }));
-    expect(v).toMatchObject({ cas: "formulaire", titre: "Changer de formule", mode: "changer", proposerPayerMaintenant: true, rappelApresEssai: true });
-    expect(v.cas === "formulaire" && v.portail).toMatch(/résiliation avant la fin de l'essai/);
-    expect(v.cas === "formulaire" && v.quand).toMatch(/le 16 décembre 2026/);
-  });
-
-  it("un document attend (?immediat=1) : le bouton principal paie, l'annonce s'affiche, pas de second bouton", () => {
-    expect(vueAbonnement(entree({ immediat: true }))).toMatchObject({
-      mode: "payer",
-      titre: "S'abonner",
-      libelle: "Continuer vers le paiement",
-      annoncerDocument: true,
-      proposerPayerMaintenant: false,
-      rappelApresEssai: false,
-    });
-    expect(vueAbonnement(entree({ immediat: true, carteEnregistree: true }))).toMatchObject({ mode: "payer", libelle: "Payer et m'abonner" });
-  });
-
-  it("essai résilié : « Fin de l'essai », même avec ?immediat=1 ; la carte n'est pas lue", () => {
-    for (const immediat of [false, true]) {
-      expect(vueAbonnement(entree({ resiliationPrevue: true, immediat }))).toMatchObject({ cas: "essai-resilie", titre: "Fin de l'essai" });
+  it("après l'essai, ou après une résiliation : s'abonner, sans parler d'essai", () => {
+    for (const statut of [null, "canceled"]) {
+      const v = vueAbonnement(entree({ statut, enEssai: false }));
+      expect(v, String(statut)).toMatchObject({ cas: "formulaire", titre: "S'abonner" });
+      expect(v.cas === "formulaire" && v.quand, String(statut)).not.toMatch(/essai/);
     }
-    expect(besoinDeLaCarte(entree({ resiliationPrevue: true }))).toBe(false);
   });
 
-  it("retour de Checkout « carte » : la finalisation, jamais sous le titre « Fin de l'essai »", () => {
-    expect(vueAbonnement(entree({ retourCarte: true, resiliationPrevue: true }))).toMatchObject({ cas: "finalisation", titre: "S'abonner" });
-    expect(besoinDeLaCarte(entree({ retourCarte: true }))).toBe(false);
+  it("retour de Checkout, copie encore en retard : rien à proposer, jamais un second paiement", () => {
+    expect(vueAbonnement(entree({ paiementTermine: true }))).toEqual({ cas: "aucune" });
+    expect(vueAbonnement(entree({ geste: "portail", statut: "active", paiementTermine: true }))).toMatchObject({ cas: "portail" });
   });
 
-  it("pause : la reprise se paie tout de suite ; carte enregistrée, prélevée directement, portail sans mention d'essai", () => {
-    const v = vueAbonnement(entree({ statut: "paused", carteEnregistree: true }));
-    expect(v).toMatchObject({ mode: "payer", libelle: "Payer et m'abonner", proposerPayerMaintenant: false });
-    expect(v.cas === "formulaire" && v.quand).toMatch(/carte enregistrée/);
-    expect(v.cas === "formulaire" && v.portail).not.toMatch(/essai/);
-    expect(besoinDeLaCarte(entree({ statut: "paused" }))).toBe(true);
+  it("un document officiel attend (`?document=1`) : la page dit pourquoi", () => {
+    expect(vueAbonnement(entree({ documentAttend: true }))).toMatchObject({ cas: "formulaire", annoncerDocument: true });
   });
 
-  it("après une résiliation (souscrire) : on paie sur Stripe, le bouton le dit — jamais « Enregistrer ma formule »", () => {
-    const v = vueAbonnement(entree({ geste: "souscrire", statut: "canceled", carteEnregistree: true }));
-    expect(v).toMatchObject({ mode: "payer", libelle: "Continuer vers le paiement", portail: null, proposerPayerMaintenant: false });
-    expect(v.cas === "formulaire" && v.quand).toMatch(/Le paiement se fait/);
-  });
-
-  it("abonnement qui court : le portail ; une facture en attente pour past_due, unpaid, incomplete", () => {
-    expect(vueAbonnement(entree({ geste: "portail", statut: "active" }))).toEqual({ cas: "portail", titre: "Gérer", factureEnAttente: false });
-    for (const statut of ["past_due", "unpaid", "incomplete"]) {
-      expect(vueAbonnement(entree({ geste: "portail", statut }))).toMatchObject({ factureEnAttente: true });
+  it("abonné : la gestion ; un impayé se règle au portail, un premier paiement à confirmer sur sa facture", () => {
+    expect(vueAbonnement(entree({ geste: "portail", statut: "active" }))).toEqual({ cas: "portail", titre: "Gérer", aRegler: null });
+    for (const statut of ["past_due", "unpaid"]) {
+      expect(vueAbonnement(entree({ geste: "portail", statut })), statut).toMatchObject({ aRegler: "impaye" });
     }
+    expect(vueAbonnement(entree({ geste: "portail", statut: "incomplete" }))).toMatchObject({ aRegler: "premier-paiement" });
   });
 });
 
 describe("preselection", () => {
-  const pro = { formule: "pro", periodicite: "annuel" } as const;
-  const essentiel = { formule: "essentiel", periodicite: "mensuel" } as const;
+  const formulaire = vueAbonnement(entree({}));
+  const pro = { formule: "pro" as const, periodicite: "annuel" as const };
+  const essentiel = { formule: "essentiel" as const, periodicite: "mensuel" as const };
 
-  it("changer de formule : celle de l'abonnement, l'offre de la page publique ignorée", () => {
-    const v = vueAbonnement(entree({ carteEnregistree: true }));
-    expect(preselection(v, { abonnement: essentiel, offreChoisie: pro, geste: "abonner" })).toEqual(essentiel);
-  });
-
-  it("enregistrer ou payer : l'offre choisie sur la page publique d'abord, sinon l'abonnement", () => {
-    const v = vueAbonnement(entree({}));
-    expect(preselection(v, { abonnement: essentiel, offreChoisie: pro, geste: "abonner" })).toEqual(pro);
-    expect(preselection(v, { abonnement: essentiel, offreChoisie: null, geste: "abonner" })).toEqual(essentiel);
-  });
-
-  it("souscrire après une résiliation : l'offre choisie, sinon l'ancienne formule (répétition du 2026-11-16)", () => {
-    const v = vueAbonnement(entree({ geste: "souscrire", statut: "canceled" }));
-    expect(preselection(v, { abonnement: pro, offreChoisie: null, geste: "souscrire" })).toEqual(pro);
-    expect(preselection(v, { abonnement: pro, offreChoisie: essentiel, geste: "souscrire" })).toEqual(essentiel);
+  it("l'offre choisie sur la page publique d'abord, sinon l'abonnement passé", () => {
+    expect(preselection(formulaire, { abonnement: essentiel, offreChoisie: pro })).toEqual(pro);
+    expect(preselection(formulaire, { abonnement: essentiel, offreChoisie: null })).toEqual(essentiel);
+    expect(preselection(formulaire, { abonnement: null, offreChoisie: null })).toBeNull();
   });
 
   it("hors formulaire : rien", () => {
-    expect(preselection(vueAbonnement(entree({ geste: "portail", statut: "active" })), { abonnement: pro, offreChoisie: pro, geste: "portail" })).toBeNull();
+    expect(preselection(vueAbonnement(entree({ geste: "portail", statut: "active" })), { abonnement: essentiel, offreChoisie: pro })).toBeNull();
   });
 });

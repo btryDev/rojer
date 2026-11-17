@@ -301,7 +301,7 @@ export async function modifierEtablissement(
   // Un essai par entreprise (ADR-053 § 8) : poser un SIREN sur une entreprise
   // ancienne qui n'en avait pas, c'est la déclarer — même règle qu'à
   // l'onboarding, seule autre porte d'un SIREN.
-  const essaiANoter = sirenAPoser && (await compteEnEssai(db, compte.compteId));
+  const essaiANoter = sirenAPoser && (await compteEnEssai(db, compte.compteId, new Date()));
   if (essaiANoter && (await sirenEssayeAilleurs(siren, compte.compteId))) {
     return { status: "error", message: MESSAGE_ENTREPRISE_DEJA_ESSAYEE };
   }

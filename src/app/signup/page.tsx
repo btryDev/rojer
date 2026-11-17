@@ -2,7 +2,7 @@ import Link from "next/link";
 import { cheminDeRetour } from "@/lib/auth/chemin-de-retour";
 import { SignupForm } from "./SignupForm";
 import { contexteDroits, offreLancee } from "@/lib/abonnements/saisie";
-import { DUREE_ESSAI_JOURS } from "@/lib/stripe/parcours";
+import { DUREE_ESSAI_JOURS } from "@/lib/abonnements/formules";
 import { estLookupKey } from "@/lib/abonnements/formules";
 
 export const metadata = {

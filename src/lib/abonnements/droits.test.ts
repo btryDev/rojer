@@ -26,10 +26,25 @@ describe("droitsDe", () => {
     }
   });
 
-  it("exigé : seuls trialing, active et past_due ouvrent la saisie", () => {
+  it("exigé : l'essai en cours, active et past_due ouvrent la saisie ; l'essai fini la ferme (2026-11-16)", () => {
     const ouvre = (statut: string) => droitsDe(ligne({ statut }), EXIGE).saisie;
-    for (const s of ["trialing", "active", "past_due"]) expect(ouvre(s), s).toBe(true);
-    for (const s of ["unpaid", "canceled", "paused", "incomplete", "incomplete_expired"]) expect(ouvre(s), s).toBe(false);
+    for (const s of ["active", "past_due"]) expect(ouvre(s), s).toBe(true);
+    for (const s of ["unpaid", "canceled", "incomplete", "incomplete_expired", "trialing", "paused"]) expect(ouvre(s), s).toBe(false);
+    // L'essai se compte chez Rojer : jamais abonné (statut vide) et fin à venir.
+    expect(droitsDe(ligne({ statut: null, finEssai: jours(20) }), EXIGE).saisie).toBe(true);
+    expect(droitsDe(ligne({ statut: null, finEssai: jours(-1) }), EXIGE)).toMatchObject({
+      saisie: false,
+      bandeau: { message: expect.stringMatching(/^Votre essai est terminé : abonnez-vous/) },
+    });
+  });
+
+  it("une souscription abandonnée pendant l'essai (confirmation de la banque) ne coupe pas l'essai ; un paiement confirmé, si (relecture du 2026-11-17)", () => {
+    for (const statut of ["incomplete", "incomplete_expired", "canceled"]) {
+      const l = ligne({ statut, finEssai: jours(20), debutPayantLe: null });
+      expect(droitsDe(l, EXIGE).saisie, statut).toBe(true);
+      expect(libelleStatut(l, MAINTENANT), statut).toBe("Essai en cours");
+    }
+    expect(droitsDe(ligne({ statut: "canceled", finEssai: jours(20), debutPayantLe: jours(-5) }), EXIGE).saisie).toBe(false);
   });
 
   it("exigé : un état inconnu de Stripe ferme la saisie plutôt que de l'ouvrir", () => {
@@ -45,7 +60,7 @@ describe("droitsDe", () => {
     expect(droitsDe(ligne({ statut: "canceled", debutPayantLe: new Date("2026-01-01") }), EXIGE).bandeau?.message).toMatch(
       /consultables et exportables/,
     );
-    expect(droitsDe(ligne({ statut: "paused" }), EXIGE).bandeau?.message).not.toMatch(/exportables/);
+    expect(droitsDe(ligne({ statut: null, finEssai: jours(-1) }), EXIGE).bandeau?.message).not.toMatch(/exportables/);
   });
 
   it("saisie fermée : la phrase dit le cas — jamais d'essai, essai fini, abonnement cessé (audit du 2026-11-16)", () => {
@@ -53,32 +68,39 @@ describe("droitsDe", () => {
     expect(message(null)).toMatch(/^Démarrez votre essai gratuit/);
     expect(message(ligne({ statut: null }))).toMatch(/^Démarrez votre essai gratuit/);
     for (const statut of ["unpaid", "incomplete"]) {
-      expect(message(ligne({ statut })), statut).toMatch(/^Une facture attend son paiement.*consultables\.$/);
+      expect(message(ligne({ statut })), statut).toMatch(/^Votre dernier paiement n.est pas passé.*rouvrir la saisie.*consultables\.$/);
       expect(message(ligne({ statut, debutPayantLe: new Date("2026-01-01") })), statut).toMatch(/et exportables\.$/);
     }
-    for (const statut of ["paused", "canceled", "incomplete_expired"]) {
+    for (const statut of ["canceled", "incomplete_expired"]) {
       expect(message(ligne({ statut })), statut).toMatch(/^Votre essai est terminé/);
     }
+    expect(message(ligne({ statut: null, finEssai: jours(-1) }))).toMatch(/^Votre essai est terminé/);
     expect(message(ligne({ statut: "canceled", debutPayantLe: new Date("2026-01-01") }))).toMatch(/^Votre abonnement n'est plus actif/);
   });
 
   it("l'état dit au dirigeant : un compte qui n'a jamais payé a un essai terminé, pas un abonnement suspendu", () => {
     const paye = new Date("2026-01-01");
-    expect(libelleStatut(null)).toBe("Aucun abonnement");
-    for (const statut of ["paused", "canceled", "incomplete_expired"]) {
-      expect(libelleStatut({ statut, debutPayantLe: null }), statut).toBe("Essai terminé");
+    const l = (statut: string | null, o: { debutPayantLe?: Date | null; finEssai?: Date | null } = {}) => ({
+      statut,
+      debutPayantLe: o.debutPayantLe ?? null,
+      finEssai: o.finEssai ?? null,
+    });
+    expect(libelleStatut(null, MAINTENANT)).toBe("Aucun abonnement");
+    expect(libelleStatut(l(null), MAINTENANT)).toBe("Aucun abonnement");
+    expect(libelleStatut(l(null, { finEssai: jours(3) }), MAINTENANT)).toBe("Essai en cours");
+    expect(libelleStatut(l(null, { finEssai: jours(-3) }), MAINTENANT)).toBe("Essai terminé");
+    for (const statut of ["canceled", "incomplete_expired"]) {
+      expect(libelleStatut(l(statut), MAINTENANT), statut).toBe("Essai terminé");
     }
-    expect(libelleStatut({ statut: "paused", debutPayantLe: paye })).toBe("Suspendu");
-    expect(libelleStatut({ statut: "canceled", debutPayantLe: paye })).toBe("Résilié");
+    expect(libelleStatut(l("canceled", { debutPayantLe: paye }), MAINTENANT)).toBe("Résilié");
     // Une facture attend : l'état le dit, comme le bandeau.
-    expect(libelleStatut({ statut: "unpaid", debutPayantLe: null })).toBe("Impayé");
-    expect(libelleStatut({ statut: "trialing", debutPayantLe: null })).toBe("Essai en cours");
+    expect(libelleStatut(l("unpaid"), MAINTENANT)).toBe("Impayé");
   });
 
   it("paiement à régler (refus ou confirmation de la banque) : saisie ouverte, alerte", () => {
     expect(droitsDe(ligne({ statut: "past_due" }), EXIGE)).toEqual({
       saisie: true,
-      bandeau: { ton: "alerte", message: expect.stringMatching(/paiement n.a pas abouti.*confirmation/) },
+      bandeau: { ton: "alerte", message: expect.stringMatching(/n.est pas passé.*changez de carte ou confirmez le paiement/) },
     });
   });
 
@@ -90,10 +112,10 @@ describe("droitsDe", () => {
   });
 
   it("essai : annoncé dans la semaine qui précède sa fin, pas avant", () => {
-    expect(droitsDe(ligne({ statut: "trialing", finEssai: jours(5) }), EXIGE).bandeau?.message).toMatch(
+    expect(droitsDe(ligne({ statut: null, finEssai: jours(5) }), EXIGE).bandeau?.message).toMatch(
       /essai se termine le 08 novembre 2026/,
     );
-    expect(droitsDe(ligne({ statut: "trialing", finEssai: jours(10) }), EXIGE)).toEqual({ saisie: true, bandeau: null });
+    expect(droitsDe(ligne({ statut: null, finEssai: jours(10) }), EXIGE)).toEqual({ saisie: true, bandeau: null });
   });
 
   it("abonnement actif sans échéance particulière : rien à dire", () => {
@@ -102,9 +124,8 @@ describe("droitsDe", () => {
 });
 
 describe("gesteAbonnement", () => {
-  const ligne = (o: Partial<{ statut: string | null; stripeSubscriptionId: string | null; essaiUtiliseLe: Date | null }>) => ({
+  const ligne = (o: Partial<{ statut: string | null; essaiUtiliseLe: Date | null }>) => ({
     statut: null,
-    stripeSubscriptionId: null,
     essaiUtiliseLe: null,
     ...o,
   });
@@ -121,21 +142,19 @@ describe("gesteAbonnement", () => {
     for (const role of ["member", "lecture"]) expect(gesteAbonnement({ ouvert: true, role, ligne: null })).toBe("membre");
   });
 
-  it("propriétaire : l'essai tant qu'il est disponible, le portail tant qu'un abonnement court, sinon Checkout", () => {
+  it("propriétaire : l'essai tant qu'il est disponible, le portail tant qu'un abonnement court, sinon « s'abonner » (2026-11-16)", () => {
     const g = (l: ReturnType<typeof ligne> | null) => gesteAbonnement({ ouvert: true, role: "owner", ligne: l });
     expect(g(null)).toBe("essai");
     expect(g(ligne({}))).toBe("essai");
-    for (const statut of ["trialing", "paused"]) {
-      expect(g(ligne({ statut, stripeSubscriptionId: "sub_1", essaiUtiliseLe: new Date() })), statut).toBe("abonner");
-    }
+    // Essai pris (en cours ou fini), jamais abonné : s'abonner.
+    expect(g(ligne({ essaiUtiliseLe: new Date() }))).toBe("abonner");
     for (const statut of ["active", "past_due", "unpaid", "incomplete"]) {
-      expect(g(ligne({ statut, stripeSubscriptionId: "sub_1", essaiUtiliseLe: new Date() })), statut).toBe("portail");
+      expect(g(ligne({ statut, essaiUtiliseLe: new Date() })), statut).toBe("portail");
     }
     for (const statut of ["canceled", "incomplete_expired"]) {
-      expect(g(ligne({ statut, stripeSubscriptionId: "sub_1", essaiUtiliseLe: new Date() })), statut).toBe("souscrire");
+      expect(g(ligne({ statut, essaiUtiliseLe: new Date() })), statut).toBe("abonner");
+      // Abonné sans essai Rojer (d'avant ce lot) : pas d'essai offert pour autant.
+      expect(g(ligne({ statut })), statut).toBe("abonner");
     }
-    // Un démarrage en cours ou interrompu (verrou, pas d'abonnement) se tranche
-    // sur l'écran d'essai, qui relit Stripe — jamais par un Checkout.
-    expect(g(ligne({ essaiUtiliseLe: new Date() }))).toBe("essai");
   });
 });

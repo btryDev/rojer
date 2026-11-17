@@ -89,7 +89,7 @@ export async function finaliserOnboarding(
   // déjà essayée par un autre compte ne se CRÉE pas. Un site de plus d'une
   // entreprise que le compte suit déjà n'est pas concerné. Le message seul,
   // sans le champ : il ne s'agit pas de corriger le SIRET.
-  const enEssai = await compteEnEssai(db, compte.compteId);
+  const enEssai = await compteEnEssai(db, compte.compteId, new Date());
   if (
     enEssai &&
     !(await db.entreprise.findUnique({

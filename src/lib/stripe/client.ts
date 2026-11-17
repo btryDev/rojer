@@ -57,7 +57,7 @@ export function clientStripe(config: ConfigActive): Stripe {
 /**
  * Le client de la file du webhook (`traitement.ts`) : `OPTIONS_WEBHOOK` pour
  * TOUS ses appels, y compris ceux des fonctions partagées qu'elle appelle
- * (`finaliserCarte`, `rendrePlanningEchu`, `carteQuiAPaye`), qui ne passent pas d'options.
+ * (`rendrePlanningEchu`, `carteQuiAPaye`), qui ne passent pas d'options.
  * Sans quoi un appel à 10 s et deux relances pourrait faire durer un
  * aiguillage plus longtemps que sa prise (`PRISE_EXPIREE_MS`), ou une
  * relecture plus longtemps que son bail (`BAIL_MS`).

@@ -13,7 +13,7 @@ import { lienActif } from "@/lib/access-tokens/revocation";
 import type { Geles } from "@/lib/auth/portee/gel";
 import { CLES_FORMULES, FORMULES, LIBELLES_PLAFONDS, LIMITES_ESSAI, formuleDeLookupKey, type CleFormule } from "./formules";
 import { contexteDroits, offreLancee } from "./lancement";
-import { droitsDe } from "./droits";
+import { droitsDe, enEssai } from "./droits";
 
 /** Les plafonds appliqués (les autres clés de `Quotas` ne le sont pas encore). */
 export type CleQuota = keyof typeof LIBELLES_PLAFONDS;
@@ -36,14 +36,18 @@ export function formuleDesPlafonds(formule: string | null | undefined): CleFormu
 }
 
 /**
- * L'essai d'un compte : `en_cours` (Stripe le dit `trialing`), ou
- * `paiement_attendu` — le compte n'a JAMAIS payé (`debutPayantLe` vide) : un
- * premier paiement en échec à la fin de l'essai (`past_due`) garde la saisie
- * ouverte, il n'ouvre pas les volumes de la formule. `null` : il a payé.
+ * L'essai d'un compte : `en_cours` (`enEssai`, l'essai compté chez Rojer —
+ * ADR-053 § 9, amendé le 2026-11-16), ou `paiement_attendu` — le compte n'a
+ * JAMAIS payé (`debutPayantLe` vide) hors de l'essai : essai fini, premier
+ * paiement en échec ou à confirmer ; il n'ouvre pas les volumes de la
+ * formule. `null` : il a payé.
  */
 export type Essai = "en_cours" | "paiement_attendu" | null;
-export function essaiDe(ligne: { statut: string | null; debutPayantLe: Date | null } | null): Essai {
-  if (ligne?.statut === "trialing") return "en_cours";
+export function essaiDe(
+  ligne: { statut: string | null; debutPayantLe: Date | null; finEssai: Date | null } | null,
+  maintenant: Date,
+): Essai {
+  if (enEssai(ligne, maintenant)) return "en_cours";
   return ligne?.debutPayantLe ? null : "paiement_attendu";
 }
 
@@ -63,7 +67,7 @@ export function motifDuRefus(regime: Regime, cle: CleQuota): string {
   const couvre = LIBELLES_PLAFONDS[cle](plafond);
   if (regime.essai && estLimiteDEssai(cle))
     return regime.essai === "en_cours"
-      ? `L'essai gratuit couvre ${couvre} : pour en ajouter, payez votre formule maintenant depuis la page Abonnement de votre compte — le premier paiement lève les limites de l'essai.`
+      ? `L'essai gratuit couvre ${couvre} : pour en ajouter, abonnez-vous depuis la page Abonnement de votre compte — l'abonnement lève les limites de l'essai.`
       : `Tant que votre premier paiement n'est pas confirmé, Rojer garde les limites de l'essai (${couvre}) : réglez votre abonnement depuis la page Abonnement de votre compte.`;
   const plus = CLES_FORMULES.find((f) => {
     const q = FORMULES[f].quotas[cle];
@@ -139,13 +143,20 @@ async function dejaUtilisesDuCompte(db: Lecteur, cle: CleQuotaComptee, debutAnne
 }
 
 /** Ce que les plafonds lisent de l'abonnement recopié de Stripe. */
-const COLONNES_PLAFONDS = { formule: true, statut: true, debutPayantLe: true, essaiUtiliseLe: true } as const;
-type LignePlafonds = { formule: string | null; statut: string | null; debutPayantLe: Date | null; essaiUtiliseLe: Date | null } | null;
+const COLONNES_PLAFONDS = { formule: true, statut: true, debutPayantLe: true, essaiUtiliseLe: true, finEssai: true } as const;
+type LignePlafonds = {
+  formule: string | null;
+  statut: string | null;
+  debutPayantLe: Date | null;
+  essaiUtiliseLe: Date | null;
+  finEssai: Date | null;
+} | null;
 
 /** Le régime et l'année des plafonds, d'une ligne d'abonnement. */
 function plafondsDeLaLigne(ligne: LignePlafonds) {
-  const regime: Regime = { formule: formuleDesPlafonds(ligne?.formule), essai: essaiDe(ligne) };
-  return { regime, debutAnnee: debutDeLAnnee(ligne?.debutPayantLe, new Date(), ligne?.essaiUtiliseLe) };
+  const maintenant = new Date();
+  const regime: Regime = { formule: formuleDesPlafonds(ligne?.formule), essai: essaiDe(ligne, maintenant) };
+  return { regime, debutAnnee: debutDeLAnnee(ligne?.debutPayantLe, maintenant, ligne?.essaiUtiliseLe) };
 }
 
 /** Le régime et l'année des plafonds du compte (client borné, jamais le brut). */

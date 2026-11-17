@@ -31,7 +31,7 @@ import {
 } from "@/lib/calendrier/etats";
 import { getEtablissement } from "@/lib/etablissements/queries";
 import { getOptionalCompte } from "@/lib/auth/compte";
-import { abonnementDuCompte } from "@/lib/abonnements/saisie";
+import { abonnementDuCompte, contexteDroits } from "@/lib/abonnements/saisie";
 import { essaiDe } from "@/lib/abonnements/quotas";
 import { LIBELLES_PLAFONDS, LIMITES_ESSAI } from "@/lib/abonnements/formules";
 import { listerEquipementsDeLEtablissement } from "@/lib/equipements/queries";
@@ -316,7 +316,7 @@ export default async function CalendrierPage({
   const sessionCompte = await getOptionalCompte();
   // `abonnementDuCompte` ne lit rien avant le lancement de l'offre : pas de mention.
   const ligneAbonnement = sessionCompte && (await abonnementDuCompte(sessionCompte.db, sessionCompte.compte.compteId));
-  const essai = ligneAbonnement ? essaiDe(ligneAbonnement) : null;
+  const essai = ligneAbonnement ? essaiDe(ligneAbonnement, contexteDroits().maintenant) : null;
 
   // Une seule horloge pour toute la page, et c'est celle du RENDU : la barre
   // latérale, rendue en parallèle, lit la même, si bien que le registre des

@@ -19,7 +19,7 @@ import { getStorage } from "@/lib/storage";
 import { OPTIONS_WEBHOOK } from "@/lib/stripe/client";
 import { expirerSessionsOuvertes } from "@/lib/stripe/parcours";
 import { synchroniserClientStripe } from "@/lib/stripe/synchronisation";
-import { OUVRENT } from "./droits";
+import { HORS_ABONNEMENT_OUVERT, OUVRENT } from "./droits";
 import { alerter } from "@/lib/alertes";
 import { adressesDesProprietaires } from "./rappels";
 import { PAGE_ABONNEMENT } from "./saisie";
@@ -50,7 +50,7 @@ const dans = (maintenant: Date, jours: number) => ajouterJours(maintenant, jours
 export function dateDeSuppressionPrevue(sansAbonnementDepuis: Date, suppressionPrevueLe: Date | null, maintenant: Date): Date {
   return suppressionPrevueLe ?? plusTard(finDuDelai(sansAbonnementDepuis), dans(maintenant, 30));
 }
-const FERME = { OR: [{ statut: null }, { statut: { notIn: [...OUVRENT] } }] };
+const FERME = HORS_ABONNEMENT_OUVERT;
 
 export type Avertissement = "j30" | "j7";
 
@@ -313,11 +313,13 @@ export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | n
     take: SUPPRESSIONS_PAR_PASSE,
   });
   for (const { compteId, stripeCustomerId } of echus) {
-    try {
+    // Un compte qui n'a jamais quitté l'essai (compté chez Rojer, ADR-053 § 9
+    // amendé le 2026-11-16) n'a pas de client Stripe : rien à y arrêter.
+    if (stripeCustomerId) try {
       // Stripe fait foi, pas notre copie : un webhook perdu peut cacher un
       // réabonnement. Un abonnement ouvert chez Stripe : rien n'est résilié
       // ni effacé, la copie est relue (son horloge se vide) et le compte
-      // attend. Sinon, ce qui pourrait encore facturer (pause, impayé, premier
+      // attend. Sinon, ce qui pourrait encore facturer (impayé, premier
       // paiement en attente) est résilié ; le client et ses factures restent.
       // Un paiement en cours sur Checkout ne doit pas aboutir pendant la
       // suppression : ses sessions ouvertes expirent d'abord.

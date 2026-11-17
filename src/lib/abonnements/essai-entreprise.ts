@@ -14,14 +14,19 @@ import "server-only";
 
 import { prisma } from "@/lib/prisma";
 import type { Db } from "@/lib/auth/compte";
+import { enEssai } from "./droits";
+import { abonnementDuCompte } from "./saisie";
 
 export const MESSAGE_ENTREPRISE_DEJA_ESSAYEE =
   "Cette entreprise a déjà bénéficié d'un essai gratuit de Rojer avec un autre compte. Pour la suivre, abonnez-vous dès maintenant depuis la page Abonnement de votre compte. Si elle n'a jamais utilisé Rojer, écrivez à l'assistance.";
 
-/** Le compte est-il en essai ? Hors essai, la règle ne joue pas. */
-export async function compteEnEssai(db: Db, compteId: string): Promise<boolean> {
-  const ligne = await db.abonnement.findUnique({ where: { compteId }, select: { statut: true } });
-  return ligne?.statut === "trialing";
+/**
+ * Le compte est-il en essai ? Hors essai, la règle ne joue pas. L'essai se
+ * compte chez Rojer (ADR-053 § 9, amendé le 2026-11-16) : `enEssai`.
+ */
+export async function compteEnEssai(db: Db, compteId: string, maintenant: Date): Promise<boolean> {
+  // La ligne que la garde de saisie vient de lire (`cache`) : pas de seconde lecture.
+  return enEssai(await abonnementDuCompte(db, compteId), maintenant);
 }
 
 /** Le SIREN a-t-il déjà servi l'essai d'un AUTRE compte ? À lire avant de créer. */

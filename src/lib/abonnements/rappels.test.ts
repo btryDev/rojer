@@ -23,10 +23,12 @@ vi.mock("@/lib/stripe/client", () => ({ OPTIONS_WEBHOOK: {} }));
 vi.mock("@/lib/stripe/parcours", () => ({ baissePrevue: st.baisse }));
 
 import {
+  FENETRE_SEMAINE_MS,
   FENETRE_VEILLE_MS,
   JOURS_AVANT_RENOUVELLEMENT,
   messageRenouvellementAnnuel,
-  messageVeilleFinEssai,
+  messageFinEssai,
+  rappelerLaSemaineDeLaFinDEssai,
   rappelerLaVeilleDeLaFinDEssai,
   rappelerLeRenouvellementAnnuel,
 } from "./rappels";
@@ -45,16 +47,26 @@ beforeEach(() => {
 });
 
 describe("rappel de la veille de la fin de l'essai", () => {
-  it("cherche les essais sans rappel ni résiliation qui finissent dans les 36 heures", async () => {
+  it("cherche les essais (jamais payé, pas d'abonnement qui paie) sans rappel qui finissent dans les 36 heures", async () => {
     await rappelerLaVeilleDeLaFinDEssai(MAINTENANT);
     expect(m.findMany.mock.calls[0][0].where).toEqual({
-      statut: "trialing",
+      debutPayantLe: null,
+      OR: [{ statut: null }, { statut: { notIn: ["active", "past_due"] } }],
       rappelVeilleEssaiLe: null,
-      resilieEnFinDePeriode: false,
-      finPrevueLe: null,
       finEssai: { gt: MAINTENANT, lte: new Date(MAINTENANT.getTime() + FENETRE_VEILLE_MS) },
     });
     expect(FENETRE_VEILLE_MS).toBe(36 * 3_600_000);
+  });
+
+  it("le rappel d'une semaine (envoyé par Rojer depuis le 2026-11-16) : au-delà de la veille, dans les 7 jours, sa propre marque", async () => {
+    await rappelerLaSemaineDeLaFinDEssai(MAINTENANT);
+    expect(m.findMany.mock.calls[0][0].where).toEqual({
+      debutPayantLe: null,
+      OR: [{ statut: null }, { statut: { notIn: ["active", "past_due"] } }],
+      rappelSemaineEssaiLe: null,
+      finEssai: { gt: new Date(MAINTENANT.getTime() + FENETRE_VEILLE_MS), lte: new Date(MAINTENANT.getTime() + FENETRE_SEMAINE_MS) },
+    });
+    expect(m.updateMany.mock.calls[0][0]).toEqual({ where: { id: "ab1", rappelSemaineEssaiLe: null }, data: { rappelSemaineEssaiLe: MAINTENANT } });
   });
 
   it("pose la marque AVANT d'envoyer, puis écrit aux propriétaires du compte, avec la date et le lien", async () => {
@@ -105,7 +117,7 @@ describe("rappel de la veille de la fin de l'essai", () => {
   });
 
   it("le message ne nomme pas Stripe, et ne promet pas l'export (un compte qui n'a jamais payé n'y a pas droit)", () => {
-    const { text } = messageVeilleFinEssai(FIN, "https://rojer.test/compte/abonnement");
+    const { text } = messageFinEssai(FIN, "https://rojer.test/compte/abonnement");
     expect(text).not.toMatch(/stripe/i);
     expect(text).not.toMatch(/export/i);
     expect(text).toMatch(/consultables pendant 12 mois/);

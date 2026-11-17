@@ -19,17 +19,33 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
+// La ligne lue par la garde de saisie (`abonnementDuCompte`, mise en cache) : ici, lue directement.
+vi.mock("./saisie", () => ({
+  abonnementDuCompte: (db: { abonnement: { findUnique: () => unknown } }) => db.abonnement.findUnique(),
+}));
+
 import type { Db } from "@/lib/auth/compte";
 import { compteEnEssai, noterEssaiEntreprise, sirenEssayeAilleurs } from "./essai-entreprise";
 
 beforeEach(() => h.table.clear());
 
 describe("un essai par entreprise", () => {
-  it("seul un compte en essai est concerné", async () => {
-    const db = (statut: string | null) =>
-      ({ abonnement: { findUnique: async () => (statut ? { statut } : null) } }) as unknown as Db;
-    expect(await compteEnEssai(db("trialing"), "c1")).toBe(true);
-    for (const s of ["active", "paused", "past_due", null]) expect(await compteEnEssai(db(s), "c1")).toBe(false);
+  it("seul un compte en essai est concerné — compté chez Rojer : jamais abonné, fin à venir (2026-11-16)", async () => {
+    const maintenant = new Date("2026-11-20T10:00:00Z");
+    const plus = (j: number) => new Date(maintenant.getTime() + j * 86_400_000);
+    const db = (ligne: { statut: string | null; finEssai: Date | null; debutPayantLe?: Date | null } | null) =>
+      ({ abonnement: { findUnique: async () => ligne } }) as unknown as Db;
+    expect(await compteEnEssai(db({ statut: null, finEssai: plus(10) }), "c1", maintenant)).toBe(true);
+    expect(await compteEnEssai(db({ statut: null, finEssai: plus(-1) }), "c1", maintenant)).toBe(false);
+    for (const statut of ["active", "past_due"]) {
+      expect(await compteEnEssai(db({ statut, finEssai: plus(10) }), "c1", maintenant), statut).toBe(false);
+    }
+    // Une souscription abandonnée pendant l'essai ne le coupe pas ; un paiement confirmé, si.
+    for (const statut of ["incomplete", "incomplete_expired"]) {
+      expect(await compteEnEssai(db({ statut, finEssai: plus(10) }), "c1", maintenant), statut).toBe(true);
+    }
+    expect(await compteEnEssai(db({ statut: "canceled", finEssai: plus(10), debutPayantLe: plus(-3) }), "c1", maintenant)).toBe(false);
+    expect(await compteEnEssai(db(null), "c1", maintenant)).toBe(false);
   });
 
   it("un SIREN neuf, ou noté par ce même compte, reste essayable", async () => {

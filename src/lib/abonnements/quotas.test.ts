@@ -31,11 +31,16 @@ import {
 
 // Le client borné (et sa transaction), réduit à ce que la porte lit.
 const PAYE_DEPUIS = new Date("2026-01-15T00:00:00Z");
-function faux(formule: string | null, nombre: number, debutPayantLe: Date | null = PAYE_DEPUIS, statut = "active") {
+function faux(formule: string | null, nombre: number, debutPayantLe: Date | null = PAYE_DEPUIS, statut: string | null = "active") {
   const compte = () => ({ count: vi.fn().mockResolvedValue(nombre) });
   const tx = {
     $queryRaw: vi.fn(),
-    abonnement: { findUnique: vi.fn().mockResolvedValue(formule === null ? null : { formule, statut, debutPayantLe }) },
+    // L'essai (`statut` vide, ADR-053 § 9 amendé) : une fin à venir.
+    abonnement: {
+      findUnique: vi
+        .fn()
+        .mockResolvedValue(formule === null ? null : { formule, statut, debutPayantLe, finEssai: statut === null ? new Date(Date.now() + 10 * 86_400_000) : null }),
+    },
     etablissement: compte(),
     prestataire: compte(),
     equipement: compte(),
@@ -260,10 +265,10 @@ describe("depassements : ce qu'une baisse fait dépasser", () => {
 describe("l'essai gratuit : ses limites priment sur la formule essayée", () => {
   it("5 équipements, 1 zone, 1 prescription, 3 unités de travail hors transverses", async () => {
     lancer();
-    const essai = (n: number) => faux("rojer_essentiel_mensuel", n, null, "trialing");
+    const essai = (n: number) => faux("rojer_essentiel_mensuel", n, null, null);
     await prendreQuota(essai(4).txc, "c1", "equipements");
     await expect(prendreQuota(essai(5).txc, "c1", "equipements")).rejects.toThrow(
-      "L'essai gratuit couvre 5 équipements : pour en ajouter, payez votre formule maintenant depuis la page Abonnement de votre compte — le premier paiement lève les limites de l'essai.",
+      "L'essai gratuit couvre 5 équipements : pour en ajouter, abonnez-vous depuis la page Abonnement de votre compte — l'abonnement lève les limites de l'essai.",
     );
     await expect(prendreQuota(essai(1).txc, "c1", "zones")).rejects.toThrow(/couvre 1 zone :/);
     await expect(prendreQuota(essai(1).txc, "c1", "prescriptions")).rejects.toThrow(/couvre 1 prescription particulière :/);
@@ -274,8 +279,8 @@ describe("l'essai gratuit : ses limites priment sur la formule essayée", () => 
 
   it("un lot qui ne tient pas en entier est refusé en entier", async () => {
     lancer();
-    await expect(prendreQuota(faux("rojer_essentiel_mensuel", 3, null, "trialing").txc, "c1", "equipements", 3)).rejects.toBeInstanceOf(RefusQuota);
-    await prendreQuota(faux("rojer_essentiel_mensuel", 3, null, "trialing").txc, "c1", "equipements", 2);
+    await expect(prendreQuota(faux("rojer_essentiel_mensuel", 3, null, null).txc, "c1", "equipements", 3)).rejects.toBeInstanceOf(RefusQuota);
+    await prendreQuota(faux("rojer_essentiel_mensuel", 3, null, null).txc, "c1", "equipements", 2);
   });
 
   it("hors essai, équipements, zones, prescriptions et unités sont sans limite (rien n'est compté)", async () => {
@@ -289,14 +294,14 @@ describe("l'essai gratuit : ses limites priment sur la formule essayée", () => 
 
   it("pendant l'essai, un plafond de la formule garde le motif de la formule", async () => {
     lancer();
-    await expect(prendreQuota(faux("rojer_essentiel_mensuel", 10, null, "trialing").txc, "c1", "permisDeFeuParAn")).rejects.toThrow(
+    await expect(prendreQuota(faux("rojer_essentiel_mensuel", 10, null, null).txc, "c1", "permisDeFeuParAn")).rejects.toThrow(
       /^Votre formule Essentiel couvre 10 permis de feu par an/,
     );
   });
 
   it("places sous le plafond : ce qui reste, sous verrou ; sans limite hors essai", async () => {
     lancer();
-    const essai = faux("rojer_essentiel_mensuel", 1, null, "trialing");
+    const essai = faux("rojer_essentiel_mensuel", 1, null, null);
     expect(await placesSousLePlafond(essai.txc, "c1", "unitesTravail")).toBe(2);
     expect(essai.tx.$queryRaw).toHaveBeenCalled();
     expect(await placesSousLePlafond(faux("rojer_pro_annuel", 99).txc, "c1", "unitesTravail")).toBe(Infinity);
@@ -306,7 +311,7 @@ describe("l'essai gratuit : ses limites priment sur la formule essayée", () => 
 
   it("utilisateurs : un seul pendant l'essai, même sur Pro", async () => {
     lancer();
-    const brut = { abonnement: { findUnique: vi.fn().mockResolvedValue({ formule: "rojer_pro_mensuel", statut: "trialing" }) }, membre: { count: vi.fn().mockResolvedValue(1) } };
+    const brut = { abonnement: { findUnique: vi.fn().mockResolvedValue({ formule: "rojer_pro_mensuel", statut: null, finEssai: new Date(Date.now() + 10 * 86_400_000) }) }, membre: { count: vi.fn().mockResolvedValue(1) } };
     expect(await limitesMembresDuPlugin(brut as never, "c1")).toEqual({ membres: 1, invitations: 0 });
   });
 });
@@ -344,7 +349,8 @@ describe("gelesDuCompte : qui est gelé après une baisse", () => {
   it("rien de gelé : tout tient, offre non lancée, ou compte qui n'a jamais payé (l'essai bloque, il ne gèle pas)", async () => {
     lancer();
     expect(await gelesDuCompte(compte(paye, 1, 10), "c1")).toBeUndefined();
-    expect(await gelesDuCompte(compte({ ...paye, statut: "trialing" }, 3, 3), "c1")).toBeUndefined();
+    // L'essai (ADR-053 § 9 amendé) : jamais payé, fin à venir.
+    expect(await gelesDuCompte(compte({ ...paye, statut: null, debutPayantLe: null, finEssai: new Date(Date.now() + 10 * 86_400_000) }, 3, 3), "c1")).toBeUndefined();
     expect(await gelesDuCompte(compte({ ...paye, statut: "past_due", debutPayantLe: null }, 3, 3), "c1")).toBeUndefined();
     lancer(false);
     const db = compte(paye, 3, 3);
@@ -376,8 +382,12 @@ describe("etatDeSaisieDuCompte : le gel et la saisie fermée, d'une seule lectur
 
   it("qui paie : saisie ouverte ; impayé, résilié ou sans abonnement : fermée — une lecture de la ligne", async () => {
     lancer();
-    for (const statut of ["active", "trialing", "past_due"]) expect((await etatDeSaisieDuCompte(compte(ligne(statut)), "c1")).saisieFermee).toBe(false);
-    for (const l of [ligne("unpaid"), ligne("canceled"), ligne("paused"), null]) {
+    for (const statut of ["active", "past_due"]) expect((await etatDeSaisieDuCompte(compte(ligne(statut)), "c1")).saisieFermee).toBe(false);
+    // L'essai, compté chez Rojer (2026-11-16) : en cours, ouvert ; fini, fermé.
+    const dans = (j: number) => new Date(Date.now() + j * 86_400_000);
+    const essai = (fin: Date) => ({ ...ligne(null), debutPayantLe: null, finEssai: fin });
+    expect((await etatDeSaisieDuCompte(compte(essai(dans(10))), "c1")).saisieFermee).toBe(false);
+    for (const l of [ligne("unpaid"), ligne("canceled"), essai(dans(-1)), null]) {
       const db = compte(l);
       expect((await etatDeSaisieDuCompte(db, "c1")).saisieFermee).toBe(true);
       expect(db.abonnement.findUnique).toHaveBeenCalledOnce();
@@ -424,8 +434,8 @@ describe("lot C : liens d'accès actifs, signatures, imports de DUERP", () => {
 describe("valider = s'abonner : une signature de test, tenue par la porte", () => {
   it("jamais payé : la première signature passe, la seconde est refusée sous le verrou", async () => {
     lancer();
-    await prendreQuota(faux("rojer_essentiel_mensuel", 0, null, "trialing").txc, "c1", "signaturesParAn");
-    await expect(prendreQuota(faux("rojer_essentiel_mensuel", 1, null, "trialing").txc, "c1", "signaturesParAn")).rejects.toThrow(
+    await prendreQuota(faux("rojer_essentiel_mensuel", 0, null, null).txc, "c1", "signaturesParAn");
+    await expect(prendreQuota(faux("rojer_essentiel_mensuel", 1, null, null).txc, "c1", "signaturesParAn")).rejects.toThrow(
       /^L'essai gratuit couvre 1 signature par an/,
     );
     await prendreQuota(faux("rojer_essentiel_mensuel", 1).txc, "c1", "signaturesParAn");

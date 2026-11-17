@@ -6,8 +6,8 @@ import "server-only";
 // d'accessibilité, signer (une signature de test permise), envoyer un lien
 // à un tiers (l'envoi à soi-même permis). Ils demandent un premier paiement
 // CONFIRMÉ (`debutPayantLe`, la première facture payée), pas un simple
-// `active`. Refusé : la page « S'abonner », où l'essai s'arrête et le
-// premier mois se prélève (`?immediat=1`, session « stripe »). Un ancien
+// `active`. Refusé : la page « S'abonner » (`?document=1` : elle dit
+// pourquoi), où s'abonner arrête l'essai et prélève le premier mois. Un ancien
 // abonné garde ses exports (ADR-053 § 3) : il a payé.
 
 import { redirect } from "next/navigation";
@@ -15,7 +15,7 @@ import type { Db } from "@/lib/auth/compte";
 import { contexteDroits, offreLancee } from "./lancement";
 import { signatureDEssaiDisponible } from "./quotas";
 
-export const PAGE_S_ABONNER = "/compte/abonnement?immediat=1";
+export const PAGE_S_ABONNER = "/compte/abonnement?document=1";
 
 /** Le compte a-t-il payé au moins une fois ? Avant le lancement de l'offre, oui. */
 export async function aDejaPaye(db: Db, compteId: string): Promise<boolean> {

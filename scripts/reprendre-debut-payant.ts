@@ -29,7 +29,7 @@ async function main() {
   // Un abonnement qui a pu payer : pas un essai, ni un abonnement jamais
   // démarré. Les autres n'ont rien à reprendre.
   const lignes = await prisma.abonnement.findMany({
-    where: { debutPayantLe: null, statut: { in: ["active", "past_due", "unpaid", "canceled", "paused"] } },
+    where: { debutPayantLe: null, stripeCustomerId: { not: null }, statut: { in: ["active", "past_due", "unpaid", "canceled", "paused"] } },
     select: { stripeCustomerId: true },
   });
   console.log(`lignes sans premier paiement : ${lignes.length}`);
@@ -41,6 +41,7 @@ async function main() {
   let ecrits = 0;
   let echecs = 0;
   for (const { stripeCustomerId } of lignes) {
+    if (!stripeCustomerId) continue; // pour le typage : la requête les écarte
     try {
       await synchroniserClientStripe(stripe, stripeCustomerId);
       ecrits++;
