@@ -1,83 +1,54 @@
-import { FilRetour } from "@/components/ui-kit/FilRetour";
-import { NomDuCompte } from "@/components/compte/NomDuCompte";
-import { BandeauAbonnement } from "@/components/abonnements/BandeauAbonnement";
-import { compteDeLaPage, getOptionalCompte, type Db } from "@/lib/auth/compte";
-import { MESSAGE_COMPTE_CHANGE } from "@/lib/auth/compte-attendu";
-import { ChampCompteAttendu } from "@/components/compte/ChampCompteAttendu";
-import { requireUser } from "@/lib/auth/require-user";
-import { PAGE_ABONNEMENT, abonnementDuCompte, contexteDroits, offreLancee } from "@/lib/abonnements/saisie";
-import { droitsDe, gesteAbonnement, libelleStatut, OUVRENT, phaseDuCompte, resiliationPrevue } from "@/lib/abonnements/droits";
-import { preselection, vueAbonnement } from "@/lib/abonnements/vue-abonnement";
-import { lireOffreChoisie } from "@/lib/abonnements/offre-choisie";
-import { formaterDateLongueFr } from "@/lib/dates";
-import { dateDeSuppressionPrevue } from "@/lib/abonnements/suppression";
-import { buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
-import { ouvrirPortailAction } from "@/lib/abonnements/actions";
-import { FormulaireAbonnement, type OffreAffichee } from "@/components/abonnements/FormulaireAbonnement";
-import { BoutonEnvoi } from "@/components/abonnements/BoutonEnvoi";
-import { ChangerDeFormule, type OptionDeFormule } from "@/components/abonnements/ChangerDeFormule";
-import { sensDuChangement } from "@/lib/abonnements/changement";
-import { depassementsDe, stocksDuCompte } from "@/lib/abonnements/quotas";
-import { prixTTC } from "@/lib/abonnements/affichage";
-import { baissePrevue } from "@/lib/stripe/parcours";
+import { Suspense } from "react";
+
+import { BandeauAbonnement } from "@/components/abonnements/BandeauAbonnement";
+import { CarteAbonnement, OffreFermee, TEXTE_AIDE } from "@/components/abonnements/CarteAbonnement";
+import { FrisePeriode } from "@/components/abonnements/FrisePeriode";
+import { JaugeDePlafond } from "@/components/abonnements/JaugeDePlafond";
+import { MenuAbonnement } from "@/components/abonnements/MenuAbonnement";
+import { RecapPaiement } from "@/components/abonnements/RecapPaiement";
+import { PageDuCompte } from "@/components/compte/PageDuCompte";
+import { buttonVariants } from "@/components/ui/button";
+import { PastilleAbonnement } from "@/components/abonnements/PastilleAbonnement";
+import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
+import { MESSAGE_COMPTE_CHANGE } from "@/lib/auth/compte-attendu";
+import type { Db } from "@/lib/auth/compte";
+import { getOptionalCompte } from "@/lib/auth/compte";
+import { PAGE_ESSAI } from "@/lib/abonnements/essai";
+import { essaiProche } from "@/lib/abonnements/droits";
+import { etatAffiche } from "@/lib/abonnements/etat-affiche";
+import { DUREE_ESSAI_JOURS } from "@/lib/abonnements/formules";
+import { etatDeLAbonnement, type EtatDeLAbonnement } from "@/lib/abonnements/page-abonnement";
+import { utilisationDuCompte } from "@/lib/abonnements/quotas";
+import { contexteDroits } from "@/lib/abonnements/saisie";
+import { PAGE_ABONNEMENT, PAGE_FORMULES, PAGE_PAIEMENT, PAGE_UTILISATION } from "@/lib/abonnements/sous-pages";
+import { dateDeSuppressionPrevue } from "@/lib/abonnements/suppression";
+import { GESTE_DU_PORTAIL, type VueAbonnement } from "@/lib/abonnements/vue-abonnement";
 import { clientStripeLecture } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
 import { idStripe } from "@/lib/stripe/ids";
 import { synchroniserClientStripe } from "@/lib/stripe/synchronisation";
-import { PAGE_ESSAI } from "@/lib/abonnements/essai";
-import {
-  CLES_FORMULES,
-  FORMULES,
-  LIBELLE_PERIODICITE,
-  PERIODICITES,
-  formuleDeLookupKey,
-  lookupKey,
-  pointsDeFormule,
-} from "@/lib/abonnements/formules";
-import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
-import { prixDesFormules } from "@/lib/stripe/parcours";
-import { DUREE_ESSAI_JOURS } from "@/lib/abonnements/formules";
-
-/** Une date déjà passée (suppression reportée d'une passe à l'autre) ne s'affiche pas : la suppression est imminente. */
-function dateDeSuppressionAffichee(le: Date, maintenant = new Date()): string {
-  return le.getTime() > maintenant.getTime() ? `le ${formaterDateLongueFr(le)}` : "très prochainement";
-}
 
 export const metadata = {
   title: "Abonnement — Rojer",
 };
 
 /**
- * L'abonnement du compte (ADR-053) : son état, et pourquoi une saisie a été
- * refusée (`verifierSaisie` y renvoie avec `?saisie=fermee`, le gel avec
- * `?saisie=gelee`). La lecture n'est jamais fermée ; les documents
- * officiels (validation, exports, publication) demandent un abonnement payé
- * (§ 15). Le propriétaire y gère
- * l'abonnement (ADR-053 §§ 9 — amendé le 2026-11-16 —, 10, 12) : l'essai
- * s'il est encore disponible ; « s'abonner » (formule, rythme, puis la page
- * de Stripe, paiement immédiat) pendant l'essai, après lui ou après une
- * résiliation ; le portail Stripe une fois abonné. Un autre membre voit
- * l'état, sans les boutons. `?document=1` : un document officiel attend
- * l'abonnement.
+ * La vue d'ensemble de l'abonnement du compte (ADR-053 ; découpée en quatre
+ * sous-pages le 2026-11-17, décision de la propriétaire) : l'état en une
+ * carte — formule, pastille, frise de la période —, puis deux résumés qui
+ * mènent à Utilisation et à Paiement et factures. Les gestes (s'abonner,
+ * changer de formule, le portail de Stripe) vivent sur leurs sous-pages.
+ *
+ * Cette adresse reste celle où l'on arrive : `verifierSaisie` y renvoie avec
+ * `?saisie=fermee`, le gel avec `?saisie=gelee`, `exigerUnPaiement` avec
+ * `?document=1`, les actions de l'abonnement avec `?formule=…` (les refus,
+ * eux, sur Formules) ou `?stripe=indisponible`, Checkout avec
+ * `?paiement=termine&session=…`.
+ *
+ * Stripe n'est lu qu'au retour d'un paiement (`relireApresPaiement`) : tout
+ * le reste vient de la copie locale de l'abonnement.
  */
-
-/** Ce que fait un changement de formule, dit avant le clic — le changement de rythme compris. */
-function effetDuChangement(sens: "montee" | "baisse", actuelle: string | null, visee: string, finPeriode: Date | null): string {
-  if (sens === "baisse") {
-    const fin = finPeriode ? `le ${formaterDateLongueFr(finPeriode)}` : "à la fin de la période payée";
-    return `À la fin de votre période payée, ${fin}, sans remboursement de la période en cours.`;
-  }
-  const de = formuleDeLookupKey(actuelle)?.periodicite;
-  const vers = formuleDeLookupKey(visee)?.periodicite;
-  if (de === "mensuel" && vers === "annuel") {
-    return "Tout de suite : l'année est prélevée maintenant, moins ce qui reste de votre mois en cours.";
-  }
-  if (de === "annuel" && vers === "mensuel") {
-    return "Tout de suite : votre période repart aujourd'hui ; ce qui reste de votre année est déduit du nouveau prix, et la différence éventuelle est prélevée maintenant.";
-  }
-  return "Tout de suite : la différence pour la période en cours est prélevée maintenant.";
-}
 
 /**
  * Au retour de Checkout (`?paiement=termine&session=cs_…`) : la copie de
@@ -88,9 +59,9 @@ function effetDuChangement(sens: "montee" | "baisse", actuelle: string | null, v
  * notification suivra.
  *
  * Rend vrai seulement pour une session payée de CE client, créée depuis
- * moins de 25 heures (une session dure 24 h au plus) : une adresse de retour revisitée (historique, favori) ou forgée ne
- * relit rien, ne masque pas le formulaire et n'annonce aucun paiement (revue
- * du 2026-11-17).
+ * moins de 25 heures (une session dure 24 h au plus) : une adresse de retour
+ * revisitée (historique, favori) ou forgée ne relit rien, ne masque pas le
+ * formulaire et n'annonce aucun paiement (revue du 2026-11-17).
  */
 async function relireApresPaiement(db: Db, compteId: string, session: string | undefined, maintenant: Date): Promise<boolean> {
   const config = configurationStripe();
@@ -108,84 +79,13 @@ async function relireApresPaiement(db: Db, compteId: string, session: string | u
 const RETOUR_DE_PAIEMENT_MS = 25 * 3_600_000;
 
 /**
- * Les formules vers lesquelles un abonnement qui paie peut aller, avec, pour
- * chacune, son sens (montée tout de suite, baisse en fin de période) et ce qui
- * dépasserait ; et la baisse déjà planifiée. Sans réponse de Stripe : rien.
+ * Ce que la page dit après un changement de formule (`changerFormuleAction`).
+ * Les refus reviennent sur Formules, à côté du choix (2026-11-17).
  */
-async function changementsPossibles(
-  db: Db,
-  compteId: string,
-  actuelle: string | null,
-  finPeriode: Date | null,
-): Promise<{ options: OptionDeFormule[]; baisse: { libelle: string; le: Date } | null }> {
-  const config = configurationStripe();
-  if (!config.active) return { options: [], baisse: null };
-  const stripe = clientStripeLecture(config);
-  const [prix, ligne] = await Promise.all([
-    prixDesFormules(stripe).catch(() => new Map()),
-    db.abonnement.findUnique({ where: { compteId }, select: { stripeSubscriptionId: true } }),
-  ]);
-  const libelleDe = (cle: string) => {
-    const f = formuleDeLookupKey(cle);
-    return f ? `${FORMULES[f.formule].libelle}, ${LIBELLE_PERIODICITE[f.periodicite].adjectif}` : cle;
-  };
-  const visees = CLES_FORMULES.flatMap((f) => PERIODICITES.map((p) => lookupKey(f, p)))
-    .map((cle) => ({ cle, sens: sensDuChangement(actuelle, cle) }))
-    .filter((o): o is { cle: string; sens: "montee" | "baisse" } => o.sens === "montee" || o.sens === "baisse");
-  // Les stocks du compte, comptés une fois pour toutes les baisses proposées.
-  const stocks = visees.some((o) => o.sens === "baisse") ? await stocksDuCompte(db, compteId) : null;
-  const options = visees.map(({ cle, sens }) => {
-    const f = formuleDeLookupKey(cle)!;
-    const montant = prix.get(cle)?.montantCentimes;
-    return {
-      cle,
-      sens,
-      effet: effetDuChangement(sens, actuelle, cle, finPeriode),
-      libelle: libelleDe(cle),
-      prix: montant ? prixTTC(montant, f.periodicite) : null,
-      depassements: sens === "baisse" && stocks ? depassementsDe(stocks, cle) : [],
-    };
-  });
-  let baisse: { libelle: string; le: Date } | null = null;
-  let baisseCle: string | null = null;
-  if (ligne?.stripeSubscriptionId) {
-    const prevue = await stripe.subscriptions
-      .retrieve(ligne.stripeSubscriptionId)
-      .then((s) => baissePrevue(stripe, s))
-      .catch(() => null);
-    if (prevue) {
-      baisse = { libelle: prevue.lookupKey ? libelleDe(prevue.lookupKey) : "une autre formule", le: prevue.le };
-      baisseCle = prevue.lookupKey;
-    }
-  }
-  // La formule déjà prévue ne se propose pas une seconde fois.
-  return { options: baisseCle ? options.filter((o) => o.cle !== baisseCle) : options, baisse };
-}
-
-/** Les formules et leurs prix lus chez Stripe ; sans réponse, les prix manquent et le bouton reste fermé. */
-async function offresAffichees(): Promise<OffreAffichee[]> {
-  const config = configurationStripe();
-  const prix = config.active ? await prixDesFormules(clientStripeLecture(config)).catch(() => new Map()) : new Map();
-  return CLES_FORMULES.map((f) => ({
-    formule: f,
-    libelle: FORMULES[f].libelle,
-    pourQui: FORMULES[f].pourQui,
-    points: pointsDeFormule(f),
-    prix: Object.fromEntries(
-      PERIODICITES.map((p) => [p, { cle: lookupKey(f, p), centimes: prix.get(lookupKey(f, p))?.montantCentimes ?? null }]),
-    ) as OffreAffichee["prix"],
-  }));
-}
-
-
-/** Ce que la page dit après un changement de formule (`changerFormuleAction`). */
 const MESSAGES_FORMULE = {
   changee: "C'est fait : votre nouvelle formule s'applique dès maintenant.",
   prevue: "C'est noté : votre nouvelle formule s'appliquera à la fin de la période payée.",
   gardee: "Vous gardez votre formule actuelle.",
-  impossible: "Le changement de formule n'est possible que pour un abonnement à jour de ses paiements.",
-  "resiliation-prevue": "Votre abonnement prend fin à la date prévue : reprenez-le d'abord depuis « Gérer mon abonnement » pour changer de formule.",
-  "trop-d-utilisateurs": "Cette formule permet moins d'utilisateurs que votre compte n'en a : retirez-en d'abord depuis Membres du compte.",
 } as const;
 
 export default async function AbonnementPage({
@@ -202,227 +102,215 @@ export default async function AbonnementPage({
     session?: string;
   }>;
 }) {
-  // Sans compte encore (rien créé), la page se lit quand même : aucun
-  // abonnement (ADR-054). `requireCompte` renverrait à l'onboarding.
-  const user = await requireUser();
-  const c = await getOptionalCompte();
   const { saisie, stripe, paiement: paiement0, abonnement, document, formule: formuleChange0, compte: compteChange, session } =
     await searchParams;
-  // Le compte que montre la page : ses gestes le postent (`ChampCompteAttendu`).
-  const { compteId, nomCompte } = await compteDeLaPage();
-  const formuleChange = formuleChange0 && formuleChange0 in MESSAGES_FORMULE ? (formuleChange0 as keyof typeof MESSAGES_FORMULE) : null;
-  const ctx = contexteDroits();
-  const ouvert = offreLancee(ctx);
-  // Le retour de Checkout ne compte que s'il est vérifié chez Stripe.
-  const paiement =
-    c && paiement0 === "termine" && (await relireApresPaiement(c.db, c.compte.compteId, session, ctx.maintenant)) ? "termine" : undefined;
-  // Une seule lecture : la ligne sert à l'état affiché et aux droits.
-  const ligne = c ? await abonnementDuCompte(c.db, c.compte.compteId) : null;
-  const droits = droitsDe(ligne, ctx);
-  // Sans compte encore, `role` est nul : l'essai reste proposé.
-  const geste = gesteAbonnement({ ouvert, role: c?.compte.role ?? null, ligne });
-  const formule = formuleDeLookupKey(ligne?.formule);
-  const finPrevue = ligne ? resiliationPrevue(ligne) : false;
-  const phase = phaseDuCompte(ligne, ctx.maintenant);
-  const essaiEnCours = phase.type === "essai";
-  const vue = vueAbonnement({
-    geste,
-    statut: ligne?.statut ?? null,
-    enEssai: essaiEnCours,
-    documentAttend: document === "1",
-    paiementTermine: paiement === "termine",
-  });
-  // Les offres (Stripe) et la formule choisie sur la page publique
-  // (`offre-choisie.ts`), ensemble ; la présélection, sinon, reprend celle
-  // d'un abonnement passé.
-  const [offres, offreChoisie] =
-    vue.cas === "formulaire" ? await Promise.all([offresAffichees(), lireOffreChoisie()]) : [[], null];
-  const courante = preselection(vue, { abonnement: formule, offreChoisie });
-  const messageInfo = messageDeLaPage({ paiement, phase, formuleChange, abonnement });
-  // Changer de formule : un abonnement qui paie, pour son propriétaire ; pas
-  // une formule qui s'arrête.
-  const { options: optionsChangement, baisse } =
-    geste === "portail" && ligne?.statut === "active" && !finPrevue && c
-      ? await changementsPossibles(c.db, c.compte.compteId, ligne.formule, ligne.finPeriode)
-      : { options: [], baisse: null };
+  // Le retour de Checkout ne compte que s'il est vérifié chez Stripe — et la
+  // relecture passe AVANT la lecture de la ligne (`etatDeLAbonnement`).
+  const c = await getOptionalCompte();
+  const paiementTermine =
+    !!c && paiement0 === "termine" && (await relireApresPaiement(c.db, c.compte.compteId, session, contexteDroits().maintenant));
+  const etat = await etatDeLAbonnement();
+  const vue = etat.vueAvec({ documentAttend: document === "1", paiementTermine });
+  // `Object.hasOwn` et non `in` : `?formule=toString` ne doit pas trouver le prototype.
+  const formuleChange =
+    formuleChange0 && Object.hasOwn(MESSAGES_FORMULE, formuleChange0) ? MESSAGES_FORMULE[formuleChange0 as keyof typeof MESSAGES_FORMULE] : null;
 
   return (
-    <main className="flex min-h-[calc(100vh-56px)] flex-col bg-[color:var(--board-canvas)] px-6 py-14 sm:px-10">
-      <div className="mx-auto w-full max-w-[560px]">
-        <FilRetour provenance={null} canonique={{ href: "/entreprises", label: "Mon dossier" }} />
-        <h1 className="board-titre m-0 mt-6 text-[clamp(29px,3vw,39px)]">Abonnement</h1>
-        <NomDuCompte nom={nomCompte} email={user.email} />
-        <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-          Sans abonnement, vos dossiers restent consultables douze mois, puis le compte est supprimé, après deux
-          e-mails d&apos;avertissement.
+    <PageDuCompte
+      titre="Abonnement"
+      description="Votre formule, où vous en êtes de la période, et ce qu'il reste à faire."
+      menu={<MenuAbonnement />}
+    >
+
+      {/* Un geste parti d'un onglet resté sur un autre compte (`clientDuCompte`) : refusé. */}
+      {compteChange === "change" && <MessageFormulaire ton="alerte">{MESSAGE_COMPTE_CHANGE}</MessageFormulaire>}
+
+      {saisie === "fermee" && !etat.droits.saisie && (
+        <p className="m-0 text-[14px] leading-[1.45] text-[color:var(--board-slate-ink)]">
+          Votre dernière modification n&apos;a pas été enregistrée.
         </p>
+      )}
 
-        {/* Un geste parti d'un onglet resté sur un autre compte (`clientDuCompte`) : refusé. */}
-        {compteChange === "change" && (
-          <div className="mt-6">
-            <MessageFormulaire ton="alerte">{MESSAGE_COMPTE_CHANGE}</MessageFormulaire>
-          </div>
+      {/* Un site ou un prestataire au-delà de la formule (gel, ADR-053 § 14). */}
+      {saisie === "gelee" && (
+        <MessageFormulaire ton="alerte">
+          Votre dernière modification n&apos;a pas été enregistrée. Ce site ou ce prestataire dépasse votre formule : il
+          reste consultable et exportable, mais ne se modifie plus. Supprimez-en un plus ancien ou passez à une formule
+          supérieure pour le modifier.
+        </MessageFormulaire>
+      )}
+
+      {/* Un geste réservé aux abonnés y renvoie (`exigerUnPaiement`) : on dit pourquoi on est là. */}
+      {vue.cas === "formulaire" && vue.annoncerDocument && (
+        <MessageFormulaire ton="info">
+          Valider un document, exporter le registre ou le dossier de contrôle, publier le registre d&apos;accessibilité ou
+          demander une signature à un tiers est réservé aux abonnés. En vous abonnant, votre abonnement démarre
+          aujourd&apos;hui et les limites de l&apos;essai sont levées.
+        </MessageFormulaire>
+      )}
+
+      {etat.droits.bandeau && <BandeauAbonnement bandeau={etat.droits.bandeau} avecLien={false} />}
+
+      <MessageFormulaire ton="alerte">
+        {stripe === "indisponible" ? "L'opération n'a pas abouti. Réessayez un peu plus tard ; rien ne vous a été facturé." : null}
+      </MessageFormulaire>
+      <MessageFormulaire ton="info">
+        {messageDeLaPage({ paiementTermine, phase: etat.phase, formuleChange, abonnement })}
+      </MessageFormulaire>
+
+      {vue.cas === "fermee" ? (
+        <OffreFermee />
+      ) : (
+        <>
+          <CarteEtat etat={etat} vue={vue} />
+          {c ? (
+            // Les compteurs ne retiennent pas la carte d'état : le résumé arrive après.
+            <Suspense fallback={null}>
+              <Resumes etat={etat} vue={vue} db={c.db} compteId={c.compte.compteId} />
+            </Suspense>
+          ) : null}
+        </>
+      )}
+
+      <p className={`${TEXTE_AIDE} text-[13px]`}>
+        Sans abonnement, vos dossiers restent consultables douze mois, puis le compte est supprimé, après deux e-mails
+        d&apos;avertissement.
+      </p>
+    </PageDuCompte>
+  );
+}
+
+/** L'état en une carte : la formule en grand, sa pastille, la frise, et le geste du cas (`etatAffiche`). */
+function CarteEtat({ etat, vue }: { etat: EtatDeLAbonnement; vue: VueAbonnement }) {
+  const { ligne, ctx } = etat;
+  const suppressionLe = ligne?.sansAbonnementDepuis
+    ? dateDeSuppressionPrevue(ligne.sansAbonnementDepuis, ligne.suppressionPrevueLe, ctx.maintenant)
+    : null;
+  const affiche = etatAffiche(ligne, ctx.maintenant, suppressionLe);
+  return (
+    <section className="carte-board px-7 py-7 sm:px-8" aria-labelledby="titre-etat">
+      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-5">
+        <div className="flex min-w-0 flex-col items-start gap-2.5">
+          <PastilleAbonnement pastille={affiche.pastille} />
+          <h2 id="titre-etat" className="board-titre m-0 text-[clamp(34px,4vw,46px)] leading-none tracking-[-0.04em]">
+            {affiche.titre}
+          </h2>
+          {affiche.detail ? <p className={TEXTE_AIDE}>{affiche.detail}</p> : null}
+        </div>
+        <GesteDuCas
+          vue={vue}
+          // Discret pendant l'essai, sauf dans sa dernière semaine ou quand un
+          // document officiel attend l'abonnement : c'est alors le geste.
+          discret={etat.phase.type === "essai" && !essaiProche(etat.phase.fin, ctx.maintenant) && !(vue.cas === "formulaire" && vue.annoncerDocument)}
+        />
+      </div>
+      {affiche.frise ? <FrisePeriode frise={affiche.frise} maintenant={ctx.maintenant} /> : null}
+      {affiche.suppressionImminente ? (
+        <p className={`${TEXTE_AIDE} mt-5`}>Vos données seront supprimées très prochainement, sauf abonnement d&apos;ici là.</p>
+      ) : null}
+    </section>
+  );
+}
+
+/**
+ * Le geste que la carte propose : un lien vers la sous-page qui le porte, ou
+ * l'essai. `discret` : pendant l'essai, rien n'y pousse à payer (2026-11-17)
+ * — les offres, en lien clair ; s'abonner plus tôt y reste possible.
+ */
+function GesteDuCas({ vue, discret }: { vue: VueAbonnement; discret: boolean }) {
+  const plein = buttonVariants({ variant: "board", size: "board" });
+  const clair = buttonVariants({ variant: "boardClair", size: "board" });
+  switch (vue.cas) {
+    case "essai":
+      return (
+        <Link href={PAGE_ESSAI} className={plein}>
+          Démarrer mon essai gratuit
+        </Link>
+      );
+    case "formulaire":
+      return (
+        <Link href={PAGE_FORMULES} className={discret ? clair : plein}>
+          {discret ? "Voir les offres" : "M'abonner"}
+        </Link>
+      );
+    case "portail":
+      return vue.situation === "a-jour" ? (
+        <div className="flex flex-wrap gap-2.5">
+          <Link href={PAGE_FORMULES} className={clair}>
+            Changer d&apos;offre
+          </Link>
+          <Link href={PAGE_PAIEMENT} className={clair}>
+            Paiement et factures
+          </Link>
+        </div>
+      ) : (
+        <Link href={PAGE_PAIEMENT} className={plein}>
+          {GESTE_DU_PORTAIL[vue.situation]}
+        </Link>
+      );
+    case "membre":
+      return <p className={TEXTE_AIDE}>Seul le propriétaire du compte gère l&apos;abonnement.</p>;
+    case "aucune":
+    case "fermee":
+      return null;
+  }
+}
+
+/** Les deux résumés sous l'état : ce qui est utilisé, et le paiement — sans rien lire chez Stripe. */
+async function Resumes({ etat, vue, db, compteId }: { etat: EtatDeLAbonnement; vue: VueAbonnement; db: Db; compteId: string }) {
+  const { lignes } = await utilisationDuCompte(db, compteId, {
+    ligne: etat.ligne,
+    seulementPlafonnes: true,
+    maintenant: etat.ctx.maintenant,
+  });
+  // Les trois plafonds les plus entamés : ce qui approche d'un refus. Un
+  // plafond d'une unité tenue (le site unique, la personne seule) n'annonce
+  // rien : il passe après les autres.
+  const ratio = (l: (typeof lignes)[number]) => (l.plafond! > 1 ? l.utilise / l.plafond! : -1);
+  const plusEntames = lignes
+    .filter((l) => l.plafond! > 0)
+    .sort((a, b) => ratio(b) - ratio(a))
+    .slice(0, 3);
+  return (
+    <div className="grid gap-5 md:grid-cols-2">
+      <CarteAbonnement titre="Utilisation" lien={{ href: PAGE_UTILISATION, libelle: "Tout voir" }}>
+        {plusEntames.length > 0 ? (
+          plusEntames.map((l) => <JaugeDePlafond key={l.cle} utilisation={l} />)
+        ) : (
+          <p className={TEXTE_AIDE}>Votre formule n&apos;a pas de plafond chiffré.</p>
         )}
-
-        {saisie === "fermee" && !droits.saisie && (
-          <p className="m-0 mt-6 text-[14px] leading-[1.45] text-[color:var(--board-slate-ink)]">
-            Votre dernière modification n&apos;a pas été enregistrée.
+      </CarteAbonnement>
+      <CarteAbonnement
+        titre="Paiement"
+        lien={vue.cas === "portail" ? { href: PAGE_PAIEMENT, libelle: "Carte et factures" } : undefined}
+      >
+        {vue.cas === "membre" ? (
+          <p className={TEXTE_AIDE}>Le paiement et les factures sont gérés par le propriétaire du compte.</p>
+        ) : vue.cas === "portail" && etat.ligne ? (
+          <RecapPaiement ligne={etat.ligne} formule={etat.formule} situation={vue.situation} />
+        ) : vue.cas === "aucune" ? (
+          // Retour d'un paiement dont la copie retarde : ne pas dire « aucune
+          // carte » à qui vient de payer (relecture du 2026-11-17).
+          <p className={TEXTE_AIDE}>Votre paiement est en cours d&apos;enregistrement : il s&apos;affichera ici dans un instant.</p>
+        ) : (
+          <p className={TEXTE_AIDE}>
+            Aucune carte enregistrée : rien ne vous est demandé tant que vous ne vous abonnez pas
+            {etat.phase.type === "essai" ? `, ni pendant les ${DUREE_ESSAI_JOURS} jours de l'essai` : ""}.
           </p>
         )}
-
-        {/* Un site ou un prestataire au-delà de la formule (gel, ADR-053 § 14). */}
-        {saisie === "gelee" && (
-          <div className="mt-6">
-            <MessageFormulaire ton="alerte">
-              Votre dernière modification n&apos;a pas été enregistrée. Ce site ou ce prestataire dépasse votre
-              formule : il reste consultable et exportable, mais ne se modifie plus. Supprimez-en un plus ancien ou
-              passez à une formule supérieure pour le modifier.
-            </MessageFormulaire>
-          </div>
-        )}
-
-        {/* Un geste réservé aux abonnés y renvoie (`exigerUnPaiement`) : on dit pourquoi on est là. */}
-        {vue.cas === "formulaire" && vue.annoncerDocument && (
-          <div className="mt-6">
-            <MessageFormulaire ton="info">
-              Valider un document, exporter le registre ou le dossier de contrôle, publier le registre
-              d&apos;accessibilité ou demander une signature à un tiers est réservé aux abonnés. En vous
-              abonnant, votre abonnement démarre aujourd&apos;hui et les limites de l&apos;essai sont levées.
-            </MessageFormulaire>
-          </div>
-        )}
-
-        {droits.bandeau && <BandeauAbonnement bandeau={droits.bandeau} avecLien={false} className="mt-6" />}
-
-        <section className="carte-board mt-7 px-7 py-6 sm:px-8" aria-labelledby="titre-etat">
-          <h2 id="titre-etat" className="board-titre m-0 text-[22px]">
-            État
-          </h2>
-          {ouvert ? (
-            <dl className="m-0 mt-4 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-[14px]">
-              <dt className="text-[color:var(--board-slate-mid)]">Abonnement</dt>
-              <dd className="m-0 font-semibold">{libelleStatut(ligne, ctx.maintenant)}</dd>
-              {ligne?.formule && (
-                <>
-                  <dt className="text-[color:var(--board-slate-mid)]">Formule</dt>
-                  <dd className="m-0">
-                    {formule
-                      ? `${FORMULES[formule.formule].libelle}, facturation ${LIBELLE_PERIODICITE[formule.periodicite].adjectif}`
-                      : ligne.formule}
-                  </dd>
-                </>
-              )}
-              {phase.type === "essai" && (
-                <>
-                  <dt className="text-[color:var(--board-slate-mid)]">Fin de l&apos;essai</dt>
-                  <dd className="m-0">{formaterDateLongueFr(phase.fin)}</dd>
-                </>
-              )}
-              {/* Seul un abonnement qui court a une période en cours : ni un
-                  abonnement terminé, ni un impayé, où Stripe
-                  n'avance plus la période. */}
-              {ligne?.finPeriode && OUVRENT.has(ligne.statut ?? "") && (
-                <>
-                  <dt className="text-[color:var(--board-slate-mid)]">Période en cours jusqu&apos;au</dt>
-                  <dd className="m-0">{formaterDateLongueFr(ligne.finPeriode)}</dd>
-                </>
-              )}
-              {/* Sans abonnement depuis douze mois, le compte est supprimé (ADR-058) :
-                  la date posée au premier avertissement, sinon la fin du délai. */}
-              {ligne?.sansAbonnementDepuis && !OUVRENT.has(ligne.statut ?? "") && !essaiEnCours && (
-                <>
-                  <dt className="text-[color:var(--board-slate-mid)]">Données supprimées</dt>
-                  <dd className="m-0">
-                    {dateDeSuppressionAffichee(dateDeSuppressionPrevue(ligne.sansAbonnementDepuis, ligne.suppressionPrevueLe, new Date()))}, sauf
-                    abonnement d&apos;ici là
-                  </dd>
-                </>
-              )}
-            </dl>
-          ) : (
-            <p className="m-0 mt-2 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-              Les abonnements ne sont pas encore ouverts : toutes les fonctions de Rojer restent accessibles.
-            </p>
-          )}
-        </section>
-
-        <div className="mt-6 flex flex-col gap-3">
-          <MessageFormulaire ton="alerte">
-            {stripe === "indisponible" ? "L'opération n'a pas abouti. Réessayez un peu plus tard ; rien ne vous a été facturé." : null}
-          </MessageFormulaire>
-          <MessageFormulaire ton="info">
-            {messageInfo}
-          </MessageFormulaire>
-        </div>
-
-        {vue.cas !== "aucune" && (
-          <section className="carte-board mt-5 px-7 py-6 sm:px-8" aria-labelledby="titre-gerer">
-            <h2 id="titre-gerer" className="board-titre m-0 text-[22px]">
-              {vue.titre}
-            </h2>
-            {vue.cas === "membre" && (
-              <p className="m-0 mt-2 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                Seul le propriétaire du compte gère l&apos;abonnement.
-              </p>
-            )}
-            {vue.cas === "essai" && (
-              <>
-                <p className="m-0 mt-2 mb-5 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                  {DUREE_ESSAI_JOURS} jours gratuits de la formule {FORMULES[CLES_FORMULES[0]].libelle}, sans carte bancaire.
-                </p>
-                <Link href={PAGE_ESSAI} className={buttonVariants({ variant: "board", size: "board" })}>
-                  Démarrer mon essai gratuit
-                </Link>
-              </>
-            )}
-            {vue.cas === "portail" && (
-              <>
-                {optionsChangement.length > 0 && <ChangerDeFormule options={optionsChangement} baisse={baisse} compteId={compteId} />}
-                {/* Un impayé : le portail de Stripe, où la carte se change (il
-                    l'enregistre et la met par défaut) et la facture se paie ou
-                    se confirme. La page de la facture, elle, n'enregistre pas
-                    une carte saisie sans la case « sauvegarder » : la carte
-                    refusée restait celle du mois suivant (répétition du
-                    2026-11-17). */}
-                {vue.aRegler ? (
-                  <FormulairePortail
-                    compteId={compteId}
-                    libelle="Changer de carte et payer"
-                    className={optionsChangement.length > 0 ? "mt-6" : "mt-2"}
-                  >
-                    Votre dernier paiement n&apos;est pas passé. Changez de carte, ou confirmez le paiement si votre
-                    banque le demande : il est relancé aussitôt, sur la page sécurisée de Stripe.
-                    {!droits.saisie ? " La saisie se rouvre dès qu'il est passé." : null}
-                  </FormulairePortail>
-                ) : (
-                  <FormulairePortail compteId={compteId} className={optionsChangement.length > 0 ? "mt-6" : "mt-2"}>
-                    Carte, factures, résiliation : sur la page sécurisée de Stripe, notre prestataire de paiement.
-                    {baisse ? " Un changement de formule est prévu : pour résilier, choisissez d'abord « Garder ma formule »." : null}
-                  </FormulairePortail>
-                )}
-              </>
-            )}
-            {/* Juste après un paiement, la vue ne propose pas de payer
-                (`paiementTermine`, vue-abonnement.ts) ; le serveur refuse de
-                toute façon un second paiement. */}
-            {vue.cas === "formulaire" && (
-              <FormulaireAbonnement offres={offres} compteId={compteId} quand={vue.quand} courante={courante} />
-            )}
-          </section>
-        )}
-      </div>
-    </main>
+      </CarteAbonnement>
+    </div>
   );
 }
 
 /** La phrase d'information de la page, une seule à la fois, par ordre de priorité. */
 function messageDeLaPage(p: {
-  paiement?: string;
-  phase: ReturnType<typeof phaseDuCompte>;
-  formuleChange: keyof typeof MESSAGES_FORMULE | null;
+  paiementTermine: boolean;
+  phase: EtatDeLAbonnement["phase"];
+  formuleChange: string | null;
   abonnement?: string;
 }): React.ReactNode {
-  if (p.paiement === "termine") {
+  if (p.paiementTermine) {
     if (p.phase.type !== "abonne") {
       // Recharger la même adresse garderait le paramètre : le lien l'ôte.
       return (
@@ -438,28 +326,7 @@ function messageDeLaPage(p: {
     // Une adresse de retour revisitée plus tard ne dit « reçu » qu'à un abonnement actif.
     return p.phase.statut === "active" ? "Paiement reçu : votre abonnement est actif." : null;
   }
-  if (p.formuleChange) return MESSAGES_FORMULE[p.formuleChange];
+  if (p.formuleChange) return p.formuleChange;
   if (p.abonnement === "en-cours") return "Un abonnement est déjà en cours pour ce compte : gérez-le ici plutôt que d'en souscrire un second.";
   return null;
-}
-
-/** Le portail Stripe (carte, factures, résiliation), avec la phrase qui dit ce qu'on y fait. */
-function FormulairePortail({
-  compteId,
-  libelle = "Gérer mon abonnement",
-  className,
-  children,
-}: {
-  compteId: string | null;
-  libelle?: string;
-  className?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <form action={ouvrirPortailAction} className={className}>
-      <ChampCompteAttendu compteId={compteId} />
-      <p className="m-0 mb-5 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">{children}</p>
-      <BoutonEnvoi variant="board">{libelle}</BoutonEnvoi>
-    </form>
-  );
 }

@@ -11,7 +11,8 @@ const m = vi.hoisted(() => ({
   redirect: vi.fn((url: string) => {
     throw Object.assign(new Error("NEXT_REDIRECT"), { url });
   }),
-  ligne: { stripeCustomerId: "cus_1" as string | null, statut: "canceled" as string | null },
+  ligne: { stripeCustomerId: "cus_1" as string | null, statut: "canceled" as string | null, stripeSubscriptionId: "sub_du_compte" as string | null },
+  ouvrirPortail: vi.fn(async () => "https://portail.stripe.test/session"),
   abonnementsDuClient: vi.fn(),
   ouvrirCheckout: vi.fn(),
   prixDesFormules: vi.fn(),
@@ -27,7 +28,7 @@ const m = vi.hoisted(() => ({
 }));
 vi.mock("next/navigation", () => ({ redirect: m.redirect }));
 vi.mock("@/lib/email", () => ({ publicAppUrl: () => "https://rojer.test" }));
-vi.mock("@/lib/stripe/client", () => ({ clientStripe: () => ({}) }));
+vi.mock("@/lib/stripe/client", () => ({ clientStripe: () => ({ customers: { retrieve: async () => ({ deleted: true }) } }) }));
 vi.mock("@/lib/stripe/config", () => ({ configurationStripe: () => ({ active: true }) }));
 vi.mock("@/lib/stripe/parcours", () => ({
   abonnementsDuClient: m.abonnementsDuClient,
@@ -35,7 +36,7 @@ vi.mock("@/lib/stripe/parcours", () => ({
   planifierBaisse: m.planifierBaisse,
   annulerBaisse: m.annulerBaisse,
   ouvrirCheckout: m.ouvrirCheckout,
-  ouvrirPortail: vi.fn(),
+  ouvrirPortail: m.ouvrirPortail,
   prixDesFormules: m.prixDesFormules,
   tauxDeTva: m.tauxDeTva,
 }));
@@ -179,21 +180,21 @@ describe("changerFormuleAction", () => {
     expect(m.planifierBaisse).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ id: "sub_actif" }), { priceId: "price_em", intervalle: "month" });
     m.planifierBaisse.mockClear();
     m.depassements.mockResolvedValue([{ quota: "membres", utilise: 3, plafond: 1 }]);
-    expect(await redirigeVers(changerFormuleAction(formulaire("rojer_essentiel_mensuel")))).toBe("/compte/abonnement?formule=trop-d-utilisateurs");
+    expect(await redirigeVers(changerFormuleAction(formulaire("rojer_essentiel_mensuel")))).toBe("/compte/abonnement/formules?formule=trop-d-utilisateurs");
     expect(m.planifierBaisse).not.toHaveBeenCalled();
     expect(m.monterDeFormule).not.toHaveBeenCalled();
   });
 
   it("une résiliation déjà prévue : pas de changement de formule", async () => {
     m.abonnementsDuClient.mockResolvedValue([{ ...actif("rojer_essentiel_mensuel"), cancel_at_period_end: true }]);
-    expect(await redirigeVers(changerFormuleAction(formulaire("rojer_pro_annuel")))).toBe("/compte/abonnement?formule=resiliation-prevue");
+    expect(await redirigeVers(changerFormuleAction(formulaire("rojer_pro_annuel")))).toBe("/compte/abonnement/formules?formule=resiliation-prevue");
     expect(m.monterDeFormule).not.toHaveBeenCalled();
   });
 
   it("course avec une invitation : revérifié après le planning, la baisse est rendue si elle ne tient plus", async () => {
     m.abonnementsDuClient.mockResolvedValue([actif("rojer_pro_annuel")]);
     m.depassements.mockResolvedValueOnce([]).mockResolvedValueOnce([{ quota: "membres", utilise: 2, plafond: 1 }]);
-    expect(await redirigeVers(changerFormuleAction(formulaire("rojer_essentiel_mensuel")))).toBe("/compte/abonnement?formule=trop-d-utilisateurs");
+    expect(await redirigeVers(changerFormuleAction(formulaire("rojer_essentiel_mensuel")))).toBe("/compte/abonnement/formules?formule=trop-d-utilisateurs");
     expect(m.planifierBaisse).toHaveBeenCalled();
     expect(m.annulerBaisse).toHaveBeenCalled();
   });
@@ -208,7 +209,7 @@ describe("changerFormuleAction", () => {
   it("hors d'un abonnement à jour (impayé) : rien ; formule hors catalogue : rien", async () => {
     for (const status of ["incomplete", "past_due"]) {
       m.abonnementsDuClient.mockResolvedValue([{ ...actif("rojer_essentiel_mensuel"), status }]);
-      expect(await redirigeVers(changerFormuleAction(formulaire("rojer_pro_annuel"))), status).toBe("/compte/abonnement?formule=impossible");
+      expect(await redirigeVers(changerFormuleAction(formulaire("rojer_pro_annuel"))), status).toBe("/compte/abonnement/formules?formule=impossible");
     }
     expect(await redirigeVers(changerFormuleAction(formulaire("rojer_surmesure_mensuel")))).toBe("/compte/abonnement");
     expect(m.monterDeFormule).not.toHaveBeenCalled();
@@ -258,5 +259,30 @@ describe("sans client Stripe (essai) : les gestes sur un abonnement n'ont rien �
     m.ligne.statut = null;
     expect(await redirigeVers(action(formulaire()))).toBe("/compte/abonnement");
     expect(m.abonnementsDuClient).not.toHaveBeenCalled();
+  });
+});
+
+describe("ouvrirPortailAction : résilier (2026-11-17)", () => {
+  const formulairePortail = (geste?: string) => {
+    const f = new FormData();
+    f.set(CHAMP_COMPTE_ATTENDU, "c1");
+    if (geste) f.set("geste", geste);
+    // Un identifiant posté à la main ne compte pas : seul celui de la copie du compte vérifié sert.
+    f.set("subscription", "sub_d_un_autre");
+    return f;
+  };
+
+  it("« Résilier » ouvre le portail sur la résiliation de l'abonnement du compte vérifié", async () => {
+    expect(await redirigeVers(ouvrirPortailAction(formulairePortail("resilier")))).toBe("https://portail.stripe.test/session");
+    expect(m.ouvrirPortail).toHaveBeenCalledWith(expect.anything(), {
+      customerId: "cus_1",
+      retour: "https://rojer.test/compte/abonnement",
+      resilier: "sub_du_compte",
+    });
+  });
+
+  it("sans le geste : le portail ordinaire", async () => {
+    await redirigeVers(ouvrirPortailAction(formulairePortail()));
+    expect(m.ouvrirPortail).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ resilier: null }));
   });
 });

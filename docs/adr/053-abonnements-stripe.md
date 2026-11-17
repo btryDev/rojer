@@ -231,6 +231,22 @@ et sans croire une information qui ne vient pas de Stripe.
      **Stripe Checkout** (mode abonnement, carte seule, conditions et
      adresse) ; premier paiement immédiat ; le retour n'est cru que pour une
      session payée du client. Le client Stripe naît à ce moment.
+     [2026-11-17 (soir), décisions de la propriétaire : pendant l'essai,
+     rien à faire — la formule de l'essai est montrée « gratuite jusqu'au
+     … », et s'y abonner plus tôt reste un geste discret, payé tout de
+     suite, qui arrête l'essai ; il n'y a pas d'essai d'une autre formule
+     (Pro choisi pendant l'essai : payé tout de suite).
+     **Essayé et abandonné le même jour : la carte enregistrée pendant
+     l'essai, prélevée à sa fin** (Checkout `trial_end`, abonnement Stripe
+     `trialing`). Il fallait un état de plus partout (droits, limites,
+     documents officiels, rappels, un essai par entreprise), le délai de
+     48 heures de Stripe, le rappel exigé par Visa, la facture à 0 € qui
+     faisait perdre la carte, le premier prélèvement refusé, le passage à
+     Pro pendant l'essai, la résiliation qui rend l'essai sans carte, la
+     page restée ouverte : chaque correction juste, mais une rustine de plus
+     (règle 13), pour un gain — payer en avance sans payer — qui ne valait
+     pas ce montage. La branche `lot/essai-carte-fin-essai` n'est pas
+     fusionnée.]
    - **Gérer** : le **portail Stripe** — carte, factures, résiliation, et
      tout paiement à régler (impayé, confirmation de la banque) : il
      enregistre la carte, la met par défaut et paie la facture.

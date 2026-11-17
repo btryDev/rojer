@@ -96,8 +96,11 @@
   /* La place de la gélule de compte (`BarreCompte`, 48 px à 12 px du haut,
      plus son air) : réservée en tête de la colonne de contenu par les deux
      shells, rendue par ce qui a le droit de passer dessous — un fond ou une
-     image (`.sous-la-gelule`). Par défaut, rien ne s'y glisse. */
-  --reserve-gelule: 72px;
+     image (`.sous-la-gelule`). Par défaut, rien ne s'y glisse.
+     [2026-11-17 : nulle ici, posée à 72 px par les shells qui montrent la
+     gélule (`CadreDuDossier`, shell DUERP) — ailleurs (le compte sans
+     établissement), l'en-tête remontait sous une bande absente.] */
+  --reserve-gelule: 0px;
   /* La place de la barre de navigation du bas (`NavigationMobile`), sur
      téléphone seulement : 68 px, plus la barre d'accueil de l'iPhone. Nulle
      dès 768 px, où le rail reprend la navigation. */

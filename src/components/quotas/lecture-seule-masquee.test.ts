@@ -90,7 +90,12 @@ describe("lecture seule : ce qui mène à une écriture est masqué", () => {
       (f) => f.startsWith("src/app/") && /<(BarreCompte|SaisieDuSite)\b/.test(readFileSync(join(RACINE, f), "utf8")),
     );
     expect(avecGelule.length).toBeGreaterThan(0);
-    for (const f of avecGelule) expect(readFileSync(join(RACINE, f), "utf8"), f).toMatch(/<MarqueLectureSeule \/>/);
+    // La marque elle-même, ou le cadre du dossier qui la rend avec la gélule
+    // (`CadreDuDossier`, 2026-11-17 : partagé par le dossier et les pages du compte).
+    for (const f of avecGelule) expect(readFileSync(join(RACINE, f), "utf8"), f).toMatch(/<MarqueLectureSeule \/>|<CadreDuDossier\b/);
+    const cadre = readFileSync(join(SRC, "components/layout/CadreDuDossier.tsx"), "utf8");
+    expect(cadre).toMatch(/<BarreCompte\b/);
+    expect(cadre).toMatch(/<MarqueLectureSeule \/>/);
   });
 
   it("la feuille de style masque data-ecriture sous la marque", () => {

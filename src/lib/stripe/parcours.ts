@@ -45,8 +45,28 @@ export async function creerClientStripe(
  * Le portail (§ 10) : changer de carte, résilier, télécharger les factures
  * (le changement de formule se fait dans Rojer, qui contrôle les plafonds).
  */
-export async function ouvrirPortail(stripe: Stripe, { customerId, retour }: { customerId: string; retour: string }) {
-  return (await stripe.billingPortal.sessions.create({ customer: customerId, return_url: retour })).url;
+export async function ouvrirPortail(
+  stripe: Stripe,
+  { customerId, retour, resilier }: { customerId: string; retour: string; resilier?: string | null },
+) {
+  return (
+    await stripe.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: retour,
+      // « Résilier l'abonnement » (page Abonnement, 2026-11-17) : le portail
+      // s'ouvre directement sur l'écran de résiliation de cet abonnement, puis
+      // revient dans Rojer.
+      ...(resilier
+        ? {
+            flow_data: {
+              type: "subscription_cancel" as const,
+              subscription_cancel: { subscription: resilier },
+              after_completion: { type: "redirect" as const, redirect: { return_url: retour } },
+            },
+          }
+        : {}),
+    })
+  ).url;
 }
 
 /**

@@ -29,6 +29,7 @@ import { INTERVALLE_STRIPE, estLookupKey, formuleDeLookupKey, formuleDuPrix } fr
 import { sensDuChangement } from "./changement";
 import { depassements } from "./quotas";
 import { PAGE_ABONNEMENT, verifierProprietaire, verifierRole, type Proprietaire } from "./saisie";
+import { PAGE_FORMULES } from "./sous-pages";
 import { ouvrirAuGel } from "./gel-saisie";
 
 /**
@@ -57,7 +58,7 @@ async function clientDuCompte({ compte, db }: Proprietaire, formData: FormData |
   if (!config.active) redirect(PAGE_ABONNEMENT);
   const ligne = await db.abonnement.findUnique({
     where: { compteId: compte.compteId },
-    select: { stripeCustomerId: true },
+    select: { stripeCustomerId: true, stripeSubscriptionId: true },
   });
   if (!ligne) redirect(PAGE_ESSAI);
   return { stripe: clientStripe(config), db, ligne, compteId: compte.compteId, conditionsSurCheckout: config.conditionsSurCheckout };
@@ -76,10 +77,15 @@ async function avecClient(proprietaire: Proprietaire, formData: FormData) {
  * changement de formule se fait dans Rojer, `sAbonnerAction` et
  * `changerFormuleAction`). Le nom de l'entreprise passe
  * sur le client Stripe juste avant : la facture le porte.
+ *
+ * `geste=resilier` (2026-11-17) : le portail s'ouvre sur l'écran de
+ * résiliation de l'abonnement du compte — son identifiant vient de la copie
+ * locale du compte vérifié, jamais du formulaire.
  */
 export async function ouvrirPortailAction(formData: FormData): Promise<void> {
   const proprietaire = await verifierProprietaire();
-  const { stripe, db, customerId } = await avecClient(proprietaire, formData);
+  const { stripe, db, customerId, ligne } = await avecClient(proprietaire, formData);
+  const resilier = formData.get("geste") === "resilier" ? ligne.stripeSubscriptionId : null;
   let url: string;
   try {
     // Seulement si le nom est encore le provisoire (l'adresse) : un nom saisi
@@ -89,7 +95,7 @@ export async function ouvrirPortailAction(formData: FormData): Promise<void> {
       const entreprise = await db.entreprise.findFirst({ orderBy: { createdAt: "asc" }, select: { raisonSociale: true } });
       if (entreprise) await stripe.customers.update(customerId, { name: entreprise.raisonSociale });
     }
-    url = await ouvrirPortail(stripe, { customerId, retour: `${publicAppUrl()}${PAGE_ABONNEMENT}` });
+    url = await ouvrirPortail(stripe, { customerId, retour: `${publicAppUrl()}${PAGE_ABONNEMENT}`, resilier });
   } catch {
     redirect(`${PAGE_ABONNEMENT}?stripe=indisponible`);
   }
@@ -149,7 +155,8 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
               // Stripe remplace `{CHECKOUT_SESSION_ID}` : la page ne croit ce
               // retour que pour une session payée de ce client.
               succes: `${base}?paiement=termine&session={CHECKOUT_SESSION_ID}`,
-              annulation: base,
+              // Annuler ramène au choix de la formule (2026-11-17).
+              annulation: `${publicAppUrl()}${PAGE_FORMULES}`,
               conditions: conditionsSurCheckout,
             });
     }
@@ -188,10 +195,10 @@ export async function changerFormuleAction(formData: FormData): Promise<void> {
     const { courant } = abonnementCourant(await abonnementsDuClient(stripe, customerId));
     const item = courant?.items.data[0];
     if (!courant || courant.status !== "active" || !item) {
-      cible = `${PAGE_ABONNEMENT}?formule=impossible`;
+      cible = `${PAGE_FORMULES}?formule=impossible`;
     } else if (resiliationDemandee(courant)) {
       // Une résiliation est prévue : on ne change pas une formule qui s'arrête.
-      cible = `${PAGE_ABONNEMENT}?formule=resiliation-prevue`;
+      cible = `${PAGE_FORMULES}?formule=resiliation-prevue`;
     } else {
       const sens = sensDuChangement(formuleDuPrix(item.price), formule);
       const prix = (await prixDesFormules(stripe)).get(formule);
@@ -203,14 +210,14 @@ export async function changerFormuleAction(formData: FormData): Promise<void> {
       } else if (sens === "baisse") {
         const trop = await depassements(db, compteId, formule);
         if (trop.some((d) => d.quota === "membres")) {
-          cible = `${PAGE_ABONNEMENT}?formule=trop-d-utilisateurs`;
+          cible = `${PAGE_FORMULES}?formule=trop-d-utilisateurs`;
         } else {
           await planifierBaisse(stripe, courant, { priceId: prix.priceId, intervalle: INTERVALLE_STRIPE[visee.periodicite] });
           // Une invitation partie entre la vérification et le planning : on
           // revérifie, et la baisse est rendue si elle ne tient plus.
           if ((await depassements(db, compteId, formule)).some((d) => d.quota === "membres")) {
             await annulerBaisse(stripe, (await abonnementsDuClient(stripe, customerId)).find((a) => a.id === courant.id) ?? courant);
-            cible = `${PAGE_ABONNEMENT}?formule=trop-d-utilisateurs`;
+            cible = `${PAGE_FORMULES}?formule=trop-d-utilisateurs`;
           } else cible = `${PAGE_ABONNEMENT}?formule=prevue`;
         }
       }

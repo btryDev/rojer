@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import {
   LABEL_ITEM,
   categorieDeItem,
+  type RailCategorieId,
   type SidebarItemId,
 } from "@/components/layout/sidebar-nav";
 
@@ -10,11 +11,25 @@ import { TITRE_EN_TETE } from "./titres";
 import { TEINTE_SECTION } from "./teintes";
 
 /** Ce que porte l'en-tête, page ou repli. */
-export type CadreEnTeteProps = {
-  item: Exclude<SidebarItemId, "tableau">;
-  /** Le titre d'une SOUS-PAGE d'une entrée (l'import du DUERP). Les pages
-   *  d'entrée n'en passent pas : leur titre est le rail, ou `TITRE_EN_TETE`. */
-  titre?: string;
+export type CadreEnTeteProps = (
+  | {
+      item: Exclude<SidebarItemId, "tableau">;
+      /** Le titre d'une SOUS-PAGE d'une entrée (l'import du DUERP). Les pages
+       *  d'entrée n'en passent pas : leur titre est le rail, ou `TITRE_EN_TETE`. */
+      titre?: string;
+      section?: never;
+    }
+  | {
+      /**
+       * Une page hors du rail — celles du compte, ouvertes par la gélule
+       * (2026-11-17) : sans entrée de rail, elle n'a ni dessin ni titre
+       * déduit ; elle nomme son titre et la section dont elle prend la teinte.
+       */
+      item?: never;
+      titre: string;
+      section: RailCategorieId;
+    }
+) & {
   /** Ce qu'on voit, puis ce qu'on peut y faire. Contenu en ligne seulement :
    *  il est rendu dans un paragraphe. */
   description: ReactNode;
@@ -42,6 +57,7 @@ export type CadreEnTeteProps = {
 export function CadreEnTete({
   item,
   titre,
+  section,
   description,
   children,
   pied,
@@ -53,7 +69,7 @@ export function CadreEnTete({
   /** Ce que le panneau montre ; le repli de chargement n'y met rien. */
   dessin?: ReactNode;
 }) {
-  const fond = TEINTE_SECTION[categorieDeItem(item) ?? "tableau"];
+  const fond = TEINTE_SECTION[section ?? (item ? categorieDeItem(item) : null) ?? "tableau"];
 
   return (
     // `flex-none` n'est pas décoratif : la colonne de contenu du shell est un
@@ -73,7 +89,7 @@ export function CadreEnTete({
           en place » tenait sur trois lignes. */}
       <div className="flex min-w-0 flex-col justify-center pb-8 pl-[var(--board-gutter)] pr-[var(--board-gutter)] pt-20 md:py-10 md:pr-12">
         <h1 className="board-titre m-0 text-[clamp(30px,4vw,50px)] leading-[1.06] tracking-[-0.035em]">
-          {titre ?? TITRE_EN_TETE[item] ?? LABEL_ITEM[item]}
+          {titre ?? (item ? (TITRE_EN_TETE[item] ?? LABEL_ITEM[item]) : null)}
         </h1>
         <p className="m-0 mt-3.5 max-w-[46ch] text-[clamp(16px,1.4vw,18px)] leading-[1.55] text-[color:var(--board-slate-ink)]">
           {description}

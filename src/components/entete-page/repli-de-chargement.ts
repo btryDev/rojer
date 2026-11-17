@@ -1,9 +1,10 @@
 import { segmentsSousEtablissement } from "@/lib/navigation/provenance";
 
+import type { SidebarItemId } from "@/components/layout/sidebar-nav";
 import type { CadreEnTeteProps } from "./CadreEnTete";
 
 /** L'en-tête qu'annonce le repli de chargement d'une page. */
-export type RepliSection = Pick<CadreEnTeteProps, "item" | "titre"> & {
+export type RepliSection = Pick<Extract<CadreEnTeteProps, { item: SidebarItemId }>, "item" | "titre"> & {
   /** La page porte une bascule de vue sous son titre : le repli lui garde
    *  sa place, sans quoi l'en-tête grandirait à l'arrivée de la page. */
   bascule?: true;

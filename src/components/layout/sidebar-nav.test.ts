@@ -108,8 +108,15 @@ describe("deduireActif", () => {
     expect(deduireActif(`/etablissements/${ID}/inconnu`, ID)).toBe("tableau");
   });
 
-  it("ne confond pas deux établissements", () => {
-    expect(deduireActif(`/etablissements/autre/actions`, ID)).toBe("tableau");
+  it("ne confond pas deux établissements : rien ne s'allume hors du sien", () => {
+    expect(deduireActif(`/etablissements/autre/actions`, ID)).toBeNull();
+    // Un préfixe commun n'est pas le même établissement.
+    expect(deduireActif(`/etablissements/${ID}x/actions`, ID)).toBeNull();
+  });
+
+  it("n'allume rien sur les pages du compte, pas même la marque (2026-11-17)", () => {
+    expect(deduireActif("/compte/abonnement", ID)).toBeNull();
+    expect(deduireActif("/compte/securite", ID)).toBeNull();
   });
 
   it("reconnaît la page « Connecter »", () => {

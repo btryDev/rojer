@@ -4,7 +4,7 @@ import { FormulaireEssai } from "@/components/abonnements/FormulaireEssai";
 import { aiguillageSansCompte, compteDeLaPage } from "@/lib/auth/compte";
 import { requireUser } from "@/lib/auth/require-user";
 import { aiguillageEssai, PRIX_D_ESSAI } from "@/lib/abonnements/essai";
-import { CLES_FORMULES, FORMULES } from "@/lib/abonnements/formules";
+import { FORMULE_D_ESSAI, FORMULES } from "@/lib/abonnements/formules";
 import { prixTTC } from "@/lib/abonnements/affichage";
 import { ConnecteAvec } from "@/components/compte/ConnecteAvec";
 import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
@@ -45,10 +45,10 @@ export default async function EssaiPage() {
     // Stripe ne répond pas : l'écran le dit, le bouton reste fermé.
   }
 
-  const essentiel = FORMULES[CLES_FORMULES[0]];
+  const essentiel = FORMULES[FORMULE_D_ESSAI];
   // L'offre choisie sur la page publique : l'essai reste sur Essentiel, on le dit.
   const offre = await lireOffreChoisie();
-  const autreFormule = offre && offre.formule !== CLES_FORMULES[0] ? FORMULES[offre.formule].libelle : null;
+  const autreFormule = offre && offre.formule !== FORMULE_D_ESSAI ? FORMULES[offre.formule].libelle : null;
   const mensuel = prix.get(PRIX_D_ESSAI)?.montantCentimes;
   // Le jour civil, pas 30 × 24 h : un changement d'heure ne décale pas la date.
   const fin = ajouterJours(instantDuRendu(), DUREE_ESSAI_JOURS);
@@ -95,7 +95,7 @@ export default async function EssaiPage() {
           {autreFormule && (
             <MessageFormulaire ton="info">
               Vous avez choisi {autreFormule}. L&apos;essai se fait sur {essentiel.libelle} ; pour passer à{" "}
-              {autreFormule}, abonnez-vous depuis la page Abonnement, où elle sera présélectionnée.
+              {autreFormule}, abonnez-vous depuis la page Abonnement.
             </MessageFormulaire>
           )}
 

@@ -5,13 +5,13 @@
 
 import { Check } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import type { CompteLanding } from "./compte";
 import { BoutonContact } from "./BoutonContact";
 import { SEGMENT, SEGMENTS } from "./segment";
 import { enEuros, OFFRES, parMoisSurUnAn, PERIODICITE_DE, type Offre, type Periode } from "./tarif-donnees";
-import { lookupKey } from "@/lib/abonnements/formules";
+import { formuleDeLookupKey, lookupKey, type CleFormule } from "@/lib/abonnements/formules";
 
 /** Les deux teintes d'une carte : claire, ou d'encre pour l'offre mise en avant. */
 const TEINTE = {
@@ -56,13 +56,33 @@ function Prix({ offre, periode, t }: { offre: Offre; periode: Periode; t: (typeo
   );
 }
 
+/**
+ * Les cartes dans l'application, page Formules de l'abonnement (2026-11-17,
+ * décision de la propriétaire : « comme sur la landing ») : mêmes cartes,
+ * mais le geste de chaque carte est rendu par la page (s'abonner, changer de
+ * formule) et les prix sont ceux de Stripe, qui les facture.
+ */
+export type CartesDansLApp = {
+  /** Le geste de chaque formule et rythme (clé : `lookupKey`) ; absent, la carte n'en propose pas. */
+  gestes: Partial<Record<string, ReactNode>>;
+  /** Les prix lus chez Stripe, en centimes (clé : `lookupKey`) ; ils priment sur ceux de la page publique. */
+  prix: Partial<Record<string, number | null>>;
+  /** La formule et le rythme du compte (`lookupKey`) : leur carte porte « Votre formule ». */
+  actuelle: string | null;
+  /** La formule de l'essai en cours : sa carte porte « Votre formule », quel que soit le rythme. */
+  enEssai?: CleFormule | null;
+  periodeInitiale: Periode;
+};
+
 export function TarifOffres({
   compte,
+  app,
 }: {
   /** Connecté, le bouton mène au dossier et le dit (« Reprendre mon dossier »), pas l'offre. */
   compte?: CompteLanding;
+  app?: CartesDansLApp;
 }) {
-  const [periode, setPeriode] = useState<Periode>("mois");
+  const [periode, setPeriode] = useState<Periode>(app?.periodeInitiale ?? "mois");
 
   return (
     <>
@@ -85,32 +105,50 @@ export function TarifOffres({
         ))}
       </div>
 
-      <div className="mt-14 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+      <div className={cn("grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3", app ? "mt-8" : "mt-14")}>
         {OFFRES.map((o) => {
           const t = TEINTE[o.misEnAvant ? "encre" : "claire"];
+          const cle = o.formule ? lookupKey(o.formule, PERIODICITE_DE[periode]) : null;
+          // Dans l'app : « Votre formule » à la place des étiquettes de la page
+          // publique — l'essai compris : le dirigeant se voit sur sa formule
+          // (retour de test du 2026-11-17) ; sa carte dit jusqu'à quand elle
+          // est gratuite.
+          const badge = app
+            ? (app.enEssai && o.formule === app.enEssai) || (cle && cle === app.actuelle)
+              ? "Votre formule"
+              : undefined
+            : o.badge;
+          const centimes = app && cle ? app.prix[cle] : undefined;
+          const offre = typeof centimes === "number" && o.prix ? { ...o, prix: { ...o.prix, [periode]: centimes / 100 } } : o;
+          // Dans l'app, la carte de l'offre du compte (ou de l'essai) est mise
+          // en avant, quel que soit le rythme affiché (2026-11-17).
+          const sienne =
+            !!app && !!o.formule && (o.formule === app.enEssai || o.formule === formuleDeLookupKey(app.actuelle)?.formule);
           return (
             <article
               key={o.nom}
+              aria-current={sienne ? "true" : undefined}
               className={cn(
                 "flex flex-col gap-[22px] rounded-[26px] px-7 py-[30px]",
                 // Sur tablette, deux cartes côte à côte ; « Sur mesure » dessous, en largeur.
                 !o.prix && "md:col-span-2 lg:col-span-1",
                 t.carte,
+                sienne && "outline outline-[3px] outline-offset-4 outline-[color:var(--board-blue-strong)]",
               )}
             >
               <div className="grid gap-1.5">
                 <h3 className="lp-titre flex items-center justify-between gap-2.5 text-[1.35rem] text-current">
                   {o.nom}
-                  {o.badge ? (
+                  {badge ? (
                     <span className={cn("lp-pill whitespace-nowrap px-[9px] py-1 font-mono text-[0.6rem] uppercase tracking-[0.12em]", t.badge)}>
-                      {o.badge}
+                      {badge}
                     </span>
                   ) : null}
                 </h3>
                 <p className={cn("text-[0.9rem]", t.discret)}>{o.pourQui}</p>
               </div>
 
-              <Prix offre={o} periode={periode} t={t} />
+              <Prix offre={offre} periode={periode} t={t} />
 
               <ul className="m-0 grid list-none gap-[11px] p-0 text-[0.92rem] leading-[1.45]">
                 {o.points.map((point) => (
@@ -121,7 +159,11 @@ export function TarifOffres({
                 ))}
               </ul>
 
-              {o.prix ? (
+              {app && o.prix ? (
+                cle && app.gestes[cle] ? (
+                  <div className="mt-auto">{app.gestes[cle]}</div>
+                ) : null
+              ) : o.prix ? (
                 <Link
                   href={compte?.href ?? (o.formule ? `/signup?offre=${lookupKey(o.formule, PERIODICITE_DE[periode])}` : "/signup")}
                   className={cn("lp-btn mt-auto justify-center", t.bouton)}

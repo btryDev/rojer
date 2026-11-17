@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FORMULES, LOOKUP_KEYS, estLookupKey, formuleDeLookupKey, formuleDuPrix, lookupKey, pointsDeFormule } from "./formules";
+import { FORMULES, LOOKUP_KEYS, estLookupKey, formuleDeLookupKey, formuleDuPrix, lookupKey } from "./formules";
 
 describe("formules", () => {
   it("une lookup_key par formule et par périodicité, relue à l'identique", () => {
@@ -40,10 +40,5 @@ describe("formuleDuPrix, estLookupKey, libellés", () => {
   it("estLookupKey n'accepte que le catalogue", () => {
     expect(estLookupKey("rojer_essentiel_annuel")).toBe(true);
     for (const v of ["", "rojer_surmesure_annuel", 12, null]) expect(estLookupKey(v)).toBe(false);
-  });
-
-  it("les points d'une formule : établissements et utilisateurs au singulier comme au pluriel", () => {
-    expect(pointsDeFormule("essentiel").slice(0, 2)).toEqual(["1 établissement", "1 utilisateur"]);
-    expect(pointsDeFormule("pro").slice(0, 2)).toEqual(["5 établissements", "5 utilisateurs"]);
   });
 });

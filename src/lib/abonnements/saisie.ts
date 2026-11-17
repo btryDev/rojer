@@ -14,7 +14,7 @@ import { getOptionalCompte, type Compte, type Db } from "@/lib/auth/compte";
 import { requireUser } from "@/lib/auth/require-user";
 import { droitsDe, type Droits } from "./droits";
 
-export const PAGE_ABONNEMENT = "/compte/abonnement";
+export { PAGE_ABONNEMENT } from "./sous-pages";
 import { PAGE_SAISIE_FERMEE } from "@/lib/auth/portee/gel";
 /** Où une écriture refusée à un membre en lecture seule renvoie (ADR-054 § 4). */
 export const PAGE_LECTURE_SEULE = "/compte/lecture-seule";

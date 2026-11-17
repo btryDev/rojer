@@ -248,12 +248,16 @@ export type NavSection = {
  * L'arborescence tient **entièrement dans le chemin**. Un filtre d'écran
  * (`?famille=`, `?vue=`) est un réglage, pas une place dans l'arbre : le
  * panneau ne porte aucune entrée qui soit l'état filtré d'une autre.
+ *
+ * `null` hors du dossier de l'établissement (les pages du compte,
+ * 2026-11-17) : rien ne s'allume, pas même la marque.
  */
 export function deduireActif(
   pathname: string,
   etablissementId: string,
-): SidebarItemId {
+): SidebarItemId | null {
   const base = `/etablissements/${etablissementId}`;
+  if (pathname !== base && !pathname.startsWith(`${base}/`)) return null;
   if (pathname === `${base}/modifier`) return "fiche";
   if (pathname === base) return "tableau";
   if (pathname.startsWith(`${base}/calendrier`)) return "calendrier";

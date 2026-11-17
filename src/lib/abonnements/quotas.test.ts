@@ -27,6 +27,7 @@ import {
   prendreQuota,
   RefusQuota,
   refusQuota,
+  utilisationDuCompte,
 } from "./quotas";
 
 // Le client borné (et sa transaction), réduit à ce que la porte lit.
@@ -268,7 +269,7 @@ describe("l'essai gratuit : ses limites priment sur la formule essayée", () => 
     const essai = (n: number) => faux("rojer_essentiel_mensuel", n, null, null);
     await prendreQuota(essai(4).txc, "c1", "equipements");
     await expect(prendreQuota(essai(5).txc, "c1", "equipements")).rejects.toThrow(
-      "L'essai gratuit couvre 5 équipements : pour en ajouter, abonnez-vous depuis la page Abonnement de votre compte — l'abonnement lève les limites de l'essai.",
+      "Votre essai gratuit couvre 5 équipements : pour en ajouter, abonnez-vous dès maintenant depuis la page Abonnement de votre compte — votre essai s'arrête, et vous passez aux limites complètes de votre formule.",
     );
     await expect(prendreQuota(essai(1).txc, "c1", "zones")).rejects.toThrow(/couvre 1 zone :/);
     await expect(prendreQuota(essai(1).txc, "c1", "prescriptions")).rejects.toThrow(/couvre 1 prescription particulière :/);
@@ -436,8 +437,55 @@ describe("valider = s'abonner : une signature de test, tenue par la porte", () =
     lancer();
     await prendreQuota(faux("rojer_essentiel_mensuel", 0, null, null).txc, "c1", "signaturesParAn");
     await expect(prendreQuota(faux("rojer_essentiel_mensuel", 1, null, null).txc, "c1", "signaturesParAn")).rejects.toThrow(
-      /^L'essai gratuit couvre 1 signature par an/,
+      /^Votre essai gratuit couvre 1 signature par an/,
     );
     await prendreQuota(faux("rojer_essentiel_mensuel", 1).txc, "c1", "signaturesParAn");
+  });
+});
+
+describe("utilisationDuCompte : la page Utilisation (2026-11-17)", () => {
+  beforeEach(() => {
+    m.membres = [{}, {}];
+    m.invitations = [{}];
+  });
+
+  it("chaque plafond, avec ce qu'en lisent les compteurs de la porte ; les invitations comptent", async () => {
+    const { db } = faux("rojer_pro_mensuel", 2);
+    const { regime, lignes } = await utilisationDuCompte(db, "c1", { maintenant: new Date("2026-11-17T00:00:00Z") });
+    expect(regime).toEqual({ formule: "pro", essai: null });
+    expect(lignes.find((l) => l.cle === "membres")).toEqual({ cle: "membres", utilise: 3, plafond: 5 });
+    expect(lignes.find((l) => l.cle === "etablissements")).toEqual({ cle: "etablissements", utilise: 2, plafond: 5 });
+    expect(lignes.find((l) => l.cle === "equipements")?.plafond).toBeNull();
+  });
+
+  it("les plafonds annuels repartent au prochain anniversaire du premier paiement", async () => {
+    const { db } = faux("rojer_pro_mensuel", 0);
+    expect((await utilisationDuCompte(db, "c1", { maintenant: new Date("2026-11-17T00:00:00Z") })).annee).toEqual({
+      type: "repart",
+      le: new Date("2027-01-15T00:00:00Z"),
+    });
+    expect((await utilisationDuCompte(db, "c1", { maintenant: new Date("2026-01-10T00:00:00Z") })).annee).toEqual({
+      type: "repart",
+      le: new Date("2026-01-15T00:00:00Z"),
+    });
+  });
+
+  it("jamais payé : les limites de l'essai ; l'année glisse sur douze mois sans essai", async () => {
+    const { db } = faux("rojer_essentiel_mensuel", 1, null, null);
+    const { regime, lignes, annee } = await utilisationDuCompte(db, "c1");
+    expect(regime.essai).toBe("en_cours");
+    expect(lignes.find((l) => l.cle === "equipements")?.plafond).toBe(5);
+    // Le faux client ne porte pas `essaiUtiliseLe` : l'année glisse.
+    expect(annee).toEqual({ type: "glissante" });
+  });
+
+  it("la ligne déjà lue ne se relit pas ; le résumé ne compte que ce qui a un plafond", async () => {
+    const { db, tx } = faux("rojer_pro_mensuel", 2);
+    const ligne = { formule: "rojer_pro_mensuel", statut: "active", debutPayantLe: PAYE_DEPUIS, essaiUtiliseLe: null, finEssai: null };
+    const { lignes } = await utilisationDuCompte(db, "c1", { ligne, seulementPlafonnes: true });
+    expect(tx.abonnement.findUnique).not.toHaveBeenCalled();
+    expect(tx.equipement.count).not.toHaveBeenCalled();
+    expect(lignes.every((l) => l.plafond !== null)).toBe(true);
+    expect(lignes.map((l) => l.cle)).toContain("membres");
   });
 });

@@ -36,8 +36,8 @@ export function EnTetePage({ children, ...cadre }: CadreEnTeteProps) {
   return (
     <CadreEnTete
       {...cadre}
-      avecPanneau={aUneIllustration(cadre.item)}
-      dessin={<IllustrationEnTete item={cadre.item} />}
+      avecPanneau={cadre.item ? aUneIllustration(cadre.item) : false}
+      dessin={cadre.item ? <IllustrationEnTete item={cadre.item} /> : null}
     >
       {children}
     </CadreEnTete>

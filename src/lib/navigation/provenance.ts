@@ -117,7 +117,7 @@ export function nommerEcran(
   // de bord : c'est une route qui n'existe pas — un `de` forgé, ou une
   // route renommée depuis. Mieux vaut retomber sur le parent canonique que
   // d'afficher « ← Tableau de bord » au-dessus d'un lien qui mène à un 404.
-  if (segments.length > 0 && item === "tableau") return null;
+  if (!item || (segments.length > 0 && item === "tableau")) return null;
   // Deux segments ou plus : on est sous une liste, donc sur une fiche.
   if (segments.length >= 2) return LABEL_DETAIL[item] ?? LABEL_ITEM[item];
   return LABEL_ITEM[item];
