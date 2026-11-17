@@ -72,7 +72,7 @@ export default async function FormulesPage({ searchParams }: { searchParams: Pro
   const { formule: refus0 } = await searchParams;
   // `Object.hasOwn` et non `in` : `?formule=toString` ne doit pas trouver le prototype.
   const refus = refus0 && Object.hasOwn(REFUS, refus0) ? REFUS[refus0 as keyof typeof REFUS] : null;
-  const { c, compteId, ligne, vue, formule, phase } = await etatDeLAbonnement();
+  const { c, compteId, ligne, vue, formule, phase, ctx } = await etatDeLAbonnement();
   const finEssai = phase.type === "essai" ? phase.fin : null;
   // La formule d'un abonnement qui court, et lui seul — jamais un essai (sa
   // formule est `FORMULE_D_ESSAI`), ni un abonnement terminé (relecture du
@@ -91,7 +91,7 @@ export default async function FormulesPage({ searchParams }: { searchParams: Pro
   if (vue.cas === "formulaire") {
     cartes = (
       <Suspense fallback={sansGeste}>
-        <CartesPourSAbonner compteId={compteId} finEssai={finEssai} periodeInitiale={periodeInitiale} />
+        <CartesPourSAbonner compteId={compteId} finEssai={finEssai} maintenant={ctx.maintenant} periodeInitiale={periodeInitiale} />
       </Suspense>
     );
   } else if (paye) {
@@ -274,11 +274,14 @@ async function CartesPourSAbonner({
   compteId,
   periodeInitiale,
   finEssai,
+  maintenant,
 }: {
   compteId: string | null;
   periodeInitiale: Periode;
   /** La fin de l'essai en cours, s'il court : il se fait sur `FORMULE_D_ESSAI`. */
   finEssai: Date | null;
+  /** L'horloge de la page (`contexteDroits`), la même que pour l'essai lui-même. */
+  maintenant: Date;
 }) {
   const prix = await prixLus();
   const gestes = Object.fromEntries(
@@ -295,7 +298,7 @@ async function CartesPourSAbonner({
             periodicite={p}
             compteId={compteId}
             carte={carteDe(f)}
-            essai={finEssai ? { fin: finEssai, sienne: f === FORMULE_D_ESSAI, proche: essaiProche(finEssai, new Date()) } : null}
+            essai={finEssai ? { fin: finEssai, sienne: f === FORMULE_D_ESSAI, proche: essaiProche(finEssai, maintenant) } : null}
           />,
         ];
       }),
