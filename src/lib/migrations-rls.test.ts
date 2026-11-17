@@ -11,12 +11,19 @@ import {
 /**
  * Toute table vivante de `public` a la RLS activée.
  *
- * Chez Supabase, l'API Data (PostgREST) expose `public` aux rôles `anon` et
+ * ~~Chez Supabase, l'API Data (PostgREST) expose `public` aux rôles `anon` et
  * `authenticated`, avec une clé publique par construction. Une table sans RLS
- * y est lisible par n'importe qui. L'app, elle, passe par Prisma avec le rôle
- * propriétaire, qui contourne la RLS : l'activer sans politique ne lui retire
- * rien, et refuse tout aux autres. Voir docs/revues/audit-owasp-2026-10-13.md
- * (S1) et la migration `20261013120000_rls_tables_restantes`.
+ * y est lisible par n'importe qui.~~ [2026-11-17 : Supabase retiré (PR #337).
+ * Chez Clever Cloud il n'y a ni API Data, ni rôle `anon` / `authenticated` :
+ * la RLS est bien posée par les migrations, mais elle ne protège RIEN
+ * aujourd'hui — aucun autre rôle que celui de l'app ne se connecte. Elle ne
+ * servirait que si un second rôle, sans `BYPASSRLS`, était un jour créé. La
+ * garde reste par décision (ADR-051, 2026-11-09 : « tout reste ») ; la
+ * retirer passe par un amendement de l'ADR-051.] L'app, elle, passe par
+ * Prisma avec le rôle propriétaire, qui contourne la RLS : l'activer sans
+ * politique ne lui retire rien, et refuse tout aux autres. Voir
+ * docs/revues/audit-owasp-2026-10-13.md (S1) et la migration
+ * `20261013120000_rls_tables_restantes`.
  *
  * Le test ne porte aucune liste de tables : il rejoue les migrations dans
  * l'ordre (CREATE TABLE, DROP TABLE, RENAME TO, ENABLE / DISABLE ROW LEVEL
