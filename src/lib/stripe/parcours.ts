@@ -165,7 +165,7 @@ export async function monterDeFormule(
     {
       items: [{ id: item.id, price: priceId }],
       proration_behavior: "always_invoice",
-      // Version d'API « dahlia » : un objet, `{ type }`.
+      // Un objet, `{ type }` (stripe-node 23, API `2026-10-28.endive`).
       ...(rythmeChange ? { billing_cycle_anchor: { type: "now" as const } } : {}),
       payment_behavior: "pending_if_incomplete",
       expand: ["latest_invoice"],
