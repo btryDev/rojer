@@ -20,6 +20,7 @@ const api = {
   customers: { create: vi.fn(), update: vi.fn(), retrieve: vi.fn() },
   subscriptions: { create: vi.fn(), update: vi.fn(), resume: vi.fn(), retrieve: vi.fn() },
   invoices: { retrieve: vi.fn(), voidInvoice: vi.fn(), pay: vi.fn() },
+  paymentMethods: { retrieve: vi.fn() },
   subscriptionSchedules: { create: vi.fn(), retrieve: vi.fn(), update: vi.fn(), release: vi.fn() },
   checkout: { sessions: { create: vi.fn(), list: vi.fn(), expire: vi.fn() } },
   prices: { list: vi.fn() },
@@ -79,13 +80,15 @@ describe("parcours Stripe", () => {
   });
 
   it("carte qui a payé : celle du paiement de la facture devient celle du client ; la carte fixée quitte l'abonnement ; réglage posé s'il manque (2026-11-16)", async () => {
-    // La carte du paiement, rattachée au client (`customer`) ou à usage unique (`null`).
-    const facture = (pm: string | null, rattacheeA: string | null = "cus_1") => ({
+    const facture = (pm: string | null) => ({
       id: "in_1",
       customer: "cus_1",
       parent: { subscription_details: { subscription: "sub_1" } },
-      payments: { data: pm ? [{ status: "paid", payment: { payment_intent: { payment_method: { id: pm, customer: rattacheeA } } } }] : [] },
+      payments: { data: pm ? [{ status: "paid", payment: { payment_intent: { payment_method: pm } } }] : [] },
     });
+    // La carte relue : rattachée au client, ou à usage unique (`null`).
+    const rattachee = (a: string | null) => api.paymentMethods.retrieve.mockImplementation(async (id: string) => ({ id, customer: a }));
+    rattachee("cus_1");
     const reglee = { payment_settings: { save_default_payment_method: "on_subscription" } };
     const etat = (pmClient: string, sub: object) => {
       api.customers.retrieve.mockResolvedValue({ id: "cus_1", invoice_settings: { default_payment_method: pmClient } });
@@ -95,23 +98,27 @@ describe("parcours Stripe", () => {
     api.invoices.retrieve.mockResolvedValue(facture("pm_nouvelle"));
     etat("pm_refusee", { ...reglee, default_payment_method: "pm_nouvelle" });
     await carteQuiAPaye(stripe, "in_1");
-    expect(api.invoices.retrieve).toHaveBeenCalledWith("in_1", { expand: ["payments.data.payment.payment_intent.payment_method"] });
+    // Quatre niveaux d'expansion au plus chez Stripe.
+    expect(api.invoices.retrieve).toHaveBeenCalledWith("in_1", { expand: ["payments.data.payment.payment_intent"] });
     expect(api.customers.update).toHaveBeenCalledWith("cus_1", { invoice_settings: { default_payment_method: "pm_nouvelle" } });
     expect(api.subscriptions.update).toHaveBeenLastCalledWith("sub_1", { default_payment_method: "" });
     // Payée sur la page de la facture sans « sauvegarder » : la carte n'est
     // rattachée à personne, Stripe refuserait — le client n'est pas réécrit
     // (répétition du 2026-11-17).
     vi.clearAllMocks();
-    api.invoices.retrieve.mockResolvedValue(facture("pm_usage_unique", null));
+    rattachee(null);
+    api.invoices.retrieve.mockResolvedValue(facture("pm_usage_unique"));
     etat("pm_refusee", { ...reglee, default_payment_method: null });
     await carteQuiAPaye(stripe, "in_1");
     expect(api.customers.update).not.toHaveBeenCalled();
+    rattachee("cus_1");
     // Renouvellement ordinaire (la carte du client a payé) : le client n'est pas réécrit ; seule la carte fixée part.
     vi.clearAllMocks();
     api.invoices.retrieve.mockResolvedValue(facture("pm_c"));
     etat("pm_c", { ...reglee, default_payment_method: "pm_c" });
     await carteQuiAPaye(stripe, "in_1");
     expect(api.customers.update).not.toHaveBeenCalled();
+    expect(api.paymentMethods.retrieve).not.toHaveBeenCalled();
     expect(api.subscriptions.update).toHaveBeenLastCalledWith("sub_1", { default_payment_method: "" });
     // Né de Checkout, sans réglage : posé.
     vi.clearAllMocks();

@@ -238,18 +238,22 @@ export async function planifierBaisse(
  * Sans clé d'idempotence : ces écritures posent une valeur.
  */
 export async function carteQuiAPaye(stripe: Stripe, factureId: string): Promise<void> {
-  const facture = await stripe.invoices.retrieve(factureId, { expand: ["payments.data.payment.payment_intent.payment_method"] });
+  // Quatre niveaux d'expansion au plus chez Stripe : la carte se relit à part
+  // (répétition du 2026-11-17 — `property_expansion_max_depth`).
+  const facture = await stripe.invoices.retrieve(factureId, { expand: ["payments.data.payment.payment_intent"] });
   const abonnementId = idStripe(facture.parent?.subscription_details?.subscription);
   const clientId = idStripe(facture.customer);
   if (!abonnementId || !clientId) return;
   const intention = facture.payments?.data.find((p) => p.status === "paid")?.payment.payment_intent;
-  const moyen = intention && typeof intention === "object" ? intention.payment_method : null;
-  // Rattachée au client, ou rien : une carte à usage unique ne se pose pas.
-  const carte = moyen && typeof moyen === "object" && idStripe(moyen.customer) === clientId ? moyen.id : null;
+  const carte = intention && typeof intention === "object" ? idStripe(intention.payment_method) : null;
   const [client, abonnement] = await Promise.all([stripe.customers.retrieve(clientId), stripe.subscriptions.retrieve(abonnementId)]);
   if (client.deleted || abonnement.status === "canceled" || abonnement.status === "incomplete_expired") return;
   if (carte && carte !== idStripe(client.invoice_settings?.default_payment_method)) {
-    await stripe.customers.update(clientId, { invoice_settings: { default_payment_method: carte } });
+    // Rattachée au client, ou rien : une carte à usage unique ne se pose pas.
+    const moyen = await stripe.paymentMethods.retrieve(carte);
+    if (idStripe(moyen.customer) === clientId) {
+      await stripe.customers.update(clientId, { invoice_settings: { default_payment_method: carte } });
+    }
   }
   const fixee = idStripe(abonnement.default_payment_method);
   const reglage = abonnement.payment_settings?.save_default_payment_method === "on_subscription";
