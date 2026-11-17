@@ -363,7 +363,7 @@ export function BarreCompte({
             {/* L'espace Compte (2026-11-17, décision de la propriétaire) : les
                 membres (ADR-054) et la sécurité (ADR-052), réunis derrière une
                 entrée, avec leur menu de côté. */}
-            <EntreeLien href={PAGE_MEMBRES} Icone={Users} libelle="Membres et sécurité" onNavigate={() => setOuvert(null)} />
+            <EntreeLien href={PAGE_MEMBRES} Icone={Users} libelle="Mon compte" onNavigate={() => setOuvert(null)} />
 
             {/* L'état de l'abonnement, ouvert à tous les rôles (ADR-053 § 12 :
                 les boutons y restent au propriétaire). */}
