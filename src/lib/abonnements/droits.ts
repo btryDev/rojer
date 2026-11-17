@@ -49,6 +49,18 @@ export const OUVRENT: ReadonlySet<string> = new Set(["active", "past_due"]);
 export const A_REGLER: ReadonlySet<string> = new Set(["past_due", "unpaid", "incomplete"]);
 
 /**
+ * Ce qu'un paiement à régler demande, et où (répétition du 2026-11-17) : un
+ * impayé (`past_due`, `unpaid`) se règle au portail de Stripe, qui enregistre
+ * la carte et relance la facture ; un premier paiement à confirmer
+ * (`incomplete`), sur la page de sa facture. La vue et l'action lisent cette
+ * seule fonction.
+ */
+export function reglementDe(statut: string | null): "impaye" | "premier-paiement" | null {
+  if (statut === "incomplete") return "premier-paiement";
+  return statut && A_REGLER.has(statut) ? "impaye" : null;
+}
+
+/**
  * Le même filtre en base : sans abonnement qui paie ou est à régler — `statut`
  * vide compris, que `notIn` écarterait (rappels, suppression).
  */

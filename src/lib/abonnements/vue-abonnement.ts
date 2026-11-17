@@ -7,7 +7,7 @@
 // amendé (2026-11-16), « s'abonner » est un seul geste — Checkout, paiement
 // immédiat — pendant l'essai, après lui, ou après une résiliation.
 
-import { A_REGLER, type Geste } from "./droits";
+import { reglementDe, type Geste } from "./droits";
 import type { CleFormule, Periodicite } from "./formules";
 
 type Choix = { formule: CleFormule; periodicite: Periodicite };
@@ -19,6 +19,13 @@ export type EntreeVue = {
   enEssai: boolean;
   /** `?document=1` : un document officiel attend l'abonnement. */
   documentAttend: boolean;
+  /**
+   * `?paiement=termine` : retour de Checkout. Si la copie de l'abonnement
+   * retarde encore, rien à proposer — jamais un second paiement
+   * (répétitions des 2026-11-16 et 17 : bouton de paiement, puis carte vide,
+   * à côté de « Paiement terminé »).
+   */
+  paiementTermine: boolean;
 };
 
 export type VueAbonnement =
@@ -56,12 +63,9 @@ export function vueAbonnement(e: EntreeVue): VueAbonnement {
     case "essai":
       return { cas: "essai", titre: "Essai gratuit" };
     case "portail":
-      return {
-        cas: "portail",
-        titre: "Gérer",
-        aRegler: e.statut === "incomplete" ? "premier-paiement" : A_REGLER.has(e.statut ?? "") ? "impaye" : null,
-      };
+      return { cas: "portail", titre: "Gérer", aRegler: reglementDe(e.statut) };
     case "abonner":
+      if (e.paiementTermine) return { cas: "aucune" };
       return {
         cas: "formulaire",
         titre: "S'abonner",

@@ -203,7 +203,6 @@ export default async function AbonnementPage({
   // Une seule lecture : la ligne sert à l'état affiché et aux droits.
   const ligne = c ? await abonnementDuCompte(c.db, c.compte.compteId) : null;
   const droits = droitsDe(ligne, ctx);
-  const saisieFermee = !droits.saisie;
   // Sans compte encore, `role` est nul : l'essai reste proposé.
   const geste = gesteAbonnement({ ouvert, role: c?.compte.role ?? null, ligne });
   const formule = formuleDeLookupKey(ligne?.formule);
@@ -213,13 +212,20 @@ export default async function AbonnementPage({
   const finPrevue = ligne ? resiliationPrevue(ligne) : false;
   const phase = phaseDuCompte(ligne, ctx.maintenant);
   const essaiEnCours = phase.type === "essai";
-  const vue = vueAbonnement({ geste, statut: ligne?.statut ?? null, enEssai: essaiEnCours, documentAttend: document === "1" });
+  const vue = vueAbonnement({
+    geste,
+    statut: ligne?.statut ?? null,
+    enEssai: essaiEnCours,
+    documentAttend: document === "1",
+    paiementTermine: paiement === "termine",
+  });
   // Les offres (Stripe) et la formule choisie sur la page publique
   // (`offre-choisie.ts`), ensemble ; la présélection, sinon, reprend celle
   // d'un abonnement passé.
   const [offres, offreChoisie] =
     vue.cas === "formulaire" ? await Promise.all([offresAffichees(), lireOffreChoisie()]) : [[], null];
   const courante = preselection(vue, { abonnement: formule, offreChoisie });
+  const messageInfo = messageDeLaPage({ paiement, phase, formuleChange, paiementEnConfirmation, facture, abonnement });
   // Changer de formule : un abonnement qui paie, pour son propriétaire ; pas
   // une formule qui s'arrête.
   const { options: optionsChangement, baisse } =
@@ -331,35 +337,11 @@ export default async function AbonnementPage({
             {stripe === "indisponible" ? "L'opération n'a pas abouti. Réessayez un peu plus tard ; rien ne vous a été facturé." : null}
           </MessageFormulaire>
           <MessageFormulaire ton="info">
-            {paiement === "termine"
-              ? phase.type === "abonne" && phase.statut === "active"
-                ? "Paiement reçu : votre abonnement est actif."
-                : phase.type === "abonne"
-                  ? null
-                  : (
-                      <>
-                        Paiement terminé. Votre abonnement s&apos;affiche ici dans quelques secondes :{" "}
-                        <Link href={PAGE_ABONNEMENT} className="underline">
-                          actualiser la page
-                        </Link>
-                        .
-                      </>
-                    )
-              : formuleChange
-                ? MESSAGES_FORMULE[formuleChange]
-                : paiementEnConfirmation
-                ? "Le premier paiement est en cours : les fonctions réservées aux abonnés s'ouvrent dès qu'il est confirmé. Inutile de payer de nouveau."
-                : facture === "aucune"
-                ? "Aucune facture n'attend de paiement : votre abonnement est à jour."
-                : facture === "introuvable"
-                ? "Aucune facture payable n'a été trouvée. Vérifiez votre carte depuis « Gérer mon abonnement » ; si le problème reste, écrivez-nous."
-                : abonnement === "en-cours"
-                  ? "Un abonnement est déjà en cours pour ce compte : gérez-le ici plutôt que d'en souscrire un second."
-                  : null}
+            {messageInfo}
           </MessageFormulaire>
         </div>
 
-        {vue.cas !== "aucune" && !(vue.cas === "formulaire" && paiement === "termine") && (
+        {vue.cas !== "aucune" && (
           <section className="carte-board mt-5 px-7 py-6 sm:px-8" aria-labelledby="titre-gerer">
             <h2 id="titre-gerer" className="board-titre m-0 text-[22px]">
               {vue.titre}
@@ -397,34 +379,30 @@ export default async function AbonnementPage({
                     une carte saisie sans la case « sauvegarder » : la carte
                     refusée restait celle du mois suivant (répétition du
                     2026-11-17). */}
-                {vue.aRegler === "impaye" ? (
-                  <FormulairePortail
-                    compteId={compteId}
-                    variant="board"
-                    libelle="Changer de carte et payer"
-                    className={optionsChangement.length > 0 ? "mt-6" : "mt-2"}
-                  >
-                    Votre dernier paiement n&apos;est pas passé. Changez de carte, ou confirmez le paiement si votre banque
-                    le demande : il est relancé aussitôt, sur la page sécurisée de Stripe.
-                    {saisieFermee ? " La saisie se rouvre dès qu'il est passé." : null}
-                  </FormulairePortail>
-                ) : (
-                  <FormulairePortail
-                    compteId={compteId}
-                    variant={vue.aRegler ? "boardClair" : "board"}
-                    className={optionsChangement.length > 0 ? "mt-6" : "mt-2"}
-                  >
-                    Carte, factures, résiliation : sur la page sécurisée de Stripe, notre prestataire de paiement.
-                    {baisse ? " Un changement de formule est prévu : pour résilier, choisissez d'abord « Garder ma formule »." : null}
-                  </FormulairePortail>
-                )}
+                <FormulairePortail
+                  compteId={compteId}
+                  variant={vue.aRegler === "premier-paiement" ? "boardClair" : "board"}
+                  libelle={vue.aRegler === "impaye" ? "Changer de carte et payer" : undefined}
+                  className={optionsChangement.length > 0 ? "mt-6" : "mt-2"}
+                >
+                  {vue.aRegler === "impaye" ? (
+                    <>
+                      Votre dernier paiement n&apos;est pas passé. Changez de carte, ou confirmez le paiement si votre
+                      banque le demande : il est relancé aussitôt, sur la page sécurisée de Stripe.
+                      {!droits.saisie ? " La saisie se rouvre dès qu'il est passé." : null}
+                    </>
+                  ) : (
+                    <>
+                      Carte, factures, résiliation : sur la page sécurisée de Stripe, notre prestataire de paiement.
+                      {baisse ? " Un changement de formule est prévu : pour résilier, choisissez d'abord « Garder ma formule »." : null}
+                    </>
+                  )}
+                </FormulairePortail>
               </>
             )}
-            {/* Juste après un paiement, si la copie de l'abonnement retarde
-                encore sur Stripe, la page ne repropose pas de payer : la carte
-                entière est masquée (répétitions des 2026-11-16 et 17 — bouton
-                de paiement, puis carte vide, à côté de « Paiement terminé »).
-                Le serveur refuse de toute façon un second paiement. */}
+            {/* Juste après un paiement, la vue ne propose pas de payer
+                (`paiementTermine`, vue-abonnement.ts) ; le serveur refuse de
+                toute façon un second paiement. */}
             {vue.cas === "formulaire" && (
               <FormulaireAbonnement offres={offres} compteId={compteId} quand={vue.quand} courante={courante} />
             )}
@@ -433,6 +411,43 @@ export default async function AbonnementPage({
       </div>
     </main>
   );
+}
+
+/** La phrase d'information de la page, une seule à la fois, par ordre de priorité. */
+function messageDeLaPage(p: {
+  paiement?: string;
+  phase: ReturnType<typeof phaseDuCompte>;
+  formuleChange: keyof typeof MESSAGES_FORMULE | null;
+  paiementEnConfirmation: boolean;
+  facture?: string;
+  abonnement?: string;
+}): React.ReactNode {
+  if (p.paiement === "termine") {
+    if (p.phase.type !== "abonne") {
+      // Recharger la même adresse garderait le paramètre : le lien l'ôte.
+      return (
+        <>
+          Paiement terminé. Votre abonnement s&apos;affiche ici dans quelques secondes :{" "}
+          <Link href={PAGE_ABONNEMENT} className="underline">
+            actualiser la page
+          </Link>
+          .
+        </>
+      );
+    }
+    // Une adresse de retour revisitée plus tard ne dit « reçu » qu'à un abonnement actif.
+    return p.phase.statut === "active" ? "Paiement reçu : votre abonnement est actif." : null;
+  }
+  if (p.formuleChange) return MESSAGES_FORMULE[p.formuleChange];
+  if (p.paiementEnConfirmation) {
+    return "Le premier paiement est en cours : les fonctions réservées aux abonnés s'ouvrent dès qu'il est confirmé. Inutile de payer de nouveau.";
+  }
+  if (p.facture === "aucune") return "Aucune facture n'attend de paiement : votre abonnement est à jour.";
+  if (p.facture === "introuvable") {
+    return "La facture de votre premier paiement est introuvable : réessayez de vous abonner ; si le problème reste, écrivez-nous.";
+  }
+  if (p.abonnement === "en-cours") return "Un abonnement est déjà en cours pour ce compte : gérez-le ici plutôt que d'en souscrire un second.";
+  return null;
 }
 
 /** Le portail Stripe (carte, factures, résiliation), avec la phrase qui dit ce qu'on y fait. */

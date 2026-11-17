@@ -9,6 +9,7 @@ const entree = (o: Partial<EntreeVue>): EntreeVue => ({
   statut: null,
   enEssai: true,
   documentAttend: false,
+  paiementTermine: false,
   ...o,
 });
 
@@ -31,6 +32,11 @@ describe("vueAbonnement", () => {
       expect(v, String(statut)).toMatchObject({ cas: "formulaire", titre: "S'abonner" });
       expect(v.cas === "formulaire" && v.quand, String(statut)).not.toMatch(/essai/);
     }
+  });
+
+  it("retour de Checkout, copie encore en retard : rien à proposer, jamais un second paiement", () => {
+    expect(vueAbonnement(entree({ paiementTermine: true }))).toEqual({ cas: "aucune" });
+    expect(vueAbonnement(entree({ geste: "portail", statut: "active", paiementTermine: true }))).toMatchObject({ cas: "portail" });
   });
 
   it("un document officiel attend (`?document=1`) : la page dit pourquoi", () => {

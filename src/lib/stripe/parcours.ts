@@ -136,7 +136,7 @@ const tauxEnVigueur = (stripe: Stripe) => tauxDeTva(stripe).catch(() => null);
 export async function monterDeFormule(
   stripe: Stripe,
   abonnement: Stripe.Subscription,
-  { priceId, intervalle }: { priceId: string; intervalle: "month" | "year" },
+  { priceId, intervalle }: { priceId: string; intervalle: (typeof INTERVALLE_STRIPE)[keyof typeof INTERVALLE_STRIPE] },
 ): Promise<string | null> {
   const item = abonnement.items.data[0];
   if (!item || item.price.id === priceId) return null;

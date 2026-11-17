@@ -25,7 +25,7 @@ import {
 } from "@/lib/stripe/parcours";
 import { clientStripeDuCompte } from "./client-stripe";
 import { demarrerEssaiDuCompte, PAGE_ESSAI, type EtatEssai } from "./essai";
-import { aNomProvisoire, abonnementEnCours, resiliationDemandee } from "./droits";
+import { aNomProvisoire, abonnementEnCours, reglementDe, resiliationDemandee } from "./droits";
 import { INTERVALLE_STRIPE, estLookupKey, formuleDeLookupKey, formuleDuPrix } from "./formules";
 import { sensDuChangement } from "./changement";
 import { depassements } from "./quotas";
@@ -156,8 +156,8 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
 }
 
 /**
- * La page hébergée de la facture qui attend ; sans facture payable trouvée,
- * la page de l'abonnement le dit (ce n'est jamais « à jour »).
+ * La page hébergée de la facture d'un premier paiement à confirmer ; sans
+ * facture payable trouvée, la page de l'abonnement le dit (jamais « à jour »).
  */
 async function versLaFactureEnAttente(stripe: Stripe, courant: Stripe.Subscription): Promise<string> {
   return (await factureARegler(stripe, courant.latest_invoice)) ?? `${PAGE_ABONNEMENT}?facture=introuvable`;
@@ -177,10 +177,11 @@ export async function reglerFactureAction(formData: FormData): Promise<void> {
   let cible = `${PAGE_ABONNEMENT}?facture=aucune`;
   try {
     const { courant } = abonnementCourant(await abonnementsDuClient(stripe, customerId));
-    if (courant?.status === "incomplete") cible = await versLaFactureEnAttente(stripe, courant);
-    // Un impayé arrivé ici (onglet resté sur l'ancien bouton « Régler la
-    // facture ») : la page, qui propose le portail — jamais « à jour ».
-    else if (courant && abonnementEnCours(courant.status) && courant.status !== "active") cible = PAGE_ABONNEMENT;
+    const reglement = courant ? reglementDe(courant.status) : null;
+    if (courant && reglement === "premier-paiement") cible = await versLaFactureEnAttente(stripe, courant);
+    // Onglet resté sur l'ancien bouton « Régler la facture » : la page, qui
+    // propose le portail — jamais « à jour ».
+    else if (reglement === "impaye") cible = PAGE_ABONNEMENT;
   } catch {
     redirect(`${PAGE_ABONNEMENT}?stripe=indisponible`);
   }
