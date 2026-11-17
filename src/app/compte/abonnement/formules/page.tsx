@@ -32,7 +32,7 @@ import { lireOffreChoisie } from "@/lib/abonnements/offre-choisie";
 import { etatDeLAbonnement } from "@/lib/abonnements/page-abonnement";
 import { depassementsDe, stocksDuCompte } from "@/lib/abonnements/quotas";
 import { PAGE_PAIEMENT } from "@/lib/abonnements/sous-pages";
-import { abonnementEnCours, finPrevueDe } from "@/lib/abonnements/droits";
+import { abonnementEnCours, essaiProche, finPrevueDe } from "@/lib/abonnements/droits";
 import { GESTE_DU_PORTAIL, type VueAbonnement } from "@/lib/abonnements/vue-abonnement";
 import { formaterDateLongueFr } from "@/lib/dates";
 import { clientStripeLecture } from "@/lib/stripe/client";
@@ -295,7 +295,7 @@ async function CartesPourSAbonner({
             periodicite={p}
             compteId={compteId}
             carte={carteDe(f)}
-            essai={finEssai ? { fin: finEssai, sienne: f === FORMULE_D_ESSAI } : null}
+            essai={finEssai ? { fin: finEssai, sienne: f === FORMULE_D_ESSAI, proche: essaiProche(finEssai, new Date()) } : null}
           />,
         ];
       }),

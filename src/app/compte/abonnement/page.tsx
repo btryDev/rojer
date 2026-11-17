@@ -15,6 +15,7 @@ import { MESSAGE_COMPTE_CHANGE } from "@/lib/auth/compte-attendu";
 import type { Db } from "@/lib/auth/compte";
 import { getOptionalCompte } from "@/lib/auth/compte";
 import { PAGE_ESSAI } from "@/lib/abonnements/essai";
+import { essaiProche } from "@/lib/abonnements/droits";
 import { etatAffiche } from "@/lib/abonnements/etat-affiche";
 import { DUREE_ESSAI_JOURS } from "@/lib/abonnements/formules";
 import { etatDeLAbonnement, type EtatDeLAbonnement } from "@/lib/abonnements/page-abonnement";
@@ -196,7 +197,12 @@ function CarteEtat({ etat, vue }: { etat: EtatDeLAbonnement; vue: VueAbonnement 
           </h2>
           {affiche.detail ? <p className={TEXTE_AIDE}>{affiche.detail}</p> : null}
         </div>
-        <GesteDuCas vue={vue} enEssai={etat.phase.type === "essai"} />
+        <GesteDuCas
+          vue={vue}
+          // Discret pendant l'essai, sauf dans sa dernière semaine ou quand un
+          // document officiel attend l'abonnement : c'est alors le geste.
+          discret={etat.phase.type === "essai" && !essaiProche(etat.phase.fin, ctx.maintenant) && !(vue.cas === "formulaire" && vue.annoncerDocument)}
+        />
       </div>
       {affiche.frise ? <FrisePeriode frise={affiche.frise} maintenant={ctx.maintenant} /> : null}
       {affiche.suppressionImminente ? (
@@ -208,10 +214,10 @@ function CarteEtat({ etat, vue }: { etat: EtatDeLAbonnement; vue: VueAbonnement 
 
 /**
  * Le geste que la carte propose : un lien vers la sous-page qui le porte, ou
- * l'essai. Pendant l'essai, rien n'y pousse à payer (2026-11-17) : les offres,
- * en lien clair ; s'abonner plus tôt y reste possible.
+ * l'essai. `discret` : pendant l'essai, rien n'y pousse à payer (2026-11-17)
+ * — les offres, en lien clair ; s'abonner plus tôt y reste possible.
  */
-function GesteDuCas({ vue, enEssai }: { vue: VueAbonnement; enEssai: boolean }) {
+function GesteDuCas({ vue, discret }: { vue: VueAbonnement; discret: boolean }) {
   const plein = buttonVariants({ variant: "board", size: "board" });
   const clair = buttonVariants({ variant: "boardClair", size: "board" });
   switch (vue.cas) {
@@ -223,8 +229,8 @@ function GesteDuCas({ vue, enEssai }: { vue: VueAbonnement; enEssai: boolean }) 
       );
     case "formulaire":
       return (
-        <Link href={PAGE_FORMULES} className={enEssai ? clair : plein}>
-          {enEssai ? "Voir les offres" : "M'abonner"}
+        <Link href={PAGE_FORMULES} className={discret ? clair : plein}>
+          {discret ? "Voir les offres" : "M'abonner"}
         </Link>
       );
     case "portail":

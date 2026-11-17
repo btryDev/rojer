@@ -43,8 +43,12 @@ export function GesteSAbonner({
   /** Le compte que montre la page (`ChampCompteAttendu`). */
   compteId: string | null;
   carte: "claire" | "encre";
-  /** L'essai en cours : sa fin, et si cette carte est celle de sa formule. */
-  essai?: { fin: Date; sienne: boolean } | null;
+  /**
+   * L'essai en cours : sa fin, si cette carte est celle de sa formule, et si
+   * la fin approche (`essaiProche`) — dans la dernière semaine, s'y abonner
+   * redevient le geste plein : c'est le moment de le faire.
+   */
+  essai?: { fin: Date; sienne: boolean; proche: boolean } | null;
 }) {
   return (
     <form action={sAbonnerAction} className="flex flex-col gap-3">
@@ -57,10 +61,10 @@ export function GesteSAbonner({
         {centimes === null
           ? "Prix indisponible pour le moment."
           : `Prélevé aujourd'hui : ${euros(centimes)} TTC, pour ${LIBELLE_PERIODICITE[periodicite].premiere}.`}
-        {essai && centimes !== null ? " Votre essai s'arrête, ses limites sont levées." : null}
+        {essai && centimes !== null ? " Votre essai s'arrête : les limites complètes de la formule s'appliquent." : null}
       </p>
-      <BoutonEnvoi variant="board" carte={carte} discret={!!essai?.sienne} disabled={centimes === null}>
-        {essai ? (essai.sienne ? "M'abonner dès maintenant" : `Passer à ${libelle}`) : <>S&apos;abonner à {libelle}</>}
+      <BoutonEnvoi variant="board" carte={carte} discret={!!essai?.sienne && !essai.proche} disabled={centimes === null}>
+        {essai ? (essai.sienne ? (essai.proche ? `M'abonner à ${libelle}` : "M'abonner dès maintenant") : `Passer à ${libelle}`) : <>S&apos;abonner à {libelle}</>}
       </BoutonEnvoi>
     </form>
   );

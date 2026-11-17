@@ -34,8 +34,8 @@ describe("GesteSAbonner", () => {
     const fin = new Date("2026-12-16T12:00:00Z");
     render(
       <>
-        <GesteSAbonner cle="rojer_essentiel_mensuel" libelle="Essentiel" centimes={2_900} periodicite="mensuel" compteId="c1" carte="claire" essai={{ fin, sienne: true }} />
-        <GesteSAbonner cle="rojer_pro_mensuel" libelle="Pro" centimes={7_900} periodicite="mensuel" compteId="c1" carte="encre" essai={{ fin, sienne: false }} />
+        <GesteSAbonner cle="rojer_essentiel_mensuel" libelle="Essentiel" centimes={2_900} periodicite="mensuel" compteId="c1" carte="claire" essai={{ fin, sienne: true, proche: false }} />
+        <GesteSAbonner cle="rojer_pro_mensuel" libelle="Pro" centimes={7_900} periodicite="mensuel" compteId="c1" carte="encre" essai={{ fin, sienne: false, proche: false }} />
       </>,
     );
     const plusTot = screen.getByRole("button", { name: "M'abonner dès maintenant" });
@@ -43,7 +43,22 @@ describe("GesteSAbonner", () => {
     expect(plusTot.className).not.toMatch(/lp-btn/);
     expect(screen.getByRole("button", { name: "Passer à Pro" }).className).toMatch(/lp-btn/);
     expect(screen.getByText("Votre formule, gratuite jusqu'au 16 décembre 2026.")).toBeTruthy();
-    expect(screen.getAllByText(/^Prélevé aujourd.hui : .* Votre essai s'arrête, ses limites sont levées\.$/)).toHaveLength(2);
+    expect(screen.getAllByText(/^Prélevé aujourd.hui : .* Votre essai s'arrête : les limites complètes de la formule s'appliquent\.$/)).toHaveLength(2);
+  });
+
+  it("dans la dernière semaine de l'essai : s'abonner à sa formule redevient le geste plein", () => {
+    render(
+      <GesteSAbonner
+        cle="rojer_essentiel_mensuel"
+        libelle="Essentiel"
+        centimes={2_900}
+        periodicite="mensuel"
+        compteId="c1"
+        carte="claire"
+        essai={{ fin: new Date("2026-12-16T12:00:00Z"), sienne: true, proche: true }}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "M'abonner à Essentiel" }).className).toMatch(/lp-btn/);
   });
 
   it("prix indisponible : le bouton reste fermé", () => {

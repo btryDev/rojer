@@ -75,9 +75,12 @@ export default async function PaiementPage() {
                 ]}
               />
               <p className={TEXTE_AIDE}>
-                À la fin de l&apos;essai, abonnez-vous pour continuer : nous vous le rappellerons par e-mail, une semaine puis
-                la veille.
+                À la fin de l&apos;essai, abonnez-vous pour continuer. Valider ou exporter un document officiel demande
+                d&apos;être abonné : vous pouvez le faire dès maintenant, votre essai s&apos;arrête alors.
               </p>
+              <Link href={PAGE_FORMULES} className={`${buttonVariants({ variant: "boardClair", size: "board" })} w-fit`}>
+                Voir les offres
+              </Link>
             </>
           ) : (
             <>
