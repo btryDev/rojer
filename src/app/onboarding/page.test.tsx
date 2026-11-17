@@ -17,6 +17,7 @@ const h = vi.hoisted(() => ({
   invitations: [] as { id: string }[],
   props: null as Record<string, unknown> | null,
   plafond: null as string | null,
+  saisie: true,
 }));
 
 vi.mock("next/navigation", () => ({ redirect: (u: string) => h.redirect(u) }));
@@ -25,10 +26,16 @@ vi.mock("@/lib/auth/require-user", () => ({
 }));
 vi.mock("@/lib/auth/compte", () => ({
   aiguillageSansCompte: async () => (!h.compte && h.invitations[0] ? `/invitation/${h.invitations[0].id}` : null),
+  getOptionalCompte: async () => (h.compte ? { ...(h.compte as object), db: {} } : null),
   compteDeLaPage: async () => ({
     compteId: (h.compte as { compte: { compteId: string } } | null)?.compte.compteId ?? null,
     nomCompte: null,
   }),
+}));
+vi.mock("@/lib/abonnements/essai", () => ({ aiguillageEssai: async () => null }));
+vi.mock("@/lib/abonnements/saisie", () => ({
+  PAGE_ABONNEMENT: "/compte/abonnement",
+  droitsDuCompte: async () => ({ saisie: h.saisie, bandeau: null }),
 }));
 vi.mock("@/lib/entreprises/queries", () => ({
   listerEntreprisesConnues: () => h.connues(),
@@ -56,6 +63,7 @@ beforeEach(() => {
   h.compte = { compte: { compteId: "c1", role: "owner" } };
   h.invitations = [];
   h.plafond = null;
+  h.saisie = true;
 });
 
 describe("/onboarding", () => {
@@ -99,5 +107,11 @@ describe("/onboarding", () => {
     const element = (await OnboardingPage()) as { props: Record<string, unknown> };
     expect(element.props).toMatchObject({ motif: h.plafond, sansBandeau: true });
     expect(assistant(element)).toMatchObject({ plafond: h.plafond });
+  });
+
+  it("saisie fermée (essai fini sans abonnement) : la page Abonnement d'emblée, pas un parcours refusé à la fin (2026-11-17)", async () => {
+    h.saisie = false;
+    await expect(OnboardingPage()).rejects.toThrow(/^REDIRECT \/compte\/abonnement$/);
+    expect(h.connues).not.toHaveBeenCalled();
   });
 });

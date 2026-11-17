@@ -2,7 +2,8 @@ import { motifDuPlafond } from "@/components/quotas/PlafondDeCreation";
 import { FermerLaSaisie } from "@/components/quotas/FermerLaSaisie";
 import { WizardShell } from "@/components/onboarding/WizardShell";
 import { redirect } from "next/navigation";
-import { aiguillageSansCompte, compteDeLaPage } from "@/lib/auth/compte";
+import { aiguillageSansCompte, compteDeLaPage, getOptionalCompte } from "@/lib/auth/compte";
+import { PAGE_ABONNEMENT, droitsDuCompte } from "@/lib/abonnements/saisie";
 import { aiguillageEssai } from "@/lib/abonnements/essai";
 import { requireUser } from "@/lib/auth/require-user";
 import { listerEntreprisesConnues } from "@/lib/entreprises/queries";
@@ -34,6 +35,13 @@ export default async function OnboardingPage() {
   // est lancée (ADR-053 § 8).
   const essai = await aiguillageEssai();
   if (essai) redirect(essai);
+  // La saisie fermée (essai fini sans abonnement, abonnement terminé) : la
+  // page Abonnement d'emblée, plutôt qu'un parcours en trois étapes refusé à
+  // la dernière (répétition du 2026-11-17). Sans `?saisie=fermee` : rien n'a
+  // été refusé, le bandeau de la page dit déjà l'état. Avant le lancement de
+  // l'offre, `droitsDe` ouvre la saisie : rien ne change.
+  const c = await getOptionalCompte();
+  if (c && !(await droitsDuCompte(c.db, c.compte.compteId)).saisie) redirect(PAGE_ABONNEMENT);
   // ~~Un compte = une entreprise : le parcours ne se joue qu'une fois.~~
   // [2026-10-26 : chaque établissement passe par ce parcours. Un compte suit
   // plusieurs entreprises, une par SIREN ; un SIRET qui reprend le SIREN de
