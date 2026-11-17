@@ -10,7 +10,10 @@ mettre à jour (rayer, dater) à chaque étape franchie.
 > vers `main`, la branche `cc` est supprimée. Vercel ne déploie plus rien
 > (`vercel.json`, `git.deploymentEnabled: false`, #312) ; le projet Vercel et
 > le code qui ne servait que lui (`vercel.json`, `scripts/migrer-en-production.sh`,
-> pilote de stockage Supabase) se retirent dans un second temps. On déploie
+> pilote de stockage Supabase) se retirent dans un second temps. [2026-11-17,
+> PR #337 : code retiré — ces trois-là, et la lecture de `VERCEL_ENV`, des
+> hôtes `VERCEL_URL` du MCP et les `maxDuration`. Reste le projet Vercel,
+> côté propriétaire.] On déploie
 > la préproduction par `pnpm deployer:preprod` depuis le dépôt principal. Tout
 > ce qui suit et parle de « deux branches », d'un flux `main` → `cc` ou d'un
 > report vers `cc` décrit l'état d'avant cette date.
@@ -197,6 +200,23 @@ Gestes de la propriétaire (Clever Cloud) :
    battement (healthchecks.io ou équivalent, période 1 jour, grâce 2 h),
    appelée par la tâche du jour finie — seul signal d'une crontab arrêtée
    (`taches/temoin.ts`, `docs/lancement-abonnements.md` § 7).
+   [2026-11-17, relecture des Server Actions] Et
+   `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` (`openssl rand -base64 32`), fixe,
+   secrète, la même au build et à l'exécution — sur la préprod aussi. Next
+   s'en sert comme sel des identifiants d'actions
+   (`serverReferenceHashSalt`, `build/webpack-config.js`, Next 16.4.6).
+   Absente, il en tire une au hasard à chaque build, et ne la garde que
+   si `.next/cache` survit (14 jours au plus) ; ce cache n'est pas cité
+   dans ce que Clever Cloud conserve d'un build à l'autre. Chaque
+   déploiement change alors tous les identifiants, et, pendant la bascule
+   progressive (anciennes et nouvelles instances côte à côte), tout
+   formulaire d'une page ouverte avant répond « Failed to find Server
+   Action ». Fixe, un identifiant ne change plus qu'avec le nom ou le
+   fichier de l'action. Ce que la doc de Next dit des instances multiples
+   ne nous concerne qu'à la marge : rien ne dit que Clever Cloud refait le
+   build par instance. Elle chiffre aussi les variables capturées par une
+   action inline : il n'y en a pas (les `.bind(null, id)` ne sont pas
+   chiffrés, et `tenancy-ecritures` garde les identifiants reçus).
 3. Questions au support : chiffrement au repos, restauration à un instant
    donné (PITR), durée de conservation des sauvegardes.
 
@@ -345,6 +365,30 @@ de la propriétaire : à traiter avant la bascule, après le chantier en cours) 
   développement (`undici`, `hono`, `fast-uri`, `vite`…). Un lot : mettre à jour ce qui
   est exploitable en production, écrire le motif pour le reste, refaire le
   relevé sur `cc`.
+
+Ajouté le 2026-11-17 (relecture du webhook Stripe contre trois listes de
+contrôle publiques ; décision de la propriétaire : pas urgent, en fin de
+liste) :
+- **Alerter sur une rafale de signatures refusées** au webhook Stripe : un
+  refus ne donne aujourd'hui qu'un `console.warn` (`route.ts`). Une série
+  trahit un secret mal posé après une rotation, ou un sondage de
+  l'endpoint. Au-delà d'un seuil, une alerte par jour au plus
+  (`alerterUneFoisParJour` existe). Le reste de la liste est tenu
+  (corps brut, temps constant, 5 min, idempotence, file, notifications
+  légères) ; le filtrage par adresse IP de Stripe est écarté (derrière le
+  répartiteur de Clever Cloud, il dépendrait de `X-Forwarded-For`, et une
+  liste d'adresses se périme en silence).
+- **Corps de 25 Mo admis par TOUTES les actions serveur** (relecture des
+  Server Actions, 2026-11-17) : `bodySizeLimit` est global
+  (`next.config.ts`), et Next lit le corps — en mémoire, jusqu'à la
+  limite — avant que l'action ne vérifie la session
+  (`app-render/action-handler.js`) ; les identifiants d'actions sont dans
+  le JavaScript servi. N'importe qui peut donc faire tenir 25 Mo par
+  requête au serveur. Pas de fuite, une consommation de mémoire, à
+  mesurer avec le test de charge sur la taille d'instance retenue.
+  Remède, déjà écrit dans `next.config.ts` : déposer les rapports par URL
+  pré-signée (et les autres fichiers déposés : import DUERP, pièces des
+  prestataires…), puis abaisser la limite.
 
 ## Recette « pages × comptes à plusieurs membres » (avant la bascule)
 
@@ -515,11 +559,13 @@ jetable, hors dépôt).
 
 ### À faire à la bascule (Vercel coupé)
 
-- Retirer le pilote de stockage `supabase` : `src/lib/storage/supabase.ts`, sa
+- ~~Retirer le pilote de stockage `supabase` : `src/lib/storage/supabase.ts`, sa
   branche dans `storage/index.ts`, la valeur `supabase` de `STORAGE_DRIVER` et
   les variables `SUPABASE_*` de `src/env.ts` et `.env.example`, la dépendance
-  `@supabase/supabase-js`. Il sert encore la production Vercel (`main`).
-- Retirer `vercel.json`.
+  `@supabase/supabase-js`. Il sert encore la production Vercel (`main`).~~
+  [2026-11-17, PR #337 : retiré, avec la clé de service (`cle-service.ts`
+  devient `nettoyer.ts`, seule `nettoyer` sert encore le pilote s3).]
+- ~~Retirer `vercel.json`.~~ [2026-11-17, PR #337 : retiré.]
 - Les tables `Intervention` et `CommentaireIntervention` (ADR-018, sans code)
   attendent toujours leur migration de suppression.
 

@@ -40,24 +40,9 @@ describe("lireHotesAutorises", () => {
     expect(hotes).not.toContain("https://rojer.fr/api");
   });
 
-  it("ajoute le domaine du déploiement Vercel", () => {
-    const hotes = lireHotesAutorises(
-      env({
-        VERCEL_URL: "test-duerp-abc.vercel.app",
-        VERCEL_PROJECT_PRODUCTION_URL: "test-duerp.vercel.app",
-      }),
-    );
-    expect(hotes).toEqual(
-      expect.arrayContaining([
-        "test-duerp-abc.vercel.app",
-        "test-duerp.vercel.app",
-      ]),
-    );
-  });
-
   it("ne répète pas un hôte déclaré deux fois", () => {
     const hotes = lireHotesAutorises(
-      env({ MCP_HOTES: "rojer.fr,rojer.fr", VERCEL_URL: "rojer.fr" }),
+      env({ MCP_HOTES: "rojer.fr,rojer.fr", PUBLIC_APP_URL: "https://rojer.fr" }),
     );
     expect(hotes.filter((h) => h === "rojer.fr")).toHaveLength(1);
   });
@@ -69,9 +54,9 @@ describe("lireHotesAutorises", () => {
   });
 });
 
-describe("lireHotesAutorises — hors Vercel (bascule Clever Cloud)", () => {
-  // Audit Next.js du 2026-10-14, H5 : sans `VERCEL_*` ni `MCP_HOTES`, la
-  // production refusait son propre hôte. Elle le tire de `PUBLIC_APP_URL`.
+describe("lireHotesAutorises — PUBLIC_APP_URL", () => {
+  // Audit Next.js du 2026-10-14, H5 : sans `MCP_HOTES`, la production tire
+  // son hôte de `PUBLIC_APP_URL`.
   it("retient l'hôte de PUBLIC_APP_URL, sans schéma ni port", () => {
     const hotes = lireHotesAutorises(env({ PUBLIC_APP_URL: "https://app.rojer.fr:443/" }));
     expect(hotes).toContain("app.rojer.fr");
@@ -90,34 +75,18 @@ describe("lireHotesAutorises — hors Vercel (bascule Clever Cloud)", () => {
 });
 
 describe("lireHotePublic", () => {
-  it("hors Vercel et sans MCP_HOTES, annonce l'hôte de PUBLIC_APP_URL", () => {
+  it("sans MCP_HOTES, annonce l'hôte de PUBLIC_APP_URL", () => {
     expect(lireHotePublic(env({ PUBLIC_APP_URL: "https://app.rojer.fr" }))).toBe("app.rojer.fr");
   });
 
-  it("MCP_HOTES prime sur PUBLIC_APP_URL, qui prime sur Vercel", () => {
+  it("MCP_HOTES prime sur PUBLIC_APP_URL", () => {
     expect(
       lireHotePublic(env({ MCP_HOTES: "mcp.rojer.fr", PUBLIC_APP_URL: "https://app.rojer.fr" })),
     ).toBe("mcp.rojer.fr");
-    expect(
-      lireHotePublic(
-        env({ PUBLIC_APP_URL: "https://app.rojer.fr", VERCEL_URL: "x-abc.vercel.app" }),
-      ),
-    ).toBe("app.rojer.fr");
   });
 
   it("écarte la boucle locale au profit d'un hôte joignable", () => {
     expect(lireHotePublic(env({ MCP_HOTES: "rojer.fr" }))).toBe("rojer.fr");
-  });
-
-  it("préfère l'hôte déclaré à celui de Vercel", () => {
-    // Un domaine propre l'emporte sur l'URL de déploiement : c'est celui que
-    // l'utilisateur saisit, donc celui que l'identifiant de ressource doit
-    // annoncer.
-    expect(
-      lireHotePublic(
-        env({ MCP_HOTES: "rojer.fr", VERCEL_URL: "test-duerp-abc.vercel.app" }),
-      ),
-    ).toBe("rojer.fr");
   });
 
   it("retombe sur la boucle locale seulement à défaut de tout le reste", () => {

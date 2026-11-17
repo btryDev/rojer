@@ -316,10 +316,3 @@ describe("entrées refusées", () => {
     expect(fiche.inputSchema.additionalProperties).toBe(false);
   });
 });
-
-describe("plafond de la plateforme", () => {
-  it("la route déclare un maxDuration borné", () => {
-    expect(route.maxDuration).toBeGreaterThan(0);
-    expect(route.maxDuration).toBeLessThanOrEqual(60);
-  });
-});

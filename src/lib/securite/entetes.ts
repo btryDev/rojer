@@ -142,8 +142,8 @@ export function entetesSecurite(): Entete[] {
     { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
     // includeSubDomains (ASVS 5.0.0 V3.4.1, L2 ; audit du 2026-10-13) : HSTS
     // couvre l'hôte qui émet l'en-tête et SES sous-domaines, jamais le domaine
-    // parent. Servi par `test-duerp-hazel.vercel.app` — ou demain par un
-    // sous-domaine de `rojer.fr` —, il n'engage pas `rojer.fr` lui-même ni ses
+    // parent. Servi par un sous-domaine (préproduction Clever Cloud, ou
+    // demain `app.rojer.fr`), il n'engage pas `rojer.fr` lui-même ni ses
     // autres noms gérés chez OVH. Le commentaire qui le refusait ici affirmait
     // le contraire : il était faux.
     // Pas de `preload` : il engage la soumission à la liste des navigateurs,

@@ -9,17 +9,15 @@
 // LA RÈGLE, dans cet ordre :
 //   1. `APP_ENV` (production | preview | development), posée à la main sur
 //      chaque déploiement. C'est la source à venir, et elle prime partout.
-//   2. À défaut, `VERCEL_ENV`, que Vercel pose lui-même : la production
-//      actuelle n'a donc rien à configurer.
-//   3. À défaut des deux, hors build de production (`next dev`, tests) :
+//   2. ~~À défaut, `VERCEL_ENV`, que Vercel pose lui-même.~~ [2026-11-17 :
+//      retiré avec Vercel.]
+//   3. À défaut, hors build de production (`next dev`, tests) :
 //      développement.
 //   4. Sinon — un serveur de production qui ne dit pas ce qu'il est —
 //      `null` : INDÉTERMINÉ. Ce n'est pas « production par défaut ».
 //
-// Une valeur inconnue (`APP_ENV=prod`, faute de frappe) rend aussi `null`,
-// sans retomber sur `VERCEL_ENV` : qui a posé `APP_ENV` a voulu trancher, et
-// un repli silencieux lui donnerait tort sans le lui dire. `src/env.ts`
-// refuse de toute façon ce cas au démarrage.
+// Une valeur inconnue (`APP_ENV=prod`, faute de frappe) rend aussi `null` ;
+// `src/env.ts` refuse de toute façon ce cas au démarrage.
 //
 // Pas de `server-only` : le module ne lit que l'environnement qu'on lui passe
 // et ne porte aucun secret ; les tests et `src/env.ts` le partagent.
@@ -37,9 +35,6 @@ function estEnvironnementApp(v: string): v is EnvironnementApp {
 export function environnementApp(env: Env = process.env): EnvironnementApp | null {
   const app = env.APP_ENV?.trim();
   if (app) return estEnvironnementApp(app) ? app : null;
-
-  const vercel = env.VERCEL_ENV?.trim();
-  if (vercel) return estEnvironnementApp(vercel) ? vercel : null;
 
   return env.NODE_ENV === "production" ? null : "development";
 }

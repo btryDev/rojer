@@ -2,6 +2,10 @@
 
 *Écrit le 2026-09-27 (`lot/stockage-supabase`, journal C46).*
 
+> [2026-11-17 : le pilote `supabase` et Vercel sont retirés (PR #337). Seule
+> la section « Clever Cloud : Cellar (S3) » vaut encore ; le reste est
+> l'historique de la mise en service sur Vercel.]
+
 ## Pourquoi
 
 Rojer stocke des fichiers déposés : rapports de vérification, pièces des

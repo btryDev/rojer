@@ -2,7 +2,8 @@
  * Abstraction de stockage de fichiers (étape 7).
  *
  * Objectif : permettre de démarrer en **filesystem local** (dev + petit prod)
- * puis migrer vers **Supabase Storage / S3 / R2** sans changer le code métier.
+ * puis migrer vers ~~**Supabase Storage /**~~ **S3 / R2** sans changer le code métier.
+ * [2026-11-17 : Supabase retiré (PR #337) ; le pilote s3 sert Cellar chez Clever Cloud.]
  *
  * Aucune méthode ne renvoie une URL signée directement : les rapports sont
  * toujours servis via une route API `/api/rapports/[id]/fichier` qui contrôle

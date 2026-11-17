@@ -6,9 +6,6 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const creer = vi.hoisted(() => vi.fn(() => ({ storage: { from: () => ({}) } })));
-vi.mock("@supabase/supabase-js", () => ({ createClient: creer }));
-
 import {
   __oublierPiloteStockage,
   getStorage,
@@ -16,7 +13,6 @@ import {
   stockageEnService,
 } from "./index";
 import { LocalFileStorage } from "./local";
-import { SupabaseFileStorage } from "./supabase";
 import { S3FileStorage } from "./s3";
 
 const VARIABLES = [
@@ -26,13 +22,8 @@ const VARIABLES = [
   "CELLAR_ADDON_KEY_SECRET",
   "STORAGE_DRIVER",
   "STORAGE_BUCKET",
-  "SUPABASE_SERVICE_ROLE_KEY",
-  "NEXT_PUBLIC_SUPABASE_URL",
   "STORAGE_LOCAL_PATH",
 ] as const;
-const b64 = (o: unknown) => Buffer.from(JSON.stringify(o)).toString("base64url");
-// Une clé service_role au format JWT : la seule forme acceptée (C47).
-const CLE_SERVICE = `${b64({ alg: "HS256", typ: "JWT" })}.${b64({ role: "service_role" })}.signature_qui_ne_doit_pas_sortir`;
 let avant: Record<string, string | undefined>;
 
 function poser(env: Partial<Record<(typeof VARIABLES)[number], string>>) {
@@ -47,7 +38,6 @@ function poser(env: Partial<Record<(typeof VARIABLES)[number], string>>) {
 
 beforeEach(() => {
   avant = Object.fromEntries(VARIABLES.map((v) => [v, process.env[v]]));
-  creer.mockClear();
 });
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -58,13 +48,6 @@ afterEach(() => {
   }
   __oublierPiloteStockage();
 });
-
-const SUPABASE_COMPLET = {
-  STORAGE_DRIVER: "supabase",
-  STORAGE_BUCKET: "rojer-pieces",
-  SUPABASE_SERVICE_ROLE_KEY: CLE_SERVICE,
-  NEXT_PUBLIC_SUPABASE_URL: "https://projet.supabase.co",
-};
 
 describe("getStorage — le pilote selon les variables", () => {
   it("développement, rien de posé : le disque local", () => {
@@ -80,102 +63,9 @@ describe("getStorage — le pilote selon les variables", () => {
       expect(stockageEnService()).toBe(false);
       expect(() => getStorage()).toThrow(StockageNonConfigure);
       expect(() => getStorage()).toThrow(/en production : le disque du serveur est en lecture seule et éphémère/);
-      expect(() => getStorage()).toThrow(/STORAGE_DRIVER=supabase \(Vercel\) ou STORAGE_DRIVER=s3 \(Clever Cloud\)/);
+      expect(() => getStorage()).toThrow(/Poser STORAGE_DRIVER=s3 et ses variables/);
     },
   );
-
-  it("supabase, tout posé : le pilote Supabase, client construit avec la clé de service, sans session", () => {
-    poser({ NODE_ENV: "production", ...SUPABASE_COMPLET });
-    expect(stockageEnService()).toBe(true);
-    expect(getStorage()).toBeInstanceOf(SupabaseFileStorage);
-    expect(creer).toHaveBeenCalledWith("https://projet.supabase.co", CLE_SERVICE, {
-      auth: { persistSession: false, autoRefreshToken: false },
-      global: { fetch: expect.any(Function) },
-    });
-  });
-
-  it.each(["STORAGE_BUCKET", "SUPABASE_SERVICE_ROLE_KEY", "NEXT_PUBLIC_SUPABASE_URL"] as const)(
-    "supabase sans %s : refusé, la variable nommée, aucune valeur dite",
-    (manquante) => {
-      poser({ NODE_ENV: "production", ...SUPABASE_COMPLET, [manquante]: undefined });
-      expect(stockageEnService()).toBe(false);
-      let message = "";
-      try {
-        getStorage();
-      } catch (e) {
-        message = (e as Error).message;
-      }
-      expect(message).toContain(manquante);
-      expect(message).not.toContain(CLE_SERVICE);
-      expect(creer).not.toHaveBeenCalled();
-    },
-  );
-
-  it("une clé collée avec blancs et guillemets est nettoyée avant d'être passée au client", () => {
-    poser({
-      NODE_ENV: "production",
-      ...SUPABASE_COMPLET,
-      SUPABASE_SERVICE_ROLE_KEY: `  "${CLE_SERVICE}"\n`,
-      NEXT_PUBLIC_SUPABASE_URL: " https://projet.supabase.co\n",
-    });
-    const info = vi.spyOn(console, "info").mockImplementation(() => {});
-    expect(stockageEnService()).toBe(true);
-    getStorage();
-    expect(creer).toHaveBeenCalledWith("https://projet.supabase.co", CLE_SERVICE, {
-      auth: { persistSession: false, autoRefreshToken: false },
-      global: { fetch: expect.any(Function) },
-    });
-    // Le journal dit la forme et la longueur, jamais la valeur.
-    const journal = info.mock.calls.map((c) => String(c[0])).join("\n");
-    expect(journal).toMatch(/JWT à trois segments, rôle « service_role »/);
-    expect(journal).not.toContain("signature_qui_ne_doit_pas_sortir");
-    info.mockRestore();
-  });
-
-  it.each([
-    ["sb_secret_nouveau_format_secret", /clé secrète au nouveau format/],
-    [`${b64({ alg: "HS256" })}.${b64({ role: "anon" })}.sig`, /rôle « anon »/],
-  ])("clé %s : refusée avant tout appel, motif clair, valeur tue", (cle, forme) => {
-    poser({ NODE_ENV: "production", ...SUPABASE_COMPLET, SUPABASE_SERVICE_ROLE_KEY: cle });
-    const erreur = vi.spyOn(console, "error").mockImplementation(() => {});
-    expect(stockageEnService()).toBe(false);
-    let message = "";
-    try {
-      getStorage();
-    } catch (e) {
-      message = (e as Error).message;
-    }
-    expect(message).toMatch(/utilisez la clé service_role au format JWT/);
-    expect(message).toMatch(forme);
-    expect(message).not.toContain(cle);
-    expect(creer).not.toHaveBeenCalled();
-    erreur.mockRestore();
-  });
-
-  it("le client Supabase borne chaque appel par un délai (audit Next.js M9)", async () => {
-    // Sans délai, un Storage muet tenait la requête ouverte jusqu'au plafond
-    // de la plateforme. On vérifie que le `fetch` remis au client pose un
-    // signal d'abandon sur chaque appel.
-    poser({ NODE_ENV: "production", ...SUPABASE_COMPLET });
-    getStorage();
-    const options = (creer.mock.calls.at(-1) as unknown[] | undefined)?.[2] as
-      | { global?: { fetch?: typeof fetch } }
-      | undefined;
-    const fetchDuClient = options?.global?.fetch;
-    expect(fetchDuClient).toBeTypeOf("function");
-
-    let signal: AbortSignal | null | undefined;
-    vi.stubGlobal("fetch", async (_e: unknown, init?: RequestInit) => {
-      signal = init?.signal;
-      return new Response("ok");
-    });
-    try {
-      await fetchDuClient!("https://projet.supabase.co/storage/v1/object/x");
-    } finally {
-      vi.unstubAllGlobals();
-    }
-    expect(signal).toBeInstanceOf(AbortSignal);
-  });
 
   it("un pilote inconnu est refusé", () => {
     poser({ NODE_ENV: "production", STORAGE_DRIVER: "ftp" });
@@ -183,7 +73,7 @@ describe("getStorage — le pilote selon les variables", () => {
   });
 
   it("aucune variable de stockage n'est exposée au navigateur", () => {
-    // La clé de service ne se préfixe jamais NEXT_PUBLIC_ : Next l'inlinerait
+    // Une clé de stockage ne se préfixe jamais NEXT_PUBLIC_ : Next l'inlinerait
     // dans le bundle client.
     const source = readFileSync(
       join(dirname(fileURLToPath(import.meta.url)), "index.ts"),

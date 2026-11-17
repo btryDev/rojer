@@ -80,19 +80,17 @@ describe("validerEnvironnement", () => {
       validerEnvironnement({ ...BASE, EMAIL_DRIVER: "mailpace", MAILPACE_API_KEY: "cle" }),
     ).not.toThrow();
     expect(() =>
-      validerEnvironnement({ ...BASE, STORAGE_DRIVER: "supabase", PUBLIC_APP_URL: "https://rojer.fr" }),
+      validerEnvironnement({ ...BASE, STORAGE_DRIVER: "s3", PUBLIC_APP_URL: "https://rojer.fr" }),
     ).not.toThrow();
   });
 
-  // APP_ENV absente d'une production non Vercel : un avertissement, pas une
-  // faute — en faire une faute fermait toute la prod si Vercel n'exposait pas
-  // ses variables système (revue du 2026-10-14, B1).
-  it("signale APP_ENV d'une production hors Vercel sans fermer le serveur", () => {
+  // APP_ENV absente d'une production : un avertissement, pas une faute
+  // (revue du 2026-10-14, B1).
+  it("signale APP_ENV absente d'une production sans fermer le serveur", () => {
     const prod = { ...BASE, NODE_ENV: "production", PUBLIC_APP_URL: "https://rojer.fr" };
     expect(() => validerEnvironnement(prod)).not.toThrow();
     expect(avertissementsEnvironnement(prod)).toHaveLength(1);
     expect(avertissementsEnvironnement(prod)[0]).toMatch(/^APP_ENV absente/);
-    expect(avertissementsEnvironnement({ ...prod, VERCEL_ENV: "production" })).toEqual([]);
     expect(avertissementsEnvironnement({ ...prod, APP_ENV: "production" })).toEqual([]);
   });
 });

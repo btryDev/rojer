@@ -175,7 +175,8 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 // La marque de calendrier périmé passe par le client de la session
-// (`regeneration-sure.ts`) : sans ce mock, le chemin d'échec appelle Supabase.
+// (`regeneration-sure.ts`) : sans ce mock, le chemin d'échec ~~appelle Supabase~~
+// lit la session réelle. [2026-11-17 : Supabase retiré (PR #337).]
 vi.mock("@/lib/auth/compte", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/auth/compte")>()),
   getOptionalCompte: async () => ({ user: { id: "user-1" }, db: await (await import("@/test/garde-simulee")).clientDuCompteSimule() }),

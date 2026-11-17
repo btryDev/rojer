@@ -94,7 +94,7 @@ export function nomDossierArchive(nom: string | null | undefined, defaut: string
  * (rapports, pièces de prestataire) : elles en avaient chacune une copie.
  *
  * Les pilotes refusent toute clé qui contient « .. » (`local.ts`,
- * `supabase.ts`) — c'est leur garde contre la remontée d'arborescence, et elle
+ * `s3.ts`) — c'est leur garde contre la remontée d'arborescence, et elle
  * reste entière. L'assainissement gardait pourtant les points consécutifs du
  * nom d'origine : « rapport..pdf », banal quand un nom est tapé à la main,
  * donnait une clé refusée, et le dépôt échouait (audit du 2026-10-13). Une

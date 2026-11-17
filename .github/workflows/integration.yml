@@ -29,8 +29,7 @@
 #
 # Absents, et pourquoi : `etablissements/comptes-modules.integration` et
 # `rapports/joindre-realisations.integration` exigent une base semée du gros
-# dossier (`seed:complet`), que ce job ne sème pas ; `storage/supabase` exige
-# un vrai stockage Supabase et sa clé de service.
+# dossier (`seed:complet`), que ce job ne sème pas.
 #
 # Aucun secret, aucun accès à la production.
 

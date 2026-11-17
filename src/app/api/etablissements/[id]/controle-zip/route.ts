@@ -49,12 +49,6 @@ import {
 } from "@/lib/controle/fichiers-zip";
 import { reserverPlaceExport } from "@/lib/exports/limite";
 
-/**
- * Durée maximale de la fonction : lire les pièces, rendre quatre PDF et
- * streamer l'archive. 300 s, le maximum du plan Hobby et le défaut du Pro
- * (documentation Vercel « Functions limits », relue le 2026-09-27).
- */
-export const maxDuration = 300;
 import type { DuerpSnapshot } from "@/lib/versions/snapshot";
 import {
   fraicheurCalendrier,

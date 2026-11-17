@@ -90,7 +90,8 @@ export const MESSAGE_REGEN_ECHEC =
  * [2026-10-14, audit Next.js H5] La garde lisait `VERCEL_ENV === "preview"`,
  * qui n'existe pas chez Clever Cloud : une préversion y aurait écrit. Elle lit
  * désormais `ecritureAutomatiqueAutorisee` (`@/lib/environnement`) : `APP_ENV`
- * d'abord, `VERCEL_ENV` à défaut, et, dans le doute, PAS d'écriture.
+ * seule [2026-11-17 : `VERCEL_ENV` n'est plus lue], et, dans le doute, PAS
+ * d'écriture.
  */
 export async function assurerCalendrierAJour(
   etablissementId: string,
