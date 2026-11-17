@@ -269,10 +269,10 @@ describe("l'essai gratuit : ses limites priment sur la formule essayée", () => 
     const essai = (n: number) => faux("rojer_essentiel_mensuel", n, null, null);
     await prendreQuota(essai(4).txc, "c1", "equipements");
     await expect(prendreQuota(essai(5).txc, "c1", "equipements")).rejects.toThrow(
-      "Votre essai gratuit couvre 5 équipements : pour en ajouter, abonnez-vous dès maintenant depuis la page Abonnement de votre compte — votre essai s'arrête, et vous passez aux limites complètes de votre formule.",
+      "Votre essai gratuit couvre 5 équipements. Abonnez-vous dès maintenant depuis la page Abonnement pour tout débloquer : les limites complètes de votre formule, et la validation des documents officiels. Votre essai s'arrête alors.",
     );
-    await expect(prendreQuota(essai(1).txc, "c1", "zones")).rejects.toThrow(/couvre 1 zone :/);
-    await expect(prendreQuota(essai(1).txc, "c1", "prescriptions")).rejects.toThrow(/couvre 1 prescription particulière :/);
+    await expect(prendreQuota(essai(1).txc, "c1", "zones")).rejects.toThrow(/couvre 1 zone\./);
+    await expect(prendreQuota(essai(1).txc, "c1", "prescriptions")).rejects.toThrow(/couvre 1 prescription particulière\./);
     const unites = essai(2);
     await prendreQuota(unites.txc, "c1", "unitesTravail");
     expect(unites.tx.uniteTravail.count).toHaveBeenCalledWith({ where: { estTransverse: false } });

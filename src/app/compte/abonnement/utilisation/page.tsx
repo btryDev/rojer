@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { CarteAbonnement, OffreFermee, TEXTE_AIDE } from "@/components/abonnements/CarteAbonnement";
 import { JaugeDePlafond } from "@/components/abonnements/JaugeDePlafond";
-import { MenuAbonnement } from "@/components/abonnements/MenuAbonnement";
+import { MenuAbonnement } from "@/components/compte/MenuInterne";
 import { PageDuCompte } from "@/components/compte/PageDuCompte";
 import { buttonVariants } from "@/components/ui/button";
 import type { Db } from "@/lib/auth/compte";
@@ -93,7 +93,7 @@ async function Plafonds({ etat, db, compteId }: { etat: EtatDeLAbonnement; db: D
     ? { texte: "Démarrez votre essai gratuit pour commencer à saisir.", geste: "Démarrer mon essai gratuit", href: PAGE_ESSAI }
     : regime.essai === "en_cours"
       ? {
-          texte: `Ce sont les limites de l'essai. En vous abonnant dès maintenant, vous passez aux limites complètes de la formule ${FORMULES[FORMULE_D_ESSAI].libelle} ; votre essai s'arrête.`,
+          texte: `Ce sont les limites de l'essai. Abonnez-vous dès maintenant pour tout débloquer : les limites complètes de la formule ${FORMULES[FORMULE_D_ESSAI].libelle}, et la validation et l'export des documents officiels. Votre essai s'arrête alors.`,
           geste: "Voir les offres",
           href: PAGE_FORMULES,
         }

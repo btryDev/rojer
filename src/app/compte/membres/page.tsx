@@ -1,5 +1,6 @@
 import { FermerLaSaisie } from "@/components/quotas/FermerLaSaisie";
 import { refusMembres } from "@/lib/abonnements/quotas";
+import { MenuCompte } from "@/components/compte/MenuInterne";
 import { PageDuCompte } from "@/components/compte/PageDuCompte";
 import { NomDuCompte } from "@/components/compte/NomDuCompte";
 import { requireCompte } from "@/lib/auth/compte";
@@ -47,6 +48,7 @@ export default async function MembresPage({
     <PageDuCompte
       titre="Membres du compte"
       description="Les personnes qui travaillent sur vos dossiers. Chacune voit tous les établissements du compte, selon son rôle. Les prestataires n'en font pas partie : ils accèdent par un lien."
+      menu={<MenuCompte />}
     >
       <div>
         <NomDuCompte nom={nomCompte} email={user.email} />

@@ -61,10 +61,14 @@ export function GesteSAbonner({
         {centimes === null
           ? "Prix indisponible pour le moment."
           : `Prélevé aujourd'hui : ${euros(centimes)} TTC, pour ${LIBELLE_PERIODICITE[periodicite].premiere}.`}
-        {essai && centimes !== null ? " Votre essai s'arrête : les limites complètes de la formule s'appliquent." : null}
+        {/* Ce que l'abonnement débloque, dit en clair (retour de test du
+            2026-11-17) : les volumes, et les documents officiels. */}
+        {essai && centimes !== null
+          ? " Lève les limites de l'essai et ouvre la validation et l'export des documents officiels ; votre essai s'arrête."
+          : null}
       </p>
       <BoutonEnvoi variant="board" carte={carte} discret={!!essai?.sienne && !essai.proche} disabled={centimes === null}>
-        {essai ? (essai.sienne ? (essai.proche ? `M'abonner à ${libelle}` : "M'abonner dès maintenant") : `Passer à ${libelle}`) : <>S&apos;abonner à {libelle}</>}
+        {essai ? (essai.sienne ? (essai.proche ? `M'abonner à ${libelle}` : "M'abonner dès maintenant pour tout débloquer") : `Passer à ${libelle}`) : <>S&apos;abonner à {libelle}</>}
       </BoutonEnvoi>
     </form>
   );

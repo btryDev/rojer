@@ -19,7 +19,8 @@ import { PAGE_SAISIE_FERMEE } from "@/lib/auth/portee/gel";
 /** Où une écriture refusée à un membre en lecture seule renvoie (ADR-054 § 4). */
 export const PAGE_LECTURE_SEULE = "/compte/lecture-seule";
 /** Où un geste réservé au propriétaire renvoie un autre membre. */
-export const PAGE_MEMBRES = "/compte/membres";
+import { PAGE_MEMBRES } from "@/lib/compte/sous-pages";
+export { PAGE_MEMBRES };
 
 // Le lancement de l'offre vit à part (`lancement.ts`), sans dépendance à la
 // session : les plafonds le lisent depuis la couche qui construit la portée.
