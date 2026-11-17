@@ -33,6 +33,8 @@ describe("verifierSaisie", () => {
   // ~~« ne lit rien, ni session ni abonnement »~~ [2026-11-03, ADR-054 § 4 :
   // le rôle se lit toujours ; l'abonnement, jamais avant le lancement.]
   it("avant le lancement de l'offre : lit le rôle, jamais l'abonnement", async () => {
+    // Un `.env` local qui lance l'offre ne doit pas décider du test.
+    vi.stubEnv("ABONNEMENT_EXIGE", "");
     etatStripe.mockReturnValue({ active: true, mode: "test" });
     await verifierSaisie();
     vi.stubEnv("ABONNEMENT_EXIGE", "oui");

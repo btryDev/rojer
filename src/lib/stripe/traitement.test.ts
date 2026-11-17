@@ -15,14 +15,18 @@ vi.mock("./synchronisation", async (reel) => ({
   ...(await reel<typeof import("./synchronisation")>()),
   synchroniserSousBail: vi.fn(),
 }));
-vi.mock("./parcours", () => ({ rendrePlanningEchu: vi.fn().mockResolvedValue(undefined), carteQuiAPaye: vi.fn().mockResolvedValue(undefined) }));
+vi.mock("./parcours", () => ({
+  rendrePlanningEchu: vi.fn().mockResolvedValue(undefined),
+  carteQuiAPaye: vi.fn().mockResolvedValue(undefined),
+  expirerSessionsOuvertes: vi.fn().mockResolvedValue(undefined),
+}));
 vi.mock("@/lib/alertes", () => ({ alerter: vi.fn().mockResolvedValue(undefined), alerterUneFoisParJour: vi.fn().mockResolvedValue(undefined) }));
 
 import * as evenements from "./evenements";
 import * as file from "./file";
 import { synchroniserSousBail } from "./synchronisation";
 import { alerter, alerterUneFoisParJour } from "@/lib/alertes";
-import { carteQuiAPaye, rendrePlanningEchu } from "./parcours";
+import { carteQuiAPaye, expirerSessionsOuvertes, rendrePlanningEchu } from "./parcours";
 import { EVENEMENTS_ECOUTES } from "./webhook";
 import { aiguillageDe, aiguiller, traiterLaFile, traiterLaFileIci } from "./traitement";
 
@@ -82,6 +86,11 @@ describe("aiguillageDe : le client de l'objet relu, et les effets propres à l'o
 
   it("session d'abonnement : la relecture suit par la file ; une session « setup » (d'avant le 2026-11-16) n'est plus suivie", async () => {
     api.checkout.sessions.retrieve.mockResolvedValue({ mode: "subscription", customer: "cus_1" });
+    expect(await aiguillageDe(faux, "v1.checkout.session.completed", "cs_1")).toEqual({ clientStripe: "cus_1" });
+    // Une autre session restée ouverte (second onglet) ne peut plus être payée ;
+    // si l'expiration échoue, la copie du paiement réussi suit quand même.
+    expect(expirerSessionsOuvertes).toHaveBeenCalledWith(faux, "cus_1");
+    vi.mocked(expirerSessionsOuvertes).mockRejectedValueOnce(new Error("injoignable"));
     expect(await aiguillageDe(faux, "v1.checkout.session.completed", "cs_1")).toEqual({ clientStripe: "cus_1" });
     api.checkout.sessions.retrieve.mockResolvedValue({ mode: "setup", customer: "cus_1" });
     expect(await aiguillageDe(faux, "v1.checkout.session.completed", "cs_1")).toMatchObject({ clientStripe: null });

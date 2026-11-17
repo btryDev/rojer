@@ -105,7 +105,11 @@ export function horlogeDeSuppression(
   if (s && OUVRENT.has(s.status)) {
     return { sansAbonnementDepuis: null, suppressionPrevueLe: null, avertiSuppression30Le: null, avertiSuppression7Le: null };
   }
-  return { sansAbonnementDepuis: laPlusRecente(date(s?.ended_at) ?? dejaNotee ?? relueLe, finEssai)! };
+  // La date déjà notée d'abord : les avertissements partis et la date de
+  // suppression annoncée en dépendent. Une résiliation tardive d'un impayé,
+  // ou une tentative de réabonnement expirée, ne la redate pas (revue du
+  // 2026-11-17) ; elle est vidée dès qu'un abonnement rouvre.
+  return { sansAbonnementDepuis: laPlusRecente(dejaNotee ?? date(s?.ended_at) ?? relueLe, finEssai)! };
 }
 
 /**

@@ -53,6 +53,7 @@ describe("parcours Stripe", () => {
       mode: "subscription",
       customer: "cus_1",
       consent_collection: { terms_of_service: "required" },
+      allowed_payment_method_types: ["card"],
       subscription_data: { metadata: { userId: "u1" }, default_tax_rates: ["txr_tva"] },
     });
     expect(api.checkout.sessions.list).toHaveBeenCalledWith({ customer: "cus_1", status: "open", limit: 10 }, expect.anything());
@@ -158,10 +159,16 @@ describe("parcours Stripe", () => {
         payment_behavior: "pending_if_incomplete",
         expand: ["latest_invoice"],
       },
-      { idempotencyKey: "monter-sub_1-price_em-price_pm" },
+      { idempotencyKey: "monter-sub_1-price_em-price_pm-sans-facture" },
     );
     api.subscriptions.update.mockResolvedValue({ latest_invoice: { status: "open", hosted_invoice_url: "https://invoice.stripe.com/i/2" } });
     expect(await monterDeFormule(stripe, { ...sub, schedule: null } as unknown as Stripe.Subscription, pm)).toBe("https://invoice.stripe.com/i/2");
+    // Montée seulement en attente de son paiement : la baisse prévue reste (revue du 2026-11-17).
+    api.subscriptionSchedules.release.mockClear();
+    api.subscriptions.update.mockResolvedValue({ pending_update: { expires_at: 1 }, latest_invoice: { status: "open", hosted_invoice_url: "https://invoice.stripe.com/i/3" } });
+    expect(await monterDeFormule(stripe, { ...sub, latest_invoice: "in_9" } as unknown as Stripe.Subscription, pm)).toBe("https://invoice.stripe.com/i/3");
+    expect(api.subscriptionSchedules.release).not.toHaveBeenCalled();
+    expect(api.subscriptions.update.mock.calls.at(-1)?.[2]).toEqual({ idempotencyKey: "monter-sub_1-price_em-price_pm-in_9" });
     // Le rythme change (mois → année) : la période repart aujourd'hui (répétition du 2026-11-17).
     api.subscriptions.update.mockResolvedValue({ latest_invoice: { status: "paid" } });
     await monterDeFormule(stripe, { ...sub, schedule: null } as unknown as Stripe.Subscription, { priceId: "price_ea", intervalle: "year" });

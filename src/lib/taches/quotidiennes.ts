@@ -81,7 +81,7 @@ export async function lancerTachesQuotidiennes(maintenant: Date) {
     ...(config.active
       ? {
           fileStripe: await tenter("état de la file Stripe", () => signalerLaFile(maintenant)),
-          rapprochement: await tenter("rapprochement Stripe", () => rapprocher(maintenant)),
+          rapprochement: await tenter("rapprochement Stripe", () => rapprocher(maintenant, clientStripe(config))),
           reglagesStripe: await tenter("réglages Stripe", () => controlerLesReglagesStripe(clientStripe(config), maintenant)),
         }
       : {}),

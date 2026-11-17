@@ -23,6 +23,7 @@ import { prixTTC } from "@/lib/abonnements/affichage";
 import { baissePrevue } from "@/lib/stripe/parcours";
 import { clientStripeLecture } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
+import { idStripe } from "@/lib/stripe/ids";
 import { synchroniserClientStripe } from "@/lib/stripe/synchronisation";
 import { PAGE_ESSAI } from "@/lib/abonnements/essai";
 import {
@@ -79,19 +80,32 @@ function effetDuChangement(sens: "montee" | "baisse", actuelle: string | null, v
 }
 
 /**
- * Au retour de Checkout (`?paiement=termine`) : la copie de l'abonnement est
- * relue chez Stripe AVANT l'affichage. Sans cela, la page montrait encore
- * « Essai terminé » et le bandeau de saisie fermée à qui venait de payer, le
- * temps que la notification arrive (répétition du 2026-11-17). Sans réponse
- * de Stripe, la page s'affiche quand même ; la notification suivra.
+ * Au retour de Checkout (`?paiement=termine&session=cs_…`) : la copie de
+ * l'abonnement est relue chez Stripe AVANT l'affichage. Sans cela, la page
+ * montrait encore « Essai terminé » et le bandeau de saisie fermée à qui
+ * venait de payer, le temps que la notification arrive (répétition du
+ * 2026-11-17). Sans réponse de Stripe, la page s'affiche quand même ; la
+ * notification suivra.
+ *
+ * Rend vrai seulement pour une session payée de CE client, créée depuis
+ * moins de 25 heures (une session dure 24 h au plus) : une adresse de retour revisitée (historique, favori) ou forgée ne
+ * relit rien, ne masque pas le formulaire et n'annonce aucun paiement (revue
+ * du 2026-11-17).
  */
-async function relireApresPaiement(db: Db, compteId: string): Promise<void> {
+async function relireApresPaiement(db: Db, compteId: string, session: string | undefined): Promise<boolean> {
   const config = configurationStripe();
-  if (!config.active) return;
+  if (!config.active || !session || !/^cs_[A-Za-z0-9_]+$/.test(session)) return false;
   const ligne = await db.abonnement.findUnique({ where: { compteId }, select: { stripeCustomerId: true } });
-  if (!ligne?.stripeCustomerId) return;
-  await synchroniserClientStripe(clientStripeLecture(config), ligne.stripeCustomerId, { attendreMs: 5_000 }).catch(() => null);
+  if (!ligne?.stripeCustomerId) return false;
+  const stripe = clientStripeLecture(config);
+  const payee = await stripe.checkout.sessions.retrieve(session).catch(() => null);
+  const recente = payee && payee.created * 1000 > Date.now() - RETOUR_DE_PAIEMENT_MS;
+  if (!payee || !recente || payee.status !== "complete" || idStripe(payee.customer) !== ligne.stripeCustomerId) return false;
+  await synchroniserClientStripe(stripe, ligne.stripeCustomerId, { attendreMs: 5_000 }).catch(() => null);
+  return true;
 }
+
+const RETOUR_DE_PAIEMENT_MS = 25 * 3_600_000;
 
 /**
  * Les formules vers lesquelles un abonnement qui paie peut aller, avec, pour
@@ -186,20 +200,23 @@ export default async function AbonnementPage({
     formule?: string;
     compte?: string;
     facture?: string;
+    session?: string;
   }>;
 }) {
   // Sans compte encore (rien créé), la page se lit quand même : aucun
   // abonnement (ADR-054). `requireCompte` renverrait à l'onboarding.
   const user = await requireUser();
   const c = await getOptionalCompte();
-  const { saisie, stripe, paiement, abonnement, document, formule: formuleChange0, compte: compteChange, facture } =
+  const { saisie, stripe, paiement: paiement0, abonnement, document, formule: formuleChange0, compte: compteChange, facture, session } =
     await searchParams;
   // Le compte que montre la page : ses gestes le postent (`ChampCompteAttendu`).
   const { compteId, nomCompte } = await compteDeLaPage();
   const formuleChange = formuleChange0 && formuleChange0 in MESSAGES_FORMULE ? (formuleChange0 as keyof typeof MESSAGES_FORMULE) : null;
   const ctx = contexteDroits();
   const ouvert = offreLancee(ctx);
-  if (c && paiement === "termine") await relireApresPaiement(c.db, c.compte.compteId);
+  // Le retour de Checkout ne compte que s'il est vérifié chez Stripe.
+  const paiement =
+    c && paiement0 === "termine" && (await relireApresPaiement(c.db, c.compte.compteId, session)) ? "termine" : undefined;
   // Une seule lecture : la ligne sert à l'état affiché et aux droits.
   const ligne = c ? await abonnementDuCompte(c.db, c.compte.compteId) : null;
   const droits = droitsDe(ligne, ctx);

@@ -31,7 +31,9 @@ const lancee = () => offreLancee(contexteDroits());
 export function formuleDesPlafonds(formule: string | null | undefined): CleFormule {
   const connue = formuleDeLookupKey(formule)?.formule;
   if (connue) return connue;
-  console.error(JSON.stringify({ type: "quotas_formule_inconnue", formule: formule ?? null }));
+  // Sans formule : un essai compté chez Rojer, rien d'anormal. Une formule
+  // non vide et inconnue : un prix Stripe sans clé connue, à signaler.
+  if (formule) console.error(JSON.stringify({ type: "quotas_formule_inconnue", formule }));
   return CLES_FORMULES[0];
 }
 

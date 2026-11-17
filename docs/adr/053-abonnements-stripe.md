@@ -228,8 +228,8 @@ et sans croire une information qui ne vient pas de Stripe.
    `trial_settings.end_behavior.missing_payment_method=pause`. Pendant
    l'essai, la saisie est ouverte (`trialing`) ; à la fin sans carte, l'état
    `paused` ferme la saisie, jamais la lecture ni l'export (§ 3).~~
-   [2026-11-16, décision de la propriétaire, **à coder** (plan :
-   `docs/plan-essai-chez-rojer.md`) : **l'essai se compte chez Rojer, Stripe
+   [2026-11-16, décision de la propriétaire, ~~**à coder**~~ [2026-11-17 :
+   codé, #332] (plan : `docs/plan-essai-chez-rojer.md`) : **l'essai se compte chez Rojer, Stripe
    n'entre qu'au moment de payer.**
    - L'essai est une date posée par Rojer au démarrage (`essaiUtiliseLe`,
      `finEssai` = + 30 jours) : ni client ni abonnement Stripe. Passé
@@ -321,7 +321,15 @@ et sans croire une information qui ne vient pas de Stripe.
    payer ») : il enregistre la carte, la met par défaut et paie la facture,
    confirmation de la banque comprise — vérifié en répétition. Seul un
    premier paiement à confirmer (`incomplete`) va encore à la page de sa
-   facture (« Confirmer le paiement »)] ; un `incomplete` n'est plus « déjà en
+   facture (« Confirmer le paiement »)] [2026-11-17, revue d'ensemble : Checkout n'accepte que la carte, écrit
+   dans le code (`allowed_payment_method_types`) ; un premier paiement en
+   attente pour une autre formule que celle choisie est résilié avant
+   Checkout ; « s'abonner » repousse de trois jours une suppression due ou
+   proche ; les sessions Checkout restées ouvertes expirent au paiement ; le
+   retour de Checkout n'est cru que pour une session payée du client
+   (`?session=`) ; le rapprochement quotidien demande aussi les clients des
+   abonnements nés chez Stripe depuis trois jours ; `sansAbonnementDepuis`
+   garde la date déjà notée] ; un `incomplete` n'est plus « déjà en
    cours ». (d) Une résiliation prévue pendant l'essai ferme le changement
    de formule, comme pour un abonnement qui paie. (e) Après l'essai,
    `/entreprises` aiguille (dossier existant ou onboarding). Le portail
@@ -555,7 +563,8 @@ et sans croire une information qui ne vient pas de Stripe.
    (`abonnements/validation.ts`). Refusé : `/compte/abonnement?immediat=1`
    (la page « S'abonner », session « stripe »). Un ancien abonné garde ses
    exports (il a payé) ; leur délai de 12 mois après la fin de l'abonnement
-   (notes § 10, 2026-11-06) reste à coder. **Condition de lancement** : la
+   (notes § 10, 2026-11-06) ~~reste à coder~~ [2026-11-17 : codé, ADR-058,
+   `abonnements/suppression.ts`]. **Condition de lancement** : la
    synchronisation écrit `debutPayantLe` à la première facture payée
    (session « stripe ») ; sans elle, tous les gestes de ce paragraphe sont
    refusés à tous, abonnés compris. Ce qui existait avant le lancement ne se

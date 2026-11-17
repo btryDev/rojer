@@ -24,13 +24,17 @@ const m = vi.hoisted(() => ({
   annulerBaisse: vi.fn(),
   depassements: vi.fn(),
   factureARegler: vi.fn(),
+  expirerSessionsOuvertes: vi.fn(),
+  resilier: vi.fn(),
+  reporterSuppression: vi.fn(async () => ({ count: 0 })),
 }));
 vi.mock("next/navigation", () => ({ redirect: m.redirect }));
 vi.mock("@/lib/email", () => ({ publicAppUrl: () => "https://rojer.test" }));
-vi.mock("@/lib/stripe/client", () => ({ clientStripe: () => ({}) }));
+vi.mock("@/lib/stripe/client", () => ({ clientStripe: () => ({ subscriptions: { cancel: m.resilier } }) }));
 vi.mock("@/lib/stripe/config", () => ({ configurationStripe: () => ({ active: true }) }));
 vi.mock("@/lib/stripe/parcours", () => ({
   abonnementsDuClient: m.abonnementsDuClient,
+  expirerSessionsOuvertes: m.expirerSessionsOuvertes,
   factureARegler: m.factureARegler,
   monterDeFormule: m.monterDeFormule,
   planifierBaisse: m.planifierBaisse,
@@ -54,7 +58,7 @@ vi.mock("./saisie", () => ({
   verifierProprietaire: async () => ({
     user: { id: "u1", email: "a@b.fr" },
     compte: { compteId: "c1" },
-    db: { abonnement: { findUnique: async () => m.ligne } },
+    db: { abonnement: { findUnique: async () => m.ligne, updateMany: m.reporterSuppression } },
   }),
   verifierRole: async () => {},
 }));
@@ -110,8 +114,14 @@ describe("sAbonnerAction", () => {
     expect(m.ouvrirAuGel).toHaveBeenCalled();
     expect(m.ouvrirCheckout).toHaveBeenCalledWith(
       expect.anything(),
-      expect.objectContaining({ customerId: "cus_neuf", priceId: "price_pa", tauxTva: "txr_tva", succes: "https://rojer.test/compte/abonnement?paiement=termine" }),
+      expect.objectContaining({ customerId: "cus_neuf", priceId: "price_pa", tauxTva: "txr_tva", succes: "https://rojer.test/compte/abonnement?paiement=termine&session={CHECKOUT_SESSION_ID}" }),
     );
+    // Une suppression due ou proche est repoussée AVANT d'ouvrir le paiement (revue du 2026-11-17).
+    expect(m.reporterSuppression).toHaveBeenCalledWith({
+      where: { compteId: "c1", suppressionPrevueLe: { lt: expect.any(Date) } },
+      data: { suppressionPrevueLe: expect.any(Date) },
+    });
+    expect(m.reporterSuppression.mock.invocationCallOrder[0]).toBeLessThan(m.ouvrirCheckout.mock.invocationCallOrder[0]);
   });
 
   it("abonnement terminé partout : Checkout souscrit, au nom du compte", async () => {
@@ -150,15 +160,28 @@ describe("sAbonnerAction", () => {
     }
   });
 
-  it("premier paiement resté en attente (incomplete) : vers sa facture, ni Checkout ni « déjà en cours »", async () => {
-    m.abonnementsDuClient.mockResolvedValue([abonnement("incomplete"), abonnement("canceled", 0)]);
+  it("premier paiement resté en attente (incomplete), même formule : vers sa facture, ni Checkout ni « déjà en cours »", async () => {
+    const enAttente = abonnement("incomplete", 1, { items: { data: [{ price: { id: "price_pa" } }] } });
+    m.abonnementsDuClient.mockResolvedValue([enAttente, abonnement("canceled", 0)]);
     m.factureARegler.mockResolvedValue("https://invoice.stripe.com/i/2");
     expect(await redirigeVers(sAbonnerAction(formulaire()))).toBe("https://invoice.stripe.com/i/2");
     expect(m.factureARegler).toHaveBeenCalledWith(expect.anything(), "in_incomplete");
     expect(m.ouvrirCheckout).not.toHaveBeenCalled();
+    expect(m.resilier).not.toHaveBeenCalled();
+    // Une session Checkout restée ouverte ne doit pas doubler ce paiement.
+    expect(m.expirerSessionsOuvertes).toHaveBeenCalledWith(expect.anything(), "cus_1");
     // Plus de facture ouverte (expirée entre-temps) : la page le dit, rien n'est ouvert.
     m.factureARegler.mockResolvedValue(null);
     expect(await redirigeVers(sAbonnerAction(formulaire()))).toBe("/compte/abonnement?facture=introuvable");
+  });
+
+  it("premier paiement en attente pour une AUTRE formule : il est résilié, Checkout s'ouvre sur la formule choisie (revue du 2026-11-17)", async () => {
+    const enAttente = abonnement("incomplete", 1, { items: { data: [{ price: { id: "price_pa" } }] } });
+    m.abonnementsDuClient.mockResolvedValue([enAttente]);
+    expect(await redirigeVers(sAbonnerAction(formulaire("rojer_essentiel_mensuel")))).toBe("https://checkout.stripe.test/abonnement");
+    expect(m.resilier).toHaveBeenCalledWith("sub_incomplete");
+    expect(m.ouvrirCheckout).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ priceId: "price_em" }));
+    expect(m.factureARegler).not.toHaveBeenCalled();
   });
 
   it("une formule hors catalogue : rien", async () => {

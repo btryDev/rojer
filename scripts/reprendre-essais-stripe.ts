@@ -31,7 +31,7 @@ import { PrismaClient } from "@prisma/client";
 import { clientStripe } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
 import { colonnesDe } from "@/lib/stripe/synchronisation";
-import { abonnementEnCours } from "@/lib/abonnements/droits";
+import { motifDErreur } from "@/lib/stripe/synchronisation";
 
 const appliquer = process.argv.includes("--appliquer");
 const prisma = new PrismaClient();
@@ -49,18 +49,26 @@ async function main() {
   const config = configurationStripe();
   if (!config.active) throw new Error("Stripe n'est pas configuré (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET)");
   if (config.mode !== "test") throw new Error("clé Stripe de production : ce script ne touche que des données de test");
+  if (process.env.APP_ENV === "production") throw new Error("environnement de production : ce script ne touche que des données de test");
   const stripe = clientStripe(config);
   let repris = 0;
   let echecs = 0;
+  let laisses = 0;
   for (const l of lignes) {
     try {
+      const s = l.stripeSubscriptionId ? await stripe.subscriptions.retrieve(l.stripeSubscriptionId) : null;
+      // Stripe fait foi : la copie peut retarder. Un abonnement qui n'est plus
+      // un essai ni sa pause (il paie, ou attend un paiement) n'est pas repris
+      // — la ligne est laissée telle quelle, la relecture la mettra à jour.
+      if (s && !ESSAIS_STRIPE.includes(s.status) && s.status !== "canceled" && s.status !== "incomplete_expired") {
+        laisses++;
+        console.error(`ligne ${l.id} laissée : l'abonnement Stripe est « ${s.status} », plus un essai`);
+        continue;
+      }
       if (l.stripeCustomerId) await stripe.customers.update(l.stripeCustomerId, { metadata: { compteId: "", userId: "" } });
-      if (l.stripeSubscriptionId) {
-        const s = await stripe.subscriptions.retrieve(l.stripeSubscriptionId);
-        if (abonnementEnCours(s.status)) {
-          await stripe.subscriptions.update(s.id, { metadata: { compteId: "", userId: "" } });
-          await stripe.subscriptions.cancel(s.id);
-        }
+      if (s && ESSAIS_STRIPE.includes(s.status)) {
+        await stripe.subscriptions.update(s.id, { metadata: { compteId: "", userId: "" } });
+        await stripe.subscriptions.cancel(s.id);
       }
       await prisma.abonnement.update({
         where: { id: l.id },
@@ -74,11 +82,12 @@ async function main() {
         },
       });
       repris++;
-    } catch {
+    } catch (e) {
       echecs++;
+      console.error(`ligne ${l.id} en échec — ${motifDErreur(e)}`);
     }
   }
-  console.log(`repris : ${repris}, en échec : ${echecs}`);
+  console.log(`repris : ${repris}, laissés (plus un essai chez Stripe) : ${laisses}, en échec : ${echecs}`);
 }
 
 main()

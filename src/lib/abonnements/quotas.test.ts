@@ -66,11 +66,11 @@ beforeEach(() => {
 });
 
 describe("formule des plafonds et motif du refus", () => {
-  it("formule absente ou inconnue : la plus petite, et le journal le signale", () => {
+  it("formule absente (essai compté chez Rojer) ou inconnue : la plus petite ; le journal ne signale que l'inconnue", () => {
     expect(formuleDesPlafonds("rojer_pro_annuel")).toBe("pro");
     expect(console.error).not.toHaveBeenCalled();
     for (const f of ["rojer_surmesure_annuel", "", null, undefined]) expect(formuleDesPlafonds(f), String(f)).toBe("essentiel");
-    expect(console.error).toHaveBeenCalledTimes(4);
+    expect(console.error).toHaveBeenCalledTimes(1);
   });
 
   it("le motif nomme le plafond et la formule qui le lève", () => {

@@ -71,6 +71,10 @@ export async function ouvrirCheckout(
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     customer: customerId,
+    // La carte seulement, écrite ici et pas seulement réglée au tableau de
+    // bord : un prélèvement différé (SEPA) rendrait l'abonnement actif avant
+    // d'être encaissé (revue de sécurité du 2026-11-17).
+    allowed_payment_method_types: ["card"],
     line_items: [{ price: priceId, quantity: 1 }],
     subscription_data: { metadata, default_tax_rates: [tauxTva] },
     consent_collection: { terms_of_service: "required" },
@@ -87,7 +91,7 @@ export async function ouvrirCheckout(
 /**
  * Les abonnements d'un client, relus chez Stripe, qui fait foi : notre copie
  * peut retarder d'un webhook. Les plus récents d'abord ; un client Rojer n'en
- * a qu'un ou deux (l'essai, puis un réabonnement après résiliation).
+ * a qu'un ou deux (un abonnement, puis un réabonnement après résiliation).
  */
 export async function abonnementsDuClient(stripe: Stripe, customerId: string): Promise<Stripe.Subscription[]> {
   const liste = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 10 }, OPTIONS_RELECTURE);
@@ -159,12 +163,16 @@ export async function monterDeFormule(
       payment_behavior: "pending_if_incomplete",
       expand: ["latest_invoice"],
     },
-    { idempotencyKey: `monter-${abonnement.id}-${item.price.id}-${priceId}` },
+    // La dernière facture entre dans la clé : la même montée refaite après un
+    // renouvellement (dans les 24 h de la première) n'est pas un rejeu.
+    { idempotencyKey: `monter-${abonnement.id}-${item.price.id}-${priceId}-${idStripe(abonnement.latest_invoice) ?? "sans-facture"}` },
   );
   // La montée est faite : rendre la baisse prévue ne doit pas la faire passer
   // pour un échec. Si Stripe refuse, la page montre encore la baisse et
-  // propose « Garder ma formule ».
-  const planning = idStripe(abonnement.schedule);
+  // propose « Garder ma formule ». Une montée seulement EN ATTENTE de son
+  // paiement (`pending_update`) n'est pas faite : la baisse prévue reste, elle
+  // vaudra si la facture n'est jamais payée (revue du 2026-11-17).
+  const planning = misAJour.pending_update ? null : idStripe(abonnement.schedule);
   if (planning) {
     try {
       await stripe.subscriptionSchedules.release(planning);

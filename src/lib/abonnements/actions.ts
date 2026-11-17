@@ -15,6 +15,7 @@ import { abonnementCourant, motifDErreur, synchroniserClientStripe } from "@/lib
 import {
   abonnementsDuClient,
   annulerBaisse,
+  expirerSessionsOuvertes,
   factureARegler,
   monterDeFormule,
   ouvrirCheckout,
@@ -107,6 +108,9 @@ export async function ouvrirPortailAction(formData: FormData): Promise<void> {
  * est relue et la page le dit ; un premier paiement en attente renvoie à sa
  * facture.
  */
+/** De combien « s'abonner » repousse une suppression due ou proche : le temps d'un paiement, relances de la banque comprises. */
+const SURSIS_DE_PAIEMENT_MS = 3 * 24 * 3_600_000;
+
 export async function sAbonnerAction(formData: FormData): Promise<void> {
   const proprietaire = await verifierProprietaire();
   // S'abonner se fait AUSSI quand la saisie est fermée (essai fini, abonnement
@@ -123,25 +127,43 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
   // `null` : un abonnement court déjà (notre copie retardait).
   let url: string | null = null;
   try {
+    // Un compte dont la suppression est due ou proche (ADR-058) : elle est
+    // repoussée AVANT d'ouvrir le paiement. La suppression revérifie sa date
+    // sous verrou : un paiement ne peut plus aboutir sur un compte effacé
+    // pendant la passe du jour (revue du 2026-11-17).
+    const sursis = new Date(Date.now() + SURSIS_DE_PAIEMENT_MS);
+    await db.abonnement.updateMany({ where: { compteId, suppressionPrevueLe: { lt: sursis } }, data: { suppressionPrevueLe: sursis } });
     const customerId = await clientStripeDuCompte(stripe, db, { compteId, email, enregistre: ligne.stripeCustomerId });
-    const { courant } = abonnementCourant(await abonnementsDuClient(stripe, customerId));
+    const [abonnements, catalogue, tauxTva] = await Promise.all([abonnementsDuClient(stripe, customerId), prixDesFormules(stripe), tauxDeTva(stripe)]);
+    const prix = catalogue.get(formule);
+    if (!prix || !tauxTva) throw new Error("prix ou TVA introuvable");
+    let { courant } = abonnementCourant(abonnements);
+    if (courant?.status === "incomplete" && courant.items.data[0]?.price.id !== prix.priceId) {
+      // Un premier paiement resté en attente pour une AUTRE formule que celle
+      // choisie maintenant : il est résilié (rien n'a été prélevé), sinon la
+      // personne paierait une formule que la page n'affiche pas (revue du
+      // 2026-11-17).
+      await stripe.subscriptions.cancel(courant.id);
+      courant = null;
+    }
     if (courant?.status === "incomplete") {
       // Un premier paiement resté en attente (Checkout abandonné à la
-      // confirmation de la banque) : on le termine, au lieu d'attendre que
-      // Stripe l'expire (environ 23 heures).
+      // confirmation de la banque), pour la même formule : on le termine, au
+      // lieu d'attendre que Stripe l'expire (environ 23 heures). Une session
+      // Checkout restée ouverte ne doit pas le doubler.
+      await expirerSessionsOuvertes(stripe, customerId);
       url = await versLaFactureEnAttente(stripe, courant);
     } else if (courant && abonnementEnCours(courant.status)) {
       await synchroniserClientStripe(stripe, customerId).catch(() => null);
     } else {
-      const [catalogue, tauxTva] = await Promise.all([prixDesFormules(stripe), tauxDeTva(stripe)]);
-      const prix = catalogue.get(formule);
-      if (!prix || !tauxTva) throw new Error("prix ou TVA introuvable");
       url = await ouvrirCheckout(stripe, {
         customerId,
         priceId: prix.priceId,
         tauxTva,
         metadata: { compteId },
-        succes: `${base}?paiement=termine`,
+        // Stripe remplace `{CHECKOUT_SESSION_ID}` : la page ne croit ce retour
+        // que pour une session payée de ce client (`relireApresPaiement`).
+        succes: `${base}?paiement=termine&session={CHECKOUT_SESSION_ID}`,
         annulation: base,
       });
     }
