@@ -8,8 +8,10 @@ import { EnTetePage } from "@/components/entete-page/EnTetePage";
  * compte se règle, comme le dossier — ; sans dessin, l'en-tête tient sur une
  * colonne, et la teinte ne se voit qu'en liseré sur téléphone.
  *
- * `menu` : le menu interne de l'abonnement, à gauche sur ordinateur. Les
- * autres pages n'en ont pas — la gélule est déjà le menu du compte.
+ * `menu` : le menu interne de l'espace, à gauche sur ordinateur.
+ * ~~Les autres pages n'en ont pas — la gélule est déjà le menu du compte.~~
+ * [2026-11-17, décision de la propriétaire : deux espaces, Abonnement et
+ * Compte (Membres, Sécurité), chacun avec son menu — `MenuInterne`.]
  * `pleineLargeur` : le corps prend toute la largeur (les trois cartes
  * d'offres de Formules) ; sinon, la mesure d'une colonne de lecture.
  */

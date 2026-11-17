@@ -38,12 +38,12 @@ describe("GesteSAbonner", () => {
         <GesteSAbonner cle="rojer_pro_mensuel" libelle="Pro" centimes={7_900} periodicite="mensuel" compteId="c1" carte="encre" essai={{ fin, sienne: false, proche: false }} />
       </>,
     );
-    const plusTot = screen.getByRole("button", { name: "M'abonner dès maintenant pour tout débloquer" });
+    const plusTot = screen.getByRole("button", { name: "M'abonner dès maintenant" });
     // Un lien, pas le bouton plein de la carte : rien n'y pousse.
     expect(plusTot.className).not.toMatch(/lp-btn/);
     expect(screen.getByRole("button", { name: "Passer à Pro" }).className).toMatch(/lp-btn/);
     expect(screen.getByText("Votre formule, gratuite jusqu'au 16 décembre 2026.")).toBeTruthy();
-    expect(screen.getAllByText(/^Prélevé aujourd.hui : .* Lève les limites de l'essai et ouvre la validation et l'export des documents officiels ; votre essai s'arrête\.$/)).toHaveLength(2);
+    expect(screen.getAllByText(/^Prélevé aujourd.hui : .* Dès l'abonnement, les limites de l'essai sont levées, et les documents officiels s'ouvrent \(valider, exporter, publier, faire signer\) ; votre essai s'arrête\.$/)).toHaveLength(2);
   });
 
   it("dans la dernière semaine de l'essai : s'abonner à sa formule redevient le geste plein", () => {

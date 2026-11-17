@@ -9,7 +9,7 @@ import { BoutonEnvoi } from "./BoutonEnvoi";
 import { annulerBaisseAction, changerFormuleAction, sAbonnerAction } from "@/lib/abonnements/actions";
 import { ChampCompteAttendu } from "@/components/compte/ChampCompteAttendu";
 import { euros } from "@/lib/abonnements/affichage";
-import { LIBELLES_PLAFONDS, LIBELLE_PERIODICITE, type Periodicite } from "@/lib/abonnements/formules";
+import { CE_QUE_L_ABONNEMENT_OUVRE, LIBELLES_PLAFONDS, LIBELLE_PERIODICITE, type Periodicite } from "@/lib/abonnements/formules";
 import type { Depassement } from "@/lib/abonnements/quotas";
 import { formaterDateLongueFr } from "@/lib/dates";
 
@@ -64,11 +64,11 @@ export function GesteSAbonner({
         {/* Ce que l'abonnement débloque, dit en clair (retour de test du
             2026-11-17) : les volumes, et les documents officiels. */}
         {essai && centimes !== null
-          ? " Lève les limites de l'essai et ouvre la validation et l'export des documents officiels ; votre essai s'arrête."
+          ? ` Dès l'abonnement, ${CE_QUE_L_ABONNEMENT_OUVRE} ; votre essai s'arrête.`
           : null}
       </p>
       <BoutonEnvoi variant="board" carte={carte} discret={!!essai?.sienne && !essai.proche} disabled={centimes === null}>
-        {essai ? (essai.sienne ? (essai.proche ? `M'abonner à ${libelle}` : "M'abonner dès maintenant pour tout débloquer") : `Passer à ${libelle}`) : <>S&apos;abonner à {libelle}</>}
+        {essai ? (essai.sienne ? (essai.proche ? `M'abonner à ${libelle}` : "M'abonner dès maintenant") : `Passer à ${libelle}`) : <>S&apos;abonner à {libelle}</>}
       </BoutonEnvoi>
     </form>
   );

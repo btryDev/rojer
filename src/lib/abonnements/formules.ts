@@ -130,6 +130,14 @@ export const CLES_FORMULES = Object.keys(FORMULES) as CleFormule[];
  */
 export const FORMULE_D_ESSAI: CleFormule = "essentiel";
 
+/**
+ * Ce que l'abonnement ouvre, pendant l'essai, dit de la même façon partout
+ * (carte de l'offre, page Utilisation, refus d'une limite — 2026-11-17) : les
+ * gestes que l'essai réserve aux abonnés (ADR-053 § 15).
+ */
+export const CE_QUE_L_ABONNEMENT_OUVRE =
+  "les limites de l'essai sont levées, et les documents officiels s'ouvrent (valider, exporter, publier, faire signer)";
+
 /** La `lookup_key` du prix Stripe d'une formule et d'une périodicité. */
 export const lookupKey = (formule: CleFormule, periodicite: Periodicite) => `rojer_${formule}_${periodicite}`;
 

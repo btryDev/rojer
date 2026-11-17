@@ -7,7 +7,7 @@ import { PageDuCompte } from "@/components/compte/PageDuCompte";
 import { buttonVariants } from "@/components/ui/button";
 import type { Db } from "@/lib/auth/compte";
 import { PAGE_ESSAI } from "@/lib/abonnements/essai";
-import { CLES_FORMULES, FORMULE_D_ESSAI, FORMULES } from "@/lib/abonnements/formules";
+import { CE_QUE_L_ABONNEMENT_OUVRE, CLES_FORMULES, FORMULE_D_ESSAI, FORMULES } from "@/lib/abonnements/formules";
 import { etatDeLAbonnement, type EtatDeLAbonnement } from "@/lib/abonnements/page-abonnement";
 import { PAR_AN, plafondDe, utilisationDuCompte, type CleQuota, type Utilisation } from "@/lib/abonnements/quotas";
 import { PAGE_FORMULES } from "@/lib/abonnements/sous-pages";
@@ -93,7 +93,7 @@ async function Plafonds({ etat, db, compteId }: { etat: EtatDeLAbonnement; db: D
     ? { texte: "Démarrez votre essai gratuit pour commencer à saisir.", geste: "Démarrer mon essai gratuit", href: PAGE_ESSAI }
     : regime.essai === "en_cours"
       ? {
-          texte: `Ce sont les limites de l'essai. Abonnez-vous dès maintenant pour tout débloquer : les limites complètes de la formule ${FORMULES[FORMULE_D_ESSAI].libelle}, et la validation et l'export des documents officiels. Votre essai s'arrête alors.`,
+          texte: `Ce sont les limites de l'essai. En vous abonnant dès maintenant, ${CE_QUE_L_ABONNEMENT_OUVRE}. Votre essai s'arrête alors.`,
           geste: "Voir les offres",
           href: PAGE_FORMULES,
         }
