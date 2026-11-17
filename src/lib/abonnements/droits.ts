@@ -62,6 +62,9 @@ export const HORS_ABONNEMENT_OUVERT = { OR: [{ statut: null }, { statut: { notIn
 /** Une fin d'essai s'annonce une semaine avant (bandeau, et rappel J-7). */
 export const PREAVIS_ESSAI_MS = 7 * 24 * 60 * 60_000;
 
+/** La fin de l'essai est-elle dans la semaine ? Le bandeau et la page Abonnement le lisent ici. */
+export const essaiProche = (fin: Date, maintenant: Date) => fin.getTime() - maintenant.getTime() <= PREAVIS_ESSAI_MS;
+
 /**
  * Où en est un compte — LA lecture, dont tout le reste découle (droits,
  * libellé, limites de l'essai, page Abonnement ; relecture du 2026-11-17) :
@@ -113,8 +116,10 @@ export function droitsDe(ligne: LigneAbonnement | null, ctx: ContexteDroits): Dr
   const ferme = (message: string): Droits => ({ saisie: false, bandeau: { ton: "ferme", message } });
   switch (phase.type) {
     case "essai": {
-      const proche = phase.fin.getTime() - ctx.maintenant.getTime() <= PREAVIS_ESSAI_MS;
-      return { saisie: true, bandeau: proche ? { ton: "info", message: `Votre essai se termine le ${jour(phase.fin)}.` } : null };
+      return {
+        saisie: true,
+        bandeau: essaiProche(phase.fin, ctx.maintenant) ? { ton: "info", message: `Votre essai se termine le ${jour(phase.fin)}.` } : null,
+      };
     }
     case "sans-essai":
       return ferme("Démarrez votre essai gratuit pour saisir dans Rojer : vos dossiers restent consultables.");

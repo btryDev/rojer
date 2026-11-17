@@ -82,8 +82,9 @@ export function FormulaireAbonnement({
             return (
               <label
                 key={o.formule}
-                className={`carte-board flex cursor-pointer flex-col gap-3 px-6 py-5 transition-shadow has-[:focus-visible]:outline has-[:focus-visible]:outline-2 ${
-                  active ? "shadow-[0_0_0_2px_var(--board-ink)]" : ""
+                // Un sous-bloc et non une carte : il vit dans la carte « S'abonner » (charte, rayon 22).
+                className={`flex cursor-pointer flex-col gap-3 rounded-[22px] bg-[color:var(--board-card)] px-6 py-5 transition-shadow has-[:focus-visible]:outline has-[:focus-visible]:outline-2 ${
+                  active ? "shadow-[0_0_0_2px_var(--board-ink)]" : "shadow-[inset_0_0_0_1px_var(--board-slate-line)]"
                 }`}
               >
                 <input

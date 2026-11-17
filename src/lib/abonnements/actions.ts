@@ -29,6 +29,7 @@ import { INTERVALLE_STRIPE, estLookupKey, formuleDeLookupKey, formuleDuPrix } fr
 import { sensDuChangement } from "./changement";
 import { depassements } from "./quotas";
 import { PAGE_ABONNEMENT, verifierProprietaire, verifierRole, type Proprietaire } from "./saisie";
+import { PAGE_FORMULES } from "./sous-pages";
 import { ouvrirAuGel } from "./gel-saisie";
 
 /**
@@ -149,7 +150,8 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
               // Stripe remplace `{CHECKOUT_SESSION_ID}` : la page ne croit ce
               // retour que pour une session payée de ce client.
               succes: `${base}?paiement=termine&session={CHECKOUT_SESSION_ID}`,
-              annulation: base,
+              // Annuler ramène au choix de la formule (2026-11-17).
+              annulation: `${publicAppUrl()}${PAGE_FORMULES}`,
               conditions: conditionsSurCheckout,
             });
     }
@@ -188,10 +190,10 @@ export async function changerFormuleAction(formData: FormData): Promise<void> {
     const { courant } = abonnementCourant(await abonnementsDuClient(stripe, customerId));
     const item = courant?.items.data[0];
     if (!courant || courant.status !== "active" || !item) {
-      cible = `${PAGE_ABONNEMENT}?formule=impossible`;
+      cible = `${PAGE_FORMULES}?formule=impossible`;
     } else if (resiliationDemandee(courant)) {
       // Une résiliation est prévue : on ne change pas une formule qui s'arrête.
-      cible = `${PAGE_ABONNEMENT}?formule=resiliation-prevue`;
+      cible = `${PAGE_FORMULES}?formule=resiliation-prevue`;
     } else {
       const sens = sensDuChangement(formuleDuPrix(item.price), formule);
       const prix = (await prixDesFormules(stripe)).get(formule);
@@ -203,14 +205,14 @@ export async function changerFormuleAction(formData: FormData): Promise<void> {
       } else if (sens === "baisse") {
         const trop = await depassements(db, compteId, formule);
         if (trop.some((d) => d.quota === "membres")) {
-          cible = `${PAGE_ABONNEMENT}?formule=trop-d-utilisateurs`;
+          cible = `${PAGE_FORMULES}?formule=trop-d-utilisateurs`;
         } else {
           await planifierBaisse(stripe, courant, { priceId: prix.priceId, intervalle: INTERVALLE_STRIPE[visee.periodicite] });
           // Une invitation partie entre la vérification et le planning : on
           // revérifie, et la baisse est rendue si elle ne tient plus.
           if ((await depassements(db, compteId, formule)).some((d) => d.quota === "membres")) {
             await annulerBaisse(stripe, (await abonnementsDuClient(stripe, customerId)).find((a) => a.id === courant.id) ?? courant);
-            cible = `${PAGE_ABONNEMENT}?formule=trop-d-utilisateurs`;
+            cible = `${PAGE_FORMULES}?formule=trop-d-utilisateurs`;
           } else cible = `${PAGE_ABONNEMENT}?formule=prevue`;
         }
       }

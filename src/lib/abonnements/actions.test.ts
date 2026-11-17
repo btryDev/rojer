@@ -179,21 +179,21 @@ describe("changerFormuleAction", () => {
     expect(m.planifierBaisse).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ id: "sub_actif" }), { priceId: "price_em", intervalle: "month" });
     m.planifierBaisse.mockClear();
     m.depassements.mockResolvedValue([{ quota: "membres", utilise: 3, plafond: 1 }]);
-    expect(await redirigeVers(changerFormuleAction(formulaire("rojer_essentiel_mensuel")))).toBe("/compte/abonnement?formule=trop-d-utilisateurs");
+    expect(await redirigeVers(changerFormuleAction(formulaire("rojer_essentiel_mensuel")))).toBe("/compte/abonnement/formules?formule=trop-d-utilisateurs");
     expect(m.planifierBaisse).not.toHaveBeenCalled();
     expect(m.monterDeFormule).not.toHaveBeenCalled();
   });
 
   it("une résiliation déjà prévue : pas de changement de formule", async () => {
     m.abonnementsDuClient.mockResolvedValue([{ ...actif("rojer_essentiel_mensuel"), cancel_at_period_end: true }]);
-    expect(await redirigeVers(changerFormuleAction(formulaire("rojer_pro_annuel")))).toBe("/compte/abonnement?formule=resiliation-prevue");
+    expect(await redirigeVers(changerFormuleAction(formulaire("rojer_pro_annuel")))).toBe("/compte/abonnement/formules?formule=resiliation-prevue");
     expect(m.monterDeFormule).not.toHaveBeenCalled();
   });
 
   it("course avec une invitation : revérifié après le planning, la baisse est rendue si elle ne tient plus", async () => {
     m.abonnementsDuClient.mockResolvedValue([actif("rojer_pro_annuel")]);
     m.depassements.mockResolvedValueOnce([]).mockResolvedValueOnce([{ quota: "membres", utilise: 2, plafond: 1 }]);
-    expect(await redirigeVers(changerFormuleAction(formulaire("rojer_essentiel_mensuel")))).toBe("/compte/abonnement?formule=trop-d-utilisateurs");
+    expect(await redirigeVers(changerFormuleAction(formulaire("rojer_essentiel_mensuel")))).toBe("/compte/abonnement/formules?formule=trop-d-utilisateurs");
     expect(m.planifierBaisse).toHaveBeenCalled();
     expect(m.annulerBaisse).toHaveBeenCalled();
   });
@@ -208,7 +208,7 @@ describe("changerFormuleAction", () => {
   it("hors d'un abonnement à jour (impayé) : rien ; formule hors catalogue : rien", async () => {
     for (const status of ["incomplete", "past_due"]) {
       m.abonnementsDuClient.mockResolvedValue([{ ...actif("rojer_essentiel_mensuel"), status }]);
-      expect(await redirigeVers(changerFormuleAction(formulaire("rojer_pro_annuel"))), status).toBe("/compte/abonnement?formule=impossible");
+      expect(await redirigeVers(changerFormuleAction(formulaire("rojer_pro_annuel"))), status).toBe("/compte/abonnement/formules?formule=impossible");
     }
     expect(await redirigeVers(changerFormuleAction(formulaire("rojer_surmesure_mensuel")))).toBe("/compte/abonnement");
     expect(m.monterDeFormule).not.toHaveBeenCalled();

@@ -21,9 +21,9 @@ export type CleQuota = keyof typeof LIBELLES_PLAFONDS;
 export type CleQuotaComptee = Exclude<CleQuota, "membres" | "stockageGo">;
 
 /** Ceux qui se comptent au journal, depuis la date anniversaire. */
-const PAR_AN = ["permisDeFeuParAn", "plansDePreventionParAn", "signaturesParAn", "importsDuerp"] as const;
+export const PAR_AN = ["permisDeFeuParAn", "plansDePreventionParAn", "signaturesParAn", "importsDuerp"] as const;
 type CleAnnuelle = (typeof PAR_AN)[number];
-const estAnnuelle = (cle: CleQuota): cle is CleAnnuelle => (PAR_AN as readonly string[]).includes(cle);
+export const estAnnuelle = (cle: CleQuota): cle is CleAnnuelle => (PAR_AN as readonly string[]).includes(cle);
 
 const lancee = () => offreLancee(contexteDroits());
 
@@ -154,8 +154,7 @@ type LignePlafonds = {
 } | null;
 
 /** Le régime et l'année des plafonds, d'une ligne d'abonnement. */
-function plafondsDeLaLigne(ligne: LignePlafonds) {
-  const maintenant = new Date();
+function plafondsDeLaLigne(ligne: LignePlafonds, maintenant = new Date()) {
   const regime: Regime = { formule: formuleDesPlafonds(ligne?.formule), essai: essaiDe(ligne, maintenant) };
   return { regime, debutAnnee: debutDeLAnnee(ligne?.debutPayantLe, maintenant, ligne?.essaiUtiliseLe) };
 }
@@ -323,16 +322,88 @@ export async function depassements(db: Db, compteId: string, formule: string): P
   return depassementsDe(await stocksDuCompte(db, compteId), formule);
 }
 
+/** Les utilisateurs au sens du plafond : les membres, et les invitations en attente (`refusMembres`). */
+async function utilisateursDuCompte(compteId: string, maintenant = new Date()): Promise<number> {
+  const [membres, invitations] = await Promise.all([membresDuCompte(compteId), invitationsDuCompte(compteId, maintenant)]);
+  return membres.length + invitations.length;
+}
+
 /** Ce que le compte utilise de chaque stock, compté une fois (page Abonnement : plusieurs formules visées). */
 export async function stocksDuCompte(db: Db, compteId: string): Promise<number[]> {
   return Promise.all(
-    STOCKS.map(async (cle) => {
-      if (cle !== "membres") return dejaUtilisesDuCompte(db, cle, new Date());
-      const [membres, invitations] = await Promise.all([membresDuCompte(compteId), invitationsDuCompte(compteId)]);
-      return membres.length + invitations.length;
-    }),
+    STOCKS.map((cle) => (cle === "membres" ? utilisateursDuCompte(compteId) : dejaUtilisesDuCompte(db, cle, new Date()))),
   );
 }
+
+/** Un plafond, et ce que le compte en utilise (`plafond` nul : sans limite). */
+export type Utilisation = { cle: CleQuota; utilise: number; plafond: number | null };
+
+/**
+ * L'année des plafonds annuels, dite au dirigeant : elle repart à
+ * l'anniversaire du premier paiement ; sans paiement, elle court depuis le
+ * début de l'essai sans se renouveler, ou, sans essai, sur les douze
+ * derniers mois (`debutDeLAnnee`).
+ */
+export type AnneeDesPlafonds = { type: "repart"; le: Date } | { type: "depuis-essai" } | { type: "glissante" };
+
+/** Les plafonds comptés par la porte, dans l'ordre de la page Utilisation. */
+const COMPTES_AFFICHES = [
+  "etablissements",
+  "equipements",
+  "unitesTravail",
+  "zones",
+  "prescriptions",
+  "prestataires",
+  "liensAccesActifs",
+  "permisDeFeuParAn",
+  "plansDePreventionParAn",
+  "signaturesParAn",
+  "importsDuerp",
+] as const satisfies readonly CleQuotaComptee[];
+
+/**
+ * Ce que le compte utilise de chaque plafond, lu par les mêmes compteurs que
+ * la porte (page Utilisation, 2026-11-17) — le stockage à part
+ * (`octetsUtilises`, `stockage.ts`). Une seule horloge, `maintenant`, pour
+ * le régime, l'année et sa date de renouvellement.
+ *
+ * `ligne` : la ligne d'abonnement déjà lue par la page (`etatDeLAbonnement`),
+ * pour ne pas la relire ; `undefined`, elle est lue ici. `seulementPlafonnes` :
+ * ne compter que ce qui a un plafond (le résumé de la vue d'ensemble).
+ */
+export async function utilisationDuCompte(
+  db: Db,
+  compteId: string,
+  {
+    ligne: dejaLue,
+    seulementPlafonnes = false,
+    maintenant = new Date(),
+  }: { ligne?: LignePlafonds; seulementPlafonnes?: boolean; maintenant?: Date } = {},
+): Promise<{ regime: Regime; lignes: Utilisation[]; annee: AnneeDesPlafonds }> {
+  const ligne = dejaLue !== undefined ? dejaLue : await db.abonnement.findUnique({ where: { compteId }, select: COLONNES_PLAFONDS });
+  const { regime, debutAnnee } = plafondsDeLaLigne(ligne, maintenant);
+  const cles = COMPTES_AFFICHES.filter((cle) => !seulementPlafonnes || plafondDe(regime, cle) !== null);
+  const avecUtilisateurs = !seulementPlafonnes || plafondDe(regime, "membres") !== null;
+  const [nombres, utilisateurs] = await Promise.all([
+    Promise.all(cles.map((cle) => dejaUtilisesDuCompte(db, cle, debutAnnee))),
+    avecUtilisateurs ? utilisateursDuCompte(compteId, maintenant) : 0,
+  ]);
+  const lignes: Utilisation[] = [
+    ...(avecUtilisateurs ? [{ cle: "membres" as const, utilise: utilisateurs, plafond: plafondDe(regime, "membres") }] : []),
+    ...cles.map((cle, i) => ({ cle, utilise: nombres[i], plafond: plafondDe(regime, cle) })),
+  ];
+  const ancre = ligne?.debutPayantLe;
+  if (!ancre) return { regime, lignes, annee: { type: ligne?.essaiUtiliseLe ? "depuis-essai" : "glissante" } };
+  const cetteAnnee = anniversaire(ancre, maintenant.getUTCFullYear());
+  const le = cetteAnnee > maintenant ? cetteAnnee : anniversaire(ancre, maintenant.getUTCFullYear() + 1);
+  return { regime, lignes, annee: { type: "repart", le } };
+}
+
+/** Le plafond de stockage du régime, en octets (`null` : sans limite). */
+export const plafondStockageOctets = (regime: Regime): number | null => {
+  const go = plafondDe(regime, "stockageGo");
+  return go === null ? null : go * 1e9;
+};
 
 /** Les dépassements d'une formule visée, à partir des stocks déjà comptés. */
 export function depassementsDe(nombres: number[], formule: string): Depassement[] {
