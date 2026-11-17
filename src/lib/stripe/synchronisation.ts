@@ -19,9 +19,9 @@ import "server-only";
 //   expiré n'écrit rien. Les listes v1 de Stripe étant immédiatement
 //   cohérentes, une relecture qui commence après la précédente voit au moins
 //   ce qu'elle a vu : la dernière écrite est la plus fraîche.
-// - En second rempart, écriture conditionnelle sur `relueLe` (l'heure du
-//   début de la relecture) : une relecture lancée plus tôt n'écrase pas une
-//   lancée plus tard.
+// - ~~En second rempart, écriture conditionnelle sur `relueLe`~~ [2026-11-17,
+//   revue d'ensemble : retiré — il comparait les horloges de deux serveurs ;
+//   le bail suffit (`mettreAJour`).]
 // - Une liste tronquée par la pagination est un échec, jamais un état
 //   complet ; une erreur de Stripe n'écrit rien (aucun droit retiré).
 
@@ -85,9 +85,10 @@ export function colonnesDe(s: Stripe.Subscription | null) {
 }
 
 /**
- * Depuis quand le compte est sans abonnement ouvert (ADR-058) : la fin chez
- * Stripe (`ended_at`), sinon la date déjà notée, sinon `relueLe` (un impayé
- * définitif n'a pas de date chez Stripe). Ouvert : vide, et les
+ * Depuis quand le compte est sans abonnement ouvert (ADR-058) : ~~la fin chez
+ * Stripe (`ended_at`), sinon la date déjà notée~~ [2026-11-17 : la date déjà
+ * notée, sinon la fin chez Stripe (`ended_at`)], sinon `relueLe` (un impayé
+ * définitif n'a pas de date chez Stripe) — jamais avant la fin de l'essai. Ouvert : vide, et les
  * avertissements avant suppression avec — un compte qui se réabonne repart
  * de zéro. Fermé : les avertissements ne sont pas touchés.
  */
@@ -114,10 +115,9 @@ export function horlogeDeSuppression(
 
 /**
  * Le premier paiement CONFIRMÉ du client (ADR-053 § 14) : la date de la plus
- * ancienne facture payée d'un montant non nul. Ni un état `active` (Stripe
- * l'affiche environ une heure avant de prélever la fin d'un essai), ni une
- * facture à zéro (celle de l'essai, ou couverte par un crédit ou une remise
- * de 100 % : un abonnement gratuit n'est pas prévu). Lue seulement tant que
+ * ancienne facture payée d'un montant non nul — pas un état `active`, et
+ * pas une facture à zéro (couverte par un crédit ou une remise de 100 % : un
+ * abonnement gratuit n'est pas prévu). Lue seulement tant que
  * le compte n'en a pas : une fois écrite, elle ne change plus. Limite
  * assumée : un paiement remboursé ou contesté reste un paiement — la
  * facture reste `paid` chez Stripe.

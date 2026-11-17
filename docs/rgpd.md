@@ -388,8 +388,12 @@ rappellent de les télécharger.] Concrètement, tant que le compte vit :
 
 - une `DuerpVersion` ne peut jamais être supprimée par un geste de
   l'utilisateur (`supprimerEntreprise` le refuse) ;
-- même sur demande d'effacement, elles sont exclues du périmètre — exception de
-  l'**article 17.3.b du RGPD**, respect d'une obligation légale ;
+- ~~même sur demande d'effacement, elles sont exclues du périmètre — exception de
+  l'**article 17.3.b du RGPD**, respect d'une obligation légale ;~~
+  [2026-11-17 : l'obligation légale est celle de l'employeur, responsable du
+  traitement. Une demande d'effacement d'une personne lui revient : il peut
+  la refuser au titre de l'article 17.3.b, et Rojer, sous-traitant, suit son
+  instruction. Rojer n'oppose pas lui-même cette exception.]
 - les risques et unités de travail suivent, puisqu'ils font partie du snapshot.
 
 ### 4.3 Sortie d'un salarié de l'effectif

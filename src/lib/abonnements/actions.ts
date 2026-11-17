@@ -15,8 +15,6 @@ import { abonnementCourant, motifDErreur, synchroniserClientStripe } from "@/lib
 import {
   abonnementsDuClient,
   annulerBaisse,
-  expirerSessionsOuvertes,
-  factureARegler,
   monterDeFormule,
   ouvrirCheckout,
   ouvrirPortail,
@@ -26,7 +24,7 @@ import {
 } from "@/lib/stripe/parcours";
 import { clientStripeDuCompte } from "./client-stripe";
 import { demarrerEssaiDuCompte, PAGE_ESSAI, type EtatEssai } from "./essai";
-import { aNomProvisoire, abonnementEnCours, reglementDe, resiliationDemandee } from "./droits";
+import { aNomProvisoire, abonnementEnCours, resiliationDemandee } from "./droits";
 import { INTERVALLE_STRIPE, estLookupKey, formuleDeLookupKey, formuleDuPrix } from "./formules";
 import { sensDuChangement } from "./changement";
 import { depassements } from "./quotas";
@@ -105,12 +103,8 @@ export async function ouvrirPortailAction(formData: FormData): Promise<void> {
  * premier paiement est immédiat. Pendant l'essai, après lui, ou après une
  * résiliation : le même geste. Le client Stripe naît ici s'il manque.
  * Stripe fait foi : un abonnement qui court ne se double jamais — la copie
- * est relue et la page le dit ; un premier paiement en attente renvoie à sa
- * facture.
+ * est relue et la page le dit.
  */
-/** De combien « s'abonner » repousse une suppression due ou proche : le temps d'un paiement, relances de la banque comprises. */
-const SURSIS_DE_PAIEMENT_MS = 3 * 24 * 3_600_000;
-
 export async function sAbonnerAction(formData: FormData): Promise<void> {
   const proprietaire = await verifierProprietaire();
   // S'abonner se fait AUSSI quand la saisie est fermée (essai fini, abonnement
@@ -127,35 +121,19 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
   // `null` : un abonnement court déjà (notre copie retardait).
   let url: string | null = null;
   try {
-    // Un compte dont la suppression est due ou proche (ADR-058) : elle est
-    // repoussée AVANT d'ouvrir le paiement. La suppression revérifie sa date
-    // sous verrou : un paiement ne peut plus aboutir sur un compte effacé
-    // pendant la passe du jour (revue du 2026-11-17).
-    const sursis = new Date(Date.now() + SURSIS_DE_PAIEMENT_MS);
-    await db.abonnement.updateMany({ where: { compteId, suppressionPrevueLe: { lt: sursis } }, data: { suppressionPrevueLe: sursis } });
     const customerId = await clientStripeDuCompte(stripe, db, { compteId, email, enregistre: ligne.stripeCustomerId });
-    const [abonnements, catalogue, tauxTva] = await Promise.all([abonnementsDuClient(stripe, customerId), prixDesFormules(stripe), tauxDeTva(stripe)]);
-    const prix = catalogue.get(formule);
-    if (!prix || !tauxTva) throw new Error("prix ou TVA introuvable");
-    let { courant } = abonnementCourant(abonnements);
-    if (courant?.status === "incomplete" && courant.items.data[0]?.price.id !== prix.priceId) {
-      // Un premier paiement resté en attente pour une AUTRE formule que celle
-      // choisie maintenant : il est résilié (rien n'a été prélevé), sinon la
-      // personne paierait une formule que la page n'affiche pas (revue du
-      // 2026-11-17).
-      await stripe.subscriptions.cancel(courant.id);
-      courant = null;
-    }
-    if (courant?.status === "incomplete") {
-      // Un premier paiement resté en attente (Checkout abandonné à la
-      // confirmation de la banque), pour la même formule : on le termine, au
-      // lieu d'attendre que Stripe l'expire (environ 23 heures). Une session
-      // Checkout restée ouverte ne doit pas le doubler.
-      await expirerSessionsOuvertes(stripe, customerId);
-      url = await versLaFactureEnAttente(stripe, courant);
-    } else if (courant && abonnementEnCours(courant.status)) {
+    const { courant } = abonnementCourant(await abonnementsDuClient(stripe, customerId));
+    // ~~Un premier paiement en attente (`incomplete`) renvoyait à sa facture~~
+    // [2026-11-17 : Checkout ne crée l'abonnement qu'une fois le paiement
+    // passé — une confirmation de la banque ratée laisse la session ouverte,
+    // sans abonnement (répétition du jour). Un abonnement qui court, quel
+    // que soit son état, se gère au portail : la copie est relue.]
+    if (courant && abonnementEnCours(courant.status)) {
       await synchroniserClientStripe(stripe, customerId).catch(() => null);
     } else {
+      const [catalogue, tauxTva] = await Promise.all([prixDesFormules(stripe), tauxDeTva(stripe)]);
+      const prix = catalogue.get(formule);
+      if (!prix || !tauxTva) throw new Error("prix ou TVA introuvable");
       url = await ouvrirCheckout(stripe, {
         customerId,
         priceId: prix.priceId,
@@ -175,39 +153,6 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
     redirect(`${PAGE_ABONNEMENT}?stripe=indisponible`);
   }
   redirect(url ?? `${PAGE_ABONNEMENT}?abonnement=en-cours`);
-}
-
-/**
- * La page hébergée de la facture d'un premier paiement à confirmer ; sans
- * facture payable trouvée, la page de l'abonnement le dit (jamais « à jour »).
- */
-async function versLaFactureEnAttente(stripe: Stripe, courant: Stripe.Subscription): Promise<string> {
-  return (await factureARegler(stripe, courant.latest_invoice)) ?? `${PAGE_ABONNEMENT}?facture=introuvable`;
-}
-
-/**
- * Confirmer un premier paiement resté en attente (`incomplete` : la banque
- * demande une confirmation) : la page hébergée de sa facture. Un impayé, lui,
- * se règle au portail (`ouvrirPortailAction`), qui enregistre la nouvelle
- * carte et relance la facture — la page de la facture n'enregistre pas une
- * carte saisie sans la case « sauvegarder » (répétition du 2026-11-17). Rien
- * à confirmer : la page de l'abonnement.
- */
-export async function reglerFactureAction(formData: FormData): Promise<void> {
-  const proprietaire = await verifierProprietaire();
-  const { stripe, customerId } = await avecClient(proprietaire, formData);
-  let cible = `${PAGE_ABONNEMENT}?facture=aucune`;
-  try {
-    const { courant } = abonnementCourant(await abonnementsDuClient(stripe, customerId));
-    const reglement = courant ? reglementDe(courant.status) : null;
-    if (courant && reglement === "premier-paiement") cible = await versLaFactureEnAttente(stripe, courant);
-    // Onglet resté sur l'ancien bouton « Régler la facture » : la page, qui
-    // propose le portail — jamais « à jour ».
-    else if (reglement === "impaye") cible = PAGE_ABONNEMENT;
-  } catch {
-    redirect(`${PAGE_ABONNEMENT}?stripe=indisponible`);
-  }
-  redirect(cible);
 }
 
 /** Le même geste envoyé deux fois : Stripe le dit par un 409, ou par un planning déjà rattaché. */

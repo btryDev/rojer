@@ -29,7 +29,7 @@ import {
   prendre,
 } from "./evenements";
 import { clientsDus, enEchecDurable } from "./file";
-import { carteQuiAPaye, expirerSessionsOuvertes, rendrePlanningEchu } from "./parcours";
+import { carteQuiAPaye, expirerSessionsOuvertes, rendreBaisseApresMontee, rendrePlanningEchu } from "./parcours";
 import { idStripe } from "./ids";
 import { motifDErreur, synchroniserSousBail } from "./synchronisation";
 import { OPTIONS_WEBHOOK } from "./client";
@@ -72,14 +72,22 @@ export async function aiguillageDe(stripe: Stripe, type: string, objetId: string
       // 2026-11-17). Sans bloquer la copie du paiement réussi.
       const client = idStripe(session.customer);
       if (client) {
-        await expirerSessionsOuvertes(stripe, client).catch((e) =>
+        await expirerSessionsOuvertes(stripe, client, OPTIONS_WEBHOOK).catch((e) =>
           console.error(`stripe : sessions Checkout du client ${client} non expirées — ${motifDErreur(e)}`),
         );
       }
       return { clientStripe: client };
     }
     case "v1.invoice.paid": {
-      const client = idStripe((await stripe.invoices.retrieve(objetId, {}, OPTIONS_WEBHOOK)).customer);
+      const facture = await stripe.invoices.retrieve(objetId, {}, OPTIONS_WEBHOOK);
+      const client = idStripe(facture.customer);
+      // La facture d'une montée de formule payée : la baisse prévue, gardée
+      // tant que la montée attendait son paiement, est rendue. Un échec fait
+      // réessayer la notification (la baisse ne doit pas défaire la montée).
+      const abonnementMonte = idStripe(facture.parent?.subscription_details?.subscription);
+      if (facture.billing_reason === "subscription_update" && abonnementMonte) {
+        await rendreBaisseApresMontee(stripe, abonnementMonte);
+      }
       // La carte qui a payé devient celle du client (`carteQuiAPaye`). Sans
       // bloquer la copie d'un paiement réussi (revue du 2026-11-16) : un
       // échec se signale, une fois par jour, pour un geste à la main.

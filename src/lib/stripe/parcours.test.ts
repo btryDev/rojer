@@ -4,6 +4,7 @@ import type Stripe from "stripe";
 vi.mock("server-only", () => ({}));
 
 import { carteQuiAPaye,
+  rendreBaisseApresMontee,
   creerClientStripe,
   oublierLesPrix,
   annulerBaisse,
@@ -19,7 +20,7 @@ import { carteQuiAPaye,
 const api = {
   customers: { create: vi.fn(), update: vi.fn(), retrieve: vi.fn() },
   subscriptions: { create: vi.fn(), update: vi.fn(), resume: vi.fn(), retrieve: vi.fn() },
-  invoices: { retrieve: vi.fn(), voidInvoice: vi.fn(), pay: vi.fn() },
+  invoices: { retrieve: vi.fn() },
   paymentMethods: { retrieve: vi.fn() },
   subscriptionSchedules: { create: vi.fn(), retrieve: vi.fn(), update: vi.fn(), release: vi.fn() },
   checkout: { sessions: { create: vi.fn(), list: vi.fn(), expire: vi.fn() } },
@@ -57,7 +58,7 @@ describe("parcours Stripe", () => {
       subscription_data: { metadata: { userId: "u1" }, default_tax_rates: ["txr_tva"] },
     });
     expect(api.checkout.sessions.list).toHaveBeenCalledWith({ customer: "cus_1", status: "open", limit: 10 }, expect.anything());
-    expect(api.checkout.sessions.expire).toHaveBeenCalledWith("cs_ancienne");
+    expect(api.checkout.sessions.expire).toHaveBeenCalledWith("cs_ancienne", {}, expect.anything());
     expect(api.checkout.sessions.expire.mock.invocationCallOrder[0]).toBeLessThan(api.checkout.sessions.create.mock.invocationCallOrder[0]);
   });
 
@@ -136,6 +137,19 @@ describe("parcours Stripe", () => {
     await carteQuiAPaye(stripe, "in_1");
     expect(api.subscriptions.update).not.toHaveBeenCalled();
     expect(api.customers.update).not.toHaveBeenCalled();
+  });
+
+  it("montée payée : la baisse gardée est rendue ; montée encore en attente, ou sans planning : rien", async () => {
+    api.subscriptionSchedules.release.mockResolvedValue({});
+    api.subscriptions.retrieve.mockResolvedValue({ id: "sub_1", schedule: "sched_1", pending_update: null });
+    await rendreBaisseApresMontee(stripe, "sub_1");
+    expect(api.subscriptionSchedules.release).toHaveBeenCalledWith("sched_1", {}, expect.anything());
+    api.subscriptionSchedules.release.mockClear();
+    api.subscriptions.retrieve.mockResolvedValue({ id: "sub_1", schedule: "sched_1", pending_update: { expires_at: 1 } });
+    await rendreBaisseApresMontee(stripe, "sub_1");
+    api.subscriptions.retrieve.mockResolvedValue({ id: "sub_1", schedule: null, pending_update: null });
+    await rendreBaisseApresMontee(stripe, "sub_1");
+    expect(api.subscriptionSchedules.release).not.toHaveBeenCalled();
   });
 
   it("monter : tout de suite, prorata facturé, appliquée seulement si payée ; une baisse planifiée est abandonnée d'abord", async () => {

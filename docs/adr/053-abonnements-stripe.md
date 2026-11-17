@@ -223,7 +223,29 @@ et sans croire une information qui ne vient pas de Stripe.
    essai peut apprendre, refus après refus, qu'un SIREN a déjà eu un essai
    Rojer ailleurs — une information commerciale, pas personnelle, sans
    aucun accès au dossier.]
-9. ~~**L'essai est un abonnement Stripe créé par l'API** :
+9. **État au 2026-11-17 — ce qui fait foi** (le reste du paragraphe est
+   l'historique, rayé et daté) :
+   - **L'essai** : 30 jours, formule Essentiel, compté par Rojer
+     (`essaiUtiliseLe`, `finEssai`) ; Stripe n'en connaît rien, aucune carte.
+   - **S'abonner** : la formule et le rythme choisis dans Rojer, puis
+     **Stripe Checkout** (mode abonnement, carte seule, conditions et
+     adresse) ; premier paiement immédiat ; le retour n'est cru que pour une
+     session payée du client. Le client Stripe naît à ce moment.
+   - **Gérer** : le **portail Stripe** — carte, factures, résiliation, et
+     tout paiement à régler (impayé, confirmation de la banque) : il
+     enregistre la carte, la met par défaut et paie la facture.
+   - **Changer de formule** : dans Rojer (le portail n'a pas
+     `subscription_update`, pour vérifier les plafonds avant une baisse).
+     Montée tout de suite (`pending_if_incomplete` ; une confirmation de la
+     banque passe par la page de sa facture), baisse en fin de période par
+     un planning Stripe.
+   - **Sans abonnement** : saisie fermée, lecture ouverte ; douze mois puis
+     suppression, après deux e-mails (ADR-058).
+   - **La copie** : écrite seulement par la relecture de Stripe sous bail,
+     depuis les notifications (format léger), le retour de Checkout et le
+     rapprochement quotidien.
+
+   ~~**L'essai est un abonnement Stripe créé par l'API** :
    `trial_period_days=30`, sans moyen de paiement,
    `trial_settings.end_behavior.missing_payment_method=pause`. Pendant
    l'essai, la saisie est ouverte (`trialing`) ; à la fin sans carte, l'état
@@ -291,25 +313,30 @@ et sans croire une information qui ne vient pas de Stripe.
    une période, puis rendu) ; refusée tant que le compte a plus
    d'utilisateurs que la formule visée ; ce qui dépasse d'autre passe en
    lecture seule (§ 14), annoncé avant le clic. Une montée abandonne une
-   baisse planifiée ; « Garder ma formule » la rend. Tant qu'une baisse est
+   baisse planifiée [2026-11-17 : une montée encore en attente de son
+   paiement la garde ; sa facture payée, la baisse est rendue
+   (`rendreBaisseApresMontee`)] ; « Garder ma formule » la rend. Tant qu'une baisse est
    planifiée, une invitation qu'elle ne permettrait pas est refusée
    (`refusInvitationBaissePrevue`) : sans cela, on inviterait après l'avoir
    planifiée et on garderait trop d'utilisateurs — ils ne sont jamais
-   gelés. Stripe refuse un planning sur un abonnement réglé pour se mettre
-   en pause à la fin de l'essai : ce réglage est levé d'abord.]] ~~Passer au payant, c'est ajouter une carte dans le portail Stripe~~ :
+   gelés. ~~Stripe refuse un planning sur un abonnement réglé pour se mettre
+   en pause à la fin de l'essai : ce réglage est levé d'abord.~~ [2026-11-17 :
+   plus de pause, plus d'essai chez Stripe.]] ~~Passer au payant, c'est ajouter une carte dans le portail Stripe :
    l'abonnement devient payant à la fin de l'essai, sans prélèvement anticipé ;
    un abonnement en pause se reprend du même portail. Le portail sert aussi à
    résilier, à télécharger les factures (émises par Stripe) et à changer de
    formule — réglé pour garder l'essai (`subscription_update.
    trial_update_behavior = continue_trial` ; par défaut, le portail y met
    fin). **Checkout** ne sert qu'à souscrire de nouveau après une
-   résiliation ; Rojer le refuse tant qu'un abonnement n'est pas terminé.
+   résiliation ; Rojer le refuse tant qu'un abonnement n'est pas terminé.~~ [2026-11-17 : faux depuis l'essai compté chez Rojer — voir l'état
+   en tête du § 9.]
    [2026-11-16, audit des parcours, plan validé par la propriétaire :
-   (a) **payer maintenant pendant l'essai** est un geste visible de la page
+   (a) ~~**payer maintenant pendant l'essai** est un geste visible de la page
    (« Payer maintenant », `immediat` du formulaire) et non plus seulement
    l'adresse `?immediat=1` d'un document officiel : choisir une formule sans
    payer ne vaut que pour la fin de l'essai, et les limites de l'essai
-   restent (le message de plafond y renvoie) ; le montant TTC prélevé est
+   restent (le message de plafond y renvoie) ;~~ [2026-11-17 : un seul geste,
+   « S'abonner » → Checkout] le montant TTC prélevé est
    écrit avant le clic. (b) Le formulaire part de la formule en cours. (c)
    ~~Une facture qui attend (`past_due`, `unpaid`, `incomplete`) se règle
    depuis Rojer (« Régler la facture en attente », `reglerFactureAction`,
@@ -319,18 +346,26 @@ et sans croire une information qui ne vient pas de Stripe.
    carte par défaut) — la carte refusée restait celle du mois suivant. Un
    impayé (`past_due`, `unpaid`) se règle au portail (« Changer de carte et
    payer ») : il enregistre la carte, la met par défaut et paie la facture,
-   confirmation de la banque comprise — vérifié en répétition. Seul un
+   confirmation de la banque comprise — vérifié en répétition. ~~Seul un
    premier paiement à confirmer (`incomplete`) va encore à la page de sa
-   facture (« Confirmer le paiement »)] [2026-11-17, revue d'ensemble : Checkout n'accepte que la carte, écrit
-   dans le code (`allowed_payment_method_types`) ; un premier paiement en
+   facture (« Confirmer le paiement »)~~ [2026-11-17 : Checkout ne crée
+   l'abonnement qu'une fois payé — une confirmation ratée laisse la session
+   ouverte, sans abonnement (vérifié). `incomplete` n'a plus de chemin
+   propre : il passe au portail comme un impayé ; `reglerFactureAction` est
+   retirée]] [2026-11-17, revue d'ensemble : Checkout n'accepte que la carte, écrit
+   dans le code (`allowed_payment_method_types`) ; ~~un premier paiement en
    attente pour une autre formule que celle choisie est résilié avant
    Checkout ; « s'abonner » repousse de trois jours une suppression due ou
-   proche ; les sessions Checkout restées ouvertes expirent au paiement ; le
+   proche~~ [retirés le même jour : chemin impossible par Checkout, et un
+   sursis renouvelable à chaque clic — la suppression revérifie sous verrou
+   qu'aucun client Stripe n'est apparu ni aucune page de paiement ouverte] ;
+   les sessions Checkout restées ouvertes expirent au paiement ; le
    retour de Checkout n'est cru que pour une session payée du client
    (`?session=`) ; le rapprochement quotidien demande aussi les clients des
    abonnements nés chez Stripe depuis trois jours ; `sansAbonnementDepuis`
-   garde la date déjà notée] ; un `incomplete` n'est plus « déjà en
-   cours ». (d) Une résiliation prévue pendant l'essai ferme le changement
+   garde la date déjà notée] ; ~~un `incomplete` n'est plus « déjà en
+   cours »~~ [2026-11-17 : un abonnement qui court, quel qu'en soit l'état,
+   se gère au portail]. (d) Une résiliation prévue pendant l'essai ferme le changement
    de formule, comme pour un abonnement qui paie. (e) Après l'essai,
    `/entreprises` aiguille (dossier existant ou onboarding). Le portail
    n'a pas `subscription_update` : il sert à la carte, aux factures et à la

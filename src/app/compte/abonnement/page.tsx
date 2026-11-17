@@ -13,7 +13,7 @@ import { formaterDateLongueFr } from "@/lib/dates";
 import { dateDeSuppressionPrevue } from "@/lib/abonnements/suppression";
 import { buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
-import { ouvrirPortailAction, reglerFactureAction } from "@/lib/abonnements/actions";
+import { ouvrirPortailAction } from "@/lib/abonnements/actions";
 import { FormulaireAbonnement, type OffreAffichee } from "@/components/abonnements/FormulaireAbonnement";
 import { BoutonEnvoi } from "@/components/abonnements/BoutonEnvoi";
 import { ChangerDeFormule, type OptionDeFormule } from "@/components/abonnements/ChangerDeFormule";
@@ -199,7 +199,6 @@ export default async function AbonnementPage({
     document?: string;
     formule?: string;
     compte?: string;
-    facture?: string;
     session?: string;
   }>;
 }) {
@@ -207,7 +206,7 @@ export default async function AbonnementPage({
   // abonnement (ADR-054). `requireCompte` renverrait à l'onboarding.
   const user = await requireUser();
   const c = await getOptionalCompte();
-  const { saisie, stripe, paiement: paiement0, abonnement, document, formule: formuleChange0, compte: compteChange, facture, session } =
+  const { saisie, stripe, paiement: paiement0, abonnement, document, formule: formuleChange0, compte: compteChange, session } =
     await searchParams;
   // Le compte que montre la page : ses gestes le postent (`ChampCompteAttendu`).
   const { compteId, nomCompte } = await compteDeLaPage();
@@ -223,9 +222,6 @@ export default async function AbonnementPage({
   // Sans compte encore, `role` est nul : l'essai reste proposé.
   const geste = gesteAbonnement({ ouvert, role: c?.compte.role ?? null, ligne });
   const formule = formuleDeLookupKey(ligne?.formule);
-  // Vient de payer, la confirmation de Stripe n'est pas encore là : la page le
-  // dit et ne propose jamais de payer une seconde fois (le geste est le portail).
-  const paiementEnConfirmation = ligne?.statut === "active" && !ligne.debutPayantLe;
   const finPrevue = ligne ? resiliationPrevue(ligne) : false;
   const phase = phaseDuCompte(ligne, ctx.maintenant);
   const essaiEnCours = phase.type === "essai";
@@ -242,7 +238,7 @@ export default async function AbonnementPage({
   const [offres, offreChoisie] =
     vue.cas === "formulaire" ? await Promise.all([offresAffichees(), lireOffreChoisie()]) : [[], null];
   const courante = preselection(vue, { abonnement: formule, offreChoisie });
-  const messageInfo = messageDeLaPage({ paiement, phase, formuleChange, paiementEnConfirmation, facture, abonnement });
+  const messageInfo = messageDeLaPage({ paiement, phase, formuleChange, abonnement });
   // Changer de formule : un abonnement qui paie, pour son propriétaire ; pas
   // une formule qui s'arrête.
   const { options: optionsChangement, baisse } =
@@ -382,15 +378,6 @@ export default async function AbonnementPage({
             {vue.cas === "portail" && (
               <>
                 {optionsChangement.length > 0 && <ChangerDeFormule options={optionsChangement} baisse={baisse} compteId={compteId} />}
-                {vue.aRegler === "premier-paiement" && (
-                  <form action={reglerFactureAction} className="mt-2 mb-6">
-                    <ChampCompteAttendu compteId={compteId} />
-                    <p className="m-0 mb-4 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                      Votre banque demande de confirmer le premier paiement. Confirmez-le sur la page sécurisée de Stripe.
-                    </p>
-                    <BoutonEnvoi variant="board">Confirmer le paiement</BoutonEnvoi>
-                  </form>
-                )}
                 {/* Un impayé : le portail de Stripe, où la carte se change (il
                     l'enregistre et la met par défaut) et la facture se paie ou
                     se confirme. La page de la facture, elle, n'enregistre pas
@@ -399,11 +386,11 @@ export default async function AbonnementPage({
                     2026-11-17). */}
                 <FormulairePortail
                   compteId={compteId}
-                  variant={vue.aRegler === "premier-paiement" ? "boardClair" : "board"}
-                  libelle={vue.aRegler === "impaye" ? "Changer de carte et payer" : undefined}
+                  variant="board"
+                  libelle={vue.aRegler ? "Changer de carte et payer" : undefined}
                   className={optionsChangement.length > 0 ? "mt-6" : "mt-2"}
                 >
-                  {vue.aRegler === "impaye" ? (
+                  {vue.aRegler ? (
                     <>
                       Votre dernier paiement n&apos;est pas passé. Changez de carte, ou confirmez le paiement si votre
                       banque le demande : il est relancé aussitôt, sur la page sécurisée de Stripe.
@@ -436,8 +423,6 @@ function messageDeLaPage(p: {
   paiement?: string;
   phase: ReturnType<typeof phaseDuCompte>;
   formuleChange: keyof typeof MESSAGES_FORMULE | null;
-  paiementEnConfirmation: boolean;
-  facture?: string;
   abonnement?: string;
 }): React.ReactNode {
   if (p.paiement === "termine") {
@@ -457,13 +442,6 @@ function messageDeLaPage(p: {
     return p.phase.statut === "active" ? "Paiement reçu : votre abonnement est actif." : null;
   }
   if (p.formuleChange) return MESSAGES_FORMULE[p.formuleChange];
-  if (p.paiementEnConfirmation) {
-    return "Le premier paiement est en cours : les fonctions réservées aux abonnés s'ouvrent dès qu'il est confirmé. Inutile de payer de nouveau.";
-  }
-  if (p.facture === "aucune") return "Aucune facture n'attend de paiement : votre abonnement est à jour.";
-  if (p.facture === "introuvable") {
-    return "La facture de votre premier paiement est introuvable : réessayez de vous abonner ; si le problème reste, écrivez-nous.";
-  }
   if (p.abonnement === "en-cours") return "Un abonnement est déjà en cours pour ce compte : gérez-le ici plutôt que d'en souscrire un second.";
   return null;
 }

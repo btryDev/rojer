@@ -45,20 +45,13 @@ export type ContexteDroits = {
 
 /** Les états Stripe qui ouvrent la saisie, et dont la période court. */
 export const OUVRENT: ReadonlySet<string> = new Set(["active", "past_due"]);
-/** Les états où une facture attend d'être réglée : impayé, premier paiement non abouti. */
-export const A_REGLER: ReadonlySet<string> = new Set(["past_due", "unpaid", "incomplete"]);
-
 /**
- * Ce qu'un paiement à régler demande, et où (répétition du 2026-11-17) : un
- * impayé (`past_due`, `unpaid`) se règle au portail de Stripe, qui enregistre
- * la carte et relance la facture ; un premier paiement à confirmer
- * (`incomplete`), sur la page de sa facture. La vue et l'action lisent cette
- * seule fonction.
+ * Les états où une facture attend d'être réglée : tous se règlent au portail
+ * de Stripe, qui enregistre la carte, demande la confirmation de la banque et
+ * relance la facture (répétition du 2026-11-17). `incomplete` n'arrive plus
+ * par Checkout ; il reste ici pour qu'un tel état ne ferme pas sans issue.
  */
-export function reglementDe(statut: string | null): "impaye" | "premier-paiement" | null {
-  if (statut === "incomplete") return "premier-paiement";
-  return statut && A_REGLER.has(statut) ? "impaye" : null;
-}
+export const A_REGLER: ReadonlySet<string> = new Set(["past_due", "unpaid", "incomplete"]);
 
 /**
  * Le même filtre en base : sans abonnement qui paie ou est à régler — `statut`
@@ -177,7 +170,7 @@ export function libelleStatut(ligne: Pick<LigneAbonnement, "statut" | "debutPaya
 
 /** Les états dont on ne revient pas : on souscrit un nouvel abonnement (Checkout). */
 export const TERMINES: ReadonlySet<string> = new Set(["canceled", "incomplete_expired"]);
-/** Un abonnement Stripe qui court encore (payé, impayé, premier paiement en attente) : on le gère, on n'en ajoute pas. */
+/** Un abonnement Stripe qui court encore (payé ou à régler) : on le gère au portail, on n'en ajoute pas. */
 export const abonnementEnCours = (statut: string | null) => statut !== null && !TERMINES.has(statut);
 
 /**

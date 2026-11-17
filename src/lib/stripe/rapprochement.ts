@@ -21,7 +21,7 @@ import { prisma } from "@/lib/prisma";
 import { demanderSynchronisations } from "./file";
 import { idStripe } from "./ids";
 import { TERMINES } from "@/lib/abonnements/droits";
-import { toutLister } from "./synchronisation";
+import { motifDErreur, toutLister } from "./synchronisation";
 
 const PAR_LOT = 500;
 
@@ -34,18 +34,27 @@ const NES_DEPUIS_S = 3 * 24 * 3600;
  */
 const DECALAGE_MS = 15 * 60_000;
 
-/** Les clients des abonnements créés chez Stripe ces trois derniers jours, une fois chacun. */
+/**
+ * Les clients des abonnements de Rojer (`metadata.compteId`, posé par
+ * Checkout) créés chez Stripe ces trois derniers jours, une fois chacun. Les
+ * abonnements d'un autre produit du même compte Stripe ne sont pas relus.
+ */
 async function clientsDesAbonnementsRecents(stripe: Stripe, maintenant: Date): Promise<string[]> {
   const depuis = Math.floor(maintenant.getTime() / 1000) - NES_DEPUIS_S;
   const recents = await toutLister(stripe.subscriptions.list({ created: { gte: depuis }, status: "all", limit: 100 }), 5000);
-  return [...new Set(recents.flatMap((s) => idStripe(s.customer) ?? []))];
+  return [...new Set(recents.flatMap((s) => (s.metadata?.compteId ? (idStripe(s.customer) ?? []) : [])))];
 }
 
-export async function rapprocher(maintenant: Date, stripe: Stripe): Promise<{ demandes: number }> {
+/**
+ * La base d'abord : son filet ne dépend d'aucun appel à Stripe. Le balayage
+ * des abonnements récents vient ensuite, isolé : s'il échoue (Stripe
+ * injoignable, limite de débit), la passe de la base est faite quand même,
+ * et l'échec se dit dans le bilan. Un client vu des deux côtés n'est demandé
+ * qu'une fois.
+ */
+export async function rapprocher(maintenant: Date, stripe: Stripe): Promise<{ demandes: number; recentsIllisibles?: true }> {
   const plusTard = new Date(maintenant.getTime() + DECALAGE_MS);
-  const recents = await clientsDesAbonnementsRecents(stripe, maintenant);
-  await demanderSynchronisations(recents, plusTard);
-  let demandes = recents.length;
+  const demandes = new Set<string>();
   let apres: string | undefined;
   for (;;) {
     const lot = await prisma.abonnement.findMany({
@@ -61,8 +70,16 @@ export async function rapprocher(maintenant: Date, stripe: Stripe): Promise<{ de
     });
     const clients = lot.flatMap((l) => (l.stripeCustomerId ? [l.stripeCustomerId] : []));
     await demanderSynchronisations(clients, plusTard);
-    demandes += clients.length;
-    if (lot.length < PAR_LOT) return { demandes };
+    for (const c of clients) demandes.add(c);
+    if (lot.length < PAR_LOT) break;
     apres = clients.at(-1);
+  }
+  try {
+    const recents = (await clientsDesAbonnementsRecents(stripe, maintenant)).filter((c) => !demandes.has(c));
+    await demanderSynchronisations(recents, plusTard);
+    return { demandes: demandes.size + recents.length };
+  } catch (e) {
+    console.error(`rapprochement : abonnements récents illisibles chez Stripe — ${motifDErreur(e)}`);
+    return { demandes: demandes.size, recentsIllisibles: true };
   }
 }

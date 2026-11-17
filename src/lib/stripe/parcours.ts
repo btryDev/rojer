@@ -7,11 +7,11 @@ import "server-only";
 // l'ADR-054, une personne peut ouvrir deux comptes). Ces clés n'arrêtent qu'un
 // double clic : Stripe ne les garde que 24 heures. La vraie garde contre deux
 // clients est la ligne `Abonnement` qui réserve le client
-// (`abonnements/client-stripe.ts`). Plus d'essai chez Stripe : il se compte
-// chez Rojer (ADR-053 § 9, amendé le 2026-11-16).
+// (`abonnements/client-stripe.ts`). L'essai se compte chez Rojer (ADR-053
+// § 9) : Stripe ne voit qu'un abonnement payé, ouvert par Checkout.
 
 import type Stripe from "stripe";
-import { OPTIONS_RELECTURE } from "./client";
+import { OPTIONS_RELECTURE, OPTIONS_WEBHOOK } from "./client";
 import { idStripe } from "./ids";
 import { INTERVALLE_STRIPE, LOOKUP_KEYS, formuleDeLookupKey } from "@/lib/abonnements/formules";
 import { tauxConformes } from "./tva";
@@ -99,12 +99,19 @@ export async function abonnementsDuClient(stripe: Stripe, customerId: string): P
 }
 
 /**
- * Les sessions Checkout encore ouvertes du client, expirées avant d'en ouvrir
- * une neuve : deux onglets ne paient pas deux abonnements.
+ * Les sessions Checkout encore ouvertes du client, expirées : avant d'en
+ * ouvrir une neuve, quand l'une est payée, avant une suppression — deux
+ * onglets ne paient pas deux abonnements. `options` : celles de l'appelant
+ * (la file du webhook a son propre délai, `OPTIONS_WEBHOOK`).
  */
-export async function expirerSessionsOuvertes(stripe: Stripe, customerId: string) {
-  const ouvertes = await stripe.checkout.sessions.list({ customer: customerId, status: "open", limit: 10 }, OPTIONS_RELECTURE);
-  await Promise.all(ouvertes.data.map((s) => stripe.checkout.sessions.expire(s.id)));
+export async function expirerSessionsOuvertes(stripe: Stripe, customerId: string, options: Stripe.RequestOptions = OPTIONS_RELECTURE) {
+  const ouvertes = await stripe.checkout.sessions.list({ customer: customerId, status: "open", limit: 10 }, options);
+  await Promise.all(ouvertes.data.map((s) => stripe.checkout.sessions.expire(s.id, {}, options)));
+}
+
+/** Le client a-t-il une session Checkout ouverte (un paiement peut-être en cours) ? */
+export async function aUneSessionOuverte(stripe: Stripe, customerId: string, options: Stripe.RequestOptions = OPTIONS_RELECTURE) {
+  return (await stripe.checkout.sessions.list({ customer: customerId, status: "open", limit: 1 }, options)).data.length > 0;
 }
 
 /**
@@ -181,6 +188,25 @@ export async function monterDeFormule(
     }
   }
   return factureARegler(stripe, misAJour.latest_invoice);
+}
+
+/**
+ * Une montée restée en attente de son paiement (`pending_update`) a gardé la
+ * baisse prévue (`monterDeFormule`). Sa facture payée, la montée s'applique :
+ * la baisse est rendue, le dernier choix l'emporte (revue du 2026-11-17 —
+ * sans cela, la baisse défaisait la montée payée au renouvellement).
+ */
+export async function rendreBaisseApresMontee(stripe: Stripe, abonnementId: string): Promise<void> {
+  const abonnement = await stripe.subscriptions.retrieve(abonnementId, {}, OPTIONS_WEBHOOK);
+  const planning = idStripe(abonnement.schedule);
+  if (!planning || abonnement.pending_update) return;
+  try {
+    await stripe.subscriptionSchedules.release(planning, {}, OPTIONS_WEBHOOK);
+  } catch (e) {
+    // Déjà rendu par une notification voisine : rien à refaire.
+    const relu = await stripe.subscriptionSchedules.retrieve(planning, {}, OPTIONS_WEBHOOK);
+    if (relu.status === "active") throw e;
+  }
 }
 
 /**

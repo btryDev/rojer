@@ -19,6 +19,7 @@ vi.mock("./parcours", () => ({
   rendrePlanningEchu: vi.fn().mockResolvedValue(undefined),
   carteQuiAPaye: vi.fn().mockResolvedValue(undefined),
   expirerSessionsOuvertes: vi.fn().mockResolvedValue(undefined),
+  rendreBaisseApresMontee: vi.fn().mockResolvedValue(undefined),
 }));
 vi.mock("@/lib/alertes", () => ({ alerter: vi.fn().mockResolvedValue(undefined), alerterUneFoisParJour: vi.fn().mockResolvedValue(undefined) }));
 
@@ -26,7 +27,7 @@ import * as evenements from "./evenements";
 import * as file from "./file";
 import { synchroniserSousBail } from "./synchronisation";
 import { alerter, alerterUneFoisParJour } from "@/lib/alertes";
-import { carteQuiAPaye, expirerSessionsOuvertes, rendrePlanningEchu } from "./parcours";
+import { carteQuiAPaye, expirerSessionsOuvertes, rendreBaisseApresMontee, rendrePlanningEchu } from "./parcours";
 import { EVENEMENTS_ECOUTES } from "./webhook";
 import { aiguillageDe, aiguiller, traiterLaFile, traiterLaFileIci } from "./traitement";
 
@@ -84,12 +85,22 @@ describe("aiguillageDe : le client de l'objet relu, et les effets propres à l'o
     expect(carteQuiAPaye).not.toHaveBeenCalled();
   });
 
+  it("facture d'une montée payée : la baisse prévue est rendue ; une autre facture ne la touche pas (revue du 2026-11-17)", async () => {
+    api.invoices.retrieve.mockResolvedValueOnce({ customer: "cus_1", billing_reason: "subscription_update", parent: { subscription_details: { subscription: "sub_1" } } });
+    await aiguillageDe(faux, "v1.invoice.paid", "in_1");
+    expect(rendreBaisseApresMontee).toHaveBeenCalledWith(faux, "sub_1");
+    vi.mocked(rendreBaisseApresMontee).mockClear();
+    api.invoices.retrieve.mockResolvedValueOnce({ customer: "cus_1", billing_reason: "subscription_cycle", parent: { subscription_details: { subscription: "sub_1" } } });
+    await aiguillageDe(faux, "v1.invoice.paid", "in_2");
+    expect(rendreBaisseApresMontee).not.toHaveBeenCalled();
+  });
+
   it("session d'abonnement : la relecture suit par la file ; une session sans abonnement n'est pas suivie", async () => {
     api.checkout.sessions.retrieve.mockResolvedValue({ mode: "subscription", customer: "cus_1" });
     expect(await aiguillageDe(faux, "v1.checkout.session.completed", "cs_1")).toEqual({ clientStripe: "cus_1" });
     // Une autre session restée ouverte (second onglet) ne peut plus être payée ;
     // si l'expiration échoue, la copie du paiement réussi suit quand même.
-    expect(expirerSessionsOuvertes).toHaveBeenCalledWith(faux, "cus_1");
+    expect(expirerSessionsOuvertes).toHaveBeenCalledWith(faux, "cus_1", expect.objectContaining({ timeout: 3_000 }));
     vi.mocked(expirerSessionsOuvertes).mockRejectedValueOnce(new Error("injoignable"));
     expect(await aiguillageDe(faux, "v1.checkout.session.completed", "cs_1")).toEqual({ clientStripe: "cus_1" });
     api.checkout.sessions.retrieve.mockResolvedValue({ mode: "payment", customer: "cus_1" });
