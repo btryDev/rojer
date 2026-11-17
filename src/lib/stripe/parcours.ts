@@ -109,9 +109,9 @@ export async function expirerSessionsOuvertes(stripe: Stripe, customerId: string
   await Promise.all(ouvertes.data.map((s) => stripe.checkout.sessions.expire(s.id, {}, options)));
 }
 
-/** Le client a-t-il une session Checkout ouverte (un paiement peut-être en cours) ? */
-export async function aUneSessionOuverte(stripe: Stripe, customerId: string, options: Stripe.RequestOptions = OPTIONS_RELECTURE) {
-  return (await stripe.checkout.sessions.list({ customer: customerId, status: "open", limit: 1 }, options)).data.length > 0;
+/** Les sessions Checkout ouvertes du client (un paiement peut y être en cours). */
+export async function sessionsOuvertes(stripe: Stripe, customerId: string, options: Stripe.RequestOptions = OPTIONS_RELECTURE) {
+  return (await stripe.checkout.sessions.list({ customer: customerId, status: "open", limit: 10 }, options)).data;
 }
 
 /**
@@ -196,16 +196,23 @@ export async function monterDeFormule(
  * la baisse est rendue, le dernier choix l'emporte (revue du 2026-11-17 —
  * sans cela, la baisse défaisait la montée payée au renouvellement).
  */
-export async function rendreBaisseApresMontee(stripe: Stripe, abonnementId: string): Promise<void> {
+export async function rendreBaisseApresMontee(stripe: Stripe, abonnementId: string, factureCreeeLe: number): Promise<void> {
   const abonnement = await stripe.subscriptions.retrieve(abonnementId, {}, OPTIONS_WEBHOOK);
-  const planning = idStripe(abonnement.schedule);
-  if (!planning || abonnement.pending_update) return;
+  const id = idStripe(abonnement.schedule);
+  // Un abonnement de Rojer seulement (Checkout pose `compteId`), sans montée
+  // encore en attente.
+  if (!id || abonnement.pending_update || !abonnement.metadata?.compteId) return;
+  const planning = await stripe.subscriptionSchedules.retrieve(id, {}, OPTIONS_WEBHOOK);
+  // Une baisse planifiée APRÈS cette montée est le dernier choix : une
+  // notification en retard ne la défait pas (relecture du 2026-11-17).
+  if (planning.status !== "active" || planning.created > factureCreeeLe) return;
   try {
-    await stripe.subscriptionSchedules.release(planning, {}, OPTIONS_WEBHOOK);
+    await stripe.subscriptionSchedules.release(id, {}, OPTIONS_WEBHOOK);
   } catch (e) {
-    // Déjà rendu par une notification voisine : rien à refaire.
-    const relu = await stripe.subscriptionSchedules.retrieve(planning, {}, OPTIONS_WEBHOOK);
-    if (relu.status === "active") throw e;
+    // Déjà rendu par une notification voisine : rien à refaire ; sinon,
+    // l'erreur du rendu remonte (la notification sera retentée).
+    const relu = await stripe.subscriptionSchedules.retrieve(id, {}, OPTIONS_WEBHOOK).catch(() => null);
+    if (!relu || relu.status === "active" || relu.status === "not_started") throw e;
   }
 }
 

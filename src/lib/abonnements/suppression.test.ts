@@ -26,7 +26,7 @@ vi.mock("@/lib/prisma", () => ({
     $transaction: m.transaction,
   },
 }));
-vi.mock("@/lib/stripe/parcours", () => ({ expirerSessionsOuvertes: m.expirer, aUneSessionOuverte: m.sessionOuverte }));
+vi.mock("@/lib/stripe/parcours", () => ({ expirerSessionsOuvertes: m.expirer, sessionsOuvertes: m.sessionOuverte }));
 vi.mock("@/lib/email", () => ({
   envoiEnService: m.enService,
   sendMail: m.sendMail,
@@ -89,7 +89,7 @@ beforeEach(() => {
   m.synchroniser.mockResolvedValue({ issue: "ecrit" });
   m.versions.mockResolvedValue(0);
   m.expirer.mockResolvedValue(undefined);
-  m.sessionOuverte.mockResolvedValue(false);
+  m.sessionOuverte.mockResolvedValue([]);
   m.membres.mockResolvedValue([]);
   m.file.count.mockResolvedValue(0);
   m.file.deleteMany.mockResolvedValue({ count: 1 });
@@ -257,7 +257,7 @@ describe("suppression d'un compte sans abonnement (ADR-058)", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     m.findMany.mockResolvedValue([{ compteId: "c1", stripeCustomerId: "cus_parti" }]);
     const introuvable = Object.assign(new Error("No such customer"), { code: "resource_missing" });
-    m.expirer.mockRejectedValue(introuvable);
+    m.sessionOuverte.mockRejectedValue(introuvable);
     m.transaction.mockResolvedValue(["cle-1"]);
     const retrieve = vi.fn();
     const cancel = vi.fn();
@@ -281,7 +281,7 @@ describe("suppression d'un compte sans abonnement (ADR-058)", () => {
     retrieve.mockResolvedValue({ id: "cus_parti" });
     expect(await supprimerComptesEchus(MAINTENANT, stripe)).toEqual({ supprimes: 0, reportes: 1 });
     // Une autre erreur ne vaut pas absence.
-    m.expirer.mockRejectedValue(Object.assign(new Error("rate limit"), { code: "rate_limit" }));
+    m.sessionOuverte.mockRejectedValue(Object.assign(new Error("rate limit"), { code: "rate_limit" }));
     expect(await supprimerComptesEchus(MAINTENANT, stripe)).toMatchObject({ supprimes: 0, reportes: 1 });
     expect(m.transaction).not.toHaveBeenCalled();
   });
@@ -303,10 +303,11 @@ describe("suppression d'un compte sans abonnement (ADR-058)", () => {
     expect(cancel).not.toHaveBeenCalled();
     expect(m.synchroniser).toHaveBeenCalledWith(stripe, "cus_1");
     // Les paiements en cours sur Checkout sont arrêtés avant la relecture.
-    expect(m.expirer).toHaveBeenCalledWith(stripe, "cus_1");
+    expect(m.expirer).toHaveBeenCalledWith(stripe, "cus_1", expect.anything());
   });
 
-  it("un abonnement qui ne paie pas (impayé définitif, état inattendu) : résilié chez Stripe, puis le compte supprimé", async () => {
+  it("un impayé définitif : résilié chez Stripe, puis le compte supprimé ; un paiement en traitement (incomplete) : le compte attend", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
     m.findMany.mockResolvedValue([{ compteId: "c1", stripeCustomerId: "cus_1" }]);
     m.transaction.mockResolvedValue(["cle-1"]);
     const cancel = vi.fn();
@@ -316,30 +317,43 @@ describe("suppression d'un compte sans abonnement (ADR-058)", () => {
     m.abonnements.mockResolvedValue([
       { id: "sub_vieux", status: "canceled" },
       { id: "sub_impaye", status: "unpaid" },
-      { id: "sub_inattendu", status: "incomplete" },
     ]);
     expect(await supprimerComptesEchus(MAINTENANT, stripe)).toEqual({ supprimes: 1, reportes: 0 });
-    expect(cancel.mock.calls.map((c) => c[0])).toEqual(["sub_impaye", "sub_inattendu"]);
+    expect(cancel.mock.calls.map((c) => c[0])).toEqual(["sub_impaye"]);
+    cancel.mockClear();
+    m.abonnements.mockResolvedValue([{ id: "sub_neuf", status: "incomplete" }]);
+    expect(await supprimerComptesEchus(MAINTENANT, stripe)).toMatchObject({ supprimes: 0, reportes: 1 });
+    expect(cancel).not.toHaveBeenCalled();
   });
 
-  it("sous le verrou, juste avant d'effacer : un client Stripe apparu ou une page de paiement ouverte, et le compte attend (revue du 2026-11-17)", async () => {
+  it("une page de paiement ouverte depuis moins d'une heure : le compte attend, sans l'expirer ; plus ancienne : expirée, la suppression suit (relecture du 2026-11-17)", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    m.findMany.mockResolvedValue([{ compteId: "c1", stripeCustomerId: "cus_1" }]);
+    m.abonnements.mockResolvedValue([]);
+    m.transaction.mockResolvedValue(["cle-1"]);
+    const stripe = {
+      subscriptions: { cancel: vi.fn(), list: () => ({ autoPagingToArray: m.abonnements }) },
+    } as unknown as Parameters<typeof supprimerComptesEchus>[1];
+    const ilYa = (minutes: number) => Math.floor(MAINTENANT.getTime() / 1000) - minutes * 60;
+    m.sessionOuverte.mockResolvedValue([{ id: "cs_1", created: ilYa(10) }]);
+    expect(await supprimerComptesEchus(MAINTENANT, stripe)).toMatchObject({ supprimes: 0, reportes: 1 });
+    expect(m.expirer).not.toHaveBeenCalled();
+    expect(m.transaction).not.toHaveBeenCalled();
+    m.sessionOuverte.mockResolvedValue([{ id: "cs_1", created: ilYa(120) }]);
+    expect(await supprimerComptesEchus(MAINTENANT, stripe)).toEqual({ supprimes: 1, reportes: 0 });
+    expect(m.expirer).toHaveBeenCalledWith(stripe, "cus_1", expect.anything());
+  });
+
+  it("sous le verrou : un client Stripe réservé depuis la lecture de la passe, et le compte attend — aucun appel à Stripe sous le verrou", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     const stripe = {
       subscriptions: { cancel: vi.fn(), list: () => ({ autoPagingToArray: m.abonnements }) },
     } as unknown as Parameters<typeof supprimerComptesEchus>[1];
-    const ligneVerrouillee = { stripeCustomerId: null as string | null, sansAbonnementDepuis: new Date(), avertiSuppression30Le: new Date(), avertiSuppression7Le: new Date(), compte: { name: "x" } };
+    const ligneVerrouillee = { stripeCustomerId: "cus_neuf" as string | null, sansAbonnementDepuis: new Date(), avertiSuppression30Le: new Date(), avertiSuppression7Le: new Date(), compte: { name: "x" } };
     const tx = { $queryRaw: vi.fn(), abonnement: { findFirst: vi.fn(async () => ligneVerrouillee) } };
     m.transaction.mockImplementation(async (f: (t: unknown) => unknown) => f(tx));
-    // Lu sans client au début de la passe ; un client réservé depuis (« S'abonner ») : rien n'est effacé.
     m.findMany.mockResolvedValue([{ compteId: "c1", stripeCustomerId: null }]);
-    ligneVerrouillee.stripeCustomerId = "cus_neuf";
     expect(await supprimerComptesEchus(MAINTENANT, stripe)).toMatchObject({ supprimes: 0, reportes: 1 });
-    // Même client, mais une page de paiement ouverte depuis l'expiration : rien n'est effacé.
-    m.findMany.mockResolvedValue([{ compteId: "c1", stripeCustomerId: "cus_1" }]);
-    m.abonnements.mockResolvedValue([]);
-    ligneVerrouillee.stripeCustomerId = "cus_1";
-    m.sessionOuverte.mockResolvedValue(true);
-    expect(await supprimerComptesEchus(MAINTENANT, stripe)).toMatchObject({ supprimes: 0, reportes: 1 });
-    expect(m.sessionOuverte).toHaveBeenCalledWith(stripe, "cus_1", expect.anything());
+    expect(m.sessionOuverte).not.toHaveBeenCalled();
   });
 });

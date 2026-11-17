@@ -40,9 +40,8 @@ export function formuleDesPlafonds(formule: string | null | undefined): CleFormu
 /**
  * L'essai d'un compte : `en_cours` (`enEssai`, l'essai compté chez Rojer —
  * ADR-053 § 9, amendé le 2026-11-16), ou `paiement_attendu` — le compte n'a
- * JAMAIS payé (`debutPayantLe` vide) hors de l'essai : essai fini, premier
- * paiement en échec ou à confirmer ; il n'ouvre pas les volumes de la
- * formule. `null` : il a payé.
+ * JAMAIS payé (`debutPayantLe` vide) hors de l'essai ; il n'ouvre pas les
+ * volumes de la formule. `null` : il a payé.
  */
 export type Essai = "en_cours" | "paiement_attendu" | null;
 export function essaiDe(
@@ -70,7 +69,7 @@ export function motifDuRefus(regime: Regime, cle: CleQuota): string {
   if (regime.essai && estLimiteDEssai(cle))
     return regime.essai === "en_cours"
       ? `L'essai gratuit couvre ${couvre} : pour en ajouter, abonnez-vous depuis la page Abonnement de votre compte — l'abonnement lève les limites de l'essai.`
-      : `Tant que votre premier paiement n'est pas confirmé, Rojer garde les limites de l'essai (${couvre}) : réglez votre abonnement depuis la page Abonnement de votre compte.`;
+      : `Sans abonnement payé, Rojer garde les limites de l'essai (${couvre}) : abonnez-vous depuis la page Abonnement de votre compte.`;
   const plus = CLES_FORMULES.find((f) => {
     const q = FORMULES[f].quotas[cle];
     return q === null || q > plafond;

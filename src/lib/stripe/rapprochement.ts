@@ -35,14 +35,19 @@ const NES_DEPUIS_S = 3 * 24 * 3600;
 const DECALAGE_MS = 15 * 60_000;
 
 /**
- * Les clients des abonnements de Rojer (`metadata.compteId`, posé par
- * Checkout) créés chez Stripe ces trois derniers jours, une fois chacun. Les
- * abonnements d'un autre produit du même compte Stripe ne sont pas relus.
+ * Les clients de Rojer (leur `metadata.compteId`, ou celui de l'abonnement)
+ * dont un abonnement est né chez Stripe ces trois derniers jours, une fois
+ * chacun — un abonnement recréé à la main pour un client de Rojer compris.
  */
 async function clientsDesAbonnementsRecents(stripe: Stripe, maintenant: Date): Promise<string[]> {
   const depuis = Math.floor(maintenant.getTime() / 1000) - NES_DEPUIS_S;
-  const recents = await toutLister(stripe.subscriptions.list({ created: { gte: depuis }, status: "all", limit: 100 }), 5000);
-  return [...new Set(recents.flatMap((s) => (s.metadata?.compteId ? (idStripe(s.customer) ?? []) : [])))];
+  const recents = await toutLister(
+    stripe.subscriptions.list({ created: { gte: depuis }, status: "all", limit: 100, expand: ["data.customer"] }),
+    5000,
+  );
+  const deRojer = (s: Stripe.Subscription) =>
+    !!s.metadata?.compteId || (typeof s.customer === "object" && !s.customer.deleted && !!s.customer.metadata?.compteId);
+  return [...new Set(recents.filter(deRojer).flatMap((s) => idStripe(s.customer) ?? []))];
 }
 
 /**
@@ -74,12 +79,13 @@ export async function rapprocher(maintenant: Date, stripe: Stripe): Promise<{ de
     if (lot.length < PAR_LOT) break;
     apres = clients.at(-1);
   }
+  let recents: string[];
   try {
-    const recents = (await clientsDesAbonnementsRecents(stripe, maintenant)).filter((c) => !demandes.has(c));
-    await demanderSynchronisations(recents, plusTard);
-    return { demandes: demandes.size + recents.length };
+    recents = (await clientsDesAbonnementsRecents(stripe, maintenant)).filter((c) => !demandes.has(c));
   } catch (e) {
     console.error(`rapprochement : abonnements récents illisibles chez Stripe — ${motifDErreur(e)}`);
     return { demandes: demandes.size, recentsIllisibles: true };
   }
+  await demanderSynchronisations(recents, plusTard);
+  return { demandes: demandes.size + recents.length };
 }

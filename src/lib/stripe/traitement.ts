@@ -86,7 +86,7 @@ export async function aiguillageDe(stripe: Stripe, type: string, objetId: string
       // réessayer la notification (la baisse ne doit pas défaire la montée).
       const abonnementMonte = idStripe(facture.parent?.subscription_details?.subscription);
       if (facture.billing_reason === "subscription_update" && abonnementMonte) {
-        await rendreBaisseApresMontee(stripe, abonnementMonte);
+        await rendreBaisseApresMontee(stripe, abonnementMonte, facture.created);
       }
       // La carte qui a payé devient celle du client (`carteQuiAPaye`). Sans
       // bloquer la copie d'un paiement réussi (revue du 2026-11-16) : un

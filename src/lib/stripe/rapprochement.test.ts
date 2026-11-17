@@ -49,13 +49,15 @@ describe("rapprocher", () => {
         { customer: "cus_resilie", ...deRojer },
         { customer: { id: "cus_resilie" }, ...deRojer },
         { customer: "cus_deja", ...deRojer },
+        // Un abonnement recréé à la main : le client porte le compte.
+        { customer: { id: "cus_main", metadata: { compteId: "c2" } }, metadata: {} },
         // Un autre produit du même compte Stripe : pas relu.
-        { customer: "cus_autre_produit", metadata: {} },
+        { customer: { id: "cus_autre_produit", metadata: {} }, metadata: {} },
       ],
     });
-    expect(await rapprocher(MAINTENANT, stripe)).toEqual({ demandes: 2 });
-    expect(m.demander).toHaveBeenLastCalledWith(["cus_resilie"], PLUS_TARD);
+    expect(await rapprocher(MAINTENANT, stripe)).toEqual({ demandes: 3 });
+    expect(m.demander).toHaveBeenLastCalledWith(["cus_resilie", "cus_main"], PLUS_TARD);
     const depuis = Math.floor(MAINTENANT.getTime() / 1000) - 3 * 24 * 3600;
-    expect(liste).toHaveBeenCalledWith({ created: { gte: depuis }, status: "all", limit: 100 });
+    expect(liste).toHaveBeenCalledWith({ created: { gte: depuis }, status: "all", limit: 100, expand: ["data.customer"] });
   });
 });

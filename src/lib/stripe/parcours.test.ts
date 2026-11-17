@@ -139,17 +139,28 @@ describe("parcours Stripe", () => {
     expect(api.customers.update).not.toHaveBeenCalled();
   });
 
-  it("montée payée : la baisse gardée est rendue ; montée encore en attente, ou sans planning : rien", async () => {
-    api.subscriptionSchedules.release.mockResolvedValue({});
-    api.subscriptions.retrieve.mockResolvedValue({ id: "sub_1", schedule: "sched_1", pending_update: null });
-    await rendreBaisseApresMontee(stripe, "sub_1");
+  it("montée payée : la baisse gardée est rendue ; pas une baisse posée après la facture, ni hors de Rojer, ni une montée encore en attente", async () => {
+    api.subscriptionSchedules.release.mockReset().mockResolvedValue({});
+    const sub = (o: object = {}) => ({ id: "sub_1", schedule: "sched_1", pending_update: null, metadata: { compteId: "c1" }, ...o });
+    api.subscriptionSchedules.retrieve.mockResolvedValue({ id: "sched_1", status: "active", created: 100 });
+    api.subscriptions.retrieve.mockResolvedValue(sub());
+    await rendreBaisseApresMontee(stripe, "sub_1", 200);
     expect(api.subscriptionSchedules.release).toHaveBeenCalledWith("sched_1", {}, expect.anything());
     api.subscriptionSchedules.release.mockClear();
-    api.subscriptions.retrieve.mockResolvedValue({ id: "sub_1", schedule: "sched_1", pending_update: { expires_at: 1 } });
-    await rendreBaisseApresMontee(stripe, "sub_1");
-    api.subscriptions.retrieve.mockResolvedValue({ id: "sub_1", schedule: null, pending_update: null });
-    await rendreBaisseApresMontee(stripe, "sub_1");
+    // Baisse planifiée APRÈS la facture (notification en retard) : gardée.
+    await rendreBaisseApresMontee(stripe, "sub_1", 50);
+    // Montée encore en attente, abonnement hors de Rojer, pas de planning : rien.
+    api.subscriptions.retrieve.mockResolvedValue(sub({ pending_update: { expires_at: 1 } }));
+    await rendreBaisseApresMontee(stripe, "sub_1", 200);
+    api.subscriptions.retrieve.mockResolvedValue(sub({ metadata: {} }));
+    await rendreBaisseApresMontee(stripe, "sub_1", 200);
+    api.subscriptions.retrieve.mockResolvedValue(sub({ schedule: null }));
+    await rendreBaisseApresMontee(stripe, "sub_1", 200);
     expect(api.subscriptionSchedules.release).not.toHaveBeenCalled();
+    // Le rendu échoue et le planning est toujours actif : l'erreur remonte (la notification sera retentée).
+    api.subscriptions.retrieve.mockResolvedValue(sub());
+    api.subscriptionSchedules.release.mockRejectedValueOnce(new Error("réseau"));
+    await expect(rendreBaisseApresMontee(stripe, "sub_1", 200)).rejects.toThrow("réseau");
   });
 
   it("monter : tout de suite, prorata facturé, appliquée seulement si payée ; une baisse planifiée est abandonnée d'abord", async () => {

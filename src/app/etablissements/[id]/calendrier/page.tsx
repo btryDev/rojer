@@ -1009,7 +1009,7 @@ export default async function CalendrierPage({
     <>
       {descriptionEnTete}
       {essai
-        ? ` ${essai === "en_cours" ? "Pendant l'essai gratuit" : "Tant que votre premier paiement n'est pas confirmé"}, Rojer suit ${suivis} au plus : le calendrier ne montre que leurs obligations et celles de l'établissement.`
+        ? ` ${essai === "en_cours" ? "Pendant l'essai gratuit" : "Sans abonnement payé"}, Rojer suit ${suivis} au plus : le calendrier ne montre que leurs obligations et celles de l'établissement.`
         : null}
     </>
   );

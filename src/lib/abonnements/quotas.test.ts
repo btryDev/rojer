@@ -320,7 +320,7 @@ describe("jamais payé : limites de l'essai, même hors essai", () => {
   it("premier paiement en échec à la fin de l'essai (past_due, sans ancre) : toujours 5 équipements", async () => {
     lancer();
     await expect(prendreQuota(faux("rojer_essentiel_mensuel", 5, null, "past_due").txc, "c1", "equipements")).rejects.toThrow(
-      "Tant que votre premier paiement n'est pas confirmé, Rojer garde les limites de l'essai (5 équipements) : réglez votre abonnement depuis la page Abonnement de votre compte.",
+      "Sans abonnement payé, Rojer garde les limites de l'essai (5 équipements) : abonnez-vous depuis la page Abonnement de votre compte.",
     );
     await prendreQuota(faux("rojer_essentiel_mensuel", 5, PAYE_DEPUIS, "past_due").txc, "c1", "equipements");
   });

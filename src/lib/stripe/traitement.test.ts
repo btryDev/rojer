@@ -86,9 +86,9 @@ describe("aiguillageDe : le client de l'objet relu, et les effets propres à l'o
   });
 
   it("facture d'une montée payée : la baisse prévue est rendue ; une autre facture ne la touche pas (revue du 2026-11-17)", async () => {
-    api.invoices.retrieve.mockResolvedValueOnce({ customer: "cus_1", billing_reason: "subscription_update", parent: { subscription_details: { subscription: "sub_1" } } });
+    api.invoices.retrieve.mockResolvedValueOnce({ customer: "cus_1", created: 200, billing_reason: "subscription_update", parent: { subscription_details: { subscription: "sub_1" } } });
     await aiguillageDe(faux, "v1.invoice.paid", "in_1");
-    expect(rendreBaisseApresMontee).toHaveBeenCalledWith(faux, "sub_1");
+    expect(rendreBaisseApresMontee).toHaveBeenCalledWith(faux, "sub_1", 200);
     vi.mocked(rendreBaisseApresMontee).mockClear();
     api.invoices.retrieve.mockResolvedValueOnce({ customer: "cus_1", billing_reason: "subscription_cycle", parent: { subscription_details: { subscription: "sub_1" } } });
     await aiguillageDe(faux, "v1.invoice.paid", "in_2");
