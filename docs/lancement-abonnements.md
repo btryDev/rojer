@@ -178,8 +178,10 @@ sur la préproduction, où fermer la saisie ne gêne personne.
    nouvelle carte et paie la facture ; carte `4000 0027 6000 3184` : la
    confirmation de la banque s'y fait aussi). Essai fini sans
    abonnement : reculer `finEssai` de la ligne en base de test, la saisie se
-   ferme. Comptes de test d'avant le 2026-11-16 (essais tenus chez Stripe) :
-   `scripts/reprendre-essais-stripe.ts`, à blanc puis `--appliquer`.
+   ferme. ~~Comptes de test d'avant le 2026-11-16 (essais tenus chez Stripe) :
+   `scripts/reprendre-essais-stripe.ts`, à blanc puis `--appliquer`.~~
+   [2026-11-17 : script passé sur la préproduction (trois essais repris),
+   puis supprimé ; la production n'a aucun essai tenu chez Stripe.]
 5. Dans le tableau de bord de test, ouvrir les journaux de la clé
    restreinte : aucune erreur 403. S'il y en a, ajouter la permission. Puis
    **« Dupliquer la clé » vers le mode réel** (méthode documentée par
