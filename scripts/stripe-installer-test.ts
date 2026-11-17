@@ -211,8 +211,6 @@ export async function installer(env: Env, creerClient: (cle: string) => Stripe):
 export const REGLAGES_MANUELS = [
   "Réglages > Informations publiques : URL des conditions d'utilisation (…/conditions). Checkout refuse " +
     "`consent_collection` sans elle ; l'API ne règle pas le profil public de son propre compte.",
-  "Réglages > Billing > Abonnements et e-mails : e-mail de rappel 7 jours avant la fin d'un essai gratuit " +
-    "(et le lien de gestion qu'il porte). Aucune ressource de l'API ne le règle.",
   "Réglages > E-mails clients : envoi des factures et reçus, si on veut les voir partir en test.",
   "Réglages > Informations publiques et Billing > Factures : raison sociale, adresse, SIREN, numéro de TVA ; " +
     "numérotation des factures au niveau du compte (une suite sans trou) ; pied de page avec les mentions " +

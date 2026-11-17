@@ -66,6 +66,32 @@ export async function adressesDesProprietaires(compteId: string): Promise<string
   return membres.map((m) => m.user.email).filter((e): e is string => Boolean(e));
 }
 
+/**
+ * Un message à tous les propriétaires du compte. `partis` : combien sont
+ * partis ; `echec` : au moins un envoi, ou la lecture des propriétaires, a
+ * échoué. L'appelant décide de rendre sa marque (rien parti à cause d'un
+ * échec) — un e-mail parti la garde, réessayer enverrait un doublon.
+ */
+export async function ecrireAuxProprietaires(compteId: string, message: { subject: string; text: string }, contexte: string) {
+  let partis = 0;
+  let echec = false;
+  try {
+    for (const to of await adressesDesProprietaires(compteId)) {
+      try {
+        await sendMail({ to, ...message });
+        partis++;
+      } catch (e) {
+        echec = true;
+        console.error(`${contexte} non envoyé (compte ${compteId}) — ${motifErreur(e)}`);
+      }
+    }
+  } catch (e) {
+    echec = true;
+    console.error(`${contexte} : propriétaires illisibles (compte ${compteId}) — ${motifErreur(e)}`);
+  }
+  return { partis, echec };
+}
+
 /** Le rappel de la veille : l'essai finit dans les 36 heures. */
 export const rappelerLaVeilleDeLaFinDEssai = (maintenant: Date) =>
   rappelerLaFinDEssai(maintenant, "rappelVeilleEssaiLe", 0, FENETRE_VEILLE_MS);
@@ -108,22 +134,7 @@ async function rappelerLaFinDEssai(
     });
     if (prise.count !== 1) continue;
     const message = messageFinEssai(ligne.finEssai, url);
-    let partis = 0;
-    let echec = false;
-    try {
-      for (const to of await adressesDesProprietaires(ligne.compteId)) {
-        try {
-          await sendMail({ to, ...message });
-          partis++;
-        } catch (e) {
-          echec = true;
-          console.error(`rappel de fin d'essai non envoyé (abonnement ${ligne.id}) — ${motifErreur(e)}`);
-        }
-      }
-    } catch (e) {
-      echec = true;
-      console.error(`rappel de fin d'essai : propriétaires illisibles (abonnement ${ligne.id}) — ${motifErreur(e)}`);
-    }
+    const { partis, echec } = await ecrireAuxProprietaires(ligne.compteId, message, "rappel de fin d'essai");
     if (partis > 0) bilan.envoyes++;
     if (echec) bilan.echecs++;
     // Rien n'est parti à cause d'un échec : la marque est rendue. Un e-mail
@@ -232,22 +243,7 @@ export async function rappelerLeRenouvellementAnnuel(maintenant: Date, stripe: S
     });
     if (prise.count !== 1) continue;
     const message = messageRenouvellementAnnuel(formule, echeance, url);
-    let partis = 0;
-    let echec = false;
-    try {
-      for (const to of await adressesDesProprietaires(ligne.compteId)) {
-        try {
-          await sendMail({ to, ...message });
-          partis++;
-        } catch (e) {
-          echec = true;
-          console.error(`rappel de renouvellement non envoyé (abonnement ${ligne.id}) — ${motifErreur(e)}`);
-        }
-      }
-    } catch (e) {
-      echec = true;
-      console.error(`rappel de renouvellement : propriétaires illisibles (abonnement ${ligne.id}) — ${motifErreur(e)}`);
-    }
+    const { partis, echec } = await ecrireAuxProprietaires(ligne.compteId, message, "rappel de renouvellement");
     if (partis > 0) bilan.envoyes++;
     if (echec) bilan.echecs++;
     // Rien n'est parti à cause d'un échec : la marque est rendue (la valeur

@@ -16,7 +16,7 @@ import { aDejaPaye, exigerSignatureDEssai, exigerUnPaiement, PAGE_S_ABONNER } fr
 
 const db = (debutPayantLe: Date | null, signatures = 0) =>
   ({
-    abonnement: { findUnique: vi.fn(async () => ({ debutPayantLe, formule: "rojer_essentiel_mensuel", statut: "trialing", essaiUtiliseLe: null })) },
+    abonnement: { findUnique: vi.fn(async () => ({ debutPayantLe, formule: "rojer_essentiel_mensuel", statut: "active", essaiUtiliseLe: null })) },
     consommationQuota: { count: vi.fn(async () => signatures) },
   }) as unknown as Db;
 

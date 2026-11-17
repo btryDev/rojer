@@ -13,7 +13,7 @@ import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
 import { CASE_A_COCHER } from "@/components/ui-kit/case-a-cocher";
 
 /** `compteId` : le compte que montre la page, `null` si la personne n'en a encore aucun. */
-export function FormulaireEssai({ disponible, compteId }: { disponible: boolean; compteId: string | null }) {
+export function FormulaireEssai({ compteId }: { compteId: string | null }) {
   const [etat, envoyer, enCours] = useActionState(demarrerEssaiAction, { status: "idle" });
   const [accepte, setAccepte] = useState(false);
 
@@ -38,11 +38,8 @@ export function FormulaireEssai({ disponible, compteId }: { disponible: boolean;
         </span>
       </label>
       <MessageFormulaire ton="alerte">{etat.status === "error" ? etat.message : null}</MessageFormulaire>
-      <MessageFormulaire ton="info">
-        {disponible ? null : "L'essai ne peut pas démarrer pour le moment : réessayez dans quelques minutes."}
-      </MessageFormulaire>
       <div>
-        <Button type="submit" variant="board" size="board" disabled={!accepte || enCours || !disponible}>
+        <Button type="submit" variant="board" size="board" disabled={!accepte || enCours}>
           {enCours ? "Démarrage de l'essai…" : "Démarrer mon essai"}
         </Button>
       </div>

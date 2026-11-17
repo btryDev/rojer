@@ -42,7 +42,6 @@ describe("FormulaireAbonnement", () => {
     expect(bouton().disabled).toBe(false);
     expect(screen.getAllByRole("button")).toHaveLength(1);
     expect(screen.getByText(/Prélevé aujourd.hui : 29\s€ TTC/)).toBeTruthy();
-    expect(container.querySelector('input[name="immediat"]')).toBeNull();
   });
 
   it("part de la présélection (offre choisie, abonnement passé) ; le montant suit la sélection", () => {

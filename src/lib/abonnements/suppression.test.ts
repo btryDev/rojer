@@ -10,7 +10,7 @@ const m = vi.hoisted(() => ({
   abonnements: vi.fn(),
   synchroniser: vi.fn(),
   versions: vi.fn(),
-  expirer: vi.fn(),
+
   transaction: vi.fn(),
   membres: vi.fn(),
   file: { findMany: vi.fn(), deleteMany: vi.fn(), update: vi.fn(), count: vi.fn() },
@@ -25,17 +25,41 @@ vi.mock("@/lib/prisma", () => ({
     $transaction: m.transaction,
   },
 }));
-vi.mock("@/lib/stripe/parcours", () => ({ expirerSessionsOuvertes: m.expirer }));
+vi.mock("@/lib/stripe/parcours", () => ({ DUREE_PAGE_DE_PAIEMENT_S: 3600 }));
 vi.mock("@/lib/email", () => ({
   envoiEnService: m.enService,
   sendMail: m.sendMail,
   publicAppUrl: () => "https://rojer.test",
   motifErreur: (e: unknown) => (e instanceof Error ? e.message : "erreur"),
 }));
-vi.mock("./rappels", () => ({ adressesDesProprietaires: m.adresses }));
+// La boucle d'envoi aux propriétaires vit dans rappels.ts (revue du
+// 2026-11-17) : la même, branchée sur les adresses et l'envoi simulés.
+vi.mock("./rappels", () => ({
+  adressesDesProprietaires: m.adresses,
+  ecrireAuxProprietaires: async (compteId: string, message: { subject: string; text: string }) => {
+    let partis = 0;
+    let echec = false;
+    try {
+      for (const to of await m.adresses(compteId)) {
+        try {
+          await m.sendMail({ to, ...message });
+          partis++;
+        } catch {
+          echec = true;
+        }
+      }
+    } catch {
+      echec = true;
+    }
+    return { partis, echec };
+  },
+}));
 vi.mock("./saisie", () => ({ PAGE_ABONNEMENT: "/compte/abonnement" }));
 vi.mock("@/lib/stripe/client", () => ({ OPTIONS_WEBHOOK: {} }));
-vi.mock("@/lib/stripe/synchronisation", () => ({ synchroniserClientStripe: m.synchroniser }));
+vi.mock("@/lib/stripe/synchronisation", async (reel) => ({
+  toutLister: (await reel<typeof import("@/lib/stripe/synchronisation")>()).toutLister,
+  synchroniserClientStripe: m.synchroniser,
+}));
 vi.mock("@/lib/suppression/fichiers", () => ({ clesDesEtablissements: vi.fn() }));
 vi.mock("@/lib/storage", () => ({ getStorage: () => m.stockage }));
 const { alerter } = vi.hoisted(() => ({ alerter: vi.fn() }));
@@ -63,7 +87,6 @@ beforeEach(() => {
   m.sendMail.mockResolvedValue(undefined);
   m.synchroniser.mockResolvedValue({ issue: "ecrit" });
   m.versions.mockResolvedValue(0);
-  m.expirer.mockResolvedValue(undefined);
   m.membres.mockResolvedValue([]);
   m.file.count.mockResolvedValue(0);
   m.file.deleteMany.mockResolvedValue({ count: 1 });
@@ -231,7 +254,7 @@ describe("suppression d'un compte sans abonnement (ADR-058)", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     m.findMany.mockResolvedValue([{ compteId: "c1", stripeCustomerId: "cus_parti" }]);
     const introuvable = Object.assign(new Error("No such customer"), { code: "resource_missing" });
-    m.expirer.mockRejectedValue(introuvable);
+    m.abonnements.mockRejectedValue(introuvable);
     m.transaction.mockResolvedValue(["cle-1"]);
     const retrieve = vi.fn();
     const cancel = vi.fn();
@@ -255,7 +278,7 @@ describe("suppression d'un compte sans abonnement (ADR-058)", () => {
     retrieve.mockResolvedValue({ id: "cus_parti" });
     expect(await supprimerComptesEchus(MAINTENANT, stripe)).toEqual({ supprimes: 0, reportes: 1 });
     // Une autre erreur ne vaut pas absence.
-    m.expirer.mockRejectedValue(Object.assign(new Error("rate limit"), { code: "rate_limit" }));
+    m.abonnements.mockRejectedValue(Object.assign(new Error("rate limit"), { code: "rate_limit" }));
     expect(await supprimerComptesEchus(MAINTENANT, stripe)).toMatchObject({ supprimes: 0, reportes: 1 });
     expect(m.transaction).not.toHaveBeenCalled();
   });
@@ -276,22 +299,37 @@ describe("suppression d'un compte sans abonnement (ADR-058)", () => {
     }
     expect(cancel).not.toHaveBeenCalled();
     expect(m.synchroniser).toHaveBeenCalledWith(stripe, "cus_1");
-    // Les paiements en cours sur Checkout sont arrêtés avant la relecture.
-    expect(m.expirer).toHaveBeenCalledWith(stripe, "cus_1");
   });
 
-  it("un premier paiement en cours (incomplete) : rien n'est résilié ni effacé, le compte attend", async () => {
+  it("un impayé définitif : résilié chez Stripe, puis le compte supprimé ; un paiement en traitement (incomplete) : le compte attend", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     m.findMany.mockResolvedValue([{ compteId: "c1", stripeCustomerId: "cus_1" }]);
+    m.transaction.mockResolvedValue(["cle-1"]);
     const cancel = vi.fn();
     const stripe = {
       subscriptions: { cancel, list: () => ({ autoPagingToArray: m.abonnements }) },
     } as unknown as Parameters<typeof supprimerComptesEchus>[1];
     m.abonnements.mockResolvedValue([
       { id: "sub_vieux", status: "canceled" },
-      { id: "sub_neuf", status: "incomplete" },
+      { id: "sub_impaye", status: "unpaid" },
     ]);
+    expect(await supprimerComptesEchus(MAINTENANT, stripe)).toEqual({ supprimes: 1, reportes: 0 });
+    expect(cancel.mock.calls.map((c) => c[0])).toEqual(["sub_impaye"]);
+    cancel.mockClear();
+    m.abonnements.mockResolvedValue([{ id: "sub_neuf", status: "incomplete" }]);
     expect(await supprimerComptesEchus(MAINTENANT, stripe)).toMatchObject({ supprimes: 0, reportes: 1 });
     expect(cancel).not.toHaveBeenCalled();
+  });
+
+  it("sous le verrou : une page de paiement ouverte depuis moins d'une heure retient la suppression — aucun appel à Stripe sous le verrou", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    m.findMany.mockResolvedValue([{ compteId: "c1", stripeCustomerId: null }]);
+    const stripe = { subscriptions: { cancel: vi.fn(), list: () => ({ autoPagingToArray: m.abonnements }) } } as unknown as Parameters<typeof supprimerComptesEchus>[1];
+    const ligne = { paiementOuvertLe: new Date(MAINTENANT.getTime() - 10 * 60_000), sansAbonnementDepuis: new Date(), avertiSuppression30Le: new Date(), avertiSuppression7Le: new Date(), compte: { name: "x" } };
+    const verrou = vi.fn();
+    const tx = { $queryRaw: verrou, abonnement: { findFirst: vi.fn(async () => ligne) } };
+    m.transaction.mockImplementation(async (f: (t: unknown) => unknown) => f(tx));
+    expect(await supprimerComptesEchus(MAINTENANT, stripe)).toMatchObject({ supprimes: 0, reportes: 1 });
+    expect(verrou).toHaveBeenCalled();
   });
 });

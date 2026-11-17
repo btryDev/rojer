@@ -9,7 +9,11 @@
 
 export type Section = { titre: string; paragraphes: string[] };
 
-export const VERSION_CONDITIONS = "2026-11-provisoire-ttc";
+// [2026-11-17 : « 2026-11-provisoire-ttc » remplacée — l'essai est en
+// Essentiel, l'export demande un abonnement payé, et un compte sans
+// abonnement depuis douze mois est supprimé (ADR-058) ; l'ancien texte
+// promettait l'inverse.]
+export const VERSION_CONDITIONS = "2026-11-17-provisoire";
 
 export const CONDITIONS: Section[] = [
   {
@@ -27,21 +31,30 @@ export const CONDITIONS: Section[] = [
   {
     titre: "Essai gratuit",
     paragraphes: [
-      "L'essai dure 30 jours, sans carte bancaire, une fois par compte, dans la formule choisie au démarrage.",
-      "Rien n'est prélevé pendant l'essai. Sans abonnement à son terme, le dossier reste consultable et exportable ; la saisie est fermée jusqu'à la souscription.",
+      "L'essai dure 30 jours, sans carte bancaire, une fois par compte, dans la formule Essentiel.",
+      "Rien n'est prélevé pendant l'essai. Pendant l'essai, les gestes qui produisent un document officiel ou engagent un tiers (valider une version du document unique, exporter le dossier ou le registre, publier le registre d'accessibilité, signer pour un tiers) demandent un abonnement payé.",
+      "Sans abonnement au terme de l'essai, la saisie est fermée et le dossier reste consultable.",
     ],
   },
   {
     titre: "Abonnement et paiement",
     paragraphes: [
       "L'abonnement est mensuel ou annuel, payable d'avance. Les prix sont indiqués toutes taxes comprises (TVA de 20 % incluse). Le paiement et les factures sont gérés par Stripe.",
-      "En cas d'impayé, la saisie est fermée ; la consultation et l'export de vos données restent toujours ouverts.",
+      "En cas d'impayé, le paiement est relancé et la saisie reste ouverte pendant les relances. Sans règlement à leur terme, l'abonnement prend fin.",
     ],
   },
   {
     titre: "Résiliation",
     paragraphes: [
       "L'abonnement se résilie en ligne à tout moment, depuis l'espace de gestion de l'abonnement accessible dans Rojer.",
+      "Après la fin de l'abonnement, la saisie est fermée ; le dossier reste consultable et exportable.",
+    ],
+  },
+  {
+    titre: "Compte sans abonnement",
+    paragraphes: [
+      "Un compte sans abonnement depuis douze mois (après l'essai, une résiliation ou un impayé) est supprimé avec toutes ses données. Deux e-mails le préviennent, trente jours puis sept jours avant, avec la date.",
+      "La conservation du document unique d'évaluation des risques pendant quarante ans incombe à l'employeur (article L. 4121-3-1 du Code du travail) : téléchargez vos versions validées avant cette date. Rojer ne les conserve pas au-delà.",
     ],
   },
   {

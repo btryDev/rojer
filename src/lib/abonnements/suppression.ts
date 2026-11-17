@@ -17,11 +17,11 @@ import { ajouterJours, ajouterMois, formaterDateLongueFr } from "@/lib/dates";
 import { clesDesEtablissements } from "@/lib/suppression/fichiers";
 import { getStorage } from "@/lib/storage";
 import { OPTIONS_WEBHOOK } from "@/lib/stripe/client";
-import { expirerSessionsOuvertes } from "@/lib/stripe/parcours";
-import { synchroniserClientStripe } from "@/lib/stripe/synchronisation";
-import { HORS_ABONNEMENT_OUVERT, OUVRENT } from "./droits";
+import { DUREE_PAGE_DE_PAIEMENT_S } from "@/lib/stripe/parcours";
+import { synchroniserClientStripe, toutLister } from "@/lib/stripe/synchronisation";
+import { HORS_ABONNEMENT_OUVERT, OUVRENT, TERMINES } from "./droits";
 import { alerter } from "@/lib/alertes";
-import { adressesDesProprietaires } from "./rappels";
+import { ecrireAuxProprietaires } from "./rappels";
 import { PAGE_ABONNEMENT } from "./saisie";
 
 export const MOIS_SANS_ABONNEMENT = 12;
@@ -115,27 +115,6 @@ export function messageAuxMembres(nomDuCompte: string, suppressionLe: Date): { s
 }
 
 type Bilan = { envoyes: number; echecs: number };
-
-/** Envoie un message à tous les propriétaires ; rend le nombre d'e-mails partis et s'il y a eu un échec. */
-async function ecrireAuxProprietaires(compteId: string, message: { subject: string; text: string }, contexte: string) {
-  let partis = 0;
-  let echec = false;
-  try {
-    for (const to of await adressesDesProprietaires(compteId)) {
-      try {
-        await sendMail({ to, ...message });
-        partis++;
-      } catch (e) {
-        echec = true;
-        console.error(`${contexte} non envoyé (compte ${compteId}) — ${motifErreur(e)}`);
-      }
-    }
-  } catch (e) {
-    echec = true;
-    console.error(`${contexte} : propriétaires illisibles (compte ${compteId}) — ${motifErreur(e)}`);
-  }
-  return { partis, echec };
-}
 
 /**
  * Les deux avertissements. J-30 : la date de suppression se pose (douze mois
@@ -262,6 +241,9 @@ function compter(b: Bilan, partis: number, echec: boolean) {
   if (echec) b.echecs++;
 }
 
+/** Un paiement ouvert depuis moins que la vie d'une page Checkout retient la suppression. */
+const PAIEMENT_EN_COURS_MS = DUREE_PAGE_DE_PAIEMENT_S * 1000;
+
 /** Les comptes à supprimer aujourd'hui : date atteinte, les deux avertissements partis. */
 const ECHUS = (maintenant: Date) => ({
   ...FERME,
@@ -319,16 +301,15 @@ export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | n
       // Stripe fait foi, pas notre copie : un webhook perdu peut cacher un
       // réabonnement. Un abonnement ouvert chez Stripe : rien n'est résilié
       // ni effacé, la copie est relue (son horloge se vide) et le compte
-      // attend. Sinon, ce qui pourrait encore facturer (impayé, premier
-      // paiement en attente) est résilié ; le client et ses factures restent.
-      // Un paiement en cours sur Checkout ne doit pas aboutir pendant la
-      // suppression : ses sessions ouvertes expirent d'abord.
+      // attend. Sinon, ce qui pourrait encore facturer (un impayé) est
+      // résilié ; le client et ses factures restent.
+      // Un paiement ouvert depuis moins d'une heure retient la suppression
+      // (`paiementOuvertLe`, lu sous le verrou de la ligne, plus bas) : rien
+      // à demander à Stripe sur ses pages de paiement.
       let abonnements: Stripe.Subscription[];
       try {
-        await expirerSessionsOuvertes(stripe, stripeCustomerId);
-        abonnements = await stripe.subscriptions
-          .list({ customer: stripeCustomerId, status: "all", limit: 100 }, OPTIONS_WEBHOOK)
-          .autoPagingToArray({ limit: 10_000 });
+        // Une liste tronquée n'est pas un état complet : `toutLister` le refuse.
+        abonnements = await toutLister(stripe.subscriptions.list({ customer: stripeCustomerId, status: "all", limit: 100 }, OPTIONS_WEBHOOK), 1000);
       } catch (e) {
         if (!introuvable(e)) throw e;
         if (!(await clientSupprime(stripe, stripeCustomerId))) {
@@ -343,7 +324,9 @@ export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | n
         console.error(`suppression du compte ${compteId} : client Stripe ${stripeCustomerId} supprimé, rien à résilier`);
         abonnements = [];
       }
-      if (abonnements.some((s) => OUVRENT.has(s.status))) {
+      // Ouvert, ou premier paiement encore en traitement (`incomplete`, que
+      // Stripe rend actif ou expire sous 23 heures) : le compte attend.
+      if (abonnements.some((s) => OUVRENT.has(s.status) || s.status === "incomplete")) {
         bilan.reportes++;
         await reporter(compteId, maintenant);
         const relue = await synchroniserClientStripe(stripe, stripeCustomerId).then(
@@ -353,17 +336,8 @@ export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | n
         console.error(`suppression du compte ${compteId} annulée : un abonnement est ouvert chez Stripe (${relue})`);
         continue;
       }
-      // Un premier paiement encore en traitement (prélèvement SEPA, 3D Secure
-      // en cours) peut aboutir : on ne résilie pas, on attend qu'il devienne
-      // actif (l'horloge se vide) ou expiré (la suppression suit).
-      if (abonnements.some((s) => s.status === "incomplete")) {
-        bilan.reportes++;
-        await reporter(compteId, maintenant);
-        console.error(`suppression du compte ${compteId} reportée : un premier paiement est en cours chez Stripe`);
-        continue;
-      }
       for (const s of abonnements) {
-        if (s.status !== "canceled" && s.status !== "incomplete_expired") await stripe.subscriptions.cancel(s.id);
+        if (!TERMINES.has(s.status)) await stripe.subscriptions.cancel(s.id);
       }
     } catch (e) {
       bilan.reportes++;
@@ -392,7 +366,9 @@ export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | n
 /**
  * Efface un compte entier, dans une transaction, la ligne d'abonnement
  * verrouillée et la condition relue : un réabonnement de dernière minute
- * l'emporte (`null`). Garde la trace du compte (`CompteSupprime`, cinq ans)
+ * l'emporte (`null`), comme une page de paiement ouverte depuis moins d'une
+ * heure (`paiementOuvertLe`, écrit par « S'abonner » avant Checkout ; la page
+ * expire au bout d'une heure) — sans aucun appel à Stripe sous le verrou. Garde la trace du compte (`CompteSupprime`, cinq ans)
  * et note ses fichiers dans la file des fichiers à libérer, dans la même
  * transaction : l'effacement ne peut pas réussir sans elles. Rend les clés.
  */
@@ -402,9 +378,10 @@ export async function supprimerCompte(compteId: string, maintenant: Date): Promi
       await tx.$queryRaw`SELECT "id" FROM "Abonnement" WHERE "compteId" = ${compteId}::uuid FOR UPDATE`;
       const encore = await tx.abonnement.findFirst({
         where: { compteId, ...ECHUS(maintenant) },
-        select: { sansAbonnementDepuis: true, avertiSuppression30Le: true, avertiSuppression7Le: true, compte: { select: { name: true } } },
+        select: { paiementOuvertLe: true, sansAbonnementDepuis: true, avertiSuppression30Le: true, avertiSuppression7Le: true, compte: { select: { name: true } } },
       });
       if (!encore) return null;
+      if (encore.paiementOuvertLe && encore.paiementOuvertLe.getTime() > maintenant.getTime() - PAIEMENT_EN_COURS_MS) return null;
 
       const etablissements = await tx.etablissement.findMany({
         where: { entreprise: { compteId } },

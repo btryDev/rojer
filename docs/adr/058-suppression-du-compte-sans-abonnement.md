@@ -5,6 +5,14 @@
   l'utilisateur, pas à Rojer » ; douze mois de lecture, puis suppression ;
   e-mails J-30 et J-7), et 2026-11-09 (« pourquoi on ne le fait pas
   maintenant ? »)
+- Confirmée le 2026-11-17 par la propriétaire, après comparaison : les
+  éditeurs effacent 30 à 90 jours après la fin (Basecamp 30, Formstack et
+  ChartMogul 60, DocuClipper 90) ; la CNIL exige une durée fixée (Discord
+  sanctionné pour une conservation jusqu'à la fermeture du compte) et admet
+  au plus deux ans pour un compte inactif. Douze mois est retenu. Les textes
+  qui promettaient l'inverse sont corrigés le même jour : conditions
+  générales (version `2026-11-17-provisoire`), page Abonnement, écran
+  d'essai, grille des tarifs.
 - Complète : ADR-053 (abonnements), ADR-054 (comptes et membres)
 - Amende : la règle 10 de CLAUDE.md (rayée le 2026-11-09, #258)
 
@@ -56,7 +64,11 @@ deux fois.
    propriétaire peut réabonner (décision du 2026-11-09, usage des éditeurs
    qui préviennent toute l'équipe). Leur envoi ne retient pas la suppression.
 4. **La suppression** (`lib/abonnements/suppression.ts`), un compte à la fois,
-   par la tâche quotidienne :
+   par la tâche quotidienne. [2026-11-17 : jamais pendant un paiement —
+   « S'abonner » écrit `Abonnement.paiementOuvertLe` avant d'ouvrir Checkout,
+   dont la page expire au bout d'une heure ; la suppression le lit sous le
+   verrou de la ligne et attend le lendemain si la page a moins d'une heure.
+   Les sessions Checkout ne sont plus lues ni expirées par la suppression.]
    - chez Stripe, qui fait foi : les sessions Checkout ouvertes expirent ;
      un abonnement OUVERT chez Stripe (notre copie en retard d'un webhook)
      annule la suppression et fait relire la copie ; un premier paiement en

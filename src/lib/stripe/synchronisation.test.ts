@@ -20,8 +20,6 @@ const abo = (o: Partial<Stripe.Subscription> & { id: string; prix?: string }) =>
   ({
     status: "active",
     created: 1,
-    trial_end: null,
-    trial_start: null,
     cancel_at: null,
     cancel_at_period_end: false,
     items: { data: [{ current_period_end: 1_800_000_000, price: { id: `price_${o.prix ?? "x"}`, lookup_key: o.prix ?? null } }] },
@@ -81,7 +79,6 @@ describe("colonnesDe", () => {
       id: "sub_1",
       status: "active",
       prix: "rojer_pro_annuel",
-      trial_end: 1_790_000_000,
       cancel_at_period_end: true,
       cancel_at: 1_800_000_000,
     });
@@ -204,10 +201,13 @@ describe("horloge de la suppression (ADR-058)", () => {
     }
   });
 
-  it("fermé : la fin chez Stripe, sinon la date notée, sinon la relecture — jamais avant la fin de l'essai ; les avertissements ne sont pas touchés", () => {
-    expect(horlogeDeSuppression(sub({ status: "canceled", ended_at: 1_790_000_000 }), notee, relue)).toEqual({
+  it("fermé : la date déjà notée, sinon la fin chez Stripe, sinon la relecture — jamais avant la fin de l'essai ; les avertissements ne sont pas touchés", () => {
+    expect(horlogeDeSuppression(sub({ status: "canceled", ended_at: 1_790_000_000 }), null, relue)).toEqual({
       sansAbonnementDepuis: new Date(1_790_000_000 * 1000),
     });
+    // Un impayé résilié plus tard, ou une tentative de réabonnement expirée : la date notée ne bouge pas
+    // (les avertissements partis en dépendent — revue du 2026-11-17).
+    expect(horlogeDeSuppression(sub({ status: "canceled", ended_at: 1_790_000_000 }), notee, relue)).toEqual({ sansAbonnementDepuis: notee });
     expect(horlogeDeSuppression(sub({ status: "unpaid", ended_at: null }), notee, relue)).toEqual({ sansAbonnementDepuis: notee });
     expect(horlogeDeSuppression(sub({ status: "unpaid", ended_at: null }), null, relue)).toEqual({ sansAbonnementDepuis: relue });
     expect(horlogeDeSuppression(null, null, relue)).toEqual({ sansAbonnementDepuis: relue });

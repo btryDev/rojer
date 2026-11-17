@@ -19,9 +19,9 @@ import "server-only";
 //   expiré n'écrit rien. Les listes v1 de Stripe étant immédiatement
 //   cohérentes, une relecture qui commence après la précédente voit au moins
 //   ce qu'elle a vu : la dernière écrite est la plus fraîche.
-// - En second rempart, écriture conditionnelle sur `relueLe` (l'heure du
-//   début de la relecture) : une relecture lancée plus tôt n'écrase pas une
-//   lancée plus tard.
+// - ~~En second rempart, écriture conditionnelle sur `relueLe`~~ [2026-11-17,
+//   revue d'ensemble : retiré — il comparait les horloges de deux serveurs ;
+//   le bail suffit (`mettreAJour`).]
 // - Une liste tronquée par la pagination est un échec, jamais un état
 //   complet ; une erreur de Stripe n'écrit rien (aucun droit retiré).
 
@@ -85,9 +85,10 @@ export function colonnesDe(s: Stripe.Subscription | null) {
 }
 
 /**
- * Depuis quand le compte est sans abonnement ouvert (ADR-058) : la fin chez
- * Stripe (`ended_at`), sinon la date déjà notée, sinon `relueLe` (un impayé
- * définitif n'a pas de date chez Stripe). Ouvert : vide, et les
+ * Depuis quand le compte est sans abonnement ouvert (ADR-058) : ~~la fin chez
+ * Stripe (`ended_at`), sinon la date déjà notée~~ [2026-11-17 : la date déjà
+ * notée, sinon la fin chez Stripe (`ended_at`)], sinon `relueLe` (un impayé
+ * définitif n'a pas de date chez Stripe) — jamais avant la fin de l'essai. Ouvert : vide, et les
  * avertissements avant suppression avec — un compte qui se réabonne repart
  * de zéro. Fermé : les avertissements ne sont pas touchés.
  */
@@ -105,15 +106,18 @@ export function horlogeDeSuppression(
   if (s && OUVRENT.has(s.status)) {
     return { sansAbonnementDepuis: null, suppressionPrevueLe: null, avertiSuppression30Le: null, avertiSuppression7Le: null };
   }
-  return { sansAbonnementDepuis: laPlusRecente(date(s?.ended_at) ?? dejaNotee ?? relueLe, finEssai)! };
+  // La date déjà notée d'abord : les avertissements partis et la date de
+  // suppression annoncée en dépendent. Une résiliation tardive d'un impayé,
+  // ou une tentative de réabonnement expirée, ne la redate pas (revue du
+  // 2026-11-17) ; elle est vidée dès qu'un abonnement rouvre.
+  return { sansAbonnementDepuis: laPlusRecente(dejaNotee ?? date(s?.ended_at) ?? relueLe, finEssai)! };
 }
 
 /**
  * Le premier paiement CONFIRMÉ du client (ADR-053 § 14) : la date de la plus
- * ancienne facture payée d'un montant non nul. Ni un état `active` (Stripe
- * l'affiche environ une heure avant de prélever la fin d'un essai), ni une
- * facture à zéro (celle de l'essai, ou couverte par un crédit ou une remise
- * de 100 % : un abonnement gratuit n'est pas prévu). Lue seulement tant que
+ * ancienne facture payée d'un montant non nul — pas un état `active`, et
+ * pas une facture à zéro (couverte par un crédit ou une remise de 100 % : un
+ * abonnement gratuit n'est pas prévu). Lue seulement tant que
  * le compte n'en a pas : une fois écrite, elle ne change plus. Limite
  * assumée : un paiement remboursé ou contesté reste un paiement — la
  * facture reste `paid` chez Stripe.
@@ -224,9 +228,16 @@ type Tx = Prisma.TransactionClient;
 type Donnees = ReturnType<typeof colonnesDe> &
   ReturnType<typeof horlogeDeSuppression> & { relueLe: Date };
 
+/**
+ * L'écriture de la copie, sous le bail vérifié et verrouillé dans la même
+ * transaction (`verrouillerSousBail`) : la relecture qui écrit est la plus
+ * récente. ~~Second rempart sur `relueLe`~~ [2026-11-17, revue d'ensemble :
+ * retiré — il comparait les horloges de deux serveurs et pouvait écarter une
+ * relecture plus fraîche, laissant « paiement en attente » à qui avait payé.]
+ */
 async function mettreAJour(tx: Tx, compteId: string, customerId: string, donnees: Donnees) {
   const { count } = await tx.abonnement.updateMany({
-    where: { compteId, stripeCustomerId: customerId, OR: [{ relueLe: null }, { relueLe: { lt: donnees.relueLe } }] },
+    where: { compteId, stripeCustomerId: customerId },
     data: donnees,
   });
   return count === 1 ? ECRIT : INCHANGE;

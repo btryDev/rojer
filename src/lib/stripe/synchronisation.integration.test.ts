@@ -76,12 +76,9 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
     status: string;
     created: number;
     prix?: string;
-    trial_start?: number;
     metadata?: Record<string, string>;
   }) =>
     ({
-      trial_end: null,
-      trial_start: null,
       cancel_at: null,
       cancel_at_period_end: false,
       items: { data: [{ current_period_end: 1_800_000_000, price: { id: "price_1", lookup_key: o.prix ?? "rojer_essentiel_mensuel" } }] },
@@ -197,7 +194,7 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
     });
 
     it("crée la ligne du compte que désigne le client Stripe relu, puis la met à jour ; l'essai, compté chez Rojer, n'est jamais écrit", async () => {
-      const s1 = stripe(A, [abo({ id: "sub_1", status: "incomplete", created: 1, trial_start: 1_780_000_000 })]);
+      const s1 = stripe(A, [abo({ id: "sub_1", status: "incomplete", created: 1 })]);
       expect(await synchroniserClientStripe(s1, "cus_A", { maintenant: () => new Date(1000) })).toEqual({ issue: "ecrit" });
       expect(await ligne(A)).toMatchObject({
         stripeCustomerId: "cus_A",
@@ -221,10 +218,15 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
       expect(await ligne(A)).toMatchObject({ statut: "active", essaiUtiliseLe: debut, finEssai: fin, sansAbonnementDepuis: null });
     });
 
-    it("une relecture plus ancienne que la dernière écrite n'écrase rien (livraisons croisées)", async () => {
-      await synchroniserClientStripe(stripe(A, [abo({ id: "sub_1", status: "active", created: 1 })]), "cus_A", { maintenant: () => new Date(5000) });
-      const tardive = stripe(A, [abo({ id: "sub_1", status: "past_due", created: 1 })]);
-      expect(await synchroniserClientStripe(tardive, "cus_A", { maintenant: () => new Date(4000) })).toEqual({ issue: "inchange" });
+    // ~~« une relecture plus ancienne que la dernière écrite n'écrase rien »~~
+    // [2026-11-17, revue d'ensemble : le rempart sur `relueLe` comparait les
+    // horloges de deux serveurs. Le bail ordonne les relectures, chacune lit
+    // l'état COURANT chez Stripe : la dernière écrit, même si l'horloge de
+    // son serveur retarde.]
+    it("deux relectures successives : la dernière écrit ce que Stripe dit, même d'un serveur à l'horloge en retard", async () => {
+      await synchroniserClientStripe(stripe(A, [abo({ id: "sub_1", status: "incomplete", created: 1 })]), "cus_A", { maintenant: () => new Date(5000) });
+      const payee = stripe(A, [abo({ id: "sub_1", status: "active", created: 1 })]);
+      expect(await synchroniserClientStripe(payee, "cus_A", { maintenant: () => new Date(4000) })).toMatchObject({ issue: "ecrit" });
       expect((await ligne(A))?.statut).toBe("active");
     });
 
@@ -246,7 +248,7 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
 
     it("un abonnement neuf en attente de paiement ne remplace pas celui qui paie", async () => {
       const s = stripe(A, [
-        abo({ id: "sub_essai", status: "canceled", created: 5, trial_start: 1_700_000_000 }),
+        abo({ id: "sub_ancien", status: "canceled", created: 5 }),
         abo({ id: "sub_paye", status: "active", created: 10 }),
         abo({ id: "sub_attente", status: "incomplete", created: 20 }),
       ]);

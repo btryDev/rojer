@@ -2468,10 +2468,11 @@ model Abonnement {
   resilieEnFinDePeriode    Boolean   @default(false)
   /// `cancel_at` : une fin programmée à une date, que le booléen ne voit pas.
   finPrevueLe              DateTime?
-  /// Un essai par compte : posé au premier abonnement en essai, jamais effacé.
+  /// Un essai par compte : posé par Rojer au démarrage de l'essai (ADR-053
+  /// § 9, amendé le 2026-11-16 — Stripe n'en connaît rien), jamais effacé.
   essaiUtiliseLe           DateTime?
-  /// Début du PREMIER abonnement payant du compte (`trial_end` s'il y a eu un
-  /// essai, sinon `start_date`), écrit une fois, à la première facture
+  /// Début du PREMIER abonnement payant du compte (la date de sa première
+  /// facture payée d'un montant non nul), écrit une fois, à la première facture
   /// réellement payée (jamais sur `past_due`), jamais écrasé : l'ancre des
   /// plafonds annuels (ADR-053 § 14), qu'une résiliation suivie d'une
   /// souscription ne remet pas à zéro. Vide : le compte n'a jamais payé, les
@@ -2479,24 +2480,30 @@ model Abonnement {
   debutPayantLe            DateTime?
   /// Dernière relecture de l'abonnement chez Stripe.
   relueLe                  DateTime?
-  /// Rappel de la veille de la fin de l'essai envoyé par Rojer (celui des
-  /// 7 jours est envoyé par Stripe) : posé AVANT l'envoi, par une écriture
+  /// Rappel de la veille de la fin de l'essai, envoyé par Rojer : posé AVANT
+  /// l'envoi, par une écriture
   /// conditionnelle — deux instances ou deux passes n'envoient qu'une fois ;
   /// rendu à vide si aucun e-mail n'est parti (`abonnements/rappels.ts`).
   rappelVeilleEssaiLe      DateTime?
   /// Rappel d'une semaine avant la fin de l'essai, envoyé par Rojer : même
   /// garde que celui de la veille.
   rappelSemaineEssaiLe     DateTime?
+  /// La dernière page de paiement Stripe ouverte par « S'abonner » : la
+  /// suppression du compte (ADR-058) attend une heure après, le temps que
+  /// la page expire (`expires_at` de Checkout) — un paiement n'aboutit
+  /// jamais sur un compte effacé.
+  paiementOuvertLe         DateTime?
   /// L'échéance annuelle dont le renouvellement a été rappelé par Rojer, 30
   /// jours avant (décision du 2026-11-10 : les annuels seulement, l'e-mail de
   /// Stripe partirait aussi chaque mois). Posée AVANT l'envoi par une
   /// écriture conditionnelle, rendue si aucun e-mail n'est parti ; une
   /// nouvelle échéance appelle un nouveau rappel (`abonnements/rappels.ts`).
   rappelRenouvellementPour DateTime?
-  /// Depuis quand le compte est sans abonnement ouvert (ADR-058) : la fin
-  /// chez Stripe (`ended_at`, `trial_end` d'une pause), sinon la première
-  /// relecture qui l'a vu fermé. Vide dès qu'un abonnement s'ouvre — et les
-  /// trois colonnes suivantes avec. Écrite par la synchronisation seule.
+  /// Depuis quand le compte est sans abonnement ouvert (ADR-058) : la date
+  /// déjà notée, sinon la fin chez Stripe (`ended_at`), sinon la première
+  /// relecture qui l'a vu fermé — jamais avant la fin de l'essai
+  /// (`finEssai`). Posée à la fin de l'essai par son démarrage. Vide dès
+  /// qu'un abonnement s'ouvre — et les trois colonnes suivantes avec.
   sansAbonnementDepuis     DateTime?
   /// La date de suppression du compte, posée au premier avertissement :
   /// douze mois après `sansAbonnementDepuis`, au moins 30 jours après le

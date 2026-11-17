@@ -7,8 +7,8 @@ import "server-only";
 // l'ADR-054, une personne peut ouvrir deux comptes). Ces clés n'arrêtent qu'un
 // double clic : Stripe ne les garde que 24 heures. La vraie garde contre deux
 // clients est la ligne `Abonnement` qui réserve le client
-// (`abonnements/client-stripe.ts`). Plus d'essai chez Stripe : il se compte
-// chez Rojer (ADR-053 § 9, amendé le 2026-11-16).
+// (`abonnements/client-stripe.ts`). L'essai se compte chez Rojer (ADR-053
+// § 9) : Stripe ne voit qu'un abonnement payé, ouvert par Checkout.
 
 import type Stripe from "stripe";
 import { OPTIONS_RELECTURE } from "./client";
@@ -56,6 +56,9 @@ export async function ouvrirPortail(stripe: Stripe, { customerId, retour }: { cu
  * numéro de TVA. L'APPELANT refuse tant qu'un abonnement n'est pas terminé :
  * deux onglets, ce seraient deux abonnements.
  */
+/** La durée de vie d'une page de paiement Checkout, en secondes. */
+export const DUREE_PAGE_DE_PAIEMENT_S = 3600;
+
 export async function ouvrirCheckout(
   stripe: Stripe,
   {
@@ -71,6 +74,10 @@ export async function ouvrirCheckout(
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     customer: customerId,
+    // La carte seulement, écrite ici et pas seulement réglée au tableau de
+    // bord : un prélèvement différé (SEPA) rendrait l'abonnement actif avant
+    // d'être encaissé (revue de sécurité du 2026-11-17).
+    allowed_payment_method_types: ["card"],
     line_items: [{ price: priceId, quantity: 1 }],
     subscription_data: { metadata, default_tax_rates: [tauxTva] },
     consent_collection: { terms_of_service: "required" },
@@ -79,6 +86,10 @@ export async function ouvrirCheckout(
     billing_address_collection: "required",
     success_url: succes,
     cancel_url: annulation,
+    // Une heure pour payer (Stripe : 30 min à 24 h). La suppression d'un
+    // compte attend une heure après l'ouverture d'un paiement
+    // (`paiementOuvertLe`) : la page ne peut plus être payée au-delà.
+    expires_at: Math.floor(Date.now() / 1000) + DUREE_PAGE_DE_PAIEMENT_S,
   });
   if (!session.url) throw new Error("session Checkout sans adresse");
   return session.url;
@@ -87,7 +98,7 @@ export async function ouvrirCheckout(
 /**
  * Les abonnements d'un client, relus chez Stripe, qui fait foi : notre copie
  * peut retarder d'un webhook. Les plus récents d'abord ; un client Rojer n'en
- * a qu'un ou deux (l'essai, puis un réabonnement après résiliation).
+ * a qu'un ou deux (un abonnement, puis un réabonnement après résiliation).
  */
 export async function abonnementsDuClient(stripe: Stripe, customerId: string): Promise<Stripe.Subscription[]> {
   const liste = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 10 }, OPTIONS_RELECTURE);
@@ -95,21 +106,22 @@ export async function abonnementsDuClient(stripe: Stripe, customerId: string): P
 }
 
 /**
- * Les sessions Checkout encore ouvertes du client, expirées avant d'en ouvrir
- * une neuve : deux onglets ne paient pas deux abonnements.
+ * Les sessions Checkout encore ouvertes du client, expirées : avant d'en
+ * ouvrir une neuve, quand l'une est payée, avant une suppression — deux
+ * onglets ne paient pas deux abonnements. `options` : celles de l'appelant
+ * (la file du webhook a son propre délai, `OPTIONS_WEBHOOK`).
  */
-export async function expirerSessionsOuvertes(stripe: Stripe, customerId: string) {
-  const ouvertes = await stripe.checkout.sessions.list({ customer: customerId, status: "open", limit: 10 }, OPTIONS_RELECTURE);
-  await Promise.all(ouvertes.data.map((s) => stripe.checkout.sessions.expire(s.id)));
+export async function expirerSessionsOuvertes(stripe: Stripe, customerId: string, options: Stripe.RequestOptions = OPTIONS_RELECTURE) {
+  const ouvertes = await stripe.checkout.sessions.list({ customer: customerId, status: "open", limit: 10 }, options);
+  await Promise.all(ouvertes.data.map((s) => stripe.checkout.sessions.expire(s.id, {}, options)));
 }
 
 /**
- * L'adresse de la dernière facture d'un abonnement si elle attend un
- * paiement (`open`) : carte refusée, authentification demandée, impayé.
- * La page hébergée de la facture se règle avec une autre carte, 3-D Secure
- * compris. `null` sinon.
+ * L'adresse de la facture d'une montée de formule qui attend son paiement
+ * (`open`) : la banque demande une confirmation, ou la carte est refusée.
+ * `null` sinon. (Un impayé se règle au portail, pas ici.)
  */
-export async function factureARegler(stripe: Stripe, derniere: Stripe.Subscription["latest_invoice"]): Promise<string | null> {
+async function factureARegler(stripe: Stripe, derniere: Stripe.Subscription["latest_invoice"]): Promise<string | null> {
   return (await factureOuverte(stripe, derniere))?.hosted_invoice_url ?? null;
 }
 
@@ -154,16 +166,22 @@ export async function monterDeFormule(
     {
       items: [{ id: item.id, price: priceId }],
       proration_behavior: "always_invoice",
-      // Version d'API « dahlia » : un objet, `{ type }`.
+      // Un objet, `{ type }` (stripe-node 23, API `2026-10-28.endive`).
       ...(rythmeChange ? { billing_cycle_anchor: { type: "now" as const } } : {}),
       payment_behavior: "pending_if_incomplete",
       expand: ["latest_invoice"],
     },
-    { idempotencyKey: `monter-${abonnement.id}-${item.price.id}-${priceId}` },
+    // La dernière facture entre dans la clé : la même montée refaite après un
+    // renouvellement (dans les 24 h de la première) n'est pas un rejeu.
+    { idempotencyKey: `monter-${abonnement.id}-${item.price.id}-${priceId}-${idStripe(abonnement.latest_invoice) ?? "sans-facture"}` },
   );
-  // La montée est faite : rendre la baisse prévue ne doit pas la faire passer
-  // pour un échec. Si Stripe refuse, la page montre encore la baisse et
-  // propose « Garder ma formule ».
+  // Monter, c'est le dernier choix : la baisse prévue est rendue, même si la
+  // montée attend encore son paiement — la page le montre (plus de baisse
+  // prévue, une facture à régler). ~~Une montée en attente gardait la
+  // baisse, rendue au paiement~~ [2026-11-17, simplification : la garder
+  // supposait de dater le planning contre la facture, et un planning
+  // réutilisé par une baisse suivante trompait cette date.] Si Stripe
+  // refuse, la page montre encore la baisse et propose « Garder ma formule ».
   const planning = idStripe(abonnement.schedule);
   if (planning) {
     try {

@@ -54,7 +54,6 @@ export const GRILLE: GroupeGrille[] = [
         cases: [INCLUS, INCLUS, INCLUS, INCLUS],
       },
       { libelle: "Relances email des échéances", cases: [INCLUS, INCLUS, INCLUS, INCLUS] },
-      { libelle: "Export de ses données, y compris après résiliation", cases: [INCLUS, INCLUS, INCLUS, INCLUS] },
     ],
   },
   {
@@ -62,6 +61,11 @@ export const GRILLE: GroupeGrille[] = [
     lignes: [
       { libelle: "DUERP validé et figé (aperçu « Projet » pendant l'essai)", cases: [ABONNEMENT, INCLUS, INCLUS, INCLUS] },
       { libelle: "Dossier de contrôle, registre consolidé", cases: [ABONNEMENT, INCLUS, INCLUS, INCLUS] },
+      // [2026-11-17 : « y compris après résiliation », sans délai, et inclus
+      // à l'essai — faux : l'export demande un abonnement payé, et un compte
+      // sans abonnement est supprimé au bout de douze mois (ADR-058). Rangé ici :
+      // la section « jamais limité » ne peut pas porter une case « abonnement ».]
+      { libelle: "Export de ses données, jusqu'à douze mois après la fin de l'abonnement", cases: [ABONNEMENT, INCLUS, INCLUS, INCLUS] },
       { libelle: "Registre d'accessibilité publié et affiche QR", cases: [ABONNEMENT, INCLUS, INCLUS, INCLUS] },
       { libelle: "Signatures électroniques", cases: ["1 test", "20 par an", "60 par an", "sur mesure"] },
       { libelle: "Liens d'accès prestataires actifs", cases: ["envoi à soi-même", "5", "15", "illimité"] },

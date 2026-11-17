@@ -87,7 +87,7 @@ export default async function EssaiPage() {
               { quand: "Quand vous voulez", quoi: "Abonnez-vous depuis la page Abonnement : l'essai s'arrête et ses limites sont levées." },
               {
                 quand: finTexte,
-                quoi: "Fin de l'essai. Pour continuer à saisir, abonnez-vous ; sinon, rien n'est prélevé et vos dossiers restent consultables.",
+                quoi: "Fin de l'essai. Pour continuer à saisir, abonnez-vous ; sinon, rien n'est prélevé et vos dossiers restent consultables douze mois.",
               },
             ]}
           />
@@ -95,14 +95,15 @@ export default async function EssaiPage() {
           {autreFormule && (
             <MessageFormulaire ton="info">
               Vous avez choisi {autreFormule}. L&apos;essai se fait sur {essentiel.libelle} ; pour passer à{" "}
-              {autreFormule}, enregistrez-la depuis la page Abonnement, où elle sera présélectionnée — pour la fin de
-              l&apos;essai, ou tout de suite en payant maintenant.
+              {autreFormule}, abonnez-vous depuis la page Abonnement, où elle sera présélectionnée.
             </MessageFormulaire>
           )}
 
           {filet}
 
-          <FormulaireEssai disponible={mensuel !== undefined} compteId={compteId} />
+          {/* L'essai ne touche pas Stripe : sans prix lisible, seule la ligne
+              « Ensuite » manque, le bouton reste (revue du 2026-11-17). */}
+          <FormulaireEssai compteId={compteId} />
         </div>
       </main>
     </div>

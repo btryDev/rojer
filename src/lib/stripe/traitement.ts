@@ -29,7 +29,7 @@ import {
   prendre,
 } from "./evenements";
 import { clientsDus, enEchecDurable } from "./file";
-import { carteQuiAPaye, rendrePlanningEchu } from "./parcours";
+import { carteQuiAPaye, expirerSessionsOuvertes, rendrePlanningEchu } from "./parcours";
 import { idStripe } from "./ids";
 import { motifDErreur, synchroniserSousBail } from "./synchronisation";
 import { OPTIONS_WEBHOOK } from "./client";
@@ -65,10 +65,18 @@ export async function aiguillageDe(stripe: Stripe, type: string, objetId: string
     }
     case "v1.checkout.session.completed": {
       const session = await stripe.checkout.sessions.retrieve(objetId, {}, OPTIONS_WEBHOOK);
-      // S'abonner (Checkout en mode abonnement) : la relecture suit, par la file.
-      return session.mode === "subscription"
-        ? { clientStripe: idStripe(session.customer) }
-        : { clientStripe: null, motif: "session sans abonnement" };
+      if (session.mode !== "subscription") return { clientStripe: null, motif: "session sans abonnement" };
+      // S'abonner (Checkout en mode abonnement) : la relecture suit, par la
+      // file. Une autre session restée ouverte (second onglet) ne doit plus
+      // pouvoir être payée : ce serait un second abonnement (revue du
+      // 2026-11-17). Sans bloquer la copie du paiement réussi.
+      const client = idStripe(session.customer);
+      if (client) {
+        await expirerSessionsOuvertes(stripe, client, OPTIONS_WEBHOOK).catch((e) =>
+          console.error(`stripe : sessions Checkout du client ${client} non expirées — ${motifDErreur(e)}`),
+        );
+      }
+      return { clientStripe: client };
     }
     case "v1.invoice.paid": {
       const client = idStripe((await stripe.invoices.retrieve(objetId, {}, OPTIONS_WEBHOOK)).customer);

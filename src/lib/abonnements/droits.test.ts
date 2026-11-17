@@ -29,7 +29,7 @@ describe("droitsDe", () => {
   it("exigé : l'essai en cours, active et past_due ouvrent la saisie ; l'essai fini la ferme (2026-11-16)", () => {
     const ouvre = (statut: string) => droitsDe(ligne({ statut }), EXIGE).saisie;
     for (const s of ["active", "past_due"]) expect(ouvre(s), s).toBe(true);
-    for (const s of ["unpaid", "canceled", "incomplete", "incomplete_expired", "trialing", "paused"]) expect(ouvre(s), s).toBe(false);
+    for (const s of ["unpaid", "canceled", "incomplete", "incomplete_expired"]) expect(ouvre(s), s).toBe(false);
     // L'essai se compte chez Rojer : jamais abonné (statut vide) et fin à venir.
     expect(droitsDe(ligne({ statut: null, finEssai: jours(20) }), EXIGE).saisie).toBe(true);
     expect(droitsDe(ligne({ statut: null, finEssai: jours(-1) }), EXIGE)).toMatchObject({

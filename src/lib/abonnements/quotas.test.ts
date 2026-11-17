@@ -66,11 +66,11 @@ beforeEach(() => {
 });
 
 describe("formule des plafonds et motif du refus", () => {
-  it("formule absente ou inconnue : la plus petite, et le journal le signale", () => {
+  it("formule absente (essai compté chez Rojer) ou inconnue : la plus petite ; le journal ne signale que l'inconnue", () => {
     expect(formuleDesPlafonds("rojer_pro_annuel")).toBe("pro");
     expect(console.error).not.toHaveBeenCalled();
     for (const f of ["rojer_surmesure_annuel", "", null, undefined]) expect(formuleDesPlafonds(f), String(f)).toBe("essentiel");
-    expect(console.error).toHaveBeenCalledTimes(4);
+    expect(console.error).toHaveBeenCalledTimes(1);
   });
 
   it("le motif nomme le plafond et la formule qui le lève", () => {
@@ -320,7 +320,7 @@ describe("jamais payé : limites de l'essai, même hors essai", () => {
   it("premier paiement en échec à la fin de l'essai (past_due, sans ancre) : toujours 5 équipements", async () => {
     lancer();
     await expect(prendreQuota(faux("rojer_essentiel_mensuel", 5, null, "past_due").txc, "c1", "equipements")).rejects.toThrow(
-      "Tant que votre premier paiement n'est pas confirmé, Rojer garde les limites de l'essai (5 équipements) : réglez votre abonnement depuis la page Abonnement de votre compte.",
+      "Sans abonnement payé, Rojer garde les limites de l'essai (5 équipements) : abonnez-vous depuis la page Abonnement de votre compte.",
     );
     await prendreQuota(faux("rojer_essentiel_mensuel", 5, PAYE_DEPUIS, "past_due").txc, "c1", "equipements");
   });

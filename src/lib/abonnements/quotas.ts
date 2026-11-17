@@ -31,16 +31,17 @@ const lancee = () => offreLancee(contexteDroits());
 export function formuleDesPlafonds(formule: string | null | undefined): CleFormule {
   const connue = formuleDeLookupKey(formule)?.formule;
   if (connue) return connue;
-  console.error(JSON.stringify({ type: "quotas_formule_inconnue", formule: formule ?? null }));
+  // Sans formule : un essai compté chez Rojer, rien d'anormal. Une formule
+  // non vide et inconnue : un prix Stripe sans clé connue, à signaler.
+  if (formule) console.error(JSON.stringify({ type: "quotas_formule_inconnue", formule }));
   return CLES_FORMULES[0];
 }
 
 /**
  * L'essai d'un compte : `en_cours` (`enEssai`, l'essai compté chez Rojer —
  * ADR-053 § 9, amendé le 2026-11-16), ou `paiement_attendu` — le compte n'a
- * JAMAIS payé (`debutPayantLe` vide) hors de l'essai : essai fini, premier
- * paiement en échec ou à confirmer ; il n'ouvre pas les volumes de la
- * formule. `null` : il a payé.
+ * JAMAIS payé (`debutPayantLe` vide) hors de l'essai ; il n'ouvre pas les
+ * volumes de la formule. `null` : il a payé.
  */
 export type Essai = "en_cours" | "paiement_attendu" | null;
 export function essaiDe(
@@ -68,7 +69,7 @@ export function motifDuRefus(regime: Regime, cle: CleQuota): string {
   if (regime.essai && estLimiteDEssai(cle))
     return regime.essai === "en_cours"
       ? `L'essai gratuit couvre ${couvre} : pour en ajouter, abonnez-vous depuis la page Abonnement de votre compte — l'abonnement lève les limites de l'essai.`
-      : `Tant que votre premier paiement n'est pas confirmé, Rojer garde les limites de l'essai (${couvre}) : réglez votre abonnement depuis la page Abonnement de votre compte.`;
+      : `Sans abonnement payé, Rojer garde les limites de l'essai (${couvre}) : abonnez-vous depuis la page Abonnement de votre compte.`;
   const plus = CLES_FORMULES.find((f) => {
     const q = FORMULES[f].quotas[cle];
     return q === null || q > plafond;
@@ -319,14 +320,23 @@ const STOCKS = ["etablissements", "membres", "prestataires"] as const satisfies 
  * l'excédent sera gelé. Vide : rien ne dépasse.
  */
 export async function depassements(db: Db, compteId: string, formule: string): Promise<Depassement[]> {
-  const cible: Regime = { formule: formuleDesPlafonds(formule), essai: null };
-  const nombres = await Promise.all(
+  return depassementsDe(await stocksDuCompte(db, compteId), formule);
+}
+
+/** Ce que le compte utilise de chaque stock, compté une fois (page Abonnement : plusieurs formules visées). */
+export async function stocksDuCompte(db: Db, compteId: string): Promise<number[]> {
+  return Promise.all(
     STOCKS.map(async (cle) => {
       if (cle !== "membres") return dejaUtilisesDuCompte(db, cle, new Date());
       const [membres, invitations] = await Promise.all([membresDuCompte(compteId), invitationsDuCompte(compteId)]);
       return membres.length + invitations.length;
     }),
   );
+}
+
+/** Les dépassements d'une formule visée, à partir des stocks déjà comptés. */
+export function depassementsDe(nombres: number[], formule: string): Depassement[] {
+  const cible: Regime = { formule: formuleDesPlafonds(formule), essai: null };
   return STOCKS.flatMap((quota, i) => {
     const plafond = plafondDe(cible, quota);
     return plafond !== null && nombres[i] > plafond ? [{ quota, utilise: nombres[i], plafond }] : [];

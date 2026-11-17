@@ -19,6 +19,7 @@ import "server-only";
 // une alerte par jour, à un humain. Les lignes ne portent que des
 // identifiants Stripe.
 
+import { idStripe } from "./ids";
 import type Stripe from "stripe";
 import { alerterUneFoisParJour } from "@/lib/alertes";
 import { toutLister } from "./synchronisation";
@@ -48,7 +49,6 @@ export function impayesTropLongs(impayes: Impaye[], maintenant: Date): Impaye[] 
   return impayes.filter((i) => i.depuis !== null && i.depuis < limite);
 }
 
-const idClient = (c: Stripe.Subscription["customer"]) => (typeof c === "string" ? c : c.id);
 
 /** Les abonnements `past_due`, chacun daté par sa plus ancienne facture encore ouverte. */
 async function lireImpayes(stripe: Stripe): Promise<Impaye[]> {
@@ -57,7 +57,7 @@ async function lireImpayes(stripe: Stripe): Promise<Impaye[]> {
     abonnements.map(async (s) => {
       const ouvertes = await toutLister(stripe.invoices.list({ subscription: s.id, status: "open", limit: 100 }), 1000);
       const echeances = ouvertes.map((f) => f.due_date ?? f.created);
-      return { id: s.id, client: idClient(s.customer), depuis: echeances.length ? Math.min(...echeances) : null };
+      return { id: s.id, client: idStripe(s.customer)!, depuis: echeances.length ? Math.min(...echeances) : null };
     }),
   );
 }

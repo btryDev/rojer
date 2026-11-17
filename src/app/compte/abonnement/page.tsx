@@ -13,16 +13,17 @@ import { formaterDateLongueFr } from "@/lib/dates";
 import { dateDeSuppressionPrevue } from "@/lib/abonnements/suppression";
 import { buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
-import { ouvrirPortailAction, reglerFactureAction } from "@/lib/abonnements/actions";
+import { ouvrirPortailAction } from "@/lib/abonnements/actions";
 import { FormulaireAbonnement, type OffreAffichee } from "@/components/abonnements/FormulaireAbonnement";
 import { BoutonEnvoi } from "@/components/abonnements/BoutonEnvoi";
 import { ChangerDeFormule, type OptionDeFormule } from "@/components/abonnements/ChangerDeFormule";
 import { sensDuChangement } from "@/lib/abonnements/changement";
-import { depassements } from "@/lib/abonnements/quotas";
+import { depassementsDe, stocksDuCompte } from "@/lib/abonnements/quotas";
 import { prixTTC } from "@/lib/abonnements/affichage";
 import { baissePrevue } from "@/lib/stripe/parcours";
 import { clientStripeLecture } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
+import { idStripe } from "@/lib/stripe/ids";
 import { synchroniserClientStripe } from "@/lib/stripe/synchronisation";
 import { PAGE_ESSAI } from "@/lib/abonnements/essai";
 import {
@@ -79,19 +80,32 @@ function effetDuChangement(sens: "montee" | "baisse", actuelle: string | null, v
 }
 
 /**
- * Au retour de Checkout (`?paiement=termine`) : la copie de l'abonnement est
- * relue chez Stripe AVANT l'affichage. Sans cela, la page montrait encore
- * « Essai terminé » et le bandeau de saisie fermée à qui venait de payer, le
- * temps que la notification arrive (répétition du 2026-11-17). Sans réponse
- * de Stripe, la page s'affiche quand même ; la notification suivra.
+ * Au retour de Checkout (`?paiement=termine&session=cs_…`) : la copie de
+ * l'abonnement est relue chez Stripe AVANT l'affichage. Sans cela, la page
+ * montrait encore « Essai terminé » et le bandeau de saisie fermée à qui
+ * venait de payer, le temps que la notification arrive (répétition du
+ * 2026-11-17). Sans réponse de Stripe, la page s'affiche quand même ; la
+ * notification suivra.
+ *
+ * Rend vrai seulement pour une session payée de CE client, créée depuis
+ * moins de 25 heures (une session dure 24 h au plus) : une adresse de retour revisitée (historique, favori) ou forgée ne
+ * relit rien, ne masque pas le formulaire et n'annonce aucun paiement (revue
+ * du 2026-11-17).
  */
-async function relireApresPaiement(db: Db, compteId: string): Promise<void> {
+async function relireApresPaiement(db: Db, compteId: string, session: string | undefined, maintenant: Date): Promise<boolean> {
   const config = configurationStripe();
-  if (!config.active) return;
+  if (!config.active || !session || !/^cs_[A-Za-z0-9_]+$/.test(session)) return false;
   const ligne = await db.abonnement.findUnique({ where: { compteId }, select: { stripeCustomerId: true } });
-  if (!ligne?.stripeCustomerId) return;
-  await synchroniserClientStripe(clientStripeLecture(config), ligne.stripeCustomerId, { attendreMs: 5_000 }).catch(() => null);
+  if (!ligne?.stripeCustomerId) return false;
+  const stripe = clientStripeLecture(config);
+  const payee = await stripe.checkout.sessions.retrieve(session).catch(() => null);
+  const recente = payee && payee.created * 1000 > maintenant.getTime() - RETOUR_DE_PAIEMENT_MS;
+  if (!payee || !recente || payee.status !== "complete" || idStripe(payee.customer) !== ligne.stripeCustomerId) return false;
+  await synchroniserClientStripe(stripe, ligne.stripeCustomerId, { attendreMs: 5_000 }).catch(() => null);
+  return true;
 }
+
+const RETOUR_DE_PAIEMENT_MS = 25 * 3_600_000;
 
 /**
  * Les formules vers lesquelles un abonnement qui paie peut aller, avec, pour
@@ -115,23 +129,23 @@ async function changementsPossibles(
     const f = formuleDeLookupKey(cle);
     return f ? `${FORMULES[f.formule].libelle}, ${LIBELLE_PERIODICITE[f.periodicite].adjectif}` : cle;
   };
-  const options = await Promise.all(
-    CLES_FORMULES.flatMap((f) => PERIODICITES.map((p) => lookupKey(f, p)))
-      .map((cle) => ({ cle, sens: sensDuChangement(actuelle, cle) }))
-      .filter((o): o is { cle: string; sens: "montee" | "baisse" } => o.sens === "montee" || o.sens === "baisse")
-      .map(async ({ cle, sens }) => {
-        const f = formuleDeLookupKey(cle)!;
-        const montant = prix.get(cle)?.montantCentimes;
-        return {
-          cle,
-          sens,
-          effet: effetDuChangement(sens, actuelle, cle, finPeriode),
-          libelle: libelleDe(cle),
-          prix: montant ? prixTTC(montant, f.periodicite) : null,
-          depassements: sens === "baisse" ? await depassements(db, compteId, cle) : [],
-        };
-      }),
-  );
+  const visees = CLES_FORMULES.flatMap((f) => PERIODICITES.map((p) => lookupKey(f, p)))
+    .map((cle) => ({ cle, sens: sensDuChangement(actuelle, cle) }))
+    .filter((o): o is { cle: string; sens: "montee" | "baisse" } => o.sens === "montee" || o.sens === "baisse");
+  // Les stocks du compte, comptés une fois pour toutes les baisses proposées.
+  const stocks = visees.some((o) => o.sens === "baisse") ? await stocksDuCompte(db, compteId) : null;
+  const options = visees.map(({ cle, sens }) => {
+    const f = formuleDeLookupKey(cle)!;
+    const montant = prix.get(cle)?.montantCentimes;
+    return {
+      cle,
+      sens,
+      effet: effetDuChangement(sens, actuelle, cle, finPeriode),
+      libelle: libelleDe(cle),
+      prix: montant ? prixTTC(montant, f.periodicite) : null,
+      depassements: sens === "baisse" && stocks ? depassementsDe(stocks, cle) : [],
+    };
+  });
   let baisse: { libelle: string; le: Date } | null = null;
   let baisseCle: string | null = null;
   if (ligne?.stripeSubscriptionId) {
@@ -185,30 +199,29 @@ export default async function AbonnementPage({
     document?: string;
     formule?: string;
     compte?: string;
-    facture?: string;
+    session?: string;
   }>;
 }) {
   // Sans compte encore (rien créé), la page se lit quand même : aucun
   // abonnement (ADR-054). `requireCompte` renverrait à l'onboarding.
   const user = await requireUser();
   const c = await getOptionalCompte();
-  const { saisie, stripe, paiement, abonnement, document, formule: formuleChange0, compte: compteChange, facture } =
+  const { saisie, stripe, paiement: paiement0, abonnement, document, formule: formuleChange0, compte: compteChange, session } =
     await searchParams;
   // Le compte que montre la page : ses gestes le postent (`ChampCompteAttendu`).
   const { compteId, nomCompte } = await compteDeLaPage();
   const formuleChange = formuleChange0 && formuleChange0 in MESSAGES_FORMULE ? (formuleChange0 as keyof typeof MESSAGES_FORMULE) : null;
   const ctx = contexteDroits();
   const ouvert = offreLancee(ctx);
-  if (c && paiement === "termine") await relireApresPaiement(c.db, c.compte.compteId);
+  // Le retour de Checkout ne compte que s'il est vérifié chez Stripe.
+  const paiement =
+    c && paiement0 === "termine" && (await relireApresPaiement(c.db, c.compte.compteId, session, ctx.maintenant)) ? "termine" : undefined;
   // Une seule lecture : la ligne sert à l'état affiché et aux droits.
   const ligne = c ? await abonnementDuCompte(c.db, c.compte.compteId) : null;
   const droits = droitsDe(ligne, ctx);
   // Sans compte encore, `role` est nul : l'essai reste proposé.
   const geste = gesteAbonnement({ ouvert, role: c?.compte.role ?? null, ligne });
   const formule = formuleDeLookupKey(ligne?.formule);
-  // Vient de payer, la confirmation de Stripe n'est pas encore là : la page le
-  // dit et ne propose jamais de payer une seconde fois (le geste est le portail).
-  const paiementEnConfirmation = ligne?.statut === "active" && !ligne.debutPayantLe;
   const finPrevue = ligne ? resiliationPrevue(ligne) : false;
   const phase = phaseDuCompte(ligne, ctx.maintenant);
   const essaiEnCours = phase.type === "essai";
@@ -225,7 +238,7 @@ export default async function AbonnementPage({
   const [offres, offreChoisie] =
     vue.cas === "formulaire" ? await Promise.all([offresAffichees(), lireOffreChoisie()]) : [[], null];
   const courante = preselection(vue, { abonnement: formule, offreChoisie });
-  const messageInfo = messageDeLaPage({ paiement, phase, formuleChange, paiementEnConfirmation, facture, abonnement });
+  const messageInfo = messageDeLaPage({ paiement, phase, formuleChange, abonnement });
   // Changer de formule : un abonnement qui paie, pour son propriétaire ; pas
   // une formule qui s'arrête.
   const { options: optionsChangement, baisse } =
@@ -240,7 +253,8 @@ export default async function AbonnementPage({
         <h1 className="board-titre m-0 mt-6 text-[clamp(29px,3vw,39px)]">Abonnement</h1>
         <NomDuCompte nom={nomCompte} email={user.email} />
         <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-          Vos dossiers restent toujours consultables, quel que soit l&apos;état de l&apos;abonnement.
+          Sans abonnement, vos dossiers restent consultables douze mois, puis le compte est supprimé, après deux
+          e-mails d&apos;avertissement.
         </p>
 
         {/* Un geste parti d'un onglet resté sur un autre compte (`clientDuCompte`) : refusé. */}
@@ -364,40 +378,28 @@ export default async function AbonnementPage({
             {vue.cas === "portail" && (
               <>
                 {optionsChangement.length > 0 && <ChangerDeFormule options={optionsChangement} baisse={baisse} compteId={compteId} />}
-                {vue.aRegler === "premier-paiement" && (
-                  <form action={reglerFactureAction} className="mt-2 mb-6">
-                    <ChampCompteAttendu compteId={compteId} />
-                    <p className="m-0 mb-4 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                      Votre banque demande de confirmer le premier paiement. Confirmez-le sur la page sécurisée de Stripe.
-                    </p>
-                    <BoutonEnvoi variant="board">Confirmer le paiement</BoutonEnvoi>
-                  </form>
-                )}
                 {/* Un impayé : le portail de Stripe, où la carte se change (il
                     l'enregistre et la met par défaut) et la facture se paie ou
                     se confirme. La page de la facture, elle, n'enregistre pas
                     une carte saisie sans la case « sauvegarder » : la carte
                     refusée restait celle du mois suivant (répétition du
                     2026-11-17). */}
-                <FormulairePortail
-                  compteId={compteId}
-                  variant={vue.aRegler === "premier-paiement" ? "boardClair" : "board"}
-                  libelle={vue.aRegler === "impaye" ? "Changer de carte et payer" : undefined}
-                  className={optionsChangement.length > 0 ? "mt-6" : "mt-2"}
-                >
-                  {vue.aRegler === "impaye" ? (
-                    <>
-                      Votre dernier paiement n&apos;est pas passé. Changez de carte, ou confirmez le paiement si votre
-                      banque le demande : il est relancé aussitôt, sur la page sécurisée de Stripe.
-                      {!droits.saisie ? " La saisie se rouvre dès qu'il est passé." : null}
-                    </>
-                  ) : (
-                    <>
-                      Carte, factures, résiliation : sur la page sécurisée de Stripe, notre prestataire de paiement.
-                      {baisse ? " Un changement de formule est prévu : pour résilier, choisissez d'abord « Garder ma formule »." : null}
-                    </>
-                  )}
-                </FormulairePortail>
+                {vue.aRegler ? (
+                  <FormulairePortail
+                    compteId={compteId}
+                    libelle="Changer de carte et payer"
+                    className={optionsChangement.length > 0 ? "mt-6" : "mt-2"}
+                  >
+                    Votre dernier paiement n&apos;est pas passé. Changez de carte, ou confirmez le paiement si votre
+                    banque le demande : il est relancé aussitôt, sur la page sécurisée de Stripe.
+                    {!droits.saisie ? " La saisie se rouvre dès qu'il est passé." : null}
+                  </FormulairePortail>
+                ) : (
+                  <FormulairePortail compteId={compteId} className={optionsChangement.length > 0 ? "mt-6" : "mt-2"}>
+                    Carte, factures, résiliation : sur la page sécurisée de Stripe, notre prestataire de paiement.
+                    {baisse ? " Un changement de formule est prévu : pour résilier, choisissez d'abord « Garder ma formule »." : null}
+                  </FormulairePortail>
+                )}
               </>
             )}
             {/* Juste après un paiement, la vue ne propose pas de payer
@@ -418,8 +420,6 @@ function messageDeLaPage(p: {
   paiement?: string;
   phase: ReturnType<typeof phaseDuCompte>;
   formuleChange: keyof typeof MESSAGES_FORMULE | null;
-  paiementEnConfirmation: boolean;
-  facture?: string;
   abonnement?: string;
 }): React.ReactNode {
   if (p.paiement === "termine") {
@@ -439,13 +439,6 @@ function messageDeLaPage(p: {
     return p.phase.statut === "active" ? "Paiement reçu : votre abonnement est actif." : null;
   }
   if (p.formuleChange) return MESSAGES_FORMULE[p.formuleChange];
-  if (p.paiementEnConfirmation) {
-    return "Le premier paiement est en cours : les fonctions réservées aux abonnés s'ouvrent dès qu'il est confirmé. Inutile de payer de nouveau.";
-  }
-  if (p.facture === "aucune") return "Aucune facture n'attend de paiement : votre abonnement est à jour.";
-  if (p.facture === "introuvable") {
-    return "La facture de votre premier paiement est introuvable : réessayez de vous abonner ; si le problème reste, écrivez-nous.";
-  }
   if (p.abonnement === "en-cours") return "Un abonnement est déjà en cours pour ce compte : gérez-le ici plutôt que d'en souscrire un second.";
   return null;
 }
@@ -453,13 +446,11 @@ function messageDeLaPage(p: {
 /** Le portail Stripe (carte, factures, résiliation), avec la phrase qui dit ce qu'on y fait. */
 function FormulairePortail({
   compteId,
-  variant,
   libelle = "Gérer mon abonnement",
   className,
   children,
 }: {
   compteId: string | null;
-  variant: "board" | "boardClair";
   libelle?: string;
   className?: string;
   children: React.ReactNode;
@@ -468,7 +459,7 @@ function FormulairePortail({
     <form action={ouvrirPortailAction} className={className}>
       <ChampCompteAttendu compteId={compteId} />
       <p className="m-0 mb-5 text-[14px] leading-[1.55] text-[color:var(--board-slate-mid)]">{children}</p>
-      <BoutonEnvoi variant={variant}>{libelle}</BoutonEnvoi>
+      <BoutonEnvoi variant="board">{libelle}</BoutonEnvoi>
     </form>
   );
 }
