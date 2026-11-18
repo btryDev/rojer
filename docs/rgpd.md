@@ -464,12 +464,19 @@ lequel, et ne promet pas d'écran là où il n'y en a pas.
    cf. `docs/dette-chantier-porteur-echeance.md` § 1.1. À ne pas confondre
    avec l'extraction **par salarié** du § 5.2, qui, elle, est livrée.
 2. **Rectification** (art. 16) — les formulaires d'édition.
-3. **Effacement** (art. 17) — **par demande à `contact@btry.fr`**, même délai.
+3. **Effacement** (art. 17) — ~~**par demande à `contact@btry.fr`**, même délai.
    *La suppression de compte en libre-service n'existe pas non plus.* L'effacement
    ne peut de toute façon pas être total : les versions de DUERP sont conservées
    au titre d'une obligation légale (§ 4.2) et ne s'effacent pas à la demande,
    exception de l'article 17.3.b. Ce que la suppression emporte et ce qu'elle
-   laisse est une décision produit qui reste à prendre — cf. dette § 1.1.
+   laisse est une décision produit qui reste à prendre — cf. dette § 1.1.~~
+   [2026-11-18, ADR-058 § 8 : **en libre-service**, pour un propriétaire —
+   « Supprimer le compte » (`/compte/suppression`), effacement total sept jours
+   après la demande, annulable d'ici là. La décision est prise : la
+   conservation des versions du DUERP est l'obligation de l'employeur, pas de
+   Rojer (CLAUDE.md, règle 10) ; la page les compte et les propose au
+   téléchargement avant le geste. Un membre invité quitte le compte. La
+   demande par courriel reste possible.]
 4. **Opposition et limitation** (art. 18 et 21) — par courriel, traitement
    manuel.
 
@@ -522,10 +529,11 @@ précisément ce qui rend possible de saisir un salarié réel :
   décrirait un autre traitement. L'outil le fournit ; il n'informe pas à la
   place de l'employeur, qui reste le responsable de traitement.
 
-**Non livré, et à ne pas confondre avec ce qui précède** : les deux
+**Non livré, et à ne pas confondre avec ce qui précède** : ~~les deux
 libres-services du titulaire du compte (§ 5.1, points 1 et 3) — **l'export
 complet** et **la suppression de compte**. Aucune route, aucune action, ni pour
-l'un ni pour l'autre. Les deux droits sont servis à la main, sur demande ; ce
+l'un ni pour l'autre.~~ [2026-11-18 : la suppression de compte est livrée
+(ADR-058 § 8, § 5.1 point 3) ; reste l'export complet (§ 5.1 point 1).] Les deux droits sont servis à la main, sur demande ; ce
 qui manque est l'outil, pas le droit. Manques distincts de celui que l'écran
 Équipe vient de combler, et recensés en dette § 1.1.
 

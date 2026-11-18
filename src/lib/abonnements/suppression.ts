@@ -12,8 +12,8 @@ import "server-only";
 
 import type Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
-import { envoiEnService, motifErreur, publicAppUrl, sendMail } from "@/lib/email";
-import { ajouterJours, ajouterMois, formaterDateLongueFr } from "@/lib/dates";
+import { envoiEnService, motifErreur, publicAppUrl } from "@/lib/email";
+import { ajouterJours, ajouterMois, debutDuJour, formaterDateLongueFr } from "@/lib/dates";
 import { clesDesEtablissements } from "@/lib/suppression/fichiers";
 import { getStorage } from "@/lib/storage";
 import { OPTIONS_WEBHOOK } from "@/lib/stripe/client";
@@ -21,7 +21,7 @@ import { DUREE_PAGE_DE_PAIEMENT_S } from "@/lib/stripe/parcours";
 import { synchroniserClientStripe, toutLister } from "@/lib/stripe/synchronisation";
 import { HORS_ABONNEMENT_OUVERT, OUVRENT, TERMINES } from "./droits";
 import { alerter, alerterUneFoisParJour } from "@/lib/alertes";
-import { ecrireAuxProprietaires } from "./rappels";
+import { ecrireAuxMembres, ecrireAuxProprietaires } from "./rappels";
 import { PAGE_ABONNEMENT } from "./saisie";
 
 export const MOIS_SANS_ABONNEMENT = 12;
@@ -65,6 +65,10 @@ export type Avertissement = "j30" | "j7";
  */
 export type CeQuiSeGarde = { versionsDuerp: boolean; fichiers: boolean; aPaye: boolean };
 
+/** Ce que tout e-mail de suppression rappelle (CLAUDE.md, règle 10). */
+export const CONSERVATION_DUERP =
+  "La conservation de votre document unique d'évaluation des risques (DUERP), quarante ans dans ses versions successives, reste à la charge de l'employeur (articles L. 4121-3-1 et R. 4121-4 du Code du travail).";
+
 /** Le message, en texte seul. */
 export function messageAvantSuppression(
   quand: Avertissement,
@@ -97,7 +101,7 @@ export function messageAvantSuppression(
       `Pour les garder, abonnez-vous avant cette date : ${base}${PAGE_ABONNEMENT}`,
       "",
       ...(conserver.length > 0 ? conserver : ["Votre compte ne porte aucun document validé ni fichier déposé."]),
-      "La conservation de votre document unique d'évaluation des risques (DUERP), quarante ans dans ses versions successives, reste à la charge de l'employeur (articles L. 4121-3-1 et R. 4121-4 du Code du travail).",
+      CONSERVATION_DUERP,
       "",
       "— Rojer",
     ].join("\n"),
@@ -215,23 +219,7 @@ export async function avertirAvantSuppression(
 
 /** Écrit aux membres qui ne sont pas propriétaires ; rend le nombre d'e-mails partis. */
 async function prevenirLesMembres(compteId: string, nom: string, suppressionLe: Date): Promise<number> {
-  let partis = 0;
-  try {
-    const membres = await prisma.membre.findMany({
-      where: { compteId, role: { not: "owner" } },
-      select: { user: { select: { email: true } } },
-    });
-    for (const { user } of membres) {
-      try {
-        await sendMail({ to: user.email, ...messageAuxMembres(nom, suppressionLe) });
-        partis++;
-      } catch (e) {
-        console.error(`avertissement J-7 aux membres non envoyé (compte ${compteId}) — ${motifErreur(e)}`);
-      }
-    }
-  } catch (e) {
-    console.error(`avertissement J-7 : membres illisibles (compte ${compteId}) — ${motifErreur(e)}`);
-  }
+  const { partis } = await ecrireAuxMembres(compteId, messageAuxMembres(nom, suppressionLe), "avertissement J-7 aux membres");
   return partis;
 }
 
@@ -308,7 +296,21 @@ export type BilanSuppressions = { supprimes: number; reportes: number };
  */
 export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | null): Promise<BilanSuppressions> {
   const bilan: BilanSuppressions = { supprimes: 0, reportes: 0 };
-  for (const { compteId, motif, stripeCustomerId, debutPayantLe, paiementOuvertLe } of await comptesASupprimer(maintenant, stripe)) {
+  for (const { compteId, motif, demandeeLe, stripeCustomerId, debutPayantLe, paiementOuvertLe } of await comptesASupprimer(maintenant, stripe)) {
+    // Sans Stripe, un compte qui a un client Stripe attend : on ne supprime
+    // pas un compte dont on ne peut pas arrêter la facturation — signalé, la
+    // date a été annoncée (relecture du 2026-11-18).
+    if (!stripe && stripeCustomerId) {
+      bilan.reportes++;
+      await signalerLeReport(compteId, "abonnements désactivés : impossible d'arrêter la facturation chez Stripe", maintenant);
+      continue;
+    }
+    // Une demande annulée depuis la sélection : rien chez Stripe, rien ne
+    // se défait (relecture du 2026-11-18) ; relue sous le verrou, plus bas.
+    if (motif === "demande" && !(await demandeToujoursEchue(compteId, maintenant))) {
+      bilan.reportes++;
+      continue;
+    }
     // Une page de paiement ouverte retient la suppression AVANT tout geste
     // chez Stripe : résilier et annuler les factures ne se défont pas, et le
     // compte qui s'abonne garderait sinon son impayé effacé (relecture du
@@ -352,7 +354,15 @@ export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | n
       // actif ou expire sous 23 heures) : le compte attend. Ouvert, pour un
       // compte sans abonnement : notre copie retardait — le compte attend
       // aussi. Ouvert pour une demande (§ 8) : c'est l'abonnement qui court
-      // encore, résilié ci-dessous.
+      // encore, résilié ci-dessous — sauf s'il est né APRÈS la demande (un
+      // « S'abonner » passé au même instant) : celui-là, quelqu'un vient de
+      // le payer, le compte attend et c'est signalé.
+      const neApresLaDemande = (s: Stripe.Subscription) => demandeeLe !== null && s.created * 1000 > demandeeLe.getTime();
+      if (motif === "demande" && abonnements.some((s) => OUVRENT.has(s.status) && neApresLaDemande(s))) {
+        bilan.reportes++;
+        await signalerLeReport(compteId, "un abonnement a été souscrit après la demande de suppression : le résilier ou retirer la demande, à la main", maintenant);
+        continue;
+      }
       if (abonnements.some((s) => s.status === "incomplete" || (motif === "sans_abonnement" && OUVRENT.has(s.status)))) {
         bilan.reportes++;
         await reporter(compteId, maintenant);
@@ -402,52 +412,73 @@ export type MotifDeSuppression = "sans_abonnement" | "demande";
 /** Le délai entre la demande d'un propriétaire et l'effacement (ADR-058 § 8). */
 export const JOURS_AVANT_EFFACEMENT = 7;
 
-/** La date d'effacement d'une demande faite le `demandeeLe`. */
+/**
+ * Le jour d'effacement d'une demande faite le `demandeeLe` : le septième jour
+ * civil après (minuit, Paris) — la tâche du matin de ce jour-là l'efface,
+ * quelle que soit l'heure de la demande. C'est la date dite partout.
+ */
 export function effacementDeLaDemande(demandeeLe: Date): Date {
-  return ajouterJours(demandeeLe, JOURS_AVANT_EFFACEMENT);
+  return ajouterJours(debutDuJour(demandeeLe), JOURS_AVANT_EFFACEMENT);
 }
 
-/** Une demande faite au plus tard ce jour-là est échue. */
-const DEMANDE_ECHUE = (maintenant: Date) => ({ suppressionDemandeeLe: { lte: ajouterJours(maintenant, -JOURS_AVANT_EFFACEMENT) } });
+/** Échue : le jour d'effacement est aujourd'hui, ou passé. */
+const DEMANDE_ECHUE = (maintenant: Date) => ({
+  suppressionDemandeeLe: { lt: ajouterJours(debutDuJour(maintenant), 1 - JOURS_AVANT_EFFACEMENT) },
+});
+
+async function demandeToujoursEchue(compteId: string, maintenant: Date): Promise<boolean> {
+  return (await prisma.compte.count({ where: { id: compteId, ...DEMANDE_ECHUE(maintenant) } })) === 1;
+}
 
 type Candidat = {
   compteId: string;
   motif: MotifDeSuppression;
+  /** La demande (§ 8), pour reconnaître un abonnement né après elle. */
+  demandeeLe: Date | null;
   stripeCustomerId: string | null;
   debutPayantLe: Date | null;
   paiementOuvertLe: Date | null;
 };
 
 /**
- * Les comptes à effacer à cette passe, `SUPPRESSIONS_PAR_PASSE` au plus : les
- * demandes échues d'abord (§ 8, annoncées pour ce jour), puis les comptes
- * sans abonnement (§ 4). Sans Stripe (abonnements désactivés), seuls les
- * comptes sans client Stripe : on ne supprime pas un compte dont on ne peut
- * pas arrêter la facturation.
+ * Les comptes à effacer à cette passe : les demandes échues (§ 8), puis les
+ * comptes sans abonnement (§ 4), chacun `SUPPRESSIONS_PAR_PASSE` au plus —
+ * des demandes bloquées ne retiennent pas les autres comptes (relecture du
+ * 2026-11-18). Sans Stripe (abonnements désactivés), pas de compte sans
+ * abonnement : l'offre n'est pas lancée.
  */
 async function comptesASupprimer(maintenant: Date, stripe: Stripe | null): Promise<Candidat[]> {
-  const demandes = await prisma.compte.findMany({
-    where: { ...DEMANDE_ECHUE(maintenant), ...(stripe ? {} : { OR: [{ abonnement: null }, { abonnement: { stripeCustomerId: null } }] }) },
-    select: { id: true, abonnement: { select: { stripeCustomerId: true, debutPayantLe: true, paiementOuvertLe: true } } },
-    orderBy: { suppressionDemandeeLe: "asc" },
-    take: SUPPRESSIONS_PAR_PASSE,
-  });
-  const candidats: Candidat[] = demandes.map((c) => ({
-    compteId: c.id,
-    motif: "demande",
-    stripeCustomerId: c.abonnement?.stripeCustomerId ?? null,
-    debutPayantLe: c.abonnement?.debutPayantLe ?? null,
-    paiementOuvertLe: c.abonnement?.paiementOuvertLe ?? null,
-  }));
-  const reste = SUPPRESSIONS_PAR_PASSE - candidats.length;
-  if (!stripe || reste <= 0) return candidats;
-  const echus = await prisma.abonnement.findMany({
-    where: { ...ECHUS(maintenant), compte: { suppressionDemandeeLe: null } },
-    select: { compteId: true, stripeCustomerId: true, debutPayantLe: true, paiementOuvertLe: true },
-    orderBy: { suppressionPrevueLe: "asc" },
-    take: reste,
-  });
-  return [...candidats, ...echus.map((e) => ({ ...e, motif: "sans_abonnement" as const }))];
+  const [demandes, echus] = await Promise.all([
+    prisma.compte.findMany({
+      where: DEMANDE_ECHUE(maintenant),
+      select: {
+        id: true,
+        suppressionDemandeeLe: true,
+        abonnement: { select: { stripeCustomerId: true, debutPayantLe: true, paiementOuvertLe: true } },
+      },
+      orderBy: { suppressionDemandeeLe: "asc" },
+      take: SUPPRESSIONS_PAR_PASSE,
+    }),
+    stripe
+      ? prisma.abonnement.findMany({
+          where: { ...ECHUS(maintenant), compte: { suppressionDemandeeLe: null } },
+          select: { compteId: true, stripeCustomerId: true, debutPayantLe: true, paiementOuvertLe: true },
+          orderBy: { suppressionPrevueLe: "asc" },
+          take: SUPPRESSIONS_PAR_PASSE,
+        })
+      : [],
+  ]);
+  return [
+    ...demandes.map((c) => ({
+      compteId: c.id,
+      motif: "demande" as const,
+      demandeeLe: c.suppressionDemandeeLe,
+      stripeCustomerId: c.abonnement?.stripeCustomerId ?? null,
+      debutPayantLe: c.abonnement?.debutPayantLe ?? null,
+      paiementOuvertLe: c.abonnement?.paiementOuvertLe ?? null,
+    })),
+    ...echus.map((e) => ({ ...e, motif: "sans_abonnement" as const, demandeeLe: null })),
+  ];
 }
 
 /**

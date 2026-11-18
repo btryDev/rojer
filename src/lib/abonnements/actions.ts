@@ -55,6 +55,11 @@ async function clientDuCompte({ compte, db }: Proprietaire, formData: FormData |
   // nouveau sur le compte actif, dit que rien n'a été fait. `null` : le retour
   // de Stripe, que la session de paiement rattache déjà à son client.
   if (formData && !memeCompteQueLaPage(formData, compte.compteId)) redirect(`${PAGE_ABONNEMENT}?compte=change`);
+  // Une suppression demandée ferme tous les gestes d'abonnement (s'abonner,
+  // changer de formule, le portail) : on ne paie pas pour un compte qui va
+  // disparaître, et la fin programmée par la demande ne se défait pas au
+  // portail (ADR-058 § 8). On annule d'abord — la page de la suppression.
+  if (formData && (await demandeDuCompte(compte.compteId))) redirect(PAGE_SUPPRESSION);
   const config = configurationStripe();
   if (!config.active) redirect(PAGE_ABONNEMENT);
   const ligne = await db.abonnement.findUnique({
@@ -120,9 +125,6 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
   // après l'essai).
   ouvrirAuGel();
   const { stripe, db, ligne, compteId, conditionsSurCheckout } = await clientDuCompte(proprietaire, formData);
-  // Un compte dont la suppression est demandée ne paie pas pour disparaître :
-  // on annule d'abord (ADR-058 § 8) — la page de la suppression le dit.
-  if (await demandeDuCompte(compteId)) redirect(PAGE_SUPPRESSION);
   const formule = String(formData.get("formule") ?? "");
   if (!estLookupKey(formule)) redirect(PAGE_ABONNEMENT);
   const email = proprietaire.user.email;

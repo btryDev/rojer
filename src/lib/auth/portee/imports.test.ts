@@ -76,7 +76,6 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous"; 
       "prisma.compte.findUniqueOrThrow",
       "prisma.compte.updateMany",
       "prisma.etablissement.findMany",
-      "prisma.membre.findMany",
     ],
   },
   "src/lib/abonnements/suppression.ts": {
@@ -86,6 +85,7 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous"; 
       "prisma.$transaction",
       "prisma.abonnement.findMany",
       "prisma.abonnement.updateMany",
+      "prisma.compte.count",
       "prisma.compte.findMany",
       "prisma.compteSupprime.deleteMany",
       "prisma.duerpVersion.count",

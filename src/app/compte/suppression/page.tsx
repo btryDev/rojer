@@ -35,7 +35,7 @@ export default async function SuppressionPage() {
           </h2>
           <p className={TEXTE}>
             Demandée {demande.par ? `par ${demande.par} ` : ""}le {formaterDateLongueFr(demande.demandeeLe)}. Ce jour-là, le
-            compte «&nbsp;{nom}&nbsp;» et toutes ses données seront effacés définitivement, et son abonnement résilié. D&apos;ici là,
+            compte «&nbsp;{nom}&nbsp;» et toutes ses données seront effacés définitivement, et son abonnement, s&apos;il en a un, résilié. D&apos;ici là,
             tout reste consultable et exportable.
           </p>
           {proprietaire ? (

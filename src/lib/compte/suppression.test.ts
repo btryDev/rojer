@@ -6,7 +6,7 @@ const m = vi.hoisted(() => ({
   compte: { findUnique: vi.fn(), findUniqueOrThrow: vi.fn(async () => ({ name: "Bistrot" })), updateMany: vi.fn() },
   membres: vi.fn(async () => [{ user: { email: "membre@exemple.fr" } }]),
   proprietaires: vi.fn(async () => ["dirigeant@exemple.fr"]),
-  sendMail: vi.fn(async () => undefined),
+  sendMail: vi.fn<(message: { to: string; subject: string; text: string }) => Promise<undefined>>(async () => undefined),
   retrieve: vi.fn(),
   update: vi.fn(),
   synchroniser: vi.fn(async () => ({ issue: "ecrit" })),
@@ -24,11 +24,21 @@ vi.mock("@/lib/email", () => ({
   publicAppUrl: () => "https://rojer.test",
   motifErreur: (e: unknown) => (e instanceof Error ? e.message : "erreur"),
 }));
-vi.mock("@/lib/abonnements/rappels", () => ({ adressesDesProprietaires: m.proprietaires }));
-vi.mock("@/lib/abonnements/suppression", async () => {
-  const { ajouterJours } = await import("@/lib/dates");
+vi.mock("@/lib/abonnements/rappels", () => {
+  const ecrire = (adresses: () => Promise<string[]>) => async (_c: string, message: { subject: string; text: string }) => {
+    for (const to of await adresses()) await m.sendMail({ to, ...message });
+    return { partis: 1, echec: false };
+  };
   return {
-    effacementDeLaDemande: (d: Date) => ajouterJours(d, 7),
+    ecrireAuxProprietaires: ecrire(m.proprietaires),
+    ecrireAuxMembres: ecrire(async () => (await m.membres()).map((x) => x.user.email)),
+  };
+});
+vi.mock("@/lib/abonnements/suppression", async () => {
+  const { ajouterJours, debutDuJour } = await import("@/lib/dates");
+  return {
+    CONSERVATION_DUERP: "La conservation de votre DUERP (R. 4121-4) reste à la charge de l'employeur.",
+    effacementDeLaDemande: (d: Date) => ajouterJours(debutDuJour(d), 7),
     paiementEnCours: (d: Date | null, maintenant: Date) => d != null && d.getTime() > maintenant.getTime() - 70 * 60_000,
   };
 });

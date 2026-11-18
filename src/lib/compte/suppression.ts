@@ -14,11 +14,11 @@ import "server-only";
 import { cache } from "react";
 import type Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
-import { formaterDateLongueFr } from "@/lib/dates";
-import { motifErreur, publicAppUrl, sendMail } from "@/lib/email";
+import { ajouterJours, formaterDateLongueFr } from "@/lib/dates";
+import { motifErreur, publicAppUrl } from "@/lib/email";
 import { abonnementEnCours } from "@/lib/abonnements/droits";
-import { adressesDesProprietaires } from "@/lib/abonnements/rappels";
-import { effacementDeLaDemande, paiementEnCours } from "@/lib/abonnements/suppression";
+import { ecrireAuxMembres, ecrireAuxProprietaires } from "@/lib/abonnements/rappels";
+import { CONSERVATION_DUERP, effacementDeLaDemande, paiementEnCours } from "@/lib/abonnements/suppression";
 import { clientStripe } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
 import { synchroniserClientStripe } from "@/lib/stripe/synchronisation";
@@ -94,8 +94,10 @@ export async function poserLaDemande(compteId: string, email: string, maintenant
       if (s.schedule) {
         return { refus: "Un changement de formule est prévu : renoncez-y d'abord sur la page Abonnement, puis revenez ici." };
       }
+      // Le jour d'effacement entier, et un jour de plus si la passe était
+      // reportée : un renouvellement d'ici là serait prélevé pour rien.
       const echeance = s.items.data[0]?.current_period_end;
-      if (abonnementEnCours(s.status) && !s.cancel_at_period_end && echeance && echeance * 1000 <= effacementLe.getTime()) {
+      if (abonnementEnCours(s.status) && !s.cancel_at_period_end && echeance && echeance * 1000 <= ajouterJours(effacementLe, 2).getTime()) {
         finAPoser = s.id;
       }
     } catch (e) {
@@ -126,7 +128,8 @@ export async function poserLaDemande(compteId: string, email: string, maintenant
   }
 
   const nom = await nomDuCompte(compteId);
-  await prevenir(compteId, messageDemande(nom, email, effacementLe, publicAppUrl()), messageDemandeAuxMembres(nom, effacementLe));
+  await ecrireAuxProprietaires(compteId, messageDemande(nom, email, effacementLe, publicAppUrl()), "suppression demandée");
+  await ecrireAuxMembres(compteId, messageDemandeAuxMembres(nom, effacementLe), "suppression demandée, aux membres");
   return { ok: true };
 }
 
@@ -138,15 +141,17 @@ export async function retirerLaDemande(compteId: string, email: string): Promise
   });
   if (!c?.suppressionDemandeeLe) return { ok: true };
   const abonnement = c.abonnement;
+  // La fin programmée par la demande a pu déjà prendre effet : l'abonnement ne
+  // court plus, et l'annulation le dit au lieu de promettre « comme avant ».
+  let abonnementArrete = false;
   if (c.suppressionFinPosee && abonnement?.stripeSubscriptionId) {
     const config = configurationStripe();
     if (!config.active) return { refus: INDISPONIBLE };
     const stripe = clientStripe(config);
     try {
       const s = await stripe.subscriptions.retrieve(abonnement.stripeSubscriptionId);
-      if (abonnementEnCours(s.status) && s.cancel_at_period_end) {
-        await stripe.subscriptions.update(s.id, { cancel_at_period_end: false });
-      }
+      if (!abonnementEnCours(s.status)) abonnementArrete = true;
+      else if (s.cancel_at_period_end) await stripe.subscriptions.update(s.id, { cancel_at_period_end: false });
     } catch (e) {
       console.error(`suppression annulée (compte ${compteId}) : fin d'abonnement non retirée — ${motifErreur(e)}`);
       return { refus: INDISPONIBLE };
@@ -159,8 +164,9 @@ export async function retirerLaDemande(compteId: string, email: string): Promise
   });
   if (retiree.count === 1) {
     const nom = await nomDuCompte(compteId);
-    const message = messageAnnulation(nom, email, effacementDeLaDemande(c.suppressionDemandeeLe));
-    await prevenir(compteId, message, message);
+    const message = messageAnnulation(nom, email, effacementDeLaDemande(c.suppressionDemandeeLe), abonnementArrete);
+    await ecrireAuxProprietaires(compteId, message, "suppression annulée");
+    await ecrireAuxMembres(compteId, message, "suppression annulée, aux membres");
   }
   return { ok: true };
 }
@@ -172,31 +178,9 @@ async function relire(stripe: Stripe, customerId: string | null) {
   if (customerId) await synchroniserClientStripe(stripe, customerId).catch(() => null);
 }
 
-/** Écrit aux propriétaires puis aux autres membres ; un envoi manqué ne défait rien. */
-async function prevenir(compteId: string, auxProprietaires: Message, auxMembres: Message) {
-  const [proprietaires, membres] = await Promise.all([
-    adressesDesProprietaires(compteId).catch(() => [] as string[]),
-    prisma.membre
-      .findMany({ where: { compteId, role: { not: "owner" } }, select: { user: { select: { email: true } } } })
-      .then((ms) => ms.map((m) => m.user.email))
-      .catch(() => [] as string[]),
-  ]);
-  for (const [adresses, message] of [
-    [proprietaires, auxProprietaires],
-    [membres, auxMembres],
-  ] as const) {
-    for (const to of adresses) {
-      await sendMail({ to, ...message }).catch((e: unknown) =>
-        console.error(`suppression du compte ${compteId} : e-mail non envoyé — ${motifErreur(e)}`),
-      );
-    }
-  }
-}
-
 type Message = { subject: string; text: string };
 
-const CONSERVATION_DUERP =
-  "La conservation de votre document unique d'évaluation des risques (DUERP), quarante ans dans ses versions successives, reste à la charge de l'employeur (articles L. 4121-3-1 et R. 4121-4 du Code du travail) : téléchargez les versions validées avant cette date, depuis la page DUERP de chaque établissement.";
+const TELECHARGER = "Téléchargez les versions validées du DUERP avant cette date, depuis la page DUERP de chaque établissement.";
 
 export function messageDemande(nom: string, par: string, effacementLe: Date, base: string): Message {
   const date = formaterDateLongueFr(effacementLe);
@@ -210,6 +194,7 @@ export function messageDemande(nom: string, par: string, effacementLe: Date, bas
       `Pour annuler d'ici là : ${base}${PAGE_SUPPRESSION}`,
       "",
       CONSERVATION_DUERP,
+      TELECHARGER,
       "",
       "— Rojer",
     ].join("\n"),
@@ -232,13 +217,16 @@ export function messageDemandeAuxMembres(nom: string, effacementLe: Date): Messa
   };
 }
 
-export function messageAnnulation(nom: string, par: string, effacementLe: Date): Message {
+export function messageAnnulation(nom: string, par: string, effacementLe: Date, abonnementArrete = false): Message {
   return {
     subject: `La suppression du compte Rojer « ${nom} » est annulée`,
     text: [
       "Bonjour,",
       "",
-      `La suppression du compte Rojer « ${nom} », prévue le ${formaterDateLongueFr(effacementLe)}, a été annulée par ${par}. Le compte et ses données restent, comme avant la demande.`,
+      `La suppression du compte Rojer « ${nom} », prévue le ${formaterDateLongueFr(effacementLe)}, a été annulée par ${par}. Le compte et ses données restent.`,
+      ...(abonnementArrete
+        ? ["", "Son abonnement, arrivé à échéance pendant la demande, ne court plus : un propriétaire peut s'abonner de nouveau depuis la page Abonnement pour continuer à saisir."]
+        : []),
       "",
       "— Rojer",
     ].join("\n"),

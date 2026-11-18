@@ -33,12 +33,16 @@ export async function BandeauAbonnementDuCompte({ dansLeContenu }: { dansLeConte
   const compte = await getOptionalCompte();
   if (!compte) return null;
   const lecture = compte.compte.role === "lecture";
-  const demande = await demandeDuCompte(compte.compte.compteId);
+  // Les deux lectures ensemble : la page ne les attend pas l'une après l'autre.
+  const [demande, droits] = await Promise.all([
+    demandeDuCompte(compte.compte.compteId),
+    lecture ? null : droitsDuCompte(compte.db, compte.compte.compteId),
+  ]);
   const bandeau = demande
     ? ({ ton: "ferme", message: `Ce compte sera supprimé le ${formaterDateLongueFr(demande.effacementLe)}, à la demande d'un propriétaire.` } as const)
     : lecture
       ? LECTURE_SEULE
-      : (await droitsDuCompte(compte.db, compte.compte.compteId)).bandeau;
+      : (droits?.bandeau ?? null);
   if (!bandeau) return null;
   const lien = demande ? LIEN_SUPPRESSION : undefined;
   const avecLien = demande ? compte.compte.role === "owner" : !lecture;
