@@ -82,14 +82,16 @@ describe("les illustrations d'en-tête n'affichent aucune donnée", () => {
   // est retiré avec le hero du guide. Toutes les pages d'entrée ont désormais
   // une illustration d'en-tête, sans aucun texte : la garde passe de la forme
   // « pas de date » à la règle plus simple « pas de texte du tout », sur
-  // toute la série.]
+  // toute la série.] [2026-11-18 : treize en-têtes sont devenus des images
+  // (`src/assets/entetes/`, sans aucun texte, relues à l'œil) ; restent en
+  // SVG les sept dessins de Documentation et Paramètres, d'où la borne à 7.]
   const DOSSIER = "src/components/entete-page/illustrations";
   const dessins = readdirSync(join(process.cwd(), DOSSIER)).filter((f) =>
     f.endsWith(".tsx"),
   );
 
   it("balaie bien la série (borne basse)", () => {
-    expect(dessins.length).toBeGreaterThanOrEqual(20);
+    expect(dessins.length).toBeGreaterThanOrEqual(7);
   });
 
   it.each(dessins)("%s : aucun texte dessiné", (fichier) => {
