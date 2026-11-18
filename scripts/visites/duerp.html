@@ -1,0 +1,1172 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Visite DUERP</title>
+<!-- Source de public/videos/visite-duerp.mp4. Les {{…}} sont remplis par scripts/visites/rendre.tsx. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Instrument+Sans:wght@500;600&display=block" rel="stylesheet">
+<style>
+/* La charte board de l'app (src/app/globals.css), relevée le 2026-11-18. */
+:root{
+  --canvas:#f6f9fb; --card:#fff; --ink:#0a0a0a; --sky:#b2daf2; --eau:#d5f0ec;
+  --blue-pale:#d8eef9; --blue-soft:#a9d3ec; --blue-strong:#5d93b8; --blue-ink:#376881;
+  --slate-pale:#edf2f5; --slate-line:#dfe8ee; --slate:#b5d1e3; --slate-soft:#5c7182; --slate-mid:#4d5d6b; --slate-ink:#304148;
+  --signal-ink:#8a2a23; --green:#bdfdb5; --green-ink:#216037;
+  --ombre:0 0 0 1px rgba(13,18,36,.06),0 1px 2px rgba(13,18,36,.04),0 12px 32px -14px rgba(13,18,36,.1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1280px;height:720px;overflow:hidden;background:var(--canvas);font-family:"IBM Plex Sans",sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+.titre{font-family:"Instrument Sans",sans-serif;font-weight:600;letter-spacing:-.032em;line-height:1.12}
+/* .board-surtitre : Plex demi-gras, en minuscules — jamais de petites capitales */
+.st{font-size:12.5px;font-weight:600;line-height:1.4;color:var(--slate-soft);font-variant-numeric:tabular-nums}
+.carte{background:var(--card);border-radius:30px;box-shadow:var(--ombre)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:9999px;height:40px;padding:0 18px;font-size:12.5px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;background:var(--ink);color:#fff;flex:none}
+.btn.cl{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px rgba(10,10,10,.18)}
+.btn.sm{height:32px;padding:0 14px;font-size:12px}
+.btn.off{opacity:.45}
+.past{display:inline-flex;align-items:center;border-radius:9999px;padding:6px 13px;font-size:12px;font-weight:600;line-height:1;white-space:nowrap;background:var(--slate-pale);color:var(--slate-ink)}
+.past.ok{background:var(--green);color:var(--green-ink)}
+.aide-q{display:inline-flex;width:20px;height:20px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--slate-soft);color:var(--slate-soft);font-size:12px;font-weight:600;align-items:center;justify-content:center;flex:none}
+.champ{height:44px;border-radius:16px;background:var(--slate-pale);border:1px solid var(--slate-line);display:flex;align-items:center;padding:0 14px;font-size:14px;color:var(--ink)}
+.champ.vide{color:#8193a0}
+.label{display:block;font-size:13px;font-weight:600;margin-bottom:8px}
+.curseur-texte{display:inline-block;width:1.5px;height:17px;background:var(--ink);margin-left:1px;vertical-align:-3px}
+.pill-marque{display:inline-flex;border-radius:9999px;background:var(--sky);padding:2px 12px;font-family:"Instrument Sans";font-weight:600;font-size:17px;letter-spacing:-.03em;color:var(--ink)}
+
+/* ---------- fenêtre et caméra ---------- */
+#fenetre{position:absolute;left:28px;top:28px;width:860px;height:664px;border-radius:18px;overflow:hidden;background:var(--canvas);box-shadow:0 0 0 1px rgba(13,18,36,.10),0 30px 60px -28px rgba(13,18,36,.32)}
+#camera{position:absolute;left:0;top:0;transform-origin:0 0}
+#app{position:relative;width:1280px;height:988px;background:var(--canvas);overflow:hidden}
+
+/* ---------- rail (le panneau est replié à l'arrivée sur chaque page, ADR-030) ---------- */
+#rail{position:absolute;left:0;top:0;bottom:0;width:88px;background:#0a0a0a;color:#fff;border-right:1px solid #1f1f1f;z-index:3}
+#rail .marque{height:67px;display:flex;align-items:center;justify-content:center;font-family:"Instrument Sans";font-weight:600;font-size:17px;letter-spacing:-.025em;color:rgba(255,255,255,.7);border-bottom:1px solid rgba(255,255,255,.1)}
+.ri{display:flex;flex-direction:column;align-items:center;gap:7px;margin-top:18px;font-size:10px;color:#a3a3a3}
+.ri .rond{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#bdbdbd}
+.ri.actif{color:#fff}
+.ri.actif .rond{background:#fff;color:#0a0a0a}
+.ri.sep{width:48px;height:1px;background:rgba(255,255,255,.1);margin-left:20px}
+
+/* ---------- colonne principale ---------- */
+#col{position:absolute;left:88px;top:0;width:1192px;bottom:0;overflow:hidden}
+.page{position:absolute;inset:0;opacity:0}
+.defil{position:absolute;left:0;top:0;width:1192px}
+.gelule{position:absolute;right:34px;top:18px;height:42px;padding:0 4px 0 14px;border-radius:9999px;background:rgba(255,255,255,.9);box-shadow:var(--ombre);display:flex;align-items:center;gap:12px;z-index:5}
+.gelule .av{width:34px;height:34px;border-radius:50%;background:#0a0a0a;color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;letter-spacing:.06em}
+.gelule .sepv{width:1px;height:20px;background:var(--slate-line)}
+
+/* EnTetePage : blanc, titre, phrase ; panneau de la teinte de section à droite */
+.entete{display:grid;grid-template-columns:minmax(0,1fr) 500px;background:var(--card);min-height:320px}
+.entete .g{padding:40px 48px 40px 32px;display:flex;flex-direction:column;justify-content:center}
+.entete h1{font-size:50px;line-height:1.06;letter-spacing:-.035em}
+.entete p{margin-top:14px;max-width:46ch;font-size:18px;line-height:1.55;color:var(--slate-ink)}
+.entete .d{background:var(--eau);display:flex;align-items:flex-end;justify-content:center;padding:64px 32px 20px}
+.entete .d img{width:243px;height:auto;display:block}
+.pied{background:var(--card);border-top:1px solid var(--slate-line);padding:28px 32px}
+
+/* le fil des étapes (WizardSteps) */
+.fil{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0 8px;list-style:none}
+.fil li{min-width:0}
+.fil .seg{display:block;height:5px;border-radius:9999px;background:var(--slate-line);overflow:hidden}
+.fil .seg i{display:block;height:100%;border-radius:9999px;background:var(--slate-soft)}
+.fil .lib{display:block;margin-top:8px;font-size:13px;line-height:1.35;color:var(--slate-mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fil li.fait .lib{color:var(--ink)}
+.fil li.act .seg{background:var(--blue-pale)}
+.fil li.act .seg i{background:var(--blue-ink)}
+.fil li.act .lib{color:var(--blue-ink);font-weight:600}
+
+.barre-retour{display:flex;align-items:center;min-height:34px;padding:24px 32px 0}
+.barre-retour .btn+.btn{margin-left:auto}
+.filunite{display:flex;gap:8px;font-size:13px;align-items:center}
+.filunite a{color:var(--slate-mid);font-weight:500}
+.filunite b{font-weight:600}
+.filunite i{font-style:normal;color:var(--slate-soft)}
+
+/* la colonne de lecture du DUERP : max-w-5xl, px-10, py-14 */
+.zone{position:relative;margin:0 auto;width:1024px;padding:56px 40px 0;height:3000px}
+.c{position:absolute;left:40px;right:40px;top:56px;opacity:0;display:flex;flex-direction:column;gap:32px}
+
+/* EnTeteEtape */
+.ee{display:flex;flex-direction:column;gap:8px;max-width:820px}
+.ee h2{font-size:27px}
+.ee h2.det{font-size:22px}
+.ee .tl{display:flex;align-items:center;gap:12px}
+.ee p{font-size:14.5px;line-height:1.55;color:var(--slate-mid)}
+.ee p b{color:var(--ink);font-weight:400}
+.lien{color:var(--blue-ink)}
+.ligne-haut{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+
+/* MarcheASuivre */
+.marche{border-radius:22px;background:var(--slate-pale);padding:20px 28px;display:flex;flex-direction:column;gap:16px}
+.marche ol{list-style:none;display:grid;grid-template-columns:repeat(3,1fr)}
+.marche li{display:flex;gap:12px;align-items:flex-start;padding-right:20px}
+.marche li+li{border-left:2px solid var(--card);padding-left:20px}
+.marche .rd{width:32px;height:32px;border-radius:50%;background:var(--card);color:var(--slate-mid);font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none}
+.marche li.cour .rd{background:var(--blue-pale);color:var(--blue-ink)}
+.marche li.fait .rd{background:var(--ink);color:#fff}
+.marche b{display:block;font-size:14px;font-weight:600;letter-spacing:-.01em}
+.marche li.cour b{color:var(--blue-ink)}
+.marche small{display:block;font-size:12.5px;line-height:1.45;color:var(--slate-mid);margin-top:2px}
+
+/* cartes et listes */
+.k-tete{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:20px 32px;border-bottom:1px solid var(--slate-line)}
+.k-tete h3{font-size:13.5px;font-weight:600;font-family:"IBM Plex Sans";letter-spacing:0;display:flex;gap:8px;align-items:baseline}
+.k-tete .st{font-weight:400}
+.rangs>li{list-style:none;display:flex;align-items:center;gap:20px;padding:20px 32px;border-top:1px solid var(--slate-line)}
+.rangs>li:first-child{border-top:0}
+.rangs .nom{flex:1;min-width:0}
+.rangs .nom b{display:block;font-size:16px;font-weight:600;line-height:1.3;letter-spacing:-.01em}
+.rangs .nom small{display:block;font-size:12.5px;color:var(--slate-mid);margin-top:2px;line-height:1.55}
+.segs{display:flex;gap:4px;width:84px;flex:none}
+.segs i{flex:1;height:5px;border-radius:9999px;background:var(--slate-line)}
+.segs i.on{background:var(--blue-ink)}
+.trois{display:flex;gap:8px;align-items:center;flex:none}
+.plus{width:32px;height:32px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(10,10,10,.18);display:flex;align-items:center;justify-content:center;font-size:15px;letter-spacing:.05em;flex:none}
+
+/* unités en cartes */
+.grille{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.unite{padding:16px 24px;display:flex;flex-direction:column;justify-content:space-between;gap:12px;min-height:128px}
+.unite b{display:block;font-size:15px;font-weight:600;line-height:1.3;letter-spacing:-.01em}
+.unite small{display:block;font-size:12.5px;line-height:1.5;color:var(--slate-mid);margin-top:4px}
+.unite .bt{display:flex;gap:6px}
+
+/* questions oui / non */
+.qrow{list-style:none;display:flex;justify-content:space-between;gap:24px;padding:20px 32px;border-top:1px solid var(--slate-line)}
+.qrow:first-child{border-top:0}
+.qrow b{display:block;font-size:14.5px;font-weight:600;line-height:1.35;letter-spacing:-.01em}
+.qrow small{display:block;font-size:12.5px;line-height:1.5;color:var(--slate-mid);margin-top:4px;max-width:600px}
+.on2{display:flex;gap:8px;flex:none;align-items:flex-start}
+.qcarte{list-style:none;padding:24px 32px}
+.qcarte b{display:block;font-size:16px;font-weight:600;line-height:1.3;letter-spacing:-.01em}
+.qcarte small{display:block;font-size:12.5px;line-height:1.55;color:var(--slate-mid);margin-top:6px}
+.qcarte .rp{display:flex;align-items:center;gap:8px;margin-top:16px}
+.qcarte .retirer{font-size:12px;color:var(--blue-ink);margin-left:6px}
+
+/* cotation */
+.prog .barre{display:flex;gap:6px;padding:20px 32px 0}
+.prog .barre i{flex:1;height:5px;border-radius:9999px;background:var(--slate-line)}
+.prog .barre i.bl{background:var(--blue-ink)}
+.prog .barre i.nr{background:var(--ink)}
+.prog ol{list-style:none;display:grid;grid-template-columns:1fr 1fr}
+.prog ol li{display:flex;gap:16px;padding:24px 32px}
+.prog ol li+li{border-left:1px solid var(--slate-line)}
+.prog .rd{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:600;flex:none;background:var(--blue-pale);color:var(--blue-ink)}
+.prog .rd.fait{background:var(--ink);color:#fff}
+.prog .rd.ver{background:var(--slate-pale);color:var(--slate)}
+.prog li b{display:block;font-size:16px;font-weight:600;margin-top:6px;letter-spacing:-.01em}
+.prog li.ver b{color:var(--slate-soft)}
+.prog li small{display:block;font-size:12.5px;line-height:1.55;color:var(--slate-mid);margin-top:4px}
+.prog .note{border-top:1px solid var(--slate-line);padding:14px 32px;font-size:12.5px;color:var(--slate-mid)}
+.qc{padding:24px 28px;display:flex;flex-direction:column;gap:16px}
+.qc .q{font-size:16px;font-weight:600;line-height:1.35;letter-spacing:-.01em}
+.tuiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tuile{display:flex;gap:12px;align-items:flex-start;border-radius:16px;padding:14px;background:var(--slate-pale);border:1px solid transparent}
+.tuile.on{background:var(--blue-pale);border-color:var(--blue-ink)}
+.radio{width:14px;height:14px;border-radius:50%;box-shadow:inset 0 0 0 1.5px #8193a0;background:#fff;flex:none;margin-top:3px}
+.tuile.on .radio{box-shadow:inset 0 0 0 4px var(--blue-ink)}
+.tuile .v{font-size:12px;font-weight:600;color:var(--slate-soft);font-variant-numeric:tabular-nums;margin-top:1px}
+.tuile span:last-child{font-size:13.5px;line-height:1.55}
+.alire{border-radius:16px;border:1px solid var(--slate-line);padding:14px 20px}
+.alire p{font-size:12.5px;line-height:1.6;color:var(--slate-ink);margin-top:6px}
+.crit{border-radius:22px;background:var(--slate-pale);padding:24px;display:grid;grid-template-columns:auto 1fr;gap:32px;align-items:center}
+.crit .n{font-size:64px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums;color:var(--slate)}
+.crit .n.ok{color:var(--ink)}
+.crit p{font-size:12.5px;line-height:1.6;color:var(--slate-mid);margin-top:6px;max-width:560px}
+
+/* mesures */
+.toggle{list-style:none;padding:16px 32px;border-top:1px solid var(--slate-line)}
+.toggle label{display:flex;gap:12px;align-items:flex-start;border-radius:16px;border:1px solid var(--slate-line);padding:12px}
+.case{width:15px;height:15px;border-radius:4px;box-shadow:inset 0 0 0 1.5px #8193a0;background:#fff;flex:none;margin-top:3px;display:flex;align-items:center;justify-content:center}
+.case.on{background:var(--ink);box-shadow:none}
+.case.on::after{content:"";width:7px;height:4px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translate(1px,-1px)}
+.toggle b,.mrow b{display:block;font-size:14px;font-weight:500;line-height:1.45}
+.toggle small,.mrow small{display:block;font-size:12.5px;color:var(--slate-mid);margin-top:2px}
+.mrow{list-style:none;padding:16px 32px;border-top:1px solid var(--slate-line)}
+.mrow .h{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+.segbtn{display:inline-flex;border-radius:9999px;border:1px solid var(--slate-line);background:var(--slate-pale);padding:2px;font-size:12px;font-weight:600}
+.segbtn span{border-radius:9999px;padding:6px 12px;color:var(--slate-mid)}
+.segbtn span.fait{background:var(--green);color:var(--green-ink)}
+.segbtn span.prevu{background:var(--blue-pale);color:var(--blue-ink)}
+.mrow .champs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.afaire-l{display:flex;gap:8px;align-items:baseline;padding:12px 32px;border-top:1px solid var(--slate-line);font-size:12.5px;color:var(--slate-mid)}
+
+/* synthèse */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;border-top:1px solid var(--slate-line);padding-top:24px;margin-top:28px}
+.stats b{display:block;font-size:30px;font-weight:400;line-height:1;margin-top:6px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:20px}
+th{text-align:left;padding:8px 16px 8px 0;font-size:12.5px;font-weight:600;color:var(--slate-soft);border-bottom:1px solid var(--slate-line)}
+td{padding:10px 16px 10px 0;color:var(--slate-ink);border-bottom:1px solid var(--slate-line);vertical-align:top;line-height:1.55}
+td b{font-weight:500;color:var(--ink)}
+.motif{display:flex;gap:12px;align-items:flex-start;border-radius:16px;border:1px solid var(--slate-line);background:rgba(255,255,255,.6);padding:12px;font-size:13.5px;line-height:1.45}
+.motif.on{border-color:var(--ink);background:#fff}
+.motif .radio{margin-top:2px}
+.motif.on .radio{box-shadow:inset 0 0 0 4px var(--ink)}
+.ver-row{display:flex;align-items:center;justify-content:space-between;gap:16px;border-top:1px solid var(--slate-line);padding:14px 0}
+.ver-row .n{font-size:18px;color:var(--slate-soft);font-variant-numeric:tabular-nums}
+
+/* fenêtre d'ajout d'une unité */
+#voile{position:absolute;inset:0;background:rgba(10,10,10,.28);opacity:0;z-index:20}
+#modale{position:absolute;left:400px;top:260px;width:560px;padding:28px 32px;opacity:0;z-index:21;display:flex;flex-direction:column;gap:18px}
+#modale h3{font-size:22px;margin-top:6px}
+
+/* ---------- curseur ---------- */
+#curseur{position:absolute;left:0;top:0;width:30px;height:30px;transform-origin:0 0;z-index:30;filter:drop-shadow(0 2px 3px rgba(13,18,36,.35));pointer-events:none}
+#onde{position:absolute;left:0;top:0;width:56px;height:56px;border-radius:50%;border:3px solid var(--blue-strong);opacity:0;z-index:29;transform-origin:0 0}
+#bulle{position:absolute;left:50%;top:22px;transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:9999px;padding:10px 18px;font-size:14px;font-weight:500;opacity:0;white-space:nowrap;z-index:40}
+
+/* ---------- le texte, à droite ---------- */
+#texte{position:absolute;left:924px;top:0;width:326px;height:720px}
+#texte .haut{position:absolute;top:150px;left:0;right:0;display:flex;align-items:center;justify-content:space-between}
+.barres{display:flex;gap:5px}
+.barres i{width:18px;height:4px;border-radius:4px;background:var(--slate-line);position:relative;overflow:hidden}
+.barres i span{position:absolute;inset:0;background:var(--ink);transform-origin:left;transform:scaleX(0)}
+.etape{position:absolute;top:210px;left:0;right:0;opacity:0}
+.etape .num{font-size:13px;font-weight:600;color:var(--blue-ink)}
+.etape h2{font-size:34px;margin-top:12px}
+.etape p{font-size:16px;line-height:1.55;color:var(--slate-mid);margin-top:16px}
+.etape p em{font-style:normal;color:var(--ink);font-weight:500}
+#marque{position:absolute;left:924px;bottom:40px}
+
+/* ---------- plans de titre ---------- */
+.inter{position:absolute;inset:0;background:var(--canvas);z-index:55;opacity:0;display:flex;flex-direction:column;justify-content:center;padding-left:96px}
+.inter .n{font-size:18px;font-weight:600;color:var(--blue-ink)}
+.inter h1{font-size:92px;margin-top:18px;letter-spacing:-.04em;line-height:1.04}
+.inter p{font-size:25px;line-height:1.5;color:var(--slate-mid);margin-top:26px;max-width:860px}
+.inter p em{font-style:normal;color:var(--ink);font-weight:500}
+.inter .n,.inter h1,.inter p,.inter .seg,.inter .sig{opacity:0}
+.inter .seg{display:flex;gap:8px;margin-top:40px}
+.inter .seg i{width:56px;height:5px;border-radius:5px;background:var(--slate-line)}
+.inter .seg i.on{background:var(--ink)}
+.inter .sig{position:absolute;left:96px;bottom:56px}
+
+/* ---------- ouverture ---------- */
+#ouv{position:absolute;inset:0;z-index:60;background:var(--canvas);overflow:hidden}
+#ciel{position:absolute;top:0;bottom:0;right:0;left:0;background:var(--sky);display:flex;align-items:flex-end;justify-content:center}
+#ciel img{height:70%;width:auto;margin-bottom:36px;opacity:0}
+#rj{position:absolute;left:96px;top:56px;transform-origin:0 0;display:inline-flex;border-radius:9999px;padding:2px 12px;font-family:"Instrument Sans";font-weight:600;font-size:20px;letter-spacing:-.035em;line-height:1.4;background:rgba(255,255,255,0)}
+#rj i{font-style:normal;display:inline-block}
+#ouv-t{position:absolute;left:96px;top:150px;font-family:"Instrument Sans";font-weight:600;font-size:92px;letter-spacing:-.04em;line-height:1.06}
+#ouv-t .lg{display:block;overflow:hidden;padding-bottom:.12em;margin-bottom:-.12em}
+#ouv-t .lg b{display:block;font-weight:600}
+#som{position:absolute;left:96px;top:398px;list-style:none;display:flex;flex-direction:column;gap:6px}
+#som li{display:flex;align-items:center;gap:16px;font-size:19px;font-weight:500;height:40px}
+#som span{width:30px;height:30px;border-radius:50%;background:var(--blue-pale);color:var(--blue-ink);font-size:13px;font-weight:600;display:inline-flex;align-items:center;justify-content:center}
+
+/* ---------- fin ---------- */
+#fin{position:absolute;inset:0;z-index:58;background:var(--canvas);opacity:0;display:flex;align-items:center}
+#fin .g{padding-left:96px;width:1100px}
+#fin h1{font-size:62px;margin-top:18px;letter-spacing:-.04em;line-height:1.06}
+#fin .chap{font-size:20px;line-height:1.55;color:var(--slate-mid);margin-top:22px;max-width:780px}
+.boucle{display:flex;gap:10px;margin-top:34px;flex-wrap:wrap;align-items:center}
+.boucle span{display:inline-flex;align-items:center;border-radius:9999px;padding:9px 16px;font-size:15px;font-weight:600;background:#fff;box-shadow:var(--ombre)}
+.boucle span.fl{background:none;box-shadow:none;padding:9px 0;color:var(--slate)}
+#fin .sig{position:absolute;left:96px;bottom:56px}
+#adieu{position:absolute;top:0;bottom:0;right:0;left:1280px;background:var(--sky);z-index:62;overflow:hidden}
+#rj2{position:absolute;left:96px;top:280px;font-family:"Instrument Sans";font-weight:600;font-size:140px;letter-spacing:-.045em;line-height:1.1}
+#rj2 i{font-style:normal;display:inline-block}
+</style>
+</head>
+<body>
+
+<!-- ================= L'APP ================= -->
+<div id="fenetre"><div id="camera"><div id="app">
+  <div id="rail">
+    <div class="marque">Rojer</div>
+    <div class="ri"><div class="rond">{{ListTodo}}</div>À faire</div>
+    <div class="ri actif"><div class="rond">{{HardHat}}</div>Sécurité</div>
+    <div class="ri"><div class="rond">{{Building2}}</div>Équipement</div>
+    <div class="ri"><div class="rond">{{Archive}}</div>Documents</div>
+    <div class="ri sep"></div>
+    <div class="ri"><div class="rond">{{Settings}}</div>Paramètres</div>
+  </div>
+
+  <div id="col">
+    <!-- La porte d'entrée : /etablissements/[id]/duerp -->
+    <div class="page" id="pg-porte"><div class="defil">
+      <div class="gelule">{{House}}<span class="sepv"></span><span class="av">MD</span></div>
+      <div class="entete">
+        <div class="g"><h1 class="titre">Votre DUERP</h1>
+          <p>Votre évaluation des risques, transcrite dans un document unique et tenue à jour. Décrivez votre activité : l'outil vous propose les risques typiques de votre secteur.</p></div>
+        <div class="d"><img src="{{illustration_duerp}}" alt=""></div>
+      </div>
+      <div style="padding:24px 32px 0;display:flex;flex-direction:column;gap:22px">
+        <div class="carte" style="padding:28px 32px;background:#fff">
+          <div class="st">Pourquoi ce document</div>
+          <h3 class="titre" style="font-size:22px;margin-top:10px">Le DUERP : votre évaluation des risques, posée par écrit</h3>
+          <p style="font-size:13.5px;line-height:1.6;color:var(--slate-mid);margin-top:10px;max-width:820px">L'employeur « transcrit et met à jour dans un document unique » les résultats de son évaluation des risques (art. R. 4121-1), sans seuil d'effectif.</p>
+          <p style="font-size:13.5px;line-height:1.6;color:var(--ink);margin-top:12px;max-width:820px">Vous décrivez votre activité, l'outil vous propose les risques typiques de votre secteur, vous ajustez. Comptez une trentaine de minutes — tout est enregistré au fur et à mesure, vous pouvez vous arrêter et reprendre. L'outil structure votre évaluation ; il ne certifie pas votre conformité.</p>
+          <div style="display:flex;gap:8px;margin-top:16px"><span class="past">Art. R. 4121-1 CT</span><span class="past">Art. R. 4121-2 CT</span><span class="past">Art. L. 4121-3-1 CT</span></div>
+        </div>
+        <div class="carte" style="padding:24px 32px;display:flex;align-items:center;justify-content:space-between;gap:16px">
+          <p style="font-size:13.5px;line-height:1.6;color:var(--slate-mid)">Première étape : choisir votre secteur d'activité (restauration, commerce ou bureau — 3 secteurs couverts).</p>
+          <span class="btn" id="b-commencer">Commencer mon DUERP →</span>
+        </div>
+      </div>
+    </div></div>
+
+    <!-- L'assistant : /duerp/[id]/… (même en-tête, le fil dans son pied) -->
+    <div class="page" id="pg-wiz"><div class="defil" id="defil">
+      <div class="gelule">{{House}}<span class="sepv"></span><span class="av">MD</span></div>
+      <div class="entete">
+        <div class="g"><h1 class="titre">Votre DUERP</h1>
+          <p>Votre évaluation des risques, unité de travail par unité. Tout est enregistré au fur et à mesure : vous pouvez vous arrêter et reprendre.</p></div>
+        <div class="d"><img src="{{illustration_duerp}}" alt=""></div>
+      </div>
+      <div class="pied"><ol class="fil" id="fil"></ol></div>
+      <div class="barre-retour" id="retour"></div>
+      <div class="zone" id="zone">
+
+        <!-- 01 · le secteur -->
+        <div class="c" id="c-secteur">
+          <div class="ligne-haut">
+            <div class="ee"><div class="st">01 · Votre activité</div><div class="tl"><h2 class="titre">Quelle est votre activité ?</h2></div>
+              <p>À partir du code NAF <b id="naf" style="border-radius:6px;padding:0 3px;margin:0 -3px">56.10A</b>, le secteur ci-dessous a été détecté. Choisissez-le pour charger les unités et risques types, ou choisissez-en un autre plus bas.</p></div>
+            <span class="btn cl sm">Importer un DUERP Excel</span>
+          </div>
+          <section class="carte" style="padding:24px 32px" id="k-secteur">
+            <div class="st">Secteur détecté</div>
+            <h3 class="titre" style="font-size:22px;margin-top:20px">Restauration traditionnelle</h3>
+            <p style="font-size:13.5px;line-height:1.6;color:var(--slate-mid);margin-top:12px">Restaurants, brasseries, fast-food, cuisines collectives. Risques types : coupures, brûlures, chutes, TMS posturales, livraison.</p>
+            <div style="display:flex;justify-content:flex-end;margin-top:24px"><span class="btn" id="b-secteur"><span id="t-secteur">Choisir ce secteur →</span></span></div>
+          </section>
+          <div>
+            <div class="st" style="margin-bottom:16px">Autres secteurs</div>
+            <div class="grille" style="grid-template-columns:1fr 1fr;gap:22px">
+              <div class="carte" style="padding:22px 28px"><b style="font-size:16px;font-weight:600">Commerce de détail</b><p style="font-size:12.5px;color:var(--slate-mid);margin-top:6px;line-height:1.55">Boutiques, petits commerces, commerces de bouche.</p></div>
+              <div class="carte" style="padding:22px 28px"><b style="font-size:16px;font-weight:600">Activités de bureau / tertiaire</b><p style="font-size:12.5px;color:var(--slate-mid);margin-top:6px;line-height:1.55">Conseil, comptabilité, communication, informatique.</p></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 01 · les précisions -->
+        <div class="c" id="c-activites">
+          <div class="ee"><div class="st">01 · Votre activité</div><div class="tl"><h2 class="titre">Précisez votre activité</h2><span class="aide-q">?</span></div>
+            <p>Secteur retenu : Restauration traditionnelle (<span class="lien">changer</span>). Faites-vous aussi l'une de ces choses ?</p></div>
+          <ul class="carte" id="k-act"></ul>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <p style="font-size:12.5px;color:var(--slate-mid)" id="act-compte">3 sans réponse — vous pouvez continuer.</p>
+            <span class="btn" id="b-val-act">Valider et continuer →</span>
+          </div>
+        </div>
+
+        <!-- 02 · les unités -->
+        <div class="c" id="c-unites">
+          <div class="ee"><div class="st">02 · Unités de travail</div><div class="tl"><h2 class="titre">Vérifiez vos unités de travail</h2><span class="aide-q">?</span></div>
+            <p>Proposées selon votre secteur. Renommez, supprimez ou ajoutez.</p></div>
+          <section style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center"><span class="st" id="nb-unites">5 unités</span><span class="btn cl sm" id="b-ajout-unite">+ Ajouter une unité de travail</span></div>
+            <ul class="grille" id="g-unites"></ul>
+          </section>
+          <div style="display:flex;justify-content:flex-end"><span class="btn" id="b-val-unites">Valider et continuer →</span></div>
+        </div>
+
+        <!-- 03 · la liste des unités à évaluer -->
+        <div class="c" id="c-risques">
+          <div class="ee"><div class="st">03 · Risques par unité</div><div class="tl"><h2 class="titre">Évaluez les risques de chaque unité</h2><span class="aide-q">?</span></div></div>
+          <div class="marche"><div class="st">Les étapes, pour chaque unité</div><ol>
+            <li><span class="rd">01</span><span><b>Inventorier</b><small>Cochez les risques types, ajoutez les vôtres.</small></span></li>
+            <li><span class="rd">02</span><span><b>Coter</b><small>Gravité, probabilité, maîtrise.</small></span></li>
+            <li><span class="rd">03</span><span><b>Prévoir les mesures</b><small>Ce qui existe et ce qu'il faut faire.</small></span></li></ol></div>
+          <section class="carte" style="overflow:hidden">
+            <div class="k-tete" style="justify-content:flex-start"><h3>Vos unités <span class="st" id="nb-risques">6 unités · 33 risques</span></h3></div>
+            <ul class="rangs" id="l-unites"></ul>
+          </section>
+          <p id="avert" style="font-size:13px;line-height:1.55;color:var(--signal-ink);max-width:820px">1 unité n'a ni risque ni déclaration « aucun risque significatif ». Vous pouvez continuer ; si c'est le cas, déclarez-le sur la page de l'unité.</p>
+          <div style="display:flex;justify-content:flex-end"><span class="btn" id="b-val-risques">Valider et continuer →</span></div>
+        </div>
+
+        <!-- 03 · une unité -->
+        <div class="c" id="c-unite">
+          <div class="ee"><div class="st">03 · Risques par unité</div><div class="tl"><h2 class="titre det">Production froide et chaude (cuisine)</h2></div>
+            <p>Préparation et cuisson, plans de travail, équipements.</p></div>
+          <div class="marche" id="marche-unite"><div class="st">Les étapes, pour cette unité</div><ol>
+            <li class="cour"><span class="rd">01</span><span><b>Inventorier</b><small>12 risques ajoutés pour vous, à vérifier</small></span></li>
+            <li><span class="rd">02</span><span><b>Coter</b><small>Après l'inventaire</small></span></li>
+            <li><span class="rd">03</span><span><b>Prévoir les mesures</b><small>Après la cotation</small></span></li></ol></div>
+          <section class="carte" style="overflow:hidden">
+            <div class="k-tete" style="align-items:center"><h3>Risques retenus <span class="st">12</span></h3><span class="btn cl sm">+ Ajouter un risque</span></div>
+            <ul class="rangs" id="l-risques"></ul>
+          </section>
+        </div>
+
+        <!-- 03 · coter un risque -->
+        <div class="c" id="c-cot">
+          <header class="ee"><div class="st"><span style="color:var(--ink)">Évaluation du risque</span> · 02 / 12 · à coter</div>
+            <h2 class="titre det" style="margin-top:4px">Coupure aux mains (couteaux, trancheuse, mandoline)</h2>
+            <p>INRS ED 880, p. 4 : « Les accidents aux mains représentent plus d'1/3 des accidents. »</p></header>
+          <nav class="carte prog" id="prog-cot"></nav>
+          <div style="display:flex;flex-direction:column;gap:24px" id="questions"></div>
+          <div class="crit" id="crit">
+            <div style="display:flex;align-items:baseline;gap:12px"><span class="n" id="crit-n">—</span><span class="st">sur 16<br>criticité</span></div>
+            <div><div class="st" id="crit-t">En attente</div><p id="crit-p">Répondez aux 0/3 questions ci-dessus pour voir apparaître la criticité. Rien n'est enregistré tant que vous n'avez pas validé.</p></div>
+          </div>
+          <div class="carte" style="padding:24px 28px;display:flex;flex-direction:column;gap:18px">
+            <div class="st">Informations complémentaires · facultatives</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+              <div><span class="label">Nombre de salariés exposés</span><div class="champ vide">ex. 3</div></div>
+              <div><span class="label">Dernières mesures physiques</span><div class="champ vide">jj/mm/aaaa</div></div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end"><span class="btn off" id="b-cot"><span id="t-cot">Répondez aux 3 questions pour continuer</span></span></div>
+        </div>
+
+        <!-- 03 · les mesures (trois états) -->
+        <div class="c" id="c-mes-a"></div>
+        <div class="c" id="c-mes-b"></div>
+        <div class="c" id="c-mes-c"></div>
+
+        <!-- 04 · questions transverses -->
+        <div class="c" id="c-trans">
+          <div class="ee"><div class="st">04 · Questions transverses</div><div class="tl"><h2 class="titre">Questions transverses</h2></div>
+            <p>Ces questions couvrent des risques présents dans la plupart des entreprises, quel que soit le métier. Chaque « oui » ajoute automatiquement le risque correspondant à votre DUERP — vous pourrez ensuite le coter comme les autres.</p></div>
+          <ul style="display:flex;flex-direction:column;gap:12px" id="l-trans"></ul>
+          <section class="carte" style="padding:24px 32px;display:flex;justify-content:space-between;align-items:center;gap:16px;opacity:0" id="k-trv">
+            <div><b style="font-size:14px;font-weight:500">1 risque transverse ajouté</b><p style="font-size:12.5px;color:var(--slate-mid);margin-top:4px">1 à coter. Ils apparaissent dans l'unité « Risques transverses ».</p></div>
+            <span class="btn cl sm">Coter les risques transverses →</span>
+          </section>
+          <div style="display:flex;justify-content:flex-end;border-top:1px solid var(--slate-line);padding-top:24px"><span class="btn" id="b-val-trans">Valider — aller à la synthèse →</span></div>
+        </div>
+
+        <!-- 05 · synthèse -->
+        <div class="c" id="c-syn">
+          <section class="carte" style="padding:24px 32px;background:var(--slate-pale)" id="alerte-syn">
+            <div class="st" style="color:var(--slate-mid)">Aucune version de votre DUERP n'est validée</div>
+            <p style="font-size:13.5px;line-height:1.6;color:var(--slate-mid);margin-top:10px;max-width:820px">Aucune version n'a encore été validée pour ce DUERP. L'art. R. 4121-1 impose de transcrire les résultats de l'évaluation dans un document unique, sans condition d'effectif — validez une première version dès que l'évaluation est complète.</p>
+          </section>
+          <section class="carte" style="padding:24px 32px" id="k-synth">
+            <div class="st">Dossier DUERP</div>
+            <h2 class="titre" style="font-size:36px;margin-top:8px">Synthèse générale</h2>
+            <p style="font-size:14.5px;line-height:1.55;color:var(--slate-mid);margin-top:12px">Vue d'ensemble de votre évaluation et plan d'actions priorisé. Chaque validation fige un exemplaire consultable et téléchargeable.</p>
+            <div class="stats"><div><span class="st">Unités</span><b id="s1">0</b></div><div><span class="st">Risques</span><b id="s2">0</b></div><div><span class="st">Mesures en place</span><b id="s3">0</b></div><div><span class="st">Actions prévues</span><b id="s4">0</b></div></div>
+          </section>
+          <section class="carte" style="padding:24px 32px" id="k-inv">
+            <div style="display:flex;justify-content:space-between;align-items:baseline"><div><div class="st">Inventaire priorisé</div><h3 class="titre" style="font-size:22px;margin-top:6px">Risques classés par criticité</h3></div><span style="font-size:12.5px;color:var(--slate-mid)">Tri : criticité décroissante · gravité en départage</span></div>
+            <table><thead><tr><th>Criticité</th><th>Risque</th><th>Unité</th><th>G × P / M</th><th>Mesures</th></tr></thead><tbody id="t-inv"></tbody></table>
+          </section>
+          <section class="carte" style="padding:24px 32px">
+            <div class="st">Plan d'actions</div><h3 class="titre" style="font-size:22px;margin-top:6px">Mesures à mettre en œuvre</h3>
+            <table><tbody>
+              <tr><td><b>Gants anti-coupure pour les tâches à risque</b><br>Coupure aux mains</td><td>15 janvier 2027</td><td>Chef de cuisine</td></tr>
+              <tr><td><b>Nettoyage immédiat des projections au sol, signalisation des sols mouillés</b><br>Chute de plain-pied</td><td>1er décembre 2026</td><td>Responsable de salle</td></tr>
+              <tr><td><b>Chariot de transport pour les livraisons lourdes</b><br>Charge physique</td><td>31 janvier 2027</td><td>Gérant</td></tr>
+            </tbody></table>
+          </section>
+          <section class="carte" style="padding:24px 32px" id="k-ver">
+            <div style="display:flex;justify-content:space-between;align-items:baseline"><div><div class="st">Versions figées</div><h3 class="titre" style="font-size:22px;margin-top:6px">Historique du dossier</h3></div><span class="btn cl sm">Aperçu PDF brouillon ↗</span></div>
+            <p style="font-size:12.5px;line-height:1.55;color:var(--slate-mid);margin-top:12px">L'aperçu télécharge un PDF estampillé <b style="font-weight:600">« Document non validé »</b> sur chaque page, sans créer de version. Pour un PDF officiel consultable et archivé, validez une version ci-dessous.</p>
+            <div style="position:relative;margin-top:14px;height:60px">
+              <p id="ver-vide" style="position:absolute;font-size:13.5px;line-height:1.6;color:var(--slate-mid)">Aucune version validée pour l'instant. L'aperçu ci-dessus permet de relire le document avant de figer une version.</p>
+              <div class="ver-row" id="ver-v1" style="position:absolute;left:0;right:0;opacity:0"><div style="display:flex;gap:16px;align-items:baseline"><span class="n">v1</span><div><p style="font-size:14px">18 novembre 2026</p><p style="font-size:12.5px;color:var(--slate-mid);margin-top:2px">« Première version du document unique »</p></div></div><span class="btn cl sm" id="b-pdf">Télécharger le PDF</span></div>
+            </div>
+            <div style="margin-top:24px;border-radius:22px;background:var(--slate-pale);padding:20px;display:flex;flex-direction:column;gap:16px" id="form-ver">
+              <div><div class="st">Nouvelle version</div><p style="font-size:12.5px;line-height:1.55;color:var(--slate-mid);margin-top:8px">Rojer demande le motif de chaque mise à jour, pour que l'historique des versions dise pourquoi chacune a été faite. Choisissez la raison qui déclenche cette nouvelle version.</p></div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div class="motif"><span class="radio"></span>Décision d'aménagement important (art. R. 4121-2, 2°)</div>
+                <div class="motif"><span class="radio"></span>Accident du travail ou maladie professionnelle</div>
+                <div class="motif"><span class="radio"></span>Information supplémentaire intéressant l'évaluation d'un risque portée à la connaissance de l'employeur (art. R. 4121-2, 3°)</div>
+                <div class="motif" id="m-autre"><span class="radio"></span>Autre</div>
+              </div>
+              <div><span class="label" id="l-prec">Précision (facultative)</span><div class="champ vide" id="ch-prec" style="background:#fff"><span id="v-prec">ex. ouverture service de livraison — juin 2026</span></div></div>
+              <p id="ver-ok" style="font-size:12.5px;color:var(--green-ink);opacity:0;height:0">Version v1 créée. Le PDF est disponible ci-dessous.</p>
+              <div><span class="btn" id="b-ver"><span id="t-ver">Valider — créer une nouvelle version</span></span></div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <div id="voile"></div>
+  <div class="carte" id="modale">
+    <div><div class="st">Unités de travail</div><h3 class="titre">Ajouter une unité de travail</h3></div>
+    <div><span class="label">Nom de l'unité</span><div class="champ vide" id="ch-liv"><span id="v-liv">ex. Terrasse, Atelier, Entrepôt</span></div></div>
+    <div><span class="label">Description (facultatif)</span><div class="champ vide">Description courte</div></div>
+    <div style="display:flex;gap:10px"><span class="btn" id="b-ajouter">Ajouter</span><span class="btn cl">Annuler</span></div>
+  </div>
+  <div id="onde"></div>
+  <svg id="curseur" viewBox="0 0 24 24"><path d="M4 2.5 L4 19.5 L8.6 15.3 L11.6 22 L14.6 20.7 L11.7 14.2 L18 14.2 Z" fill="#0a0a0a" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>
+</div></div><div id="bulle">En accéléré : le même geste pour chaque risque, unité par unité</div></div>
+
+<!-- ================= LE TEXTE ================= -->
+<div id="texte">
+  <div class="haut">
+    <div class="st">Visite guidée · DUERP</div>
+    <div class="barres"><i><span id="b1"></span></i><i><span id="b2"></span></i><i><span id="b3"></span></i><i><span id="b4"></span></i><i><span id="b5"></span></i></div>
+  </div>
+  <div class="etape" id="t1"><div class="num">Étape 1 sur 5</div><h2 class="titre">Dites votre activité.</h2>
+    <p>Rojer reconnaît votre secteur à votre code NAF et <em>charge les unités et les risques types du métier</em>. Vous ajustez ensuite.</p></div>
+  <div class="etape" id="t2"><div class="num">Étape 2 sur 5</div><h2 class="titre">Vérifiez vos unités de travail.</h2>
+    <p>Une unité regroupe des salariés <em>exposés aux mêmes risques</em> : un poste, une zone, une activité. Rojer en propose ; vous renommez, supprimez ou ajoutez.</p></div>
+  <div class="etape" id="t3"><div class="num">Étape 3 sur 5</div><h2 class="titre">Évaluez les risques de chaque unité.</h2>
+    <p>Pour chaque unité : <em>inventorier, coter, prévoir les mesures</em>. On vous montre un risque ; les autres se font de la même façon.</p></div>
+  <div class="etape" id="t4"><div class="num">Étape 4 sur 5</div><h2 class="titre">Répondez aux questions transverses.</h2>
+    <p>Des risques présents dans la plupart des entreprises, quel que soit le métier. <em>Chaque « oui » ajoute le risque</em> à votre DUERP.</p></div>
+  <div class="etape" id="t5"><div class="num">Étape 5 sur 5</div><h2 class="titre">Validez une version.</h2>
+    <p>La synthèse classe vos risques par criticité. <em>Valider fige une version</em> : un PDF daté, que vous gardez.</p></div>
+</div>
+<div id="marque"><span class="pill-marque">Rojer</span></div>
+
+<!-- ================= OUVERTURE ================= -->
+<div id="ouv">
+  <div id="ciel"><img src="{{illustration_duerp}}" alt=""></div>
+  <span id="rj"><i>R</i><i>o</i><i>j</i><i>e</i><i>r</i></span>
+  <div id="ouv-t"><span class="lg"><b>Votre DUERP,</b></span><span class="lg"><b>en cinq étapes.</b></span></div>
+  <ol id="som">
+    <li><span>1</span>Dire votre activité</li>
+    <li><span>2</span>Vérifier vos unités de travail</li>
+    <li><span>3</span>Évaluer les risques de chaque unité</li>
+    <li><span>4</span>Répondre aux questions transverses</li>
+    <li><span>5</span>Valider une version</li>
+  </ol>
+</div>
+
+<!-- ================= FIN ================= -->
+<div id="fin">
+  <div class="g">
+    <div class="st" style="font-size:15px;color:var(--blue-ink)">Et ensuite</div>
+    <h1 class="titre">Votre activité change ?<br>Votre DUERP suit.</h1>
+    <p class="chap">Un aménagement, un accident, une information nouvelle : mettez à jour et validez une nouvelle version. Les précédentes restent conservées.</p>
+    <div class="boucle"><span>Un changement</span><span class="fl">→</span><span>Vous mettez à jour</span><span class="fl">→</span><span>Nouvelle version</span><span class="fl">→</span><span>Les précédentes restent</span></div>
+  </div>
+  <div class="sig"><span class="pill-marque">Rojer</span></div>
+</div>
+<div id="adieu"><span id="rj2"><i>R</i><i>o</i><i>j</i><i>e</i><i>r</i></span></div>
+
+<script>{{gsap}}</script>
+<script>
+const W = 860, H = 664, AW = 1280, AH = 988, BASE = W / AW;
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => [...document.querySelectorAll(s)];
+
+// ---------------------------------------------------------------------------
+// Les contenus répétés, écrits une fois. Libellés relevés dans le code de
+// l'app (référentiel restauration, questions de cotation, questions
+// transverses) le 2026-11-18.
+// ---------------------------------------------------------------------------
+const ACTIVITES = [
+  ["Fabriquez-vous vous-même le pain, les viennoiseries ou les pâtisseries que vous servez ?", "Répondez oui si la pâte est travaillée dans votre cuisine (pétrissage, façonnage, dressage). Répondez non si vous servez des produits achetés déjà finis."],
+  ["Un salarié ouvre-t-il ou ferme-t-il seul l'établissement, ou transporte-t-il la recette ?", "Répondez oui si une personne se retrouve seule dans l'établissement avant l'ouverture, après le service, ou sur le trajet du dépôt en banque."],
+  ["Produisez-vous des repas qui sont consommés ailleurs que dans votre salle ?", "Répondez oui pour une cuisine centrale, une cantine desservie depuis vos locaux ou du portage de repas à domicile."],
+];
+$("#k-act").innerHTML = ACTIVITES.map(([q, a], i) =>
+  `<li class="qrow"><div><b>${q}</b><small>${a}</small></div><div class="on2"><span class="btn cl sm" id="act-oui-${i}">Oui</span><span class="btn cl sm" id="act-non-${i}">Non</span></div></li>`).join("");
+
+const UNITES = [
+  ["Réception des matières premières", "Déchargement, contrôle, transfert vers les zones de stockage.", 2],
+  ["Stockage (réserve, chambre froide)", "Rayonnages, chambres froides, locaux d'emballage.", 6],
+  ["Production froide et chaude (cuisine)", "Préparation et cuisson, plans de travail, équipements.", 12],
+  ["Service en salle", "Accueil, prise de commande, service, encaissement.", 6],
+  ["Plonge, nettoyage", "Lavage de la vaisselle, nettoyage des locaux et équipements.", 7],
+];
+const carteUnite = ([n, d], id = "") =>
+  `<li class="carte unite" ${id}><div><b>${n}</b>${d ? `<small>${d}</small>` : ""}</div><div class="bt"><span class="btn cl sm">Renommer</span><span class="btn cl sm">Supprimer</span></div></li>`;
+$("#g-unites").innerHTML = UNITES.map((u) => carteUnite(u)).join("") + carteUnite(["Livraison", ""], 'id="u-liv" style="opacity:0"');
+
+const pl = (n, s) => `${n} ${s}${n > 1 ? "s" : ""}`;
+$("#l-unites").innerHTML = [...UNITES, ["Livraison", "", 0]].map(([n, , r], i) =>
+  `<li id="ru-${i}"><div class="nom"><b>${n}</b><small>${r ? `${pl(r, "risque")} ajouté${r > 1 ? "s" : ""} pour vous, à vérifier` : "Aucun risque inventorié"}</small></div>`
+  + `<span class="segs"><i></i><i></i><i></i></span><span class="past">À faire</span><span class="btn sm" id="ru-b-${i}">Commencer</span></li>`).join("");
+
+const RISQUES = [
+  ["Chute de plain-pied (sols glissants, encombrés)", "INRS ED 880, p. 4 : « Trois types d'accidents représentent à eux seuls plus des deux tiers des accidents en restauration collective : […] les chutes et glissades de plain-pied (1/3 à eux seuls) ; […] »"],
+  ["Coupure aux mains (couteaux, trancheuse, mandoline)", "INRS ED 880, p. 4 : « Les accidents aux mains représentent plus d'1/3 des accidents. »"],
+  ["Brûlure (équipements de cuisson, friteuse, liquides chauds)", ""],
+  ["Charge physique : manutentions et postures (cuisine, service, plonge)", "ED 840, fiche 5 « Risques liés à la charge physique de travail » : déplacements de charges, postures debout statiques, gestes répétitifs."],
+  ["Chute de hauteur (rangement en hauteur, escabeau, escaliers)", ""],
+  ["Incendie (friteuse, hotte, flamme nue)", ""],
+];
+$("#l-risques").innerHTML = RISQUES.map(([l, d], i) =>
+  `<li><div class="nom"><b>${l}</b>${d ? `<small>${d}</small>` : ""}</div><div class="trois"><span class="btn sm" id="rq-${i}">Coter</span><span class="plus">⋯</span></div></li>`).join("");
+
+const prog = (etape) => `
+  <div class="k-tete" style="padding:16px 32px"><span class="st">Évaluation en deux temps</span><span class="st">Partie ${etape === 1 ? "01" : "02"} en cours</span></div>
+  <div class="barre"><i class="${etape === 1 ? "bl" : "nr"}"></i><i class="${etape === 2 ? "bl" : ""}"></i></div>
+  <ol>
+    <li><span class="rd ${etape === 2 ? "fait" : ""}">${etape === 2 ? "✓" : "01"}</span><div><span class="st">01 · ${etape === 2 ? "cotation enregistrée" : "3 questions"}</span><b>Cotation</b><small>Gravité, probabilité, maîtrise actuelle. La criticité se calcule automatiquement.</small></div></li>
+    <li class="${etape === 1 ? "ver" : ""}"><span class="rd ${etape === 1 ? "ver" : ""}">02</span><div><span class="st">02 · ${etape === 1 ? "après la cotation" : "à renseigner"}</span><b>Mesures</b><small>Prévention déjà en place et prévue, par type de mesure.</small></div></li>
+  </ol>
+  <p class="note">La maîtrise notée en <b style="font-weight:500;color:var(--ink)">01</b> décrit l'état actuel ; les mesures de <b style="font-weight:500;color:var(--ink)">02</b> la documentent et peuvent vous amener à la réajuster.</p>`;
+$("#prog-cot").innerHTML = prog(1);
+
+const QUESTIONS = [
+  ["Gravité", "Si cet accident ou ce problème de santé survenait, quelle serait la conséquence la plus probable ?", [
+    "Gêne, petite douleur, premiers soins sur place. La personne continue sa journée.",
+    "Passage aux urgences ou chez le médecin, mais retour au travail dans les 1 à 2 jours.",
+    "Arrêt de travail de plusieurs jours à plusieurs semaines.",
+    "Séquelles durables, invalidité permanente, décès."]],
+  ["Probabilité", "À quelle fréquence vos salariés sont-ils exposés à cette situation à risque ?", [
+    "Très rarement : situation exceptionnelle, ou protection très efficace.",
+    "Occasionnellement : quelques fois par an, ou exposition brève.",
+    "Régulièrement : une ou plusieurs fois par semaine.",
+    "Permanente ou quotidienne, pour la majorité des salariés concernés."]],
+  ["Maîtrise actuelle", "Où en êtes-vous dans la prévention de ce risque aujourd'hui ?", [
+    "Aucune mesure spécifique en place, ou mesures insuffisantes.",
+    "Quelques mesures existent (EPI, consignes) mais mal appliquées ou incomplètes.",
+    "Mesures en place, appliquées, mais perfectibles.",
+    "Prévention bien structurée : suppression/réduction à la source, protection collective, formation."]],
+];
+$("#questions").innerHTML = QUESTIONS.map(([axe, q, opts], i) =>
+  `<fieldset class="carte qc" id="q${i}" style="border:0"><div><div class="st">${axe} · question ${i + 1} sur 3</div><p class="q" style="margin-top:4px">${q}</p></div>`
+  + (i === 2 ? `<aside class="alire"><div class="st" style="color:var(--blue-ink)">À lire avant de cocher</div><p>La maîtrise décrit l'état <b style="font-weight:600">actuel</b> de votre prévention pour ce risque. <b style="font-weight:500">La partie 02 — Mesures — vient juste après</b> : vous y listerez précisément ce qui est en place et ce qui est prévu.</p></aside>` : "")
+  + `<div class="tuiles">${opts.map((o, k) => `<label class="tuile" id="q${i}-${k + 1}"><span class="radio"></span><span class="v">${k + 1}</span><span>${o}</span></label>`).join("")}</div></fieldset>`).join("");
+
+// Les mesures : trois états de la même page (rien coché, une, deux et « à prévoir »).
+const MESURES = [
+  ["Trancheuses / machines à trancher avec protecteurs et arrêt d'urgence en place", "Protection collective"],
+  ["Privilégier un éplucheur ou équipement adapté pour réduire les gestes manuels répétés", "Réduction du risque à la source"],
+  ["Rangement spécifique des couteaux (armoire, bac), à part de la vaisselle sale", "Mesure organisationnelle"],
+  ["Affûtage et affilage réguliers ; formation à l'affûtage et à la manipulation", "Formation / information"],
+  ["Gants anti-coupure pour les tâches à risque", "Protection individuelle (EPI)"],
+];
+const pad = (n) => String(n).padStart(2, "0");
+function pageMesures(etat, k) {
+  // etat : 0 rien coché ; 1 trancheuses ; 2 trancheuses + gants ; 3 gants « à prévoir »
+  const retenues = etat === 0 ? [] : etat === 1 ? [0] : [0, 4];
+  const reste = MESURES.map((m, i) => i).filter((i) => !retenues.includes(i));
+  const ligne = (i) => {
+    const prevu = etat === 3 && i === 4;
+    return `<li class="mrow" id="mr-${k}-${i}"><div class="h"><div><b>${MESURES[i][0]}</b><small>${MESURES[i][1]}</small></div>`
+      + `<div style="display:flex;gap:8px;align-items:center;flex:none"><span class="segbtn"><span class="${prevu ? "" : "fait"}">Déjà en place</span><span class="${prevu ? "prevu" : ""}" id="prevu-${k}-${i}">À prévoir</span></span><span class="btn cl sm">Supprimer</span></div></div>`
+      + (prevu ? `<div class="champs"><div><span class="label">Échéance</span><div class="champ vide" id="ch-ech"><span id="v-ech">jj/mm/aaaa</span></div></div><div><span class="label">Responsable</span><div class="champ vide" id="ch-resp"><span id="v-resp">Nom ou rôle</span></div></div></div>` : "")
+      + `</li>`;
+  };
+  return `
+  <header class="ee"><div class="st"><span style="color:var(--ink)">Évaluation du risque</span> · 02 / 12</div>
+    <h2 class="titre det" style="margin-top:4px">Coupure aux mains (couteaux, trancheuse, mandoline)</h2>
+    <div class="st" style="margin-top:4px">Criticité cotée <span style="color:var(--ink)">05 / 16</span> · <span class="lien" style="font-weight:500">revoir la cotation</span></div></header>
+  <nav class="carte prog">${prog(2)}</nav>
+  <div><div style="display:flex;gap:12px;align-items:center"><p style="font-size:14.5px;font-weight:500">Cochez les mesures déjà en place et celles que vous comptez mettre en œuvre.</p><span class="aide-q">?</span></div>
+    <p style="font-size:12.5px;color:var(--slate-mid);margin-top:6px">Si votre inventaire diffère de la maîtrise cotée, vous pourrez <span class="lien" style="font-weight:500">revenir ajuster la cotation</span>.</p></div>
+  <section class="carte" style="overflow:hidden" id="ret-${k}"><div class="k-tete"><span class="st">Mesures retenues</span><span class="st">${pad(retenues.length)} au total</span></div>`
+    + (retenues.length === 0
+      ? `<p style="padding:32px;font-size:13.5px;color:var(--slate-mid)">Aucune mesure retenue pour ce risque. Cochez ci-dessous dans le référentiel, ou ajoutez une mesure personnalisée.</p>`
+      : `<p class="afaire-l" style="border-top:0"><span class="st" style="color:var(--blue-ink)">À faire</span><span>Pour chaque mesure, indiquez si elle est <b style="font-weight:500;color:var(--ink)">déjà en place</b> ou <b style="font-weight:500;color:var(--ink)">à prévoir</b>. Les mesures « à prévoir » deviennent des actions avec échéance et responsable.</span></p><ul>${retenues.map(ligne).join("")}</ul>`)
+    + `</section>
+  <section class="carte" style="overflow:hidden"><div class="k-tete"><span class="st">Mesures recommandées par le référentiel</span><span class="st">${pad(reste.length)} à envisager</span></div>
+    <p style="padding:16px 32px;font-size:12.5px;line-height:1.55;color:var(--slate-mid)">Cochez celles qui sont déjà en place ou prévues. Vous pourrez ensuite préciser le statut (existante / prévue), l'échéance et le responsable.</p>
+    <ul>${reste.map((i) => `<li class="toggle"><label id="tg-${k}-${i}"><span class="case" id="cs-${k}-${i}"></span><span><b>${MESURES[i][0]}</b><small>${MESURES[i][1]}</small></span></label></li>`).join("")}</ul></section>`;
+}
+$("#c-mes-a").innerHTML = pageMesures(0, "a");
+$("#c-mes-b").innerHTML = pageMesures(1, "b");
+$("#c-mes-c").innerHTML = pageMesures(3, "c");
+// L'état « deux cochées, rien à prévoir » est celui de c, gants en place : il
+// se lit dans c avant le clic sur « À prévoir » (pose plus bas).
+
+const TRANS = [
+  ["q-nuit", "Des salariés travaillent-ils habituellement entre minuit et 5 heures ?", "Travail de nuit et travail posté"],
+  ["q-bio", "Vos salariés manipulent-ils des denrées crues, des déchets ou du linge sale ?", "Agents biologiques (denrées, déchets, linge, sanitaires)"],
+  ["q-routier", "Des salariés conduisent-ils un véhicule (voiture, deux-roues, utilitaire) dans le cadre du travail, même occasionnellement ?", "Risque routier en mission"],
+  ["q-ecran", "Des salariés utilisent-ils un écran de façon habituelle et pendant une partie non négligeable de leur temps de travail ?", "Travail sur écran (TMS, fatigue visuelle)"],
+  ["q-public", "Des salariés sont-ils en contact direct avec du public (clients, patients, usagers) ?", null],
+  ["q-isolement", "Des salariés travaillent-ils seuls ou sur des horaires atypiques (nuit, week-end, isolés géographiquement) ?", null],
+  ["q-charges", "Des salariés portent-ils, poussent-ils ou tirent-ils des charges à la main, même occasionnellement ?", null],
+  ["q-rps", "Observez-vous des tensions internes, un turnover élevé, des arrêts maladie répétés ou un climat dégradé ?", null],
+];
+$("#l-trans").innerHTML = TRANS.map(([id, q, r]) =>
+  `<li class="carte qcarte" id="${id}"><b>${q}</b>${r ? `<small>Si oui → ajoute le risque « ${r} » à votre DUERP.</small>` : `<small>Si oui → ajoute le risque correspondant à votre DUERP.</small>`}`
+  + `<div class="rp"><span class="btn cl sm" id="${id}-oui">Oui</span><span class="btn cl sm" id="${id}-non">Non</span><span class="st" id="${id}-etat">Sans réponse</span></div></li>`).join("");
+
+$("#t-inv").innerHTML = [
+  ["12/16", "Incendie (friteuse, hotte, flamme nue)", "Production froide et chaude (cuisine)", "4 × 3 / 1", 4],
+  ["09/16", "Chute de plain-pied (sols glissants, encombrés)", "Plonge, nettoyage", "3 × 3 / 1", 3],
+  ["08/16", "Charge physique : manutentions et postures", "Réception des matières premières", "2 × 4 / 1", 2],
+  ["06/16", "Brûlure (équipements de cuisson, friteuse, liquides chauds)", "Production froide et chaude (cuisine)", "3 × 4 / 2", 3],
+  ["05/16", "Coupure aux mains (couteaux, trancheuse, mandoline)", "Production froide et chaude (cuisine)", "3 × 3 / 2", 2],
+].map(([c, r, u, f, m]) => `<tr><td><span class="past">${c}</span></td><td><b>${r}</b></td><td>${u}</td><td>${f}</td><td>${m}</td></tr>`).join("");
+
+// Le fil des étapes, et le retour de la page : posés selon l'instant.
+const LIB_FIL = ["Votre activité", "Unités de travail", "Risques par unité", "Questions transverses", "Synthèse"];
+const fa = { v: 0 }; // la part faite de l'étape courante
+function dessinerFil({ cur, faits }) {
+  $("#fil").innerHTML = LIB_FIL.map((l, i) => {
+    const fait = i < faits, act = i === cur;
+    const w = act ? (fait ? 1 : fa.v) : fait ? 1 : 0;
+    return `<li class="${fait ? "fait" : ""} ${act ? "act" : ""}"><span class="seg"><i style="width:${Math.round(w * 100)}%"></i></span><span class="lib">${fait ? "✓ " + l : `0${i + 1} · ${l}`}</span></li>`;
+  }).join("");
+}
+const RETOURS = {
+  aucun: "",
+  activites: `<span class="btn cl sm">← Secteur d'activité</span>`,
+  unites: `<span class="btn cl sm">← Votre activité</span>`,
+  risques: `<span class="btn cl sm">← Unités de travail</span>`,
+  unite: `<nav class="filunite"><a>Toutes les unités</a><i>/</i><b>Production froide et chaude (cuisine)</b></nav>`,
+  cot: `<nav class="filunite"><a>Toutes les unités</a><i>/</i><a>Production froide et chaude (cuisine)</a><i>/</i><b>Coupure aux mains (couteaux, trancheuse, mandoline)</b></nav>`,
+  mes: `<nav class="filunite"><a>Toutes les unités</a><i>/</i><a>Production froide et chaude (cuisine)</a><i>/</i><a>Coupure aux mains</a><i>/</i><b>Mesures</b></nav>`,
+  trans: `<span class="btn cl sm">← Risques par unité</span>`,
+  syn: `<span class="btn cl sm">← Questions transverses</span><span class="btn cl sm">PDF DUERP ↓</span>`,
+};
+
+// ---------------------------------------------------------------------------
+// La timeline
+// ---------------------------------------------------------------------------
+const app = $("#app");
+function pos(sel, dx = 0, dy = 0) {
+  const a = app.getBoundingClientRect(), r = $(sel).getBoundingClientRect();
+  return { x: r.left - a.left + r.width / 2 + dx, y: r.top - a.top + r.height / 2 + dy };
+}
+const cam = { x: AW / 2, y: AH / 2, s: BASE };
+const cur = { x: 1100, y: 900, k: 1, o: 0 };
+const onde = { x: 0, y: 0, s: 0.3, o: 0 };
+const frappe = { liv: 0, ech: 0, resp: 0, prec: 0 };
+const compte = { crit: 0, s1: 0, s2: 0, s3: 0, s4: 0 };
+const defil = { y: 0 };
+const LIV = "Livraison", ECH = "15/01/2027", RESP = "Chef de cuisine", PREC = "Première version du document unique";
+
+// Des états posés à un instant : pour chaque clé, le dernier atteint s'applique.
+const poses = {};
+const pose = (cle, t, f) => (poses[cle] ??= []).push([t, f]);
+
+function construire() {
+  // Mesuré au repos, défilement à zéro : `vu` retire le défilement de l'instant.
+  const tl = gsap.timeline({ paused: true, defaults: { ease: "power2.inOut" } });
+  const vu = (sel, S, dx = 0, dy = 0) => { const p = pos(sel, dx, dy); return { x: p.x, y: p.y - S }; };
+  const camera = (p, s, at, d = 0.9) => tl.to(cam, { x: p.x, y: p.y, s, duration: d, ease: "power2.inOut" }, at);
+  // Une trajectoire légèrement courbe : la main ne va pas en ligne droite.
+  const vers = (p, at, d = 0.8) => {
+    tl.to(cur, { x: p.x, duration: d, ease: "power2.inOut" }, at);
+    tl.to(cur, { y: p.y, duration: d, ease: "power3.inOut" }, at);
+  };
+  const clic = (p, at) => {
+    tl.to(cur, { k: 0.82, duration: 0.08 }, at).to(cur, { k: 1, duration: 0.14 }, at + 0.08);
+    tl.fromTo(onde, { x: p.x, y: p.y, s: 0.3, o: 0.9 }, { s: 1.6, o: 0, duration: 0.5, ease: "power1.out", immediateRender: false }, at);
+  };
+  // Survol : le bouton s'assombrit un peu avant le clic.
+  const survol = (sel, at, d = 0.5) => tl.fromTo(sel, { opacity: 1 }, { opacity: 0.82, duration: 0.15, yoyo: true, repeat: 1, repeatDelay: d, immediateRender: false }, at);
+  const page = (sel, at) => {
+    tl.to(".page", { opacity: 0, duration: 0.2 }, at);
+    tl.fromTo(sel, { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "power2.out", immediateRender: false }, at + 0.12);
+  };
+  // Naviguer d'un écran de l'assistant à l'autre : l'en-tête reste, le corps change.
+  const ecran = (sel, at) => {
+    tl.to(".c", { opacity: 0, duration: 0.18 }, at);
+    tl.fromTo(sel, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", immediateRender: false }, at + 0.12);
+  };
+  const net = (sel, at) => { tl.set(".c", { opacity: 0 }, at); tl.set(sel, { opacity: 1, y: 0 }, at); };
+  const etape = (n, at, dureeBarre, debutBarre = at) => {
+    if (n > 1) tl.to("#t" + (n - 1), { opacity: 0, y: -14, duration: 0.3, ease: "power1.in" }, at);
+    tl.fromTo("#t" + n, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out", immediateRender: false }, at + (n > 1 ? 0.2 : 0));
+    tl.to("#b" + n, { scaleX: 1, duration: dureeBarre, ease: "none" }, debutBarre);
+  };
+  const filA = (t, cur, faits) => pose("fil", t, () => dessinerFil({ cur, faits }));
+  const retourA = (t, cle) => pose("retour", t, () => { $("#retour").innerHTML = RETOURS[cle]; });
+
+  const LECTURE = 2.2;
+  const TITRES = ["Dites votre activité.", "Vérifiez vos unités.", "Évaluez les risques.", "Répondez aux questions.", "Validez une version."];
+  const intertitre = (n, at) => {
+    const el = document.createElement("div");
+    el.className = "inter";
+    const texte = document.querySelector(`#t${n} p`).innerHTML;
+    el.innerHTML = `<div class="n">Étape ${n} sur 5</div><h1 class="titre">${TITRES[n - 1]}</h1><p>${texte}</p>`
+      + `<div class="seg">${[1, 2, 3, 4, 5].map((k) => `<i class="${k <= n ? "on" : ""}"></i>`).join("")}</div>`
+      + `<div class="sig"><span class="pill-marque">Rojer</span></div>`;
+    document.body.appendChild(el);
+    tl.to(el, { opacity: 1, duration: 0.65, ease: "power2.inOut" }, at);
+    tl.fromTo([el.querySelector(".n"), el.querySelector(".seg"), el.querySelector(".sig")], { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out", immediateRender: false }, at + 0.5);
+    tl.fromTo(el.querySelector("h1"), { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.7, ease: "power2.out", immediateRender: false }, at + 0.6);
+    tl.fromTo(el.querySelector("p"), { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out", immediateRender: false }, at + 0.85);
+    const sortie = at + 1.45 + LECTURE;
+    tl.to([el.querySelector("p"), el.querySelector("h1"), el.querySelector(".n"), el.querySelector(".seg"), el.querySelector(".sig")],
+      { opacity: 0, y: -10, duration: 0.35, ease: "power2.in", stagger: 0.06 }, sortie - 0.45);
+    tl.to(el, { opacity: 0, duration: 0.5, ease: "power2.inOut" }, sortie);
+    tl.set(["#fenetre", "#texte", "#marque"], { opacity: 0 }, at + 0.7);
+    tl.fromTo("#fenetre", { opacity: 0, y: 16, scale: 0.985 }, { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: "power3.out", immediateRender: false }, sortie + 0.05);
+    tl.fromTo(["#texte", "#marque"], { opacity: 0, x: 14 }, { opacity: 1, x: 0, duration: 0.7, ease: "power3.out", immediateRender: false }, sortie + 0.2);
+    // [instant où la démo est cachée, instant où le geste peut commencer]
+    return [at + 0.8, sortie + 0.55];
+  };
+
+  // ======================= OUVERTURE (0 → 7 s) =======================
+  // A · la marque : « Rojer » en très grand sur le bleu, calé à gauche.
+  const GRAND = 7, PAD = 12;
+  tl.set("#rj", { transformOrigin: "0 0", x: -PAD * GRAND, y: 186, scale: GRAND }, 0);
+  tl.from("#rj i", { opacity: 0, y: 14, duration: 0.55, stagger: 0.07, ease: "power3.out" }, 0.15);
+  // B · le nom se range, le titre monte sur deux lignes.
+  tl.to("#rj", { x: 0, y: 0, scale: 1, duration: 0.85, ease: "power3.inOut" }, 1.9);
+  tl.to("#rj", { backgroundColor: "rgba(255,255,255,1)", duration: 0.4 }, 2.45);
+  tl.from("#ouv-t .lg b", { yPercent: 115, duration: 0.75, stagger: 0.26, ease: "power3.out" }, 2.4);
+  // C · le bleu se replie en panneau « eau » ; le sommaire entre.
+  tl.to("#ciel", { left: 794, backgroundColor: "#d5f0ec", duration: 1.0, ease: "power3.inOut" }, 4.2);
+  tl.to("#rj", { backgroundColor: "#b2daf2", duration: 0.5 }, 4.5);
+  tl.fromTo("#ciel img", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.7, ease: "power2.out", immediateRender: false }, 4.8);
+  tl.from("#som li", { opacity: 0, x: -14, duration: 0.45, stagger: 0.16, ease: "power2.out" }, 4.75);
+
+  // ======================= 1 · VOTRE ACTIVITÉ =======================
+  const S = 380; // le défilement de l'assistant : le fil reste en vue
+  const CX = 88 + 596; // le centre de la colonne de lecture
+  let [cache, t] = intertitre(1, 7.0);
+  tl.set("#ouv", { opacity: 0 }, cache);
+  tl.set("#pg-porte", { opacity: 1 }, cache);
+  camera({ x: AW / 2, y: AH / 2 }, BASE, cache, 0.01);
+  etape(1, cache, 10.6, t);
+  const P1 = vu("#b-commencer", 0);
+  tl.to(cur, { o: 1, duration: 0.3 }, t);
+  vers(P1, t + 0.3, 1.0);
+  camera({ x: P1.x - 220, y: P1.y - 90 }, 0.82, t + 0.5, 1.0);
+  survol("#b-commencer", t + 1.1, 0.3);
+  clic(P1, t + 1.5);
+  // L'assistant s'ouvre en haut, puis la page descend jusqu'au fil.
+  filA(0, 0, 0); tl.set(fa, { v: 0.15 }, 0);
+  retourA(0, "aucun");
+  tl.set(defil, { y: 0 }, 0);
+  net("#c-secteur", 0);
+  page("#pg-wiz", t + 1.7);
+  camera({ x: AW / 2, y: AH / 2 }, BASE, t + 1.7, 0.6);
+  tl.to(defil, { y: S, duration: 1.0, ease: "power2.inOut" }, t + 2.4);
+  const naf = vu("#naf", S);
+  camera({ x: CX, y: naf.y + 90 }, 0.86, t + 2.5, 1.0);
+  tl.to("#naf", { backgroundColor: "#d8eef9", duration: 0.25, yoyo: true, repeat: 1, repeatDelay: 0.5 }, t + 3.4);
+  const P2 = vu("#b-secteur", S);
+  vers(P2, t + 3.6, 0.9);
+  camera({ x: CX, y: P2.y - 60 }, 0.86, t + 3.9, 0.7);
+  clic(P2, t + 4.6);
+  pose("secteur", 0, () => { $("#t-secteur").textContent = "Choisir ce secteur →"; });
+  pose("secteur", t + 4.65, () => { $("#t-secteur").textContent = "Application…"; });
+  // Les précisions d'activité.
+  ecran("#c-activites", t + 5.0);
+  retourA(t + 5.0, "activites");
+  tl.set(fa, { v: 0.4 }, t + 5.0);
+  camera({ x: CX, y: vu("#k-act", S).y }, 0.84, t + 5.0, 0.8);
+  const nons = [0, 1, 2].map((i) => vu(`#act-non-${i}`, S));
+  [0, 1, 2].forEach((i) => {
+    const at = t + 5.6 + i * 0.75;
+    vers(nons[i], at, i === 0 ? 0.7 : 0.45);
+    clic(nons[i], at + (i === 0 ? 0.7 : 0.45));
+    pose("act" + i, 0, () => { $(`#act-non-${i}`).classList.add("cl"); });
+    pose("act" + i, at + (i === 0 ? 0.75 : 0.5), () => { $(`#act-non-${i}`).classList.remove("cl"); });
+    tl.to(fa, { v: 0.5 + 0.12 * (i + 1), duration: 0.3 }, at + 0.6);
+  });
+  pose("act-compte", 0, () => { $("#act-compte").textContent = "3 sans réponse — vous pouvez continuer."; });
+  pose("act-compte", t + 6.35, () => { $("#act-compte").textContent = "2 sans réponse — vous pouvez continuer."; });
+  pose("act-compte", t + 7.1, () => { $("#act-compte").textContent = "1 sans réponse — vous pouvez continuer."; });
+  pose("act-compte", t + 7.85, () => { $("#act-compte").textContent = "Toutes les questions ont une réponse."; });
+  const P3 = vu("#b-val-act", S);
+  vers(P3, t + 8.1, 0.7);
+  survol("#b-val-act", t + 8.5, 0.2);
+  clic(P3, t + 8.85);
+  // Le fil coche l'étape : la caméra remonte le voir.
+  ecran("#c-unites", t + 9.15);
+  filA(t + 9.15, 1, 1); tl.set(fa, { v: 0.5 }, t + 9.15);
+  retourA(t + 9.15, "unites");
+  tl.set("#g-unites li", { opacity: 1 }, 0);
+  tl.set("#u-liv", { opacity: 0 }, 0);
+  camera({ x: CX, y: vu("#fil", S).y + 120 }, 0.76, t + 9.0, 0.7);
+
+  // ======================= 2 · UNITÉS DE TRAVAIL =======================
+  [cache, t] = intertitre(2, t + 10.7);
+  etape(2, cache, 7.0, t);
+  camera({ x: CX, y: vu("#g-unites", S).y - 10 }, 0.8, cache, 0.01);
+  tl.from("#g-unites li:not(#u-liv)", { opacity: 0, y: 10, duration: 0.4, stagger: 0.1, ease: "power2.out", immediateRender: false }, t - 0.2);
+  const U1 = vu("#b-ajout-unite", S);
+  vers(U1, t + 0.8, 0.8);
+  survol("#b-ajout-unite", t + 1.3, 0.2);
+  clic(U1, t + 1.6);
+  tl.to("#voile", { opacity: 1, duration: 0.25 }, t + 1.7);
+  tl.fromTo("#modale", { opacity: 0, scale: 0.97 }, { opacity: 1, scale: 1, duration: 0.3, ease: "power2.out", immediateRender: false }, t + 1.75);
+  camera(pos("#modale"), 0.92, t + 1.7, 0.7);
+  const M1 = pos("#ch-liv", -120);
+  vers(M1, t + 2.2, 0.5);
+  clic(M1, t + 2.7);
+  tl.to(frappe, { liv: LIV.length, duration: 0.6, ease: "none" }, t + 2.85);
+  const M2 = pos("#b-ajouter");
+  vers(M2, t + 3.55, 0.45);
+  clic(M2, t + 4.0);
+  tl.to("#modale", { opacity: 0, duration: 0.2 }, t + 4.15);
+  tl.to("#voile", { opacity: 0, duration: 0.25 }, t + 4.15);
+  tl.fromTo("#u-liv", { opacity: 0, y: 8, boxShadow: "0 0 0 2px #376881" }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", immediateRender: false }, t + 4.3);
+  tl.to("#u-liv", { boxShadow: "0 0 0 1px rgba(13,18,36,.06), 0 1px 2px rgba(13,18,36,.04), 0 12px 32px -14px rgba(13,18,36,.1)", duration: 0.8 }, t + 5.2);
+  pose("nbu", 0, () => { $("#nb-unites").textContent = "5 unités"; });
+  pose("nbu", t + 4.3, () => { $("#nb-unites").textContent = "6 unités"; });
+  camera({ x: CX, y: vu("#g-unites", S).y + 20 }, 0.8, t + 4.2, 0.7);
+  const U2 = vu("#b-val-unites", S);
+  vers(U2, t + 4.9, 0.7);
+  survol("#b-val-unites", t + 5.3, 0.2);
+  clic(U2, t + 5.65);
+  ecran("#c-risques", t + 5.95);
+  filA(t + 5.95, 2, 2); tl.set(fa, { v: 0.08 }, t + 5.95);
+  retourA(t + 5.95, "risques");
+  camera({ x: CX, y: vu("#fil", S).y + 120 }, 0.76, t + 5.8, 0.7);
+
+  // ======================= 3 · RISQUES PAR UNITÉ =======================
+  [cache, t] = intertitre(3, t + 7.5);
+  etape(3, cache, 22.4, t);
+  camera({ x: CX, y: vu("#l-unites", S).y - 40 }, 0.78, cache, 0.01);
+  pose("liste", 0, () => {
+    UNITES.concat([["Livraison", "", 0]]).forEach(([, , r], i) => {
+      const li = $(`#ru-${i}`);
+      li.querySelector("small").textContent = r ? `${pl(r, "risque")} ajouté${r > 1 ? "s" : ""} pour vous, à vérifier` : "Aucun risque inventorié";
+      li.querySelectorAll(".segs i").forEach((s) => s.classList.remove("on"));
+      const p = li.querySelector(".past"); p.className = "past"; p.textContent = "À faire";
+      const b = li.querySelector(".btn"); b.className = "btn sm"; b.textContent = "Commencer";
+    });
+    $("#avert").style.opacity = 1;
+    $("#nb-risques").textContent = "6 unités · 33 risques";
+  });
+  const R1 = vu("#ru-b-2", S);
+  vers(R1, t + 0.2, 0.9);
+  survol("#ru-b-2", t + 0.8, 0.2);
+  clic(R1, t + 1.15);
+  ecran("#c-unite", t + 1.45);
+  retourA(t + 1.45, "unite");
+  camera({ x: CX, y: vu("#marche-unite", S).y }, 0.9, t + 1.45, 0.8);
+  camera({ x: CX, y: vu("#l-risques", S).y - 40 }, 0.84, t + 2.9, 0.9);
+  const R2 = vu("#rq-1", S);
+  vers(R2, t + 3.0, 0.9);
+  survol("#rq-1", t + 3.6, 0.2);
+  clic(R2, t + 3.95);
+  // Coter : la page défile d'une question à l'autre.
+  ecran("#c-cot", t + 4.25);
+  retourA(t + 4.25, "cot");
+  const yQ = [0, 1, 2].map((i) => pos(`#q${i}`).y);
+  const S1 = yQ[0] - 330, S2 = yQ[1] - 330, S3 = yQ[2] - 300;
+  tl.to(defil, { y: S1, duration: 0.8 }, t + 4.5);
+  camera({ x: CX, y: 494 }, 0.9, t + 4.5, 0.8);
+  const CHOIX = [3, 3, 2], SS = [S1, S2, S3];
+  CHOIX.forEach((v, i) => {
+    const at = t + 5.2 + i * 1.45;
+    if (i > 0) tl.to(defil, { y: SS[i], duration: 0.55 }, at - 0.55);
+    const p = vu(`#q${i}-${v}`, SS[i], -120);
+    vers(p, at, 0.55);
+    clic(p, at + 0.6);
+    pose("q" + i, 0, () => { $$(`#q${i} .tuile`).forEach((x) => x.classList.remove("on")); });
+    pose("q" + i, at + 0.65, () => { $(`#q${i}-${v}`).classList.add("on"); });
+  });
+  const tCrit = t + 5.2 + 2 * 1.45 + 0.65;
+  pose("crit", 0, () => {
+    $("#crit-n").className = "n"; $("#crit-t").textContent = "En attente";
+    $("#crit-p").textContent = "Répondez aux questions ci-dessus pour voir apparaître la criticité. Rien n'est enregistré tant que vous n'avez pas validé.";
+    $("#b-cot").classList.add("off"); $("#t-cot").textContent = "Répondez aux 3 questions pour continuer";
+  });
+  pose("crit", tCrit, () => {
+    $("#crit-n").className = "n ok"; $("#crit-t").textContent = "Formule retenue";
+    $("#crit-p").textContent = "(gravité × probabilité) ÷ maîtrise — arrondi à l'entier et borné entre 1 et 16. Plus la note est haute, plus le risque est prioritaire.";
+    $("#b-cot").classList.remove("off"); $("#t-cot").textContent = "Enregistrer & passer aux mesures →";
+  });
+  tl.fromTo(compte, { crit: 0 }, { crit: 5, duration: 0.5, ease: "power1.out", immediateRender: false }, tCrit);
+  const S4 = pos("#crit").y - 470;
+  tl.to(defil, { y: S4, duration: 0.6 }, tCrit + 0.1);
+  camera({ x: CX, y: pos("#crit").y - S4 }, 0.9, tCrit + 0.1, 0.6);
+  const S5 = pos("#b-cot").y - 640;
+  tl.to(defil, { y: S5, duration: 0.6 }, tCrit + 1.5);
+  camera({ x: CX, y: 560 }, 0.86, tCrit + 1.5, 0.6);
+  const C1 = vu("#b-cot", S5);
+  vers(C1, tCrit + 1.7, 0.7);
+  clic(C1, tCrit + 2.45);
+  // Les mesures : cocher deux mesures, en passer une « à prévoir ».
+  const tM = tCrit + 2.75;
+  ecran("#c-mes-a", tM);
+  retourA(tM, "mes");
+  const SM = pos("#tg-a-0").y - 470;
+  tl.set(defil, { y: S }, tM);
+  tl.to(defil, { y: SM, duration: 0.7 }, tM + 0.3);
+  camera({ x: CX, y: 520 }, 0.88, tM + 0.3, 0.7);
+  const K1 = vu("#cs-a-0", SM);
+  vers(K1, tM + 0.8, 0.6);
+  clic(K1, tM + 1.4);
+  pose("cs-a", 0, () => { $("#cs-a-0").className = "case"; });
+  pose("cs-a", tM + 1.45, () => { $("#cs-a-0").className = "case on"; });
+  net("#c-mes-b", tM + 1.6);
+  const K2 = vu("#cs-b-4", SM);
+  vers(K2, tM + 1.85, 0.55);
+  clic(K2, tM + 2.4);
+  pose("cs-b", 0, () => { $("#cs-b-4").className = "case"; });
+  pose("cs-b", tM + 2.45, () => { $("#cs-b-4").className = "case on"; });
+  net("#c-mes-c", tM + 2.6);
+  // c porte « à prévoir » ; avant le clic, les gants y sont « déjà en place ».
+  pose("gants", 0, () => {
+    $("#prevu-c-4").className = ""; $("#prevu-c-4").previousElementSibling.className = "fait";
+    $("#mr-c-4 .champs").style.display = "none";
+  });
+  const SR = pos("#ret-c").y - 330;
+  tl.to(defil, { y: SR, duration: 0.6 }, tM + 2.8);
+  camera({ x: CX, y: pos("#mr-c-4").y - SR - 30 }, 0.9, tM + 2.8, 0.7);
+  const K3 = vu("#prevu-c-4", SR);
+  // La position mesurée est celle de l'état final : les champs n'y décalent rien au-dessus.
+  vers(K3, tM + 3.4, 0.6);
+  clic(K3, tM + 4.0);
+  pose("gants", tM + 4.05, () => {
+    $("#prevu-c-4").className = "prevu"; $("#prevu-c-4").previousElementSibling.className = "";
+    $("#mr-c-4 .champs").style.display = "";
+  });
+  const E1 = vu("#ch-ech", SR, -60), E2 = vu("#ch-resp", SR, -60);
+  vers(E1, tM + 4.3, 0.45);
+  clic(E1, tM + 4.75);
+  tl.to(frappe, { ech: ECH.length, duration: 0.6, ease: "none" }, tM + 4.9);
+  vers(E2, tM + 5.55, 0.4);
+  clic(E2, tM + 5.95);
+  tl.to(frappe, { resp: RESP.length, duration: 0.7, ease: "none" }, tM + 6.1);
+  // L'ellipse, dite à l'écran : toutes les unités évaluées.
+  const tF = tM + 7.1;
+  tl.fromTo("#bulle", { opacity: 0, y: -6 }, { opacity: 1, y: 0, duration: 0.35, immediateRender: false }, tF - 0.2);
+  tl.to("#bulle", { opacity: 0, duration: 0.35 }, tF + 2.4);
+  ecran("#c-risques", tF);
+  retourA(tF, "risques");
+  tl.set(defil, { y: S }, tF);
+  camera({ x: CX, y: vu("#l-unites", S).y - 20 }, 0.78, tF, 0.01);
+  const FAITES = [2, 6, 12, 6, 7, 2];
+  FAITES.forEach((n, i) => {
+    pose("ru" + i, tF + 0.35 + i * 0.28, () => {
+      const li = $(`#ru-${i}`);
+      li.querySelector("small").textContent = `${pl(n, "risque")} · évaluée`;
+      li.querySelectorAll(".segs i").forEach((s) => s.classList.add("on"));
+      const p = li.querySelector(".past"); p.className = "past ok"; p.textContent = "✓ Évaluée";
+      const b = li.querySelector(".btn"); b.className = "btn cl sm"; b.textContent = "Revoir";
+      if (i === 5) { $("#avert").style.opacity = 0; $("#nb-risques").textContent = "6 unités · 35 risques"; }
+    });
+  });
+  tl.to(fa, { v: 0.9, duration: 1.7, ease: "none" }, tF + 0.35);
+  const R3 = vu("#b-val-risques", S);
+  vers(R3, tF + 2.0, 0.7);
+  survol("#b-val-risques", tF + 2.45, 0.2);
+  clic(R3, tF + 2.8);
+  ecran("#c-trans", tF + 3.1);
+  filA(tF + 3.1, 3, 3); tl.set(fa, { v: 0.15 }, tF + 3.1);
+  retourA(tF + 3.1, "trans");
+  camera({ x: CX, y: vu("#fil", S).y + 120 }, 0.76, tF + 2.95, 0.7);
+
+  // ======================= 4 · QUESTIONS TRANSVERSES =======================
+  [cache, t] = intertitre(4, tF + 4.7);
+  etape(4, cache, 7.4, t);
+  camera({ x: CX, y: vu("#q-bio", S).y - 60 }, 0.86, cache, 0.01);
+  pose("tq", 0, () => {
+    ["q-nuit", "q-bio"].forEach((id) => { $(`#${id}-oui`).className = "btn cl sm"; $(`#${id}-non`).className = "btn cl sm"; $(`#${id}-etat`).textContent = "Sans réponse"; $(`#${id}-etat`).className = "st"; });
+    $("#k-trv").style.opacity = 0;
+  });
+  const Q1 = vu("#q-nuit-non", S), Q2 = vu("#q-bio-oui", S);
+  vers(Q1, t + 0.2, 0.8);
+  clic(Q1, t + 1.0);
+  pose("tq", t + 1.05, () => { $("#q-nuit-non").className = "btn sm"; $("#q-nuit-etat").textContent = "retirer ma réponse"; $("#q-nuit-etat").className = "retirer"; });
+  vers(Q2, t + 1.4, 0.6);
+  clic(Q2, t + 2.0);
+  pose("tq", t + 2.05, () => {
+    $("#q-nuit-non").className = "btn sm"; $("#q-nuit-etat").textContent = "retirer ma réponse"; $("#q-nuit-etat").className = "retirer";
+    $("#q-bio-oui").className = "btn sm"; $("#q-bio-etat").textContent = "retirer ma réponse"; $("#q-bio-etat").className = "retirer";
+    $("#k-trv").style.opacity = 1;
+  });
+  tl.to(fa, { v: 0.45, duration: 0.4 }, t + 2.1);
+  const ST = pos("#k-trv").y - 520;
+  tl.to(defil, { y: ST, duration: 1.2 }, t + 2.5);
+  camera({ x: CX, y: pos("#k-trv").y - ST + 30 }, 0.9, t + 2.7, 1.0);
+  const Q3 = vu("#b-val-trans", ST);
+  vers(Q3, t + 4.0, 0.8);
+  survol("#b-val-trans", t + 4.5, 0.2);
+  clic(Q3, t + 4.85);
+  ecran("#c-syn", t + 5.15);
+  tl.fromTo(compte, { s1: 0, s2: 0, s3: 0, s4: 0 }, { s1: 6, s2: 36, s3: 61, s4: 14, duration: 1.0, ease: "power1.out", immediateRender: false }, t + 5.3);
+  tl.set(defil, { y: S }, t + 5.15);
+  filA(t + 5.15, 4, 4); tl.set(fa, { v: 0.0 }, t + 5.15);
+  retourA(t + 5.15, "syn");
+  camera({ x: CX, y: vu("#fil", S).y + 120 }, 0.76, t + 5.0, 0.7);
+
+  // ======================= 5 · SYNTHÈSE =======================
+  [cache, t] = intertitre(5, t + 6.4);
+  etape(5, cache, 11.0, t);
+  camera({ x: CX, y: vu("#k-synth", S).y + 10 }, 0.9, cache, 0.01);
+  const SI = pos("#k-inv").y - 420;
+  tl.to(defil, { y: SI, duration: 1.1 }, t + 1.5);
+  camera({ x: CX, y: 500 }, 0.8, t + 1.5, 1.1);
+  const SV = pos("#form-ver").y - 470;
+  tl.to(defil, { y: SV, duration: 1.1 }, t + 3.0);
+  camera({ x: CX, y: 470 }, 0.9, t + 3.0, 1.1);
+  pose("ver", 0, () => {
+    $("#m-autre").classList.remove("on"); $("#l-prec").textContent = "Précision (facultative)";
+    $("#ver-vide").style.opacity = 1; $("#ver-v1").style.opacity = 0; $("#ver-ok").style.opacity = 0;
+    $("#t-ver").textContent = "Valider — créer une nouvelle version"; $("#alerte-syn").style.display = "";
+  });
+  const V1 = vu("#m-autre", SV, -300);
+  vers(V1, t + 4.1, 0.7);
+  clic(V1, t + 4.8);
+  pose("ver", t + 4.85, () => { $("#m-autre").classList.add("on"); $("#l-prec").textContent = "Précision (requise)"; });
+  const V2 = vu("#ch-prec", SV, -200);
+  vers(V2, t + 5.1, 0.45);
+  clic(V2, t + 5.55);
+  tl.to(frappe, { prec: PREC.length, duration: 0.9, ease: "none" }, t + 5.7);
+  const V3 = vu("#b-ver", SV);
+  vers(V3, t + 6.65, 0.55);
+  survol("#b-ver", t + 7.0, 0.15);
+  clic(V3, t + 7.25);
+  pose("ver", t + 7.3, () => { $("#m-autre").classList.add("on"); $("#l-prec").textContent = "Précision (requise)"; $("#t-ver").textContent = "Création…"; });
+  pose("ver", t + 7.75, () => {
+    $("#m-autre").classList.remove("on"); $("#l-prec").textContent = "Précision (facultative)";
+    $("#ver-vide").style.opacity = 0; $("#ver-v1").style.opacity = 1; $("#ver-ok").style.opacity = 1;
+    $("#t-ver").textContent = "Valider — créer une nouvelle version";
+  });
+  window.tVersion = t + 7.75;
+  tl.fromTo("#ver-v1", { y: 6 }, { y: 0, duration: 0.35, ease: "power2.out", immediateRender: false }, t + 7.75);
+  filA(t + 7.75, 4, 5);
+  const V4 = vu("#b-pdf", SV);
+  camera({ x: CX, y: V4.y + 120 }, 0.9, t + 7.8, 0.7);
+  vers(V4, t + 8.2, 0.6);
+  survol("#b-pdf", t + 8.6, 0.6);
+  // Dernier regard : la page remonte, le fil est entièrement coché.
+  const hAlerte = $("#alerte-syn").offsetHeight + 32;
+  pose("alerte", 0, () => { $("#alerte-syn").style.display = ""; });
+  pose("alerte", t + 9.6, () => { $("#alerte-syn").style.display = "none"; });
+  tl.set(defil, { y: SV - hAlerte }, t + 9.6);
+  tl.to(defil, { y: 0, duration: 1.3, ease: "power2.inOut" }, t + 9.62);
+  camera({ x: AW / 2, y: AH / 2 }, BASE, t + 9.6, 1.3);
+  tl.to(cur, { o: 0, duration: 0.3 }, t + 9.6);
+
+  // ======================= FIN =======================
+  const tFin = t + 11.8;
+  tl.to("#fin", { opacity: 1, duration: 0.6, ease: "power1.out" }, tFin);
+  tl.from("#fin .st, #fin h1, #fin .chap", { y: 14, opacity: 0, duration: 0.5, stagger: 0.1, ease: "power2.out" }, tFin + 0.2);
+  tl.from("#fin .boucle span", { opacity: 0, y: 8, duration: 0.3, stagger: 0.08 }, tFin + 0.8);
+  // La signature : le bleu revient, « Rojer » se pose comme à l'ouverture.
+  tl.to("#adieu", { left: 0, duration: 0.9, ease: "power3.inOut" }, tFin + 4.2);
+  tl.from("#rj2 i", { opacity: 0, y: 16, duration: 0.55, stagger: 0.07, ease: "power3.out" }, tFin + 4.85);
+  tl.to({}, { duration: 1.4 }, tFin + 5.6);
+  window.affiche = 6.9;
+  return tl;
+}
+
+function rendre(t) {
+  for (const cle in poses) {
+    let f = null;
+    for (const [instant, g] of poses[cle]) if (t >= instant) f = g;
+    if (f) f();
+  }
+  const v = (txt, n) => txt.slice(0, Math.round(n));
+  const tape = (id, chId, txt, n, vide) => {
+    const el = $(id); if (!el) return;
+    if (n > 0) { el.innerHTML = v(txt, n) + (n < txt.length ? '<i class="curseur-texte"></i>' : ""); $(chId).classList.remove("vide"); }
+    else { el.textContent = vide; $(chId).classList.add("vide"); }
+  };
+  tape("#v-liv", "#ch-liv", LIV, frappe.liv, "ex. Terrasse, Atelier, Entrepôt");
+  tape("#v-ech", "#ch-ech", ECH, frappe.ech, "jj/mm/aaaa");
+  tape("#v-resp", "#ch-resp", RESP, frappe.resp, "Nom ou rôle");
+  // La précision se vide une fois la version créée (le formulaire repart à zéro).
+  const vide = t >= (window.tVersion ?? Infinity);
+  tape("#v-prec", "#ch-prec", PREC, vide ? 0 : frappe.prec, "ex. ouverture service de livraison — juin 2026");
+  $("#crit-n").textContent = compte.crit >= 0.5 ? String(Math.round(compte.crit)).padStart(2, "0") : "—";
+  ["s1", "s2", "s3", "s4"].forEach((k) => { $("#" + k).textContent = Math.round(compte[k]); });
+  $("#defil").style.transform = `translateY(${-defil.y}px)`;
+  const s = cam.s;
+  const tx = Math.min(0, Math.max(W - AW * s, W / 2 - cam.x * s));
+  const ty = Math.min(0, Math.max(H - AH * s, H / 2 - cam.y * s));
+  $("#camera").style.transform = `translate(${tx}px,${ty}px) scale(${s})`;
+  $("#curseur").style.transform = `translate(${cur.x - 5 / s}px,${cur.y - 3 / s}px) scale(${cur.k / s})`;
+  $("#curseur").style.opacity = cur.o;
+  $("#onde").style.transform = `translate(${onde.x - 28 * onde.s / s}px,${onde.y - 28 * onde.s / s}px) scale(${onde.s / s})`;
+  $("#onde").style.opacity = onde.o;
+}
+
+window.allerA = (t) => { window.tl.seek(t, false); rendre(t); };
+
+document.fonts.ready.then(() => {
+  // Toutes les pages sont posées pour la mesure, puis rendues à leur état de départ.
+  dessinerFil({ cur: 0, faits: 0 });
+  $("#retour").innerHTML = RETOURS.activites;
+  window.tl = construire();
+  window.duree = window.tl.duration();
+  rendre(0);
+  window.pret = true;
+  if (!navigator.webdriver) {
+    const debut = performance.now();
+    const boucle = (now) => { allerA(((now - debut) / 1000) % (window.duree + 0.8)); requestAnimationFrame(boucle); };
+    requestAnimationFrame(boucle);
+  }
+});
+</script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { EnTetePage } from "@/components/entete-page/EnTetePage";
+import { VisiteGuidee } from "@/components/visite/VisiteGuidee";
 import { notFound, redirect } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { WhyCard } from "@/components/ui-kit/WhyCard";
@@ -115,6 +116,7 @@ export default async function EtablissementDuerpPage({
           )}
         </div>
       </div>
+      <VisiteGuidee cle="duerp" />
     </main>
   );
 }

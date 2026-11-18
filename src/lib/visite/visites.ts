@@ -6,7 +6,7 @@
 // vidéo, son image d'aperçu pleine taille et la vignette de l'îlot. La garde
 // `visites.test.ts` vérifie qu'ils existent.
 
-export type CleVisite = "equipements";
+export type CleVisite = "equipements" | "duerp";
 
 export type Visite = {
   /** Durée annoncée, « 50 s ». */
@@ -30,6 +30,18 @@ export const VISITES: Record<CleVisite, Visite> = {
       "Voir ce qui lui manque",
       "Déposer le rapport du dernier contrôle",
       "Prendre rendez-vous pour le suivant",
+    ],
+  },
+  duerp: {
+    duree: "1 min 35",
+    titre: "Comment ça marche ?",
+    titreVideo: "Votre DUERP, en cinq étapes",
+    etapes: [
+      "Dire votre activité",
+      "Vérifier vos unités de travail",
+      "Évaluer les risques de chaque unité",
+      "Répondre aux questions transverses",
+      "Valider une version",
     ],
   },
 };

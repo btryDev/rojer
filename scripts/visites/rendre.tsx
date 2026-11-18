@@ -45,17 +45,23 @@ type Icone = ComponentType<{ size?: number; color?: string; strokeWidth?: number
 const icone = (C: Icone, size: number, color?: string) =>
   renderToStaticMarkup(<C size={size} strokeWidth={1.75} color={color} />);
 
+/** Une image d'en-tête de page (`src/assets/entetes/`, celle que l'app
+ *  importe), en ligne : le gabarit est ouvert depuis le disque, sans
+ *  serveur pour la servir. */
+const imageEnTete = (nom: string) =>
+  `data:image/webp;base64,${readFileSync(path.join(RACINE, "src/assets/entetes", `${nom}.webp`)).toString("base64")}`;
+
 /** Ce que les `{{…}}` des gabarits peuvent demander. */
 function remplissages(): Record<string, string> {
   const lucide = Lucide as unknown as Record<string, Icone>;
   const r: Record<string, string> = {
     // L'illustration d'en-tête de l'app, telle quelle, en ligne.
-    illustration: `<img alt="" style="width:100%;height:auto" src="data:image/webp;base64,${readFileSync(
-      path.join(RACINE, "src/assets/entetes/equipements.webp"),
-    ).toString("base64")}">`,
+    illustration: `<img alt="" style="width:100%;height:auto" src="${imageEnTete("equipements")}">`,
     extincteur: icone(ICONE_CATEGORIE.EXTINCTEUR as Icone, 22, "#fff"),
     extincteur_grand: icone(ICONE_CATEGORIE.EXTINCTEUR as Icone, 40, "#fff"),
     elec: icone(ICONE_CATEGORIE.INSTALLATION_ELECTRIQUE as Icone, 22, "#fff"),
+    // L'image d'en-tête de la page DUERP, la même que l'app sert.
+    illustration_duerp: imageEnTete("duerp"),
     ClipboardCheck_grand: icone(lucide.ClipboardCheck, 38),
     gsap: readFileSync(createRequire(path.join(RACINE, "package.json")).resolve("gsap/dist/gsap.min.js"), "utf8"),
   };
@@ -93,14 +99,20 @@ async function rendre(cle: string) {
     const page = await navigateur.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1.5 });
     await page.goto(`file://${html}`);
     await page.waitForFunction(() => (window as unknown as { pret?: boolean }).pret === true);
-    const { duree, debut } = await page.evaluate(() => {
-      const w = window as unknown as { duree: number; debut?: number };
-      return { duree: w.duree, debut: w.debut ?? 0 };
+    const { duree, debut, affiche } = await page.evaluate(() => {
+      const w = window as unknown as { duree: number; debut?: number; affiche?: number };
+      return { duree: w.duree, debut: w.debut ?? 0, affiche: w.affiche };
     });
     const n = Math.ceil((duree - debut) * FPS);
     for (let i = 0; i < n; i++) {
       await page.evaluate((t) => (window as unknown as { allerA: (t: number) => void }).allerA(t), debut + i / FPS);
       await page.screenshot({ path: path.join(images, `${String(i).padStart(5, "0")}.png`) });
+    }
+    // L'image d'aperçu : l'instant que le gabarit désigne (`window.affiche`),
+    // sinon la première image de la vidéo.
+    if (affiche !== undefined) {
+      await page.evaluate((t) => (window as unknown as { allerA: (t: number) => void }).allerA(t), affiche);
+      await page.screenshot({ path: path.join(travail, "affiche.png") });
     }
     console.log(`${n} images, ${(n / FPS).toFixed(1)} s`);
     dureeRendue = n / FPS;
@@ -110,7 +122,7 @@ async function rendre(cle: string) {
 
   const sortie = (nom: string) => path.join(RACINE, "public/videos", nom);
   const ffmpeg = (...args: string[]) => execFileSync("ffmpeg", ["-y", "-loglevel", "error", ...args]);
-  const premiere = path.join(images, "00000.png");
+  const premiere = existsSync(path.join(travail, "affiche.png")) ? path.join(travail, "affiche.png") : path.join(images, "00000.png");
   const musique = path.join(RACINE, "scripts/visites/musique", `${cle}.m4a`);
   const son = existsSync(musique)
     ? [
@@ -127,12 +139,39 @@ async function rendre(cle: string) {
   console.log(`public/videos/visite-${cle}.mp4, .jpg, -vignette.jpg`);
 }
 
-const cle = process.argv[2];
+/**
+ * `--apercu 12,30.5,61` : quelques images fixes, sans vidéo, pour relire un
+ * plan sans attendre le rendu complet. Elles sont écrites dans un dossier
+ * temporaire, dont le chemin est affiché.
+ */
+async function apercu(cle: string, instants: number[]) {
+  const travail = mkdtempSync(path.join(tmpdir(), `apercu-${cle}-`));
+  const html = path.join(travail, "visite.html");
+  writeFileSync(html, construire(cle));
+  const navigateur = await chromium.launch({ executablePath: CHROME, headless: true });
+  try {
+    const page = await navigateur.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 });
+    await page.goto(`file://${html}`);
+    await page.waitForFunction(() => (window as unknown as { pret?: boolean }).pret === true);
+    const duree = await page.evaluate(() => (window as unknown as { duree: number }).duree);
+    console.log(`durée : ${duree.toFixed(1)} s`);
+    for (const t of instants) {
+      await page.evaluate((t) => (window as unknown as { allerA: (t: number) => void }).allerA(t), t);
+      const f = path.join(travail, `${String(t).padStart(6, "0")}.png`);
+      await page.screenshot({ path: f });
+      console.log(f);
+    }
+  } finally {
+    await navigateur.close();
+  }
+}
+
+const [cle, option, valeur] = process.argv.slice(2);
 if (!cle) {
-  console.error("Usage : pnpm visite:rendre <cle>   (ex. equipements)");
+  console.error("Usage : pnpm visite:rendre <cle> [--apercu 12,30.5]   (ex. equipements)");
   process.exit(1);
 }
-rendre(cle).catch((e) => {
+(option === "--apercu" ? apercu(cle, (valeur ?? "0").split(",").map(Number)) : rendre(cle)).catch((e) => {
   console.error(e);
   process.exit(1);
 });
