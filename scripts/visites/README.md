@@ -51,12 +51,18 @@ relire quand on touche :
   les unités à « ✓ Évaluée » est une ellipse, et la vidéo le dit à l'écran.
   Les chiffres de la synthèse (6 unités, 36 risques, 61 mesures en place,
   14 actions) et les lignes de l'inventaire priorisé sont inventés, cohérents
-  avec le référentiel restauration. La vidéo n'a pas de musique.
+  avec le référentiel restauration.
 - L'écran juste après le dépôt d'un rapport (carte verte « Le prochain
   contrôle est calculé ») n'existe pas encore dans l'app :
   `docs/chantiers-ouverts.md` § 20.
 
 ## La musique
+
+`musique/duerp.m4a` vient d'une piste Suno de la propriétaire (2026-11-18,
+« Ouverture Électrique », French electro à 116 BPM), raccourcie de 3 min 30
+à 98 s sur la grille des mesures : le début jusqu'à la mesure 40, puis de
+la mesure 94 à la fin, pour que l'accord final tombe sur la signature
+(« Rojer » sur le bleu). Même réserve de droits que ci-dessous.
 
 `musique/equipements.m4a` a été générée avec Suno par la propriétaire
 (2026-10-28). Le droit d'usage commercial d'une piste Suno dépend de
