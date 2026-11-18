@@ -1,58 +1,59 @@
 import type { ComponentType } from "react";
+import type { StaticImageData } from "next/image";
+
+import accessibilite from "@/assets/entetes/accessibilite.webp";
+import calendrier from "@/assets/entetes/calendrier.webp";
+import carnetSanitaire from "@/assets/entetes/carnet-sanitaire.webp";
+import duerp from "@/assets/entetes/duerp.webp";
+import enPlace from "@/assets/entetes/en-place.webp";
+import equipe from "@/assets/entetes/equipe.webp";
+import equipements from "@/assets/entetes/equipements.webp";
+import permisFeu from "@/assets/entetes/permis-feu.webp";
+import planActions from "@/assets/entetes/plan-actions.webp";
+import planPrevention from "@/assets/entetes/plan-prevention.webp";
+import prescriptions from "@/assets/entetes/prescriptions.webp";
+import prestataires from "@/assets/entetes/prestataires.webp";
+import registre from "@/assets/entetes/registre.webp";
 
 import type { SidebarItemId } from "@/components/layout/sidebar-nav";
 
+import { ImageEnTete } from "./ImageEnTete";
 import { aUneIllustration, type ItemIllustre } from "./liste";
 
-import { IllustrationAccessibilite } from "./Accessibilite";
-import { IllustrationCalendrier } from "./Calendrier";
-import { IllustrationCarnetSanitaire } from "./CarnetSanitaire";
 import { IllustrationConnecter } from "./Connecter";
 import { IllustrationControle } from "./Controle";
 import { IllustrationDocuments } from "./Documents";
-import { IllustrationDuerp } from "./Duerp";
-import { IllustrationEnPlace } from "./EnPlace";
-import { IllustrationEquipe } from "./Equipe";
-import { IllustrationEquipements } from "./Equipements";
 import { IllustrationFiche } from "./Fiche";
 import { IllustrationGuide } from "./Guide";
 import { IllustrationPerimetre } from "./Perimetre";
-import { IllustrationPermisFeu } from "./PermisFeu";
-import { IllustrationPlanActions } from "./PlanActions";
-import { IllustrationPlansPrevention } from "./PlansPrevention";
-import { IllustrationPrescriptions } from "./Prescriptions";
-import { IllustrationPrestataires } from "./Prestataires";
-import { IllustrationRegistre } from "./Registre";
 import { IllustrationZones } from "./Zones";
 
 /**
  * L'illustration de chaque page d'entrée. Une page sans illustration rend
- * un en-tête sans colonne de droite.
+ * un en-tête sans colonne de droite. Toutes se posent sur la teinte de la
+ * section, sans fond propre.
  *
- * Le style est commun à toutes : trait noir d'épaisseur constante, aplats
- * noirs ponctuels, objets blancs en perspective isométrique, posés sur la
- * teinte de la section — pas de fond propre. Une seule animation par dessin
- * vectoriel (une image générée reste fixe : Calendrier, Plan d'actions et
- * Ce qui doit être en place, `ImageEnTete`, depuis le 2026-11-09),
- * jouée une fois au chargement (`ep-*` dans `globals.css`), aucune si le
- * visiteur a demandé moins de mouvement.
+ * Deux familles : une image générée (`ImageEnTete`, fixe — scène sans texte
+ * ni tampon, `src/assets/entetes/`), ou un dessin SVG (`CadreIllustration` :
+ * trait noir, objets blancs en isométrique, une animation `ep-*` jouée une
+ * fois, aucune si le visiteur a demandé moins de mouvement).
  */
-const ILLUSTRATIONS: Record<ItemIllustre, ComponentType> = {
-  calendrier: IllustrationCalendrier,
-  actions: IllustrationPlanActions,
-  "etats-permanents": IllustrationEnPlace,
-  duerp: IllustrationDuerp,
-  equipe: IllustrationEquipe,
-  prescriptions: IllustrationPrescriptions,
-  "permis-feu": IllustrationPermisFeu,
-  "plan-prevention": IllustrationPlansPrevention,
+const ILLUSTRATIONS: Record<ItemIllustre, StaticImageData | ComponentType> = {
+  calendrier, // l'éphéméride du 1er février et son extincteur
+  actions: planActions, // le porte-bloc, trois actions dont deux cochées
+  "etats-permanents": enPlace, // le tableau d'affichage
+  duerp, // trois risques cotés, un crayon
+  equipe, // trois badges et les pictogrammes de leurs titres
+  prescriptions, // la lettre reçue, un paragraphe surligné
+  "permis-feu": permisFeu, // le permis signé sur son porte-bloc
+  "plan-prevention": planPrevention, // deux entreprises, la zone, deux signatures
   perimetre: IllustrationPerimetre,
-  equipements: IllustrationEquipements,
+  equipements, // le local technique, chaque appareil étiqueté
   batiments: IllustrationZones,
-  prestataires: IllustrationPrestataires,
-  registre: IllustrationRegistre,
-  accessibilite: IllustrationAccessibilite,
-  "carnet-sanitaire": IllustrationCarnetSanitaire,
+  prestataires, // le fichier rotatif des métiers
+  registre, // le registre ouvert, un rapport inséré
+  accessibilite, // l'entrée vitrée, sa rampe, l'affiche QR
+  "carnet-sanitaire": carnetSanitaire, // la sonde dans le jet, le carnet
   documents: IllustrationDocuments,
   controle: IllustrationControle,
   guide: IllustrationGuide,
@@ -62,6 +63,8 @@ const ILLUSTRATIONS: Record<ItemIllustre, ComponentType> = {
 
 export function IllustrationEnTete({ item }: { item: SidebarItemId }) {
   if (!aUneIllustration(item)) return null;
-  const Dessin = ILLUSTRATIONS[item];
+  const illustration = ILLUSTRATIONS[item];
+  if (typeof illustration !== "function") return <ImageEnTete image={illustration} />;
+  const Dessin = illustration;
   return <Dessin />;
 }
