@@ -1,18 +1,18 @@
 import { ImageEnTete } from "./ImageEnTete";
 
 /**
- * Le « Plan de prévention », une poignée de mains et deux lignes de signature
- * — l'entreprise utilisatrice et l'entreprise extérieure —, devant une
- * barrière de chantier. Planche Santé-sécurité, choisie par la propriétaire
- * le 2026-11-18.
+ * Le plan de prévention : deux entreprises reliées, le plan de la zone de
+ * travail hachurée, les deux signatures — l'entreprise utilisatrice et
+ * l'entreprise extérieure —, une barrière de chantier devant. Planche
+ * Santé-sécurité, choisie par la propriétaire le 2026-11-18.
  */
 export function IllustrationPlansPrevention() {
   return (
     <ImageEnTete
       src="/illustrations/entetes/plan-prevention.webp"
-      width={642}
+      width={688}
       height={900}
-      className="w-[clamp(180px,17vw,243px)]"
+      className="w-[clamp(193px,18vw,260px)]"
     />
   );
 }

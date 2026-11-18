@@ -1,17 +1,18 @@
 import { ImageEnTete } from "./ImageEnTete";
 
 /**
- * Le badge « Équipe » à son cordon, un casque devant : la personne et ce
- * qu'elle est habilitée à faire. Planche Santé-sécurité, choisie par la
- * propriétaire le 2026-11-18.
+ * Trois badges à leur portant, chacun avec le pictogramme d'un titre
+ * (habilitation électrique, secourisme, conduite d'engins) : un titre est
+ * porté par une personne, pas par un poste. Planche Santé-sécurité, choisie
+ * par la propriétaire le 2026-11-18.
  */
 export function IllustrationEquipe() {
   return (
     <ImageEnTete
       src="/illustrations/entetes/equipe.webp"
-      width={827}
-      height={900}
-      className="w-[clamp(232px,22vw,312px)]"
+      width={900}
+      height={785}
+      className="w-[clamp(290px,27vw,390px)]"
     />
   );
 }
