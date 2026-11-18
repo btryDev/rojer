@@ -7,6 +7,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import { BarreCompte } from "@/components/layout/BarreCompte";
+import { VisiteGuidee } from "@/components/visite/VisiteGuidee";
 import { comptesDeLaSession } from "@/lib/auth/compte";
 import { getDuerp } from "@/lib/duerps/queries";
 import { PAGES_DU_PARCOURS, etapesDuDuerp, type EtapeId } from "@/lib/duerps/etapes";
@@ -160,6 +161,9 @@ export default async function DuerpLayout({
           </Suspense>
           {children}
         </div>
+        {/* La même visite qu'à la porte d'entrée : l'assistant est la page
+            où l'on passe son temps. */}
+        <VisiteGuidee cle="duerp" />
       </div>
     </div>
   );
