@@ -10,7 +10,7 @@
 /* La charte board de l'app (src/app/globals.css), relevée le 2026-11-18. */
 :root{
   --canvas:#f6f9fb; --card:#fff; --ink:#0a0a0a; --sky:#b2daf2; --eau:#d5f0ec;
-  --blue-pale:#d8eef9; --blue-soft:#a9d3ec; --blue-strong:#5d93b8; --blue-ink:#376881;
+  --blue-pale:#d8eef9; --blue-strong:#5d93b8; --blue-ink:#376881;
   --slate-pale:#edf2f5; --slate-line:#dfe8ee; --slate:#b5d1e3; --slate-soft:#5c7182; --slate-mid:#4d5d6b; --slate-ink:#304148;
   --signal-ink:#8a2a23; --green:#bdfdb5; --green-ink:#216037;
   --ombre:0 0 0 1px rgba(13,18,36,.06),0 1px 2px rgba(13,18,36,.04),0 12px 32px -14px rgba(13,18,36,.1);
@@ -329,7 +329,7 @@ td b{font-weight:500;color:var(--ink)}
               <p>À partir du code NAF <b id="naf" style="border-radius:6px;padding:0 3px;margin:0 -3px">56.10A</b>, le secteur ci-dessous a été détecté. Choisissez-le pour charger les unités et risques types, ou choisissez-en un autre plus bas.</p></div>
             <span class="btn cl sm">Importer un DUERP Excel</span>
           </div>
-          <section class="carte" style="padding:24px 32px" id="k-secteur">
+          <section class="carte" style="padding:24px 32px">
             <div class="st">Secteur détecté</div>
             <h3 class="titre" style="font-size:22px;margin-top:20px">Restauration traditionnelle</h3>
             <p style="font-size:13.5px;line-height:1.6;color:var(--slate-mid);margin-top:12px">Restaurants, brasseries, fast-food, cuisines collectives. Risques types : coupures, brûlures, chutes, TMS posturales, livraison.</p>
@@ -404,7 +404,7 @@ td b{font-weight:500;color:var(--ink)}
           <div style="display:flex;flex-direction:column;gap:24px" id="questions"></div>
           <div class="crit" id="crit">
             <div style="display:flex;align-items:baseline;gap:12px"><span class="n" id="crit-n">—</span><span class="st">sur 16<br>criticité</span></div>
-            <div><div class="st" id="crit-t">En attente</div><p id="crit-p">Répondez aux 0/3 questions ci-dessus pour voir apparaître la criticité. Rien n'est enregistré tant que vous n'avez pas validé.</p></div>
+            <div><div class="st" id="crit-t">En attente</div><p id="crit-p">Répondez aux questions ci-dessus pour voir apparaître la criticité. Rien n'est enregistré tant que vous n'avez pas validé.</p></div>
           </div>
           <div class="carte" style="padding:24px 28px;display:flex;flex-direction:column;gap:18px">
             <div class="st">Informations complémentaires · facultatives</div>
@@ -457,7 +457,7 @@ td b{font-weight:500;color:var(--ink)}
               <tr><td><b>Chariot de transport pour les livraisons lourdes</b><br>Charge physique</td><td>31 janvier 2027</td><td>Gérant</td></tr>
             </tbody></table>
           </section>
-          <section class="carte" style="padding:24px 32px" id="k-ver">
+          <section class="carte" style="padding:24px 32px">
             <div style="display:flex;justify-content:space-between;align-items:baseline"><div><div class="st">Versions figées</div><h3 class="titre" style="font-size:22px;margin-top:6px">Historique du dossier</h3></div><span class="btn cl sm">Aperçu PDF brouillon ↗</span></div>
             <p style="font-size:12.5px;line-height:1.55;color:var(--slate-mid);margin-top:12px">L'aperçu télécharge un PDF estampillé <b style="font-weight:600">« Document non validé »</b> sur chaque page, sans créer de version. Pour un PDF officiel consultable et archivé, validez une version ci-dessous.</p>
             <div style="position:relative;margin-top:14px;height:60px">
@@ -566,9 +566,20 @@ const carteUnite = ([n, d], id = "") =>
 $("#g-unites").innerHTML = UNITES.map((u) => carteUnite(u)).join("") + carteUnite(["Livraison", ""], 'id="u-liv" style="opacity:0"');
 
 const pl = (n, s) => `${n} ${s}${n > 1 ? "s" : ""}`;
-$("#l-unites").innerHTML = [...UNITES, ["Livraison", "", 0]].map(([n, , r], i) =>
-  `<li id="ru-${i}"><div class="nom"><b>${n}</b><small>${r ? `${pl(r, "risque")} ajouté${r > 1 ? "s" : ""} pour vous, à vérifier` : "Aucun risque inventorié"}</small></div>`
-  + `<span class="segs"><i></i><i></i><i></i></span><span class="past">À faire</span><span class="btn sm" id="ru-b-${i}">Commencer</span></li>`).join("");
+const LISTE = [...UNITES, ["Livraison", "", 0]];
+$("#l-unites").innerHTML = LISTE.map(([n], i) =>
+  `<li id="ru-${i}"><div class="nom"><b>${n}</b><small></small></div>`
+  + `<span class="segs"><i></i><i></i><i></i></span><span class="past"></span><span class="btn sm" id="ru-b-${i}"></span></li>`).join("");
+// Une ligne de « Vos unités » : à faire (risques proposés), ou évaluée.
+function etatUnite(i, n, evaluee) {
+  const li = $(`#ru-${i}`);
+  li.querySelector("small").textContent = evaluee ? `${pl(n, "risque")} · évaluée`
+    : n ? `${pl(n, "risque")} ajouté${n > 1 ? "s" : ""} pour vous, à vérifier` : "Aucun risque inventorié";
+  li.querySelectorAll(".segs i").forEach((s) => s.classList.toggle("on", evaluee));
+  const p = li.querySelector(".past"); p.className = evaluee ? "past ok" : "past"; p.textContent = evaluee ? "✓ Évaluée" : "À faire";
+  const b = li.querySelector(".btn"); b.className = evaluee ? "btn cl sm" : "btn sm"; b.textContent = evaluee ? "Revoir" : "Commencer";
+}
+LISTE.forEach(([, , r], i) => etatUnite(i, r, false));
 
 const RISQUES = [
   ["Chute de plain-pied (sols glissants, encombrés)", "INRS ED 880, p. 4 : « Trois types d'accidents représentent à eux seuls plus des deux tiers des accidents en restauration collective : […] les chutes et glissades de plain-pied (1/3 à eux seuls) ; […] »"],
@@ -623,7 +634,8 @@ const MESURES = [
 ];
 const pad = (n) => String(n).padStart(2, "0");
 function pageMesures(etat, k) {
-  // etat : 0 rien coché ; 1 trancheuses ; 2 trancheuses + gants ; 3 gants « à prévoir »
+  // etat : 0 rien coché ; 1 trancheuses ; 3 trancheuses + gants « à prévoir » (l'état
+  // « deux cochées, gants en place » se lit dans 3 avant le clic, pose « gants »)
   const retenues = etat === 0 ? [] : etat === 1 ? [0] : [0, 4];
   const reste = MESURES.map((m, i) => i).filter((i) => !retenues.includes(i));
   const ligne = (i) => {
@@ -652,8 +664,6 @@ function pageMesures(etat, k) {
 $("#c-mes-a").innerHTML = pageMesures(0, "a");
 $("#c-mes-b").innerHTML = pageMesures(1, "b");
 $("#c-mes-c").innerHTML = pageMesures(3, "c");
-// L'état « deux cochées, rien à prévoir » est celui de c, gants en place : il
-// se lit dans c avant le clic sur « À prévoir » (pose plus bas).
 
 const TRANS = [
   ["q-nuit", "Des salariés travaillent-ils habituellement entre minuit et 5 heures ?", "Travail de nuit et travail posté"],
@@ -729,10 +739,10 @@ function construire() {
   // cible hors d'atteinte (trop près d'un bord) laissait l'image immobile au
   // début du mouvement, puis la faisait partir d'un coup, en plein élan.
   const borne = (v, s, L, l) => Math.min(Math.max(v, l / 2 / s), L - l / 2 / s);
-  const camera = (p, s, at, d = 0.9) => tl.to(cam, { x: borne(p.x, s, AW, W), y: borne(p.y, s, AH, H), s, duration: d, ease: "power2.inOut" }, at);
+  const camera = (p, s, at, d = 0.9) => tl.to(cam, { x: borne(p.x, s, AW, W), y: borne(p.y, s, AH, H), s, duration: d }, at);
   // Une trajectoire légèrement courbe : la main ne va pas en ligne droite.
   const vers = (p, at, d = 0.8) => {
-    tl.to(cur, { x: p.x, duration: d, ease: "power2.inOut" }, at);
+    tl.to(cur, { x: p.x, duration: d }, at);
     tl.to(cur, { y: p.y, duration: d, ease: "power3.inOut" }, at);
   };
   const clic = (p, at) => {
@@ -751,17 +761,18 @@ function construire() {
     tl.fromTo(sel, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", immediateRender: false }, at + 0.12);
   };
   const net = (sel, at) => { tl.set(".c", { opacity: 0 }, at); tl.set(sel, { opacity: 1, y: 0 }, at); };
-  const etape = (n, at, dureeBarre, debutBarre = at) => {
+  const etape = (n, at) => {
     if (n > 1) tl.to("#t" + (n - 1), { opacity: 0, y: -14, duration: 0.3, ease: "power1.in" }, at);
     tl.fromTo("#t" + n, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out", immediateRender: false }, at + (n > 1 ? 0.2 : 0));
   };
   const filA = (t, etapeFil, faits) => pose("fil", t, () => dessinerFil({ cur: etapeFil, faits }));
   // Une partie finit sur le clic « Valider ». L'écran suivant arrive sous le
   // plan de titre ; la partie suivante s'ouvre sur le fil, qui se coche sous
-  // les yeux, puis la caméra descend sur l'écran. Rend [cache, t] : à t, la
-  // caméra peut quitter le fil.
-  const passage = (n, at, sel, retour, etapeFil, faits, av, S) => {
+  // les yeux, puis la caméra descend sur `cible`. Rend l'instant du premier
+  // geste de la partie.
+  const passage = (n, at, sel, retour, etapeFil, faits, av, S, cible, zoom, delai = 0.4) => {
     const [cache, t] = intertitre(n, at);
+    etape(n, cache);
     net(sel, cache);
     retourA(cache, retour);
     tl.set(defil, { y: S }, cache);
@@ -771,24 +782,21 @@ function construire() {
     // Le curseur s'efface le temps du changement d'écran, puis revient.
     tl.set(cur, { o: 0 }, cache);
     tl.to(cur, { o: 1, duration: 0.3 }, t + 0.5);
-    (window.reperes ??= {})[`partie ${n}`] = { clic: +at.toFixed(2), titre: +at.toFixed(2), demo: +(t - 0.5).toFixed(2) };
-    return [cache, t + 0.75];
+    camera(cible, zoom, t + 0.45, 1.25);
+    (window.reperes ??= {})[`partie ${n}`] = { titre: +at.toFixed(2), demo: +(t - 0.5).toFixed(2) };
+    return t + 0.75 + delai;
   };
   const retourA = (t, cle) => pose("retour", t, () => { $("#retour").innerHTML = RETOURS[cle]; });
 
   const LECTURE = 2.2;
-  const TEXTES = [
-    "Rojer reconnaît votre secteur à votre code NAF et <em>charge les unités et les risques types du métier</em>. Vous ajustez ensuite.",
-    "Une unité regroupe des salariés <em>exposés aux mêmes risques</em> : un poste, une zone, une activité. Rojer en propose ; vous renommez, supprimez ou ajoutez.",
-    "Pour chaque unité, trois temps : <em>inventorier, coter, prévoir les mesures</em>. On vous montre un risque ; les autres se font de la même façon.",
-    "Des risques présents dans la plupart des entreprises, quel que soit le métier. <em>Chaque « oui » ajoute le risque</em> à votre DUERP.",
-    "La synthèse classe vos risques par criticité. <em>Valider fige une version</em> : un PDF daté, que vous gardez.",
-  ];
+  // Le texte du plan de titre est celui du panneau de droite ; l'étape 3, dont
+  // le panneau suit ses trois temps, a le sien.
+  const TEXTE_3 = "Pour chaque unité, trois temps : <em>inventorier, coter, prévoir les mesures</em>. On vous montre un risque ; les autres se font de la même façon.";
   const TITRES = ["Décrivez votre activité.", "Vérifiez vos unités.", "Évaluez les risques.", "Répondez aux questions.", "Validez une version."];
   const intertitre = (n, at) => {
     const el = document.createElement("div");
     el.className = "inter";
-    const texte = TEXTES[n - 1];
+    const texte = n === 3 ? TEXTE_3 : $(`#t${n} p`).innerHTML;
     el.innerHTML = `<div class="n">Étape ${n} sur 5</div><h1 class="titre">${TITRES[n - 1]}</h1><p>${texte}</p>`
       + `<div class="seg">${[1, 2, 3, 4, 5].map((k) => `<i class="${k <= n ? "on" : ""}"></i>`).join("")}</div>`
       + `<div class="sig"><span class="pill-marque">Rojer</span></div>`;
@@ -833,7 +841,7 @@ function construire() {
   tl.set("#ouv", { opacity: 0 }, cache);
   tl.set("#pg-porte", { opacity: 1 }, cache);
   camera({ x: AW / 2, y: AH / 2 }, BASE, cache, 0.01);
-  etape(1, cache, 10.6, t);
+  etape(1, cache);
   const P1 = vu("#b-commencer", 0);
   tl.to(cur, { o: 1, duration: 0.3 }, t);
   vers(P1, t + 0.3, 1.0);
@@ -882,10 +890,7 @@ function construire() {
   tl.set("#u-liv", { opacity: 0 }, 0);
 
   // ======================= 2 · UNITÉS DE TRAVAIL =======================
-  [cache, t] = passage(2, t + 9.3, "#c-unites", "unites", 1, 1, 0.5, S);
-  etape(2, cache, 7.8, t - 0.9);
-  camera({ x: CX, y: vu("#g-unites", S).y - 10 }, 0.8, t - 0.3, 1.25);
-  t += 0.4;
+  t = passage(2, t + 9.3, "#c-unites", "unites", 1, 1, 0.5, S, { x: CX, y: vu("#g-unites", S).y - 10 }, 0.8);
   const U1 = vu("#b-ajout-unite", S);
   vers(U1, t + 0.8, 0.8);
   survol("#b-ajout-unite", t + 1.3, 0.2);
@@ -913,10 +918,7 @@ function construire() {
   clic(U2, t + 5.65);
 
   // ======================= 3 · RISQUES PAR UNITÉ =======================
-  [cache, t] = passage(3, t + 6.1, "#c-risques", "risques", 2, 2, 0.08, S);
-  etape(3, cache, 25.0, t - 0.9);
-  camera({ x: CX, y: vu("#l-unites", S).y - 40 }, 0.78, t - 0.3, 1.25);
-  t += 0.4;
+  t = passage(3, t + 6.1, "#c-risques", "risques", 2, 2, 0.08, S, { x: CX, y: vu("#l-unites", S).y - 40 }, 0.78);
   // Le panneau de droite suit les trois temps de l'évaluation.
   const SOUS = [
     ["Inventoriez.", "Rojer a déjà listé les risques types de l'unité. <em>Gardez ceux qui vous concernent</em>, retirez les autres, ajoutez les vôtres."],
@@ -927,21 +929,14 @@ function construire() {
   const sous = (at, k) => {
     pose("sous", at, () => {
       [0, 1, 2].forEach((i) => { $("#s3-" + i).className = i < k ? "fait" : i === k ? "cour" : ""; });
-      $("#s3-" + Math.min(k, 2)).querySelector("span").textContent = k > 2 ? "✓" : String(Math.min(k, 2) + 1);
-      [0, 1, 2].forEach((i) => { if (i < k) $("#s3-" + i).querySelector("span").textContent = "✓"; else $("#s3-" + i).querySelector("span").textContent = String(i + 1); });
+      [0, 1, 2].forEach((i) => { $("#s3-" + i).querySelector("span").textContent = i < k ? "✓" : String(i + 1); });
       $("#t3-h").textContent = SOUS[k][0]; $("#t3-p").innerHTML = SOUS[k][1];
     });
     if (at > 0) tl.fromTo("#t3-var", { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", immediateRender: false }, at);
   };
   sous(0, 0);
   pose("liste", 0, () => {
-    UNITES.concat([["Livraison", "", 0]]).forEach(([, , r], i) => {
-      const li = $(`#ru-${i}`);
-      li.querySelector("small").textContent = r ? `${pl(r, "risque")} ajouté${r > 1 ? "s" : ""} pour vous, à vérifier` : "Aucun risque inventorié";
-      li.querySelectorAll(".segs i").forEach((s) => s.classList.remove("on"));
-      const p = li.querySelector(".past"); p.className = "past"; p.textContent = "À faire";
-      const b = li.querySelector(".btn"); b.className = "btn sm"; b.textContent = "Commencer";
-    });
+    LISTE.forEach(([, , r], i) => etatUnite(i, r, false));
     $("#avert").style.opacity = 1;
     $("#nb-risques").textContent = "6 unités · 33 risques";
   });
@@ -1056,11 +1051,7 @@ function construire() {
   const FAITES = [2, 6, 12, 6, 7, 2];
   FAITES.forEach((n, i) => {
     pose("ru" + i, tF + 0.35 + i * 0.28, () => {
-      const li = $(`#ru-${i}`);
-      li.querySelector("small").textContent = `${pl(n, "risque")} · évaluée`;
-      li.querySelectorAll(".segs i").forEach((s) => s.classList.add("on"));
-      const p = li.querySelector(".past"); p.className = "past ok"; p.textContent = "✓ Évaluée";
-      const b = li.querySelector(".btn"); b.className = "btn cl sm"; b.textContent = "Revoir";
+      etatUnite(i, n, true);
       if (i === 5) { $("#avert").style.opacity = 0; $("#nb-risques").textContent = "6 unités · 35 risques"; }
     });
   });
@@ -1075,25 +1066,21 @@ function construire() {
   clic(R3, tF + 2.8);
 
   // ======================= 4 · QUESTIONS TRANSVERSES =======================
-  [cache, t] = passage(4, tF + 3.25, "#c-trans", "trans", 3, 3, 0.15, S);
-  etape(4, cache, 7.6, t - 0.9);
-  camera({ x: CX, y: vu("#q-bio", S).y - 60 }, 0.86, t - 0.3, 1.25);
-  t += 0.4;
-  pose("tq", 0, () => {
-    ["q-nuit", "q-bio"].forEach((id) => { $(`#${id}-oui`).className = "btn cl sm"; $(`#${id}-non`).className = "btn cl sm"; $(`#${id}-etat`).textContent = "Sans réponse"; $(`#${id}-etat`).className = "st"; });
-    $("#k-trv").style.opacity = 0;
-  });
+  t = passage(4, tF + 3.25, "#c-trans", "trans", 3, 3, 0.15, S, { x: CX, y: vu("#q-bio", S).y - 60 }, 0.86);
+  // Une réponse : le bouton choisi passe à l'encre, « Sans réponse » devient le lien de retrait.
+  const repondre = (id, bouton, at) => {
+    pose(id, 0, () => { $(`#${id}-oui`).className = "btn cl sm"; $(`#${id}-non`).className = "btn cl sm"; $(`#${id}-etat`).textContent = "Sans réponse"; $(`#${id}-etat`).className = "st"; });
+    pose(id, at, () => { $(`#${id}-${bouton}`).className = "btn sm"; $(`#${id}-etat`).textContent = "retirer ma réponse"; $(`#${id}-etat`).className = "retirer"; });
+  };
   const Q1 = vu("#q-nuit-non", S), Q2 = vu("#q-bio-oui", S);
   vers(Q1, t + 0.2, 0.8);
   clic(Q1, t + 1.0);
-  pose("tq", t + 1.05, () => { $("#q-nuit-non").className = "btn sm"; $("#q-nuit-etat").textContent = "retirer ma réponse"; $("#q-nuit-etat").className = "retirer"; });
+  repondre("q-nuit", "non", t + 1.05);
   vers(Q2, t + 1.4, 0.6);
   clic(Q2, t + 2.0);
-  pose("tq", t + 2.05, () => {
-    $("#q-nuit-non").className = "btn sm"; $("#q-nuit-etat").textContent = "retirer ma réponse"; $("#q-nuit-etat").className = "retirer";
-    $("#q-bio-oui").className = "btn sm"; $("#q-bio-etat").textContent = "retirer ma réponse"; $("#q-bio-etat").className = "retirer";
-    $("#k-trv").style.opacity = 1;
-  });
+  repondre("q-bio", "oui", t + 2.05);
+  pose("trv", 0, () => { $("#k-trv").style.opacity = 0; });
+  pose("trv", t + 2.05, () => { $("#k-trv").style.opacity = 1; });
   tl.to(fa, { v: 0.45, duration: 0.4 }, t + 2.1);
   const ST = pos("#k-trv").y - 520;
   tl.to(defil, { y: ST, duration: 1.2 }, t + 2.5);
@@ -1104,26 +1091,24 @@ function construire() {
   clic(Q3, t + 4.85);
 
   // ======================= 5 · SYNTHÈSE =======================
-  [cache, t] = passage(5, t + 5.3, "#c-syn", "syn", 4, 4, 0, S);
-  etape(5, cache, 12.0, t - 0.9);
-  camera({ x: CX, y: vu("#k-synth", S).y + 10 }, 0.9, t - 0.3, 1.25);
-  tl.fromTo(compte, { s1: 0, s2: 0, s3: 0, s4: 0 }, { s1: 6, s2: 36, s3: 61, s4: 14, duration: 1.0, ease: "power1.out", immediateRender: false }, t - 0.1);
-  t += 0.9;
+  t = passage(5, t + 5.3, "#c-syn", "syn", 4, 4, 0, S, { x: CX, y: vu("#k-synth", S).y + 10 }, 0.9, 0.9);
+  tl.fromTo(compte, { s1: 0, s2: 0, s3: 0, s4: 0 }, { s1: 6, s2: 36, s3: 61, s4: 14, duration: 1.0, ease: "power1.out", immediateRender: false }, t - 1.0);
   const SI = pos("#k-inv").y - 420;
   tl.to(defil, { y: SI, duration: 1.1 }, t + 1.5);
   camera({ x: CX, y: 500 }, 0.8, t + 1.5, 1.1);
   const SV = pos("#form-ver").y - 470;
   tl.to(defil, { y: SV, duration: 1.1 }, t + 3.0);
   camera({ x: CX, y: 470 }, 0.9, t + 3.0, 1.1);
-  pose("ver", 0, () => {
-    $("#m-autre").classList.remove("on"); $("#l-prec").textContent = "Précision (facultative)";
-    $("#ver-vide").style.opacity = 1; $("#ver-v1").style.opacity = 0; $("#ver-ok").style.opacity = 0;
-    $("#t-ver").textContent = "Valider — créer une nouvelle version"; $("#alerte-syn").style.display = "";
-  });
+  const motif = (on) => () => { $("#m-autre").classList.toggle("on", on); $("#l-prec").textContent = on ? "Précision (requise)" : "Précision (facultative)"; };
+  const bouton = (txt) => () => { $("#t-ver").textContent = txt; };
+  const versions = (v1) => () => { $("#ver-vide").style.opacity = v1 ? 0 : 1; $("#ver-v1").style.opacity = v1 ? 1 : 0; $("#ver-ok").style.opacity = v1 ? 1 : 0; };
+  pose("motif", 0, motif(false));
+  pose("bouton", 0, bouton("Valider — créer une nouvelle version"));
+  pose("versions", 0, versions(false));
   const V1 = vu("#m-autre", SV, -300);
   vers(V1, t + 4.1, 0.7);
   clic(V1, t + 4.8);
-  pose("ver", t + 4.85, () => { $("#m-autre").classList.add("on"); $("#l-prec").textContent = "Précision (requise)"; });
+  pose("motif", t + 4.85, motif(true));
   const V2 = vu("#ch-prec", SV, -200);
   vers(V2, t + 5.1, 0.45);
   clic(V2, t + 5.55);
@@ -1132,13 +1117,12 @@ function construire() {
   vers(V3, t + 6.65, 0.55);
   survol("#b-ver", t + 7.0, 0.15);
   clic(V3, t + 7.25);
-  pose("ver", t + 7.3, () => { $("#m-autre").classList.add("on"); $("#l-prec").textContent = "Précision (requise)"; $("#t-ver").textContent = "Création…"; });
-  pose("ver", t + 7.75, () => {
-    $("#m-autre").classList.remove("on"); $("#l-prec").textContent = "Précision (facultative)";
-    $("#ver-vide").style.opacity = 0; $("#ver-v1").style.opacity = 1; $("#ver-ok").style.opacity = 1;
-    $("#t-ver").textContent = "Valider — créer une nouvelle version";
-  });
-  window.tVersion = t + 7.75;
+  pose("bouton", t + 7.3, bouton("Création…"));
+  // La version créée, le formulaire repart à zéro.
+  pose("bouton", t + 7.75, bouton("Valider — créer une nouvelle version"));
+  pose("motif", t + 7.75, motif(false));
+  pose("versions", t + 7.75, versions(true));
+  tl.set(frappe, { prec: 0 }, t + 7.75);
   tl.fromTo("#ver-v1", { y: 6 }, { y: 0, duration: 0.35, ease: "power2.out", immediateRender: false }, t + 7.75);
   filA(t + 7.75, 4, 5);
   const V4 = vu("#b-pdf", SV);
@@ -1176,17 +1160,19 @@ function rendre(t) {
     if (f) f();
   }
   const v = (txt, n) => txt.slice(0, Math.round(n));
-  const tape = (id, chId, txt, n, vide) => {
-    const el = $(id); if (!el) return;
-    if (n > 0) { el.innerHTML = v(txt, n) + (n < txt.length ? '<i class="curseur-texte"></i>' : ""); $(chId).classList.remove("vide"); }
-    else { el.textContent = vide; $(chId).classList.add("vide"); }
+  // Un champ en cours de frappe ; vide, il reprend son texte d'exemple, lu
+  // une fois dans le gabarit.
+  const tape = (id, txt, n) => {
+    const el = $(id);
+    el.dataset.vide ??= el.textContent;
+    if (n > 0) el.innerHTML = v(txt, n) + (n < txt.length ? '<i class="curseur-texte"></i>' : "");
+    else el.textContent = el.dataset.vide;
+    el.parentElement.classList.toggle("vide", n <= 0);
   };
-  tape("#v-liv", "#ch-liv", LIV, frappe.liv, "ex. Terrasse, Atelier, Entrepôt");
-  tape("#v-ech", "#ch-ech", ECH, frappe.ech, "jj/mm/aaaa");
-  tape("#v-resp", "#ch-resp", RESP, frappe.resp, "Nom ou rôle");
-  // La précision se vide une fois la version créée (le formulaire repart à zéro).
-  const vide = t >= (window.tVersion ?? Infinity);
-  tape("#v-prec", "#ch-prec", PREC, vide ? 0 : frappe.prec, "ex. ouverture service de livraison — juin 2026");
+  tape("#v-liv", LIV, frappe.liv);
+  tape("#v-ech", ECH, frappe.ech);
+  tape("#v-resp", RESP, frappe.resp);
+  tape("#v-prec", PREC, frappe.prec);
   $("#crit-n").textContent = compte.crit >= 0.5 ? String(Math.round(compte.crit)).padStart(2, "0") : "—";
   ["s1", "s2", "s3", "s4"].forEach((k) => { $("#" + k).textContent = Math.round(compte[k]); });
   $("#defil").style.transform = `translateY(${-defil.y}px)`;

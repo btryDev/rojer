@@ -86,43 +86,59 @@ function construire(cle: string): string {
   });
 }
 
-async function rendre(cle: string) {
-  const travail = mkdtempSync(path.join(tmpdir(), `visite-${cle}-`));
+/** Le gabarit rempli, écrit dans un dossier de travail neuf. */
+function preparer(cle: string, prefixe: string) {
+  const travail = mkdtempSync(path.join(tmpdir(), `${prefixe}-${cle}-`));
   const html = path.join(travail, "visite.html");
   writeFileSync(html, construire(cle));
+  return { travail, html };
+}
+
+type InfosGabarit = { duree: number; debut: number; affiche?: number; reperes?: unknown };
+
+/**
+ * Ouvre le gabarit dans Chrome sans fenêtre et attend qu'il soit prêt. Rend
+ * ce qu'il publie (`window.duree`, `debut`, `affiche`, `reperes`), de quoi
+ * capturer un instant, et de quoi refermer.
+ */
+async function ouvrir(html: string, echelle: number) {
+  const navigateur = await chromium.launch({ executablePath: CHROME, headless: true });
+  const page = await navigateur.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: echelle });
+  await page.goto(`file://${html}`);
+  await page.waitForFunction(() => (window as unknown as { pret?: boolean }).pret === true);
+  const infos = await page.evaluate(() => {
+    const w = window as unknown as InfosGabarit;
+    return { duree: w.duree, debut: w.debut ?? 0, affiche: w.affiche, reperes: w.reperes };
+  });
+  const capturer = async (t: number, fichier: string) => {
+    await page.evaluate((t) => (window as unknown as { allerA: (t: number) => void }).allerA(t), t);
+    await page.screenshot({ path: fichier });
+  };
+  return { infos, capturer, fermer: () => navigateur.close() };
+}
+
+async function rendre(cle: string) {
+  const { travail, html } = preparer(cle, "visite");
   const images = path.join(travail, "images");
   execFileSync("mkdir", [images]);
+  const image = (i: number) => path.join(images, `${String(i).padStart(5, "0")}.png`);
 
-  let dureeRendue = 0;
-  const navigateur = await chromium.launch({ executablePath: CHROME, headless: true });
+  const { infos, capturer, fermer } = await ouvrir(html, 1.5);
+  const { duree, debut, affiche } = infos;
+  const n = Math.ceil((duree - debut) * FPS);
   try {
-    const page = await navigateur.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1.5 });
-    await page.goto(`file://${html}`);
-    await page.waitForFunction(() => (window as unknown as { pret?: boolean }).pret === true);
-    const { duree, debut, affiche } = await page.evaluate(() => {
-      const w = window as unknown as { duree: number; debut?: number; affiche?: number };
-      return { duree: w.duree, debut: w.debut ?? 0, affiche: w.affiche };
-    });
-    const n = Math.ceil((duree - debut) * FPS);
-    for (let i = 0; i < n; i++) {
-      await page.evaluate((t) => (window as unknown as { allerA: (t: number) => void }).allerA(t), debut + i / FPS);
-      await page.screenshot({ path: path.join(images, `${String(i).padStart(5, "0")}.png`) });
-    }
-    // L'image d'aperçu : l'instant que le gabarit désigne (`window.affiche`),
-    // sinon la première image de la vidéo.
-    if (affiche !== undefined) {
-      await page.evaluate((t) => (window as unknown as { allerA: (t: number) => void }).allerA(t), affiche);
-      await page.screenshot({ path: path.join(travail, "affiche.png") });
-    }
-    console.log(`${n} images, ${(n / FPS).toFixed(1)} s`);
-    dureeRendue = n / FPS;
+    for (let i = 0; i < n; i++) await capturer(debut + i / FPS, image(i));
   } finally {
-    await navigateur.close();
+    await fermer();
   }
+  const dureeRendue = n / FPS;
+  console.log(`${n} images, ${dureeRendue.toFixed(1)} s`);
 
   const sortie = (nom: string) => path.join(RACINE, "public/videos", nom);
   const ffmpeg = (...args: string[]) => execFileSync("ffmpeg", ["-y", "-loglevel", "error", ...args]);
-  const premiere = existsSync(path.join(travail, "affiche.png")) ? path.join(travail, "affiche.png") : path.join(images, "00000.png");
+  // L'image d'aperçu : celle de l'instant que le gabarit désigne
+  // (`window.affiche`), déjà dans la séquence ; sinon la première.
+  const premiere = image(affiche === undefined ? 0 : Math.min(n - 1, Math.round((affiche - debut) * FPS)));
   const musique = path.join(RACINE, "scripts/visites/musique", `${cle}.m4a`);
   const son = existsSync(musique)
     ? [
@@ -142,30 +158,22 @@ async function rendre(cle: string) {
 /**
  * `--apercu 12,30.5,61` : quelques images fixes, sans vidéo, pour relire un
  * plan sans attendre le rendu complet. Elles sont écrites dans un dossier
- * temporaire, dont le chemin est affiché.
+ * temporaire, dont le chemin est affiché, avec les repères que le gabarit
+ * publie (`window.reperes`) pour viser un plan.
  */
 async function apercu(cle: string, instants: number[]) {
-  const travail = mkdtempSync(path.join(tmpdir(), `apercu-${cle}-`));
-  const html = path.join(travail, "visite.html");
-  writeFileSync(html, construire(cle));
-  const navigateur = await chromium.launch({ executablePath: CHROME, headless: true });
+  const { travail, html } = preparer(cle, "apercu");
+  const { infos, capturer, fermer } = await ouvrir(html, 1);
   try {
-    const page = await navigateur.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 });
-    await page.goto(`file://${html}`);
-    await page.waitForFunction(() => (window as unknown as { pret?: boolean }).pret === true);
-    const duree = await page.evaluate(() => (window as unknown as { duree: number }).duree);
-    console.log(`durée : ${duree.toFixed(1)} s`);
-    // Les repères que le gabarit publie (`window.reperes`), pour viser un plan.
-    const reperes = await page.evaluate(() => (window as unknown as { reperes?: unknown }).reperes);
-    if (reperes) console.log(JSON.stringify(reperes));
+    console.log(`durée : ${infos.duree.toFixed(1)} s`);
+    if (infos.reperes) console.log(JSON.stringify(infos.reperes));
     for (const t of instants) {
-      await page.evaluate((t) => (window as unknown as { allerA: (t: number) => void }).allerA(t), t);
       const f = path.join(travail, `${String(t).padStart(6, "0")}.png`);
-      await page.screenshot({ path: f });
+      await capturer(t, f);
       console.log(f);
     }
   } finally {
-    await navigateur.close();
+    await fermer();
   }
 }
 
