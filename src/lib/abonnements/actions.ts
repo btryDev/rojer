@@ -31,6 +31,7 @@ import { depassements } from "./quotas";
 import { PAGE_ABONNEMENT, verifierProprietaire, verifierRole, type Proprietaire } from "./saisie";
 import { PAGE_FORMULES } from "./sous-pages";
 import { ouvrirAuGel } from "./gel-saisie";
+import { demandeDuCompte, PAGE_SUPPRESSION } from "@/lib/compte/suppression";
 
 /**
  * Démarrer l'essai (écran « Votre essai gratuit »). Le rôle d'abord : le
@@ -119,6 +120,9 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
   // après l'essai).
   ouvrirAuGel();
   const { stripe, db, ligne, compteId, conditionsSurCheckout } = await clientDuCompte(proprietaire, formData);
+  // Un compte dont la suppression est demandée ne paie pas pour disparaître :
+  // on annule d'abord (ADR-058 § 8) — la page de la suppression le dit.
+  if (await demandeDuCompte(compteId)) redirect(PAGE_SUPPRESSION);
   const formule = String(formData.get("formule") ?? "");
   if (!estLookupKey(formule)) redirect(PAGE_ABONNEMENT);
   const email = proprietaire.user.email;

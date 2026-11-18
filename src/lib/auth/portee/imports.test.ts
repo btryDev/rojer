@@ -67,6 +67,18 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous"; 
       "rappel de la veille de la fin de l'essai (ADR-053), joué par la tâche quotidienne hors session : les essais de tous les comptes, l'adresse de leurs propriétaires, et sa seule marque d'envoi",
     usages: ["prisma.abonnement.findMany", "prisma.abonnement.updateMany", "prisma.membre.findMany"],
   },
+  "src/lib/compte/suppression.ts": {
+    motif:
+      "suppression du compte à la demande d'un propriétaire (ADR-058 § 8) : `Compte` n'est pas dans la portée bornée ; le compte vient toujours de `verifierProprietaire` (ou du compte de la session pour le bandeau), et chaque lecture ou écriture le porte en clé",
+    usages: [
+      "prisma.abonnement.findUnique",
+      "prisma.compte.findUnique",
+      "prisma.compte.findUniqueOrThrow",
+      "prisma.compte.updateMany",
+      "prisma.etablissement.findMany",
+      "prisma.membre.findMany",
+    ],
+  },
   "src/lib/abonnements/suppression.ts": {
     motif:
       "suppression d'un compte sans abonnement depuis douze mois (ADR-058), jouée par la tâche quotidienne hors session : les abonnements de tous les comptes, leurs avertissements, et l'effacement d'un compte entier dans une transaction",
@@ -74,6 +86,7 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous"; 
       "prisma.$transaction",
       "prisma.abonnement.findMany",
       "prisma.abonnement.updateMany",
+      "prisma.compte.findMany",
       "prisma.compteSupprime.deleteMany",
       "prisma.duerpVersion.count",
       "prisma.fichierALiberer.count",

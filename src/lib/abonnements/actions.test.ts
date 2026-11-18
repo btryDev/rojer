@@ -25,6 +25,7 @@ const m = vi.hoisted(() => ({
   annulerBaisse: vi.fn(),
   depassements: vi.fn(),
   marquer: vi.fn(async () => ({ count: 1 })),
+  demande: vi.fn(async () => null as unknown),
 }));
 vi.mock("next/navigation", () => ({ redirect: m.redirect }));
 vi.mock("@/lib/email", () => ({ publicAppUrl: () => "https://rojer.test" }));
@@ -45,6 +46,7 @@ vi.mock("@/lib/stripe/synchronisation", async (reel) => ({
   synchroniserClientStripe: m.synchroniser,
 }));
 vi.mock("./client-stripe", () => ({ clientStripeDuCompte: m.clientStripeDuCompte }));
+vi.mock("@/lib/compte/suppression", () => ({ demandeDuCompte: m.demande, PAGE_SUPPRESSION: "/compte/suppression" }));
 vi.mock("./quotas", () => ({ depassements: m.depassements }));
 vi.mock("./essai", () => ({ PAGE_ESSAI: "/essai", demarrerEssaiDuCompte: vi.fn() }));
 // `ouvrirAuGel` (l'essai) : sans la chaîne de la session, que ce test remplace par ./saisie.
@@ -111,6 +113,13 @@ describe("sAbonnerAction", () => {
     // La marque du paiement ouvert, AVANT Checkout : la suppression du compte l'attend (ADR-058).
     expect(m.marquer).toHaveBeenCalledWith({ where: { compteId: "c1" }, data: { paiementOuvertLe: expect.any(Date) } });
     expect(m.marquer.mock.invocationCallOrder[0]).toBeLessThan(m.ouvrirCheckout.mock.invocationCallOrder[0]);
+  });
+
+  it("une suppression du compte est demandée : pas de paiement, la page de la suppression (ADR-058 § 8)", async () => {
+    m.demande.mockResolvedValueOnce({ demandeeLe: new Date(), par: "a@b.fr", effacementLe: new Date() });
+    expect(await redirigeVers(sAbonnerAction(formulaire()))).toBe("/compte/suppression");
+    expect(m.clientStripeDuCompte).not.toHaveBeenCalled();
+    expect(m.ouvrirCheckout).not.toHaveBeenCalled();
   });
 
   it("le compte a été effacé entre-temps (plus de ligne à marquer) : pas de paiement", async () => {

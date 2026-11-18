@@ -1,4 +1,7 @@
+import Link from "next/link";
 import { FermerLaSaisie } from "@/components/quotas/FermerLaSaisie";
+import { buttonVariants } from "@/components/ui/button";
+import { PAGE_SUPPRESSION } from "@/lib/compte/suppression";
 import { refusMembres } from "@/lib/abonnements/quotas";
 import { MenuCompte } from "@/components/compte/MenuInterne";
 import { PageDuCompte } from "@/components/compte/PageDuCompte";
@@ -149,7 +152,7 @@ export default async function MembresPage({
 
       {/* Quitter : pour une personne invitée. Un propriétaire ne quitte pas
           son compte, il le supprime (décision de la propriétaire du
-          2026-11-17 ; l'écran de suppression est à venir). */}
+          2026-11-17, ADR-058 § 8). */}
       {!proprietaire ? (
         <section className="carte-board px-7 py-6 sm:px-8" aria-labelledby="titre-depart">
           <h2 id="titre-depart" className="board-titre m-0 text-[22px]">
@@ -160,7 +163,21 @@ export default async function MembresPage({
           </p>
           <DepartDuCompte compteId={compte.compteId} nomCompte={nomCompte} />
         </section>
-      ) : null}
+      ) : (
+        // Un propriétaire supprime son compte : une page à part, qui dit tout
+        // ce qui part avant le geste.
+        <section className="carte-board px-7 py-6 sm:px-8" aria-labelledby="titre-suppression">
+          <h2 id="titre-suppression" className="board-titre m-0 text-[22px]">
+            Supprimer le compte
+          </h2>
+          <p className="m-0 mt-1 mb-5 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+            Le compte et toutes ses données sont effacés sept jours après votre demande ; vous pouvez annuler d&apos;ici là.
+          </p>
+          <Link href={PAGE_SUPPRESSION} className={buttonVariants({ variant: "boardClair", size: "board" })}>
+            Supprimer le compte…
+          </Link>
+        </section>
+      )}
     </PageDuCompte>
   );
 }

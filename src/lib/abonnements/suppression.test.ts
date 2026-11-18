@@ -11,6 +11,7 @@ const m = vi.hoisted(() => ({
   synchroniser: vi.fn(),
   versions: vi.fn(),
   fichiers: vi.fn(),
+  demandes: vi.fn(),
 
   transaction: vi.fn(),
   membres: vi.fn(),
@@ -22,6 +23,7 @@ vi.mock("@/lib/prisma", () => ({
     abonnement: { findMany: m.findMany, updateMany: m.updateMany },
     duerpVersion: { count: m.versions },
     fichierStocke: { count: m.fichiers },
+    compte: { findMany: m.demandes },
     membre: { findMany: m.membres },
     fichierALiberer: m.file,
     $transaction: m.transaction,
@@ -90,6 +92,7 @@ beforeEach(() => {
   m.synchroniser.mockResolvedValue({ issue: "ecrit" });
   m.versions.mockResolvedValue(0);
   m.fichiers.mockResolvedValue(0);
+  m.demandes.mockResolvedValue([]);
   m.membres.mockResolvedValue([]);
   m.file.count.mockResolvedValue(0);
   m.file.deleteMany.mockResolvedValue({ count: 1 });
@@ -387,6 +390,32 @@ describe("suppression d'un compte sans abonnement (ADR-058)", () => {
     expect(cancel).not.toHaveBeenCalled();
     expect(voidInvoice).not.toHaveBeenCalled();
     expect(m.transaction).not.toHaveBeenCalled();
+  });
+
+  it("une demande échue (§ 8) : l'abonnement qui court est résilié — ce n'est pas une copie en retard —, puis le compte effacé au motif « demande »", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    m.demandes.mockResolvedValue([{ id: "c1", abonnement: { stripeCustomerId: "cus_1", debutPayantLe: new Date("2027-01-01"), paiementOuvertLe: null } }]);
+    m.abonnements.mockResolvedValue([{ id: "sub_actif", status: "active" }]);
+    m.transaction.mockImplementation(async () => ["cle-1"]);
+    const cancel = vi.fn();
+    const stripe = {
+      subscriptions: { cancel, list: () => ({ autoPagingToArray: m.abonnements }) },
+      invoices: { list: () => ({ autoPagingToArray: async () => [], data: [] }), voidInvoice: vi.fn(), del: vi.fn() },
+      customers: { del: vi.fn() },
+    } as unknown as Parameters<typeof supprimerComptesEchus>[1];
+    expect(await supprimerComptesEchus(MAINTENANT, stripe)).toEqual({ supprimes: 1, reportes: 0 });
+    expect(cancel).toHaveBeenCalledWith("sub_actif");
+    expect(m.synchroniser).not.toHaveBeenCalled();
+    // La sélection des demandes : faites il y a sept jours au moins.
+    expect(m.demandes.mock.calls[0][0].where.suppressionDemandeeLe).toEqual({ lte: ajouterJours(MAINTENANT, -7) });
+  });
+
+  it("sans Stripe : une demande sans client Stripe s'efface ; aucun compte sans abonnement n'est lu", async () => {
+    m.demandes.mockResolvedValue([{ id: "c1", abonnement: null }]);
+    m.transaction.mockResolvedValue([]);
+    expect(await supprimerComptesEchus(MAINTENANT, null)).toEqual({ supprimes: 1, reportes: 0 });
+    expect(m.demandes.mock.calls[0][0].where.OR).toEqual([{ abonnement: null }, { abonnement: { stripeCustomerId: null } }]);
+    expect(m.findMany).not.toHaveBeenCalled();
   });
 
   it("un client Stripe qui n'a jamais payé : supprimé chez Stripe après l'effacement, s'il n'a aucune facture ; un échec se signale, le compte reste effacé", async () => {
