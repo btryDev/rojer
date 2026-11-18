@@ -155,6 +155,9 @@ async function apercu(cle: string, instants: number[]) {
     await page.waitForFunction(() => (window as unknown as { pret?: boolean }).pret === true);
     const duree = await page.evaluate(() => (window as unknown as { duree: number }).duree);
     console.log(`durée : ${duree.toFixed(1)} s`);
+    // Les repères que le gabarit publie (`window.reperes`), pour viser un plan.
+    const reperes = await page.evaluate(() => (window as unknown as { reperes?: unknown }).reperes);
+    if (reperes) console.log(JSON.stringify(reperes));
     for (const t of instants) {
       await page.evaluate((t) => (window as unknown as { allerA: (t: number) => void }).allerA(t), t);
       const f = path.join(travail, `${String(t).padStart(6, "0")}.png`);

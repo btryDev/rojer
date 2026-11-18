@@ -33,11 +33,11 @@ export const VISITES: Record<CleVisite, Visite> = {
     ],
   },
   duerp: {
-    duree: "1 min 35",
+    duree: "1 min 36",
     titre: "Comment ça marche ?",
     titreVideo: "Votre DUERP, en cinq étapes",
     etapes: [
-      "Dire votre activité",
+      "Décrire votre activité",
       "Vérifier vos unités de travail",
       "Évaluer les risques de chaque unité",
       "Répondre aux questions transverses",

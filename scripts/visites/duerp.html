@@ -227,6 +227,14 @@ td b{font-weight:500;color:var(--ink)}
 .etape p{font-size:16px;line-height:1.55;color:var(--slate-mid);margin-top:16px}
 .etape p em{font-style:normal;color:var(--ink);font-weight:500}
 #marque{position:absolute;left:924px;bottom:40px}
+.sous{list-style:none;display:flex;flex-direction:column;gap:9px;margin-top:18px}
+.sous li{display:flex;gap:11px;align-items:center;font-size:15px;color:var(--slate-mid)}
+.sous span{width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:inset 0 0 0 1px var(--slate-line);font-size:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.sous li.cour{color:var(--blue-ink);font-weight:600}
+.sous li.cour span{background:var(--blue-pale);box-shadow:none}
+.sous li.fait{color:var(--ink)}
+.sous li.fait span{background:var(--ink);color:#fff;box-shadow:none}
+#t3 h2{font-size:30px;margin-top:22px}
 
 /* ---------- plans de titre ---------- */
 .inter{position:absolute;inset:0;background:var(--canvas);z-index:55;opacity:0;display:flex;flex-direction:column;justify-content:center;padding-left:96px}
@@ -385,7 +393,7 @@ td b{font-weight:500;color:var(--ink)}
             <li><span class="rd">02</span><span><b>Coter</b><small>Après l'inventaire</small></span></li>
             <li><span class="rd">03</span><span><b>Prévoir les mesures</b><small>Après la cotation</small></span></li></ol></div>
           <section class="carte" style="overflow:hidden">
-            <div class="k-tete" style="align-items:center"><h3>Risques retenus <span class="st">12</span></h3><span class="btn cl sm">+ Ajouter un risque</span></div>
+            <div class="k-tete" style="align-items:center"><h3>Risques retenus <span class="st">12</span></h3><span class="btn cl sm" id="b-ajout-risque">+ Ajouter un risque</span></div>
             <ul class="rangs" id="l-risques"></ul>
           </section>
         </div>
@@ -494,12 +502,13 @@ td b{font-weight:500;color:var(--ink)}
     <div class="st">Visite guidée · DUERP</div>
     <div class="barres"><i><span id="b1"></span></i><i><span id="b2"></span></i><i><span id="b3"></span></i><i><span id="b4"></span></i><i><span id="b5"></span></i></div>
   </div>
-  <div class="etape" id="t1"><div class="num">Étape 1 sur 5</div><h2 class="titre">Dites votre activité.</h2>
+  <div class="etape" id="t1"><div class="num">Étape 1 sur 5</div><h2 class="titre">Décrivez votre activité.</h2>
     <p>Rojer reconnaît votre secteur à votre code NAF et <em>charge les unités et les risques types du métier</em>. Vous ajustez ensuite.</p></div>
   <div class="etape" id="t2"><div class="num">Étape 2 sur 5</div><h2 class="titre">Vérifiez vos unités de travail.</h2>
     <p>Une unité regroupe des salariés <em>exposés aux mêmes risques</em> : un poste, une zone, une activité. Rojer en propose ; vous renommez, supprimez ou ajoutez.</p></div>
-  <div class="etape" id="t3"><div class="num">Étape 3 sur 5</div><h2 class="titre">Évaluez les risques de chaque unité.</h2>
-    <p>Pour chaque unité : <em>inventorier, coter, prévoir les mesures</em>. On vous montre un risque ; les autres se font de la même façon.</p></div>
+  <div class="etape" id="t3"><div class="num">Étape 3 sur 5 · Évaluer les risques</div>
+    <ol class="sous"><li id="s3-0"><span>1</span>Inventorier</li><li id="s3-1"><span>2</span>Coter</li><li id="s3-2"><span>3</span>Prévoir les mesures</li></ol>
+    <div id="t3-var"><h2 class="titre" id="t3-h"></h2><p id="t3-p"></p></div></div>
   <div class="etape" id="t4"><div class="num">Étape 4 sur 5</div><h2 class="titre">Répondez aux questions transverses.</h2>
     <p>Des risques présents dans la plupart des entreprises, quel que soit le métier. <em>Chaque « oui » ajoute le risque</em> à votre DUERP.</p></div>
   <div class="etape" id="t5"><div class="num">Étape 5 sur 5</div><h2 class="titre">Validez une version.</h2>
@@ -513,7 +522,7 @@ td b{font-weight:500;color:var(--ink)}
   <span id="rj"><i>R</i><i>o</i><i>j</i><i>e</i><i>r</i></span>
   <div id="ouv-t"><span class="lg"><b>Votre DUERP,</b></span><span class="lg"><b>en cinq étapes.</b></span></div>
   <ol id="som">
-    <li><span>1</span>Dire votre activité</li>
+    <li><span>1</span>Décrire votre activité</li>
     <li><span>2</span>Vérifier vos unités de travail</li>
     <li><span>3</span>Évaluer les risques de chaque unité</li>
     <li><span>4</span>Répondre aux questions transverses</li>
@@ -719,7 +728,9 @@ const pose = (cle, t, f) => (poses[cle] ??= []).push([t, f]);
 
 function construire() {
   // Mesuré au repos, défilement à zéro : `vu` retire le défilement de l'instant.
-  const tl = gsap.timeline({ paused: true, defaults: { ease: "power2.inOut" } });
+  // lazy: false : sans quoi une valeur de départ se lit en retard quand on saute
+  // d'un instant à un autre (aperçu), et un état posé plus tôt est perdu.
+  const tl = gsap.timeline({ paused: true, defaults: { ease: "power2.inOut", lazy: false } });
   const vu = (sel, S, dx = 0, dy = 0) => { const p = pos(sel, dx, dy); return { x: p.x, y: p.y - S }; };
   const camera = (p, s, at, d = 0.9) => tl.to(cam, { x: p.x, y: p.y, s, duration: d, ease: "power2.inOut" }, at);
   // Une trajectoire légèrement courbe : la main ne va pas en ligne droite.
@@ -748,15 +759,40 @@ function construire() {
     tl.fromTo("#t" + n, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out", immediateRender: false }, at + (n > 1 ? 0.2 : 0));
     tl.to("#b" + n, { scaleX: 1, duration: dureeBarre, ease: "none" }, debutBarre);
   };
-  const filA = (t, cur, faits) => pose("fil", t, () => dessinerFil({ cur, faits }));
+  const filA = (t, etapeFil, faits) => pose("fil", t, () => dessinerFil({ cur: etapeFil, faits }));
+  // Une partie finit sur le clic « Valider ». L'écran suivant arrive sous le
+  // plan de titre ; la partie suivante s'ouvre sur le fil, qui se coche sous
+  // les yeux, puis la caméra descend sur l'écran. Rend [cache, t] : à t, la
+  // caméra peut quitter le fil.
+  const passage = (n, at, sel, retour, etapeFil, faits, av, S) => {
+    const [cache, t] = intertitre(n, at);
+    net(sel, cache);
+    retourA(cache, retour);
+    tl.set(defil, { y: S }, cache);
+    filA(cache, etapeFil - 1, faits - 1); tl.set(fa, { v: 1 }, cache);
+    camera({ x: AW / 2 + 44, y: pos("#fil").y - S + 120 }, 0.76, cache, 0.01);
+    filA(t + 0.1, etapeFil, faits); tl.set(fa, { v: av }, t + 0.1);
+    // Le curseur s'efface le temps du changement d'écran, puis revient.
+    tl.set(cur, { o: 0 }, cache);
+    tl.to(cur, { o: 1, duration: 0.3 }, t + 0.5);
+    (window.reperes ??= {})[`partie ${n}`] = { clic: +at.toFixed(2), titre: +at.toFixed(2), demo: +(t - 0.5).toFixed(2) };
+    return [cache, t + 0.9];
+  };
   const retourA = (t, cle) => pose("retour", t, () => { $("#retour").innerHTML = RETOURS[cle]; });
 
   const LECTURE = 2.2;
-  const TITRES = ["Dites votre activité.", "Vérifiez vos unités.", "Évaluez les risques.", "Répondez aux questions.", "Validez une version."];
+  const TEXTES = [
+    "Rojer reconnaît votre secteur à votre code NAF et <em>charge les unités et les risques types du métier</em>. Vous ajustez ensuite.",
+    "Une unité regroupe des salariés <em>exposés aux mêmes risques</em> : un poste, une zone, une activité. Rojer en propose ; vous renommez, supprimez ou ajoutez.",
+    "Pour chaque unité, trois temps : <em>inventorier, coter, prévoir les mesures</em>. On vous montre un risque ; les autres se font de la même façon.",
+    "Des risques présents dans la plupart des entreprises, quel que soit le métier. <em>Chaque « oui » ajoute le risque</em> à votre DUERP.",
+    "La synthèse classe vos risques par criticité. <em>Valider fige une version</em> : un PDF daté, que vous gardez.",
+  ];
+  const TITRES = ["Décrivez votre activité.", "Vérifiez vos unités.", "Évaluez les risques.", "Répondez aux questions.", "Validez une version."];
   const intertitre = (n, at) => {
     const el = document.createElement("div");
     el.className = "inter";
-    const texte = document.querySelector(`#t${n} p`).innerHTML;
+    const texte = TEXTES[n - 1];
     el.innerHTML = `<div class="n">Étape ${n} sur 5</div><h1 class="titre">${TITRES[n - 1]}</h1><p>${texte}</p>`
       + `<div class="seg">${[1, 2, 3, 4, 5].map((k) => `<i class="${k <= n ? "on" : ""}"></i>`).join("")}</div>`
       + `<div class="sig"><span class="pill-marque">Rojer</span></div>`;
@@ -844,19 +880,13 @@ function construire() {
   vers(P3, t + 8.1, 0.7);
   survol("#b-val-act", t + 8.5, 0.2);
   clic(P3, t + 8.85);
-  // Le fil coche l'étape : la caméra remonte le voir.
-  ecran("#c-unites", t + 9.15);
-  filA(t + 9.15, 1, 1); tl.set(fa, { v: 0.5 }, t + 9.15);
-  retourA(t + 9.15, "unites");
-  tl.set("#g-unites li", { opacity: 1 }, 0);
   tl.set("#u-liv", { opacity: 0 }, 0);
-  camera({ x: CX, y: vu("#fil", S).y + 120 }, 0.76, t + 9.0, 0.7);
 
   // ======================= 2 · UNITÉS DE TRAVAIL =======================
-  [cache, t] = intertitre(2, t + 10.7);
-  etape(2, cache, 7.0, t);
-  camera({ x: CX, y: vu("#g-unites", S).y - 10 }, 0.8, cache, 0.01);
-  tl.from("#g-unites li:not(#u-liv)", { opacity: 0, y: 10, duration: 0.4, stagger: 0.1, ease: "power2.out", immediateRender: false }, t - 0.2);
+  [cache, t] = passage(2, t + 9.3, "#c-unites", "unites", 1, 1, 0.5, S);
+  etape(2, cache, 7.8, t - 0.9);
+  camera({ x: CX, y: vu("#g-unites", S).y - 10 }, 0.8, t - 0.3, 0.9);
+  t += 0.4;
   const U1 = vu("#b-ajout-unite", S);
   vers(U1, t + 0.8, 0.8);
   survol("#b-ajout-unite", t + 1.3, 0.2);
@@ -882,15 +912,29 @@ function construire() {
   vers(U2, t + 4.9, 0.7);
   survol("#b-val-unites", t + 5.3, 0.2);
   clic(U2, t + 5.65);
-  ecran("#c-risques", t + 5.95);
-  filA(t + 5.95, 2, 2); tl.set(fa, { v: 0.08 }, t + 5.95);
-  retourA(t + 5.95, "risques");
-  camera({ x: CX, y: vu("#fil", S).y + 120 }, 0.76, t + 5.8, 0.7);
 
   // ======================= 3 · RISQUES PAR UNITÉ =======================
-  [cache, t] = intertitre(3, t + 7.5);
-  etape(3, cache, 22.4, t);
-  camera({ x: CX, y: vu("#l-unites", S).y - 40 }, 0.78, cache, 0.01);
+  [cache, t] = passage(3, t + 6.1, "#c-risques", "risques", 2, 2, 0.08, S);
+  etape(3, cache, 25.0, t - 0.9);
+  camera({ x: CX, y: vu("#l-unites", S).y - 40 }, 0.78, t - 0.3, 0.9);
+  t += 0.4;
+  // Le panneau de droite suit les trois temps de l'évaluation.
+  const SOUS = [
+    ["Inventoriez.", "Rojer a déjà listé les risques types de l'unité. <em>Gardez ceux qui vous concernent</em>, retirez les autres, ajoutez les vôtres."],
+    ["Cotez.", "Trois questions : gravité, probabilité, maîtrise actuelle. <em>La criticité se calcule</em>, sur 16."],
+    ["Prévoyez les mesures.", "Ce qui est déjà en place, ce qui est à prévoir. <em>Une mesure à prévoir devient une action</em>, avec une échéance et un responsable."],
+    ["Unité par unité.", "Le même geste pour chaque risque. Quand toutes les unités sont évaluées, <em>l'étape se valide</em>."],
+  ];
+  const sous = (at, k) => {
+    pose("sous", at, () => {
+      [0, 1, 2].forEach((i) => { $("#s3-" + i).className = i < k ? "fait" : i === k ? "cour" : ""; });
+      $("#s3-" + Math.min(k, 2)).querySelector("span").textContent = k > 2 ? "✓" : String(Math.min(k, 2) + 1);
+      [0, 1, 2].forEach((i) => { if (i < k) $("#s3-" + i).querySelector("span").textContent = "✓"; else $("#s3-" + i).querySelector("span").textContent = String(i + 1); });
+      $("#t3-h").textContent = SOUS[k][0]; $("#t3-p").innerHTML = SOUS[k][1];
+    });
+    if (at > 0) tl.fromTo("#t3-var", { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", immediateRender: false }, at);
+  };
+  sous(0, 0);
   pose("liste", 0, () => {
     UNITES.concat([["Livraison", "", 0]]).forEach(([, , r], i) => {
       const li = $(`#ru-${i}`);
@@ -910,12 +954,17 @@ function construire() {
   retourA(t + 1.45, "unite");
   camera({ x: CX, y: vu("#marche-unite", S).y }, 0.9, t + 1.45, 0.8);
   camera({ x: CX, y: vu("#l-risques", S).y - 40 }, 0.84, t + 2.9, 0.9);
+  const AJ = vu("#b-ajout-risque", S);
+  vers(AJ, t + 3.0, 0.8);
+  survol("#b-ajout-risque", t + 3.6, 0.6);
+  t += 1.3;
   const R2 = vu("#rq-1", S);
   vers(R2, t + 3.0, 0.9);
   survol("#rq-1", t + 3.6, 0.2);
   clic(R2, t + 3.95);
   // Coter : la page défile d'une question à l'autre.
   ecran("#c-cot", t + 4.25);
+  sous(t + 4.25, 1);
   retourA(t + 4.25, "cot");
   const yQ = [0, 1, 2].map((i) => pos(`#q${i}`).y);
   const S1 = yQ[0] - 330, S2 = yQ[1] - 330, S3 = yQ[2] - 300;
@@ -955,6 +1004,7 @@ function construire() {
   // Les mesures : cocher deux mesures, en passer une « à prévoir ».
   const tM = tCrit + 2.75;
   ecran("#c-mes-a", tM);
+  sous(tM, 2);
   retourA(tM, "mes");
   const SM = pos("#tg-a-0").y - 470;
   tl.set(defil, { y: S }, tM);
@@ -1000,6 +1050,7 @@ function construire() {
   tl.fromTo("#bulle", { opacity: 0, y: -6 }, { opacity: 1, y: 0, duration: 0.35, immediateRender: false }, tF - 0.2);
   tl.to("#bulle", { opacity: 0, duration: 0.35 }, tF + 2.4);
   ecran("#c-risques", tF);
+  sous(tF, 3);
   retourA(tF, "risques");
   tl.set(defil, { y: S }, tF);
   camera({ x: CX, y: vu("#l-unites", S).y - 20 }, 0.78, tF, 0.01);
@@ -1015,19 +1066,20 @@ function construire() {
     });
   });
   tl.to(fa, { v: 0.9, duration: 1.7, ease: "none" }, tF + 0.35);
-  const R3 = vu("#b-val-risques", S);
+  // Le bouton est sous la liste : la page descend jusqu'à lui.
+  const SB = pos("#b-val-risques").y - 700;
+  tl.to(defil, { y: SB, duration: 0.7 }, tF + 1.8);
+  camera({ x: CX, y: 560 }, 0.8, tF + 1.8, 0.7);
+  const R3 = vu("#b-val-risques", SB);
   vers(R3, tF + 2.0, 0.7);
   survol("#b-val-risques", tF + 2.45, 0.2);
   clic(R3, tF + 2.8);
-  ecran("#c-trans", tF + 3.1);
-  filA(tF + 3.1, 3, 3); tl.set(fa, { v: 0.15 }, tF + 3.1);
-  retourA(tF + 3.1, "trans");
-  camera({ x: CX, y: vu("#fil", S).y + 120 }, 0.76, tF + 2.95, 0.7);
 
   // ======================= 4 · QUESTIONS TRANSVERSES =======================
-  [cache, t] = intertitre(4, tF + 4.7);
-  etape(4, cache, 7.4, t);
-  camera({ x: CX, y: vu("#q-bio", S).y - 60 }, 0.86, cache, 0.01);
+  [cache, t] = passage(4, tF + 3.25, "#c-trans", "trans", 3, 3, 0.15, S);
+  etape(4, cache, 7.6, t - 0.9);
+  camera({ x: CX, y: vu("#q-bio", S).y - 60 }, 0.86, t - 0.3, 0.9);
+  t += 0.4;
   pose("tq", 0, () => {
     ["q-nuit", "q-bio"].forEach((id) => { $(`#${id}-oui`).className = "btn cl sm"; $(`#${id}-non`).className = "btn cl sm"; $(`#${id}-etat`).textContent = "Sans réponse"; $(`#${id}-etat`).className = "st"; });
     $("#k-trv").style.opacity = 0;
@@ -1051,17 +1103,13 @@ function construire() {
   vers(Q3, t + 4.0, 0.8);
   survol("#b-val-trans", t + 4.5, 0.2);
   clic(Q3, t + 4.85);
-  ecran("#c-syn", t + 5.15);
-  tl.fromTo(compte, { s1: 0, s2: 0, s3: 0, s4: 0 }, { s1: 6, s2: 36, s3: 61, s4: 14, duration: 1.0, ease: "power1.out", immediateRender: false }, t + 5.3);
-  tl.set(defil, { y: S }, t + 5.15);
-  filA(t + 5.15, 4, 4); tl.set(fa, { v: 0.0 }, t + 5.15);
-  retourA(t + 5.15, "syn");
-  camera({ x: CX, y: vu("#fil", S).y + 120 }, 0.76, t + 5.0, 0.7);
 
   // ======================= 5 · SYNTHÈSE =======================
-  [cache, t] = intertitre(5, t + 6.4);
-  etape(5, cache, 11.0, t);
-  camera({ x: CX, y: vu("#k-synth", S).y + 10 }, 0.9, cache, 0.01);
+  [cache, t] = passage(5, t + 5.3, "#c-syn", "syn", 4, 4, 0, S);
+  etape(5, cache, 12.0, t - 0.9);
+  camera({ x: CX, y: vu("#k-synth", S).y + 10 }, 0.9, t - 0.3, 0.9);
+  tl.fromTo(compte, { s1: 0, s2: 0, s3: 0, s4: 0 }, { s1: 6, s2: 36, s3: 61, s4: 14, duration: 1.0, ease: "power1.out", immediateRender: false }, t - 0.1);
+  t += 0.9;
   const SI = pos("#k-inv").y - 420;
   tl.to(defil, { y: SI, duration: 1.1 }, t + 1.5);
   camera({ x: CX, y: 500 }, 0.8, t + 1.5, 1.1);
