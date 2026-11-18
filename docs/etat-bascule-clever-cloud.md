@@ -535,8 +535,11 @@ et de la recette restent ouvertes. Sur l'instance :
     COMPTE_TEST_MOT_DE_PASSE=… $L --email julien@rojer.invalid --situations --ecrire   # les 5 fiches du préventeur
 
 Sans `--ecrire`, à blanc. `--annuler` retire les fiches. Relancer remet le mot
-de passe. Ne marche pas sans e-mail : inviter un membre, lien prestataire,
-signature à distance, mot de passe oublié.
+de passe. ~~Ne marche pas sans e-mail : inviter un membre, lien prestataire,
+signature à distance, mot de passe oublié.~~ [2026-11-18 : Mailpace est
+branché sur la préprod depuis le 2026-11-14 (`EMAIL_DRIVER=mailpace`,
+expéditeur `no-reply@rojer.fr`) ; ces chemins se testent, avec une vraie
+adresse — une `@rojer.invalid` ne reçoit rien. Recette ci-dessous.]
 
 [2026-11-12 : la commande `pnpm comptes-test` écrite ici d'abord (#301) ne
 marche pas sur l'instance — `pnpm` absent du PATH, environnement non chargé
@@ -546,6 +549,33 @@ Comptes posés le 2026-11-12 sur la préprod : `testeur@rojer.invalid` (vide),
 `julien@rojer.invalid` (5 fiches), `paloma@rojer.invalid` (vérification de
 l'ADR-057 : hôtel O + N de 5ᵉ et magasin M témoin, semé par un script
 jetable, hors dépôt).
+
+### Recette des envois d'e-mail (à faire tester, 2026-11-18)
+
+Tous les envois passent par le même pilote (`src/lib/email/index.ts`) ; la
+recette vérifie que chacun arrive et que son lien mène au bon endroit. Les
+destinataires sont de **vraies adresses** (une boîte à soi, une seconde pour
+jouer le prestataire ou l'entreprise extérieure).
+
+Pour chaque e-mail : il arrive (pas en indésirables), il vient de
+`no-reply@rojer.fr`, son lien ouvre la préprod (pas `localhost`), le code
+reçu marche une fois et pas deux.
+
+- **Plan de prévention** : demander la signature à l'entreprise extérieure →
+  e-mail avec le lien, code à l'ouverture, signature, puis
+  `/verifier/[signature]` l'affiche.
+- **Lien prestataire** (dépôt d'un rapport) : e-mail avec le lien et le code ;
+  le rapport déposé arrive sur la bonne ligne ; révoqué, le lien ne s'ouvre
+  plus.
+- **Autre signature à distance** (permis de feu, rapport de vérification) :
+  même parcours que
+  le plan de prévention.
+- **Invitation d'un membre** : e-mail, lien, acceptation (recette § 6).
+- **Inscription** : e-mail de confirmation, activation.
+- **Mot de passe oublié** : e-mail, lien, nouveau mot de passe accepté.
+
+Noter ici la date et ce qui n'est pas arrivé. La mise en page des e-mails
+n'est pas faite (texte brut) : ce n'est pas un défaut de la recette.
 
 ### À faire, une fois les tests finis (pas avant : les comptes servent)
 
