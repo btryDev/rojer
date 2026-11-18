@@ -11,7 +11,7 @@ export function IllustrationCarnetSanitaire() {
     <ImageEnTete
       src="/illustrations/entetes/carnet-sanitaire.webp"
       width={900}
-      height={582}
+      height={583}
       className="w-[clamp(300px,30vw,400px)]"
     />
   );
