@@ -1,10 +1,10 @@
 "use client";
-// Le menu interne de l'abonnement (2026-11-17, décision de la propriétaire) :
-// quatre sous-pages. Sur grand écran, une carte blanche à gauche — le menu se
-// détache du contenu (retour de test du même jour : « pas assez séparés ») —,
-// l'entrée ouverte en creux. Sur tablette et téléphone, une rangée de
-// pastilles au-dessus. Seul l'abonnement en a un : Membres et Sécurité
-// s'ouvrent depuis la gélule, qui est déjà le menu du compte.
+// Le menu interne d'un espace du compte (2026-11-17, décisions de la
+// propriétaire) : l'abonnement et ses quatre sous-pages, puis le compte
+// (Membres, Sécurité) — deux espaces, le même menu. Sur grand écran, une
+// carte blanche à gauche — le menu se détache du contenu (retour de test du
+// même jour : « pas assez séparés ») —, l'entrée ouverte en creux. Sur
+// tablette et téléphone, une rangée de pastilles au-dessus.
 //
 // Deux `nav` et non une : `carte-board` ne se pose pas sous un préfixe
 // `lg:`. Une seule est affichée à la fois, l'autre est masquée (`hidden`).
@@ -14,6 +14,9 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 
 import { SOUS_PAGES_ABONNEMENT } from "@/lib/abonnements/sous-pages";
+import { SOUS_PAGES_COMPTE } from "@/lib/compte/sous-pages";
+
+type Entree = { readonly href: string; readonly libelle: string };
 
 const STYLES = {
   carte: {
@@ -32,7 +35,13 @@ const STYLES = {
   },
 } as const;
 
-export function MenuAbonnement() {
+/** Le menu de l'espace Abonnement. */
+export const MenuAbonnement = () => <MenuInterne nom="Abonnement" entrees={SOUS_PAGES_ABONNEMENT} />;
+
+/** Le menu de l'espace Compte : les membres, la sécurité. */
+export const MenuCompte = () => <MenuInterne nom="Compte" entrees={SOUS_PAGES_COMPTE} />;
+
+function MenuInterne({ nom, entrees }: { nom: string; entrees: readonly Entree[] }) {
   const chemin = usePathname();
   const pastilles = useRef<HTMLElement>(null);
   // Sur téléphone, la rangée défile : la pastille de la page ouverte est
@@ -48,8 +57,8 @@ export function MenuAbonnement() {
       {(["carte", "pastilles"] as const).map((forme) => {
         const s = STYLES[forme];
         return (
-          <nav key={forme} ref={forme === "pastilles" ? pastilles : undefined} aria-label="Abonnement" className={s.nav}>
-            {SOUS_PAGES_ABONNEMENT.map((p) => (
+          <nav key={forme} ref={forme === "pastilles" ? pastilles : undefined} aria-label={nom} className={s.nav}>
+            {entrees.map((p) => (
               <Link
                 key={p.href}
                 href={p.href}

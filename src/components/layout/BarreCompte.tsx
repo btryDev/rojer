@@ -35,11 +35,12 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Building2, Check, CreditCard, HelpCircle, Home, LogOut, Plus, ShieldCheck, Users, type LucideIcon } from "lucide-react";
+import { Building2, Check, CreditCard, HelpCircle, Home, LogOut, Plus, Users, type LucideIcon } from "lucide-react";
 import { signOutAction } from "@/lib/auth/actions";
 import { choisirEtablissementActif } from "@/lib/etablissements/actions";
 import { choisirCompte } from "@/lib/membres/actions";
 import { estMultiEtablissements } from "@/lib/etablissements/selection";
+import { PAGE_MEMBRES } from "@/lib/compte/sous-pages";
 
 export type EtablissementCommutable = { id: string; raisonDisplay: string };
 export type CompteCommutable = { compteId: string; nom: string };
@@ -359,11 +360,10 @@ export function BarreCompte({
                 pas figurer deux fois à l'écran. */}
             {multi ? null : <LienAjouter onNavigate={() => setOuvert(null)} />}
 
-            {/* Mot de passe et sessions ouvertes (ADR-052, lot 3a). */}
-            <EntreeLien href="/compte/securite" Icone={ShieldCheck} libelle="Sécurité du compte" onNavigate={() => setOuvert(null)} />
-
-            {/* Les personnes qui travaillent sur le compte (ADR-054). */}
-            <EntreeLien href="/compte/membres" Icone={Users} libelle="Membres du compte" onNavigate={() => setOuvert(null)} />
+            {/* L'espace Compte (2026-11-17, décision de la propriétaire) : les
+                membres (ADR-054) et la sécurité (ADR-052), réunis derrière une
+                entrée, avec leur menu de côté. */}
+            <EntreeLien href={PAGE_MEMBRES} Icone={Users} libelle="Mon compte" onNavigate={() => setOuvert(null)} />
 
             {/* L'état de l'abonnement, ouvert à tous les rôles (ADR-053 § 12 :
                 les boutons y restent au propriétaire). */}

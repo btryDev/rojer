@@ -6,7 +6,7 @@ import { CarteAbonnement, OffreFermee, TEXTE_AIDE } from "@/components/abonnemen
 import { ChampCompteAttendu } from "@/components/compte/ChampCompteAttendu";
 import { ouvrirPortailAction } from "@/lib/abonnements/actions";
 import { BaissePrevue, GesteChangement, GesteSAbonner, NOTE_FORTE, type OptionDeFormule } from "@/components/abonnements/GestesDeFormule";
-import { MenuAbonnement } from "@/components/abonnements/MenuAbonnement";
+import { MenuAbonnement } from "@/components/compte/MenuInterne";
 import { PageDuCompte } from "@/components/compte/PageDuCompte";
 import { GrilleDesOffres } from "@/components/landing/GrilleDesOffres";
 import { OFFRES, type Periode } from "@/components/landing/tarif-donnees";

@@ -12,6 +12,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { getOptionalCompte, type Compte, type Db } from "@/lib/auth/compte";
 import { requireUser } from "@/lib/auth/require-user";
+import { PAGE_MEMBRES } from "@/lib/compte/sous-pages";
 import { droitsDe, type Droits } from "./droits";
 
 export { PAGE_ABONNEMENT } from "./sous-pages";
@@ -19,7 +20,7 @@ import { PAGE_SAISIE_FERMEE } from "@/lib/auth/portee/gel";
 /** Où une écriture refusée à un membre en lecture seule renvoie (ADR-054 § 4). */
 export const PAGE_LECTURE_SEULE = "/compte/lecture-seule";
 /** Où un geste réservé au propriétaire renvoie un autre membre. */
-export const PAGE_MEMBRES = "/compte/membres";
+export { PAGE_MEMBRES };
 
 // Le lancement de l'offre vit à part (`lancement.ts`), sans dépendance à la
 // session : les plafonds le lisent depuis la couche qui construit la portée.

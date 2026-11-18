@@ -5,7 +5,7 @@ import { BandeauAbonnement } from "@/components/abonnements/BandeauAbonnement";
 import { CarteAbonnement, OffreFermee, TEXTE_AIDE } from "@/components/abonnements/CarteAbonnement";
 import { FrisePeriode } from "@/components/abonnements/FrisePeriode";
 import { JaugeDePlafond } from "@/components/abonnements/JaugeDePlafond";
-import { MenuAbonnement } from "@/components/abonnements/MenuAbonnement";
+import { MenuAbonnement } from "@/components/compte/MenuInterne";
 import { RecapPaiement } from "@/components/abonnements/RecapPaiement";
 import { PageDuCompte } from "@/components/compte/PageDuCompte";
 import { buttonVariants } from "@/components/ui/button";

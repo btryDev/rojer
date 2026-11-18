@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { BoutonEnvoi } from "@/components/abonnements/BoutonEnvoi";
 import { CarteAbonnement, OffreFermee, TEXTE_AIDE } from "@/components/abonnements/CarteAbonnement";
-import { MenuAbonnement } from "@/components/abonnements/MenuAbonnement";
+import { MenuAbonnement } from "@/components/compte/MenuInterne";
 import { Recap, RecapPaiement } from "@/components/abonnements/RecapPaiement";
 import { ChampCompteAttendu } from "@/components/compte/ChampCompteAttendu";
 import { PageDuCompte } from "@/components/compte/PageDuCompte";

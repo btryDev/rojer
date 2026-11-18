@@ -43,7 +43,7 @@ describe("GesteSAbonner", () => {
     expect(plusTot.className).not.toMatch(/lp-btn/);
     expect(screen.getByRole("button", { name: "Passer à Pro" }).className).toMatch(/lp-btn/);
     expect(screen.getByText("Votre formule, gratuite jusqu'au 16 décembre 2026.")).toBeTruthy();
-    expect(screen.getAllByText(/^Prélevé aujourd.hui : .* Votre essai s'arrête : les limites complètes de la formule s'appliquent\.$/)).toHaveLength(2);
+    expect(screen.getAllByText(/^Prélevé aujourd.hui : .* Dès l'abonnement, les limites de l'essai sont levées, et les documents officiels s'ouvrent \(valider, exporter, publier, faire signer\) ; votre essai s'arrête\.$/)).toHaveLength(2);
   });
 
   it("dans la dernière semaine de l'essai : s'abonner à sa formule redevient le geste plein", () => {

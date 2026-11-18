@@ -1,5 +1,6 @@
 import { FermerLaSaisie } from "@/components/quotas/FermerLaSaisie";
 import { refusMembres } from "@/lib/abonnements/quotas";
+import { MenuCompte } from "@/components/compte/MenuInterne";
 import { PageDuCompte } from "@/components/compte/PageDuCompte";
 import { NomDuCompte } from "@/components/compte/NomDuCompte";
 import { requireCompte } from "@/lib/auth/compte";
@@ -47,10 +48,9 @@ export default async function MembresPage({
     <PageDuCompte
       titre="Membres du compte"
       description="Les personnes qui travaillent sur vos dossiers. Chacune voit tous les établissements du compte, selon son rôle. Les prestataires n'en font pas partie : ils accèdent par un lien."
+      menu={<MenuCompte />}
     >
-      <div>
-        <NomDuCompte nom={nomCompte} email={user.email} />
-      </div>
+      {nomCompte ? <NomDuCompte nom={nomCompte} /> : null}
 
       {reserve === "proprietaire" && !proprietaire ? (
         <p className="m-0 text-[14px] leading-[1.45] text-[color:var(--board-slate-ink)]">
@@ -147,16 +147,20 @@ export default async function MembresPage({
         </section>
       ) : null}
 
-      <section className="carte-board px-7 py-6 sm:px-8" aria-labelledby="titre-depart">
-        <h2 id="titre-depart" className="board-titre m-0 text-[22px]">
-          Quitter le compte
-        </h2>
-        <p className="m-0 mt-1 mb-5 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-          Vous perdez l&apos;accès à ses dossiers ; ce que vous y avez saisi reste au compte. Le dernier
-          propriétaire ne peut pas partir : il nomme d&apos;abord un autre propriétaire.
-        </p>
-        <DepartDuCompte compteId={compte.compteId} nomCompte={nomCompte} />
-      </section>
+      {/* Quitter : pour une personne invitée. Un propriétaire ne quitte pas
+          son compte, il le supprime (décision de la propriétaire du
+          2026-11-17 ; l'écran de suppression est à venir). */}
+      {!proprietaire ? (
+        <section className="carte-board px-7 py-6 sm:px-8" aria-labelledby="titre-depart">
+          <h2 id="titre-depart" className="board-titre m-0 text-[22px]">
+            Quitter le compte
+          </h2>
+          <p className="m-0 mt-1 mb-5 text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+            Vous perdez l&apos;accès à ses dossiers ; ce que vous y avez saisi reste au compte.
+          </p>
+          <DepartDuCompte compteId={compte.compteId} nomCompte={nomCompte} />
+        </section>
+      ) : null}
     </PageDuCompte>
   );
 }

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { NomDuCompte } from "@/components/compte/NomDuCompte";
+import { MenuCompte } from "@/components/compte/MenuInterne";
 import { PageDuCompte } from "@/components/compte/PageDuCompte";
 import { fermerSessionsAction } from "@/lib/auth/actions";
 import { decrireAppareil } from "@/lib/auth/appareil";
@@ -51,10 +51,8 @@ export default async function SecuriteComptePage() {
     <PageDuCompte
       titre="Sécurité du compte"
       description="Votre mot de passe, la double authentification et les appareils connectés à votre compte."
+      menu={<MenuCompte />}
     >
-      <div>
-        <NomDuCompte nom={null} email={user.email} />
-      </div>
       <section className="carte-board px-7 py-6 sm:px-8" aria-labelledby="titre-mdp">
         <h2 id="titre-mdp" className="board-titre m-0 text-[22px]">
           Mot de passe

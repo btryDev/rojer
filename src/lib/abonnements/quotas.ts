@@ -11,7 +11,7 @@ import { invitationsDuCompte, membresDuCompte } from "@/lib/auth/membres";
 import { creerEnLotVerifie } from "@/lib/auth/portee/lot-verifie";
 import { lienActif } from "@/lib/access-tokens/revocation";
 import type { Geles } from "@/lib/auth/portee/gel";
-import { CLES_FORMULES, FORMULE_D_ESSAI, FORMULES, LIBELLES_PLAFONDS, LIMITES_ESSAI, formuleDeLookupKey, type CleFormule } from "./formules";
+import { CE_QUE_L_ABONNEMENT_OUVRE, CLES_FORMULES, FORMULE_D_ESSAI, FORMULES, LIBELLES_PLAFONDS, LIMITES_ESSAI, formuleDeLookupKey, type CleFormule } from "./formules";
 import { contexteDroits, offreLancee } from "./lancement";
 import { droitsDe, enEssai } from "./droits";
 
@@ -68,7 +68,7 @@ export function motifDuRefus(regime: Regime, cle: CleQuota): string {
   const couvre = LIBELLES_PLAFONDS[cle](plafond);
   if (regime.essai && estLimiteDEssai(cle))
     return regime.essai === "en_cours"
-      ? `Votre essai gratuit couvre ${couvre} : pour en ajouter, abonnez-vous dès maintenant depuis la page Abonnement de votre compte — votre essai s'arrête, et vous passez aux limites complètes de votre formule.`
+      ? `Votre essai gratuit couvre ${couvre}. Abonnez-vous dès maintenant depuis la page Abonnement de votre compte : ${CE_QUE_L_ABONNEMENT_OUVRE}. Votre essai s'arrête alors.`
       : `Sans abonnement payé, Rojer garde les limites de l'essai (${couvre}) : abonnez-vous depuis la page Abonnement de votre compte.`;
   const plus = CLES_FORMULES.find((f) => {
     const q = FORMULES[f].quotas[cle];
