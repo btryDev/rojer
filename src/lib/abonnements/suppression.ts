@@ -250,6 +250,14 @@ function compter(b: Bilan, partis: number, echec: boolean) {
  * 2026-11-17).
  */
 const PAIEMENT_EN_COURS_MS = (DUREE_PAGE_DE_PAIEMENT_S + 10 * 60) * 1000;
+/** La même garde, en condition d'écriture sur `Compte` : aucun paiement en cours. */
+export const SANS_PAIEMENT_EN_COURS = (maintenant: Date) => ({
+  OR: [
+    { abonnement: { is: null } },
+    { abonnement: { is: { paiementOuvertLe: null } } },
+    { abonnement: { is: { paiementOuvertLe: { lte: new Date(maintenant.getTime() - PAIEMENT_EN_COURS_MS) } } } },
+  ],
+});
 export const paiementEnCours = (ouvertLe: Date | null, maintenant: Date) =>
   ouvertLe != null && ouvertLe.getTime() > maintenant.getTime() - PAIEMENT_EN_COURS_MS;
 
@@ -294,9 +302,13 @@ export type BilanSuppressions = { supprimes: number; reportes: number };
  * (abonnements désactivés), rien : on ne supprime pas un compte dont on ne
  * peut pas arrêter la facturation.
  */
-export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | null): Promise<BilanSuppressions> {
+export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | null, sansAbonnement = true): Promise<BilanSuppressions> {
   const bilan: BilanSuppressions = { supprimes: 0, reportes: 0 };
-  for (const { compteId, motif, demandeeLe, stripeCustomerId, debutPayantLe, paiementOuvertLe } of await comptesASupprimer(maintenant, stripe)) {
+  let demandesEffacees = 0;
+  for (const { compteId, motif, demandeeLe, stripeCustomerId, debutPayantLe, paiementOuvertLe } of await comptesASupprimer(maintenant, sansAbonnement && stripe !== null)) {
+    // Les demandes sont lues plus large que la passe (des demandes bloquées
+    // ne retiennent pas les suivantes) : la passe, elle, reste courte.
+    if (motif === "demande" && demandesEffacees >= SUPPRESSIONS_PAR_PASSE) continue;
     // Sans Stripe, un compte qui a un client Stripe attend : on ne supprime
     // pas un compte dont on ne peut pas arrêter la facturation — signalé, la
     // date a été annoncée (relecture du 2026-11-18).
@@ -373,9 +385,14 @@ export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | n
         console.error(`suppression du compte ${compteId} annulée : un abonnement est ouvert chez Stripe (${relue})`);
         continue;
       }
-      for (const s of abonnements) {
-        if (!TERMINES.has(s.status)) await stripe.subscriptions.cancel(s.id);
+      const aResilier = abonnements.filter((s) => !TERMINES.has(s.status));
+      // Noté AVANT de résilier : si l'effacement échoue ensuite et que la
+      // demande est annulée, l'annulation saura dire que l'abonnement ne
+      // court plus (`retirerLaDemande`, relecture du 2026-11-18).
+      if (motif === "demande" && aResilier.length > 0) {
+        await prisma.compte.updateMany({ where: { id: compteId }, data: { suppressionFinPosee: true } });
       }
+      for (const s of aResilier) await stripe.subscriptions.cancel(s.id);
       if (clientChezStripe) await fermerLesFactures(stripe, stripeCustomerId);
     } catch (e) {
       bilan.reportes++;
@@ -392,6 +409,7 @@ export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | n
       // Les fichiers sont notés dans la transaction ; la tâche des fichiers
       // à libérer les retire du stockage (`libererFichiersEnAttente`).
       bilan.supprimes++;
+      if (motif === "demande") demandesEffacees++;
     } catch (e) {
       bilan.reportes++;
       await reporter(compteId, maintenant);
@@ -447,7 +465,7 @@ type Candidat = {
  * 2026-11-18). Sans Stripe (abonnements désactivés), pas de compte sans
  * abonnement : l'offre n'est pas lancée.
  */
-async function comptesASupprimer(maintenant: Date, stripe: Stripe | null): Promise<Candidat[]> {
+async function comptesASupprimer(maintenant: Date, sansAbonnement: boolean): Promise<Candidat[]> {
   const [demandes, echus] = await Promise.all([
     prisma.compte.findMany({
       where: DEMANDE_ECHUE(maintenant),
@@ -457,9 +475,12 @@ async function comptesASupprimer(maintenant: Date, stripe: Stripe | null): Promi
         abonnement: { select: { stripeCustomerId: true, debutPayantLe: true, paiementOuvertLe: true } },
       },
       orderBy: { suppressionDemandeeLe: "asc" },
-      take: SUPPRESSIONS_PAR_PASSE,
+      // Cinq fois la passe : une demande bloquée (abonnement né après elle,
+      // base) n'est pas repoussée, et dix bloquées ne doivent pas retenir
+      // toutes les suivantes (relecture du 2026-11-18).
+      take: SUPPRESSIONS_PAR_PASSE * 5,
     }),
-    stripe
+    sansAbonnement
       ? prisma.abonnement.findMany({
           where: { ...ECHUS(maintenant), compte: { suppressionDemandeeLe: null } },
           select: { compteId: true, stripeCustomerId: true, debutPayantLe: true, paiementOuvertLe: true },
@@ -507,7 +528,18 @@ async function fermerLesFactures(stripe: Stripe, customer: string) {
   // « Irrécouvrable » se paie encore par son lien (relances de Stripe) : annulée aussi.
   for (const status of ["open", "uncollectible", "draft"] as const) {
     for (const f of await toutLister(stripe.invoices.list({ customer, status, limit: 100 }, OPTIONS_WEBHOOK), 1000)) {
-      if (f.id) await (status === "draft" ? stripe.invoices.del(f.id) : stripe.invoices.voidInvoice(f.id));
+      if (!f.id) continue;
+      if (status !== "draft") await stripe.invoices.voidInvoice(f.id);
+      else {
+        // Stripe ne supprime qu'un brouillon ponctuel ; celui d'un abonnement
+        // doit être annulé, donc finalisé d'abord — sans relance ni
+        // prélèvement (`auto_advance: false`) (relecture du 2026-11-18).
+        const id = f.id;
+        await stripe.invoices.del(id).catch(async () => {
+          await stripe.invoices.finalizeInvoice(id, { auto_advance: false });
+          await stripe.invoices.voidInvoice(id);
+        });
+      }
     }
   }
 }

@@ -24,7 +24,7 @@ vi.mock("@/lib/prisma", () => ({
     abonnement: { findMany: m.findMany, updateMany: m.updateMany },
     duerpVersion: { count: m.versions },
     fichierStocke: { count: m.fichiers },
-    compte: { findMany: m.demandes, count: m.demandeEncore },
+    compte: { findMany: m.demandes, count: m.demandeEncore, updateMany: async () => ({ count: 1 }) },
     membre: { findMany: m.membres },
     fichierALiberer: m.file,
     $transaction: m.transaction,

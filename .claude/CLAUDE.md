@@ -484,8 +484,9 @@ sources dans `docs/carto-obligations-hors-equipement.md`.
 
 **Ce que le chantier laisse ouvert est écrit** : `docs/dette-chantier-porteur-echeance.md`.
 Limites connues, promesses non tenues et décisions repoussées, chacune avec sa raison — dont
-une à lire avant de s'y fier : l'export JSON du titulaire du compte et la suppression de
-compte **n'existent pas**. `docs/rgpd.md` § 5.1 le dit désormais et renvoie à une demande
+une à lire avant de s'y fier : l'export JSON du titulaire du compte ~~et la suppression de
+compte~~ **n'existent pas** [2026-11-18 : la suppression de compte est livrée — « Supprimer le
+compte », `/compte/suppression`, ADR-058 § 8 ; reste l'export complet]. `docs/rgpd.md` § 5.1 le dit désormais et renvoie à une demande
 manuelle ; la **règle 9 de ce fichier continue de les annoncer au présent**, et c'est le
 manque qui reste ouvert (`docs/dette-chantier-porteur-echeance.md` § 1.1). À consulter avant
 d'ouvrir un lot sur ce périmètre, pour ne pas redécouvrir une limite déjà tranchée.
@@ -803,6 +804,11 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     type déclaré (`typePorte`, `typeEpi`, exigé) ; GZ 15 sur l'installation
     de gaz seule ; référentiel `2026-11-07.1`, 206 inchangé ; migration en un
     seul déploiement, enum recréé])
+
+58. **058** — Un compte sans abonnement depuis douze mois est supprimé, averti
+    à J-30 et J-7 ; § 8 (2026-11-18) : un propriétaire supprime le compte à
+    la demande (`/compte/suppression`), effacé le 7e jour civil, annulable
+    d'ici là ; un invité quitte le compte
 
 59. **059** — Une étape du DUERP n'est faite que validée : « Fait » =
     validé par le dirigeant ET complet sur les données ; `Duerp.etapesValidees`

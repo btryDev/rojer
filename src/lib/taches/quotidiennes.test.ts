@@ -140,11 +140,14 @@ describe("tâches quotidiennes", () => {
     expect(m.prendreLeJour).not.toHaveBeenCalled();
   });
 
-  it("offre pas lancée : rien ne se rappelle, rien ne s'avertit, rien ne se supprime ; le ménage se fait", async () => {
+  it("offre pas lancée : rien ne se rappelle, rien ne s'avertit ; seules les suppressions demandées s'effacent ; le ménage se fait", async () => {
     m.lancee.v = false;
-    expect(await lancerTachesQuotidiennes(aParis(9))).toEqual({
+    const bilan = await lancerTachesQuotidiennes(aParis(9));
+    expect(m.supprimer.mock.calls[0][2]).toBe(false);
+    expect(bilan).toEqual({
       offreLancee: false,
       configuration: { problemes: 0 },
+      suppressions: expect.anything(),
       fichiersALiberer: { liberes: 3, echecs: 0, restants: 0 },
       tracesPurgees: { effacees: 1 },
       comptesNonActives: { supprimes: 0 },
@@ -153,7 +156,6 @@ describe("tâches quotidiennes", () => {
     expect(m.rappels).not.toHaveBeenCalled();
     expect(m.renouvellement).not.toHaveBeenCalled();
     expect(m.avertir).not.toHaveBeenCalled();
-    expect(m.supprimer).not.toHaveBeenCalled();
   });
 
   it("une tâche qui échoue n'empêche pas les suivantes", async () => {

@@ -149,7 +149,11 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
       // La marque d'abord : la suppression du compte (ADR-058) la lit sous
       // verrou et attend une heure, le temps que la page expire. Plus de
       // ligne (compte effacé entre-temps) : pas de paiement.
-      const marque = await db.abonnement.updateMany({ where: { compteId }, data: { paiementOuvertLe: new Date() } });
+      // … ni de demande de suppression posée depuis la lecture (ADR-058 § 8).
+      const marque = await db.abonnement.updateMany({
+        where: { compteId, compte: { suppressionDemandeeLe: null } },
+        data: { paiementOuvertLe: new Date() },
+      });
       url =
         marque.count !== 1
           ? PAGE_ABONNEMENT

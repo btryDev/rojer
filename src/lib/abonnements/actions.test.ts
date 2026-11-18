@@ -111,7 +111,7 @@ describe("sAbonnerAction", () => {
       expect.objectContaining({ customerId: "cus_neuf", priceId: "price_pa", tauxTva: "txr_tva", succes: "https://rojer.test/compte/abonnement?paiement=termine&session={CHECKOUT_SESSION_ID}" }),
     );
     // La marque du paiement ouvert, AVANT Checkout : la suppression du compte l'attend (ADR-058).
-    expect(m.marquer).toHaveBeenCalledWith({ where: { compteId: "c1" }, data: { paiementOuvertLe: expect.any(Date) } });
+    expect(m.marquer).toHaveBeenCalledWith({ where: { compteId: "c1", compte: { suppressionDemandeeLe: null } }, data: { paiementOuvertLe: expect.any(Date) } });
     expect(m.marquer.mock.invocationCallOrder[0]).toBeLessThan(m.ouvrirCheckout.mock.invocationCallOrder[0]);
   });
 

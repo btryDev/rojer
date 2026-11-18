@@ -62,7 +62,7 @@ export default async function SuppressionPage() {
 }
 
 async function AvantLaDemande({ compteId, nom }: { compteId: string; nom: string }) {
-  const { etablissements, aPaye, abonnementEnCours } = await ceQuiPart(compteId);
+  const { etablissements, aPaye, abonnementEnCours, finAbonnementAvant } = await ceQuiPart(compteId);
   const versions = etablissements.reduce((n, e) => n + e.versions, 0);
   return (
     <>
@@ -76,13 +76,20 @@ async function AvantLaDemande({ compteId, nom }: { compteId: string; nom: string
             documents et les fichiers déposés.
           </li>
           <li>L&apos;accès de chaque membre. Les membres qui n&apos;ont pas d&apos;autre compte Rojer perdent aussi leur identifiant.</li>
-          {abonnementEnCours ? (
+          {finAbonnementAvant ? (
+            <li>
+              Votre abonnement. Il devait se renouveler le {formaterDateLongueFr(finAbonnementAvant)}, avant la suppression : il
+              s&apos;arrêtera ce jour-là au lieu de se renouveler, et la saisie sera fermée ensuite.
+            </li>
+          ) : abonnementEnCours ? (
             <li>Votre abonnement, résilié le jour de la suppression, sans remboursement de la période entamée.</li>
           ) : null}
         </ul>
         <p className={TEXTE}>
           L&apos;effacement a lieu sept jours après votre demande. D&apos;ici là, tout reste consultable, et vous pouvez annuler :
-          rien n&apos;aura changé.
+          {finAbonnementAvant
+            ? " le compte et ses données restent, mais un abonnement arrêté entre-temps ne reprend pas : il faudra s'abonner de nouveau."
+            : " rien n'aura changé."}
         </p>
       </section>
 
