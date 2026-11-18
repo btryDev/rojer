@@ -271,8 +271,9 @@ td b{font-weight:500;color:var(--ink)}
 .boucle span.fl{background:none;box-shadow:none;padding:9px 0;color:var(--slate)}
 #fin .sig{position:absolute;left:96px;bottom:56px}
 #adieu{position:absolute;top:0;bottom:0;right:0;left:1280px;background:var(--sky);z-index:62;overflow:hidden}
-#rj2{position:absolute;left:96px;top:280px;font-family:"Instrument Sans";font-weight:600;font-size:140px;letter-spacing:-.045em;line-height:1.1}
+#rj2{position:absolute;left:96px;top:250px;font-family:"Instrument Sans";font-weight:600;font-size:140px;letter-spacing:-.045em;line-height:1.1}
 #rj2 i{font-style:normal;display:inline-block}
+#devise{position:absolute;left:100px;top:422px;font-family:"Instrument Sans";font-weight:600;font-size:44px;letter-spacing:-.03em;line-height:1.1;color:var(--slate-ink)}
 </style>
 </head>
 <body>
@@ -540,7 +541,7 @@ td b{font-weight:500;color:var(--ink)}
   </div>
   <div class="sig"><span class="pill-marque">Rojer</span></div>
 </div>
-<div id="adieu"><span id="rj2"><i>R</i><i>o</i><i>j</i><i>e</i><i>r</i></span></div>
+<div id="adieu"><span id="rj2"><i>R</i><i>o</i><i>j</i><i>e</i><i>r</i></span><span id="devise">Votre copilote prévention.</span></div>
 
 <script>{{gsap}}</script>
 <script>
@@ -771,12 +772,12 @@ function construire() {
     tl.set(defil, { y: S }, cache);
     filA(cache, etapeFil - 1, faits - 1); tl.set(fa, { v: 1 }, cache);
     camera({ x: AW / 2 + 44, y: pos("#fil").y - S + 120 }, 0.76, cache, 0.01);
-    filA(t + 0.1, etapeFil, faits); tl.set(fa, { v: av }, t + 0.1);
+    filA(t + 0.05, etapeFil, faits); tl.set(fa, { v: av }, t + 0.05);
     // Le curseur s'efface le temps du changement d'écran, puis revient.
     tl.set(cur, { o: 0 }, cache);
     tl.to(cur, { o: 1, duration: 0.3 }, t + 0.5);
     (window.reperes ??= {})[`partie ${n}`] = { clic: +at.toFixed(2), titre: +at.toFixed(2), demo: +(t - 0.5).toFixed(2) };
-    return [cache, t + 0.9];
+    return [cache, t + 0.75];
   };
   const retourA = (t, cle) => pose("retour", t, () => { $("#retour").innerHTML = RETOURS[cle]; });
 
@@ -806,7 +807,10 @@ function construire() {
       { opacity: 0, y: -10, duration: 0.35, ease: "power2.in", stagger: 0.06 }, sortie - 0.45);
     tl.to(el, { opacity: 0, duration: 0.5, ease: "power2.inOut" }, sortie);
     tl.set(["#fenetre", "#texte", "#marque"], { opacity: 0 }, at + 0.7);
-    tl.fromTo("#fenetre", { opacity: 0, y: 16, scale: 0.985 }, { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: "power3.out", immediateRender: false }, sortie + 0.05);
+    // Un fondu, sans glissement : le seul mouvement est ensuite celui de la
+    // caméra. La fenêtre qui glissait, puis la caméra qui repartait, faisaient
+    // deux à-coups.
+    tl.fromTo("#fenetre", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power1.out", immediateRender: false }, sortie + 0.05);
     tl.fromTo(["#texte", "#marque"], { opacity: 0, x: 14 }, { opacity: 1, x: 0, duration: 0.7, ease: "power3.out", immediateRender: false }, sortie + 0.2);
     // [instant où la démo est cachée, instant où le geste peut commencer]
     return [at + 0.8, sortie + 0.55];
@@ -885,7 +889,7 @@ function construire() {
   // ======================= 2 · UNITÉS DE TRAVAIL =======================
   [cache, t] = passage(2, t + 9.3, "#c-unites", "unites", 1, 1, 0.5, S);
   etape(2, cache, 7.8, t - 0.9);
-  camera({ x: CX, y: vu("#g-unites", S).y - 10 }, 0.8, t - 0.3, 0.9);
+  camera({ x: CX, y: vu("#g-unites", S).y - 10 }, 0.8, t - 0.3, 1.25);
   t += 0.4;
   const U1 = vu("#b-ajout-unite", S);
   vers(U1, t + 0.8, 0.8);
@@ -916,7 +920,7 @@ function construire() {
   // ======================= 3 · RISQUES PAR UNITÉ =======================
   [cache, t] = passage(3, t + 6.1, "#c-risques", "risques", 2, 2, 0.08, S);
   etape(3, cache, 25.0, t - 0.9);
-  camera({ x: CX, y: vu("#l-unites", S).y - 40 }, 0.78, t - 0.3, 0.9);
+  camera({ x: CX, y: vu("#l-unites", S).y - 40 }, 0.78, t - 0.3, 1.25);
   t += 0.4;
   // Le panneau de droite suit les trois temps de l'évaluation.
   const SOUS = [
@@ -1078,7 +1082,7 @@ function construire() {
   // ======================= 4 · QUESTIONS TRANSVERSES =======================
   [cache, t] = passage(4, tF + 3.25, "#c-trans", "trans", 3, 3, 0.15, S);
   etape(4, cache, 7.6, t - 0.9);
-  camera({ x: CX, y: vu("#q-bio", S).y - 60 }, 0.86, t - 0.3, 0.9);
+  camera({ x: CX, y: vu("#q-bio", S).y - 60 }, 0.86, t - 0.3, 1.25);
   t += 0.4;
   pose("tq", 0, () => {
     ["q-nuit", "q-bio"].forEach((id) => { $(`#${id}-oui`).className = "btn cl sm"; $(`#${id}-non`).className = "btn cl sm"; $(`#${id}-etat`).textContent = "Sans réponse"; $(`#${id}-etat`).className = "st"; });
@@ -1107,7 +1111,7 @@ function construire() {
   // ======================= 5 · SYNTHÈSE =======================
   [cache, t] = passage(5, t + 5.3, "#c-syn", "syn", 4, 4, 0, S);
   etape(5, cache, 12.0, t - 0.9);
-  camera({ x: CX, y: vu("#k-synth", S).y + 10 }, 0.9, t - 0.3, 0.9);
+  camera({ x: CX, y: vu("#k-synth", S).y + 10 }, 0.9, t - 0.3, 1.25);
   tl.fromTo(compte, { s1: 0, s2: 0, s3: 0, s4: 0 }, { s1: 6, s2: 36, s3: 61, s4: 14, duration: 1.0, ease: "power1.out", immediateRender: false }, t - 0.1);
   t += 0.9;
   const SI = pos("#k-inv").y - 420;
@@ -1163,7 +1167,8 @@ function construire() {
   // La signature : le bleu revient, « Rojer » se pose comme à l'ouverture.
   tl.to("#adieu", { left: 0, duration: 0.9, ease: "power3.inOut" }, tFin + 4.2);
   tl.from("#rj2 i", { opacity: 0, y: 16, duration: 0.55, stagger: 0.07, ease: "power3.out" }, tFin + 4.85);
-  tl.to({}, { duration: 1.4 }, tFin + 5.6);
+  tl.fromTo("#devise", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out", immediateRender: false }, tFin + 5.5);
+  tl.to({}, { duration: 2.0 }, tFin + 6.1);
   window.affiche = 6.9;
   return tl;
 }
