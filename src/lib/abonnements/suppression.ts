@@ -423,12 +423,11 @@ async function signalerLeReport(compteId: string, motif: string, maintenant: Dat
  */
 async function fermerLesFactures(stripe: Stripe, customer: string) {
   // « Irrécouvrable » se paie encore par son lien (relances de Stripe) : annulée aussi.
-  for (const status of ["open", "uncollectible"] as const) {
-    const payables = await toutLister(stripe.invoices.list({ customer, status, limit: 100 }, OPTIONS_WEBHOOK), 1000);
-    for (const f of payables) if (f.id) await stripe.invoices.voidInvoice(f.id);
+  for (const status of ["open", "uncollectible", "draft"] as const) {
+    for (const f of await toutLister(stripe.invoices.list({ customer, status, limit: 100 }, OPTIONS_WEBHOOK), 1000)) {
+      if (f.id) await (status === "draft" ? stripe.invoices.del(f.id) : stripe.invoices.voidInvoice(f.id));
+    }
   }
-  const brouillons = await toutLister(stripe.invoices.list({ customer, status: "draft", limit: 100 }, OPTIONS_WEBHOOK), 1000);
-  for (const f of brouillons) if (f.id) await stripe.invoices.del(f.id);
 }
 
 /**
