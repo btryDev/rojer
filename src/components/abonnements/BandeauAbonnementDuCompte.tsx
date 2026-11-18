@@ -12,6 +12,8 @@
 import { getOptionalCompte } from "@/lib/auth/compte";
 import { droitsDuCompte } from "@/lib/abonnements/saisie";
 import { BandeauAbonnement } from "./BandeauAbonnement";
+import { demandeDuCompte, PAGE_SUPPRESSION } from "@/lib/compte/suppression";
+import { formaterDateLongueFr } from "@/lib/dates";
 
 const DANS_LA_BANDE =
   "fixed inset-x-3 bottom-[calc(var(--reserve-nav-bas)+0.75rem)] z-40 " +
@@ -24,15 +26,29 @@ const LECTURE_SEULE = {
   message: "Accès en lecture seule : vous consultez et exportez les dossiers, sans les modifier.",
 } as const;
 
+/** La suppression demandée (ADR-058 § 8) passe avant tout : c'est la fin du compte, pour tous ses membres. */
+const LIEN_SUPPRESSION = { href: PAGE_SUPPRESSION, libelle: "Voir la suppression" };
+
 export async function BandeauAbonnementDuCompte({ dansLeContenu }: { dansLeContenu?: string }) {
   const compte = await getOptionalCompte();
   if (!compte) return null;
   const lecture = compte.compte.role === "lecture";
-  const bandeau = lecture ? LECTURE_SEULE : (await droitsDuCompte(compte.db, compte.compte.compteId)).bandeau;
+  // Les deux lectures ensemble : la page ne les attend pas l'une après l'autre.
+  const [demande, droits] = await Promise.all([
+    demandeDuCompte(compte.compte.compteId),
+    lecture ? null : droitsDuCompte(compte.db, compte.compte.compteId),
+  ]);
+  const bandeau = demande
+    ? ({ ton: "ferme", message: `Ce compte sera supprimé le ${formaterDateLongueFr(demande.effacementLe)}, à la demande d'un propriétaire.` } as const)
+    : lecture
+      ? LECTURE_SEULE
+      : (droits?.bandeau ?? null);
   if (!bandeau) return null;
+  const lien = demande ? LIEN_SUPPRESSION : undefined;
+  const avecLien = demande ? compte.compte.role === "owner" : !lecture;
   return dansLeContenu ? (
-    <BandeauAbonnement bandeau={bandeau} avecLien={!lecture} className={dansLeContenu} />
+    <BandeauAbonnement bandeau={bandeau} avecLien={avecLien} lien={lien} className={dansLeContenu} />
   ) : (
-    <BandeauAbonnement bandeau={bandeau} avecLien={!lecture} compact className={DANS_LA_BANDE} />
+    <BandeauAbonnement bandeau={bandeau} avecLien={avecLien} lien={lien} compact className={DANS_LA_BANDE} />
   );
 }

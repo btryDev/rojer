@@ -57,10 +57,10 @@ export function messageFinEssai(finEssai: Date, url: string): { subject: string;
   };
 }
 
-/** Les adresses des propriétaires du compte : eux seuls peuvent s'abonner. */
-export async function adressesDesProprietaires(compteId: string): Promise<string[]> {
+/** Les adresses des propriétaires du compte (eux seuls peuvent s'abonner), ou des autres membres. */
+export async function adressesDesProprietaires(compteId: string, proprietaires = true): Promise<string[]> {
   const membres = await prisma.membre.findMany({
-    where: { compteId, role: "owner" },
+    where: { compteId, role: proprietaires ? "owner" : { not: "owner" } },
     select: { user: { select: { email: true } } },
   });
   return membres.map((m) => m.user.email).filter((e): e is string => Boolean(e));
@@ -72,11 +72,20 @@ export async function adressesDesProprietaires(compteId: string): Promise<string
  * échoué. L'appelant décide de rendre sa marque (rien parti à cause d'un
  * échec) — un e-mail parti la garde, réessayer enverrait un doublon.
  */
-export async function ecrireAuxProprietaires(compteId: string, message: { subject: string; text: string }, contexte: string) {
+export function ecrireAuxProprietaires(compteId: string, message: { subject: string; text: string }, contexte: string) {
+  return ecrireA(compteId, true, message, contexte);
+}
+
+/** Le même, aux membres qui ne sont pas propriétaires. */
+export function ecrireAuxMembres(compteId: string, message: { subject: string; text: string }, contexte: string) {
+  return ecrireA(compteId, false, message, contexte);
+}
+
+async function ecrireA(compteId: string, proprietaires: boolean, message: { subject: string; text: string }, contexte: string) {
   let partis = 0;
   let echec = false;
   try {
-    for (const to of await adressesDesProprietaires(compteId)) {
+    for (const to of await adressesDesProprietaires(compteId, proprietaires)) {
       try {
         await sendMail({ to, ...message });
         partis++;
@@ -87,7 +96,7 @@ export async function ecrireAuxProprietaires(compteId: string, message: { subjec
     }
   } catch (e) {
     echec = true;
-    console.error(`${contexte} : propriétaires illisibles (compte ${compteId}) — ${motifErreur(e)}`);
+    console.error(`${contexte} : destinataires illisibles (compte ${compteId}) — ${motifErreur(e)}`);
   }
   return { partis, echec };
 }

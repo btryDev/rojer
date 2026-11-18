@@ -12,6 +12,8 @@ const TONS: Record<Bandeau["ton"], { fond: string; filet: string; encre: string 
   info: { fond: "var(--board-blue-soft)", filet: "var(--board-slate-line)", encre: "var(--board-blue-ink)" },
 };
 
+const LIEN_ABONNEMENT = { href: "/compte/abonnement", libelle: "Voir mon abonnement" };
+
 /**
  * `avecLien` : faux sur la page de l'abonnement elle-même. La place vient de
  * l'appelant. `compact` : la gélule de la bande du haut, à gauche de celle du
@@ -21,11 +23,14 @@ const TONS: Record<Bandeau["ton"], { fond: string; filet: string; encre: string 
 export function BandeauAbonnement({
   bandeau,
   avecLien = true,
+  lien = LIEN_ABONNEMENT,
   compact = false,
   className = "",
 }: {
   bandeau: Bandeau;
   avecLien?: boolean;
+  /** Où mène le lien : la page de l'abonnement, sauf pour une suppression demandée (ADR-058 § 8). */
+  lien?: { href: string; libelle: string };
   compact?: boolean;
   className?: string;
 }) {
@@ -43,8 +48,8 @@ export function BandeauAbonnement({
         {bandeau.message}
       </p>
       {avecLien && (
-        <Link href="/compte/abonnement" className="flex-none font-semibold underline" style={{ color: ton.encre }}>
-          Voir mon abonnement
+        <Link href={lien.href} className="flex-none font-semibold underline" style={{ color: ton.encre }}>
+          {lien.libelle}
         </Link>
       )}
     </section>

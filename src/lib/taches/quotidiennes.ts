@@ -87,11 +87,20 @@ export async function lancerTachesQuotidiennes(maintenant: Date) {
       : {}),
     evenementsOublies: await tenter("ménage des événements Stripe", () => oublierLesAnciens(maintenant)),
   });
-  // L'offre pas lancée (ou retirée) : la saisie est ouverte à tous, rien ne
-  // se rappelle ni ne se supprime — un compte ne lirait nulle part ce que
-  // l'e-mail lui annonce.
-  if (!offreLancee(contexteDroits())) return { offreLancee: false as const, configuration, ...(await menage()) };
   const stripe = config.active ? clientStripe(config) : null;
+  // L'offre pas lancée (ou retirée) : la saisie est ouverte à tous, rien ne
+  // se rappelle ni ne se supprime faute d'abonnement — un compte ne lirait
+  // nulle part ce que l'e-mail lui annonce. Les suppressions DEMANDÉES par
+  // un propriétaire (ADR-058 § 8), elles, s'effacent : leur date a été dite
+  // (relecture du 2026-11-18).
+  if (!offreLancee(contexteDroits())) {
+    return {
+      offreLancee: false as const,
+      configuration,
+      suppressions: await tenter("suppressions demandées", () => supprimerComptesEchus(maintenant, stripe, false)),
+      ...(await menage()),
+    };
+  }
   return {
     configuration,
     rappelsSemaineFinEssai: await tenter("rappel d'une semaine avant la fin d'essai", () => rappelerLaSemaineDeLaFinDEssai(maintenant)),

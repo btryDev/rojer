@@ -45,9 +45,15 @@ ses établissements, ses équipements et ses documents. Reste à trancher : ce
 qu'on fait des fichiers déposés (`attestationCle`, `agendaAdapCle`, rapports
 en stockage) — les inclure, ou n'en donner que l'inventaire.
 
-**b) La suppression de compte (art. 17).** Aucune action non plus. Vérifié le
+**b) La suppression de compte (art. 17).** ~~Aucune action non plus. Vérifié le
 2026-08-28 : rien ne répond à `supprimerCompte`, `deleteAccount` ni
-`deleteUser` dans `src/`.
+`deleteUser` dans `src/`.~~ [2026-11-18 : **close**. ADR-058 § 8 — « Supprimer
+le compte » (`/compte/suppression`, `lib/compte/suppression.ts`), effacement
+total sept jours après la demande d'un propriétaire, par la même transaction
+que la suppression sans abonnement (`abonnements/suppression.ts`). La décision
+produit du paragraphe ci-dessous est prise : les quarante ans sont à
+l'employeur (CLAUDE.md, règle 10, rayée le 2026-11-09) ; la page compte les
+versions du DUERP et les propose au téléchargement avant le geste.]
 
 *Ce n'est pas une route à écrire, c'est une décision produit à prendre.* Les
 versions de DUERP se conservent 40 ans au titre d'une obligation légale

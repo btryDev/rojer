@@ -201,6 +201,34 @@ describe.skipIf(!URL_BASE || !local)("suppression d'un compte sans abonnement �
     expect(await prisma.duerpVersion.count({ where: { duerp: { etablissement: { entreprise: { compteId: A } } } } })).toBe(1);
   });
 
+  it("une demande du propriétaire (§ 8), échue : le compte s'efface, même sans abonnement échu ; la trace dit le motif et qui", async () => {
+    await prisma.abonnement.update({
+      where: { compteId: A },
+      data: { statut: "active", sansAbonnementDepuis: null, suppressionPrevueLe: null, avertiSuppression30Le: null, avertiSuppression7Le: null },
+    });
+    await prisma.compte.update({
+      where: { id: A },
+      data: { suppressionDemandeeLe: new Date("2027-11-24T09:00:00Z"), suppressionDemandeePar: `${SEUL}@exemple.invalid` },
+    });
+    // Sans abonnement échu, le motif « sans abonnement » ne l'efface pas.
+    expect(await supprimerCompte(A, MAINTENANT)).toBeNull();
+    expect(await supprimerCompte(A, MAINTENANT, "demande")).not.toBeNull();
+    expect(await prisma.compte.findUnique({ where: { id: A } })).toBeNull();
+    expect(await prisma.compteSupprime.findFirstOrThrow({ where: { ancienCompteId: A } })).toMatchObject({
+      motif: "demande",
+      demandeePar: `${SEUL}@exemple.invalid`,
+      sansAbonnementDepuis: null,
+    });
+  });
+
+  it("une demande de moins de sept jours, ou annulée : rien n'est effacé", async () => {
+    await prisma.compte.update({ where: { id: A }, data: { suppressionDemandeeLe: new Date("2027-11-26T09:00:00Z") } });
+    expect(await supprimerCompte(A, MAINTENANT, "demande")).toBeNull();
+    await prisma.compte.update({ where: { id: A }, data: { suppressionDemandeeLe: null } });
+    expect(await supprimerCompte(A, MAINTENANT, "demande")).toBeNull();
+    expect(await prisma.compte.findUnique({ where: { id: A } })).not.toBeNull();
+  });
+
   it("date pas encore atteinte, ou second avertissement absent : rien n'est effacé", async () => {
     expect(await supprimerCompte(A, new Date("2027-11-29T09:00:00Z"))).toBeNull();
     await prisma.abonnement.update({ where: { compteId: A }, data: { avertiSuppression7Le: null } });

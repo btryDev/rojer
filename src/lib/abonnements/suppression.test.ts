@@ -11,6 +11,8 @@ const m = vi.hoisted(() => ({
   synchroniser: vi.fn(),
   versions: vi.fn(),
   fichiers: vi.fn(),
+  demandes: vi.fn(),
+  demandeEncore: vi.fn(),
 
   transaction: vi.fn(),
   membres: vi.fn(),
@@ -22,6 +24,7 @@ vi.mock("@/lib/prisma", () => ({
     abonnement: { findMany: m.findMany, updateMany: m.updateMany },
     duerpVersion: { count: m.versions },
     fichierStocke: { count: m.fichiers },
+    compte: { findMany: m.demandes, count: m.demandeEncore, updateMany: async () => ({ count: 1 }) },
     membre: { findMany: m.membres },
     fichierALiberer: m.file,
     $transaction: m.transaction,
@@ -38,6 +41,14 @@ vi.mock("@/lib/email", () => ({
 // 2026-11-17) : la même, branchée sur les adresses et l'envoi simulés.
 vi.mock("./rappels", () => ({
   adressesDesProprietaires: m.adresses,
+  ecrireAuxMembres: async (compteId: string, message: { subject: string; text: string }) => {
+    let partis = 0;
+    for (const { user } of await m.membres(compteId)) {
+      await m.sendMail({ to: user.email, ...message });
+      partis++;
+    }
+    return { partis, echec: false };
+  },
   ecrireAuxProprietaires: async (compteId: string, message: { subject: string; text: string }) => {
     let partis = 0;
     let echec = false;
@@ -67,7 +78,7 @@ vi.mock("@/lib/storage", () => ({ getStorage: () => m.stockage }));
 const { alerter, alerterUneFoisParJour } = vi.hoisted(() => ({ alerter: vi.fn(), alerterUneFoisParJour: vi.fn() }));
 vi.mock("@/lib/alertes", () => ({ alerter, alerterUneFoisParJour }));
 
-import { ajouterJours, ajouterMois } from "@/lib/dates";
+import { ajouterJours, ajouterMois, debutDuJour } from "@/lib/dates";
 import {
   avertirAvantSuppression,
   dateDeSuppressionPrevue,
@@ -90,6 +101,8 @@ beforeEach(() => {
   m.synchroniser.mockResolvedValue({ issue: "ecrit" });
   m.versions.mockResolvedValue(0);
   m.fichiers.mockResolvedValue(0);
+  m.demandes.mockResolvedValue([]);
+  m.demandeEncore.mockResolvedValue(1);
   m.membres.mockResolvedValue([]);
   m.file.count.mockResolvedValue(0);
   m.file.deleteMany.mockResolvedValue({ count: 1 });
@@ -147,7 +160,7 @@ describe("suppression d'un compte sans abonnement (ADR-058)", () => {
     });
     expect(m.sendMail.mock.calls[0][0].subject).toMatch(/^Rappel : /);
     // Les autres membres sont prévenus aussi, par un message à eux : seul un propriétaire peut réabonner.
-    expect(m.membres.mock.calls[0][0].where).toEqual({ compteId: "c1", role: { not: "owner" } });
+    expect(m.sendMail).toHaveBeenCalledWith(expect.objectContaining({ to: "serveur@exemple.fr" }));
     expect(m.sendMail.mock.calls[1][0]).toMatchObject({ to: "serveur@exemple.fr", subject: expect.stringMatching(/« Chez Lulu »/) });
     expect(bilan.membresPrevenus).toBe(1);
   });
@@ -387,6 +400,61 @@ describe("suppression d'un compte sans abonnement (ADR-058)", () => {
     expect(cancel).not.toHaveBeenCalled();
     expect(voidInvoice).not.toHaveBeenCalled();
     expect(m.transaction).not.toHaveBeenCalled();
+  });
+
+  it("une demande échue (§ 8) : l'abonnement qui court est résilié — ce n'est pas une copie en retard —, puis le compte effacé au motif « demande »", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const demandeeLe = new Date("2027-10-13T09:00:00Z");
+    m.demandes.mockResolvedValue([
+      { id: "c1", suppressionDemandeeLe: demandeeLe, abonnement: { stripeCustomerId: "cus_1", debutPayantLe: new Date("2027-01-01"), paiementOuvertLe: null } },
+    ]);
+    m.abonnements.mockResolvedValue([{ id: "sub_actif", status: "active", created: Date.parse("2027-02-01") / 1000 }]);
+    m.transaction.mockImplementation(async () => ["cle-1"]);
+    const cancel = vi.fn();
+    const stripe = {
+      subscriptions: { cancel, list: () => ({ autoPagingToArray: m.abonnements }) },
+      invoices: { list: () => ({ autoPagingToArray: async () => [], data: [] }), voidInvoice: vi.fn(), del: vi.fn() },
+      customers: { del: vi.fn() },
+    } as unknown as Parameters<typeof supprimerComptesEchus>[1];
+    expect(await supprimerComptesEchus(MAINTENANT, stripe)).toEqual({ supprimes: 1, reportes: 0 });
+    expect(cancel).toHaveBeenCalledWith("sub_actif");
+    expect(m.synchroniser).not.toHaveBeenCalled();
+    // La sélection des demandes : faites il y a sept jours au moins.
+    // La sélection des demandes : leur jour d'effacement (le 7e jour civil) est atteint.
+    expect(m.demandes.mock.calls[0][0].where.suppressionDemandeeLe).toEqual({ lt: ajouterJours(debutDuJour(MAINTENANT), -6) });
+  });
+
+  it("une demande : annulée depuis la sélection, rien chez Stripe ; un abonnement né APRÈS elle n'est jamais résilié — le compte attend, signalé", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const demandeeLe = new Date("2027-10-13T09:00:00Z");
+    m.demandes.mockResolvedValue([{ id: "c1", suppressionDemandeeLe: demandeeLe, abonnement: { stripeCustomerId: "cus_1", debutPayantLe: null, paiementOuvertLe: null } }]);
+    const cancel = vi.fn();
+    const stripe = {
+      subscriptions: { cancel, list: () => ({ autoPagingToArray: m.abonnements }) },
+      invoices: { list: () => ({ autoPagingToArray: async () => [], data: [] }), voidInvoice: vi.fn(), del: vi.fn() },
+    } as unknown as Parameters<typeof supprimerComptesEchus>[1];
+
+    m.demandeEncore.mockResolvedValueOnce(0);
+    expect(await supprimerComptesEchus(MAINTENANT, stripe)).toEqual({ supprimes: 0, reportes: 1 });
+    expect(m.abonnements).not.toHaveBeenCalled();
+
+    m.abonnements.mockResolvedValue([{ id: "sub_neuf", status: "active", created: Date.parse("2027-10-15") / 1000 }]);
+    expect(await supprimerComptesEchus(MAINTENANT, stripe)).toEqual({ supprimes: 0, reportes: 1 });
+    expect(cancel).not.toHaveBeenCalled();
+    expect(m.transaction).not.toHaveBeenCalled();
+    expect(alerterUneFoisParJour).toHaveBeenCalledWith("suppression:c1", expect.any(String), expect.arrayContaining([expect.stringMatching(/souscrit après la demande/)]), MAINTENANT);
+  });
+
+  it("sans Stripe : une demande sans client Stripe s'efface ; avec un client, elle attend et c'est signalé ; aucun compte sans abonnement n'est lu", async () => {
+    m.demandes.mockResolvedValue([
+      { id: "c1", suppressionDemandeeLe: new Date("2027-10-01"), abonnement: null },
+      { id: "c2", suppressionDemandeeLe: new Date("2027-10-01"), abonnement: { stripeCustomerId: "cus_2", debutPayantLe: null, paiementOuvertLe: null } },
+    ]);
+    m.transaction.mockResolvedValue([]);
+    expect(await supprimerComptesEchus(MAINTENANT, null)).toEqual({ supprimes: 1, reportes: 1 });
+    expect(m.transaction).toHaveBeenCalledTimes(1);
+    expect(alerterUneFoisParJour).toHaveBeenCalledWith("suppression:c2", expect.any(String), expect.arrayContaining([expect.stringMatching(/désactivés/)]), MAINTENANT);
+    expect(m.findMany).not.toHaveBeenCalled();
   });
 
   it("un client Stripe qui n'a jamais payé : supprimé chez Stripe après l'effacement, s'il n'a aucune facture ; un échec se signale, le compte reste effacé", async () => {

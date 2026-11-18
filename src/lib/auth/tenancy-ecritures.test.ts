@@ -176,6 +176,22 @@ const EXEMPTIONS = new Map<string, Exemption>([
         "compte (`where: { compteId }`). Aucun identifiant reçu du navigateur ne désigne la ligne.",
     },
   ],
+  ...(
+    ["lib/compte/actions-suppression.ts:demanderSuppressionAction", "lib/compte/actions-suppression.ts:annulerSuppressionAction"] as const
+  ).map(
+    (cle) =>
+      [
+        cle,
+        {
+          garde: "verifierProprietaire",
+          raison:
+            "La suppression du compte à la demande (ADR-058 § 8) : `verifierProprietaire` rend le " +
+            "compte où la personne est PROPRIÉTAIRE, comparé au compte de la page " +
+            "(`memeCompteQueLaPage`) ; `compte/suppression.ts` n'écrit que la ligne de ce compte " +
+            "(`where: { id: compteId }`). Aucun identifiant reçu du navigateur ne désigne la ligne.",
+        },
+      ] as const,
+  ),
   [
     "lib/signatures/actions.ts:poserSignatureAvecToken",
     {

@@ -31,6 +31,7 @@ import { depassements } from "./quotas";
 import { PAGE_ABONNEMENT, verifierProprietaire, verifierRole, type Proprietaire } from "./saisie";
 import { PAGE_FORMULES } from "./sous-pages";
 import { ouvrirAuGel } from "./gel-saisie";
+import { demandeDuCompte, PAGE_SUPPRESSION } from "@/lib/compte/suppression";
 
 /**
  * Démarrer l'essai (écran « Votre essai gratuit »). Le rôle d'abord : le
@@ -54,6 +55,11 @@ async function clientDuCompte({ compte, db }: Proprietaire, formData: FormData |
   // nouveau sur le compte actif, dit que rien n'a été fait. `null` : le retour
   // de Stripe, que la session de paiement rattache déjà à son client.
   if (formData && !memeCompteQueLaPage(formData, compte.compteId)) redirect(`${PAGE_ABONNEMENT}?compte=change`);
+  // Une suppression demandée ferme tous les gestes d'abonnement (s'abonner,
+  // changer de formule, le portail) : on ne paie pas pour un compte qui va
+  // disparaître, et la fin programmée par la demande ne se défait pas au
+  // portail (ADR-058 § 8). On annule d'abord — la page de la suppression.
+  if (formData && (await demandeDuCompte(compte.compteId))) redirect(PAGE_SUPPRESSION);
   const config = configurationStripe();
   if (!config.active) redirect(PAGE_ABONNEMENT);
   const ligne = await db.abonnement.findUnique({
@@ -143,7 +149,11 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
       // La marque d'abord : la suppression du compte (ADR-058) la lit sous
       // verrou et attend une heure, le temps que la page expire. Plus de
       // ligne (compte effacé entre-temps) : pas de paiement.
-      const marque = await db.abonnement.updateMany({ where: { compteId }, data: { paiementOuvertLe: new Date() } });
+      // … ni de demande de suppression posée depuis la lecture (ADR-058 § 8).
+      const marque = await db.abonnement.updateMany({
+        where: { compteId, compte: { suppressionDemandeeLe: null } },
+        data: { paiementOuvertLe: new Date() },
+      });
       url =
         marque.count !== 1
           ? PAGE_ABONNEMENT

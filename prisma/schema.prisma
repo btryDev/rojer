@@ -2672,6 +2672,12 @@ model Compte {
   logo      String?
   metadata  String?
   createdAt DateTime @default(now())
+  /// La suppression demandée par un propriétaire (ADR-058 § 8) : effacée 7 jours après par la tâche quotidienne ; `null` sans demande, ou annulée.
+  suppressionDemandeeLe  DateTime?
+  /// L'adresse de qui l'a demandée (reprise dans la trace).
+  suppressionDemandeePar String?
+  /// La demande a programmé la fin de l'abonnement à son échéance (renouvellement avant la date) : à retirer si elle est annulée.
+  suppressionFinPosee    Boolean   @default(false)
 
   membres                Membre[]
   invitations            InvitationCompte[]
@@ -2683,6 +2689,7 @@ model Compte {
   fichiersStockes        FichierStocke[]
 
   @@unique([slug])
+  @@index([suppressionDemandeeLe])
 }
 
 model Membre {
@@ -2737,6 +2744,10 @@ model CompteSupprime {
   avertiSuppression7Le  DateTime?
   supprimeLe            DateTime
   conserverJusquAu      DateTime
+  /// Pourquoi : `sans_abonnement` (§ 4) ou `demande` (§ 8, ADR-058).
+  motif                 String    @default("sans_abonnement")
+  /// Pour une demande : l'adresse de qui l'a faite.
+  demandeePar           String?
 
   @@index([conserverJusquAu])
 }

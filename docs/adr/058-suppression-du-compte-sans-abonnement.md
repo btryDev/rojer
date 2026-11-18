@@ -139,5 +139,52 @@ deux fois.
 
 - Comptes d'avant le lancement, sans ligne d'abonnement : date de départ =
   date du lancement ? À décider avec le lancement.
-- Suppression à la demande (« supprimer mon compte », RGPD art. 17) : la
-  même fonction la permettra ; l'écran n'est pas fait.
+- ~~Suppression à la demande (« supprimer mon compte », RGPD art. 17) : la
+  même fonction la permettra ; l'écran n'est pas fait.~~ [2026-11-18 :
+  tranchée, § 8 ci-dessous.]
+
+## Amendement du 2026-11-18 — § 8, la suppression à la demande
+
+Décision de la propriétaire du 2026-11-17 et 18 : « si on est propriétaire on
+le supprime, si on est invité on le quitte » ; la suppression résilie
+l'abonnement ; délai de 7 jours, annulable ; n'importe quel propriétaire.
+
+8. **Supprimer le compte**, geste d'un propriétaire (`/compte/suppression`,
+   depuis la page Membres ; un membre invité garde « Quitter le compte »).
+   - **Avant le geste**, la page dit ce qui part (établissements, documents,
+     fichiers, accès de l'équipe ; les membres sans autre compte Rojer
+     perdent leur identifiant), compte les versions validées du DUERP avec
+     le lien de chaque établissement, rappelle que leur conservation
+     quarante ans est à l'employeur, propose l'export s'il a payé, et dit
+     que l'abonnement sera résilié sans remboursement de la période entamée.
+   - **La confirmation** : le nom du compte tapé, et le mot de passe de la
+     personne (vérifié par Better Auth, limite d'essais par personne).
+   - **La demande** pose `Compte.suppressionDemandeeLe` (et qui l'a faite) ;
+     l'effacement vient **7 jours plus tard**, par la tâche quotidienne et
+     la même fonction que § 4. Un e-mail part aux propriétaires (la date, le
+     lien pour annuler) et aux autres membres.
+   - **Rien n'est résilié à la demande** : annuler doit tout remettre comme
+     avant, abonnement compris (résilier au clic aurait fait perdre au
+     dirigeant qui se ravise ce qu'il avait payé). Seule exception : un
+     abonnement qui se renouvellerait avant la date de suppression reçoit
+     une fin programmée à son échéance (`cancel_at_period_end`), notée
+     (`Compte.suppressionFinPosee`) et retirée si la demande est annulée —
+     pour ne pas prélever une période d'un compte qui va disparaître.
+   - **Refusée** tant qu'une page de paiement est ouverte (§ 4) ou qu'un
+     changement de formule est planifié (Stripe refuserait la fin
+     programmée, ADR-053 § 10). S'abonner est refusé tant que la demande
+     court : on annule d'abord.
+   - **Pendant les 7 jours**, le compte vit normalement, un bandeau en tête
+     du dossier dit la date ; un propriétaire l'annule d'un geste (e-mail aux
+     propriétaires et aux membres).
+   - **À l'effacement** : la condition relue sous verrou (demande toujours
+     là, âgée de 7 jours, aucun paiement en cours), puis les gestes Stripe
+     du § 4 — abonnements résiliés, factures payables annulées, client sans
+     facture supprimé —, puis la transaction du § 4. Un compte sans client
+     Stripe se supprime même sans clé Stripe.
+   - **La trace** (§ 5) gagne le motif (`demande` ou `sans_abonnement`) et
+     l'adresse de qui a demandé.
+
+   Conséquences : trois colonnes sur `Compte` (`suppressionDemandeeLe`,
+   `suppressionDemandeePar`, `suppressionFinPosee`), deux sur
+   `CompteSupprime` (`motif`, `demandeePar`). Aucune table neuve.
