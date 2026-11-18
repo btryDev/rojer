@@ -12,6 +12,7 @@ import {
 
 import { EnTetePage } from "./EnTetePage";
 import { ITEMS_ILLUSTRES } from "./illustrations/liste";
+import { CadreIllustration } from "./illustrations/motifs";
 import { SECTIONS_TEINTEES, TEINTE_SECTION } from "./teintes";
 
 afterEach(cleanup);
@@ -59,7 +60,11 @@ describe("EnTetePage", () => {
   });
 
   it("une illustration dessinée est décorative : masquée aux lecteurs d'écran", () => {
-    const { container } = render(<EnTetePage item="documents" description="x" />);
+    const { container } = render(
+      <CadreIllustration viewBox="0 0 10 10" className="w-1">
+        <rect width={1} height={1} />
+      </CadreIllustration>,
+    );
     const svg = container.querySelector("svg");
     expect(svg).not.toBeNull();
     expect(svg?.getAttribute("aria-hidden")).toBe("true");

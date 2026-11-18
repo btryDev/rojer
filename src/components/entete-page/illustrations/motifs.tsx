@@ -3,8 +3,8 @@ import type { ReactNode } from "react";
 /**
  * Ce que les illustrations d'en-tête ont en commun — extrait à la relecture
  * du 2026-10-25, où le cadre était recopié dans chaque dessin, l'extincteur
- * et le crayon trois fois chacun. [2026-11-18 : l'extincteur et le crayon
- * sont retirés — les dessins qui les portaient sont devenus des images.]
+ * et le crayon trois fois chacun (retirés depuis : leurs dessins sont
+ * devenus des images).
  */
 
 /**

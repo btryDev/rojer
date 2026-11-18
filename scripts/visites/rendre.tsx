@@ -12,7 +12,8 @@
 //
 // Comment : le gabarit `scripts/visites/<cle>.html` est une page animée par
 // GSAP, aux couleurs de la charte. Ses `{{…}}` reçoivent les vraies icônes
-// et la vraie illustration de l'app (rendues ici depuis leurs composants),
+// (rendues ici depuis leurs composants), la vraie illustration de l'app
+// (son fichier, `src/assets/entetes/`),
 // et GSAP lui-même. Chrome, sans fenêtre, avance l'horloge de l'animation
 // image par image (30 par seconde) et capture chacune ; FFmpeg assemble.
 // Rien n'est filmé en temps réel : le rendu est identique d'une fois sur
@@ -30,7 +31,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { ComponentType } from "react";
 import * as Lucide from "lucide-react";
 import { chromium } from "playwright-core";
-import { IllustrationEquipements } from "../../src/components/entete-page/illustrations/Equipements";
 import { ICONE_CATEGORIE } from "../../src/components/equipements/MarqueCategorie";
 
 const FPS = 30;
@@ -49,7 +49,10 @@ const icone = (C: Icone, size: number, color?: string) =>
 function remplissages(): Record<string, string> {
   const lucide = Lucide as unknown as Record<string, Icone>;
   const r: Record<string, string> = {
-    illustration: renderToStaticMarkup(<IllustrationEquipements />),
+    // L'illustration d'en-tête de l'app, telle quelle, en ligne.
+    illustration: `<img alt="" style="width:100%;height:auto" src="data:image/webp;base64,${readFileSync(
+      path.join(RACINE, "src/assets/entetes/equipements.webp"),
+    ).toString("base64")}">`,
     extincteur: icone(ICONE_CATEGORIE.EXTINCTEUR as Icone, 22, "#fff"),
     extincteur_grand: icone(ICONE_CATEGORIE.EXTINCTEUR as Icone, 40, "#fff"),
     elec: icone(ICONE_CATEGORIE.INSTALLATION_ELECTRIQUE as Icone, 22, "#fff"),

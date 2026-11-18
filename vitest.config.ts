@@ -1,7 +1,20 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
+// `import image from "@/assets/….webp"` : Next en fait un objet
+// `StaticImageData` (adresse, largeur, hauteur) ; Vite, une simple chaîne.
+// Les tests reçoivent la même forme que l'app (dimensions factices).
+const imagesStatiques = {
+  name: "images-statiques",
+  enforce: "pre" as const,
+  load(id: string) {
+    if (!/\/src\/assets\/.+\.(webp|png|jpe?g)$/.test(id)) return null;
+    return `export default { src: ${JSON.stringify(id)}, width: 400, height: 500 };`;
+  },
+};
+
 export default defineConfig({
+  plugins: [imagesStatiques],
   test: {
     environment: "node",
     include: ["src/**/*.test.{ts,tsx}"],
