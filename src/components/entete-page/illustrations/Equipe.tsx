@@ -11,7 +11,7 @@ export function IllustrationEquipe() {
     <ImageEnTete
       src="/illustrations/entetes/equipe.webp"
       width={900}
-      height={785}
+      height={786}
       className="w-[clamp(290px,27vw,390px)]"
     />
   );
