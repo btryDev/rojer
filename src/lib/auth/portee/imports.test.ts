@@ -80,6 +80,7 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous"; 
       "prisma.fichierALiberer.deleteMany",
       "prisma.fichierALiberer.findMany",
       "prisma.fichierALiberer.update",
+      "prisma.fichierStocke.count",
       "prisma.membre.findMany",
     ],
     // L'effacement d'un compte : une transaction interactive (le verrou, la
@@ -423,7 +424,7 @@ const SQL_BRUT_NOMMES: Record<string, string> = {
   "src/lib/calendrier/recalcul-ligne.ts": "verrou FOR UPDATE d'une ligne déjà lue par le client borné",
   "src/lib/entreprises/cycle-de-vie.ts": "verrou FOR UPDATE d'une entreprise déjà gardée",
   "src/lib/abonnements/suppression.ts":
-    "verrou FOR UPDATE de la ligne d'abonnement d'un compte à supprimer (ADR-058), dans la transaction qui relit la condition",
+    "verrous FOR UPDATE de la ligne d'abonnement d'un compte à supprimer (ADR-058), dans la transaction qui relit la condition, puis de ses membres avant de compter leurs attaches",
   "src/lib/abonnements/quotas.ts": "verrou FOR NO KEY UPDATE de la ligne du compte de la portée (plafonds, ADR-053 § 14)",
   "src/lib/stripe/file.ts":
     "file des relectures Stripe, hors compte : demande (INSERT … ON CONFLICT), bail à jeton (UPDATE … RETURNING), verrou FOR UPDATE sous le jeton, clôture",

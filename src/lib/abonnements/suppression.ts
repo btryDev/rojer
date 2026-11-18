@@ -20,7 +20,7 @@ import { OPTIONS_WEBHOOK } from "@/lib/stripe/client";
 import { DUREE_PAGE_DE_PAIEMENT_S } from "@/lib/stripe/parcours";
 import { synchroniserClientStripe, toutLister } from "@/lib/stripe/synchronisation";
 import { HORS_ABONNEMENT_OUVERT, OUVRENT, TERMINES } from "./droits";
-import { alerter } from "@/lib/alertes";
+import { alerter, alerterUneFoisParJour } from "@/lib/alertes";
 import { ecrireAuxProprietaires } from "./rappels";
 import { PAGE_ABONNEMENT } from "./saisie";
 
@@ -58,9 +58,12 @@ export type Avertissement = "j30" | "j7";
  * Ce que le compte peut garder avant la suppression : `versionsDuerp`, les
  * versions validées de son DUERP (téléchargeables une à une, abonnement ou
  * non — un compte d'avant le lancement a pu en valider sans payer) ;
- * `aPaye`, l'export du dossier (ADR-053 § 15).
+ * `fichiers`, les fichiers déposés (rapports, attestations), qui se
+ * téléchargent un à un, la lecture restant ouverte — l'employeur doit garder
+ * les rapports annexés au registre (R. 4323-25, R. 4323-26) ; `aPaye`,
+ * l'export du dossier (ADR-053 § 15), qui les reprend.
  */
-export type CeQuiSeGarde = { versionsDuerp: boolean; aPaye: boolean };
+export type CeQuiSeGarde = { versionsDuerp: boolean; fichiers: boolean; aPaye: boolean };
 
 /** Le message, en texte seul. */
 export function messageAvantSuppression(
@@ -75,7 +78,11 @@ export function messageAvantSuppression(
     garde.versionsDuerp
       ? "Pour conserver les versions validées de votre DUERP, téléchargez-les avant cette date depuis la page DUERP de chaque établissement."
       : null,
-    garde.aPaye ? "Vos autres documents s'exportent depuis la page « Préparer un contrôle » de chaque établissement." : null,
+    garde.aPaye
+      ? "Vos autres documents s'exportent depuis la page « Préparer un contrôle » de chaque établissement."
+      : garde.fichiers
+        ? "Les fichiers que vous avez déposés (rapports de vérification, attestations…) se téléchargent un à un depuis leur page, jusqu'à cette date."
+        : null,
   ].filter((l): l is string => l !== null);
   return {
     subject:
@@ -89,7 +96,7 @@ export function messageAvantSuppression(
       "",
       `Pour les garder, abonnez-vous avant cette date : ${base}${PAGE_ABONNEMENT}`,
       "",
-      ...(conserver.length > 0 ? conserver : ["Votre compte ne porte aucun document validé."]),
+      ...(conserver.length > 0 ? conserver : ["Votre compte ne porte aucun document validé ni fichier déposé."]),
       "La conservation de votre document unique d'évaluation des risques (DUERP), quarante ans dans ses versions successives, reste à la charge de l'employeur (articles L. 4121-3-1 et R. 4121-4 du Code du travail).",
       "",
       "— Rojer",
@@ -227,8 +234,13 @@ async function prevenirLesMembres(compteId: string, nom: string, suppressionLe: 
 }
 
 async function ceQuiSeGarde(compteId: string, debutPayantLe: Date | null): Promise<CeQuiSeGarde> {
-  const versions = await prisma.duerpVersion.count({ where: { duerp: { etablissement: { entreprise: { compteId } } } } });
-  return { versionsDuerp: versions > 0, aPaye: debutPayantLe !== null };
+  const aPaye = debutPayantLe !== null;
+  const [versions, fichiers] = await Promise.all([
+    prisma.duerpVersion.count({ where: { duerp: { etablissement: { entreprise: { compteId } } } } }),
+    // Qui a payé exporte son dossier, fichiers compris : rien à compter.
+    aPaye ? 0 : prisma.fichierStocke.count({ where: { compteId } }),
+  ]);
+  return { versionsDuerp: versions > 0, fichiers: fichiers > 0, aPaye };
 }
 
 /** L'horloge au plus tard pour que la fin du délai tombe d'ici `jours` jours. */
@@ -241,8 +253,15 @@ function compter(b: Bilan, partis: number, echec: boolean) {
   if (echec) b.echecs++;
 }
 
-/** Un paiement ouvert depuis moins que la vie d'une page Checkout retient la suppression. */
-const PAIEMENT_EN_COURS_MS = DUREE_PAGE_DE_PAIEMENT_S * 1000;
+/**
+ * Un paiement ouvert depuis moins que la vie d'une page Checkout retient la
+ * suppression — plus dix minutes : la marque est écrite avant la création de
+ * la page, dont Stripe compte l'expiration sur sa propre horloge (relecture du
+ * 2026-11-17).
+ */
+const PAIEMENT_EN_COURS_MS = (DUREE_PAGE_DE_PAIEMENT_S + 10 * 60) * 1000;
+const paiementEnCours = (ouvertLe: Date | null, maintenant: Date) =>
+  ouvertLe != null && ouvertLe.getTime() > maintenant.getTime() - PAIEMENT_EN_COURS_MS;
 
 /** Les comptes à supprimer aujourd'hui : date atteinte, les deux avertissements partis. */
 const ECHUS = (maintenant: Date) => ({
@@ -290,11 +309,22 @@ export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | n
   if (!stripe) return bilan;
   const echus = await prisma.abonnement.findMany({
     where: ECHUS(maintenant),
-    select: { compteId: true, stripeCustomerId: true },
+    select: { compteId: true, stripeCustomerId: true, debutPayantLe: true, paiementOuvertLe: true },
     orderBy: { suppressionPrevueLe: "asc" },
     take: SUPPRESSIONS_PAR_PASSE,
   });
-  for (const { compteId, stripeCustomerId } of echus) {
+  for (const { compteId, stripeCustomerId, debutPayantLe, paiementOuvertLe } of echus) {
+    // Une page de paiement ouverte retient la suppression AVANT tout geste
+    // chez Stripe : résilier et annuler les factures ne se défont pas, et le
+    // compte qui s'abonne garderait sinon son impayé effacé (relecture du
+    // 2026-11-18). Relu sous le verrou, plus bas, pour la page ouverte entre-temps.
+    if (paiementEnCours(paiementOuvertLe, maintenant)) {
+      bilan.reportes++;
+      continue;
+    }
+    // Le client Stripe existe-t-il encore (supprimé au tableau de bord : rien
+    // à y fermer ni à y effacer) ?
+    let clientChezStripe = stripeCustomerId !== null;
     // Un compte qui n'a jamais quitté l'essai (compté chez Rojer, ADR-053 § 9
     // amendé le 2026-11-16) n'a pas de client Stripe : rien à y arrêter.
     if (stripeCustomerId) try {
@@ -302,9 +332,9 @@ export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | n
       // réabonnement. Un abonnement ouvert chez Stripe : rien n'est résilié
       // ni effacé, la copie est relue (son horloge se vide) et le compte
       // attend. Sinon, ce qui pourrait encore facturer (un impayé) est
-      // résilié ; le client et ses factures restent.
-      // Un paiement ouvert depuis moins d'une heure retient la suppression
-      // (`paiementOuvertLe`, lu sous le verrou de la ligne, plus bas) : rien
+      // résilié, et ce qui resterait payable fermé (`fermerLesFactures`).
+      // Un paiement ouvert retient la suppression (`paiementEnCours`, relu
+      // sous le verrou de la ligne, plus bas) : rien
       // à demander à Stripe sur ses pages de paiement.
       let abonnements: Stripe.Subscription[];
       try {
@@ -314,15 +344,14 @@ export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | n
         if (!introuvable(e)) throw e;
         if (!(await clientSupprime(stripe, stripeCustomerId))) {
           // Introuvable sans être supprimé : mauvaise clé (test en production,
-          // autre compte Stripe) — le compte attend, chaque jour : à signaler.
-          await alerter("suppression d'un compte en attente : client Stripe introuvable", [
-            `compte ${compteId}, client ${stripeCustomerId}`,
-            "Vérifier la clé Stripe de l'application (mode, compte) ; rien n'est effacé tant que Stripe ne dit pas le client supprimé.",
-          ]);
-          throw e;
+          // autre compte Stripe) — le compte attend, signalé chaque jour.
+          throw new Error(
+            `client Stripe ${stripeCustomerId} introuvable sans être supprimé : vérifier la clé Stripe de l'application (mode, compte) ; rien n'est effacé tant que Stripe ne dit pas le client supprimé`,
+          );
         }
         console.error(`suppression du compte ${compteId} : client Stripe ${stripeCustomerId} supprimé, rien à résilier`);
         abonnements = [];
+        clientChezStripe = false;
       }
       // Ouvert, ou premier paiement encore en traitement (`incomplete`, que
       // Stripe rend actif ou expire sous 23 heures) : le compte attend.
@@ -339,10 +368,11 @@ export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | n
       for (const s of abonnements) {
         if (!TERMINES.has(s.status)) await stripe.subscriptions.cancel(s.id);
       }
+      if (clientChezStripe) await fermerLesFactures(stripe, stripeCustomerId);
     } catch (e) {
       bilan.reportes++;
       await reporter(compteId, maintenant);
-      console.error(`suppression du compte ${compteId} reportée : Stripe — ${motifErreur(e)}`);
+      await signalerLeReport(compteId, `Stripe — ${motifErreur(e)}`, maintenant);
       continue;
     }
     try {
@@ -357,18 +387,76 @@ export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | n
     } catch (e) {
       bilan.reportes++;
       await reporter(compteId, maintenant);
-      console.error(`suppression du compte ${compteId} échouée — ${motifErreur(e)}`);
+      await signalerLeReport(compteId, `base — ${motifErreur(e)}`, maintenant);
+      continue;
     }
+    // Un client qui n'a jamais payé n'a rien à garder chez Stripe : aucune
+    // facture à conserver pour la comptabilité (RGPD, relecture du 2026-11-17).
+    // Notre copie (`debutPayantLe`) ne fait qu'écarter d'emblée qui a payé ;
+    // la liste des factures, chez Stripe, décide.
+    if (clientChezStripe && stripeCustomerId && !debutPayantLe) await effacerLeClientSansFacture(stripe, compteId, stripeCustomerId);
   }
   return bilan;
 }
 
 /**
+ * Un compte annoncé « supprimé le … » qui reste en base se signale : sans
+ * cela, l'échec n'allait qu'au journal, et la tâche du jour se disait réussie
+ * (relecture du 2026-11-17). Une fois par jour et par compte.
+ */
+async function signalerLeReport(compteId: string, motif: string, maintenant: Date) {
+  await alerterUneFoisParJour(`suppression:${compteId}`, "suppression d'un compte reportée", [
+    `compte ${compteId}`,
+    motif,
+    "Le compte reste en base ; la suppression est retentée à la passe suivante.",
+  ], maintenant);
+}
+
+/**
+ * Ce qui resterait payable chez Stripe, fermé avant l'effacement : les
+ * factures ouvertes annulées (une facture annulée ne se paie plus, son lien
+ * hébergé non plus), les brouillons supprimés. Sans quoi un ancien client
+ * pouvait régler un impayé après la suppression de son compte, et l'argent
+ * restait sans que personne le sache (relecture du 2026-11-17). Une facture
+ * payée entre la liste et l'annulation fait échouer celle-ci : le compte
+ * attend la passe suivante, et Stripe y sera relu.
+ */
+async function fermerLesFactures(stripe: Stripe, customer: string) {
+  // « Irrécouvrable » se paie encore par son lien (relances de Stripe) : annulée aussi.
+  for (const status of ["open", "uncollectible", "draft"] as const) {
+    for (const f of await toutLister(stripe.invoices.list({ customer, status, limit: 100 }, OPTIONS_WEBHOOK), 1000)) {
+      if (f.id) await (status === "draft" ? stripe.invoices.del(f.id) : stripe.invoices.voidInvoice(f.id));
+    }
+  }
+}
+
+/**
+ * Après l'effacement d'un compte qui n'a jamais payé : son client Stripe (né
+ * d'un « S'abonner » abandonné) porte une adresse et l'identifiant du compte,
+ * sans facture à garder — il est supprimé. Une facture, même annulée, le
+ * garde (pièce comptable). Un échec se signale : le compte, lui, est déjà
+ * effacé.
+ */
+async function effacerLeClientSansFacture(stripe: Stripe, compteId: string, customer: string) {
+  try {
+    const factures = await stripe.invoices.list({ customer, limit: 1 }, OPTIONS_WEBHOOK);
+    if (factures.data.length > 0) return;
+    await stripe.customers.del(customer);
+  } catch (e) {
+    await alerter("client Stripe d'un compte supprimé à effacer à la main", [
+      `ancien compte ${compteId}, client ${customer}`,
+      `Il n'a jamais payé : rien à garder chez Stripe. Échec : ${motifErreur(e)}`,
+    ]);
+  }
+}
+
+/**
  * Efface un compte entier, dans une transaction, la ligne d'abonnement
  * verrouillée et la condition relue : un réabonnement de dernière minute
- * l'emporte (`null`), comme une page de paiement ouverte depuis moins d'une
- * heure (`paiementOuvertLe`, écrit par « S'abonner » avant Checkout ; la page
- * expire au bout d'une heure) — sans aucun appel à Stripe sous le verrou. Garde la trace du compte (`CompteSupprime`, cinq ans)
+ * l'emporte (`null`), comme une page de paiement encore ouverte
+ * (`paiementEnCours` : `paiementOuvertLe`, écrit par « S'abonner » avant
+ * Checkout, plus la vie de la page et une marge) — sans aucun appel à Stripe
+ * sous le verrou. Garde la trace du compte (`CompteSupprime`, cinq ans)
  * et note ses fichiers dans la file des fichiers à libérer, dans la même
  * transaction : l'effacement ne peut pas réussir sans elles. Rend les clés.
  */
@@ -381,7 +469,7 @@ export async function supprimerCompte(compteId: string, maintenant: Date): Promi
         select: { paiementOuvertLe: true, sansAbonnementDepuis: true, avertiSuppression30Le: true, avertiSuppression7Le: true, compte: { select: { name: true } } },
       });
       if (!encore) return null;
-      if (encore.paiementOuvertLe && encore.paiementOuvertLe.getTime() > maintenant.getTime() - PAIEMENT_EN_COURS_MS) return null;
+      if (paiementEnCours(encore.paiementOuvertLe, maintenant)) return null;
 
       const etablissements = await tx.etablissement.findMany({
         where: { entreprise: { compteId } },
@@ -434,6 +522,15 @@ export async function supprimerCompte(compteId: string, maintenant: Date): Promi
       await tx.abonnement.delete({ where: { compteId } });
 
       const membres = await tx.membre.findMany({ where: { compteId }, select: { userId: true } });
+      // Les personnes verrouillées avant de compter leurs attaches : une
+      // invitation acceptée ailleurs, ou un compte créé, au même instant
+      // (l'insertion d'un `Membre` prend un verrou partagé sur la personne)
+      // attend la fin de la transaction, au lieu d'être emportée par la
+      // cascade de `Membre.user` (relecture du 2026-11-17).
+      if (membres.length > 0) {
+        const ids = membres.map((m) => m.userId);
+        await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ANY(${ids}::uuid[]) FOR UPDATE`;
+      }
       await tx.compte.delete({ where: { id: compteId } });
 
       // Les personnes qui ne sont membres d'aucun autre compte, et dont rien
