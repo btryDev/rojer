@@ -554,6 +554,11 @@ du propriétaire, puis nom, adresse de facturation et carte saisis sur la page
 de Stripe — naît au moment de s'abonner. Stripe est à ajouter à cette liste
 avec les sous-traitants de Clever Cloud, à la bascule.]
 
+[2026-11-18, ADR-058 § 4 : à la suppression d'un compte sans abonnement, le
+client Stripe qui n'a jamais payé, et dont Stripe ne connaît aucune facture,
+est supprimé chez Stripe ; celui qui a payé reste, avec ses factures
+(obligations comptables de Rojer).]
+
 ~~Aucun autre.~~ [2026-10-30 : aucun autre à ce jour, hormis l'appel ci-dessus.] Pas de LLM, pas d'analytics tiers, pas de CDN hors UE. Le principe
 « zéro IA » du produit a une conséquence directe : **le produit** n'envoie
 aucune donnée à un service d'inférence, pour aucun traitement.

@@ -80,6 +80,50 @@ describe.skipIf(!URL_BASE || !local)("suppression d'un compte sans abonnement �
     await prisma.demandeAssistance.create({
       data: { compteId: A, userId: SEUL, categorie: "duerp", message: "aide", page: "/" },
     });
+    // Ce qu'un dossier vivant porte, et dont plusieurs liens refusent
+    // l'effacement de leur cible (Restrict, `suppression-schema.test.ts`) : une
+    // signature et un lien d'accès faits par la personne, un salarié avec son
+    // titre et une ligne de suivi qui le vise, un rapport déposé.
+    const { id: etablissementId } = await prisma.etablissement.findFirstOrThrow({ where: { entreprise: { compteId: A } }, select: { id: true } });
+    await prisma.signature.create({
+      data: {
+        etablissementId,
+        userId: SEUL,
+        objetType: "duerp_version",
+        objetId: "v1",
+        signataireNom: "Dirigeant",
+        signataireEmail: `${SEUL}@exemple.invalid`,
+        hashDocument: "0".repeat(64),
+        methode: "compte_connecte",
+      },
+    });
+    await prisma.accessToken.create({
+      data: {
+        tokenHash: "5e1e7-jeton",
+        etablissementId,
+        scope: "consultation",
+        objetType: "etablissement",
+        objetId: etablissementId,
+        emailDestinataire: "prestataire@exemple.invalid",
+        expireLe: MAINTENANT,
+        createdByUserId: SEUL,
+      },
+    });
+    const salarie = await prisma.salarie.create({ data: { etablissementId, nom: "Martin", prenom: "Léa" } });
+    await prisma.titreSalarie.create({ data: { salarieId: salarie.id, obligationId: "elec-salarie-habilitation", delivreLe: MAINTENANT } });
+    const verification = await prisma.verification.create({
+      data: {
+        etablissementId,
+        salarieId: salarie.id,
+        obligationId: "elec-salarie-habilitation",
+        libelleObligation: "Habilitation électrique",
+        periodicite: "autre",
+        datePrevue: MAINTENANT,
+      },
+    });
+    await prisma.rapportVerification.create({
+      data: { etablissementId, verificationId: verification.id, dateRapport: MAINTENANT, resultat: "conforme", realiseEnInterne: true },
+    });
   }
 
   beforeEach(async () => {
@@ -99,6 +143,10 @@ describe.skipIf(!URL_BASE || !local)("suppression d'un compte sans abonnement �
     expect(await prisma.acceptationConditions.count({ where: { compteId: A } })).toBe(0);
     expect(await prisma.demandeAssistance.count({ where: { compteId: A } })).toBe(0);
     expect(await prisma.user.findUnique({ where: { id: SEUL } })).toBeNull();
+    // Le dossier vivant est parti avec, sans qu'un lien bloque la transaction.
+    expect(await prisma.signature.count({ where: { signataireEmail: `${SEUL}@exemple.invalid` } })).toBe(0);
+    expect(await prisma.accessToken.count({ where: { tokenHash: "5e1e7-jeton" } })).toBe(0);
+    expect(await prisma.salarie.count({ where: { nom: "Martin", etablissement: { entreprise: { compteId: A } } } })).toBe(0);
 
     expect(await prisma.user.findUnique({ where: { id: DEUX } })).not.toBeNull();
     expect(await prisma.compte.findUnique({ where: { id: B } })).not.toBeNull();

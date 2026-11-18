@@ -10,6 +10,7 @@ const m = vi.hoisted(() => ({
   abonnements: vi.fn(),
   synchroniser: vi.fn(),
   versions: vi.fn(),
+  fichiers: vi.fn(),
 
   transaction: vi.fn(),
   membres: vi.fn(),
@@ -20,6 +21,7 @@ vi.mock("@/lib/prisma", () => ({
   prisma: {
     abonnement: { findMany: m.findMany, updateMany: m.updateMany },
     duerpVersion: { count: m.versions },
+    fichierStocke: { count: m.fichiers },
     membre: { findMany: m.membres },
     fichierALiberer: m.file,
     $transaction: m.transaction,
@@ -62,8 +64,8 @@ vi.mock("@/lib/stripe/synchronisation", async (reel) => ({
 }));
 vi.mock("@/lib/suppression/fichiers", () => ({ clesDesEtablissements: vi.fn() }));
 vi.mock("@/lib/storage", () => ({ getStorage: () => m.stockage }));
-const { alerter } = vi.hoisted(() => ({ alerter: vi.fn() }));
-vi.mock("@/lib/alertes", () => ({ alerter }));
+const { alerter, alerterUneFoisParJour } = vi.hoisted(() => ({ alerter: vi.fn(), alerterUneFoisParJour: vi.fn() }));
+vi.mock("@/lib/alertes", () => ({ alerter, alerterUneFoisParJour }));
 
 import { ajouterJours, ajouterMois } from "@/lib/dates";
 import {
@@ -87,6 +89,7 @@ beforeEach(() => {
   m.sendMail.mockResolvedValue(undefined);
   m.synchroniser.mockResolvedValue({ issue: "ecrit" });
   m.versions.mockResolvedValue(0);
+  m.fichiers.mockResolvedValue(0);
   m.membres.mockResolvedValue([]);
   m.file.count.mockResolvedValue(0);
   m.file.deleteMany.mockResolvedValue({ count: 1 });
@@ -208,10 +211,11 @@ describe("suppression d'un compte sans abonnement (ADR-058)", () => {
   it("le message : la date, le lien ; ce qui se garde selon le compte ; la conservation du DUERP à l'employeur ; jamais « Stripe »", () => {
     const le = new Date("2027-11-19T12:00:00Z");
     const depuis = new Date("2026-11-19T12:00:00Z");
-    const msg = (versionsDuerp: boolean, aPaye: boolean) =>
-      messageAvantSuppression("j30", le, depuis, { versionsDuerp, aPaye }, "https://rojer.test").text;
-    const paye = msg(true, true);
+    const msg = (versionsDuerp: boolean, aPaye: boolean, fichiers = false) =>
+      messageAvantSuppression("j30", le, depuis, { versionsDuerp, fichiers, aPaye }, "https://rojer.test").text;
+    const paye = msg(true, true, true);
     const versionsSansPaiement = msg(true, false); // validé avant le lancement, jamais payé
+    const fichiersSansPaiement = msg(false, false, true); // des rapports déposés, rien validé ni payé
     const rien = msg(false, false);
     expect(paye).toMatch(/19 novembre 2027/);
     expect(paye).toMatch(/depuis le 19 novembre 2026/);
@@ -220,8 +224,11 @@ describe("suppression d'un compte sans abonnement (ADR-058)", () => {
     expect(versionsSansPaiement).toMatch(/téléchargez-les/);
     expect(versionsSansPaiement).not.toMatch(/Préparer un contrôle/);
     expect(versionsSansPaiement).not.toMatch(/aucun document validé/);
-    expect(rien).toMatch(/aucun document validé/);
-    for (const t of [paye, versionsSansPaiement, rien]) {
+    expect(fichiersSansPaiement).toMatch(/fichiers que vous avez déposés/);
+    expect(fichiersSansPaiement).not.toMatch(/aucun document validé/);
+    expect(paye).not.toMatch(/fichiers que vous avez déposés/); // l'export les reprend
+    expect(rien).toMatch(/aucun document validé ni fichier déposé/);
+    for (const t of [paye, versionsSansPaiement, fichiersSansPaiement, rien]) {
       expect(t).toMatch(/R\. 4121-4/);
       expect(t).not.toMatch(/stripe/i);
     }
@@ -273,7 +280,12 @@ describe("suppression d'un compte sans abonnement (ADR-058)", () => {
     m.transaction.mockClear();
     retrieve.mockRejectedValue(introuvable);
     expect(await supprimerComptesEchus(MAINTENANT, stripe)).toEqual({ supprimes: 0, reportes: 1 });
-    expect(alerter).toHaveBeenCalledWith(expect.stringMatching(/client Stripe introuvable/), expect.any(Array));
+    expect(alerterUneFoisParJour).toHaveBeenCalledWith(
+      "suppression:c1",
+      expect.stringMatching(/suppression d'un compte reportée/),
+      expect.arrayContaining([expect.stringMatching(/introuvable sans être supprimé/)]),
+      MAINTENANT,
+    );
     // Un client lisible et non supprimé : de même.
     retrieve.mockResolvedValue({ id: "cus_parti" });
     expect(await supprimerComptesEchus(MAINTENANT, stripe)).toEqual({ supprimes: 0, reportes: 1 });
@@ -308,6 +320,8 @@ describe("suppression d'un compte sans abonnement (ADR-058)", () => {
     const cancel = vi.fn();
     const stripe = {
       subscriptions: { cancel, list: () => ({ autoPagingToArray: m.abonnements }) },
+      invoices: { list: () => ({ autoPagingToArray: async () => [], data: [{ id: "in_1" }] }), voidInvoice: vi.fn(), del: vi.fn() },
+      customers: { del: vi.fn() },
     } as unknown as Parameters<typeof supprimerComptesEchus>[1];
     m.abonnements.mockResolvedValue([
       { id: "sub_vieux", status: "canceled" },
@@ -321,11 +335,88 @@ describe("suppression d'un compte sans abonnement (ADR-058)", () => {
     expect(cancel).not.toHaveBeenCalled();
   });
 
-  it("sous le verrou : une page de paiement ouverte depuis moins d'une heure retient la suppression — aucun appel à Stripe sous le verrou", async () => {
+  it("avant l'effacement, ce qui reste payable est fermé : factures ouvertes annulées, brouillons supprimés ; une annulation refusée (payée entre-temps) : le compte attend, signalé", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    m.findMany.mockResolvedValue([{ compteId: "c1", stripeCustomerId: "cus_1", debutPayantLe: new Date("2027-01-01") }]);
+    m.abonnements.mockResolvedValue([{ id: "sub_impaye", status: "unpaid" }]);
+    const ordre: string[] = [];
+    m.transaction.mockImplementation(async () => {
+      ordre.push("effacement");
+      return ["cle-1"];
+    });
+    const voidInvoice = vi.fn(async (id: string) => ordre.push(`annule ${id}`));
+    const del = vi.fn(async (id: string) => ordre.push(`supprime ${id}`));
+    const parStatut: Record<string, { id: string }[]> = { open: [{ id: "in_ouverte" }], draft: [{ id: "in_brouillon" }] };
+    const customersDel = vi.fn();
+    const stripe = {
+      subscriptions: { cancel: vi.fn(), list: () => ({ autoPagingToArray: m.abonnements }) },
+      invoices: {
+        list: (p: { status?: string }) => ({ autoPagingToArray: async () => parStatut[p.status ?? ""] ?? [], data: [] }),
+        voidInvoice,
+        del,
+      },
+      customers: { del: customersDel },
+    } as unknown as Parameters<typeof supprimerComptesEchus>[1];
+
+    expect(await supprimerComptesEchus(MAINTENANT, stripe)).toEqual({ supprimes: 1, reportes: 0 });
+    expect(ordre).toEqual(["annule in_ouverte", "supprime in_brouillon", "effacement"]);
+    // Il a payé : son client et ses factures restent chez Stripe.
+    expect(customersDel).not.toHaveBeenCalled();
+
+    ordre.length = 0;
+    voidInvoice.mockRejectedValueOnce(new Error("Invoice is already paid"));
+    expect(await supprimerComptesEchus(MAINTENANT, stripe)).toEqual({ supprimes: 0, reportes: 1 });
+    expect(ordre).not.toContain("effacement");
+    expect(alerterUneFoisParJour).toHaveBeenCalledWith("suppression:c1", expect.any(String), expect.arrayContaining([expect.stringMatching(/already paid/)]), MAINTENANT);
+  });
+
+  it("un client Stripe qui n'a jamais payé : supprimé chez Stripe après l'effacement, s'il n'a aucune facture ; un échec se signale, le compte reste effacé", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    m.findMany.mockResolvedValue([{ compteId: "c1", stripeCustomerId: "cus_1", debutPayantLe: null }]);
+    m.abonnements.mockResolvedValue([]);
+    m.transaction.mockResolvedValue([]);
+    let factures: { id: string }[] = [];
+    const customersDel = vi.fn();
+    const stripe = {
+      subscriptions: { cancel: vi.fn(), list: () => ({ autoPagingToArray: m.abonnements }) },
+      invoices: { list: () => ({ autoPagingToArray: async () => [], data: factures }), voidInvoice: vi.fn(), del: vi.fn() },
+      customers: { del: customersDel },
+    } as unknown as Parameters<typeof supprimerComptesEchus>[1];
+
+    expect(await supprimerComptesEchus(MAINTENANT, stripe)).toEqual({ supprimes: 1, reportes: 0 });
+    expect(customersDel).toHaveBeenCalledWith("cus_1");
+
+    // Une facture, même annulée, est une pièce comptable : le client reste.
+    customersDel.mockClear();
+    factures = [{ id: "in_annulee" }];
+    expect(await supprimerComptesEchus(MAINTENANT, stripe)).toEqual({ supprimes: 1, reportes: 0 });
+    expect(customersDel).not.toHaveBeenCalled();
+
+    factures = [];
+    customersDel.mockRejectedValueOnce(new Error("injoignable"));
+    expect(await supprimerComptesEchus(MAINTENANT, stripe)).toEqual({ supprimes: 1, reportes: 0 });
+    expect(alerter).toHaveBeenCalledWith(expect.stringMatching(/à effacer à la main/), expect.arrayContaining([expect.stringMatching(/cus_1/)]));
+  });
+
+  it("l'effacement en base échoue : le compte attend la passe suivante, et c'est signalé (une fois par jour)", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    m.findMany.mockResolvedValue([{ compteId: "c1", stripeCustomerId: null }]);
+    m.transaction.mockRejectedValue(new Error("violates foreign key constraint"));
+    const stripe = { subscriptions: { cancel: vi.fn(), list: () => ({ autoPagingToArray: m.abonnements }) } } as unknown as Parameters<typeof supprimerComptesEchus>[1];
+    expect(await supprimerComptesEchus(MAINTENANT, stripe)).toEqual({ supprimes: 0, reportes: 1 });
+    expect(alerterUneFoisParJour).toHaveBeenCalledWith(
+      "suppression:c1",
+      expect.stringMatching(/reportée/),
+      expect.arrayContaining([expect.stringMatching(/base — violates foreign key/)]),
+      MAINTENANT,
+    );
+  });
+
+  it("sous le verrou : une page de paiement ouverte depuis moins d'une heure et dix minutes (marge d'horloge) retient la suppression — aucun appel à Stripe sous le verrou", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     m.findMany.mockResolvedValue([{ compteId: "c1", stripeCustomerId: null }]);
     const stripe = { subscriptions: { cancel: vi.fn(), list: () => ({ autoPagingToArray: m.abonnements }) } } as unknown as Parameters<typeof supprimerComptesEchus>[1];
-    const ligne = { paiementOuvertLe: new Date(MAINTENANT.getTime() - 10 * 60_000), sansAbonnementDepuis: new Date(), avertiSuppression30Le: new Date(), avertiSuppression7Le: new Date(), compte: { name: "x" } };
+    const ligne = { paiementOuvertLe: new Date(MAINTENANT.getTime() - 65 * 60_000), sansAbonnementDepuis: new Date(), avertiSuppression30Le: new Date(), avertiSuppression7Le: new Date(), compte: { name: "x" } };
     const verrou = vi.fn();
     const tx = { $queryRaw: verrou, abonnement: { findFirst: vi.fn(async () => ligne) } };
     m.transaction.mockImplementation(async (f: (t: unknown) => unknown) => f(tx));

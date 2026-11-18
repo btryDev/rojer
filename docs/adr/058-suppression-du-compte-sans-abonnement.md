@@ -67,17 +67,28 @@ deux fois.
    par la tâche quotidienne. [2026-11-17 : jamais pendant un paiement —
    « S'abonner » écrit `Abonnement.paiementOuvertLe` avant d'ouvrir Checkout,
    dont la page expire au bout d'une heure ; la suppression le lit sous le
-   verrou de la ligne et attend le lendemain si la page a moins d'une heure.
+   verrou de la ligne et attend le lendemain si la page a moins d'une heure
+   [2026-11-18 : d'une heure et dix minutes — la marque précède la page, dont
+   Stripe compte l'expiration sur sa propre horloge].
    Les sessions Checkout ne sont plus lues ni expirées par la suppression.]
    - chez Stripe, qui fait foi : les sessions Checkout ouvertes expirent ;
      un abonnement OUVERT chez Stripe (notre copie en retard d'un webhook)
      annule la suppression et fait relire la copie ; un premier paiement en
      cours (`incomplete` : prélèvement, 3D Secure) la reporte ; sinon, les abonnements
      non terminés (pause, impayé) sont résiliés, sans quoi Stripe pourrait
-     encore facturer ; le client Stripe et ses factures restent
-     (comptabilité de Rojer). Stripe injoignable : le compte attend la
+     encore facturer ; ~~le client Stripe et ses factures restent
+     (comptabilité de Rojer)~~ [2026-11-18, relecture de la suppression :
+     ses factures encore ouvertes sont annulées et ses brouillons supprimés,
+     avant l'effacement — une facture annulée ne se paie plus, son lien non
+     plus ; une facture payée entre-temps fait échouer l'annulation, et le
+     compte attend. Le client et ses factures restent s'il a payé une fois
+     (comptabilité de Rojer) ; s'il n'a jamais payé et que Stripe ne lui
+     connaît aucune facture, il est supprimé chez Stripe après l'effacement
+     (rien à garder), un échec étant signalé]. Stripe injoignable : le compte attend la
      passe suivante, et passe derrière les autres comptes échus (un compte
-     qui échoue chaque jour ne bloque pas la file). Client Stripe supprimé
+     qui échoue chaque jour ne bloque pas la file) [2026-11-18 : tout report
+     — Stripe ou base — se signale par une alerte, une fois par jour et par
+     compte ; il n'allait qu'au journal]. Client Stripe supprimé
      à la main : il n'y a rien à résilier, la suppression suit ;
    - en base, dans une transaction, la ligne d'abonnement verrouillée et la
      condition relue (un réabonnement de dernière minute l'emporte) : les
@@ -86,14 +97,19 @@ deux fois.
      conditions (leur trace reste, § 5), l'abonnement, puis le compte (membres, invitations,
      consommations, fichiers comptés) ; enfin les personnes qui ne sont
      membres d'aucun autre compte et dont rien ne garde la trace ailleurs
-     (signature, lien d'accès, demande, acceptation, invitation envoyée) ;
+     (signature, lien d'accès, demande, acceptation, invitation envoyée)
+     [2026-11-18 : verrouillées avant d'être comptées — une invitation
+     acceptée au même instant attend la fin de la transaction. Les liens qui
+     refusent l'effacement d'une personne, d'un compte ou d'un DUERP sont
+     listés par une garde qui relit le schéma (`suppression-schema.test.ts`) :
+     un lien neuf la fait échouer tant que la suppression ne le traite pas] ;
    - les fichiers du stockage (ceux des établissements et tout fichier
      compté au compte) : notés DANS la transaction (`FichierALiberer`),
      retirés après par la tâche quotidienne, et retentés chaque jour tant
      que le stockage échoue, les moins tentés d'abord. Un fichier dont la
      ligne est effacée ne reste pas lisible (décision du 2026-11-09).
    - Restent : `EssaiEntreprise` (un essai par SIREN, ADR-053 § 8), le
-     client Stripe, les journaux.
+     client Stripe [2026-11-18 : s'il a payé une fois], les journaux.
 5. **La trace** (`CompteSupprime`), écrite dans la même transaction et gardée
    **cinq ans** (prescription de droit commun, art. 2224 C. civ.), puis
    effacée par la tâche quotidienne : le nom du compte, les adresses des
