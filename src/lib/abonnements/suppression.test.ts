@@ -346,7 +346,11 @@ describe("suppression d'un compte sans abonnement (ADR-058)", () => {
     });
     const voidInvoice = vi.fn(async (id: string) => ordre.push(`annule ${id}`));
     const del = vi.fn(async (id: string) => ordre.push(`supprime ${id}`));
-    const parStatut: Record<string, { id: string }[]> = { open: [{ id: "in_ouverte" }], draft: [{ id: "in_brouillon" }] };
+    const parStatut: Record<string, { id: string }[]> = {
+      open: [{ id: "in_ouverte" }],
+      uncollectible: [{ id: "in_irrecouvrable" }],
+      draft: [{ id: "in_brouillon" }],
+    };
     const customersDel = vi.fn();
     const stripe = {
       subscriptions: { cancel: vi.fn(), list: () => ({ autoPagingToArray: m.abonnements }) },
@@ -359,7 +363,7 @@ describe("suppression d'un compte sans abonnement (ADR-058)", () => {
     } as unknown as Parameters<typeof supprimerComptesEchus>[1];
 
     expect(await supprimerComptesEchus(MAINTENANT, stripe)).toEqual({ supprimes: 1, reportes: 0 });
-    expect(ordre).toEqual(["annule in_ouverte", "supprime in_brouillon", "effacement"]);
+    expect(ordre).toEqual(["annule in_ouverte", "annule in_irrecouvrable", "supprime in_brouillon", "effacement"]);
     // Il a payé : son client et ses factures restent chez Stripe.
     expect(customersDel).not.toHaveBeenCalled();
 
@@ -368,6 +372,21 @@ describe("suppression d'un compte sans abonnement (ADR-058)", () => {
     expect(await supprimerComptesEchus(MAINTENANT, stripe)).toEqual({ supprimes: 0, reportes: 1 });
     expect(ordre).not.toContain("effacement");
     expect(alerterUneFoisParJour).toHaveBeenCalledWith("suppression:c1", expect.any(String), expect.arrayContaining([expect.stringMatching(/already paid/)]), MAINTENANT);
+  });
+
+  it("une page de paiement ouverte retient la suppression AVANT tout geste chez Stripe : rien n'est résilié ni annulé", async () => {
+    m.findMany.mockResolvedValue([{ compteId: "c1", stripeCustomerId: "cus_1", paiementOuvertLe: new Date(MAINTENANT.getTime() - 20 * 60_000) }]);
+    const cancel = vi.fn();
+    const voidInvoice = vi.fn();
+    const stripe = {
+      subscriptions: { cancel, list: () => ({ autoPagingToArray: m.abonnements }) },
+      invoices: { list: () => ({ autoPagingToArray: async () => [{ id: "in_1" }] }), voidInvoice, del: vi.fn() },
+    } as unknown as Parameters<typeof supprimerComptesEchus>[1];
+    expect(await supprimerComptesEchus(MAINTENANT, stripe)).toEqual({ supprimes: 0, reportes: 1 });
+    expect(m.abonnements).not.toHaveBeenCalled();
+    expect(cancel).not.toHaveBeenCalled();
+    expect(voidInvoice).not.toHaveBeenCalled();
+    expect(m.transaction).not.toHaveBeenCalled();
   });
 
   it("un client Stripe qui n'a jamais payé : supprimé chez Stripe après l'effacement, s'il n'a aucune facture ; un échec se signale, le compte reste effacé", async () => {

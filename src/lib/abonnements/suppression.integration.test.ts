@@ -83,7 +83,8 @@ describe.skipIf(!URL_BASE || !local)("suppression d'un compte sans abonnement �
     // Ce qu'un dossier vivant porte, et dont plusieurs liens refusent
     // l'effacement de leur cible (Restrict, `suppression-schema.test.ts`) : une
     // signature et un lien d'accès faits par la personne, un salarié avec son
-    // titre et une ligne de suivi qui le vise, un rapport déposé.
+    // titre et une ligne de suivi qui le vise, un rapport, une zone, un
+    // équipement et un point à corriger.
     const { id: etablissementId } = await prisma.etablissement.findFirstOrThrow({ where: { entreprise: { compteId: A } }, select: { id: true } });
     await prisma.signature.create({
       data: {
@@ -123,6 +124,11 @@ describe.skipIf(!URL_BASE || !local)("suppression d'un compte sans abonnement �
     });
     await prisma.rapportVerification.create({
       data: { etablissementId, verificationId: verification.id, dateRapport: MAINTENANT, resultat: "conforme", realiseEnInterne: true },
+    });
+    const zone = await prisma.batiment.create({ data: { etablissementId, nom: "Salle" } });
+    const equipement = await prisma.equipement.create({ data: { etablissementId, batimentId: zone.id, categorie: "EXTINCTEUR", libelle: "Extincteur" } });
+    await prisma.action.create({
+      data: { etablissementId, verificationId: verification.id, equipementId: equipement.id, libelle: "Remplacer", type: "organisationnelle" },
     });
   }
 

@@ -234,11 +234,13 @@ async function prevenirLesMembres(compteId: string, nom: string, suppressionLe: 
 }
 
 async function ceQuiSeGarde(compteId: string, debutPayantLe: Date | null): Promise<CeQuiSeGarde> {
+  const aPaye = debutPayantLe !== null;
   const [versions, fichiers] = await Promise.all([
     prisma.duerpVersion.count({ where: { duerp: { etablissement: { entreprise: { compteId } } } } }),
-    prisma.fichierStocke.count({ where: { compteId } }),
+    // Qui a payé exporte son dossier, fichiers compris : rien à compter.
+    aPaye ? 0 : prisma.fichierStocke.count({ where: { compteId } }),
   ]);
-  return { versionsDuerp: versions > 0, fichiers: fichiers > 0, aPaye: debutPayantLe !== null };
+  return { versionsDuerp: versions > 0, fichiers: fichiers > 0, aPaye };
 }
 
 /** L'horloge au plus tard pour que la fin du délai tombe d'ici `jours` jours. */
@@ -258,6 +260,8 @@ function compter(b: Bilan, partis: number, echec: boolean) {
  * 2026-11-17).
  */
 const PAIEMENT_EN_COURS_MS = (DUREE_PAGE_DE_PAIEMENT_S + 10 * 60) * 1000;
+const paiementEnCours = (ouvertLe: Date | null, maintenant: Date) =>
+  ouvertLe != null && ouvertLe.getTime() > maintenant.getTime() - PAIEMENT_EN_COURS_MS;
 
 /** Les comptes à supprimer aujourd'hui : date atteinte, les deux avertissements partis. */
 const ECHUS = (maintenant: Date) => ({
@@ -305,11 +309,19 @@ export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | n
   if (!stripe) return bilan;
   const echus = await prisma.abonnement.findMany({
     where: ECHUS(maintenant),
-    select: { compteId: true, stripeCustomerId: true, debutPayantLe: true },
+    select: { compteId: true, stripeCustomerId: true, debutPayantLe: true, paiementOuvertLe: true },
     orderBy: { suppressionPrevueLe: "asc" },
     take: SUPPRESSIONS_PAR_PASSE,
   });
-  for (const { compteId, stripeCustomerId, debutPayantLe } of echus) {
+  for (const { compteId, stripeCustomerId, debutPayantLe, paiementOuvertLe } of echus) {
+    // Une page de paiement ouverte retient la suppression AVANT tout geste
+    // chez Stripe : résilier et annuler les factures ne se défont pas, et le
+    // compte qui s'abonne garderait sinon son impayé effacé (relecture du
+    // 2026-11-18). Relu sous le verrou, plus bas, pour la page ouverte entre-temps.
+    if (paiementEnCours(paiementOuvertLe, maintenant)) {
+      bilan.reportes++;
+      continue;
+    }
     // Le client Stripe existe-t-il encore (supprimé au tableau de bord : rien
     // à y fermer ni à y effacer) ?
     let clientChezStripe = stripeCustomerId !== null;
@@ -321,8 +333,8 @@ export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | n
       // ni effacé, la copie est relue (son horloge se vide) et le compte
       // attend. Sinon, ce qui pourrait encore facturer (un impayé) est
       // résilié, et ce qui resterait payable fermé (`fermerLesFactures`).
-      // Un paiement ouvert depuis moins d'une heure retient la suppression
-      // (`paiementOuvertLe`, lu sous le verrou de la ligne, plus bas) : rien
+      // Un paiement ouvert retient la suppression (`paiementEnCours`, relu
+      // sous le verrou de la ligne, plus bas) : rien
       // à demander à Stripe sur ses pages de paiement.
       let abonnements: Stripe.Subscription[];
       try {
@@ -380,7 +392,9 @@ export async function supprimerComptesEchus(maintenant: Date, stripe: Stripe | n
     }
     // Un client qui n'a jamais payé n'a rien à garder chez Stripe : aucune
     // facture à conserver pour la comptabilité (RGPD, relecture du 2026-11-17).
-    if (stripeCustomerId && clientChezStripe && !debutPayantLe) await effacerLeClientSansFacture(stripe, compteId, stripeCustomerId);
+    // Notre copie (`debutPayantLe`) ne fait qu'écarter d'emblée qui a payé ;
+    // la liste des factures, chez Stripe, décide.
+    if (clientChezStripe && stripeCustomerId && !debutPayantLe) await effacerLeClientSansFacture(stripe, compteId, stripeCustomerId);
   }
   return bilan;
 }
@@ -408,8 +422,11 @@ async function signalerLeReport(compteId: string, motif: string, maintenant: Dat
  * attend la passe suivante, et Stripe y sera relu.
  */
 async function fermerLesFactures(stripe: Stripe, customer: string) {
-  const ouvertes = await toutLister(stripe.invoices.list({ customer, status: "open", limit: 100 }, OPTIONS_WEBHOOK), 1000);
-  for (const f of ouvertes) if (f.id) await stripe.invoices.voidInvoice(f.id);
+  // « Irrécouvrable » se paie encore par son lien (relances de Stripe) : annulée aussi.
+  for (const status of ["open", "uncollectible"] as const) {
+    const payables = await toutLister(stripe.invoices.list({ customer, status, limit: 100 }, OPTIONS_WEBHOOK), 1000);
+    for (const f of payables) if (f.id) await stripe.invoices.voidInvoice(f.id);
+  }
   const brouillons = await toutLister(stripe.invoices.list({ customer, status: "draft", limit: 100 }, OPTIONS_WEBHOOK), 1000);
   for (const f of brouillons) if (f.id) await stripe.invoices.del(f.id);
 }
@@ -437,9 +454,10 @@ async function effacerLeClientSansFacture(stripe: Stripe, compteId: string, cust
 /**
  * Efface un compte entier, dans une transaction, la ligne d'abonnement
  * verrouillée et la condition relue : un réabonnement de dernière minute
- * l'emporte (`null`), comme une page de paiement ouverte depuis moins d'une
- * heure (`paiementOuvertLe`, écrit par « S'abonner » avant Checkout ; la page
- * expire au bout d'une heure) — sans aucun appel à Stripe sous le verrou. Garde la trace du compte (`CompteSupprime`, cinq ans)
+ * l'emporte (`null`), comme une page de paiement encore ouverte
+ * (`paiementEnCours` : `paiementOuvertLe`, écrit par « S'abonner » avant
+ * Checkout, plus la vie de la page et une marge) — sans aucun appel à Stripe
+ * sous le verrou. Garde la trace du compte (`CompteSupprime`, cinq ans)
  * et note ses fichiers dans la file des fichiers à libérer, dans la même
  * transaction : l'effacement ne peut pas réussir sans elles. Rend les clés.
  */
@@ -452,7 +470,7 @@ export async function supprimerCompte(compteId: string, maintenant: Date): Promi
         select: { paiementOuvertLe: true, sansAbonnementDepuis: true, avertiSuppression30Le: true, avertiSuppression7Le: true, compte: { select: { name: true } } },
       });
       if (!encore) return null;
-      if (encore.paiementOuvertLe && encore.paiementOuvertLe.getTime() > maintenant.getTime() - PAIEMENT_EN_COURS_MS) return null;
+      if (paiementEnCours(encore.paiementOuvertLe, maintenant)) return null;
 
       const etablissements = await tx.etablissement.findMany({
         where: { entreprise: { compteId } },
