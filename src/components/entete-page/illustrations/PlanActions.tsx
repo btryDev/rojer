@@ -9,7 +9,7 @@ export function IllustrationPlanActions() {
   return (
     <ImageEnTete
       src="/illustrations/entetes/plan-actions.webp"
-      width={634}
+      width={628}
       height={900}
       className="w-[clamp(180px,17vw,240px)]"
     />

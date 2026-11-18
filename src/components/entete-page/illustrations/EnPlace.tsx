@@ -10,7 +10,7 @@ export function IllustrationEnPlace() {
     <ImageEnTete
       src="/illustrations/entetes/en-place.webp"
       width={900}
-      height={687}
+      height={695}
       className="w-[clamp(240px,24vw,340px)]"
     />
   );

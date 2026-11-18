@@ -59,7 +59,7 @@ describe("EnTetePage", () => {
   });
 
   it("une illustration dessinée est décorative : masquée aux lecteurs d'écran", () => {
-    const { container } = render(<EnTetePage item="equipements" description="x" />);
+    const { container } = render(<EnTetePage item="documents" description="x" />);
     const svg = container.querySelector("svg");
     expect(svg).not.toBeNull();
     expect(svg?.getAttribute("aria-hidden")).toBe("true");

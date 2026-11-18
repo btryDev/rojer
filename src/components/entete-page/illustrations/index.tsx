@@ -33,8 +33,9 @@ import { IllustrationZones } from "./Zones";
  * noirs ponctuels, objets blancs en perspective isométrique, posés sur la
  * teinte de la section — pas de fond propre. Une seule animation par dessin
  * vectoriel (une image générée reste fixe : Calendrier, Plan d'actions et
- * Ce qui doit être en place, `ImageEnTete`, depuis le 2026-11-09 ; DUERP,
- * Équipe, Permis de feu et Plans de prévention depuis le 2026-11-18),
+ * Ce qui doit être en place, `ImageEnTete`, depuis le 2026-11-09 ; les
+ * sections Santé-sécurité et Équipement et bâtiment depuis le 2026-11-18,
+ * scènes sans texte ni tampon),
  * jouée une fois au chargement (`ep-*` dans `globals.css`), aucune si le
  * visiteur a demandé moins de mouvement.
  */
