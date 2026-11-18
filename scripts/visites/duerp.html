@@ -217,11 +217,7 @@ td b{font-weight:500;color:var(--ink)}
 
 /* ---------- le texte, à droite ---------- */
 #texte{position:absolute;left:924px;top:0;width:326px;height:720px}
-#texte .haut{position:absolute;top:150px;left:0;right:0;display:flex;align-items:center;justify-content:space-between}
-.barres{display:flex;gap:5px}
-.barres i{width:18px;height:4px;border-radius:4px;background:var(--slate-line);position:relative;overflow:hidden}
-.barres i span{position:absolute;inset:0;background:var(--ink);transform-origin:left;transform:scaleX(0)}
-.etape{position:absolute;top:210px;left:0;right:0;opacity:0}
+.etape{position:absolute;top:170px;left:0;right:0;opacity:0}
 .etape .num{font-size:13px;font-weight:600;color:var(--blue-ink)}
 .etape h2{font-size:34px;margin-top:12px}
 .etape p{font-size:16px;line-height:1.55;color:var(--slate-mid);margin-top:16px}
@@ -239,7 +235,7 @@ td b{font-weight:500;color:var(--ink)}
 /* ---------- plans de titre ---------- */
 .inter{position:absolute;inset:0;background:var(--canvas);z-index:55;opacity:0;display:flex;flex-direction:column;justify-content:center;padding-left:96px}
 .inter .n{font-size:18px;font-weight:600;color:var(--blue-ink)}
-.inter h1{font-size:92px;margin-top:18px;letter-spacing:-.04em;line-height:1.04}
+.inter h1{font-size:92px;margin-top:36px;letter-spacing:-.04em;line-height:1.04}
 .inter p{font-size:25px;line-height:1.5;color:var(--slate-mid);margin-top:26px;max-width:860px}
 .inter p em{font-style:normal;color:var(--ink);font-weight:500}
 .inter .n,.inter h1,.inter p,.inter .seg,.inter .sig{opacity:0}
@@ -273,7 +269,7 @@ td b{font-weight:500;color:var(--ink)}
 #adieu{position:absolute;top:0;bottom:0;right:0;left:1280px;background:var(--sky);z-index:62;overflow:hidden}
 #rj2{position:absolute;left:96px;top:250px;font-family:"Instrument Sans";font-weight:600;font-size:140px;letter-spacing:-.045em;line-height:1.1}
 #rj2 i{font-style:normal;display:inline-block}
-#devise{position:absolute;left:100px;top:422px;font-family:"Instrument Sans";font-weight:600;font-size:44px;letter-spacing:-.03em;line-height:1.1;color:var(--slate-ink)}
+#devise{opacity:0;position:absolute;left:100px;top:422px;font-family:"Instrument Sans";font-weight:600;font-size:44px;letter-spacing:-.03em;line-height:1.1;color:var(--slate-ink)}
 </style>
 </head>
 <body>
@@ -499,10 +495,6 @@ td b{font-weight:500;color:var(--ink)}
 
 <!-- ================= LE TEXTE ================= -->
 <div id="texte">
-  <div class="haut">
-    <div class="st">Visite guidée · DUERP</div>
-    <div class="barres"><i><span id="b1"></span></i><i><span id="b2"></span></i><i><span id="b3"></span></i><i><span id="b4"></span></i><i><span id="b5"></span></i></div>
-  </div>
   <div class="etape" id="t1"><div class="num">Étape 1 sur 5</div><h2 class="titre">Décrivez votre activité.</h2>
     <p>Rojer reconnaît votre secteur à votre code NAF et <em>charge les unités et les risques types du métier</em>. Vous ajustez ensuite.</p></div>
   <div class="etape" id="t2"><div class="num">Étape 2 sur 5</div><h2 class="titre">Vérifiez vos unités de travail.</h2>
@@ -733,7 +725,11 @@ function construire() {
   // d'un instant à un autre (aperçu), et un état posé plus tôt est perdu.
   const tl = gsap.timeline({ paused: true, defaults: { ease: "power2.inOut", lazy: false } });
   const vu = (sel, S, dx = 0, dy = 0) => { const p = pos(sel, dx, dy); return { x: p.x, y: p.y - S }; };
-  const camera = (p, s, at, d = 0.9) => tl.to(cam, { x: p.x, y: p.y, s, duration: d, ease: "power2.inOut" }, at);
+  // La cible est ramenée dans ce que la caméra peut montrer à ce zoom. Une
+  // cible hors d'atteinte (trop près d'un bord) laissait l'image immobile au
+  // début du mouvement, puis la faisait partir d'un coup, en plein élan.
+  const borne = (v, s, L, l) => Math.min(Math.max(v, l / 2 / s), L - l / 2 / s);
+  const camera = (p, s, at, d = 0.9) => tl.to(cam, { x: borne(p.x, s, AW, W), y: borne(p.y, s, AH, H), s, duration: d, ease: "power2.inOut" }, at);
   // Une trajectoire légèrement courbe : la main ne va pas en ligne droite.
   const vers = (p, at, d = 0.8) => {
     tl.to(cur, { x: p.x, duration: d, ease: "power2.inOut" }, at);
@@ -758,7 +754,6 @@ function construire() {
   const etape = (n, at, dureeBarre, debutBarre = at) => {
     if (n > 1) tl.to("#t" + (n - 1), { opacity: 0, y: -14, duration: 0.3, ease: "power1.in" }, at);
     tl.fromTo("#t" + n, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out", immediateRender: false }, at + (n > 1 ? 0.2 : 0));
-    tl.to("#b" + n, { scaleX: 1, duration: dureeBarre, ease: "none" }, debutBarre);
   };
   const filA = (t, etapeFil, faits) => pose("fil", t, () => dessinerFil({ cur: etapeFil, faits }));
   // Une partie finit sur le clic « Valider ». L'écran suivant arrive sous le
@@ -1167,8 +1162,9 @@ function construire() {
   // La signature : le bleu revient, « Rojer » se pose comme à l'ouverture.
   tl.to("#adieu", { left: 0, duration: 0.9, ease: "power3.inOut" }, tFin + 4.2);
   tl.from("#rj2 i", { opacity: 0, y: 16, duration: 0.55, stagger: 0.07, ease: "power3.out" }, tFin + 4.85);
-  tl.fromTo("#devise", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out", immediateRender: false }, tFin + 5.5);
-  tl.to({}, { duration: 2.0 }, tFin + 6.1);
+  // La devise attend que « Rojer » soit posé.
+  tl.fromTo("#devise", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out", immediateRender: false }, tFin + 6.0);
+  tl.to({}, { duration: 2.0 }, tFin + 6.6);
   window.affiche = 6.9;
   return tl;
 }
