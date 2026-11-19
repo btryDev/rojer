@@ -2,6 +2,7 @@ import type { ObjetSignable, PartieSignataire, Prisma } from "@prisma/client";
 import { envoiEnService, motifErreur, publicAppUrl, sendMail } from "@/lib/email";
 import { formaterDateHeureFr } from "@/lib/dates";
 import { libelleDocumentSignable } from "./libelle-document";
+import { pieceJointePlanPrevention } from "@/lib/pdf/piece-jointe-plan-prevention";
 
 /**
  * L'avis de fin de signature (2026-11-19) : quand toutes les parties d'un
@@ -59,6 +60,12 @@ export async function envoyerAvisCoSignature(
       }),
     ]);
     if (!libelle || signatures.length === 0) return;
+    // Le PDF du plan, rendu une fois et joint à chaque avis (2026-11-19,
+    // ADR-061 § 7). Au mieux : sans lui, l'avis part quand même.
+    const pieceJointe =
+      objetType === "plan_prevention"
+        ? await pieceJointePlanPrevention(db, etablissementId, objetId)
+        : null;
 
     const base = publicAppUrl();
     const lignes = [
@@ -84,7 +91,12 @@ export async function envoyerAvisCoSignature(
 
     await Promise.all(
       destinataires.map((to) =>
-        sendMail({ to, subject: `Document signé par toutes les parties : ${libelle}`, text: texte }).catch(
+        sendMail({
+          to,
+          subject: `Document signé par toutes les parties : ${libelle}`,
+          text: texte,
+          ...(pieceJointe ? { attachments: [pieceJointe] } : {}),
+        }).catch(
           (e: unknown) => console.error("[signatures] avis de fin non envoyé :", motifErreur(e)),
         ),
       ),
