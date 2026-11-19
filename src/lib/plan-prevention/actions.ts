@@ -4,6 +4,7 @@ import { requireCompte } from "@/lib/auth/compte";
 import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { notFound, redirect } from "next/navigation";
 import { resoudreBatimentOptionnel } from "@/lib/batiments/queries";
 import { resoudrePrestataireOptionnel } from "@/lib/prestataires/queries";
@@ -18,6 +19,7 @@ import {
   type PlanPreventionInput,
 } from "./schema";
 import { nextNumeroPlan } from "./queries";
+import { avertirDecision } from "./contre-signature";
 import { porteUneTraceDeSignature } from "@/lib/signatures/trace";
 import { statutPlanSignable } from "@/lib/signatures/etat-signable";
 import {
@@ -410,10 +412,25 @@ async function fermerPropositionEnAttente(
   planId: string,
   etablissementId: string,
 ) {
-  await db.propositionModificationPlan.updateMany({
+  const enAttente = await db.propositionModificationPlan.findFirst({
+    where: { planPreventionId: planId, etablissementId, enAttente: true },
+    select: { accessTokenId: true },
+  });
+  if (!enAttente) return;
+  const r = await db.propositionModificationPlan.updateMany({
     where: { planPreventionId: planId, etablissementId, enAttente: true },
     data: { statut: "refusee", enAttente: null, traiteeLe: new Date() },
   });
+  if (r.count === 0) return;
+  // L'auteur l'apprend, comme d'un refus du dirigeant (ADR-061 § 5).
+  const lien = await db.accessToken.findFirst({
+    where: { id: enAttente.accessTokenId, etablissementId },
+    select: { emailDestinataire: true },
+  });
+  if (lien) {
+    const to = lien.emailDestinataire;
+    after(() => avertirDecision(db, { etablissementId, planId, to, acceptee: false }));
+  }
 }
 
 export async function cloturerPlan(planId: string): Promise<void> {

@@ -297,6 +297,17 @@ describe("le dirigeant traite la proposition (ADR-061 § 4)", () => {
     expect(mails.find((m) => m.to === "chef@exterieure.fr")?.subject).toMatch(/^Proposition acceptée/);
   });
 
+  it("un plan modifié depuis la proposition ne se l'applique pas, il se refuse encore", async () => {
+    // Le dirigeant a retouché le plan pendant que la proposition attendait.
+    prismaMock.planPrevention.lignes[0].lieux = "Réserve, corrigé à la main";
+    expect(await decider("accepter")).toMatchObject({
+      status: "error",
+      message: "Le plan a changé depuis la proposition : refusez-la et corrigez le plan à la main.",
+    });
+    expect(prismaMock.signature.lignes[0].active).toBe(true);
+    expect((await decider("refuser")).status).toBe("success");
+  });
+
   it("refuser ne touche ni au plan ni aux signatures", async () => {
     const r = await decider("refuser");
     expect(r.status).toBe("success");

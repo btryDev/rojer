@@ -46,7 +46,10 @@ vi.mock("@/lib/prisma", () => {
     },
     signature: { count: vi.fn(async () => 0) },
     accessToken: { updateMany: vi.fn(async () => ({ count: 0 })) },
-    propositionModificationPlan: { updateMany: vi.fn(async () => ({ count: 0 })) },
+    propositionModificationPlan: {
+      findFirst: vi.fn(async () => null),
+      updateMany: vi.fn(async () => ({ count: 0 })),
+    },
   };
   return { prisma: client };
 });

@@ -9,6 +9,7 @@ import { verifierSaisie } from "@/lib/abonnements/saisie";
 import { revoquerLiensEnVol } from "@/lib/access-tokens/revocation";
 import { statutPlanSignable } from "@/lib/signatures/etat-signable";
 import { compterSignatures, MOTIF_CONTENU_MODIFIE, verrouillerObjetSigne } from "@/lib/signatures/verrou-contenu";
+import { calculerHashObjet, versionDeHash } from "@/lib/signatures/hash-objet";
 import { lireProposition } from "./proposition";
 import {
   avertirDecision,
@@ -123,7 +124,7 @@ export async function traiterProposition(
     await verrouillerObjetSigne(tx, "plan_prevention", planId, etablissementId);
     const p = await tx.propositionModificationPlan.findFirst({
       where: { id: propositionId, etablissementId, enAttente: true },
-      select: { contenu: true, accessTokenId: true },
+      select: { contenu: true, accessTokenId: true, hashVersion: true },
     });
     if (!p) return { ok: false as const, message: "Cette proposition a déjà été traitée." };
     const plan = await tx.planPrevention.findFirst({
@@ -157,6 +158,22 @@ export async function traiterProposition(
       return { ok: true as const, acceptee: false, auteur, retirees: [] };
     }
 
+    // La proposition porte sur UNE version du plan (son empreinte, relevée à
+    // l'envoi) : si le dirigeant a modifié le plan depuis, l'appliquer
+    // écraserait ses modifications (relecture GestBAT du 2026-11-19). Deux
+    // empreintes de formes différentes (`v1`/`v2:`) ne se comparent pas :
+    // seule la vérification des lignes vaut alors.
+    const actuel = await calculerHashObjet(tx, "plan_prevention", planId, etablissementId);
+    if (
+      actuel.ok &&
+      versionDeHash(actuel.hash) === versionDeHash(p.hashVersion) &&
+      actuel.hash !== p.hashVersion
+    ) {
+      return {
+        ok: false as const,
+        message: "Le plan a changé depuis la proposition : refusez-la et corrigez le plan à la main.",
+      };
+    }
     // Relue telle qu'enregistrée, contre le plan d'AUJOURD'HUI : une ligne
     // retirée depuis par le dirigeant rend la proposition inapplicable.
     const lecture = lireProposition(JSON.stringify(p.contenu), new Set(plan.lignes.map((l) => l.id)));

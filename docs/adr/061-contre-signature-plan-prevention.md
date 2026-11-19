@@ -118,6 +118,13 @@ par ligne, et trois choix :
 
 Puis « Demander les signatures », comme aujourd'hui.
 
+[2026-11-19, relecture GestBAT : « Accepter » et « Accepter puis modifier »
+refusent si le plan a changé depuis la proposition — son empreinte
+(`hashVersion`, relevée à l'envoi) est relue sous le verrou ; deux formes
+d'empreinte différentes ne se comparent pas. « Refuser » reste possible. Et
+la proposition refusée d'office par une clôture ou une annulation prévient
+son auteur, comme un refus du dirigeant (§ 5).]
+
 ### 5. Personne n'est laissé sans nouvelle
 
 | Événement | Qui reçoit un e-mail |
