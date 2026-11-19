@@ -6,6 +6,7 @@ import {
   otpEstExpire,
   otpExpirationDate,
   renvoiOtpAutorise,
+  renvoiOtpPossibleLe,
   verifyOtp,
 } from "./otp";
 
@@ -99,5 +100,15 @@ describe("renvoi d'un nouveau code", () => {
   it("autorise le renvoi sur un token sans expiration enregistrée", () => {
     const r = renvoiOtpAutorise(null, new Date("2026-04-23T12:00:01Z"));
     expect(r.autorise).toBe(true);
+  });
+
+  it("le compte à rebours de la page suit la même règle que le renvoi (2026-11-19)", () => {
+    const emis = new Date("2026-04-23T12:00:00Z");
+    const expire = otpExpirationDate(emis);
+    const possible = renvoiOtpPossibleLe(expire)!;
+    expect(possible.toISOString()).toBe("2026-04-23T12:01:00.000Z");
+    expect(renvoiOtpAutorise(expire, new Date(possible.getTime() - 1000)).autorise).toBe(false);
+    expect(renvoiOtpAutorise(expire, possible).autorise).toBe(true);
+    expect(renvoiOtpPossibleLe(null)).toBeNull();
   });
 });

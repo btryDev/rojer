@@ -97,6 +97,17 @@ export type RenvoiOtp =
  * Sans expiration connue (`null`), on autorise : c'est précisément le cas
  * d'un lien ancien devenu inutilisable, que le renvoi doit pouvoir réparer.
  */
+/**
+ * L'instant à partir duquel un nouveau code peut être demandé — la même
+ * règle que `renvoiOtpAutorise`, dite en date pour le compte à rebours de la
+ * page du lien (2026-11-19). `null` : aucun code encore demandé.
+ */
+export function renvoiOtpPossibleLe(otpExpireLe: Date | null): Date | null {
+  if (otpExpireLe === null) return null;
+  const emisLe = otpExpireLe.getTime() - OTP_TTL_MINUTES * 60 * 1000;
+  return new Date(emisLe + OTP_DELAI_RENVOI_SECONDES * 1000);
+}
+
 export function renvoiOtpAutorise(
   otpExpireLe: Date | null,
   now: Date,

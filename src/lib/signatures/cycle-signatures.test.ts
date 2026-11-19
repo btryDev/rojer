@@ -441,7 +441,8 @@ describe("relecture du jeton non consommé : celle de l'établissement du jeton"
       return reserver({ ...a, where: { ...a.where, etablissementId: "etab-a-moi" } });
     });
 
-    expect(await signer()).toEqual({ status: "error", message: "Ce lien a été révoqué : Contenu modifié" });
+    // Le motif traduit en phrase (`motifLisible`, 2026-11-19).
+    expect(await signer()).toEqual({ status: "error", message: "Ce lien a été révoqué. Contenu modifié." });
     expect(prismaMock.signature.create).not.toHaveBeenCalled();
   });
 });

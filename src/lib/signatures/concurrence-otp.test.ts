@@ -181,7 +181,8 @@ describe("trois essais, même en rafale", () => {
       Array.from({ length: 10 }, (_, i) => soumettre(String(100000 + i))),
     );
     const messages = r.map((x) => (x.status === "error" ? x.message : x.status));
-    const compares = messages.filter((m) => /^Code incorrect|^Trop d'essais/.test(m));
+    // ~~`^Trop d'essais`~~ : message traduit le 2026-11-19.
+    const compares = messages.filter((m) => /^Code incorrect|^Les 3 essais de code/.test(m));
     const refuses = messages.filter((m) => /^Ce lien n'accepte plus de code/.test(m));
 
     expect(compares).toHaveLength(3);

@@ -23,6 +23,7 @@ import {
   verifierAccessToken,
 } from "@/lib/access-tokens/verify";
 import {
+  OTP_ESSAIS_MAX,
   generateOtp,
   hashOtp,
   otpEstExpire,
@@ -30,6 +31,7 @@ import {
   renvoiOtpAutorise,
   verifyOtp,
 } from "./otp";
+import { motifLisible } from "@/lib/access-tokens/motif-lisible";
 import { calculerHashObjet } from "./hash-objet";
 import { verrouillerObjetSigne } from "./verrou-contenu";
 import { objetEstSignable } from "./etat-signable";
@@ -65,6 +67,12 @@ const MESSAGE_NON_SIGNABLE =
 /** Vrai à la lettre : le refus arrive avant le renouvellement du code. */
 const MESSAGE_RENVOI_HORS_SERVICE =
   "Aucun nouveau code n'a été envoyé : l'envoi d'e-mails n'est pas encore en service dans Rojer. Le code précédent n'a pas été modifié.";
+
+/** « Ce lien a été révoqué. » suivi de son motif traduit (`motifLisible`, 2026-11-19). */
+function messageLienRevoque(motif: string | null | undefined): string {
+  const pourquoi = motifLisible(motif);
+  return pourquoi ? `Ce lien a été révoqué. ${pourquoi}` : "Ce lien a été révoqué.";
+}
 
 /**
  * Les entrées de `demanderSignature`, validées. C'est une server action,
@@ -267,7 +275,9 @@ export async function poserSignatureAvecToken(
       case "revoque":
         return {
           status: "error",
-          message: `Ce lien a été révoqué${res.motif ? ` : ${res.motif}` : ""}.`,
+          // Le motif traduit (2026-11-19) : le brut « OTP épuisé (3 essais) »
+          // ne se montre plus au signataire.
+          message: messageLienRevoque(res.motif),
         };
       case "deja_utilise":
         return {
@@ -285,7 +295,9 @@ export async function poserSignatureAvecToken(
   if (!token.otpHash) {
     return {
       status: "error",
-      message: "Demandez d'abord votre code de confirmation (bouton « Recevoir mon code »).",
+      // ~~(bouton « Recevoir mon code »)~~ — le bouton s'appelle « Signer »
+      // depuis le 2026-11-19 (cahier de reprise § 3.2).
+      message: "Demandez d'abord votre code de confirmation (bouton « Signer »).",
     };
   }
   // Le client borné au compte propriétaire de l'établissement DU JETON
@@ -348,9 +360,11 @@ export async function poserSignatureAvecToken(
   if (!verifyOtp(otp, token.otpHash)) {
     if (essai.restants === 0) {
       await revoquerOtpEpuise(token.id);
+      // ~~« Trop d'essais OTP. Ce lien est révoqué. »~~ (2026-11-19) : en
+      // français, et le geste suivant dit.
       return {
         status: "error",
-        message: "Trop d'essais OTP. Ce lien est révoqué.",
+        message: `Les ${OTP_ESSAIS_MAX} essais de code de ce lien sont épuisés : il est révoqué. Demandez un nouveau lien à votre interlocuteur.`,
       };
     }
     return {
@@ -455,9 +469,7 @@ export async function poserSignatureAvecToken(
     if (etat?.revoqueLe) {
       return {
         status: "error",
-        message: etat.revoqueMotif
-          ? `Ce lien a été révoqué : ${etat.revoqueMotif}`
-          : "Ce lien a été révoqué.",
+        message: messageLienRevoque(etat.revoqueMotif),
       };
     }
     return {
@@ -492,7 +504,8 @@ export async function poserSignatureAvecToken(
  * un lien encore valide (72 h) mais un code mort, donc un document
  * impossible à signer.~~ [2026-11-19 : c'est désormais l'envoi du code tout
  * court, premier compris — le lien part sans code, le destinataire le
- * demande sur la page (« Recevoir mon code »), et il arrive par un second
+ * demande sur la page (~~« Recevoir mon code »~~ « Signer », le même jour,
+ * cahier de reprise § 3.2), et il arrive par un second
  * courriel, sans le lien. Aucun écran n'appelait cette action jusqu'ici :
  * le courriel promettait un renvoi que la page ne proposait pas.]
  *
@@ -527,7 +540,7 @@ export async function renvoyerCodeOtp(
         res.raison === "expire"
           ? `Ce lien a expiré le ${formaterDateFr(res.expireLe)}. Demandez-en un nouveau à votre interlocuteur.`
           : res.raison === "revoque"
-            ? "Ce lien a été révoqué."
+            ? messageLienRevoque(res.motif)
             : res.raison === "deja_utilise"
               ? "Ce lien a déjà servi."
               : "Ce lien est invalide.",
