@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { z } from "zod";
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { objetAppartientAEtablissement } from "@/lib/signatures/appartenance";
-import { PartieSignataire, ScopeAccessToken } from "@prisma/client";
+import { PartieSignataire, ScopeAccessToken, type Prisma } from "@prisma/client";
 import {
   expirationFromNow,
   generateToken,
@@ -18,6 +18,7 @@ import {
   MOTIF_REVOCATION_ENVOI_ECHOUE,
   MOTIF_REVOCATION_NOUVEAU_LIEN,
   estAUsageUnique,
+  lienActif,
 } from "./revocation";
 import { signatureDejaComptee } from "@/lib/plan-prevention/resignature";
 
@@ -284,10 +285,31 @@ export async function emettreAccessToken(
   // Plafonds de la formule (ADR-053 § 14) : les liens actifs, et pour une
   // demande de signature, les signatures de l'année — comptées à la demande,
   // comme une enveloppe : la signature du tiers, plus tard, ne recompte pas.
+  //
+  // UN LIEN QUI EN REMPLACE UN AUTRE NE PREND PAS DE PLACE (2026-11-19,
+  // « Renvoyer le lien » et nouveau lien au refus d'une proposition). Le
+  // lien encore ouvert de la même partie sera révoqué après l'envoi (plus
+  // bas) : le compter ici refusait le renvoi d'un compte arrivé au plafond
+  // des liens actifs, alors que le nombre de liens ouverts ne change pas.
+  // La révocation reste APRÈS l'envoi : pendant l'envoi, l'ancien et le
+  // nouveau coexistent, une place de plus pour quelques secondes.
+  const remplaces = params.partie
+    ? await db.accessToken.count({
+        where: { ...lienDeLaPartie(params), ...lienActif() },
+      })
+    : 0;
+  // Une re-signature après correction ne compte pas (ADR-061 § 6) ; un
+  // nouveau lien à la MÊME adresse, pour la même partie, non plus : le
+  // premier, parti et jamais consommé, a déjà été compté (décision du
+  // 2026-11-19). Un lien consommé a produit une signature : la suivante
+  // relève de la re-signature, plafonnée par `signatureDejaComptee`.
   let pris: string[] = [];
   const creation = await creerSousPlafond(db, compte.compteId, "liensAccesActifs", async (tx) => {
-    // Une re-signature après correction ne compte pas (ADR-061 § 6).
-    if (params.scope === "signature" && !(await signatureDejaComptee(tx, { ...params, email: params.emailDestinataire })))
+    if (
+      params.scope === "signature" &&
+      !(await dejaCompteePourCetteAdresse(tx, params)) &&
+      !(await signatureDejaComptee(tx, { ...params, email: params.emailDestinataire }))
+    )
       pris = await prendreQuota(tx, compte.compteId, "signaturesParAn");
     return tx.accessToken.create({
       data: {
@@ -304,7 +326,7 @@ export async function emettreAccessToken(
         createdByUserId: user.id,
       },
     });
-  });
+  }, remplaces > 0 ? 0 : 1);
   if (!creation.ok) return { ok: false, raison: "plafond", message: creation.motif };
   const access = creation.valeur;
 
@@ -391,4 +413,41 @@ export async function emettreAccessToken(
     accessTokenId: access.id,
     expireLe,
   };
+}
+
+/** Les liens de la même partie sur le même objet — ceux qu'un nouvel envoi remplace. */
+function lienDeLaPartie(p: {
+  etablissementId: string;
+  objetType: string;
+  objetId: string;
+  scope: ScopeAccessToken;
+  partie?: PartieSignataire;
+}): Prisma.AccessTokenWhereInput {
+  return {
+    etablissementId: p.etablissementId,
+    objetType: p.objetType,
+    objetId: p.objetId,
+    scope: p.scope,
+    partie: p.partie,
+    utiliseLe: null,
+  };
+}
+
+/**
+ * Un lien de signature est-il déjà parti à cette adresse, pour cette partie,
+ * sans avoir été consommé ? Alors sa signature a été comptée à son émission
+ * (`signaturesParAn`), et le nouveau lien — renvoi, lien après un refus — ne
+ * la reprend pas (décision de la propriétaire du 2026-11-19). Un lien dont
+ * l'e-mail n'est pas parti ne compte pas : sa place a été rendue
+ * (`LIEN_PARTI`).
+ */
+async function dejaCompteePourCetteAdresse(
+  tx: Prisma.TransactionClient,
+  p: Parameters<typeof lienDeLaPartie>[0] & { emailDestinataire: string },
+): Promise<boolean> {
+  if (!p.partie) return false;
+  const n = await tx.accessToken.count({
+    where: { ...lienDeLaPartie(p), emailDestinataire: p.emailDestinataire, ...LIEN_PARTI },
+  });
+  return n > 0;
 }

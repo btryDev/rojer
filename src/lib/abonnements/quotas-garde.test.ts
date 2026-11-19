@@ -40,6 +40,9 @@ const CREATEURS = [
   "src/lib/activites/ajouts.ts",
   "src/lib/access-tokens/emission.ts",
   "src/lib/signatures/actions.ts",
+  // La signature depuis le compte confirmée par un code (2026-11-19), sous la
+  // même porte que `signerEnCompteConnecte`.
+  "src/lib/signatures/code-compte.ts",
 ];
 
 /**

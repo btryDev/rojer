@@ -134,6 +134,36 @@ export async function envoyerMailCode(args: MailCodeArgs): Promise<void> {
   await sendMail({ to: args.to, subject: "Votre code de confirmation Rojer", ...message });
 }
 
+/**
+ * Le code d'une signature depuis le compte (2026-11-19, fenêtre « Signer et
+ * envoyer » de la fiche du plan) : à l'adresse du compte, sans lien — il se
+ * saisit dans la fenêtre restée ouverte.
+ */
+export async function envoyerMailCodeCompte(args: {
+  to: string;
+  nom?: string | null;
+  otp: string;
+  document: string | null;
+}): Promise<void> {
+  if (args.document) exigerUneLigne("document", args.document);
+  if (args.nom) exigerUneLigne("nom du destinataire", args.nom);
+  const message = mailSignature({
+    titre: "Votre code de signature",
+    nom: args.nom,
+    paragraphes: args.document
+      ? [`Il confirme votre signature de : « ${args.document} ».`]
+      : ["Il confirme la signature que vous apposez depuis votre compte Rojer."],
+    code: { libelle: "Votre code de signature", valeur: args.otp },
+    suite: [
+      `Ce code expire dans ${OTP_TTL_MINUTES} minutes. Ne le partagez avec personne.`,
+      `Saisissez-le dans la fenêtre de signature restée ouverte dans Rojer. ` +
+        `Il accepte ${OTP_ESSAIS_MAX} essais.`,
+    ],
+    apres: ["Si vous n'avez rien demandé, changez votre mot de passe Rojer."],
+  });
+  await sendMail({ to: args.to, subject: "Votre code de signature Rojer", ...message });
+}
+
 /** URL publique de la page d'accès pour un token clair donné. */
 export function urlAccesPourToken(tokenClair: string): string {
   return `${publicAppUrl()}/acces/${tokenClair}`;
