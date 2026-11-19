@@ -327,6 +327,17 @@ describe("le dirigeant traite la proposition (ADR-061 § 4)", () => {
     expect(mails.find((m) => m.to === "chef@exterieure.fr")?.html).toContain(">Proposition acceptée</h1>");
   });
 
+  it("corriger : la proposition s'applique, marquée « correction en cours » (2026-11-19)", async () => {
+    await decider("corriger").catch((e: { digest?: string; message?: string }) => {
+      if (e?.digest !== "NEXT_REDIRECT" && e?.message !== "NEXT_REDIRECT") throw e;
+    });
+    const p = prismaMock.propositionModificationPlan.lignes[0];
+    expect(p.statut).toBe("acceptee");
+    expect(p.finaliseeLe ?? null).toBeNull();
+    expect(p.corrigeeLe).toBeInstanceOf(Date);
+    expect(prismaMock.planPrevention.lignes[0].efChefNom).toBe("Paul Dupond");
+  });
+
   it("un plan modifié depuis la proposition ne se l'applique pas, il se refuse encore", async () => {
     // Le dirigeant a retouché le plan pendant que la proposition attendait.
     prismaMock.planPrevention.lignes[0].lieux = "Réserve, corrigé à la main";
