@@ -333,8 +333,20 @@ export async function emettreAccessToken(
   // obsolète — plan modifié, clos, proposition). Conditionnelle : un lien
   // consommé garde sa trace « utilisé », une révocation antérieure son motif.
   // Sans partie (un rapport), rien ne dit que deux liens visent la même
-  // personne : rien n'est révoqué. Les plafonds ne changent pas. Un échec ici
-  // ne défait pas l'envoi réussi : il se journalise.
+  // personne : rien n'est révoqué. Les plafonds ne changent pas.
+  //
+  // Seuls les liens créés AVANT celui-ci (`createdAt`, l'horloge de la base
+  // pour les deux côtés) : deux envois simultanés à la même partie ne se
+  // révoquent pas l'un l'autre — le plus récent reste valable, au pire les
+  // deux.
+  //
+  // Un échec ici ne défait pas l'envoi réussi : il se journalise, et
+  // l'ancien lien reste valable à côté du nouveau (même partie, même objet).
+  // C'est acceptable : aucun lien obsolète n'est remis en service — l'ancien
+  // n'a jamais cessé de l'être —, et la garde de fond reste
+  // `objetEstSignable` au moment de signer, avec la révocation à chaque
+  // modification, clôture ou annulation (`revoquerLiensEnVol`). C'est l'état
+  // d'avant le 2026-11-19, où les liens d'une partie s'empilaient.
   if (params.partie) {
     await db.accessToken
       .updateMany({
@@ -345,6 +357,7 @@ export async function emettreAccessToken(
           scope: params.scope,
           partie: params.partie,
           id: { not: access.id },
+          createdAt: { lt: access.createdAt },
           revoqueLe: null,
           utiliseLe: null,
         },

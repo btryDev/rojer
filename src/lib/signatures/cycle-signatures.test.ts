@@ -967,14 +967,56 @@ describe("envoi échoué : rien de valable ne reste, et l'écran le dit", () => 
 // ─────────────────────────────────────────────────────────────────────────
 
 describe("un nouveau lien remplace l'ancien de la même partie", () => {
+  const UNE_HEURE_AVANT = () => new Date(Date.now() - 3_600_000);
+
   function ancienLien(extra: Ligne = {}): Ligne {
     return {
       ...lienValide("plan_prevention", "pp-1"),
       id: "atk_ancien",
       tokenHash: "ancien",
+      createdAt: UNE_HEURE_AVANT(),
       ...extra,
     };
   }
+
+  beforeEach(() => {
+    // `createdAt` posé par la base (`@default(now())`), comme en vrai : la
+    // révocation compare l'âge des liens.
+    const creer = prismaMock.accessToken.create.getMockImplementation()!;
+    prismaMock.accessToken.create.mockImplementation(async (args: { data: Ligne }) =>
+      creer({ data: { createdAt: new Date(), ...args.data } }),
+    );
+  });
+
+  it("deux envois simultanés ne se révoquent pas l'un l'autre : un lien plus récent reste intact", async () => {
+    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
+    // Le lien de l'envoi concurrent, créé APRÈS celui de cette demande.
+    const concurrent = ancienLien({ id: "atk_concurrent", tokenHash: "concurrent", createdAt: new Date(Date.now() + 60_000) });
+    const ancien = ancienLien();
+    prismaMock.accessToken.lignes.push(concurrent, ancien);
+
+    const r = await demanderSignature({ ...DEMANDE_PLAN, partie: "entreprise_exterieure" });
+
+    expect(r).toEqual({ ok: true });
+    expect(concurrent.revoqueLe).toBeNull();
+    expect(ancien.revoqueMotif).toBe(MOTIF_REVOCATION_NOUVEAU_LIEN);
+  });
+
+  it("une révocation qui échoue après l'envoi ne défait pas l'envoi réussi", async () => {
+    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
+    const ancien = ancienLien();
+    prismaMock.accessToken.lignes.push(ancien);
+    const erreur = vi.spyOn(console, "error").mockImplementation(() => {});
+    prismaMock.accessToken.updateMany.mockRejectedValueOnce(new Error("base indisponible"));
+
+    const r = await demanderSignature({ ...DEMANDE_PLAN, partie: "entreprise_exterieure" });
+
+    expect(r).toEqual({ ok: true });
+    expect(mailsEnvoyes).toHaveLength(1);
+    expect(ancien.revoqueLe).toBeNull();
+    expect(erreur).toHaveBeenCalledWith("[access-tokens] ancien lien non révoqué :", "base indisponible");
+    erreur.mockRestore();
+  });
 
   it("l'ancien lien encore ouvert de la partie est révoqué, avec un motif lisible", async () => {
     prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
