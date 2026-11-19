@@ -429,7 +429,7 @@ async function fermerPropositionEnAttente(
   });
   if (lien) {
     const to = lien.emailDestinataire;
-    after(() => avertirDecision(db, { etablissementId, planId, to, acceptee: false }));
+    after(() => avertirDecision(db, { etablissementId, planId, to, acceptee: false, planFerme: true }));
   }
 }
 

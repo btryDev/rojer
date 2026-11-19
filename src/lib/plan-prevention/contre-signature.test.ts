@@ -378,7 +378,7 @@ describe("le dirigeant traite la proposition (ADR-061 § 4)", () => {
     expect(m.html).not.toContain("<Martin>");
   });
 
-  it("refuser, lien en échec : le refus tient, l'avis part sans lien et dit d'en demander un", async () => {
+  it("refuser, lien en échec : le refus tient, l'avis part sans lien et renvoie au lien d'origine", async () => {
     envoiAcces.echoue = true;
     const r = await decider("refuser");
     expect(r).toMatchObject({
@@ -395,7 +395,7 @@ describe("le dirigeant traite la proposition (ADR-061 § 4)", () => {
     expect(m.to).toBe("chef@exterieure.fr");
     expect(m.subject).toMatch(/^Proposition non retenue : /);
     expect(m.text).not.toContain("/acces/");
-    expect(m.text).toContain("Pour le signer, demandez un nouveau lien à votre interlocuteur.");
+    expect(m.text).toContain("Pour le signer, reprenez le lien reçu précédemment");
   });
 
   it("refuser quand l'entreprise extérieure a déjà signé : aucun lien, l'avis seul", async () => {
@@ -513,5 +513,23 @@ describe("la re-signature ne compte pas dans la formule (ADR-061 § 6)", () => {
 
   it("hors plan de prévention, rien n'est épargné", async () => {
     expect(await compte("entreprise_exterieure", "chef@exterieure.fr", "permis_feu")).toBe(false);
+  });
+});
+
+describe("avis de décision au refus d'office (plan clos ou annulé)", () => {
+  it("dit que le plan est clos, sans promettre de le soumettre de nouveau", async () => {
+    const { avertirDecision } = await import("./contre-signature");
+    await avertirDecision(prismaMock as never, {
+      etablissementId: "etab-1",
+      planId: "pp-1",
+      to: "chef@exterieure.fr",
+      acceptee: false,
+      planFerme: true,
+    });
+    expect(mails).toHaveLength(1);
+    expect(mails[0].text).toContain("votre interlocuteur a clos ce plan");
+    expect(mails[0].text).toContain("Ce plan ne se signe plus.");
+    expect(mails[0].text).not.toContain("soumettre de nouveau");
+    expect(mails[0].text).not.toContain("reste tel qu'il était");
   });
 });
