@@ -24,6 +24,10 @@ import type { EmailDriver, EmailPayload } from "./index";
  *   coupé par notre délai peut être encore en cours chez Mailpace, et la doc
  *   d'idempotence dit qu'une requête concurrente en conflit « can safely
  *   retry » ; si le premier a abouti entre-temps, Mailpace rend sa réponse.
+ * - `attachments` (2026-11-19) : `name`, `content` en base64, `content_type`.
+ *   Extensions admises en liste fermée (pdf en est), un seul point dans le
+ *   nom, 30 Mo par message. Une pièce refusée rend un 4xx : `sendMail`
+ *   renvoie alors le message sans elle (`index.ts`).
  * - `to` accepte une LISTE séparée par des virgules (jusqu'à 50) : une adresse
  *   saisie « a@x.fr, b@y.fr » enverrait un lien ou un code à un tiers. Le
  *   pilote n'accepte qu'une adresse.
@@ -118,6 +122,17 @@ export function creerPiloteMailpace(options: {
         subject: payload.subject,
         textbody: payload.text,
         ...(payload.html ? { htmlbody: payload.html } : {}),
+        // `attachments` : `name`, `content` (base64), `content_type`
+        // (https://docs.mailpace.com/reference/send). Absent sans pièce.
+        ...(payload.attachments && payload.attachments.length > 0
+          ? {
+              attachments: payload.attachments.map((p) => ({
+                name: p.name,
+                content: p.content,
+                content_type: p.contentType,
+              })),
+            }
+          : {}),
       });
       const entetes = {
         Accept: "application/json",

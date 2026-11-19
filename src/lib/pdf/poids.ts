@@ -53,6 +53,12 @@ function blocsDuDocument(demande: DemandePdf): number[] {
       return [demande.props.data.actions.length];
     case "points-a-corriger":
       return [demande.props.data.ouverts.length + demande.props.data.corriges.length];
+    case "plan-prevention": {
+      // Une seule `<Page>` : les risques d'interférence, les phases
+      // dangereuses et les signatures, chacun une ligne imprimée.
+      const { plan, signatures } = demande.props.data;
+      return [plan.lignes.length + plan.phasesDangereuses.length + signatures.length];
+    }
     case "duerp": {
       // Une entrée par `<Page>` de `DuerpDocument` qui grossit avec lui :
       //   - les unités (et celles hors référentiel, au plus autant), et les

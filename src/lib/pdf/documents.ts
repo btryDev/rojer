@@ -3,6 +3,7 @@ import type { ReactElement } from "react";
 import { DossierConformiteDocument } from "./DossierConformiteDocument";
 import { DuerpDocument } from "./DuerpDocument";
 import { PlanActionsDocument } from "./PlanActionsDocument";
+import { PlanPreventionDocument } from "./PlanPreventionDocument";
 import { PointsACorrigerDocument } from "./PointsACorrigerDocument";
 import { RegistreDocument } from "./RegistreDocument";
 
@@ -22,6 +23,7 @@ const DOCUMENTS = {
   "plan-actions": PlanActionsDocument,
   "points-a-corriger": PointsACorrigerDocument,
   duerp: DuerpDocument,
+  "plan-prevention": PlanPreventionDocument,
 } as const;
 
 export type TypeDocument = keyof typeof DOCUMENTS;
@@ -39,6 +41,7 @@ export const NOM_DOCUMENT: Record<TypeDocument, string> = {
   "plan-actions": "plan d'actions",
   "points-a-corriger": "relevé des points à corriger",
   duerp: "DUERP",
+  "plan-prevention": "plan de prévention",
 };
 
 /** L'élément React d'une demande, prêt pour `renderToBuffer`. */

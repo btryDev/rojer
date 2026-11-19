@@ -4,6 +4,7 @@ import { mailSignature } from "@/lib/email/gabarit";
 import { formaterHeureFr } from "@/lib/dates";
 import { formaterJourDateLongueFr } from "@/lib/dates/jour-long";
 import { libelleDocumentSignable } from "./libelle-document";
+import { pieceJointePlanPrevention } from "@/lib/pdf/piece-jointe-plan-prevention";
 
 /**
  * L'avis de fin de signature (2026-11-19) : quand toutes les parties d'un
@@ -85,6 +86,12 @@ export async function envoyerAvisCoSignature(
       }),
     ]);
     if (!libelle || signatures.length === 0) return;
+    // Le PDF du plan, rendu une fois et joint à chaque avis (2026-11-19,
+    // ADR-061 § 7). Au mieux : sans lui, l'avis part quand même.
+    const pieceJointe =
+      objetType === "plan_prevention"
+        ? await pieceJointePlanPrevention(db, etablissementId, objetId)
+        : null;
 
     const base = publicAppUrl();
     // La date où l'acte est signé par tous : celle de la dernière signature.
@@ -132,6 +139,8 @@ export async function envoyerAvisCoSignature(
           to,
           subject: `Document signé par toutes les parties : ${libelle}`,
           ...message,
+          // Le PDF du plan, rendu une fois pour tous (lot 5) ; absent, l'avis part sans.
+          ...(pieceJointe ? { attachments: [pieceJointe] } : {}),
         }).catch((e: unknown) => console.error("[signatures] avis de fin non envoyé :", motifErreur(e)));
       }),
     );

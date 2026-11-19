@@ -33,6 +33,8 @@ export const PIECES_ZIP = {
   accessibilite: "05_Accessibilite_URL.txt",
   permisFeu: "06_Permis_de_feu.txt",
   plansPrevention: "07_Plans_de_prevention.txt",
+  /** Le PDF de chaque plan du 07, avec ses signatures (2026-11-19). */
+  plansPreventionPdf: "07_Plans_de_prevention/",
   carnet: "08_Carnet_sanitaire.txt",
   analyses: "08_Carnet_sanitaire_analyses/",
   prestataires: "Prestataires/",
@@ -64,6 +66,7 @@ export const PIECES_A_L_ECRAN: readonly {
   { cle: "accessibilite", titre: "Registre d'accessibilité ERP" },
   { cle: "permisFeu", titre: "Permis de feu (12 derniers mois)" },
   { cle: "plansPrevention", titre: "Plans de prévention (12 derniers mois)" },
+  { cle: "plansPreventionPdf", titre: "Plans de prévention en PDF, signatures comprises" },
   { cle: "carnet", titre: "Carnet sanitaire" },
   { cle: "analyses", titre: "Rapports de laboratoire des analyses légionelles" },
   { cle: "prestataires", titre: "Attestations prestataires" },

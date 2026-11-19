@@ -278,6 +278,14 @@ export default async function ControlePage({
       present: nbPlansPrevention > 0,
       reference: "Art. R. 4512-6 CT",
     },
+    // Le PDF de chacun de ces plans, mis en page à l'export (2026-11-19).
+    plansPreventionPdf: {
+      description:
+        nbPlansPrevention > 0
+          ? `Un PDF par plan, avec ses signatures, dans le dossier ${PIECES_ZIP.plansPreventionPdf}`
+          : "Aucun plan sur les 12 derniers mois.",
+      present: nbPlansPrevention > 0,
+    },
     carnet: {
       description: carnetRenseigne
         ? "Relevés de température et analyses de légionelles."

@@ -8,8 +8,9 @@
 // Module pur : il rend la ligne et son niveau, l'appelant l'écrit.
 
 export type IssueExportPdf = "ok" | "trop_volumineux" | "echec";
-/** D'où vient l'export : une route PDF ou le ZIP de contrôle. */
-export type OrigineExportPdf = "route" | "zip";
+/** D'où vient l'export : une route PDF, le ZIP de contrôle, ou la pièce
+ *  jointe d'un courriel (plan de prévention signé, 2026-11-19). */
+export type OrigineExportPdf = "route" | "zip" | "courriel";
 
 export type ExportPdf = {
   document: string;
