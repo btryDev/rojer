@@ -157,6 +157,14 @@ et par signataire ; au-delà, la signature compte.]
   le fait ; pour la cible de Rojer, c'est disproportionné. L'empreinte envoyée
   à chaque partie (lot A) et la page publique de vérification sortent déjà la
   preuve de l'auto-attestation.
+  [2026-11-19 : un **PDF du plan** est rendu à la demande depuis ses données
+  (`PlanPreventionDocument`, route `…/plan-prevention/[planId]/pdf`, ZIP de
+  contrôle) et **joint au dernier e-mail** (« signé par toutes les
+  parties »). Il n'est toujours ni scellé ni horodaté : il imprime, pour
+  chaque signature en vigueur, l'empreinte des DONNÉES signées et son
+  adresse `/verifier/{id}`, dit qu'il n'est pas l'original scellé, et porte
+  « Document de travail — non signé par toutes les parties » tant qu'une
+  partie manque.]
 - **Commentaire libre, pièces jointes, refus sans proposition** : une
   entreprise qui n'est pas d'accord dit sur quoi, ligne par ligne.
 - **Le permis de feu** : il dure le temps d'une intervention et se refait plus
