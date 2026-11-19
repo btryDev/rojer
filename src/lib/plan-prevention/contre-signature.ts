@@ -241,6 +241,8 @@ export async function avertirDecision(
     acceptee: boolean;
     /** Au refus : ce qu'il est advenu du nouveau lien. */
     nouveauLien?: IssueNouveauLien;
+    /** Refus d'office : le plan a été clos ou annulé (`fermerPropositionEnAttente`). */
+    planFerme?: boolean;
   },
 ): Promise<void> {
   try {
@@ -252,12 +254,19 @@ export async function avertirDecision(
       paragraphes: [
         params.acceptee
           ? `Votre proposition de modification du document « ${nom} » est acceptée.`
-          : `Votre proposition de modification du document « ${nom} » n'est pas retenue : le plan reste tel qu'il était.`,
+          : params.planFerme
+            ? `Votre proposition de modification du document « ${nom} » n'est pas retenue : votre interlocuteur a clos ce plan.`
+            : `Votre proposition de modification du document « ${nom} » n'est pas retenue : le plan reste tel qu'il était.`,
       ],
       suite: [
-        !params.acceptee && params.nouveauLien === "echec"
-          ? "Pour le signer, demandez un nouveau lien à votre interlocuteur."
-          : "Votre interlocuteur peut ensuite vous soumettre de nouveau le plan à signer.",
+        params.planFerme
+          ? "Ce plan ne se signe plus. Pour toute question, adressez-vous à votre interlocuteur."
+          : !params.acceptee && params.nouveauLien === "echec"
+            ? // Le nouveau lien n'est pas parti, mais la proposition n'a consommé
+              // ni révoqué le lien d'origine : il permet encore de signer s'il est valable.
+              "Pour le signer, reprenez le lien reçu précédemment ; s'il n'est plus valable, " +
+              "demandez-en un nouveau à votre interlocuteur."
+            : "Votre interlocuteur peut ensuite vous soumettre de nouveau le plan à signer.",
       ],
       apres: [],
     });
