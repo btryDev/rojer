@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { LIEN_PARTI, SCOPES_USAGE_UNIQUE, estAUsageUnique } from "./revocation";
+import { estAUsageUnique } from "./revocation";
 import type { AccessToken, Prisma } from "@prisma/client";
 import { sha256Hex } from "@/lib/signatures/hash";
 import {
@@ -156,12 +156,14 @@ export type ReservationEnvoiOtp = { ok: true } | { ok: false; possibleLe: Date }
  * heure / email » (ASVS 5.0.0 V6.6.3, 2026-10-13). À appeler AVANT de toucher
  * au code : un refus laisse le code précédent valable.
  *
- * Ce qui compte : les liens à code émis vers cette adresse dans l'heure — leur
+ * ~~Ce qui compte : les liens à code émis vers cette adresse dans l'heure — leur
  * premier code part avec eux (`emission.ts`) —, plus les renvois de la fenêtre
- * en cours (`QuotaEnvoiOtp`). Les premiers sont LUS : ils ne passent pas par
- * ici, et seul un titulaire de compte en crée, sous sa propre limite. Les
- * seconds sont RÉSERVÉS, et c'est là que tient la garde : le chemin d'un
- * porteur de lien, le seul qui se rejoue sans compte, est le renvoi.
+ * en cours (`QuotaEnvoiOtp`).~~ [2026-11-19 : le lien ne porte plus de code ;
+ * seuls comptent les envois de code de la fenêtre en cours, premier compris,
+ * tous RÉSERVÉS ici. Compter encore les liens faisait payer deux fois un lien
+ * suivi de son code, et refusait le code du cinquième lien de l'heure vers un
+ * même organisme, quel que soit le client qui l'avait émis.] La garde tient
+ * sur le chemin d'un porteur de lien, le seul qui se rejoue sans compte.
  *
  * La réservation est une écriture CONDITIONNELLE, que la base sérialise sur la
  * ligne de l'adresse — `envois < plafond` → `+ 1` —, comme la réservation d'un
@@ -177,17 +179,7 @@ export async function reserverEnvoiOtp(
   const empreinte = empreinteAdresse(emailDestinataire);
   const ouverture = new Date(maintenant.getTime() - OTP_FENETRE_ENVOIS_MS);
 
-  const liensRecents = await prisma.accessToken.findMany({
-    where: {
-      emailDestinataire,
-      createdAt: { gte: ouverture },
-      scope: { in: [...SCOPES_USAGE_UNIQUE] },
-      // Un lien dont l'e-mail n'est pas parti n'a rien envoyé à cette adresse.
-      ...LIEN_PARTI,
-    },
-    select: { createdAt: true },
-  });
-  const plafond = OTP_ENVOIS_MAX_PAR_HEURE - liensRecents.length;
+  const plafond = OTP_ENVOIS_MAX_PAR_HEURE;
 
   await prisma.quotaEnvoiOtp.createMany({
     data: [{ empreinteAdresse: empreinte, fenetreDebut: maintenant, envois: 0 }],
@@ -197,21 +189,13 @@ export async function reserverEnvoiOtp(
     where: { empreinteAdresse: empreinte, fenetreDebut: { lte: ouverture } },
     data: { fenetreDebut: maintenant, envois: 0 },
   });
-  if (plafond > 0) {
-    const r = await prisma.quotaEnvoiOtp.updateMany({
-      where: { empreinteAdresse: empreinte, envois: { lt: plafond } },
-      data: { envois: { increment: 1 } },
-    });
-    if (r.count === 1) return { ok: true };
-  }
+  const r = await prisma.quotaEnvoiOtp.updateMany({
+    where: { empreinteAdresse: empreinte, envois: { lt: plafond } },
+    data: { envois: { increment: 1 } },
+  });
+  if (r.count === 1) return { ok: true };
 
-  // Refusé : quand un envoi redeviendra possible. Les renvois se libèrent à la
-  // fin de leur fenêtre, les liens une heure après leur émission ; si les seuls
-  // liens suffisent à remplir le plafond, c'est le plus ancien qui libère.
-  if (plafond <= 0) {
-    const plusAncien = Math.min(...liensRecents.map((l) => l.createdAt.getTime()));
-    return { ok: false, possibleLe: new Date(plusAncien + OTP_FENETRE_ENVOIS_MS) };
-  }
+  // Refusé : un envoi redeviendra possible à la fin de la fenêtre.
   const q = await prisma.quotaEnvoiOtp.findUnique({
     where: { empreinteAdresse: empreinte },
     select: { fenetreDebut: true },

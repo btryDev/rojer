@@ -3,12 +3,20 @@ import { OTP_ESSAIS_MAX, OTP_TTL_MINUTES } from "@/lib/signatures/otp";
 import { formaterDateHeureFr } from "@/lib/dates";
 
 /**
- * Email d'accès externe (ADR-007) : lien magique + éventuel code OTP.
+ * Les deux courriels d'un accès externe (ADR-007), envoyés en deux temps
+ * (2026-11-19, recette des envois en préprod) :
  *
- * Sorti de `actions.ts` pour deux raisons : ce n'est pas une server action
- * (tout export d'un module `"use server"` devient un point d'entrée
- * réseau), et le renvoi d'un code depuis `@/lib/signatures/actions` a
- * besoin du même corps de message.
+ * 1. `envoyerMailAcces` : le LIEN, jamais de code. Le code partait dans le
+ *    même message : il ne prouvait rien de plus que le lien (qui détient
+ *    l'un détient l'autre — message transféré, boîte partagée, outil qui
+ *    ouvre les liens), et ses 10 minutes couraient avant même que le
+ *    destinataire ouvre sa boîte.
+ * 2. `envoyerMailCode` : le CODE, à la demande, depuis la page du lien
+ *    (`renvoyerCodeOtp`). Sans le lien : un message de code transféré seul
+ *    n'ouvre rien.
+ *
+ * Sortis de `actions.ts` : ce ne sont pas des server actions (tout export
+ * d'un module `"use server"` devient un point d'entrée réseau).
  */
 
 export type MailAccesArgs = {
@@ -17,7 +25,8 @@ export type MailAccesArgs = {
   sujet: string;
   message: string;
   urlAcces: string;
-  otp: string | null;
+  /** Un code sera demandé sur la page (scopes à usage unique). */
+  codeALaDemande: boolean;
   /** Fin de validité du **lien**, distincte de celle du code (10 minutes). */
   expireLe: Date;
 };
@@ -35,41 +44,76 @@ function exigerUneLigne(champ: string, valeur: string): void {
   }
 }
 
+function bonjour(nom: string | null | undefined): string {
+  return nom ? `Bonjour ${nom},` : "Bonjour,";
+}
+
+const PIED = [
+  "— Rojer (de la part de votre interlocuteur)",
+  "",
+  "Finalité : permettre une action ponctuelle demandée par votre interlocuteur.",
+  "Droit d'accès / effacement : contactez l'émetteur du lien.",
+];
+
 export async function envoyerMailAcces(args: MailAccesArgs): Promise<void> {
   exigerUneLigne("sujet", args.sujet);
   if (args.nom) exigerUneLigne("nom du destinataire", args.nom);
-  const bonjour = args.nom ? `Bonjour ${args.nom},` : "Bonjour,";
   const expiration = formaterDateHeureFr(args.expireLe);
 
   const lignes = [
-    bonjour,
+    bonjour(args.nom),
     "",
     args.message,
     "",
     `Accédez à la page dédiée : ${args.urlAcces}`,
     "",
   ];
-  if (args.otp) {
+  if (args.codeALaDemande) {
     lignes.push(
-      `Code de confirmation : ${args.otp}`,
-      // Le texte annonce la durée réelle : elle est portée par
-      // `AccessToken.otpExpireLe` et vérifiée à chaque tentative.
-      `(Ce code vous sera demandé sur la page. Valable ${OTP_TTL_MINUTES} minutes, ${OTP_ESSAIS_MAX} essais au total sur ce lien, nouveaux codes compris. Passé ce délai, la page vous permet d'en demander un nouveau.)`,
+      "Sur la page, demandez votre code de confirmation : Rojer l'adresse " +
+        "par un second e-mail.",
       "",
     );
   }
-  lignes.push(
-    `Lien valable jusqu'au ${expiration} (heure de Paris).`,
-    "",
-    "— Rojer (de la part de votre interlocuteur)",
-    "",
-    "Finalité : permettre une action ponctuelle demandée par votre interlocuteur.",
-    "Droit d'accès / effacement : contactez l'émetteur du lien.",
-  );
+  lignes.push(`Lien valable jusqu'au ${expiration} (heure de Paris).`, "", ...PIED);
 
+  await sendMail({ to: args.to, subject: args.sujet, text: lignes.join("\n") });
+}
+
+export type MailCodeArgs = {
+  to: string;
+  nom?: string | null;
+  otp: string;
+  /** Le document à signer (`libelleDocumentSignable`, une ligne), si connu. */
+  document: string | null;
+  /** Essais qui restent sur le lien, nouveaux codes compris. */
+  essaisRestants: number;
+};
+
+/** Le code et le nom du document, sans le lien. */
+export async function envoyerMailCode(args: MailCodeArgs): Promise<void> {
+  if (args.document) exigerUneLigne("document", args.document);
+  if (args.nom) exigerUneLigne("nom du destinataire", args.nom);
+  const essais = `${args.essaisRestants} essai${args.essaisRestants > 1 ? "s" : ""}`;
+  const lignes = [
+    bonjour(args.nom),
+    "",
+    `Votre code de confirmation : ${args.otp}`,
+    ...(args.document ? [`Il sert à signer : « ${args.document} ».`] : []),
+    "",
+    // Le texte annonce la durée réelle : elle est portée par
+    // `AccessToken.otpExpireLe` et vérifiée à chaque tentative.
+    `Saisissez-le sur la page que vous avez ouverte. Il est valable ` +
+      `${OTP_TTL_MINUTES} minutes ; il vous reste ${essais} sur ce lien ` +
+      `(sur ${OTP_ESSAIS_MAX}, nouveaux codes compris).`,
+    "",
+    "Ne transmettez ce code à personne. Si vous n'avez rien demandé, ignorez ce message.",
+    "",
+    ...PIED,
+  ];
   await sendMail({
     to: args.to,
-    subject: args.sujet,
+    subject: "Votre code de confirmation Rojer",
     text: lignes.join("\n"),
   });
 }

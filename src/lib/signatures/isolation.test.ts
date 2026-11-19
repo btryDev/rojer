@@ -212,7 +212,7 @@ describe("appartenance — refus par défaut", () => {
 });
 
 describe("demande de signature — les facteurs ne remontent pas au demandeur", () => {
-  it("ne rend ni le code ni le lien, alors que le message les porte", async () => {
+  it("ne rend pas le lien, alors que le message le porte — et le message ne porte aucun code", async () => {
     const retour = await demanderSignature({
       etablissementId: "etab-a-moi",
       objetType: "rapport_verification",
@@ -228,15 +228,14 @@ describe("demande de signature — les facteurs ne remontent pas au demandeur", 
     const texte = mailsEnvoyes[0].text;
     expect(mailsEnvoyes[0].to).toBe("signataire@exemple-externe.fr");
 
-    const code = texte.match(/Code de confirmation : (\d{6})/)?.[1];
     const lien = texte.match(/\/acces\/([A-Za-z0-9_-]{30,})/)?.[1];
-    expect(code, "le message doit porter le code au destinataire").toBeTruthy();
     expect(lien, "le message doit porter le lien au destinataire").toBeTruthy();
+    // Deux temps (2026-11-19) : le code part à la demande, jamais avec le lien.
+    expect(texte).not.toMatch(/\b\d{6}\b/);
 
-    // Et maintenant la garantie : ni l'un ni l'autre ne doit se trouver dans
-    // ce que l'action rend, sous quelque nom de champ que ce soit.
+    // Et maintenant la garantie : le lien ne doit pas se trouver dans ce que
+    // l'action rend, sous quelque nom de champ que ce soit.
     const rendu = JSON.stringify(retour);
-    expect(rendu).not.toContain(code!);
     expect(rendu).not.toContain(lien!);
     expect(retour).toEqual({ ok: true });
   });
@@ -345,7 +344,7 @@ describe("garantie 5b — le texte du courriel ne vient plus du client", () => {
         sujet: "Signature\r\nBcc: victime@exemple-externe.fr",
         message: "x",
         urlAcces: "http://localhost:3000/acces/x",
-        otp: null,
+        codeALaDemande: true,
         expireLe: new Date(),
       }),
     ).rejects.toThrow();

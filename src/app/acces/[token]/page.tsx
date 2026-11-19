@@ -155,6 +155,7 @@ export default async function AccesParTokenPage({
               nom: t.nomDestinataire,
             }}
             expireLe={t.expireLe}
+            codeDejaDemande={t.otpHash !== null}
           />
         </div>
       </main>

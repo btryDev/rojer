@@ -14,7 +14,6 @@ import {
 import { envoyerMailAcces, urlAccesPourToken } from "./mail";
 import { envoiEnService, motifErreur } from "@/lib/email";
 import { LIEN_PARTI, MOTIF_REVOCATION_ENVOI_ECHOUE, estAUsageUnique } from "./revocation";
-import { generateOtp, hashOtp, otpExpirationDate } from "@/lib/signatures/otp";
 
 /**
  * **Ce module n'est volontairement pas `"use server"`.** `emettreAccessToken`
@@ -88,7 +87,9 @@ export const emissionSchema = z.object({
 
 /**
  * Émet un token d'accès externe et envoie par email le lien magique au
- * destinataire (+ OTP si scope = signature ou depot_rapport).
+ * destinataire. ~~(+ OTP si scope = signature ou depot_rapport)~~
+ * [2026-11-19 : le code part à la demande, par un second courriel —
+ * `renvoyerCodeOtp`.]
  *
  * ── Ni le lien ni le code ne reviennent à l'appelant ─────────────────────
  *
@@ -249,20 +250,13 @@ export async function emettreAccessToken(
   const urlAcces = urlAccesPourToken(token);
   const tokenHash = hashToken(token);
   const ttl = ttlHoursFor(params.scope);
-  // Horloge lue une seule fois : l'expiration du lien et celle du code
-  // partent du même instant.
-  const maintenant = new Date();
-  const expireLe = expirationFromNow(ttl, maintenant);
+  const expireLe = expirationFromNow(ttl, new Date());
 
-  // OTP uniquement pour scopes à preuve (signature, dépôt de rapport).
-  const besoinOtp = estAUsageUnique(params.scope);
-  const otp = besoinOtp ? generateOtp() : null;
-  const otpHash = otp ? hashOtp(otp) : null;
-  // Le code a sa propre expiration (10 minutes), bien plus courte que celle
-  // du lien (72 h pour une signature, 7 jours pour un dépôt). Sans cette
-  // date, le code à 6 chiffres restait valable aussi longtemps que le lien
-  // — l'email annonçait 10 minutes, le code en durait des jours.
-  const otpExpireLe = otp ? otpExpirationDate(maintenant) : null;
+  // Aucun code à l'émission (2026-11-19) : le code part à la demande, depuis
+  // la page du lien, par un second courriel (`renvoyerCodeOtp`). Il voyageait
+  // avec le lien et n'en prouvait rien de plus ; ses 10 minutes couraient
+  // avant même que le destinataire ouvre sa boîte. `otpHash` et
+  // `otpExpireLe` restent nuls jusqu'à la première demande.
 
   // Plafonds de la formule (ADR-053 § 14) : les liens actifs, et pour une
   // demande de signature, les signatures de l'année — comptées à la demande,
@@ -281,8 +275,6 @@ export async function emettreAccessToken(
         partie: params.partie,
         emailDestinataire: params.emailDestinataire,
         nomDestinataire: params.nomDestinataire,
-        otpHash,
-        otpExpireLe,
         expireLe,
         createdByUserId: user.id,
       },
@@ -298,7 +290,7 @@ export async function emettreAccessToken(
       sujet: params.sujetMail,
       message: params.messageMail,
       urlAcces,
-      otp,
+      codeALaDemande: estAUsageUnique(params.scope),
       expireLe,
     });
   } catch (erreur) {

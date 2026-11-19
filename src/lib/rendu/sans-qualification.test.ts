@@ -189,11 +189,6 @@ const ADMISES: { fichier: string; ligne: string; motif: string }[] = [
     motif: "Titre du bloc affiché sur `ok: true` seulement, après un envoi parti.",
   },
   {
-    fichier: "src/components/signatures/SignatureExterneForm.tsx",
-    ligne: "Code à 6 chiffres reçu dans l'email. Valable 10 minutes, 3 essais",
-    motif: "Sur la page ouverte par le lien, qui n'existe que si le message est parti.",
-  },
-  {
     fichier: "src/lib/access-tokens/emission.ts",
     ligne: "\"Trop de liens envoyés dans l'heure. Réessayez un peu plus tard.\",",
     motif: "Limite de fréquence, comptée APRÈS le refus d'envoi hors service : ne s'affiche que l'envoi en service.",
@@ -205,8 +200,8 @@ const ADMISES: { fichier: string; ligne: string; motif: string }[] = [
   },
   {
     fichier: "src/lib/signatures/actions.ts",
-    ligne: "`Un nouveau code vient d'être envoyé à ${token.emailDestinataire}. ` +",
-    motif: "Rendu après `envoyerMailAcces`, qui a réussi.",
+    ligne: "`${quoi} vient d'être envoyé à ${token.emailDestinataire}. ` +",
+    motif: "Rendu après `envoyerMailCode`, qui a réussi.",
   },
   {
     fichier: "src/lib/signatures/actions.ts",
@@ -222,7 +217,12 @@ const ADMISES: { fichier: string; ligne: string; motif: string }[] = [
   },
   {
     fichier: "src/components/signatures/SignatureExterneForm.tsx",
-    ligne: '<Label htmlFor="otp">Code reçu par email *</Label>',
+    ligne: "Code à 6 chiffres reçu par e-mail. Valable 10 minutes,",
+    motif: "Sur la page ouverte par le lien, qui n'existe que si le message est parti.",
+  },
+  {
+    fichier: "src/components/signatures/SignatureExterneForm.tsx",
+    ligne: '<Label htmlFor="otp">Code reçu par e-mail *</Label>',
     motif: "Sur la page ouverte par le lien, qui n'existe que si le message est parti.",
   },
 ];
