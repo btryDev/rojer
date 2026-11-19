@@ -22,7 +22,7 @@ const nombre = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 });
 
 /** Ce que la jauge dit d'office, sous son chiffre (ADR-061 § 6 pour les signatures). */
 const NOTE_PAR_DEFAUT: Partial<Record<CleQuota, string>> = {
-  signaturesParAn: "Une re-signature après correction d'un plan de prévention ne compte pas.",
+  signaturesParAn: "Un signataire qui signe de nouveau un plan de prévention corrigé ne compte pas une seconde fois.",
 };
 
 /**

@@ -401,6 +401,21 @@ function lireChampOptionnel(v: FormDataEntryValue | null): string | undefined {
 }
 
 
+/**
+ * Clos ou annulé, un plan ne s'applique plus rien (ADR-061) : la proposition
+ * qui attendait est refusée d'office, au lieu de rester en suspens.
+ */
+async function fermerPropositionEnAttente(
+  db: Awaited<ReturnType<typeof planDuCompte>>["db"],
+  planId: string,
+  etablissementId: string,
+) {
+  await db.propositionModificationPlan.updateMany({
+    where: { planPreventionId: planId, etablissementId, enAttente: true },
+    data: { statut: "refusee", enAttente: null, traiteeLe: new Date() },
+  });
+}
+
 export async function cloturerPlan(planId: string): Promise<void> {
   await verifierSaisie();
   const plan = await planDuCompte(planId);
@@ -408,6 +423,7 @@ export async function cloturerPlan(planId: string): Promise<void> {
     where: { id: planId },
     data: { statut: "clos" },
   });
+  await fermerPropositionEnAttente(plan.db, planId, plan.etablissementId);
   // Un plan clos ne se signe plus : les liens encore ouverts tombent avec lui.
   // La garde de fond reste au moment de signer (`etat-signable.ts`).
   await revoquerLiensEnVol(plan.db, {
@@ -441,6 +457,7 @@ export async function supprimerPlan(planId: string): Promise<void> {
       where: { id: planId },
       data: { statut: "annule" },
     });
+    await fermerPropositionEnAttente(plan.db, planId, etabId);
   }
   // Annulé ou effacé, le plan ne se signe plus. Pour un plan effacé la
   // révocation ne trouve rien — il était vierge —, sauf un lien émis entre

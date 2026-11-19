@@ -33,8 +33,10 @@ ADR-006 amendée le 2026-11-19).
 
 `Signature` reçoit `revoqueLe` et `revoqueMotif`. Une signature révoquée garde
 tout : nom, adresse, date, IP, navigateur, empreinte. L'unicité d'une partie
-par acte ne vaut que pour les signatures actives (index unique partiel
-`WHERE "revoqueLe" IS NULL`).
+par acte ne vaut que pour les signatures actives : `active` vaut `true` ou
+NULL (CHECK), et l'unicité porte sur `[objetType, objetId, partie, active]`
+— PostgreSQL ne compare pas les NULL. Écrite dans le schéma, à la
+différence d'un index partiel (même montage que `PieceEtatPermanent`).
 
 Partout où une signature compte — statut de l'acte, verrou du contenu, fiche,
 registre, ZIP de contrôle —, seules les signatures **actives** comptent. Un
@@ -120,20 +122,25 @@ Puis « Demander les signatures », comme aujourd'hui.
 
 ### 6. Le plafond de signatures de la formule
 
-Une re-signature après une proposition ou une correction **ne consomme pas**
-de signature de plus dans le plafond annuel (`signaturesParAn` : 20 en
+Une re-signature après une proposition ou une correction, **par la même
+personne** (même adresse, même partie), **ne consomme pas** de signature de
+plus dans le plafond annuel (`signaturesParAn` : 20 en
 Essentiel, 60 en Pro) : le client ne paie pas deux fois le même plan, et une
 correction demandée par l'entreprise extérieure ne le pénalise pas.
 (Décision de la propriétaire, 2026-11-19. RiskBoard, relu le même jour, ne
-compte rien : pas de précédent.)
+compte rien : pas de précédent.) « Même personne » (relecture du même jour) :
+sinon un plan vidé puis réécrit pour une autre entreprise se ferait signer
+gratuitement à l'infini. Le fait se lit sur une signature révoquée, ou sur
+une proposition faite depuis un lien de cette adresse — jamais sur un texte
+de motif (`plan-prevention/resignature.ts`).
 
 **L'écran le dit**, partout où le plafond se lit :
 - la jauge des signatures (`JaugeDePlafond`) et la description des formules
   (`formules.ts`, « 20 signatures par an ») : « une re-signature après
   correction ne compte pas » ;
 - le bandeau de la proposition et la confirmation de « Révoquer les
-  signatures pour corriger » : « Les nouvelles signatures de ce plan ne
-  comptent pas dans votre formule. »
+  signatures pour corriger » : « Un signataire qui signe de nouveau ce plan
+  ne compte pas une seconde fois dans votre formule. »
 
 ### 7. Écarté
 

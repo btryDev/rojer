@@ -211,6 +211,7 @@ beforeEach(() => {
   comptesDemandes.length = 0;
   proprietaire.userId = "user-1";
   prismaMock.planPrevention = table([]);
+  prismaMock.propositionModificationPlan = table([]);
   prismaMock.permisFeu = table([]);
   prismaMock.signature = table([]);
   prismaMock.accessToken = table([]);

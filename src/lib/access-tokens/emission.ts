@@ -265,7 +265,7 @@ export async function emettreAccessToken(
   let pris: string[] = [];
   const creation = await creerSousPlafond(db, compte.compteId, "liensAccesActifs", async (tx) => {
     // Une re-signature après correction ne compte pas (ADR-061 § 6).
-    if (params.scope === "signature" && !(await signatureDejaComptee(tx, params)))
+    if (params.scope === "signature" && !(await signatureDejaComptee(tx, { ...params, email: params.emailDestinataire })))
       pris = await prendreQuota(tx, compte.compteId, "signaturesParAn");
     return tx.accessToken.create({
       data: {

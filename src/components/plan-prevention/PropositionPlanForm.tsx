@@ -86,8 +86,8 @@ export function PropositionPlanForm({
         </p>
         <p className="mt-2 text-[0.85rem] leading-relaxed text-[color:var(--board-ink)]">
           Les signatures déjà posées sur ce plan sont révoquées. Votre interlocuteur
-          accepte, corrige ou refuse votre proposition, puis vous soumet de nouveau le
-          plan à signer.
+          accepte, corrige ou refuse votre proposition ; il peut ensuite vous soumettre
+          de nouveau le plan à signer.
         </p>
       </div>
     );
@@ -243,8 +243,8 @@ export function PropositionPlanForm({
       )}
 
       <p className="text-[0.78rem] text-[color:var(--muted-foreground)]">
-        Envoyer cette proposition révoque les signatures déjà posées sur ce plan : il
-        sera signé de nouveau par chaque partie une fois votre proposition traitée.
+        Envoyer cette proposition révoque les signatures déjà posées sur ce plan :
+        chaque partie le signe de nouveau une fois votre proposition traitée.
       </p>
       <div className="flex flex-wrap gap-3">
         <Button type="submit" disabled={pending}>

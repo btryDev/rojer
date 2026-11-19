@@ -103,8 +103,9 @@ export default async function VerifierSignaturePage({
               {res.revoqueMotif ? ` : ${res.revoqueMotif}` : ""}.
             </p>
             <p>
-              Elle ne vaut plus pour le document actuel, qui a été corrigé puis soumis de
-              nouveau à la signature. Le recalcul de l&apos;empreinte ne s&apos;applique pas.
+              Elle ne vaut plus pour le document actuel, que son auteur peut corriger et
+              soumettre de nouveau à la signature. Le recalcul de l&apos;empreinte ne
+              s&apos;applique pas.
             </p>
           </div>
         </header>

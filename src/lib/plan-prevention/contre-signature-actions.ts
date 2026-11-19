@@ -8,7 +8,7 @@ import { requireCompte } from "@/lib/auth/compte";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
 import { revoquerLiensEnVol } from "@/lib/access-tokens/revocation";
 import { statutPlanSignable } from "@/lib/signatures/etat-signable";
-import { MOTIF_CONTENU_MODIFIE, verrouillerObjetSigne } from "@/lib/signatures/verrou-contenu";
+import { compterSignatures, MOTIF_CONTENU_MODIFIE, verrouillerObjetSigne } from "@/lib/signatures/verrou-contenu";
 import { lireProposition } from "./proposition";
 import {
   avertirDecision,
@@ -65,12 +65,17 @@ export async function revoquerSignaturesPlan(
     if (!etat || !statutPlanSignable(etat.statut)) {
       return { ok: false as const, message: "Ce plan est clos ou annulé : il ne se corrige plus." };
     }
+    // Compté AVANT toute écriture : sans signature active, rien ne bouge —
+    // pas même les liens en cours (un onglet resté ouvert les aurait fait
+    // tomber en répondant « rien à révoquer »).
+    if ((await compterSignatures(tx, "plan_prevention", planId, etablissementId)) === 0) {
+      return { ok: false as const, message: "Ce plan ne porte aucune signature à révoquer." };
+    }
     const retirees = await retirerSignaturesDuPlan(tx, {
       etablissementId,
       planId,
       motif: MOTIF_REVOCATION_PLAN.correction,
     });
-    if (retirees.length === 0) return { ok: false as const, message: "Ce plan ne porte aucune signature à révoquer." };
     return { ok: true as const, retirees };
   });
   if (!r.ok) return { status: "error", message: r.message };
@@ -118,15 +123,25 @@ export async function traiterProposition(
     await verrouillerObjetSigne(tx, "plan_prevention", planId, etablissementId);
     const p = await tx.propositionModificationPlan.findFirst({
       where: { id: propositionId, etablissementId, enAttente: true },
-      select: { contenu: true },
+      select: { contenu: true, accessTokenId: true },
     });
     if (!p) return { ok: false as const, message: "Cette proposition a déjà été traitée." };
     const plan = await tx.planPrevention.findFirst({
       where: { id: planId, etablissementId },
-      select: { statut: true, efChefEmail: true, lignes: { select: { id: true } } },
+      select: { statut: true, lignes: { select: { id: true } } },
     });
-    if (!plan || !statutPlanSignable(plan.statut)) {
-      return { ok: false as const, message: "Ce plan est clos ou annulé." };
+    // L'avis de décision va à qui a proposé : l'adresse de SON lien, qui a pu
+    // différer de celle de la fiche.
+    const lien = await tx.accessToken.findFirst({
+      where: { id: p.accessTokenId, etablissementId },
+      select: { emailDestinataire: true },
+    });
+    const auteur = lien?.emailDestinataire ?? null;
+    if (!plan) return { ok: false as const, message: "Ce plan n'existe plus." };
+    // Un plan clos ou annulé ne s'applique plus rien, mais sa proposition se
+    // refuse encore : elle ne reste pas en suspens pour toujours.
+    if (!statutPlanSignable(plan.statut) && decision !== "refuser") {
+      return { ok: false as const, message: "Ce plan est clos ou annulé : refusez la proposition." };
     }
     const cloture = {
       enAttente: null,
@@ -139,9 +154,17 @@ export async function traiterProposition(
         where: { id: propositionId, etablissementId },
         data: { ...cloture, statut: "refusee" },
       });
-      return { ok: true as const, acceptee: false, efChefEmail: plan.efChefEmail };
+      return { ok: true as const, acceptee: false, auteur };
     }
 
+    // Aucune signature active ne doit couvrir ce qu'on va réécrire (ADR-061) :
+    // relu sous le verrou, une signature posée depuis la proposition refuse.
+    if ((await compterSignatures(tx, "plan_prevention", planId, etablissementId)) > 0) {
+      return {
+        ok: false as const,
+        message: "Une signature a été posée depuis la proposition : révoquez-la avant d'appliquer la proposition.",
+      };
+    }
     // Relue telle qu'enregistrée, contre le plan d'AUJOURD'HUI : une ligne
     // retirée depuis par le dirigeant rend la proposition inapplicable.
     const lecture = lireProposition(JSON.stringify(p.contenu), new Set(plan.lignes.map((l) => l.id)));
@@ -183,21 +206,20 @@ export async function traiterProposition(
       where: { id: propositionId, etablissementId },
       data: { ...cloture, statut: "acceptee" },
     });
-    return { ok: true as const, acceptee: true, efChefEmail: plan.efChefEmail };
+    return { ok: true as const, acceptee: true, auteur };
   });
   if (!r.ok) return { status: "error", message: r.message };
 
-  after(() =>
-    avertirDecision(db, { etablissementId, planId, to: r.efChefEmail, acceptee: r.acceptee }),
-  );
+  const { auteur, acceptee } = r;
+  if (auteur) after(() => avertirDecision(db, { etablissementId, planId, to: auteur, acceptee }));
   revalider(etablissementId, planId);
   if (decision === "corriger") {
     redirect(`/etablissements/${etablissementId}/plan-prevention/${planId}/modifier`);
   }
   return {
     status: "success",
-    message: r.acceptee
+    message: acceptee
       ? "Proposition appliquée au plan. Demandez de nouveau les signatures."
-      : "Proposition refusée. Demandez de nouveau les signatures.",
+      : "Proposition refusée.",
   };
 }

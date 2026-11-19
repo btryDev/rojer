@@ -262,6 +262,7 @@ export async function lireSignatureSousLimite(
 async function getSignature(id: string) {
   return prisma.signature.findUnique({
     where: { id },
-    select: SELECT_PREUVE,
+    // + la révocation (ADR-061) : l'accusé d'une signature révoquée le dit.
+    select: { ...SELECT_PREUVE, active: true, revoqueLe: true },
   });
 }

@@ -16,7 +16,7 @@ import {
  */
 
 export const PHRASE_PLAFOND =
-  "Les nouvelles signatures de ce plan ne comptent pas dans votre formule.";
+  "Un signataire qui signe de nouveau ce plan ne compte pas une seconde fois dans votre formule.";
 
 function Message({ state }: { state: ContreSignatureState }) {
   if (state.status === "idle") return null;

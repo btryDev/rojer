@@ -9,9 +9,9 @@ import { clientDuProprietaire } from "@/lib/auth/compte-hors-session";
 import { calculerHashObjet } from "@/lib/signatures/hash-objet";
 import { verrouillerObjetSigne } from "@/lib/signatures/verrou-contenu";
 import { statutPlanSignable } from "@/lib/signatures/etat-signable";
-import { ipClient } from "@/lib/securite/ip-client";
+import { ipClient, ipPourLimite } from "@/lib/securite/ip-client";
 import { cleLimite, consommer, LIMITES, messageTropDeTentatives } from "@/lib/securite/limite-debit";
-import { aucunEcart, ecartsDeLaProposition, lireProposition } from "./proposition";
+import { aucunEcart, ecartsDeLaProposition, lireProposition, PROPOSITION_TAILLE_MAX, propositionSchema } from "./proposition";
 import {
   avertirPropositionRecue,
   avertirSignaturesRetirees,
@@ -59,11 +59,28 @@ export async function proposerModificationPlan(
     return LIEN_INVALIDE;
   }
 
+  // La forme se valide AVANT la limite : une saisie à corriger ne consomme
+  // pas les envois de l'heure (l'appartenance des lignes se vérifie ensuite,
+  // sous le verrou).
+  const brut = formData.get("proposition");
+  if (typeof brut !== "string" || brut.length > PROPOSITION_TAILLE_MAX) {
+    return { status: "error", message: "Proposition illisible." };
+  }
+  try {
+    const forme = propositionSchema.safeParse(JSON.parse(brut));
+    if (!forme.success) {
+      return { status: "error", message: forme.error.issues[0]?.message ?? "Proposition invalide." };
+    }
+  } catch {
+    return { status: "error", message: "Proposition illisible." };
+  }
+
   const hh = await headers();
   const ip = ipClient(hh);
   const ua = hh.get("user-agent")?.slice(0, 500) ?? null;
+  // Par réseau (/64 en IPv6), comme les autres limites.
   const verdict = await consommer([
-    { cle: cleLimite("proposition-plan", "ip", ip ?? "inconnue"), limite: LIMITES.propositionPlanIp },
+    { cle: cleLimite("proposition-plan", "ip", ipPourLimite(hh) ?? "inconnue"), limite: LIMITES.propositionPlanIp },
   ]);
   if (!verdict.ok) return { status: "error", message: messageTropDeTentatives(verdict.reessayerDansSecondes) };
 
@@ -101,7 +118,7 @@ export async function proposerModificationPlan(
       if (!plan || !statutPlanSignable(plan.statut)) {
         return { ok: false as const, reponse: { status: "error", message: "Ce plan ne se modifie plus." } as const };
       }
-      const lecture = lireProposition(formData.get("proposition"), new Set(plan.lignes.map((l) => l.id)));
+      const lecture = lireProposition(brut, new Set(plan.lignes.map((l) => l.id)));
       if (!lecture.ok) return { ok: false as const, reponse: { status: "error", message: lecture.message } as const };
       if (aucunEcart(ecartsDeLaProposition(plan, lecture.proposition))) {
         return {

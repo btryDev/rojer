@@ -3,7 +3,6 @@ import { revoquerLiensEnVol } from "@/lib/access-tokens/revocation";
 import { envoiEnService, motifErreur, publicAppUrl, sendMail } from "@/lib/email";
 import { ecrireAuxProprietaires } from "@/lib/abonnements/rappels";
 import { libelleDocumentSignable } from "@/lib/signatures/libelle-document";
-import { MOTIFS_REMISE_EN_CORRECTION } from "./resignature";
 
 /**
  * Remettre un plan de prévention en correction (ADR-061 § 2) — UNE opération,
@@ -25,8 +24,8 @@ import { MOTIFS_REMISE_EN_CORRECTION } from "./resignature";
  */
 
 export const MOTIF_REVOCATION_PLAN = {
-  proposition: MOTIFS_REMISE_EN_CORRECTION[0],
-  correction: MOTIFS_REMISE_EN_CORRECTION[1],
+  proposition: "l'entreprise extérieure a proposé une modification du plan",
+  correction: "l'entreprise utilisatrice corrige le plan",
 } as const;
 
 export type SignatureRetiree = {
@@ -60,7 +59,7 @@ export async function retirerSignaturesDuPlan(
     etablissementId,
     objetType: "plan_prevention",
     objetId: planId,
-    motif: `${motif} ; un nouveau lien vous parviendra`,
+    motif: `${motif} ; demandez un nouveau lien à votre interlocuteur`,
   });
   return actives.map(({ signataireEmail, signataireNom, partie }) => ({
     signataireEmail,
@@ -93,7 +92,7 @@ export async function avertirSignaturesRetirees(
       "",
       `Votre signature du document « ${nom} » est révoquée : ${params.motif}.`,
       "Elle reste enregistrée, avec sa date, et sa vérification la montre « révoquée ».",
-      "Le plan sera de nouveau soumis à la signature de chaque partie.",
+      "Une fois le plan corrigé, votre interlocuteur peut vous le soumettre de nouveau.",
       ...PIED,
     ].join("\n");
     await Promise.all(
@@ -151,7 +150,7 @@ export async function avertirDecision(
       params.acceptee
         ? `Votre proposition de modification du document « ${nom} » est acceptée.`
         : `Votre proposition de modification du document « ${nom} » n'est pas retenue.`,
-      "Le plan vous sera de nouveau soumis pour signature par votre interlocuteur.",
+      "Votre interlocuteur peut ensuite vous soumettre de nouveau le plan à signer.",
       ...PIED,
     ].join("\n");
     await sendMail({

@@ -400,6 +400,11 @@ export async function poserSignatureAvecToken(
       // consomme plus. Sinon, elle attend que cette signature soit écrite, et
       // la compte.
       await verrouillerObjetSigne(tx, token.objetType as ObjetSignable, token.objetId, token.etablissementId);
+      // L'état relu SOUS LE VERROU (ADR-061) : une proposition de
+      // modification arrivée depuis la garde du début rend l'acte non signable.
+      if (!(await objetEstSignable(tx, token.objetType, token.objetId, token.etablissementId))) {
+        return "non_signable" as const;
+      }
       const consomme = await consommerJeton(tx, token.id, {
         ip: ip ?? undefined,
         userAgent: ua ?? undefined,
@@ -434,6 +439,9 @@ export async function poserSignatureAvecToken(
       return { status: "error", message: MESSAGE_PARTIE_DEJA_SIGNEE };
     }
     throw e;
+  }
+  if (signature === "non_signable") {
+    return { status: "error", message: MESSAGE_NON_SIGNABLE };
   }
   if (!signature) {
     // Le jeton n'a pas été consommé : soit il a déjà servi, soit une
@@ -706,6 +714,10 @@ export async function signerEnCompteConnecte(params: {
   try {
     resultat = await db.$transaction(async (tx) => {
       await verrouillerObjetSigne(tx, params.objetType, params.objetId, params.etablissementId);
+      // Relu SOUS LE VERROU (ADR-061), comme pour la signature par lien.
+      if (!(await objetEstSignable(tx, params.objetType, params.objetId, params.etablissementId))) {
+        return { ok: false as const, raison: "non_signable" as const };
+      }
       const h = await calculerHashObjet(
         tx,
         params.objetType,
@@ -721,6 +733,7 @@ export async function signerEnCompteConnecte(params: {
           objetType: params.objetType,
           objetId: params.objetId,
           partie,
+          email: user.email,
         }))
       ) {
         await prendreQuota(tx, compte.compteId, "signaturesParAn");

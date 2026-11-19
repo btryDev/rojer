@@ -8,18 +8,15 @@ import type { ObjetSignable, PartieSignataire, Prisma } from "@prisma/client";
  *
  * **Module pur, sans `"use server"`.**
  *
- * La partie a déjà été comptée sur ce plan si elle y porte une signature
- * révoquée, ou un lien de signature révoqué par une remise en correction
- * (proposition ou correction — `MOTIF_REVOCATION_PLAN`, dont le motif du lien
- * commence par l'un de ces deux textes).
+ * « Déjà comptée » se lit sur des FAITS structurés, jamais sur un texte libre
+ * (relecture du 2026-11-19 : un motif de révocation se réécrit), et pour la
+ * MÊME PERSONNE — sinon un plan vidé puis réécrit pour une autre entreprise
+ * se ferait signer gratuitement à l'infini :
+ * - une signature révoquée de cette partie, par cette adresse ;
+ * - ou une proposition de modification faite depuis un lien de cette partie,
+ *   envoyé à cette adresse (le lien a été compté à son émission, et la
+ *   proposition l'a fait tomber avant qu'il serve).
  */
-
-/** Les débuts de motif d'un lien révoqué par une remise en correction. */
-export const MOTIFS_REMISE_EN_CORRECTION = [
-  "l'entreprise extérieure a proposé une modification du plan",
-  "l'entreprise utilisatrice corrige le plan",
-] as const;
-
 export async function signatureDejaComptee(
   /** Le client borné au compte, ou sa transaction (ADR-051). */
   db: Prisma.TransactionClient,
@@ -28,20 +25,29 @@ export async function signatureDejaComptee(
     objetType: ObjetSignable | string;
     objetId: string;
     partie?: PartieSignataire | null;
+    /** L'adresse de qui signera : celle du lien, ou celle du compte. */
+    email: string | null | undefined;
   },
 ): Promise<boolean> {
-  if (params.objetType !== "plan_prevention" || !params.partie) return false;
-  const objet = { etablissementId: params.etablissementId, objetId: params.objetId, partie: params.partie };
-  const [signatures, liens] = await Promise.all([
-    db.signature.count({ where: { ...objet, objetType: "plan_prevention", active: null } }),
-    db.accessToken.count({
-      where: {
-        ...objet,
-        objetType: "plan_prevention",
-        scope: "signature",
-        OR: MOTIFS_REMISE_EN_CORRECTION.map((m) => ({ revoqueMotif: { startsWith: m } })),
-      },
-    }),
-  ]);
-  return signatures + liens > 0;
+  const email = params.email?.trim().toLowerCase();
+  if (params.objetType !== "plan_prevention" || !params.partie || !email) return false;
+  const { etablissementId, objetId, partie } = params;
+  const revoquees = await db.signature.count({
+    where: { etablissementId, objetType: "plan_prevention", objetId, partie, signataireEmail: email, active: null },
+  });
+  if (revoquees > 0) return true;
+  const propositions = await db.propositionModificationPlan.findMany({
+    where: { etablissementId, planPreventionId: objetId },
+    select: { accessTokenId: true },
+  });
+  if (propositions.length === 0) return false;
+  const liens = await db.accessToken.count({
+    where: {
+      etablissementId,
+      id: { in: propositions.map((p) => p.accessTokenId) },
+      partie,
+      emailDestinataire: email,
+    },
+  });
+  return liens > 0;
 }

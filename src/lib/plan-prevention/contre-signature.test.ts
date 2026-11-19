@@ -293,6 +293,16 @@ describe("le dirigeant traite la proposition (ADR-061 § 4)", () => {
     expect(mails[0].subject).toMatch(/^Proposition acceptée/);
   });
 
+  it("une signature posée depuis la proposition interdit de l'appliquer", async () => {
+    // Elle se serait glissée entre la garde d'une signature et son verrou.
+    prismaMock.signature.lignes[0].active = true;
+    prismaMock.signature.lignes[0].revoqueLe = null;
+    const r = await decider("accepter");
+    expect(r).toMatchObject({ status: "error" });
+    expect(prismaMock.planPrevention.lignes[0].efChefNom).toBe("Jean Dupond");
+    expect(prismaMock.propositionModificationPlan.lignes[0].enAttente).toBe(true);
+  });
+
   it("refuser ne touche pas au plan", async () => {
     const r = await decider("refuser");
     expect(r.status).toBe("success");
@@ -324,24 +334,30 @@ describe("révoquer les signatures pour corriger (ADR-061 § 2)", () => {
 
 describe("la re-signature ne compte pas dans la formule (ADR-061 § 6)", () => {
   const params = { etablissementId: "etab-1", objetType: "plan_prevention", objetId: "pp-1" } as const;
+  const compte = (partie: "entreprise_utilisatrice" | "entreprise_exterieure", email: string, objetType = "plan_prevention") =>
+    signatureDejaComptee(prismaMock as never, { ...params, objetType, partie, email });
 
   it("une première signature compte", async () => {
-    expect(await signatureDejaComptee(prismaMock as never, { ...params, partie: "entreprise_exterieure" })).toBe(false);
+    expect(await compte("entreprise_exterieure", "chef@exterieure.fr")).toBe(false);
   });
 
-  it("une partie dont la signature a été révoquée ne compte plus", async () => {
+  it("le même signataire, après révocation, ne compte plus", async () => {
     await revoquerSignaturesPlan("pp-1", { status: "idle" });
-    expect(await signatureDejaComptee(prismaMock as never, { ...params, partie: "entreprise_utilisatrice" })).toBe(true);
+    expect(await compte("entreprise_utilisatrice", "marie@utilisatrice.fr")).toBe(true);
   });
 
-  it("une partie dont le lien est tombé avec une proposition ne compte plus", async () => {
+  it("un autre signataire, après révocation, compte : un plan réécrit n'est plus le même plan", async () => {
+    await revoquerSignaturesPlan("pp-1", { status: "idle" });
+    expect(await compte("entreprise_utilisatrice", "autre@ailleurs.fr")).toBe(false);
+  });
+
+  it("l'auteur d'une proposition ne compte plus, sur le lien de la même adresse", async () => {
     await proposer({ fiche: { ...FICHE, efChefNom: "Paul" }, lignes: [LIGNE_1] });
-    expect(await signatureDejaComptee(prismaMock as never, { ...params, partie: "entreprise_exterieure" })).toBe(true);
+    expect(await compte("entreprise_exterieure", "chef@exterieure.fr")).toBe(true);
+    expect(await compte("entreprise_exterieure", "autre@exterieure.fr")).toBe(false);
   });
 
   it("hors plan de prévention, rien n'est épargné", async () => {
-    expect(
-      await signatureDejaComptee(prismaMock as never, { ...params, objetType: "permis_feu", partie: "entreprise_exterieure" }),
-    ).toBe(false);
+    expect(await compte("entreprise_exterieure", "chef@exterieure.fr", "permis_feu")).toBe(false);
   });
 });
