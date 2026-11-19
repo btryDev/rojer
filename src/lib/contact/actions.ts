@@ -10,12 +10,8 @@
 // enverrait alors des e-mails de Rojer à n'importe quelle adresse saisie.
 
 import { headers } from "next/headers";
-import {
-  CHAMP_PIEGE,
-  CONTACT,
-  courrielDeContact,
-  schemaMessageContact,
-} from "@/components/landing/contact";
+import { CHAMP_PIEGE, CONTACT } from "@/components/landing/contact";
+import { courrielDeContact, schemaMessageContact } from "@/lib/contact/message";
 import { envoiEnService, motifErreur, sendMail } from "@/lib/email";
 import { ipPourLimite } from "@/lib/securite/ip-client";
 import {
@@ -64,13 +60,11 @@ export async function envoyerMessageContact(
   // use toutes les clés qu'on lui donne, et une seule adresse refusée en
   // boucle userait sinon le quota de tous. Sans IP lisible, un seau commun.
   const ip = ipPourLimite(await headers()) ?? "inconnue";
-  for (const [dimension, valeur, limite] of [
-    ["ip", ip, LIMITES.contactIp],
-    ["tous", "site", LIMITES.contactTous],
-  ] as const) {
-    const verdict = await consommer([{ cle: cleLimite("contact", dimension, valeur), limite }]);
-    if (!verdict.ok) return { status: "erreur", message: messageTropDeTentatives(verdict.reessayerDansSecondes) };
+  let verdict = await consommer([{ cle: cleLimite("contact", "ip", ip), limite: LIMITES.contactIp }]);
+  if (verdict.ok) {
+    verdict = await consommer([{ cle: cleLimite("contact", "tous", "site"), limite: LIMITES.contactTous }]);
   }
+  if (!verdict.ok) return { status: "erreur", message: messageTropDeTentatives(verdict.reessayerDansSecondes) };
 
   try {
     await sendMail({ to: CONTACT, replyTo: lu.data.email, ...courrielDeContact(lu.data) });

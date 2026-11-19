@@ -33,8 +33,8 @@ export type EmailPayload = {
   html?: string;
   attachments?: PieceJointe[];
   /**
-   * L'adresse à laquelle une réponse part (en-tête `Reply-To`) : celle du
-   * visiteur, pour un message du formulaire de contact. Une seule adresse.
+   * L'adresse où part une réponse (en-tête `Reply-To`), une seule — par
+   * exemple celle du visiteur qui écrit depuis le formulaire de contact.
    */
   replyTo?: string;
 };

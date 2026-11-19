@@ -66,9 +66,9 @@ export class ErreurEnvoiMail extends Error {
  * la redire ici protège le pilote d'un appelant qui ne valide pas.
  */
 const ADRESSE_UNIQUE = z.string().email();
-function exigerAdresseUnique(to: string): void {
-  if (!ADRESSE_UNIQUE.safeParse(to).success) {
-    throw new ErreurEnvoiMail(null, "Destinataire refusé : une seule adresse e-mail est attendue.");
+function exigerAdresseUnique(adresse: string, champ = "Destinataire"): void {
+  if (!ADRESSE_UNIQUE.safeParse(adresse).success) {
+    throw new ErreurEnvoiMail(null, `${champ} refusé : une seule adresse e-mail est attendue.`);
   }
 }
 
@@ -116,7 +116,7 @@ export function creerPiloteMailpace(options: {
   return {
     async send(payload: EmailPayload): Promise<void> {
       exigerAdresseUnique(payload.to);
-      if (payload.replyTo !== undefined) exigerAdresseUnique(payload.replyTo);
+      if (payload.replyTo) exigerAdresseUnique(payload.replyTo, "Reply-To");
       const corps = JSON.stringify({
         from: options.expediteur,
         to: payload.to,

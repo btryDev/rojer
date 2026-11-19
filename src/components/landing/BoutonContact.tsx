@@ -6,7 +6,7 @@
 // part du serveur (`envoyerMessageContact`) ; [2026-11-19 : il ouvrait la
 // messagerie du visiteur par un lien `mailto:`, provisoire].
 
-import { startTransition, useActionState, useEffect, useId, useRef, useState } from "react";
+import { startTransition, useActionState, useId, useState } from "react";
 import { ChampBoard } from "@/components/ui-kit/ChampBoard";
 import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
 import { PanneauModal } from "@/components/ui-kit/PanneauModal";
@@ -52,23 +52,16 @@ const ETAT_INITIAL: EtatContact = { status: "saisie" };
 function FormulaireContact({ sujet, fermer }: { sujet: SujetContact; fermer: () => void }) {
   const [etat, envoyer, enCours] = useActionState(envoyerMessageContact, ETAT_INITIAL);
   const id = useId();
-  const confirmation = useRef<HTMLParagraphElement>(null);
-  useEffect(() => {
-    if (etat.status === "envoye") confirmation.current?.focus();
-  }, [etat.status]);
 
   if (etat.status === "envoye") {
+    // Le formulaire disparaît : le focus va au bouton qui reste, et la
+    // confirmation (`role="status"`) est lue au lecteur d'écran.
     return (
       <div className="space-y-4">
-        <p
-          ref={confirmation}
-          role="status"
-          tabIndex={-1}
-          className="m-0 rounded-[14px] bg-[color:var(--board-blue-pale)] px-4 py-3 text-[color:var(--board-ink)] outline-none"
-        >
+        <MessageFormulaire ton="info">
           Merci, votre message est bien parti. Nous vous répondons à {etat.email}.
-        </p>
-        <button type="button" onClick={fermer} className="lp-btn lp-btn-ink">
+        </MessageFormulaire>
+        <button type="button" onClick={fermer} autoFocus className="lp-btn lp-btn-ink">
           Fermer
         </button>
       </div>

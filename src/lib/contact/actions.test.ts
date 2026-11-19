@@ -65,25 +65,16 @@ describe("envoyerMessageContact", () => {
   });
 
   it.each([
-    ["un nom vide", { nom: "   " }],
-    ["une adresse invalide", { email: "pas-une-adresse" }],
-    ["une liste d'adresses", { email: "a@exemple.fr, b@exemple.fr" }],
-    ["un message vide", { message: "" }],
-    ["un sujet hors liste", { sujet: "Publicité" }],
-    ["un message trop long", { message: "x".repeat(3001) }],
-  ])("refuse %s sans rien envoyer ni compter", async (_, champs) => {
-    const etat = await envoyerMessageContact(SAISIE, formulaire(champs));
-    expect(etat.status).toBe("erreur");
+    ["un nom vide", { nom: "   " }, "Indiquez votre nom."],
+    ["une adresse invalide", { email: "pas-une-adresse" }, "Cette adresse e-mail n'est pas valide."],
+    ["une liste d'adresses", { email: "a@exemple.fr, b@exemple.fr" }, "Cette adresse e-mail n'est pas valide."],
+    ["un message vide", { message: "" }, "Écrivez votre message."],
+    ["un sujet hors liste", { sujet: "Publicité" }, "Choisissez un sujet dans la liste."],
+    ["un message trop long", { message: "x".repeat(3001) }, "Le message tient en 3000 caractères au plus."],
+  ])("refuse %s, en français, sans rien envoyer ni compter", async (_, champs, message) => {
+    expect(await envoyerMessageContact(SAISIE, formulaire(champs))).toEqual({ status: "erreur", message });
     expect(sendMail).not.toHaveBeenCalled();
     expect(consommer).not.toHaveBeenCalled();
-  });
-
-  it.each([
-    ["trop long", { message: "x".repeat(3001) }, "Le message tient en 3000 caractères au plus."],
-    ["hors liste", { sujet: "Publicité" }, "Choisissez un sujet dans la liste."],
-    ["vide", { nom: "" }, "Indiquez votre nom."],
-  ])("un refus se dit en français (%s)", async (_, champs, message) => {
-    expect(await envoyerMessageContact(SAISIE, formulaire(champs))).toEqual({ status: "erreur", message });
   });
 
   it("un saut de ligne compte un caractère, comme dans le champ (CRLF à l'envoi)", async () => {
