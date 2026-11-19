@@ -203,7 +203,7 @@ beforeEach(() => {
 });
 
 describe("l'entreprise extérieure propose une modification (ADR-061 § 3)", () => {
-  it("la proposition s'enregistre, les signatures et les liens tombent, le dirigeant est prévenu", async () => {
+  it("la proposition s'enregistre et le dirigeant est prévenu ; rien n'est révoqué (revue de sécurité)", async () => {
     const r = await proposer({
       fiche: { ...FICHE, efChefNom: "Paul Dupond" },
       lignes: [LIGNE_1, { risque: "Produits chimiques", mesureEntrepriseExterieure: "Fiches de sécurité" }],
@@ -213,16 +213,15 @@ describe("l'entreprise extérieure propose une modification (ADR-061 § 3)", () 
     const [p] = prismaMock.propositionModificationPlan.lignes;
     expect(p).toMatchObject({ planPreventionId: "pp-1", accessTokenId: "atk_ee", enAttente: true });
 
+    // Proposer ne demande pas de code : ni signature ni lien ne tombe.
     const [s] = prismaMock.signature.lignes;
-    expect(s.active).toBeNull();
-    expect(s.revoqueLe).toBeInstanceOf(Date);
-    expect(s.revoqueMotif).toMatch(/proposé une modification/);
-    expect(prismaMock.planPrevention.lignes[0].statut).toBe("attente_signatures");
-    expect(prismaMock.accessToken.lignes[0].revoqueLe).toBeInstanceOf(Date);
+    expect(s.active).toBe(true);
+    expect(prismaMock.planPrevention.lignes[0].statut).toBe("valide");
+    expect(prismaMock.accessToken.lignes[0].revoqueLe).toBeNull();
 
     await vi.waitFor(() => expect(aux).toHaveLength(1));
     expect(aux[0].compteId).toBe("user-1");
-    await vi.waitFor(() => expect(mails.map((m) => m.to)).toContain("marie@utilisatrice.fr"));
+    expect(mails).toHaveLength(0);
   });
 
   it("une proposition qui ne change rien est refusée, sans rien révoquer", async () => {
@@ -266,8 +265,8 @@ describe("le dirigeant traite la proposition (ADR-061 § 4)", () => {
       fiche: { ...FICHE, efChefNom: "Paul Dupond" },
       lignes: [{ ...LIGNE_1, mesureEntrepriseExterieure: "Panneaux et balisage" }],
     });
-    // Les avis de la proposition partent après la réponse : attendus, puis oubliés.
-    await vi.waitFor(() => expect(mails.map((m) => m.to)).toContain("marie@utilisatrice.fr"));
+    // L'avis au dirigeant part après la réponse : attendu, puis oublié.
+    await vi.waitFor(() => expect(aux).toHaveLength(1));
     mails.length = 0;
   });
 
@@ -278,7 +277,7 @@ describe("le dirigeant traite la proposition (ADR-061 § 4)", () => {
     return traiterProposition(id, { status: "idle" }, fd);
   };
 
-  it("accepter applique la fiche et les lignes, et prévient l'entreprise extérieure", async () => {
+  it("accepter révoque les signatures, applique la fiche et les lignes, et prévient chacun", async () => {
     const r = await decider("accepter");
     expect(r.status).toBe("success");
     const plan = prismaMock.planPrevention.lignes[0];
@@ -289,23 +288,19 @@ describe("le dirigeant traite la proposition (ADR-061 § 4)", () => {
       enAttente: null,
       traiteeParEmail: "dirigeant@utilisatrice.fr",
     });
-    await vi.waitFor(() => expect(mails.map((m) => m.to)).toEqual(["chef@exterieure.fr"]));
-    expect(mails[0].subject).toMatch(/^Proposition acceptée/);
+    expect(prismaMock.signature.lignes[0]).toMatchObject({ active: null });
+    expect(prismaMock.signature.lignes[0].revoqueMotif).toMatch(/proposé une modification/);
+    expect(prismaMock.planPrevention.lignes[0].statut).toBe("attente_signatures");
+    await vi.waitFor(() =>
+      expect(mails.map((m) => m.to).sort()).toEqual(["chef@exterieure.fr", "marie@utilisatrice.fr"]),
+    );
+    expect(mails.find((m) => m.to === "chef@exterieure.fr")?.subject).toMatch(/^Proposition acceptée/);
   });
 
-  it("une signature posée depuis la proposition interdit de l'appliquer", async () => {
-    // Elle se serait glissée entre la garde d'une signature et son verrou.
-    prismaMock.signature.lignes[0].active = true;
-    prismaMock.signature.lignes[0].revoqueLe = null;
-    const r = await decider("accepter");
-    expect(r).toMatchObject({ status: "error" });
-    expect(prismaMock.planPrevention.lignes[0].efChefNom).toBe("Jean Dupond");
-    expect(prismaMock.propositionModificationPlan.lignes[0].enAttente).toBe(true);
-  });
-
-  it("refuser ne touche pas au plan", async () => {
+  it("refuser ne touche ni au plan ni aux signatures", async () => {
     const r = await decider("refuser");
     expect(r.status).toBe("success");
+    expect(prismaMock.signature.lignes[0].active).toBe(true);
     expect(prismaMock.planPrevention.lignes[0].efChefNom).toBe("Jean Dupond");
     expect(prismaMock.propositionModificationPlan.lignes[0].statut).toBe("refusee");
   });
@@ -355,6 +350,33 @@ describe("la re-signature ne compte pas dans la formule (ADR-061 § 6)", () => {
     await proposer({ fiche: { ...FICHE, efChefNom: "Paul" }, lignes: [LIGNE_1] });
     expect(await compte("entreprise_exterieure", "chef@exterieure.fr")).toBe(true);
     expect(await compte("entreprise_exterieure", "autre@exterieure.fr")).toBe(false);
+  });
+
+  it("au-delà de trois re-signatures gratuites, la signature compte", async () => {
+    for (let i = 0; i < 3; i++) {
+      prismaMock.signature.lignes.push({
+        id: `sig_old_${i}`,
+        etablissementId: "etab-1",
+        objetType: "plan_prevention",
+        objetId: "pp-1",
+        partie: "entreprise_exterieure",
+        signataireEmail: "chef@exterieure.fr",
+        active: null,
+        revoqueLe: new Date(),
+      });
+      expect(await compte("entreprise_exterieure", "chef@exterieure.fr"), `fois ${i + 1}`).toBe(true);
+    }
+    prismaMock.signature.lignes.push({
+      id: "sig_old_3",
+      etablissementId: "etab-1",
+      objetType: "plan_prevention",
+      objetId: "pp-1",
+      partie: "entreprise_exterieure",
+      signataireEmail: "chef@exterieure.fr",
+      active: null,
+      revoqueLe: new Date(),
+    });
+    expect(await compte("entreprise_exterieure", "chef@exterieure.fr")).toBe(false);
   });
 
   it("hors plan de prévention, rien n'est épargné", async () => {

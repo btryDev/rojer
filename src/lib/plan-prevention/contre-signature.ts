@@ -124,7 +124,7 @@ export async function avertirPropositionRecue(
           "Bonjour,",
           "",
           `${params.entreprise} propose une modification du document « ${nom} », au lieu de le signer.`,
-          "Les signatures déjà posées sont révoquées. Acceptez, corrigez ou refusez la proposition depuis la fiche du plan :",
+          "Le plan ne se signe pas tant que vous n'avez pas décidé. Acceptez (les signatures déjà posées sont alors révoquées), corrigez ou refusez la proposition depuis la fiche du plan :",
           url,
           ...PIED,
         ].join("\n"),

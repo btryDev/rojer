@@ -95,6 +95,32 @@ export default async function AccesParTokenPage({
     t.scope === "signature" &&
     !(await objetEstSignable(db, t.objetType, t.objetId, t.etablissementId))
   ) {
+    // Une proposition de modification attend une décision (ADR-061) : ce
+    // n'est ni une clôture ni une panne, et la page le dit pour que le
+    // signataire ne croie pas à une erreur.
+    const propositionEnAttente =
+      t.objetType === "plan_prevention" &&
+      (await db.propositionModificationPlan.count({
+        where: { planPreventionId: t.objetId, etablissementId: t.etablissementId, enAttente: true },
+      })) > 0;
+    if (propositionEnAttente) {
+      return (
+        <main className="mx-auto max-w-xl px-6 py-16 sm:px-10">
+          <div className="rounded-2xl border border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] p-8">
+            <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">Signature</p>
+            <h1 className="mt-2 text-[1.5rem] font-semibold tracking-[-0.02em]">
+              Signature en pause, ce n&apos;est pas une erreur
+            </h1>
+            <p className="mt-4 text-[0.9rem] leading-relaxed text-[color:var(--muted-foreground)]">
+              Une modification de ce plan a été proposée, et la personne qui vous a
+              envoyé ce lien ne l&apos;a pas encore acceptée ni refusée. Le plan ne se
+              signe pas d&apos;ici là. Revenez sur ce lien plus tard ; si le plan est
+              modifié, un nouveau lien vous sera nécessaire.
+            </p>
+          </div>
+        </main>
+      );
+    }
     return (
       <main className="mx-auto max-w-xl px-6 py-16 sm:px-10">
         <div className="rounded-2xl border border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] p-8">

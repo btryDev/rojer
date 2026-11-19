@@ -66,7 +66,13 @@ pas réussir toutes les deux.
 
 Deux portes y mènent :
 
-- **l'entreprise extérieure propose une modification** (§ 3) ;
+- **le dirigeant accepte la proposition de l'entreprise extérieure** (§ 3 et
+  4) — [2026-11-19, revue de sécurité, décision de la propriétaire : la
+  proposition elle-même ne révoque rien ; proposer ne demande pas de code, et
+  un porteur du lien ne doit pas pouvoir faire tomber les signatures des
+  autres. Tant qu'elle attend, le plan ne se signe pas, et la page du lien le
+  dit (« ce n'est pas une erreur »). Refusée, les signatures restent
+  valables.] ;
 - **le dirigeant clique « Révoquer les signatures pour corriger »** sur un
   plan signé ou en attente, ni clos ni annulé.
 
@@ -98,7 +104,8 @@ attente par plan ; une limite par IP borne les envois.
 La proposition est une pièce datée : `PropositionModificationPlan` (plan,
 lien d'origine, empreinte de la version visée, contenu proposé, statut
 `en_attente` / `acceptee` / `refusee`, qui l'a traitée et quand, IP,
-navigateur). Elle remet le plan en brouillon (§ 2).
+navigateur). ~~Elle remet le plan en brouillon (§ 2).~~ [2026-11-19 : elle
+ne révoque rien ; c'est l'acceptation qui remet le plan en correction (§ 2).]
 
 ### 4. Ce que fait le dirigeant
 
@@ -132,7 +139,9 @@ compte rien : pas de précédent.) « Même personne » (relecture du même jour
 sinon un plan vidé puis réécrit pour une autre entreprise se ferait signer
 gratuitement à l'infini. Le fait se lit sur une signature révoquée, ou sur
 une proposition faite depuis un lien de cette adresse — jamais sur un texte
-de motif (`plan-prevention/resignature.ts`).
+de motif (`plan-prevention/resignature.ts`). [2026-11-19, revue de sécurité,
+décision de la propriétaire : **3 re-signatures gratuites au plus** par plan
+et par signataire ; au-delà, la signature compte.]
 
 **L'écran le dit**, partout où le plafond se lit :
 - la jauge des signatures (`JaugeDePlafond`) et la description des formules

@@ -43,8 +43,9 @@ export function PropositionEnAttente({
           L&apos;entreprise extérieure propose une modification
         </h2>
         <p className="mt-1 text-[13px] text-[color:var(--board-slate-mid)]">
-          Reçue le {formaterDateFr(proposition.createdAt)}. Les signatures déjà posées sont
-          révoquées ; aucune signature ne se recueille avant votre décision.
+          Reçue le {formaterDateFr(proposition.createdAt)}. Aucune signature ne se recueille
+          avant votre décision. Accepter révoque les signatures déjà posées ; refuser les
+          laisse valables.
         </p>
       </div>
 
