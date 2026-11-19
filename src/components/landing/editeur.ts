@@ -24,7 +24,7 @@ export const EDITEUR = {
   ape: "71.12B",
   gerant: "Julien Chantoin",
   email: "contact@btry.fr",
-  telephone: "[à compléter]",
+  telephone: "04\u00a066\u00a071\u00a007\u00a003",
 } as const;
 
 export const HEBERGEUR = {
