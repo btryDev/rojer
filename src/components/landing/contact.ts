@@ -1,7 +1,8 @@
 /**
- * Le contact de la page publique : l'adresse, et les sujets que le
- * formulaire propose (pied de page, tarif « Sur mesure », mise en route
- * accompagnée).
+ * Le contact de la page publique : l'adresse, les sujets que le formulaire
+ * propose (pied de page, tarif « Sur mesure », mise en route accompagnée), et
+ * la règle d'un message valide, lue par le formulaire et par l'action qui
+ * l'envoie (`lib/contact/actions.ts`).
  *
  * L'adresse n'est pas affichée sur la page (décision de la propriétaire,
  * 2026-11-07) : elle ne sert que de destinataire au formulaire.
@@ -11,6 +12,8 @@
  * point d'entrée RGPD (`docs/rgpd.md`) : si elle change, vérifier si celle-ci
  * suit.
  */
+import { z } from "zod";
+
 export const CONTACT = "contact@btry.fr";
 
 export const SUJETS_CONTACT = [
@@ -20,35 +23,57 @@ export const SUJETS_CONTACT = [
   "Autre",
 ] as const;
 
-/**
- * Le message tient dans un lien `mailto:` : encodé, il triple ou presque, et
- * au-delà d'environ 2 000 caractères d'adresse certaines messageries
- * (Outlook sous Windows) tronquent ou n'ouvrent rien.
- */
-export const MESSAGE_MAX = 1000;
-
-/** La longueur du lien `mailto:` au-delà de laquelle le formulaire refuse d'ouvrir. */
-export const MAILTO_MAX = 1900;
-
 export type SujetContact = (typeof SUJETS_CONTACT)[number];
 
 /**
- * Le message du formulaire, prêt à partir de la messagerie du visiteur.
- *
- * Provisoire : aucun e-mail ne part encore du serveur en production. Le
- * formulaire ouvre donc la messagerie du visiteur, message rédigé — rien
- * n'est enregistré, rien ne transite par Rojer. Le jour où l'envoi existe,
- * le formulaire poste vers une action serveur et cette fonction disparaît.
+ * La longueur d'un message. [2026-11-19 : 1 000 tant que le message partait
+ * dans un lien `mailto:` (au-delà, certaines messageries tronquaient) ; il
+ * part désormais du serveur.]
  */
-export function mailtoContact(m: {
-  sujet: SujetContact;
-  nom: string;
-  email: string;
-  structure: string;
-  message: string;
-}): string {
-  const signature = [m.nom, m.structure, m.email].map((t) => t.trim()).filter(Boolean);
-  // CRLF : la forme que la RFC 6068 demande dans un corps de `mailto:`.
-  const corps = [m.message.trim(), "", "—", ...signature].join("\r\n");
-  return `mailto:${CONTACT}?subject=${encodeURIComponent(m.sujet)}&body=${encodeURIComponent(corps)}`;
+export const MESSAGE_MAX = 3000;
+export const NOM_MAX = 120;
+export const EMAIL_MAX = 200;
+export const STRUCTURE_MAX = 160;
+
+/**
+ * Le champ piège : invisible pour une personne, rempli par les robots qui
+ * remplissent tout. Un message qui le porte est jeté sans rien dire.
+ */
+export const CHAMP_PIEGE = "site_web";
+
+/** Les espaces de début et de fin retirés, et rien de plus. */
+const texte = (max: number) => z.string().trim().max(max);
+
+export const schemaMessageContact = z.object({
+  sujet: z.enum(SUJETS_CONTACT),
+  nom: texte(NOM_MAX).min(1, "Indiquez votre nom."),
+  email: z.string().trim().max(EMAIL_MAX).pipe(z.email("Cette adresse e-mail n'est pas valide.")),
+  structure: texte(STRUCTURE_MAX),
+  message: texte(MESSAGE_MAX).min(1, "Écrivez votre message."),
+});
+
+export type MessageContact = z.infer<typeof schemaMessageContact>;
+
+/** Une ligne, sans saut de ligne ni espaces répétés : pour un sujet d'e-mail. */
+function surUneLigne(t: string): string {
+  return t.replace(/\s+/g, " ").trim();
+}
+
+/** L'e-mail qui part vers la boîte de Rojer. La réponse va au visiteur (`Reply-To`). */
+export function courrielDeContact(m: MessageContact): { subject: string; text: string } {
+  const qui = surUneLigne(m.structure ? `${m.nom} (${m.structure})` : m.nom);
+  return {
+    subject: `[Contact Rojer] ${m.sujet} — ${qui}`,
+    text: [
+      `Sujet : ${m.sujet}`,
+      `Nom : ${surUneLigne(m.nom)}`,
+      `E-mail : ${m.email}`,
+      `Structure : ${m.structure ? surUneLigne(m.structure) : "—"}`,
+      "",
+      m.message,
+      "",
+      "—",
+      "Envoyé depuis le formulaire de contact du site de Rojer. Répondre à ce message écrit à l'expéditeur.",
+    ].join("\n"),
+  };
 }

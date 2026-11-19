@@ -81,6 +81,20 @@ describe("pilote Mailpace — la requête", () => {
     expect(JSON.parse(String(appels[0].init.body))).not.toHaveProperty("attachments");
   });
 
+  it("l'adresse de réponse part en `replyto`", async () => {
+    const { pilote, appels } = apiSimulee([ok()]);
+    await pilote.send({ ...MESSAGE, replyTo: "visiteur@exemple-externe.fr" });
+    expect(JSON.parse(String(appels[0].init.body)).replyto).toBe("visiteur@exemple-externe.fr");
+  });
+
+  it("une adresse de réponse en liste est refusée avant tout appel", async () => {
+    const { pilote, appels } = apiSimulee([ok()]);
+    await expect(pilote.send({ ...MESSAGE, replyTo: "a@exemple.fr, b@exemple.fr" })).rejects.toBeInstanceOf(
+      ErreurEnvoiMail,
+    );
+    expect(appels).toHaveLength(0);
+  });
+
   it("deux messages, deux clés d'idempotence différentes", async () => {
     const { pilote, appels } = apiSimulee([ok(), ok()]);
     await pilote.send(MESSAGE);

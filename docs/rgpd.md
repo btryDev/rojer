@@ -336,6 +336,17 @@ active sans politique ; une limite de débit par réseau et un champ piège
 freinent les inscriptions automatiques. Écrit aussi dans la politique de
 confidentialité (`pages-legales.ts`).
 
+### 2.11 Formulaire de contact de la page publique (2026-11-19)
+
+Un visiteur, sans compte, écrit depuis « Nous contacter » : un sujet, son
+nom, son adresse e-mail, sa structure (facultative) et son message. Le
+message part par e-mail (Mailpace) vers `contact@btry.fr`, l'adresse du
+visiteur en adresse de réponse ; **rien n'est enregistré en base**, hormis le
+compteur de limitation de débit, dont la clé est l'empreinte de l'IP
+(`lib/contact/actions.ts`). Aucun accusé de réception n'est envoyé au
+visiteur. Base légale : sa demande (6.1.b). Conservation : celle de la boîte
+de réception, trois ans au plus (politique de confidentialité).
+
 ## 3. Hébergement
 
 - Base de données et authentification : **Supabase**, région UE (Francfort).

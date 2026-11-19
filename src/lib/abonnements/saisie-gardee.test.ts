@@ -62,6 +62,10 @@ const INVITE: Ouverte = {
 };
 const TIERS: Ouverte = { motif: "acte d'un tiers par lien vérifié, pas du titulaire", lectureSeule: true };
 const RGPD: Ouverte = { motif: "supprimer ses données reste possible à tout moment (RGPD, règle 9)" };
+const VISITEUR: Ouverte = {
+  motif: "formulaire de la page publique, sans session ni compte : n'écrit rien d'un dossier (envoi d'un e-mail, compteur de débit)",
+  lectureSeule: true,
+};
 
 /**
  * Le connecteur d'assistant (ADR-062) : consentir, refuser, choisir le compte
@@ -114,6 +118,7 @@ const OUVERTES = new Map<string, Ouverte>([
   ["lib/auth/actions.ts:signOutAction", COMPTE],
   ["lib/auth/actions.ts:signUpAction", COMPTE],
   ["lib/auth/actions.ts:verifierSecondFacteurAction", COMPTE],
+  ["lib/contact/actions.ts:envoyerMessageContact", VISITEUR],
   [
     "lib/assistance/actions.ts:demanderAssistance",
     { motif: "joindre l'assistance, y compris pour une question d'abonnement", lectureSeule: true },

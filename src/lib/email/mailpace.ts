@@ -116,6 +116,7 @@ export function creerPiloteMailpace(options: {
   return {
     async send(payload: EmailPayload): Promise<void> {
       exigerAdresseUnique(payload.to);
+      if (payload.replyTo !== undefined) exigerAdresseUnique(payload.replyTo);
       const corps = JSON.stringify({
         from: options.expediteur,
         to: payload.to,
@@ -133,6 +134,8 @@ export function creerPiloteMailpace(options: {
               })),
             }
           : {}),
+        // `replyto` : champ facultatif de l'API (https://docs.mailpace.com/reference/send).
+        ...(payload.replyTo ? { replyto: payload.replyTo } : {}),
       });
       const entetes = {
         Accept: "application/json",

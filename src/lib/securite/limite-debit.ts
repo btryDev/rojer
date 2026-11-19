@@ -99,6 +99,13 @@ export const LIMITES = {
    */
   lienPageIp: { max: 30, fenetreSecondes: 10 * 60 },
   lienActionIp: { max: 10, fenetreSecondes: 10 * 60 },
+  /**
+   * Formulaire de contact de la page publique : des e-mails vers la boîte de
+   * Rojer, envoyés par n'importe qui. Par IP, et pour tout le site — une
+   * rafale venue de mille adresses ne remplit ni la boîte ni le quota d'envoi.
+   */
+  contactIp: { max: 5, fenetreSecondes: 60 * 60 },
+  contactTous: { max: 100, fenetreSecondes: 24 * 60 * 60 },
 } as const satisfies Record<string, Limite>;
 
 export type Verdict =
