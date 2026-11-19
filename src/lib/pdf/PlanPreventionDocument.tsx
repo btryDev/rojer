@@ -1,7 +1,7 @@
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import type { MethodeSignature, PartieSignataire, StatutPlanPrevention } from "@prisma/client";
 import { formaterDateFr, formaterDateHeureFr, formaterDateLongueFr } from "@/lib/dates";
-import { ETAT_PLAN } from "@/lib/plan-prevention/etats";
+import { etatAffichePlan } from "@/lib/plan-prevention/etats";
 import { ligneHeuresRevisees } from "@/lib/plan-prevention/annonces-plan";
 import {
   CHAPEAU_R4512_8,
@@ -49,6 +49,8 @@ export type SignaturePlanPdf = {
 export type PlanPreventionData = {
   numero: number;
   statut: StatutPlanPrevention;
+  /** Un lien parti ou une signature en vigueur (`etatAffichePlan`) ; absent : vrai. */
+  lienOuSignature?: boolean;
   entreprise: string;
   etablissement: string;
   adresse: string;
@@ -212,7 +214,7 @@ export function PlanPreventionDocument({ data }: { data: PlanPreventionData }) {
             {data.etablissement} — {data.adresse}
             {data.siretEtablissement ? ` · SIRET ${data.siretEtablissement}` : ""}
           </Text>
-          <Text style={s.metaLigne}>{`Statut dans Rojer : ${ETAT_PLAN[data.statut].mot}`}</Text>
+          <Text style={s.metaLigne}>{`Statut dans Rojer : ${etatAffichePlan(data.statut, data.lienOuSignature ?? true).mot}`}</Text>
           <Text style={s.metaLigne}>{`Mis en page le ${formaterDateLongueFr(data.genereLe)}`}</Text>
         </View>
 

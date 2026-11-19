@@ -42,6 +42,7 @@ function db(plan: unknown, etab: () => Promise<unknown> = async () => ({
     etablissement: { findFirst: vi.fn(etab) },
     planPrevention: { findFirst: vi.fn(async () => plan) },
     signature: { findMany: vi.fn(async () => []) },
+    accessToken: { count: vi.fn(async () => 1) },
   } as unknown as Prisma.TransactionClient;
 }
 

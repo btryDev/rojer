@@ -37,6 +37,8 @@ import { construirePlanPreventionData } from "@/lib/pdf/builder-plan-prevention"
 import { nomFichierPlanPrevention } from "@/lib/pdf/PlanPreventionDocument";
 import { slugifyFilename } from "@/lib/pdf/styles";
 import { contenuR4512_8 } from "@/lib/plan-prevention/contenu-r4512-8";
+import { etatAffichePlan } from "@/lib/plan-prevention/etats";
+import { lienOuSignatureParPlan } from "@/lib/plan-prevention/queries";
 import { annoncesZip, ligneHeuresRevisees } from "@/lib/plan-prevention/annonces-plan";
 import {
   ligneInspectionZip,
@@ -593,6 +595,12 @@ async function construireArchive(
     plansPreventionDuDossier(db, id, maintenant),
   );
   if (plansList.length > 0) {
+    // Le statut dans les mots de la fiche (2026-11-19, cahier de reprise
+    // § 1.3) : « Brouillon » tant que rien n'est parti, « Signé » et non le
+    // statut brut de la base. Au mieux : sans la lecture, le statut de la base.
+    const avecLien = await lienOuSignatureParPlan(db, id, plansList.map((p) => p.id)).catch(
+      () => new Set(plansList.map((p) => p.id)),
+    );
     const txt = [
       `PLANS DE PRÉVENTION — 12 derniers mois (${plansList.length})`,
       `Art. R. 4512-6 à R. 4512-12 du code du travail.`,
@@ -603,7 +611,7 @@ async function construireArchive(
       "",
       "────────────────────────────────────────────────────────────",
       ...plansList.flatMap((p) => [
-        `PP-${String(p.numero).padStart(3, "0")} · ${p.statut.toUpperCase()}`,
+        `PP-${String(p.numero).padStart(3, "0")} · ${etatAffichePlan(p.statut, avecLien.has(p.id)).mot.toUpperCase()}`,
         `  Entreprise extérieure : ${p.entrepriseExterieureRaison}`,
         `  Chef EE : ${p.efChefNom} (${p.efChefEmail})`,
         `  Effectif EE : ${p.efEffectifIntervenant}`,

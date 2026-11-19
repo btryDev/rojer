@@ -1,6 +1,7 @@
 import "server-only";
 import type { Prisma } from "@prisma/client";
 import { diagnostiquerPlan } from "@/lib/plan-prevention/schema";
+import { LIEN_PARTI } from "@/lib/access-tokens/revocation";
 import { publicAppUrl, refusUrlPublique } from "@/lib/url-publique";
 import type { PlanPreventionData } from "./PlanPreventionDocument";
 
@@ -89,11 +90,19 @@ export async function construirePlanPreventionData(
     }),
   ]);
   if (!etab || !plan) return null;
+  // « Brouillon » tant que rien n'est parti ni signé (2026-11-19) : la même
+  // lecture que la fiche, les liens dont l'e-mail est parti.
+  const lienOuSignature =
+    signatures.length > 0 ||
+    (await db.accessToken.count({
+      where: { etablissementId, objetType: "plan_prevention", objetId: planId, ...LIEN_PARTI },
+    })) > 0;
 
   const { numero, statut, ...contenu } = plan;
   return {
     numero,
     statut,
+    lienOuSignature,
     entreprise: etab.entreprise.raisonSociale,
     etablissement: etab.raisonDisplay,
     adresse: etab.adresse,

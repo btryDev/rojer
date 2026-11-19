@@ -15,8 +15,8 @@ import {
   WhyCard,
 } from "@/components/ui-kit";
 import { requireEtablissement } from "@/lib/auth/scope";
-import { ETAT_PLAN } from "@/lib/plan-prevention/etats";
-import { listPlansPrevention } from "@/lib/plan-prevention/queries";
+import { etatAffichePlan } from "@/lib/plan-prevention/etats";
+import { listPlansPrevention, plansAvecLienOuSignature } from "@/lib/plan-prevention/queries";
 import type { RegistreLigne } from "@/lib/calendrier/etats";
 import { etatPlanPrevention } from "@/lib/calendrier/echeances";
 import { formaterDateCourteFr, formaterDateFr } from "@/lib/dates";
@@ -44,6 +44,8 @@ export default async function PlanPreventionListePage({
   const { id } = await params;
   await requireEtablissement(id);
   const plans = await listPlansPrevention(id);
+  // « Brouillon » tant que rien n'est parti ni signé (2026-11-19, `etatAffichePlan`).
+  const avecLien = await plansAvecLienOuSignature(id, plans.map((p) => p.id));
   const maintenant = new Date();
 
   return (
@@ -154,8 +156,8 @@ export default async function PlanPreventionListePage({
                       </>
                     }
                     droite={
-                      <PastilleFiche ton={ETAT_PLAN[p.statut].ton}>
-                        {ETAT_PLAN[p.statut].mot}
+                      <PastilleFiche ton={etatAffichePlan(p.statut, avecLien.has(p.id)).ton}>
+                        {etatAffichePlan(p.statut, avecLien.has(p.id)).mot}
                       </PastilleFiche>
                     }
                   />

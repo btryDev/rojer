@@ -45,6 +45,8 @@ function dbSimulee(plan: typeof PLAN | null) {
     },
     planPrevention: { findFirst: vi.fn(async () => plan) },
     signature: { findMany: vi.fn(async () => []) },
+    // « Brouillon » ou non (2026-11-19) : les liens partis du plan.
+    accessToken: { count: vi.fn(async () => 1) },
   };
   return { db, client: db as unknown as Prisma.TransactionClient };
 }
