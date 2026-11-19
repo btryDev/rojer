@@ -37,19 +37,36 @@ export const STRUCTURE_MAX = 160;
 
 /**
  * Le champ piège : invisible pour une personne, rempli par les robots qui
- * remplissent tout. Un message qui le porte est jeté sans rien dire.
+ * remplissent tout. Un message qui le porte est jeté sans rien dire. Son nom
+ * ne veut rien dire, à dessein : « site web », « url » ou « société », le
+ * remplissage automatique du navigateur le remplirait pour un vrai visiteur.
  */
-export const CHAMP_PIEGE = "site_web";
+export const CHAMP_PIEGE = "rjx_tampon";
 
-/** Les espaces de début et de fin retirés, et rien de plus. */
-const texte = (max: number) => z.string().trim().max(max);
+/**
+ * Les fins de ligne ramenées à `\n`, puis les espaces de début et de fin
+ * retirés : le navigateur compte un saut de ligne pour un caractère
+ * (`maxLength`), l'envoi du formulaire en fait deux (`\r\n`) — sans cela, un
+ * message que le champ accepte serait refusé au serveur.
+ */
+const texte = (max: number, trop: string) =>
+  z
+    .string()
+    .transform((t) => t.replace(/\r\n?/g, "\n").trim())
+    .pipe(z.string().max(max, trop));
 
 export const schemaMessageContact = z.object({
-  sujet: z.enum(SUJETS_CONTACT),
-  nom: texte(NOM_MAX).min(1, "Indiquez votre nom."),
-  email: z.string().trim().max(EMAIL_MAX).pipe(z.email("Cette adresse e-mail n'est pas valide.")),
-  structure: texte(STRUCTURE_MAX),
-  message: texte(MESSAGE_MAX).min(1, "Écrivez votre message."),
+  sujet: z.enum(SUJETS_CONTACT, "Choisissez un sujet dans la liste."),
+  nom: texte(NOM_MAX, `Le nom tient en ${NOM_MAX} caractères au plus.`).pipe(
+    z.string().min(1, "Indiquez votre nom."),
+  ),
+  email: texte(EMAIL_MAX, "Cette adresse e-mail est trop longue.").pipe(
+    z.email("Cette adresse e-mail n'est pas valide."),
+  ),
+  structure: texte(STRUCTURE_MAX, `Le nom de la structure tient en ${STRUCTURE_MAX} caractères au plus.`),
+  message: texte(MESSAGE_MAX, `Le message tient en ${MESSAGE_MAX} caractères au plus.`).pipe(
+    z.string().min(1, "Écrivez votre message."),
+  ),
 });
 
 export type MessageContact = z.infer<typeof schemaMessageContact>;

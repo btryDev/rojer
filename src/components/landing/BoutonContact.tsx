@@ -99,12 +99,11 @@ function FormulaireContact({ sujet, fermer }: { sujet: SujetContact; fermer: () 
         </select>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
-        <ChampBoard id={`${id}-nom`} label="Nom" requis required name="nom" autoComplete="name" maxLength={NOM_MAX} />
+        <ChampBoard id={`${id}-nom`} label="Nom" requis name="nom" autoComplete="name" maxLength={NOM_MAX} />
         <ChampBoard
           id={`${id}-email`}
           label="E-mail"
           requis
-          required
           name="email"
           type="email"
           autoComplete="email"

@@ -31,7 +31,7 @@ export type EtatContact =
   | { status: "erreur"; message: string };
 
 const ENVOI_IMPOSSIBLE =
-  "Votre message n'a pas pu partir. Réessayez dans quelques minutes : ce que vous avez écrit est conservé.";
+  "Votre message n'a pas pu partir. Réessayez un peu plus tard : ce que vous avez écrit est conservé.";
 
 export async function envoyerMessageContact(
   _prev: EtatContact,
@@ -51,17 +51,26 @@ export async function envoyerMessageContact(
   }
 
   // Un robot a rempli le champ invisible : on lui répond comme à un visiteur,
-  // sans rien envoyer — lui dire non lui apprendrait à l'éviter.
-  if (champ(CHAMP_PIEGE).trim() !== "") return { status: "envoye", email: lu.data.email };
+  // sans rien envoyer — lui dire non lui apprendrait à l'éviter. Le journal
+  // le note, sans rien du message : un vrai visiteur jeté se verrait.
+  if (champ(CHAMP_PIEGE).trim() !== "") {
+    console.warn("[contact] message jeté : champ piège rempli");
+    return { status: "envoye", email: lu.data.email };
+  }
 
   if (!envoiEnService()) return { status: "erreur", message: ENVOI_IMPOSSIBLE };
 
-  const ip = ipPourLimite(await headers());
-  const verdict = await consommer([
-    ...(ip ? [{ cle: cleLimite("contact", "ip", ip), limite: LIMITES.contactIp }] : []),
-    { cle: cleLimite("contact", "tous", "site"), limite: LIMITES.contactTous },
-  ]);
-  if (!verdict.ok) return { status: "erreur", message: messageTropDeTentatives(verdict.reessayerDansSecondes) };
+  // L'IP d'abord, le compteur du site seulement si elle passe : `consommer`
+  // use toutes les clés qu'on lui donne, et une seule adresse refusée en
+  // boucle userait sinon le quota de tous. Sans IP lisible, un seau commun.
+  const ip = ipPourLimite(await headers()) ?? "inconnue";
+  for (const [dimension, valeur, limite] of [
+    ["ip", ip, LIMITES.contactIp],
+    ["tous", "site", LIMITES.contactTous],
+  ] as const) {
+    const verdict = await consommer([{ cle: cleLimite("contact", dimension, valeur), limite }]);
+    if (!verdict.ok) return { status: "erreur", message: messageTropDeTentatives(verdict.reessayerDansSecondes) };
+  }
 
   try {
     await sendMail({ to: CONTACT, replyTo: lu.data.email, ...courrielDeContact(lu.data) });

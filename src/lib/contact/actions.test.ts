@@ -8,9 +8,8 @@ const envoiEnService = vi.fn(() => true);
 const consommer = vi.fn<(d: unknown) => Promise<{ ok: true } | { ok: false; reessayerDansSecondes: number }>>();
 
 vi.mock("server-only", () => ({}));
-vi.mock("next/headers", () => ({
-  headers: async () => new Headers({ "x-forwarded-for": "203.0.113.7" }),
-}));
+let entetes = new Headers();
+vi.mock("next/headers", () => ({ headers: async () => entetes }));
 vi.mock("@/lib/email", () => ({
   sendMail: (p: unknown) => sendMail(p),
   envoiEnService: () => envoiEnService(),
@@ -41,6 +40,7 @@ function formulaire(champs: Record<string, string> = {}): FormData {
 const SAISIE = { status: "saisie" } as const;
 
 beforeEach(() => {
+  entetes = new Headers({ "x-forwarded-for": "203.0.113.7" });
   sendMail.mockReset().mockResolvedValue(undefined);
   envoiEnService.mockReset().mockReturnValue(true);
   consommer.mockReset().mockResolvedValue({ ok: true });
@@ -78,19 +78,55 @@ describe("envoyerMessageContact", () => {
     expect(consommer).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ["trop long", { message: "x".repeat(3001) }, "Le message tient en 3000 caractères au plus."],
+    ["hors liste", { sujet: "Publicité" }, "Choisissez un sujet dans la liste."],
+    ["vide", { nom: "" }, "Indiquez votre nom."],
+  ])("un refus se dit en français (%s)", async (_, champs, message) => {
+    expect(await envoyerMessageContact(SAISIE, formulaire(champs))).toEqual({ status: "erreur", message });
+  });
+
+  it("un saut de ligne compte un caractère, comme dans le champ (CRLF à l'envoi)", async () => {
+    // 3 300 caractères envoyés, 3 000 dans le champ (puis 2 999, le dernier saut retiré).
+    const etat = await envoyerMessageContact(SAISIE, formulaire({ message: "abcdefghi\r\n".repeat(300) }));
+    expect(etat.status).toBe("envoye");
+  });
+
   it("le champ piège rempli : réponse « envoyé », rien ne part", async () => {
-    const etat = await envoyerMessageContact(SAISIE, formulaire({ site_web: "https://spam.example" }));
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const etat = await envoyerMessageContact(SAISIE, formulaire({ rjx_tampon: "https://spam.example" }));
     expect(etat.status).toBe("envoye");
     expect(sendMail).not.toHaveBeenCalled();
   });
 
-  it("compte par IP et pour tout le site, et refuse au-delà", async () => {
-    consommer.mockResolvedValue({ ok: false, reessayerDansSecondes: 600 });
+  const dimensions = () =>
+    consommer.mock.calls.map((c) => (c[0] as { cle: string }[]).map((d) => d.cle.split(":")[1]).join(","));
+
+  it("compte l'IP, puis le site", async () => {
+    await envoyerMessageContact(SAISIE, formulaire());
+    expect(dimensions()).toEqual(["ip", "tous"]);
+  });
+
+  it("une IP refusée n'use pas le quota du site", async () => {
+    consommer.mockResolvedValueOnce({ ok: false, reessayerDansSecondes: 600 });
     const etat = await envoyerMessageContact(SAISIE, formulaire());
     expect(etat).toEqual({ status: "erreur", message: expect.stringContaining("10 minutes") });
+    expect(dimensions()).toEqual(["ip"]);
     expect(sendMail).not.toHaveBeenCalled();
-    const cles = (consommer.mock.calls[0][0] as { cle: string }[]).map((d) => d.cle.split(":").slice(0, 2).join(":"));
-    expect(cles).toEqual(["contact:ip", "contact:tous"]);
+  });
+
+  it("sans IP lisible, un seau commun plutôt que pas de limite", async () => {
+    entetes = new Headers();
+    await envoyerMessageContact(SAISIE, formulaire());
+    const [premier] = consommer.mock.calls[0][0] as { cle: string }[];
+    const { cleLimite } = await import("@/lib/securite/limite-debit");
+    expect(premier.cle).toBe(cleLimite("contact", "ip", "inconnue"));
+  });
+
+  it("le quota du site atteint : refus", async () => {
+    consommer.mockResolvedValueOnce({ ok: true }).mockResolvedValueOnce({ ok: false, reessayerDansSecondes: 3600 });
+    expect((await envoyerMessageContact(SAISIE, formulaire())).status).toBe("erreur");
+    expect(sendMail).not.toHaveBeenCalled();
   });
 
   it("l'envoi hors service ou en échec : une erreur, sans rien promettre", async () => {
