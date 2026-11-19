@@ -66,6 +66,9 @@ export const SEUILS_PDF: Record<TypeDocument, SeuilsPdf> = {
   "plan-actions": NON_MESURE,
   "points-a-corriger": NON_MESURE,
   duerp: NON_MESURE,
+  // [2026-11-19] Le plan de prévention : quelques feuilles, non mesuré ; la
+  // borne d'absurdité des autres documents.
+  "plan-prevention": NON_MESURE,
 };
 
 /** Le document dépasse un seuil : il n'est pas mis en page. */
