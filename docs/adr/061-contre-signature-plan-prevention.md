@@ -123,8 +123,8 @@ Puis « Demander les signatures », comme aujourd'hui.
 | Événement | Qui reçoit un e-mail |
 |---|---|
 | Proposition reçue | le dirigeant (adresse de son compte) |
-| Proposition acceptée ou refusée | l'entreprise extérieure |
-| Signatures révoquées (par l'une ou l'autre porte) | chaque signataire dont la signature tombe |
+| Proposition acceptée ou refusée | l'entreprise extérieure [2026-11-19 : au refus, l'avis porte un nouveau lien de signature, émis à l'adresse de l'auteur de la proposition par le chemin ordinaire (fréquence, plafonds, essai) ; s'il ne part pas, l'avis dit de demander un nouveau lien] |
+| Signatures révoquées (par l'une ou l'autre porte) | chaque signataire dont la signature tombe [2026-11-19 : sauf qui a fait le geste — le dirigeant qui révoque ou accepte] |
 | Plan signé par toutes les parties | chaque signataire (lot A, déjà fait) |
 
 ### 6. Le plafond de signatures de la formule
