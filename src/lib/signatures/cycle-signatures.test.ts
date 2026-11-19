@@ -134,6 +134,8 @@ vi.mock("@/lib/auth/require-user", () => ({
 }));
 vi.mock("@/lib/storage", () => ({ getStorage: vi.fn() }));
 vi.mock("next/headers", () => ({ headers: async () => new Map() }));
+// `after` (l'avis de fin part après la réponse) : lancé tout de suite ici.
+vi.mock("next/server", () => ({ after: (fn: () => unknown) => void fn() }));
 /** Les verrous de ligne pris (`SELECT … FOR UPDATE`), dans l'ordre. */
 const verrous: string[] = [];
 

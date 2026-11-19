@@ -105,6 +105,8 @@ vi.mock("@/lib/auth/compte-hors-session", async () =>
   (await import("@/test/garde-simulee")).compteHorsSessionSimule(),
 );
 vi.mock("next/headers", () => ({ headers: async () => new Map() }));
+// `after` (l'avis de fin part après la réponse) : lancé tout de suite ici.
+vi.mock("next/server", () => ({ after: (fn: () => unknown) => void fn() }));
 vi.mock("@/lib/storage", () => ({ getStorage: vi.fn() }));
 vi.mock("@/lib/auth/require-user", () => ({ requireUser: vi.fn(), getOptionalUser: vi.fn() }));
 vi.mock("@/lib/auth/scope", () => ({ assertEtablissementOwnership: vi.fn() }));
@@ -261,14 +263,14 @@ describe("renvoi du code : plafond par adresse, sur la base", () => {
     expect(mails).toHaveLength(5);
   });
 
-  it("l'envoi du lien compte : un lien émis il y a dix minutes n'a plus que quatre renvois", async () => {
+  it("le lien ne compte plus (2026-11-19) : un lien émis il y a dix minutes garde ses cinq codes", async () => {
     prismaMock.accessToken.lignes[0].createdAt = new Date(Date.now() - 10 * 60_000);
-    for (let i = 0; i < 4; i++) {
-      expect((await renvoyerCodeOtp(JETON)).status, `renvoi ${i + 1}`).toBe("success");
+    for (let i = 0; i < 5; i++) {
+      expect((await renvoyerCodeOtp(JETON)).status, `envoi ${i + 1}`).toBe("success");
       avancer(61_000);
     }
     expect((await renvoyerCodeOtp(JETON)).status).toBe("error");
-    expect(mails).toHaveLength(4);
+    expect(mails).toHaveLength(5);
   });
 
   it("le plafond est celui de l'ADRESSE : deux liens vers la même boîte le partagent", async () => {
@@ -400,6 +402,8 @@ describe("deux temps (2026-11-19) : le lien part sans code, le code se demande s
     expect(mails[0].text).not.toContain("/acces/");
     const code = /code de confirmation : (\d{6})/i.exec(mails[0].text)?.[1];
     expect(code).toMatch(/^\d{6}$/);
+    // Le nom du document, pour ne pas saisir le code d'une page sur l'autre.
+    expect(mails[0].text).toMatch(/Il sert à signer : « .+ »/);
     expect((await soumettre(code!)).status).toBe("success");
   });
 
@@ -427,6 +431,9 @@ describe("l'avis de fin : toutes les parties ont signé (2026-11-19)", () => {
     expect((await soumettre(CODE)).status).toBe("success");
     expect(prismaMock.planPrevention.lignes[0].statut).toBe("valide");
 
+    await vi.waitFor(() =>
+      expect(mails.filter((m) => /signé par toutes les parties/.test(m.text))).toHaveLength(2),
+    );
     const avis = mails.filter((m) => /signé par toutes les parties/.test(m.text));
     expect(avis.map((m) => m.to).sort()).toEqual(["chef@exterieure.fr", "marie@utilisatrice.fr"]);
     expect(avis[0].text).toContain("a".repeat(64));

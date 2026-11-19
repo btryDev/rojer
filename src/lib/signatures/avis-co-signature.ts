@@ -14,8 +14,9 @@ import { libelleDocumentSignable } from "./libelle-document";
  * de l'auto-attestation : Rojer ne pourrait plus changer le document sans
  * que la vérification le dise à quelqu'un qui garde l'empreinte d'origine.
  *
- * Au mieux : appelée APRÈS la signature écrite et l'acte validé, elle ne
- * lève jamais — un envoi qui échoue se journalise et ne défait rien.
+ * Au mieux : appelée APRÈS la signature écrite et l'acte validé, et après la
+ * réponse (`after`, côté appelant), elle ne lève jamais — un envoi qui échoue
+ * se journalise et ne défait rien.
  *
  * **Ce module n'est volontairement pas `"use server"`** (voir
  * `./appartenance.ts`) : ses appelants ont établi le périmètre.
@@ -81,11 +82,13 @@ export async function envoyerAvisCoSignature(
     const destinataires = [...new Set(signatures.map((s) => s.signataireEmail.trim().toLowerCase()))]
       .filter((e) => e.includes("@"));
 
-    for (const to of destinataires) {
-      await sendMail({ to, subject: `Document signé par toutes les parties : ${libelle}`, text: texte }).catch(
-        (e: unknown) => console.error("[signatures] avis de fin non envoyé :", motifErreur(e)),
-      );
-    }
+    await Promise.all(
+      destinataires.map((to) =>
+        sendMail({ to, subject: `Document signé par toutes les parties : ${libelle}`, text: texte }).catch(
+          (e: unknown) => console.error("[signatures] avis de fin non envoyé :", motifErreur(e)),
+        ),
+      ),
+    );
   } catch (e) {
     console.error("[signatures] avis de fin impossible :", motifErreur(e));
   }

@@ -140,7 +140,7 @@ export function SignatureExterneForm({
               autoComplete="one-time-code"
             />
             <p className="text-[0.78rem] text-[color:var(--muted-foreground)]">
-              Code à 6 chiffres reçu dans le second e-mail. Valable 10 minutes,
+              Code à 6 chiffres reçu par e-mail. Valable 10 minutes,
               3 essais au total sur ce lien, nouveaux codes compris. Le lien expire
               le{" "}
               {expireLe.toLocaleDateString("fr-FR", {

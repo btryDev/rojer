@@ -32,8 +32,9 @@ export const OTP_ESSAIS_MAX = 3;
 export const OTP_DELAI_RENVOI_SECONDES = 60;
 
 /** Plafond des envois de code par adresse et par heure — ADR-006,
- *  « Anti-abus » : « max 5 envois d'OTP / heure / email ». L'envoi du lien
- *  compte, les renvois aussi (`reserverEnvoiOtp`). */
+ *  « Anti-abus » : « max 5 envois d'OTP / heure / email ». ~~L'envoi du lien
+ *  compte, les renvois aussi~~ [2026-11-19 : chaque code envoyé compte, le
+ *  premier compris ; le lien n'en porte plus] (`reserverEnvoiOtp`). */
 export const OTP_ENVOIS_MAX_PAR_HEURE = 5;
 export const OTP_FENETRE_ENVOIS_MS = 60 * 60 * 1000;
 

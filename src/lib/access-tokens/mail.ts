@@ -84,18 +84,22 @@ export type MailCodeArgs = {
   to: string;
   nom?: string | null;
   otp: string;
+  /** Le document à signer (`libelleDocumentSignable`, une ligne), si connu. */
+  document: string | null;
   /** Essais qui restent sur le lien, nouveaux codes compris. */
   essaisRestants: number;
 };
 
-/** Le code seul : ni lien, ni nom de document. */
+/** Le code et le nom du document, sans le lien. */
 export async function envoyerMailCode(args: MailCodeArgs): Promise<void> {
+  if (args.document) exigerUneLigne("document", args.document);
   if (args.nom) exigerUneLigne("nom du destinataire", args.nom);
   const essais = `${args.essaisRestants} essai${args.essaisRestants > 1 ? "s" : ""}`;
   const lignes = [
     bonjour(args.nom),
     "",
     `Votre code de confirmation : ${args.otp}`,
+    ...(args.document ? [`Il sert à signer : « ${args.document} ».`] : []),
     "",
     // Le texte annonce la durée réelle : elle est portée par
     // `AccessToken.otpExpireLe` et vérifiée à chaque tentative.

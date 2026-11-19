@@ -217,6 +217,11 @@ const ADMISES: { fichier: string; ligne: string; motif: string }[] = [
   },
   {
     fichier: "src/components/signatures/SignatureExterneForm.tsx",
+    ligne: "Code à 6 chiffres reçu par e-mail. Valable 10 minutes,",
+    motif: "Sur la page ouverte par le lien, qui n'existe que si le message est parti.",
+  },
+  {
+    fichier: "src/components/signatures/SignatureExterneForm.tsx",
     ligne: '<Label htmlFor="otp">Code reçu par e-mail *</Label>',
     motif: "Sur la page ouverte par le lien, qui n'existe que si le message est parti.",
   },

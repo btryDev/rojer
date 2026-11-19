@@ -4,6 +4,7 @@ import { exigerSignatureDEssai } from "@/lib/abonnements/validation";
 import { prendreQuota, RefusQuota } from "@/lib/abonnements/quotas";
 import { randomUUID } from "node:crypto";
 import { headers } from "next/headers";
+import { after } from "next/server";
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { clientDuProprietaire } from "@/lib/auth/compte-hors-session";
 import { formaterDateFr, formaterHeureFr } from "@/lib/dates";
@@ -461,14 +462,12 @@ export async function poserSignatureAvecToken(
     token.objetId,
     token.etablissementId,
   );
-  // Toutes les parties ont signé : chacune reçoit les empreintes (au mieux).
+  // Toutes les parties ont signé : chacune reçoit les empreintes (au mieux),
+  // APRÈS la réponse (`after`) — l'envoi peut prendre des secondes, la
+  // signature est déjà écrite.
   if (complet) {
-    await envoyerAvisCoSignature(
-      db,
-      token.objetType as ObjetSignable,
-      token.objetId,
-      token.etablissementId,
-    );
+    const objetType = token.objetType as ObjetSignable;
+    after(() => envoyerAvisCoSignature(db, objetType, token.objetId, token.etablissementId));
   }
 
   return { status: "success", signatureId: signature.id };
@@ -588,12 +587,21 @@ export async function renvoyerCodeOtp(
     };
   }
 
+  // Le nom du document, pour le courriel du code : deux pages ouvertes, deux
+  // codes — sans lui, celui de l'un se saisit sur l'autre et y brûle un essai.
+  // Lu au mieux : à défaut, le code part sans.
+  const db = await clientDuProprietaire(token.etablissementId);
+  const document = db
+    ? await libelleDocumentSignable(db, token.objetType, token.objetId, token.etablissementId).catch(() => null)
+    : null;
+
   try {
-    // Le code seul, sans le lien : un courriel de code transféré n'ouvre rien.
+    // Le code, sans le lien : un courriel de code transféré n'ouvre rien.
     await envoyerMailCode({
       to: token.emailDestinataire,
       nom: token.nomDestinataire,
       otp,
+      document,
       essaisRestants: token.otpEssaisRestants,
     });
   } catch (erreur) {
@@ -733,7 +741,7 @@ export async function signerEnCompteConnecte(params: {
   const { signature } = resultat;
   const complet = await validerSiCoSigne(db, params.objetType, params.objetId, params.etablissementId);
   if (complet) {
-    await envoyerAvisCoSignature(db, params.objetType, params.objetId, params.etablissementId);
+    after(() => envoyerAvisCoSignature(db, params.objetType, params.objetId, params.etablissementId));
   }
   return { ok: true, signatureId: signature.id };
 }
