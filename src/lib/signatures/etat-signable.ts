@@ -85,9 +85,11 @@ export async function objetEstSignable(
   if (objetType === "plan_prevention") {
     const plan = await db.planPrevention.findFirst({
       where: { id: objetId, etablissementId },
-      select: { statut: true },
+      // Une proposition de l'entreprise extérieure en attente (ADR-061 § 4) :
+      // le dirigeant l'accepte, la corrige ou la refuse AVANT toute signature.
+      select: { statut: true, propositions: { where: { enAttente: true }, select: { id: true }, take: 1 } },
     });
-    return plan !== null && statutPlanSignable(plan.statut);
+    return plan !== null && statutPlanSignable(plan.statut) && plan.propositions.length === 0;
   }
   if (objetType === "permis_feu") {
     const permis = await db.permisFeu.findFirst({

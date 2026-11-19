@@ -67,6 +67,8 @@ export type ContenuPlanASigner = {
   inspectionDate: Date | null;
   inspectionParticipants: string | null;
   lignes: {
+    /** Pour la proposition de modification de l'entreprise extérieure (ADR-061). */
+    id: string;
     ordre: number;
     risque: string;
     mesureEntrepriseUtilisatrice: string | null;
@@ -205,6 +207,7 @@ export async function contenuASigner(
         lignes: {
           orderBy: { ordre: "asc" },
           select: {
+            id: true,
             ordre: true,
             risque: true,
             mesureEntrepriseUtilisatrice: true,

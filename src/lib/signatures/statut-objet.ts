@@ -55,7 +55,7 @@ export async function validerSiCoSigne(
 ): Promise<boolean> {
   if (partiesAttendues(objetType).length === 0) return false;
   const signatures = await db.signature.findMany({
-    where: { objetType, objetId, etablissementId },
+    where: { objetType, objetId, etablissementId, active: true },
     select: { partie: true },
   });
   if (repartirSignatures(objetType, signatures).manquantes.length > 0) return false;

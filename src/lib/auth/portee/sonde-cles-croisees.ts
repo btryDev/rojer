@@ -100,6 +100,9 @@ export const CLES_SANS_RELATION: readonly {
   // Le rapport qui a levé l'action (ADR-048) : sans clé étrangère, la ligne
   // survit à la suppression du rapport.
   { modele: "Action", cle: "leveeRapportId", cibles: { "": "RapportVerification" } },
+  // Le lien d'où vient la proposition de l'entreprise extérieure (ADR-061) :
+  // sans clé étrangère, la proposition survit au ménage des jetons.
+  { modele: "PropositionModificationPlan", cle: "accessTokenId", cibles: { "": "AccessToken" } },
   // L'objet signé, polymorphe (ADR-008) ; le jeton d'une signature désigne le même.
   ...(["Signature", "AccessToken"] as const).map((modele) => ({
     modele,

@@ -2,6 +2,7 @@
 
 import { exigerSignatureDEssai } from "@/lib/abonnements/validation";
 import { prendreQuota, RefusQuota } from "@/lib/abonnements/quotas";
+import { signatureDejaComptee } from "@/lib/plan-prevention/resignature";
 import { randomUUID } from "node:crypto";
 import { headers } from "next/headers";
 import { after } from "next/server";
@@ -59,7 +60,7 @@ import { verifierSaisie } from "@/lib/abonnements/saisie";
  */
 
 const MESSAGE_NON_SIGNABLE =
-  "Ce document n'est plus à signer : il a été clos ou annulé.";
+  "Ce document n'est pas à signer pour l'instant : il est clos, annulé, ou une modification proposée attend une réponse.";
 
 /** Vrai à la lettre : le refus arrive avant le renouvellement du code. */
 const MESSAGE_RENVOI_HORS_SERVICE =
@@ -184,6 +185,7 @@ export async function demanderSignature(
         objetType: params.objetType,
         objetId: params.objetId,
         partie: params.partie,
+        active: true,
       },
     })) > 0
   ) {
@@ -419,6 +421,7 @@ export async function poserSignatureAvecToken(
           hashDocument: hash,
           nomDocument,
           methode: "otp_email",
+          active: true,
           ipAddress: ip,
           userAgent: ua?.slice(0, 500) ?? null,
         },
@@ -710,8 +713,18 @@ export async function signerEnCompteConnecte(params: {
         params.etablissementId,
       );
       if (!h.ok) return h;
-      // Plafond annuel de signatures de la formule (ADR-053 § 14).
-      await prendreQuota(tx, compte.compteId, "signaturesParAn");
+      // Plafond annuel de signatures de la formule (ADR-053 § 14) — sauf une
+      // re-signature après correction (ADR-061 § 6).
+      if (
+        !(await signatureDejaComptee(tx, {
+          etablissementId: params.etablissementId,
+          objetType: params.objetType,
+          objetId: params.objetId,
+          partie,
+        }))
+      ) {
+        await prendreQuota(tx, compte.compteId, "signaturesParAn");
+      }
       const signature = await tx.signature.create({
         data: {
           id: `sig_${randomUUID()}`,
@@ -726,6 +739,7 @@ export async function signerEnCompteConnecte(params: {
           hashDocument: h.hash,
           nomDocument: h.nomDocument,
           methode: "compte_connecte",
+          active: true,
           ipAddress: ip,
           userAgent: ua?.slice(0, 500) ?? null,
         },

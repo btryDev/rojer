@@ -85,6 +85,7 @@ const OUVERTES = new Map<string, Ouverte>([
   ["lib/accessibilite/actions.ts:depublierRegistre", { motif: "retirer une page publique : une mesure de protection" }],
   ["lib/signatures/actions.ts:poserSignatureAvecToken", TIERS],
   ["lib/signatures/actions.ts:renvoyerCodeOtp", TIERS],
+  ["lib/plan-prevention/proposition-actions.ts:proposerModificationPlan", TIERS],
   ["lib/entreprises/actions.ts:supprimerEntreprise", RGPD],
   ["lib/etablissements/actions.ts:supprimerEtablissement", RGPD],
   [

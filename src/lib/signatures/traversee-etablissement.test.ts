@@ -60,6 +60,7 @@ const plan = (etablissementId: string, statut = "attente_signatures") => ({
   entrepriseExterieureRaison: `EF de ${etablissementId}`,
   lignes: [],
   phasesDangereuses: [],
+  propositions: [],
 });
 const permis = (etablissementId: string, statut = "attente_signatures") => ({
   id: ID,
@@ -74,6 +75,7 @@ const signature = (objetType: string, etablissementId: string, partie: string) =
   objetId: ID,
   etablissementId,
   partie,
+  active: true,
 });
 
 let db: Awaited<ReturnType<typeof clientDuCompteSimule>>;

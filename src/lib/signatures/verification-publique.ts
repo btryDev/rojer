@@ -50,11 +50,33 @@ export async function verifierIntegriteSignature(
   | { ok: false; raison: "document_modifie"; hashAttendu: string; hashActuel: string }
   | { ok: false; raison: "document_introuvable" }
   | { ok: false; raison: "version_anterieure"; signature: PreuveSignature }
+  | {
+      ok: false;
+      raison: "revoquee";
+      signature: PreuveSignature;
+      revoqueLe: Date | null;
+      revoqueMotif: string | null;
+    }
 > {
   const signature = await prisma.signature.findUnique({
     where: { id: signatureId },
   });
   if (!signature) return { ok: false, raison: "inexistante" };
+
+  // RÉVOQUÉE (ADR-061) : elle porte sur une version du document que la
+  // correction a remplacée. La comparer au document d'aujourd'hui rendrait
+  // « document modifié » — vrai du document, faux comme accusation : la
+  // modification est celle qui a motivé la révocation, décidée et datée.
+  // Ni recalcul ni verdict : la preuve, la date et le motif.
+  if (signature.active === null) {
+    return {
+      ok: false,
+      raison: "revoquee",
+      signature: enPreuve(signature),
+      revoqueLe: signature.revoqueLe,
+      revoqueMotif: signature.revoqueMotif,
+    };
+  }
 
   // Le recalcul lit par le client borné au compte propriétaire de
   // l'établissement que porte la signature (ADR-051) : sans session, le

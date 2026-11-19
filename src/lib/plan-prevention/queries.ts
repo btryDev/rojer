@@ -1,7 +1,7 @@
 import "server-only";
 import { requireCompte } from "@/lib/auth/compte";
 import { requireEtablissement } from "@/lib/auth/scope";
-import { listSignatures } from "@/lib/signatures/queries";
+import { listSignatures, listSignaturesRevoquees } from "@/lib/signatures/queries";
 
 export async function listPlansPrevention(etablissementId: string) {
   const { db, etablissement } = await requireEtablissement(etablissementId);
@@ -28,8 +28,17 @@ export async function getPlanPrevention(
     },
   });
   if (!plan) return null;
-  const signatures = await listSignatures(db, etablissement.id, "plan_prevention", plan.id);
-  return { ...plan, signatures };
+  const [signatures, signaturesRevoquees, propositionEnAttente] = await Promise.all([
+    listSignatures(db, etablissement.id, "plan_prevention", plan.id),
+    // ADR-061 : les signatures révoquées se montrent à part, et la
+    // proposition de l'entreprise extérieure attend une décision.
+    listSignaturesRevoquees(db, etablissement.id, "plan_prevention", plan.id),
+    db.propositionModificationPlan.findFirst({
+      where: { planPreventionId: plan.id, etablissementId: etablissement.id, enAttente: true },
+      select: { id: true, contenu: true, createdAt: true },
+    }),
+  ]);
+  return { ...plan, signatures, signaturesRevoquees, propositionEnAttente };
 }
 
 /**

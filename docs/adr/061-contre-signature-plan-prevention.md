@@ -1,6 +1,6 @@
 # ADR-061 — Contre-signature du plan de prévention : proposer, corriger, re-signer
 
-- **Statut** : proposée, 2026-11-19 ; § 6 décidé par la propriétaire le même jour. Le reste à valider avant le code.
+- **Statut** : acceptée, 2026-11-19 (décision de la propriétaire).
 - **Portée** : `Signature` (révocation datée), nouveau modèle
   `PropositionModificationPlan`, `src/lib/plan-prevention/`,
   `src/lib/signatures/` (lectures des signatures actives), page
@@ -45,9 +45,20 @@ la cacher.
 ### 2. Une seule opération : remettre le plan en brouillon
 
 Dans une transaction, sous le verrou de l'objet (`verrouillerObjetSigne`) :
-le plan repasse en `brouillon`, toutes ses signatures actives sont révoquées
-avec le même motif daté, tous ses liens en cours sont révoqués
-(`revoquerLiensEnVol`). L'écriture est conditionnelle sur le statut : une
+toutes ses signatures actives sont révoquées avec le même motif daté, tous
+ses liens en cours sont révoqués (`revoquerLiensEnVol`), et un plan
+« valide » repasse « en attente de signatures ». Sans signature active, le
+plan redevient modifiable (`compterSignatures`) — c'est le sens de « remettre
+en brouillon » ici ; aucun statut nouveau n'est créé.
+(`plan-prevention/contre-signature.ts`.)
+
+Tant qu'une proposition attend une décision, le plan ne se signe pas
+(`objetEstSignable`), ni par lien ni depuis le compte.
+
+Une signature révoquée se vérifie toujours à `/verifier` : la page la dit
+« révoquée », avec sa date et son motif, sans recalculer l'empreinte — la
+comparer au plan corrigé rendrait « document modifié », vrai du document,
+faux comme accusation. L'écriture est conditionnelle sur le statut : une
 signature qui se termine au même instant et la remise en brouillon ne peuvent
 pas réussir toutes les deux.
 

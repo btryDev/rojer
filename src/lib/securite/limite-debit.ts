@@ -73,6 +73,12 @@ export const LIMITES = {
   mcpPortee: { max: 120, fenetreSecondes: 60 },
   /** Invitations à rejoindre un compte (ADR-054) : des e-mails Rojer vers des tiers. */
   invitationCompte: { max: 20, fenetreSecondes: 24 * 60 * 60 },
+  /**
+   * Propositions de modification d'un plan de prévention, depuis un lien de
+   * signature, sans compte (ADR-061 § 3) : chacune révoque des signatures et
+   * écrit au dirigeant.
+   */
+  propositionPlanIp: { max: 5, fenetreSecondes: 15 * 60 },
 } as const satisfies Record<string, Limite>;
 
 export type Verdict =

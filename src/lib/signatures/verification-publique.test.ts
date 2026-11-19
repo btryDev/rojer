@@ -16,6 +16,8 @@ const h = vi.hoisted(() => ({
   /** Si posée, chaque lecture attend cette promesse (recalcul « en cours »). */
   porte: null as Promise<void> | null,
   ip: "203.0.113.7",
+  /** La signature que rend la lecture (ADR-061 : révoquée ou non). */
+  signature: null as Record<string, unknown> | null,
 }));
 
 vi.mock("next/headers", () => ({
@@ -34,13 +36,21 @@ vi.mock("@/lib/prisma", () => ({
       findUnique: async () => {
         h.lue += 1;
         if (h.porte) await h.porte;
-        return null;
+        return h.signature;
       },
     },
   },
 }));
 
-const { verifierSousLimite, lireSignatureSousLimite } = await import("./verification-publique");
+vi.mock("@/lib/auth/compte-hors-session", () => ({
+  clientDuProprietaire: async () => {
+    throw new Error("une signature révoquée ne se recalcule pas");
+  },
+}));
+
+const { verifierSousLimite, lireSignatureSousLimite, verifierIntegriteSignature } = await import(
+  "./verification-publique"
+);
 
 beforeEach(() => {
   h.verdict = { ok: true };
@@ -48,6 +58,34 @@ beforeEach(() => {
   h.cles = [];
   h.porte = null;
   h.ip = "203.0.113.7";
+  h.signature = null;
+});
+
+describe("une signature révoquée (ADR-061)", () => {
+  it("se dit révoquée, avec sa date et son motif, sans recalcul ni « document modifié »", async () => {
+    const revoqueLe = new Date("2026-11-19T10:00:00Z");
+    h.signature = {
+      id: "sig_1",
+      etablissementId: "etab-1",
+      objetType: "plan_prevention",
+      objetId: "pp-1",
+      signataireNom: "Marie Martin",
+      signataireEmail: "marie@utilisatrice.fr",
+      signataireRole: null,
+      horodatageIso: new Date("2026-11-18T10:00:00Z"),
+      methode: "compte_connecte",
+      hashDocument: "a".repeat(64),
+      nomDocument: null,
+      ipAddress: "203.0.113.9",
+      active: null,
+      revoqueLe,
+      revoqueMotif: "l'entreprise utilisatrice corrige le plan",
+    };
+    const r = await verifierIntegriteSignature("sig_1");
+    expect(r).toMatchObject({ ok: false, raison: "revoquee", revoqueLe, revoqueMotif: "l'entreprise utilisatrice corrige le plan" });
+    // La preuve publique, sans l'IP.
+    expect(JSON.stringify(r)).not.toContain("203.0.113.9");
+  });
 });
 
 describe("vérification publique sous limite", () => {

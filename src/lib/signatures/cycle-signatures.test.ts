@@ -179,11 +179,11 @@ function plan(id: string, etablissementId: string, statut: string): Ligne {
   // périmètre du compte (`etablissement: { entreprise: { compteId: compte.compteId } }`, audit du
   // 2026-10-13), et `correspond` la traverse.
   const userId = etablissementId === "etab-a-moi" ? "user-1" : "user-voisin";
-  return { id, etablissementId, statut, numero: 1, etablissement: { entreprise: { compteId: userId } } };
+  return { id, etablissementId, statut, numero: 1, propositions: [], etablissement: { entreprise: { compteId: userId } } };
 }
 
 function signature(objetType: string, objetId: string, etablissementId: string): Ligne {
-  return { id: `sig_${objetId}_${etablissementId}`, objetType, objetId, etablissementId };
+  return { id: `sig_${objetId}_${etablissementId}`, objetType, objetId, etablissementId, active: true };
 }
 
 function jeton(
@@ -520,7 +520,7 @@ describe("garantie 2b — un objet clos ou annulé ne se signe plus, même avec 
     // `traversee-etablissement.test.ts`.
     expect(r).toEqual({
       status: "error",
-      message: "Ce document n'est plus à signer : il a été clos ou annulé.",
+      message: "Ce document n'est pas à signer pour l'instant : il est clos, annulé, ou une modification proposée attend une réponse.",
     });
     expect(prismaMock.signature.create).not.toHaveBeenCalled();
     expect(prismaMock.signature.lignes).toHaveLength(0);
@@ -569,7 +569,7 @@ describe("garantie 2b — un objet clos ou annulé ne se signe plus, même avec 
 
     expect(r).toEqual({
       ok: false,
-      message: "Ce document n'est plus à signer : il a été clos ou annulé.",
+      message: "Ce document n'est pas à signer pour l'instant : il est clos, annulé, ou une modification proposée attend une réponse.",
     });
     expect(prismaMock.accessToken.create).not.toHaveBeenCalled();
     expect(mailsEnvoyes).toHaveLength(0);

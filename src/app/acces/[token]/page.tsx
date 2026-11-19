@@ -5,6 +5,7 @@ import { verifierAccessToken } from "@/lib/access-tokens/verify";
 import { WhyCard } from "@/components/ui-kit/WhyCard";
 import { LegalBadge } from "@/components/ui-kit/LegalBadge";
 import { SignatureExterneForm } from "@/components/signatures/SignatureExterneForm";
+import { PropositionPlanForm } from "@/components/plan-prevention/PropositionPlanForm";
 import { formaterDateFr } from "@/lib/dates";
 import { objetEstSignable } from "@/lib/signatures/etat-signable";
 import {
@@ -158,6 +159,21 @@ export default async function AccesParTokenPage({
             codeDejaDemande={t.otpHash !== null}
           />
         </div>
+
+        {contenu?.type === "plan_prevention" && t.partie === "entreprise_exterieure" && (
+          <div className="mt-8">
+            <PropositionPlanForm
+              token={token}
+              fiche={{
+                entrepriseExterieureRaison: contenu.entrepriseExterieureRaison,
+                entrepriseExterieureSiret: contenu.entrepriseExterieureSiret,
+                efChefNom: contenu.efChefNom,
+                efEffectifIntervenant: contenu.efEffectifIntervenant,
+              }}
+              lignes={contenu.lignes}
+            />
+          </div>
+        )}
       </main>
     );
   }

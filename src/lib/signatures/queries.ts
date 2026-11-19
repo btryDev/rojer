@@ -24,7 +24,25 @@ export async function listSignatures(
   objetId: string,
 ) {
   return db.signature.findMany({
-    where: { etablissementId, objetType, objetId },
+    where: { etablissementId, objetType, objetId, active: true },
+    orderBy: { horodatageIso: "asc" },
+  });
+}
+
+/**
+ * Les signatures RÉVOQUÉES d'un objet (ADR-061) : jamais effacées, elles se
+ * montrent à part sur la fiche, avec leur date et leur motif. Même contrat
+ * d'appel que `listSignatures`.
+ */
+export async function listSignaturesRevoquees(
+  /** Le client borné au compte, reçu de la garde de l'appelant (ADR-051). */
+  db: Prisma.TransactionClient,
+  etablissementId: string,
+  objetType: ObjetSignable,
+  objetId: string,
+) {
+  return db.signature.findMany({
+    where: { etablissementId, objetType, objetId, active: null },
     orderBy: { horodatageIso: "asc" },
   });
 }
@@ -54,6 +72,7 @@ export async function listSignaturesDesObjets(
     where: {
       objetType,
       objetId: { in: [...objetIds] },
+      active: true,
       etablissement: { entreprise: { compteId: compte.compteId } },
     },
     select: { ...SELECT_PREUVE, objetId: true },
