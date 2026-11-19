@@ -37,30 +37,26 @@ export default async function NouveauPlanPreventionPage({
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
       {/* Le plafond de la formule, annoncé avant la saisie (ADR-053 § 14). */}
       <PlafondDeCreation cle="plansDePreventionParAn" className="mx-[var(--board-gutter)] mt-4">
-      <header className="border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] py-[22px]">
-        <Link
-          href={`/etablissements/${id}/plan-prevention`}
-          className="board-eyebrow inline-flex items-center gap-2 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)] transition-colors hover:text-[color:var(--board-ink)]"
-        >
-          <ArrowLeft className="size-3" aria-hidden />
-          Plans de prévention
-        </Link>
-        <h1 className="board-titre m-0 mt-2.5 text-[clamp(22px,2.2vw,27px)]">
-          Nouveau plan de prévention
-        </h1>
-        <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-          Diagnostic, inspection commune, matrice risques/mesures.
-        </p>
+      {/* L'en-tête centré sur la trame de points (maquette V2, 2026-11-19). */}
+      <header className="entete-trame">
+        <div className="mx-auto flex max-w-[1180px] flex-col items-center gap-2.5 px-4 pb-9 pt-8 text-center md:px-6 md:pt-10">
+          <Link
+            href={`/etablissements/${id}/plan-prevention`}
+            className="board-eyebrow inline-flex items-center gap-2 self-start text-[11px] tracking-[0.14em] text-[color:var(--board-slate-soft)] transition-colors hover:text-[color:var(--board-ink)]"
+          >
+            <ArrowLeft className="size-3" aria-hidden />
+            Plans de prévention
+          </Link>
+          <h1 className="board-titre m-0 text-[34px] leading-none md:text-[46px]">Nouveau plan de prévention</h1>
+          <p className="m-0 max-w-[560px] text-[15.5px] leading-[1.5] text-[color:var(--board-slate-ink)]">
+            Pour une entreprise extérieure qui intervient chez vous. Vous le complétez ensemble à
+            l&apos;inspection commune ; vous le faites signer ensuite.
+          </p>
+        </div>
       </header>
 
-      <div className="px-[var(--board-gutter)] pt-6">
-        <div className="carte-board max-w-[880px] px-7 py-7 sm:px-8">
-          <FormulairePlanPrevention
-            etablissementId={id}
-            prestataires={prestataires}
-            batiments={batiments}
-          />
-        </div>
+      <div className="px-[var(--board-gutter)] pt-7">
+        <FormulairePlanPrevention etablissementId={id} prestataires={prestataires} batiments={batiments} />
       </div>
       </PlafondDeCreation>
     </main>

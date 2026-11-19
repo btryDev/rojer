@@ -41,21 +41,22 @@ export default async function ModifierPlanPreventionPage({
 
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
-      <header className="border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] py-[22px]">
-        <Link
-          href={fiche}
-          className="board-eyebrow inline-flex items-center gap-2 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)] transition-colors hover:text-[color:var(--board-ink)]"
-        >
-          <ArrowLeft className="size-3" aria-hidden />
-          Plan {numero}
-        </Link>
-        <h1 className="board-titre m-0 mt-2.5 text-[clamp(22px,2.2vw,27px)]">
-          Modifier le plan {numero}
-        </h1>
+      {/* L'en-tête centré sur la trame de points (maquette V2, 2026-11-19). */}
+      <header className="entete-trame">
+        <div className="mx-auto flex max-w-[1180px] flex-col items-center gap-2.5 px-4 pb-9 pt-8 text-center md:px-6 md:pt-10">
+          <Link
+            href={fiche}
+            className="board-eyebrow inline-flex items-center gap-2 self-start text-[11px] tracking-[0.14em] text-[color:var(--board-slate-soft)] transition-colors hover:text-[color:var(--board-ink)]"
+          >
+            <ArrowLeft className="size-3" aria-hidden />
+            Plan {numero}
+          </Link>
+          <h1 className="board-titre m-0 text-[34px] leading-none md:text-[46px]">Modifier le plan {numero}</h1>
+        </div>
       </header>
 
-      <div className="px-[var(--board-gutter)] pt-6">
-        <div className="carte-board max-w-[880px] px-7 py-7 sm:px-8">
+      <div className="px-[var(--board-gutter)] pt-7">
+        <div>
           <FormulairePlanPrevention
             etablissementId={id}
             prestataires={prestatairesAnnuaire.map((p) => ({

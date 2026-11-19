@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Check, ChevronDown } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { ChampBoard, LegalBadge, SectionChamps, Textes } from "@/components/ui-kit";
+import { ChampBoard, LegalBadge, Textes } from "@/components/ui-kit";
 import { ChampBatiment } from "@/components/batiments/ChampBatiment";
 import { ArticleEnClair } from "@/components/plan-prevention/ArticleEnClair";
 import {
@@ -17,6 +18,7 @@ import {
   RUBRIQUES_R4512_8,
   TEXTE_R4512_8,
   URL_R4512_8,
+  type ContenuPlan,
 } from "@/lib/plan-prevention/contenu-r4512-8";
 import {
   AIDE_DUREE_HEURES,
@@ -115,12 +117,14 @@ const RUBRIQUES_TEXTE = [
 /** Même pilule que le formulaire jumeau du permis de feu : un choix retenu
  *  est bleu glacier, jamais rouge — le papier peignait la sélection en
  *  `--minium`, ce qui faisait lire un choix comme un retard. */
+// [2026-11-19, maquette V2 « Formulaire »] Le choix retenu en encre pleine,
+// les autres en contour blanc — toujours ni rouge, ni couleur d'état.
 const PILULE =
-  "inline-flex cursor-pointer items-center gap-2 rounded-full px-3.5 py-1.5 text-[12.5px] font-medium transition-colors";
+  "inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-full border px-3.5 text-[13px] transition-colors";
 const PILULE_REPOS =
-  "bg-[color:var(--board-slate-pale)] text-[color:var(--board-slate-mid)]";
+  "border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] text-[color:var(--board-ink)] hover:bg-[color:var(--board-slate-pale)]";
 const PILULE_RETENUE =
-  "bg-[color:var(--board-blue-pale)] text-[color:var(--board-blue-ink)]";
+  "border-[color:var(--board-ink)] bg-[color:var(--board-ink)] text-white";
 
 /** Le textarea du board : mêmes jetons que `.champ-board`, hauteur libre. */
 const TEXTAREA = "champ-board resize-y";
@@ -276,691 +280,766 @@ export function FormulairePlanPrevention({
     setPhases((p) => p.map((x) => (x.cle === cle ? { ...x, [champ]: v } : x)));
   }
 
-  return (
-    <form action={formAction} className="flex flex-col gap-9">
-      {/* UN PLAN SIGNÉ NE SE RÉÉCRIT PAS EN SILENCE (2026-10-12). Ce que
-          l'empreinte couvre est désactivé — donc ni modifiable ni envoyé —,
-          et l'écran dit pourquoi ; la zone, hors empreinte, reste ouverte. */}
-      {scelle && (
-        <section className="rounded-[22px] bg-[color:var(--board-slate-pale)] px-6 py-5">
-          <p className="m-0 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-ink)]">
-            {scelle}
-          </p>
-          <div className="mt-4">
-            <ChampBatiment
-              charte="board"
-              batiments={batiments}
-              defaultValue={plan?.batimentId}
-              erreur={err("batimentId")}
-            />
-          </div>
-        </section>
-      )}
-      {!scelle && avisLiens && (
-        <p className="m-0 max-w-[var(--board-mesure)] rounded-[22px] bg-[color:var(--board-slate-pale)] px-6 py-5 text-[13.5px] leading-[1.6] text-[color:var(--board-ink)]">
-          {avisLiens}
-        </p>
-      )}
-      <fieldset
-        disabled={Boolean(scelle)}
-        className="m-0 flex min-w-0 flex-col gap-9 border-0 p-0"
-      >
-      {/* Le diagnostic reste sur un creux ardoise, quelle que soit sa
-          conclusion : « plan écrit obligatoire » dit ce que la loi impose,
-          pas où en est le dossier — ce n'est pas une échéance, et le board
-          ne pose pas de rose là où rien n'a d'échéance (interdit 3). Ce
-          sont les raisons, elles, qui portent l'encre de signal. */}
-      <section className="rounded-[22px] bg-[color:var(--board-slate-pale)] px-6 py-5">
-        <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-          Diagnostic — avez-vous besoin d&apos;un plan écrit ?
-        </p>
-        {/* « PLAN ÉCRIT RECOMMANDÉ » SE LISAIT « PLAN RECOMMANDÉ ». Le titre
-            est la seule ligne de cette carte qu'on lit à coup sûr, et il
-            répondait à la question de l'écrit par un mot — « recommandé » —
-            qui, sous un titre commençant par « Plan », qualifiait le plan.
-            Deux faits plutôt qu'un : le plan est dû (R. 4512-6, quelle que
-            soit la durée), l'écrit ne l'est pas ici (R. 4512-7). */}
-        <h2 className="board-titre m-0 mt-2 text-[22px]">
-          {/* Trois états : sans durée ni travaux dangereux, Rojer ne sait
-              pas, et le titre le dit au lieu de conclure « non imposé ». */}
-          {diagnostic.ecrit === "obligatoire"
-            ? "Plan écrit obligatoire"
-            : diagnostic.ecrit === "indetermine"
-              ? "Plan dû, durée non renseignée"
-              : "Plan dû, écrit non imposé"}
-        </h2>
-        <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
-          {diagnostic.recommandation}
-        </p>
-        {diagnostic.raisons.length > 0 && (
-          <ul className="m-0 mt-3 flex list-none flex-col gap-1 p-0 text-[12.5px] leading-[1.5] text-[color:var(--board-signal-ink)]">
-            {diagnostic.raisons.map((r) => (
-              <li key={r}>{r}</li>
-            ))}
-          </ul>
-        )}
-        {/* UN SEUL LIVRE (2026-10-28). Les articles que la phrase résume :
-            l'écrit (R. 4512-7), l'inspection (R. 4512-2), l'accord
-            (R. 4512-6), et R. 4512-12 dans les deux états où il se dit. Deux
-            livres « Texte » côte à côte ne se distinguaient pas. */}
-        <Textes className="mt-4">
-          <LegalBadge reference="Art. R. 4512-7 CT" href={URL_R4512_7}>
-            {SENS_R4512_7}
-          </LegalBadge>
-          <LegalBadge reference="Art. R. 4512-2 CT" href={URL_R4512_2} extrait={R4512_2} />
-          <LegalBadge reference="Art. R. 4512-6 CT" href={URL_R4512_6}>
-            {SENS_R4512_6}
-          </LegalBadge>
-          {citeR4512_12(diagnostic.ecrit) && (
-            <LegalBadge
-              reference="Art. R. 4512-12 CT"
-              href={URL_R4512_12}
-              extrait={EXTRAIT_R4512_12}
-            />
-          )}
-        </Textes>
-      </section>
 
-      {/* Les sections ne sont plus numérotées : la numérotation ne se garde
-          que si l'ordre porte une information. */}
-      {/* R. 4512-1, dit ici parce que c'est la section qui nomme L'entreprise
-          extérieure, au singulier : le modèle n'en connaît qu'une par plan.
-          En clair, puis le constat sur le produit ; le texte et l'antécédent
-          de « le présent chapitre » sous le livre (2026-10-28).
-          `annonces-plan.ts` les écrit une fois. */}
-      <SectionChamps
-        titre="Entreprise extérieure"
-        chapeau={
-          <>
-            Qui intervient chez vous. {EN_CLAIR_R4512_1} {CONSTAT_R4512_1}
-          </>
-        }
-      >
-        <LegalBadge reference="Art. R. 4512-1 CT" href={URL_R4512_1} extrait={R4512_1}>
-          {CHAPITRE_R4512}
-        </LegalBadge>
-        {prestataires.length > 0 && (
-          <fieldset className="m-0 border-0 p-0">
-            <legend className="label-board">
-              Choisir dans l&apos;annuaire
-            </legend>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {prestataires.map((p) => {
-                const actif = prestataireChoisi?.id === p.id;
-                return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    aria-pressed={actif}
-                    onClick={() => {
-                      setPrestataireChoisi(actif ? null : p);
-                      setPrestataireId(actif ? "" : p.id);
-                    }}
-                    className={
-                      `${PILULE} ` +
-                      (actif
-                        ? PILULE_RETENUE
-                        : `${PILULE_REPOS} hover:bg-[color:var(--board-blue-pale)] hover:text-[color:var(--board-blue-ink)]`)
-                    }
+  // LE SOMMAIRE (2026-11-19, maquette V2 « Formulaire ») : une coche par
+  // partie remplie, « n / 5 » pour le contenu minimal. Lu sur le formulaire
+  // à chaque saisie — les champs restent non contrôlés, la lecture ne change
+  // rien à ce qui part au serveur.
+  const formulaire = useRef<HTMLFormElement | null>(null);
+  const [saisie, setSaisie] = useState<Record<string, string>>({});
+  const relire = useCallback(() => {
+    const f = formulaire.current;
+    if (!f) return;
+    const lu: Record<string, string> = {};
+    for (const [k, v] of new FormData(f).entries()) if (typeof v === "string") lu[k] = v.trim();
+    setSaisie(lu);
+  }, []);
+  useEffect(() => {
+    relire();
+  }, [relire]);
+  // Avant la première lecture (rendu serveur), les valeurs du plan rouvert.
+  const v = (nom: string, defaut: string | number | null | undefined) =>
+    nom in saisie ? saisie[nom] : String(defaut ?? "").trim();
+  const contenu: ContenuPlan = {
+    phasesDangereuses: phases.map((f) => ({ phase: f.phase, moyensPrevention: f.moyensPrevention })),
+    adaptationMateriels: v("adaptationMateriels", plan?.adaptationMateriels),
+    instructionsTravailleurs: v("instructionsTravailleurs", plan?.instructionsTravailleurs),
+    organisationSecours: v("organisationSecours", plan?.organisationSecours),
+    participationCroisee: v("participationCroisee", plan?.participationCroisee),
+  };
+  const rubriquesRemplies = RUBRIQUES_R4512_8.filter((r) => r.renseignee(contenu)).length;
+  const parties: { ancre: string; titre: string; remplie: boolean; compte?: string }[] = [
+    {
+      ancre: "pp-ee",
+      titre: "Entreprise extérieure",
+      remplie: Boolean(
+        v("entrepriseExterieureRaison", plan?.entrepriseExterieureRaison) &&
+          v("efChefNom", plan?.efChefNom) &&
+          v("efChefEmail", plan?.efChefEmail),
+      ),
+    },
+    {
+      ancre: "pp-travaux",
+      titre: "Travaux",
+      remplie: Boolean(
+        v("naturesTravaux", plan?.naturesTravaux) &&
+          v("lieux", plan?.lieux) &&
+          v("dateDebut", plan?.dateDebut) &&
+          v("dateFin", plan?.dateFin),
+      ),
+    },
+    { ancre: "pp-inspection", titre: "Inspection commune", remplie: Boolean(v("inspectionDate", plan?.inspectionDate)) },
+    { ancre: "pp-risques", titre: "Risques et mesures", remplie: lignes.some((l) => l.risque.trim()) },
+    {
+      ancre: "pp-contenu",
+      titre: "Contenu minimal",
+      remplie: rubriquesRemplies === RUBRIQUES_R4512_8.length,
+      compte: `${rubriquesRemplies} / ${RUBRIQUES_R4512_8.length}`,
+    },
+  ];
+  // Les rubriques ouvertes au premier affichage : celles qui portent déjà quelque chose.
+  const [rubriquesOuvertes] = useState(() => new Set(RUBRIQUES_R4512_8.filter((r) => r.renseignee(contenu)).map((r) => r.numero)));
+
+  return (
+    <form
+      ref={formulaire}
+      action={formAction}
+      onInput={relire}
+      onChange={relire}
+      className="mx-auto flex w-full max-w-[1180px] flex-col gap-6"
+    >
+      <div className="flex flex-wrap items-start gap-6">
+        <aside className="flex min-w-0 flex-[1_1_260px] flex-col gap-4 md:sticky md:top-6 md:max-w-[300px]">
+          <nav aria-label="Parties du plan" className="carte-board flex flex-col px-5 py-[18px]">
+            {parties.map((p, i) => (
+              <a
+                key={p.ancre}
+                href={`#${p.ancre}`}
+                className={`flex min-h-11 items-center justify-between gap-3 text-[14.5px] no-underline ${
+                  i > 0 ? "border-t border-[color:var(--board-slate-pale)]" : ""
+                } ${p.remplie ? "font-medium text-[color:var(--board-ink)]" : "text-[color:var(--board-slate-mid)]"}`}
+              >
+                {p.titre}
+                {p.compte ? (
+                  <span className="font-mono text-[11px] text-[color:var(--board-slate-soft)]">
+                    {p.compte}
+                    <span className="sr-only"> rubriques renseignées</span>
+                  </span>
+                ) : p.remplie ? (
+                  <span className="flex size-[18px] items-center justify-center rounded-full bg-[color:var(--board-green)] text-[color:var(--board-green-ink)]">
+                    <Check className="size-2.5" strokeWidth={3.5} aria-hidden />
+                    <span className="sr-only">rempli</span>
+                  </span>
+                ) : (
+                  <span className="size-[18px] rounded-full border-2 border-[color:var(--board-slate)]">
+                    <span className="sr-only">à remplir</span>
+                  </span>
+                )}
+              </a>
+            ))}
+          </nav>
+
+          {/* Le diagnostic, en court, sur un fond blanc : « plan écrit
+              obligatoire » dit ce que la loi impose, pas où en est le
+              dossier — ce n'est pas une échéance (interdit 3). Ce sont les
+              raisons, elles, qui portent l'encre de signal. */}
+          <section className="carte-board flex flex-col gap-2 px-5 py-[18px]" aria-labelledby="pp-diagnostic">
+            <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.14em] text-[color:var(--board-slate-soft)]">
+              Faut-il un plan écrit ?
+            </p>
+            <h2 id="pp-diagnostic" className="board-titre m-0 text-[19px] leading-[1.2]">
+              {/* Trois états : sans durée ni travaux dangereux, Rojer ne sait
+                  pas, et le titre le dit au lieu de conclure « non imposé ». */}
+              {diagnostic.ecrit === "obligatoire"
+                ? "Plan écrit obligatoire"
+                : diagnostic.ecrit === "indetermine"
+                  ? "Plan dû, durée non renseignée"
+                  : "Plan dû, écrit non imposé"}
+            </h2>
+            <p className="m-0 text-[13px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+              {diagnostic.recommandation}
+            </p>
+            {diagnostic.raisons.length > 0 && (
+              <ul className="m-0 flex list-none flex-col gap-1 p-0 text-[12.5px] leading-[1.5] text-[color:var(--board-signal-ink)]">
+                {diagnostic.raisons.map((r) => (
+                  <li key={r}>{r}</li>
+                ))}
+              </ul>
+            )}
+            {/* UN SEUL LIVRE (2026-10-28) : l'écrit (R. 4512-7), l'inspection
+                (R. 4512-2), l'accord (R. 4512-6), et R. 4512-12 dans les deux
+                états où il se dit. */}
+            <Textes>
+              <LegalBadge reference="Art. R. 4512-7 CT" href={URL_R4512_7}>
+                {SENS_R4512_7}
+              </LegalBadge>
+              <LegalBadge reference="Art. R. 4512-2 CT" href={URL_R4512_2} extrait={R4512_2} />
+              <LegalBadge reference="Art. R. 4512-6 CT" href={URL_R4512_6}>
+                {SENS_R4512_6}
+              </LegalBadge>
+              {citeR4512_12(diagnostic.ecrit) && (
+                <LegalBadge reference="Art. R. 4512-12 CT" href={URL_R4512_12} extrait={EXTRAIT_R4512_12} />
+              )}
+            </Textes>
+          </section>
+        </aside>
+
+        <div className="flex min-w-0 flex-[999_1_560px] flex-col gap-5">
+          {/* UN PLAN SIGNÉ NE SE RÉÉCRIT PAS EN SILENCE (2026-10-12). Ce que
+              l'empreinte couvre est désactivé — donc ni modifiable ni envoyé —,
+              et l'écran dit pourquoi ; la zone, hors empreinte, reste ouverte. */}
+          {scelle && (
+            <section className="carte-board px-6 py-6 md:px-8">
+              <p className="m-0 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-ink)]">
+                {scelle}
+              </p>
+              <div className="mt-4">
+                <ChampBatiment charte="board" batiments={batiments} defaultValue={plan?.batimentId} erreur={err("batimentId")} />
+              </div>
+            </section>
+          )}
+          {!scelle && avisLiens && (
+            <p className="carte-board m-0 px-6 py-5 text-[13.5px] leading-[1.6] text-[color:var(--board-ink)] md:px-8">
+              {avisLiens}
+            </p>
+          )}
+
+          <fieldset disabled={Boolean(scelle)} className="m-0 flex min-w-0 flex-col gap-5 border-0 p-0">
+            {/* R. 4512-1, dit ici parce que c'est la section qui nomme
+                L'entreprise extérieure, au singulier. En clair, puis le
+                constat ; le texte sous le livre (2026-10-28). */}
+            <section id="pp-ee" className={CARTE} aria-labelledby="pp-ee-titre">
+              <EnTeteCarte id="pp-ee-titre" titre="Entreprise extérieure" note="Qui intervient chez vous" />
+              <p className={CHAPEAU}>
+                {EN_CLAIR_R4512_1} {CONSTAT_R4512_1}
+              </p>
+              <LegalBadge reference="Art. R. 4512-1 CT" href={URL_R4512_1} extrait={R4512_1}>
+                {CHAPITRE_R4512}
+              </LegalBadge>
+              {prestataires.length > 0 && (
+                <fieldset className="m-0 flex flex-wrap items-center gap-2 border-0 p-0">
+                  <legend className="float-left mr-1 text-[13px] text-[color:var(--board-slate-mid)]">
+                    Depuis vos prestataires :
+                  </legend>
+                  {prestataires.map((p) => {
+                    const actif = prestataireChoisi?.id === p.id;
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        aria-pressed={actif}
+                        onClick={() => {
+                          setPrestataireChoisi(actif ? null : p);
+                          setPrestataireId(actif ? "" : p.id);
+                        }}
+                        className={`${PILULE} ${actif ? PILULE_RETENUE : PILULE_REPOS}`}
+                      >
+                        {p.raisonSociale}
+                      </button>
+                    );
+                  })}
+                </fieldset>
+              )}
+
+              <input type="hidden" name="prestataireId" value={prestataireId} />
+
+              <div className="grid grid-cols-1 gap-x-4 gap-y-3.5 md:grid-cols-2">
+                <ChampBoard
+                  id="entrepriseExterieureRaison"
+                  name="entrepriseExterieureRaison"
+                  label="Raison sociale"
+                  requis
+                  maxLength={200}
+                  defaultValue={prestataireChoisi?.raisonSociale ?? valeur(plan?.entrepriseExterieureRaison)}
+                  key={prestataireChoisi?.id ?? "libre"}
+                  erreur={err("entrepriseExterieureRaison")}
+                />
+                <ChampBoard
+                  id="entrepriseExterieureSiret"
+                  name="entrepriseExterieureSiret"
+                  label="SIRET (facultatif)"
+                  inputMode="numeric"
+                  maxLength={17}
+                  placeholder="14 chiffres"
+                  defaultValue={prestataireChoisi?.siret ?? valeur(plan?.entrepriseExterieureSiret)}
+                  key={`siret-${prestataireChoisi?.id ?? "libre"}`}
+                  erreur={err("entrepriseExterieureSiret")}
+                />
+                <ChampBoard
+                  id="efChefNom"
+                  name="efChefNom"
+                  label="Chef d'entreprise"
+                  requis
+                  maxLength={200}
+                  defaultValue={prestataireChoisi?.contactNom ?? valeur(plan?.efChefNom)}
+                  key={`ef-${prestataireChoisi?.id ?? "libre"}`}
+                  erreur={err("efChefNom")}
+                />
+                <ChampBoard
+                  id="efChefEmail"
+                  name="efChefEmail"
+                  type="email"
+                  label="E-mail, pour la signature"
+                  requis
+                  maxLength={200}
+                  defaultValue={prestataireChoisi?.contactEmail ?? valeur(plan?.efChefEmail)}
+                  key={`emailef-${prestataireChoisi?.id ?? "libre"}`}
+                  erreur={err("efChefEmail")}
+                />
+                {/* `type="text" inputMode="numeric"` plutôt que `type="number"` :
+                    la molette d'un champ nombre modifie une valeur déjà saisie
+                    au premier défilement de page (charte § 5). Zod coerce la
+                    chaîne et tient les bornes côté serveur. */}
+                <ChampBoard
+                  id="efEffectifIntervenant"
+                  name="efEffectifIntervenant"
+                  label="Intervenants"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={4}
+                  defaultValue={plan?.efEffectifIntervenant ?? 1}
+                  erreur={err("efEffectifIntervenant")}
+                />
+              </div>
+
+              {/* L'entreprise utilisatrice — vous : qui signe côté site. */}
+              <div className="border-t border-[color:var(--board-slate-pale)] pt-4">
+                <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.14em] text-[color:var(--board-slate-soft)]">
+                  De votre côté, l&apos;entreprise utilisatrice
+                </p>
+                <div className="mt-3 grid grid-cols-1 gap-x-4 gap-y-3.5 md:grid-cols-2">
+                  <ChampBoard
+                    id="euChefNom"
+                    name="euChefNom"
+                    label="Nom du chef d'entreprise"
+                    requis
+                    defaultValue={valeur(plan?.euChefNom)}
+                    maxLength={200}
+                    erreur={err("euChefNom")}
+                  />
+                  <ChampBoard
+                    id="euChefFonction"
+                    name="euChefFonction"
+                    label="Fonction"
+                    defaultValue={valeur(plan?.euChefFonction)}
+                    maxLength={120}
+                    placeholder="Ex : Gérant, Directeur d'établissement…"
+                    erreur={err("euChefFonction")}
+                  />
+                </div>
+              </div>
+            </section>
+
+            <section id="pp-travaux" className={CARTE} aria-labelledby="pp-travaux-titre">
+              <EnTeteCarte id="pp-travaux-titre" titre="Travaux" />
+              <div>
+                <label className="label-board" htmlFor="naturesTravaux">
+                  Ce qui sera fait *
+                </label>
+                <textarea
+                  id="naturesTravaux"
+                  name="naturesTravaux"
+                  required
+                  defaultValue={valeur(plan?.naturesTravaux)}
+                  rows={2}
+                  maxLength={4000}
+                  className={`${TEXTAREA} min-h-[64px]`}
+                  aria-invalid={Boolean(err("naturesTravaux"))}
+                  aria-describedby={err("naturesTravaux") ? "naturesTravaux-erreur" : undefined}
+                  placeholder="Ex : dégraissage de la hotte ; remplacement de la membrane d'étanchéité de la toiture terrasse, avec pose ponctuelle de chalumeau."
+                />
+                {err("naturesTravaux") && (
+                  <p id="naturesTravaux-erreur" className="m-0 mt-1.5 text-[12.5px] text-[color:var(--board-signal-ink)]">
+                    {err("naturesTravaux")}
+                  </p>
+                )}
+              </div>
+              <div className="grid grid-cols-1 gap-x-4 gap-y-3.5 md:grid-cols-2">
+                <ChampBoard
+                  id="lieux"
+                  name="lieux"
+                  label="Où"
+                  defaultValue={valeur(plan?.lieux)}
+                  requis
+                  maxLength={1000}
+                  placeholder="Ex : cuisine, toiture, local technique"
+                  erreur={err("lieux")}
+                />
+                <ChampBoard
+                  id="dureeHeuresEstimee"
+                  name="dureeHeuresEstimee"
+                  label="Durée totale estimée, en heures"
+                  defaultValue={valeur(plan?.dureeHeuresEstimee)}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={5}
+                  // Le total compte les sous-traitants, et les heures revues en
+                  // cours de chantier se notent sur la fiche (`seuil400EnCours`).
+                  aide={AIDE_DUREE_HEURES}
+                  erreur={err("dureeHeuresEstimee")}
+                  onChange={(e) => {
+                    const n = Number.parseInt(e.target.value, 10);
+                    setDureeHeures(Number.isNaN(n) ? null : n);
+                  }}
+                />
+                <ChampBoard
+                  id="dateDebut"
+                  name="dateDebut"
+                  type="datetime-local"
+                  label="Début"
+                  defaultValue={valeur(plan?.dateDebut)}
+                  requis
+                  erreur={err("dateDebut")}
+                />
+                <ChampBoard
+                  id="dateFin"
+                  name="dateFin"
+                  type="datetime-local"
+                  label="Fin"
+                  defaultValue={valeur(plan?.dateFin)}
+                  requis
+                  erreur={err("dateFin")}
+                />
+              </div>
+              {!scelle && (
+                <ChampBatiment
+                  charte="board"
+                  batiments={batiments}
+                  defaultValue={plan?.batimentId}
+                  erreur={err("batimentId")}
+                  aide="La zone principale de l'opération ; détaillez les lieux ci-dessus si elle en traverse plusieurs."
+                />
+              )}
+
+              <label className="flex cursor-pointer items-start gap-3 rounded-[18px] bg-[color:var(--board-canvas)] px-4 py-3.5 transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[color:var(--board-blue-strong)]">
+                <input
+                  type="checkbox"
+                  name="travauxDangereux"
+                  checked={travauxDangereux}
+                  onChange={(e) => setTravauxDangereux(e.target.checked)}
+                  className="mt-0.5 size-[18px] flex-none accent-[color:var(--board-ink)]"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[14px] font-semibold leading-[1.4] text-[color:var(--board-ink)]">
+                    Travaux dangereux
+                  </span>
+                  <span className="mt-0.5 block text-[13px] leading-[1.5] text-[color:var(--board-slate-ink)]">
+                    Les travaux figurent sur la liste des travaux dangereux de l&apos;arrêté du 19 mars 1993 ou,
+                    pour les travaux agricoles, de l&apos;arrêté du ministre chargé de l&apos;agriculture
+                  </span>
+                  {/* Les exemples sont des points de la liste, entre
+                      guillemets (C40, suite) — jamais paraphrasés. */}
+                  <span className="mt-1 block text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
+                    Parmi les vingt et un points de la liste : « Travaux de démolition », « Travaux exposant au
+                    contact avec des pièces nues sous tension supérieure à la T. B. T. », « Travaux dans ou sur des
+                    cuves et accumulateurs de matière ou en atmosphère confinée », « Travaux de soudage
+                    oxyacétylénique exigeant le recours à un permis de feu »…
+                  </span>
+                </span>
+              </label>
+            </section>
+
+            {/* Le moment de R. 4512-2 — « avant l'exécution », pas celui de
+                R. 4512-6 (C40). L'article sous le livre. */}
+            <section id="pp-inspection" className={CARTE} aria-labelledby="pp-inspection-titre">
+              <EnTeteCarte id="pp-inspection-titre" titre="Inspection commune" note="Avant le début des travaux" />
+              <p className={CHAPEAU}>{EN_CLAIR_R4512_2}</p>
+              <LegalBadge reference="Art. R. 4512-2 CT" href={URL_R4512_2} extrait={R4512_2} />
+              <div className="grid grid-cols-1 gap-x-4 gap-y-3.5 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+                <ChampBoard
+                  id="inspectionDate"
+                  name="inspectionDate"
+                  type="date"
+                  label="Date"
+                  defaultValue={valeur(plan?.inspectionDate)}
+                  erreur={err("inspectionDate")}
+                />
+                <div>
+                  <label className="label-board" htmlFor="inspectionParticipants">
+                    Participants
+                  </label>
+                  <textarea
+                    id="inspectionParticipants"
+                    name="inspectionParticipants"
+                    defaultValue={valeur(plan?.inspectionParticipants)}
+                    rows={1}
+                    maxLength={2000}
+                    className={`${TEXTAREA} min-h-[48px]`}
+                    placeholder="Ex : vous, le chef d'équipe de l'entreprise extérieure"
+                  />
+                </div>
+              </div>
+            </section>
+
+            {/* R. 4463-8 : « le cas échéant » laisse l'appréciation aux
+                employeurs, et la phrase en clair le garde. */}
+            <section id="pp-risques" className={CARTE} aria-labelledby="pp-risques-titre">
+              <EnTeteCarte
+                id="pp-risques-titre"
+                titre="Risques et mesures"
+                note="Ce que la présence des deux entreprises fait courir"
+              />
+              <p className={CHAPEAU}>
+                Pour chaque risque identifié lors de l&apos;inspection, indiquez la mesure prise par chaque partie.{" "}
+                {EN_CLAIR_R4463_8}
+              </p>
+              <LegalBadge reference="Art. R. 4463-8 CT" href={URL_R4463_8} extrait={R4463_8} />
+              <div
+                aria-hidden
+                className="hidden gap-2.5 px-0.5 font-mono text-[10.5px] uppercase tracking-[0.12em] text-[color:var(--board-slate-soft)] md:grid md:grid-cols-[34px_minmax(0,2fr)_minmax(0,1.5fr)_minmax(0,1.5fr)_72px]"
+              >
+                <span />
+                <span>Risque</span>
+                <span>Votre mesure</span>
+                <span>Sa mesure</span>
+                <span />
+              </div>
+              {lignes.map((l, i) => (
+                <div
+                  key={l.cle}
+                  className="grid grid-cols-1 gap-2.5 border-t border-[color:var(--board-slate-pale)] pt-3.5 first-of-type:border-t-0 md:grid-cols-[34px_minmax(0,2fr)_minmax(0,1.5fr)_minmax(0,1.5fr)_72px] md:items-start md:border-t-0 md:pt-0"
+                >
+                  <span
+                    aria-hidden
+                    className="flex size-[34px] items-center justify-center rounded-[10px] bg-[color:var(--board-ink)] font-display font-bold text-white md:mt-1.5"
                   >
-                    {p.raisonSociale}
-                  </button>
+                    {i + 1}
+                  </span>
+                  <div>
+                    <label className="label-board md:sr-only" htmlFor={`risque-${l.cle}`}>
+                      Risque {i + 1} *
+                    </label>
+                    <input
+                      id={`risque-${l.cle}`}
+                      name={`lignes[${i}].risque`}
+                      required
+                      value={l.risque}
+                      onChange={(e) => majLigne(l.cle, "risque", e.target.value)}
+                      maxLength={500}
+                      className="champ-board"
+                      placeholder="Ex : graisses chaudes pendant le service"
+                    />
+                  </div>
+                  <div>
+                    <label className="label-board md:sr-only" htmlFor={`mesureEU-${l.cle}`}>
+                      Votre mesure, risque {i + 1}
+                    </label>
+                    <textarea
+                      id={`mesureEU-${l.cle}`}
+                      name={`lignes[${i}].mesureEntrepriseUtilisatrice`}
+                      value={l.mesureEntrepriseUtilisatrice}
+                      onChange={(e) => majLigne(l.cle, "mesureEntrepriseUtilisatrice", e.target.value)}
+                      rows={1}
+                      maxLength={500}
+                      className={`${TEXTAREA} min-h-[48px]`}
+                      placeholder="Ex : intervention hors service"
+                    />
+                  </div>
+                  <div>
+                    <label className="label-board md:sr-only" htmlFor={`mesureEE-${l.cle}`}>
+                      Sa mesure, risque {i + 1}
+                    </label>
+                    <textarea
+                      id={`mesureEE-${l.cle}`}
+                      name={`lignes[${i}].mesureEntrepriseExterieure`}
+                      value={l.mesureEntrepriseExterieure}
+                      onChange={(e) => majLigne(l.cle, "mesureEntrepriseExterieure", e.target.value)}
+                      rows={1}
+                      maxLength={500}
+                      className={`${TEXTAREA} min-h-[48px]`}
+                      placeholder="Ex : gants, lunettes"
+                    />
+                  </div>
+                  <div className="flex md:justify-end">
+                    {lignes.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => retirerLigne(l.cle)}
+                        className="min-h-11 text-[12.5px] font-semibold text-[color:var(--board-slate-mid)] transition-colors hover:text-[color:var(--board-signal-ink)]"
+                      >
+                        Retirer
+                        <span className="sr-only"> le risque {i + 1}</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={ajouterLigne}
+                  className="inline-flex min-h-11 items-center rounded-full border border-dashed border-[color:var(--board-slate)] bg-[color:var(--board-card)] px-[18px] text-[14px] text-[color:var(--board-ink)] hover:bg-[color:var(--board-slate-pale)]"
+                >
+                  + Ajouter un risque
+                </button>
+                {err("lignes") && (
+                  <p className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">{err("lignes")}</p>
+                )}
+              </div>
+            </section>
+
+            {/* LES CINQ RUBRIQUES DE R. 4512-8, repliables. Aucune n'est
+                requise à la saisie : ce qui est vide se lit vide, sur la fiche
+                comme dans le dossier de contrôle. */}
+            <section id="pp-contenu" className={`${CARTE} gap-1.5`} aria-labelledby="pp-contenu-titre">
+              <EnTeteCarte id="pp-contenu-titre" titre="Contenu minimal" note="Vous pouvez y revenir après l'inspection" />
+              <p className={CHAPEAU}>
+                Les rubriques que le plan contient au moins. Ce que vous laissez vide est signalé comme manquant sur la
+                fiche du plan et dans le dossier de contrôle — rien ne vous empêche d&apos;enregistrer.
+              </p>
+              <LegalBadge reference="Art. R. 4512-8 CT" href={URL_R4512_8}>
+                {TEXTE_R4512_8}
+              </LegalBadge>
+
+              <details
+                open={rubriquesOuvertes.has(1)}
+                className="group border-t border-[color:var(--board-slate-pale)] py-3.5"
+              >
+                <Rubrique numero={1} titre={RUBRIQUES_R4512_8[0].titre} remplie={RUBRIQUES_R4512_8[0].renseignee(contenu)} />
+                <div className="mt-3 flex flex-col gap-4">
+                  <p className="m-0 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                    Les phases dangereuses de l&apos;opération elle-même, et les moyens de prévention de chacune. À
+                    distinguer des risques d&apos;interférence ci-dessus, qui naissent de la co-activité.
+                  </p>
+                  {phases.map((f, i) => (
+                    <div
+                      key={f.cle}
+                      className="flex flex-col gap-3 border-t border-[color:var(--board-slate-pale)] pt-3 first-of-type:border-t-0"
+                    >
+                      <div className="flex items-baseline justify-between gap-3">
+                        <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
+                          Phase #{i + 1}
+                        </p>
+                        {phases.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => retirerPhase(f.cle)}
+                            className="text-[12.5px] font-semibold text-[color:var(--board-slate-mid)] transition-colors hover:text-[color:var(--board-signal-ink)]"
+                          >
+                            Retirer
+                          </button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                        <ChampBoard
+                          id={`phase-${f.cle}`}
+                          name={`phases[${i}].phase`}
+                          label="Phase d'activité dangereuse"
+                          value={f.phase}
+                          onChange={(e) => majPhase(f.cle, "phase", e.target.value)}
+                          maxLength={500}
+                          placeholder="Ex : découpe au chalumeau en toiture"
+                        />
+                        <div>
+                          <label className="label-board" htmlFor={`moyens-${f.cle}`}>
+                            Moyens de prévention spécifiques correspondants
+                          </label>
+                          <textarea
+                            id={`moyens-${f.cle}`}
+                            name={`phases[${i}].moyensPrevention`}
+                            value={f.moyensPrevention}
+                            onChange={(e) => majPhase(f.cle, "moyensPrevention", e.target.value)}
+                            rows={2}
+                            maxLength={500}
+                            className={`${TEXTAREA} min-h-[72px]`}
+                            placeholder="Ex : permis de feu, extincteur à poste, surveillance 2 h après arrêt"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="flex items-center justify-between gap-3">
+                    <button type="button" onClick={ajouterPhase} className={buttonVariants({ variant: "boardClair", size: "boardSm" })}>
+                      Ajouter une phase
+                    </button>
+                    {/* `extrairePhases` remonte au schéma tout rang dont un
+                        champ porte quelque chose : son erreur s'affiche ici. */}
+                    {err("phases") && (
+                      <p className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">{err("phases")}</p>
+                    )}
+                  </div>
+                </div>
+              </details>
+
+              {RUBRIQUES_TEXTE.map((r) => {
+                const rubrique = RUBRIQUES_R4512_8.find((x) => x.numero === r.numero)!;
+                return (
+                  <details
+                    key={r.name}
+                    open={rubriquesOuvertes.has(r.numero) || Boolean(err(r.name))}
+                    className="group border-t border-[color:var(--board-slate-pale)] py-3.5"
+                  >
+                    <Rubrique numero={r.numero} titre={rubrique.titre} remplie={rubrique.renseignee(contenu)} />
+                    <div className="mt-3">
+                      <label className="sr-only" htmlFor={r.name}>
+                        {r.numero}° — {rubrique.titre}
+                      </label>
+                      <textarea
+                        id={r.name}
+                        name={r.name}
+                        defaultValue={valeur(plan?.[r.name])}
+                        rows={r.rows}
+                        maxLength={4000}
+                        className={`${TEXTAREA} min-h-[88px]`}
+                        placeholder={r.placeholder}
+                        aria-invalid={Boolean(err(r.name))}
+                        aria-describedby={err(r.name) ? `${r.name}-erreur` : undefined}
+                      />
+                      {err(r.name) && (
+                        <p id={`${r.name}-erreur`} className="m-0 mt-1.5 text-[12.5px] text-[color:var(--board-signal-ink)]">
+                          {err(r.name)}
+                        </p>
+                      )}
+                    </div>
+                  </details>
                 );
               })}
-            </div>
+
+              {/* DEUX PIÈCES QUE D'AUTRES ARTICLES FONT FIGURER DANS LE PLAN, et
+                  pour lesquelles ce formulaire n'a pas de champ. En clair et le
+                  constat ; l'article sous son livre. Écrits un par un : la garde
+                  des extraits lit la `reference` littérale. */}
+              <ArticleEnClair
+                className="border-t border-[color:var(--board-slate-pale)] pt-4"
+                titre="Liste des postes en suivi individuel renforcé"
+                texte={EN_CLAIR_R4512_9}
+                constat={CONSTAT_R4512_9}
+              >
+                <LegalBadge className="mt-2" reference="Art. R. 4512-9 CT" href={URL_R4512_9} extrait={R4512_9} />
+              </ArticleEnClair>
+              <ArticleEnClair
+                className="border-t border-[color:var(--board-slate-pale)] pt-4"
+                titre="Dossiers techniques amiante"
+                texte={EN_CLAIR_R4512_11}
+                constat={CONSTAT_R4512_11}
+              >
+                <LegalBadge className="mt-2" reference="Art. R. 4512-11 CT" href={URL_R4512_11} extrait={R4512_11} />
+              </ArticleEnClair>
+            </section>
           </fieldset>
-        )}
-
-        <input
-          type="hidden"
-          name="prestataireId"
-          value={prestataireId}
-        />
-
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <ChampBoard
-            id="entrepriseExterieureRaison"
-            name="entrepriseExterieureRaison"
-            label="Raison sociale"
-            requis
-            maxLength={200}
-            defaultValue={prestataireChoisi?.raisonSociale ?? valeur(plan?.entrepriseExterieureRaison)}
-            key={prestataireChoisi?.id ?? "libre"}
-            erreur={err("entrepriseExterieureRaison")}
-          />
-          <ChampBoard
-            id="entrepriseExterieureSiret"
-            name="entrepriseExterieureSiret"
-            label="SIRET"
-            inputMode="numeric"
-            maxLength={17}
-            defaultValue={prestataireChoisi?.siret ?? valeur(plan?.entrepriseExterieureSiret)}
-            key={`siret-${prestataireChoisi?.id ?? "libre"}`}
-            erreur={err("entrepriseExterieureSiret")}
-          />
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <ChampBoard
-            id="efChefNom"
-            name="efChefNom"
-            label="Chef d'entreprise extérieure"
-            requis
-            maxLength={200}
-            defaultValue={prestataireChoisi?.contactNom ?? valeur(plan?.efChefNom)}
-            key={`ef-${prestataireChoisi?.id ?? "libre"}`}
-            erreur={err("efChefNom")}
-          />
-          <ChampBoard
-            id="efChefEmail"
-            name="efChefEmail"
-            type="email"
-            label="Email"
-            requis
-            maxLength={200}
-            defaultValue={prestataireChoisi?.contactEmail ?? valeur(plan?.efChefEmail)}
-            key={`emailef-${prestataireChoisi?.id ?? "libre"}`}
-            erreur={err("efChefEmail")}
-          />
-        </div>
-
-        {/* `type="text" inputMode="numeric"` plutôt que `type="number"` :
-            la molette d'un champ nombre modifie une valeur déjà saisie au
-            premier défilement de page (charte § 5). Zod coerce la chaîne
-            et tient les bornes côté serveur. */}
-        <ChampBoard
-          id="efEffectifIntervenant"
-          name="efEffectifIntervenant"
-          label="Effectif qui interviendra"
-          type="text"
-          inputMode="numeric"
-          maxLength={4}
-          defaultValue={plan?.efEffectifIntervenant ?? 1}
-          className="max-w-[220px]"
-          erreur={err("efEffectifIntervenant")}
-        />
-      </SectionChamps>
-
-      <SectionChamps
-        titre="Entreprise utilisatrice (vous)"
-        chapeau="Qui signe côté site."
-      >
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <ChampBoard
-            id="euChefNom"
-            name="euChefNom"
-            label="Nom du chef d'entreprise"
-            requis
-            defaultValue={valeur(plan?.euChefNom)}
-            maxLength={200}
-            erreur={err("euChefNom")}
-          />
-          <ChampBoard
-            id="euChefFonction"
-            name="euChefFonction"
-            label="Fonction"
-            defaultValue={valeur(plan?.euChefFonction)}
-            maxLength={120}
-            placeholder="Ex : Gérant, Directeur d'établissement…"
-            erreur={err("euChefFonction")}
-          />
-        </div>
-      </SectionChamps>
-
-      <SectionChamps titre="Travaux prévus" chapeau="Nature, durée, lieu.">
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <ChampBoard
-            id="dateDebut"
-            name="dateDebut"
-            type="datetime-local"
-            label="Début"
-            defaultValue={valeur(plan?.dateDebut)}
-            requis
-            erreur={err("dateDebut")}
-          />
-          <ChampBoard
-            id="dateFin"
-            name="dateFin"
-            type="datetime-local"
-            label="Fin"
-            defaultValue={valeur(plan?.dateFin)}
-            requis
-            erreur={err("dateFin")}
-          />
-        </div>
-
-        <ChampBoard
-          id="dureeHeuresEstimee"
-          name="dureeHeuresEstimee"
-          label="Durée totale estimée (heures)"
-          defaultValue={valeur(plan?.dureeHeuresEstimee)}
-          type="text"
-          inputMode="numeric"
-          maxLength={5}
-          // La largeur bornée est celle du champ, pas du bloc : bornée sur le
-          // bloc, l'aide s'étirait sur cinq lignes étroites.
-          champClassName="max-w-[220px]"
-          // Le total compte les sous-traitants, et les heures revues en cours
-          // de chantier se notent sur la fiche (`seuil400EnCours`).
-          aide={AIDE_DUREE_HEURES}
-          erreur={err("dureeHeuresEstimee")}
-          onChange={(e) => {
-            const n = Number.parseInt(e.target.value, 10);
-            setDureeHeures(Number.isNaN(n) ? null : n);
-          }}
-        />
-
-        <label className="flex cursor-pointer items-start gap-3 rounded-[18px] bg-[color:var(--board-slate-pale)] px-4 py-3.5 transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[color:var(--board-blue-strong)]">
-          <input
-            type="checkbox"
-            name="travauxDangereux"
-            checked={travauxDangereux}
-            onChange={(e) => setTravauxDangereux(e.target.checked)}
-            className="mt-0.5 size-4 flex-none accent-[color:var(--board-ink)]"
-          />
-          <span className="min-w-0 flex-1">
-            <span className="block text-[13.5px] font-semibold leading-[1.4] text-[color:var(--board-ink)]">
-              {/* « (art. R. 4512-7, 2°) » retiré le 2026-10-28 : l'article
-                  s'ouvre sous le livre du diagnostic. */}
-              Les travaux figurent sur la liste des travaux dangereux de
-              l&apos;arrêté du 19 mars 1993 ou, pour les travaux agricoles,
-              de l&apos;arrêté du ministre chargé de l&apos;agriculture
-            </span>
-            {/* Les exemples sont des points de la liste, entre guillemets
-                (C40, suite). Ils étaient paraphrasés, et plusieurs en
-                faisaient plus que l'arrêté : « travaux sur toiture »,
-                « soudage en hauteur », « travaux à chaud », « levage lourd »
-                n'y figurent pas sous ces mots. */}
-            <span className="mt-1 block text-[12px] leading-[1.5] text-[color:var(--board-slate-mid)]">
-              Parmi les vingt et un points de la liste : « Travaux de
-              démolition », « Travaux exposant au contact avec des pièces
-              nues sous tension supérieure à la T. B. T. », « Travaux dans ou
-              sur des cuves et accumulateurs de matière ou en atmosphère
-              confinée », « Travaux de soudage oxyacétylénique exigeant le
-              recours à un permis de feu »…
-            </span>
-          </span>
-        </label>
-
-        {!scelle && (
-          <ChampBatiment
-            charte="board"
-            batiments={batiments}
-            defaultValue={plan?.batimentId}
-            erreur={err("batimentId")}
-            aide="La zone principale de l'opération ; détaillez les lieux ci-dessous si elle en traverse plusieurs."
-          />
-        )}
-
-        <ChampBoard
-          id="lieux"
-          name="lieux"
-          label="Lieux d'intervention"
-          defaultValue={valeur(plan?.lieux)}
-          requis
-          maxLength={1000}
-          placeholder="Ex : toiture, local technique sous-sol, chaufferie"
-          erreur={err("lieux")}
-        />
-
-        <div>
-          <label className="label-board" htmlFor="naturesTravaux">
-            Nature précise des travaux *
-          </label>
-          <textarea
-            id="naturesTravaux"
-            name="naturesTravaux"
-            required
-            defaultValue={valeur(plan?.naturesTravaux)}
-            rows={4}
-            maxLength={4000}
-            className={`${TEXTAREA} min-h-[104px]`}
-            aria-invalid={Boolean(err("naturesTravaux"))}
-            aria-describedby={
-              err("naturesTravaux") ? "naturesTravaux-erreur" : undefined
-            }
-            placeholder="Ex : remplacement complet de la membrane d'étanchéité toiture terrasse de 120 m², avec pose ponctuelle de chalumeau."
-          />
-          {err("naturesTravaux") && (
-            <p
-              id="naturesTravaux-erreur"
-              className="m-0 mt-1.5 text-[12.5px] text-[color:var(--board-signal-ink)]"
-            >
-              {err("naturesTravaux")}
-            </p>
-          )}
-        </div>
-      </SectionChamps>
-
-      {/* Le moment de R. 4512-2 — « avant l'exécution », pas celui de
-          R. 4512-6 (C40). L'article sous le livre, pris à `annonces-plan.ts`. */}
-      <SectionChamps
-        titre="Inspection commune préalable"
-        chapeau={EN_CLAIR_R4512_2}
-      >
-        <LegalBadge reference="Art. R. 4512-2 CT" href={URL_R4512_2} extrait={R4512_2} />
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-[220px_1fr]">
-          <ChampBoard
-            id="inspectionDate"
-            name="inspectionDate"
-            type="date"
-            label="Date de l'inspection"
-            defaultValue={valeur(plan?.inspectionDate)}
-            erreur={err("inspectionDate")}
-          />
-          <div>
-            <label className="label-board" htmlFor="inspectionParticipants">
-              Participants à l&apos;inspection
-            </label>
-            <textarea
-              id="inspectionParticipants"
-              name="inspectionParticipants"
-              defaultValue={valeur(plan?.inspectionParticipants)}
-              rows={2}
-              maxLength={2000}
-              className={`${TEXTAREA} min-h-[72px]`}
-              placeholder="Ex : M. Dupond (gérant), Mme Martin (chef de chantier EE), M. Petit (CSE)"
-            />
-          </div>
-        </div>
-      </SectionChamps>
-
-      <SectionChamps
-        titre="Analyse conjointe des risques d'interférence"
-        // R. 4463-8 : « le cas échéant » laisse l'appréciation aux
-        // employeurs, et la phrase en clair le garde. L'article entier sous
-        // le livre (2026-10-28).
-        chapeau={
-          <>
-            Pour chaque risque identifié lors de l&apos;inspection, indiquez la
-            mesure prise par chaque partie. {EN_CLAIR_R4463_8}
-          </>
-        }
-      >
-        <LegalBadge reference="Art. R. 4463-8 CT" href={URL_R4463_8} extrait={R4463_8} />
-        {/* Les risques sont séparés par un filet plein : le board sépare
-            ainsi, ou pas du tout — il n'a pas de pointillé. */}
-        {lignes.map((l, i) => (
-          <div
-            key={l.cle}
-            className="flex flex-col gap-4 border-t border-[color:var(--board-slate-line)] pt-5 first:border-t-0 first:pt-0"
-          >
-            <div className="flex items-baseline justify-between gap-3">
-              <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
-                Risque #{i + 1}
+      {/* LA BARRE DU BAS, collée en bas de l'écran le temps du formulaire,
+          au-dessus de la navigation du téléphone. */}
+      <div className="sticky bottom-[var(--reserve-nav-bas)] z-10 -mx-[var(--board-gutter)] border-t border-[color:var(--board-slate-line)] bg-white/95 px-[var(--board-gutter)] py-3.5 backdrop-blur">
+        <div className="mx-auto flex max-w-[1180px] flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0">
+            {state.status === "error" && !state.fieldErrors ? (
+              <p role="alert" className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
+                {state.message}
               </p>
-              {lignes.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => retirerLigne(l.cle)}
-                  className="text-[12.5px] font-semibold text-[color:var(--board-slate-mid)] transition-colors hover:text-[color:var(--board-signal-ink)]"
-                >
-                  Retirer
-                </button>
-              )}
-            </div>
-
-            <ChampBoard
-              id={`risque-${l.cle}`}
-              name={`lignes[${i}].risque`}
-              label="Description du risque"
-              requis
-              value={l.risque}
-              onChange={(e) => majLigne(l.cle, "risque", e.target.value)}
-              maxLength={500}
-              placeholder="Ex : chute de hauteur depuis la toiture sans garde-corps"
-            />
-
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <div>
-                <label className="label-board" htmlFor={`mesureEU-${l.cle}`}>
-                  Votre mesure (entreprise utilisatrice)
-                </label>
-                <textarea
-                  id={`mesureEU-${l.cle}`}
-                  name={`lignes[${i}].mesureEntrepriseUtilisatrice`}
-                  value={l.mesureEntrepriseUtilisatrice}
-                  onChange={(e) =>
-                    majLigne(
-                      l.cle,
-                      "mesureEntrepriseUtilisatrice",
-                      e.target.value,
-                    )
-                  }
-                  rows={2}
-                  maxLength={500}
-                  className={`${TEXTAREA} min-h-[72px]`}
-                />
-              </div>
-              <div>
-                <label className="label-board" htmlFor={`mesureEE-${l.cle}`}>
-                  Mesure EE (entreprise extérieure)
-                </label>
-                <textarea
-                  id={`mesureEE-${l.cle}`}
-                  name={`lignes[${i}].mesureEntrepriseExterieure`}
-                  value={l.mesureEntrepriseExterieure}
-                  onChange={(e) =>
-                    majLigne(
-                      l.cle,
-                      "mesureEntrepriseExterieure",
-                      e.target.value,
-                    )
-                  }
-                  rows={2}
-                  maxLength={500}
-                  className={`${TEXTAREA} min-h-[72px]`}
-                />
-              </div>
-            </div>
-          </div>
-        ))}
-
-        <div className="flex items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={ajouterLigne}
-            className={buttonVariants({
-              variant: "boardClair",
-              size: "boardSm",
-            })}
-          >
-            Ajouter un risque
-          </button>
-          {err("lignes") && (
-            <p className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
-              {err("lignes")}
-            </p>
-          )}
-        </div>
-      </SectionChamps>
-
-      {/* LES CINQ RUBRIQUES QUE LE PLAN ÉMIS NE PORTAIT PAS. R. 4512-8 écrit
-          que les mesures du plan « comportent AU MOINS » cinq dispositions ;
-          le formulaire n'en collectait aucune, et le ZIP remis à un tiers
-          citait l'article en en-tête. Aucune n'est requise à la saisie : le
-          produit n'a pas de porte de validation sur les plans, et en poser une
-          au seul point de création aurait bloqué ici sans rien exiger à la
-          clôture. Ce qui est vide se lit vide, sur la fiche comme dans le ZIP. */}
-      <SectionChamps
-        titre="Contenu minimal du plan"
-        // 2026-10-28 : la citation du chapeau et celle de chaque rubrique
-        // passent sous le livre de l'article, en tête de section ; le titre
-        // de chaque rubrique dit déjà ce qu'on y écrit.
-        chapeau="Les rubriques que le plan contient au moins. Ce que vous laissez vide est signalé comme manquant sur la fiche du plan et dans le dossier de contrôle — rien ne vous empêche d'enregistrer."
-      >
-        <LegalBadge reference="Art. R. 4512-8 CT" href={URL_R4512_8}>
-          {TEXTE_R4512_8}
-        </LegalBadge>
-        <div>
-          <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
-            1° — {RUBRIQUES_R4512_8[0].titre}
-          </p>
-          <p className="m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-            Les phases dangereuses de l&apos;opération elle-même, et les moyens
-            de prévention de chacune. À distinguer des risques
-            d&apos;interférence ci-dessus, qui naissent de la co-activité.
-          </p>
-        </div>
-
-        {phases.map((f, i) => (
-          <div
-            key={f.cle}
-            className="flex flex-col gap-4 border-t border-[color:var(--board-slate-line)] pt-5"
-          >
-            <div className="flex items-baseline justify-between gap-3">
-              <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
-                Phase #{i + 1}
+            ) : state.status === "error" ? (
+              <p role="alert" className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
+                Des champs sont à revoir : ils sont signalés plus haut.
               </p>
-              {phases.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => retirerPhase(f.cle)}
-                  className="text-[12.5px] font-semibold text-[color:var(--board-slate-mid)] transition-colors hover:text-[color:var(--board-signal-ink)]"
-                >
-                  Retirer
-                </button>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <ChampBoard
-                id={`phase-${f.cle}`}
-                name={`phases[${i}].phase`}
-                label="Phase d'activité dangereuse"
-                value={f.phase}
-                onChange={(e) => majPhase(f.cle, "phase", e.target.value)}
-                maxLength={500}
-                placeholder="Ex : découpe au chalumeau en toiture"
-              />
-              <div>
-                <label className="label-board" htmlFor={`moyens-${f.cle}`}>
-                  Moyens de prévention spécifiques correspondants
-                </label>
-                <textarea
-                  id={`moyens-${f.cle}`}
-                  name={`phases[${i}].moyensPrevention`}
-                  value={f.moyensPrevention}
-                  onChange={(e) =>
-                    majPhase(f.cle, "moyensPrevention", e.target.value)
-                  }
-                  rows={2}
-                  maxLength={500}
-                  className={`${TEXTAREA} min-h-[72px]`}
-                  placeholder="Ex : permis de feu, extincteur à poste, surveillance 2 h après arrêt"
-                />
-              </div>
-            </div>
+            ) : (
+              <p className="m-0 text-[13px] text-[color:var(--board-slate-soft)]">
+                Rien ne part à l&apos;entreprise extérieure tant que vous ne demandez pas sa signature.
+              </p>
+            )}
           </div>
-        ))}
-
-        <div className="flex items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={ajouterPhase}
-            className={buttonVariants({
-              variant: "boardClair",
-              size: "boardSm",
-            })}
-          >
-            Ajouter une phase
-          </button>
-          {/* `extrairePhases` remonte désormais au schéma tout rang dont un
-              champ porte quelque chose. Sans cet affichage, son erreur
-              n'arriverait nulle part et la saisie semblerait avalée. */}
-          {err("phases") && (
-            <p className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
-              {err("phases")}
-            </p>
-          )}
-        </div>
-
-        {RUBRIQUES_TEXTE.map((r) => {
-          const rubrique = RUBRIQUES_R4512_8.find(
-            (x) => x.numero === r.numero,
-          )!;
-          return (
-            <div
-              key={r.name}
-              className="border-t border-[color:var(--board-slate-line)] pt-5"
+          <div className="flex gap-2.5">
+            <Link
+              href={`/etablissements/${etablissementId}/plan-prevention${plan ? `/${plan.id}` : ""}`}
+              className="inline-flex min-h-11 items-center px-4 text-[14px] text-[color:var(--board-slate-mid)] hover:text-[color:var(--board-ink)]"
             >
-              <label className="label-board" htmlFor={r.name}>
-                {r.numero}° — {rubrique.titre}
-              </label>
-              <textarea
-                id={r.name}
-                name={r.name}
-                defaultValue={valeur(plan?.[r.name])}
-                rows={r.rows}
-                maxLength={4000}
-                className={`${TEXTAREA} min-h-[88px]`}
-                placeholder={r.placeholder}
-                aria-invalid={Boolean(err(r.name))}
-                aria-describedby={err(r.name) ? `${r.name}-erreur` : undefined}
-              />
-              {err(r.name) && (
-                <p
-                  id={`${r.name}-erreur`}
-                  className="m-0 mt-1.5 text-[12.5px] text-[color:var(--board-signal-ink)]"
-                >
-                  {err(r.name)}
-                </p>
-              )}
-            </div>
-          );
-        })}
-
-        {/* DEUX PIÈCES QUE D'AUTRES ARTICLES FONT FIGURER DANS LE PLAN, et
-            pour lesquelles ce formulaire n'a pas de champ. Les taire laissait
-            croire que les cinq rubriques ci-dessus sont tout le plan. Le
-            constat est sur le produit ; ce qu'est une « entreprise
-            concernée » ou un « dossier technique », le texte le dit, pas nous. */}
-        {/* En clair et le constat ; l'article sous son livre (2026-10-28).
-            Écrits un par un, pas en boucle : la garde des extraits
-            (`extraits-affiches.test.ts`) lit la `reference` littérale. */}
-        <ArticleEnClair
-          className="border-t border-[color:var(--board-slate-line)] pt-5"
-          titre="Liste des postes en suivi individuel renforcé"
-          texte={EN_CLAIR_R4512_9}
-          constat={CONSTAT_R4512_9}
-        >
-          <LegalBadge className="mt-2" reference="Art. R. 4512-9 CT" href={URL_R4512_9} extrait={R4512_9} />
-        </ArticleEnClair>
-        <ArticleEnClair
-          className="border-t border-[color:var(--board-slate-line)] pt-5"
-          titre="Dossiers techniques amiante"
-          texte={EN_CLAIR_R4512_11}
-          constat={CONSTAT_R4512_11}
-        >
-          <LegalBadge className="mt-2" reference="Art. R. 4512-11 CT" href={URL_R4512_11} extrait={R4512_11} />
-        </ArticleEnClair>
-      </SectionChamps>
-
-      </fieldset>
-
-      {state.status === "error" && !state.fieldErrors && (
-        <p className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
-          {state.message}
-        </p>
-      )}
-
-      <div className="flex flex-wrap items-center gap-3">
-        <Button variant="board" size="board" type="submit" disabled={pending}>
-          {plan
-            ? pending
-              ? "Enregistrement…"
-              : "Enregistrer les modifications"
-            : pending
-              ? "Création…"
-              : "Créer le plan et demander les signatures"}
-        </Button>
-        <Link
-          href={`/etablissements/${etablissementId}/plan-prevention${plan ? `/${plan.id}` : ""}`}
-          className={buttonVariants({ variant: "boardClair", size: "board" })}
-        >
-          Annuler
-        </Link>
+              Annuler
+            </Link>
+            <Button
+              variant="board"
+              size="board"
+              type="submit"
+              disabled={pending}
+              className="min-h-12 rounded-full px-7 font-display text-[16px] font-semibold normal-case tracking-normal"
+            >
+              {plan
+                ? pending
+                  ? "Enregistrement…"
+                  : "Enregistrer les modifications"
+                : pending
+                  ? "Création…"
+                  : "Créer le plan"}
+            </Button>
+          </div>
+        </div>
       </div>
     </form>
+  );
+}
+
+const CARTE = "carte-board flex scroll-mt-6 flex-col gap-4 px-6 py-6 md:px-8 md:py-7";
+const CHAPEAU = "m-0 max-w-[var(--board-mesure)] text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]";
+
+function EnTeteCarte({ id, titre, note }: { id: string; titre: string; note?: string }) {
+  return (
+    <div className="flex flex-wrap items-baseline justify-between gap-3">
+      <h2 id={id} className="board-titre m-0 text-[24px] md:text-[26px]">
+        {titre}
+      </h2>
+      {note && <span className="text-[13px] text-[color:var(--board-slate-soft)]">{note}</span>}
+    </div>
+  );
+}
+
+function Rubrique({ numero, titre, remplie }: { numero: number; titre: string; remplie: boolean }) {
+  return (
+    <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 text-[15px] font-medium text-[color:var(--board-ink)] [&::-webkit-details-marker]:hidden">
+      <span>
+        {numero}° — {titre}
+      </span>
+      <span className="flex flex-none items-center gap-2.5">
+        <span
+          className={`pastille-board text-[12px] ${
+            remplie
+              ? "bg-[color:var(--board-green)] text-[color:var(--board-green-ink)]"
+              : "bg-[color:var(--board-slate-pale)] text-[color:var(--board-slate-mid)]"
+          }`}
+        >
+          {remplie ? "Renseignée" : "Non renseignée"}
+        </span>
+        <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden />
+      </span>
+    </summary>
   );
 }
