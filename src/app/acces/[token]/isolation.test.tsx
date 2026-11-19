@@ -95,6 +95,10 @@ vi.mock("@/components/ui-kit/LegalBadge", () => ({ LegalBadge: "div" }));
 vi.mock("@/components/signatures/SignatureExterneForm", () => ({
   SignatureExterneForm: "form",
 }));
+// Le bloc d'action (2026-11-19) : client, ses props sont lues dans l'arbre.
+vi.mock("@/components/signatures/SignerOuProposer", () => ({
+  SignerOuProposer: "form",
+}));
 
 import AccesParTokenPage from "./page";
 
@@ -110,6 +114,10 @@ function jetonSignature(objetId: string, objetType = "rapport_verification") {
       emailDestinataire: "signataire@exemple-externe.fr",
       nomDestinataire: "Jean Dupond",
       expireLe: new Date("2026-09-10T12:00:00Z"),
+      // Aucun code encore demandé (2026-11-19 : le code part à la demande).
+      otpHash: null,
+      otpExpireLe: null,
+      otpEssaisRestants: 3,
     },
   };
 }
@@ -372,5 +380,113 @@ describe("garantie 3 — le signataire voit ce qu'il signe, et rien de plus", ()
     const renduPermis = await rendreLaPage();
     expect(renduPermis).toContain("Description-moi");
     expect(renduPermis).not.toMatch(/voisin/);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+// 2026-11-19 (cahier de reprise § 3) — le gabarit, le bloc d'action, les états.
+// ─────────────────────────────────────────────────────────────────────────
+
+function avecPartie(objetId: string, partie: string) {
+  const j = jetonSignature(objetId, "plan_prevention");
+  return { ...j, token: { ...j.token, partie } };
+}
+
+describe("page d'accès — gabarit et bloc d'action", () => {
+  it("le lien de l'entreprise extérieure porte la proposition ; celui de l'entreprise utilisatrice non", async () => {
+    verifierMock.mockResolvedValue(avecPartie("pp-moi", "entreprise_exterieure"));
+    const ee = await rendreLaPage();
+    expect(ee).toContain("Plan de prévention à signer");
+    expect(ee).toContain("Action requise");
+    expect(ee).toContain("Vous engagez");
+    expect(ee).toContain("ou proposez des modifications");
+    expect(ee).toMatch(/"proposition":\{"fiche":\{"entrepriseExterieureRaison":"EF-moi"/);
+
+    verifierMock.mockResolvedValue(avecPartie("pp-moi", "entreprise_utilisatrice"));
+    const eu = await rendreLaPage();
+    expect(eu).toContain('"proposition":null');
+    expect(eu).not.toContain("ou proposez des modifications");
+  });
+
+  it("le badge « Vous » marque la partie du lien, et elle seule", async () => {
+    verifierMock.mockResolvedValue(avecPartie("pp-moi", "entreprise_exterieure"));
+    const rendu = await rendreLaPage();
+    expect(rendu.match(/"children":"Vous"/g)).toHaveLength(1);
+    // Le badge suit la raison sociale de l'entreprise extérieure.
+    expect(rendu).toMatch(/"EF-moi",\{[^]*?"children":"Vous"/);
+
+    verifierMock.mockResolvedValue(jetonSignature("rap-a-moi"));
+    expect(await rendreLaPage()).not.toContain('"children":"Vous"');
+  });
+
+  it("aucun code demandé : l'étape du code ne s'ouvre pas d'office", async () => {
+    verifierMock.mockResolvedValue(avecPartie("pp-moi", "entreprise_exterieure"));
+    expect(await rendreLaPage()).toContain('"codeDejaDemande":false');
+  });
+
+  it("un code déjà demandé ouvre l'étape du code, avec l'heure du prochain renvoi", async () => {
+    const j = avecPartie("pp-moi", "entreprise_exterieure");
+    verifierMock.mockResolvedValue({
+      ...j,
+      token: { ...j.token, otpHash: "h", otpExpireLe: new Date("2026-11-19T10:10:00Z") },
+    });
+    const rendu = await rendreLaPage();
+    expect(rendu).toContain('"codeDejaDemande":true');
+    expect(rendu).toContain('"renvoiPossibleLe":"2026-11-19T10:01:00.000Z"');
+  });
+});
+
+describe("page d'accès — les états d'un lien inutilisable", () => {
+  it("révoqué au 3ᵉ essai : le motif est traduit, et l'entreprise à contacter nommée", async () => {
+    verifierMock.mockResolvedValue({
+      ok: false,
+      raison: "revoque",
+      motif: "OTP épuisé (3 essais)",
+      etablissementId: "etab-a-moi",
+    });
+    const rendu = await rendreLaPage();
+    expect(rendu).toContain("Ce lien a été révoqué");
+    expect(rendu).toContain("Les 3 essais de code de ce lien sont épuisés.");
+    expect(rendu).not.toContain("OTP épuisé");
+    expect(rendu).toContain("Contactez Mon entreprise pour obtenir un nouveau lien.");
+  });
+
+  it("expiré : la date, et qui contacter", async () => {
+    verifierMock.mockResolvedValue({
+      ok: false,
+      raison: "expire",
+      expireLe: new Date("2026-11-10T10:00:00Z"),
+      etablissementId: "etab-a-moi",
+    });
+    const rendu = await rendreLaPage();
+    expect(rendu).toContain("Ce lien a expiré");
+    expect(rendu).toContain("10/11/2026");
+    expect(rendu).toContain("Mon entreprise");
+  });
+
+  it("inexistant : rien n'est lu, la consigne reste générale", async () => {
+    verifierMock.mockResolvedValue({ ok: false, raison: "inexistant" });
+    const rendu = await rendreLaPage();
+    expect(rendu).toContain("Ce lien n'existe pas");
+    expect(rendu).toContain("Contactez la personne qui vous a envoyé ce lien pour obtenir un nouveau lien.");
+    expect(prismaMock.etablissement.findUnique).not.toHaveBeenCalled();
+  });
+
+  it("un lien d'un établissement sans propriétaire ne nomme personne", async () => {
+    proprietaire.userId = null;
+    verifierMock.mockResolvedValue({ ok: false, raison: "deja_utilise", utiliseLe: new Date(), etablissementId: "etab-a-moi" });
+    const rendu = await rendreLaPage();
+    expect(rendu).toContain("Ce lien a déjà servi");
+    expect(rendu).not.toContain("Mon entreprise");
+  });
+
+  it("une proposition en attente : la signature est en pause, pas en erreur", async () => {
+    prismaMock.propositionModificationPlan = { count: vi.fn(async () => 1) } as unknown as ReturnType<typeof table>;
+    prismaMock.planPrevention = table([{ ...PLAN_A_MOI, propositions: [{ id: "prop-1" }] }]);
+    verifierMock.mockResolvedValue(avecPartie("pp-moi", "entreprise_exterieure"));
+    const rendu = await rendreLaPage();
+    // Selon la lecture de l'état signable, la page dit « en pause » ou, à
+    // défaut, « plus à signer » ; elle ne présente jamais le formulaire.
+    expect(rendu).not.toContain("Action requise");
   });
 });
