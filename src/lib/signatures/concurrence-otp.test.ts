@@ -167,6 +167,7 @@ beforeEach(() => {
       numero: 1,
       lignes: [],
       phasesDangereuses: [],
+      propositions: [],
     },
   ]);
   prismaMock.$transaction = async (fn: (tx: unknown) => Promise<unknown>) => fn(prismaMock);
@@ -427,6 +428,7 @@ describe("l'avis de fin : toutes les parties ont signé (2026-11-19)", () => {
       signataireEmail: "marie@utilisatrice.fr",
       hashDocument: "a".repeat(64),
       horodatageIso: new Date(Date.now() - 60_000),
+      active: true,
     });
     expect((await soumettre(CODE)).status).toBe("success");
     expect(prismaMock.planPrevention.lignes[0].statut).toBe("valide");

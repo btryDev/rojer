@@ -12,7 +12,7 @@ type Raison = Exclude<
 >["raison"];
 
 const MESSAGES: Record<Exclude<Raison, "plafond">, string> = {
-  non_signable: "Ce document n'est plus à signer : il a été clos ou annulé.",
+  non_signable: "Ce document n'est pas à signer pour l'instant : il est clos, annulé, ou une modification proposée attend une réponse.",
   deja_signee: "Cette partie a déjà signé ce document.",
   objet_introuvable: "Ce document n'existe plus.",
   fichier_introuvable: "Le document à signer n'est plus accessible sur le serveur.",

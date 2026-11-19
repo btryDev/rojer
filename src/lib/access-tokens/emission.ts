@@ -14,6 +14,7 @@ import {
 import { envoyerMailAcces, urlAccesPourToken } from "./mail";
 import { envoiEnService, motifErreur } from "@/lib/email";
 import { LIEN_PARTI, MOTIF_REVOCATION_ENVOI_ECHOUE, estAUsageUnique } from "./revocation";
+import { signatureDejaComptee } from "@/lib/plan-prevention/resignature";
 
 /**
  * **Ce module n'est volontairement pas `"use server"`.** `emettreAccessToken`
@@ -263,7 +264,9 @@ export async function emettreAccessToken(
   // comme une enveloppe : la signature du tiers, plus tard, ne recompte pas.
   let pris: string[] = [];
   const creation = await creerSousPlafond(db, compte.compteId, "liensAccesActifs", async (tx) => {
-    if (params.scope === "signature") pris = await prendreQuota(tx, compte.compteId, "signaturesParAn");
+    // Une re-signature après correction ne compte pas (ADR-061 § 6).
+    if (params.scope === "signature" && !(await signatureDejaComptee(tx, { ...params, email: params.emailDestinataire })))
+      pris = await prendreQuota(tx, compte.compteId, "signaturesParAn");
     return tx.accessToken.create({
       data: {
         id: `atk_${randomUUID()}`,

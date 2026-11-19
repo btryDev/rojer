@@ -203,6 +203,16 @@ const EXEMPTIONS = new Map<string, Exemption>([
     },
   ],
   [
+    "lib/plan-prevention/proposition-actions.ts:proposerModificationPlan",
+    {
+      garde: "verifierAccessToken",
+      raison:
+        "Même porte que la signature (ADR-061 § 3) : un lien de signature du plan, " +
+        "émis pour l'entreprise extérieure ; le plan, l'établissement et les lignes " +
+        "viennent du JETON, chaque identifiant de ligne reçu est confronté au plan.",
+    },
+  ],
+  [
     "lib/signatures/actions.ts:renvoyerCodeOtp",
     {
       garde: "verifierAccessToken",

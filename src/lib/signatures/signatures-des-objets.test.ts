@@ -26,6 +26,7 @@ describe("listSignaturesDesObjets", () => {
       where: {
         objetType: "rapport_verification",
         objetId: { in: ["r1", "r2", "r3"] },
+        active: true,
         // La portée au propriétaire, dans la requête.
         etablissement: { entreprise: { compteId: "u1" } },
       },

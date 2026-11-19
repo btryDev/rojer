@@ -47,7 +47,7 @@ export const OFFRES: Offre[] = [
       "1 établissement, 1 utilisateur",
       "Tous les modules : DUERP, vérifications et calendrier, registre de sécurité, plan d'actions, équipe, carnet sanitaire, accessibilité, relances email…",
       "10 permis de feu et 5 plans de prévention par an",
-      "20 signatures par an, 2 Go de documents",
+      "20 signatures par an (signer de nouveau un plan corrigé ne compte pas), 2 Go de documents",
     ],
     cta: "Essayer 30 jours",
     formule: "essentiel",

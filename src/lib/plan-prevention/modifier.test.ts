@@ -239,7 +239,7 @@ describe("un plan signé : ce que l'empreinte couvre ne se réécrit pas", () =>
   it("une saisie qui porte un champ couvert est refusée, avec la phrase de l'écran", async () => {
     // Inspection datée : la phrase de B5 ne s'ajoute pas (voir plus bas).
     db.plans.push(planEnBase({ inspectionDate: new Date("2026-10-01") }));
-    db.signatures.push({ objetType: "plan_prevention", objetId: "pp-1", etablissementId: "etab-a-moi" });
+    db.signatures.push({ objetType: "plan_prevention", objetId: "pp-1", etablissementId: "etab-a-moi", active: true });
 
     const r = await modifier(saisie());
 
@@ -253,7 +253,7 @@ describe("un plan signé : ce que l'empreinte couvre ne se réécrit pas", () =>
 
   it("la zone, hors de l'empreinte, se modifie encore", async () => {
     db.plans.push(planEnBase());
-    db.signatures.push({ objetType: "plan_prevention", objetId: "pp-1", etablissementId: "etab-a-moi" });
+    db.signatures.push({ objetType: "plan_prevention", objetId: "pp-1", etablissementId: "etab-a-moi", active: true });
     const fd = new FormData();
     fd.set("batimentId", "zone-2");
 
@@ -266,7 +266,7 @@ describe("un plan signé : ce que l'empreinte couvre ne se réécrit pas", () =>
 
   it("une signature d'un homonyme chez un voisin ne scelle pas ce plan", async () => {
     db.plans.push(planEnBase());
-    db.signatures.push({ objetType: "plan_prevention", objetId: "pp-1", etablissementId: "etab-voisin" });
+    db.signatures.push({ objetType: "plan_prevention", objetId: "pp-1", etablissementId: "etab-voisin", active: true });
 
     expect((await modifier(saisie())).status).toBe("success");
   });
@@ -390,7 +390,7 @@ describe("les lectures de propriété se font hors transaction (relecture finale
 describe("un plan signé sans date d'inspection commune (B5)", () => {
   it("l'écran et le serveur disent l'issue réelle, pas seulement « la zone »", async () => {
     db.plans.push(planEnBase());
-    db.signatures.push({ objetType: "plan_prevention", objetId: "pp-1", etablissementId: "etab-a-moi" });
+    db.signatures.push({ objetType: "plan_prevention", objetId: "pp-1", etablissementId: "etab-a-moi", active: true });
 
     const r = await modifier(saisie());
 
@@ -403,7 +403,7 @@ describe("un plan signé sans date d'inspection commune (B5)", () => {
 
   it("une inspection déjà datée ne fait pas ajouter la phrase", async () => {
     db.plans.push(planEnBase({ inspectionDate: new Date("2026-10-01") }));
-    db.signatures.push({ objetType: "plan_prevention", objetId: "pp-1", etablissementId: "etab-a-moi" });
+    db.signatures.push({ objetType: "plan_prevention", objetId: "pp-1", etablissementId: "etab-a-moi", active: true });
 
     const r = await modifier(saisie());
 

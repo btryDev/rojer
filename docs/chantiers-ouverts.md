@@ -1823,7 +1823,9 @@ toujours à `["GHW"]` (`src/lib/referentiels/classes-igh.test.ts:253`).]
 
 ---
 
-## 10. Le cycle de contre-signature du plan de prévention — DÉCIDÉ, à faire après
+## ~~10. Le cycle de contre-signature du plan de prévention — DÉCIDÉ, à faire après~~ — FAIT le 2026-11-19 (ADR-061, `lot/contre-signature`)
+
+[2026-11-19 : fait. Code en deux temps et avis de fin aux signataires (PR #348) ; proposition de modification de l'entreprise extérieure, révocation datée des signatures, re-signature, `/verifier` qui dit « révoquée » (ADR-061). Décidé contre ce qui suit : ni horodatage chez un tiers ni PDF scellé (ADR-061 § 7) ; le lien n'est pas lié à une version, il est révoqué quand le contenu change (`revoquerLiensEnVol`, depuis le 2026-10-12).]
 
 **Décidé par la propriétaire le 2026-09-07 : le processus de signature et de
 contre-signature du plan de prévention est à mettre en place dans Rojer, une fois

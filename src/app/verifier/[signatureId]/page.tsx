@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { formaterDateFr } from "@/lib/dates";
 import { verifierSousLimite } from "@/lib/signatures/verification-publique";
 import { RefusLimite } from "@/components/signatures/RefusLimite";
 import { SignatureBlock } from "@/components/ui-kit/SignatureBlock";
@@ -73,6 +74,58 @@ export default async function VerifierSignaturePage({
   // Annoncer « valide » serait le mensonge inverse, et le pire des deux sur un
   // outil de preuve. Cette page rend donc un ton neutre : la signature est un
   // témoin authentique, le contrôle automatique ne peut pas s'exercer.
+  // RÉVOQUÉE (ADR-061) : ni « valide », ni « modifié ». La signature reste
+  // enregistrée, sa preuve aussi ; elle ne vaut plus pour le document, qui a
+  // été corrigé et se signe de nouveau.
+  if (res.ok === false && res.raison === "revoquee") {
+    const s = res.signature;
+    return (
+      <main className="mx-auto max-w-2xl px-6 py-14 sm:px-10">
+        <nav>
+          <Link
+            href="/"
+            className="font-mono text-[0.68rem] uppercase tracking-[0.16em] text-[color:var(--board-slate-mid)] hover:text-[color:var(--board-ink)]"
+          >
+            ← Accueil
+          </Link>
+        </nav>
+        <header className="mt-6 space-y-3">
+          <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
+            Vérification publique d&apos;intégrité
+          </p>
+          <h1 className="text-[1.5rem] font-semibold tracking-[-0.02em]">Signature révoquée</h1>
+          <div className="space-y-2 text-[0.9rem] text-[color:var(--muted-foreground)]">
+            <p>
+              Cette signature est enregistrée, avec son signataire, son horodatage et
+              l&apos;empreinte du document tel qu&apos;il se présentait quand elle a été
+              apposée. Elle a été révoquée
+              {res.revoqueLe ? ` le ${formaterDateFr(res.revoqueLe)}` : ""}
+              {res.revoqueMotif ? ` : ${res.revoqueMotif}` : ""}.
+            </p>
+            <p>
+              Elle ne vaut plus pour le document actuel, que son auteur peut corriger et
+              soumettre de nouveau à la signature. Le recalcul de l&apos;empreinte ne
+              s&apos;applique pas.
+            </p>
+          </div>
+        </header>
+        <div className="mt-8">
+          <SignatureBlock
+            charte="board"
+            signataireNom={s.signataireNom}
+            signataireRole={s.signataireRole}
+            signataireEmail={s.signataireEmail}
+            horodatageIso={s.horodatageIso}
+            methode={s.methode}
+            hashDocument={s.hashDocument}
+            nomDocument={s.nomDocument}
+            signatureId={s.id}
+          />
+        </div>
+      </main>
+    );
+  }
+
   if (res.ok === false && res.raison === "version_anterieure") {
     const s = res.signature;
     return (

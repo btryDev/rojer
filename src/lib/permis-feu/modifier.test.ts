@@ -194,7 +194,7 @@ describe("un permis non signé se corrige", () => {
 describe("un permis signé : ce que l'empreinte couvre ne se réécrit pas", () => {
   beforeEach(() => {
     db.permis.push(permisEnBase());
-    db.signatures.push({ objetType: "permis_feu", objetId: "pf-1", etablissementId: "etab-a-moi" });
+    db.signatures.push({ objetType: "permis_feu", objetId: "pf-1", etablissementId: "etab-a-moi", active: true });
   });
 
   it("une saisie qui porte un champ couvert est refusée, avec la phrase de l'écran", async () => {

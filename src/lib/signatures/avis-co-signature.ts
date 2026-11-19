@@ -46,7 +46,7 @@ export async function envoyerAvisCoSignature(
     const [libelle, signatures] = await Promise.all([
       libelleDocumentSignable(db, objetType, objetId, etablissementId),
       db.signature.findMany({
-        where: { objetType, objetId, etablissementId },
+        where: { objetType, objetId, etablissementId, active: true },
         orderBy: { horodatageIso: "asc" },
         select: {
           id: true,

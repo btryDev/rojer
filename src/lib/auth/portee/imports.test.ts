@@ -198,6 +198,7 @@ const NOMMES_ROUAGES: Record<string, Record<string, Nomme>> = {
     // [cc : pas d'OAuth MCP (ADR-052) — ni `clientDuCompteVerifie` ni `acces-oauth-deps.ts`.]
     "src/lib/mcp/db.ts": { motif: "MCP : établissement de la clé", symboles: ["clientDuProprietaire"] },
     "src/lib/signatures/actions.ts": { motif: "pose de signature par jeton vérifié", symboles: ["clientDuProprietaire"] },
+    "src/lib/plan-prevention/proposition-actions.ts": { motif: "proposition de modification par jeton vérifié (ADR-061)", symboles: ["clientDuProprietaire"] },
     "src/lib/signatures/verification-publique.ts": { motif: "établissement d'une signature lue par son identifiant", symboles: ["clientDuProprietaire"] },
     "src/app/acces/[token]/page.tsx": { motif: "page d'un jeton vérifié", symboles: ["clientDuProprietaire"] },
     "src/lib/stripe/synchronisation.ts": {

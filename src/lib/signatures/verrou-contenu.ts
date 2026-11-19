@@ -38,7 +38,9 @@ export async function compterSignatures(
   objetId: string,
   etablissementId: string,
 ): Promise<number> {
-  return db.signature.count({ where: { objetType, objetId, etablissementId } });
+  // Seules les signatures ACTIVES scellent (ADR-061) : un plan dont les
+  // signatures sont révoquées redevient modifiable.
+  return db.signature.count({ where: { objetType, objetId, etablissementId, active: true } });
 }
 
 /**

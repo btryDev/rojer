@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { formaterDateFr } from "@/lib/dates";
 import { lireSignatureSousLimite } from "@/lib/signatures/verification-publique";
 import { RefusLimite } from "@/components/signatures/RefusLimite";
 import { SignatureBlock } from "@/components/ui-kit/SignatureBlock";
@@ -56,6 +57,30 @@ export default async function ConfirmationSignaturePage({
   }
   const signature = lue.signature;
   if (!signature) notFound();
+
+  // Révoquée depuis (ADR-061) : l'accusé ne dit plus « prise en compte ».
+  if (signature.active === null) {
+    return (
+      <main className="mx-auto max-w-2xl px-6 py-16 sm:px-10">
+        <section className="rounded-3xl border border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] p-10">
+          <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
+            Signature révoquée
+          </p>
+          <h1 className="mt-3 text-[1.6rem] font-semibold tracking-[-0.02em] leading-tight">
+            Cette signature a été révoquée
+            {signature.revoqueLe ? ` le ${formaterDateFr(signature.revoqueLe)}` : ""}.
+          </h1>
+          <p className="mt-4 text-[0.95rem] leading-relaxed text-[color:var(--board-ink)]">
+            Elle reste enregistrée, avec sa preuve. Le document a été remis en
+            correction ; votre interlocuteur peut vous le soumettre de nouveau.{" "}
+            <Link href={`/verifier/${signature.id}`} className="underline">
+              Voir la vérification
+            </Link>
+          </p>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-16 sm:px-10">

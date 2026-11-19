@@ -197,6 +197,8 @@ async function rendreFiche(plan: { dureeHeuresEstimee: number | null; travauxDan
     organisationSecours: null,
     participationCroisee: null,
     signatures: [],
+    signaturesRevoquees: [],
+    propositionEnAttente: null,
     ...plan,
   };
   const { default: Page } = await import(

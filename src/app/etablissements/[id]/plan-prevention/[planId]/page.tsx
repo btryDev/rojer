@@ -22,6 +22,8 @@ import {
 import { repartirSignatures } from "@/lib/signatures/parties";
 import { SignerDepuisMonCompte } from "@/components/signatures/SignerDepuisMonCompte";
 import { InformationInspectionForm } from "@/components/plan-prevention/InformationInspectionForm";
+import { PropositionEnAttente, SignaturesRevoquees } from "@/components/plan-prevention/ContreSignatureFiche";
+import { BoutonRevoquerSignatures } from "@/components/plan-prevention/ContreSignatureBoutons";
 import { statutPlanSignable } from "@/lib/signatures/etat-signable";
 import { INSPECTION_SUR_PLAN_SIGNE } from "@/lib/signatures/verrou-contenu";
 import {
@@ -138,6 +140,10 @@ export default async function PlanPreventionDetailPage({
   const signatures = repartirSignatures("plan_prevention", plan.signatures);
   const signatureEU = signatures.parPartie.entreprise_utilisatrice;
   const signatureEF = signatures.parPartie.entreprise_exterieure;
+  // ADR-061 : une proposition de l'entreprise extérieure attend une décision
+  // — aucune signature ne se recueille avant.
+  const enAttente = plan.propositionEnAttente;
+  const recueillir = planSignable && !enAttente;
 
   const aujourdhui = new Date();
   // Annulé : ardoise, comme la tuile « Annulé » de la liste (voir la fiche du
@@ -194,6 +200,10 @@ export default async function PlanPreventionDetailPage({
           </>
         }
       />
+
+      {enAttente && (
+        <PropositionEnAttente proposition={enAttente} plan={plan} />
+      )}
 
       <CorpsFiche
         principal={
@@ -562,6 +572,11 @@ export default async function PlanPreventionDetailPage({
                 plan.statut === "attente_signatures") && (
                 <BoutonCloturer planId={plan.id} />
               )}
+              {/* ADR-061 § 2 : corriger un plan signé, en révoquant (sans
+                  effacer) ses signatures. */}
+              {planSignable && (signatureEU || signatureEF) && (
+                <BoutonRevoquerSignatures planId={plan.id} />
+              )}
               {plan.statut === "clos" && (
                 <p className="m-0 w-full text-[13px] leading-[1.55] text-[color:var(--board-green-ink)]">
                   Plan clos — l&apos;intervention est terminée.
@@ -587,7 +602,7 @@ export default async function PlanPreventionDetailPage({
             <SceauSignature s={signatureEU} />
           ) : (
             <BlocCreux>
-              {planSignable ? (
+              {recueillir ? (
                 <div className="flex flex-col items-start gap-3">
                   <SignerDepuisMonCompte
                     etablissementId={id}
@@ -605,7 +620,9 @@ export default async function PlanPreventionDetailPage({
                 </div>
               ) : (
                 <p className="m-0 text-[13.5px] text-[color:var(--board-slate-mid)]">
-                  Plus de signature à recueillir : le document est clos ou annulé.
+                  {enAttente && planSignable
+                    ? "Traitez d'abord la proposition de l'entreprise extérieure."
+                    : "Plus de signature à recueillir : le document est clos ou annulé."}
                 </p>
               )}
             </BlocCreux>
@@ -620,7 +637,7 @@ export default async function PlanPreventionDetailPage({
             <SceauSignature s={signatureEF} />
           ) : (
             <BlocCreux>
-              {planSignable ? (
+              {recueillir ? (
                 <DemanderSignatureForm
                   etablissementId={id}
                   objetType="plan_prevention"
@@ -631,7 +648,9 @@ export default async function PlanPreventionDetailPage({
                 />
               ) : (
                 <p className="m-0 text-[13.5px] text-[color:var(--board-slate-mid)]">
-                  Plus de signature à recueillir : le document est clos ou annulé.
+                  {enAttente && planSignable
+                    ? "Traitez d'abord la proposition de l'entreprise extérieure."
+                    : "Plus de signature à recueillir : le document est clos ou annulé."}
                 </p>
               )}
             </BlocCreux>
@@ -640,6 +659,8 @@ export default async function PlanPreventionDetailPage({
       </div>
 
       <SignaturesSansPartie signatures={signatures.sansPartie} />
+
+      <SignaturesRevoquees signatures={plan.signaturesRevoquees} />
 
       <div className="pt-2">
         <LegalBadge

@@ -20,6 +20,11 @@ export const NOM_DU_PLAFOND: Record<CleQuota, string> = {
 
 const nombre = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 });
 
+/** Ce que la jauge dit d'office, sous son chiffre (ADR-061 § 6 pour les signatures). */
+const NOTE_PAR_DEFAUT: Partial<Record<CleQuota, string>> = {
+  signaturesParAn: "Un signataire qui signe de nouveau un plan de prévention corrigé ne compte pas une seconde fois.",
+};
+
 /**
  * Un plafond et ce qui en est utilisé (page Utilisation, 2026-11-17). Plein,
  * la jauge passe en paille — « proche » au calendrier : rien n'est perdu,
@@ -36,6 +41,7 @@ export function JaugeDePlafond({
   note?: string;
 }) {
   const { cle, utilise, plafond } = utilisation;
+  const texteNote = note ?? NOTE_PAR_DEFAUT[cle];
   const plein = plafond !== null && utilise >= plafond;
   const u = unite ? ` ${unite}` : "";
   const valeur =
@@ -65,7 +71,7 @@ export function JaugeDePlafond({
           />
         </div>
       ) : null}
-      {note ? <p className="m-0 text-[12.5px] text-[color:var(--board-slate-soft)]">{note}</p> : null}
+      {texteNote ? <p className="m-0 text-[12.5px] text-[color:var(--board-slate-soft)]">{texteNote}</p> : null}
     </div>
   );
 }

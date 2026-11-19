@@ -6,7 +6,7 @@
  *
  * Ce qu'il sait : égalité, `null` (absent ou nul), dates, `gt`/`gte`/`lt`/
  * `lte` (nombres et dates, par `valueOf`), `in`, `not` (comme en SQL : une
- * valeur nulle ne passe pas), `OR`, et les filtres de relation imbriqués
+ * valeur nulle ne passe pas), `startsWith`, `OR`, et les filtres de relation imbriqués
  * (`{ etablissement: { entreprise: { userId } } }`). Un opérateur inconnu
  * lève : un faux client qui accepterait en silence ce qu'il ne comprend pas
  * ferait passer un test pour une mauvaise raison.
@@ -14,7 +14,7 @@
 
 export type Ligne = Record<string, unknown>;
 
-const OPERATEURS = ["gt", "gte", "lt", "lte", "in", "not"] as const;
+const OPERATEURS = ["gt", "gte", "lt", "lte", "in", "not", "startsWith"] as const;
 
 function estOperateur(o: Ligne): boolean {
   return OPERATEURS.some((op) => op in o);
@@ -34,6 +34,8 @@ function compare(valeur: unknown, op: string, borne: unknown): boolean {
       return (borne as unknown[]).includes(valeur);
     case "not":
       return valeur != null && valeur !== borne;
+    case "startsWith":
+      return typeof valeur === "string" && valeur.startsWith(borne as string);
     default:
       throw new Error(`opérateur inconnu du faux client : ${op}`);
   }
