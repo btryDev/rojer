@@ -88,7 +88,21 @@ export const emissionSchema = z.object({
   // La partie invitée à signer (2026-10-12), recopiée sur la signature.
   partie: z.enum(PartieSignataire).optional(),
   sujetMail: z.string().trim().min(1).max(200).regex(SANS_CONTROLE),
+  // Les paragraphes du message, séparés par une ligne vide.
   messageMail: z.string().trim().min(1).max(2000),
+  // La mise en page du courriel (2026-11-19) : titre, encadré, libellé du
+  // bouton. Facultatifs ; chaque valeur tient sur une ligne.
+  titreMail: z.string().trim().min(1).max(120).regex(SANS_CONTROLE).optional(),
+  boutonMail: z.string().trim().min(1).max(60).regex(SANS_CONTROLE).optional(),
+  encadreMail: z
+    .array(
+      z.object({
+        libelle: z.string().trim().min(1).max(40).regex(SANS_CONTROLE),
+        valeur: z.string().trim().min(1).max(300).regex(SANS_CONTROLE),
+      }),
+    )
+    .max(6)
+    .optional(),
 });
 
 /**
@@ -159,6 +173,9 @@ export type EmissionTokenParams = {
   partie?: PartieSignataire;
   sujetMail: string;
   messageMail: string;
+  titreMail?: string;
+  boutonMail?: string;
+  encadreMail?: { libelle: string; valeur: string }[];
 };
 
 export type EmissionResultat =
@@ -297,6 +314,9 @@ export async function emettreAccessToken(
       nom: params.nomDestinataire,
       sujet: params.sujetMail,
       message: params.messageMail,
+      titre: params.titreMail,
+      bouton: params.boutonMail,
+      encadre: params.encadreMail,
       urlAcces,
       codeALaDemande: estAUsageUnique(params.scope),
       expireLe,

@@ -14,6 +14,7 @@ import { lireProposition } from "./proposition";
 import {
   avertirDecision,
   avertirSignaturesRetirees,
+  emettreLienApresRefus,
   MOTIF_REVOCATION_PLAN,
   retirerSignaturesDuPlan,
 } from "./contre-signature";
@@ -34,13 +35,13 @@ export type ContreSignatureState =
   | { status: "success"; message: string };
 
 async function planDuCompte(planId: string) {
-  const { compte, db } = await requireCompte();
+  const { user, compte, db } = await requireCompte();
   const plan = await db.planPrevention.findFirst({
     where: { id: planId, etablissement: { entreprise: { compteId: compte.compteId } } },
     select: { id: true, etablissementId: true },
   });
   if (!plan) notFound();
-  return { ...plan, db };
+  return { ...plan, db, auteurEmail: user.email ?? null };
 }
 
 function revalider(etablissementId: string, planId: string) {
@@ -55,7 +56,7 @@ export async function revoquerSignaturesPlan(
 ): Promise<ContreSignatureState> {
   await verifierSaisie();
   const plan = await planDuCompte(planId);
-  const { etablissementId, db } = plan;
+  const { etablissementId, db, auteurEmail } = plan;
 
   const r = await db.$transaction(async (tx) => {
     await verrouillerObjetSigne(tx, "plan_prevention", planId, etablissementId);
@@ -87,6 +88,8 @@ export async function revoquerSignaturesPlan(
       planId,
       motif: MOTIF_REVOCATION_PLAN.correction,
       retirees: r.retirees,
+      // Qui révoque ne reçoit pas l'avis de ce qu'il vient de faire (2026-11-19).
+      auteurEmail,
     }),
   );
   revalider(etablissementId, planId);
@@ -135,9 +138,10 @@ export async function traiterProposition(
     // différer de celle de la fiche.
     const lien = await tx.accessToken.findFirst({
       where: { id: p.accessTokenId, etablissementId },
-      select: { emailDestinataire: true },
+      select: { emailDestinataire: true, nomDestinataire: true },
     });
     const auteur = lien?.emailDestinataire ?? null;
+    const auteurNom = lien?.nomDestinataire ?? null;
     if (!plan) return { ok: false as const, message: "Ce plan n'existe plus." };
     // Un plan clos ou annulé ne s'applique plus rien, mais sa proposition se
     // refuse encore : elle ne reste pas en suspens pour toujours.
@@ -155,7 +159,7 @@ export async function traiterProposition(
         where: { id: propositionId, etablissementId },
         data: { ...cloture, statut: "refusee" },
       });
-      return { ok: true as const, acceptee: false, auteur, retirees: [] };
+      return { ok: true as const, acceptee: false, auteur, auteurNom, retirees: [] };
     }
 
     // La proposition porte sur UNE version du plan (son empreinte, relevée à
@@ -222,18 +226,34 @@ export async function traiterProposition(
       where: { id: propositionId, etablissementId },
       data: { ...cloture, statut: "acceptee" },
     });
-    return { ok: true as const, acceptee: true, auteur, retirees };
+    return { ok: true as const, acceptee: true, auteur, auteurNom, retirees };
   });
   if (!r.ok) return { status: "error", message: r.message };
 
-  const { auteur, acceptee, retirees } = r;
+  const { auteur, auteurNom, acceptee, retirees } = r;
+  // Au refus, un nouveau lien pour l'entreprise extérieure (2026-11-19) :
+  // APRÈS la transaction — le refus est acquis quoi qu'il arrive à l'envoi —,
+  // et avant la réponse, qui dit s'il est parti. Son courriel est l'avis de
+  // décision ; en échec, l'avis part sans lien (`avertirDecision`).
+  const nouveauLien =
+    !acceptee && auteur
+      ? await emettreLienApresRefus(db, {
+          compteId: compte.compteId,
+          emailDuCompte: user.email ?? null,
+          etablissementId,
+          planId,
+          to: auteur,
+          nom: auteurNom,
+        })
+      : undefined;
   after(async () => {
-    if (auteur) await avertirDecision(db, { etablissementId, planId, to: auteur, acceptee });
+    if (auteur) await avertirDecision(db, { etablissementId, planId, to: auteur, acceptee, nouveauLien });
     await avertirSignaturesRetirees(db, {
       etablissementId,
       planId,
       motif: MOTIF_REVOCATION_PLAN.proposition,
       retirees,
+      auteurEmail: traiteePar,
     });
   });
   revalider(etablissementId, planId);
@@ -244,6 +264,10 @@ export async function traiterProposition(
     status: "success",
     message: acceptee
       ? "Proposition appliquée au plan. Demandez de nouveau les signatures."
-      : "Proposition refusée.",
+      : nouveauLien === "parti"
+        ? `Proposition refusée. Un nouveau lien de signature est parti à ${auteur} : le plan se signe tel qu'il est.`
+        : nouveauLien === "echec"
+          ? "Proposition refusée. Le nouveau lien de signature n'a pas pu partir : demandez de nouveau la signature de l'entreprise extérieure."
+          : "Proposition refusée.",
   };
 }
