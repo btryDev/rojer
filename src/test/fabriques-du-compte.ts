@@ -161,6 +161,20 @@ export const FABRIQUES: Record<string, Fabrique[]> = {
   ],
   LignePlanPrevention: [(g) => ({ planPreventionId: g.PlanPrevention, risque: "x" })],
   PhaseDangereuse: [(g) => ({ planPreventionId: g.PlanPrevention, phase: "x" })],
+  // ADR-061. Traitée (refusée) : l'unicité « une seule en attente par plan »
+  // ne gêne pas les variantes.
+  PropositionModificationPlan: [
+    (g, n) => ({
+      etablissementId: g.Etablissement,
+      planPreventionId: g.PlanPrevention,
+      accessTokenId: g.AccessToken,
+      hashVersion: `h${n}`,
+      contenu: {},
+      statut: "refusee",
+      enAttente: null,
+      traiteeLe: JOUR,
+    }),
+  ],
   CarnetSanitaire: [(g) => ({ etablissementId: g.Etablissement })],
   PointReleve: [
     (g, n) => ({ carnetId: g.CarnetSanitaire, nom: `Pt${n}`, typeReseau: "ECS", seuilMinCelsius: 50, batimentId: g.Batiment }),

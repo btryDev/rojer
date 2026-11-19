@@ -9,8 +9,9 @@ import { clientDuProprietaire } from "@/lib/auth/compte-hors-session";
 import { calculerHashObjet } from "@/lib/signatures/hash-objet";
 import { verrouillerObjetSigne } from "@/lib/signatures/verrou-contenu";
 import { statutPlanSignable } from "@/lib/signatures/etat-signable";
-import { ipClient, ipPourLimite } from "@/lib/securite/ip-client";
-import { cleLimite, consommer, LIMITES, messageTropDeTentatives } from "@/lib/securite/limite-debit";
+import { ipClient } from "@/lib/securite/ip-client";
+import { messageTropDeTentatives } from "@/lib/securite/limite-debit";
+import { limiterProposition } from "./limite-proposition";
 import { aucunEcart, ecartsDeLaProposition, lireProposition, PROPOSITION_TAILLE_MAX, propositionSchema } from "./proposition";
 import {
   avertirPropositionRecue,
@@ -79,9 +80,7 @@ export async function proposerModificationPlan(
   const ip = ipClient(hh);
   const ua = hh.get("user-agent")?.slice(0, 500) ?? null;
   // Par réseau (/64 en IPv6), comme les autres limites.
-  const verdict = await consommer([
-    { cle: cleLimite("proposition-plan", "ip", ipPourLimite(hh) ?? "inconnue"), limite: LIMITES.propositionPlanIp },
-  ]);
+  const verdict = await limiterProposition(hh);
   if (!verdict.ok) return { status: "error", message: messageTropDeTentatives(verdict.reessayerDansSecondes) };
 
   const db = await clientDuProprietaire(token.etablissementId);

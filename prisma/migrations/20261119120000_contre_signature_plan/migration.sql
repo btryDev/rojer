@@ -8,12 +8,10 @@ ALTER TABLE "Signature" ADD COLUMN "active" BOOLEAN DEFAULT true,
 ADD COLUMN "revoqueLe" TIMESTAMP(3),
 ADD COLUMN "revoqueMotif" TEXT;
 
--- L'unicité « une partie signe une fois » ne porte plus que sur les
--- signatures actives : `active` vaut true ou NULL, et PostgreSQL ne compare
--- pas les NULL. Écrite dans le schéma (`@@unique`), à l'abri d'un
--- `migrate dev` suivant, à la différence d'un index partiel.
-DROP INDEX "Signature_objetType_objetId_partie_key";
-CREATE UNIQUE INDEX "Signature_objetType_objetId_partie_active_key" ON "Signature"("objetType", "objetId", "partie", "active");
+-- L'unicité « une partie signe une fois » passe aux seules signatures
+-- actives dans les deux migrations suivantes, chacune SEULE dans son fichier
+-- (`CONCURRENTLY`, `migrations-index.test.ts`) : la nouvelle d'abord, puis le
+-- retrait de l'ancienne.
 
 -- Les deux colonnes d'état disent la même chose : active sans date de
 -- révocation, ou révoquée avec la sienne — jamais `active = false`, qui
