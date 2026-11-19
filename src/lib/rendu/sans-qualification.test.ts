@@ -210,11 +210,10 @@ const ADMISES: { fichier: string; ligne: string; motif: string }[] = [
       "Renvoi devancé par un autre sur le même lien (`renouvelerOtp` rendu `false`), " +
       "contrôlé APRÈS le refus d'envoi hors service : c'est l'autre renvoi qui a écrit le code et l'envoie.",
   },
-  {
-    fichier: "src/components/signatures/DemanderSignatureForm.tsx",
-    ligne: "Le destinataire va recevoir un email avec le lien et son code de",
-    motif: "Affichée sur `ok: true` seulement, c'est-à-dire après un envoi parti (`emettreAccessToken`).",
-  },
+  // ~~DemanderSignatureForm, « Le destinataire va recevoir un email avec le
+  // lien et son code de »~~ — retirée le 2026-11-19 : la phrase était fausse
+  // (le code part à la demande, dans un second e-mail) et sa réécriture ne
+  // promet plus d'envoi.
   {
     fichier: "src/components/signatures/SignatureExterneForm.tsx",
     ligne: "Code à 6 chiffres reçu par e-mail. Valable 10 minutes,",

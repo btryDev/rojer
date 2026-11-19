@@ -10,7 +10,8 @@ import type { ObjetSignable, PartieSignataire } from "@prisma/client";
 /**
  * Déclencheur côté admin : demande à un tiers (prestataire / contrôleur /
  * co-signataire) de signer électroniquement l'objet. Envoie un lien magique
- * + code de confirmation par email.
+ * par email ; ~~+ code de confirmation~~ [2026-11-19 : le code se demande
+ * depuis la page du lien et part dans un second e-mail, `renvoyerCodeOtp`].
  *
  * **Ni le lien ni le code n'arrivent ici**, et ce composant n'affiche donc ni
  * l'un ni l'autre : la demande ne rend qu'un accusé de réception. Le code
@@ -113,9 +114,12 @@ export function DemanderSignatureForm({
           Lien envoyé
         </p>
         <p className="mt-1 text-[color:var(--board-ink)]">
-          Le destinataire va recevoir un email avec le lien et son code de
-          confirmation. Le code ne part qu&apos;à lui : c&apos;est ce qui rend
-          sa signature indépendante de la vôtre.
+          {/* ~~« un email avec le lien et son code de confirmation »~~
+              (2026-11-19) : le code ne voyage plus avec le lien. */}
+          Le destinataire trouvera le lien dans sa boîte. En l&apos;ouvrant, il
+          demande son code de confirmation, qui part à son adresse seule, dans
+          un second e-mail : c&apos;est ce qui rend sa signature indépendante
+          de la vôtre.
         </p>
         {/* Bloc de développement. `EN_DEV` est résolu à la compilation : dans
             un build de production, ce qui suit ne figure pas dans le bundle.

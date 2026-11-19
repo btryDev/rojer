@@ -749,6 +749,22 @@ describe("garantie 3 — la partie qui signe est enregistrée, jamais devinée",
     expect(prismaMock.signature.lignes[0].partie).toBe("entreprise_utilisatrice");
   });
 
+  it("le nom enregistré est celui du compte, à défaut son adresse (2026-11-19)", async () => {
+    const { assertEtablissementDuCompte } = await import("@/lib/auth/scope");
+    const db = await (await import("@/test/garde-simulee")).clientDuCompteSimule();
+    const compte = { compteId: "user-1", role: "owner" };
+    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
+    prismaMock.planPrevention.lignes.push(planComplet("pp-2", "etab-a-moi", "attente_signatures"));
+    vi.mocked(assertEtablissementDuCompte)
+      .mockResolvedValueOnce({ user: { id: "user-1", email: "moi@exemple.fr", name: "Marie Durand" }, compte, db } as never)
+      .mockResolvedValueOnce({ user: { id: "user-1", email: "moi@exemple.fr", name: "  " }, compte, db } as never);
+
+    await signerEnCompteConnecte({ etablissementId: "etab-a-moi", objetType: "plan_prevention", objetId: "pp-1" });
+    await signerEnCompteConnecte({ etablissementId: "etab-a-moi", objetType: "plan_prevention", objetId: "pp-2" });
+
+    expect(prismaMock.signature.lignes.map((s) => s.signataireNom)).toEqual(["Marie Durand", "moi@exemple.fr"]);
+  });
+
   it("le compte connecté ne signe pas deux fois", async () => {
     unicitePartie();
     prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
@@ -986,22 +1002,39 @@ describe("un nouveau lien remplace l'ancien de la même partie", () => {
     for (const l of [autrePartie, autreObjet, voisin]) expect(l.revoqueLe, String(l.id)).toBeNull();
   });
 
-  it("un lien déjà consommé, déjà révoqué ou expiré garde sa trace", async () => {
+  it("un lien déjà consommé ou déjà révoqué garde sa trace", async () => {
     prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
     const avant = new Date("2026-11-01T10:00:00Z");
     const utilise = ancienLien({ id: "atk_u", tokenHash: "u", utiliseLe: avant });
     const revoque = ancienLien({ id: "atk_r", tokenHash: "r", revoqueLe: avant, revoqueMotif: "Plan de prévention clos" });
-    const expire = ancienLien({ id: "atk_e", tokenHash: "e", expireLe: avant });
-    prismaMock.accessToken.lignes.push(utilise, revoque, expire);
+    prismaMock.accessToken.lignes.push(utilise, revoque);
 
     await demanderSignature({ ...DEMANDE_PLAN, partie: "entreprise_exterieure" });
 
     expect(utilise.revoqueLe).toBeNull();
+    expect(revoque.revoqueLe).toEqual(avant);
     expect(revoque.revoqueMotif).toBe("Plan de prévention clos");
-    expect(expire.revoqueLe).toBeNull();
   });
 
-  it("si l'e-mail du nouveau lien ne part pas, l'ancien redevient valable", async () => {
+  it("l'ancien lien n'est révoqué qu'APRÈS l'envoi du nouveau : l'e-mail parti, puis la révocation", async () => {
+    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
+    const ancien = ancienLien();
+    prismaMock.accessToken.lignes.push(ancien);
+    let ancienOuvertALEnvoi: boolean | null = null;
+    const { sendMail } = await import("@/lib/email");
+    vi.mocked(sendMail).mockImplementationOnce(async (p) => {
+      ancienOuvertALEnvoi = ancien.revoqueLe == null;
+      mailsEnvoyes.push(p as { to: string; subject: string; text: string });
+    });
+
+    const r = await demanderSignature({ ...DEMANDE_PLAN, partie: "entreprise_exterieure" });
+
+    expect(r).toEqual({ ok: true });
+    expect(ancienOuvertALEnvoi).toBe(true);
+    expect(ancien.revoqueMotif).toBe(MOTIF_REVOCATION_NOUVEAU_LIEN);
+  });
+
+  it("si l'e-mail du nouveau lien ne part pas, l'ancien n'est jamais touché", async () => {
     prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
     const ancien = ancienLien();
     prismaMock.accessToken.lignes.push(ancien);
@@ -1014,5 +1047,9 @@ describe("un nouveau lien remplace l'ancien de la même partie", () => {
     expect(ancien.revoqueMotif).toBeNull();
     const nouveau = prismaMock.accessToken.lignes.find((l) => l.id !== "atk_ancien");
     expect(nouveau?.revoqueMotif).toBe(MOTIF_REVOCATION_ENVOI_ECHOUE);
+    // Aucune écriture n'a visé l'ancien lien, pas même pour le rétablir.
+    for (const appel of prismaMock.accessToken.updateMany.mock.calls) {
+      expect(JSON.stringify(appel[0])).not.toContain(MOTIF_REVOCATION_NOUVEAU_LIEN);
+    }
   });
 });

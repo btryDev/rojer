@@ -8,6 +8,12 @@ import { auth } from "./better-auth";
 export type AuthedUser = {
   id: string;
   email: string | null;
+  /**
+   * Le nom du compte Better Auth (`User.name`), quand il en a un. L'inscription
+   * y met l'adresse faute de le demander (`signUpAction`) : il ne vaut donc pas
+   * toujours mieux qu'elle. Facultatif dans le type, pour les doubles de test.
+   */
+  name?: string | null;
   /** Double authentification active (ADR-052 § 7). */
   twoFactorEnabled: boolean;
 };
@@ -54,6 +60,7 @@ const lireUserCourant = cache(async (): Promise<AuthedUser | null> => {
   return {
     id: session.user.id,
     email: session.user.email ?? null,
+    name: session.user.name ?? null,
     twoFactorEnabled: session.user.twoFactorEnabled === true,
   };
 });

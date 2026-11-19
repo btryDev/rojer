@@ -745,7 +745,9 @@ export async function signerEnCompteConnecte(params: {
           objetType: params.objetType,
           objetId: params.objetId,
           partie,
-          signataireNom: user.email ?? "Utilisateur",
+          // ~~`user.email`~~ (2026-11-19, cahier de reprise § 8.3) : le nom
+          // du compte s'il en a un, à défaut l'adresse.
+          signataireNom: user.name?.trim() || user.email || "Utilisateur",
           signataireEmail: user.email ?? "",
           signataireRole: role || null,
           userId: user.id,

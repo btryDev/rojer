@@ -141,8 +141,11 @@ export function SignatureBlock({
     minute: "2-digit",
     timeZone: "Europe/Paris",
   });
+  // ~~« Compte connecté + OTP »~~ (2026-11-19, cahier de reprise § 8.2) : la
+  // signature depuis le compte ne demande aucun code, la mention le laissait
+  // croire. Et la méthode se dit en français, pas en sigle.
   const methodeLabel =
-    methode === "compte_connecte" ? "Compte connecté + OTP" : "OTP email";
+    methode === "compte_connecte" ? "Compte connecté" : "Lien et code par e-mail";
   const hashCourt =
     hashDocument.length > 16
       ? `${hashDocument.slice(0, 10)}…${hashDocument.slice(-6)}`
