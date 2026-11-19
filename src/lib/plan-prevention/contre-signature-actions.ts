@@ -222,9 +222,22 @@ export async function traiterProposition(
       objetId: planId,
       motif: MOTIF_CONTENU_MODIFIE.plan,
     });
+    // « Corriger » (2026-11-19, lot 4) : la marque « correction en cours »,
+    // que la signature du dirigeant termine (`finaliseeLe`). Une correction
+    // plus ancienne restée ouverte se termine ici : une seule à la fois.
+    await tx.propositionModificationPlan.updateMany({
+      where: {
+        planPreventionId: planId,
+        etablissementId,
+        id: { not: propositionId },
+        corrigeeLe: { not: null },
+        finaliseeLe: null,
+      },
+      data: { finaliseeLe: maintenant },
+    });
     await tx.propositionModificationPlan.update({
       where: { id: propositionId, etablissementId },
-      data: { ...cloture, statut: "acceptee" },
+      data: { ...cloture, statut: "acceptee", ...(decision === "corriger" ? { corrigeeLe: maintenant } : {}) },
     });
     return { ok: true as const, acceptee: true, auteur, auteurNom, retirees };
   });

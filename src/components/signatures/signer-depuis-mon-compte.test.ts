@@ -12,8 +12,15 @@ import { describe, expect, it } from "vitest";
 const lire = (chemin: string) => readFileSync(join(process.cwd(), chemin), "utf8");
 
 describe("le dirigeant signe depuis son compte, sur les deux fiches", () => {
+  // [2026-11-19] La fiche du plan signe avec un code par e-mail : son câblage
+  // est éprouvé plus bas ; le bouton sans code reste celui du permis de feu.
+  it("la fiche du plan monte le panneau Signatures, dont la fenêtre signe avec le code", () => {
+    expect(lire("src/app/etablissements/[id]/plan-prevention/[planId]/page.tsx")).toMatch(/<PanneauSignatures[\s\S]*?planId=\{plan\.id\}/);
+    expect(lire("src/components/plan-prevention/PanneauSignatures.tsx")).toMatch(/<FenetreSigner[\s\S]*?planId=\{planId\}/);
+    expect(lire("src/components/plan-prevention/FenetreSigner.tsx")).toMatch(/signerEtEnvoyerPlan\.bind\(null, planId\)/);
+  });
+
   it.each([
-    ["src/app/etablissements/[id]/plan-prevention/[planId]/page.tsx", "plan_prevention"],
     ["src/app/etablissements/[id]/permis-feu/[permisFeuId]/page.tsx", "permis_feu"],
   ])("%s monte le bouton sur son objet", (chemin, objet) => {
     const source = lire(chemin);

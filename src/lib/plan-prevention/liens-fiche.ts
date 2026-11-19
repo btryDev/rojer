@@ -46,7 +46,7 @@ export async function emettreLienDepuisLaFiche(
     if (!(await signatureDEssaiPermise(db, p.compteId, p.emailDuCompte, to))) {
       return {
         ok: false,
-        message: "Sans abonnement payé, un lien de signature ne part qu'à votre propre adresse. Abonnez-vous pour l'envoyer.",
+        message: "Sans abonnement payé, le seul destinataire possible d'un lien de signature est votre propre adresse. Abonnez-vous pour l'adresser à l'entreprise extérieure.",
       };
     }
     const contexte = await lireContexteDemande(db, "plan_prevention", p.planId, p.etablissementId);

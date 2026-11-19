@@ -98,7 +98,7 @@ describe("l'historique", () => {
   });
 
   it("liens envoyés, ouverts, remplacés", () => {
-    expect(lignes).toContain("Lien envoyé à Nettoyage Pro SARL");
+    expect(lignes).toContain("Lien adressé à Nettoyage Pro SARL");
     expect(lignes).toContain("Paul Testeur ouvre le lien et demande un code");
     expect(h.find((e) => e.cle === "revocation-l1")?.sousLigne).toBe("remplacé par un lien plus récent");
   });

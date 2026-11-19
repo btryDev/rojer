@@ -94,7 +94,7 @@ export async function envoyerCodeSignatureCompte(o: Objet): Promise<EnvoiCodeCom
   if (!renvoi.autorise) {
     return {
       ok: false,
-      message: `Un code vient d'être envoyé. Patientez ${renvoi.attendreSecondes} seconde${renvoi.attendreSecondes > 1 ? "s" : ""} avant d'en demander un autre.`,
+      message: `Un code est déjà parti il y a moins d'une minute. Patientez ${renvoi.attendreSecondes} seconde${renvoi.attendreSecondes > 1 ? "s" : ""} avant d'en demander un autre.`,
     };
   }
   const reservation = await reserverEnvoiOtp(email, maintenant);
@@ -139,7 +139,7 @@ export async function envoyerCodeSignatureCompte(o: Objet): Promise<EnvoiCodeCom
   }
   if (!pose) {
     await rendreEnvoiOtp(email);
-    return { ok: false, message: "Un code vient d'être envoyé. Patientez une minute avant d'en demander un autre." };
+    return { ok: false, message: "Un code est déjà parti il y a moins d'une minute. Patientez avant d'en demander un autre." };
   }
 
   const document = await libelleDocumentSignable(db, o.objetType, o.objetId, o.etablissementId).catch(() => null);
@@ -182,7 +182,7 @@ export async function poserSignatureCompteAvecCode(
   }
   const code = o.code.replace(/\s+/g, "");
   if (!new RegExp(`^\\d{${OTP_LENGTH}}$`).test(code)) {
-    return { ok: false, message: `Le code reçu par e-mail compte ${OTP_LENGTH} chiffres.` };
+    return { ok: false, message: `Le code compte ${OTP_LENGTH} chiffres.` };
   }
   if (!(await objetEstSignable(db, o.objetType, o.objetId, o.etablissementId))) {
     return { ok: false, message: MESSAGE_NON_SIGNABLE_COMPTE };

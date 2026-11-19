@@ -18,7 +18,7 @@ export async function getPlanPrevention(
   etablissementId: string,
   planId: string,
 ) {
-  const { db, etablissement } = await requireEtablissement(etablissementId);
+  const { db, etablissement, user } = await requireEtablissement(etablissementId);
   const plan = await db.planPrevention.findFirst({
     where: { id: planId, etablissementId: etablissement.id },
     include: {
@@ -72,7 +72,21 @@ export async function getPlanPrevention(
       },
     }),
   ]);
-  return { ...plan, signatures, signaturesRevoquees, propositionEnAttente, liens, propositions };
+  const entreprise = await db.etablissement.findFirst({
+    where: { id: etablissement.id },
+    select: { entreprise: { select: { raisonSociale: true } } },
+  });
+  return {
+    ...plan,
+    signatures,
+    signaturesRevoquees,
+    propositionEnAttente,
+    liens,
+    propositions,
+    // La fenêtre « Signer et envoyer » : qui signe, et au nom de quelle entreprise.
+    raisonEU: entreprise?.entreprise.raisonSociale ?? "l'entreprise utilisatrice",
+    vous: { nom: user.name?.trim() || user.email || "", email: user.email ?? "" },
+  };
 }
 
 /**

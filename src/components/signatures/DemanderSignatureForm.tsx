@@ -44,7 +44,10 @@ export function DemanderSignatureForm({
   emailDefaut,
   nomDefaut,
   partie,
+  ouvertDEmblee = false,
 }: {
+  /** Le formulaire déjà déplié (« Faire signer un collègue », fiche du plan, 2026-11-19). */
+  ouvertDEmblee?: boolean;
   etablissementId: string;
   objetType: ObjetSignable;
   objetId: string;
@@ -54,7 +57,7 @@ export function DemanderSignatureForm({
    *  le formulaire est posé qui la décide, pas l'adresse saisie (2026-10-12). */
   partie?: PartieSignataire;
 }) {
-  const [ouvert, setOuvert] = useState(false);
+  const [ouvert, setOuvert] = useState(ouvertDEmblee);
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<
     null | { ok: true } | { ok: false; message: string }

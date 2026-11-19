@@ -5,7 +5,7 @@ import { LIBELLE_METHODE_COURT } from "@/lib/signatures/methode";
 
 /**
  * Ce que la fiche du plan montre des signatures (2026-11-19, lot 3) : l'état
- * de chaque partie — signée, lien envoyé, rien encore — et l'historique, lus
+ * de chaque partie — signée, lien adressé, rien encore — et l'historique, lus
  * dans ce que Rojer garde déjà (`AccessToken`, `Signature`,
  * `PropositionModificationPlan`). Aucune table neuve, aucune écriture.
  *
@@ -108,7 +108,7 @@ const jour = (d: Date) => FMT_JOUR.format(d);
  * 2026-10-12) se dit « — ».
  */
 export function historiqueDuPlan(p: {
-  creeLe: Date;
+  creeLe: Date | null;
   raisonEE: string;
   liens: readonly LienLu[];
   signatures: readonly SignatureLue[];
@@ -121,16 +121,18 @@ export function historiqueDuPlan(p: {
       : partie === "entreprise_utilisatrice"
         ? `${nom ?? "un collègue"} (entreprise utilisatrice)`
         : "—";
-  const e: EvenementHistorique[] = [
-    { cle: "creation", date: p.creeLe, ligne: "Plan créé", pastille: { mot: "Création", ton: "neutre" } },
-  ];
+  // Le plan ne garde pas sa date de création (aucune colonne) : sans elle,
+  // pas de ligne « Plan créé » plutôt qu'une date inventée.
+  const e: EvenementHistorique[] = p.creeLe
+    ? [{ cle: "creation", date: p.creeLe, ligne: "Plan créé", pastille: { mot: "Création", ton: "neutre" } }]
+    : [];
 
   for (const l of p.liens) {
     const echoue = l.revoqueMotif === MOTIF_REVOCATION_ENVOI_ECHOUE;
     e.push({
       cle: `lien-${l.id}`,
       date: l.createdAt,
-      ligne: echoue ? `Envoi du lien à ${qui(l.partie, l.nomDestinataire)} échoué` : `Lien envoyé à ${qui(l.partie, l.nomDestinataire)}`,
+      ligne: echoue ? `Envoi du lien à ${qui(l.partie, l.nomDestinataire)} échoué` : `Lien adressé à ${qui(l.partie, l.nomDestinataire)}`,
       sousLigne: [l.nomDestinataire, l.emailDestinataire, echoue ? null : `expire le ${jour(l.expireLe)}`]
         .filter(Boolean)
         .join(" · "),

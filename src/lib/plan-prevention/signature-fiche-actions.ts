@@ -176,7 +176,7 @@ export async function renvoyerLienPlan(
   });
   if (!r.ok) return { status: "error", message: r.message };
   revalider(plan.etablissementId, plan.id);
-  return { status: "success", message: `Nouveau lien envoyé à ${ancien.emailDestinataire}. L'ancien ne sert plus.` };
+  return { status: "success", message: `Nouveau lien parti à ${ancien.emailDestinataire}. L'ancien ne sert plus.` };
 }
 
 /** « Envoyer le lien » à l'entreprise extérieure, à l'adresse de la fiche. */
@@ -197,5 +197,5 @@ export async function envoyerLienEntrepriseExterieure(
   });
   if (!r.ok) return { status: "error", message: r.message };
   revalider(plan.etablissementId, plan.id);
-  return { status: "success", message: `Lien de signature envoyé à ${plan.efChefEmail}.` };
+  return { status: "success", message: `Lien de signature parti à ${plan.efChefEmail}.` };
 }
