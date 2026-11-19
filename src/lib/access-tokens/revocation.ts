@@ -11,10 +11,11 @@ export const MOTIF_REVOCATION_ENVOI_ECHOUE =
 
 /**
  * Le motif écrit sur l'ancien lien d'une partie quand un nouveau lui est
- * envoyé (2026-11-19, `emettreAccessToken`) : un seul lien ouvert par partie
- * et par objet. La page du lien le traduit (`motifLisible`).
+ * envoyé (2026-11-19, `emettreAccessToken`, écrit APRÈS l'envoi réussi) : un
+ * seul lien ouvert par partie et par objet. La page du lien le traduit
+ * (`motifLisible`).
  */
-export const MOTIF_REVOCATION_NOUVEAU_LIEN = "un nouveau lien a été envoyé";
+export const MOTIF_REVOCATION_NOUVEAU_LIEN = "un lien plus récent le remplace";
 
 /** Les liens à usage unique : consommés, ils ne servent plus. */
 export const SCOPES_USAGE_UNIQUE = ["signature", "depot_rapport"] as const;
