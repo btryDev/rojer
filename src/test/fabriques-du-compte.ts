@@ -175,6 +175,19 @@ export const FABRIQUES: Record<string, Fabrique[]> = {
       traiteeLe: JOUR,
     }),
   ],
+  // Le code d'une signature depuis le compte (2026-11-19) : l'objet est
+  // polymorphe, comme celui d'une signature.
+  CodeSignatureCompte: [
+    (g) => ({
+      etablissementId: g.Etablissement,
+      userId: g.user,
+      objetType: "plan_prevention",
+      objetId: g.PlanPrevention,
+      email: "x@exemple.invalid",
+      otpHash: "0".repeat(64),
+      otpExpireLe: DANS_UN_AN,
+    }),
+  ],
   CarnetSanitaire: [(g) => ({ etablissementId: g.Etablissement })],
   PointReleve: [
     (g, n) => ({ carnetId: g.CarnetSanitaire, nom: `Pt${n}`, typeReseau: "ECS", seuilMinCelsius: 50, batimentId: g.Batiment }),

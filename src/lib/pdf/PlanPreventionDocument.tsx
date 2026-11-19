@@ -97,6 +97,9 @@ export const LIBELLE_PARTIE_PLAN: Record<PartieSignataire, string> = {
 export const LIBELLE_METHODE: Record<MethodeSignature, string> = {
   compte_connecte: "depuis le compte Rojer de l'entreprise utilisatrice",
   otp_email: "par lien personnel, confirmé par un code à usage unique",
+  // 2026-11-19 : la fenêtre « Signer et envoyer » de la fiche du plan.
+  compte_code_email:
+    "depuis le compte Rojer de l'entreprise utilisatrice, confirmé par un code à usage unique envoyé à l'adresse du compte",
 };
 
 const PARTIES_ATTENDUES: readonly PartieSignataire[] = [

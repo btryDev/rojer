@@ -1,5 +1,7 @@
+import type { MethodeSignature } from "@prisma/client";
 import { cn } from "@/lib/utils";
 import { CHAMP_ETAT, ENCRE_ETAT } from "@/lib/calendrier/etats";
+import { LIBELLE_METHODE } from "@/lib/signatures/methode";
 import type { Charte } from "./charte";
 
 /**
@@ -123,7 +125,7 @@ export function SignatureBlock({
   signataireRole?: string | null;
   signataireEmail?: string | null;
   horodatageIso: Date | string;
-  methode: "compte_connecte" | "otp_email";
+  methode: MethodeSignature;
   hashDocument: string;
   nomDocument?: string | null;
   signatureId: string;
@@ -144,8 +146,9 @@ export function SignatureBlock({
   // ~~« Compte connecté + OTP »~~ (2026-11-19, cahier de reprise § 8.2) : la
   // signature depuis le compte ne demande aucun code, la mention le laissait
   // croire. Et la méthode se dit en français, pas en sigle.
-  const methodeLabel =
-    methode === "compte_connecte" ? "Compte connecté" : "Lien et code par e-mail";
+  // [2026-11-19 : la table de `signatures/methode.ts` — une méthode de plus,
+  // le compte confirmé par un code.]
+  const methodeLabel = LIBELLE_METHODE[methode];
   const hashCourt =
     hashDocument.length > 16
       ? `${hashDocument.slice(0, 10)}…${hashDocument.slice(-6)}`
