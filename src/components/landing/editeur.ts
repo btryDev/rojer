@@ -16,10 +16,10 @@
 export const EDITEUR = {
   denomination: "BTRY",
   forme: "société à responsabilité limitée (SARL)",
-  capital: "4 000 €",
+  capital: "4\u00a0000\u00a0€",
   siege: "301 avenue du Pascalet, ZA de la Montée Rouge, 30310 Vergèze, France",
-  rcs: "RCS Nîmes 934 765 769",
-  siret: "934 765 769 00021",
+  rcs: "RCS Nîmes 934\u00a0765\u00a0769",
+  siret: "934\u00a0765\u00a0769\u00a000021",
   tva: "FR62934765769",
   ape: "71.12B",
   gerant: "Julien Chantoin",
