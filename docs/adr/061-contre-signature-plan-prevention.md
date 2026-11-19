@@ -1,6 +1,6 @@
 # ADR-061 — Contre-signature du plan de prévention : proposer, corriger, re-signer
 
-- **Statut** : acceptée, 2026-11-19 (décision de la propriétaire).
+- **Statut** : proposée, 2026-11-19 ; § 6 décidé par la propriétaire le même jour. Le reste à valider avant le code.
 - **Portée** : `Signature` (révocation datée), nouveau modèle
   `PropositionModificationPlan`, `src/lib/plan-prevention/`,
   `src/lib/signatures/` (lectures des signatures actives), page
