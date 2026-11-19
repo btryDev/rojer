@@ -33,6 +33,8 @@ import {
 } from "@/lib/pdf/builders";
 import { historiqueJusqua } from "@/lib/versions/historique";
 import { raisonEchecRendu, rendrePdf } from "@/lib/pdf/rendre";
+import { construirePlanPreventionData } from "@/lib/pdf/builder-plan-prevention";
+import { nomFichierPlanPrevention } from "@/lib/pdf/PlanPreventionDocument";
 import { slugifyFilename } from "@/lib/pdf/styles";
 import { contenuR4512_8 } from "@/lib/plan-prevention/contenu-r4512-8";
 import { annoncesZip, ligneHeuresRevisees } from "@/lib/plan-prevention/annonces-plan";
@@ -647,6 +649,23 @@ async function construireArchive(
     ].join("\n");
     zip.file(PIECES_ZIP.plansPrevention, txt);
   }
+  // Le PDF de chaque plan du 07, signatures comprises (2026-11-19, ADR-061
+  // § 7) : rendu ici, depuis les données, comme sur la fiche. Un rendu en
+  // échec prive son seul plan, et le README le compte.
+  const plansPdf = { rendus: 0, echecs: 0 };
+  for (const p of plansList) {
+    try {
+      const data = await construirePlanPreventionData(db, id, p.id, maintenant);
+      if (!data) continue;
+      const buf = await rendrePdf({ type: "plan-prevention", props: { data } }, RENDU_DU_ZIP);
+      const nom = `${PIECES_ZIP.plansPreventionPdf}${nomFichierPlanPrevention(data.numero, data.etablissement)}`;
+      zip.file(nom, new Uint8Array(buf));
+      plansPdf.rendus++;
+    } catch (e) {
+      plansPdf.echecs++;
+      if (!raisonEchecRendu(e)) console.error("controle-zip : PDF d'un plan de prévention non inclus", e);
+    }
+  }
 
   // ── 08 Carnet sanitaire (résumé) ─────────────────────────────────────
   // Sans le nom de qui a relevé (`ReleveTemperature.operateur`) : la
@@ -728,6 +747,7 @@ async function construireArchive(
       : prestataires.map(datesAttestationZip),
     nbPermisFeu: permisFeuList.length,
     nbPlansPrevention: plansList.length,
+    plansPreventionPdf: plansPdf,
     aCarnetSanitaire: Boolean(
       carnetSan && (carnetSan.pointsReleve.length > 0 || carnetSan.analyses.length > 0),
     ),

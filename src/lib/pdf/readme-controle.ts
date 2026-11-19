@@ -85,6 +85,8 @@ export function genererReadme(args: {
   nbPrestataires: number;
   nbPermisFeu: number;
   nbPlansPrevention: number;
+  /** Les PDF des plans mis au ZIP, et ceux dont le rendu a échoué (2026-11-19). */
+  plansPreventionPdf?: { rendus: number; echecs: number };
   aCarnetSanitaire: boolean;
   /** Échéances nées d'une demande d'assureur et imprimées dans ce dossier
    *  (ADR-032). Zéro = rien à annoncer, et rien n'est écrit. */
@@ -236,6 +238,16 @@ export function genererReadme(args: {
     ),
     ligne(PIECES_ZIP.permisFeu, `${args.nbPermisFeu} permis sur 12 mois (INRS ED 6030)`, "Aucun permis émis sur 12 mois"),
     ligne(PIECES_ZIP.plansPrevention, `${args.nbPlansPrevention} plan(s) (art. R. 4512-6 CT)`, "Aucun plan actif"),
+    // Le PDF de chaque plan : ce qui est dans le ZIP, et ce dont le rendu a
+    // échoué — jamais un nombre de plans présenté comme un nombre de PDF.
+    ...(args.plansPreventionPdf && args.plansPreventionPdf.rendus + args.plansPreventionPdf.echecs > 0
+      ? [
+          ` ${PIECES_ZIP.plansPreventionPdf.padEnd(30)}${args.plansPreventionPdf.rendus} PDF de plan, signatures comprises` +
+            (args.plansPreventionPdf.echecs > 0
+              ? ` ; ${args.plansPreventionPdf.echecs} non inclus (la génération a échoué)`
+              : ""),
+        ]
+      : []),
     ligne(PIECES_ZIP.carnet, "Relevés ECS + analyses légionelles (arrêté 01-02-2010)", "Non configuré"),
     ...(args.analysesZip && args.analysesZip.deposes > 0
       ? [ligneFichiers(PIECES_ZIP.analyses, `rapport(s) de laboratoire (${NB_ANALYSES_DU_DOSSIER} dernières analyses)`, "", args.analysesZip)]

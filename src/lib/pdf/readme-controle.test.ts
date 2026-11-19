@@ -342,3 +342,23 @@ describe("le README dit pourquoi le registre d'accessibilité manque", () => {
     expect(genererReadme(base)).toContain("Non inclus (registre non publié)");
   });
 });
+
+describe("le README nomme les PDF des plans de prévention (2026-11-19)", () => {
+  it("les PDF rendus, et ceux dont le rendu a échoué", () => {
+    const t = genererReadme({
+      ...base,
+      nbPlansPrevention: 3,
+      presents: new Set([...base.presents, "07_Plans_de_prevention.txt"]),
+      plansPreventionPdf: { rendus: 2, echecs: 1 },
+    });
+    expect(t).toMatch(
+      /07_Plans_de_prevention\/\s+2 PDF de plan, signatures comprises ; 1 non inclus \(la génération a échoué\)/,
+    );
+  });
+
+  it("aucun plan : la ligne n'est pas écrite", () => {
+    expect(
+      genererReadme({ ...base, plansPreventionPdf: { rendus: 0, echecs: 0 } }),
+    ).not.toContain("07_Plans_de_prevention/");
+  });
+});
