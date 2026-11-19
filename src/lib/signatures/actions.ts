@@ -43,6 +43,7 @@ import {
   partiesAttendues,
 } from "./parties";
 import { libelleDocumentSignable } from "./libelle-document";
+import { lireContexteDemande, presentationDemandeSignature } from "./mail-demande";
 import { notFound, redirect } from "next/navigation";
 import { ipClient } from "@/lib/securite/ip-client";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
@@ -192,13 +193,15 @@ export async function demanderSignature(
     return { ok: false, message: MESSAGE_PARTIE_DEJA_SIGNEE };
   }
 
-  const libelle = await libelleDocumentSignable(
+  // Le libellé, et ce que le courriel dit autour — qui demande, l'encadré du
+  // plan (2026-11-19) : tout est lu sur l'objet, borné à l'établissement.
+  const contexte = await lireContexteDemande(
     db,
     params.objetType,
     params.objetId,
     params.etablissementId,
   );
-  if (!libelle) notFound();
+  if (!contexte) notFound();
 
   const r = await emettreAccessToken({
     etablissementId: params.etablissementId,
@@ -208,17 +211,7 @@ export async function demanderSignature(
     emailDestinataire: params.signataireEmail,
     nomDestinataire: params.signataireNom,
     partie: params.partie,
-    sujetMail: `Signature à apporter : ${libelle}`,
-    messageMail:
-      // ~~« la même valeur probatoire qu'une signature manuscrite (art.
-      // 1366-1367 du Code civil, règlement eIDAS niveau simple) »~~ — une
-      // qualification (contre-lecture du 2026-09-26) : l'al. 2 de l'art. 1367
-      // ne présume la fiabilité que « dans des conditions fixées par décret en
-      // Conseil d'Etat ». Même texte que la page `/signe`.
-      `Vous êtes invité(e) à signer électroniquement le document suivant : ` +
-      `« ${libelle} ». ` +
-      `Rojer enregistrera votre signature avec son horodatage et l'empreinte ` +
-      `du document tel qu'il se présentait.`,
+    ...presentationDemandeSignature(contexte),
   });
   if (!r.ok) return { ok: false, message: r.message };
   // Un accusé de réception, rien d'autre. Aucun appelant n'a besoin de

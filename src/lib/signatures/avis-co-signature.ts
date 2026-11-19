@@ -1,18 +1,26 @@
 import type { ObjetSignable, PartieSignataire, Prisma } from "@prisma/client";
 import { envoiEnService, motifErreur, publicAppUrl, sendMail } from "@/lib/email";
-import { formaterDateHeureFr } from "@/lib/dates";
+import { mailSignature } from "@/lib/email/gabarit";
+import { formaterHeureFr } from "@/lib/dates";
+import { formaterJourDateLongueFr } from "@/lib/dates/jour-long";
 import { libelleDocumentSignable } from "./libelle-document";
 
 /**
  * L'avis de fin de signature (2026-11-19) : quand toutes les parties d'un
  * acte co-signé (plan de prévention, permis de feu) ont signé, chaque
- * signataire reçoit un courriel avec, pour chaque signature, son empreinte
- * SHA-256 et l'adresse publique qui la vérifie (`/verifier/[signatureId]`).
+ * signataire reçoit un courriel avec l'empreinte SHA-256 du document et
+ * l'adresse publique qui vérifie SA signature (`/verifier/[signatureId]`).
  *
  * Pourquoi : jusqu'ici aucune partie ne recevait rien, et la preuve ne vivait
  * que chez Rojer. Une empreinte tenue par chaque partie fait sortir la preuve
  * de l'auto-attestation : Rojer ne pourrait plus changer le document sans
  * que la vérification le dise à quelqu'un qui garde l'empreinte d'origine.
+ *
+ * ~~Une liste de toutes les signatures, avec chaque empreinte et chaque lien,
+ * envoyée à l'identique à chacun~~ [2026-11-19, reprise de la forme GestBAT,
+ * décision de la propriétaire : un message par destinataire — le document, la
+ * date où il est signé par tous, UNE empreinte, le lien « Vérifier » de sa
+ * seule signature ; rien sur l'adresse de l'autre partie.]
  *
  * Au mieux : appelée APRÈS la signature écrite et l'acte validé, et après la
  * réponse (`after`, côté appelant), elle ne lève jamais — un envoi qui échoue
@@ -32,6 +40,24 @@ const LIBELLE_PARTIE: Record<"plan_prevention" | "permis_feu", Record<PartieSign
     entreprise_exterieure: "prestataire",
   },
 };
+
+const TITRE: Record<"plan_prevention" | "permis_feu", string> = {
+  plan_prevention: "Plan de prévention signé",
+  permis_feu: "Permis de feu signé",
+};
+
+/**
+ * Le libellé de GestBAT (2026-11-19), sans « la CPAM ou la médecine du
+ * travail », qu'aucune lecture de Rojer ne source. Pour le plan de prévention
+ * seulement : le permis de feu n'a pas reçu de décision.
+ */
+const CONSERVATION_PLAN =
+  "Conservez ce document pendant toute la durée de l'opération et au moins " +
+  "5 ans : il peut être demandé par l'inspection du travail.";
+
+function quand(d: Date): string {
+  return `${formaterJourDateLongueFr(d)} à ${formaterHeureFr(d)} (heure de Paris)`;
+}
 
 export async function envoyerAvisCoSignature(
   /** Le client borné au compte de l'appelant ou du jeton (ADR-051). */
@@ -61,33 +87,53 @@ export async function envoyerAvisCoSignature(
     if (!libelle || signatures.length === 0) return;
 
     const base = publicAppUrl();
-    const lignes = [
-      "Bonjour,",
-      "",
-      `Le document « ${libelle} » est signé par toutes les parties.`,
-      "",
-      ...signatures.flatMap((s) => [
-        `- ${s.signataireNom}${s.partie ? ` (${LIBELLE_PARTIE[objetType][s.partie]})` : ""}, ` +
-          `le ${formaterDateHeureFr(s.horodatageIso)} (heure de Paris)`,
-        `  Empreinte SHA-256 du document signé : ${s.hashDocument}`,
-        `  Vérifier cette signature : ${base}/verifier/${s.id}`,
-      ]),
-      "",
-      "Conservez ce message : l'empreinte permet de vérifier à tout moment " +
-        "que le document signé n'a pas été modifié.",
-      "",
-      "— Rojer",
-    ];
-    const texte = lignes.join("\n");
-    const destinataires = [...new Set(signatures.map((s) => s.signataireEmail.trim().toLowerCase()))]
-      .filter((e) => e.includes("@"));
+    // La date où l'acte est signé par tous : celle de la dernière signature.
+    const signeLe = quand(
+      signatures.reduce((d, s) => (s.horodatageIso > d ? s.horodatageIso : d), signatures[0].horodatageIso),
+    );
+
+    // Un message par destinataire, qui ne porte que SES signatures (une, sauf
+    // si la même adresse a signé pour les deux parties).
+    const parDestinataire = new Map<string, typeof signatures>();
+    for (const s of signatures) {
+      const to = s.signataireEmail.trim().toLowerCase();
+      if (!to.includes("@")) continue;
+      parDestinataire.set(to, [...(parDestinataire.get(to) ?? []), s]);
+    }
 
     await Promise.all(
-      destinataires.map((to) =>
-        sendMail({ to, subject: `Document signé par toutes les parties : ${libelle}`, text: texte }).catch(
-          (e: unknown) => console.error("[signatures] avis de fin non envoyé :", motifErreur(e)),
-        ),
-      ),
+      [...parDestinataire].map(([to, siennes]) => {
+        const [premiere, ...autres] = siennes;
+        const message = mailSignature({
+          titre: TITRE[objetType],
+          nom: premiere.signataireNom,
+          paragraphes: [`Le document « ${libelle} » est signé par toutes les parties le ${signeLe}.`],
+          encadre: [
+            ...siennes.map((s) => ({
+              libelle: "Votre signature",
+              valeur:
+                `${s.signataireNom}${s.partie ? ` (${LIBELLE_PARTIE[objetType][s.partie]})` : ""}, ` +
+                `le ${quand(s.horodatageIso)}`,
+            })),
+            // L'empreinte du document tel que ce signataire l'a signé : celle
+            // que son lien « Vérifier » recalcule.
+            { libelle: "Empreinte SHA-256 du document", valeur: premiere.hashDocument },
+          ],
+          suite: [
+            ...autres.map((s) => `Vérifier votre autre signature : ${base}/verifier/${s.id}`),
+            ...(objetType === "plan_prevention" ? [CONSERVATION_PLAN] : []),
+            "Gardez aussi ce message : l'empreinte permet de vérifier à tout moment " +
+              "que le document signé n'a pas été modifié.",
+          ],
+          bouton: { libelle: "Vérifier ma signature", url: `${base}/verifier/${premiere.id}` },
+          apres: [],
+        });
+        return sendMail({
+          to,
+          subject: `Document signé par toutes les parties : ${libelle}`,
+          ...message,
+        }).catch((e: unknown) => console.error("[signatures] avis de fin non envoyé :", motifErreur(e)));
+      }),
     );
   } catch (e) {
     console.error("[signatures] avis de fin impossible :", motifErreur(e));

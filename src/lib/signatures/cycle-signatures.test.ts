@@ -179,7 +179,19 @@ function plan(id: string, etablissementId: string, statut: string): Ligne {
   // périmètre du compte (`etablissement: { entreprise: { compteId: compte.compteId } }`, audit du
   // 2026-10-13), et `correspond` la traverse.
   const userId = etablissementId === "etab-a-moi" ? "user-1" : "user-voisin";
-  return { id, etablissementId, statut, numero: 1, propositions: [], etablissement: { entreprise: { compteId: userId } } };
+  return {
+    id,
+    etablissementId,
+    statut,
+    numero: 1,
+    // Ce que le courriel de demande lit d'un plan (encadré, 2026-11-19).
+    entrepriseExterieureRaison: "EF",
+    lieux: "Cuisine",
+    dateDebut: new Date("2026-12-01T08:00:00Z"),
+    dateFin: new Date("2026-12-05T17:00:00Z"),
+    propositions: [],
+    etablissement: { entreprise: { compteId: userId } },
+  };
 }
 
 function signature(objetType: string, objetId: string, etablissementId: string): Ligne {
