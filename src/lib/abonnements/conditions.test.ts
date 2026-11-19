@@ -16,9 +16,11 @@ describe("conditions générales", () => {
     expect(empreinteConditions(CONDITIONS, "autre")).not.toBe(e);
   });
 
-  it("la version provisoire le dit en tête", () => {
-    expect(VERSION_CONDITIONS).toMatch(/provisoire/);
-    expect(CONDITIONS[0].titre).toBe("Version provisoire");
+  // [2026-11-19 : la mention « Version provisoire » est retirée, décision de
+  // la propriétaire ; ce test vérifiait qu'elle était en tête.]
+  it("la version est une date, et le texte ne se dit plus provisoire", () => {
+    expect(VERSION_CONDITIONS).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(JSON.stringify(CONDITIONS)).not.toMatch(/provisoire/i);
   });
 });
 

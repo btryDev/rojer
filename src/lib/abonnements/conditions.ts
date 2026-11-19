@@ -4,13 +4,14 @@
 // module n'a que les données : un écran client peut l'importer. Changer le
 // texte, c'est changer de version.
 //
-// TEXTE PROVISOIRE (décision de la propriétaire du 2026-11-03) : à faire
-// relire par un juriste avant le lancement de l'offre (notes du chantier, § 6).
+// ~~TEXTE PROVISOIRE (décision de la propriétaire du 2026-11-03) : à faire
+// relire par un juriste avant le lancement de l'offre (notes du chantier, § 6).~~
 // [2026-11-19 : texte complet rédigé d'après les conditions de RiskBoard
 // (BTRY) et le fonctionnement de Rojer relu dans le code — abonnement en
 // ligne, essai, résiliation en fin de période, impayé, suppression à 12 mois.
-// Toujours à faire relire par l'avocat ; les points à trancher sont marqués
-// « À VALIDER » ci-dessous, en commentaire.]
+// La mention « provisoire » est retirée de la page (décision de la
+// propriétaire du même jour) ; une relecture juridique reste conseillée. Les
+// points encore ouverts sont marqués « À VALIDER » ci-dessous, en commentaire.]
 
 import { EDITEUR, IDENTITE_EDITEUR } from "@/components/landing/editeur";
 
@@ -20,16 +21,10 @@ export type Section = { titre: string; paragraphes: string[] };
 // Essentiel, l'export demande un abonnement payé, et un compte sans
 // abonnement depuis douze mois est supprimé (ADR-058) ; l'ancien texte
 // promettait l'inverse.] [2026-11-19 : « 2026-11-17-provisoire » remplacée
-// par le texte complet, encore à relire par l'avocat.]
-export const VERSION_CONDITIONS = "2026-11-19-provisoire";
+// par le texte complet, sans la section « Version provisoire ».]
+export const VERSION_CONDITIONS = "2026-11-19";
 
 export const CONDITIONS: Section[] = [
-  {
-    titre: "Version provisoire",
-    paragraphes: [
-      "Ce texte est provisoire. Il sera remplacé par des conditions relues par un juriste avant toute facturation.",
-    ],
-  },
   {
     titre: "1. Objet et parties",
     paragraphes: [

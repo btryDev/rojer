@@ -6,10 +6,12 @@
  * 2026-06-04), remises par la propriétaire le 2026-11-19.
  *
  * ⚠︎ À confirmer par la propriétaire avant publication :
- * - le SIRET : 934 765 769 00039 dans les conditions de RiskBoard, 00013 dans
- *   ses mentions légales (antérieures) — l'établissement du siège actuel ?
+ * - ~~le SIRET : 934 765 769 00039 dans les conditions de RiskBoard, 00013
+ *   dans ses mentions légales~~ [2026-11-19 : 00021, donné par la
+ *   propriétaire] ;
  * - le téléphone de BTRY et celui de l'hébergeur (LCEN, art. 6 III) ;
- * - le directeur de la publication (le gérant, par défaut).
+ * - ~~le directeur de la publication (le gérant, par défaut)~~ [2026-11-19 :
+ *   le gérant, confirmé par la propriétaire].
  */
 export const EDITEUR = {
   denomination: "BTRY",
@@ -17,7 +19,7 @@ export const EDITEUR = {
   capital: "4 000 €",
   siege: "301 avenue du Pascalet, ZA de la Montée Rouge, 30310 Vergèze, France",
   rcs: "RCS Nîmes 934 765 769",
-  siret: "934 765 769 00039",
+  siret: "934 765 769 00021",
   tva: "FR62934765769",
   ape: "71.12B",
   gerant: "Julien Chantoin",
