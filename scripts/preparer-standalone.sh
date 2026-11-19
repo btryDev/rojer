@@ -11,6 +11,10 @@
 # requis (sans lui, « prisma: not found » fait échouer le déploiement).
 set -e
 test -f .next/standalone/server.js || { echo "Pas de .next/standalone/server.js : lancer next build avec output standalone."; exit 1; }
+# Les polices standard de pdfkit (`outputFileTracingIncludes`, next.config.ts) :
+# sans elles, chaque export PDF échoue au premier appel, pas au démarrage.
+ls .next/standalone/node_modules/.pnpm/pdfkit@*/node_modules/pdfkit/js/standard-fonts/Helvetica.cjs >/dev/null 2>&1 \
+  || { echo "Polices standard de pdfkit absentes du serveur autonome : les exports PDF échoueraient."; exit 1; }
 rm -rf .next/standalone/public .next/standalone/.next/static
 cp -r public .next/standalone/public
 cp -r .next/static .next/standalone/.next/static

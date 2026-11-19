@@ -36,6 +36,14 @@ const nextConfig: NextConfig = {
   // et `.next/static` ne le sont pas : `scripts/preparer-standalone.sh` les
   // ajoute après le build. Vercel construit à sa façon et n'en est pas gêné.
   output: "standalone",
+  // `pdfkit` (depuis @react-pdf/renderer 4.9) charge ses polices standard par
+  // un import interne (`#standard-fonts/Helvetica`) que le traçage des
+  // fichiers ne suit pas : sans cette ligne, tout export PDF échouait en
+  // préproduction (MODULE_NOT_FOUND, 2026-11-19). `preparer-standalone.sh`
+  // vérifie la présence de ces fichiers après le build.
+  outputFileTracingIncludes: {
+    "/**": ["./node_modules/.pnpm/pdfkit@*/node_modules/pdfkit/js/standard-fonts/**/*"],
+  },
   pageExtensions:
     process.env.NODE_ENV === "production"
       ? EXTENSIONS_PAGES
