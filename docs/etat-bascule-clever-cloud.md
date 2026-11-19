@@ -187,8 +187,9 @@ Gestes de la propriétaire (Clever Cloud) :
    l'application « riskboard » ; `scripts/deployer-cc.sh` n'a donc rien à
    déployer.]
 2. Poser les variables : `BETTER_AUTH_SECRET`, `PUBLIC_APP_URL`,
-   `BASE_CA_PEM`, celles de Mailpace (nom exact à confirmer :
-   `MAILPACE_API_TOKEN`), `STORAGE_DRIVER=s3` et celles du stockage. En
+   `BASE_CA_PEM`, celles de Mailpace (~~nom exact à confirmer :
+   `MAILPACE_API_TOKEN`~~ [2026-11-19 : `EMAIL_DRIVER=mailpace` et
+   `MAILPACE_API_KEY`, comme sur la préprod]), `STORAGE_DRIVER=s3` et celles du stockage. En
    production, `STORAGE_DRIVER=local` est refusé au démarrage, c'est voulu.
    [2026-11-10] Et, même avant l'ouverture des abonnements :
    `TACHES_SECRET` (`openssl rand -base64 32`), que présente la crontab de
@@ -224,6 +225,12 @@ Documents à valider puis fusionner :
 - PR #126 — `docs/plan-bascule-clever-cloud.md` : le plan et **l'ordre** de
   la bascule (couper Vercel avant de fusionner `cc`).
 - PR #130 — ADR-052 (Better Auth).
+
+Avant l'ouverture au public [2026-11-19, demande de la propriétaire] :
+**mettre en page les e-mails**. Ils partent en texte brut
+(`src/lib/email/`) : confirmation d'inscription, mot de passe oublié,
+invitation, liens et codes de signature, rappels d'abonnement, suppression
+du compte. Au moins ceux du compte et de la signature.
 
 Avant d'y faire pointer le domaine : jouer la recette « pages × comptes
 à plusieurs membres » (section suivante).
@@ -564,9 +571,11 @@ reçu marche une fois et pas deux.
 - **Plan de prévention** : demander la signature à l'entreprise extérieure →
   e-mail avec le lien, code à l'ouverture, signature, puis
   `/verifier/[signature]` l'affiche.
-- **Lien prestataire** (dépôt d'un rapport) : e-mail avec le lien et le code ;
+- ~~**Lien prestataire** (dépôt d'un rapport) : e-mail avec le lien et le code ;
   le rapport déposé arrive sur la bonne ligne ; révoqué, le lien ne s'ouvre
-  plus.
+  plus.~~ [2026-11-19 : n'existe pas dans l'application — aucun écran
+  n'émet de lien de dépôt ; seule la signature à distance envoie un lien
+  (`signatures/actions.ts`). Écrit à tort le 2026-11-18.]
 - **Autre signature à distance** (permis de feu, rapport de vérification) :
   même parcours que
   le plan de prévention.
