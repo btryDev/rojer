@@ -13,7 +13,12 @@ import {
 } from "./token";
 import { envoyerMailAcces, urlAccesPourToken } from "./mail";
 import { envoiEnService, motifErreur } from "@/lib/email";
-import { LIEN_PARTI, MOTIF_REVOCATION_ENVOI_ECHOUE, estAUsageUnique } from "./revocation";
+import {
+  LIEN_PARTI,
+  MOTIF_REVOCATION_ENVOI_ECHOUE,
+  MOTIF_REVOCATION_NOUVEAU_LIEN,
+  estAUsageUnique,
+} from "./revocation";
 import { signatureDejaComptee } from "@/lib/plan-prevention/resignature";
 
 /**
@@ -263,10 +268,41 @@ export async function emettreAccessToken(
   // demande de signature, les signatures de l'année — comptées à la demande,
   // comme une enveloppe : la signature du tiers, plus tard, ne recompte pas.
   let pris: string[] = [];
+  // Les anciens liens que celui-ci remplace, révoqués dans la transaction qui
+  // le crée — et rétablis si son e-mail ne part pas (plus bas).
+  let remplaces: string[] = [];
+  const revoqueLe = new Date();
   const creation = await creerSousPlafond(db, compte.compteId, "liensAccesActifs", async (tx) => {
     // Une re-signature après correction ne compte pas (ADR-061 § 6).
     if (params.scope === "signature" && !(await signatureDejaComptee(tx, { ...params, email: params.emailDestinataire })))
       pris = await prendreQuota(tx, compte.compteId, "signaturesParAn");
+    // Un seul lien ouvert par partie et par objet (2026-11-19, cahier de
+    // reprise § 8.6) : un nouvel envoi à une partie révoque son ancien lien
+    // encore ouvert, quelle que soit l'adresse qui l'avait reçu. Sans partie
+    // (un rapport), rien ne dit que deux liens visent la même personne : rien
+    // n'est révoqué. Les plafonds ne changent pas : ils ont été lus avant.
+    if (params.partie) {
+      const anciens = await tx.accessToken.findMany({
+        where: {
+          etablissementId: params.etablissementId,
+          objetType: params.objetType,
+          objetId: params.objetId,
+          scope: params.scope,
+          partie: params.partie,
+          revoqueLe: null,
+          utiliseLe: null,
+          expireLe: { gt: revoqueLe },
+        },
+        select: { id: true },
+      });
+      remplaces = anciens.map((a) => a.id);
+      if (remplaces.length > 0) {
+        await tx.accessToken.updateMany({
+          where: { id: { in: remplaces }, etablissementId: params.etablissementId, revoqueLe: null, utiliseLe: null },
+          data: { revoqueLe, revoqueMotif: MOTIF_REVOCATION_NOUVEAU_LIEN },
+        });
+      }
+    }
     return tx.accessToken.create({
       data: {
         id: `atk_${randomUUID()}`,
@@ -316,6 +352,22 @@ export async function emettreAccessToken(
     // révoqué, le lien a pu partir (délai dépassé, e-mail accepté) : elle reste.
     if (revoque === "révoqué")
       await rendreQuota(db, pris).catch((e: unknown) => console.error("[access-tokens] signature non rendue :", motifErreur(e)));
+    // Le nouveau lien n'est pas parti : l'ancien, que la partie a peut-être
+    // dans sa boîte, redevient valable — sinon une panne d'envoi lui
+    // retirerait en silence un lien qui marchait. Seulement ceux que cet
+    // envoi a révoqués (motif et instant), et seulement si le nouveau l'est.
+    if (revoque === "révoqué" && remplaces.length > 0)
+      await db.accessToken
+        .updateMany({
+          where: {
+            id: { in: remplaces },
+            etablissementId: params.etablissementId,
+            revoqueLe,
+            revoqueMotif: MOTIF_REVOCATION_NOUVEAU_LIEN,
+          },
+          data: { revoqueLe: null, revoqueMotif: null },
+        })
+        .catch((e: unknown) => console.error("[access-tokens] ancien lien non rétabli :", motifErreur(e)));
     console.error(`[access-tokens] envoi échoué, jeton ${access.id} ${revoque} :`, motifErreur(erreur));
     return { ok: false, raison: "envoi_echoue", message: MESSAGE_ENVOI_ECHOUE };
   }

@@ -11,7 +11,10 @@ import { sha256Hex } from "@/lib/signatures/hash";
  */
 
 export const TOKEN_TTL_HOURS_DEFAULT = 168; // 7 jours
-export const TOKEN_TTL_HOURS_SIGNATURE = 72;
+// ~~72 h~~ [2026-11-19, décision de la propriétaire : 7 jours. Une entreprise
+// extérieure de TPE n'ouvre pas toujours sa boîte dans les trois jours ; le
+// code, lui, garde ses 10 minutes et ses 3 essais par lien.]
+export const TOKEN_TTL_HOURS_SIGNATURE = 168;
 export const TOKEN_TTL_HOURS_CONSULTATION = 30 * 24;
 
 export function generateToken(): string {

@@ -11,8 +11,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * l'obligation concernée.
  *
  * L'émission est refermée (`lib/signatures/appartenance.ts`), mais un jeton
- * émis avant l'est toujours en base jusqu'à son expiration — jusqu'à 72 h pour
- * une signature. C'est donc ici que se joue ce qu'il donne à lire, et cette
+ * émis avant l'est toujours en base jusqu'à son expiration — jusqu'à ~~72 h~~
+ * 7 jours (2026-11-19) pour une signature. C'est donc ici que se joue ce qu'il donne à lire, et cette
  * seconde barrière n'est pas une redondance.
  *
  * Le test **tente la traversée** : la table en mémoire applique réellement la

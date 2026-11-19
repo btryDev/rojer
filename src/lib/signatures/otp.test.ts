@@ -59,8 +59,9 @@ describe("expiration du code", () => {
     expect(otpEstExpire(expireLe, new Date("2026-04-23T12:10:01Z"))).toBe(true);
   });
 
-  it("refuse un code bien après, alors que le lien lui court encore 72 h", () => {
-    // C'est exactement le défaut corrigé : le lien de signature vit 72 h,
+  it("refuse un code bien après, alors que le lien lui court encore des jours", () => {
+    // C'est exactement le défaut corrigé : le lien de signature vit ~~72 h~~
+    // 7 jours (2026-11-19),
     // le code ne doit pas vivre aussi longtemps.
     expect(otpEstExpire(expireLe, new Date("2026-04-25T09:00:00Z"))).toBe(true);
   });
