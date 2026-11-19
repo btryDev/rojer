@@ -37,7 +37,7 @@ export const CONDITIONS: Section[] = [
     paragraphes: [
       `Rojer est un service en ligne édité par ${IDENTITE_EDITEUR}, représentée par son gérant (ci-après « BTRY »).`,
       "Les présentes conditions générales d'utilisation et de vente (les « Conditions ») régissent l'accès à Rojer et son utilisation par toute personne qui crée un compte, démarre un essai ou souscrit un abonnement (le « Client »), ainsi que par les personnes qu'il invite sur son compte (les « Utilisateurs »). Le Client fait respecter les Conditions par ses Utilisateurs.",
-      "Rojer s'adresse aux entreprises et aux associations établies en France, qui l'utilisent pour leur activité. Il n'est pas proposé aux consommateurs. Le Client déclare souscrire pour les besoins de son activité professionnelle, et la personne qui crée le compte déclare avoir le pouvoir d'engager la structure qu'elle représente. Une personne publique qui souhaite utiliser Rojer s'adresse à BTRY pour un contrat particulier.",
+      "Rojer s'adresse aux entreprises et aux associations établies en France métropolitaine, qui l'utilisent pour leur activité. Il n'est pas proposé aux consommateurs. Le Client déclare souscrire pour les besoins de son activité professionnelle, et la personne qui crée le compte déclare avoir le pouvoir d'engager la structure qu'elle représente. Une personne publique qui souhaite utiliser Rojer s'adresse à BTRY pour un contrat particulier.",
       "Le contrat se compose des Conditions, de l'annexe « Données personnelles traitées pour le compte du Client » et de la page des tarifs à la date de souscription. En cas de contradiction, les Conditions prévalent.",
     ],
   },
@@ -92,9 +92,10 @@ export const CONDITIONS: Section[] = [
   },
   {
     titre: "8. L'expert (offre Pro)",
-    // À VALIDER (propriétaire) : les avantages Pro sont maintenus (décision
-    // du 2026-11-19), à préciser. Les demandes d'assistance ne partent pas
-    // encore vers un expert (ADR-050) : à brancher avant de vendre Pro.
+    // [2026-11-19, décision de la propriétaire : maintenu, à préciser ;
+    // l'envoi des demandes vers l'expert (ADR-050) sera livré avant de
+    // vendre Pro — `docs/etat-bascule-clever-cloud.md`, « À faire après la
+    // bascule ».]
     paragraphes: [
       "L'offre Pro permet de poser des questions techniques de prévention à un expert désigné par BTRY, et d'obtenir un rendez-vous d'une heure par an, dans les conditions affichées sur la page des tarifs à la date de souscription.",
       "L'expert donne un avis technique de prévention, fondé sur les seules informations que le Client lui transmet. Il ne donne aucun avis ni aucune consultation juridique, ne se rend pas sur place, n'effectue aucune vérification réglementaire et ne prend aucune décision à la place du Client. BTRY s'engage à une réponse dans un délai raisonnable, sans délai garanti.",
@@ -188,10 +189,12 @@ export const CONDITIONS: Section[] = [
   },
   {
     titre: "19. Disponibilité et assistance",
-    // À VALIDER (propriétaire) : une clause de sauvegarde (fréquence,
-    // durée, lieu) une fois confirmé ce que fait Clever Cloud.
+    // [2026-11-19 : sauvegarde, d'après la documentation de l'add-on
+    // PostgreSQL de Clever Cloud — une par jour, gardée sept jours. Ne vaut
+    // que pour la base : les fichiers (Cellar) n'y sont pas.]
     paragraphes: [
       "BTRY met en œuvre les moyens raisonnables pour que Rojer soit accessible en continu, sans garantir de taux de disponibilité. Le service peut être interrompu pour maintenance, mise à jour, ou en raison d'un incident chez un prestataire, d'une attaque informatique ou d'un cas de force majeure ; BTRY s'efforce de prévenir le Client des maintenances prévues.",
+      "La base de données de Rojer est sauvegardée chaque jour chez l'hébergeur, et chaque sauvegarde est conservée sept jours. Ces sauvegardes servent à remettre le service en état après un incident ; elles ne constituent pas un archivage pour le compte du Client (article 17).",
       "BTRY corrige dans un délai raisonnable les anomalies reproductibles qui lui sont signalées, hors celles qui proviennent de l'équipement ou du réseau du Client, sans délai d'intervention garanti. Elle fait évoluer Rojer librement, sans en dénaturer l'objet ; les évolutions sont comprises dans l'abonnement.",
       "L'assistance est assurée par écrit, depuis l'application ou le formulaire de contact du site, les jours ouvrés. Elle porte sur l'usage de Rojer ; elle ne comprend ni la saisie des données, ni l'évaluation des risques à la place du Client.",
     ],

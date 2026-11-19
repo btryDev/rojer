@@ -115,10 +115,12 @@ const CONFIDENTIALITE: PageLegale = {
     },
     {
       titre: "Qui y a accès",
-      // À VALIDER : la localisation de Mailpace (Royaume-Uni ?) et les
-      // garanties de transfert de Stripe, à relire dans leurs contrats.
+      // [2026-11-19 : Mailpace d'après son accord de traitement et son
+      // journal (données en France, envoi par des serveurs SMTP au
+      // Royaume-Uni). À relire avec l'avocat : la décision d'adéquation du
+      // Royaume-Uni en vigueur, et les garanties de transfert de Stripe.]
       paragraphes: [
-        `Seules les personnes de ${EDITEUR.denomination} qui en ont besoin pour le service, et, pour une demande faite à l'expert de l'offre Pro, cet expert. Nos prestataires techniques, qui traitent les données pour notre compte : Clever Cloud (hébergement de l'application, de la base de données et des fichiers, Union européenne), Mailpace (envoi des e-mails du service), Stripe (paiement et factures).`,
+        `Seules les personnes de ${EDITEUR.denomination} qui en ont besoin pour le service, et, pour une demande faite à l'expert de l'offre Pro, cet expert. Nos prestataires techniques, qui traitent les données pour notre compte : Clever Cloud (hébergement de l'application, de la base de données et des fichiers, Union européenne), Mailpace (envoi des e-mails du service ; données hébergées en France, envoi par des serveurs situés au Royaume-Uni, pays reconnu par la Commission européenne comme assurant une protection adéquate), Stripe (paiement et factures).`,
         "Transferts hors de l'Union européenne : Stripe peut transférer les données de paiement et de facturation vers les États-Unis, avec les garanties prévues par le RGPD (décision d'adéquation « Data Privacy Framework » ou clauses contractuelles types de la Commission européenne). Les données de votre dossier — établissements, salariés, rapports — ne sont pas transmises à Stripe.",
         "Au moment de choisir ou changer un mot de passe, nous vérifions qu'il ne figure pas parmi des mots de passe divulgués (service « Pwned Passwords ») : seuls les cinq premiers caractères d'une empreinte du mot de passe sont transmis, jamais le mot de passe ni votre adresse.",
         "Si vous reliez Rojer à un assistant d'intelligence artificielle, les informations que cet assistant lit quittent Rojer selon les conditions de son fournisseur, que vous avez choisi.",

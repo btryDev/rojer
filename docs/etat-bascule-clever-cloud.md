@@ -632,6 +632,30 @@ Constats de l'audit de sécurité du 2026-11-21 (dig sur le DNS public de
 - Les tables `Intervention` et `CommentaireIntervention` (ADR-018, sans code)
   attendent toujours leur migration de suppression.
 
+### À faire après la bascule : ce que les conditions générales promettent (2026-11-19)
+
+Relevé par l'inspection juridique et la comparaison aux usages des textes
+légaux (branche `lot/textes-legaux`) ; décision de la propriétaire du
+2026-11-19 : « on va le faire ».
+
+- **Export complet structuré** de toutes les données d'un compte (JSON ou
+  CSV), et une page publique qui liste les données exportables et leurs
+  formats — règlement (UE) 2023/2854 « Data Act », art. 25 et 26 ; RGPD,
+  art. 28.3 g (restitution). D'ici là, les conditions (art. 17) promettent
+  une restitution sans frais **sur demande écrite**, faite à la main.
+- **Page des tarifs** : écrire que l'abonnement annuel est payé d'avance et
+  n'est pas remboursé en cas de résiliation par le client — Data Act,
+  art. 29.4 (à annoncer avant la souscription).
+- **Expert de l'offre Pro** : les demandes d'assistance doivent partir vers
+  l'expert (ADR-050, « rien ne part » aujourd'hui) avant de vendre Pro ; les
+  conditions (art. 8) le promettent.
+- **Acceptation au paiement** : enregistrer dans Rojer la version des
+  conditions acceptée au clic « S'abonner » (Stripe Checkout coche la case
+  sans version) — preuve du contrat, conditions art. 2.
+- **Mentions légales** : téléphones de BTRY et de Clever Cloud
+  (`components/landing/editeur.ts`) — LCEN, art. 1-1 ; à poser avant toute
+  publication sur rojer.fr.
+
 ## Règles de travail qui valent ici
 
 - Ce fichier est **le même sur `main` et sur `cc`** : le modifier sur `main`
