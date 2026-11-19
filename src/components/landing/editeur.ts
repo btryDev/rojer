@@ -9,7 +9,8 @@
  * - ~~le SIRET : 934 765 769 00039 dans les conditions de RiskBoard, 00013
  *   dans ses mentions légales~~ [2026-11-19 : 00021, donné par la
  *   propriétaire] ;
- * - le téléphone de BTRY et celui de l'hébergeur (LCEN, art. 1-1 depuis la loi SREN du 21 mai 2024) ;
+ * - ~~le téléphone de BTRY~~ [2026-11-19 : donné par la propriétaire] et
+ *   celui de l'hébergeur (LCEN, art. 1-1 depuis la loi SREN du 21 mai 2024) ;
  * - ~~le directeur de la publication (le gérant, par défaut)~~ [2026-11-19 :
  *   le gérant, confirmé par la propriétaire].
  */
