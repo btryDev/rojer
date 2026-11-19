@@ -40,29 +40,39 @@ const STATUTS_PERMIS_AVANT_VALIDE: StatutPermisFeu[] = [
   "attente_signatures",
 ];
 
+/**
+ * Rend `true` quand CET appel a fait passer l'acte à « valide » : c'est le
+ * signal de l'avis aux signataires (`avis-co-signature.ts`), envoyé une fois,
+ * par la signature qui complète l'acte — l'écriture conditionnelle garantit
+ * qu'une seule des deux signatures simultanées l'obtient.
+ */
 export async function validerSiCoSigne(
   /** Le client borné au compte de l'appelant ou du jeton (ADR-051). */
   db: Prisma.TransactionClient,
   objetType: ObjetSignable,
   objetId: string,
   etablissementId: string,
-): Promise<void> {
-  if (partiesAttendues(objetType).length === 0) return;
+): Promise<boolean> {
+  if (partiesAttendues(objetType).length === 0) return false;
   const signatures = await db.signature.findMany({
     where: { objetType, objetId, etablissementId },
     select: { partie: true },
   });
-  if (repartirSignatures(objetType, signatures).manquantes.length > 0) return;
+  if (repartirSignatures(objetType, signatures).manquantes.length > 0) return false;
 
   if (objetType === "plan_prevention") {
-    await db.planPrevention.updateMany({
+    const r = await db.planPrevention.updateMany({
       where: { id: objetId, etablissementId, statut: { in: STATUTS_PLAN_AVANT_VALIDE } },
       data: { statut: "valide" },
     });
-  } else if (objetType === "permis_feu") {
-    await db.permisFeu.updateMany({
+    return r.count > 0;
+  }
+  if (objetType === "permis_feu") {
+    const r = await db.permisFeu.updateMany({
       where: { id: objetId, etablissementId, statut: { in: STATUTS_PERMIS_AVANT_VALIDE } },
       data: { statut: "valide" },
     });
+    return r.count > 0;
   }
+  return false;
 }

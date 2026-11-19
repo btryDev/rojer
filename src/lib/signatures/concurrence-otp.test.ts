@@ -332,8 +332,11 @@ describe("renvoi du code : plafond par adresse, sur la base", () => {
     const r = await renvoyerCodeOtp(JETON);
     expect(r.status).toBe("success");
     expect(mails).toHaveLength(1);
-    const code = /Code de confirmation : (\d{6})/.exec(mails[0].text)?.[1];
+    const code = /code de confirmation : (\d{6})/i.exec(mails[0].text)?.[1];
     expect(code).toBeDefined();
+    // Le courriel du code ne porte pas le lien (2026-11-19) : transféré seul,
+    // il n'ouvre rien.
+    expect(mails[0].text).not.toContain("/acces/");
     expect((await soumettre(code!)).status).toBe("success");
   });
 });
@@ -372,5 +375,66 @@ describe("la fonction du signataire, sur la page publique (ASVS V2.2.1)", () => 
   it("la fonction reste facultative", async () => {
     expect((await soumettreAvecRole("")).status).toBe("success");
     expect(prismaMock.signature.lignes[0].signataireRole).toBeNull();
+  });
+});
+
+describe("deux temps (2026-11-19) : le lien part sans code, le code se demande sur la page", () => {
+  beforeEach(() => {
+    const [t] = prismaMock.accessToken.lignes;
+    t.otpHash = null;
+    t.otpExpireLe = null;
+  });
+
+  it("signer avant d'avoir demandé un code : refusé, sans consommer d'essai", async () => {
+    const r = await soumettre("123456");
+    expect(r.status).toBe("error");
+    expect(r.status === "error" && r.message).toMatch(/Demandez d'abord votre code/);
+    expect(prismaMock.accessToken.lignes[0].otpEssaisRestants).toBe(3);
+  });
+
+  it("le premier code part par un courriel sans le lien, et il signe", async () => {
+    const r = await renvoyerCodeOtp(JETON);
+    expect(r).toMatchObject({ status: "success" });
+    expect(r.status === "success" && r.message).toMatch(/^Un code vient d'être envoyé/);
+    expect(mails).toHaveLength(1);
+    expect(mails[0].text).not.toContain("/acces/");
+    const code = /code de confirmation : (\d{6})/i.exec(mails[0].text)?.[1];
+    expect(code).toMatch(/^\d{6}$/);
+    expect((await soumettre(code!)).status).toBe("success");
+  });
+
+  it("des essais épuisés : aucun code ne part", async () => {
+    prismaMock.accessToken.lignes[0].otpEssaisRestants = 0;
+    const r = await renvoyerCodeOtp(JETON);
+    expect(r.status).toBe("error");
+    expect(mails).toHaveLength(0);
+  });
+});
+
+describe("l'avis de fin : toutes les parties ont signé (2026-11-19)", () => {
+  it("la signature qui complète l'acte envoie les empreintes à chaque signataire", async () => {
+    prismaMock.signature.lignes.push({
+      id: "sig_eu",
+      etablissementId: "etab-1",
+      objetType: "plan_prevention",
+      objetId: "pp-1",
+      partie: "entreprise_utilisatrice",
+      signataireNom: "Marie Martin",
+      signataireEmail: "marie@utilisatrice.fr",
+      hashDocument: "a".repeat(64),
+      horodatageIso: new Date(Date.now() - 60_000),
+    });
+    expect((await soumettre(CODE)).status).toBe("success");
+    expect(prismaMock.planPrevention.lignes[0].statut).toBe("valide");
+
+    const avis = mails.filter((m) => /signé par toutes les parties/.test(m.text));
+    expect(avis.map((m) => m.to).sort()).toEqual(["chef@exterieure.fr", "marie@utilisatrice.fr"]);
+    expect(avis[0].text).toContain("a".repeat(64));
+    expect(avis[0].text).toContain("http://localhost:3000/verifier/sig_eu");
+  });
+
+  it("une signature qui ne complète pas l'acte n'envoie rien", async () => {
+    expect((await soumettre(CODE)).status).toBe("success");
+    expect(mails.filter((m) => /signé par toutes les parties/.test(m.text))).toHaveLength(0);
   });
 });

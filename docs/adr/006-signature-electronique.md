@@ -127,6 +127,19 @@ Cliquer « Vérifier l'intégrité » ouvre une page publique `/verifier/[signat
 5. Saisie OTP → vérification serveur → création de la `Signature` + invalidation du token (usage unique).
 6. Le lien reste valide pour re-téléchargement du document signé pendant 30 jours (lecture seule).
 
+[2026-11-19, décision de la propriétaire après la recette des envois en
+préprod : **le code part en deux temps**. Le premier courriel ne porte que le
+lien ; le code est généré quand le signataire clique « Recevoir mon code » sur
+la page, et part dans un second courriel, sans le lien
+(`access-tokens/mail.ts`, `renvoyerCodeOtp`). Dans le même courriel, le code
+ne prouvait rien de plus que le lien (message transféré, boîte partagée) et ses
+10 minutes couraient avant l'ouverture du message. Inchangés : 10 minutes,
+3 essais par lien nouveaux codes compris, 5 envois par heure et par adresse.
+Et quand toutes les parties d'un acte co-signé ont signé, chacune reçoit un
+courriel avec l'empreinte SHA-256 et l'adresse `/verifier` de chaque signature
+(`signatures/avis-co-signature.ts`). Recette RiskBoard relue le même jour ;
+la contre-signature du plan de prévention suit (ADR-061, à venir).]
+
 ### Flux signataire connecté
 
 1. Bouton « Signer » sur la page de l'objet.

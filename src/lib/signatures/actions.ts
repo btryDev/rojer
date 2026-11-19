@@ -9,7 +9,7 @@ import { clientDuProprietaire } from "@/lib/auth/compte-hors-session";
 import { formaterDateFr, formaterHeureFr } from "@/lib/dates";
 import { z } from "zod";
 import { emettreAccessToken } from "@/lib/access-tokens/emission";
-import { envoyerMailAcces, urlAccesPourToken } from "@/lib/access-tokens/mail";
+import { envoyerMailCode } from "@/lib/access-tokens/mail";
 import { envoiEnService, motifErreur } from "@/lib/email";
 import {
   consommerJeton,
@@ -32,6 +32,7 @@ import { calculerHashObjet } from "./hash-objet";
 import { verrouillerObjetSigne } from "./verrou-contenu";
 import { objetEstSignable } from "./etat-signable";
 import { validerSiCoSigne } from "./statut-objet";
+import { envoyerAvisCoSignature } from "./avis-co-signature";
 import { ObjetSignable, PartieSignataire } from "@prisma/client";
 import {
   MESSAGE_PARTIE_DEJA_SIGNEE,
@@ -276,8 +277,13 @@ export async function poserSignatureAvecToken(
   if (token.scope !== "signature") {
     return { status: "error", message: "Ce lien ne sert pas à signer." };
   }
+  // Le code se demande sur la page (2026-11-19) : tant qu'aucun n'est parti,
+  // il n'y a rien à comparer, et aucun essai n'est consommé.
   if (!token.otpHash) {
-    return { status: "error", message: "Configuration OTP manquante." };
+    return {
+      status: "error",
+      message: "Demandez d'abord votre code de confirmation (bouton « Recevoir mon code »).",
+    };
   }
   // Le client borné au compte propriétaire de l'établissement DU JETON
   // (ADR-051). Il s'AJOUTE aux contrôles du jeton, qui restent tous
@@ -449,12 +455,21 @@ export async function poserSignatureAvecToken(
   }
   // Le statut suit les signatures : les deux parties signées, l'acte passe
   // « valide » (`validerSiCoSigne`, 2026-10-12).
-  await validerSiCoSigne(
+  const complet = await validerSiCoSigne(
     db,
     token.objetType as ObjetSignable,
     token.objetId,
     token.etablissementId,
   );
+  // Toutes les parties ont signé : chacune reçoit les empreintes (au mieux).
+  if (complet) {
+    await envoyerAvisCoSignature(
+      db,
+      token.objetType as ObjetSignable,
+      token.objetId,
+      token.etablissementId,
+    );
+  }
 
   return { status: "success", signatureId: signature.id };
 }
@@ -462,10 +477,14 @@ export async function poserSignatureAvecToken(
 /**
  * Renvoie un nouveau code de confirmation sur un lien encore valide.
  *
- * Indispensable depuis que le code expire au bout de 10 minutes : sans ce
+ * ~~Indispensable depuis que le code expire au bout de 10 minutes : sans ce
  * chemin, un destinataire qui ouvre son mail le lendemain se retrouve avec
  * un lien encore valide (72 h) mais un code mort, donc un document
- * impossible à signer.
+ * impossible à signer.~~ [2026-11-19 : c'est désormais l'envoi du code tout
+ * court, premier compris — le lien part sans code, le destinataire le
+ * demande sur la page (« Recevoir mon code »), et il arrive par un second
+ * courriel, sans le lien. Aucun écran n'appelait cette action jusqu'ici :
+ * le courriel promettait un renvoi que la page ne proposait pas.]
  *
  * Autorisation : la connaissance du token clair, comme pour la signature
  * elle-même. Le nouveau code part à l'adresse enregistrée sur le token, pas
@@ -506,10 +525,19 @@ export async function renvoyerCodeOtp(
   }
 
   const token = res.token;
-  if (!token.otpHash) {
+  // Seule une signature demande un code (2026-11-19 : plus de code émis avec
+  // le lien, donc `otpHash` nul ne dit plus rien du scope).
+  if (token.scope !== "signature") {
     return {
       status: "error",
       message: "Ce lien ne demande pas de code de confirmation.",
+    };
+  }
+  // Essais épuisés : aucun code ne pourrait plus servir, rien ne part.
+  if (token.otpEssaisRestants <= 0) {
+    return {
+      status: "error",
+      message: "Ce lien n'accepte plus de code : ses essais sont épuisés.",
     };
   }
 
@@ -528,10 +556,6 @@ export async function renvoyerCodeOtp(
       message: `Un code vient d'être envoyé. Patientez ${renvoi.attendreSecondes} seconde${renvoi.attendreSecondes > 1 ? "s" : ""} avant d'en demander un autre.`,
     };
   }
-
-  // L'URL avant le renouvellement (2026-10-12, audit B7) : sans adresse
-  // publique en production, `publicAppUrl` lève avant d'invalider l'ancien code.
-  const urlAcces = urlAccesPourToken(tokenClair);
 
   // Le plafond de l'ADR-006 — cinq envois par heure et par adresse —, réservé
   // en base AVANT de toucher au code : refusé, le code précédent reste celui
@@ -565,16 +589,12 @@ export async function renvoyerCodeOtp(
   }
 
   try {
-    await envoyerMailAcces({
+    // Le code seul, sans le lien : un courriel de code transféré n'ouvre rien.
+    await envoyerMailCode({
       to: token.emailDestinataire,
       nom: token.nomDestinataire,
-      sujet: "Votre nouveau code de confirmation",
-      message:
-        "Voici un nouveau code de confirmation pour l'action qui vous a été demandée. " +
-        "Le précédent n'est plus valable.",
-      urlAcces,
       otp,
-      expireLe: token.expireLe,
+      essaisRestants: token.otpEssaisRestants,
     });
   } catch (erreur) {
     // Le nouveau code est posé mais n'est pas parti : l'ancien ne vaut déjà
@@ -585,17 +605,18 @@ export async function renvoyerCodeOtp(
     return {
       status: "error",
       message:
-        "Le nouveau code n'a pas pu être envoyé. Patientez une minute, puis demandez-en un autre.",
+        "Le code n'a pas pu être envoyé. Patientez une minute, puis demandez-en un autre.",
     };
   }
 
   // Les essais ne sont pas remis à trois (`renouvelerOtp`) : la phrase dit ce
   // qui reste sur le lien, pour que le signataire ne compte pas sur trois.
   const restants = token.otpEssaisRestants;
+  const quoi = token.otpHash ? "Un nouveau code" : "Un code";
   return {
     status: "success",
     message:
-      `Un nouveau code vient d'être envoyé à ${token.emailDestinataire}. ` +
+      `${quoi} vient d'être envoyé à ${token.emailDestinataire}. ` +
       `Il vous reste ${restants} essai${restants > 1 ? "s" : ""} sur ce lien.`,
   };
 }
@@ -710,7 +731,10 @@ export async function signerEnCompteConnecte(params: {
   }
   if (!resultat.ok) return { ok: false, raison: resultat.raison };
   const { signature } = resultat;
-  await validerSiCoSigne(db, params.objetType, params.objetId, params.etablissementId);
+  const complet = await validerSiCoSigne(db, params.objetType, params.objetId, params.etablissementId);
+  if (complet) {
+    await envoyerAvisCoSignature(db, params.objetType, params.objetId, params.etablissementId);
+  }
   return { ok: true, signatureId: signature.id };
 }
 
