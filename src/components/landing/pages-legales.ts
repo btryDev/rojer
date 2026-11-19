@@ -93,9 +93,11 @@ const CONFIDENTIALITE: PageLegale = {
         "Compte et utilisation du service : adresse e-mail, nom, mot de passe (conservé sous une forme hachée, irréversible), rôle dans le compte, journaux de connexion (date, adresse IP). Fondement : l'exécution du contrat.",
         "Abonnement et facturation : formule, dates, statut du paiement, factures ; la carte bancaire est saisie chez Stripe, Rojer n'en connaît ni le numéro ni le cryptogramme. Fondement : l'exécution du contrat et nos obligations comptables.",
         "Acceptation des conditions générales : version acceptée, date, compte. Fondement : la preuve du contrat (intérêt légitime).",
-        "Formulaire de contact : sujet, nom, adresse e-mail, structure, message. Le message nous parvient par e-mail ; il n'est pas enregistré dans Rojer. Fondement : la réponse à votre demande.",
+        "Formulaire de contact : sujet, nom, adresse e-mail, structure, message. Le message nous parvient par e-mail ; il n'est pas enregistré dans Rojer. Fondement : les mesures précontractuelles prises à votre demande, ou notre intérêt légitime à vous répondre.",
+        "Demandes d'assistance faites depuis l'application : catégorie, question, téléphone (facultatif), page d'origine. Fondement : l'exécution du contrat.",
         "Sécurité : adresse IP réduite à une empreinte pour limiter les tentatives répétées, journaux techniques. Fondement : notre intérêt légitime à protéger le service.",
-        "Nous ne faisons ni publicité ciblée, ni revente de données, ni profilage. Rojer n'utilise aucune intelligence artificielle pour traiter vos données.",
+        "Les champs marqués d'un astérisque sont nécessaires pour créer un compte, souscrire ou nous écrire ; sans eux, nous ne pouvons pas rendre le service demandé. Les autres sont facultatifs.",
+        "Nous ne faisons ni publicité ciblée, ni revente de données, ni profilage, et aucune décision n'est prise à votre égard de façon entièrement automatisée. Rojer n'utilise aucune intelligence artificielle pour traiter vos données.",
       ],
     },
     {
@@ -107,15 +109,17 @@ const CONFIDENTIALITE: PageLegale = {
         "Inscription jamais activée : trente jours, puis effacée.",
         "Factures : dix ans (article L. 123-22 du Code de commerce).",
         "Trace d'un compte supprimé (nom du compte, adresses des propriétaires, acceptations des conditions, dates) : cinq ans, pour la preuve en cas de litige.",
-        "Messages de contact : le temps de traiter la demande, puis trois ans au plus.",
+        "Messages de contact et demandes d'assistance : le temps de traiter la demande, puis trois ans au plus.",
+        "Journaux techniques de l'hébergeur (dont l'adresse IP) : trente jours. Sessions de connexion : sept jours au plus.",
       ],
     },
     {
       titre: "Qui y a accès",
-      // À VALIDER : la liste des sous-traitants ultérieurs et leur
-      // localisation (Stripe : transferts hors UE encadrés ?).
+      // À VALIDER : la localisation de Mailpace (Royaume-Uni ?) et les
+      // garanties de transfert de Stripe, à relire dans leurs contrats.
       paragraphes: [
-        `Seules les personnes de ${EDITEUR.denomination} qui en ont besoin pour le service. Nos prestataires techniques, qui traitent les données pour notre compte : Clever Cloud (hébergement de l'application, de la base de données et des fichiers, Union européenne), Mailpace (envoi des e-mails du service), Stripe (paiement et factures).`,
+        `Seules les personnes de ${EDITEUR.denomination} qui en ont besoin pour le service, et, pour une demande faite à l'expert de l'offre Pro, cet expert. Nos prestataires techniques, qui traitent les données pour notre compte : Clever Cloud (hébergement de l'application, de la base de données et des fichiers, Union européenne), Mailpace (envoi des e-mails du service), Stripe (paiement et factures).`,
+        "Transferts hors de l'Union européenne : Stripe peut transférer les données de paiement et de facturation vers les États-Unis, avec les garanties prévues par le RGPD (décision d'adéquation « Data Privacy Framework » ou clauses contractuelles types de la Commission européenne). Les données de votre dossier — établissements, salariés, rapports — ne sont pas transmises à Stripe.",
         "Au moment de choisir ou changer un mot de passe, nous vérifions qu'il ne figure pas parmi des mots de passe divulgués (service « Pwned Passwords ») : seuls les cinq premiers caractères d'une empreinte du mot de passe sont transmis, jamais le mot de passe ni votre adresse.",
         "Si vous reliez Rojer à un assistant d'intelligence artificielle, les informations que cet assistant lit quittent Rojer selon les conditions de son fournisseur, que vous avez choisi.",
       ],
@@ -145,7 +149,7 @@ const COOKIES: PageLegale = {
       titre: "Ce que Rojer dépose",
       paragraphes: [
         "Rojer ne dépose que des cookies nécessaires au fonctionnement du service : aucun cookie de mesure d'audience, de publicité ou de réseau social, et aucun outil de suivi tiers.",
-        "Le cookie de session garde votre connexion ouverte ; il est supprimé à la déconnexion ou à son expiration.",
+        "Le cookie de session garde votre connexion ouverte ; il est supprimé à la déconnexion et expire sept jours après la connexion.",
         "Le cookie de l'établissement actif retient l'établissement sur lequel vous travaillez ; il dure un an.",
         "Le cookie de l'offre choisie retient la formule choisie sur la page des tarifs jusqu'à la création du compte ; il dure quarante-quatre jours au plus.",
         "L'application garde aussi dans votre navigateur (stockage local) quelques préférences d'affichage, comme la disposition du tableau de bord. Elles ne quittent pas votre appareil.",

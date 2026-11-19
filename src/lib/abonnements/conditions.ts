@@ -12,6 +12,13 @@
 // La mention « provisoire » est retirée de la page (décision de la
 // propriétaire du même jour) ; une relecture juridique reste conseillée. Les
 // points encore ouverts sont marqués « À VALIDER » ci-dessous, en commentaire.]
+// [2026-11-19, même jour : reprise après deux relectures indépendantes —
+// inspection juridique, et comparaison aux usages (CGV de Deemply, SaaS B2B
+// français) : responsabilité rééquilibrée, remboursement au prorata quand la
+// fin vient de BTRY, arrêt du service, sortie et restitution des données,
+// annexe de sous-traitance (art. 28 RGPD), preuve et formation du contrat en
+// ligne, clause de juridiction réservée aux commerçants, licence des
+// documents produits, données de santé.]
 
 import { EDITEUR, IDENTITE_EDITEUR } from "@/components/landing/editeur";
 
@@ -29,15 +36,18 @@ export const CONDITIONS: Section[] = [
     titre: "1. Objet et parties",
     paragraphes: [
       `Rojer est un service en ligne édité par ${IDENTITE_EDITEUR}, représentée par son gérant (ci-après « BTRY »).`,
-      "Les présentes conditions générales d'utilisation et de vente (les « Conditions ») régissent l'accès à Rojer et son utilisation par toute personne qui crée un compte, démarre un essai ou souscrit un abonnement (le « Client »), ainsi que par les personnes qu'il invite sur son compte (les « Utilisateurs »).",
-      "Rojer s'adresse aux professionnels — entreprises, associations, administrations — qui l'utilisent pour leur activité. Il n'est pas proposé aux consommateurs. En acceptant les Conditions, la personne qui crée le compte déclare agir au nom et pour le compte de la structure qu'elle représente, et avoir le pouvoir de l'engager.",
+      "Les présentes conditions générales d'utilisation et de vente (les « Conditions ») régissent l'accès à Rojer et son utilisation par toute personne qui crée un compte, démarre un essai ou souscrit un abonnement (le « Client »), ainsi que par les personnes qu'il invite sur son compte (les « Utilisateurs »). Le Client fait respecter les Conditions par ses Utilisateurs.",
+      "Rojer s'adresse aux entreprises et aux associations établies en France, qui l'utilisent pour leur activité. Il n'est pas proposé aux consommateurs. Le Client déclare souscrire pour les besoins de son activité professionnelle, et la personne qui crée le compte déclare avoir le pouvoir d'engager la structure qu'elle représente. Une personne publique qui souhaite utiliser Rojer s'adresse à BTRY pour un contrat particulier.",
+      "Le contrat se compose des Conditions, de l'annexe « Données personnelles traitées pour le compte du Client » et de la page des tarifs à la date de souscription. En cas de contradiction, les Conditions prévalent.",
     ],
   },
   {
-    titre: "2. Acceptation et modification des Conditions",
+    titre: "2. Conclusion du contrat, preuve et modification des Conditions",
     paragraphes: [
-      "Le Client accepte les Conditions en cochant la case prévue au démarrage de l'essai ou à la souscription. Rojer enregistre la version acceptée, sa date et l'adresse du compte.",
-      "BTRY peut modifier les Conditions. Le Client en est informé par e-mail au moins trente jours avant leur entrée en vigueur ; elles s'appliquent à la période d'abonnement suivante. Le Client qui les refuse résilie son abonnement avant cette date, sans frais.",
+      "Le Client accepte les Conditions en cochant la case prévue au démarrage de l'essai et à la souscription ; il peut les lire, les télécharger et les imprimer à tout moment depuis le site. Entre professionnels, les parties conviennent de déroger aux articles 1127-1 1° à 5° et 1127-2 du Code civil.",
+      "Les enregistrements électroniques de Rojer — acceptations des Conditions (version, empreinte du texte, date, compte), journaux, empreintes et horodatages — font preuve entre les parties, sauf preuve contraire.",
+      "BTRY peut modifier les Conditions. Elle en informe le Client par e-mail au moins trente jours avant leur entrée en vigueur. Le Client qui les refuse résilie son abonnement avant cette date ; la part non consommée d'une période payée d'avance lui est alors remboursée. Une modification imposée par la loi ou par la sécurité du service s'applique dès sa publication.",
+      "Les notifications prévues par les Conditions, y compris une mise en demeure, sont valablement faites par e-mail : BTRY écrit à l'adresse du propriétaire du compte, le Client à l'adresse indiquée à l'article 25.",
     ],
   },
   {
@@ -55,6 +65,7 @@ export const CONDITIONS: Section[] = [
       "Rojer n'atteste jamais la conformité d'un établissement. Aucun indicateur, tableau de bord, échéance « à jour » ni document produit par Rojer ne vaut attestation de conformité, ni à l'égard du Client, ni à l'égard d'un tiers (inspection du travail, commission de sécurité, assureur, bailleur, acquéreur).",
       "Le Client reste seul tenu des obligations que la loi met à sa charge, en particulier celles de l'employeur (article L. 4121-1 du Code du travail) et de l'exploitant d'un établissement. Il évalue les risques, prend les décisions, fait réaliser les vérifications, conduit les actions et répond de leur exécution.",
       "Les documents produits avec Rojer — notamment le document unique d'évaluation des risques — sont les documents du Client, établis sous sa responsabilité à partir des informations qu'il a saisies. Il lui appartient de les relire, de les compléter et de les valider avant de les utiliser ou de les remettre à un tiers.",
+      "Le Client reconnaît avoir pu, pendant l'essai, apprécier les fonctions de Rojer et leur adéquation à ses besoins, et l'avoir choisi en connaissance de cause.",
     ],
   },
   {
@@ -76,30 +87,30 @@ export const CONDITIONS: Section[] = [
   {
     titre: "7. Rappels et notifications",
     paragraphes: [
-      "Les rappels, alertes et e-mails envoyés par Rojer sont une aide. Leur absence, leur retard ou leur non-réception (adresse erronée, filtre de messagerie, indisponibilité du service) ne décharge le Client d'aucune obligation, et ne peut être reprochée à BTRY. Le Client consulte régulièrement son calendrier dans l'application.",
+      "Les rappels, alertes et e-mails envoyés par Rojer sont une aide. BTRY ne garantit pas leur réception (adresse erronée, filtre de messagerie, indisponibilité), et leur absence ne décharge le Client d'aucune obligation. Le Client consulte régulièrement son calendrier dans l'application. La responsabilité de BTRY à ce titre ne peut être recherchée que dans les conditions de l'article 20.",
     ],
   },
   {
     titre: "8. L'expert (offre Pro)",
-    // À VALIDER (propriétaire) : les avantages Pro affichés sur la page des
-    // tarifs (question à l'expert, rendez-vous d'une heure par an, assistant)
-    // sont-ils maintenus ? Retirer la section si non.
+    // À VALIDER (propriétaire) : les avantages Pro sont maintenus (décision
+    // du 2026-11-19), à préciser. Les demandes d'assistance ne partent pas
+    // encore vers un expert (ADR-050) : à brancher avant de vendre Pro.
     paragraphes: [
       "L'offre Pro permet de poser des questions techniques de prévention à un expert désigné par BTRY, et d'obtenir un rendez-vous d'une heure par an, dans les conditions affichées sur la page des tarifs à la date de souscription.",
-      "L'expert donne un avis technique de prévention, fondé sur les seules informations que le Client lui transmet. Il ne donne aucun avis juridique, ne se rend pas sur place, n'effectue aucune vérification réglementaire et ne prend aucune décision à la place du Client. BTRY s'engage à une réponse dans un délai raisonnable, sans délai garanti.",
+      "L'expert donne un avis technique de prévention, fondé sur les seules informations que le Client lui transmet. Il ne donne aucun avis ni aucune consultation juridique, ne se rend pas sur place, n'effectue aucune vérification réglementaire et ne prend aucune décision à la place du Client. BTRY s'engage à une réponse dans un délai raisonnable, sans délai garanti.",
     ],
   },
   {
     titre: "9. Services de tiers reliés à Rojer",
     paragraphes: [
-      "Le Client peut relier Rojer à un assistant d'intelligence artificielle de son choix (offre Pro). Les informations que cet assistant lit dans Rojer quittent alors le service, sous la seule responsabilité du Client et selon les conditions du fournisseur de l'assistant. Les réponses de l'assistant ne sont pas produites par Rojer ; BTRY n'en répond pas.",
-      "Le paiement est assuré par Stripe, la messagerie par un prestataire d'envoi d'e-mails, l'hébergement par Clever Cloud. BTRY n'est pas responsable des interruptions propres à ces services.",
+      "Le Client peut relier Rojer à un assistant d'intelligence artificielle de son choix (offre Pro). Les informations que cet assistant lit dans Rojer quittent alors le service, sous la seule responsabilité du Client et selon les conditions du fournisseur de l'assistant, que le Client a choisi. Les réponses de l'assistant ne sont pas produites par Rojer ; BTRY n'en répond pas.",
+      "Le paiement est assuré par Stripe, qui recueille directement les données de la carte bancaire et en est seul dépositaire.",
     ],
   },
   {
     titre: "10. Signature électronique, accès des tiers, pages publiques",
     paragraphes: [
-      "La signature proposée par Rojer est une signature électronique simple au sens du règlement (UE) n° 910/2014 (« eIDAS ») : elle associe au document signé une empreinte et une date, vérifiables sur une page publique. Ce n'est ni une signature avancée ni une signature qualifiée ; il appartient au Client d'apprécier si elle convient à l'usage qu'il en fait.",
+      "La signature proposée par Rojer est une signature électronique simple au sens du règlement (UE) n° 910/2014 (« eIDAS ») : le signataire est identifié par son compte, ou par un lien personnel et un code à usage unique envoyé à son adresse e-mail ; l'empreinte du document, la date et l'identité du signataire (nom, qualité, adresse e-mail) sont vérifiables sur une page publique. Ce n'est ni une signature avancée ni une signature qualifiée ; il appartient au Client d'apprécier si elle convient à l'usage qu'il en fait, et d'informer les signataires de cette publication.",
       "Le Client choisit les personnes qu'il invite sur son compte et les prestataires auxquels il ouvre un accès ou demande une signature. Il répond de leur usage du service et de ce qu'il leur communique.",
       "Les informations que le Client publie (registre public d'accessibilité, affiche à QR code) le sont sous sa responsabilité ; il en vérifie l'exactitude.",
     ],
@@ -107,22 +118,23 @@ export const CONDITIONS: Section[] = [
   {
     titre: "11. Compte et Utilisateurs",
     paragraphes: [
-      "Le Client fournit des informations exactes et les tient à jour. Il garde ses identifiants confidentiels, en répond, et prévient BTRY sans délai de tout usage non autorisé. Chaque Utilisateur dispose d'identifiants personnels ; un compte ne se partage pas.",
-      "Le Client s'interdit tout usage contraire à la loi ou aux Conditions, toute tentative d'accès non autorisé, toute atteinte à la sécurité ou au fonctionnement du service, et toute extraction automatisée du référentiel.",
+      "Le Client fournit des informations exactes et les tient à jour. Il garde ses identifiants confidentiels, en répond, et prévient BTRY sans délai de tout usage non autorisé ; BTRY l'informe de son côté de toute activité anormale qu'elle détecte sur son compte. Chaque Utilisateur dispose d'identifiants personnels ; un compte ne se partage pas.",
+      "Le Client s'interdit tout usage contraire à la loi ou aux Conditions, toute tentative d'accès non autorisé, toute atteinte à la sécurité ou au fonctionnement du service, et toute extraction d'une partie substantielle du référentiel ou toute extraction répétée et systématique de parties qui ne le sont pas (article L. 342-2 du Code de la propriété intellectuelle).",
     ],
   },
   {
     titre: "12. Essai gratuit",
     paragraphes: [
-      "L'essai dure 30 jours, sans carte bancaire, une fois par compte, dans la formule Essentiel et ses limites d'essai.",
+      "L'essai dure 30 jours, sans carte bancaire, une seule fois par compte et par entreprise, dans la formule Essentiel et ses limites d'essai.",
       "Rien n'est prélevé pendant l'essai. Pendant l'essai, les gestes qui produisent un document officiel ou engagent un tiers (valider une version du document unique, exporter le dossier ou le registre, publier le registre d'accessibilité, signer pour un tiers) demandent un abonnement payé.",
+      "Pendant l'essai, Rojer est fourni en l'état, sans engagement de disponibilité ni d'assistance.",
       "Sans abonnement au terme de l'essai, la saisie est fermée et le dossier reste consultable.",
     ],
   },
   {
     titre: "13. Formules, prix et paiement",
     paragraphes: [
-      "Les formules, leurs limites et leurs prix sont ceux de la page des tarifs à la date de souscription. L'abonnement est mensuel ou annuel, payable d'avance par carte bancaire. Les prix sont indiqués toutes taxes comprises (TVA de 20 % incluse). Le paiement et l'émission des factures sont assurés par Stripe ; les factures sont envoyées par e-mail et restent disponibles dans l'espace de gestion de l'abonnement.",
+      "Les formules, leurs limites et leurs prix sont ceux de la page des tarifs à la date de souscription ; le prix est rappelé au moment du paiement et sur la facture. L'abonnement est mensuel ou annuel, payable d'avance par carte bancaire. Les prix sont indiqués toutes taxes comprises (TVA de 20 % incluse) ; toute variation du taux de TVA est répercutée. Le paiement et l'émission des factures sont assurés par Stripe ; les factures sont envoyées par e-mail et restent disponibles dans l'espace de gestion de l'abonnement.",
       "L'abonnement se renouvelle automatiquement à la fin de chaque période, au prix en vigueur, jusqu'à sa résiliation. BTRY peut modifier ses prix ; le Client en est informé par e-mail au moins trente jours à l'avance, et le nouveau prix s'applique à la période suivante.",
       "Passer à une formule supérieure prend effet immédiatement ; la différence pour la période en cours est facturée au prorata. Passer à une formule inférieure prend effet à la fin de la période payée.",
       // À VALIDER (expert-comptable) : le taux des pénalités de retard.
@@ -136,62 +148,71 @@ export const CONDITIONS: Section[] = [
     ],
   },
   {
-    titre: "15. Résiliation",
+    titre: "15. Résiliation et arrêt du service",
     paragraphes: [
       "Le Client résilie son abonnement en ligne, à tout moment, depuis l'espace de gestion de l'abonnement accessible dans Rojer. La résiliation prend effet à la fin de la période payée ; le service reste accessible jusque-là.",
       "BTRY peut résilier l'abonnement en cas de manquement grave du Client aux Conditions, après une mise en demeure restée sans effet pendant quinze jours, ou suspendre l'accès sans délai en cas de risque pour la sécurité du service ou des autres clients.",
+      "Si BTRY décide de cesser de fournir Rojer, elle en informe le Client au moins trois mois à l'avance et lui permet de récupérer ses données dans les conditions de l'article 17.",
       "Après la fin de l'abonnement, la saisie est fermée ; le dossier reste consultable, et les exports déjà ouverts par un abonnement payé restent disponibles, jusqu'à la suppression du compte prévue à l'article 17.",
     ],
   },
   {
     titre: "16. Remboursement",
-    // À VALIDER (propriétaire, avocat) : la règle de remboursement.
     paragraphes: [
-      "Une période commencée est due en entier : la résiliation, un passage à une formule inférieure ou l'absence d'utilisation ne donnent lieu à aucun remboursement, total ou au prorata, que l'abonnement soit mensuel ou annuel. Seule une erreur de facturation imputable à BTRY est remboursée.",
+      "Une période commencée est due en entier : la résiliation par le Client, un passage à une formule inférieure ou l'absence d'utilisation ne donnent lieu à aucun remboursement, total ou au prorata, que l'abonnement soit mensuel ou annuel. L'abonnement annuel est payé d'avance pour un an.",
+      "Par exception, la part non consommée d'une période payée d'avance est remboursée au prorata lorsque l'abonnement prend fin du fait de BTRY (résiliation pour manquement de BTRY, arrêt du service), en cas de force majeure, ou lorsque le Client refuse une modification des Conditions (article 2). Une erreur de facturation imputable à BTRY est remboursée.",
       "Une contestation de paiement auprès de la banque (rétrofacturation) met fin à l'abonnement sans délai ; le Client peut se réabonner ensuite.",
     ],
   },
   {
-    titre: "17. Données du Client, export et suppression",
+    titre: "17. Données du Client, sortie et suppression",
+    // À VALIDER (propriétaire) : la restitution sur demande écrite est
+    // aujourd'hui manuelle — l'export complet structuré n'existe pas
+    // (`docs/rgpd.md` § 5.1). Règlement (UE) 2023/2854 (« Data Act »),
+    // art. 25 et 26 : liste et formats des données exportables à publier.
     paragraphes: [
-      "Les données saisies et les documents déposés par le Client restent sa propriété. Il les consulte à tout moment, et les exporte dans les conditions de sa formule.",
+      "Les données saisies et les documents déposés par le Client restent sa propriété. BTRY ne les utilise que pour fournir le service : elle ne les vend pas et ne s'en sert pas pour entraîner un modèle d'intelligence artificielle. Elle peut en tirer des statistiques de fonctionnement agrégées et anonymes.",
+      "Le Client consulte ses données à tout moment et exporte ses documents depuis l'application. À tout moment, et jusqu'à la suppression du compte, il peut aussi demander par écrit la restitution sans frais de l'ensemble de ses données dans un format structuré et couramment utilisé ; BTRY la lui fournit dans un délai raisonnable.",
       "La conservation du document unique d'évaluation des risques pendant quarante ans (article L. 4121-3-1 du Code du travail) et celle des rapports de vérification incombent au Client. Rojer n'est pas un service d'archivage : le Client télécharge et conserve lui-même ses versions validées et ses rapports.",
       "Un compte sans abonnement depuis douze mois (après l'essai, une résiliation ou un impayé) est supprimé avec toutes ses données. Deux e-mails le préviennent, trente jours puis sept jours avant, avec la date. La suppression est définitive.",
-      "Le propriétaire du compte peut aussi en demander la suppression depuis l'application : elle intervient le septième jour, et peut être annulée d'ici là. BTRY conserve les factures et les preuves d'acceptation des Conditions pendant les durées que la loi lui impose.",
+      "Le propriétaire du compte peut aussi en demander la suppression depuis l'application : elle intervient le septième jour, et peut être annulée d'ici là. BTRY conserve les factures pendant dix ans (article L. 123-22 du Code de commerce), et la trace d'un compte supprimé — dont les acceptations des Conditions — pendant cinq ans, pour la preuve en cas de litige.",
     ],
   },
   {
     titre: "18. Données personnelles",
     paragraphes: [
-      "Pour les données personnelles que le Client enregistre dans Rojer (salariés, prestataires, intervenants), le Client est responsable du traitement et BTRY agit en qualité de sous-traitant au sens de l'article 28 du règlement (UE) 2016/679 (RGPD). BTRY s'engage à : ne traiter ces données que pour fournir le service et sur instruction du Client ; en garantir la confidentialité par les personnes autorisées à y accéder ; mettre en œuvre des mesures de sécurité appropriées ; ne recourir qu'aux sous-traitants ultérieurs listés dans la politique de confidentialité, et informer le Client de tout changement ; l'aider à répondre aux demandes d'exercice des droits ; lui notifier toute violation de données dans les meilleurs délais ; supprimer les données à la fin du service dans les conditions de l'article 17 ; et mettre à sa disposition les informations nécessaires pour démontrer le respect de ces obligations.",
+      "Pour les données personnelles que le Client enregistre dans Rojer (salariés, prestataires, intervenants), le Client est responsable du traitement et BTRY agit en qualité de sous-traitant au sens de l'article 28 du règlement (UE) 2016/679 (RGPD), dans les conditions de l'annexe « Données personnelles traitées pour le compte du Client ».",
       "Pour les données des comptes, de la facturation et des échanges avec ses clients, BTRY est responsable du traitement. La politique de confidentialité, accessible depuis le site, décrit ces traitements, leurs durées et les droits des personnes.",
-      "Les données sont hébergées dans l'Union européenne.",
+      "Rojer ne conserve d'une pièce médicale que son existence, sa date et son échéance. Le Client s'interdit d'y enregistrer un diagnostic, le contenu d'un avis médical, une pièce médicale ou toute autre donnée de santé que celles appelées par les champs prévus. Rojer n'est pas un hébergeur de données de santé.",
     ],
   },
   {
     titre: "19. Disponibilité et assistance",
+    // À VALIDER (propriétaire) : une clause de sauvegarde (fréquence,
+    // durée, lieu) une fois confirmé ce que fait Clever Cloud.
     paragraphes: [
       "BTRY met en œuvre les moyens raisonnables pour que Rojer soit accessible en continu, sans garantir de taux de disponibilité. Le service peut être interrompu pour maintenance, mise à jour, ou en raison d'un incident chez un prestataire, d'une attaque informatique ou d'un cas de force majeure ; BTRY s'efforce de prévenir le Client des maintenances prévues.",
-      "BTRY corrige dans un délai raisonnable les anomalies reproductibles qui lui sont signalées, sans délai d'intervention garanti. Elle fait évoluer Rojer librement, sans en dénaturer l'objet ; les évolutions sont comprises dans l'abonnement.",
-      `L'assistance est assurée par écrit, depuis l'application ou le formulaire de contact du site, les jours ouvrés.`,
+      "BTRY corrige dans un délai raisonnable les anomalies reproductibles qui lui sont signalées, hors celles qui proviennent de l'équipement ou du réseau du Client, sans délai d'intervention garanti. Elle fait évoluer Rojer librement, sans en dénaturer l'objet ; les évolutions sont comprises dans l'abonnement.",
+      "L'assistance est assurée par écrit, depuis l'application ou le formulaire de contact du site, les jours ouvrés. Elle porte sur l'usage de Rojer ; elle ne comprend ni la saisie des données, ni l'évaluation des risques à la place du Client.",
     ],
   },
   {
     titre: "20. Responsabilité",
-    // À VALIDER (avocat) : plafond, exclusions, articulation avec l'article
-    // 1170 du Code civil (obligation essentielle) et l'article 1171
-    // (déséquilibre significatif dans un contrat d'adhésion).
+    // À VALIDER (avocat) : plafond (un plancher ?), articulation avec les
+    // articles 1170 et 1171 du Code civil et L. 442-1 du Code de commerce.
     paragraphes: [
       "Les obligations de BTRY sont des obligations de moyens. Sa responsabilité ne peut être engagée qu'en cas de faute prouvée, et pour les seuls dommages directs et prévisibles subis par le Client.",
-      "BTRY ne répond pas des dommages indirects, ni des conséquences des décisions du Client, de ses déclarations inexactes ou incomplètes, ou de la non-réalisation d'une obligation qui lui incombe. Sont notamment exclus : les amendes, sanctions administratives ou pénales, mises en demeure, fermetures administratives, avis défavorables, refus de garantie ou majorations d'assurance, accidents et sinistres, pertes d'exploitation, de chiffre d'affaires ou de clientèle, et atteintes à l'image.",
-      "Sauf faute lourde ou dolosive de BTRY, et hors dommages corporels causés par sa faute, la responsabilité totale de BTRY, tous dommages et toutes causes confondus, est limitée aux sommes payées par le Client au titre de son abonnement pendant les douze mois précédant le fait qui l'engage.",
+      "Sauf faute lourde ou dolosive de BTRY, et hors dommage corporel, BTRY ne répond pas des dommages indirects, ni des conséquences des décisions du Client, de ses déclarations inexactes ou incomplètes, ou de l'inexécution d'une obligation qui incombe au Client. Sont notamment des dommages indirects : les amendes, sanctions administratives ou pénales, fermetures administratives, refus de garantie ou majorations d'assurance, pertes d'exploitation, de chiffre d'affaires ou de clientèle, et atteintes à l'image.",
+      "Sauf faute lourde ou dolosive de BTRY, et hors dommage corporel causé par sa faute, la responsabilité totale de BTRY, tous dommages et toutes causes confondus, est limitée aux sommes payées par le Client au titre de son abonnement pendant les douze mois précédant le fait qui l'engage. La responsabilité du Client envers BTRY est limitée de la même manière, hors sommes dues au titre de l'abonnement et hors atteinte à la propriété intellectuelle de BTRY ou à la confidentialité.",
+      "Le prix de l'abonnement tient compte de cette répartition des risques, sans laquelle il serait plus élevé.",
     ],
   },
   {
     titre: "21. Propriété intellectuelle",
     paragraphes: [
-      "Rojer, ses logiciels, ses interfaces, ses textes, son référentiel d'obligations (base de données protégée par les articles L. 341-1 et suivants du Code de la propriété intellectuelle), ses documents types et sa marque appartiennent à BTRY. L'abonnement donne au Client un droit d'usage personnel, non exclusif et non cessible, pour ses besoins internes et pour la durée de l'abonnement.",
-      "Le Client s'interdit de reproduire, d'extraire ou de réutiliser tout ou partie substantielle du référentiel, de copier ou de décompiler le service, ou de le mettre à la disposition d'un tiers, hors les cas autorisés par la loi.",
+      "Rojer, ses logiciels, ses interfaces, ses textes, son référentiel d'obligations (base de données protégée par les articles L. 341-1 et suivants du Code de la propriété intellectuelle), ses documents types et sa marque appartiennent à BTRY. L'abonnement donne au Client un droit d'usage du service, non exclusif et non cessible, pour son activité et pour la durée de l'abonnement.",
+      "Le Client peut utiliser, reproduire et communiquer à tout tiers, sans limite de durée et y compris après la fin de l'abonnement, les documents produits avec Rojer pour ses besoins.",
+      "Le Client s'interdit, hors les cas autorisés par la loi, de reproduire ou de décompiler le service, de le mettre à la disposition d'un tiers, et d'extraire ou de réutiliser une partie substantielle du référentiel.",
     ],
   },
   {
@@ -203,7 +224,7 @@ export const CONDITIONS: Section[] = [
   {
     titre: "23. Force majeure",
     paragraphes: [
-      "Aucune partie n'est responsable d'un manquement dû à un cas de force majeure au sens de l'article 1218 du Code civil. Si l'empêchement dure plus de soixante jours, chaque partie peut résilier l'abonnement par écrit, sans indemnité.",
+      "Aucune partie n'est responsable d'un manquement dû à un cas de force majeure au sens de l'article 1218 du Code civil. Si l'empêchement dure plus de soixante jours, chaque partie peut résilier l'abonnement par écrit ; la part non consommée d'une période payée d'avance est remboursée (article 16).",
     ],
   },
   {
@@ -214,9 +235,26 @@ export const CONDITIONS: Section[] = [
     ],
   },
   {
-    titre: "25. Droit applicable et litiges",
+    titre: "25. Droit applicable, litiges et attribution de juridiction",
     paragraphes: [
-      `Les Conditions sont régies par le droit français. En cas de différend, les parties recherchent d'abord une solution amiable ; le Client écrit à ${EDITEUR.email}. À défaut d'accord, compétence exclusive est attribuée aux tribunaux compétents de Nîmes, y compris en cas de pluralité de défendeurs ou d'appel en garantie.`,
+      `Les Conditions sont régies par le droit français. En cas de différend, les parties recherchent d'abord une solution amiable pendant trente jours, sans préjudice des mesures urgentes ou conservatoires ; le Client écrit à ${EDITEUR.email}. Chaque partie peut aussi saisir le Médiateur des entreprises, gratuitement.`,
+      "CLAUSE ATTRIBUTIVE DE JURIDICTION — LORSQUE LE CLIENT A LA QUALITÉ DE COMMERÇANT, COMPÉTENCE EXCLUSIVE EST ATTRIBUÉE AU TRIBUNAL DE COMMERCE DE NÎMES, Y COMPRIS EN CAS DE PLURALITÉ DE DÉFENDEURS OU D'APPEL EN GARANTIE. À défaut, les règles de compétence de droit commun s'appliquent.",
+    ],
+  },
+  {
+    titre: "Annexe — Données personnelles traitées pour le compte du Client",
+    // À VALIDER (avocat) : cette annexe tient lieu d'accord de traitement
+    // (art. 28.3 RGPD), repris point par point.
+    paragraphes: [
+      "Objet et durée. BTRY traite, pour le compte du Client, les données personnelles que le Client enregistre dans Rojer, pour la seule fourniture du service, pendant la durée du contrat et jusqu'à la suppression du compte (article 17).",
+      "Nature et finalité. Hébergement, enregistrement, consultation, mise en forme dans des documents, envoi de messages et de liens d'accès, suppression — pour permettre au Client de suivre ses obligations de prévention et de sécurité.",
+      "Personnes concernées et données. Salariés et Utilisateurs du Client (identité, poste, dates d'entrée, titres, habilitations, formations et leurs échéances) ; prestataires, intervenants et signataires (identité, coordonnées professionnelles, attestations, signatures). Certains titres de suivi médical peuvent révéler indirectement une situation particulière (par exemple une périodicité adaptée) : Rojer n'en garde que l'existence, la date et l'échéance (article 18).",
+      "Instructions. BTRY ne traite ces données que sur instruction documentée du Client — les Conditions et l'usage qu'il fait du service —, y compris pour un transfert hors de l'Union européenne, sauf obligation légale dont elle l'informe. Elle l'avertit si une instruction lui paraît contraire au RGPD.",
+      "Confidentialité et sécurité. Les personnes de BTRY autorisées à traiter ces données sont tenues à la confidentialité. BTRY met en œuvre les mesures de sécurité de l'article 32 du RGPD décrites dans la politique de confidentialité : chiffrement des échanges, cloisonnement des comptes, double authentification proposée, stockage privé des fichiers.",
+      "Sous-traitants ultérieurs. BTRY recourt aux sous-traitants listés dans la politique de confidentialité et leur impose les mêmes obligations de protection. Elle informe le Client par e-mail de tout ajout ou remplacement au moins trente jours à l'avance ; le Client peut s'y opposer pour un motif légitime et, à défaut d'accord, résilier son abonnement avec remboursement de la part non consommée.",
+      "Assistance. BTRY aide le Client, dans la mesure du possible, à répondre aux demandes d'exercice des droits des personnes, à assurer la sécurité du traitement, à réaliser une analyse d'impact et, le cas échéant, à consulter la CNIL. Elle lui notifie toute violation de données personnelles dans les quarante-huit heures après en avoir pris connaissance.",
+      "Fin du traitement. À la fin du contrat, au choix du Client, BTRY lui restitue les données sans frais dans un format structuré et couramment utilisé, puis les supprime, ou les supprime directement, dans les conditions de l'article 17, sauf obligation légale de conservation.",
+      "Audit. BTRY met à la disposition du Client les informations nécessaires pour démontrer le respect de ces obligations. Elle permet un audit, au plus une fois par an et sauf violation de données, à la demande écrite du Client faite trente jours à l'avance, à ses frais, par lui-même ou par un auditeur indépendant tenu au secret.",
     ],
   },
 ];
