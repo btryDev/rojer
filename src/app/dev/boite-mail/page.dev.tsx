@@ -71,6 +71,13 @@ export default async function BoiteMailDevPage() {
                   {m.text}
                 </pre>
 
+                {m.piecesJointes.length > 0 && (
+                  <p className="mt-2 text-[12.5px] text-[color:var(--muted-foreground)]">
+                    Pièce{m.piecesJointes.length > 1 ? "s" : ""} jointe{m.piecesJointes.length > 1 ? "s" : ""} :{" "}
+                    {m.piecesJointes.join(", ")}
+                  </p>
+                )}
+
                 {lien && (
                   <a
                     href={lien}

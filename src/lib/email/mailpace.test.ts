@@ -63,6 +63,24 @@ describe("pilote Mailpace — la requête", () => {
     });
   });
 
+  it("une pièce jointe part sous la forme documentée : name, content en base64, content_type", async () => {
+    const { pilote, appels } = apiSimulee([ok()]);
+    const content = Buffer.from("%PDF-1.3 test").toString("base64");
+    await pilote.send({
+      ...MESSAGE,
+      attachments: [{ name: "Plan_prevention_PP-001.pdf", content, contentType: "application/pdf" }],
+    });
+    expect(JSON.parse(String(appels[0].init.body)).attachments).toEqual([
+      { name: "Plan_prevention_PP-001.pdf", content, content_type: "application/pdf" },
+    ]);
+  });
+
+  it("une liste de pièces vide : pas de champ attachments", async () => {
+    const { pilote, appels } = apiSimulee([ok()]);
+    await pilote.send({ ...MESSAGE, attachments: [] });
+    expect(JSON.parse(String(appels[0].init.body))).not.toHaveProperty("attachments");
+  });
+
   it("deux messages, deux clés d'idempotence différentes", async () => {
     const { pilote, appels } = apiSimulee([ok(), ok()]);
     await pilote.send(MESSAGE);

@@ -10,14 +10,36 @@ import "server-only";
  * clé dans `MAILPACE_API_KEY`, expéditeur dans `SIGNATURE_MAIL_FROM` (un
  * domaine vérifié chez Mailpace). Voir `mailpace.ts`.
  */
-import { creerPiloteMailpace } from "./mailpace";
+import { creerPiloteMailpace, ErreurEnvoiMail } from "./mailpace";
+
+/**
+ * Une pièce jointe (2026-11-19 : le PDF du plan de prévention signé). La
+ * forme est celle de l'API Mailpace (`attachments`), au nom de champ près :
+ * contenu en base64, type MIME. Mailpace n'accepte qu'une liste
+ * d'extensions (pdf en est) et un nom à UN seul point ; 30 Mo par message.
+ * https://docs.mailpace.com/reference/send
+ */
+export type PieceJointe = {
+  name: string;
+  /** Le fichier, encodé en base64. */
+  content: string;
+  contentType: string;
+};
 
 export type EmailPayload = {
   to: string;
   subject: string;
   text: string;
   html?: string;
+  attachments?: PieceJointe[];
 };
+
+/** « Plan.pdf (12 Ko) » — pour un journal ou la boîte de développement. */
+export function resumePieceJointe(p: PieceJointe): string {
+  // Taille du fichier d'origine : 3 octets pour 4 caractères de base64.
+  const octets = Math.floor((p.content.replace(/=+$/, "").length * 3) / 4);
+  return `${p.name} (${Math.max(1, Math.round(octets / 1024))} Ko)`;
+}
 
 export interface EmailDriver {
   send(payload: EmailPayload): Promise<void>;
@@ -30,6 +52,9 @@ class ConsoleEmailDriver implements EmailDriver {
     console.log(`   Sujet : ${payload.subject}`);
     console.log(`   ${"─".repeat(66)}`);
     console.log(payload.text);
+    for (const p of payload.attachments ?? []) {
+      console.log(`   Pièce jointe : ${resumePieceJointe(p)}`);
+    }
     // L'expéditeur qui sortirait en production, pour le voir dès le dev.
     console.log(`   (From : ${mailFrom()})`);
     console.log("─".repeat(72) + "\n");
@@ -51,7 +76,7 @@ class ConsoleEmailDriver implements EmailDriver {
     // production.
     if (process.env.NODE_ENV !== "production") {
       const { capturerMail } = await import("./dev-outbox");
-      capturerMail(payload);
+      capturerMail({ ...payload, piecesJointes: (payload.attachments ?? []).map(resumePieceJointe) });
     }
   }
 }
@@ -135,8 +160,30 @@ export function getEmailDriver(): EmailDriver {
   return _driver;
 }
 
+/**
+ * Les refus de Mailpace qui peuvent venir d'une pièce jointe (contenu,
+ * extension, nom, taille). 401/403 (clé, domaine) et les réessayables n'en
+ * sont pas : renvoyer sans la pièce rendrait la même erreur.
+ */
+const REFUS_DE_PIECE = new Set([400, 413, 415, 422]);
+
 export async function sendMail(payload: EmailPayload): Promise<void> {
-  return getEmailDriver().send(payload);
+  const driver = getEmailDriver();
+  if (!payload.attachments || payload.attachments.length === 0) return driver.send(payload);
+  try {
+    return await driver.send(payload);
+  } catch (e) {
+    // UNE PIÈCE REFUSÉE NE RETIENT PAS LE MESSAGE (2026-11-19). Le message
+    // part sans elle, et le journal le dit — jamais le contenu ni l'adresse.
+    if (!(e instanceof ErreurEnvoiMail) || e.statut === null || !REFUS_DE_PIECE.has(e.statut)) {
+      throw e;
+    }
+    console.error(
+      `[email] pièce jointe refusée (${payload.attachments.map((p) => p.name).join(", ")}), ` +
+        `message renvoyé sans elle : ${e.message}`,
+    );
+    return driver.send({ ...payload, attachments: undefined });
+  }
 }
 
 /**

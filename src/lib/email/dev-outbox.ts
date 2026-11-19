@@ -73,6 +73,8 @@ export type MailCapture = {
   to: string;
   subject: string;
   text: string;
+  /** Les pièces jointes, par nom et taille — jamais leur contenu. */
+  piecesJointes: string[];
 };
 
 /** Au-delà, les plus anciens sortent. On teste un flux, on n'archive rien. */
@@ -91,6 +93,7 @@ export function capturerMail(payload: {
   to: string;
   subject: string;
   text: string;
+  piecesJointes?: string[];
 }): void {
   messages.push({
     id: `mail_${Date.now()}_${messages.length}`,
@@ -98,6 +101,7 @@ export function capturerMail(payload: {
     to: payload.to,
     subject: payload.subject,
     text: payload.text,
+    piecesJointes: payload.piecesJointes ?? [],
   });
   while (messages.length > BOITE_CAPACITE) messages.shift();
 }
