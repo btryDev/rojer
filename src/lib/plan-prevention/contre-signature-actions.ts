@@ -154,17 +154,9 @@ export async function traiterProposition(
         where: { id: propositionId, etablissementId },
         data: { ...cloture, statut: "refusee" },
       });
-      return { ok: true as const, acceptee: false, auteur };
+      return { ok: true as const, acceptee: false, auteur, retirees: [] };
     }
 
-    // Aucune signature active ne doit couvrir ce qu'on va réécrire (ADR-061) :
-    // relu sous le verrou, une signature posée depuis la proposition refuse.
-    if ((await compterSignatures(tx, "plan_prevention", planId, etablissementId)) > 0) {
-      return {
-        ok: false as const,
-        message: "Une signature a été posée depuis la proposition : révoquez-la avant d'appliquer la proposition.",
-      };
-    }
     // Relue telle qu'enregistrée, contre le plan d'AUJOURD'HUI : une ligne
     // retirée depuis par le dirigeant rend la proposition inapplicable.
     const lecture = lireProposition(JSON.stringify(p.contenu), new Set(plan.lignes.map((l) => l.id)));
@@ -175,6 +167,13 @@ export async function traiterProposition(
       };
     }
     const { fiche, lignes } = lecture.proposition;
+    // Accepter révoque les signatures déjà posées (ADR-061, revue de sécurité
+    // du 2026-11-19) : elles portaient sur le plan d'avant la proposition.
+    const retirees = await retirerSignaturesDuPlan(tx, {
+      etablissementId,
+      planId,
+      motif: MOTIF_REVOCATION_PLAN.proposition,
+    });
     await tx.planPrevention.update({
       where: { id: planId, etablissementId },
       data: {
@@ -206,12 +205,20 @@ export async function traiterProposition(
       where: { id: propositionId, etablissementId },
       data: { ...cloture, statut: "acceptee" },
     });
-    return { ok: true as const, acceptee: true, auteur };
+    return { ok: true as const, acceptee: true, auteur, retirees };
   });
   if (!r.ok) return { status: "error", message: r.message };
 
-  const { auteur, acceptee } = r;
-  if (auteur) after(() => avertirDecision(db, { etablissementId, planId, to: auteur, acceptee }));
+  const { auteur, acceptee, retirees } = r;
+  after(async () => {
+    if (auteur) await avertirDecision(db, { etablissementId, planId, to: auteur, acceptee });
+    await avertirSignaturesRetirees(db, {
+      etablissementId,
+      planId,
+      motif: MOTIF_REVOCATION_PLAN.proposition,
+      retirees,
+    });
+  });
   revalider(etablissementId, planId);
   if (decision === "corriger") {
     redirect(`/etablissements/${etablissementId}/plan-prevention/${planId}/modifier`);

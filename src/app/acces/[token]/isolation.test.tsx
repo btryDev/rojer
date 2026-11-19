@@ -217,6 +217,8 @@ beforeEach(() => {
   ]);
   prismaMock.planPrevention = table([PLAN_VOISIN, PLAN_A_MOI]);
   prismaMock.permisFeu = table([PERMIS_VOISIN, PERMIS_A_MOI]);
+  // Aucune proposition en attente (ADR-061) : la page dit « clos ou annulé ».
+  prismaMock.propositionModificationPlan = { count: vi.fn(async () => 0) } as unknown as ReturnType<typeof table>;
   prismaMock.etablissement = table([
     {
       id: "etab-a-moi",

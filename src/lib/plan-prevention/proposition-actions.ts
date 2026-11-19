@@ -13,12 +13,7 @@ import { ipClient } from "@/lib/securite/ip-client";
 import { messageTropDeTentatives } from "@/lib/securite/limite-debit";
 import { limiterProposition } from "./limite-proposition";
 import { aucunEcart, ecartsDeLaProposition, lireProposition, PROPOSITION_TAILLE_MAX, propositionSchema } from "./proposition";
-import {
-  avertirPropositionRecue,
-  avertirSignaturesRetirees,
-  MOTIF_REVOCATION_PLAN,
-  retirerSignaturesDuPlan,
-} from "./contre-signature";
+import { avertirPropositionRecue } from "./contre-signature";
 
 /**
  * L'entreprise extérieure propose une modification du plan, depuis son lien
@@ -32,9 +27,9 @@ import {
  * l'IP, au navigateur et à l'empreinte de la version lue. Une limite par IP
  * borne les envois ; une seule proposition attend par plan (unicité en base).
  *
- * L'effet : la proposition est enregistrée, les signatures actives du plan
- * sont révoquées et ses liens aussi (celui-ci compris), le dirigeant est
- * prévenu. Il accepte, corrige ou refuse depuis la fiche du plan.
+ * L'effet : la proposition est enregistrée et le dirigeant est prévenu. Rien
+ * n'est révoqué : le plan ne se signe plus tant qu'elle attend, et c'est
+ * l'acceptation qui révoque les signatures (revue de sécurité du 2026-11-19).
  */
 
 export type PropositionState =
@@ -140,14 +135,13 @@ export async function proposerModificationPlan(
           userAgent: ua,
         },
       });
-      const retirees = await retirerSignaturesDuPlan(tx, {
-        etablissementId,
-        planId,
-        motif: MOTIF_REVOCATION_PLAN.proposition,
-      });
+      // Rien n'est révoqué ici (2026-11-19, revue de sécurité) : proposer ne
+      // demande pas de code, et un porteur du lien ne doit pas pouvoir faire
+      // tomber les signatures des autres. Tant qu'elle attend, le plan ne se
+      // signe pas (`objetEstSignable`) ; les signatures tombent si le
+      // dirigeant l'accepte (`traiterProposition`).
       return {
         ok: true as const,
-        retirees,
         compteId: plan.etablissement.entreprise.compteId,
         entreprise: lecture.proposition.fiche.entrepriseExterieureRaison,
       };
@@ -160,15 +154,7 @@ export async function proposerModificationPlan(
   }
   if (!resultat.ok) return resultat.reponse;
 
-  const { retirees, compteId, entreprise } = resultat;
-  after(async () => {
-    if (compteId) await avertirPropositionRecue(db, { compteId, etablissementId, planId, entreprise });
-    await avertirSignaturesRetirees(db, {
-      etablissementId,
-      planId,
-      motif: MOTIF_REVOCATION_PLAN.proposition,
-      retirees,
-    });
-  });
+  const { compteId, entreprise } = resultat;
+  if (compteId) after(() => avertirPropositionRecue(db, { compteId, etablissementId, planId, entreprise }));
   return { status: "success" };
 }

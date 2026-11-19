@@ -16,7 +16,14 @@ import type { ObjetSignable, PartieSignataire, Prisma } from "@prisma/client";
  * - ou une proposition de modification faite depuis un lien de cette partie,
  *   envoyé à cette adresse (le lien a été compté à son émission, et la
  *   proposition l'a fait tomber avant qu'il serve).
+ *
+ * Plafonnée (revue de sécurité du 2026-11-19, décision de la propriétaire) :
+ * au plus `RESIGNATURES_GRATUITES_MAX` re-signatures gratuites par plan et
+ * par signataire. Au-delà, la signature compte : sinon un même plan, révoqué
+ * et réécrit en boucle, servirait de chantier en chantier sans rien coûter.
  */
+export const RESIGNATURES_GRATUITES_MAX = 3;
+
 export async function signatureDejaComptee(
   /** Le client borné au compte, ou sa transaction (ADR-051). */
   db: Prisma.TransactionClient,
@@ -35,19 +42,23 @@ export async function signatureDejaComptee(
   const revoquees = await db.signature.count({
     where: { etablissementId, objetType: "plan_prevention", objetId, partie, signataireEmail: email, active: null },
   });
-  if (revoquees > 0) return true;
   const propositions = await db.propositionModificationPlan.findMany({
     where: { etablissementId, planPreventionId: objetId },
     select: { accessTokenId: true },
   });
-  if (propositions.length === 0) return false;
-  const liens = await db.accessToken.count({
-    where: {
-      etablissementId,
-      id: { in: propositions.map((p) => p.accessTokenId) },
-      partie,
-      emailDestinataire: email,
-    },
-  });
-  return liens > 0;
+  const liens =
+    propositions.length === 0
+      ? 0
+      : await db.accessToken.count({
+          where: {
+            etablissementId,
+            id: { in: propositions.map((p) => p.accessTokenId) },
+            partie,
+            emailDestinataire: email,
+          },
+        });
+  // Combien de fois cette personne a déjà été comptée sur ce plan : la
+  // première l'a été, les suivantes sont gratuites, jusqu'au plafond.
+  const fois = revoquees + liens;
+  return fois >= 1 && fois <= RESIGNATURES_GRATUITES_MAX;
 }
