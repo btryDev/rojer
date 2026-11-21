@@ -32,7 +32,7 @@ const BOUTON_CLAIR =
   "inline-flex min-h-12 items-center justify-center rounded-full border border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-6 text-[14px] text-[color:var(--board-ink)] hover:bg-[color:var(--board-slate-pale)]";
 
 function useSecondesAvant(cible: string | null): number {
-  const [maintenant, setMaintenant] = useState(() => Date.now());
+  const [maintenant, setMaintenant] = useState(Date.now);
   useEffect(() => {
     if (!cible) return;
     const t = setInterval(() => setMaintenant(Date.now()), 1000);

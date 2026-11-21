@@ -54,6 +54,7 @@ const db = {
     }),
   },
   signature: { findMany: vi.fn(async () => []) },
+  accessToken: { count: vi.fn(async () => 0) },
 };
 
 const { GET } = await import("./route");

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { formaterDateLongueFr, formaterHeureFr } from "@/lib/dates";
 import { ChampBoard } from "@/components/ui-kit/ChampBoard";
 import {
   poserSignatureAvecToken,
@@ -21,15 +22,6 @@ import {
  *
  * Le signataire ne tape ni son nom ni son adresse : ils viennent du jeton.
  */
-
-const FORMAT_EXPIRATION: Intl.DateTimeFormatOptions = {
-  day: "2-digit",
-  month: "long",
-  year: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-  timeZone: "Europe/Paris",
-};
 
 const essais = (n: number) => `${n} essai${n > 1 ? "s" : ""}`;
 
@@ -229,7 +221,7 @@ export function SignatureExterneForm({
                 const champ = e.currentTarget;
                 champ.value = champ.value.replace(/\D/g, "").slice(0, 6);
               }}
-              aide={`Valable 10 minutes. Le lien expire le ${expireLe.toLocaleDateString("fr-FR", FORMAT_EXPIRATION)}.`}
+              aide={`Valable 10 minutes. Le lien expire le ${formaterDateLongueFr(expireLe)} à ${formaterHeureFr(expireLe)}.`}
             />
 
             {state.status === "error" && (

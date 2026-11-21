@@ -177,12 +177,15 @@ export const FABRIQUES: Record<string, Fabrique[]> = {
   ],
   // Le code d'une signature depuis le compte (2026-11-19) : l'objet est
   // polymorphe, comme celui d'une signature.
+  // Un code par (personne, objet) — clé unique : l'objet varie d'une ligne à
+  // l'autre, sinon le témoin, l'upsert et les clés se heurtent à la ligne déjà
+  // créée pour la même personne.
   CodeSignatureCompte: [
-    (g) => ({
+    (g, n) => ({
       etablissementId: g.Etablissement,
       userId: g.user,
       objetType: "plan_prevention",
-      objetId: g.PlanPrevention,
+      objetId: `${g.PlanPrevention}-${n}`,
       email: "x@exemple.invalid",
       otpHash: "0".repeat(64),
       otpExpireLe: DANS_UN_AN,
