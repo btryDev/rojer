@@ -63,9 +63,9 @@ function extraireLignes(formData: FormData): LigneInput[] {
       mesureEntrepriseExterieure: formData.get(
         `lignes[${i}].mesureEntrepriseExterieure`,
       ),
-      famille: formData.get(`lignes[${i}].famille`) ?? undefined,
-      lieu: formData.get(`lignes[${i}].lieu`) ?? undefined,
-      frequence: formData.get(`lignes[${i}].frequence`) ?? undefined,
+      famille: formData.get(`lignes[${i}].famille`),
+      lieu: formData.get(`lignes[${i}].lieu`),
+      frequence: formData.get(`lignes[${i}].frequence`),
     });
     if (ligne.success) {
       // On ne garde que les lignes au moins partiellement renseignées.
@@ -119,10 +119,6 @@ function extrairePhases(formData: FormData): unknown[] {
  * La saisie du formulaire, validée — UNE lecture pour la création et la
  * modification (2026-10-12) : l'écran « Modifier » réutilise le formulaire
  * de création, et le serveur reprend les mêmes validations.
- *
- * Les champs repris de RiskBoard (2026-11-21) se lisent `?? undefined` : un
- * formulaire chargé avant leur mise en ligne ne les poste pas, et un champ
- * absent ne doit pas faire refuser une saisie qui ne les connaît pas.
  */
 function lirePlanPrevention(formData: FormData) {
   return planPreventionSchema.safeParse({
@@ -132,11 +128,11 @@ function lirePlanPrevention(formData: FormData) {
     efChefNom: formData.get("efChefNom"),
     efChefEmail: formData.get("efChefEmail"),
     efEffectifIntervenant: formData.get("efEffectifIntervenant"),
-    entrepriseExterieureAdresse: formData.get("entrepriseExterieureAdresse") ?? undefined,
-    efChefTelephone: formData.get("efChefTelephone") ?? undefined,
+    entrepriseExterieureAdresse: formData.get("entrepriseExterieureAdresse"),
+    efChefTelephone: formData.get("efChefTelephone"),
     euChefNom: formData.get("euChefNom"),
     euChefFonction: formData.get("euChefFonction"),
-    euChefTelephone: formData.get("euChefTelephone") ?? undefined,
+    euChefTelephone: formData.get("euChefTelephone"),
     dateDebut: formData.get("dateDebut"),
     dateFin: formData.get("dateFin"),
     dureeHeuresEstimee: formData.get("dureeHeuresEstimee"),
@@ -144,10 +140,10 @@ function lirePlanPrevention(formData: FormData) {
     batimentId: formData.get("batimentId"),
     naturesTravaux: formData.get("naturesTravaux"),
     travauxDangereux: formData.get("travauxDangereux") === "on",
-    horaires: formData.get("horaires") ?? undefined,
+    horaires: formData.get("horaires"),
     inspectionDate: formData.get("inspectionDate"),
     inspectionParticipants: formData.get("inspectionParticipants"),
-    cseAssocie: formData.get("cseAssocie") ?? undefined,
+    cseAssocie: formData.get("cseAssocie"),
     lignes: extraireLignes(formData),
     // Les cinq rubriques de `R. 4512-8` — cf. `contenu-r4512-8.ts`.
     phases: extrairePhases(formData),
@@ -155,9 +151,9 @@ function lirePlanPrevention(formData: FormData) {
     instructionsTravailleurs: formData.get("instructionsTravailleurs"),
     organisationSecours: formData.get("organisationSecours"),
     participationCroisee: formData.get("participationCroisee"),
-    qualificationsRequises: formData.get("qualificationsRequises") ?? undefined,
-    moyensFournis: formData.get("moyensFournis") ?? undefined,
-    autresObservations: formData.get("autresObservations") ?? undefined,
+    qualificationsRequises: formData.get("qualificationsRequises"),
+    moyensFournis: formData.get("moyensFournis"),
+    autresObservations: formData.get("autresObservations"),
   });
 }
 

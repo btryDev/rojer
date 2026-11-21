@@ -61,9 +61,12 @@ const DATETIME_FMT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/;
 const DATE_FMT = /^\d{4}-\d{2}-\d{2}$/;
 const SIRET_FMT = /^\d{14}$/;
 
+// `null` vaut absent : `formData.get` rend `null` pour un champ que le
+// formulaire n'a pas posté — un formulaire chargé avant l'ajout d'un champ
+// (2026-11-21) ne doit pas faire refuser la saisie.
 const optionalTrimmed = (max = 2000) =>
   z.preprocess(
-    (v) => (typeof v === "string" ? v.trim() || undefined : v),
+    (v) => (v === null ? undefined : typeof v === "string" ? v.trim() || undefined : v),
     z.string().max(max).optional(),
   );
 
