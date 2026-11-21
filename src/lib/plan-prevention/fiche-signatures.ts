@@ -2,6 +2,8 @@ import type { MethodeSignature, PartieSignataire, StatutPropositionPlan } from "
 import { MOTIF_REVOCATION_ENVOI_ECHOUE, MOTIF_REVOCATION_NOUVEAU_LIEN } from "@/lib/access-tokens/revocation";
 import { OTP_ESSAIS_MAX, OTP_TTL_MINUTES } from "@/lib/signatures/otp";
 import { LIBELLE_METHODE_COURT } from "@/lib/signatures/methode";
+import { SUITE_NOUVEAU_LIEN } from "@/lib/access-tokens/motif-lisible";
+import { formaterJourMoisChiffresFr } from "@/lib/dates";
 
 /**
  * Ce que la fiche du plan montre des signatures (2026-11-19, lot 3) : l'état
@@ -72,14 +74,58 @@ export function etatDeLaPartie(
   return { etat: "lien_envoye", lien: dernier, ouvert: dernier.otpExpireLe !== null };
 }
 
+/**
+ * La correction en cours (« Corriger », 2026-11-19) : appliquée, elle court
+ * jusqu'à la signature du dirigeant. Lue par la fiche et par « Modifier »,
+ * qui y ramène (2026-11-21).
+ */
+export function correctionEnCours<P extends { corrigeeLe: Date | null; finaliseeLe: Date | null }>(p: {
+  planSignable: boolean;
+  propositionEnAttente: boolean;
+  euSignee: boolean;
+  propositions: readonly P[];
+}): P | undefined {
+  if (!p.planSignable || p.propositionEnAttente || p.euSignee) return undefined;
+  return p.propositions.find((x) => x.corrigeeLe && !x.finaliseeLe);
+}
+
+/**
+ * Ce qui attend le dirigeant sur la fiche (2026-11-21) — UN calcul, lu par la
+ * pastille de l'onglet « Suivi » et par les cartes d'action qu'il porte :
+ * trancher la proposition, terminer la correction en signant, signer, ou
+ * envoyer le lien de l'entreprise extérieure qui n'est pas encore parti.
+ * Rien pour un membre en lecture seule, ni sur un plan clos ou annulé.
+ */
+export type AttenteDirigeant = "proposition" | "correction" | "signer" | "envoyer_lien";
+
+export function ceQuiAttendLeDirigeant(p: {
+  planSignable: boolean;
+  lectureSeule: boolean;
+  propositionEnAttente: boolean;
+  correctionEnCours: boolean;
+  eu: EtatPartie["etat"];
+  ee: EtatPartie["etat"];
+}): AttenteDirigeant | null {
+  if (!p.planSignable || p.lectureSeule) return null;
+  if (p.propositionEnAttente) return "proposition";
+  if (p.eu !== "signee") return p.correctionEnCours ? "correction" : "signer";
+  if (p.ee === "rien") return "envoyer_lien";
+  return null;
+}
+
 /** Un lien parti, ou une signature en vigueur : ce qui fait sortir le plan du « Brouillon ». */
 export function aUnLienOuUneSignature(liens: readonly LienLu[], signaturesActives: number): boolean {
   return signaturesActives > 0 || liens.some((l) => l.revoqueMotif !== MOTIF_REVOCATION_ENVOI_ECHOUE);
 }
 
-/** Le motif d'une révocation de lien, pour le dirigeant. */
+/**
+ * Le motif d'une révocation de lien, pour le dirigeant. La suite « demandez
+ * un nouveau lien à votre interlocuteur », que `retirerSignaturesDuPlan`
+ * écrit pour le porteur du lien, est retirée (2026-11-21, retour de test) :
+ * le panneau dit lui-même ce qui suit pour le dirigeant.
+ */
 export function motifLienPourLaFiche(motif: string | null): string {
-  const brut = motif?.trim() ?? "";
+  const brut = motif?.replace(SUITE_NOUVEAU_LIEN, "").trim() ?? "";
   if (!brut) return "révoqué";
   if (brut === MOTIF_REVOCATION_NOUVEAU_LIEN) return "remplacé par un lien plus récent";
   if (brut === MOTIF_REVOCATION_ENVOI_ECHOUE) return "l'e-mail n'est pas parti";
@@ -100,8 +146,7 @@ export type EvenementHistorique = {
   verifier?: { libelle: string; signatureId: string }[];
 };
 
-const FMT_JOUR = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", day: "2-digit", month: "2-digit" });
-const jour = (d: Date) => FMT_JOUR.format(d);
+const jour = formaterJourMoisChiffresFr;
 
 /**
  * L'historique du plan, du plus récent au plus ancien. `raisonEE` nomme
@@ -122,7 +167,8 @@ export function historiqueDuPlan(p: {
       : partie === "entreprise_utilisatrice"
         ? `${nom ?? "un collègue"} (entreprise utilisatrice)`
         : "—";
-  // Le plan ne garde pas sa date de création (aucune colonne) : sans elle,
+  // ~~Le plan ne garde pas sa date de création (aucune colonne)~~ [2026-11-21 :
+  // faux, `PlanPrevention.createdAt` existe et la fiche le passe]. Sans date,
   // pas de ligne « Plan créé » plutôt qu'une date inventée.
   const e: EvenementHistorique[] = p.creeLe
     ? [{ cle: "creation", date: p.creeLe, ligne: "Plan créé", pastille: { mot: "Création", ton: "neutre" } }]

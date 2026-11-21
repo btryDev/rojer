@@ -8,9 +8,17 @@ import { CHAMP_ETAT, ENCRE_ETAT } from "@/lib/calendrier/etats";
  * place » (En permanence / En cas de…).
  *
  * `alerte` : un nombre à signaler sur l'onglet, dans la couleur du retard ;
- * rien n'est affiché à zéro.
+ * rien n'est affiché à zéro. `tonAlerte: "proche"` (2026-11-21, fiche du
+ * plan de prévention) : un geste attendu qui n'est pas un retard, en ambre.
  */
-export type Onglet = { href: string; label: string; actif: boolean; alerte?: number; libelleAlerte?: string };
+export type Onglet = {
+  href: string;
+  label: string;
+  actif: boolean;
+  alerte?: number;
+  libelleAlerte?: string;
+  tonAlerte?: "enRetard" | "proche";
+};
 
 export function OngletsPage({ libelle, onglets }: { libelle: string; onglets: readonly Onglet[] }) {
   return (
@@ -32,7 +40,7 @@ export function OngletsPage({ libelle, onglets }: { libelle: string; onglets: re
             {o.alerte !== undefined && o.alerte > 0 && (
               <span
                 className="rounded-full px-1.5 text-[11px] tabular-nums"
-                style={{ background: CHAMP_ETAT.enRetard, color: ENCRE_ETAT.enRetard }}
+                style={{ background: CHAMP_ETAT[o.tonAlerte ?? "enRetard"], color: ENCRE_ETAT[o.tonAlerte ?? "enRetard"] }}
                 aria-label={o.libelleAlerte}
               >
                 {o.alerte}

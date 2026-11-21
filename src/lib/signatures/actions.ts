@@ -30,6 +30,7 @@ import {
   otpEstExpire,
   otpExpirationDate,
   renvoiOtpAutorise,
+  renvoiOtpPossibleLe,
   verifyOtp,
 } from "./otp";
 import { motifLisible } from "@/lib/access-tokens/motif-lisible";
@@ -523,8 +524,10 @@ export async function poserSignatureAvecToken(
  */
 export type RenvoiOtpState =
   | { status: "idle" }
-  | { status: "error"; message: string }
-  | { status: "success"; message: string };
+  /** `codeAnnule` : le code renouvelé n'est pas parti, l'ancien ne vaut plus (2026-11-21). */
+  | { status: "error"; message: string; codeAnnule?: true; renvoiPossibleLe?: string }
+  /** La fin du code envoyé et le prochain renvoi possible, à l'heure du serveur (ISO). */
+  | { status: "success"; message: string; expireLe: string; renvoiPossibleLe: string };
 
 export async function renvoyerCodeOtp(
   tokenClair: string,
@@ -595,9 +598,13 @@ export async function renvoyerCodeOtp(
   }
 
   const otp = generateOtp();
+  const otpExpireLe = otpExpirationDate(maintenant);
+  // Ce que la page dit du code : sa fin, et quand en demander un autre
+  // (2026-11-21) — lus ici, sur l'heure du serveur.
+  const renvoiPossibleLe = (renvoiOtpPossibleLe(otpExpireLe) ?? maintenant).toISOString();
   const renouvele = await renouvelerOtp(token.id, {
     otpHash: hashOtp(otp),
-    otpExpireLe: otpExpirationDate(maintenant),
+    otpExpireLe,
     otpExpireLeLu: token.otpExpireLe,
   });
   if (!renouvele) {
@@ -638,6 +645,9 @@ export async function renvoyerCodeOtp(
       status: "error",
       message:
         "Le code n'a pas pu être envoyé. Patientez une minute, puis demandez-en un autre.",
+      // L'ancien code ne vaut plus : la page ne le dit plus valable.
+      codeAnnule: true,
+      renvoiPossibleLe,
     };
   }
 
@@ -650,6 +660,8 @@ export async function renvoyerCodeOtp(
     message:
       `${quoi} vient d'être envoyé à ${token.emailDestinataire}. ` +
       `Il vous reste ${restants} essai${restants > 1 ? "s" : ""} sur ce lien.`,
+    expireLe: otpExpireLe.toISOString(),
+    renvoiPossibleLe,
   };
 }
 

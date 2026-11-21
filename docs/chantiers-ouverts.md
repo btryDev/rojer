@@ -809,8 +809,11 @@ en tête du fichier.
   > contenu d'une autre.
   >
   > **Ce qui n'est pas fait, et qui ne se déduit pas de cette ligne** : rien
-  > n'est bloquant. Une rubrique vide est *nommée* — la fiche la compte et cite
-  > son alinéa, le ZIP écrit « NON RENSEIGNÉE » — mais aucune garde n'empêche
+  > n'est bloquant. Une rubrique vide est *nommée* — ~~la fiche la compte et cite
+  > son alinéa, le ZIP écrit « NON RENSEIGNÉE »~~ [2026-11-21, décision de la
+  > propriétaire : la fiche la nomme sur une ligne « À compléter » tant que le
+  > plan n'est pas figé ; le PDF et la page du lien ne montrent que les
+  > rubriques remplies ; le ZIP joint le PDF, son 07 n'est qu'un index] — mais aucune garde n'empêche
   > d'enregistrer ni de clore un plan vide, faute de porte de validation sur les
   > plans (§ 6 bis, états morts). Et le 4° ne se pré-remplit pas : aucun champ
   > d'`Etablissement` ne décrit le dispositif de secours, `R. 4224-16` est

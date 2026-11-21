@@ -253,7 +253,8 @@ describe("l'entreprise extérieure propose une modification (ADR-061 § 3)", () 
     // E3 en HTML, avec son bouton vers la fiche du plan (2026-11-19).
     expect(aux[0].subject).toBe("Modifications proposées : Plan de prévention PP-001 — Nettoyage SARL");
     expect(aux[0].html).toContain(">Voir les modifications proposées</a>");
-    expect(aux[0].html).toContain('href="http://localhost:3000/etablissements/etab-1/plan-prevention/pp-1"');
+    // L'onglet « Suivi », où la proposition se décide (2026-11-21).
+    expect(aux[0].html).toContain('href="http://localhost:3000/etablissements/etab-1/plan-prevention/pp-1?onglet=suivi"');
     expect(aux[0].text).toContain("Le plan ne se signe pas tant que vous n'avez pas décidé.");
   });
 

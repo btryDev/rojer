@@ -67,7 +67,8 @@ export const MESSAGE_NON_SIGNABLE_COMPTE =
   "Ce document n'est pas à signer pour l'instant : il est clos, annulé, ou une modification proposée attend une réponse.";
 
 export type EnvoiCodeCompte =
-  | { ok: true; email: string; renvoiPossibleLe: string }
+  /** `expireLe` : la fin de validité du code envoyé, dite sous le champ (2026-11-21). */
+  | { ok: true; email: string; renvoiPossibleLe: string; expireLe: string }
   | { ok: false; message: string };
 
 /** Envoie un code de signature à l'adresse du compte connecté. */
@@ -155,7 +156,12 @@ export async function envoyerCodeSignatureCompte(o: Objet): Promise<EnvoiCodeCom
     console.error("[signatures] code de signature du compte non envoyé :", motifErreur(erreur));
     return { ok: false, message: "Le code n'a pas pu être envoyé. Patientez une minute, puis demandez-en un autre." };
   }
-  return { ok: true, email, renvoiPossibleLe: (renvoiOtpPossibleLe(otpExpireLe) ?? maintenant).toISOString() };
+  return {
+    ok: true,
+    email,
+    renvoiPossibleLe: (renvoiOtpPossibleLe(otpExpireLe) ?? maintenant).toISOString(),
+    expireLe: otpExpireLe.toISOString(),
+  };
 }
 
 async function partieDejaSignee(db: Prisma.TransactionClient, o: Objet, partie: PartieSignataire) {

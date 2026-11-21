@@ -3,6 +3,8 @@ import { MOTIF_REVOCATION_ENVOI_ECHOUE, MOTIF_REVOCATION_NOUVEAU_LIEN } from "@/
 import { etatAffichePlan } from "./etats";
 import {
   aUnLienOuUneSignature,
+  ceQuiAttendLeDirigeant,
+  correctionEnCours,
   etatDeLaPartie,
   historiqueDuPlan,
   type LienLu,
@@ -97,6 +99,27 @@ describe("l'historique", () => {
     for (let i = 1; i < h.length; i++) expect(h[i - 1].date.getTime()).toBeGreaterThanOrEqual(h[i].date.getTime());
   });
 
+  it("le motif d'un lien révoqué par une proposition : sans la suite écrite pour l'entreprise extérieure", () => {
+    const r = historiqueDuPlan({
+      creeLe: null,
+      raisonEE: "Nettoyage Pro SARL",
+      liens: [
+        lien("l9", {
+          revoqueLe: plus(5),
+          revoqueMotif:
+            "l'entreprise extérieure a proposé une modification du plan ; demandez un nouveau lien à votre interlocuteur",
+        }),
+      ],
+      signatures: [],
+      propositions: [],
+      maintenant: plus(10),
+    });
+    expect(r.find((e) => e.cle === "revocation-l9")?.sousLigne).toBe(
+      "l'entreprise extérieure a proposé une modification du plan",
+    );
+    expect(r.some((e) => e.ligne === "Plan créé")).toBe(false);
+  });
+
   it("liens envoyés, ouverts, remplacés", () => {
     expect(lignes).toContain("Lien adressé à Nettoyage Pro SARL");
     expect(lignes).toContain("Paul Testeur ouvre le lien et demande un code");
@@ -115,5 +138,37 @@ describe("l'historique", () => {
     expect(r).toHaveLength(1);
     expect(r[0].ligne).toBe("2 signatures révoquées : l'entreprise utilisatrice corrige le plan");
     expect(r[0].verifier?.map((v) => v.signatureId)).toEqual(["s1", "s2"]);
+  });
+});
+
+describe("ce qui attend le dirigeant : un seul calcul, pour la pastille et les cartes", () => {
+  const base = {
+    planSignable: true,
+    lectureSeule: false,
+    propositionEnAttente: false,
+    correctionEnCours: false,
+    eu: "rien" as const,
+    ee: "rien" as const,
+  };
+
+  it("la proposition, la correction, la signature, puis le lien de l'entreprise extérieure", () => {
+    expect(ceQuiAttendLeDirigeant({ ...base, propositionEnAttente: true })).toBe("proposition");
+    expect(ceQuiAttendLeDirigeant({ ...base, correctionEnCours: true })).toBe("correction");
+    expect(ceQuiAttendLeDirigeant(base)).toBe("signer");
+    expect(ceQuiAttendLeDirigeant({ ...base, eu: "signee" })).toBe("envoyer_lien");
+    expect(ceQuiAttendLeDirigeant({ ...base, eu: "signee", ee: "lien_envoye" })).toBeNull();
+  });
+
+  it("rien pour un membre en lecture seule, ni sur un plan clos", () => {
+    expect(ceQuiAttendLeDirigeant({ ...base, lectureSeule: true, propositionEnAttente: true })).toBeNull();
+    expect(ceQuiAttendLeDirigeant({ ...base, planSignable: false })).toBeNull();
+  });
+
+  it("la correction en cours : ouverte, non finalisée, tant que le dirigeant n'a pas signé", () => {
+    const p = { corrigeeLe: T0, finaliseeLe: null };
+    const c = { planSignable: true, propositionEnAttente: false, euSignee: false, propositions: [p] };
+    expect(correctionEnCours(c)).toBe(p);
+    expect(correctionEnCours({ ...c, euSignee: true })).toBeUndefined();
+    expect(correctionEnCours({ ...c, propositions: [{ ...p, finaliseeLe: T0 }] })).toBeUndefined();
   });
 });

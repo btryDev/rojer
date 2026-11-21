@@ -1,6 +1,8 @@
 // La fiche du plan RENDUE (2026-11-19, lots 3 et 4) : le statut affiché, le
 // panneau Signatures selon l'état de chaque partie, le bandeau de la
 // proposition et celui de la correction en cours.
+// [2026-11-21, maquette V3] Deux onglets, choisis par l'adresse : le plan
+// d'un seul tenant, et le suivi (action requise, signatures, historique).
 
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
@@ -77,10 +79,10 @@ function plan(extra: Record<string, unknown> = {}) {
   };
 }
 
-async function rendre(p: Record<string, unknown>) {
+async function rendre(p: Record<string, unknown>, query: { onglet?: string; openSign?: string } = { onglet: "suivi" }) {
   planCourant.valeur = p;
   const { default: Page } = await import("@/app/etablissements/[id]/plan-prevention/[planId]/page");
-  const element = await Page({ params: Promise.resolve({ id: "e1", planId: "p1" }), searchParams: Promise.resolve({}) });
+  const element = await Page({ params: Promise.resolve({ id: "e1", planId: "p1" }), searchParams: Promise.resolve(query) });
   return renderToStaticMarkup(element)
     .replace(/<[^>]+>/g, " ")
     .replace(/&#x27;/g, "'")
@@ -116,16 +118,78 @@ describe("la fiche du plan", () => {
     expect(lu).toContain("Plan de prévention PP-002");
     expect(lu).toContain("Dégraissage de la hotte");
     expect(lu).toContain("Brouillon");
-    expect(lu).toContain("0 signature sur 2");
+    // Sa signature à poser : l'onglet « Suivi » le compte.
+    expect(lu).toContain("Plan de prévention Suivi 1");
+    expect(lu).toContain("Action requise Votre signature est attendue");
+    expect(lu).toContain("Signatures · 0 sur 2");
     expect(lu).toContain("Signer et envoyer à l'entreprise extérieure");
     expect(lu).toContain("Faire signer un collègue");
     expect(lu).not.toContain("Cycle de vie");
+    // L'historique est dans l'onglet ; plus de bouton ni de fenêtre.
+    expect(lu).toContain("Ce qui s'est passé");
+    expect(lu).not.toMatch(/\bHistorique\b/);
+  });
+
+  it("« Plan créé » ouvre l'historique, à la date de création du plan", async () => {
+    const lu = await rendre(plan({ createdAt: new Date("2026-11-18T09:05:00Z"), liens: [lienEE] }));
+    expect(lu).toMatch(/Plan créé , le 18 novembre 2026 à 10:05/);
+    expect(lu.indexOf("Plan créé")).toBeGreaterThan(lu.indexOf("Lien adressé à Nettoyage Pro SARL"));
+  });
+
+  it("sans paramètre, l'onglet « Plan de prévention » ; `?openSign=1` ouvre « Suivi »", async () => {
+    const planLu = await rendre(plan(), {});
+    expect(planLu).toContain("Les parties");
+    expect(planLu).toContain("Risques d'interférence et mesures");
+    expect(planLu).toContain("Télécharger le PDF");
+    expect(planLu).not.toContain("Signatures · 0 sur 2");
+
+    const signe = await rendre(plan(), { openSign: "1" });
+    expect(signe).toContain("Signatures · 0 sur 2");
+    expect(signe).not.toContain("Les parties");
+  });
+
+  it("le plan d'un seul tenant : une rubrique de R. 4512-8 remplie est une section ; les vides, une ligne", async () => {
+    const lu = await rendre(plan({ instructionsTravailleurs: "Port des EPI en cuisine" }), {});
+    expect(lu).toContain("Instructions à donner aux travailleurs Port des EPI en cuisine");
+    expect(lu).toMatch(/À compléter : Phases d'activité dangereuses ; Adaptation des matériels/);
+    expect(lu).not.toContain("Contenu minimal");
+    expect(lu).not.toMatch(/rubriques? sur 5/);
+    expect(lu).not.toContain("Non renseignée");
+
+    // Figé (signé) : plus de ligne « À compléter ».
+    const fige = await rendre(
+      plan({ statut: "valide", signatures: [signatureEU], instructionsTravailleurs: "Port des EPI en cuisine" }),
+      {},
+    );
+    expect(fige).toContain("Instructions à donner aux travailleurs Port des EPI en cuisine");
+    expect(fige).not.toContain("À compléter :");
+  });
+
+  it("un lien révoqué par une proposition acceptée : la suite dite au dirigeant, pas celle de l'entreprise extérieure", async () => {
+    const lu = await rendre(
+      plan({
+        liens: [
+          {
+            ...lienEE,
+            revoqueLe: new Date("2026-11-19T15:00:00Z"),
+            revoqueMotif:
+              "l'entreprise extérieure a proposé une modification du plan ; demandez un nouveau lien à votre interlocuteur",
+          },
+        ],
+      }),
+    );
+    expect(lu).toContain(
+      "lien révoqué : l'entreprise extérieure a proposé une modification du plan · Rojer adresse un nouveau lien quand vous signez",
+    );
+    expect(lu).not.toContain("demandez un nouveau lien");
   });
 
   it("votre signature posée, le lien adressé : la ligne de chaque partie, et « Renvoyer le lien »", async () => {
     const lu = await rendre(plan({ signatures: [signatureEU], liens: [lienEE] }));
     expect(lu).toContain("En attente de signatures");
-    expect(lu).toContain("1 signature sur 2");
+    expect(lu).toContain("Signatures · 1 sur 2");
+    // Rien n'attend le dirigeant : pas de nombre sur l'onglet.
+    expect(lu).not.toContain("Suivi 1");
     expect(lu).toContain("Il manque l'entreprise extérieure");
     expect(lu).toMatch(/signé le 19\/11 à 15 h 26 · code par e-mail/);
     expect(lu).toMatch(/lien adressé le 19\/11 · ouvert · expire le/);
@@ -154,10 +218,43 @@ describe("la fiche du plan", () => {
         },
       }),
     );
-    expect(lu).toContain("Nettoyage Pro SARL propose de modifier le plan");
+    expect(lu).toContain("Modification proposée");
+    expect(lu).not.toContain("En attente de signatures");
+    expect(lu).toContain("Plan de prévention Suivi 1");
+    expect(lu).toContain("Action requise · reçue le 19/11 à 15 h 35");
+    expect(lu).toContain("Nettoyage Pro SARL propose 1 modification");
     expect(lu).toContain("Paul Testeur, depuis son lien.");
     expect(lu).toMatch(/Refuser.*Corriger.*Accepter sans modifier/);
-    expect(lu).toContain("Traitez d'abord la proposition");
+    // Le lien de l'entreprise extérieure attend la décision.
+    expect(lu).toContain("En pause");
+    expect(lu).toContain("signera après votre décision");
+    expect(lu).not.toContain("Votre signature est attendue");
+  });
+
+  it("une proposition en attente, onglet « Plan de prévention » : le rappel mène au suivi", async () => {
+    const lu = await rendre(
+      plan({
+        liens: [lienEE],
+        propositionEnAttente: {
+          id: "prop-1",
+          accessTokenId: "atk-1",
+          createdAt: new Date("2026-11-19T14:35:00Z"),
+          contenu: {
+            fiche: {
+              entrepriseExterieureRaison: "Nettoyage Pro SARL",
+              entrepriseExterieureSiret: null,
+              efChefNom: "Paul Testeur",
+              efEffectifIntervenant: 2,
+            },
+            lignes: [{ id: "l1", risque: "Graisses chaudes", mesureEntrepriseUtilisatrice: "Hors service", mesureEntrepriseExterieure: "Gants" }],
+          },
+        },
+      }),
+      {},
+    );
+    expect(lu).toContain("Nettoyage Pro SARL a proposé 1 modification le 19/11 à 15 h 35.");
+    expect(lu).toContain("Voir et décider →");
+    expect(lu).not.toMatch(/Refuser.*Corriger/);
   });
 
   it("après « Corriger » : la correction en cours mène à la fenêtre de signature", async () => {
@@ -179,6 +276,87 @@ describe("la fiche du plan", () => {
     );
     expect(lu).toContain("Correction en cours");
     expect(lu).toContain("Terminer la correction et signer");
+    expect(lu).toContain("Suivi 1");
+    // La carte de signature ne double pas celle de la correction.
+    expect(lu).not.toContain("Votre signature est attendue");
+  });
+
+  it("après « Corriger », onglet « Plan de prévention » : un rappel mène au suivi", async () => {
+    const lu = await rendre(
+      plan({
+        propositions: [
+          {
+            id: "prop-1",
+            accessTokenId: "atk-1",
+            statut: "acceptee",
+            createdAt: new Date("2026-11-19T14:35:00Z"),
+            traiteeLe: new Date("2026-11-19T14:38:00Z"),
+            traiteeParEmail: "paloma@exemple.fr",
+            corrigeeLe: new Date("2026-11-19T14:38:00Z"),
+            finaliseeLe: null,
+          },
+        ],
+      }),
+      {},
+    );
+    expect(lu).toContain("Correction en cours : la proposition de Nettoyage Pro SARL est reprise dans le plan.");
+    expect(lu).toContain("Terminer la correction et signer →");
+  });
+
+  it("votre signature posée, aucun lien parti : la carte « envoyer le lien », comptée sur « Suivi »", async () => {
+    const lu = await rendre(plan({ signatures: [signatureEU] }));
+    expect(lu).toContain("Suivi 1");
+    expect(lu).toContain("Nettoyage Pro SARL n'a pas encore son lien");
+    expect(lu).toContain("Envoyer le lien à l'entreprise extérieure");
+  });
+
+  it("lecture seule : rien n'attend, la pastille de « Suivi » reste à zéro", async () => {
+    const lu = await rendre(plan({ lectureSeule: true }));
+    expect(lu).not.toContain("Suivi 1");
+    expect(lu).not.toContain("Votre signature est attendue");
+  });
+
+  it("lecture seule : ni la proposition à trancher ni la correction ne s'affichent en appel à l'action", async () => {
+    const proposition = {
+      id: "prop-1",
+      accessTokenId: "atk-1",
+      createdAt: new Date("2026-11-19T14:35:00Z"),
+      contenu: {
+        fiche: {
+          entrepriseExterieureRaison: "Nettoyage Pro SARL",
+          entrepriseExterieureSiret: null,
+          efChefNom: "Paul Testeur",
+          efEffectifIntervenant: 2,
+        },
+        lignes: [{ id: "l1", risque: "Graisses chaudes", mesureEntrepriseUtilisatrice: "Hors service", mesureEntrepriseExterieure: "Gants" }],
+      },
+    };
+    for (const query of [{ onglet: "suivi" }, {}]) {
+      const lu = await rendre(plan({ lectureSeule: true, liens: [lienEE], propositionEnAttente: proposition }), query);
+      // L'état reste dit, par la pastille d'en-tête.
+      expect(lu).toContain("Modification proposée");
+      expect(lu).not.toContain("Action requise");
+      expect(lu).not.toContain("Voir et décider");
+    }
+    const correction = await rendre(
+      plan({
+        lectureSeule: true,
+        propositions: [
+          {
+            id: "prop-1",
+            accessTokenId: "atk-1",
+            statut: "acceptee",
+            createdAt: new Date("2026-11-19T14:35:00Z"),
+            traiteeLe: new Date("2026-11-19T14:38:00Z"),
+            traiteeParEmail: "paloma@exemple.fr",
+            corrigeeLe: new Date("2026-11-19T14:38:00Z"),
+            finaliseeLe: null,
+          },
+        ],
+      }),
+    );
+    expect(correction).not.toContain("Correction en cours");
+    expect(correction).not.toContain("Terminer la correction et signer");
   });
 
   it("signé des deux parties : « Signé », et plus de grande action", async () => {
@@ -189,7 +367,7 @@ describe("la fiche du plan", () => {
       }),
     );
     expect(lu).toContain("Signé");
-    expect(lu).toContain("2 signatures sur 2");
+    expect(lu).toContain("Signatures · 2 sur 2");
     expect(lu).toContain("Les deux parties ont signé ce plan.");
   });
 
@@ -205,6 +383,7 @@ describe("la fiche du plan", () => {
         moyensFournis: null,
         autresObservations: null,
       }),
+      {},
     );
     expect(vide).not.toContain("Compléments");
     expect(vide).not.toContain("CSE associé");
@@ -232,12 +411,13 @@ describe("la fiche du plan", () => {
           },
         ],
       }),
+      {},
     );
     expect(rempli).toContain("12 rue des Artisans, Lyon");
     expect(rempli).toContain("06 00 00 00 00");
     expect(rempli).toContain("04 00 00 00 00");
     expect(rempli).toContain("Horaires de travail 8 h – 17 h");
-    expect(rempli).toContain("CSE associé à l'opération : Non");
+    expect(rempli).toContain("CSE associé à l'opération Non");
     expect(rempli).toContain("Compléments");
     expect(rempli).toContain("Habilitation B1V");
     expect(rempli).toContain("Accès par la cour");

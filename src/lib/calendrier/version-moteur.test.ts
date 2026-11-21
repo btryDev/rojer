@@ -596,7 +596,12 @@ const RELEVE = {
   // ~~a2ff149614a33d22~~ — même jour, même branche : `COLONNE_SECHE` entre à
   // la même liste. NON, même raison (référentiel `2026-11-13.2`). Empreinte
   // recopiée, version inchangée.
-  empreinte: "c3241249cff6c70a",
+  // ~~c3241249cff6c70a~~ — 2026-11-21, `lot/proposition-page-a-part` : deux
+  // fonctions d'affichage ajoutées à `dates/index.ts`
+  // (`formaterHeureEnLettresFr`, `formaterJourMoisChiffresFr`). NON : aucune
+  // n'est appelée par le moteur ; la régénération écrit les mêmes lignes.
+  // Empreinte recopiée, version inchangée.
+  empreinte: "b6804c84f8147cca",
 };
 
 const versPosix = (p: string) => p.split("\\").join("/");

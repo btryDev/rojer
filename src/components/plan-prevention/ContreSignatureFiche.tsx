@@ -2,8 +2,9 @@ import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 import { propositionSchema, type PlanComparable } from "@/lib/plan-prevention/proposition";
 import { bandeauDeLaProposition, type Changement, type LigneBandeau } from "@/lib/plan-prevention/bandeau-proposition";
-import { formaterHeureFr } from "@/lib/dates";
+import { formaterHeureEnLettresFr, formaterJourMoisChiffresFr } from "@/lib/dates";
 import { TraiterPropositionBoutons } from "./ContreSignatureBoutons";
+import { CarteActionRequise, RappelSuivi } from "./ActionRequise";
 
 /**
  * Ce que la fiche du plan montre de la contre-signature (ADR-061).
@@ -17,7 +18,6 @@ import { TraiterPropositionBoutons } from "./ContreSignatureBoutons";
  * l'historique, chacune vérifiable.
  */
 
-const FMT_JOUR = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", day: "2-digit", month: "2-digit" });
 
 const TUILE =
   "flex size-11 flex-none items-center justify-center rounded-[12px] font-display text-[20px] font-bold leading-none";
@@ -145,6 +145,55 @@ function Ligne({ l }: { l: LigneBandeau }) {
   }
 }
 
+/** La proposition relue contre le plan d'aujourd'hui ; `null` si elle ne se lit plus. */
+function lireBandeau(plan: PlanComparable, contenu: Prisma.JsonValue) {
+  const lue = propositionSchema.safeParse(contenu);
+  return lue.success ? bandeauDeLaProposition(plan, lue.data) : null;
+}
+
+const nombreDeModifications = (b: { modifies: number; ajoutes: number; supprimes: number }) =>
+  b.modifies + b.ajoutes + b.supprimes;
+const modifications = (n: number) => `${n} modification${n > 1 ? "s" : ""}`;
+const recue = (d: Date) => `${formaterJourMoisChiffresFr(d)} à ${formaterHeureEnLettresFr(d)}`;
+
+/**
+ * Le rappel de l'onglet « Plan de prévention » (2026-11-21, maquette V3) :
+ * une proposition attend, la décision se prend dans l'onglet « Suivi ».
+ */
+export function RappelProposition({
+  proposition,
+  plan,
+  suiviHref,
+}: {
+  proposition: { contenu: Prisma.JsonValue; createdAt: Date };
+  plan: PlanComparable;
+  suiviHref: string;
+}) {
+  const b = lireBandeau(plan, proposition.contenu);
+  const n = b ? nombreDeModifications(b) : 0;
+  return (
+    <RappelSuivi href={suiviHref} action="Voir et décider →">
+      <strong className="font-semibold">
+        {plan.entrepriseExterieureRaison} a proposé {n > 0 ? modifications(n) : "des modifications"}
+      </strong>{" "}
+      le {recue(proposition.createdAt)}. Aucune signature ne se recueille avant votre décision.
+    </RappelSuivi>
+  );
+}
+
+/**
+ * Le rappel de la correction en cours, sur l'onglet « Plan de prévention »
+ * (2026-11-21, relecture : revenu de « Modifier », rien ne la signalait).
+ */
+export function RappelCorrection({ raisonEE, suiviHref }: { raisonEE: string; suiviHref: string }) {
+  return (
+    <RappelSuivi href={suiviHref} action="Terminer la correction et signer →">
+      <strong className="font-semibold">Correction en cours</strong> : la proposition de {raisonEE} est reprise dans le
+      plan. Signez pour la terminer.
+    </RappelSuivi>
+  );
+}
+
 export function PropositionEnAttente({
   proposition,
   plan,
@@ -155,28 +204,18 @@ export function PropositionEnAttente({
   /** Qui a proposé : le nom du lien, à défaut son adresse. */
   auteur: string | null;
 }) {
-  const lue = propositionSchema.safeParse(proposition.contenu);
-  const b = lue.success ? bandeauDeLaProposition(plan, lue.data) : null;
+  const b = lireBandeau(plan, proposition.contenu);
   const raison = plan.entrepriseExterieureRaison;
-  const recue = `${FMT_JOUR.format(proposition.createdAt)} à ${formaterHeureFr(proposition.createdAt).replace(":", " h ")}`;
+  const n = b ? nombreDeModifications(b) : 0;
+  // [2026-11-21, maquette V3] « Action requise », et le nombre de
+  // modifications dans le titre.
   return (
-    <section
-      aria-labelledby="proposition-titre"
-      className="carte-board flex flex-col gap-5 px-6 py-7 shadow-[inset_0_4px_0_#f2d36b] md:px-[34px] md:py-[30px]"
-    >
-      <div className="flex flex-wrap items-end justify-between gap-3.5">
-        <div className="max-w-[720px]">
-          <p className="board-eyebrow m-0 text-[11px] tracking-[0.16em] text-[color:var(--board-amber-ink)]">
-            Proposition de modification · reçue le {recue}
-          </p>
-          <h2 id="proposition-titre" className="board-titre m-0 mt-2 text-[28px] leading-[1.02] md:text-[34px]">
-            {raison} propose de modifier le plan
-          </h2>
-          <p className="m-0 mt-2 text-[15px] text-[color:var(--board-slate-ink)]">
-            {auteur ? `${auteur}, depuis son lien. ` : ""}Aucune signature ne se recueille avant votre décision.
-          </p>
-        </div>
-        {b && (
+    <CarteActionRequise
+      id="proposition-titre"
+      surtitre={`Action requise · reçue le ${recue(proposition.createdAt)}`}
+      titre={n > 0 ? `${raison} propose ${modifications(n)}` : `${raison} propose de modifier le plan`}
+      droite={
+        b && (
           <div className="flex flex-wrap gap-2">
             {b.modifies > 0 && <span className={`${PASTILLE} ${ARDOISE} font-semibold`}>{b.modifies} modifié{b.modifies > 1 ? "s" : ""}</span>}
             {b.ajoutes > 0 && <span className={`${PASTILLE} ${ARDOISE} font-semibold`}>{b.ajoutes} ajouté{b.ajoutes > 1 ? "s" : ""}</span>}
@@ -186,9 +225,10 @@ export function PropositionEnAttente({
               </span>
             )}
           </div>
-        )}
-      </div>
-
+        )
+      }
+      phrase={`${auteur ? `${auteur}, depuis son lien. ` : ""}Aucune signature ne se recueille avant votre décision.`}
+    >
       {!b ? (
         <p className="m-0 text-[13.5px] text-[color:var(--board-signal-ink)]">
           Cette proposition ne se lit plus : refusez-la et corrigez le plan à la main.
@@ -202,7 +242,7 @@ export function PropositionEnAttente({
       )}
 
       <TraiterPropositionBoutons propositionId={proposition.id} raisonEE={raison} />
-    </section>
+    </CarteActionRequise>
   );
 }
 
@@ -224,7 +264,7 @@ export function CorrectionEnCours({
   return (
     <section
       aria-labelledby="correction-titre"
-      className="carte-board flex flex-wrap items-center justify-between gap-[18px] px-6 py-6 shadow-[inset_0_4px_0_#7fb0d0] md:px-[34px]"
+      className="carte-board flex flex-wrap items-center justify-between gap-[18px] px-6 py-6 shadow-[inset_0_4px_0_var(--board-blue-mid)] md:px-[34px]"
     >
       <div>
         <p className="board-eyebrow m-0 text-[11px] tracking-[0.16em] text-[color:var(--board-slate-ink)]">
@@ -235,13 +275,14 @@ export function CorrectionEnCours({
         </h2>
         <p className="m-0 mt-1 text-[14.5px] text-[color:var(--board-slate-ink)]">
           La proposition de {raisonEE} est reprise dans le plan :{" "}
-          <Link href={modifierHref} className="text-[color:var(--board-blue-ink)] underline-offset-2 hover:underline">
+          <Link data-ecriture href={modifierHref} className="text-[color:var(--board-blue-ink)] underline-offset-2 hover:underline">
             retouchez ce que vous voulez
           </Link>
           , puis signez.
         </p>
       </div>
       <Link
+        data-ecriture
         href={signerHref}
         scroll={false}
         className="inline-flex min-h-11 items-center rounded-full bg-[color:var(--board-ink)] px-6 font-display text-[15px] font-semibold text-white transition-opacity hover:opacity-90"

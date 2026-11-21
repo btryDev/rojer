@@ -10,6 +10,7 @@
 import { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
+import { useMonte } from "./useMonte";
 
 const LARGEUR = {
   normale: "max-w-[600px]",
@@ -52,9 +53,14 @@ export function PanneauModal({
   useEffect(() => {
     fermer.current = surFermer;
   });
+  // Au rendu serveur et à l'hydratation, pas de portail : une fenêtre ouverte
+  // dès l'arrivée (`?openSign=1` sur la fiche du plan, page rechargée)
+  // s'affiche au rendu qui suit le montage (2026-11-21).
+  const monte = useMonte();
+  const visible = ouvert && monte;
 
   useEffect(() => {
-    if (!ouvert) return;
+    if (!visible) return;
     // Un champ `autoFocus` du contenu a déjà pris le focus : le lui laisser
     // (2026-11-12), sinon le premier champ d'un formulaire n'est jamais actif.
     if (!panneau.current?.contains(document.activeElement)) panneau.current?.focus();
@@ -69,9 +75,9 @@ export function PanneauModal({
     };
     document.addEventListener("keydown", surTouche);
     return () => document.removeEventListener("keydown", surTouche);
-  }, [ouvert]);
+  }, [visible]);
 
-  if (!ouvert) return null;
+  if (!visible) return null;
   return createPortal(
     <div
       role="dialog"

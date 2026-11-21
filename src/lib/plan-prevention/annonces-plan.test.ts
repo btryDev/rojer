@@ -321,6 +321,9 @@ describe("trois états de l'écrit, et R. 4512-12 dans deux", () => {
     const t = annoncesZip.enTete().join("\n");
     for (const c of [R4512_9, R4512_11]) expect(t).toContain(`« ${c} »`);
     for (const c of [CONSTAT_R4512_9, CONSTAT_R4512_11]) expect(t).toContain(c);
+    // [2026-11-21] Le ZIP joint le PDF de chaque plan, qui ne les porte pas non plus.
+    expect(t).toContain("Ni ce fichier ni les PDF des plans ne la contiennent.");
+    expect(t).toContain("Ni ce fichier ni les PDF des plans ne les contiennent.");
   });
 });
 
@@ -343,6 +346,9 @@ describe("la route du ZIP passe le plan, elle ne décide rien", () => {
   });
   it("l'en-tête est imprimé", () => {
     expect(route).toContain("...annoncesZip.enTete(),");
+  });
+  it("un plan que le PDF ne relit pas compte comme un PDF manquant (2026-11-21)", () => {
+    expect(route).toMatch(/if \(!data\) \{\s*plansPdf\.echecs\+\+;\s*continue;\s*\}/);
   });
 });
 

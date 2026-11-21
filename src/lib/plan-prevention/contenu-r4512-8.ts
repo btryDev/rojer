@@ -4,13 +4,23 @@
  *
  * POURQUOI CE MODULE EXISTE PLUTÔT QUE CINQ CHAMPS ÉPARPILLÉS. Trois surfaces
  * doivent dire la même chose des mêmes rubriques : le formulaire de saisie, la
- * fiche du plan, et le fichier `07_Plans_de_prevention.txt` du ZIP de contrôle
- * remis à un tiers. Les trois doivent nommer la rubrique de la même façon, et
+ * fiche du plan, et ~~le fichier `07_Plans_de_prevention.txt` du ZIP de
+ * contrôle~~ [2026-11-21 : le PDF du plan, que le ZIP de contrôle joint, et la
+ * page du lien de signature] remis à un tiers. Les trois doivent nommer la
+ * rubrique de la même façon, et
  * surtout s'accorder sur ce qui est MANQUANT — c'est la seule information que
  * le dirigeant ne peut pas déduire de ce qu'il lit. Trois copies de la liste
  * auraient divergé au premier ajout, et c'est déjà arrivé dans ce module :
  * `prisma/schema.prisma` annotait `inspectionDate` « (art. R4512-7) » quand
  * l'inspection commune est `R. 4512-2`.
+ *
+ * [2026-11-21, décision de la propriétaire] Le PDF du plan et la page du lien
+ * de signature ne montrent plus que les rubriques remplies
+ * (`rubriquesRenseignees`), chacune sous son `titre` ; la fiche nomme les vides
+ * sur une ligne « À compléter » tant que le plan n'est pas figé ; ~~le ZIP garde
+ * « NON RENSEIGNÉE »~~ le ZIP ne recopie plus le plan : il joint son PDF, et
+ * son `07_Plans_de_prevention.txt` n'est qu'un index (2026-11-21, décision de
+ * la propriétaire ; voir la fin de ce module).
  *
  * LE VERBATIM EST ICI, PAS DANS LES ÉCRANS. Chaque rubrique porte le texte
  * exact de son alinéa, relevé sur Légifrance le 2026-09-07
@@ -65,15 +75,18 @@ const rempli = (v: string | null | undefined): boolean =>
  * pour aligner la colonne.
  *
  * Le critère est : **la seconde moitié de l'alinéa atteint-elle le lecteur du
- * ZIP ?** Ce fichier-là est le plus pauvre des quatre surfaces — il écrit
- * `<n>° <titre> : NON RENSEIGNÉE` et n'imprime jamais le `verbatim` —, et son
- * destinataire est un inspecteur, un assureur ou un acquéreur, à qui personne
- * ne répétera ce que le texte demande. Rubrique par rubrique :
+ * ~~ZIP~~ [2026-11-21 : PDF] ?** ~~Ce fichier-là est le plus pauvre des quatre
+ * surfaces — il écrit `<n>° <titre> : NON RENSEIGNÉE` et n'imprime jamais le
+ * `verbatim` —~~ [2026-11-21 : le PDF n'imprime que le titre, jamais le
+ * `verbatim`], et son destinataire est un inspecteur, un assureur ou un
+ * acquéreur, à qui personne ne répétera ce que le texte demande. Rubrique par
+ * rubrique :
  *
  *  - 2° et 5° : les deux moitiés sont dans le titre. Rien à faire.
  *  - 1° : le titre tronque « et des moyens de prévention spécifiques
- *    correspondants », MAIS le ZIP imprime « → Moyens de prévention : » sous
- *    chaque phase.
+ *    correspondants », MAIS ~~le ZIP imprime « → Moyens de prévention : »~~
+ *    [2026-11-21 : le PDF imprime « Moyens de prévention : »] sous chaque
+ *    phase.
  *    La seconde moitié est matériellement là, sous une autre forme.
  *  - 3° : l'alinéa n'a qu'une moitié.
  *  - 4° : le titre tronquait, et RIEN ne rattrapait ailleurs. Sous
@@ -85,20 +98,27 @@ const rempli = (v: string | null | undefined): boolean =>
  * Autrement dit : on juge chaque rubrique sur ce qui arrive au lecteur, pas
  * sur ce à quoi la liste ressemble. Aligner les cinq par ressemblance ferait
  * perdre au 4° la moitié qu'on vient de lui rendre.
+ *
+ * [2026-11-21 : le ZIP n'imprime plus les rubriques, il joint le PDF du plan,
+ * qui les porte sous les mêmes titres et imprime les moyens sous chaque phase.
+ * Le critère vaut désormais pour le PDF et la page du lien ; les titres ne
+ * changent pas.]
  */
 export const RUBRIQUES_R4512_8: readonly RubriqueR4512_8[] = [
   {
     numero: 1,
-    // Titre volontairement court : voir le critère ci-dessus — le ZIP rend la
-    // seconde moitié par les « → Moyens de prévention : » de chaque phase.
+    // Titre volontairement court : voir le critère ci-dessus — ~~le ZIP~~
+    // [2026-11-21 : le PDF] rend la seconde moitié par les « Moyens de
+    // prévention : » de chaque phase.
     titre: "Phases d'activité dangereuses",
     verbatim:
       "La définition des phases d'activité dangereuses et des moyens de prévention spécifiques correspondants",
     // UN DES DEUX CHAMPS SUFFIT, ET C'EST P7 QUI L'A IMPOSÉ. Tant que la
     // rubrique ne comptait que `phase`, une ligne en base dont la phase était
     // blanche et les moyens renseignés faisait imprimer « 1° … : NON
-    // RENSEIGNÉE » — et les moyens stockés DISPARAISSAIENT du dossier. Ce
-    // module promet qu'une rubrique vide s'imprime ; il doit d'abord promettre
+    // RENSEIGNÉE » — et les moyens stockés DISPARAISSAIENT du dossier. ~~Ce
+    // module promet qu'une rubrique vide s'imprime ; il doit d'abord promettre~~
+    // [2026-11-21 : une rubrique vide ne s'imprime plus ; ce module promet]
     // qu'une rubrique remplie ne s'efface pas.
     renseignee: (p) =>
       p.phasesDangereuses.some((f) => rempli(f.phase) || rempli(f.moyensPrevention)),
@@ -119,7 +139,8 @@ export const RUBRIQUES_R4512_8: readonly RubriqueR4512_8[] = [
   {
     numero: 4,
     // Le seul titre qu'on ait allongé, et le critère est ci-dessus : sa
-    // seconde moitié n'atteignait le lecteur du ZIP par aucun autre chemin.
+    // seconde moitié n'atteignait le lecteur du ~~ZIP~~ [2026-11-21 : PDF] par
+    // aucun autre chemin.
     titre:
       "Organisation des premiers secours et description du dispositif de l'entreprise utilisatrice",
     verbatim:
@@ -158,6 +179,13 @@ export function rubriquesManquantes(
   return RUBRIQUES_R4512_8.filter((r) => !r.renseignee(plan));
 }
 
+/** Celles qu'un plan donné porte, dans l'ordre de l'article. */
+export function rubriquesRenseignees(
+  plan: ContenuPlan,
+): readonly RubriqueR4512_8[] {
+  return RUBRIQUES_R4512_8.filter((r) => r.renseignee(plan));
+}
+
 /** Ce que la rubrique 2° à 5° contient sur ce plan, ou `null`. */
 export function texteRubrique(plan: ContenuPlan, numero: number): string | null {
   switch (numero) {
@@ -174,114 +202,13 @@ export function texteRubrique(plan: ContenuPlan, numero: number): string | null 
   }
 }
 
-/**
- * Les cinq rubriques mises en texte pour le dossier de contrôle.
- *
- * Le vide s'écrit « NON RENSEIGNÉE » et ne disparaît pas. Ce fichier est remis
- * à un inspecteur, un assureur, un bailleur ou un acquéreur : une rubrique
- * omise en silence se lit comme une rubrique absente de l'obligation, et c'est
- * exactement le contraire que dit « comportent au moins ».
- *
- * Le formatage vit ici, avec la liste, pour la même raison qu'elle : le jour
- * où une sixième rubrique apparaîtrait, il n'y a qu'un endroit à corriger.
- */
-/** Le retrait des lignes de rubrique. */
-const RANG_RUBRIQUE = "    ";
-/** Le retrait des lignes de structure INTERNES au 1° : phase, moyens. */
-const RANG_PHASE = "       ";
-/** Le retrait des lignes qui portent du texte saisi. */
-const RANG_SAISIE = "         ";
-/**
- * LA MARQUE QUI FERME LA CONTREFAÇON, ET ELLE VAUT À TOUTE PROFONDEUR.
- *
- * Toute ligne portant du texte que l'utilisateur a tapé commence par elle ;
- * aucune ligne produite par le module ne la porte. Un retrait supplémentaire
- * n'aurait fait que repousser le problème d'un cran — c'est d'ailleurs
- * exactement ce qui s'est passé : la première correction séparait les rubriques
- * de la saisie, et la saisie s'est mise à contrefaire la structure INTERNE du
- * 1° (« · phase », « → moyens : »), d'un rang plus bas. La marque ne dépend
- * d'aucun niveau : elle dit « ceci est cité », et c'est vrai du premier au
- * dernier caractère saisi.
- */
-const MARQUE_SAISIE = "> ";
 
-/**
- * Une saisie utilisateur, rendue sans qu'aucune de ses lignes ne puisse se lire
- * comme une ligne de structure.
- *
- * CE QUE ÇA CORRIGE, ET IL A FALLU S'Y REPRENDRE À DEUX FOIS. Les champs 2° à
- * 5° et `moyensPrevention` sont des `textarea` : leur contenu porte des retours
- * à la ligne. La première version n'indentait que la PREMIÈRE ligne, si bien
- * qu'une saisie contenant « 3° Instructions à donner aux travailleurs : Rien à
- * signaler » ressortait à la colonne des rubriques, indiscernable d'une ligne
- * du module. Le document remis à un inspecteur portait alors une rubrique que
- * personne n'avait remplie.
- *
- * LA CORRECTION PAR LE RETRAIT A DÉPLACÉ LE DÉFAUT D'UN CRAN, ELLE NE L'A PAS
- * FERMÉ. Pousser toute saisie plus profond que les rubriques laissait intacte
- * la structure INTERNE du 1° — « · phase », « → moyens : » —, écrite au même
- * rang que la saisie. Un `moyensPrevention` valant
- * « Permis de feu\\n· Phase inventée\\n  → moyens : néant » fabriquait donc une
- * SECONDE phase d'activité dangereuse, avec ses moyens, dans un dossier de
- * contrôle où une seule était déclarée. Plus lourd que le cas des rubriques :
- * une fausse rubrique dit « rien à signaler » sur un contenu absent, une
- * fausse phase AJOUTE une déclaration de danger et de mesure que les deux
- * employeurs n'ont jamais arrêtée d'un commun accord.
- *
- * D'OÙ UNE MARQUE PLUTÔT QU'UN TROISIÈME RANG. Un rang de plus aurait rejoué
- * le même correctif un niveau plus bas, et l'argument qui a produit celui-ci
- * aurait valu encore au suivant. `MARQUE_SAISIE` ne dépend d'aucune
- * profondeur : toute ligne de texte saisi la porte, aucune ligne du module ne
- * la porte, et les libellés de structure vivent seuls sur leur ligne pour
- * qu'aucune valeur ne partage la leur. Rien n'est retiré ni réécrit du texte du
- * dirigeant — on ne censure pas ce qu'il a écrit, on l'empêche d'occuper la
- * place de la structure.
- *
- * CE QUI RESTE, ET QUI DÉBORDE CE MODULE. Le reste de
- * `07_Plans_de_prevention.txt` a exactement la même propriété : `lieux` et
- * `naturesTravaux` — quatre mille caractères, multiligne — s'impriment en clair
- * sur leur ligne, et le fichier n'est pas le seul du ZIP dans ce cas. C'est une
- * propriété du format plat, antérieure à ce lot. Ce module cesse d'y
- * contribuer ; il ne la corrige pour personne d'autre.
- */
-function citer(valeur: string): string[] {
-  // `\r?\n` et non `\n` : un `<textarea>` est posté en CRLF, et découper sur le
-  // seul saut de ligne laissait un `\r` à la fin de chaque ligne intermédiaire
-  // du fichier remis.
-  return valeur
-    .split(/\r?\n/)
-    .map((ligne) => `${RANG_SAISIE}${MARQUE_SAISIE}${ligne}`);
-}
-
-export function contenuR4512_8(plan: ContenuPlan): string[] {
-  const out: string[] = [
-    `  Contenu minimal (art. R. 4512-8) — ${CHAPEAU_R4512_8}`,
-  ];
-  for (const r of RUBRIQUES_R4512_8) {
-    if (!r.renseignee(plan)) {
-      out.push(`${RANG_RUBRIQUE}${r.numero}° ${r.titre} : NON RENSEIGNÉE`);
-      continue;
-    }
-    out.push(`${RANG_RUBRIQUE}${r.numero}° ${r.titre} :`);
-
-    // AUCUNE VALEUR SAISIE N'EST ÉCRITE SUR UNE LIGNE DE STRUCTURE, et c'est
-    // la règle qui rend la marque efficace. Tant que « · <phase> » mettait le
-    // texte du dirigeant sur la ligne du puce, un retour à la ligne dans ce
-    // texte fabriquait une deuxième puce. Les libellés vivent seuls sur leur
-    // ligne ; les valeurs vivent seules sur les leurs, citées.
-    if (r.numero === 1) {
-      for (const f of plan.phasesDangereuses) {
-        out.push(`${RANG_PHASE}· Phase :`);
-        out.push(...citer(f.phase));
-        out.push(`${RANG_PHASE}  → Moyens de prévention :`);
-        // `rempli` et non `||` : une valeur faite d'espaces est vraie pour
-        // JavaScript, et la ligne s'imprimait sans contenu NI tiret (P5).
-        out.push(...citer(rempli(f.moyensPrevention) ? f.moyensPrevention! : "—"));
-      }
-      continue;
-    }
-    const valeur = texteRubrique(plan, r.numero);
-    out.push(...citer(rempli(valeur) ? valeur! : "—"));
-  }
-  return out;
-}
+// ~~`contenuR4512_8` — les cinq rubriques mises en texte pour le fichier
+// `07_Plans_de_prevention.txt` du ZIP de contrôle, « NON RENSEIGNÉE » pour une
+// vide, chaque ligne saisie citée par une marque (`citer`, `MARQUE_SAISIE`,
+// `RANG_*`) pour qu'aucune saisie ne contrefasse la structure du fichier.~~
+// [2026-11-21, décision de la propriétaire : « il reprend le document
+// existant ». Le 07 n'est plus qu'un index ; le contenu du plan est dans son
+// PDF, joint au ZIP. Plus d'appelant : la fonction et ses aides sont
+// retirées. Le risque de contrefaçon qu'elles fermaient disparaît avec le
+// texte plat qui le portait.]

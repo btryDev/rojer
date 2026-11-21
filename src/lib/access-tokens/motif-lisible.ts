@@ -16,7 +16,8 @@ import { MOTIF_REVOCATION_ENVOI_ECHOUE, MOTIF_REVOCATION_NOUVEAU_LIEN } from "./
 
 /** Ce que les motifs écrits par `revoquerOtpEpuise` commencent par. */
 const PREFIXE_OTP_EPUISE = "OTP épuisé";
-const SUITE_NOUVEAU_LIEN = /\s*;\s*demandez un nouveau lien à votre interlocuteur\s*$/i;
+/** La suite écrite pour le porteur du lien ; la fiche du plan la retire aussi (`motifLienPourLaFiche`). */
+export const SUITE_NOUVEAU_LIEN = /\s*;\s*demandez un nouveau lien à votre interlocuteur\s*$/i;
 
 /** Les révocations du cycle de vie d'un acte (`plan-prevention/actions.ts`, `permis-feu/actions.ts`). */
 const CYCLE_DE_VIE = /^(Plan de prévention|Permis de feu) (clos|terminé|supprimé|annulé)$/;

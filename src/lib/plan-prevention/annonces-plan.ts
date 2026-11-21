@@ -305,7 +305,9 @@ export const URL_R4463_8 =
  * `enTete` : une fois pour le fichier — `R. 4512-9` et `R. 4512-11` valent pour
  * tout plan, et le lecteur du ZIP (inspecteur, assureur, acquéreur) doit
  * apprendre que ce fichier ne les contient pas plutôt que de conclure à leur
- * absence de l'obligation.
+ * absence de l'obligation. ~~« Ce fichier ne la contient pas. »~~ [2026-11-21 :
+ * le 07 est un index et le ZIP joint le PDF de chaque plan — « Ni ce fichier
+ * ni les PDF des plans ne la contiennent. », le PDF ne la portant pas non plus.]
  *
  * Les lignes de `R. 4512-12` par plan vivent dans `annonces-zip.ts` : elles
  * appellent le diagnostic, que ce module sans dépendance n'importe pas.
@@ -313,9 +315,9 @@ export const URL_R4463_8 =
 export const annoncesZip = {
   enTete: (): string[] => [
     `Art. R. 4512-9 : « ${R4512_9} »`,
-    `  ${CONSTAT_R4512_9} Ce fichier ne la contient pas.`,
+    `  ${CONSTAT_R4512_9} Ni ce fichier ni les PDF des plans ne la contiennent.`,
     `Art. R. 4512-11 : « ${R4512_11} »`,
-    `  ${CONSTAT_R4512_11} Ce fichier ne les contient pas.`,
+    `  ${CONSTAT_R4512_11} Ni ce fichier ni les PDF des plans ne les contiennent.`,
   ],
   parPlan: (ecrit: EtatEcrit, informeeLeTexte: string | null): string[] =>
     !citeR4512_12(ecrit)

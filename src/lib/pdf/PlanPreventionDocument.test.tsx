@@ -6,6 +6,7 @@
 import { describe, expect, it } from "vitest";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { elementsDansLOrdre, texteDirect } from "./arbre-rendu.test-utils";
+import { RUBRIQUES_R4512_8 } from "@/lib/plan-prevention/contenu-r4512-8";
 import {
   MENTION_DOCUMENT_DE_TRAVAIL,
   MENTION_NON_SCELLE,
@@ -154,26 +155,27 @@ describe("PlanPreventionDocument — contenu", () => {
     expect(contient(textes(d), /^Heures prévisibles revues : 420 h, seuil de 400 h noté le 20\/11\/2026$/)).toBe(true);
   });
 
-  it("les cinq rubriques de R. 4512-8 ; une rubrique vide se signale comme manquante", () => {
+  // [2026-11-21, décision de la propriétaire] Une rubrique remplie est une
+  // section sous son titre ; une vide n'apparaît pas — ni « Contenu minimal »,
+  // ni décompte, ni « Non renseignée ».
+  it("les rubriques de R. 4512-8 remplies, chacune sous son titre ; les vides n'apparaissent pas", () => {
     const t = textes(donnees());
-    for (const n of [1, 2, 3, 4, 5]) expect(contient(t, new RegExp(`^${n}° `))).toBe(true);
-    expect(contient(t, /^1 rubrique sur 5 non renseignée : 3°\.$/)).toBe(true);
-    expect(contient(t, /^Non renseignée$/)).toBe(true);
+    for (const r of RUBRIQUES_R4512_8.filter((x) => x.numero !== 3)) {
+      expect(contient(t, new RegExp(`^${r.titre.replace(/[()]/g, "\\$&")}$`)), r.titre).toBe(true);
+    }
+    expect(contient(t, /^Instructions à donner aux travailleurs$/)).toBe(false);
+    expect(contient(t, /Contenu minimal/)).toBe(false);
+    expect(contient(t, /rubriques? sur 5|non renseignée$/i)).toBe(false);
+    expect(contient(t, /^\d° /)).toBe(false);
     expect(contient(t, /^Levage du groupe$/)).toBe(true);
     expect(contient(t, /Grue et chef de manœuvre/)).toBe(true);
   });
 
-  it("toutes les rubriques remplies : aucune n'est dite manquante", () => {
-    const d = donnees();
-    d.plan.instructionsTravailleurs = "Consignes remises";
-    const t = textes(d);
-    expect(contient(t, /non renseignée/i)).toBe(false);
-  });
-
-  it("cite les textes, dit que le fichier n'est pas l'original scellé, et ne qualifie rien", () => {
+  it("dit que le fichier n'est pas l'original scellé, et ne qualifie rien ; plus d'encadré des textes", () => {
     const t = textes(donnees());
-    expect(contient(t, /art\. R\. 4512-6 à R\. 4512-12 du Code du travail/)).toBe(true);
-    expect(contient(t, /^Art\. R\. 4512-8 : Les mesures prévues/)).toBe(true);
+    expect(contient(t, /art\. R\. 4512-6 à R\. 4512-12 du Code du travail/)).toBe(false);
+    expect(contient(t, /^Art\. R\. 4512-8 : Les mesures prévues/)).toBe(false);
+    expect(contient(t, /^Ce document ne vaut pas certification de conformité\.$/)).toBe(true);
     expect(t).toContain(MENTION_NON_SCELLE);
     expect(MENTION_NON_SCELLE).toMatch(/pas un original scellé/);
     // Règle 8 : jamais « vous êtes conforme ».

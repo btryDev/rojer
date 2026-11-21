@@ -1,12 +1,13 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { PanneauModal } from "@/components/ui-kit/PanneauModal";
 import {
   BOUTON_CLAIR,
   BOUTON_PLEIN,
   CaseConsentement,
   ChampCodeSignature,
+  RenvoiDuCode,
   useCodeDeSignature,
 } from "@/components/signatures/EtapesCodeSignature";
 import {
@@ -15,6 +16,7 @@ import {
   type SignerEtEnvoyerState,
 } from "@/lib/plan-prevention/signature-fiche-actions";
 import { texteConsentement } from "@/lib/signatures/consentement";
+import { nomSansAdresse } from "@/lib/signatures/signataire";
 import { useAnnonceFiche } from "./AnnonceFiche";
 
 /**
@@ -32,15 +34,12 @@ const FMT_MAINTENANT = new Intl.DateTimeFormat("fr-FR", {
   timeStyle: "short",
 });
 
-function useSecondesAvant(cible: string | null): number {
-  const [maintenant, setMaintenant] = useState(Date.now);
-  useEffect(() => {
-    if (!cible) return;
-    const t = setInterval(() => setMaintenant(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, [cible]);
-  if (!cible) return 0;
-  return Math.max(0, Math.ceil((new Date(cible).getTime() - maintenant) / 1000));
+/** « Nom <adresse> », ou l'adresse seule quand le nom n'est qu'elle (`nomSansAdresse`). */
+export function signataireAffiche(vous: { nom: string; email: string }): string {
+  const email = vous.email.trim();
+  if (!email) return vous.nom.trim();
+  const nom = nomSansAdresse(vous.nom, email);
+  return nom ? `${nom} <${email}>` : email;
 }
 
 export function FenetreSigner({
@@ -76,7 +75,6 @@ export function FenetreSigner({
     () => demanderCodeSignaturePlan(planId),
     state,
   );
-  const attente = useSecondesAvant(envoi?.renvoiPossibleLe ?? null);
 
   // Signé : la fenêtre se ferme, la fiche annonce ce qui a eu lieu.
   // Une fois par réponse : `surFermer` est recréé à chaque rendu du panneau.
@@ -93,7 +91,7 @@ export function FenetreSigner({
   const recap: [string, string][] = [
     ["Référence", reference],
     ["Objet", objet],
-    ["Signataire", vous.email ? `${vous.nom} <${vous.email}>` : vous.nom],
+    ["Signataire", signataireAffiche(vous)],
     ["Au nom de", raisonEU],
     ["Date et heure", FMT_MAINTENANT.format(new Date())],
     ...(envoyer ? ([["Ensuite", `Rojer adresse le lien de signature à ${raisonEE} (${efChefEmail})`]] as [string, string][]) : []),
@@ -152,7 +150,13 @@ export function FenetreSigner({
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            <ChampCodeSignature id="code-signature" email={envoi.email} code={code} surChanger={setCode} />
+            <ChampCodeSignature
+              id="code-signature"
+              email={envoi.email}
+              expireLe={envoi.expireLe}
+              code={code}
+              surChanger={setCode}
+            />
             {state.status === "error" && !state.codeAReDemander && (
               <p role="alert" className="m-0 text-[13px] text-[color:var(--board-signal-ink)]">
                 {state.message}
@@ -164,20 +168,7 @@ export function FenetreSigner({
               </p>
             )}
             <div className="flex flex-wrap items-center justify-between gap-2.5">
-              {attente > 0 ? (
-                <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-[color:var(--board-slate-soft)]">
-                  Renvoyer un code dans {Math.floor(attente / 60)}:{String(attente % 60).padStart(2, "0")}
-                </span>
-              ) : (
-                <button
-                  type="button"
-                  onClick={demanderCode}
-                  disabled={demande}
-                  className="text-[13px] text-[color:var(--board-blue-ink)] underline-offset-2 hover:underline"
-                >
-                  Renvoyer un code
-                </button>
-              )}
+              <RenvoiDuCode renvoiPossibleLe={envoi.renvoiPossibleLe} demande={demande} demanderCode={demanderCode} />
               <div className="flex flex-wrap gap-2.5">
                 <button type="button" onClick={surFermer} className={BOUTON_CLAIR}>
                   Annuler

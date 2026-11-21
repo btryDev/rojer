@@ -9,6 +9,8 @@ import { listerBatimentsDeLEtablissement } from "@/lib/batiments/queries";
 import { statutPlanSignable } from "@/lib/signatures/etat-signable";
 import { avisLiensEnVol, motifContenuScelle } from "@/lib/signatures/verrou-contenu";
 import { compterLiensEnVol } from "@/lib/access-tokens/revocation";
+import { correctionEnCours } from "@/lib/plan-prevention/fiche-signatures";
+import { repartirSignatures } from "@/lib/signatures/parties";
 import { cleJourCivil, versSaisieDateHeure } from "@/lib/dates";
 
 export const metadata = {
@@ -38,6 +40,16 @@ export default async function ModifierPlanPreventionPage({
 
   const numero = `PP-${String(plan.numero).padStart(3, "0")}`;
   const fiche = `/etablissements/${id}/plan-prevention/${plan.id}`;
+  // Une correction en cours (« Corriger ») se termine en signant : « Annuler »
+  // et « Enregistrer » ramènent à l'onglet « Suivi », qui porte la signature
+  // (2026-11-21, relecture).
+  const correction = correctionEnCours({
+    planSignable: true,
+    propositionEnAttente: Boolean(plan.propositionEnAttente),
+    euSignee: Boolean(repartirSignatures("plan_prevention", plan.signatures).parPartie.entreprise_utilisatrice),
+    propositions: plan.propositions ?? [],
+  });
+  const retour = correction ? `${fiche}?onglet=suivi` : fiche;
 
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
@@ -45,7 +57,7 @@ export default async function ModifierPlanPreventionPage({
       <header className="entete-trame">
         <div className="mx-auto flex max-w-[1180px] flex-col items-center gap-2.5 px-4 pb-9 pt-8 text-center md:px-6 md:pt-10">
           <Link
-            href={fiche}
+            href={retour}
             className="board-eyebrow inline-flex items-center gap-2 self-start text-[11px] tracking-[0.14em] text-[color:var(--board-slate-soft)] transition-colors hover:text-[color:var(--board-ink)]"
           >
             <ArrowLeft className="size-3" aria-hidden />
@@ -74,6 +86,7 @@ export default async function ModifierPlanPreventionPage({
               plan.inspectionDate === null,
             )}
             avisLiens={avisLiensEnVol(liensEnVol)}
+            retourHref={retour}
             plan={{
               id: plan.id,
               prestataireId: plan.prestataireId,
