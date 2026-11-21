@@ -110,6 +110,17 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous"; 
     motif: "compteurs techniques, hors de tout compte",
     usages: ["prisma.$executeRaw", "prisma.$queryRaw"],
   },
+  // ADR-062 : le connecteur MCP en OAuth. Le compte du jeton vérifié n'est
+  // pas encore une portée : son appartenance (et l'abonnement du compte, pour
+  // la formule Pro) se relit avant de construire le client borné.
+  "src/lib/mcp/acces-compte.ts": {
+    motif: "porteur d'un jeton MCP vérifié : appartenance au compte du jeton et abonnement de ce compte, relus avant la portée",
+    usages: ["prisma.membre.findUnique"],
+  },
+  "src/lib/mcp/compte-oauth.ts": {
+    motif: "compte d'un consentement OAuth : appartenances de la personne connectée, relues avant que le compte soit choisi",
+    usages: ["prisma.membre.findMany"],
+  },
   "src/lib/auth/membres.ts": {
     motif:
       "appartenance d'une personne à un compte (ADR-054 § 3) : relue avant de construire la portée, que le client borné ne connaît pas encore",
@@ -191,8 +202,11 @@ const NOMMES_ROUAGES: Record<string, Record<string, Nomme>> = {
   // preuve vérifiée (jeton, signature, clé ou jeton MCP) — seconde lecture de
   // #146.
   "src/lib/auth/compte-hors-session": {
-    // [cc : pas d'OAuth MCP (ADR-052) — ni `clientDuCompteVerifie` ni `acces-oauth-deps.ts`.]
-    "src/lib/mcp/db.ts": { motif: "MCP : établissement de la clé", symboles: ["clientDuProprietaire"] },
+    "src/lib/mcp/db.ts": { motif: "MCP stdio et tests : établissement désigné", symboles: ["clientDuProprietaire"] },
+    "src/lib/mcp/outils-compte.ts": {
+      motif: "MCP en OAuth (ADR-062) : compte du jeton vérifié, appartenance relue, en lecture seule",
+      symboles: ["clientDuPorteurMcp"],
+    },
     "src/lib/signatures/actions.ts": { motif: "pose de signature par jeton vérifié", symboles: ["clientDuProprietaire"] },
     "src/lib/plan-prevention/proposition-actions.ts": { motif: "proposition de modification par jeton vérifié (ADR-061)", symboles: ["clientDuProprietaire"] },
     "src/app/acces/[token]/page.tsx": { motif: "page d'un jeton vérifié", symboles: ["clientDuProprietaire"] },

@@ -145,13 +145,25 @@ function controle(m: Methode): string | null {
       return `délégation à ${delegation.fonction}`;
     }
   }
-  if (
-    /\bhandler\.servir\(/.test(m.corps) &&
-    appelle("creerHandlerMcpHttp", m.source) &&
-    (appelle("resoudreScopeDepuisCle", m.source) ||
-      appelle("resoudreScopeDepuisJeton", m.source))
-  ) {
+  // ~~La clé d'URL (`resoudreScopeDepuisCle`)~~ [2026-11-21, ADR-062 : retirée].
+  // Le serveur MCP : un handler dont le porteur est résolu par le jeton
+  // OAuth vérifié, l'appartenance et l'abonnement relus (`resoudrePorteur`).
+  // Ses autres méthodes (GET, DELETE) répondent 405 sans rien lire.
+  if (appelle("creerHandlerMcpHttp", m.source) && appelle("resoudrePorteur", m.source)) {
     return "MCP";
+  }
+  // La route de Better Auth : liste blanche des points d'entrée OAuth, dont
+  // le fournisseur est la garde (jeton, PKCE, client, consentement).
+  if (appelle("estCheminAuthServi", m.corps) && /\bauth\.handler\(/.test(m.corps)) {
+    return "liste blanche OAuth";
+  }
+  // Documents de découverte OAuth : publics par la spécification, construits
+  // depuis la configuration, sans lecture du dossier.
+  if (appelle("servirDecouverte", m.corps)) return "découverte OAuth";
+  // La page de connexion du fournisseur : requête signée vérifiée, puis la
+  // session (ou `/login`).
+  if (appelle("verifyOAuthQueryParams", m.corps) && appelle("lireSessionCourante", m.corps)) {
+    return "requête OAuth signée";
   }
   return null;
 }

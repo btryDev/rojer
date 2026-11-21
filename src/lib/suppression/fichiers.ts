@@ -45,6 +45,17 @@ export const COLONNES_ECARTEES: Record<
   string,
   { motif: string; jamaisEcrite: boolean }
 > = {
+  // ADR-062 : les clés de signature des jetons d'accès du connecteur MCP
+  // (plugin `jwt` de Better Auth). Des clés cryptographiques, pas des clés de
+  // stockage ; écrites par le plugin, jamais par notre code.
+  "Jwks.publicKey": {
+    motif: "Clé publique de signature (JWK), pas un fichier stocké.",
+    jamaisEcrite: false,
+  },
+  "Jwks.privateKey": {
+    motif: "Clé privée de signature (JWK chiffrée par BETTER_AUTH_SECRET), pas un fichier stocké.",
+    jamaisEcrite: false,
+  },
   "DuerpVersion.pdfUrl": {
     motif:
       "Jamais écrite (controle-zip/route.ts le dit). Et une version figée rend l'établissement insupprimable (R. 4121-4).",

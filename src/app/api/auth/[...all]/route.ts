@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 
 const absent = () => new Response(null, { status: 404, headers: { "cache-control": "no-store" } });
 
-async function servir(request: Request): Promise<Response> {
+async function servirOAuth(request: Request): Promise<Response> {
   const { pathname } = new URL(request.url);
   if (!estCheminAuthServi(pathname)) return absent();
 
@@ -38,5 +38,10 @@ async function servir(request: Request): Promise<Response> {
   return auth.handler(request);
 }
 
-export const GET = servir;
-export const POST = servir;
+export async function GET(request: Request) {
+  return servirOAuth(request);
+}
+
+export async function POST(request: Request) {
+  return servirOAuth(request);
+}

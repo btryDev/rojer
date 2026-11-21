@@ -13,6 +13,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
 import { ipClient } from "@/lib/securite/ip-client";
 import { ENTETE_IP_CLIENT } from "./entete-ip";
+import { estCheminAuthServi } from "@/lib/mcp/oauth";
 
 // Préfixes publics (non authentifiés), comparés par segment entier.
 const PUBLIC_PREFIXES = [
@@ -37,10 +38,9 @@ const PUBLIC_PREFIXES = [
   // jeton OAuth de `/api/mcp` (ADR-062), qui doit répondre 401 avec son défi
   // et non le refus JSON du proxy.
   "/api/mcp",
-  // ADR-062 : les points d'entrée OAuth qu'un client appelle sans session
-  // (jeton, enregistrement) — la route sert une liste blanche — et la
-  // découverte (RFC 8414, RFC 9728).
-  "/api/auth",
+  // ADR-062 : la découverte OAuth (RFC 8414, RFC 9728). Les points d'entrée
+  // de `/api/auth` sont publics un par un (`estCheminAuthServi`), pas le
+  // préfixe : le reste de Better Auth n'est pas monté.
   "/.well-known",
   // ADR-062 : la page de connexion du fournisseur OAuth ; sans session, elle
   // renvoie elle-même vers `/login` avec la requête signée en `next`.
@@ -62,7 +62,7 @@ function sousPrefixe(pathname: string, prefixes: readonly string[]): boolean {
 
 /** Exporté pour les tests — la règle mérite d'être vérifiée directement. */
 export function cheminPublic(pathname: string): boolean {
-  return pathname === "/" || sousPrefixe(pathname, PUBLIC_PREFIXES);
+  return pathname === "/" || sousPrefixe(pathname, PUBLIC_PREFIXES) || estCheminAuthServi(pathname);
 }
 
 /** Ce que reçoit `/api/*` sans session : du JSON, pas une page de connexion. */

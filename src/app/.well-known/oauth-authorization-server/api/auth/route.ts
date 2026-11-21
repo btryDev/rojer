@@ -5,5 +5,11 @@
 import { servirDecouverte } from "@/lib/mcp/decouverte";
 
 export const dynamic = "force-dynamic";
-export const GET = servirDecouverte;
-export const HEAD = servirDecouverte;
+
+export async function GET(request: Request) {
+  return servirDecouverte(request);
+}
+
+export async function HEAD(request: Request) {
+  return servirDecouverte(request);
+}

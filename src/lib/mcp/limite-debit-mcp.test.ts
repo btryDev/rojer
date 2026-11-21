@@ -3,7 +3,7 @@ import { creerHandlerMcpHttp } from "./http";
 
 /**
  * Limitation de débit du serveur MCP (audit OWASP B3 / B14, 2026-10-14) :
- * par IP AVANT l'authentification, par portée APRÈS ; un refus est un 429
+ * par IP AVANT l'authentification, par compte du porteur APRÈS ; un refus est un 429
  * avec `Retry-After`, et l'authentification n'est pas appelée.
  */
 
@@ -23,16 +23,17 @@ vi.mock("@/lib/securite/limite-debit", async (original) => ({
 }));
 
 vi.mock("./prisma", () => ({ prismaMcp: {} }));
+vi.mock("@/lib/auth/compte-hors-session", () => ({ clientDuPorteurMcp: () => ({}) }));
 
-const resoudreScope = vi.fn(async () => ({
+const resoudrePorteur = vi.fn(async () => ({
   statut: "ok" as const,
-  scope: { etablissementId: "etab_1" },
+  porteur: { userId: "user-1", compteId: "compte-1", clientId: "claude", ouvert: true },
 }));
 
 const handler = creerHandlerMcpHttp({
   hotesAutorises: ["rojer.test"],
   originesAutorisees: [],
-  resoudreScope,
+  resoudrePorteur,
 });
 
 function requete(xff?: string): Request {
@@ -51,7 +52,7 @@ function requete(xff?: string): Request {
 beforeEach(() => {
   h.refuser.clear();
   h.cles = [];
-  resoudreScope.mockClear();
+  resoudrePorteur.mockClear();
 });
 
 describe("MCP : limitation de débit", () => {
@@ -61,15 +62,21 @@ describe("MCP : limitation de débit", () => {
     expect(r.status).toBe(429);
     expect(r.headers.get("retry-after")).toBe("42");
     expect((await r.json()).error.message).toMatch(/Trop de requêtes/);
-    expect(resoudreScope).not.toHaveBeenCalled();
+    expect(resoudrePorteur).not.toHaveBeenCalled();
   });
 
   it("au-delà de la limite par portée : 429 après l'authentification", async () => {
     h.refuser.add("portee");
     const r = await handler.servir(requete("203.0.113.7"));
     expect(r.status).toBe(429);
-    expect(resoudreScope).toHaveBeenCalledTimes(1);
+    expect(resoudrePorteur).toHaveBeenCalledTimes(1);
     expect(h.cles.map((c) => c.split(":").slice(0, 2).join(":"))).toEqual(["mcp:ip", "mcp:portee"]);
+  });
+
+  it("la limite après l'authentification compte par compte du porteur", async () => {
+    const { cleLimite } = await import("@/lib/securite/limite-debit");
+    await handler.servir(requete());
+    expect(h.cles).toEqual([cleLimite("mcp", "portee", "compte-1")]);
   });
 
   it("sans IP lisible, seule la limite par portée s'applique", async () => {
