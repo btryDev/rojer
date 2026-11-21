@@ -31,15 +31,18 @@ consentement, jetons portant l'audience du serveur MCP — ce qui règle aussi
 le point 8 de l'ADR-013). **De toute manière revu à la migration**, puisque
 toute l'authentification sera refaite.
 
-À faire alors :
-1. Serveur d'autorisation Better Auth pour `/api/mcp` : découverte RFC 8414,
-   métadonnées RFC 9728 (déjà servies, à repointer), DCR, consentement.
+~~À faire alors :~~ [2026-11-21 : fait sur `lot/mcp-par-compte` (ADR-062),
+sauf le test depuis claude.ai, à faire sur la préproduction.]
+1. ~~Serveur d'autorisation Better Auth pour `/api/mcp` : découverte RFC 8414,
+   métadonnées RFC 9728 (déjà servies, à repointer), DCR, consentement.~~
 2. ~~Vérification du jeton dans `src/lib/mcp/acces-oauth.ts` réécrite pour
    Better Auth (aujourd'hui `getClaims` Supabase), cloisonnement inchangé :
    `sub → Entreprise.userId → Etablissement`.~~ [2026-11-21 : le fichier est
    retiré depuis la bascule ; la portée passe au compte (ADR-054), voir
    ADR-062 § 4 et 5.]
-3. Test de bout en bout avec Claude Code, puis Claude.ai.
+3. Test de bout en bout avec Claude Code, puis Claude.ai. [2026-11-21 : le
+   flux est éprouvé en CI (`mcp/oauth-flux.integration.test.ts`) ; reste
+   Claude.ai sur la préproduction.]
 4. Retrait de la route `/api/mcp/[cle]` et des variables `MCP_CLE`,
    `MCP_ETABLISSEMENT_ID` ; mise à jour de la page « Connecter ».
 5. Reprendre les recommandations restantes de l'audit MCP : limitation de

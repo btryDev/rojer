@@ -1,6 +1,6 @@
 # ADR-062 — Le connecteur MCP s'ouvre par compte, en OAuth servi par Better Auth, et seulement en Pro
 
-- **Statut** : proposée, 2026-11-21.
+- **Statut** : acceptée, 2026-11-21 (décision de la propriétaire) ; codée sur `lot/mcp-par-compte`.
 - **Portée** : `src/lib/auth/better-auth.ts` (plugins `jwt`, `mcp`, `cimd`),
   route `/api/auth/[...all]` (liste blanche), `/.well-known/*`,
   `src/app/api/mcp/route.ts`, `src/lib/mcp/`, page de consentement,
@@ -109,9 +109,13 @@ navigateur.
 ### 2. Une route HTTP de Better Auth, en liste blanche
 
 `/api/auth/[...all]` monte le gestionnaire de Better Auth, mais ne laisse
-passer QUE les chemins de l'OAuth — `oauth2/authorize`, `oauth2/token`,
-`oauth2/register`, `oauth2/revoke`, `oauth2/consent`, `oauth2/continue`,
-`jwks` et ce que la découverte désigne. Tout autre chemin répond `404`.
+passer QUE les chemins qu'un client OAuth appelle lui-même —
+`oauth2/authorize`, `oauth2/token`, `oauth2/register`, `oauth2/revoke` et la
+découverte (`CHEMINS_AUTH_SERVIS`, `mcp/oauth.ts`). [2026-11-21 :
+~~`oauth2/consent`, `oauth2/continue`, `jwks`~~ — le consentement et le choix
+du compte passent par nos actions serveur (`auth.api.*`), et le JWKS est lu en
+mémoire par le serveur de ressource.] Tout autre chemin répond `404`, et le
+proxy ne rend publics que ces chemins-là, un par un.
 L'ADR-052 tient pour le reste : connexion, inscription, double
 authentification, membres restent des actions serveur avec leurs propres
 gardes (limites de débit, quotas, refus). Monter tout le gestionnaire
@@ -119,7 +123,11 @@ ouvrirait des portes qui contournent ces gardes. Une garde de test relit la
 liste blanche.
 
 La limitation de débit de Better Auth est active sur ces chemins, et
-`oauth2/register` passe en plus par `LimiteDebit` (par IP).
+`oauth2/register` passe en plus par `LimiteDebit` (par IP). [2026-11-21 :
+les défauts du plugin — 20 jetons et 5 enregistrements par minute et par IP —
+sont relevés (600 et 60) : claude.ai rafraîchit les jetons de TOUS ses
+utilisateurs depuis quelques adresses de sortie (`160.79.104.0/21`), et les
+défauts auraient coupé le connecteur dès une poignée de clients.]
 
 ### 3. Enregistrement des clients : CIMD d'abord, DCR bornée aux assistants admis
 
@@ -152,8 +160,13 @@ La limitation de débit de Better Auth est active sur ces chemins, et
   2. **appartenance relue** : l'utilisateur est toujours membre du compte du
      jeton (`Membre`, comme `requireCompte`) — sinon `401` ;
   3. **formule** : le compte a un abonnement ouvert (`OUVRENT`, ADR-053) en
-     formule dont `connecterUnAssistant` vaut `true` — sinon `403` avec un
-     message lisible (« Le connecteur est réservé à la formule Pro »).
+     formule dont `connecterUnAssistant` vaut `true` — ~~sinon `403` avec un
+     message lisible~~ [2026-11-21, à l'implémentation : sinon chaque outil
+     répond, en erreur d'outil, « Le connecteur d'assistant est réservé à la
+     formule Pro… », et rien n'est lu. Un refus HTTP laissait l'assistant
+     devant une erreur de connexion muette ; l'erreur d'outil, il la relaie à
+     la personne. La page de consentement n'offre de toute façon que le refus
+     hors Pro, et le geste le revérifie.]
      L'essai porte sur l'Essentiel (`FORMULE_D_ESSAI`) : il n'ouvre pas le
      connecteur.
   Les points 2 et 3 font qu'un départ du compte ou une fin d'abonnement
@@ -240,6 +253,32 @@ ou l'appartenance qui tombe.
 - `connecterUnAssistant` est lu (§ 4) et affiché dans les points de la
   formule ; l'entrée « Connecter un assistant » reste visible pour tous, et
   la page invite à passer en Pro hors formule.
+
+### 11. Ce que l'implémentation a ajouté (2026-11-21)
+
+- **Le jeton d'accès doit porter `typ: "at+jwt"`.** La 1.7 de Better Auth
+  accepte comme jeton d'accès tout JWT signé par ses clés qui porte `azp` et
+  une audience admise ; `mcp/acces-compte.ts` lit l'en-tête, couvert par la
+  signature déjà vérifiée.
+- **Le client borné admet une relation par une clé qui ne vise pas `id`,
+  entre deux modèles hors compte seulement** (`portee/borne.ts`) : les tables
+  du fournisseur se relient par `clientId`. Le client borné ne lit ni n'écrit
+  aucun de ces modèles ; il n'a rien à réécrire.
+- **La lecture passe par `clientDuPorteurMcp`, en lecture seule** quel que
+  soit le rôle : toute écriture est refusée par le client lui-même.
+- **Le retrait d'un assistant vit hors de `lib/mcp`** (`connecteur/assistants.ts`) :
+  le serveur MCP n'écrit rien, et la garde le vérifie sur ses fichiers.
+- **La reprise après `/login` ne passe pas par le crochet du plugin** (accroché
+  à la réponse de la connexion, il ne survit pas à la double
+  authentification) : `/oauth/reprendre` vérifie la requête signée, renvoie
+  vers `/login` avec elle en `next`, puis rejoue la requête d'autorisation
+  d'origine, que le fournisseur revérifie entièrement.
+- **`localhost` n'est plus un hôte admis en production** (audit S8).
+- **Preuve de bout en bout** : `mcp/oauth-flux.integration.test.ts` (CI,
+  vrai PostgreSQL, vrai Better Auth) — découverte, enregistrement refusé pour
+  une adresse étrangère, autorisation PKCE, consentement, jeton, porteur,
+  formule, rafraîchissement, retrait, départ du compte. Reste à éprouver
+  depuis claude.ai, sur la préproduction.
 
 ## Conséquences
 

@@ -638,7 +638,8 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
 10. **010** — Registre de sources d'échéances du calendrier
 11. **011** — Dates civiles, fuseau de référence et prédicats de retard
 12. **012** — Conservation des preuves : régénération idempotente, suppression logique
-13. **013** — Serveur MCP distant authentifié en OAuth 2.1
+13. **013** — Serveur MCP distant authentifié en OAuth 2.1 [2026-11-21 :
+    remplacée par l'ADR-062]
 14. **014** — Le retour dit d'où l'on vient, le fil d'Ariane dit où la fiche vit
 15. **015** — « À faire » est un écran (le calendrier)
 16. **016** — La nature d'une échéance est un type fermé, la famille s'en déduit
@@ -814,6 +815,12 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     validé par le dirigeant ET complet sur les données ; `Duerp.etapesValidees`
     (2026-11-11). Amende la décision du 2026-10-12 sur les transverses sans la
     renverser
+62. **062** — Le connecteur MCP s'ouvre par compte, en OAuth servi par Better
+    Auth (`@better-auth/mcp`), et seulement en formule Pro : route
+    `/api/auth/[...all]` en liste blanche, adresses de retour de Claude
+    seules, jeton relu à chaque requête (audience, `typ`, appartenance,
+    formule), outils bornés au compte en lecture seule. Remplace l'ADR-013 ;
+    la route à clé est retirée (2026-11-21)
 
 [2026-10-15, ménage des ADR : 037, 038 et 043 manquaient à cette liste ;
 **il n'existe pas d'ADR-044** — annoncée dans

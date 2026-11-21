@@ -174,9 +174,11 @@ release (lots lancés le même jour) ; **n° 1 (gaz sans cuisine) et n° 5
    ([§ 9 bis](#9-bis-ghw--retrait-programmé-en-attente-dun-comptage-en-production)).
 8. **Règle de fusion « la plus ancienne réalisation »**, en production sans
    confirmation ([§ 11](#11-le-réconciliateur-de-calendrier--seize-constats-un-plan-ordonné), lot 2).
-9. **`MCP_ETABLISSEMENT_ID` en production** désigne un établissement supprimé :
+9. ~~**`MCP_ETABLISSEMENT_ID` en production** désigne un établissement supprimé :
    la mettre à jour ou la retirer
-   ([§ 13](#13-les-previews-vercel-sont-abandonnées--2026-09-18)).
+   ([§ 13](#13-les-previews-vercel-sont-abandonnées--2026-09-18)).~~
+   [2026-11-21, ADR-062 : la route à clé qui la lisait est retirée ; la
+   variable ne sert plus qu'au serveur stdio de développement.]
 10. **Les cinq décisions de produit de l'audit du 2026-09-19**, à confirmer
     ([§ 14](#14-laudit-du-2026-09-19-est-fusionné--ce-quil-laisse-ouvert)).
 11. **Engin déclaré et « non » à la conduite** : relever la contradiction ou
@@ -3367,12 +3369,17 @@ n'ouvre l'accès aux données d'un autre compte. Chemins : `cc` sauf mention.
   (`dossier-conformite` est filigrané « projet »). Question commerciale.
 - Repli `metadata.userId` de Stripe : sûr par l'index unique sur
   `stripeCustomerId` ; à retirer quand plus aucun client ancien n'existe.
-- MCP : la clé passe dans l'URL (journaux du répartiteur) — acceptable si elle
+- ~~MCP : la clé passe dans l'URL (journaux du répartiteur) — acceptable si elle
   désigne un établissement de démonstration ; `decodeURIComponent` sur un
   échappement mal formé rend 500 au lieu du 404 muet ; `localhost` toujours
   admis comme hôte ; la clé ne suit ni le gel ni les membres (variable
-  d'environnement, rotation par redéploiement).
-- La page « Connecter » affiche des chemins absolus du serveur à tout membre.
+  d'environnement, rotation par redéploiement).~~ [2026-11-21,
+  `lot/mcp-par-compte` (ADR-062) : la route à clé est retirée ; le connecteur
+  s'ouvre en OAuth, par compte, réservé au Pro ; `localhost` refusé en
+  production.]
+- ~~La page « Connecter » affiche des chemins absolus du serveur à tout membre.~~
+  [2026-11-21, ADR-062 : la page ne montre plus que l'adresse publique du
+  connecteur, et seulement en formule Pro.]
 - `libererFichiers` journalise les clés de stockage en clair.
 - `versConnexion` (`proxy-session.ts`) bâtit la redirection depuis l'hôte de
   la requête ; sans cache partagé, sans effet.
