@@ -69,6 +69,23 @@ export function cleDesCodes(env: NodeJS.ProcessEnv = process.env): string {
   return CLE_DE_DEVELOPPEMENT;
 }
 
+/** Message rendu quand la clé manque en production : rien n'est réservé ni envoyé. */
+export const MESSAGE_CODES_HORS_SERVICE =
+  "Les codes de signature sont momentanément indisponibles. Réessayez plus tard ; si le problème persiste, prévenez votre interlocuteur.";
+
+/**
+ * La clé est-elle là ? À appeler AVANT toute réservation (envoi ou essai),
+ * pour qu'une clé absente ne coûte ni une place du plafond horaire ni un essai.
+ */
+export function codesEnService(env: NodeJS.ProcessEnv = process.env): boolean {
+  try {
+    cleDesCodes(env);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function hashOtp(otp: string): string {
   return createHmac("sha256", cleDesCodes()).update(otp).digest("hex");
 }

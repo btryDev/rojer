@@ -27,7 +27,14 @@ export type TokenInvalide =
   | { ok: false; raison: "inexistant" }
   | { ok: false; raison: "expire"; expireLe: Date; etablissementId: string }
   | { ok: false; raison: "revoque"; motif: string | null; etablissementId: string }
-  | { ok: false; raison: "deja_utilise"; utiliseLe: Date; etablissementId: string };
+  | {
+      ok: false;
+      raison: "deja_utilise";
+      utiliseLe: Date;
+      etablissementId: string;
+      /** De quoi retrouver la signature posée par ce lien (page `/acces`). */
+      signe: { objetType: string | null; objetId: string | null; partie: string | null; email: string };
+    };
 
 export async function verifierAccessToken(
   tokenClair: string,
@@ -46,7 +53,18 @@ export async function verifierAccessToken(
     token.utiliseLe &&
     estAUsageUnique(token.scope)
   ) {
-    return { ok: false, raison: "deja_utilise", utiliseLe: token.utiliseLe, etablissementId };
+    return {
+      ok: false,
+      raison: "deja_utilise",
+      utiliseLe: token.utiliseLe,
+      etablissementId,
+      signe: {
+        objetType: token.objetType ?? null,
+        objetId: token.objetId ?? null,
+        partie: token.partie ?? null,
+        email: token.emailDestinataire,
+      },
+    };
   }
   return { ok: true, token };
 }

@@ -487,6 +487,24 @@ describe("page d'accès — les états d'un lien inutilisable", () => {
     expect(rendu).not.toContain("Mon entreprise");
   });
 
+  it("lien utilisé, signature retirée depuis : la page ne confirme plus une signature qui ne vaut plus", async () => {
+    const count = vi.fn(async () => 0);
+    prismaMock.signature = { count } as unknown as ReturnType<typeof table>;
+    verifierMock.mockResolvedValue({
+      ok: false,
+      raison: "deja_utilise",
+      utiliseLe: new Date(),
+      etablissementId: "etab-a-moi",
+      signe: { objetType: "plan_prevention", objetId: "pp-moi", partie: "entreprise_exterieure", email: "chef@exterieure.fr" },
+    });
+    const rendu = await rendreLaPage();
+    expect(rendu).toContain("Votre signature a été retirée");
+    expect(rendu).not.toContain("Signature enregistrée le ");
+    expect(count).toHaveBeenCalledWith({
+      where: expect.objectContaining({ etablissementId: "etab-a-moi", objetId: "pp-moi", active: true }),
+    });
+  });
+
   it("une proposition en attente : la signature est en pause, pas en erreur", async () => {
     prismaMock.propositionModificationPlan = { count: vi.fn(async () => 1) } as unknown as ReturnType<typeof table>;
     prismaMock.planPrevention = table([{ ...PLAN_A_MOI, propositions: [{ id: "prop-1" }] }]);

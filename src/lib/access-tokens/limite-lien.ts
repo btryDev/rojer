@@ -11,7 +11,10 @@ import { cleLimite, consommer, LIMITES, messageTropDeTentatives, type Verdict } 
  * que le jeton existe ou non.
  */
 async function limiter(action: "lien-page" | "lien-action"): Promise<Verdict> {
-  const ip = ipPourLimite(await headers()) ?? "inconnue";
+  const ip = ipPourLimite(await headers());
+  // Sans IP lisible, pas de limite par réseau (comme `auth/actions.ts`) :
+  // une clé commune ferait partager un seul compteur à tous les signataires.
+  if (!ip) return { ok: true };
   return consommer([
     {
       cle: cleLimite(action, "ip", ip),

@@ -16,7 +16,9 @@ import {
   OTP_ESSAIS_MAX,
   OTP_LENGTH,
   generateOtp,
+  codesEnService,
   hashOtp,
+  MESSAGE_CODES_HORS_SERVICE,
   otpEstExpire,
   otpExpirationDate,
   renvoiOtpAutorise,
@@ -99,6 +101,7 @@ export async function envoyerCodeSignatureCompte(o: Objet): Promise<EnvoiCodeCom
       message: `Un code est déjà parti il y a moins d'une minute. Patientez ${renvoi.attendreSecondes} seconde${renvoi.attendreSecondes > 1 ? "s" : ""} avant d'en demander un autre.`,
     };
   }
+  if (!codesEnService()) return { ok: false, message: MESSAGE_CODES_HORS_SERVICE };
   const reservation = await reserverEnvoiOtp(email, maintenant);
   if (!reservation.ok) {
     return {
@@ -201,6 +204,7 @@ export async function poserSignatureCompteAvecCode(
   if (otpEstExpire(ligne.otpExpireLe, new Date())) {
     return { ok: false, message: "Ce code a expiré (validité 10 minutes). Demandez-en un nouveau.", codeAReDemander: true };
   }
+  if (!codesEnService()) return { ok: false, message: MESSAGE_CODES_HORS_SERVICE };
   // L'essai se RÉSERVE avant la comparaison (`reserverEssaiOtp`) : une rafale
   // n'éprouve jamais plus de codes que le compteur n'en accorde.
   const reserve = await db.codeSignatureCompte.updateMany({

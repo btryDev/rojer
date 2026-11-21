@@ -25,7 +25,10 @@ function fichiers(dossier: string): string[] {
   });
 }
 
-const ECRITURE = /\bsignature\.(?:create|createMany|createManyAndReturn|upsert)\s*\(|INSERT\s+INTO\s+"?Signature"?\b|creerEnLot\w*\([^)]*["']Signature["']/g;
+// Chaîne sur plusieurs lignes (`signature\n  .create(`), accès par crochets
+// (`db["signature"]`), écriture imbriquée (`signatures: { create … }`), SQL brut.
+const ECRITURE =
+  /\bsignature\s*\.\s*(?:create|createMany|createManyAndReturn|upsert)\s*\(|\[\s*["'`]signature["'`]\s*\]|\bsignatures?\s*:\s*\{\s*(?:create|createMany|connectOrCreate|upsert)\b|INSERT\s+INTO\s+"?Signature"?\b|creerEnLot\w*\([^)]*["']Signature["']/g;
 
 /** Les portes autorisées : fichier → la fonction qui contient la seule pose. */
 const PORTES: Record<string, string> = {
@@ -33,10 +36,12 @@ const PORTES: Record<string, string> = {
   "lib/signatures/code-compte.ts": "poserSignatureCompteAvecCode",
 };
 
-/** La fonction exportée qui englobe une position (la dernière déclarée avant elle). */
+/** La fonction qui englobe une position (la dernière déclarée avant elle). */
 function fonctionEnglobante(source: string, position: number): string | null {
   const avant = source.slice(0, position);
-  const noms = [...avant.matchAll(/^export\s+async\s+function\s+(\w+)/gm)];
+  // Toute fonction déclarée, exportée ou non : un helper placé après une porte
+  // ne prend pas son nom.
+  const noms = [...avant.matchAll(/^(?:export\s+)?(?:async\s+)?function\s+(\w+)/gm)];
   return noms.length ? noms[noms.length - 1][1] : null;
 }
 
@@ -54,5 +59,18 @@ describe("une signature ne se pose que par le lien ou le compte, avec un code", 
         .map(([f, fn]) => `${f}:${fn}`)
         .sort(),
     );
+  });
+
+
+  it("le motif attrape les formes détournées", () => {
+    const formes = [
+      "db.signature\n    .create({",
+      'db["signature"].create({',
+      "db.etablissement.update({ data: { signatures: { create: {",
+      "tx.signature.upsert(",
+      'INSERT INTO "Signature"',
+    ];
+    for (const f of formes) expect(f.match(ECRITURE), f).not.toBeNull();
+    expect("db.signature.updateMany({".match(ECRITURE)).toBeNull();
   });
 });

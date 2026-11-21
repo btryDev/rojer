@@ -24,7 +24,9 @@ import {
 import {
   OTP_ESSAIS_MAX,
   generateOtp,
+  codesEnService,
   hashOtp,
+  MESSAGE_CODES_HORS_SERVICE,
   otpEstExpire,
   otpExpirationDate,
   renvoiOtpAutorise,
@@ -343,6 +345,7 @@ export async function poserSignatureAvecToken(
   // L'essai se RÉSERVE avant que le code soit comparé (`reserverEssaiOtp`) :
   // une rafale de soumissions parallèles n'éprouve jamais plus de codes que
   // le compteur n'en accorde. Celle qui n'obtient pas d'essai ne compare rien.
+  if (!codesEnService()) return { status: "error", message: MESSAGE_CODES_HORS_SERVICE };
   const essai = await reserverEssaiOtp(token.id);
   if (!essai.ok) {
     return {
@@ -566,6 +569,7 @@ export async function renvoyerCodeOtp(
   if (!envoiEnService()) {
     return { status: "error", message: MESSAGE_RENVOI_HORS_SERVICE };
   }
+  if (!codesEnService()) return { status: "error", message: MESSAGE_CODES_HORS_SERVICE };
 
   const maintenant = new Date();
   const renvoi = renvoiOtpAutorise(token.otpExpireLe, maintenant);

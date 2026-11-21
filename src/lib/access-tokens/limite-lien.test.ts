@@ -7,8 +7,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  */
 
 vi.mock("server-only", () => ({}));
-const h = vi.hoisted(() => ({ verdict: { ok: true } as { ok: true } | { ok: false; reessayerDansSecondes: number }, cles: [] as string[] }));
-vi.mock("next/headers", () => ({ headers: async () => new Headers({ "x-rojer-ip-client": "203.0.113.7" }) }));
+const h = vi.hoisted(() => ({
+  verdict: { ok: true } as { ok: true } | { ok: false; reessayerDansSecondes: number },
+  cles: [] as string[],
+  xff: "203.0.113.7" as string | null,
+}));
+vi.mock("next/headers", () => ({
+  headers: async () => new Headers(h.xff ? { "x-forwarded-for": h.xff } : {}),
+}));
 vi.mock("@/lib/securite/limite-debit", async (orig) => ({
   ...(await orig<typeof import("@/lib/securite/limite-debit")>()),
   consommer: vi.fn(async (demandes: { cle: string }[]) => {
@@ -23,6 +29,7 @@ import { LIMITES } from "@/lib/securite/limite-debit";
 beforeEach(() => {
   h.verdict = { ok: true };
   h.cles = [];
+  h.xff = "203.0.113.7";
 });
 
 describe("limite des liens", () => {
@@ -42,5 +49,13 @@ describe("limite des liens", () => {
     h.verdict = { ok: false, reessayerDansSecondes: 120 };
     expect(await refusActionDuLien()).toBe("Trop de tentatives en peu de temps. Par sécurité, réessayez dans 2 minutes.");
     expect(await limiterPageDuLien()).toEqual({ ok: false, reessayerDansSecondes: 120 });
+  });
+
+  it("sans IP lisible, aucune limite : pas de compteur commun à tous les signataires", async () => {
+    h.xff = null;
+    h.verdict = { ok: false, reessayerDansSecondes: 60 };
+    expect((await limiterPageDuLien()).ok).toBe(true);
+    expect(await refusActionDuLien()).toBeNull();
+    expect(h.cles).toEqual([]);
   });
 });

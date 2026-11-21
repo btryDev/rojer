@@ -1,3 +1,4 @@
+import type { ObjetSignable } from "@prisma/client";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { AlertTriangle, Check, ChevronDown } from "lucide-react";
@@ -91,6 +92,16 @@ export default async function AccesParTokenPage({
       case "revoque":
         return etatDuLien({ titre: "Ce lien a été révoqué", phrase: motifLisible(res.motif), contact });
       case "deja_utilise":
+        // Retirée depuis (une proposition acceptée, une correction : ADR-061) ?
+        // Le lien ne confirme alors plus une signature qui ne vaut plus.
+        if (!(await signatureDuLienEnVigueur(res.etablissementId, res.signe))) {
+          return etatDuLien({
+            titre: "Votre signature a été retirée",
+            phrase: `Vous aviez signé le ${formaterDateLongueFr(res.utiliseLe)}. Le document a été modifié depuis : pour le signer de nouveau, il faut un nouveau lien de votre interlocuteur.`,
+            contact,
+            si: "Si vous n'avez pas reçu de nouveau lien",
+          });
+        }
         // La confirmation de la signature, sur le lien lui-même (2026-11-21,
         // ADR-006 amendée) : plus d'accusé public `/signe`.
         return etatDuLien({
@@ -289,6 +300,27 @@ export default async function AccesParTokenPage({
  * l'établissement DU JETON, comme le reste de la page ; `null` au moindre
  * doute (établissement disparu, sans propriétaire).
  */
+/** La signature posée par ce lien est-elle toujours en vigueur ? Dans le doute, oui. */
+async function signatureDuLienEnVigueur(
+  etablissementId: string,
+  signe: { objetType: string | null; objetId: string | null; partie: string | null; email: string } | undefined,
+): Promise<boolean> {
+  if (!signe?.objetType || !signe.objetId) return true;
+  const db = await clientDuProprietaire(etablissementId);
+  if (!db) return true;
+  const n = await db.signature.count({
+    where: {
+      etablissementId,
+      objetType: signe.objetType as ObjetSignable,
+      objetId: signe.objetId,
+      signataireEmail: signe.email,
+      ...(signe.partie ? { partie: signe.partie as PartieSignataire } : {}),
+      active: true,
+    },
+  });
+  return n > 0;
+}
+
 async function entrepriseDuLien(etablissementId: string): Promise<string | null> {
   const db = await clientDuProprietaire(etablissementId);
   if (!db) return null;
