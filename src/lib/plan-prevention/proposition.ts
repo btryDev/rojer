@@ -59,21 +59,27 @@ export const propositionSchema = z.object({
 
 export type Proposition = z.infer<typeof propositionSchema>;
 
+/**
+ * Le plan auquel une proposition se compare. Les champs repris de RiskBoard
+ * (2026-11-21) y sont REQUIS, pas facultatifs : un appelant qui oublierait de
+ * les lire comparerait la proposition à `undefined`, et une proposition qui
+ * ne change rien passerait pour un écart.
+ */
 export type PlanComparable = {
   entrepriseExterieureRaison: string;
   entrepriseExterieureSiret: string | null;
   efChefNom: string;
   efEffectifIntervenant: number;
-  entrepriseExterieureAdresse?: string | null;
-  efChefTelephone?: string | null;
+  entrepriseExterieureAdresse: string | null;
+  efChefTelephone: string | null;
   lignes: {
     id: string;
     risque: string;
     mesureEntrepriseUtilisatrice: string | null;
     mesureEntrepriseExterieure: string | null;
-    famille?: string | null;
-    lieu?: string | null;
-    frequence?: string | null;
+    famille: string | null;
+    lieu: string | null;
+    frequence: string | null;
   }[];
 };
 

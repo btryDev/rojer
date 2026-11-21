@@ -106,9 +106,21 @@ export async function proposerModificationPlan(
           entrepriseExterieureSiret: true,
           efChefNom: true,
           efEffectifIntervenant: true,
+          // Ce que la proposition peut changer (2026-11-21) : lus pour que
+          // « ne change rien » compare au plan réel.
+          entrepriseExterieureAdresse: true,
+          efChefTelephone: true,
           lignes: {
             orderBy: { ordre: "asc" },
-            select: { id: true, risque: true, mesureEntrepriseUtilisatrice: true, mesureEntrepriseExterieure: true },
+            select: {
+              id: true,
+              risque: true,
+              mesureEntrepriseUtilisatrice: true,
+              mesureEntrepriseExterieure: true,
+              famille: true,
+              lieu: true,
+              frequence: true,
+            },
           },
           etablissement: { select: { entreprise: { select: { compteId: true } } } },
         },
