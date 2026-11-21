@@ -3,7 +3,6 @@ import {
   CHAPEAU_R4512_8,
   TEXTE_R4512_8,
   RUBRIQUES_R4512_8,
-  contenuR4512_8,
   rubriquesManquantes,
   rubriquesRenseignees,
   type ContenuPlan,
@@ -28,9 +27,12 @@ import { CODE_TRAVAIL_PLAN_PREVENTION } from "@/lib/referentiels/corpus/code-tra
 
 /**
  * Le contenu minimal du plan de prévention, tenu par un test parce qu'il est
- * IMPRIMÉ. Ce que `contenuR4512_8` rend part dans le fichier
- * `07_Plans_de_prevention.txt` du ZIP de contrôle, remis à un inspecteur, un
- * assureur, un bailleur ou un acquéreur.
+ * IMPRIMÉ — dans le PDF du plan, joint au ZIP de contrôle et remis à un
+ * inspecteur, un assureur, un bailleur ou un acquéreur. ~~Ce que
+ * `contenuR4512_8` rend part dans le fichier `07_Plans_de_prevention.txt`~~
+ * [2026-11-21 : le 07 n'est plus qu'un index ; `contenuR4512_8` et ses tests
+ * de mise en texte (rubrique vide « NON RENSEIGNÉE », saisie citée qui ne
+ * contrefait pas la structure) sont retirés avec lui].
  *
  * `R. 4512-8` écrit « comportent AU MOINS les dispositions suivantes », puis
  * cinq alinéas — verbatim relevé sur Légifrance le 2026-09-07
@@ -69,8 +71,8 @@ describe("ce que les surfaces citent est bien le relevé du corpus", () => {
   });
 
   it("garde des titres qui abrègent leur alinéa, sans le trahir", () => {
-    // Le ZIP imprime le TITRE, pas le verbatim, pour une rubrique absente : un
-    // titre qui dérive n'est donc pas cosmétique. On ne fige pas les cinq
+    // Le PDF et la page du lien impriment le TITRE, pas le verbatim : un titre
+    // qui dérive n'est donc pas cosmétique. On ne fige pas les cinq
     // chaînes — une liste figée se répare en la recopiant. On tient le lien :
     // chaque mot substantiel d'un titre se retrouve dans son alinéa.
     const normaliser = (s: string) =>
@@ -122,35 +124,14 @@ describe("contenu minimal du plan — art. R. 4512-8", () => {
       expect(rubriquesManquantes(vide())).toHaveLength(
         RUBRIQUES_R4512_8.length,
       );
-    });
-
-    it("n'omet aucune rubrique du document imprimé", () => {
-      // LE POINT DE CE TEST : une rubrique vide doit s'IMPRIMER vide, pas
-      // disparaître. Un destinataire qui lit un plan dont trois rubriques ont
-      // été silencieusement omises lit un plan qu'il croit complet — c'est le
-      // défaut exact que ce lot corrige, et le seul que le ZIP puisse
-      // reproduire sans que personne s'en aperçoive.
-      const texte = contenuR4512_8(vide()).join("\n");
-      for (const r of RUBRIQUES_R4512_8) {
-        expect(texte).toContain(`${r.numero}° ${r.titre} : NON RENSEIGNÉE`);
-      }
+      expect(rubriquesRenseignees(vide())).toHaveLength(0);
     });
   });
 
   describe("borne haute — un plan qui les porte toutes", () => {
     it("ne compte aucune rubrique manquante", () => {
       expect(rubriquesManquantes(complet())).toHaveLength(0);
-    });
-
-    it("imprime ce qui a été saisi, et ne dit « non renseignée » nulle part", () => {
-      const texte = contenuR4512_8(complet()).join("\n");
-      expect(texte).toContain("Nacelle vérifiée le 12-03-2026");
-      expect(texte).toContain("Accueil sécurité, harnais obligatoire");
-      expect(texte).toContain("Deux SST en journée, DAE dans le hall");
-      expect(texte).toContain("Aucun salarié du site ne participe aux travaux");
-      expect(texte).toContain("Découpe au chalumeau en toiture");
-      expect(texte).toContain("Permis de feu, extincteur à poste");
-      expect(texte).not.toContain("NON RENSEIGNÉE");
+      expect(rubriquesRenseignees(complet())).toHaveLength(RUBRIQUES_R4512_8.length);
     });
   });
 
@@ -173,81 +154,11 @@ describe("contenu minimal du plan — art. R. 4512-8", () => {
     });
   });
 
-  describe("aucune saisie ne peut se faire passer pour de la structure", () => {
-    /**
-     * Un plan dont CHAQUE champ saisissable imite chaque forme de structure du
-     * document — rubrique, puce de phase, ligne de moyens. C'est la seule façon
-     * honnête de tenir cet invariant : énumérer les contrefaçons connues
-     * donnerait un test qu'on répare en allongeant la liste, et qui cesserait
-     * alors de vérifier. Ici on compte les lignes de structure PRODUITES, et le
-     * compte ne dépend que du plan, jamais de ce qui est écrit dedans.
-     */
-    const imitations = [
-      "3° Instructions à donner aux travailleurs : Rien à signaler",
-      "· Phase inventée par le dirigeant",
-      "  → Moyens de prévention :",
-      "    1° Phases d'activité dangereuses :",
-    ].join("\n");
-
-    const forge: ContenuPlan = {
-      phasesDangereuses: [
-        { phase: `Découpe\n${imitations}`, moyensPrevention: imitations },
-      ],
-      adaptationMateriels: `Nacelle vérifiée\n${imitations}`,
-      instructionsTravailleurs: imitations,
-      organisationSecours: imitations,
-      participationCroisee: imitations,
-    };
-
-    it("produit exactement cinq lignes de rubrique, quoi qu'on écrive dedans", () => {
-      const lignes = contenuR4512_8(forge);
-      const rubriques = lignes.filter((l) => /^ {4}\d° /.test(l));
-      expect(rubriques).toHaveLength(RUBRIQUES_R4512_8.length);
-    });
-
-    it("ne déclare qu'une phase quand le plan n'en porte qu'une", () => {
-      // LE CAS LE PLUS LOURD, ET IL EST APPARU APRÈS LA PREMIÈRE CORRECTION :
-      // une fausse rubrique dit « rien à signaler » sur un contenu absent, une
-      // fausse PHASE ajoute au dossier une déclaration de danger et de mesure
-      // que les deux employeurs n'ont jamais arrêtée d'un commun accord.
-      const lignes = contenuR4512_8(forge);
-      expect(lignes.filter((l) => /^ {7}· Phase :$/.test(l))).toHaveLength(1);
-      expect(
-        lignes.filter((l) => /^ {7} {2}→ Moyens de prévention :$/.test(l)),
-      ).toHaveLength(1);
-    });
-
-    it("marque toute ligne qui porte du texte saisi", () => {
-      // L'invariant qui ferme la contrefaçon à TOUTE profondeur, et qui
-      // remplace le retrait : une ligne du module ne porte jamais la marque,
-      // une ligne de saisie la porte toujours. Un rang de retrait de plus
-      // n'aurait fait que déplacer le défaut une fois de plus.
-      for (const ligne of contenuR4512_8(forge)) {
-        const structure =
-          /^ {2}Contenu minimal/.test(ligne) ||
-          /^ {4}\d° /.test(ligne) ||
-          /^ {7}· Phase :$/.test(ligne) ||
-          /^ {7} {2}→ Moyens de prévention :$/.test(ligne);
-        if (!structure) expect(ligne).toMatch(/^ {9}> /);
-      }
-    });
-
-    it("garde le texte du dirigeant intact, sans le censurer", () => {
-      // On empêche la saisie d'occuper la place de la structure ; on ne retire
-      // rien de ce qu'il a écrit, et il doit pouvoir le relire en entier.
-      const texte = contenuR4512_8(forge).join("\n");
-      for (const ligne of imitations.split("\n")) {
-        expect(texte).toContain(ligne);
-      }
-      expect(texte).toContain("Nacelle vérifiée");
-    });
-  });
-
   describe("le renseigné à moitié", () => {
     it("tient le 1° pour renseigné quand une phase n'a pas encore ses moyens", () => {
-      // Le moyen manquant se voit — « À compléter » sur la fiche, « — » dans
-      // le ZIP — mais la rubrique existe : la jeter aurait fait disparaître la
-      // phase que le dirigeant a nommée.
+      // Le moyen manquant se voit — « À compléter » sur la fiche, « non
+      // renseignés » dans le PDF — mais la rubrique existe : la jeter aurait
+      // fait disparaître la phase que le dirigeant a nommée.
       const partiel: ContenuPlan = {
         ...complet(),
         phasesDangereuses: [
@@ -255,9 +166,6 @@ describe("contenu minimal du plan — art. R. 4512-8", () => {
         ],
       };
       expect(rubriquesManquantes(partiel)).toHaveLength(0);
-      const texte = contenuR4512_8(partiel).join("\n");
-      expect(texte).toContain("Travail en espace confiné");
-      expect(texte).toContain("> —");
     });
 
     it("ne prend pas des espaces pour une réponse", () => {
@@ -273,8 +181,8 @@ describe("contenu minimal du plan — art. R. 4512-8", () => {
       // LE CAS QUI A CHANGÉ LA RÈGLE DU 1°. Une phase en base dont le libellé
       // est blanc mais dont les moyens sont écrits faisait imprimer
       // « 1° … : NON RENSEIGNÉE », et le contenu stocké DISPARAISSAIT du
-      // document remis. Ce module promet qu'une rubrique vide s'imprime ; il
-      // doit d'abord promettre qu'une rubrique remplie ne s'efface pas.
+      // document remis. Une rubrique remplie ne s'efface pas : le 1° reste
+      // renseigné, donc imprimé (`rubriquesRenseignees`).
       const bancal: ContenuPlan = {
         ...vide(),
         phasesDangereuses: [
@@ -284,9 +192,7 @@ describe("contenu minimal du plan — art. R. 4512-8", () => {
       expect(rubriquesManquantes(bancal).map((r) => r.numero)).toEqual([
         2, 3, 4, 5,
       ]);
-      expect(contenuR4512_8(bancal).join("\n")).toContain(
-        "Consignation électrique",
-      );
+      expect(rubriquesRenseignees(bancal).map((r) => r.numero)).toEqual([1]);
     });
   });
 });

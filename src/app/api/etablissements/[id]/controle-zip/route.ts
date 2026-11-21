@@ -36,15 +36,10 @@ import { raisonEchecRendu, rendrePdf } from "@/lib/pdf/rendre";
 import { construirePlanPreventionData } from "@/lib/pdf/builder-plan-prevention";
 import { nomFichierPlanPrevention } from "@/lib/pdf/PlanPreventionDocument";
 import { slugifyFilename } from "@/lib/pdf/styles";
-import { contenuR4512_8 } from "@/lib/plan-prevention/contenu-r4512-8";
-import { complementsRemplis, precisionsLigne } from "@/lib/plan-prevention/complements";
 import { etatAffichePlan } from "@/lib/plan-prevention/etats";
 import { lienOuSignatureParPlan } from "@/lib/plan-prevention/queries";
-import { annoncesZip, ligneHeuresRevisees } from "@/lib/plan-prevention/annonces-plan";
-import {
-  ligneInspectionZip,
-  lignesR4512_12Zip,
-} from "@/lib/plan-prevention/annonces-zip";
+import { annoncesZip } from "@/lib/plan-prevention/annonces-plan";
+import { lignesR4512_12Zip } from "@/lib/plan-prevention/annonces-zip";
 import { nomDossierArchive, nomEntreeArchive } from "@/lib/storage/noms";
 import {
   contenuDiffere,
@@ -595,79 +590,13 @@ async function construireArchive(
   const plansList = await lire(PIECES_ZIP.plansPrevention, [], () =>
     plansPreventionDuDossier(db, id, maintenant),
   );
-  if (plansList.length > 0) {
-    // Le statut dans les mots de la fiche (2026-11-19, cahier de reprise
-    // § 1.3) : « Brouillon » tant que rien n'est parti, « Signé » et non le
-    // statut brut de la base. Au mieux : sans la lecture, le statut de la base.
-    const avecLien = await lienOuSignatureParPlan(db, id, plansList.map((p) => p.id)).catch(
-      () => new Set(plansList.map((p) => p.id)),
-    );
-    const txt = [
-      `PLANS DE PRÉVENTION — 12 derniers mois (${plansList.length})`,
-      `Art. R. 4512-6 à R. 4512-12 du code du travail.`,
-      // R. 4512-9 et R. 4512-11 valent pour tout plan, et ce fichier n'en
-      // porte aucune pièce : le lecteur doit l'apprendre ici plutôt que de
-      // conclure, d'un silence, que l'obligation n'existe pas.
-      ...annoncesZip.enTete(),
-      "",
-      "────────────────────────────────────────────────────────────",
-      ...plansList.flatMap((p) => [
-        `PP-${String(p.numero).padStart(3, "0")} · ${etatAffichePlan(p.statut, avecLien.has(p.id)).mot.toUpperCase()}`,
-        `  Entreprise extérieure : ${p.entrepriseExterieureRaison}`,
-        `  Chef EE : ${p.efChefNom} (${p.efChefEmail}${p.efChefTelephone ? `, ${p.efChefTelephone}` : ""})`,
-        // Repris de RiskBoard (2026-11-21) : seulement ce qui est rempli.
-        ...(p.entrepriseExterieureAdresse ? [`  Adresse EE : ${p.entrepriseExterieureAdresse}`] : []),
-        `  Effectif EE : ${p.efEffectifIntervenant}`,
-        `  Chef EU : ${p.euChefNom}${p.euChefFonction ? ` (${p.euChefFonction})` : ""}${p.euChefTelephone ? ` · ${p.euChefTelephone}` : ""}`,
-        `  Période : ${formaterDateFr(p.dateDebut)} → ${formaterDateFr(p.dateFin)}${p.dureeHeuresEstimee ? ` · ${p.dureeHeuresEstimee} h` : ""}`,
-        // R. 4512-7, 1°, seconde phrase (2026-10-12) : la révision notée en
-        // cours de chantier, dans les mots de la fiche.
-        ...(p.heuresPrevisiblesRevisees != null && p.heuresPrevisiblesReviseesLe
-          ? [
-              `  ${ligneHeuresRevisees(
-                p.heuresPrevisiblesRevisees,
-                formaterDateFr(p.heuresPrevisiblesReviseesLe),
-              )}`,
-            ]
-          : []),
-        `  Lieux : ${p.lieux}`,
-        `  Travaux dangereux : ${p.travauxDangereux ? "OUI" : "non"}`,
-        // « date non renseignée », pas « NON RÉALISÉE » : Rojer ne tient
-        // que la date (`ligneInspectionZip`).
-        ligneInspectionZip(p.inspectionDate, formaterDateFr),
-        `  Risques d'interférence identifiés (art. R. 4512-6, ${p.lignes.length}) :`,
-        ...p.lignes.map(
-          (l, i) =>
-            `    ${i + 1}. ${l.risque}\n` +
-            precisionsLigne(l).map((x) => `       ${x}\n`).join("") +
-            `       → EU : ${l.mesureEntrepriseUtilisatrice ?? "—"}\n` +
-            `       → EE : ${l.mesureEntrepriseExterieure ?? "—"}`,
-        ),
-        // LE CONTENU MINIMAL, IMPRIMÉ RUBRIQUE PAR RUBRIQUE — Y COMPRIS CELLES
-        // QUI MANQUENT. Ce fichier porte en en-tête « Art. R. 4512-6 à
-        // R. 4512-12 » et n'imprimait rien de R. 4512-8 : il citait l'article
-        // dont il ne servait pas le contenu. Une rubrique vide s'imprime
-        // « NON RENSEIGNÉE » plutôt que de disparaître — le destinataire de ce
-        // ZIP est un inspecteur, un assureur ou un acquéreur, et une omission
-        // silencieuse lui ferait lire un plan complet.
-        ...contenuR4512_8(p),
-        // Les compléments repris de RiskBoard, hors du minimum de R. 4512-8 :
-        // remplis seulement, rien n'est signalé s'ils manquent.
-        ...complementsRemplis(p).map((x) => `  ${x.libelle} : ${x.texte}`),
-        // R. 4512-12, sous sa propre condition — écrit obligatoire au sens de
-        // R. 4512-7 — ou quand la durée manque et que Rojer ne peut pas dire
-        // qu'il ne l'est pas. Le même diagnostic que la fiche, appelé dans le
-        // module : la route passe le plan, elle ne décide rien.
-        ...lignesR4512_12Zip(p, formaterDateFr),
-        "",
-      ]),
-    ].join("\n");
-    zip.file(PIECES_ZIP.plansPrevention, txt);
-  }
   // Le PDF de chaque plan du 07, signatures comprises (2026-11-19, ADR-061
   // § 7) : rendu ici, depuis les données, comme sur la fiche. Un rendu en
-  // échec prive son seul plan, et le README le compte.
+  // échec prive son seul plan, et le README le compte. Rendus AVANT l'index :
+  // l'index nomme le fichier joint, ou dit qu'il manque.
   const plansPdf = { rendus: 0, echecs: 0 };
+  // Un objet, pas une `Map` : la garde des lectures du stockage (`branchements.test.ts`) compte chaque lecture par clé.
+  const pdfDuPlan: Record<string, string> = {};
   for (const p of plansList) {
     try {
       const data = await construirePlanPreventionData(db, id, p.id, maintenant);
@@ -675,11 +604,51 @@ async function construireArchive(
       const buf = await rendrePdf({ type: "plan-prevention", props: { data } }, RENDU_DU_ZIP);
       const nom = `${PIECES_ZIP.plansPreventionPdf}${nomFichierPlanPrevention(data.numero, data.etablissement)}`;
       zip.file(nom, new Uint8Array(buf));
+      pdfDuPlan[p.id] = nom;
       plansPdf.rendus++;
     } catch (e) {
       plansPdf.echecs++;
       if (!raisonEchecRendu(e)) console.error("controle-zip : PDF d'un plan de prévention non inclus", e);
     }
+  }
+  if (plansList.length > 0) {
+    // Le statut dans les mots de la fiche (2026-11-19, cahier de reprise
+    // § 1.3) : « Brouillon » tant que rien n'est parti, « Signé » et non le
+    // statut brut de la base. Au mieux : sans la lecture, le statut de la base.
+    const avecLien = await lienOuSignatureParPlan(db, id, plansList.map((p) => p.id)).catch(
+      () => new Set(plansList.map((p) => p.id)),
+    );
+    // UN INDEX, PAS UNE COPIE (2026-11-21, décision de la propriétaire : « il
+    // reprend le document existant »). ~~Le contenu du plan recopié ici —
+    // parties, risques, rubriques de R. 4512-8 (« NON RENSEIGNÉE »),
+    // compléments, inspection commune, heures révisées~~ : le PDF joint le
+    // porte. Restent, par plan, ce qui le désigne et ce que le PDF ne dit pas :
+    // R. 4512-12. ~~« Art. R. 4512-6 à R. 4512-12 du code du travail. »~~
+    // (retiré le même jour).
+    const txt = [
+      `PLANS DE PRÉVENTION — 12 derniers mois (${plansList.length})`,
+      `Chaque plan est dans son PDF, signatures comprises (${PIECES_ZIP.plansPreventionPdf}).`,
+      // R. 4512-9 et R. 4512-11 valent pour tout plan, et ce ZIP n'en porte
+      // aucune pièce : le lecteur doit l'apprendre ici plutôt que de
+      // conclure, d'un silence, que l'obligation n'existe pas.
+      ...annoncesZip.enTete(),
+      "",
+      "────────────────────────────────────────────────────────────",
+      ...plansList.flatMap((p) => [
+        `PP-${String(p.numero).padStart(3, "0")} · ${etatAffichePlan(p.statut, avecLien.has(p.id)).mot.toUpperCase()}`,
+        `  Entreprise extérieure : ${p.entrepriseExterieureRaison}`,
+        `  Période : ${formaterDateFr(p.dateDebut)} → ${formaterDateFr(p.dateFin)}`,
+        `  PDF : ${pdfDuPlan[p.id] ?? "non inclus (la génération a échoué)"}`,
+        // R. 4512-12, sous sa propre condition — écrit obligatoire au sens de
+        // R. 4512-7 — ou quand la durée manque et que Rojer ne peut pas dire
+        // qu'il ne l'est pas. Le PDF n'en dit rien : il reste ici. Le même
+        // diagnostic que la fiche, appelé dans le module : la route passe le
+        // plan, elle ne décide rien.
+        ...lignesR4512_12Zip(p, formaterDateFr),
+        "",
+      ]),
+    ].join("\n");
+    zip.file(PIECES_ZIP.plansPrevention, txt);
   }
 
   // ── 08 Carnet sanitaire (résumé) ─────────────────────────────────────

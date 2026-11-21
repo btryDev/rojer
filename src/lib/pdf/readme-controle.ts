@@ -237,7 +237,8 @@ export function genererReadme(args: {
         : "Non applicable (l'établissement n'est pas un ERP)",
     ),
     ligne(PIECES_ZIP.permisFeu, `${args.nbPermisFeu} permis sur 12 mois (INRS ED 6030)`, "Aucun permis émis sur 12 mois"),
-    ligne(PIECES_ZIP.plansPrevention, `${args.nbPlansPrevention} plan(s) (art. R. 4512-6 CT)`, "Aucun plan actif"),
+    // [2026-11-21] Le 07 est un index : chaque plan se lit dans son PDF, ligne suivante.
+    ligne(PIECES_ZIP.plansPrevention, `Index de ${args.nbPlansPrevention} plan(s), qui renvoie aux PDF`, "Aucun plan actif"),
     // Le PDF de chaque plan : ce qui est dans le ZIP, et ce dont le rendu a
     // échoué — jamais un nombre de plans présenté comme un nombre de PDF.
     ...(args.plansPreventionPdf && args.plansPreventionPdf.rendus + args.plansPreventionPdf.echecs > 0

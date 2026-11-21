@@ -182,7 +182,12 @@ export async function permisFeuDuDossier(db: Db, etablissementId: string, mainte
   });
 }
 
-/** Les plans de prévention des douze derniers mois, lignes et phases comprises. */
+/**
+ * Les plans de prévention des douze derniers mois. ~~Lignes et phases
+ * comprises~~ [2026-11-21 : le 07 du ZIP est un index, le contenu est dans le
+ * PDF de chaque plan (`construirePlanPreventionData`) ; ni lignes ni phases
+ * ne se lisent plus ici].
+ */
 export async function plansPreventionDuDossier(
   db: Db,
   etablissementId: string,
@@ -190,10 +195,6 @@ export async function plansPreventionDuDossier(
 ) {
   return db.planPrevention.findMany({
     where: { ...filtreActesDuDossier(etablissementId, maintenant) },
-    include: {
-      lignes: { orderBy: { ordre: "asc" } },
-      phasesDangereuses: { orderBy: { ordre: "asc" } },
-    },
     orderBy: { numero: "desc" },
   });
 }
