@@ -190,87 +190,109 @@ export default async function AccesParTokenPage({
 
     return (
       <main className="min-h-screen bg-[color:var(--board-canvas)] pb-12">
-        <header className="bg-[color:var(--board-card)]">
-          <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 pt-5 pb-2 sm:px-6">
-            {pastilleRojer()}
-            <span className={CLASSE_MONO}>Signature demandée</span>
-          </div>
-          <div className="mx-auto max-w-3xl px-4 pt-3 pb-7 sm:px-6">
-            <p className={CLASSE_MONO}>De la part de {demandeur}</p>
-            <h1 className="m-0 mt-2 font-display text-[clamp(30px,4vw,40px)] leading-[1.02] font-semibold tracking-[-0.035em] text-[color:var(--board-ink)]">
-              {titreDePage(contenu)}
-            </h1>
-            <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-ink)]">
-              Relisez-le ; signez-le s&apos;il vous convient
-              {proposition ? ", ou proposez une modification" : ""}.
-            </p>
-          </div>
-        </header>
-
-        <div className="mx-auto mt-4 flex max-w-3xl flex-col gap-4 px-3 sm:px-6">
-          <section className={CLASSE_CARTE}>
-            <div className="flex items-center gap-4">
-              {tuileDate(contenu)}
-              <div className="min-w-0">
-                <p className={`${CLASSE_MONO} text-[color:var(--board-slate-ink)]`}>
-                  {[reference(contenu), etablissement.raisonDisplay].filter(Boolean).join(" · ")}
-                </p>
-                <h2 className="m-0 mt-1 font-display text-[21px] leading-[1.15] font-semibold tracking-[-0.02em] text-[color:var(--board-ink)]">
-                  {libelleObjet.titre}
-                </h2>
+        {/* La proposition est un écran à part (`SignerOuProposer`, 2026-11-21). */}
+        <SignerOuProposer
+          classeConteneur="mx-auto mt-4 flex max-w-3xl flex-col gap-4 px-3 sm:px-6"
+          classeCarte={CLASSE_CARTE}
+          entete={
+            <header className="bg-[color:var(--board-card)]">
+              <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 pt-5 pb-2 sm:px-6">
+                {pastilleRojer()}
+                <span className={CLASSE_MONO}>Signature demandée</span>
               </div>
-            </div>
-            {/* ~~L'encadré « Ce que vous signez » (WhyCard)~~ : devenu le
-                chapeau de la carte (cahier § 3.1, 2026-11-19). */}
-            <p className="m-0 mt-4 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-              {libelleObjet.description}
-            </p>
-            <div className="mt-3">
-              <LegalBadge
-                libelle="Textes"
-                reference="Textes : art. 1366 et 1367 du Code civil · règlement (UE) n° 910/2014"
-                extrait="L'écrit électronique a la même force probante que l'écrit sur support papier, sous réserve que puisse être dûment identifiée la personne dont il émane et qu'il soit établi et conservé dans des conditions de nature à en garantir l'intégrité."
-              >
-                Votre signature est posée avec une preuve d&apos;intégrité
-                (empreinte SHA-256 du document) et un horodatage serveur ;
-                l&apos;empreinte figure sur le PDF du document signé.
-              </LegalBadge>
-            </div>
+              <div className="mx-auto max-w-3xl px-4 pt-3 pb-7 sm:px-6">
+                <p className={CLASSE_MONO}>De la part de {demandeur}</p>
+                <h1 className="m-0 mt-2 font-display text-[clamp(30px,4vw,40px)] leading-[1.02] font-semibold tracking-[-0.035em] text-[color:var(--board-ink)]">
+                  {titreDePage(contenu)}
+                </h1>
+                <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-ink)]">
+                  Relisez-le ; signez-le s&apos;il vous convient
+                  {proposition ? ", ou proposez une modification" : ""}.
+                </p>
+              </div>
+            </header>
+          }
+          enteteProposition={
+            <header className="bg-[color:var(--board-card)]">
+              <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 pt-5 pb-2 sm:px-6">
+                {pastilleRojer()}
+                <span className={CLASSE_MONO}>Proposition de modifications</span>
+              </div>
+              <div className="mx-auto max-w-3xl px-4 pt-3 pb-7 sm:px-6">
+                <p className={CLASSE_MONO}>De la part de {demandeur}</p>
+                <h1 className="m-0 mt-2 font-display text-[clamp(30px,4vw,40px)] leading-[1.02] font-semibold tracking-[-0.035em] text-[color:var(--board-ink)]">
+                  Proposer des modifications
+                </h1>
+                <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-ink)]">
+                  {titreDePage(contenu)}. Modifiez ce qui ne convient pas ; {demandeur} accepte, corrige ou refuse votre proposition.
+                </p>
+              </div>
+            </header>
+          }
+          document={
+            <>
+              <section className={CLASSE_CARTE}>
+                <div className="flex items-center gap-4">
+                  {tuileDate(contenu)}
+                  <div className="min-w-0">
+                    <p className={`${CLASSE_MONO} text-[color:var(--board-slate-ink)]`}>
+                      {[reference(contenu), etablissement.raisonDisplay].filter(Boolean).join(" · ")}
+                    </p>
+                    <h2 className="m-0 mt-1 font-display text-[21px] leading-[1.15] font-semibold tracking-[-0.02em] text-[color:var(--board-ink)]">
+                      {libelleObjet.titre}
+                    </h2>
+                  </div>
+                </div>
+                {/* ~~L'encadré « Ce que vous signez » (WhyCard)~~ : devenu le
+                    chapeau de la carte (cahier § 3.1, 2026-11-19). */}
+                <p className="m-0 mt-4 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+                  {libelleObjet.description}
+                </p>
+                <div className="mt-3">
+                  <LegalBadge
+                    libelle="Textes"
+                    reference="Textes : art. 1366 et 1367 du Code civil · règlement (UE) n° 910/2014"
+                    extrait="L'écrit électronique a la même force probante que l'écrit sur support papier, sous réserve que puisse être dûment identifiée la personne dont il émane et qu'il soit établi et conservé dans des conditions de nature à en garantir l'intégrité."
+                  >
+                    Votre signature est posée avec une preuve d&apos;intégrité
+                    (empreinte SHA-256 du document) et un horodatage serveur ;
+                    l&apos;empreinte figure sur le PDF du document signé.
+                  </LegalBadge>
+                </div>
 
-            {contenu?.type === "plan_prevention" && faitsPlan(contenu, demandeur, partie)}
-            {contenu?.type === "permis_feu" && faitsPermis(contenu, partie)}
-          </section>
+                {contenu?.type === "plan_prevention" && faitsPlan(contenu, demandeur, partie)}
+                {contenu?.type === "permis_feu" && faitsPermis(contenu, partie)}
+              </section>
 
-          {contenu?.type === "plan_prevention" && sectionsPlan(contenu)}
-          {contenu?.type === "permis_feu" && sectionsPermis(contenu)}
-
-          <section className={CLASSE_CARTE} aria-label="Signer">
-            <p className={`${CLASSE_MONO} text-[color:var(--board-slate-ink)]`}>Action requise</p>
-            <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.6] text-[color:var(--board-ink)]">
-              {engagee ? (
-                <>
-                  Vous engagez <strong>{engagee}</strong>.{" "}
-                </>
-              ) : null}
-              Signez électroniquement si le document vous convient — le code de confirmation
-              part à <strong>{t.emailDestinataire}</strong>
-              {proposition ? " —, ou proposez des modifications." : "."}
-            </p>
-            <div className="mt-5">
-              <SignerOuProposer
-                signature={{
-                  token,
-                  destinataire: { email: t.emailDestinataire, nom: t.nomDestinataire },
-                  expireLe: t.expireLe,
-                  codeDejaDemande: t.otpHash !== null,
-                  essaisRestants: t.otpEssaisRestants,
-                  renvoiPossibleLe: renvoiOtpPossibleLe(t.otpExpireLe),
-                }}
-                proposition={proposition}
-              />
-            </div>
-          </section>
-        </div>
+              {contenu?.type === "plan_prevention" && sectionsPlan(contenu)}
+              {contenu?.type === "permis_feu" && sectionsPermis(contenu)}
+            </>
+          }
+          chapeauAction={
+            <>
+                <p className={`${CLASSE_MONO} text-[color:var(--board-slate-ink)]`}>Action requise</p>
+                <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.6] text-[color:var(--board-ink)]">
+                  {engagee ? (
+                    <>
+                      Vous engagez <strong>{engagee}</strong>.{" "}
+                    </>
+                  ) : null}
+                  Signez électroniquement si le document vous convient — le code de confirmation
+                  part à <strong>{t.emailDestinataire}</strong>
+                  {proposition ? " —, ou proposez des modifications." : "."}
+                </p>
+            </>
+          }
+          signature={{
+            token,
+            destinataire: { email: t.emailDestinataire, nom: t.nomDestinataire },
+            expireLe: t.expireLe,
+            codeDejaDemande: t.otpHash !== null,
+            essaisRestants: t.otpEssaisRestants,
+            renvoiPossibleLe: renvoiOtpPossibleLe(t.otpExpireLe),
+          }}
+          proposition={proposition}
+        />
       </main>
     );
   }
