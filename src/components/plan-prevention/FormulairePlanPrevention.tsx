@@ -50,6 +50,7 @@ import {
   citeR4512_12,
 } from "@/lib/plan-prevention/annonces-plan";
 import { FAMILLES_RISQUE, libelleFamille } from "@/lib/plan-prevention/familles-risque";
+import { basculerFamille, ligneVide, type LigneState } from "./lignes-risque";
 import { LIBELLES_COMPLEMENTS } from "@/lib/plan-prevention/complements";
 
 type PrestataireLite = {
@@ -80,35 +81,7 @@ type PrestataireLite = {
  * le même écran, et laisser les deux se comporter différemment aurait fait de
  * la correction une bizarrerie plutôt qu'une règle.
  */
-type LigneState = {
-  cle: string;
-  risque: string;
-  mesureEntrepriseUtilisatrice: string;
-  mesureEntrepriseExterieure: string;
-  /** La famille cochée (`familles-risque.ts`) ; vide : une ligne libre. */
-  famille: string;
-  lieu: string;
-  frequence: string;
-};
-
-const ligneVide = (cle: string, famille = "", risque = ""): LigneState => ({
-  cle,
-  risque,
-  mesureEntrepriseUtilisatrice: "",
-  mesureEntrepriseExterieure: "",
-  famille,
-  lieu: "",
-  frequence: "",
-});
-
-/** Une ligne que personne n'a touchée : la remplacer ne perd rien. */
-const estVierge = (l: LigneState) =>
-  !l.famille &&
-  !l.risque.trim() &&
-  !l.mesureEntrepriseUtilisatrice.trim() &&
-  !l.mesureEntrepriseExterieure.trim() &&
-  !l.lieu.trim() &&
-  !l.frequence.trim();
+// Les lignes de risque et les familles de RiskBoard : `lignes-risque.ts`.
 
 type PhaseState = { cle: string; phase: string; moyensPrevention: string };
 
@@ -287,21 +260,8 @@ export function FormulairePlanPrevention({
     setLignes((l) => [...l, ligneVide(nouvelleCle())]);
   }
 
-  /**
-   * Cocher une famille de RiskBoard (2026-11-21) ajoute sa ligne, le risque
-   * prérempli par le libellé ; la décocher la retire. La ligne vierge du
-   * premier affichage est remplacée plutôt que laissée vide au-dessus.
-   */
-  function basculerFamille(code: string) {
-    setLignes((l) => {
-      if (l.some((x) => x.famille === code)) {
-        const reste = l.filter((x) => x.famille !== code);
-        return reste.length > 0 ? reste : [ligneVide(nouvelleCle())];
-      }
-      const ajout = ligneVide(nouvelleCle(), code, libelleFamille(code));
-      return [...l.filter((x) => !estVierge(x)), ajout];
-    });
-  }
+  // Cocher, décocher une famille de RiskBoard : la règle est dans `lignes-risque.ts`.
+  const cocherFamille = (code: string) => setLignes((l) => basculerFamille(l, code, nouvelleCle));
 
   function retirerLigne(cle: string) {
     setLignes((l) => (l.length === 1 ? l : l.filter((x) => x.cle !== cle)));
@@ -842,7 +802,7 @@ export function FormulairePlanPrevention({
                       key={f.code}
                       type="button"
                       aria-pressed={cochee}
-                      onClick={() => basculerFamille(f.code)}
+                      onClick={() => cocherFamille(f.code)}
                       className={`${PILULE} ${cochee ? PILULE_RETENUE : PILULE_REPOS}`}
                     >
                       {cochee && <Check className="size-3.5" strokeWidth={3} aria-hidden />}
