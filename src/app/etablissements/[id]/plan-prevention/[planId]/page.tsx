@@ -24,6 +24,7 @@ import {
   type EtatPartie,
 } from "@/lib/plan-prevention/fiche-signatures";
 import { diagnostiquerPlan } from "@/lib/plan-prevention/schema";
+import { complementsRemplis, LIBELLES_COMPLEMENTS, precisionsLigne } from "@/lib/plan-prevention/complements";
 import {
   CHAPEAU_R4512_8,
   RUBRIQUES_R4512_8,
@@ -159,6 +160,11 @@ export default async function PlanPreventionDetailPage({
   // Le calcul vit dans `contenu-r4512-8.ts` : la fiche et le ZIP de contrôle
   // doivent dire la même chose du même plan.
   const manquantes = rubriquesManquantes(plan);
+  // Les compléments repris de RiskBoard, hors horaires et CSE, dits à côté de
+  // la période et de l'inspection.
+  const complementsAutres = complementsRemplis(plan).filter(
+    (x) => x.cle !== "horaires" && x.cle !== "cseAssocie",
+  );
   const texteRubrique: Record<number, string | null> = {
     2: plan.adaptationMateriels,
     3: plan.instructionsTravailleurs,
@@ -354,6 +360,13 @@ export default async function PlanPreventionDetailPage({
                     <div>
                       <p className={ETIQUETTE}>Risque {i + 1}</p>
                       <p className="m-0 mt-0.5 whitespace-pre-wrap font-medium">{l.risque}</p>
+                      {/* Famille, lieu, fréquence (2026-11-21) : seulement
+                          ce qui est rempli. */}
+                      {precisionsLigne(l).map((p) => (
+                        <p key={p} className="m-0 mt-0.5 text-[13px] text-[color:var(--board-slate-mid)]">
+                          {p}
+                        </p>
+                      ))}
                     </div>
                     <div>
                       <p className={ETIQUETTE}>Votre mesure</p>
@@ -397,9 +410,19 @@ export default async function PlanPreventionDetailPage({
                     {plan.entrepriseExterieureSiret ? ` · SIRET ${plan.entrepriseExterieureSiret}` : ""}
                     <br />
                     <span className="text-[color:var(--board-slate-mid)]">
-                      {plan.efChefNom} · {plan.efChefEmail} · {plan.efEffectifIntervenant} intervenant
+                      {plan.efChefNom} · {plan.efChefEmail}
+                      {plan.efChefTelephone ? ` · ${plan.efChefTelephone}` : ""} · {plan.efEffectifIntervenant}{" "}
+                      intervenant
                       {plan.efEffectifIntervenant > 1 ? "s" : ""}
                     </span>
+                    {plan.entrepriseExterieureAdresse && (
+                      <>
+                        <br />
+                        <span className="whitespace-pre-wrap text-[color:var(--board-slate-mid)]">
+                          {plan.entrepriseExterieureAdresse}
+                        </span>
+                      </>
+                    )}
                   </dd>
                 </div>
                 <div>
@@ -407,6 +430,7 @@ export default async function PlanPreventionDetailPage({
                   <dd className="m-0 mt-0.5">
                     {plan.euChefNom}
                     {plan.euChefFonction ? ` · ${plan.euChefFonction}` : ""}
+                    {plan.euChefTelephone ? ` · ${plan.euChefTelephone}` : ""}
                   </dd>
                 </div>
                 <div>
@@ -425,6 +449,12 @@ export default async function PlanPreventionDetailPage({
                     )}
                   </dd>
                 </div>
+                {plan.horaires && (
+                  <div className="md:col-span-2">
+                    <dt className={ETIQUETTE}>{LIBELLES_COMPLEMENTS.horaires}</dt>
+                    <dd className="m-0 mt-0.5 whitespace-pre-wrap">{plan.horaires}</dd>
+                  </div>
+                )}
                 <div className="md:col-span-2">
                   <dt className={ETIQUETTE}>Lieux</dt>
                   <dd className="m-0 mt-0.5 whitespace-pre-wrap">{plan.lieux}</dd>
@@ -475,7 +505,28 @@ export default async function PlanPreventionDetailPage({
                   <LegalBadge className="mt-2" reference="Art. R. 4512-2 CT" href={URL_R4512_2} extrait={R4512_2} />
                 </>
               )}
+              {plan.cseAssocie != null && (
+                <p className="m-0 mt-3 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
+                  {LIBELLES_COMPLEMENTS.cseAssocie} : {plan.cseAssocie ? "oui" : "non"}
+                </p>
+              )}
             </CarteFiche>
+
+            {/* Repris de RiskBoard (2026-11-21), facultatifs : la carte
+                n'existe que si l'un d'eux est rempli. Horaires et CSE sont
+                dits plus haut, à côté de ce qu'ils précisent. */}
+            {complementsAutres.length > 0 && (
+              <CarteFiche titre="Compléments">
+                <dl className="m-0 flex flex-col gap-3">
+                  {complementsAutres.map((x) => (
+                    <div key={x.cle}>
+                      <dt className={ETIQUETTE}>{x.libelle}</dt>
+                      <dd className="m-0 mt-0.5 whitespace-pre-wrap text-[14px] leading-[1.6]">{x.texte}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </CarteFiche>
+            )}
 
             {/* LE CONTENU QUE R. 4512-8 IMPOSE, ET CE QUE CE PLAN N'EN PORTE
                 PAS. Une rubrique vide se dit ici plutôt que de s'omettre :
