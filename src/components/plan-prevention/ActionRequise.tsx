@@ -8,6 +8,9 @@ import type { ReactNode } from "react";
  *   trancher, la signature à poser, le lien à envoyer ;
  * - `RappelSuivi`, sur l'onglet « Plan de prévention » : une ligne qui mène
  *   au suivi, où le geste se fait.
+ *
+ * ~~Une carte à filet ambre~~ [2026-11-21, « toujours le même bloc » : une
+ * section de la carte unique de la fiche, le trait ambre en tête].
  */
 
 /** Le filet ambre de la maquette V2, en un seul endroit (pas de jeton du board pour lui). */
@@ -38,7 +41,7 @@ export function CarteActionRequise({
     <section
       aria-labelledby={id}
       data-ecriture={ecriture ? "" : undefined}
-      className={`carte-board flex flex-col gap-5 px-6 py-7 md:px-[34px] md:py-[30px] ${FILET_AMBRE}`}
+      className={`flex flex-col gap-5 px-6 py-7 md:px-10 ${FILET_AMBRE}`}
     >
       <div className="flex flex-wrap items-end justify-between gap-3.5">
         <div className="max-w-[720px]">

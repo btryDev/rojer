@@ -264,7 +264,7 @@ export function CorrectionEnCours({
   return (
     <section
       aria-labelledby="correction-titre"
-      className="carte-board flex flex-wrap items-center justify-between gap-[18px] px-6 py-6 shadow-[inset_0_4px_0_var(--board-blue-mid)] md:px-[34px]"
+      className="flex flex-wrap items-center justify-between gap-[18px] px-6 py-7 shadow-[inset_0_4px_0_var(--board-blue-mid)] md:px-10"
     >
       <div>
         <p className="board-eyebrow m-0 text-[11px] tracking-[0.16em] text-[color:var(--board-slate-ink)]">

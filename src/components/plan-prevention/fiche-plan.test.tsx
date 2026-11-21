@@ -32,8 +32,8 @@ vi.mock("@/lib/plan-prevention/contre-signature-actions", () => ({
   revoquerSignaturesPlan: async () => ({ status: "idle" }),
 }));
 vi.mock("@/components/plan-prevention/PlanActionsButtons", () => ({
-  BoutonCloturer: () => null,
-  BoutonSupprimerPlan: () => null,
+  BoutonCloturer: () => "[Clôturer]",
+  BoutonSupprimerPlan: () => "[Supprimer]",
 }));
 const planCourant: { valeur: Record<string, unknown> | null } = { valeur: null };
 vi.mock("@/lib/plan-prevention/queries", () => ({
@@ -180,10 +180,31 @@ describe("la fiche du plan", () => {
       for (const o of onglets) expect(o).toContain('aria-controls="contenu-du-plan"');
       expect(onglets.filter((o) => o.includes('aria-selected="true"'))).toHaveLength(1);
       expect(html).toContain('id="contenu-du-plan" role="tabpanel"');
-      // Le PDF sur la même rangée que la bascule.
+      // TOUS les gestes sur la rangée de la bascule, dans les deux onglets
+      // (2026-11-21, « toujours le même bloc »), et nulle part ailleurs.
       const rangee = html.slice(html.indexOf('role="tablist"'), html.indexOf('role="tabpanel"'));
-      expect(rangee).toContain("Télécharger le PDF");
+      for (const geste of ["Modifier", "Télécharger le PDF", "[Clôturer]", "[Supprimer]"]) {
+        expect(rangee, geste).toContain(geste);
+        expect(html.split(geste).length - 1, geste).toBe(1);
+      }
+      // Une seule carte : la bascule et le contenu de l'onglet dedans.
+      const corps = html.slice(html.indexOf("</header>"));
+      expect(corps.match(/class="carte-board"/g) ?? []).toHaveLength(1);
+      const carte = corps.slice(corps.indexOf('class="carte-board"'));
+      expect(carte.indexOf('role="tablist"')).toBeLessThan(carte.indexOf('role="tabpanel"'));
     }
+  });
+
+  it("Suivi, dans le même bloc : action requise en tête, signatures, puis l'historique — des sections, pas des cartes", async () => {
+    const lu = await rendre(plan());
+    expect(lu.indexOf("Action requise")).toBeLessThan(lu.indexOf("Signatures · 0 sur 2"));
+    expect(lu.indexOf("Signatures · 0 sur 2")).toBeLessThan(lu.indexOf("Ce qui s'est passé"));
+    planCourant.valeur = plan();
+    const { default: Page } = await import("@/app/etablissements/[id]/plan-prevention/[planId]/page");
+    const html = renderToStaticMarkup(
+      await Page({ params: Promise.resolve({ id: "e1", planId: "p1" }), searchParams: Promise.resolve({ onglet: "suivi" }) }),
+    );
+    expect(html.match(/carte-board/g) ?? []).toHaveLength(1);
   });
 
   it("le retour : `LienRetour`, vers la liste, et d'où l'on vient quand c'est ailleurs (ADR-014)", async () => {
