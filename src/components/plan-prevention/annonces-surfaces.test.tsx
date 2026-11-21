@@ -284,8 +284,11 @@ describe("fiche du plan : en clair à l'écran, le texte sous le livre, dans les
 
   it("les rubriques vides de R. 4512-8 ne recopient plus leur alinéa à l'écran", async () => {
     const { lu } = await rendreFiche({ dureeHeuresEstimee: 30, travauxDangereux: false });
+    // [2026-11-21, maquette V3] Nommées sur une ligne « À compléter », sans
+    // numéro ni décompte.
+    expect(contient(lu, "À compléter :")).toBe(true);
     for (const r of RUBRIQUES_R4512_8) {
-      expect(contient(lu, `${r.numero}° ${r.titre}`), r.titre).toBe(true);
+      expect(contient(lu, r.titre), r.titre).toBe(true);
       expect(contient(lu, `« ${r.verbatim}`), r.titre).toBe(false);
     }
   });

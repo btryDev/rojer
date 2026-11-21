@@ -71,7 +71,10 @@ export function PanneauModal({
     return () => document.removeEventListener("keydown", surTouche);
   }, [ouvert]);
 
-  if (!ouvert) return null;
+  // Au rendu serveur, pas de `document` où monter le portail : une fenêtre
+  // ouverte dès l'arrivée (`?openSign=1` sur la fiche du plan, page
+  // rechargée) s'affiche au navigateur seulement (2026-11-21).
+  if (!ouvert || typeof document === "undefined") return null;
   return createPortal(
     <div
       role="dialog"

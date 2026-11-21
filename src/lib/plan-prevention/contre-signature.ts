@@ -136,7 +136,8 @@ export async function avertirPropositionRecue(
   try {
     if (!envoiEnService()) return;
     const nom = await libelle(db, params.etablissementId, params.planId);
-    const url = `${publicAppUrl()}/etablissements/${params.etablissementId}/plan-prevention/${params.planId}`;
+    // L'onglet « Suivi » de la fiche, où la proposition se décide (2026-11-21).
+    const url = `${publicAppUrl()}/etablissements/${params.etablissementId}/plan-prevention/${params.planId}?onglet=suivi`;
     const message = mailSignature({
       titre: "Modifications proposées",
       paragraphes: [`${params.entreprise} propose une modification du document « ${nom} », au lieu de le signer.`],

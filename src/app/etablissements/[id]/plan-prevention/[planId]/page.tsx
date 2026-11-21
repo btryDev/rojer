@@ -1,12 +1,19 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { lireProvenance } from "@/lib/navigation/provenance";
-import { CarteFiche, LegalBadge, PastilleFiche, TitreSection } from "@/components/ui-kit";
+import { LegalBadge, PastilleFiche } from "@/components/ui-kit";
 import { FilRetour } from "@/components/ui-kit/FilRetour";
+import { OngletsPage } from "@/components/ui-kit/OngletsPage";
+import { ChevronRepli } from "@/components/ui/repli";
 import { SignaturesSansPartie } from "@/components/signatures/SignaturesParties";
 import { repartirSignatures } from "@/lib/signatures/parties";
 import { InformationInspectionForm } from "@/components/plan-prevention/InformationInspectionForm";
-import { CorrectionEnCours, PropositionEnAttente } from "@/components/plan-prevention/ContreSignatureFiche";
+import {
+  CorrectionEnCours,
+  PropositionEnAttente,
+  RappelProposition,
+} from "@/components/plan-prevention/ContreSignatureFiche";
 import { PanneauSignatures, type PartieVue } from "@/components/plan-prevention/PanneauSignatures";
 import { HistoriquePlan } from "@/components/plan-prevention/HistoriquePlan";
 import { AnnonceFiche } from "@/components/plan-prevention/AnnonceFiche";
@@ -26,11 +33,11 @@ import {
 import { diagnostiquerPlan } from "@/lib/plan-prevention/schema";
 import { complementsParPlace, precisionsLigne } from "@/lib/plan-prevention/complements";
 import {
-  CHAPEAU_R4512_8,
   RUBRIQUES_R4512_8,
   TEXTE_R4512_8,
   URL_R4512_8,
   rubriquesManquantes,
+  texteRubrique,
 } from "@/lib/plan-prevention/contenu-r4512-8";
 import { HeuresReviseesForm } from "@/components/plan-prevention/HeuresReviseesForm";
 import { ArticleEnClair } from "@/components/plan-prevention/ArticleEnClair";
@@ -72,36 +79,42 @@ import {
   cleJourCivil,
   composantesCiviles,
   FUSEAU_REFERENCE,
-  formaterDateCourteFr,
   formaterDateFr,
   formaterDateLongueFr,
 } from "@/lib/dates";
 
 /**
- * La fiche d'un plan de prévention (2026-11-19, lots 3 et 4 du chantier
- * d'interface, maquette V2 validée par la propriétaire).
+ * La fiche d'un plan de prévention.
  *
- * Dans l'ordre : l'en-tête centré (date, référence, nature des travaux,
- * bande d'intervention, statut affiché), la barre d'actions (historique,
- * PDF, clôturer, supprimer), le bandeau de la proposition ou de la
- * correction en cours, le panneau Signatures, puis le contenu du plan et
- * tous les blocs réglementaires d'avant, sans en retirer un. L'encadré
- * « Cycle de vie » n'existe plus : ses gestes sont dans l'en-tête, le
- * panneau et le contenu.
+ * [2026-11-21, maquette V3 validée par la propriétaire] L'en-tête — tuile du
+ * jour, référence, nature des travaux, bande de faits, UNE pastille d'état —,
+ * puis deux onglets, choisis par l'adresse (`?onglet=suivi`) et rendus au
+ * serveur :
+ * - « Plan de prévention » : le plan d'un seul tenant, une carte, des
+ *   sections séparées d'un filet ; chaque rubrique de `R. 4512-8` remplie est
+ *   une section sous son titre ; les vides se disent en une ligne tant que le
+ *   plan n'est pas figé ; les blocs réglementaires d'avant restent tous, en
+ *   bas, repliés ;
+ * - « Suivi » : l'action requise (la proposition, la correction en cours, ou
+ *   la signature), les signatures, puis ce qui s'est passé.
+ * `?openSign=1` ouvre l'onglet « Suivi », qui porte la fenêtre de signature.
+ *
+ * ~~(2026-11-19, lots 3 et 4, maquette V2) l'en-tête, la barre d'actions
+ * (historique, PDF, clôturer, supprimer), le bandeau de la proposition, le
+ * panneau Signatures, puis le contenu du plan carte par carte~~.
  */
+
+type OngletFiche = "plan" | "suivi";
 
 const FMT_JOUR = new Intl.DateTimeFormat("fr-FR", { timeZone: FUSEAU_REFERENCE, day: "2-digit" });
 const FMT_MOIS = new Intl.DateTimeFormat("fr-FR", { timeZone: FUSEAU_REFERENCE, month: "short" });
+/** « 27 nov. » */
+const FMT_JOUR_MOIS = new Intl.DateTimeFormat("fr-FR", { timeZone: FUSEAU_REFERENCE, day: "numeric", month: "short" });
 
 /** « 8 h », « 8 h 30 » */
 function heureCourte(d: Date): string {
   const { heure, minute } = composantesCiviles(d);
   return minute === 0 ? `${heure} h` : `${heure} h ${String(minute).padStart(2, "0")}`;
-}
-
-function horaires(debut: Date, fin: Date): string {
-  if (cleJourCivil(debut) === cleJourCivil(fin)) return `${heureCourte(debut)} → ${heureCourte(fin)}`;
-  return `${formaterDateCourteFr(debut)} ${heureCourte(debut)} → ${formaterDateCourteFr(fin)} ${heureCourte(fin)}`;
 }
 
 function numero(n: number): string {
@@ -131,23 +144,60 @@ function vueDeLaPartie(e: EtatPartie): PartieVue {
   };
 }
 
-const ETIQUETTE = "board-eyebrow m-0 text-[10.5px] tracking-[0.12em] text-[color:var(--board-slate-soft)]";
-const LIEN_MODIFIER = "text-[14px] text-[color:var(--board-blue-ink)] underline-offset-2 hover:underline";
+const PILULE =
+  "inline-flex min-h-11 items-center rounded-full border border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[18px] text-[14px] text-[color:var(--board-ink)] transition-colors hover:bg-[color:var(--board-slate-pale)]";
+const DISCRET = "text-[color:var(--board-slate-mid)]";
+
+/** Une section du plan, séparée de la précédente par un filet (maquette V3). */
+function Section({ titre, children }: { titre?: string; children: ReactNode }) {
+  return (
+    <section className="border-t border-[color:var(--board-slate-pale)] py-[26px] first:border-t-0">
+      {titre && <h2 className="board-titre m-0 mb-3.5 text-[22px]">{titre}</h2>}
+      {children}
+    </section>
+  );
+}
+
+/** Les faits d'une section : la clé à gauche, la valeur à côté (une colonne sur téléphone). */
+function Faits({ children }: { children: ReactNode }) {
+  return <dl className="m-0 grid grid-cols-1 gap-x-6 gap-y-2.5 md:grid-cols-[220px_minmax(0,1fr)]">{children}</dl>;
+}
+
+function Fait({ cle, children }: { cle: string; children: ReactNode }) {
+  return (
+    <>
+      <dt className="text-[14px] text-[color:var(--board-slate-mid)]">{cle}</dt>
+      <dd className="m-0 mb-1.5 whitespace-pre-wrap text-[14.5px] leading-[1.55] md:mb-0">{children}</dd>
+    </>
+  );
+}
+
+/** Un bloc réglementaire, dans le repli du bas. */
+function Bloc({ titre, children }: { titre: string; children: ReactNode }) {
+  return (
+    <div className="border-t border-[color:var(--board-slate-pale)] pt-5 first:border-t-0 first:pt-0">
+      <h3 className="m-0 mb-2.5 font-display text-[17px] font-semibold tracking-[-0.01em]">{titre}</h3>
+      {children}
+    </div>
+  );
+}
 
 export default async function PlanPreventionDetailPage({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string; planId: string }>;
-  searchParams: Promise<{ de?: string; openSign?: string }>;
+  searchParams: Promise<{ de?: string; openSign?: string; onglet?: string }>;
 }) {
   const { id, planId } = await params;
-  const { de, openSign } = await searchParams;
+  const { de, openSign, onglet: ongletDemande } = await searchParams;
   const provenance = lireProvenance(de, id);
   const registre = {
     href: `/etablissements/${id}/plan-prevention`,
     label: "Plans de prévention",
   };
+  // `?openSign=1` ouvre la fenêtre de signature, qui vit dans « Suivi ».
+  const onglet: OngletFiche = ongletDemande === "suivi" || openSign === "1" ? "suivi" : "plan";
 
   const plan = await getPlanPrevention(id, planId);
   if (!plan) notFound();
@@ -156,27 +206,19 @@ export default async function PlanPreventionDetailPage({
   // les champs dont il a besoin (`diagnostiquerPlan`), comme le ZIP.
   const diag = diagnostiquerPlan(plan);
 
-  // Les cinq rubriques de `R. 4512-8`, et celles que CE plan ne porte pas.
-  // Le calcul vit dans `contenu-r4512-8.ts` : la fiche et le ZIP de contrôle
-  // doivent dire la même chose du même plan.
-  const manquantes = rubriquesManquantes(plan);
   // Les compléments repris de RiskBoard : horaires avec la période, CSE avec
-  // l'inspection, le reste dans sa carte.
+  // l'inspection, le reste dans sa section.
   const complements = complementsParPlace(plan);
-  const texteRubrique: Record<number, string | null> = {
-    2: plan.adaptationMateriels,
-    3: plan.instructionsTravailleurs,
-    4: plan.organisationSecours,
-    5: plan.participationCroisee,
-  };
 
   // Clos ou annulé : aucune demande de signature ne part plus d'ici. Le
   // serveur la refuserait de toute façon (`etat-signable.ts`).
   const planSignable = statutPlanSignable(plan.statut);
-  // Figé (signé, clos ou annulé) : le plan ne se complète plus ; la fiche ne
-  // montre que les rubriques remplies (décision de la propriétaire, 2026-11-21).
+  // Figé (signé, clos ou annulé) : le plan ne se complète plus ; les
+  // rubriques vides ne se signalent plus (décision de la propriétaire,
+  // 2026-11-21). Remplies, elles s'affichent toujours, chacune sa section.
   const fige = !planSignable || plan.signatures.length > 0;
-  const rubriquesAffichees = fige ? RUBRIQUES_R4512_8.filter((r) => r.renseignee(plan)) : RUBRIQUES_R4512_8;
+  const rubriquesRemplies = RUBRIQUES_R4512_8.filter((r) => r.renseignee(plan));
+  const manquantes = fige ? [] : rubriquesManquantes(plan);
   // La partie est un fait enregistré, pas une déduction de l'adresse
   // (`repartirSignatures`, 2026-10-12).
   const signatures = repartirSignatures("plan_prevention", plan.signatures);
@@ -191,30 +233,49 @@ export default async function PlanPreventionDetailPage({
   const maintenant = new Date();
   const eu = vueDeLaPartie(etatDeLaPartie("entreprise_utilisatrice", signatureEU ?? null, liens, maintenant));
   const ee = vueDeLaPartie(etatDeLaPartie("entreprise_exterieure", signatureEF ?? null, liens, maintenant));
-  const statutAffiche = etatAffichePlan(plan.statut, aUnLienOuUneSignature(liens, plan.signatures.length));
+  // UNE pastille d'état (maquette V3) : la proposition qui attend l'emporte
+  // sur le statut, qu'elle suspend.
+  const pastille = enAttente
+    ? { ton: "proche" as const, mot: "Modification proposée" }
+    : etatAffichePlan(plan.statut, aUnLienOuUneSignature(liens, plan.signatures.length));
   // « Corriger » (lot 4) : appliquée, la correction court jusqu'à la
   // signature du dirigeant.
   const correction =
     planSignable && !enAttente && !signatureEU
       ? propositions.find((p) => p.corrigeeLe && !p.finaliseeLe)
       : undefined;
+  // Ce qui attend le dirigeant, compté sur l'onglet « Suivi » : la
+  // proposition à trancher, ou sa signature à poser.
+  const actionsAttendues = enAttente ? 1 : planSignable && !signatureEU ? 1 : 0;
   const lienAuteur = enAttente ? liens.find((l) => l.id === enAttente.accessTokenId) : undefined;
-  const historique = historiqueDuPlan({
-    creeLe: null,
-    raisonEE: plan.entrepriseExterieureRaison,
-    liens,
-    signatures: [...plan.signatures, ...(plan.signaturesRevoquees ?? [])],
-    propositions,
-    maintenant,
-  });
   const reference = numero(plan.numero);
   const fiche = `/etablissements/${id}/plan-prevention/${plan.id}`;
   const modifier = `${fiche}/modifier`;
   const objet = plan.naturesTravaux.replace(/\s+/g, " ").trim();
 
+  const adresseOnglet = (o: OngletFiche) => {
+    const q = new URLSearchParams();
+    if (de) q.set("de", de);
+    if (o === "suivi") q.set("onglet", "suivi");
+    const s = q.toString();
+    return s ? `${fiche}?${s}` : fiche;
+  };
+  const suivi = adresseOnglet("suivi");
+
+  const memeJour = cleJourCivil(plan.dateDebut) === cleJourCivil(plan.dateFin);
   const bande: { cle: string; valeur: string }[] = [
     { cle: "Entreprise extérieure", valeur: plan.entrepriseExterieureRaison },
-    { cle: "Horaires", valeur: horaires(plan.dateDebut, plan.dateFin) },
+    {
+      cle: "Date",
+      valeur: memeJour
+        ? FMT_JOUR_MOIS.format(plan.dateDebut)
+        : `${FMT_JOUR_MOIS.format(plan.dateDebut)} → ${FMT_JOUR_MOIS.format(plan.dateFin)}`,
+    },
+    // Les horaires saisis l'emportent ; sinon ceux que les dates portent.
+    {
+      cle: "Horaires",
+      valeur: complements.horaires?.texte ?? `${heureCourte(plan.dateDebut)} – ${heureCourte(plan.dateFin)}`,
+    },
     { cle: "Lieu", valeur: plan.lieux },
     {
       cle: "Intervenants",
@@ -222,11 +283,23 @@ export default async function PlanPreventionDetailPage({
     },
   ];
 
+  const periode = memeJour
+    ? `Le ${formaterDateLongueFr(plan.dateDebut)}, de ${heureCourte(plan.dateDebut)} à ${heureCourte(plan.dateFin)}`
+    : `Du ${formaterDateLongueFr(plan.dateDebut)} à ${heureCourte(plan.dateDebut)} au ${formaterDateLongueFr(plan.dateFin)} à ${heureCourte(plan.dateFin)}`;
+  const duree = [
+    plan.dureeHeuresEstimee ? `${plan.dureeHeuresEstimee} h` : "Non renseignée",
+    diag.seuil400 ? "seuil des 400 h franchi" : null,
+    plan.travauxDangereux ? "travaux déclarés dangereux" : "travaux non déclarés dangereux",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const inspectionAInformer = diag.ecritObligatoire && !plan.inspectionTravailInformeeLe;
+
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
-      {/* L'EN-TÊTE (maquette V2) : centré, sur la trame de points. */}
+      {/* L'EN-TÊTE (maquette V3) : centré, sur la trame de points. */}
       <header className="entete-trame">
-        <div className="mx-auto flex w-full max-w-[1180px] flex-col items-center gap-3.5 px-4 pb-10 pt-8 text-center md:px-6 md:pt-11">
+        <div className="mx-auto flex w-full max-w-[1180px] flex-col items-center gap-3.5 px-4 pb-7 pt-8 text-center md:px-6 md:pt-11">
           <FilRetour provenance={provenance} canonique={registre} className="self-start" />
           <span
             className="flex size-16 flex-none flex-col items-center justify-center rounded-[16px] bg-[color:var(--board-ink)] text-white"
@@ -257,7 +330,7 @@ export default async function PlanPreventionDetailPage({
                 {i > 0 && (
                   <span aria-hidden className="my-3 hidden w-px self-stretch bg-[color:var(--board-slate-line)] md:block" />
                 )}
-                <div className="flex min-w-[120px] max-w-[280px] flex-col items-center gap-1 px-6 py-3.5">
+                <div className="flex min-w-[110px] max-w-[280px] flex-col items-center gap-1 px-6 py-3.5">
                   <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-[color:var(--board-slate-soft)]">
                     {b.cle}
                   </dt>
@@ -268,459 +341,416 @@ export default async function PlanPreventionDetailPage({
               </div>
             ))}
           </dl>
-          <div className="flex flex-wrap justify-center gap-2">
-            <PastilleFiche ton={statutAffiche.ton}>{statutAffiche.mot}</PastilleFiche>
-            {/* Le seuil réglementaire n'est pas un statut : il dit ce que la
-                loi impose, pas où en est le dossier. */}
-            {diag.ecritObligatoire && <PastilleFiche ton="neutre">Plan écrit obligatoire</PastilleFiche>}
+          <PastilleFiche ton={pastille.ton}>{pastille.mot}</PastilleFiche>
+          <div className="mt-2.5">
+            <OngletsPage
+              libelle={`Plan de prévention ${reference}`}
+              onglets={[
+                { href: adresseOnglet("plan"), label: "Plan de prévention", actif: onglet === "plan" },
+                {
+                  href: suivi,
+                  label: "Suivi",
+                  actif: onglet === "suivi",
+                  alerte: actionsAttendues,
+                  libelleAlerte: "une action vous attend",
+                  tonAlerte: "proche",
+                },
+              ]}
+            />
           </div>
         </div>
       </header>
 
-      <div className="flex flex-col gap-6 px-[var(--board-gutter)]">
-        <div className="flex flex-wrap justify-center gap-2.5 pt-[22px]">
-          <HistoriquePlan reference={reference} evenements={historique} etablissementId={id} />
-          <a
-            href={`/api/etablissements/${id}/plan-prevention/${plan.id}/pdf`}
-            className="inline-flex min-h-11 items-center rounded-full border border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[18px] text-[14px] text-[color:var(--board-ink)] transition-colors hover:bg-[color:var(--board-slate-pale)]"
-          >
-            Télécharger le PDF
-          </a>
-          {(plan.statut === "valide" || plan.statut === "attente_signatures") && (
-            <BoutonCloturer planId={plan.id} entete />
-          )}
-          <BoutonSupprimerPlan planId={plan.id} entete />
-        </div>
-
-        <AnnonceFiche>
-          <div className="flex flex-col gap-6">
-            {enAttente && (
-              <PropositionEnAttente
-                proposition={enAttente}
-                plan={plan}
-                auteur={lienAuteur?.nomDestinataire ?? lienAuteur?.emailDestinataire ?? null}
-              />
-            )}
-            {correction && (
-              <CorrectionEnCours
-                raisonEE={plan.entrepriseExterieureRaison}
-                modifierHref={modifier}
-                signerHref={`${fiche}?openSign=1`}
-              />
-            )}
-
-            <PanneauSignatures
-              etablissementId={id}
-              planId={plan.id}
-              reference={reference}
-              objet={objet}
-              raisonEU={plan.raisonEU ?? "l'entreprise utilisatrice"}
-              raisonEE={plan.entrepriseExterieureRaison}
-              euChefNom={plan.euChefNom}
-              efChefNom={plan.efChefNom}
-              efChefEmail={plan.efChefEmail}
-              vous={plan.vous ?? { nom: "", email: "" }}
-              eu={eu}
-              ee={ee}
-              planSignable={planSignable}
-              propositionEnAttente={Boolean(enAttente)}
-              correctionEnCours={Boolean(correction)}
-              ouvrirSigner={openSign === "1"}
-            />
-
-            <SignaturesSansPartie signatures={signatures.sansPartie} />
-
-            {plan.statut === "clos" && (
-              <p className="m-0 text-center text-[13.5px] text-[color:var(--board-green-ink)]">
-                Plan clos — l&apos;intervention est terminée.
-              </p>
-            )}
-
-            {/* LES RISQUES D'INTERFÉRENCE, comme la maquette : trois colonnes
-                sur un creux, qui passent en une colonne sur téléphone. */}
-            <section className="carte-board flex flex-col gap-3.5 px-6 py-6 md:px-8 md:py-[26px]" aria-labelledby="risques-titre">
-              <div className="flex flex-wrap items-baseline justify-between gap-3">
-                <h2 id="risques-titre" className="board-titre m-0 text-[24px] md:text-[28px]">
-                  {`${plan.lignes.length} risque${plan.lignes.length > 1 ? "s" : ""} d'interférence`}
-                </h2>
-                {planSignable && (
-                  <Link data-ecriture href={modifier} className={LIEN_MODIFIER}>
-                    Modifier
-                  </Link>
+      <div className="px-[var(--board-gutter)]">
+        <div className="mx-auto flex w-full max-w-[980px] flex-col gap-[18px] pt-[22px]">
+          <AnnonceFiche>
+            {onglet === "suivi" ? (
+              <div className="flex flex-col gap-[18px]">
+                {enAttente && (
+                  <PropositionEnAttente
+                    proposition={enAttente}
+                    plan={plan}
+                    auteur={lienAuteur?.nomDestinataire ?? lienAuteur?.emailDestinataire ?? null}
+                  />
                 )}
-              </div>
-              {plan.lignes.length === 0 ? (
-                <p className="m-0 text-[13.5px] text-[color:var(--board-slate-mid)]">
-                  Aucun risque d&apos;interférence n&apos;est encore écrit dans ce plan.
-                </p>
-              ) : (
-                plan.lignes.map((l, i) => (
-                  <div
-                    key={l.id}
-                    className="grid grid-cols-1 gap-3 rounded-[18px] bg-[color:var(--board-slate-pale)] px-[18px] py-3.5 text-[14.5px] md:grid-cols-3"
-                  >
-                    <div>
-                      <p className={ETIQUETTE}>Risque {i + 1}</p>
-                      <p className="m-0 mt-0.5 whitespace-pre-wrap font-medium">{l.risque}</p>
-                      {/* Famille, lieu, fréquence (2026-11-21) : seulement
-                          ce qui est rempli. */}
-                      {precisionsLigne(l).map((p) => (
-                        <p key={p} className="m-0 mt-0.5 text-[13px] text-[color:var(--board-slate-mid)]">
-                          {p}
-                        </p>
-                      ))}
-                    </div>
-                    <div>
-                      <p className={ETIQUETTE}>Votre mesure</p>
-                      <p className="m-0 mt-0.5 whitespace-pre-wrap">
-                        {l.mesureEntrepriseUtilisatrice || (
-                          <span className="text-[color:var(--board-slate-soft)]">À compléter</span>
-                        )}
-                      </p>
-                    </div>
-                    <div>
-                      <p className={ETIQUETTE}>Sa mesure</p>
-                      <p className="m-0 mt-0.5 whitespace-pre-wrap">
-                        {l.mesureEntrepriseExterieure || (
-                          <span className="text-[color:var(--board-slate-soft)]">À compléter</span>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              )}
-            </section>
-
-            {/* LES PARTIES ET LA PÉRIODE — les faits de l'ancien bandeau,
-                durée et seuil des 400 h compris. */}
-            <section className="carte-board flex flex-col gap-4 px-6 py-6 md:px-8 md:py-[26px]" aria-labelledby="parties-titre">
-              <div className="flex flex-wrap items-baseline justify-between gap-3">
-                <h2 id="parties-titre" className="board-titre m-0 text-[22px]">
-                  Parties et période
-                </h2>
-                {planSignable && (
-                  <Link data-ecriture href={modifier} className={LIEN_MODIFIER}>
-                    Modifier
-                  </Link>
+                {correction && (
+                  <CorrectionEnCours
+                    raisonEE={plan.entrepriseExterieureRaison}
+                    modifierHref={modifier}
+                    signerHref={`${suivi}${suivi.includes("?") ? "&" : "?"}openSign=1`}
+                  />
                 )}
+
+                <PanneauSignatures
+                  etablissementId={id}
+                  planId={plan.id}
+                  reference={reference}
+                  objet={objet}
+                  raisonEU={plan.raisonEU ?? "l'entreprise utilisatrice"}
+                  raisonEE={plan.entrepriseExterieureRaison}
+                  euChefNom={plan.euChefNom}
+                  efChefNom={plan.efChefNom}
+                  efChefEmail={plan.efChefEmail}
+                  vous={plan.vous ?? { nom: "", email: "" }}
+                  eu={eu}
+                  ee={ee}
+                  planSignable={planSignable}
+                  propositionEnAttente={Boolean(enAttente)}
+                  correctionEnCours={Boolean(correction)}
+                  ouvrirSigner={openSign === "1"}
+                />
+
+                <SignaturesSansPartie signatures={signatures.sansPartie} />
+
+                <HistoriquePlan
+                  etablissementId={id}
+                  evenements={historiqueDuPlan({
+                    creeLe: plan.createdAt,
+                    raisonEE: plan.entrepriseExterieureRaison,
+                    liens,
+                    signatures: [...plan.signatures, ...(plan.signaturesRevoquees ?? [])],
+                    propositions,
+                    maintenant,
+                  })}
+                />
               </div>
-              <dl className="m-0 grid grid-cols-1 gap-x-6 gap-y-3 text-[14px] md:grid-cols-2">
-                <div>
-                  <dt className={ETIQUETTE}>Entreprise extérieure</dt>
-                  <dd className="m-0 mt-0.5">
-                    {plan.entrepriseExterieureRaison}
-                    {plan.entrepriseExterieureSiret ? ` · SIRET ${plan.entrepriseExterieureSiret}` : ""}
-                    <br />
-                    <span className="text-[color:var(--board-slate-mid)]">
-                      {plan.efChefNom} · {plan.efChefEmail}
-                      {plan.efChefTelephone ? ` · ${plan.efChefTelephone}` : ""} · {plan.efEffectifIntervenant}{" "}
-                      intervenant
-                      {plan.efEffectifIntervenant > 1 ? "s" : ""}
-                    </span>
-                    {plan.entrepriseExterieureAdresse && (
-                      <>
+            ) : (
+              <div className="flex flex-col gap-[18px]">
+                {enAttente && <RappelProposition proposition={enAttente} plan={plan} suiviHref={suivi} />}
+
+                {/* Supprimer reste avec les autres gestes du plan. */}
+                <div className="flex flex-wrap justify-end gap-2.5">
+                  {planSignable && (
+                    <Link data-ecriture href={modifier} className={PILULE}>
+                      Modifier
+                    </Link>
+                  )}
+                  <a href={`/api/etablissements/${id}/plan-prevention/${plan.id}/pdf`} className={PILULE}>
+                    Télécharger le PDF
+                  </a>
+                  {(plan.statut === "valide" || plan.statut === "attente_signatures") && (
+                    <BoutonCloturer planId={plan.id} entete />
+                  )}
+                  <BoutonSupprimerPlan planId={plan.id} entete />
+                </div>
+
+                {/* LE PLAN, D'UN SEUL TENANT (maquette V3). */}
+                <article className="carte-board px-6 pb-4 pt-1 md:px-10">
+                  <Section titre="Les parties">
+                    <Faits>
+                      <Fait cle="Entreprise utilisatrice">
+                        {plan.raisonEU ? `${plan.raisonEU} — ` : ""}
+                        {plan.euChefNom}
+                        {plan.euChefFonction ? `, ${plan.euChefFonction}` : ""}
+                        {plan.euChefTelephone ? ` · ${plan.euChefTelephone}` : ""}
+                      </Fait>
+                      <Fait cle="Entreprise extérieure">
+                        {plan.entrepriseExterieureRaison}
+                        {plan.entrepriseExterieureSiret ? ` · SIRET ${plan.entrepriseExterieureSiret}` : ""} —{" "}
+                        {plan.efChefNom} · {plan.efChefEmail}
+                        {plan.efChefTelephone ? ` · ${plan.efChefTelephone}` : ""}
                         <br />
-                        <span className="whitespace-pre-wrap text-[color:var(--board-slate-mid)]">
-                          {plan.entrepriseExterieureAdresse}
+                        <span className={DISCRET}>
+                          {plan.entrepriseExterieureAdresse ? `${plan.entrepriseExterieureAdresse} · ` : ""}
+                          {plan.efEffectifIntervenant} intervenant{plan.efEffectifIntervenant > 1 ? "s" : ""}
                         </span>
+                      </Fait>
+                    </Faits>
+                  </Section>
+
+                  <Section titre="Les travaux">
+                    <Faits>
+                      <Fait cle="Nature">{plan.naturesTravaux}</Fait>
+                      <Fait cle="Période">{periode}</Fait>
+                      {complements.horaires && <Fait cle={complements.horaires.libelle}>{complements.horaires.texte}</Fait>}
+                      <Fait cle="Lieux">{plan.lieux}</Fait>
+                      <Fait cle="Durée estimée">{duree}</Fait>
+                      {diag.ecritObligatoire && <Fait cle="Plan écrit">Obligatoire</Fait>}
+                    </Faits>
+                  </Section>
+
+                  <Section titre="Inspection commune">
+                    {plan.inspectionDate ? (
+                      <Faits>
+                        <Fait cle="Date">{formaterDateLongueFr(plan.inspectionDate)}</Fait>
+                        {plan.inspectionParticipants && <Fait cle="Participants">{plan.inspectionParticipants}</Fait>}
+                        {complements.cse && <Fait cle={complements.cse.libelle}>{complements.cse.texte}</Fait>}
+                      </Faits>
+                    ) : (
+                      // Le moment de R. 4512-2, pas celui de R. 4512-6 (C40) ;
+                      // le texte sous le livre.
+                      <>
+                        <p className="m-0 text-[14px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+                          Aucune date d&apos;inspection commune enregistrée. {EN_CLAIR_R4512_2_MOMENT}
+                          {/* Signé, le plan ne la prend plus (B5) : la fiche dit la
+                              même issue que l'écran « Modifier ». */}
+                          {planSignable && plan.signatures.length > 0 && <> {INSPECTION_SUR_PLAN_SIGNE}</>}
+                        </p>
+                        <LegalBadge className="mt-2" reference="Art. R. 4512-2 CT" href={URL_R4512_2} extrait={R4512_2} />
+                        {complements.cse && (
+                          <div className="mt-3.5">
+                            <Faits>
+                              <Fait cle={complements.cse.libelle}>{complements.cse.texte}</Fait>
+                            </Faits>
+                          </div>
+                        )}
                       </>
                     )}
-                  </dd>
-                </div>
-                <div>
-                  <dt className={ETIQUETTE}>Entreprise utilisatrice</dt>
-                  <dd className="m-0 mt-0.5">
-                    {plan.euChefNom}
-                    {plan.euChefFonction ? ` · ${plan.euChefFonction}` : ""}
-                    {plan.euChefTelephone ? ` · ${plan.euChefTelephone}` : ""}
-                  </dd>
-                </div>
-                <div>
-                  <dt className={ETIQUETTE}>Période</dt>
-                  <dd className="m-0 mt-0.5">
-                    Du {formaterDateCourteFr(plan.dateDebut)} à {heureCourte(plan.dateDebut)} au{" "}
-                    {formaterDateCourteFr(plan.dateFin)} à {heureCourte(plan.dateFin)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className={ETIQUETTE}>Durée estimée</dt>
-                  <dd className="m-0 mt-0.5">
-                    {plan.dureeHeuresEstimee ? `${plan.dureeHeuresEstimee} h` : "—"}
-                    {diag.seuil400 && (
-                      <span className="text-[color:var(--board-slate-mid)]"> · seuil des 400 h franchi</span>
+                  </Section>
+
+                  <Section titre="Risques d'interférence et mesures">
+                    {plan.lignes.length === 0 ? (
+                      <p className="m-0 text-[14px] text-[color:var(--board-slate-mid)]">
+                        Aucun risque d&apos;interférence n&apos;est encore écrit dans ce plan.
+                      </p>
+                    ) : (
+                      <div className="text-[14px]">
+                        {/* Un tableau sur écran large, une carte par risque
+                            sur téléphone : les intitulés de colonne y
+                            passent dans chaque ligne. */}
+                        <div
+                          aria-hidden
+                          className="hidden border-b border-[color:var(--board-slate-line)] pb-2.5 font-medium md:grid md:grid-cols-[36%_1fr_1fr] md:gap-3"
+                        >
+                          <span>Risque</span>
+                          <span>Votre mesure</span>
+                          <span>Sa mesure</span>
+                        </div>
+                        <ol className="m-0 list-none p-0">
+                          {plan.lignes.map((l, i) => (
+                            <li
+                              key={l.id}
+                              className="grid grid-cols-1 gap-1.5 border-b border-[color:var(--board-slate-pale)] py-3 last:border-b-0 md:grid-cols-[36%_1fr_1fr] md:gap-3"
+                            >
+                              <div>
+                                <p className="m-0 whitespace-pre-wrap font-semibold">
+                                  {i + 1}. {l.risque}
+                                </p>
+                                {/* Famille, lieu, fréquence (2026-11-21) :
+                                    seulement ce qui est rempli. */}
+                                {precisionsLigne(l).map((p) => (
+                                  <p key={p} className="m-0 mt-0.5 text-[13px] text-[color:var(--board-slate-mid)]">
+                                    {p}
+                                  </p>
+                                ))}
+                              </div>
+                              <p className="m-0 whitespace-pre-wrap">
+                                <span className="text-[color:var(--board-slate-mid)] md:sr-only">Votre mesure : </span>
+                                {l.mesureEntrepriseUtilisatrice || (
+                                  <span className="text-[color:var(--board-slate-soft)]">À compléter</span>
+                                )}
+                              </p>
+                              <p className="m-0 whitespace-pre-wrap">
+                                <span className="text-[color:var(--board-slate-mid)] md:sr-only">Sa mesure : </span>
+                                {l.mesureEntrepriseExterieure || (
+                                  <span className="text-[color:var(--board-slate-soft)]">À compléter</span>
+                                )}
+                              </p>
+                            </li>
+                          ))}
+                        </ol>
+                      </div>
                     )}
-                  </dd>
-                </div>
-                {complements.horaires && (
-                  <div className="md:col-span-2">
-                    <dt className={ETIQUETTE}>{complements.horaires.libelle}</dt>
-                    <dd className="m-0 mt-0.5 whitespace-pre-wrap">{complements.horaires.texte}</dd>
-                  </div>
-                )}
-                <div className="md:col-span-2">
-                  <dt className={ETIQUETTE}>Lieux</dt>
-                  <dd className="m-0 mt-0.5 whitespace-pre-wrap">{plan.lieux}</dd>
-                </div>
-              </dl>
-            </section>
+                  </Section>
 
-            <CarteFiche titre="Nature des travaux">
-              <p className="m-0 whitespace-pre-wrap text-[14.5px] leading-[1.6]">{plan.naturesTravaux}</p>
-            </CarteFiche>
+                  {/* LES RUBRIQUES DE R. 4512-8 REMPLIES, chacune sa section
+                      sous son titre (2026-11-21) : plus de catégorie
+                      « Contenu minimal ». */}
+                  {rubriquesRemplies.map((r) => (
+                    <Section key={r.numero} titre={r.titre}>
+                      {r.numero === 1 ? (
+                        <ul className="m-0 flex list-none flex-col gap-3 p-0">
+                          {plan.phasesDangereuses.map((f) => (
+                            <li key={f.id}>
+                              <p className="m-0 text-[14.5px] font-semibold leading-[1.4]">{f.phase}</p>
+                              <p className="m-0 mt-1 whitespace-pre-wrap text-[14px] leading-[1.6] text-[color:var(--board-slate-ink)]">
+                                {f.moyensPrevention || (
+                                  <span className="text-[color:var(--board-slate-soft)]">Moyens de prévention à compléter</span>
+                                )}
+                              </p>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="m-0 whitespace-pre-wrap text-[14.5px] leading-[1.6]">{texteRubrique(plan, r.numero)}</p>
+                      )}
+                    </Section>
+                  ))}
 
-            <CarteFiche
-              titre="Inspection commune préalable"
-              // Ardoise et non ambre sur « à planifier » : c'est l'absence
-              // de rendez-vous, pas une urgence (charte, interdit 4).
-              droite={
-                plan.inspectionDate ? (
-                  <PastilleFiche ton="fait">Réalisée</PastilleFiche>
-                ) : (
-                  <PastilleFiche ton="neutre">À planifier</PastilleFiche>
-                )
-              }
-            >
-              {plan.inspectionDate ? (
-                <>
-                  <p className="m-0 text-[14px]">
-                    Effectuée le <strong>{formaterDateLongueFr(plan.inspectionDate)}</strong>.
-                  </p>
-                  {plan.inspectionParticipants && (
-                    <p className="m-0 mt-3 whitespace-pre-wrap text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
-                      <span className="board-eyebrow mr-2 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
-                        Participants
-                      </span>
-                      {plan.inspectionParticipants}
-                    </p>
+                  {/* Non figé : les rubriques vides en une ligne, sans titre ni
+                      décompte. Rien ne bloque. */}
+                  {manquantes.length > 0 && (
+                    <Section>
+                      <p className="m-0 text-[14px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+                        À compléter : {manquantes.map((r) => r.titre).join(" ; ")}.{" "}
+                        {planSignable && (
+                          <Link
+                            data-ecriture
+                            href={modifier}
+                            className="text-[color:var(--board-blue-ink)] underline-offset-2 hover:underline"
+                          >
+                            Compléter
+                          </Link>
+                        )}
+                      </p>
+                    </Section>
                   )}
-                </>
-              ) : (
-                // Le moment de R. 4512-2, pas celui de R. 4512-6 (C40) ; le
-                // texte sous le livre.
-                <>
-                  <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-                    Aucune date d&apos;inspection commune enregistrée. {EN_CLAIR_R4512_2_MOMENT}
-                    {/* Signé, le plan ne la prend plus (B5) : la fiche dit la
-                        même issue que l'écran « Modifier ». */}
-                    {planSignable && plan.signatures.length > 0 && <> {INSPECTION_SUR_PLAN_SIGNE}</>}
-                  </p>
-                  <LegalBadge className="mt-2" reference="Art. R. 4512-2 CT" href={URL_R4512_2} extrait={R4512_2} />
-                </>
-              )}
-              {complements.cse && (
-                <p className="m-0 mt-3 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
-                  {complements.cse.libelle} : {complements.cse.texte}
-                </p>
-              )}
-            </CarteFiche>
 
-            {/* Repris de RiskBoard (2026-11-21), facultatifs : la carte
-                n'existe que si l'un d'eux est rempli. Horaires et CSE sont
-                dits plus haut, à côté de ce qu'ils précisent. */}
-            {complements.autres.length > 0 && (
-              <CarteFiche titre="Compléments">
-                <dl className="m-0 flex flex-col gap-3">
-                  {complements.autres.map((x) => (
-                    <div key={x.cle}>
-                      <dt className={ETIQUETTE}>{x.libelle}</dt>
-                      <dd className="m-0 mt-0.5 whitespace-pre-wrap text-[14px] leading-[1.6]">{x.texte}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </CarteFiche>
-            )}
+                  {/* Repris de RiskBoard (2026-11-21), facultatifs : la section
+                      n'existe que si l'un d'eux est rempli. Horaires et CSE
+                      sont dits plus haut, à côté de ce qu'ils précisent. */}
+                  {complements.autres.length > 0 && (
+                    <Section titre="Compléments">
+                      <Faits>
+                        {complements.autres.map((x) => (
+                          <Fait key={x.cle} cle={x.libelle}>
+                            {x.texte}
+                          </Fait>
+                        ))}
+                      </Faits>
+                    </Section>
+                  )}
 
-            {/* LE CONTENU QUE R. 4512-8 IMPOSE, ET CE QUE CE PLAN N'EN PORTE
-                PAS. Une rubrique vide se dit ici plutôt que de s'omettre (figé, on ne montre que les remplies) :
-                c'est le dirigeant qui remet ce plan. Rien ne bloque. */}
-            <TitreSection
-              surtitre="Contenu minimal · art. R. 4512-8"
-              titre={
-                fige
-                  ? "Contenu du plan"
-                  : manquantes.length === 0
-                  ? "Les cinq rubriques sont renseignées"
-                  : `${manquantes.length} rubrique${manquantes.length > 1 ? "s" : ""} sur 5 non renseignée${
-                      manquantes.length > 1 ? "s" : ""
-                    }`
-              }
-            />
-
-            {!fige && manquantes.length > 0 && (
-              <CarteFiche titre="Ce que ce plan ne dit pas encore">
-                <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">{CHAPEAU_R4512_8}</p>
-                <ul className="m-0 mt-3 flex list-disc flex-col gap-1.5 pl-5 text-[14px] leading-[1.6]">
-                  {manquantes.map((r) => (
-                    <li key={r.numero}>
-                      <strong>
-                        {r.numero}° {r.titre}
-                      </strong>
-                    </li>
-                  ))}
-                </ul>
-              </CarteFiche>
-            )}
-
-            {rubriquesAffichees.map((r) => (
-              <CarteFiche
-                key={r.numero}
-                titre={`${r.numero}° ${r.titre}`}
-                droite={
-                  fige ? undefined : r.renseignee(plan) ? (
-                    <PastilleFiche ton="fait">Renseignée</PastilleFiche>
-                  ) : (
-                    <PastilleFiche ton="neutre">Non renseignée</PastilleFiche>
-                  )
-                }
-              >
-                {r.numero === 1 ? (
-                  plan.phasesDangereuses.length > 0 ? (
-                    <ul className="m-0 flex list-none flex-col gap-3 p-0">
-                      {plan.phasesDangereuses.map((f) => (
-                        <li key={f.id}>
-                          <p className="m-0 text-[14px] font-semibold leading-[1.4]">{f.phase}</p>
-                          <p className="m-0 mt-1 whitespace-pre-wrap text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
-                            {f.moyensPrevention || (
-                              <span className="text-[color:var(--board-slate-soft)]">Moyens de prévention à compléter</span>
+                  {/* LE SUIVI RÉGLEMENTAIRE, en bas et replié (maquette V3) :
+                      rien n'en est retiré. */}
+                  <Section>
+                    <details className="group">
+                      <summary className="flex min-h-6 cursor-pointer list-none flex-wrap items-center gap-2 text-[14.5px] font-semibold text-[color:var(--board-ink)] [&::-webkit-details-marker]:hidden">
+                        <ChevronRepli />
+                        Textes et suivi réglementaire
+                        <span className="text-[13px] font-normal text-[color:var(--board-slate-mid)]">
+                          · R. 4512-6 à R. 4512-12, heures prévisibles, autres articles
+                          {inspectionAInformer ? " · inspection du travail à informer" : ""}
+                        </span>
+                      </summary>
+                      <div className="mt-5 flex flex-col gap-5">
+                        {diag.ecritObligatoire && (
+                          <Bloc titre="Pourquoi l'écrit est obligatoire">
+                            <ul className="m-0 flex list-disc flex-col gap-1.5 pl-5 text-[14px] leading-[1.6]">
+                              {diag.raisons.map((raison) => (
+                                <li key={raison}>{raison}</li>
+                              ))}
+                            </ul>
+                            <LegalBadge className="mt-3" reference="Art. R. 4512-7 CT" href={URL_R4512_7}>
+                              {SENS_R4512_7}
+                            </LegalBadge>
+                          </Bloc>
+                        )}
+                        {/* R. 4512-12, cité quand l'écrit est obligatoire ET
+                            quand la durée manque — l'incertitude ne réduit pas
+                            la couverture. */}
+                        {citeR4512_12(diag.ecrit) && (
+                          <Bloc titre="Inspection du travail">
+                            {diag.ecrit === "indetermine" && (
+                              <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
+                                {FAIT_DUREE_NON_RENSEIGNEE}
+                              </p>
                             )}
+                            <p className={`m-0 text-[14px] leading-[1.6] ${diag.ecrit === "indetermine" ? "mt-2" : ""}`}>
+                              {diag.ecrit === "indetermine" ? EN_CLAIR_R4512_12_SI_ECRIT : EN_CLAIR_R4512_12}
+                            </p>
+                            <p className="m-0 mt-3 text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                              {CONSTAT_R4512_12}
+                            </p>
+                            <LegalBadge
+                              className="mt-3"
+                              reference="Art. R. 4512-12 CT"
+                              href={URL_R4512_12}
+                              extrait={EXTRAIT_R4512_12}
+                            />
+                            {/* C45 : la trace déclarée du 2°. */}
+                            <InformationInspectionForm
+                              planId={plan.id}
+                              informeeLe={plan.inspectionTravailInformeeLe ? cleJourCivil(plan.inspectionTravailInformeeLe) : null}
+                              informeeLeTexte={
+                                plan.inspectionTravailInformeeLe ? formaterDateLongueFr(plan.inspectionTravailInformeeLe) : null
+                              }
+                            />
+                          </Bloc>
+                        )}
+                        {/* R. 4512-7, 1°, seconde phrase (2026-10-12) : le
+                            seuil vaut aussi quand il apparaît en cours de
+                            chantier. Hors empreinte. */}
+                        <Bloc titre="Heures prévisibles en cours de chantier">
+                          <p className="m-0 text-[14px] leading-[1.6]">
+                            {plan.heuresPrevisiblesRevisees != null && plan.heuresPrevisiblesReviseesLe
+                              ? `${ligneHeuresRevisees(
+                                  plan.heuresPrevisiblesRevisees,
+                                  formaterDateFr(plan.heuresPrevisiblesReviseesLe),
+                                )}.`
+                              : "Aucune révision notée."}
                           </p>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-                      Aucune phase d&apos;activité dangereuse enregistrée.
-                    </p>
-                  )
-                ) : /* `r.renseignee(plan)` : un seul juge, la pastille et le corps. */
-                r.renseignee(plan) ? (
-                  <p className="m-0 whitespace-pre-wrap text-[14px] leading-[1.6]">{texteRubrique[r.numero]}</p>
-                ) : (
-                  <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">Non renseigné.</p>
-                )}
-              </CarteFiche>
-            ))}
+                          <p className="m-0 mt-2 text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+                            {EN_CLAIR_R4512_7_EN_COURS} {CONSTAT_HEURES_REVISEES}
+                          </p>
+                          <LegalBadge
+                            className="mt-2"
+                            reference="Art. R. 4512-7 CT"
+                            href={URL_R4512_7}
+                            extrait={R4512_7_1_EN_COURS}
+                          />
+                          {planSignable && (
+                            <HeuresReviseesForm planId={plan.id} dejaNotees={plan.heuresPrevisiblesRevisees !== null} />
+                          )}
+                        </Bloc>
 
-            <LegalBadge className="mt-1" reference="Art. R. 4512-8 CT" href={URL_R4512_8}>
-              {/* LE VERBATIM SE COMPOSE, IL NE SE RECOPIE PAS (`contenu-r4512-8.ts`). */}
-              {TEXTE_R4512_8}
-            </LegalBadge>
+                        {/* TROIS ARTICLES QUI DISENT CE QUE LE PLAN CONTIENT,
+                            ET QUE CE PLAN NE PORTE PAS. Écrits un par un : la
+                            garde des extraits lit la `reference` littérale. */}
+                        <Bloc titre="Ce que d'autres articles demandent au plan">
+                          <ul className="m-0 flex list-none flex-col gap-4 p-0 text-[13.5px] leading-[1.6]">
+                            <li>
+                              <ArticleEnClair texte={EN_CLAIR_R4512_9} constat={CONSTAT_R4512_9}>
+                                <LegalBadge className="mt-2" reference="Art. R. 4512-9 CT" href={URL_R4512_9} extrait={R4512_9} />
+                              </ArticleEnClair>
+                            </li>
+                            <li>
+                              <ArticleEnClair texte={EN_CLAIR_R4512_11} constat={CONSTAT_R4512_11}>
+                                <LegalBadge className="mt-2" reference="Art. R. 4512-11 CT" href={URL_R4512_11} extrait={R4512_11} />
+                              </ArticleEnClair>
+                            </li>
+                            <li>
+                              <ArticleEnClair texte={EN_CLAIR_R4463_8}>
+                                <LegalBadge className="mt-2" reference="Art. R. 4463-8 CT" href={URL_R4463_8} extrait={R4463_8} />
+                              </ArticleEnClair>
+                            </li>
+                          </ul>
+                        </Bloc>
 
-            {/* LE SUIVI RÉGLEMENTAIRE, après le contenu (cahier de reprise
-                § 1.1) : rien n'en est retiré. */}
-            {diag.ecritObligatoire && (
-              <CarteFiche titre="Pourquoi l'écrit est obligatoire">
-                <ul className="m-0 flex list-disc flex-col gap-1.5 pl-5 text-[14.5px] leading-[1.6]">
-                  {diag.raisons.map((raison) => (
-                    <li key={raison}>{raison}</li>
-                  ))}
-                </ul>
-                <LegalBadge className="mt-3" reference="Art. R. 4512-7 CT" href={URL_R4512_7}>
-                  {SENS_R4512_7}
-                </LegalBadge>
-              </CarteFiche>
+                        {/* R. 4512-1 à part : il ne demande rien AU PLAN. */}
+                        <Bloc titre="Nouveaux sous-traitants">
+                          <ArticleEnClair texte={EN_CLAIR_R4512_1} constat={CONSTAT_R4512_1}>
+                            <LegalBadge className="mt-2" reference="Art. R. 4512-1 CT" href={URL_R4512_1} extrait={R4512_1}>
+                              {CHAPITRE_R4512}
+                            </LegalBadge>
+                          </ArticleEnClair>
+                        </Bloc>
+
+                        <Bloc titre="Les textes">
+                          <div className="flex flex-wrap gap-2">
+                            <LegalBadge reference="Art. R. 4512-8 CT" href={URL_R4512_8}>
+                              {/* LE VERBATIM SE COMPOSE, IL NE SE RECOPIE PAS (`contenu-r4512-8.ts`). */}
+                              {TEXTE_R4512_8}
+                            </LegalBadge>
+                            <LegalBadge
+                              reference="Art. R. 4512-6 à R. 4512-12 CT"
+                              href="https://www.legifrance.gouv.fr/codes/id/LEGISCTA000018529787/"
+                            >
+                              Le plan de prévention est établi conjointement par le chef de l&apos;entreprise
+                              utilisatrice et celui de l&apos;entreprise extérieure avant toute intervention, à la suite
+                              d&apos;une inspection commune des lieux. Il précise les mesures de prévention prises par
+                              chaque entreprise face aux risques d&apos;interférence.
+                            </LegalBadge>
+                          </div>
+                        </Bloc>
+                      </div>
+                    </details>
+                  </Section>
+                </article>
+              </div>
             )}
-            {/* R. 4512-12, cité quand l'écrit est obligatoire ET quand la
-                durée manque — l'incertitude ne réduit pas la couverture. */}
-            {citeR4512_12(diag.ecrit) && (
-              <CarteFiche titre="Inspection du travail">
-                {diag.ecrit === "indetermine" && (
-                  <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
-                    {FAIT_DUREE_NON_RENSEIGNEE}
-                  </p>
-                )}
-                <p className={`m-0 text-[14px] leading-[1.6] ${diag.ecrit === "indetermine" ? "mt-2" : ""}`}>
-                  {diag.ecrit === "indetermine" ? EN_CLAIR_R4512_12_SI_ECRIT : EN_CLAIR_R4512_12}
-                </p>
-                <p className="m-0 mt-3 text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                  {CONSTAT_R4512_12}
-                </p>
-                <LegalBadge
-                  className="mt-3"
-                  reference="Art. R. 4512-12 CT"
-                  href={URL_R4512_12}
-                  extrait={EXTRAIT_R4512_12}
-                />
-                {/* C45 : la trace déclarée du 2°. */}
-                <InformationInspectionForm
-                  planId={plan.id}
-                  informeeLe={plan.inspectionTravailInformeeLe ? cleJourCivil(plan.inspectionTravailInformeeLe) : null}
-                  informeeLeTexte={
-                    plan.inspectionTravailInformeeLe ? formaterDateLongueFr(plan.inspectionTravailInformeeLe) : null
-                  }
-                />
-              </CarteFiche>
-            )}
-            {/* R. 4512-7, 1°, seconde phrase (2026-10-12) : le seuil vaut aussi
-                quand il apparaît en cours de chantier. Hors empreinte. */}
-            <CarteFiche titre="Heures prévisibles en cours de chantier">
-              <p className="m-0 text-[14px] leading-[1.6]">
-                {plan.heuresPrevisiblesRevisees != null && plan.heuresPrevisiblesReviseesLe
-                  ? `${ligneHeuresRevisees(
-                      plan.heuresPrevisiblesRevisees,
-                      formaterDateFr(plan.heuresPrevisiblesReviseesLe),
-                    )}.`
-                  : "Aucune révision notée."}
-              </p>
-              <p className="m-0 mt-2 text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-                {EN_CLAIR_R4512_7_EN_COURS} {CONSTAT_HEURES_REVISEES}
-              </p>
-              <LegalBadge
-                className="mt-2"
-                reference="Art. R. 4512-7 CT"
-                href={URL_R4512_7}
-                extrait={R4512_7_1_EN_COURS}
-              />
-              {planSignable && (
-                <HeuresReviseesForm planId={plan.id} dejaNotees={plan.heuresPrevisiblesRevisees !== null} />
-              )}
-            </CarteFiche>
-
-            {/* TROIS ARTICLES QUI DISENT CE QUE LE PLAN CONTIENT, ET QUE CE
-                PLAN NE PORTE PAS. Écrits un par un : la garde des extraits lit
-                la `reference` littérale. */}
-            <CarteFiche titre="Ce que d'autres articles demandent au plan">
-              <ul className="m-0 flex list-none flex-col gap-4 p-0 text-[13.5px] leading-[1.6]">
-                <li>
-                  <ArticleEnClair texte={EN_CLAIR_R4512_9} constat={CONSTAT_R4512_9}>
-                    <LegalBadge className="mt-2" reference="Art. R. 4512-9 CT" href={URL_R4512_9} extrait={R4512_9} />
-                  </ArticleEnClair>
-                </li>
-                <li>
-                  <ArticleEnClair texte={EN_CLAIR_R4512_11} constat={CONSTAT_R4512_11}>
-                    <LegalBadge className="mt-2" reference="Art. R. 4512-11 CT" href={URL_R4512_11} extrait={R4512_11} />
-                  </ArticleEnClair>
-                </li>
-                <li>
-                  <ArticleEnClair texte={EN_CLAIR_R4463_8}>
-                    <LegalBadge className="mt-2" reference="Art. R. 4463-8 CT" href={URL_R4463_8} extrait={R4463_8} />
-                  </ArticleEnClair>
-                </li>
-              </ul>
-            </CarteFiche>
-
-            {/* R. 4512-1 à part : il ne demande rien AU PLAN. */}
-            <CarteFiche titre="Nouveaux sous-traitants">
-              <ArticleEnClair texte={EN_CLAIR_R4512_1} constat={CONSTAT_R4512_1}>
-                <LegalBadge className="mt-2" reference="Art. R. 4512-1 CT" href={URL_R4512_1} extrait={R4512_1}>
-                  {CHAPITRE_R4512}
-                </LegalBadge>
-              </ArticleEnClair>
-            </CarteFiche>
-
-            <div className="pt-2">
-              <LegalBadge
-                reference="Art. R. 4512-6 à R. 4512-12 CT"
-                href="https://www.legifrance.gouv.fr/codes/id/LEGISCTA000018529787/"
-              >
-                Le plan de prévention est établi conjointement par le chef de l&apos;entreprise utilisatrice et celui
-                de l&apos;entreprise extérieure avant toute intervention, à la suite d&apos;une inspection commune des
-                lieux. Il précise les mesures de prévention prises par chaque entreprise face aux risques
-                d&apos;interférence.
-              </LegalBadge>
-            </div>
-          </div>
-        </AnnonceFiche>
+          </AnnonceFiche>
+        </div>
       </div>
     </main>
   );

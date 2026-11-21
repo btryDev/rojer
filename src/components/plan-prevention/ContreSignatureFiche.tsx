@@ -145,6 +145,49 @@ function Ligne({ l }: { l: LigneBandeau }) {
   }
 }
 
+/** La proposition relue contre le plan d'aujourd'hui ; `null` si elle ne se lit plus. */
+function lireBandeau(plan: PlanComparable, contenu: Prisma.JsonValue) {
+  const lue = propositionSchema.safeParse(contenu);
+  return lue.success ? bandeauDeLaProposition(plan, lue.data) : null;
+}
+
+const nombreDeModifications = (b: { modifies: number; ajoutes: number; supprimes: number }) =>
+  b.modifies + b.ajoutes + b.supprimes;
+const modifications = (n: number) => `${n} modification${n > 1 ? "s" : ""}`;
+const recue = (d: Date) => `${FMT_JOUR.format(d)} à ${formaterHeureFr(d).replace(":", " h ")}`;
+
+/**
+ * Le rappel de l'onglet « Plan de prévention » (2026-11-21, maquette V3) :
+ * une proposition attend, la décision se prend dans l'onglet « Suivi ».
+ */
+export function RappelProposition({
+  proposition,
+  plan,
+  suiviHref,
+}: {
+  proposition: { contenu: Prisma.JsonValue; createdAt: Date };
+  plan: PlanComparable;
+  suiviHref: string;
+}) {
+  const b = lireBandeau(plan, proposition.contenu);
+  const n = b ? nombreDeModifications(b) : 0;
+  return (
+    <Link
+      href={suiviHref}
+      className="flex flex-wrap items-center gap-3 rounded-[18px] border border-[color:var(--board-amber)] bg-[color:var(--board-amber-wash)] px-[18px] py-3 text-[color:var(--board-ink)]"
+    >
+      <span aria-hidden className="size-2 flex-none rounded-full bg-[color:var(--board-amber-ink)]" />
+      <span className="min-w-0 flex-[1_1_320px] text-[14.5px]">
+        <strong className="font-semibold">
+          {plan.entrepriseExterieureRaison} a proposé {n > 0 ? modifications(n) : "des modifications"}
+        </strong>{" "}
+        le {recue(proposition.createdAt)}. Aucune signature ne se recueille avant votre décision.
+      </span>
+      <span className="text-[14px] font-semibold text-[color:var(--board-amber-ink)]">Voir et décider →</span>
+    </Link>
+  );
+}
+
 export function PropositionEnAttente({
   proposition,
   plan,
@@ -155,10 +198,9 @@ export function PropositionEnAttente({
   /** Qui a proposé : le nom du lien, à défaut son adresse. */
   auteur: string | null;
 }) {
-  const lue = propositionSchema.safeParse(proposition.contenu);
-  const b = lue.success ? bandeauDeLaProposition(plan, lue.data) : null;
+  const b = lireBandeau(plan, proposition.contenu);
   const raison = plan.entrepriseExterieureRaison;
-  const recue = `${FMT_JOUR.format(proposition.createdAt)} à ${formaterHeureFr(proposition.createdAt).replace(":", " h ")}`;
+  const n = b ? nombreDeModifications(b) : 0;
   return (
     <section
       aria-labelledby="proposition-titre"
@@ -166,11 +208,13 @@ export function PropositionEnAttente({
     >
       <div className="flex flex-wrap items-end justify-between gap-3.5">
         <div className="max-w-[720px]">
+          {/* [2026-11-21, maquette V3] « Action requise », et le nombre de
+              modifications dans le titre. */}
           <p className="board-eyebrow m-0 text-[11px] tracking-[0.16em] text-[color:var(--board-amber-ink)]">
-            Proposition de modification · reçue le {recue}
+            Action requise · reçue le {recue(proposition.createdAt)}
           </p>
           <h2 id="proposition-titre" className="board-titre m-0 mt-2 text-[28px] leading-[1.02] md:text-[34px]">
-            {raison} propose de modifier le plan
+            {n > 0 ? `${raison} propose ${modifications(n)}` : `${raison} propose de modifier le plan`}
           </h2>
           <p className="m-0 mt-2 text-[15px] text-[color:var(--board-slate-ink)]">
             {auteur ? `${auteur}, depuis son lien. ` : ""}Aucune signature ne se recueille avant votre décision.
