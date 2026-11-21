@@ -64,6 +64,7 @@ export default async function ModifierPlanPreventionPage({
               raisonSociale: p.raisonSociale,
               contactNom: p.contactNom,
               contactEmail: p.contactEmail,
+              contactTelephone: p.contactTelephone,
               siret: p.siret,
             }))}
             batiments={batiments}

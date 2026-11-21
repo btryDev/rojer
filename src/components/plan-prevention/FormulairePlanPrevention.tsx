@@ -58,6 +58,7 @@ type PrestataireLite = {
   raisonSociale: string;
   contactNom: string;
   contactEmail: string;
+  contactTelephone: string | null;
   siret: string | null;
 };
 
@@ -557,7 +558,8 @@ export function FormulairePlanPrevention({
                   type="tel"
                   label="Téléphone (facultatif)"
                   maxLength={30}
-                  defaultValue={valeur(plan?.efChefTelephone)}
+                  defaultValue={prestataireChoisi?.contactTelephone ?? valeur(plan?.efChefTelephone)}
+                  key={`telef-${prestataireChoisi?.id ?? "libre"}`}
                   erreur={err("efChefTelephone")}
                 />
               </div>
@@ -1023,27 +1025,17 @@ export function FormulairePlanPrevention({
                     className="group border-t border-[color:var(--board-slate-pale)] py-3.5"
                   >
                     <Rubrique numero={r.numero} titre={rubrique.titre} remplie={rubrique.renseignee(contenu)} />
-                    <div className="mt-3">
-                      <label className="sr-only" htmlFor={r.name}>
-                        {r.numero}° — {rubrique.titre}
-                      </label>
-                      <textarea
-                        id={r.name}
-                        name={r.name}
-                        defaultValue={valeur(plan?.[r.name])}
-                        rows={r.rows}
-                        maxLength={4000}
-                        className={`${TEXTAREA} min-h-[88px]`}
-                        placeholder={r.placeholder}
-                        aria-invalid={Boolean(err(r.name))}
-                        aria-describedby={err(r.name) ? `${r.name}-erreur` : undefined}
-                      />
-                      {err(r.name) && (
-                        <p id={`${r.name}-erreur`} className="m-0 mt-1.5 text-[12.5px] text-[color:var(--board-signal-ink)]">
-                          {err(r.name)}
-                        </p>
-                      )}
-                    </div>
+                    <ZoneTexte
+                      className="mt-3"
+                      name={r.name}
+                      label={`${r.numero}° — ${rubrique.titre}`}
+                      labelMasque
+                      defaultValue={valeur(plan?.[r.name])}
+                      rows={r.rows}
+                      hauteur="min-h-[88px]"
+                      placeholder={r.placeholder}
+                      erreur={err(r.name)}
+                    />
                   </details>
                 );
               })}
@@ -1075,27 +1067,16 @@ export function FormulairePlanPrevention({
             <section id="pp-complements" className={CARTE} aria-labelledby="pp-complements-titre">
               <EnTeteCarte id="pp-complements-titre" titre="Compléments" note="Facultatif" />
               {COMPLEMENTS_TEXTE.map((c) => (
-                <div key={c.name}>
-                  <label className="label-board" htmlFor={c.name}>
-                    {LIBELLES_COMPLEMENTS[c.name]}
-                  </label>
-                  <textarea
-                    id={c.name}
-                    name={c.name}
-                    defaultValue={valeur(plan?.[c.name])}
-                    rows={2}
-                    maxLength={4000}
-                    className={`${TEXTAREA} min-h-[72px]`}
-                    placeholder={c.placeholder}
-                    aria-invalid={Boolean(err(c.name))}
-                    aria-describedby={err(c.name) ? `${c.name}-erreur` : undefined}
-                  />
-                  {err(c.name) && (
-                    <p id={`${c.name}-erreur`} className="m-0 mt-1.5 text-[12.5px] text-[color:var(--board-signal-ink)]">
-                      {err(c.name)}
-                    </p>
-                  )}
-                </div>
+                <ZoneTexte
+                  key={c.name}
+                  name={c.name}
+                  label={LIBELLES_COMPLEMENTS[c.name]}
+                  defaultValue={valeur(plan?.[c.name])}
+                  rows={2}
+                  hauteur="min-h-[72px]"
+                  placeholder={c.placeholder}
+                  erreur={err(c.name)}
+                />
               ))}
             </section>
           </fieldset>
@@ -1160,6 +1141,54 @@ function EnTeteCarte({ id, titre, note }: { id: string; titre: string; note?: st
         {titre}
       </h2>
       {note && <span className="text-[13px] text-[color:var(--board-slate-soft)]">{note}</span>}
+    </div>
+  );
+}
+
+/** Un bloc de texte du plan (rubrique de R. 4512-8 ou complément), avec son erreur. */
+function ZoneTexte({
+  name,
+  label,
+  labelMasque = false,
+  defaultValue,
+  rows,
+  hauteur,
+  placeholder,
+  erreur,
+  className,
+}: {
+  name: string;
+  label: string;
+  /** Le titre est déjà dit au-dessus (rubrique repliable) : libellé pour lecteur d'écran seul. */
+  labelMasque?: boolean;
+  defaultValue: string;
+  rows: number;
+  hauteur: string;
+  placeholder: string;
+  erreur?: string;
+  className?: string;
+}) {
+  return (
+    <div className={className}>
+      <label className={labelMasque ? "sr-only" : "label-board"} htmlFor={name}>
+        {label}
+      </label>
+      <textarea
+        id={name}
+        name={name}
+        defaultValue={defaultValue}
+        rows={rows}
+        maxLength={4000}
+        className={`${TEXTAREA} ${hauteur}`}
+        placeholder={placeholder}
+        aria-invalid={Boolean(erreur)}
+        aria-describedby={erreur ? `${name}-erreur` : undefined}
+      />
+      {erreur && (
+        <p id={`${name}-erreur`} className="m-0 mt-1.5 text-[12.5px] text-[color:var(--board-signal-ink)]">
+          {erreur}
+        </p>
+      )}
     </div>
   );
 }
