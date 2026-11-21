@@ -112,3 +112,32 @@ describe("renvoi d'un nouveau code", () => {
     expect(renvoiOtpPossibleLe(null)).toBeNull();
   });
 });
+
+describe("le HMAC des codes (2026-11-21)", () => {
+  it("dépend de la clé : une autre clé ne reconnaît pas le code", async () => {
+    const { cleDesCodes } = await import("./otp");
+    const avant = process.env.SIGNATURE_CODE_SECRET;
+    try {
+      process.env.SIGNATURE_CODE_SECRET = "a".repeat(32);
+      const h = hashOtp("123456");
+      expect(verifyOtp("123456", h)).toBe(true);
+      process.env.SIGNATURE_CODE_SECRET = "b".repeat(32);
+      expect(verifyOtp("123456", h)).toBe(false);
+      expect(cleDesCodes()).toBe("b".repeat(32));
+    } finally {
+      if (avant === undefined) delete process.env.SIGNATURE_CODE_SECRET;
+      else process.env.SIGNATURE_CODE_SECRET = avant;
+    }
+  });
+
+  it("n'est pas le SHA-256 nu du code", async () => {
+    const { sha256Hex } = await import("./hash");
+    expect(hashOtp("123456")).not.toBe(sha256Hex("123456"));
+  });
+
+  it("absente en production : refus clair, jamais la clé de développement", async () => {
+    const { cleDesCodes } = await import("./otp");
+    expect(() => cleDesCodes({ NODE_ENV: "production" } as NodeJS.ProcessEnv)).toThrow(/SIGNATURE_CODE_SECRET absente/);
+    expect(cleDesCodes({ NODE_ENV: "test" } as NodeJS.ProcessEnv)).toMatch(/developpement/);
+  });
+});

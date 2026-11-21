@@ -1,11 +1,15 @@
-import { randomInt, timingSafeEqual } from "node:crypto";
-import { sha256Hex } from "./hash";
+import { createHmac, randomInt, timingSafeEqual } from "node:crypto";
 
 /**
  * OTP à 6 chiffres, usage unique, durée de vie courte.
  *
  * - Génération : RNG cryptographique (Node crypto.randomInt).
- * - Stockage : uniquement le SHA-256. Le clair n'est jamais persisté.
+ * - Stockage : ~~uniquement le SHA-256~~ [2026-11-21, décision de la
+ *   propriétaire : un HMAC-SHA-256 sous une clé hors base,
+ *   `SIGNATURE_CODE_SECRET` — un million de codes possibles, une empreinte
+ *   nue se retrouvait par essai exhaustif depuis une copie de la base]. Le
+ *   clair n'est jamais persisté. Changer la clé invalide les codes en cours
+ *   (10 minutes) : pas de double lecture.
  * - Vérification : comparaison en temps constant (timingSafeEqual) pour
  *   éviter les attaques par timing.
  * - 3 essais par LIEN, nouveaux codes compris (compteur porté par
@@ -14,7 +18,8 @@ import { sha256Hex } from "./hash";
  * - 5 envois de code par adresse et par heure (`OTP_ENVOIS_MAX_PAR_HEURE`).
  * - Expiration : 10 minutes, portée par `AccessToken.otpExpireLe`.
  *
- * Ce module reste **pur** : aucune lecture base, l'horloge est injectée.
+ * Ce module reste **pur** : aucune lecture base, l'horloge est injectée ; il
+ * lit seulement la clé des codes dans l'environnement.
  */
 
 export const OTP_LENGTH = 6;
@@ -44,8 +49,28 @@ export function generateOtp(): string {
   return n.toString().padStart(OTP_LENGTH, "0");
 }
 
+/** La clé de développement : jamais en production (`cleDesCodes`). */
+const CLE_DE_DEVELOPPEMENT = "rojer-developpement-cle-des-codes-de-signature-non-secrete";
+
+/**
+ * La clé du HMAC des codes. Absente en production : refus clair à l'envoi
+ * comme à la vérification, plutôt qu'une clé connue de tous. En local et en
+ * test, la clé de développement.
+ */
+export function cleDesCodes(env: NodeJS.ProcessEnv = process.env): string {
+  const cle = env.SIGNATURE_CODE_SECRET?.trim();
+  if (cle) return cle;
+  if (env.NODE_ENV === "production") {
+    throw new Error(
+      "SIGNATURE_CODE_SECRET absente : aucun code de signature ne peut être émis ni vérifié en production. " +
+        "Posez la variable (32 caractères au moins, `openssl rand -base64 32`).",
+    );
+  }
+  return CLE_DE_DEVELOPPEMENT;
+}
+
 export function hashOtp(otp: string): string {
-  return sha256Hex(otp);
+  return createHmac("sha256", cleDesCodes()).update(otp).digest("hex");
 }
 
 export function verifyOtp(saisie: string, hashAttendu: string): boolean {
