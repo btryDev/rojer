@@ -27,8 +27,9 @@ const VERT = "bg-[color:var(--board-green)] text-[color:var(--board-green-ink)]"
 const ROUGE_PALE = "bg-[color:var(--board-signal-wash)] text-[color:var(--board-signal-ink)]";
 const ARDOISE = "bg-[color:var(--board-slate-pale)] text-[color:var(--board-slate-ink)]";
 
-/** Lieu et fréquence d'un risque (2026-11-21), dits sous ses mesures. */
+/** Famille, lieu et fréquence d'un risque (2026-11-21), dits sous ses mesures. */
 const PRECISIONS = [
+  { cle: "famille", libelle: "Famille" },
   { cle: "lieu", libelle: "Lieu" },
   { cle: "frequence", libelle: "Fréquence" },
 ] as const;

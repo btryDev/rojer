@@ -139,28 +139,54 @@ describe("une proposition qui touche aux champs neufs", () => {
     expect(aucunEcart(ecartsDeLaProposition(plan, p))).toBe(true);
   });
 
-  it("la famille ne se propose pas : envoyée quand même, elle est écartée", () => {
+  const ligne1 = {
+    id: "l1",
+    risque: "Chutes en hauteur",
+    mesureEntrepriseUtilisatrice: "Accès balisé",
+    mesureEntrepriseExterieure: "Harnais",
+    lieu: "Toiture",
+    frequence: "",
+  };
+
+  it("la famille se propose : changée, c'est un écart, et le bandeau le montre", () => {
     const p = lire({
       fiche: ficheDuPlan,
       lignes: [
-        {
-          id: "l1",
-          risque: "Chutes en hauteur",
-          mesureEntrepriseUtilisatrice: "Accès balisé",
-          mesureEntrepriseExterieure: "Harnais",
-          famille: "AMIANTE",
-          lieu: "Toiture",
-          frequence: "",
-        },
-        { risque: "Poussières", mesureEntrepriseUtilisatrice: "", mesureEntrepriseExterieure: "", famille: "AMIANTE" },
+        { ...ligne1, famille: "AMIANTE" },
+        { risque: "Poussières", mesureEntrepriseUtilisatrice: "", mesureEntrepriseExterieure: "", famille: "BIOLOGIQUE" },
       ],
     });
-    expect(p.lignes.map((l) => "famille" in l)).toEqual([false, false]);
-    // Une famille « changée » n'est pas un écart : seule la ligne ajoutée l'est.
     const e = ecartsDeLaProposition(plan, p);
-    expect([e.modifiees.length, e.ajoutees.length]).toEqual([0, 1]);
-    // À l'acceptation : la famille du plan pour la ligne connue, aucune pour l'ajoutée.
-    expect(famillesAAppliquer(plan.lignes, p.lignes)).toEqual(["CHUTES_HAUTEUR", null]);
+    expect([e.modifiees.length, e.ajoutees.length]).toEqual([1, 1]);
+    const b = bandeauDeLaProposition(plan, p).lignes;
+    expect(b.find((l) => l.type === "modifie")).toMatchObject({
+      famille: "Amiante",
+      changements: { famille: { avant: "Chutes en hauteur", apres: "Amiante" }, risque: null, lieu: null },
+    });
+    expect(b.find((l) => l.type === "ajoute")).toMatchObject({ famille: "Biologique" });
+    // À l'acceptation : la famille proposée.
+    expect(famillesAAppliquer(plan.lignes, p.lignes)).toEqual(["AMIANTE", "BIOLOGIQUE"]);
+  });
+
+  it("« sans famille » se propose aussi, et se voit", () => {
+    const p = lire({ fiche: ficheDuPlan, lignes: [{ ...ligne1, famille: null }] });
+    const m = bandeauDeLaProposition(plan, p).lignes.find((l) => l.type === "modifie");
+    expect(m).toMatchObject({ changements: { famille: { avant: "Chutes en hauteur", apres: "" } } });
+    expect(famillesAAppliquer(plan.lignes, p.lignes)).toEqual([null]);
+  });
+
+  it("une proposition sans la clé famille (d'avant ce lot) garde celle du plan, sans écart", () => {
+    const p = lire({ fiche: ficheDuPlan, lignes: [ligne1] });
+    expect(aucunEcart(ecartsDeLaProposition(plan, p))).toBe(true);
+    expect(famillesAAppliquer(plan.lignes, p.lignes)).toEqual(["CHUTES_HAUTEUR"]);
+  });
+
+  it("une famille hors de la liste est refusée", () => {
+    const r = lireProposition(
+      JSON.stringify({ fiche: ficheDuPlan, lignes: [{ ...ligne1, famille: "INVENTEE" }] }),
+      ids,
+    );
+    expect(r.ok).toBe(false);
   });
 
   it("une ligne ajoutée montre son lieu et sa fréquence au dirigeant", () => {

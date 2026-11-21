@@ -342,9 +342,8 @@ describe("le dirigeant traite la proposition (ADR-061 § 4)", () => {
     });
   });
 
-  it("accepter garde la famille que la ligne porte au plan, même si la proposition en nomme une autre", async () => {
-    // Une proposition qui force une famille sur la ligne connue et en ajoute
-    // une autre : la famille ne se propose pas (2026-11-21).
+  it("accepter applique la famille proposée, ligne connue comme ajoutée (2026-11-21)", async () => {
+    // L'entreprise extérieure propose la famille, comme dans RiskBoard.
     await decider("refuser");
     await proposer({
       fiche: FICHE,
@@ -358,9 +357,15 @@ describe("le dirigeant traite la proposition (ADR-061 § 4)", () => {
     fd.set("decision", "accepter");
     expect((await traiterProposition(id, { status: "idle" }, fd)).status).toBe("success");
     expect((prismaMock.planPrevention.lignes[0].lignes as Ligne[]).map((l) => l.famille)).toEqual([
-      "CHUTES_HAUTEUR",
-      null,
+      "AMIANTE",
+      "AMIANTE",
     ]);
+  });
+
+  it("accepter une proposition sans la clé famille garde celle du plan", async () => {
+    // La proposition du `beforeEach` a la forme d'avant ce lot.
+    expect((await decider("accepter")).status).toBe("success");
+    expect((prismaMock.planPrevention.lignes[0].lignes as Ligne[])[0].famille).toBe("CHUTES_HAUTEUR");
   });
 
   it("corriger : la proposition s'applique, marquée « correction en cours » (2026-11-19)", async () => {

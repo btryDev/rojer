@@ -8,7 +8,7 @@ import {
   type PropositionState,
 } from "@/lib/plan-prevention/proposition-actions";
 import { LIGNES_MAX } from "@/lib/plan-prevention/proposition";
-import { libelleFamille } from "@/lib/plan-prevention/familles-risque";
+import { FAMILLES_RISQUE } from "@/lib/plan-prevention/familles-risque";
 
 /**
  * « Un point ne convient pas ? Proposer des modifications » — sur la page du
@@ -41,9 +41,9 @@ type Ligne = {
   risque: string;
   mesureEntrepriseUtilisatrice: string;
   mesureEntrepriseExterieure: string;
-  /** La famille de la ligne, affichée seulement : elle ne se propose pas, et
-   *  le serveur garde celle du plan (`famillesAAppliquer`, 2026-11-21). */
-  famille: string | null;
+  /** La famille de RiskBoard (2026-11-21), proposable comme le reste ; vide :
+   *  sans famille. */
+  famille: string;
   lieu: string;
   frequence: string;
 };
@@ -56,7 +56,7 @@ const LIGNE_AJOUTEE: Omit<Ligne, "id" | "cle"> = {
   risque: "",
   mesureEntrepriseUtilisatrice: "",
   mesureEntrepriseExterieure: "",
-  famille: null,
+  famille: "",
   lieu: "",
   frequence: "",
 };
@@ -111,7 +111,7 @@ export function PropositionPlanForm({
       risque: l.risque,
       mesureEntrepriseUtilisatrice: l.mesureEntrepriseUtilisatrice ?? "",
       mesureEntrepriseExterieure: l.mesureEntrepriseExterieure ?? "",
-      famille: l.famille,
+      famille: l.famille ?? "",
       lieu: l.lieu ?? "",
       frequence: l.frequence ?? "",
     })),
@@ -147,16 +147,17 @@ export function PropositionPlanForm({
     );
   }
 
-  const changerLigne = (cle: string, champ: keyof Omit<Ligne, "id" | "cle" | "famille">, valeur: string) =>
+  const changerLigne = (cle: string, champ: keyof Omit<Ligne, "id" | "cle">, valeur: string) =>
     setLignes((ls) => ls.map((l) => (l.cle === cle ? { ...l, [champ]: valeur } : l)));
 
   const json = JSON.stringify({
     fiche,
-    lignes: lignes.map(({ id, risque, mesureEntrepriseUtilisatrice, mesureEntrepriseExterieure, lieu, frequence }) => ({
+    lignes: lignes.map(({ id, risque, mesureEntrepriseUtilisatrice, mesureEntrepriseExterieure, famille, lieu, frequence }) => ({
       ...(id ? { id } : {}),
       risque,
       mesureEntrepriseUtilisatrice,
       mesureEntrepriseExterieure,
+      famille: famille || null,
       lieu,
       frequence,
     })),
@@ -253,7 +254,6 @@ export function PropositionPlanForm({
               <p className="m-0 font-mono text-[10px] tracking-[0.12em] uppercase text-[color:var(--board-slate-soft)]">
                 Risque {i + 1}
                 {!l.id && " (ajouté)"}
-                {l.famille && ` · ${libelleFamille(l.famille)}`}
               </p>
               <Button
                 type="button"
@@ -265,6 +265,22 @@ export function PropositionPlanForm({
                 Retirer
               </Button>
             </div>
+            <label className="label-board" htmlFor={`pp-famille-${l.cle}`}>
+              Famille de risque
+            </label>
+            <select
+              id={`pp-famille-${l.cle}`}
+              className="champ-board"
+              value={l.famille}
+              onChange={(e) => changerLigne(l.cle, "famille", e.target.value)}
+            >
+              <option value="">Sans famille</option>
+              {FAMILLES_RISQUE.map((f) => (
+                <option key={f.code} value={f.code}>
+                  {f.libelle}
+                </option>
+              ))}
+            </select>
             <label className="label-board" htmlFor={`pp-risque-${l.cle}`}>
               Risque *
             </label>

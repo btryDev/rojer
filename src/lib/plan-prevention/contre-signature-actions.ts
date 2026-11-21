@@ -188,7 +188,7 @@ export async function traiterProposition(
       };
     }
     const { fiche, lignes } = lecture.proposition;
-    // La famille ne se propose pas : celle du plan, ou aucune pour une ligne ajoutée.
+    // La famille proposée ; absente (proposition d'avant le 2026-11-21), celle du plan.
     const familles = famillesAAppliquer(plan.lignes, lignes);
     // Accepter révoque les signatures déjà posées (ADR-061, revue de sécurité
     // du 2026-11-19) : elles portaient sur le plan d'avant la proposition.

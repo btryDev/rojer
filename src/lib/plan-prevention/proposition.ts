@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ligneSchema } from "./schema";
+import { CODES_FAMILLE_RISQUE } from "./familles-risque";
 
 /**
  * La proposition de modification d'une entreprise extérieure (ADR-061 § 3).
@@ -53,12 +54,16 @@ export const propositionSchema = z.object({
   }),
   lignes: z
     .array(
-      // LA FAMILLE NE SE PROPOSE PAS (2026-11-21) : `omit` la retire du
-      // schéma, et zod écarte la clé si elle est envoyée quand même. À
-      // l'acceptation, une ligne connue garde la famille du plan, une ligne
-      // ajoutée n'en a pas (`famillesAAppliquer`).
+      // LA FAMILLE SE PROPOSE (2026-11-21, alignement sur RiskBoard,
+      // `proposedRiskSchema`) : validée par la liste, `null` pour « sans
+      // famille ». Absente — une proposition d'avant ce lot —, la ligne garde
+      // la famille du plan (`famillesAAppliquer`).
       ligneSchema.omit({ famille: true }).extend({
         id: z.string().min(1).max(60).optional(),
+        famille: z.preprocess(
+          (v) => (typeof v === "string" ? v.trim() || null : v),
+          z.enum(CODES_FAMILLE_RISQUE, { error: "Famille de risque inconnue" }).nullable().optional(),
+        ),
       }),
     )
     .min(1, "Gardez au moins un risque identifié")
@@ -172,7 +177,9 @@ export function ecartsDeLaProposition(plan: PlanComparable, p: Proposition): Eca
       !egal(avant.mesureEntrepriseUtilisatrice, l.mesureEntrepriseUtilisatrice) ||
       !egal(avant.mesureEntrepriseExterieure, l.mesureEntrepriseExterieure) ||
       !egal(avant.lieu, l.lieu) ||
-      !egal(avant.frequence, l.frequence)
+      !egal(avant.frequence, l.frequence) ||
+      // Absente : non proposée, rien ne change.
+      (l.famille !== undefined && !egal(avant.famille, l.famille))
     ) {
       modifiees.push({ avant, apres: l });
     }
@@ -182,16 +189,19 @@ export function ecartsDeLaProposition(plan: PlanComparable, p: Proposition): Eca
 }
 
 /**
- * La famille de chaque ligne proposée, dans l'ordre proposé : celle que la
- * ligne porte au plan si elle y est déjà, `null` pour une ligne ajoutée. Ce
- * que la proposition aurait envoyé n'est jamais lu.
+ * La famille de chaque ligne proposée, dans l'ordre proposé : la famille
+ * proposée, `null` comprise ; à défaut — proposition d'avant le 2026-11-21,
+ * sans la clé —, celle que la ligne porte au plan, et aucune pour une ligne
+ * ajoutée.
  */
 export function famillesAAppliquer(
   lignesDuPlan: readonly { id: string; famille: string | null }[],
-  proposees: readonly { id?: string }[],
+  proposees: readonly { id?: string; famille?: string | null }[],
 ): (string | null)[] {
   const parId = new Map(lignesDuPlan.map((l) => [l.id, l.famille]));
-  return proposees.map((l) => (l.id ? (parId.get(l.id) ?? null) : null));
+  return proposees.map((l) =>
+    l.famille !== undefined ? l.famille : l.id ? (parId.get(l.id) ?? null) : null,
+  );
 }
 
 export function aucunEcart(e: Ecarts): boolean {
