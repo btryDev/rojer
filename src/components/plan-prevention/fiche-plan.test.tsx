@@ -130,6 +130,23 @@ describe("la fiche du plan", () => {
     expect(lu).not.toMatch(/\bHistorique\b/);
   });
 
+  it("« Ce qui s'est passé » : repliée, fermée par défaut, avec le nombre d'événements ; le contenu est là", async () => {
+    planCourant.valeur = plan({ createdAt: new Date("2026-11-18T09:05:00Z"), liens: [lienEE] });
+    const { default: Page } = await import("@/app/etablissements/[id]/plan-prevention/[planId]/page");
+    const html = renderToStaticMarkup(
+      await Page({ params: Promise.resolve({ id: "e1", planId: "p1" }), searchParams: Promise.resolve({ onglet: "suivi" }) }),
+    );
+    const debut = html.indexOf('<details id="historique"');
+    expect(debut).toBeGreaterThan(-1);
+    const balise = html.slice(debut, html.indexOf(">", debut));
+    expect(balise).not.toContain("open");
+    const details = html.slice(debut, html.indexOf("</details>", debut));
+    expect(details).toMatch(/<summary[^>]*>[\s\S]*Ce qui s&#x27;est passé[\s\S]*3 événements[\s\S]*<\/summary>/);
+    expect(details).toContain("Plan créé");
+    // La carte « Signatures » n'est pas repliée.
+    expect(html.slice(0, debut)).toContain('id="signatures-titre"');
+  });
+
   it("« Plan créé » ouvre l'historique, à la date de création du plan", async () => {
     const lu = await rendre(plan({ createdAt: new Date("2026-11-18T09:05:00Z"), liens: [lienEE] }));
     expect(lu).toMatch(/Plan créé , le 18 novembre 2026 à 10:05/);

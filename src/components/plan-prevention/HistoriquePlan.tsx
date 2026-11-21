@@ -1,4 +1,5 @@
 import { VerifierSignature } from "@/components/signatures/VerifierSignature";
+import { CarteRepliable } from "@/components/ui-kit/CarteRepliable";
 import type { EvenementHistorique, TonHistorique } from "@/lib/plan-prevention/fiche-signatures";
 import { formaterHeureFr } from "@/lib/dates";
 
@@ -49,15 +50,17 @@ export function HistoriquePlan({
   evenements: EvenementHistorique[];
   etablissementId: string;
 }) {
+  const n = evenements.length;
+  // Repliée, fermée par défaut (2026-11-21, décision de la propriétaire) :
+  // `CarteRepliable`, le `<details>` natif du board.
   return (
-    <section
-      aria-labelledby="historique-titre"
-      className="carte-board flex flex-col gap-3 px-6 py-6 md:px-[34px]"
+    <CarteRepliable
+      id="historique"
+      titre="Ce qui s'est passé"
+      compte={`${n} événement${n > 1 ? "s" : ""}`}
+      ouverte={false}
     >
-      <h2 id="historique-titre" className="board-titre m-0 text-[22px]">
-        Ce qui s&apos;est passé
-      </h2>
-      {evenements.length === 0 ? (
+      {n === 0 ? (
         <p className="m-0 text-[13.5px] text-[color:var(--board-slate-mid)]">Rien encore.</p>
       ) : (
         <ol className="m-0 list-none p-0">
@@ -98,6 +101,6 @@ export function HistoriquePlan({
           ))}
         </ol>
       )}
-    </section>
+    </CarteRepliable>
   );
 }
