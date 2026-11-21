@@ -28,6 +28,18 @@ function ecartsDe(plan: PlanComparable, contenu: Prisma.JsonValue): LigneEcart[]
 const modifications = (n: number) => `${n} modification${n > 1 ? "s" : ""}`;
 const recue = (d: Date) => `${formaterJourMoisChiffresFr(d)} à ${formaterHeureEnLettresFr(d)}`;
 
+/** Une cellule vide, la même dans les deux colonnes : un tiret discret, dit « vide » au lecteur d'écran. */
+function Vide() {
+  return (
+    <>
+      <span aria-hidden className="text-[color:var(--board-slate-soft)]">
+        —
+      </span>
+      <span className="sr-only">vide</span>
+    </>
+  );
+}
+
 function TableauEcarts({ lignes }: { lignes: LigneEcart[] }) {
   return (
     <div className="overflow-x-auto">
@@ -44,16 +56,18 @@ function TableauEcarts({ lignes }: { lignes: LigneEcart[] }) {
             <tr key={l.cle} className="border-t border-[color:var(--board-slate-pale)] align-top">
               <td className="py-2.5 pr-4">{l.quoi}</td>
               <td className="whitespace-pre-wrap py-2.5 pr-4">
-                {l.avant ? (
-                  <s className="text-[color:var(--board-slate-soft)]">{l.avant}</s>
-                ) : (
-                  <span className="sr-only">vide</span>
-                )}
+                {l.avant ? <s className="text-[color:var(--board-slate-soft)]">{l.avant}</s> : <Vide />}
               </td>
               <td
                 className={`whitespace-pre-wrap py-2.5 ${l.genre === "supprime" ? "text-[color:var(--board-signal-ink)]" : ""}`}
               >
-                <strong className="font-semibold">{l.apres || "vide"}</strong>
+                {l.apres ? <strong className="font-semibold">{l.apres}</strong> : <Vide />}
+                {/* Un risque ajouté : ce qui sera écrit à l'acceptation. */}
+                {l.details.map((d) => (
+                  <span key={d} className="mt-0.5 block text-[13px] text-[color:var(--board-slate-mid)]">
+                    {d}
+                  </span>
+                ))}
               </td>
             </tr>
           ))}

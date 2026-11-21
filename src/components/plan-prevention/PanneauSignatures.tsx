@@ -8,6 +8,7 @@ import { DemanderSignatureForm } from "@/components/signatures/DemanderSignature
 import { BoutonRevoquerSignatures } from "./ContreSignatureBoutons";
 import { FenetreSigner } from "./FenetreSigner";
 import { CarteActionRequise } from "./ActionRequise";
+import { SECTION_SUIVI } from "./classes-fiche";
 import type { AttenteDirigeant } from "@/lib/plan-prevention/fiche-signatures";
 import { VerifierSignature } from "@/components/signatures/VerifierSignature";
 import {
@@ -313,7 +314,7 @@ export function PanneauSignatures({
 
       <section
         aria-labelledby="signatures-titre"
-        className="flex flex-col gap-3 px-6 py-7 md:px-10"
+        className={`flex flex-col gap-3 ${SECTION_SUIVI}`}
       >
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <h2 id="signatures-titre" className="board-titre m-0 text-[22px]">

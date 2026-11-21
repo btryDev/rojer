@@ -11,8 +11,11 @@ export const GESTE_FICHE =
 
 /**
  * Une section de l'onglet « Suivi » (2026-11-21, « toujours le même bloc ») :
- * dans la carte unique de la fiche, sous la barre d'onglets, séparée de la
- * précédente par un filet — comme les sections du plan. Les sections d'action
- * requise portent, à la place du filet, leur trait de couleur.
+ * dans la carte unique de la fiche, sous la barre d'onglets. ~~Séparée de la
+ * précédente par un filet ; les sections d'action requise portent, à la place
+ * du filet, leur trait de couleur.~~ [2026-11-21, maquette « Bloc Suivi » :
+ * l'action requise est une carte intérieure au-dessus ; les Signatures la
+ * suivent sans filet, l'Historique en porte un (`FILET_SUIVI`).]
  */
-export const SECTION_SUIVI = "border-t border-[color:var(--board-slate-pale)] px-6 py-7 first:border-t-0 md:px-10";
+export const SECTION_SUIVI = "px-6 py-7 md:px-10";
+export const FILET_SUIVI = "border-t border-[color:var(--board-slate-pale)]";

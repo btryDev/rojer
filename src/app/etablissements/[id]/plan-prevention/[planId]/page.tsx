@@ -100,14 +100,17 @@ import {
  * « Télécharger le PDF » à droite ; « Modifier » disparaît dès la première
  * signature] [2026-11-21, retour de la propriétaire, « toujours le même
  * bloc » : une seule carte dans les deux onglets — onglets et TOUS les gestes
- * en tête, puis le contenu ; le suivi en sections à filet, plus en cartes] :
- * - « Plan de prévention » : le plan d'un seul tenant, une carte, des
+ * en tête, puis le contenu ; ~~le suivi en sections à filet, plus en
+ * cartes~~ [maquette « Bloc Suivi » : l'action requise en carte intérieure,
+ * puis les sections]] :
+ * - ~~« Plan de prévention »~~ « Le plan » : le plan d'un seul tenant, des
  *   sections séparées d'un filet ; chaque rubrique de `R. 4512-8` remplie est
  *   une section sous son titre ; les vides se disent en une ligne tant que le
  *   plan n'est pas figé ; les blocs réglementaires d'avant restent tous, en
  *   bas, repliés ;
  * - « Suivi » : l'action requise (la proposition, la correction en cours, ou
- *   la signature), les signatures, puis ce qui s'est passé.
+ *   la signature) dans sa carte, les signatures, puis ~~ce qui s'est passé~~
+ *   l'« Historique », replié.
  * `?openSign=1` ouvre l'onglet « Suivi », qui porte la fenêtre de signature.
  *
  * ~~(2026-11-19, lots 3 et 4, maquette V2) l'en-tête, la barre d'actions

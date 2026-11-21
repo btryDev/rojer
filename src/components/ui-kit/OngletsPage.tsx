@@ -51,7 +51,11 @@ export function OngletsPage({
   libelle: string;
   onglets: readonly Onglet[];
   variante?: "pilules" | "soulignee";
-  /** Variante soulignée : à droite de la rangée (« Télécharger le PDF »). */
+  /**
+   * Variante soulignée : à droite de la rangée ~~(« Télécharger le PDF »)~~
+   * [2026-11-21 : tous les gestes de la carte — sur la fiche du plan,
+   * Modifier, Télécharger le PDF, Clôturer, Supprimer].
+   */
   droite?: ReactNode;
   /** Variante soulignée : l'identifiant du panneau que les onglets commandent. */
   idPanneau?: string;

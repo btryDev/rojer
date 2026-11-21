@@ -16,9 +16,11 @@ import { useAnnonceFiche } from "./AnnonceFiche";
  * au moment du geste (§ 6).
  *
  * [2026-11-19, lot 4, maquette V2 « Bandeau »] « Refuser » / « Corriger » /
- * ~~« Accepter sans modifier »~~ « Accepter » (2026-11-21, maquette « Bloc Suivi ») ; le refus se confirme dans le bandeau. Le
- * résultat s'annonce sur la fiche (`AnnonceFiche`) : le bandeau disparaît
- * avec la proposition traitée, son message disparaissait avec lui.
+ * ~~« Accepter sans modifier »~~ « Accepter » (2026-11-21, maquette « Bloc
+ * Suivi ») ; le refus se confirme dans ~~le bandeau~~ [2026-11-21 : la carte
+ * « À décider »]. Le résultat s'annonce sur la fiche (`AnnonceFiche`) : la
+ * carte disparaît avec la proposition traitée, son message disparaissait avec
+ * elle.
  */
 
 export const PHRASE_PLAFOND =

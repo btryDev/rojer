@@ -1,6 +1,6 @@
 import { VerifierSignature } from "@/components/signatures/VerifierSignature";
 import { CarteRepliable } from "@/components/ui-kit/CarteRepliable";
-import { SECTION_SUIVI } from "./classes-fiche";
+import { FILET_SUIVI, SECTION_SUIVI } from "./classes-fiche";
 import type { EvenementHistorique, TonHistorique } from "@/lib/plan-prevention/fiche-signatures";
 import { formaterHeureFr } from "@/lib/dates";
 
@@ -62,7 +62,7 @@ export function HistoriquePlan({
       compte={`${n} événement${n > 1 ? "s" : ""}`}
       ouverte={false}
       // Une section de la carte unique de la fiche (2026-11-21).
-      classeEnveloppe={SECTION_SUIVI}
+      classeEnveloppe={`${SECTION_SUIVI} ${FILET_SUIVI}`}
     >
       {n === 0 ? (
         <p className="m-0 text-[13.5px] text-[color:var(--board-slate-mid)]">Rien encore.</p>

@@ -109,7 +109,7 @@ describe("une proposition qui touche aux champs neufs", () => {
       ],
     });
     expect(ecartsDeLaProposition(plan, p).modifiees).toHaveLength(1);
-    const m = bandeauDeLaProposition(plan, p).lignes.find((l) => l.type === "modifie");
+    const m = bandeauDeLaProposition(plan, p).find((l) => l.type === "modifie");
     expect(m).toMatchObject({
       changements: {
         risque: null,
@@ -158,9 +158,8 @@ describe("une proposition qui touche aux champs neufs", () => {
     });
     const e = ecartsDeLaProposition(plan, p);
     expect([e.modifiees.length, e.ajoutees.length]).toEqual([1, 1]);
-    const b = bandeauDeLaProposition(plan, p).lignes;
+    const b = bandeauDeLaProposition(plan, p);
     expect(b.find((l) => l.type === "modifie")).toMatchObject({
-      famille: "Amiante",
       changements: { famille: { avant: "Chutes en hauteur", apres: "Amiante" }, risque: null, lieu: null },
     });
     expect(b.find((l) => l.type === "ajoute")).toMatchObject({ famille: "Biologique" });
@@ -170,7 +169,7 @@ describe("une proposition qui touche aux champs neufs", () => {
 
   it("« sans famille » se propose aussi, et se voit", () => {
     const p = lire({ fiche: ficheDuPlan, lignes: [{ ...ligne1, famille: null }] });
-    const m = bandeauDeLaProposition(plan, p).lignes.find((l) => l.type === "modifie");
+    const m = bandeauDeLaProposition(plan, p).find((l) => l.type === "modifie");
     expect(m).toMatchObject({ changements: { famille: { avant: "Chutes en hauteur", apres: "" } } });
     expect(famillesAAppliquer(plan.lignes, p.lignes)).toEqual([null]);
   });
@@ -203,7 +202,7 @@ describe("une proposition qui touche aux champs neufs", () => {
         { risque: "Poussières", mesureEntrepriseUtilisatrice: "", mesureEntrepriseExterieure: "", lieu: "Réserve", frequence: "Le matin" },
       ],
     });
-    const ajout = bandeauDeLaProposition(plan, p).lignes.find((l) => l.type === "ajoute");
+    const ajout = bandeauDeLaProposition(plan, p).find((l) => l.type === "ajoute");
     expect(ajout).toMatchObject({ risque: "Poussières", lieu: "Réserve", frequence: "Le matin" });
   });
 });
