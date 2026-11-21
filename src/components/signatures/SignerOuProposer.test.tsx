@@ -137,7 +137,8 @@ describe("SignerOuProposer — la signature", () => {
     await cliquer(/^Renvoyer un code$/);
     expect(screen.getByText(valable)).toBeTruthy();
 
-    // Renouvelé mais pas parti : plus aucun code n'est dit valable.
+    // Renouvelé mais pas parti : plus aucun code ne vaut, retour à « Signer »,
+    // l'erreur dite.
     renvoyer.mockResolvedValueOnce({
       status: "error",
       message: "Le code n'a pas pu être envoyé.",
@@ -145,7 +146,29 @@ describe("SignerOuProposer — la signature", () => {
       renvoiPossibleLe: new Date(0).toISOString(),
     });
     await cliquer(/^Renvoyer un code$/);
-    expect(screen.getByText(/Ce code n'est plus valable : demandez-en un nouveau\. Le lien/)).toBeTruthy();
+    expect(screen.queryByLabelText(/Code reçu par e-mail/)).toBeNull();
+    expect(screen.queryByText(/Code valable jusqu'à/)).toBeNull();
+    expect(screen.getByRole("button", { name: /^Signer$/ })).toBeTruthy();
+    expect(screen.getByText("Le code n'a pas pu être envoyé.")).toBeTruthy();
+  });
+
+  it("un code envoyé, puis un renvoi refusé : l'étape du code reste ouverte", async () => {
+    render(<SignerOuProposer {...MISE_EN_PAGE} signature={{ ...SIGNATURE, renvoiPossibleLe: null }} />);
+    renvoyer.mockResolvedValueOnce({
+      status: "success",
+      message: "Un code vient d'être envoyé à chef@ee.fr. Il vous reste 3 essais sur ce lien.",
+      expireLe: new Date(Date.now() + 600_000).toISOString(),
+      renvoiPossibleLe: new Date(0).toISOString(),
+    });
+    await cliquer(/^Signer$/);
+    expect(screen.getByLabelText(/Code reçu par e-mail/)).toBeTruthy();
+    renvoyer.mockResolvedValueOnce({ status: "error", message: "Un code vient d'être envoyé. Patientez." });
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 5));
+    });
+    await cliquer(/^Renvoyer un code$/);
+    expect(screen.getByLabelText(/Code reçu par e-mail/)).toBeTruthy();
+    expect(screen.getByText("Un code vient d'être envoyé. Patientez.")).toBeTruthy();
   });
 
   it("un code déjà demandé ouvre directement l'étape du code", () => {

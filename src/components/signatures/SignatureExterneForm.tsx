@@ -30,14 +30,16 @@ const essais = (n: number) => `${n} essai${n > 1 ? "s" : ""}`;
 /**
  * La dernière réponse de `renvoyerCodeOtp`, et le code tel que le serveur
  * l'a dit en dernier (2026-11-21) : sa fin et le prochain renvoi, à l'heure
- * du serveur. Un renvoi refusé garde le code d'avant ; un code renouvelé
- * mais pas parti (`codeAnnule`) n'est plus dit valable.
+ * du serveur. Un renvoi refusé garde le code d'avant, et l'étape du code
+ * reste ouverte (`demande`) ; un code renouvelé mais pas parti
+ * (`codeAnnule`) ne vaut plus rien : retour à « Signer », qui en redemande un.
  */
 type EtatCode = {
   reponse: RenvoiOtpState;
   expireA: number | null;
   renvoiA: number | null;
-  annule: boolean;
+  /** Un code valable est parti sur ce lien : l'étape du code est ouverte. */
+  demande: boolean;
 };
 
 const instant = (iso: string | undefined) => (iso ? Date.parse(iso) : null);
@@ -80,10 +82,10 @@ export function SignatureExterneForm({
     async (avant) => {
       const reponse = await renvoyerCodeOtp(token);
       if (reponse.status === "success") {
-        return { reponse, expireA: instant(reponse.expireLe), renvoiA: instant(reponse.renvoiPossibleLe), annule: false };
+        return { reponse, expireA: instant(reponse.expireLe), renvoiA: instant(reponse.renvoiPossibleLe), demande: true };
       }
       if (reponse.status === "error" && reponse.codeAnnule) {
-        return { reponse, expireA: null, renvoiA: instant(reponse.renvoiPossibleLe), annule: true };
+        return { reponse, expireA: null, renvoiA: instant(reponse.renvoiPossibleLe), demande: false };
       }
       return { ...avant, reponse };
     },
@@ -91,11 +93,11 @@ export function SignatureExterneForm({
       reponse: { status: "idle" },
       expireA: codeExpireLe?.getTime() ?? null,
       renvoiA: renvoiPossibleLe?.getTime() ?? null,
-      annule: false,
+      demande: codeDejaDemande,
     },
   );
   const codeState = code.reponse;
-  const codeDemande = codeDejaDemande || codeState.status === "success";
+  const codeDemande = code.demande;
   const envoyeIci = codeState.status === "success";
   // Un code faux décompte un essai : la réponse dit combien il en reste.
   const restants =
@@ -106,9 +108,8 @@ export function SignatureExterneForm({
   // chiffre).
   const attente = useSecondesAvant(code.renvoiA);
   const avantFin = useSecondesAvant(code.expireA);
-  const validite = code.annule
-    ? "Ce code n'est plus valable : demandez-en un nouveau. "
-    : code.expireA === null
+  const validite =
+    code.expireA === null
       ? ""
       : avantFin === 0
         ? "Ce code a expiré : demandez-en un nouveau. "
