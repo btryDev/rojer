@@ -55,12 +55,24 @@ export async function construirePlanPreventionData(
         travauxDangereux: true,
         inspectionDate: true,
         inspectionParticipants: true,
+        // Repris de RiskBoard (2026-11-21) : imprimés quand ils sont remplis.
+        entrepriseExterieureAdresse: true,
+        efChefTelephone: true,
+        euChefTelephone: true,
+        horaires: true,
+        cseAssocie: true,
+        qualificationsRequises: true,
+        moyensFournis: true,
+        autresObservations: true,
         lignes: {
           orderBy: { ordre: "asc" },
           select: {
             risque: true,
             mesureEntrepriseUtilisatrice: true,
             mesureEntrepriseExterieure: true,
+            famille: true,
+            lieu: true,
+            frequence: true,
           },
         },
         phasesDangereuses: {

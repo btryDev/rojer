@@ -121,6 +121,32 @@ describe("PlanPreventionDocument — contenu", () => {
     expect(contient(t, /^À compléter$/)).toBe(true);
   });
 
+  it("les champs repris de RiskBoard : absents, rien ne s'imprime ; remplis, ils s'impriment (2026-11-21)", () => {
+    const sans = textes(donnees());
+    expect(contient(sans, /^Compléments$/)).toBe(false);
+    expect(contient(sans, /CSE associé/)).toBe(false);
+    expect(contient(sans, /Horaires de travail/)).toBe(false);
+
+    const d = donnees();
+    Object.assign(d.plan, {
+      entrepriseExterieureAdresse: "12 rue des Artisans, Lyon",
+      efChefTelephone: "06 00 00 00 00",
+      horaires: "8 h – 17 h",
+      cseAssocie: true,
+      moyensFournis: "Vestiaire du personnel",
+    });
+    d.plan.lignes[0] = { ...d.plan.lignes[0], lieu: "Toiture", frequence: "Chaque matin" };
+    const t = textes(d);
+    expect(contient(t, /^Clim Services — Paul Durand · 06 00 00 00 00$/)).toBe(true);
+    expect(contient(t, /^12 rue des Artisans, Lyon$/)).toBe(true);
+    expect(contient(t, /^8 h – 17 h$/)).toBe(true);
+    expect(contient(t, /^CSE associé à l'opération$/)).toBe(true);
+    expect(contient(t, /^Compléments$/)).toBe(true);
+    expect(contient(t, /^Vestiaire du personnel$/)).toBe(true);
+    expect(contient(t, /^Lieu : Toiture$/)).toBe(true);
+    expect(contient(t, /^Fréquence : Chaque matin$/)).toBe(true);
+  });
+
   it("imprime les heures révisées en cours de chantier, dans les mots de la fiche", () => {
     const d = donnees();
     d.plan.heuresPrevisiblesRevisees = 420;

@@ -10,6 +10,7 @@ import {
   rubriquesManquantes,
   texteRubrique,
 } from "@/lib/plan-prevention/contenu-r4512-8";
+import { complementsRemplis, precisionsLigne } from "@/lib/plan-prevention/complements";
 import { BOARD, slugifyFilename, stylesCommuns as s } from "./styles";
 import { PiedFixe } from "./PiedFixe";
 
@@ -75,10 +76,23 @@ export type PlanPreventionData = {
     travauxDangereux: boolean;
     inspectionDate: Date | null;
     inspectionParticipants: string | null;
+    // Repris de RiskBoard (2026-11-21). Facultatifs dans le type : un plan
+    // qui ne les porte pas s'imprime comme avant.
+    entrepriseExterieureAdresse?: string | null;
+    efChefTelephone?: string | null;
+    euChefTelephone?: string | null;
+    horaires?: string | null;
+    cseAssocie?: boolean | null;
+    qualificationsRequises?: string | null;
+    moyensFournis?: string | null;
+    autresObservations?: string | null;
     lignes: {
       risque: string;
       mesureEntrepriseUtilisatrice: string | null;
       mesureEntrepriseExterieure: string | null;
+      famille?: string | null;
+      lieu?: string | null;
+      frequence?: string | null;
     }[];
     phasesDangereuses: { phase: string; moyensPrevention: string | null }[];
     adaptationMateriels: string | null;
@@ -186,6 +200,16 @@ export function PlanPreventionDocument({ data }: { data: PlanPreventionData }) {
   const sansSignature = partiesSansSignature(data.signatures);
   const deTravail = sansSignature.length > 0;
   const manquantes = rubriquesManquantes(pl);
+  const complements = complementsRemplis({
+    horaires: pl.horaires ?? null,
+    cseAssocie: pl.cseAssocie ?? null,
+    qualificationsRequises: pl.qualificationsRequises ?? null,
+    moyensFournis: pl.moyensFournis ?? null,
+    autresObservations: pl.autresObservations ?? null,
+  });
+  const horaires = complements.find((x) => x.cle === "horaires");
+  const cse = complements.find((x) => x.cle === "cseAssocie");
+  const autres = complements.filter((x) => x.cle !== "horaires" && x.cle !== "cseAssocie");
 
   return (
     <Document title={`Plan de prévention ${ref}`} author="Rojer">
@@ -212,17 +236,21 @@ export function PlanPreventionDocument({ data }: { data: PlanPreventionData }) {
 
         <Text style={s.h2}>Les parties</Text>
         <Ligne cle="Entreprise utilisatrice">
-          {`${data.entreprise} — ${pl.euChefNom}${pl.euChefFonction ? `, ${pl.euChefFonction}` : ""}`}
+          {`${data.entreprise} — ${pl.euChefNom}${pl.euChefFonction ? `, ${pl.euChefFonction}` : ""}${rempli(pl.euChefTelephone) ? ` · ${pl.euChefTelephone}` : ""}`}
         </Ligne>
         <Ligne cle="Entreprise extérieure">
-          {`${pl.entrepriseExterieureRaison}${pl.entrepriseExterieureSiret ? ` (SIRET ${pl.entrepriseExterieureSiret})` : ""} — ${pl.efChefNom}`}
+          {`${pl.entrepriseExterieureRaison}${pl.entrepriseExterieureSiret ? ` (SIRET ${pl.entrepriseExterieureSiret})` : ""} — ${pl.efChefNom}${rempli(pl.efChefTelephone) ? ` · ${pl.efChefTelephone}` : ""}`}
         </Ligne>
+        {rempli(pl.entrepriseExterieureAdresse) && (
+          <Ligne cle="Adresse de l'entreprise extérieure">{pl.entrepriseExterieureAdresse}</Ligne>
+        )}
         <Ligne cle="Effectif intervenant">{String(pl.efEffectifIntervenant)}</Ligne>
 
         <Text style={s.h2}>Les travaux</Text>
         <Ligne cle="Période">
           {`Du ${formaterDateHeureFr(pl.dateDebut)} au ${formaterDateHeureFr(pl.dateFin)} (heure de Paris)`}
         </Ligne>
+        {horaires && <Ligne cle={horaires.libelle}>{horaires.texte}</Ligne>}
         <Ligne cle="Durée estimée">
           {pl.dureeHeuresEstimee != null ? `${pl.dureeHeuresEstimee} h` : "Non renseignée"}
         </Ligne>
@@ -253,6 +281,7 @@ export function PlanPreventionDocument({ data }: { data: PlanPreventionData }) {
         ) : (
           <Text style={p.manquant}>Aucune date d&apos;inspection commune enregistrée.</Text>
         )}
+        {cse && <Ligne cle={cse.libelle}>{cse.texte}</Ligne>}
 
         <Text style={s.h2}>Risques d&apos;interférence et mesures (art. R. 4512-6)</Text>
         {pl.lignes.length === 0 ? (
@@ -266,9 +295,14 @@ export function PlanPreventionDocument({ data }: { data: PlanPreventionData }) {
             </View>
             {pl.lignes.map((l, i) => (
               <View key={i} style={s.row} wrap={false}>
-                <Text style={[s.td, { width: "34%", paddingRight: 4, fontFamily: "Helvetica-Bold" }]}>
-                  {`${i + 1}. ${l.risque}`}
-                </Text>
+                <View style={{ width: "34%", paddingRight: 4 }}>
+                  <Text style={[s.td, { fontFamily: "Helvetica-Bold" }]}>{`${i + 1}. ${l.risque}`}</Text>
+                  {precisionsLigne(l).map((x) => (
+                    <Text key={x} style={s.td}>
+                      {x}
+                    </Text>
+                  ))}
+                </View>
                 <Text style={[s.td, { width: "33%", paddingRight: 4 }]}>
                   {rempli(l.mesureEntrepriseUtilisatrice) ? l.mesureEntrepriseUtilisatrice : "À compléter"}
                 </Text>
@@ -306,6 +340,18 @@ export function PlanPreventionDocument({ data }: { data: PlanPreventionData }) {
             )}
           </View>
         ))}
+
+        {autres.length > 0 && (
+          <>
+            <Text style={s.h2}>Compléments</Text>
+            {autres.map((x) => (
+              <View key={x.cle} style={p.bloc} wrap={false}>
+                <Text style={p.titreBloc}>{x.libelle}</Text>
+                <Text style={s.td}>{x.texte}</Text>
+              </View>
+            ))}
+          </>
+        )}
 
         <Text style={s.h2}>Signatures</Text>
         {actives.length === 0 && <Text style={p.manquant}>Aucune signature en vigueur.</Text>}
