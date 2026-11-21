@@ -169,6 +169,10 @@ export default async function PlanPreventionDetailPage({
   // Clos ou annulé : aucune demande de signature ne part plus d'ici. Le
   // serveur la refuserait de toute façon (`etat-signable.ts`).
   const planSignable = statutPlanSignable(plan.statut);
+  // Figé (signé, clos ou annulé) : le plan ne se complète plus ; la fiche ne
+  // montre que les rubriques remplies (décision de la propriétaire, 2026-11-21).
+  const fige = !planSignable || plan.signatures.length > 0;
+  const rubriquesAffichees = fige ? RUBRIQUES_R4512_8.filter((r) => r.renseignee(plan)) : RUBRIQUES_R4512_8;
   // La partie est un fait enregistré, pas une déduction de l'adresse
   // (`repartirSignatures`, 2026-10-12).
   const signatures = repartirSignatures("plan_prevention", plan.signatures);
@@ -478,12 +482,14 @@ export default async function PlanPreventionDetailPage({
             </CarteFiche>
 
             {/* LE CONTENU QUE R. 4512-8 IMPOSE, ET CE QUE CE PLAN N'EN PORTE
-                PAS. Une rubrique vide se dit ici plutôt que de s'omettre :
+                PAS. Une rubrique vide se dit ici plutôt que de s'omettre (figé, on ne montre que les remplies) :
                 c'est le dirigeant qui remet ce plan. Rien ne bloque. */}
             <TitreSection
               surtitre="Contenu minimal · art. R. 4512-8"
               titre={
-                manquantes.length === 0
+                fige
+                  ? "Contenu du plan"
+                  : manquantes.length === 0
                   ? "Les cinq rubriques sont renseignées"
                   : `${manquantes.length} rubrique${manquantes.length > 1 ? "s" : ""} sur 5 non renseignée${
                       manquantes.length > 1 ? "s" : ""
@@ -491,7 +497,7 @@ export default async function PlanPreventionDetailPage({
               }
             />
 
-            {manquantes.length > 0 && (
+            {!fige && manquantes.length > 0 && (
               <CarteFiche titre="Ce que ce plan ne dit pas encore">
                 <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">{CHAPEAU_R4512_8}</p>
                 <ul className="m-0 mt-3 flex list-disc flex-col gap-1.5 pl-5 text-[14px] leading-[1.6]">
@@ -506,12 +512,12 @@ export default async function PlanPreventionDetailPage({
               </CarteFiche>
             )}
 
-            {RUBRIQUES_R4512_8.map((r) => (
+            {rubriquesAffichees.map((r) => (
               <CarteFiche
                 key={r.numero}
                 titre={`${r.numero}° ${r.titre}`}
                 droite={
-                  r.renseignee(plan) ? (
+                  fige ? undefined : r.renseignee(plan) ? (
                     <PastilleFiche ton="fait">Renseignée</PastilleFiche>
                   ) : (
                     <PastilleFiche ton="neutre">Non renseignée</PastilleFiche>
