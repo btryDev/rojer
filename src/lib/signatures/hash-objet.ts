@@ -74,6 +74,16 @@ export function versionDeHash(hash: string): string {
   return i === -1 ? "v1" : hash.slice(0, i + 1);
 }
 
+/**
+ * Un champ ajouté au canonique APRÈS que des documents ont été signés n'y
+ * entre que rempli : `undefined` pour NULL, que `JSON.stringify` omet. Le
+ * canonique d'un document qui ne le porte pas reste celui d'avant, et sa
+ * signature reste vérifiable sans changer de version.
+ */
+function siRempli<T>(v: T | null | undefined): T | undefined {
+  return v ?? undefined;
+}
+
 export type HashResult =
   | { ok: true; hash: string; nomDocument: string | null }
   | {
@@ -195,6 +205,11 @@ export async function calculerHashObjet(
         risque: l.risque,
         mesureEntrepriseUtilisatrice: l.mesureEntrepriseUtilisatrice,
         mesureEntrepriseExterieure: l.mesureEntrepriseExterieure,
+        // Repris de RiskBoard (2026-11-21) : scellés quand ils sont remplis,
+        // absents sinon — voir `siRempli` plus bas.
+        famille: siRempli(l.famille),
+        lieu: siRempli(l.lieu),
+        frequence: siRempli(l.frequence),
       })),
       // ── Les cinq rubriques de R. 4512-8, entrées dans le sceau le
       // 2026-09-07 (v2). Elles s'affichent sur la fiche que le chef de
@@ -209,6 +224,21 @@ export async function calculerHashObjet(
       instructionsTravailleurs: plan.instructionsTravailleurs,
       organisationSecours: plan.organisationSecours,
       participationCroisee: plan.participationCroisee,
+      // ── Les champs repris de RiskBoard (2026-11-21). Ils s'affichent au
+      // signataire, donc ils sont scellés — mais SEULEMENT QUAND ILS SONT
+      // REMPLIS. `siRempli` rend `undefined` pour NULL, et `JSON.stringify`
+      // omet une clé `undefined` : un plan qui ne les porte pas — tous ceux
+      // signés avant ce lot — garde, au caractère près, le canonique d'avant
+      // et donc son empreinte v2 (`hash-plan-stable.test.ts`). Écrire `null`
+      // ici aurait changé l'empreinte de chaque plan déjà signé.
+      entrepriseExterieureAdresse: siRempli(plan.entrepriseExterieureAdresse),
+      efChefTelephone: siRempli(plan.efChefTelephone),
+      euChefTelephone: siRempli(plan.euChefTelephone),
+      horaires: siRempli(plan.horaires),
+      cseAssocie: siRempli(plan.cseAssocie),
+      qualificationsRequises: siRempli(plan.qualificationsRequises),
+      moyensFournis: siRempli(plan.moyensFournis),
+      autresObservations: siRempli(plan.autresObservations),
     });
     return {
       ok: true,

@@ -1771,10 +1771,16 @@ model PlanPrevention {
   efChefNom                  String // chef de l'entreprise extérieure
   efChefEmail                String
   efEffectifIntervenant      Int
+  // Coordonnées reprises du formulaire de RiskBoard (2026-11-21, décision de
+  // la propriétaire). Facultatives ; dans l'empreinte de signature quand
+  // elles sont remplies, absentes du canonique sinon (`hash-objet.ts`).
+  entrepriseExterieureAdresse String?
+  efChefTelephone             String?
 
   // Entreprise utilisatrice (vous)
-  euChefNom      String
-  euChefFonction String?
+  euChefNom       String
+  euChefFonction  String?
+  euChefTelephone String?
 
   // Travaux
   dateDebut          DateTime
@@ -1785,11 +1791,16 @@ model PlanPrevention {
   batiment           Batiment? @relation(fields: [batimentId], references: [id], onDelete: SetNull)
   naturesTravaux     String    @db.Text
   travauxDangereux   Boolean   @default(false)
+  // Repris de RiskBoard (2026-11-21) : texte libre, facultatif.
+  horaires           String?
 
   // Inspection commune préalable (art. R. 4512-2 — c'est lui qui l'impose ;
   // R. 4512-7 ne porte que le seuil de l'écrit. Relu à la source le 2026-09-02.)
   inspectionDate         DateTime?
   inspectionParticipants String?   @db.Text
+  // « CSE associé à l'opération » (libellé de RiskBoard, 2026-11-21). NULL :
+  // non renseigné — distinct de « non », qui est une réponse.
+  cseAssocie             Boolean?
 
   // R. 4512-12, 2°, CT (C45) : « Le chef de l'entreprise utilisatrice informe
   // par écrit l'inspection du travail de l'ouverture des travaux. » Date
@@ -1828,6 +1839,13 @@ model PlanPrevention {
   organisationSecours      String?           @db.Text // 4°
   participationCroisee     String?           @db.Text // 5°
 
+  // Trois rubriques reprises de RiskBoard (2026-11-21, décision de la
+  // propriétaire), hors du minimum de R. 4512-8 : facultatives, et absentes
+  // du canonique de l'empreinte tant qu'elles sont vides.
+  qualificationsRequises String? @db.Text
+  moyensFournis          String? @db.Text
+  autresObservations     String? @db.Text
+
   // Lignes risques-mesures (relation 1-N) — analyse d'interférence,
   // R. 4512-6 al. 2. À ne pas confondre avec le 1° de R. 4512-8 ci-dessus :
   // l'une porte sur l'interférence entre deux activités, l'autre sur les
@@ -1858,6 +1876,12 @@ model LignePlanPrevention {
   risque                       String
   mesureEntrepriseUtilisatrice String?
   mesureEntrepriseExterieure   String?
+  // La famille de risque de RiskBoard (2026-11-21), validée par la liste de
+  // `plan-prevention/familles-risque.ts` — pas d'enum en base : une famille
+  // retirée de la liste ne casse pas une ligne déjà écrite. NULL : ligne libre.
+  famille                      String?
+  lieu                         String?
+  frequence                    String?
 
   @@index([planPreventionId, ordre])
 }
