@@ -3,6 +3,7 @@ import { MOTIF_REVOCATION_ENVOI_ECHOUE, MOTIF_REVOCATION_NOUVEAU_LIEN } from "@/
 import { OTP_ESSAIS_MAX, OTP_TTL_MINUTES } from "@/lib/signatures/otp";
 import { LIBELLE_METHODE_COURT } from "@/lib/signatures/methode";
 import { SUITE_NOUVEAU_LIEN } from "@/lib/access-tokens/motif-lisible";
+import { formaterJourMoisChiffresFr } from "@/lib/dates";
 
 /**
  * Ce que la fiche du plan montre des signatures (2026-11-19, lot 3) : l'état
@@ -73,6 +74,45 @@ export function etatDeLaPartie(
   return { etat: "lien_envoye", lien: dernier, ouvert: dernier.otpExpireLe !== null };
 }
 
+/**
+ * La correction en cours (« Corriger », 2026-11-19) : appliquée, elle court
+ * jusqu'à la signature du dirigeant. Lue par la fiche et par « Modifier »,
+ * qui y ramène (2026-11-21).
+ */
+export function correctionEnCours<P extends { corrigeeLe: Date | null; finaliseeLe: Date | null }>(p: {
+  planSignable: boolean;
+  propositionEnAttente: boolean;
+  euSignee: boolean;
+  propositions: readonly P[];
+}): P | undefined {
+  if (!p.planSignable || p.propositionEnAttente || p.euSignee) return undefined;
+  return p.propositions.find((x) => x.corrigeeLe && !x.finaliseeLe);
+}
+
+/**
+ * Ce qui attend le dirigeant sur la fiche (2026-11-21) — UN calcul, lu par la
+ * pastille de l'onglet « Suivi » et par les cartes d'action qu'il porte :
+ * trancher la proposition, terminer la correction en signant, signer, ou
+ * envoyer le lien de l'entreprise extérieure qui n'est pas encore parti.
+ * Rien pour un membre en lecture seule, ni sur un plan clos ou annulé.
+ */
+export type AttenteDirigeant = "proposition" | "correction" | "signer" | "envoyer_lien";
+
+export function ceQuiAttendLeDirigeant(p: {
+  planSignable: boolean;
+  lectureSeule: boolean;
+  propositionEnAttente: boolean;
+  correctionEnCours: boolean;
+  eu: EtatPartie["etat"];
+  ee: EtatPartie["etat"];
+}): AttenteDirigeant | null {
+  if (!p.planSignable || p.lectureSeule) return null;
+  if (p.propositionEnAttente) return "proposition";
+  if (p.eu !== "signee") return p.correctionEnCours ? "correction" : "signer";
+  if (p.ee === "rien") return "envoyer_lien";
+  return null;
+}
+
 /** Un lien parti, ou une signature en vigueur : ce qui fait sortir le plan du « Brouillon ». */
 export function aUnLienOuUneSignature(liens: readonly LienLu[], signaturesActives: number): boolean {
   return signaturesActives > 0 || liens.some((l) => l.revoqueMotif !== MOTIF_REVOCATION_ENVOI_ECHOUE);
@@ -106,8 +146,7 @@ export type EvenementHistorique = {
   verifier?: { libelle: string; signatureId: string }[];
 };
 
-const FMT_JOUR = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", day: "2-digit", month: "2-digit" });
-const jour = (d: Date) => FMT_JOUR.format(d);
+const jour = formaterJourMoisChiffresFr;
 
 /**
  * L'historique du plan, du plus récent au plus ancien. `raisonEE` nomme

@@ -1,12 +1,14 @@
 "use client";
 
-import { useActionState, useEffect, useState, type ReactNode } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Clock } from "lucide-react";
 import { LegalBadge } from "@/components/ui-kit";
 import { DemanderSignatureForm } from "@/components/signatures/DemanderSignatureForm";
 import { BoutonRevoquerSignatures } from "./ContreSignatureBoutons";
 import { FenetreSigner } from "./FenetreSigner";
+import { CarteActionRequise } from "./ActionRequise";
+import type { AttenteDirigeant } from "@/lib/plan-prevention/fiche-signatures";
 import { VerifierSignature } from "@/components/signatures/VerifierSignature";
 import {
   envoyerLienEntrepriseExterieure,
@@ -14,7 +16,7 @@ import {
   type GesteLienState,
 } from "@/lib/plan-prevention/signature-fiche-actions";
 import { SENS_R4512_7, URL_R4512_7 } from "@/lib/plan-prevention/annonces-plan";
-import { formaterHeureFr } from "@/lib/dates";
+import { formaterHeureEnLettresFr, formaterJourMoisChiffresFr } from "@/lib/dates";
 
 /**
  * Les signatures de la fiche du plan (2026-11-19, lot 3, maquette V2
@@ -44,9 +46,8 @@ export type PartieVue =
     }
   | { etat: "rien" };
 
-const FMT_JOUR = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", day: "2-digit", month: "2-digit" });
-const jour = (d: Date) => FMT_JOUR.format(d);
-const heure = (d: Date) => formaterHeureFr(d).replace(":", " h ");
+const jour = formaterJourMoisChiffresFr;
+const heure = formaterHeureEnLettresFr;
 
 const TUILE = "flex size-9 flex-none items-center justify-center rounded-[10px]";
 const META = "m-0 mt-0.5 text-[13px] text-[color:var(--board-slate-soft)]";
@@ -199,24 +200,6 @@ function BoutonEnvoyerLien({ planId }: { planId: string }) {
   );
 }
 
-/** La carte de l'action requise : filet ambre, comme la proposition (maquette V3). */
-function CarteAction({ titre, children }: { titre: string; children: ReactNode }) {
-  return (
-    <section
-      aria-labelledby="action-signature-titre"
-      className="carte-board flex flex-col gap-3 px-6 py-7 shadow-[inset_0_4px_0_#f2d36b] md:px-[34px]"
-    >
-      <p className="board-eyebrow m-0 text-[11px] tracking-[0.16em] text-[color:var(--board-amber-ink)]">
-        Action requise
-      </p>
-      <h2 id="action-signature-titre" className="board-titre m-0 text-[26px] leading-[1.1] md:text-[30px]">
-        {titre}
-      </h2>
-      {children}
-    </section>
-  );
-}
-
 export function PanneauSignatures({
   etablissementId,
   planId,
@@ -232,7 +215,7 @@ export function PanneauSignatures({
   ee,
   planSignable,
   propositionEnAttente,
-  correctionEnCours,
+  attente,
   ouvrirSigner,
 }: {
   etablissementId: string;
@@ -249,7 +232,8 @@ export function PanneauSignatures({
   ee: PartieVue;
   planSignable: boolean;
   propositionEnAttente: boolean;
-  correctionEnCours: boolean;
+  /** Ce qui attend le dirigeant (`ceQuiAttendLeDirigeant`) : le même calcul que la pastille de « Suivi ». */
+  attente: AttenteDirigeant | null;
   /** `?openSign=1` : « Terminer la correction et signer » ramène ici, fenêtre ouverte. */
   ouvrirSigner: boolean;
 }) {
@@ -264,7 +248,6 @@ export function PanneauSignatures({
   // Le lien part après la signature s'il n'y en a pas d'ouvert pour l'EE.
   const lienAEnvoyer = !eeSignee && ee.etat !== "lien_envoye";
   const peutSigner = recueillir && !euSignee;
-  const envoyerLien = recueillir && euSignee && ee.etat === "rien";
 
   // `?openSign=1` ouvre la fenêtre au rendu qui le reçoit — à l'arrivée sur
   // la fiche comme depuis « Terminer la correction et signer » sur la même
@@ -300,24 +283,30 @@ export function PanneauSignatures({
 
   return (
     <>
-      {peutSigner && !correctionEnCours && (
-        <CarteAction titre="Votre signature est attendue">
-          <p className="m-0 text-[14.5px] text-[color:var(--board-slate-ink)]">
-            {lienAEnvoyer
+      {/* La proposition et la correction portent leur propre carte, sur la
+          page ; ici, la signature à poser et le lien à envoyer. */}
+      {attente === "signer" && (
+        <CarteActionRequise
+          id="action-signature-titre"
+          titre="Votre signature est attendue"
+          phrase={
+            lienAEnvoyer
               ? `Un code arrive à votre adresse pour confirmer, puis Rojer adresse le lien à ${raisonEE}.`
-              : "Un code arrive à votre adresse pour confirmer votre signature."}
-          </p>
+              : "Un code arrive à votre adresse pour confirmer votre signature."
+          }
+          ecriture
+        >
           <div>
-            <button type="button" data-ecriture onClick={() => setFenetre(true)} className={GRANDE_ACTION}>
+            <button type="button" onClick={() => setFenetre(true)} className={GRANDE_ACTION}>
               {lienAEnvoyer ? "Signer et envoyer à l'entreprise extérieure" : "Signer le plan"}
             </button>
           </div>
-        </CarteAction>
+        </CarteActionRequise>
       )}
-      {envoyerLien && (
-        <CarteAction titre={`${raisonEE} n'a pas encore son lien`}>
+      {attente === "envoyer_lien" && (
+        <CarteActionRequise id="action-lien-titre" titre={`${raisonEE} n'a pas encore son lien`} ecriture>
           <BoutonEnvoyerLien planId={planId} />
-        </CarteAction>
+        </CarteActionRequise>
       )}
 
       <section

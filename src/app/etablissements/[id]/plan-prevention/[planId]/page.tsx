@@ -12,6 +12,7 @@ import { InformationInspectionForm } from "@/components/plan-prevention/Informat
 import {
   CorrectionEnCours,
   PropositionEnAttente,
+  RappelCorrection,
   RappelProposition,
 } from "@/components/plan-prevention/ContreSignatureFiche";
 import { PanneauSignatures, type PartieVue } from "@/components/plan-prevention/PanneauSignatures";
@@ -21,11 +22,14 @@ import { statutPlanSignable } from "@/lib/signatures/etat-signable";
 import { INSPECTION_SUR_PLAN_SIGNE } from "@/lib/signatures/verrou-contenu";
 import { LIBELLE_METHODE_COURT } from "@/lib/signatures/methode";
 import { BoutonCloturer, BoutonSupprimerPlan } from "@/components/plan-prevention/PlanActionsButtons";
+import { PILULE_FICHE } from "@/components/plan-prevention/classes-fiche";
 import { getPlanPrevention } from "@/lib/plan-prevention/queries";
 import { etatAffichePlan } from "@/lib/plan-prevention/etats";
 import {
   aUnLienOuUneSignature,
   etatDeLaPartie,
+  ceQuiAttendLeDirigeant,
+  correctionEnCours,
   historiqueDuPlan,
   motifLienPourLaFiche,
   type EtatPartie,
@@ -33,7 +37,7 @@ import {
 import { diagnostiquerPlan } from "@/lib/plan-prevention/schema";
 import { complementsParPlace, precisionsLigne } from "@/lib/plan-prevention/complements";
 import {
-  RUBRIQUES_R4512_8,
+  rubriquesRenseignees,
   TEXTE_R4512_8,
   URL_R4512_8,
   rubriquesManquantes,
@@ -81,6 +85,7 @@ import {
   FUSEAU_REFERENCE,
   formaterDateFr,
   formaterDateLongueFr,
+  formaterJourMoisFr,
 } from "@/lib/dates";
 
 /**
@@ -108,8 +113,6 @@ type OngletFiche = "plan" | "suivi";
 
 const FMT_JOUR = new Intl.DateTimeFormat("fr-FR", { timeZone: FUSEAU_REFERENCE, day: "2-digit" });
 const FMT_MOIS = new Intl.DateTimeFormat("fr-FR", { timeZone: FUSEAU_REFERENCE, month: "short" });
-/** « 27 nov. » */
-const FMT_JOUR_MOIS = new Intl.DateTimeFormat("fr-FR", { timeZone: FUSEAU_REFERENCE, day: "numeric", month: "short" });
 
 /** « 8 h », « 8 h 30 » */
 function heureCourte(d: Date): string {
@@ -144,8 +147,6 @@ function vueDeLaPartie(e: EtatPartie): PartieVue {
   };
 }
 
-const PILULE =
-  "inline-flex min-h-11 items-center rounded-full border border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[18px] text-[14px] text-[color:var(--board-ink)] transition-colors hover:bg-[color:var(--board-slate-pale)]";
 const DISCRET = "text-[color:var(--board-slate-mid)]";
 
 /** Une section du plan, séparée de la précédente par un filet (maquette V3). */
@@ -217,7 +218,7 @@ export default async function PlanPreventionDetailPage({
   // rubriques vides ne se signalent plus (décision de la propriétaire,
   // 2026-11-21). Remplies, elles s'affichent toujours, chacune sa section.
   const fige = !planSignable || plan.signatures.length > 0;
-  const rubriquesRemplies = RUBRIQUES_R4512_8.filter((r) => r.renseignee(plan));
+  const rubriquesRemplies = rubriquesRenseignees(plan);
   const manquantes = fige ? [] : rubriquesManquantes(plan);
   // La partie est un fait enregistré, pas une déduction de l'adresse
   // (`repartirSignatures`, 2026-10-12).
@@ -240,13 +241,22 @@ export default async function PlanPreventionDetailPage({
     : etatAffichePlan(plan.statut, aUnLienOuUneSignature(liens, plan.signatures.length));
   // « Corriger » (lot 4) : appliquée, la correction court jusqu'à la
   // signature du dirigeant.
-  const correction =
-    planSignable && !enAttente && !signatureEU
-      ? propositions.find((p) => p.corrigeeLe && !p.finaliseeLe)
-      : undefined;
-  // Ce qui attend le dirigeant, compté sur l'onglet « Suivi » : la
-  // proposition à trancher, ou sa signature à poser.
-  const actionsAttendues = enAttente ? 1 : planSignable && !signatureEU ? 1 : 0;
+  const correction = correctionEnCours({
+    planSignable,
+    propositionEnAttente: Boolean(enAttente),
+    euSignee: Boolean(signatureEU),
+    propositions,
+  });
+  // Ce qui attend le dirigeant : UN calcul, pour la pastille de « Suivi » et
+  // les cartes d'action du panneau (`ceQuiAttendLeDirigeant`).
+  const attente = ceQuiAttendLeDirigeant({
+    planSignable,
+    lectureSeule: plan.lectureSeule ?? false,
+    propositionEnAttente: Boolean(enAttente),
+    correctionEnCours: Boolean(correction),
+    eu: eu.etat,
+    ee: ee.etat,
+  });
   const lienAuteur = enAttente ? liens.find((l) => l.id === enAttente.accessTokenId) : undefined;
   const reference = numero(plan.numero);
   const fiche = `/etablissements/${id}/plan-prevention/${plan.id}`;
@@ -268,8 +278,8 @@ export default async function PlanPreventionDetailPage({
     {
       cle: "Date",
       valeur: memeJour
-        ? FMT_JOUR_MOIS.format(plan.dateDebut)
-        : `${FMT_JOUR_MOIS.format(plan.dateDebut)} → ${FMT_JOUR_MOIS.format(plan.dateFin)}`,
+        ? formaterJourMoisFr(plan.dateDebut)
+        : `${formaterJourMoisFr(plan.dateDebut)} → ${formaterJourMoisFr(plan.dateFin)}`,
     },
     // Les horaires saisis l'emportent ; sinon ceux que les dates portent.
     {
@@ -351,7 +361,7 @@ export default async function PlanPreventionDetailPage({
                   href: suivi,
                   label: "Suivi",
                   actif: onglet === "suivi",
-                  alerte: actionsAttendues,
+                  alerte: attente ? 1 : 0,
                   libelleAlerte: "une action vous attend",
                   tonAlerte: "proche",
                 },
@@ -377,7 +387,7 @@ export default async function PlanPreventionDetailPage({
                   <CorrectionEnCours
                     raisonEE={plan.entrepriseExterieureRaison}
                     modifierHref={modifier}
-                    signerHref={`${suivi}${suivi.includes("?") ? "&" : "?"}openSign=1`}
+                    signerHref={`${suivi}&openSign=1`}
                   />
                 )}
 
@@ -396,7 +406,7 @@ export default async function PlanPreventionDetailPage({
                   ee={ee}
                   planSignable={planSignable}
                   propositionEnAttente={Boolean(enAttente)}
-                  correctionEnCours={Boolean(correction)}
+                  attente={attente}
                   ouvrirSigner={openSign === "1"}
                 />
 
@@ -417,15 +427,16 @@ export default async function PlanPreventionDetailPage({
             ) : (
               <div className="flex flex-col gap-[18px]">
                 {enAttente && <RappelProposition proposition={enAttente} plan={plan} suiviHref={suivi} />}
+                {correction && <RappelCorrection raisonEE={plan.entrepriseExterieureRaison} suiviHref={suivi} />}
 
                 {/* Supprimer reste avec les autres gestes du plan. */}
                 <div className="flex flex-wrap justify-end gap-2.5">
                   {planSignable && (
-                    <Link data-ecriture href={modifier} className={PILULE}>
+                    <Link data-ecriture href={modifier} className={PILULE_FICHE}>
                       Modifier
                     </Link>
                   )}
-                  <a href={`/api/etablissements/${id}/plan-prevention/${plan.id}/pdf`} className={PILULE}>
+                  <a href={`/api/etablissements/${id}/plan-prevention/${plan.id}/pdf`} className={PILULE_FICHE}>
                     Télécharger le PDF
                   </a>
                   {(plan.statut === "valide" || plan.statut === "attente_signatures") && (

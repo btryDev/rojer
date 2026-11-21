@@ -3,6 +3,8 @@ import { MOTIF_REVOCATION_ENVOI_ECHOUE, MOTIF_REVOCATION_NOUVEAU_LIEN } from "@/
 import { etatAffichePlan } from "./etats";
 import {
   aUnLienOuUneSignature,
+  ceQuiAttendLeDirigeant,
+  correctionEnCours,
   etatDeLaPartie,
   historiqueDuPlan,
   type LienLu,
@@ -136,5 +138,37 @@ describe("l'historique", () => {
     expect(r).toHaveLength(1);
     expect(r[0].ligne).toBe("2 signatures révoquées : l'entreprise utilisatrice corrige le plan");
     expect(r[0].verifier?.map((v) => v.signatureId)).toEqual(["s1", "s2"]);
+  });
+});
+
+describe("ce qui attend le dirigeant : un seul calcul, pour la pastille et les cartes", () => {
+  const base = {
+    planSignable: true,
+    lectureSeule: false,
+    propositionEnAttente: false,
+    correctionEnCours: false,
+    eu: "rien" as const,
+    ee: "rien" as const,
+  };
+
+  it("la proposition, la correction, la signature, puis le lien de l'entreprise extérieure", () => {
+    expect(ceQuiAttendLeDirigeant({ ...base, propositionEnAttente: true })).toBe("proposition");
+    expect(ceQuiAttendLeDirigeant({ ...base, correctionEnCours: true })).toBe("correction");
+    expect(ceQuiAttendLeDirigeant(base)).toBe("signer");
+    expect(ceQuiAttendLeDirigeant({ ...base, eu: "signee" })).toBe("envoyer_lien");
+    expect(ceQuiAttendLeDirigeant({ ...base, eu: "signee", ee: "lien_envoye" })).toBeNull();
+  });
+
+  it("rien pour un membre en lecture seule, ni sur un plan clos", () => {
+    expect(ceQuiAttendLeDirigeant({ ...base, lectureSeule: true, propositionEnAttente: true })).toBeNull();
+    expect(ceQuiAttendLeDirigeant({ ...base, planSignable: false })).toBeNull();
+  });
+
+  it("la correction en cours : ouverte, non finalisée, tant que le dirigeant n'a pas signé", () => {
+    const p = { corrigeeLe: T0, finaliseeLe: null };
+    const c = { planSignable: true, propositionEnAttente: false, euSignee: false, propositions: [p] };
+    expect(correctionEnCours(c)).toBe(p);
+    expect(correctionEnCours({ ...c, euSignee: true })).toBeUndefined();
+    expect(correctionEnCours({ ...c, propositions: [{ ...p, finaliseeLe: T0 }] })).toBeUndefined();
   });
 });

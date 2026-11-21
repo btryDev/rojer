@@ -276,6 +276,44 @@ describe("la fiche du plan", () => {
     );
     expect(lu).toContain("Correction en cours");
     expect(lu).toContain("Terminer la correction et signer");
+    expect(lu).toContain("Suivi 1");
+    // La carte de signature ne double pas celle de la correction.
+    expect(lu).not.toContain("Votre signature est attendue");
+  });
+
+  it("après « Corriger », onglet « Plan de prévention » : un rappel mène au suivi", async () => {
+    const lu = await rendre(
+      plan({
+        propositions: [
+          {
+            id: "prop-1",
+            accessTokenId: "atk-1",
+            statut: "acceptee",
+            createdAt: new Date("2026-11-19T14:35:00Z"),
+            traiteeLe: new Date("2026-11-19T14:38:00Z"),
+            traiteeParEmail: "paloma@exemple.fr",
+            corrigeeLe: new Date("2026-11-19T14:38:00Z"),
+            finaliseeLe: null,
+          },
+        ],
+      }),
+      {},
+    );
+    expect(lu).toContain("Correction en cours : la proposition de Nettoyage Pro SARL est reprise dans le plan.");
+    expect(lu).toContain("Terminer la correction et signer →");
+  });
+
+  it("votre signature posée, aucun lien parti : la carte « envoyer le lien », comptée sur « Suivi »", async () => {
+    const lu = await rendre(plan({ signatures: [signatureEU] }));
+    expect(lu).toContain("Suivi 1");
+    expect(lu).toContain("Nettoyage Pro SARL n'a pas encore son lien");
+    expect(lu).toContain("Envoyer le lien à l'entreprise extérieure");
+  });
+
+  it("lecture seule : rien n'attend, la pastille de « Suivi » reste à zéro", async () => {
+    const lu = await rendre(plan({ lectureSeule: true }));
+    expect(lu).not.toContain("Suivi 1");
+    expect(lu).not.toContain("Votre signature est attendue");
   });
 
   it("signé des deux parties : « Signé », et plus de grande action", async () => {

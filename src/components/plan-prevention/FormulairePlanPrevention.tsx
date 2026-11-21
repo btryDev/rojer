@@ -18,6 +18,7 @@ import {
   RUBRIQUES_R4512_8,
   TEXTE_R4512_8,
   URL_R4512_8,
+  rubriquesRenseignees,
   type ContenuPlan,
 } from "@/lib/plan-prevention/contenu-r4512-8";
 import {
@@ -189,6 +190,7 @@ export function FormulairePlanPrevention({
   plan,
   scelle = null,
   avisLiens = null,
+  retourHref,
 }: {
   etablissementId: string;
   prestataires: PrestataireLite[];
@@ -202,6 +204,12 @@ export function FormulairePlanPrevention({
   /** Des liens de signature attendent une réponse (`avisLiensEnVol`) : changer
    *  le contenu les annule, et l'écran le dit avant l'envoi. */
   avisLiens?: string | null;
+  /**
+   * Où ramènent « Annuler » et l'enregistrement d'un plan rouvert — l'onglet
+   * « Suivi » quand une correction court (2026-11-21). Absent : la fiche du
+   * plan, ou la liste à la création.
+   */
+  retourHref?: string;
 }) {
   const router = useRouter();
   const boundAction = plan
@@ -249,10 +257,10 @@ export function FormulairePlanPrevention({
   useEffect(() => {
     if (state.status === "success") {
       router.push(
-        `/etablissements/${etablissementId}/plan-prevention/${state.planId}`,
+        retourHref ?? `/etablissements/${etablissementId}/plan-prevention/${state.planId}`,
       );
     }
-  }, [state, etablissementId, router]);
+  }, [state, etablissementId, router, retourHref]);
 
   const err = (champ: string) =>
     state.status === "error" ? state.fieldErrors?.[champ]?.[0] : undefined;
@@ -314,7 +322,8 @@ export function FormulairePlanPrevention({
     organisationSecours: v("organisationSecours", plan?.organisationSecours),
     participationCroisee: v("participationCroisee", plan?.participationCroisee),
   };
-  const rubriquesRemplies = RUBRIQUES_R4512_8.filter((r) => r.renseignee(contenu)).length;
+  const remplies = rubriquesRenseignees(contenu);
+  const rubriquesRemplies = remplies.length;
   const parties: { ancre: string; titre: string; remplie: boolean; compte?: string }[] = [
     {
       ancre: "pp-ee",
@@ -350,7 +359,7 @@ export function FormulairePlanPrevention({
     },
   ];
   // Les rubriques ouvertes au premier affichage : celles qui portent déjà quelque chose.
-  const [rubriquesOuvertes] = useState(() => new Set(RUBRIQUES_R4512_8.filter((r) => r.renseignee(contenu)).map((r) => r.numero)));
+  const [rubriquesOuvertes] = useState(() => new Set(remplies.map((r) => r.numero)));
 
   return (
     <form
@@ -1104,7 +1113,7 @@ export function FormulairePlanPrevention({
           </div>
           <div className="flex gap-2.5">
             <Link
-              href={`/etablissements/${etablissementId}/plan-prevention${plan ? `/${plan.id}` : ""}`}
+              href={retourHref ?? `/etablissements/${etablissementId}/plan-prevention${plan ? `/${plan.id}` : ""}`}
               className="inline-flex min-h-11 items-center px-4 text-[14px] text-[color:var(--board-slate-mid)] hover:text-[color:var(--board-ink)]"
             >
               Annuler
