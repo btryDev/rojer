@@ -5,8 +5,25 @@ import {
   RUBRIQUES_R4512_8,
   contenuR4512_8,
   rubriquesManquantes,
+  rubriquesRenseignees,
   type ContenuPlan,
 } from "./contenu-r4512-8";
+
+describe("rubriquesRenseignees : le complément de rubriquesManquantes (2026-11-21)", () => {
+  it("les deux se partagent les cinq rubriques ; les remplies dans l'ordre de l'article", () => {
+    const plan: ContenuPlan = {
+      phasesDangereuses: [],
+      adaptationMateriels: "Matériel vérifié",
+      instructionsTravailleurs: null,
+      organisationSecours: "  ",
+      participationCroisee: "Chef de chantier",
+    };
+    expect(rubriquesRenseignees(plan).map((r) => r.numero)).toEqual([2, 5]);
+    expect([...rubriquesRenseignees(plan), ...rubriquesManquantes(plan)].map((r) => r.numero).sort()).toEqual(
+      RUBRIQUES_R4512_8.map((r) => r.numero),
+    );
+  });
+});
 import { CODE_TRAVAIL_PLAN_PREVENTION } from "@/lib/referentiels/corpus/code-travail-plan-prevention";
 
 /**

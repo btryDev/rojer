@@ -1,7 +1,7 @@
 import type { ObjetSignable } from "@prisma/client";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { AlertTriangle, Check, ChevronDown } from "lucide-react";
+import { AlertTriangle, Check } from "lucide-react";
 import { clientDuProprietaire } from "@/lib/auth/compte-hors-session";
 import { notFound } from "next/navigation";
 import { verifierAccessToken } from "@/lib/access-tokens/verify";
@@ -21,8 +21,7 @@ import {
   type ContenuPlanASigner,
 } from "@/lib/signatures/contenu-a-signer";
 import {
-  CHAPEAU_R4512_8,
-  RUBRIQUES_R4512_8,
+  rubriquesRenseignees,
   texteRubrique,
 } from "@/lib/plan-prevention/contenu-r4512-8";
 import { ligneHeuresRevisees } from "@/lib/plan-prevention/annonces-plan";
@@ -194,41 +193,18 @@ export default async function AccesParTokenPage({
         <SignerOuProposer
           classeConteneur="mx-auto mt-4 flex max-w-3xl flex-col gap-4 px-3 sm:px-6"
           classeCarte={CLASSE_CARTE}
-          entete={
-            <header className="bg-[color:var(--board-card)]">
-              <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 pt-5 pb-2 sm:px-6">
-                {pastilleRojer()}
-                <span className={CLASSE_MONO}>Signature demandée</span>
-              </div>
-              <div className="mx-auto max-w-3xl px-4 pt-3 pb-7 sm:px-6">
-                <p className={CLASSE_MONO}>De la part de {demandeur}</p>
-                <h1 className="m-0 mt-2 font-display text-[clamp(30px,4vw,40px)] leading-[1.02] font-semibold tracking-[-0.035em] text-[color:var(--board-ink)]">
-                  {titreDePage(contenu)}
-                </h1>
-                <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-ink)]">
-                  Relisez-le ; signez-le s&apos;il vous convient
-                  {proposition ? ", ou proposez une modification" : ""}.
-                </p>
-              </div>
-            </header>
-          }
-          enteteProposition={
-            <header className="bg-[color:var(--board-card)]">
-              <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 pt-5 pb-2 sm:px-6">
-                {pastilleRojer()}
-                <span className={CLASSE_MONO}>Proposition de modifications</span>
-              </div>
-              <div className="mx-auto max-w-3xl px-4 pt-3 pb-7 sm:px-6">
-                <p className={CLASSE_MONO}>De la part de {demandeur}</p>
-                <h1 className="m-0 mt-2 font-display text-[clamp(30px,4vw,40px)] leading-[1.02] font-semibold tracking-[-0.035em] text-[color:var(--board-ink)]">
-                  Proposer des modifications
-                </h1>
-                <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-ink)]">
-                  {titreDePage(contenu)}. Modifiez ce qui ne convient pas ; {demandeur} accepte, corrige ou refuse votre proposition.
-                </p>
-              </div>
-            </header>
-          }
+          entete={enTete(
+            "Signature demandée",
+            demandeur,
+            titreDePage(contenu),
+            `Relisez-le ; signez-le s'il vous convient${proposition ? ", ou proposez une modification" : ""}.`,
+          )}
+          enteteProposition={enTete(
+            "Proposition de modifications",
+            demandeur,
+            "Proposer des modifications",
+            `${titreDePage(contenu)}. Modifiez ce qui ne convient pas ; ${demandeur} accepte, corrige ou refuse votre proposition.`,
+          )}
           document={
             <>
               <section className={CLASSE_CARTE}>
@@ -482,6 +458,27 @@ function pastilleRojer() {
   );
 }
 
+/** L'en-tête de la page du lien : la signature et la proposition partagent son balisage. */
+function enTete(etiquette: string, demandeur: string, titre: string, phrase: string) {
+  return (
+    <header className="bg-[color:var(--board-card)]">
+      <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 pt-5 pb-2 sm:px-6">
+        {pastilleRojer()}
+        <span className={CLASSE_MONO}>{etiquette}</span>
+      </div>
+      <div className="mx-auto max-w-3xl px-4 pt-3 pb-7 sm:px-6">
+        <p className={CLASSE_MONO}>De la part de {demandeur}</p>
+        <h1 className="m-0 mt-2 font-display text-[clamp(30px,4vw,40px)] leading-[1.02] font-semibold tracking-[-0.035em] text-[color:var(--board-ink)]">
+          {titre}
+        </h1>
+        <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-ink)]">
+          {phrase}
+        </p>
+      </div>
+    </header>
+  );
+}
+
 /** La tuile noire du premier jour des travaux : « 27 / NOV. ». */
 function tuileDate(contenu: ContenuASigner | null) {
   if (contenu?.type !== "plan_prevention" && contenu?.type !== "permis_feu") return null;
@@ -652,35 +649,24 @@ function sectionsPlan(c: ContenuPlanASigner) {
         )}
       </section>
 
-      <details className={`${CLASSE_CARTE} group`}>
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
-          <span className="font-display text-[18px] font-semibold tracking-[-0.01em] text-[color:var(--board-ink)]">
-            Contenu minimal (art. R. 4512-8 CT)
-          </span>
-          <ChevronDown aria-hidden className="size-4 flex-none transition-transform group-open:rotate-180" />
-        </summary>
-        <p className={CLASSE_VIDE}>{CHAPEAU_R4512_8}</p>
-        {RUBRIQUES_R4512_8.map((r) => (
-          <div key={r.numero} className="mt-3 rounded-[18px] bg-[color:var(--board-canvas)] px-4 py-3">
-            <p className="m-0 text-[14px] font-semibold text-[color:var(--board-ink)]">
-              {r.numero}° {r.titre}
-            </p>
-            {!r.renseignee(c) ? (
-              <p className={CLASSE_VIDE}>Non renseigné.</p>
-            ) : r.numero === 1 ? (
-              <ul className="m-0 mt-2 flex list-disc flex-col gap-2 pl-5 text-[14px] text-[color:var(--board-ink)]">
-                {c.phasesDangereuses.map((f) => (
-                  <li key={f.ordre} className="whitespace-pre-wrap">
-                    {f.phase || "—"} → {f.moyensPrevention || "moyens de prévention non renseignés"}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className={CLASSE_TEXTE}>{texteRubrique(c, r.numero)}</p>
-            )}
-          </div>
-        ))}
-      </details>
+      {/* [2026-11-21, comme la fiche et le PDF] Chaque rubrique de R. 4512-8
+          remplie est une section sous son titre ; une vide n'apparaît pas. */}
+      {rubriquesRenseignees(c).map((r) => (
+        <section key={r.numero} className={CLASSE_CARTE}>
+          <h2 className={CLASSE_TITRE_CARTE}>{r.titre}</h2>
+          {r.numero === 1 ? (
+            <ul className="m-0 mt-2 flex list-disc flex-col gap-2 pl-5 text-[14px] text-[color:var(--board-ink)]">
+              {c.phasesDangereuses.map((f) => (
+                <li key={f.ordre} className="whitespace-pre-wrap">
+                  {f.phase || "—"} → {f.moyensPrevention || "moyens de prévention non renseignés"}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className={CLASSE_TEXTE}>{texteRubrique(c, r.numero)}</p>
+          )}
+        </section>
+      ))}
     </>
   );
 }

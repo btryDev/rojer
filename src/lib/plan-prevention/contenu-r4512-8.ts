@@ -12,8 +12,9 @@
  * `prisma/schema.prisma` annotait `inspectionDate` « (art. R4512-7) » quand
  * l'inspection commune est `R. 4512-2`.
  *
- * [2026-11-21, décision de la propriétaire] Le PDF du plan n'imprime plus que
- * les rubriques remplies, chacune sous son `titre` ; la fiche nomme les vides
+ * [2026-11-21, décision de la propriétaire] Le PDF du plan et la page du lien
+ * de signature ne montrent plus que les rubriques remplies
+ * (`rubriquesRenseignees`), chacune sous son `titre` ; la fiche nomme les vides
  * sur une ligne « À compléter » tant que le plan n'est pas figé ; le ZIP garde
  * « NON RENSEIGNÉE » (`contenuR4512_8`, ci-dessous).
  *
@@ -161,6 +162,13 @@ export function rubriquesManquantes(
   plan: ContenuPlan,
 ): readonly RubriqueR4512_8[] {
   return RUBRIQUES_R4512_8.filter((r) => !r.renseignee(plan));
+}
+
+/** Celles qu'un plan donné porte, dans l'ordre de l'article. */
+export function rubriquesRenseignees(
+  plan: ContenuPlan,
+): readonly RubriqueR4512_8[] {
+  return RUBRIQUES_R4512_8.filter((r) => r.renseignee(plan));
 }
 
 /** Ce que la rubrique 2° à 5° contient sur ce plan, ou `null`. */

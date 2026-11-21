@@ -3,7 +3,7 @@ import type { MethodeSignature, PartieSignataire, StatutPlanPrevention } from "@
 import { formaterDateFr, formaterDateHeureFr, formaterDateLongueFr } from "@/lib/dates";
 import { etatAffichePlan } from "@/lib/plan-prevention/etats";
 import { ligneHeuresRevisees } from "@/lib/plan-prevention/annonces-plan";
-import { RUBRIQUES_R4512_8, texteRubrique } from "@/lib/plan-prevention/contenu-r4512-8";
+import { rubriquesRenseignees, texteRubrique } from "@/lib/plan-prevention/contenu-r4512-8";
 import { complementsParPlace, precisionsLigne } from "@/lib/plan-prevention/complements";
 import { BOARD, slugifyFilename, stylesCommuns as s } from "./styles";
 import { PiedFixe } from "./PiedFixe";
@@ -28,9 +28,11 @@ import { PiedFixe } from "./PiedFixe";
  * de plus, rien de moins. Aucune adresse électronique n'y figure — le fichier
  * part chez les deux parties, et le PDF n'a pas besoin de les répéter.
  *
- * [2026-11-21, décision de la propriétaire, comme la fiche] Chaque rubrique de
- * `R. 4512-8` remplie est une section sous son titre ; une rubrique vide
- * n'apparaît pas — plus de section « Contenu minimal » ni de décompte. Plus
+ * [2026-11-21, décision de la propriétaire] Chaque rubrique de `R. 4512-8`
+ * remplie est une section sous son titre (`rubriquesRenseignees`) ; une
+ * rubrique vide n'apparaît pas — plus de section « Contenu minimal » ni de
+ * décompte. La page du lien fait de même ; la fiche, elle, nomme les vides
+ * sur une ligne « À compléter » tant que le plan n'est pas figé. Plus
  * d'encadré final « art. R. 4512-6 à R. 4512-12 » : restent la phrase du
  * fichier non scellé et celle qui ne qualifie rien.
  */
@@ -199,7 +201,7 @@ export function PlanPreventionDocument({ data }: { data: PlanPreventionData }) {
   const actives = signaturesActives(data.signatures);
   const sansSignature = partiesSansSignature(data.signatures);
   const deTravail = sansSignature.length > 0;
-  const rubriques = RUBRIQUES_R4512_8.filter((r) => r.renseignee(pl));
+  const rubriques = rubriquesRenseignees(pl);
   const { horaires, cse, autres } = complementsParPlace(pl);
 
   return (
