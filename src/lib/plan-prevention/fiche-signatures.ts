@@ -2,6 +2,7 @@ import type { MethodeSignature, PartieSignataire, StatutPropositionPlan } from "
 import { MOTIF_REVOCATION_ENVOI_ECHOUE, MOTIF_REVOCATION_NOUVEAU_LIEN } from "@/lib/access-tokens/revocation";
 import { OTP_ESSAIS_MAX, OTP_TTL_MINUTES } from "@/lib/signatures/otp";
 import { LIBELLE_METHODE_COURT } from "@/lib/signatures/methode";
+import { SUITE_NOUVEAU_LIEN } from "@/lib/access-tokens/motif-lisible";
 
 /**
  * Ce que la fiche du plan montre des signatures (2026-11-19, lot 3) : l'état
@@ -77,9 +78,14 @@ export function aUnLienOuUneSignature(liens: readonly LienLu[], signaturesActive
   return signaturesActives > 0 || liens.some((l) => l.revoqueMotif !== MOTIF_REVOCATION_ENVOI_ECHOUE);
 }
 
-/** Le motif d'une révocation de lien, pour le dirigeant. */
+/**
+ * Le motif d'une révocation de lien, pour le dirigeant. La suite « demandez
+ * un nouveau lien à votre interlocuteur », que `retirerSignaturesDuPlan`
+ * écrit pour le porteur du lien, est retirée (2026-11-21, retour de test) :
+ * le panneau dit lui-même ce qui suit pour le dirigeant.
+ */
 export function motifLienPourLaFiche(motif: string | null): string {
-  const brut = motif?.trim() ?? "";
+  const brut = motif?.replace(SUITE_NOUVEAU_LIEN, "").trim() ?? "";
   if (!brut) return "révoqué";
   if (brut === MOTIF_REVOCATION_NOUVEAU_LIEN) return "remplacé par un lien plus récent";
   if (brut === MOTIF_REVOCATION_ENVOI_ECHOUE) return "l'e-mail n'est pas parti";
@@ -122,7 +128,8 @@ export function historiqueDuPlan(p: {
       : partie === "entreprise_utilisatrice"
         ? `${nom ?? "un collègue"} (entreprise utilisatrice)`
         : "—";
-  // Le plan ne garde pas sa date de création (aucune colonne) : sans elle,
+  // ~~Le plan ne garde pas sa date de création (aucune colonne)~~ [2026-11-21 :
+  // faux, `PlanPrevention.createdAt` existe et la fiche le passe]. Sans date,
   // pas de ligne « Plan créé » plutôt qu'une date inventée.
   const e: EvenementHistorique[] = p.creeLe
     ? [{ cle: "creation", date: p.creeLe, ligne: "Plan créé", pastille: { mot: "Création", ton: "neutre" } }]

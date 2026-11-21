@@ -97,6 +97,27 @@ describe("l'historique", () => {
     for (let i = 1; i < h.length; i++) expect(h[i - 1].date.getTime()).toBeGreaterThanOrEqual(h[i].date.getTime());
   });
 
+  it("le motif d'un lien révoqué par une proposition : sans la suite écrite pour l'entreprise extérieure", () => {
+    const r = historiqueDuPlan({
+      creeLe: null,
+      raisonEE: "Nettoyage Pro SARL",
+      liens: [
+        lien("l9", {
+          revoqueLe: plus(5),
+          revoqueMotif:
+            "l'entreprise extérieure a proposé une modification du plan ; demandez un nouveau lien à votre interlocuteur",
+        }),
+      ],
+      signatures: [],
+      propositions: [],
+      maintenant: plus(10),
+    });
+    expect(r.find((e) => e.cle === "revocation-l9")?.sousLigne).toBe(
+      "l'entreprise extérieure a proposé une modification du plan",
+    );
+    expect(r.some((e) => e.ligne === "Plan créé")).toBe(false);
+  });
+
   it("liens envoyés, ouverts, remplacés", () => {
     expect(lignes).toContain("Lien adressé à Nettoyage Pro SARL");
     expect(lignes).toContain("Paul Testeur ouvre le lien et demande un code");
