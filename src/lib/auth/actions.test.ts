@@ -494,6 +494,29 @@ describe("fermer des sessions (lot 3a)", () => {
   });
 });
 
+describe("une session à la fois par navigateur (2026-11-16)", () => {
+  it("se connecter ferme d'abord la session ouverte ; sans session, rien n'est fermé", async () => {
+    h.sessionOuverte = { id: "u-autre", email: "autre@exemple.fr" };
+    await expect(signInAction({}, formulaire({ email: "a@exemple.fr", password: "x" }))).rejects.toThrow("NEXT_REDIRECT");
+    expect(h.auth.signOut).toHaveBeenCalledTimes(1);
+    expect(h.auth.signOut.mock.invocationCallOrder[0]).toBeLessThan(h.auth.signInEmail.mock.invocationCallOrder[0]);
+    // Changer de compte garde l'offre choisie à l'inscription ; seule la déconnexion volontaire l'efface.
+    expect(h.cookiesEffaces).toContain("etablissement-actif");
+    expect(h.cookiesEffaces).not.toContain("rojer-offre-choisie");
+    h.auth.signOut.mockClear();
+    h.sessionOuverte = null;
+    await expect(signInAction({}, formulaire({ email: "a@exemple.fr", password: "x" }))).rejects.toThrow("NEXT_REDIRECT");
+    expect(h.auth.signOut).not.toHaveBeenCalled();
+  });
+
+  it("refusée par la limite de débit : la session ouverte n'est pas touchée", async () => {
+    h.sessionOuverte = { id: "u-autre", email: "autre@exemple.fr" };
+    h.limite.mockResolvedValueOnce({ ok: false, reessayerDansSecondes: 60 });
+    expect((await signInAction({}, formulaire({ email: "a@exemple.fr", password: "x" }))).error).toMatch(/Trop de tentatives/);
+    expect(h.auth.signOut).not.toHaveBeenCalled();
+  });
+});
+
 describe("déconnexion (audit Next.js, B3)", () => {
   it("ferme la session en base et efface le cookie de l'établissement actif", async () => {
     await expect(signOutAction()).rejects.toThrow("NEXT_REDIRECT");
