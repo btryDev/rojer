@@ -52,8 +52,18 @@ export type ContenuPlanASigner = {
   entrepriseExterieureSiret: string | null;
   efChefNom: string;
   efEffectifIntervenant: number;
+  // Repris de RiskBoard (2026-11-21) : scellés quand ils sont remplis
+  // (`hash-objet.ts`), donc montrés au signataire.
+  entrepriseExterieureAdresse: string | null;
+  efChefTelephone: string | null;
   euChefNom: string;
   euChefFonction: string | null;
+  euChefTelephone: string | null;
+  horaires: string | null;
+  cseAssocie: boolean | null;
+  qualificationsRequises: string | null;
+  moyensFournis: string | null;
+  autresObservations: string | null;
   dateDebut: Date;
   dateFin: Date;
   dureeHeuresEstimee: number | null;
@@ -73,6 +83,9 @@ export type ContenuPlanASigner = {
     risque: string;
     mesureEntrepriseUtilisatrice: string | null;
     mesureEntrepriseExterieure: string | null;
+    famille: string | null;
+    lieu: string | null;
+    frequence: string | null;
   }[];
   phasesDangereuses: {
     ordre: number;
@@ -192,8 +205,16 @@ export async function contenuASigner(
         entrepriseExterieureSiret: true,
         efChefNom: true,
         efEffectifIntervenant: true,
+        entrepriseExterieureAdresse: true,
+        efChefTelephone: true,
         euChefNom: true,
         euChefFonction: true,
+        euChefTelephone: true,
+        horaires: true,
+        cseAssocie: true,
+        qualificationsRequises: true,
+        moyensFournis: true,
+        autresObservations: true,
         dateDebut: true,
         dateFin: true,
         dureeHeuresEstimee: true,
@@ -212,6 +233,9 @@ export async function contenuASigner(
             risque: true,
             mesureEntrepriseUtilisatrice: true,
             mesureEntrepriseExterieure: true,
+            famille: true,
+            lieu: true,
+            frequence: true,
           },
         },
         phasesDangereuses: {

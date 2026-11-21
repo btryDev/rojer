@@ -24,6 +24,13 @@ export const PROPOSITION_TAILLE_MAX = 100_000;
 
 const SIRET_FMT = /^\d{14}$/;
 
+/** Absent : la clé n'était pas proposée ; vide : `null` ; sinon le texte. */
+const texteFacultatif = (max: number) =>
+  z.preprocess(
+    (v) => (typeof v === "string" ? v.trim() || null : v),
+    z.string().max(max).nullable().optional(),
+  );
+
 export const propositionSchema = z.object({
   fiche: z.object({
     entrepriseExterieureRaison: z.string().trim().min(1, "Raison sociale requise").max(200),
@@ -33,6 +40,12 @@ export const propositionSchema = z.object({
     ),
     efChefNom: z.string().trim().min(1, "Nom du chef d'entreprise requis").max(200),
     efEffectifIntervenant: z.coerce.number().int().min(1).max(9999),
+    // Repris de RiskBoard (2026-11-21). FACULTATIFS DANS LA FORME : une
+    // proposition enregistrée avant ce lot ne les porte pas, et doit encore se
+    // lire et s'appliquer — une clé absente ne change rien au plan
+    // (`ecartsDeLaProposition`, `traiterProposition`). Vide : `null`.
+    entrepriseExterieureAdresse: texteFacultatif(500),
+    efChefTelephone: texteFacultatif(30),
   }),
   lignes: z
     .array(
@@ -51,11 +64,16 @@ export type PlanComparable = {
   entrepriseExterieureSiret: string | null;
   efChefNom: string;
   efEffectifIntervenant: number;
+  entrepriseExterieureAdresse?: string | null;
+  efChefTelephone?: string | null;
   lignes: {
     id: string;
     risque: string;
     mesureEntrepriseUtilisatrice: string | null;
     mesureEntrepriseExterieure: string | null;
+    famille?: string | null;
+    lieu?: string | null;
+    frequence?: string | null;
   }[];
 };
 
@@ -109,12 +127,17 @@ const LIBELLE_CHAMP: Record<keyof Proposition["fiche"], string> = {
   entrepriseExterieureSiret: "SIRET",
   efChefNom: "Chef de l'entreprise extérieure",
   efEffectifIntervenant: "Effectif qui interviendra",
+  entrepriseExterieureAdresse: "Adresse",
+  efChefTelephone: "Téléphone du chef de l'entreprise extérieure",
 };
 
 /** Ce que la proposition change au plan, pour le bandeau du dirigeant. */
 export function ecartsDeLaProposition(plan: PlanComparable, p: Proposition): Ecarts {
   const fiche: ChangementFiche[] = [];
   for (const champ of Object.keys(LIBELLE_CHAMP) as (keyof Proposition["fiche"])[]) {
+    // Une clé absente de la proposition n'a pas été proposée (proposition
+    // enregistrée avant que la fiche ne la porte) : elle ne change rien.
+    if (p.fiche[champ] === undefined) continue;
     const avant = String(plan[champ] ?? "");
     const apres = String(p.fiche[champ] ?? "");
     if (avant !== apres) fiche.push({ champ, libelle: LIBELLE_CHAMP[champ], avant, apres });
@@ -133,7 +156,10 @@ export function ecartsDeLaProposition(plan: PlanComparable, p: Proposition): Eca
     if (
       !egal(avant.risque, l.risque) ||
       !egal(avant.mesureEntrepriseUtilisatrice, l.mesureEntrepriseUtilisatrice) ||
-      !egal(avant.mesureEntrepriseExterieure, l.mesureEntrepriseExterieure)
+      !egal(avant.mesureEntrepriseExterieure, l.mesureEntrepriseExterieure) ||
+      !egal(avant.famille, l.famille) ||
+      !egal(avant.lieu, l.lieu) ||
+      !egal(avant.frequence, l.frequence)
     ) {
       modifiees.push({ avant, apres: l });
     }

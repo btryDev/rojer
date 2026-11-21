@@ -202,6 +202,10 @@ export async function traiterProposition(
         entrepriseExterieureSiret: fiche.entrepriseExterieureSiret,
         efChefNom: fiche.efChefNom,
         efEffectifIntervenant: fiche.efEffectifIntervenant,
+        // Absentes d'une proposition d'avant le 2026-11-21 : `undefined`, que
+        // Prisma n'écrit pas — le plan garde ce qu'il porte.
+        entrepriseExterieureAdresse: fiche.entrepriseExterieureAdresse,
+        efChefTelephone: fiche.efChefTelephone,
         // Remplacées en bloc, dans l'ordre proposé — comme « Modifier ».
         lignes: {
           deleteMany: {},
@@ -211,6 +215,9 @@ export async function traiterProposition(
             risque: l.risque,
             mesureEntrepriseUtilisatrice: l.mesureEntrepriseUtilisatrice,
             mesureEntrepriseExterieure: l.mesureEntrepriseExterieure,
+            famille: l.famille ?? null,
+            lieu: l.lieu ?? null,
+            frequence: l.frequence ?? null,
           })),
         },
       },

@@ -8,6 +8,7 @@ import {
   type PropositionState,
 } from "@/lib/plan-prevention/proposition-actions";
 import { LIGNES_MAX } from "@/lib/plan-prevention/proposition";
+import { libelleFamille } from "@/lib/plan-prevention/familles-risque";
 
 /**
  * « Un point ne convient pas ? Proposer des modifications » — sur la page du
@@ -29,6 +30,8 @@ type Fiche = {
   entrepriseExterieureSiret: string;
   efChefNom: string;
   efEffectifIntervenant: string;
+  entrepriseExterieureAdresse: string;
+  efChefTelephone: string;
 };
 
 type Ligne = {
@@ -38,6 +41,11 @@ type Ligne = {
   risque: string;
   mesureEntrepriseUtilisatrice: string;
   mesureEntrepriseExterieure: string;
+  /** La famille de la ligne, reportée telle quelle : elle ne se propose pas
+   *  ici, mais l'accepter ne doit pas l'effacer (2026-11-21). */
+  famille: string | null;
+  lieu: string;
+  frequence: string;
 };
 
 let compteur = 0;
@@ -61,12 +69,17 @@ export function PropositionPlanForm({
     entrepriseExterieureSiret: string | null;
     efChefNom: string;
     efEffectifIntervenant: number;
+    entrepriseExterieureAdresse: string | null;
+    efChefTelephone: string | null;
   };
   lignes: {
     id: string;
     risque: string;
     mesureEntrepriseUtilisatrice: string | null;
     mesureEntrepriseExterieure: string | null;
+    famille: string | null;
+    lieu: string | null;
+    frequence: string | null;
   }[];
   /** « ← Retour à la signature ». */
   onRetour: () => void;
@@ -78,6 +91,8 @@ export function PropositionPlanForm({
     entrepriseExterieureSiret: ficheInitiale.entrepriseExterieureSiret ?? "",
     efChefNom: ficheInitiale.efChefNom,
     efEffectifIntervenant: String(ficheInitiale.efEffectifIntervenant),
+    entrepriseExterieureAdresse: ficheInitiale.entrepriseExterieureAdresse ?? "",
+    efChefTelephone: ficheInitiale.efChefTelephone ?? "",
   });
   const [lignes, setLignes] = useState<Ligne[]>(
     lignesInitiales.map((l) => ({
@@ -86,6 +101,9 @@ export function PropositionPlanForm({
       risque: l.risque,
       mesureEntrepriseUtilisatrice: l.mesureEntrepriseUtilisatrice ?? "",
       mesureEntrepriseExterieure: l.mesureEntrepriseExterieure ?? "",
+      famille: l.famille,
+      lieu: l.lieu ?? "",
+      frequence: l.frequence ?? "",
     })),
   );
   // Le succès se dit aussi au bloc qui l'entoure (`onEnvoyee`), qui retire
@@ -124,11 +142,14 @@ export function PropositionPlanForm({
 
   const json = JSON.stringify({
     fiche,
-    lignes: lignes.map(({ id, risque, mesureEntrepriseUtilisatrice, mesureEntrepriseExterieure }) => ({
+    lignes: lignes.map(({ id, risque, mesureEntrepriseUtilisatrice, mesureEntrepriseExterieure, famille, lieu, frequence }) => ({
       ...(id ? { id } : {}),
       risque,
       mesureEntrepriseUtilisatrice,
       mesureEntrepriseExterieure,
+      ...(famille ? { famille } : {}),
+      lieu,
+      frequence,
     })),
   });
 
@@ -188,6 +209,21 @@ export function PropositionPlanForm({
           onChange={(e) => setFiche({ ...fiche, efChefNom: e.target.value })}
         />
         <ChampBoard
+          id="pp-telephone"
+          label="Téléphone (facultatif)"
+          type="tel"
+          value={fiche.efChefTelephone}
+          maxLength={30}
+          onChange={(e) => setFiche({ ...fiche, efChefTelephone: e.target.value })}
+        />
+        <ChampBoard
+          id="pp-adresse"
+          label="Adresse (facultatif)"
+          value={fiche.entrepriseExterieureAdresse}
+          maxLength={500}
+          onChange={(e) => setFiche({ ...fiche, entrepriseExterieureAdresse: e.target.value })}
+        />
+        <ChampBoard
           id="pp-effectif"
           label="Effectif qui interviendra"
           requis
@@ -208,6 +244,7 @@ export function PropositionPlanForm({
               <p className="m-0 font-mono text-[10px] tracking-[0.12em] uppercase text-[color:var(--board-slate-soft)]">
                 Risque {i + 1}
                 {!l.id && " (ajouté)"}
+                {l.famille && ` · ${libelleFamille(l.famille)}`}
               </p>
               <Button
                 type="button"
@@ -249,6 +286,22 @@ export function PropositionPlanForm({
               maxLength={500}
               onChange={(e) => changerLigne(l.cle, "mesureEntrepriseExterieure", e.target.value)}
             />
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <ChampBoard
+                id={`pp-lieu-${l.cle}`}
+                label="Lieu (facultatif)"
+                value={l.lieu}
+                maxLength={200}
+                onChange={(e) => changerLigne(l.cle, "lieu", e.target.value)}
+              />
+              <ChampBoard
+                id={`pp-frequence-${l.cle}`}
+                label="Fréquence (facultatif)"
+                value={l.frequence}
+                maxLength={200}
+                onChange={(e) => changerLigne(l.cle, "frequence", e.target.value)}
+              />
+            </div>
           </div>
         ))}
         <Button
@@ -259,7 +312,15 @@ export function PropositionPlanForm({
           onClick={() =>
             setLignes((ls) => [
               ...ls,
-              { cle: nouvelleCle(), risque: "", mesureEntrepriseUtilisatrice: "", mesureEntrepriseExterieure: "" },
+              {
+                cle: nouvelleCle(),
+                risque: "",
+                mesureEntrepriseUtilisatrice: "",
+                mesureEntrepriseExterieure: "",
+                famille: null,
+                lieu: "",
+                frequence: "",
+              },
             ])
           }
         >

@@ -87,6 +87,18 @@ function Ligne({ l }: { l: LigneBandeau }) {
               Votre mesure : <Valeur texte={l.eu} changement={l.changements.eu} /> · Sa mesure :{" "}
               <Valeur texte={l.ee} changement={l.changements.ee} />
             </p>
+            {/* Lieu et fréquence (2026-11-21) : dits seulement s'ils portent
+                quelque chose ou s'ils changent. */}
+            {(l.lieu || l.changements.lieu) && (
+              <p className={sous}>
+                Lieu : <Valeur texte={l.lieu} changement={l.changements.lieu} />
+              </p>
+            )}
+            {(l.frequence || l.changements.frequence) && (
+              <p className={sous}>
+                Fréquence : <Valeur texte={l.frequence} changement={l.changements.frequence} />
+              </p>
+            )}
           </div>
           <span className={`${PASTILLE} ${AMBRE}`}>Modifié</span>
         </li>

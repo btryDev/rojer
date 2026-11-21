@@ -14,6 +14,8 @@ type Ligne = Record<string, unknown>;
 
 function appliquer(ligne: Ligne, data: Ligne) {
   for (const [clef, v] of Object.entries(data)) {
+    // Comme Prisma : une valeur `undefined` n'écrit rien.
+    if (v === undefined) continue;
     if (clef === "lignes" && v && typeof v === "object") {
       const op = v as { create: Ligne[] };
       ligne.lignes = op.create.map((l) => ({ ...l }));
@@ -192,6 +194,8 @@ beforeEach(() => {
       numero: 1,
       ...FICHE,
       efChefEmail: "chef@exterieure.fr",
+      entrepriseExterieureAdresse: "1 rue des Lilas, Lyon",
+      efChefTelephone: "06 00 00 00 00",
       lignes: [{ ...LIGNE_1, ordre: 0 }],
       lieux: "Cuisine",
       dateDebut: new Date("2026-12-01T08:00:00Z"),
@@ -325,6 +329,17 @@ describe("le dirigeant traite la proposition (ADR-061 § 4)", () => {
     );
     expect(mails.find((m) => m.to === "chef@exterieure.fr")?.subject).toMatch(/^Proposition acceptée/);
     expect(mails.find((m) => m.to === "chef@exterieure.fr")?.html).toContain(">Proposition acceptée</h1>");
+  });
+
+  it("accepter une proposition qui ne porte pas l'adresse ni le téléphone ne les efface (2026-11-21)", async () => {
+    // La proposition du `beforeEach` a la forme d'avant le 2026-11-21 : sa
+    // fiche ne nomme ni l'adresse ni le téléphone, que le plan porte.
+    expect((await decider("accepter")).status).toBe("success");
+    expect(prismaMock.planPrevention.lignes[0]).toMatchObject({
+      efChefNom: "Paul Dupond",
+      entrepriseExterieureAdresse: "1 rue des Lilas, Lyon",
+      efChefTelephone: "06 00 00 00 00",
+    });
   });
 
   it("corriger : la proposition s'applique, marquée « correction en cours » (2026-11-19)", async () => {

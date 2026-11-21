@@ -19,9 +19,18 @@ export type LigneBandeau =
       numero: number;
       risque: string;
       /** Ce qui change, champ par champ ; `null` : inchangé. */
-      changements: { risque: Changement; eu: Changement; ee: Changement };
+      changements: {
+        risque: Changement;
+        eu: Changement;
+        ee: Changement;
+        lieu: Changement;
+        frequence: Changement;
+      };
       eu: string;
       ee: string;
+      /** Repris de RiskBoard (2026-11-21) ; vides : rien ne s'affiche. */
+      lieu: string;
+      frequence: string;
     }
   | { type: "ajoute"; cle: string; risque: string; eu: string; ee: string }
   | { type: "supprime"; cle: string; risque: string };
@@ -69,10 +78,14 @@ export function bandeauDeLaProposition(plan: PlanComparable, p: Proposition): Ba
       risque: texte(l.risque),
       eu,
       ee,
+      lieu: texte(l.lieu),
+      frequence: texte(l.frequence),
       changements: {
         risque: changement(avant.risque, l.risque),
         eu: changement(avant.mesureEntrepriseUtilisatrice, l.mesureEntrepriseUtilisatrice),
         ee: changement(avant.mesureEntrepriseExterieure, l.mesureEntrepriseExterieure),
+        lieu: changement(avant.lieu, l.lieu),
+        frequence: changement(avant.frequence, l.frequence),
       },
     });
   });
