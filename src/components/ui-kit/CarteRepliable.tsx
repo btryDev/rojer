@@ -25,7 +25,7 @@ export function CarteRepliable({
 }) {
   return (
     <details id={id} open={ouverte} className="carte-board group scroll-mt-6 px-7 py-6 sm:px-8">
-      <summary className="flex cursor-pointer list-none items-center gap-3 py-1 [&::-webkit-details-marker]:hidden">
+      <summary className="flex cursor-pointer list-none items-center gap-3 rounded-[12px] py-1 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[color:var(--board-blue-strong)] [&::-webkit-details-marker]:hidden">
         <ChevronRepli />
         <h2 className="board-titre m-0 flex-1 text-[22px]">{titre}</h2>
         <span className="text-[12.5px] text-[color:var(--board-slate-mid)]">{compte}</span>

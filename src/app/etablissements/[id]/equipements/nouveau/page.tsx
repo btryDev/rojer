@@ -1,7 +1,6 @@
 import { PlafondDeCreation } from "@/components/quotas/PlafondDeCreation";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { LienRetour } from "@/components/duerps/LienRetour";
 import { questionsExigeesParCategorie } from "@/lib/equipements/reponses-exigees";
 import { EquipementForm } from "@/components/equipements/EquipementForm";
 import { creerEquipement } from "@/lib/equipements/actions";
@@ -46,13 +45,7 @@ export default async function NouvelEquipementPage({
       {/* Le plafond de la formule, annoncé avant la saisie (ADR-053 § 14). */}
       <PlafondDeCreation cle="equipements" className="mx-[var(--board-gutter)] mt-4">
       <header className="border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] py-[22px]">
-        <Link
-          href={`/etablissements/${id}/equipements`}
-          className="board-eyebrow inline-flex items-center gap-2 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)] transition-colors hover:text-[color:var(--board-ink)]"
-        >
-          <ArrowLeft className="size-3" aria-hidden />
-          Équipements de {etab.raisonDisplay}
-        </Link>
+        <LienRetour href={`/etablissements/${id}/equipements`}>Équipements de {etab.raisonDisplay}</LienRetour>
         {/* Le sur-titre « Nouvel équipement » redisait le titre : le board
             ne pose pas de sur-titre quand le titre nomme déjà la vue. */}
         <h1 className="board-titre m-0 mt-2.5 text-[clamp(22px,2.2vw,27px)]">

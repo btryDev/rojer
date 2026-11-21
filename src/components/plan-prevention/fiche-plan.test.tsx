@@ -119,7 +119,7 @@ describe("la fiche du plan", () => {
     expect(lu).toContain("Dégraissage de la hotte");
     expect(lu).toContain("Brouillon");
     // Sa signature à poser : l'onglet « Suivi » le compte.
-    expect(lu).toContain("Plan de prévention Suivi 1");
+    expect(lu).toContain("Le plan Suivi 1");
     expect(lu).toContain("Action requise Votre signature est attendue");
     expect(lu).toContain("Signatures · 0 sur 2");
     expect(lu).toContain("Signer et envoyer à l'entreprise extérieure");
@@ -128,6 +128,23 @@ describe("la fiche du plan", () => {
     // L'historique est dans l'onglet ; plus de bouton ni de fenêtre.
     expect(lu).toContain("Ce qui s'est passé");
     expect(lu).not.toMatch(/\bHistorique\b/);
+  });
+
+  it("« Ce qui s'est passé » : repliée, fermée par défaut, avec le nombre d'événements ; le contenu est là", async () => {
+    planCourant.valeur = plan({ createdAt: new Date("2026-11-18T09:05:00Z"), liens: [lienEE] });
+    const { default: Page } = await import("@/app/etablissements/[id]/plan-prevention/[planId]/page");
+    const html = renderToStaticMarkup(
+      await Page({ params: Promise.resolve({ id: "e1", planId: "p1" }), searchParams: Promise.resolve({ onglet: "suivi" }) }),
+    );
+    const debut = html.indexOf('<details id="historique"');
+    expect(debut).toBeGreaterThan(-1);
+    const balise = html.slice(debut, html.indexOf(">", debut));
+    expect(balise).not.toContain("open");
+    const details = html.slice(debut, html.indexOf("</details>", debut));
+    expect(details).toMatch(/<summary[^>]*>[\s\S]*Ce qui s&#x27;est passé[\s\S]*3 événements[\s\S]*<\/summary>/);
+    expect(details).toContain("Plan créé");
+    // La carte « Signatures » n'est pas repliée.
+    expect(html.slice(0, debut)).toContain('id="signatures-titre"');
   });
 
   it("« Plan créé » ouvre l'historique, à la date de création du plan", async () => {
@@ -146,6 +163,59 @@ describe("la fiche du plan", () => {
     const signe = await rendre(plan(), { openSign: "1" });
     expect(signe).toContain("Signatures · 0 sur 2");
     expect(signe).not.toContain("Les parties");
+  });
+
+  it("la bascule « Le plan / Suivi » est sur la carte, pas dans l'en-tête (Switch A)", async () => {
+    planCourant.valeur = plan();
+    const { default: Page } = await import("@/app/etablissements/[id]/plan-prevention/[planId]/page");
+    for (const query of [{}, { onglet: "suivi" }]) {
+      const html = renderToStaticMarkup(
+        await Page({ params: Promise.resolve({ id: "e1", planId: "p1" }), searchParams: Promise.resolve(query) }),
+      );
+      const entete = html.slice(0, html.indexOf("</header>"));
+      expect(entete).not.toContain('role="tablist"');
+      expect(html).toMatch(/role="tablist"[^>]*aria-label="Plan de prévention PP-002"/);
+      const onglets = html.match(/<a[^>]*role="tab"[^>]*>/g) ?? [];
+      expect(onglets).toHaveLength(2);
+      for (const o of onglets) expect(o).toContain('aria-controls="contenu-du-plan"');
+      expect(onglets.filter((o) => o.includes('aria-selected="true"'))).toHaveLength(1);
+      expect(html).toContain('id="contenu-du-plan" role="tabpanel"');
+      // Le PDF sur la même rangée que la bascule.
+      const rangee = html.slice(html.indexOf('role="tablist"'), html.indexOf('role="tabpanel"'));
+      expect(rangee).toContain("Télécharger le PDF");
+    }
+  });
+
+  it("le retour : `LienRetour`, vers la liste, et d'où l'on vient quand c'est ailleurs (ADR-014)", async () => {
+    planCourant.valeur = plan();
+    const { default: Page } = await import("@/app/etablissements/[id]/plan-prevention/[planId]/page");
+    const sans = renderToStaticMarkup(
+      await Page({ params: Promise.resolve({ id: "e1", planId: "p1" }), searchParams: Promise.resolve({}) }),
+    );
+    const retourSans = sans.slice(sans.indexOf('aria-label="Retour"'), sans.indexOf("</nav>"));
+    expect(retourSans).toContain('href="/etablissements/e1/plan-prevention"');
+    expect(retourSans).toContain("← Plans de prévention");
+    expect(retourSans).not.toContain("font-mono");
+
+    const depuisCalendrier = renderToStaticMarkup(
+      await Page({
+        params: Promise.resolve({ id: "e1", planId: "p1" }),
+        searchParams: Promise.resolve({ de: "/etablissements/e1/calendrier" }),
+      }),
+    );
+    const retour = depuisCalendrier.slice(
+      depuisCalendrier.indexOf('aria-label="Retour"'),
+      depuisCalendrier.indexOf("</nav>"),
+    );
+    expect(retour).toContain('href="/etablissements/e1/calendrier"');
+    expect(retour).toContain('href="/etablissements/e1/plan-prevention"');
+  });
+
+  it("« Modifier » jusqu'à la première signature, plus après", async () => {
+    expect(await rendre(plan(), {})).toMatch(/\bModifier\b/);
+    const signe = await rendre(plan({ signatures: [signatureEU], liens: [lienEE] }), {});
+    expect(signe).not.toMatch(/\bModifier\b/);
+    expect(signe).not.toContain("Compléter");
   });
 
   it("le plan d'un seul tenant : une rubrique de R. 4512-8 remplie est une section ; les vides, une ligne", async () => {
@@ -220,7 +290,7 @@ describe("la fiche du plan", () => {
     );
     expect(lu).toContain("Modification proposée");
     expect(lu).not.toContain("En attente de signatures");
-    expect(lu).toContain("Plan de prévention Suivi 1");
+    expect(lu).toContain("Le plan Suivi 1");
     expect(lu).toContain("Action requise · reçue le 19/11 à 15 h 35");
     expect(lu).toContain("Nettoyage Pro SARL propose 1 modification");
     expect(lu).toContain("Paul Testeur, depuis son lien.");

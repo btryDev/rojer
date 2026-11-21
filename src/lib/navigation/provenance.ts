@@ -187,6 +187,26 @@ export function retourDistinct(
 }
 
 /**
+ * Les deux liens de retour d'une fiche (ADR-014) : `retour`, d'où l'on vient
+ * — le parent canonique sans provenance, et le parent sous son nom (avec ses
+ * filtres) quand la provenance y mène — ; `parent`, où la fiche vit, seulement
+ * quand la provenance mène ailleurs. Lu par `FilRetour`, qui rend chacun
+ * avec `LienRetour` (2026-11-21).
+ */
+export function retoursDeLaFiche(
+  provenance: Provenance | null,
+  canonique: Provenance,
+): { retour: Provenance; parent: Provenance | null } {
+  const ailleurs = retourDistinct(provenance, canonique.href);
+  const retour = !provenance
+    ? canonique
+    : ailleurs
+      ? provenance
+      : { href: provenance.href, label: canonique.label };
+  return { retour, parent: ailleurs ? canonique : null };
+}
+
+/**
  * Ajoute la provenance à un lien sortant. Sans origine, le lien est rendu
  * inchangé : mieux vaut un retour canonique qu'un paramètre vide. Un lien
  * qui reste sur l'écran courant n'est pas annoté non plus — se dire à

@@ -94,7 +94,10 @@ import {
  * [2026-11-21, maquette V3 validée par la propriétaire] L'en-tête — tuile du
  * jour, référence, nature des travaux, bande de faits, UNE pastille d'état —,
  * puis deux onglets, choisis par l'adresse (`?onglet=suivi`) et rendus au
- * serveur :
+ * serveur [2026-11-21, maquette « Switch A » : la bascule quitte l'en-tête et
+ * se pose en haut de la carte du contenu, « Le plan » / « Suivi » soulignés,
+ * « Télécharger le PDF » à droite ; « Modifier » disparaît dès la première
+ * signature] :
  * - « Plan de prévention » : le plan d'un seul tenant, une carte, des
  *   sections séparées d'un filet ; chaque rubrique de `R. 4512-8` remplie est
  *   une section sous son titre ; les vides se disent en une ligne tant que le
@@ -110,6 +113,8 @@ import {
  */
 
 type OngletFiche = "plan" | "suivi";
+/** Le panneau que la bascule commande (`tabpanel`). */
+const PANNEAU = "contenu-du-plan";
 
 const FMT_JOUR = new Intl.DateTimeFormat("fr-FR", { timeZone: FUSEAU_REFERENCE, day: "2-digit" });
 const FMT_MOIS = new Intl.DateTimeFormat("fr-FR", { timeZone: FUSEAU_REFERENCE, month: "short" });
@@ -217,6 +222,10 @@ export default async function PlanPreventionDetailPage({
   // Figé (signé, clos ou annulé) : le plan ne se complète plus ; les
   // rubriques vides ne se signalent plus (décision de la propriétaire,
   // 2026-11-21). Remplies, elles s'affichent toujours, chacune sa section.
+  // « Modifier » (et « Compléter ») seulement s'il n'est pas figé (même
+  // décision) : on modifie librement jusqu'à la première signature ; ensuite,
+  // seul « Révoquer les signatures pour corriger » rouvre le contenu. La page
+  // « Modifier » garde son verrou.
   const fige = !planSignable || plan.signatures.length > 0;
   const rubriquesRemplies = rubriquesRenseignees(plan);
   const manquantes = fige ? [] : rubriquesManquantes(plan);
@@ -271,6 +280,34 @@ export default async function PlanPreventionDetailPage({
     return s ? `${fiche}?${s}` : fiche;
   };
   const suivi = adresseOnglet("suivi");
+  // La bascule « Le plan / Suivi » (2026-11-21, maquette « Switch A ») : en
+  // haut de la carte du contenu, plus dans l'en-tête ; le PDF à droite.
+  const bascule = (
+    <OngletsPage
+      variante="soulignee"
+      libelle={`Plan de prévention ${reference}`}
+      idPanneau={PANNEAU}
+      onglets={[
+        { href: adresseOnglet("plan"), label: "Le plan", actif: onglet === "plan" },
+        {
+          href: suivi,
+          label: "Suivi",
+          actif: onglet === "suivi",
+          alerte: attente ? 1 : 0,
+          libelleAlerte: "une action vous attend",
+          tonAlerte: "proche",
+        },
+      ]}
+      droite={
+        <a
+          href={`/api/etablissements/${id}/plan-prevention/${plan.id}/pdf`}
+          className="text-[13.5px] text-[color:var(--board-blue-ink)] underline-offset-2 hover:underline"
+        >
+          Télécharger le PDF
+        </a>
+      }
+    />
+  );
 
   const memeJour = cleJourCivil(plan.dateDebut) === cleJourCivil(plan.dateFin);
   const bande: { cle: string; valeur: string }[] = [
@@ -352,22 +389,6 @@ export default async function PlanPreventionDetailPage({
             ))}
           </dl>
           <PastilleFiche ton={pastille.ton}>{pastille.mot}</PastilleFiche>
-          <div className="mt-2.5">
-            <OngletsPage
-              libelle={`Plan de prévention ${reference}`}
-              onglets={[
-                { href: adresseOnglet("plan"), label: "Plan de prévention", actif: onglet === "plan" },
-                {
-                  href: suivi,
-                  label: "Suivi",
-                  actif: onglet === "suivi",
-                  alerte: attente ? 1 : 0,
-                  libelleAlerte: "une action vous attend",
-                  tonAlerte: "proche",
-                },
-              ]}
-            />
-          </div>
         </div>
       </header>
 
@@ -376,6 +397,8 @@ export default async function PlanPreventionDetailPage({
           <AnnonceFiche>
             {onglet === "suivi" ? (
               <div className="flex flex-col gap-[18px]">
+                <div className="carte-board">{bascule}</div>
+                <div id={PANNEAU} role="tabpanel" aria-label="Suivi" className="flex flex-col gap-[18px]">
                 {/* Les cartes d'action lisent `attente`, comme la pastille : rien
                     en lecture seule (2026-11-21) — l'état reste dit par la
                     pastille d'en-tête et par l'historique. */}
@@ -426,30 +449,32 @@ export default async function PlanPreventionDetailPage({
                     maintenant,
                   })}
                 />
+                </div>
               </div>
             ) : (
               <div className="flex flex-col gap-[18px]">
                 {attente === "proposition" && enAttente && <RappelProposition proposition={enAttente} plan={plan} suiviHref={suivi} />}
                 {attente === "correction" && <RappelCorrection raisonEE={plan.entrepriseExterieureRaison} suiviHref={suivi} />}
 
-                {/* Supprimer reste avec les autres gestes du plan. */}
+                {/* Supprimer reste avec les autres gestes du plan ; « Télécharger
+                    le PDF » est sur la bascule. */}
                 <div className="flex flex-wrap justify-end gap-2.5">
-                  {planSignable && (
+                  {!fige && (
                     <Link data-ecriture href={modifier} className={PILULE_FICHE}>
                       Modifier
                     </Link>
                   )}
-                  <a href={`/api/etablissements/${id}/plan-prevention/${plan.id}/pdf`} className={PILULE_FICHE}>
-                    Télécharger le PDF
-                  </a>
                   {(plan.statut === "valide" || plan.statut === "attente_signatures") && (
                     <BoutonCloturer planId={plan.id} entete />
                   )}
                   <BoutonSupprimerPlan planId={plan.id} entete />
                 </div>
 
-                {/* LE PLAN, D'UN SEUL TENANT (maquette V3). */}
-                <article className="carte-board px-6 pb-4 pt-1 md:px-10">
+                {/* LE PLAN, D'UN SEUL TENANT (maquette V3), sous la bascule
+                    (« Switch A ») : une seule carte. */}
+                <div className="carte-board">
+                {bascule}
+                <article id={PANNEAU} role="tabpanel" aria-label="Le plan" className="px-6 pb-4 pt-1 md:px-10">
                   <Section titre="Les parties">
                     <Faits>
                       <Fait cle="Entreprise utilisatrice">
@@ -597,15 +622,14 @@ export default async function PlanPreventionDetailPage({
                     <Section>
                       <p className="m-0 text-[14px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                         À compléter : {manquantes.map((r) => r.titre).join(" ; ")}.{" "}
-                        {planSignable && (
-                          <Link
-                            data-ecriture
-                            href={modifier}
-                            className="text-[color:var(--board-blue-ink)] underline-offset-2 hover:underline"
-                          >
-                            Compléter
-                          </Link>
-                        )}
+                        {/* Le bloc n'existe que non figé : « Compléter » sans condition. */}
+                        <Link
+                          data-ecriture
+                          href={modifier}
+                          className="text-[color:var(--board-blue-ink)] underline-offset-2 hover:underline"
+                        >
+                          Compléter
+                        </Link>
                       </p>
                     </Section>
                   )}
@@ -761,6 +785,7 @@ export default async function PlanPreventionDetailPage({
                     </details>
                   </Section>
                 </article>
+                </div>
               </div>
             )}
           </AnnonceFiche>
