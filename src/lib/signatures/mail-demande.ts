@@ -122,7 +122,7 @@ export type PresentationLien = {
 
 const PHRASE_ENREGISTREMENT =
   "Rojer enregistrera votre signature avec son horodatage et l'empreinte " +
-  "du document tel qu'il se présentait.";
+  "des données signées, telles qu'elles se présentaient.";
 
 /** E1 — le lien de signature. Aucun code : il part à la demande, depuis la page. */
 export function presentationDemandeSignature(c: ContexteDemande): PresentationLien {

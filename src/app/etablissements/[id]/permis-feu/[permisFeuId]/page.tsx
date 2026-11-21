@@ -1,3 +1,4 @@
+import { requireEtablissement } from "@/lib/auth/scope";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
@@ -97,6 +98,8 @@ export default async function PermisFeuDetailPage({
 
   const permis = await getPermisFeu(id, permisFeuId);
   if (!permis) notFound();
+  // L'entreprise nommée au consentement de la signature (lecture en cache).
+  const { etablissement } = await requireEtablissement(id);
 
   const mesuresCochees = new Set(permis.mesuresValidees);
   const groupes = mesuresParGroupe();
@@ -404,6 +407,8 @@ export default async function PermisFeuDetailPage({
                       objetType="permis_feu"
                       objetId={permis.id}
                       auNomDe="le donneur d'ordre"
+                      raisonSociale={etablissement.entreprise.raisonSociale}
+                      surtitre={`Permis de feu · ${numero(permis.numero)}`}
                     />
                     <DemanderSignatureForm
                       etablissementId={id}

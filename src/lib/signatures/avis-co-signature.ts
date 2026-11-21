@@ -133,7 +133,7 @@ export async function envoyerAvisCoSignature(
               libelle:
                 objetType === "plan_prevention"
                   ? "Empreinte SHA-256 des données du plan (ce n'est pas celle du PDF joint)"
-                  : "Empreinte SHA-256 des données du permis",
+                  : "Empreinte SHA-256 des données signées",
               valeur: premiere.hashDocument,
             },
           ],

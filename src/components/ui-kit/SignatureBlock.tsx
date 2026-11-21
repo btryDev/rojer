@@ -223,7 +223,7 @@ export function SignatureBlock({
           </div>
         )}
         <div className="col-span-full flex gap-2">
-          <dt className={CLE[charte]}>Empreinte SHA-256 :</dt>
+          <dt className={CLE[charte]}>Empreinte SHA-256 des données signées :</dt>
           <dd className={cn("font-mono", VALEUR[charte])} title={hashDocument}>
             {hashCourt}
           </dd>

@@ -39,9 +39,11 @@ const CREATEURS = [
   // L'unité dédiée d'une activité hors référentiel (ADR-060), sous la porte.
   "src/lib/activites/ajouts.ts",
   "src/lib/access-tokens/emission.ts",
-  "src/lib/signatures/actions.ts",
-  // La signature depuis le compte confirmée par un code (2026-11-19), sous la
-  // même porte que `signerEnCompteConnecte`.
+  // ~~"src/lib/signatures/actions.ts"~~ (2026-11-21) : sa signature d'un clic
+  // depuis le compte est retirée ; la signature par lien a été comptée à
+  // l'émission du lien.
+  // La signature depuis le compte confirmée par un code (2026-11-19) — depuis
+  // le 2026-11-21 la seule voie depuis le compte.
   "src/lib/signatures/code-compte.ts",
 ];
 

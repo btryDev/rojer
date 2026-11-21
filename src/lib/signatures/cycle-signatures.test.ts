@@ -161,7 +161,6 @@ import {
   demanderSignature,
   poserSignatureAvecToken,
   renvoyerCodeOtp,
-  signerEnCompteConnecte,
 } from "./actions";
 import { hashToken } from "@/lib/access-tokens/token";
 import { MESSAGE_ENVOI_ECHOUE } from "@/lib/access-tokens/emission";
@@ -556,29 +555,6 @@ describe("garantie 2b — un objet clos ou annulé ne se signe plus, même avec 
     expect(prismaMock.signature.create).not.toHaveBeenCalled();
   });
 
-  it("le donneur d'ordre connecté ne signe pas non plus un permis terminé", async () => {
-    prismaMock.permisFeu.lignes.push(plan("pf-1", "etab-a-moi", "termine"));
-
-    const r = await signerEnCompteConnecte({
-      etablissementId: "etab-a-moi",
-      objetType: "permis_feu",
-      objetId: "pf-1",
-    });
-
-    expect(r).toEqual({ ok: false, raison: "non_signable" });
-    expect(prismaMock.signature.create).not.toHaveBeenCalled();
-  });
-
-  it("la signature directe ne signe que le permis de feu : un plan passe par le code (relecture du 2026-11-21)", async () => {
-    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
-
-    for (const objetType of ["plan_prevention", "rapport_verification", "duerp_version"] as const) {
-      const r = await signerEnCompteConnecte({ etablissementId: "etab-a-moi", objetType, objetId: "pp-1" });
-      expect(r).toEqual({ ok: false, raison: "non_implemente" });
-    }
-    expect(prismaMock.signature.create).not.toHaveBeenCalled();
-  });
-
   it("aucun lien ne part pour un plan clos", async () => {
     prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "clos"));
 
@@ -759,49 +735,6 @@ describe("garantie 3 — la partie qui signe est enregistrée, jamais devinée",
     expect(prismaMock.signature.lignes).toHaveLength(1);
   });
 
-  it("le compte connecté signe toujours au nom de l'entreprise utilisatrice", async () => {
-    prismaMock.permisFeu.lignes.push(plan("pf-1", "etab-a-moi", "attente_signatures"));
-
-    const r = await signerEnCompteConnecte({
-      etablissementId: "etab-a-moi",
-      objetType: "permis_feu",
-      objetId: "pf-1",
-    });
-
-    expect(r.ok).toBe(true);
-    expect(prismaMock.signature.lignes[0].partie).toBe("entreprise_utilisatrice");
-  });
-
-  it("le nom enregistré est celui du compte, à défaut son adresse (2026-11-19)", async () => {
-    const { assertEtablissementDuCompte } = await import("@/lib/auth/scope");
-    const db = await (await import("@/test/garde-simulee")).clientDuCompteSimule();
-    const compte = { compteId: "user-1", role: "owner" };
-    prismaMock.permisFeu.lignes.push(plan("pf-1", "etab-a-moi", "attente_signatures"));
-    prismaMock.permisFeu.lignes.push(plan("pf-2", "etab-a-moi", "attente_signatures"));
-    vi.mocked(assertEtablissementDuCompte)
-      .mockResolvedValueOnce({ user: { id: "user-1", email: "moi@exemple.fr", name: "Marie Durand" }, compte, db } as never)
-      .mockResolvedValueOnce({ user: { id: "user-1", email: "moi@exemple.fr", name: "  " }, compte, db } as never);
-
-    await signerEnCompteConnecte({ etablissementId: "etab-a-moi", objetType: "permis_feu", objetId: "pf-1" });
-    await signerEnCompteConnecte({ etablissementId: "etab-a-moi", objetType: "permis_feu", objetId: "pf-2" });
-
-    expect(prismaMock.signature.lignes.map((s) => s.signataireNom)).toEqual(["Marie Durand", "moi@exemple.fr"]);
-  });
-
-  it("le compte connecté ne signe pas deux fois", async () => {
-    unicitePartie();
-    prismaMock.permisFeu.lignes.push(plan("pf-1", "etab-a-moi", "attente_signatures"));
-    const signerMoi = () =>
-      signerEnCompteConnecte({
-        etablissementId: "etab-a-moi",
-        objetType: "permis_feu",
-        objetId: "pf-1",
-      });
-
-    expect((await signerMoi()).ok).toBe(true);
-    expect(await signerMoi()).toEqual({ ok: false, raison: "deja_signee" });
-    expect(prismaMock.signature.lignes).toHaveLength(1);
-  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -810,8 +743,14 @@ describe("garantie 3 — la partie qui signe est enregistrée, jamais devinée",
 // signatures ».
 // ─────────────────────────────────────────────────────────────────────────
 
-const signerCommeDirigeant = (objetType: "permis_feu", objetId: string) =>
-  signerEnCompteConnecte({ etablissementId: "etab-a-moi", objetType, objetId });
+// ~~`signerEnCompteConnecte`~~ (retirée le 2026-11-21) : la signature du
+// dirigeant passe par le code (`code-compte.test.ts`) ; ici, elle est posée.
+const signatureDuDirigeant = (objetType: "permis_feu", objetId: string) =>
+  prismaMock.signature.lignes.push({
+    ...signature(objetType, objetId, "etab-a-moi"),
+    id: `sig_eu_${objetId}`,
+    partie: "entreprise_utilisatrice",
+  });
 
 describe("garantie 4 — le statut suit les signatures", () => {
   it("plan : la seconde partie signe, le plan passe « valide »", async () => {
@@ -834,8 +773,8 @@ describe("garantie 4 — le statut suit les signatures", () => {
     prismaMock.permisFeu.lignes.push(plan("pf-1", "etab-a-moi", "attente_signatures"));
     prismaMock.accessToken.lignes.push(lienValide("permis_feu", "pf-1"));
 
+    signatureDuDirigeant("permis_feu", "pf-1");
     expect((await signer()).status).toBe("success");
-    await signerCommeDirigeant("permis_feu", "pf-1");
 
     expect(prismaMock.permisFeu.lignes[0].statut).toBe("valide");
   });
@@ -878,7 +817,7 @@ describe("garantie 4 — le statut suit les signatures", () => {
     prismaMock.permisFeu.lignes.push(plan("pf-1", "etab-a-moi", "en_cours"));
     prismaMock.accessToken.lignes.push(lienValide("permis_feu", "pf-1"));
 
-    await signerCommeDirigeant("permis_feu", "pf-1");
+    signatureDuDirigeant("permis_feu", "pf-1");
     await signer();
 
     expect(prismaMock.permisFeu.lignes[0].statut).toBe("en_cours");
@@ -907,13 +846,6 @@ describe("garantie 5 — la signature prend le verrou de l'objet que prend la mo
     expect(verrous[0]).toBe('SELECT 1 FROM "PlanPrevention" WHERE "id" = ? AND "etablissementId" = ? FOR UPDATE pp-1,etab-a-moi');
   });
 
-  it("en compte connecté : le verrou du permis est pris avant la signature", async () => {
-    prismaMock.permisFeu.lignes.push(plan("pf-1", "etab-a-moi", "attente_signatures"));
-
-    expect((await signerCommeDirigeant("permis_feu", "pf-1")).ok).toBe(true);
-
-    expect(verrous).toEqual(['SELECT 1 FROM "PermisFeu" WHERE "id" = ? AND "etablissementId" = ? FOR UPDATE pf-1,etab-a-moi']);
-  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────

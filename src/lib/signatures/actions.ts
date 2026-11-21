@@ -1,8 +1,6 @@
 "use server";
 
 import { exigerSignatureDEssai } from "@/lib/abonnements/validation";
-import { prendreQuota, RefusQuota } from "@/lib/abonnements/quotas";
-import { signatureDejaComptee } from "@/lib/plan-prevention/resignature";
 import { randomUUID } from "node:crypto";
 import { headers } from "next/headers";
 import { after } from "next/server";
@@ -42,7 +40,6 @@ import {
   MESSAGE_PARTIE_DEJA_SIGNEE,
   estPartieDejaSignee,
   partieRecevable,
-  partiesAttendues,
 } from "./parties";
 import { libelleDocumentSignable } from "./libelle-document";
 import { lireContexteDemande, presentationDemandeSignature } from "./mail-demande";
@@ -646,150 +643,10 @@ export async function renvoyerCodeOtp(
   };
 }
 
-/** Les objets que le compte signe d'un clic, sans code (`signerEnCompteConnecte`). */
-const OBJETS_SIGNES_SANS_CODE: readonly ObjetSignable[] = ["permis_feu"];
-
-/**
- * Signature directe par un utilisateur connecté (pas de token externe).
- * Utilisé pour la co-signature du donneur d'ordre sur ses propres documents.
- *
- * `assertEtablissementDuCompte` est le garde décisif : `requireUser` seul
- * établissait qu'il y a *un* utilisateur, pas qu'il a quoi que ce soit à
- * voir avec `etablissementId` et `objetId`. On pouvait ainsi signer le
- * document d'un tiers — et en récupérer l'empreinte au passage.
- */
-export async function signerEnCompteConnecte(params: {
-  etablissementId: string;
-  objetType: ObjetSignable;
-  objetId: string;
-  role?: string;
-}): Promise<
-  | { ok: true; signatureId: string }
-  | {
-      ok: false;
-      raison:
-        | "objet_introuvable"
-        | "fichier_introuvable"
-        | "stockage_non_configure"
-        | "non_implemente"
-        | "non_signable"
-        | "deja_signee";
-    }
-  | { ok: false; raison: "plafond"; message: string }
-> {
-  await verifierSaisie();
-  // Liste blanche (relecture du 2026-11-21) : la signature directe ne sert
-  // que le permis de feu. Un plan de prévention se signe depuis le compte
-  // avec un code et un consentement (`poserSignatureCompteAvecCode`) ; un
-  // appel forgé avec un autre objet ne signe rien.
-  if (!OBJETS_SIGNES_SANS_CODE.includes(params.objetType)) {
-    return { ok: false, raison: "non_implemente" };
-  }
-  const { user, compte, db } = await assertEtablissementDuCompte(params.etablissementId);
-  // Sans abonnement payé, la seule signature de test du compte (ADR-053 § 15).
-  await exigerSignatureDEssai(db, compte.compteId, user.email);
-  // Même règle que les deux autres portes. Aucun écran ne passe de fonction
-  // ici : seul un appel forgé est refusé, d'où l'exception plutôt qu'une
-  // raison de plus dans le retour.
-  const role =
-    params.role === undefined ? undefined : roleSignataireSchema.parse(params.role);
-
-  // Même garde que pour le signataire externe : un objet clos ou annulé ne
-  // se signe plus, par personne.
-  if (
-    !(await objetEstSignable(
-      db,
-      params.objetType,
-      params.objetId,
-      params.etablissementId,
-    ))
-  ) {
-    return { ok: false, raison: "non_signable" };
-  }
-
-  const hh = await headers();
-  const ip = ipClient(hh);
-  const ua = hh.get("user-agent");
-
-  // Le titulaire du compte tient l'établissement : sur un acte co-signé, il
-  // ne signe jamais qu'au nom de l'entreprise utilisatrice — le donneur
-  // d'ordre du permis. La partie n'est pas un paramètre : un appel qui la
-  // choisirait pourrait signer à la place de l'entreprise extérieure.
-  const partie: PartieSignataire | null = partiesAttendues(
-    params.objetType,
-  ).includes("entreprise_utilisatrice")
-    ? "entreprise_utilisatrice"
-    : null;
-
-  // L'empreinte se calcule SOUS LE VERROU de l'objet, celui que prend
-  // `modifier*` (2026-10-12, relecture indépendante) : une correction en
-  // cours dans un autre onglet finit avant, et la signature porte sur ce
-  // qu'elle a écrit. L'objet est cherché dans ce seul établissement : un
-  // objetId d'un autre périmètre ressort « introuvable ».
-  let resultat;
-  try {
-    resultat = await db.$transaction(async (tx) => {
-      await verrouillerObjetSigne(tx, params.objetType, params.objetId, params.etablissementId);
-      // Relu SOUS LE VERROU (ADR-061), comme pour la signature par lien.
-      if (!(await objetEstSignable(tx, params.objetType, params.objetId, params.etablissementId))) {
-        return { ok: false as const, raison: "non_signable" as const };
-      }
-      const h = await calculerHashObjet(
-        tx,
-        params.objetType,
-        params.objetId,
-        params.etablissementId,
-      );
-      if (!h.ok) return h;
-      // Plafond annuel de signatures de la formule (ADR-053 § 14) — sauf une
-      // re-signature après correction (ADR-061 § 6).
-      if (
-        !(await signatureDejaComptee(tx, {
-          etablissementId: params.etablissementId,
-          objetType: params.objetType,
-          objetId: params.objetId,
-          partie,
-          email: user.email,
-        }))
-      ) {
-        await prendreQuota(tx, compte.compteId, "signaturesParAn");
-      }
-      const signature = await tx.signature.create({
-        data: {
-          id: `sig_${randomUUID()}`,
-          etablissementId: params.etablissementId,
-          objetType: params.objetType,
-          objetId: params.objetId,
-          partie,
-          // ~~`user.email`~~ (2026-11-19, cahier de reprise § 8.3) : le nom
-          // du compte s'il en a un, à défaut l'adresse.
-          signataireNom: user.name?.trim() || user.email || "Utilisateur",
-          signataireEmail: user.email ?? "",
-          signataireRole: role || null,
-          userId: user.id,
-          hashDocument: h.hash,
-          nomDocument: h.nomDocument,
-          methode: "compte_connecte",
-          active: true,
-          ipAddress: ip,
-          userAgent: ua?.slice(0, 500) ?? null,
-        },
-      });
-      return { ok: true as const, signature };
-    });
-  } catch (e) {
-    if (estPartieDejaSignee(e)) return { ok: false, raison: "deja_signee" };
-    if (e instanceof RefusQuota) return { ok: false, raison: "plafond", message: e.motif };
-    throw e;
-  }
-  if (!resultat.ok) return { ok: false, raison: resultat.raison };
-  const { signature } = resultat;
-  const complet = await validerSiCoSigne(db, params.objetType, params.objetId, params.etablissementId);
-  if (complet) {
-    after(() => envoyerAvisCoSignature(db, params.objetType, params.objetId, params.etablissementId));
-  }
-  return { ok: true, signatureId: signature.id };
-}
+// ~~`signerEnCompteConnecte`~~ (2026-11-21, décision de la propriétaire) :
+// la signature d'un clic depuis le compte est retirée. Une seule voie depuis
+// le compte, pour tout objet : le code par e-mail et le consentement
+// (`./code-compte`, `./signature-compte-actions`).
 
 // ~~`verifierIntegriteSignature` vit dans `./verification-publique`~~
 // (2026-11-21) : la vérification publique est retirée ; « Vérifier » se fait

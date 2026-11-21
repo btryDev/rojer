@@ -40,7 +40,9 @@ import { libelleDocumentSignable } from "./libelle-document";
  *
  * **Module serveur, volontairement pas `"use server"`** : ses appelants sont
  * des actions qui ouvrent par `verifierSaisie` et désignent l'objet
- * (`plan-prevention/signature-fiche-actions.ts`). Chaque fonction refait
+ * (`plan-prevention/signature-fiche-actions.ts` pour le plan,
+ * `signatures/signature-compte-actions.ts` pour tout objet signable — depuis
+ * le 2026-11-21, la seule voie de signature depuis le compte). Chaque fonction refait
  * quand même la garde d'appartenance (`assertEtablissementDuCompte`).
  *
  * Les règles du code sont celles d'un lien (`otp.ts`) : empreinte seule,
@@ -54,7 +56,7 @@ import { libelleDocumentSignable } from "./libelle-document";
 
 type Objet = { etablissementId: string; objetType: ObjetSignable; objetId: string };
 
-/** Le titulaire signe au nom de l'entreprise utilisatrice, toujours (`signerEnCompteConnecte`). */
+/** Le titulaire signe au nom de l'entreprise utilisatrice, toujours. */
 function partieDuCompte(objetType: ObjetSignable): PartieSignataire | null {
   return partiesAttendues(objetType).includes("entreprise_utilisatrice") ? "entreprise_utilisatrice" : null;
 }
@@ -237,7 +239,7 @@ export async function poserSignatureCompteAvecCode(
   try {
     resultat = await db.$transaction(async (tx) => {
       // Le verrou de l'objet, celui que prend `modifier*` : la signature porte
-      // sur ce qu'une correction concurrente a écrit (`signerEnCompteConnecte`).
+      // sur ce qu'une correction concurrente a écrit.
       await verrouillerObjetSigne(tx, o.objetType, o.objetId, o.etablissementId);
       if (!(await objetEstSignable(tx, o.objetType, o.objetId, o.etablissementId))) {
         return { ok: false as const, message: MESSAGE_NON_SIGNABLE_COMPTE };
