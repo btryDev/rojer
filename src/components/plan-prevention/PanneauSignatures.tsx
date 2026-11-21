@@ -14,6 +14,7 @@ import {
   type GesteLienState,
 } from "@/lib/plan-prevention/signature-fiche-actions";
 import { SENS_R4512_7, URL_R4512_7 } from "@/lib/plan-prevention/annonces-plan";
+import { formaterHeureFr } from "@/lib/dates";
 
 /**
  * Le panneau Signatures de la fiche du plan (2026-11-19, lot 3, maquette V2
@@ -39,9 +40,8 @@ export type PartieVue =
   | { etat: "rien" };
 
 const FMT_JOUR = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", day: "2-digit", month: "2-digit" });
-const FMT_HEURE = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", hour: "2-digit", minute: "2-digit" });
 const jour = (d: Date) => FMT_JOUR.format(d);
-const heure = (d: Date) => FMT_HEURE.format(d).replace(":", " h ");
+const heure = (d: Date) => formaterHeureFr(d).replace(":", " h ");
 
 const TUILE = "flex size-11 flex-none items-center justify-center rounded-[12px]";
 const META = "m-0 mt-0.5 font-mono text-[11px] uppercase tracking-[0.12em] text-[color:var(--board-slate-soft)]";

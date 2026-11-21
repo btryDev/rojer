@@ -1,8 +1,14 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState, useTransition } from "react";
-import { unstable_rethrow } from "next/navigation";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { PanneauModal } from "@/components/ui-kit/PanneauModal";
+import {
+  BOUTON_CLAIR,
+  BOUTON_PLEIN,
+  CaseConsentement,
+  ChampCodeSignature,
+  useCodeDeSignature,
+} from "@/components/signatures/EtapesCodeSignature";
 import {
   demanderCodeSignaturePlan,
   signerEtEnvoyerPlan,
@@ -25,11 +31,6 @@ const FMT_MAINTENANT = new Intl.DateTimeFormat("fr-FR", {
   dateStyle: "long",
   timeStyle: "short",
 });
-
-const BOUTON_PLEIN =
-  "inline-flex min-h-12 items-center justify-center rounded-full bg-[color:var(--board-ink)] px-7 font-display text-[16px] font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50";
-const BOUTON_CLAIR =
-  "inline-flex min-h-12 items-center justify-center rounded-full border border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-6 text-[14px] text-[color:var(--board-ink)] hover:bg-[color:var(--board-slate-pale)]";
 
 function useSecondesAvant(cible: string | null): number {
   const [maintenant, setMaintenant] = useState(Date.now);
@@ -67,14 +68,13 @@ export function FenetreSigner({
   envoyer: boolean;
 }) {
   const annoncer = useAnnonceFiche();
-  const [coche, setCoche] = useState(false);
-  const [code, setCode] = useState("");
-  const [envoi, setEnvoi] = useState<{ email: string; renvoiPossibleLe: string } | null>(null);
-  const [erreurCode, setErreurCode] = useState<string | null>(null);
-  const [demande, startDemande] = useTransition();
   const [state, formAction, pending] = useActionState<SignerEtEnvoyerState, FormData>(
     signerEtEnvoyerPlan.bind(null, planId),
     { status: "idle" },
+  );
+  const { coche, setCoche, code, setCode, envoi, erreurCode, demande, demanderCode } = useCodeDeSignature(
+    () => demanderCodeSignaturePlan(planId),
+    state,
   );
   const attente = useSecondesAvant(envoi?.renvoiPossibleLe ?? null);
 
@@ -89,31 +89,6 @@ export function FenetreSigner({
     annoncer({ ton: state.lienParti === false ? "erreur" : "succes", message: state.message });
     fermer.current();
   }, [state, annoncer]);
-  // Un code à redemander (expiré, essais épuisés) : retour à l'étape du code,
-  // décidé au rendu qui reçoit la réponse.
-  const [reponseVue, setReponseVue] = useState(state);
-  if (state !== reponseVue) {
-    setReponseVue(state);
-    if (state.status === "error" && state.codeAReDemander) {
-      setEnvoi(null);
-      setCode("");
-    }
-  }
-
-  function demanderCode() {
-    setErreurCode(null);
-    startDemande(async () => {
-      try {
-        const r = await demanderCodeSignaturePlan(planId);
-        if (r.ok) setEnvoi({ email: r.email, renvoiPossibleLe: r.renvoiPossibleLe });
-        else setErreurCode(r.message);
-      } catch (e) {
-        unstable_rethrow(e);
-        setErreurCode("Le code n'a pas pu être demandé. Réessayez dans un instant.");
-      }
-    });
-  }
-
   const consentement = texteConsentement(raisonEU);
   const recap: [string, string][] = [
     ["Référence", reference],
@@ -148,16 +123,7 @@ export function FenetreSigner({
           ))}
         </dl>
 
-        <label className="flex cursor-pointer items-start gap-3 rounded-[18px] border border-[color:var(--board-slate-line)] px-4 py-3.5 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[color:var(--board-blue-strong)]">
-          <input
-            type="checkbox"
-            name="consentement"
-            checked={coche}
-            onChange={(e) => setCoche(e.target.checked)}
-            className="mt-1 size-[18px] flex-none accent-[color:var(--board-ink)]"
-          />
-          <span className="text-[14px] leading-[1.55] text-[color:var(--board-ink)]">{consentement}</span>
-        </label>
+        <CaseConsentement coche={coche} surChanger={setCoche} texte={consentement} />
         <input type="hidden" name="envoyer" value={envoyer ? "1" : "0"} />
 
         {!envoi ? (
@@ -186,24 +152,7 @@ export function FenetreSigner({
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            <p className="m-0 rounded-[18px] bg-[color:var(--board-slate-pale)] px-4 py-3 text-[13.5px] text-[color:var(--board-slate-ink)]">
-              Un code à 6 chiffres est parti à {envoi.email}. Il vaut 10 minutes et accepte 3 essais.
-            </p>
-            <label htmlFor="code-signature" className="label-board">
-              Votre code de signature
-            </label>
-            <input
-              id="code-signature"
-              name="code"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              maxLength={6}
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-              placeholder="000000"
-              autoFocus
-              className="rounded-[18px] border border-[color:var(--board-slate-line)] bg-[color:var(--board-slate-pale)] px-4 py-3.5 text-center font-mono text-[28px] tracking-[0.45em] text-[color:var(--board-ink)] outline-none focus-visible:outline-2 focus-visible:outline-[color:var(--board-blue-strong)]"
-            />
+            <ChampCodeSignature id="code-signature" email={envoi.email} code={code} surChanger={setCode} />
             {state.status === "error" && !state.codeAReDemander && (
               <p role="alert" className="m-0 text-[13px] text-[color:var(--board-signal-ink)]">
                 {state.message}

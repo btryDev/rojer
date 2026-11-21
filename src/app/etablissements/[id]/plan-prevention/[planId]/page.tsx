@@ -69,6 +69,7 @@ import {
 } from "@/lib/plan-prevention/annonces-plan";
 import {
   cleJourCivil,
+  composantesCiviles,
   FUSEAU_REFERENCE,
   formaterDateCourteFr,
   formaterDateFr,
@@ -88,18 +89,13 @@ import {
  * panneau et le contenu.
  */
 
-const FMT_HEURE = new Intl.DateTimeFormat("fr-FR", {
-  timeZone: FUSEAU_REFERENCE,
-  hour: "2-digit",
-  minute: "2-digit",
-});
 const FMT_JOUR = new Intl.DateTimeFormat("fr-FR", { timeZone: FUSEAU_REFERENCE, day: "2-digit" });
 const FMT_MOIS = new Intl.DateTimeFormat("fr-FR", { timeZone: FUSEAU_REFERENCE, month: "short" });
 
 /** « 8 h », « 8 h 30 » */
 function heureCourte(d: Date): string {
-  const [h, m] = FMT_HEURE.format(d).split(":");
-  return m === "00" ? `${Number(h)} h` : `${Number(h)} h ${m}`;
+  const { heure, minute } = composantesCiviles(d);
+  return minute === 0 ? `${heure} h` : `${heure} h ${String(minute).padStart(2, "0")}`;
 }
 
 function horaires(debut: Date, fin: Date): string {

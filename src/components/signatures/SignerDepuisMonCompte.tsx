@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useState, useTransition } from "react";
-import { unstable_rethrow, useRouter } from "next/navigation";
+import { useActionState, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { ObjetSignable } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { PanneauModal } from "@/components/ui-kit/PanneauModal";
@@ -11,6 +11,13 @@ import {
   type SignerDuCompteState,
 } from "@/lib/signatures/signature-compte-actions";
 import { texteConsentementPour } from "@/lib/signatures/consentement";
+import {
+  BOUTON_CLAIR,
+  BOUTON_PLEIN,
+  CaseConsentement,
+  ChampCodeSignature,
+  useCodeDeSignature,
+} from "./EtapesCodeSignature";
 
 /**
  * La signature du dirigeant depuis son propre compte, pour tout objet
@@ -22,11 +29,6 @@ import { texteConsentementPour } from "@/lib/signatures/consentement";
  * (`signerDuCompteAvecCode`)]. La partie n'est pas choisie ici : le serveur
  * signe au nom de l'entreprise utilisatrice, toujours.
  */
-
-const BOUTON_PLEIN =
-  "inline-flex min-h-12 items-center justify-center rounded-full bg-[color:var(--board-ink)] px-7 font-display text-[16px] font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50";
-const BOUTON_CLAIR =
-  "inline-flex min-h-12 items-center justify-center rounded-full border border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-6 text-[14px] text-[color:var(--board-ink)] hover:bg-[color:var(--board-slate-pale)]";
 
 export function SignerDepuisMonCompte({
   etablissementId,
@@ -49,43 +51,24 @@ export function SignerDepuisMonCompte({
   const router = useRouter();
   const [ouvert, setOuvert] = useState(false);
   const objet = { etablissementId, objetType, objetId };
-  const [coche, setCoche] = useState(false);
-  const [code, setCode] = useState("");
-  const [envoi, setEnvoi] = useState<string | null>(null);
-  const [erreurCode, setErreurCode] = useState<string | null>(null);
-  const [demande, startDemande] = useTransition();
   const [state, formAction, pending] = useActionState<SignerDuCompteState, FormData>(
     signerDuCompteAvecCode.bind(null, objet),
     { status: "idle" },
+  );
+  const { coche, setCoche, code, setCode, envoi, erreurCode, demande, demanderCode } = useCodeDeSignature(
+    () => demanderCodeSignatureDuCompte(objet),
+    state,
   );
 
   useEffect(() => {
     if (state.status === "success") router.refresh();
   }, [state, router]);
-  // Signée : la fenêtre se ferme. Un code à redemander (expiré, essais
-  // épuisés) : retour à l'étape du code. Décidé au rendu qui reçoit la réponse.
+  // Signée : la fenêtre se ferme, décidé au rendu qui reçoit la réponse (le
+  // retour à l'étape du code est dans `useCodeDeSignature`).
   const [reponseVue, setReponseVue] = useState(state);
   if (state !== reponseVue) {
     setReponseVue(state);
     if (state.status === "success") setOuvert(false);
-    if (state.status === "error" && state.codeAReDemander) {
-      setEnvoi(null);
-      setCode("");
-    }
-  }
-
-  function demanderCode() {
-    setErreurCode(null);
-    startDemande(async () => {
-      try {
-        const r = await demanderCodeSignatureDuCompte(objet);
-        if (r.ok) setEnvoi(r.email);
-        else setErreurCode(r.message);
-      } catch (e) {
-        unstable_rethrow(e);
-        setErreurCode("Le code n'a pas pu être demandé. Réessayez dans un instant.");
-      }
-    });
   }
 
   const erreur =
@@ -104,40 +87,10 @@ export function SignerDepuisMonCompte({
             l&apos;horodatage serveur.
           </p>
 
-          <label className="flex cursor-pointer items-start gap-3 rounded-[18px] border border-[color:var(--board-slate-line)] px-4 py-3.5">
-            <input
-              type="checkbox"
-              name="consentement"
-              checked={coche}
-              onChange={(e) => setCoche(e.target.checked)}
-              className="mt-1 size-[18px] flex-none accent-[color:var(--board-ink)]"
-            />
-            <span className="text-[14px] leading-[1.55] text-[color:var(--board-ink)]">
-              {texteConsentementPour(objetType, raisonSociale)}
-            </span>
-          </label>
+          <CaseConsentement coche={coche} surChanger={setCoche} texte={texteConsentementPour(objetType, raisonSociale)} />
 
           {envoi ? (
-            <>
-              <p className="m-0 rounded-[18px] bg-[color:var(--board-slate-pale)] px-4 py-3 text-[13.5px] text-[color:var(--board-slate-ink)]">
-                Un code à 6 chiffres est parti à {envoi}. Il vaut 10 minutes et accepte 3 essais.
-              </p>
-              <label htmlFor={`code-${objetId}`} className="label-board">
-                Votre code de signature
-              </label>
-              <input
-                id={`code-${objetId}`}
-                name="code"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                maxLength={6}
-                value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                placeholder="000000"
-                autoFocus
-                className="rounded-[18px] border border-[color:var(--board-slate-line)] bg-[color:var(--board-slate-pale)] px-4 py-3.5 text-center font-mono text-[28px] tracking-[0.45em] text-[color:var(--board-ink)] outline-none focus-visible:outline-2 focus-visible:outline-[color:var(--board-blue-strong)]"
-              />
-            </>
+            <ChampCodeSignature id={`code-${objetId}`} email={envoi.email} code={code} surChanger={setCode} />
           ) : null}
 
           {erreur && (

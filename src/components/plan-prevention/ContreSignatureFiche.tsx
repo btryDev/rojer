@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 import { propositionSchema, type PlanComparable } from "@/lib/plan-prevention/proposition";
 import { bandeauDeLaProposition, type Changement, type LigneBandeau } from "@/lib/plan-prevention/bandeau-proposition";
+import { formaterHeureFr } from "@/lib/dates";
 import { TraiterPropositionBoutons } from "./ContreSignatureBoutons";
 
 /**
@@ -17,7 +18,6 @@ import { TraiterPropositionBoutons } from "./ContreSignatureBoutons";
  */
 
 const FMT_JOUR = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", day: "2-digit", month: "2-digit" });
-const FMT_HEURE = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", hour: "2-digit", minute: "2-digit" });
 
 const TUILE =
   "flex size-11 flex-none items-center justify-center rounded-[12px] font-display text-[20px] font-bold leading-none";
@@ -135,7 +135,7 @@ export function PropositionEnAttente({
   const lue = propositionSchema.safeParse(proposition.contenu);
   const b = lue.success ? bandeauDeLaProposition(plan, lue.data) : null;
   const raison = plan.entrepriseExterieureRaison;
-  const recue = `${FMT_JOUR.format(proposition.createdAt)} à ${FMT_HEURE.format(proposition.createdAt).replace(":", " h ")}`;
+  const recue = `${FMT_JOUR.format(proposition.createdAt)} à ${formaterHeureFr(proposition.createdAt).replace(":", " h ")}`;
   return (
     <section
       aria-labelledby="proposition-titre"

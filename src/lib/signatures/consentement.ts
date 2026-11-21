@@ -9,11 +9,7 @@ import type { ObjetSignable } from "@prisma/client";
  * celui que Rojer a affiché.
  */
 export function texteConsentement(auNomDe: string): string {
-  const nom = auNomDe.replace(/\s+/g, " ").trim() || "l'entreprise utilisatrice";
-  return (
-    "Je confirme avoir pris connaissance du plan de prévention et de son contenu, " +
-    `et j'accepte d'y apposer ma signature électronique au nom de ${nom}.`
-  );
+  return texteConsentementPour("plan_prevention", auNomDe);
 }
 
 /**
@@ -31,7 +27,6 @@ const LU: Record<ObjetSignable, string> = {
 
 /** La phrase de consentement d'un objet ; celle du plan est `texteConsentement`. */
 export function texteConsentementPour(objetType: ObjetSignable, auNomDe: string): string {
-  if (objetType === "plan_prevention") return texteConsentement(auNomDe);
   const nom = auNomDe.replace(/\s+/g, " ").trim() || "l'entreprise utilisatrice";
   return (
     `Je confirme avoir pris connaissance ${LU[objetType]}, ` +

@@ -30,7 +30,7 @@ export async function getPlanPrevention(
     },
   });
   if (!plan) return null;
-  const [signatures, signaturesRevoquees, propositionEnAttente, liens, propositions] = await Promise.all([
+  const [signatures, signaturesRevoquees, propositionEnAttente, liens, propositions, entreprise] = await Promise.all([
     listSignatures(db, etablissement.id, "plan_prevention", plan.id),
     // ADR-061 : les signatures révoquées se montrent à part, et la
     // proposition de l'entreprise extérieure attend une décision.
@@ -71,11 +71,11 @@ export async function getPlanPrevention(
         finaliseeLe: true,
       },
     }),
+    db.etablissement.findFirst({
+      where: { id: etablissement.id },
+      select: { entreprise: { select: { raisonSociale: true } } },
+    }),
   ]);
-  const entreprise = await db.etablissement.findFirst({
-    where: { id: etablissement.id },
-    select: { entreprise: { select: { raisonSociale: true } } },
-  });
   return {
     ...plan,
     signatures,

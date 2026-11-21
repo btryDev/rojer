@@ -27,9 +27,11 @@ describe("le dirigeant signe depuis son compte, avec un code, sur les deux fiche
 
   it("la fenêtre demande le code puis signe avec lui, et rien d'autre", () => {
     const source = lire("src/components/signatures/SignerDepuisMonCompte.tsx");
-    expect(source).toMatch(/await demanderCodeSignatureDuCompte\(objet\)/);
+    expect(source).toMatch(/\(\) => demanderCodeSignatureDuCompte\(objet\)/);
     expect(source).toMatch(/signerDuCompteAvecCode\.bind\(null, objet\)/);
-    expect(source).toContain('name="consentement"');
+    // La case et le champ du code, communs aux deux fenêtres (2026-11-21).
+    expect(source).toMatch(/<CaseConsentement[\s\S]*?<ChampCodeSignature/);
+    expect(lire("src/components/signatures/EtapesCodeSignature.tsx")).toContain('name="consentement"');
     expect(source).not.toMatch(/signerEnCompteConnecte\(/);
   });
 });

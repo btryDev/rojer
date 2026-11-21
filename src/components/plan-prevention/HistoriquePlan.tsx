@@ -5,6 +5,7 @@ import { VerifierSignature } from "@/components/signatures/VerifierSignature";
 import { History } from "lucide-react";
 import { PanneauModal } from "@/components/ui-kit/PanneauModal";
 import type { EvenementHistorique, TonHistorique } from "@/lib/plan-prevention/fiche-signatures";
+import { formaterHeureFr } from "@/lib/dates";
 
 /**
  * L'historique du plan, dans une fenêtre (2026-11-19, maquette V2
@@ -24,7 +25,6 @@ const PASTILLE: Record<TonHistorique, string> = {
 
 const FMT_JOUR = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", day: "2-digit" });
 const FMT_MOIS = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", month: "short" });
-const FMT_HEURE = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", hour: "2-digit", minute: "2-digit" });
 const FMT_COMPLET = new Intl.DateTimeFormat("fr-FR", {
   timeZone: "Europe/Paris",
   dateStyle: "long",
@@ -38,7 +38,7 @@ export function TuileJourHeure({ date }: { date: Date }) {
       className="flex size-12 flex-none flex-col items-center justify-center rounded-[12px] bg-[color:var(--board-ink)] text-white"
     >
       <span className="font-display text-[17px] font-bold leading-none tabular-nums">{FMT_JOUR.format(date)}</span>
-      <span className="mt-0.5 font-mono text-[9px] uppercase tracking-[0.08em]">{FMT_HEURE.format(date)}</span>
+      <span className="mt-0.5 font-mono text-[9px] uppercase tracking-[0.08em]">{formaterHeureFr(date)}</span>
     </span>
   );
 }
