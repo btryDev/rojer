@@ -1,4 +1,5 @@
 import type { MethodeSignature } from "@prisma/client";
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { CHAMP_ETAT, ENCRE_ETAT } from "@/lib/calendrier/etats";
 import { LIBELLE_METHODE } from "@/lib/signatures/methode";
@@ -94,7 +95,8 @@ const IDENTIFIANT: Record<Charte, string> = {
     "font-mono text-[10.5px] uppercase tracking-[0.16em] text-[color:var(--board-slate-soft)]",
 };
 
-const LIEN_VERIFIER: Record<Charte, string> = {
+/** Le style de l'action « Vérifier » posée dans le scellé (`verifier`). */
+export const LIEN_VERIFIER: Record<Charte, string> = {
   papier:
     "inline-flex items-center gap-1 rounded-full border border-[color:var(--accent-vif)] px-3 py-1 font-mono text-[0.7rem] font-medium uppercase tracking-[0.1em] text-[color:var(--accent-vif)] hover:bg-[color:var(--accent-vif)] hover:text-[color:var(--paper-elevated)]",
   // La pilule de contour du board (celle de `variant="boardClair"`, posée
@@ -118,7 +120,7 @@ export function SignatureBlock({
   hashDocument,
   nomDocument,
   signatureId,
-  verifierHref,
+  verifier,
   charte = "papier",
 }: {
   signataireNom: string;
@@ -129,7 +131,11 @@ export function SignatureBlock({
   hashDocument: string;
   nomDocument?: string | null;
   signatureId: string;
-  verifierHref?: string;
+  /**
+   * L'action « Vérifier » (`VerifierSignature`), dans l'application
+   * seulement : la page publique `/verifier` n'existe plus (2026-11-21).
+   */
+  verifier?: ReactNode;
   /** La grammaire visuelle de l'écran qui porte le scellé. */
   charte?: Charte;
 }) {
@@ -226,11 +232,7 @@ export function SignatureBlock({
           <span className={IDENTIFIANT[charte]}>
             ID&nbsp;· {signatureId}
           </span>
-          {verifierHref && (
-            <a href={verifierHref} className={LIEN_VERIFIER[charte]}>
-              Vérifier l&apos;intégrité →
-            </a>
-          )}
+          {verifier}
         </div>
       </dl>
     </div>

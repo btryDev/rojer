@@ -275,7 +275,7 @@ export default async function PlanPreventionDetailPage({
 
       <div className="flex flex-col gap-6 px-[var(--board-gutter)]">
         <div className="flex flex-wrap justify-center gap-2.5 pt-[22px]">
-          <HistoriquePlan reference={reference} evenements={historique} />
+          <HistoriquePlan reference={reference} evenements={historique} etablissementId={id} />
           <a
             href={`/api/etablissements/${id}/plan-prevention/${plan.id}/pdf`}
             className="inline-flex min-h-11 items-center rounded-full border border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[18px] text-[14px] text-[color:var(--board-ink)] transition-colors hover:bg-[color:var(--board-slate-pale)]"

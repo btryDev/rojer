@@ -2,7 +2,6 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 import { diagnostiquerPlan } from "@/lib/plan-prevention/schema";
 import { LIEN_PARTI } from "@/lib/access-tokens/revocation";
-import { publicAppUrl, refusUrlPublique } from "@/lib/url-publique";
 import type { PlanPreventionData } from "./PlanPreventionDocument";
 
 /**
@@ -110,7 +109,6 @@ export async function construirePlanPreventionData(
     genereLe: maintenant,
     // Sans adresse publique configurée, le PDF donne le chemin seul plutôt
     // que de refuser d'être produit.
-    urlPublique: refusUrlPublique() === null ? publicAppUrl() : null,
     raisonsEcrit: diagnostiquerPlan(plan).raisons,
     plan: contenu,
     signatures,

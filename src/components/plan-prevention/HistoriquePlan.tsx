@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { VerifierSignature } from "@/components/signatures/VerifierSignature";
 import { History } from "lucide-react";
 import { PanneauModal } from "@/components/ui-kit/PanneauModal";
 import type { EvenementHistorique, TonHistorique } from "@/lib/plan-prevention/fiche-signatures";
@@ -46,10 +46,12 @@ export function TuileJourHeure({ date }: { date: Date }) {
 export function HistoriquePlan({
   reference,
   evenements,
+  etablissementId,
 }: {
   /** « PP-002 » */
   reference: string;
   evenements: EvenementHistorique[];
+  etablissementId: string;
 }) {
   const [ouvert, setOuvert] = useState(false);
   return (
@@ -78,18 +80,20 @@ export function HistoriquePlan({
                     {e.ligne}
                     <span className="sr-only">, le {FMT_COMPLET.format(e.date)}</span>
                   </p>
-                  {(e.sousLigne || e.verifier) && (
-                    <p className="m-0 mt-0.5 text-[13px] text-[color:var(--board-slate-soft)]">
-                      {e.sousLigne}
-                      {e.verifier?.map((v) => (
-                        <span key={v.href}>
-                          {" · "}
-                          <Link href={v.href} className="text-[color:var(--board-blue-ink)] hover:underline">
-                            {v.libelle}
-                          </Link>
-                        </span>
+                  {e.sousLigne && (
+                    <p className="m-0 mt-0.5 text-[13px] text-[color:var(--board-slate-soft)]">{e.sousLigne}</p>
+                  )}
+                  {e.verifier && (
+                    <div className="mt-1 flex flex-col gap-1">
+                      {e.verifier.map((v) => (
+                        <VerifierSignature
+                          key={v.signatureId}
+                          etablissementId={etablissementId}
+                          signatureId={v.signatureId}
+                          libelle={v.libelle}
+                        />
                       ))}
-                    </p>
+                    </div>
                   )}
                   <p className="m-0 mt-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-[color:var(--board-slate-soft)]">
                     {FMT_MOIS.format(e.date)}

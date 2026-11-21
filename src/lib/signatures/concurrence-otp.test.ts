@@ -443,15 +443,17 @@ describe("l'avis de fin : toutes les parties ont signé (2026-11-19)", () => {
     const avis = mails.filter((m) => /signé par toutes les parties/.test(m.text));
     expect(avis.map((m) => m.to).sort()).toEqual(["chef@exterieure.fr", "marie@utilisatrice.fr"]);
 
-    // Simplifié (2026-11-19) : chacun SA signature, une empreinte, son lien.
+    // Simplifié (2026-11-19) : chacun SA signature, une empreinte. Plus de
+    // lien « Vérifier » (2026-11-21, ADR-006 amendée) : la preuve est le PDF.
     const marie = avis.find((m) => m.to === "marie@utilisatrice.fr")!;
     const chef = avis.find((m) => m.to === "chef@exterieure.fr")!;
     const sigChef = prismaMock.signature.lignes.find((s) => s.signataireEmail === "chef@exterieure.fr")!;
     expect(marie.text).toContain("a".repeat(64));
-    expect(marie.text).toContain("http://localhost:3000/verifier/sig_eu");
-    expect(marie.text).not.toContain(`/verifier/${sigChef.id as string}`);
-    expect(chef.text).toContain(`http://localhost:3000/verifier/${sigChef.id as string}`);
     expect(chef.text).toContain(sigChef.hashDocument as string);
+    for (const m of [marie, chef]) {
+      expect(m.text).not.toMatch(/\/verifier\/|\/signe\//);
+      expect(m.html).not.toMatch(/\/verifier\/|\/signe\//);
+    }
     for (const [m, autre] of [
       [marie, ["chef@exterieure.fr", "Jean Dupond"]],
       [chef, ["marie@utilisatrice.fr", "Marie Martin", "sig_eu", "a".repeat(64)]],
@@ -462,7 +464,7 @@ describe("l'avis de fin : toutes les parties ont signé (2026-11-19)", () => {
         expect(m.html).not.toContain(x);
       }
       expect(m.text).toContain("au moins 5 ans : il peut être demandé par l'inspection du travail.");
-      expect(m.html).toContain("Vérifier ma signature");
+      expect(m.html).not.toContain("Vérifier ma signature");
     }
   });
 

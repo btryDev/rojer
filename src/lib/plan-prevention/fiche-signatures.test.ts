@@ -114,6 +114,6 @@ describe("l'historique", () => {
     const r = h.filter((e) => e.cle.startsWith("revocation-signatures-"));
     expect(r).toHaveLength(1);
     expect(r[0].ligne).toBe("2 signatures révoquées : l'entreprise utilisatrice corrige le plan");
-    expect(r[0].verifier?.map((v) => v.href)).toEqual(["/verifier/s1", "/verifier/s2"]);
+    expect(r[0].verifier?.map((v) => v.signatureId)).toEqual(["s1", "s2"]);
   });
 });

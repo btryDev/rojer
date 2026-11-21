@@ -476,7 +476,9 @@ describe("page d'accès — les états d'un lien inutilisable", () => {
     proprietaire.userId = null;
     verifierMock.mockResolvedValue({ ok: false, raison: "deja_utilise", utiliseLe: new Date(), etablissementId: "etab-a-moi" });
     const rendu = await rendreLaPage();
-    expect(rendu).toContain("Ce lien a déjà servi");
+    // La confirmation de la signature, sur le lien (2026-11-21).
+    expect(rendu).toContain("Signature enregistrée le ");
+    expect(rendu).toContain("Quand toutes les parties auront signé, Rojer adresse à chaque signataire un e-mail");
     expect(rendu).not.toContain("Mon entreprise");
   });
 

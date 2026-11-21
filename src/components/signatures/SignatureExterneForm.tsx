@@ -103,27 +103,23 @@ export function SignatureExterneForm({
     codeState.status === "success" ? codeState.renvoiA : (renvoiPossibleLe?.getTime() ?? null);
   const attente = secondesAvant(renvoiA, maintenant);
 
-  // Vers l'accusé de réception dès que la signature est posée. `/signe/[id]`
-  // est une route dynamique sous le même layout racine, jamais visitée
-  // avant (l'identifiant vient de naître) : `router.push` la rend au
-  // serveur avec la signature fraîche, sans rechargement complet.
+  // La confirmation reste sur le lien (2026-11-21, ADR-006 amendée : plus
+  // d'accusé public `/signe`). `router.refresh` relit la page : le lien,
+  // consommé, y affiche la date de la signature.
   const router = useRouter();
   useEffect(() => {
-    if (state.status === "success") {
-      router.push(`/signe/${state.signatureId}`);
-    }
+    if (state.status === "success") router.refresh();
   }, [state, router]);
 
   if (state.status === "success") {
-    // Transition — la page de confirmation va s'afficher immédiatement.
     return (
-      <div className="rounded-[22px] bg-[color:var(--board-green)] p-6 text-center">
-        <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-green-ink)]">
-          Redirection…
+      <div role="status" className="rounded-[18px] bg-[color:var(--board-canvas)] px-5 py-5 text-center">
+        <p className="m-0 font-mono text-[10.5px] tracking-[0.14em] uppercase text-[color:var(--board-slate-soft)]">
+          Signature enregistrée
         </p>
-        <p className="m-0 mt-2 text-[13.5px] text-[color:var(--board-ink)]">
-          Votre signature est enregistrée. Vous allez être redirigé(e) vers
-          l&apos;accusé de réception.
+        <p className="m-0 mt-2 text-[14px] leading-[1.55] text-[color:var(--board-ink)]">
+          Quand toutes les parties auront signé, Rojer adresse à chaque signataire
+          un e-mail avec l&apos;empreinte du document.
         </p>
       </div>
     );
@@ -239,8 +235,7 @@ export function SignatureExterneForm({
 
             <p className="m-0 text-[12px] leading-[1.55] text-[color:var(--board-slate-mid)]">
               {/* ~~« vous apposez une signature au sens de l'article 1367 du Code
-                  civil »~~ — une qualification (vérification du 2026-09-26) :
-                  aligné sur `/verifier`. */}
+                  civil »~~ — une qualification (vérification du 2026-09-26). */}
               En cliquant sur « Valider ma signature », vous signez ce document.
               Seront enregistrés : votre email, votre adresse IP, l&apos;empreinte
               SHA-256 du document et l&apos;horodatage serveur. Textes : art. 1366 et

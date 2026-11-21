@@ -21,8 +21,8 @@ import { lireContexteDemande, presentationRefusAvecLien } from "@/lib/signatures
  *
  * Ce qui se passe, dans la transaction de l'appelant :
  * - les signatures ACTIVES sont révoquées, datées, avec le motif — jamais
- *   effacées : nom, adresse, IP, empreinte restent, et `/verifier` les montre
- *   « révoquées » ;
+ *   effacées : nom, adresse, IP, empreinte restent, et l'historique de la
+ *   fiche les montre « révoquées », vérifiables (`VerifierSignature`) ;
  * - un plan « valide » repasse « en attente de signatures » ;
  * - tous les liens encore ouverts sur le plan sont révoqués.
  * Ensuite, sans les signatures actives, le plan redevient modifiable

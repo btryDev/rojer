@@ -96,7 +96,8 @@ export type EvenementHistorique = {
   sousLigne?: string;
   pastille: { mot: string; ton: TonHistorique };
   /** Les signatures qu'on peut vérifier depuis cette ligne. */
-  verifier?: { libelle: string; href: string }[];
+  /** Les signatures à vérifier dans l'application (`VerifierSignature`, 2026-11-21). */
+  verifier?: { libelle: string; signatureId: string }[];
 };
 
 const FMT_JOUR = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", day: "2-digit", month: "2-digit" });
@@ -175,7 +176,7 @@ export function historiqueDuPlan(p: {
       ligne: `${s.signataireNom} signe pour ${s.partie === "entreprise_exterieure" ? p.raisonEE : s.partie === "entreprise_utilisatrice" ? "l'entreprise utilisatrice" : "—"}`,
       sousLigne: LIBELLE_METHODE_COURT[s.methode],
       pastille: { mot: "Signée", ton: "fait" },
-      verifier: [{ libelle: "Vérifier", href: `/verifier/${s.id}` }],
+      verifier: [{ libelle: "Vérifier", signatureId: s.id }],
     });
   }
   // Les signatures révoquées d'un même geste se lisent sur une ligne.
@@ -193,7 +194,7 @@ export function historiqueDuPlan(p: {
       ligne: `${n} signature${n > 1 ? "s" : ""} révoquée${n > 1 ? "s" : ""}${groupe[0].revoqueMotif ? ` : ${groupe[0].revoqueMotif}` : ""}`,
       sousLigne: `${n > 1 ? "Gardées et vérifiables" : "Gardée et vérifiable"} · ${groupe.map((s) => s.signataireNom).join(", ")}`,
       pastille: { mot: n > 1 ? "Révoquées" : "Révoquée", ton: "neutre" },
-      verifier: groupe.map((s) => ({ libelle: `Vérifier (${s.signataireNom})`, href: `/verifier/${s.id}` })),
+      verifier: groupe.map((s) => ({ libelle: `Vérifier (${s.signataireNom})`, signatureId: s.id })),
     });
   }
 

@@ -34,8 +34,6 @@ describe("chemins publics", () => {
   it("laisse passer les accès externes sans compte", () => {
     for (const p of [
       "/acces/abc",
-      "/verifier/sig_1",
-      "/signe/sig_1",
       "/accessibilite/mon-erp",
       "/api/accessibilite/mon-erp/affiche",
       "/robots.txt",
@@ -73,6 +71,12 @@ describe("chemins publics", () => {
       "/api/auth/sign-in/email",
     ]) {
       expect(cheminPublic(p), p).toBe(false);
+    }
+  });
+
+  it("les anciennes adresses de signature restent sans session, pour répondre 404 à tous (2026-11-21)", () => {
+    for (const p of ["/verifier/sig_1", "/signe/sig_1"]) {
+      expect(cheminPublic(p), p).toBe(true);
     }
   });
 

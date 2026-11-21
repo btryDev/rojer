@@ -791,7 +791,6 @@ export async function signerEnCompteConnecte(params: {
   return { ok: true, signatureId: signature.id };
 }
 
-// `verifierIntegriteSignature` vit dans `./verification-publique` (audit
-// OWASP B14, 2026-10-14) : exportée d'ici, module `"use server"`, elle était
-// aussi une action serveur publique, appelable par POST sur n'importe quelle
-// page, et hachait jusqu'à 20 Mo par appel.
+// ~~`verifierIntegriteSignature` vit dans `./verification-publique`~~
+// (2026-11-21) : la vérification publique est retirée ; « Vérifier » se fait
+// dans l'application, connecté (`./verification-actions`, ADR-006 amendée).

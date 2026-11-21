@@ -6,9 +6,9 @@ import { OUVERT_AUX_MOTEURS } from "@/lib/indexation";
  *
  * Seules la page d'accueil, les pages d'entrée (`/login`, `/signup`) et les
  * pages légales (`/legal/…`) sont offertes aux moteurs. Tout le reste est exclu :
- * - **les pages publiques à lien** — `/acces/[jeton]`, `/signe/[id]`,
- *   `/verifier/[id]` : elles ne valent que pour qui a reçu le lien, et un robot
- *   qui suivrait un jeton n'a rien à y faire ;
+ * - **les pages publiques à lien** — `/acces/[jeton]` (~~`/signe/[id]`,
+ *   `/verifier/[id]`~~, retirées le 2026-11-21) : elles ne valent que pour qui
+ *   a reçu le lien, et un robot qui suivrait un jeton n'a rien à y faire ;
  * - **le registre public d'accessibilité** — `/accessibilite/[slug]` et son
  *   affiche. Tranché à la lecture du code : l'obligation est de tenir le
  *   registre consultable « sur place ou en ligne » (schéma, `RegistreAccessibilite`),
@@ -44,8 +44,6 @@ export const RACINES_EXCLUES = [
   // Pages publiques, à lien ou par slug.
   "/acces/",
   "/accessibilite/",
-  "/signe/",
-  "/verifier/",
   // Application authentifiée et parcours de compte.
   "/auth/",
   "/compte",

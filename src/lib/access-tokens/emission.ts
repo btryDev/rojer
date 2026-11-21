@@ -125,7 +125,7 @@ export const emissionSchema = z.object({
  * demandeur : le code remontait donc à celui-là même dont la signature du
  * tiers doit être indépendante. Un demandeur tenant les deux facteurs signe
  * lui-même à la place du signataire, et il en sort une `Signature`
- * `otp_email` qu'un `/verifier/<id>` public confirme. La séparation des
+ * `otp_email` que la vérification confirme. La séparation des
  * canaux — lien et code ne partent qu'à la boîte du destinataire — était la
  * seule chose qui distinguait cette signature d'une case cochée par le
  * donneur d'ordre.

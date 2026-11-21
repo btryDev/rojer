@@ -1,7 +1,7 @@
 // L'adresse IP du client (2026-10-14). SEUL lecteur de l'IP dans l'app, et il
 // sert à trois usages, dont le deuxième est une preuve :
 //  - la limitation de débit, par `ipPourLimite` (`auth/actions.ts`,
-//    `signatures/verification-publique.ts`) — l'adresse réduite à son réseau
+//    ~~`signatures/verification-publique.ts`~~, retiré le 2026-11-21) — l'adresse réduite à son réseau
 //    (voir plus bas) ; le MCP lit l'adresse complète (`mcp/http.ts`, motif
 //    sur place) : `null` → la limite par IP ne s'applique pas, celle par
 //    compte si ;

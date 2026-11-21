@@ -56,8 +56,6 @@ export type PlanPreventionData = {
   adresse: string;
   siretEtablissement: string | null;
   genereLe: Date;
-  /** L'adresse publique de l'application, `null` si elle n'est pas configurée. */
-  urlPublique: string | null;
   /** Les raisons pour lesquelles l'écrit est obligatoire (R. 4512-7), vides sinon. */
   raisonsEcrit: string[];
   plan: {
@@ -115,7 +113,7 @@ export const MENTION_DOCUMENT_DE_TRAVAIL =
 export const MENTION_NON_SCELLE =
   "Ce fichier est mis en page à la demande, à partir des données du plan enregistrées dans Rojer. " +
   "Ce n'est pas un original scellé : les signatures portent sur les données du plan, pas sur ce fichier. " +
-  "Chaque signature se vérifie à son adresse ci-dessus, qui recalcule l'empreinte des données signées.";
+  "L'empreinte imprimée ci-dessus, reçue aussi par e-mail, se compare à celle affichée dans Rojer par l'émetteur.";
 
 export function referencePlan(numero: number): string {
   return `PP-${String(numero).padStart(3, "0")}`;
@@ -140,12 +138,6 @@ export function partiesSansSignature(signatures: readonly SignaturePlanPdf[]): P
   return PARTIES_ATTENDUES.filter((p) => !actives.some((x) => x.partie === p));
 }
 
-/** L'adresse publique qui vérifie une signature ; son chemin seul si l'URL n'est pas configurée. */
-export function adresseDeVerification(urlPublique: string | null, signatureId: string): string {
-  return urlPublique
-    ? `${urlPublique}/verifier/${signatureId}`
-    : `page /verifier/${signatureId} de l'application Rojer`;
-}
 
 const rempli = (v: string | null | undefined): v is string =>
   typeof v === "string" && v.trim().length > 0;
@@ -328,9 +320,9 @@ export function PlanPreventionDocument({ data }: { data: PlanPreventionData }) {
             <Text style={[s.td, { marginTop: 2 }]}>Empreinte SHA-256 des données signées :</Text>
             <Text style={p.empreinte}>{sig.hashDocument}</Text>
             <Text style={[s.td, { marginTop: 2 }]}>{`Identifiant de la signature : ${sig.id}`}</Text>
-            <Text style={[s.td, { marginTop: 2 }]}>
-              {`Vérifier cette signature : ${adresseDeVerification(data.urlPublique, sig.id)}`}
-            </Text>
+            {/* ~~« Vérifier cette signature : …/verifier/<id> »~~ (2026-11-21,
+                ADR-006 amendée) : plus de page publique ; le PDF et ses
+                empreintes sont la preuve transmise. */}
           </View>
         ))}
         {sansSignature.map((partie) => (

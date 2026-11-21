@@ -2,8 +2,8 @@ import type { MethodeSignature } from "@prisma/client";
 
 /**
  * La méthode d'une signature, dite en français (cahier de reprise § 8.2) —
- * une seule table pour les écrans : le bloc de signature, `/verifier`,
- * `/signe` et la fiche du plan. Le PDF garde sa phrase longue
+ * une seule table pour les écrans : le bloc de signature et la fiche du plan
+ * (~~`/verifier`, `/signe`~~, retirées le 2026-11-21). Le PDF garde sa phrase longue
  * (`LIBELLE_METHODE` de `PlanPreventionDocument.tsx`). Un `Record` sur
  * l'enum : une méthode ajoutée au schéma ne compile pas sans son libellé.
  */

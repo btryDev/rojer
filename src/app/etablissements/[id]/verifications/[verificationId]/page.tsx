@@ -1,5 +1,7 @@
 import { PlafondDeCreation } from "@/components/quotas/PlafondDeCreation";
 import Link from "next/link";
+import { VerifierSignature } from "@/components/signatures/VerifierSignature";
+import { LIEN_VERIFIER } from "@/components/ui-kit/SignatureBlock";
 import { notFound, redirect } from "next/navigation";
 import { ArrowUpRight, ChevronDown, FileText, FileUp } from "lucide-react";
 import { BadgeStatut } from "@/components/calendrier/BadgeStatut";
@@ -863,7 +865,14 @@ export default async function VerificationDetailPage({
                               hashDocument={s.hashDocument}
                               nomDocument={s.nomDocument}
                               signatureId={s.id}
-                              verifierHref={`/verifier/${s.id}`}
+                              verifier={
+                                <VerifierSignature
+                                  etablissementId={id}
+                                  signatureId={s.id}
+                                  libelle="Vérifier l'intégrité"
+                                  className={LIEN_VERIFIER.board}
+                                />
+                              }
                             />
                           ))}
                         </div>

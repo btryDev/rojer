@@ -130,7 +130,7 @@ export function presentationDemandeSignature(c: ContexteDemande): PresentationLi
   // 1366-1367 du Code civil, règlement eIDAS niveau simple) »~~ — une
   // qualification (contre-lecture du 2026-09-26) : l'al. 2 de l'art. 1367
   // ne présume la fiabilité que « dans des conditions fixées par décret en
-  // Conseil d'Etat ». Même texte que la page `/signe`.
+  // Conseil d'Etat ». ~~Même texte que la page `/signe`~~ (retirée le 2026-11-21).
   if (c.plan) {
     const invitation = c.demandeur
       ? `${c.demandeur} vous invite à signer le plan de prévention relatif à ` +

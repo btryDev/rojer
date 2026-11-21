@@ -2,12 +2,12 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import Link from "next/link";
 import { Check, Clock } from "lucide-react";
 import { LegalBadge } from "@/components/ui-kit";
 import { DemanderSignatureForm } from "@/components/signatures/DemanderSignatureForm";
 import { BoutonRevoquerSignatures } from "./ContreSignatureBoutons";
 import { FenetreSigner } from "./FenetreSigner";
+import { VerifierSignature } from "@/components/signatures/VerifierSignature";
 import {
   envoyerLienEntrepriseExterieure,
   renvoyerLienPlan,
@@ -84,6 +84,7 @@ function LignePartie({
   personne,
   vue,
   planId,
+  etablissementId,
   renvoiPossible,
 }: {
   libellePartie: string;
@@ -91,6 +92,7 @@ function LignePartie({
   personne: string;
   vue: PartieVue;
   planId: string;
+  etablissementId: string;
   renvoiPossible: boolean;
 }) {
   if (vue.etat === "signee") {
@@ -110,9 +112,7 @@ function LignePartie({
         <span className="pastille-board bg-[color:var(--board-green)] text-[13px] text-[color:var(--board-green-ink)]">
           Signée
         </span>
-        <Link href={`/verifier/${vue.signatureId}`} className={LIEN_DISCRET}>
-          Vérifier
-        </Link>
+        <VerifierSignature etablissementId={etablissementId} signatureId={vue.signatureId} className={LIEN_DISCRET} />
       </li>
     );
   }
@@ -277,6 +277,7 @@ export function PanneauSignatures({
           personne={euChefNom}
           vue={eu}
           planId={planId}
+          etablissementId={etablissementId}
           renvoiPossible={recueillir}
         />
         <LignePartie
@@ -285,6 +286,7 @@ export function PanneauSignatures({
           personne={efChefNom}
           vue={ee}
           planId={planId}
+          etablissementId={etablissementId}
           renvoiPossible={recueillir}
         />
       </ul>

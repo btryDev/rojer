@@ -1,5 +1,5 @@
 import type { ObjetSignable, PartieSignataire, Prisma } from "@prisma/client";
-import { envoiEnService, motifErreur, publicAppUrl, sendMail } from "@/lib/email";
+import { envoiEnService, motifErreur, sendMail } from "@/lib/email";
 import { mailSignature } from "@/lib/email/gabarit";
 import { formaterHeureFr } from "@/lib/dates";
 import { formaterJourDateLongueFr } from "@/lib/dates/jour-long";
@@ -9,8 +9,11 @@ import { pieceJointePlanPrevention } from "@/lib/pdf/piece-jointe-plan-preventio
 /**
  * L'avis de fin de signature (2026-11-19) : quand toutes les parties d'un
  * acte co-signé (plan de prévention, permis de feu) ont signé, chaque
- * signataire reçoit un courriel avec l'empreinte SHA-256 du document et
- * l'adresse publique qui vérifie SA signature (`/verifier/[signatureId]`).
+ * signataire reçoit un courriel avec l'empreinte SHA-256 du document et,
+ * pour un plan, le PDF en pièce jointe. ~~l'adresse publique qui vérifie SA
+ * signature (`/verifier/[signatureId]`)~~ [2026-11-21, ADR-006 amendée : plus
+ * de page publique de vérification ; la preuve transmise est le PDF avec les
+ * empreintes.]
  *
  * Pourquoi : jusqu'ici aucune partie ne recevait rien, et la preuve ne vivait
  * que chez Rojer. Une empreinte tenue par chaque partie fait sortir la preuve
@@ -93,7 +96,6 @@ export async function envoyerAvisCoSignature(
         ? await pieceJointePlanPrevention(db, etablissementId, objetId)
         : null;
 
-    const base = publicAppUrl();
     // La date où l'acte est signé par tous : celle de la dernière signature.
     const signeLe = quand(
       signatures.reduce((d, s) => (s.horodatageIso > d ? s.horodatageIso : d), signatures[0].horodatageIso),
@@ -110,11 +112,12 @@ export async function envoyerAvisCoSignature(
 
     await Promise.all(
       [...parDestinataire].map(([to, siennes]) => {
-        const [premiere, ...autres] = siennes;
+        const [premiere] = siennes;
         const message = mailSignature({
           titre: TITRE[objetType],
           nom: premiere.signataireNom,
           paragraphes: [`Le document « ${libelle} » est signé par toutes les parties le ${signeLe}.`],
+          surtitre: "Signatures complètes",
           encadre: [
             ...siennes.map((s) => ({
               libelle: "Votre signature",
@@ -123,16 +126,22 @@ export async function envoyerAvisCoSignature(
                 `le ${quand(s.horodatageIso)}`,
             })),
             // L'empreinte du document tel que ce signataire l'a signé : celle
-            // que son lien « Vérifier » recalcule.
-            { libelle: "Empreinte SHA-256 du document", valeur: premiere.hashDocument },
+            // que le PDF imprime.
+            // Celle des données signées (JSON canonique), pas celle du PDF
+            // joint (audit de sécurité du 2026-11-21).
+            {
+              libelle:
+                objetType === "plan_prevention"
+                  ? "Empreinte SHA-256 des données du plan (ce n'est pas celle du PDF joint)"
+                  : "Empreinte SHA-256 des données du permis",
+              valeur: premiere.hashDocument,
+            },
           ],
           suite: [
-            ...autres.map((s) => `Vérifier votre autre signature : ${base}/verifier/${s.id}`),
             ...(objetType === "plan_prevention" ? [CONSERVATION_PLAN] : []),
-            "Gardez aussi ce message : l'empreinte permet de vérifier à tout moment " +
-              "que le document signé n'a pas été modifié.",
+            "Gardez aussi ce message : cette empreinte, imprimée aussi sur le PDF, " +
+              "se compare à celle affichée dans Rojer par l'émetteur.",
           ],
-          bouton: { libelle: "Vérifier ma signature", url: `${base}/verifier/${premiere.id}` },
           apres: [],
         });
         return sendMail({

@@ -44,7 +44,7 @@ import type { ObjetSignable } from "@prisma/client";
  * et restent des témoins honnêtes de ce qui a été signé ce jour-là. C'est à la
  * VÉRIFICATION de refuser de les comparer à une empreinte v2, et non au calcul
  * de faire semblant qu'elles sont d'une autre forme
- * (`verifierIntegriteSignature`).
+ * (`verifierSignature`, `./verification`).
  *
  * Le préfixe ne vaut que pour `plan_prevention` : la forme d'entrée est propre
  * à chaque type d'objet, et celles du permis de feu et du rapport de

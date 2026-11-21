@@ -1,13 +1,13 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { AlertTriangle, ChevronDown } from "lucide-react";
+import { AlertTriangle, Check, ChevronDown } from "lucide-react";
 import { clientDuProprietaire } from "@/lib/auth/compte-hors-session";
 import { notFound } from "next/navigation";
 import { verifierAccessToken } from "@/lib/access-tokens/verify";
 import { motifLisible } from "@/lib/access-tokens/motif-lisible";
 import { LegalBadge } from "@/components/ui-kit/LegalBadge";
 import { SignerOuProposer } from "@/components/signatures/SignerOuProposer";
-import { formaterDateFr, formaterJourMoisFr } from "@/lib/dates";
+import { formaterDateFr, formaterDateLongueFr, formaterHeureFr, formaterJourMoisFr } from "@/lib/dates";
 import { objetEstSignable } from "@/lib/signatures/etat-signable";
 import { renvoiOtpPossibleLe } from "@/lib/signatures/otp";
 import {
@@ -77,11 +77,14 @@ export default async function AccesParTokenPage({
       case "revoque":
         return etatDuLien({ titre: "Ce lien a été révoqué", phrase: motifLisible(res.motif), contact });
       case "deja_utilise":
+        // La confirmation de la signature, sur le lien lui-même (2026-11-21,
+        // ADR-006 amendée) : plus d'accusé public `/signe`.
         return etatDuLien({
-          titre: "Ce lien a déjà servi",
-          phrase: `Le document a été signé le ${formaterDateFr(res.utiliseLe)}.`,
+          titre: "Signature enregistrée",
+          phrase: `Signature enregistrée le ${formaterDateLongueFr(res.utiliseLe)} à ${formaterHeureFr(res.utiliseLe)}. Quand toutes les parties auront signé, Rojer adresse à chaque signataire un e-mail avec l'empreinte du document.`,
           contact,
           si: "Si une nouvelle signature vous est demandée",
+          confirme: true,
         });
     }
   }
@@ -201,9 +204,8 @@ export default async function AccesParTokenPage({
                 extrait="L'écrit électronique a la même force probante que l'écrit sur support papier, sous réserve que puisse être dûment identifiée la personne dont il émane et qu'il soit établi et conservé dans des conditions de nature à en garantir l'intégrité."
               >
                 Votre signature est posée avec une preuve d&apos;intégrité
-                (empreinte SHA-256 du document) et un horodatage serveur.
-                Vous pourrez à tout moment vérifier qu&apos;elle porte bien sur
-                le document non modifié.
+                (empreinte SHA-256 du document) et un horodatage serveur ;
+                l&apos;empreinte figure sur le PDF du document signé.
               </LegalBadge>
             </div>
 
@@ -290,6 +292,7 @@ function etatDuLien({
   phrase,
   contact,
   si,
+  confirme,
 }: {
   titre: string;
   phrase: string | null;
@@ -297,6 +300,8 @@ function etatDuLien({
   contact: string | null;
   /** Le cas où un nouveau lien serait utile, quand il n'est pas évident. */
   si?: string;
+  /** Une signature posée : la tuile dit « fait », pas « attention ». */
+  confirme?: boolean;
 }) {
   const qui = contact ?? "la personne qui vous a envoyé ce lien";
   const consigne = `contactez ${qui} pour obtenir un nouveau lien.`;
@@ -306,7 +311,7 @@ function etatDuLien({
         {pastilleRojer()}
         <div className={`${CLASSE_CARTE} w-full text-center`}>
           <span className="mx-auto flex size-12 items-center justify-center rounded-[14px] bg-[color:var(--board-ink)] text-white">
-            <AlertTriangle aria-hidden className="size-5" />
+            {confirme ? <Check aria-hidden className="size-5" /> : <AlertTriangle aria-hidden className="size-5" />}
           </span>
           <h1 className="m-0 mt-4 font-display text-[26px] leading-[1.1] font-semibold tracking-[-0.03em] text-[color:var(--board-ink)]">
             {titre}

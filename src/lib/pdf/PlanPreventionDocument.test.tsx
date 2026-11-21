@@ -10,7 +10,6 @@ import {
   MENTION_DOCUMENT_DE_TRAVAIL,
   MENTION_NON_SCELLE,
   PlanPreventionDocument,
-  adresseDeVerification,
   nomFichierPlanPrevention,
   type PlanPreventionData,
   type SignaturePlanPdf,
@@ -57,7 +56,6 @@ function donnees(over: Partial<PlanPreventionData> = {}): PlanPreventionData {
     adresse: "1 rue des Lilas, 75011 Paris",
     siretEtablissement: "12345678900012",
     genereLe: new Date("2026-11-19T10:00:00Z"),
-    urlPublique: "https://rojer.example",
     raisonsEcrit: ["Durée estimée : 450 h"],
     plan: {
       entrepriseExterieureRaison: "Clim Services",
@@ -162,7 +160,7 @@ describe("PlanPreventionDocument — contenu", () => {
 });
 
 describe("PlanPreventionDocument — signatures", () => {
-  it("pour chaque signature active : partie, nom, date, méthode en français, empreinte, identifiant, adresse de vérification", () => {
+  it("pour chaque signature active : partie, nom, date, méthode en français, empreinte, identifiant — sans adresse de vérification", () => {
     const t = textes(donnees());
     expect(contient(t, /^Entreprise utilisatrice — Claire Martin, Gérante$/)).toBe(true);
     expect(contient(t, /^Entreprise extérieure — Paul Durand$/)).toBe(true);
@@ -172,7 +170,8 @@ describe("PlanPreventionDocument — signatures", () => {
     expect(t).toContain(HASH_EE);
     expect(contient(t, /^Empreinte SHA-256 des données signées :$/)).toBe(true);
     expect(contient(t, /^Identifiant de la signature : sig_eu$/)).toBe(true);
-    expect(contient(t, /^Vérifier cette signature : https:\/\/rojer\.example\/verifier\/sig_ee$/)).toBe(true);
+    // Plus de lien de vérification publique (2026-11-21, ADR-006 amendée).
+    expect(t.some((x) => /\/verifier\/|Vérifier cette signature/.test(x))).toBe(false);
   });
 
   it("n'imprime jamais une signature révoquée", () => {
@@ -200,10 +199,6 @@ describe("PlanPreventionDocument — signatures", () => {
     expect(contient(t, /^Signature attendue : entreprise utilisatrice, entreprise extérieure\.$/)).toBe(true);
   });
 
-  it("sans adresse publique configurée : le chemin de vérification, sans hôte inventé", () => {
-    expect(adresseDeVerification(null, "sig_x")).toBe("page /verifier/sig_x de l'application Rojer");
-    expect(adresseDeVerification("https://a.b", "sig_x")).toBe("https://a.b/verifier/sig_x");
-  });
 });
 
 describe("PlanPreventionDocument — fichier", () => {
