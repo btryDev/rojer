@@ -222,12 +222,11 @@ export default async function PlanPreventionDetailPage({
   // Figé (signé, clos ou annulé) : le plan ne se complète plus ; les
   // rubriques vides ne se signalent plus (décision de la propriétaire,
   // 2026-11-21). Remplies, elles s'affichent toujours, chacune sa section.
+  // « Modifier » (et « Compléter ») seulement s'il n'est pas figé (même
+  // décision) : on modifie librement jusqu'à la première signature ; ensuite,
+  // seul « Révoquer les signatures pour corriger » rouvre le contenu. La page
+  // « Modifier » garde son verrou.
   const fige = !planSignable || plan.signatures.length > 0;
-  // « Modifier » (et « Compléter ») tant que le plan n'est pas figé
-  // (2026-11-21, décision de la propriétaire) : on modifie librement jusqu'à
-  // la première signature ; ensuite, seul « Révoquer les signatures pour
-  // corriger » rouvre le contenu. La page « Modifier » garde son verrou.
-  const modifiable = !fige;
   const rubriquesRemplies = rubriquesRenseignees(plan);
   const manquantes = fige ? [] : rubriquesManquantes(plan);
   // La partie est un fait enregistré, pas une déduction de l'adresse
@@ -460,7 +459,7 @@ export default async function PlanPreventionDetailPage({
                 {/* Supprimer reste avec les autres gestes du plan ; « Télécharger
                     le PDF » est sur la bascule. */}
                 <div className="flex flex-wrap justify-end gap-2.5">
-                  {modifiable && (
+                  {!fige && (
                     <Link data-ecriture href={modifier} className={PILULE_FICHE}>
                       Modifier
                     </Link>
@@ -623,15 +622,14 @@ export default async function PlanPreventionDetailPage({
                     <Section>
                       <p className="m-0 text-[14px] leading-[1.6] text-[color:var(--board-slate-mid)]">
                         À compléter : {manquantes.map((r) => r.titre).join(" ; ")}.{" "}
-                        {modifiable && (
-                          <Link
-                            data-ecriture
-                            href={modifier}
-                            className="text-[color:var(--board-blue-ink)] underline-offset-2 hover:underline"
-                          >
-                            Compléter
-                          </Link>
-                        )}
+                        {/* Le bloc n'existe que non figé : « Compléter » sans condition. */}
+                        <Link
+                          data-ecriture
+                          href={modifier}
+                          className="text-[color:var(--board-blue-ink)] underline-offset-2 hover:underline"
+                        >
+                          Compléter
+                        </Link>
                       </p>
                     </Section>
                   )}

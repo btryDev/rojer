@@ -1,9 +1,13 @@
 // Le fil de retour d'une page de détail : deux questions distinctes, deux
 // liens distincts.
 //
-//   ← Calendrier        d'où je viens (la provenance, cf.
-//                       `src/lib/navigation/provenance.ts`)
-//   Plan d'actions      où cette fiche vit (le parent canonique)
+// ~~   ← Calendrier        d'où je viens (la provenance, cf.
+//                         `src/lib/navigation/provenance.ts`)
+//      Plan d'actions      où cette fiche vit (le parent canonique)~~
+// [2026-11-21 : deux boutons « ← … » (`LienRetour`) — « ← Calendrier », d'où
+// je viens (la provenance, `src/lib/navigation/provenance.ts`), puis
+// « ← Plan d'actions », où cette fiche vit (le parent canonique), d'un ton
+// plus clair (`discret`).]
 //
 // Sans provenance, le premier lien *est* le parent canonique et le second
 // disparaît : la page se comporte comme avant. Le parent n'est jamais
@@ -36,9 +40,13 @@ export function FilRetour({
   const { retour, parent } = retoursDeLaFiche(provenance, canonique);
 
   return (
-    <nav aria-label="Retour" className={"flex flex-wrap items-center gap-2" + (className ? ` ${className}` : "")}>
+    <nav aria-label="Retour" className={"flex max-w-full flex-wrap items-center gap-2" + (className ? ` ${className}` : "")}>
       <LienRetour href={retour.href}>{retour.label}</LienRetour>
-      {parent && <LienRetour href={parent.href}>{parent.label}</LienRetour>}
+      {parent && (
+        <LienRetour href={parent.href} discret>
+          {parent.label}
+        </LienRetour>
+      )}
     </nav>
   );
 }
