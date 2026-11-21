@@ -4,6 +4,8 @@ import { AlertTriangle, Check, ChevronDown } from "lucide-react";
 import { clientDuProprietaire } from "@/lib/auth/compte-hors-session";
 import { notFound } from "next/navigation";
 import { verifierAccessToken } from "@/lib/access-tokens/verify";
+import { limiterPageDuLien } from "@/lib/access-tokens/limite-lien";
+import { messageTropDeTentatives } from "@/lib/securite/limite-debit";
 import { motifLisible } from "@/lib/access-tokens/motif-lisible";
 import { LegalBadge } from "@/components/ui-kit/LegalBadge";
 import { SignerOuProposer } from "@/components/signatures/SignerOuProposer";
@@ -55,6 +57,18 @@ export default async function AccesParTokenPage({
   params: Promise<{ token: string }>;
 }) {
   const { token } = await params;
+
+  // La limite par réseau de la page d'un lien, AVANT la lecture du jeton :
+  // la même réponse, que le lien existe ou non (2026-11-21).
+  const limite = await limiterPageDuLien();
+  if (!limite.ok) {
+    return etatDuLien({
+      titre: "Trop de demandes",
+      phrase: messageTropDeTentatives(limite.reessayerDansSecondes),
+      contact: null,
+      si: "Si le problème persiste",
+    });
+  }
 
   const res = await verifierAccessToken(token);
 

@@ -79,6 +79,13 @@ export const LIMITES = {
    * écrit au dirigeant.
    */
   propositionPlanIp: { max: 5, fenetreSecondes: 15 * 60 },
+  /**
+   * La page d'un lien (`/acces/[token]`) et ses actions, tous scopes
+   * (2026-11-21, `access-tokens/limite-lien.ts`) : par réseau, avant la
+   * lecture du jeton. Un prestataire recharge sa page, il n'en fait pas trente.
+   */
+  lienPageIp: { max: 30, fenetreSecondes: 10 * 60 },
+  lienActionIp: { max: 10, fenetreSecondes: 10 * 60 },
 } as const satisfies Record<string, Limite>;
 
 export type Verdict =

@@ -195,6 +195,10 @@ const GARDE_LOCALE_MEMBRES = { fichier: "lib/membres/actions.ts", garde: "propri
  */
 const ECRITURES_A_LA_LECTURE = new Map<string, string>([
   [
+    "lib/access-tokens/limite-lien.ts:limiterPageDuLien",
+    "le compteur anti-abus de la page d'un lien (`limite-debit`, 2026-11-21) : ni donnée du compte, ni saisie",
+  ],
+  [
     "lib/calendrier/regeneration-sure.ts:assurerCalendrierAJour",
     "réparation du calendrier à l'affichage (tableau de bord, calendrier) : des lignes dérivées du référentiel, pas une saisie — la lecture d'un impayé reste juste",
   ],

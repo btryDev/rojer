@@ -74,6 +74,11 @@ const { prismaMock, verifierMock, proprietaire } = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
+// La limite par réseau des liens (2026-11-21) : éprouvée dans `limite-lien.test.ts`.
+vi.mock("@/lib/access-tokens/limite-lien", () => ({
+  limiterPageDuLien: async () => ({ ok: true }),
+  refusActionDuLien: async () => null,
+}));
 // Sans session, le compte vient du propriétaire de l'établissement du jeton
 // (ADR-051, `compte-hors-session.ts`) : ici, le client borné simulé.
 vi.mock("@/lib/auth/compte-hors-session", async () =>

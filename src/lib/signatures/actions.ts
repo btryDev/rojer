@@ -1,6 +1,7 @@
 "use server";
 
 import { exigerSignatureDEssai } from "@/lib/abonnements/validation";
+import { refusActionDuLien } from "@/lib/access-tokens/limite-lien";
 import { randomUUID } from "node:crypto";
 import { headers } from "next/headers";
 import { after } from "next/server";
@@ -238,6 +239,9 @@ export async function poserSignatureAvecToken(
   _prev: PoserSignatureState,
   formData: FormData,
 ): Promise<PoserSignatureState> {
+  // La limite des actions d'un lien, avant toute lecture (2026-11-21).
+  const tropDeDemandes = await refusActionDuLien();
+  if (tropDeDemandes) return { status: "error", message: tropDeDemandes };
   const otp = (formData.get("otp") ?? "").toString().trim();
   // La fonction se valide AVANT le jeton et le code : un refus ici ne
   // consomme aucun essai, et rien n'est écrit (ASVS V2.2.1, 2026-10-13).
@@ -522,6 +526,8 @@ export type RenvoiOtpState =
 export async function renvoyerCodeOtp(
   tokenClair: string,
 ): Promise<RenvoiOtpState> {
+  const tropDeDemandes = await refusActionDuLien();
+  if (tropDeDemandes) return { status: "error", message: tropDeDemandes };
   const res = await verifierAccessToken(tokenClair);
   if (!res.ok) {
     return {
