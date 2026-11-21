@@ -126,8 +126,12 @@ const RELATIONS = new Map<string, Relation[]>(
         const de = f.relationFromFields ?? [];
         // Une clé composée, ou une clé qui ne vise pas `id`, ne se réécrit pas
         // en `connect` borné : refusée au chargement plutôt que laissée passer
-        // sans borne. Le schéma n'en porte aucune.
-        if (de.length > 1 || (de.length === 1 && (f.relationToFields?.[0] ?? "id") !== "id"))
+        // sans borne. [2026-11-21, ADR-062 : sauf entre deux modèles HORS
+        // COMPTE — les tables du fournisseur OAuth se relient par `clientId`.
+        // Le client borné ne lit ni n'écrit aucun des deux (`estHorsCompte`) :
+        // il n'a rien à réécrire, la relation n'est jamais traversée par lui.]
+        const entreHorsCompte = genre === "hors" && genreDe(classement(m.name)) === "hors";
+        if (!entreHorsCompte && (de.length > 1 || (de.length === 1 && (f.relationToFields?.[0] ?? "id") !== "id")))
           throw new ErreurPortee(`${m.name}.${f.name} : clé étrangère non simple, non bornable`);
         const c = classement(f.type);
         const porteePar = "identite" in c ? c.porteePar : undefined;

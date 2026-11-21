@@ -119,6 +119,19 @@ export const CORRESPONDANCE = {
     horsCompte: "jeton de vérification Better Auth (e-mail, réinitialisation, défi et appareil de confiance de la double authentification)",
   },
   TwoFactor: { horsCompte: "second facteur Better Auth (secret TOTP et codes de secours, chiffrés), lu à la connexion" },
+
+  // Connecteur MCP (ADR-062) : le fournisseur OAuth de Better Auth, lu et
+  // écrit par son adaptateur avant toute identité. Aucune donnée de dossier :
+  // le compte d'un consentement n'y est qu'une étiquette (`referenceId`),
+  // relue contre `Membre` à chaque requête (`mcp/acces-compte.ts`).
+  OauthClient: { horsCompte: "client OAuth (Claude) enregistré par DCR ou CIMD, avant toute identité" },
+  OauthResource: { horsCompte: "la ressource protégée (le serveur MCP) et sa politique de jetons" },
+  OauthClientResource: { horsCompte: "lien d'un client OAuth à la ressource qu'il peut demander" },
+  OauthRefreshToken: { horsCompte: "jeton de rafraîchissement OAuth (haché), lu au rafraîchissement, avant toute identité" },
+  OauthAccessToken: { horsCompte: "jeton d'accès OAuth opaque (haché) ; les jetons du connecteur sont des JWT non stockés" },
+  OauthConsent: { horsCompte: "consentement d'une personne à un client OAuth, étiqueté du compte (`referenceId`)" },
+  OauthClientAssertion: { horsCompte: "assertion de client déjà vue (anti-rejeu), technique" },
+  Jwks: { horsCompte: "clés de signature des jetons d'accès (plugin `jwt`), clé privée chiffrée" },
 } satisfies Record<Prisma.ModelName, Classement>;
 
 /** Hors compte au sens du client borné : il ne lit ni n'écrit ces modèles. */

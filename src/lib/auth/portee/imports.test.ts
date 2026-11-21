@@ -117,6 +117,13 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous"; 
     motif: "porteur d'un jeton MCP vérifié : appartenance au compte du jeton et abonnement de ce compte, relus avant la portée",
     usages: ["prisma.membre.findUnique"],
   },
+  "src/lib/connecteur/assistants.ts": {
+    motif:
+      "assistants autorisés (consentements OAuth, hors compte) bornés à la main par la personne ET le compte ; abonnement du compte pour la formule Pro",
+    usages: ["prisma.oauthConsent.findMany", "prisma.$transaction", "prisma.abonnement.findUnique"],
+    // La transaction du retrait : lecture du consentement, suppression, révocation des jetons.
+    valeur: ["$transaction(hors tableau)"],
+  },
   "src/lib/mcp/compte-oauth.ts": {
     motif: "compte d'un consentement OAuth : appartenances de la personne connectée, relues avant que le compte soit choisi",
     usages: ["prisma.membre.findMany"],

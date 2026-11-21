@@ -63,6 +63,19 @@ const INVITE: Ouverte = {
 const TIERS: Ouverte = { motif: "acte d'un tiers par lien vérifié, pas du titulaire", lectureSeule: true };
 const RGPD: Ouverte = { motif: "supprimer ses données reste possible à tout moment (RGPD, règle 9)" };
 
+/**
+ * Le connecteur d'assistant (ADR-062) : consentir, refuser, choisir le compte
+ * d'une autorisation, retirer un assistant. Le consentement ne s'accepte
+ * qu'en formule Pro (le geste le revérifie) ; refuser et retirer un accès
+ * sont des mesures de sécurité, jamais fermées. Ouvert à tout membre, lecture
+ * seule comprise : le connecteur ne fait que lire.
+ */
+const CONNECTEUR: Ouverte = {
+  motif:
+    "connecteur d'assistant (ADR-062) : refuser et retirer un accès ne se ferment jamais ; accepter exige la formule Pro, revérifiée par le geste",
+  lectureSeule: true,
+};
+
 /** Écritures qui restent ouvertes quand la saisie est fermée. */
 const OUVERTES = new Map<string, Ouverte>([
   // « Vérifier » une signature (2026-11-21) : recalcule une empreinte en lisant
@@ -72,6 +85,9 @@ const OUVERTES = new Map<string, Ouverte>([
     "lib/signatures/verification-actions.ts:verifierSignatureDuCompte",
     { motif: "vérifier une signature : une lecture du stockage, aucune écriture", lectureSeule: true },
   ],
+  ["app/oauth/actions.ts:choisirCompteOAuth", CONNECTEUR],
+  ["app/oauth/actions.ts:repondreConsentement", CONNECTEUR],
+  ["app/etablissements/[id]/connecter/actions.ts:retirerAssistantAction", CONNECTEUR],
   ["lib/auth/actions.ts:activerCompteAction", COMPTE],
   ["lib/auth/actions.ts:activerDoubleAuthAction", COMPTE],
   ["lib/auth/actions.ts:changerMotDePasseAction", COMPTE],
@@ -160,10 +176,14 @@ const ROUTES_OUVERTES = new Map<string, string>([
     "la notification de Stripe : sans session, prouvée par sa signature — c'est elle qui rouvre un compte impayé",
   ],
   [
-    "app/api/mcp/[cle]/route.ts:POST",
-    "serveur MCP, authentifié par sa clé, sans session : lecture seule (aucune écriture dans `lib/mcp`, hors le compteur anti-abus)",
+    "app/api/mcp/route.ts:POST",
+    "serveur MCP, authentifié par un jeton OAuth, sans session : lecture seule (aucune écriture dans `lib/mcp`, hors le compteur anti-abus)",
   ],
-  ["app/api/mcp/[cle]/route.ts:DELETE", "serveur MCP : la fin de session du protocole, aucune donnée du compte"],
+  ["app/api/mcp/route.ts:DELETE", "serveur MCP sans état : 405, rien n'est lu ni écrit"],
+  [
+    "app/api/auth/[...all]/route.ts:POST",
+    "points d'entrée OAuth du fournisseur (jeton, enregistrement, révocation, ADR-062), sans session de titulaire : ils n'écrivent que les tables du fournisseur, aucune donnée de dossier",
+  ],
 ]);
 const METHODES_QUI_ECRIVENT = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
