@@ -4,8 +4,10 @@
  *
  * POURQUOI CE MODULE EXISTE PLUTÔT QUE CINQ CHAMPS ÉPARPILLÉS. Trois surfaces
  * doivent dire la même chose des mêmes rubriques : le formulaire de saisie, la
- * fiche du plan, et le fichier `07_Plans_de_prevention.txt` du ZIP de contrôle
- * remis à un tiers. Les trois doivent nommer la rubrique de la même façon, et
+ * fiche du plan, et ~~le fichier `07_Plans_de_prevention.txt` du ZIP de
+ * contrôle~~ [2026-11-21 : le PDF du plan, que le ZIP de contrôle joint, et la
+ * page du lien de signature] remis à un tiers. Les trois doivent nommer la
+ * rubrique de la même façon, et
  * surtout s'accorder sur ce qui est MANQUANT — c'est la seule information que
  * le dirigeant ne peut pas déduire de ce qu'il lit. Trois copies de la liste
  * auraient divergé au premier ajout, et c'est déjà arrivé dans ce module :
@@ -73,15 +75,18 @@ const rempli = (v: string | null | undefined): boolean =>
  * pour aligner la colonne.
  *
  * Le critère est : **la seconde moitié de l'alinéa atteint-elle le lecteur du
- * ZIP ?** Ce fichier-là est le plus pauvre des quatre surfaces — il écrit
- * `<n>° <titre> : NON RENSEIGNÉE` et n'imprime jamais le `verbatim` —, et son
- * destinataire est un inspecteur, un assureur ou un acquéreur, à qui personne
- * ne répétera ce que le texte demande. Rubrique par rubrique :
+ * ~~ZIP~~ [2026-11-21 : PDF] ?** ~~Ce fichier-là est le plus pauvre des quatre
+ * surfaces — il écrit `<n>° <titre> : NON RENSEIGNÉE` et n'imprime jamais le
+ * `verbatim` —~~ [2026-11-21 : le PDF n'imprime que le titre, jamais le
+ * `verbatim`], et son destinataire est un inspecteur, un assureur ou un
+ * acquéreur, à qui personne ne répétera ce que le texte demande. Rubrique par
+ * rubrique :
  *
  *  - 2° et 5° : les deux moitiés sont dans le titre. Rien à faire.
  *  - 1° : le titre tronque « et des moyens de prévention spécifiques
- *    correspondants », MAIS le ZIP imprime « → Moyens de prévention : » sous
- *    chaque phase.
+ *    correspondants », MAIS ~~le ZIP imprime « → Moyens de prévention : »~~
+ *    [2026-11-21 : le PDF imprime « Moyens de prévention : »] sous chaque
+ *    phase.
  *    La seconde moitié est matériellement là, sous une autre forme.
  *  - 3° : l'alinéa n'a qu'une moitié.
  *  - 4° : le titre tronquait, et RIEN ne rattrapait ailleurs. Sous
@@ -102,16 +107,18 @@ const rempli = (v: string | null | undefined): boolean =>
 export const RUBRIQUES_R4512_8: readonly RubriqueR4512_8[] = [
   {
     numero: 1,
-    // Titre volontairement court : voir le critère ci-dessus — le ZIP rend la
-    // seconde moitié par les « → Moyens de prévention : » de chaque phase.
+    // Titre volontairement court : voir le critère ci-dessus — ~~le ZIP~~
+    // [2026-11-21 : le PDF] rend la seconde moitié par les « Moyens de
+    // prévention : » de chaque phase.
     titre: "Phases d'activité dangereuses",
     verbatim:
       "La définition des phases d'activité dangereuses et des moyens de prévention spécifiques correspondants",
     // UN DES DEUX CHAMPS SUFFIT, ET C'EST P7 QUI L'A IMPOSÉ. Tant que la
     // rubrique ne comptait que `phase`, une ligne en base dont la phase était
     // blanche et les moyens renseignés faisait imprimer « 1° … : NON
-    // RENSEIGNÉE » — et les moyens stockés DISPARAISSAIENT du dossier. Ce
-    // module promet qu'une rubrique vide s'imprime ; il doit d'abord promettre
+    // RENSEIGNÉE » — et les moyens stockés DISPARAISSAIENT du dossier. ~~Ce
+    // module promet qu'une rubrique vide s'imprime ; il doit d'abord promettre~~
+    // [2026-11-21 : une rubrique vide ne s'imprime plus ; ce module promet]
     // qu'une rubrique remplie ne s'efface pas.
     renseignee: (p) =>
       p.phasesDangereuses.some((f) => rempli(f.phase) || rempli(f.moyensPrevention)),
@@ -132,7 +139,8 @@ export const RUBRIQUES_R4512_8: readonly RubriqueR4512_8[] = [
   {
     numero: 4,
     // Le seul titre qu'on ait allongé, et le critère est ci-dessus : sa
-    // seconde moitié n'atteignait le lecteur du ZIP par aucun autre chemin.
+    // seconde moitié n'atteignait le lecteur du ~~ZIP~~ [2026-11-21 : PDF] par
+    // aucun autre chemin.
     titre:
       "Organisation des premiers secours et description du dispositif de l'entreprise utilisatrice",
     verbatim:

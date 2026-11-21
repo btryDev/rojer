@@ -600,7 +600,12 @@ async function construireArchive(
   for (const p of plansList) {
     try {
       const data = await construirePlanPreventionData(db, id, p.id, maintenant);
-      if (!data) continue;
+      // Le plan lu ici mais plus par le builder : un PDF manquant, compté comme
+      // tel — l'index et le README disent la même chose (2026-11-21).
+      if (!data) {
+        plansPdf.echecs++;
+        continue;
+      }
       const buf = await rendrePdf({ type: "plan-prevention", props: { data } }, RENDU_DU_ZIP);
       const nom = `${PIECES_ZIP.plansPreventionPdf}${nomFichierPlanPrevention(data.numero, data.etablissement)}`;
       zip.file(nom, new Uint8Array(buf));
