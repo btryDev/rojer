@@ -1,8 +1,9 @@
-import { AppHeader } from "./AppHeader";
+import { AppHeader, EnTeteMarqueSeule } from "./AppHeader";
 
 /**
  * Le layout des segments qui portent l'en-tête global (audit Next.js du
- * 2026-10-14, M2) : connexion, création de compte, réinitialisation, pages
+ * 2026-10-14, M2) : ~~connexion, création de compte, réinitialisation~~
+ * [2026-11-21 : marque seule, `LayoutMarqueSeule` ci-dessous], pages
  * publiques (~~`/acces`~~ [2026-11-21 : la page du lien a sa propre pastille,
  * plus d'en-tête global], `/accessibilite` ; ~~`/signe`, `/verifier`~~, retirées
  * le 2026-11-21) et
@@ -52,7 +53,7 @@ export function LayoutMarqueSeule({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <>
-      <AppHeader marqueSeule />
+      <EnTeteMarqueSeule />
       {children}
     </>
   );
