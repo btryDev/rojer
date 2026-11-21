@@ -16,9 +16,11 @@ import { useAnnonceFiche } from "./AnnonceFiche";
  * au moment du geste (§ 6).
  *
  * [2026-11-19, lot 4, maquette V2 « Bandeau »] « Refuser » / « Corriger » /
- * « Accepter sans modifier » ; le refus se confirme dans le bandeau. Le
- * résultat s'annonce sur la fiche (`AnnonceFiche`) : le bandeau disparaît
- * avec la proposition traitée, son message disparaissait avec lui.
+ * ~~« Accepter sans modifier »~~ « Accepter » (2026-11-21, maquette « Bloc
+ * Suivi ») ; le refus se confirme dans ~~le bandeau~~ [2026-11-21 : la carte
+ * « À décider »]. Le résultat s'annonce sur la fiche (`AnnonceFiche`) : la
+ * carte disparaît avec la proposition traitée, son message disparaissait avec
+ * elle.
  */
 
 export const PHRASE_PLAFOND =
@@ -94,7 +96,7 @@ export function TraiterPropositionBoutons({
       ) : (
         <div className="flex flex-wrap items-center justify-between gap-4">
           <p className="m-0 max-w-[520px] text-[13px] leading-[1.55] text-[color:var(--board-slate-ink)]">
-            Accepter révoque les signatures déjà posées ; refuser les laisse valables et renvoie un lien à {raisonEE}.{" "}
+            Accepter retire les signatures déjà posées : chacun signe la nouvelle version. Refuser les laisse valables et renvoie un lien à {raisonEE}.{" "}
             {PHRASE_PLAFOND}
           </p>
           <div className="flex flex-wrap gap-2.5">
@@ -111,7 +113,7 @@ export function TraiterPropositionBoutons({
               Corriger
             </button>
             <button type="submit" name="decision" value="accepter" disabled={pending} data-ecriture className={BOUTON_PLEIN}>
-              {pending ? "Application…" : "Accepter sans modifier"}
+              {pending ? "Application…" : "Accepter"}
             </button>
           </div>
         </div>

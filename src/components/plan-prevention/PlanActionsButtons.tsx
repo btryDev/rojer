@@ -4,11 +4,11 @@ import { useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { useConfirmation } from "@/components/ui-kit/Confirmation";
 import { cloturerPlan, supprimerPlan } from "@/lib/plan-prevention/actions";
-import { PILULE_FICHE } from "./classes-fiche";
+import { cn } from "@/lib/utils";
+import { GESTE_FICHE } from "./classes-fiche";
 
-/** L'en-tête de la fiche (maquette V2) : pilules blanches, « Supprimer » en encre rouge. */
-const ENTETE_SUPPRIMER =
-  "inline-flex min-h-11 items-center rounded-full border-0 bg-transparent px-[18px] text-[14px] font-normal normal-case tracking-normal text-[color:var(--board-signal-ink)] shadow-none ring-0 transition-colors hover:bg-[color:var(--board-signal-wash)] disabled:opacity-60";
+/** Les gestes de la fiche (`GESTE_FICHE`) : « Supprimer » en encre rouge. */
+const ENTETE_SUPPRIMER = cn(GESTE_FICHE, "text-[color:var(--board-signal-ink)]");
 
 export function BoutonCloturer({ planId, entete = false }: { planId: string; entete?: boolean }) {
   const [pending, startTransition] = useTransition();
@@ -20,7 +20,7 @@ export function BoutonCloturer({ planId, entete = false }: { planId: string; ent
         type="button"
         variant="board"
         size="board"
-        className={entete ? PILULE_FICHE : undefined}
+        className={entete ? GESTE_FICHE : undefined}
         disabled={pending}
         onClick={() =>
           demander({

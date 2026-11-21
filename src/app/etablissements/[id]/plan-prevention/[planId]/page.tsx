@@ -22,7 +22,8 @@ import { statutPlanSignable } from "@/lib/signatures/etat-signable";
 import { INSPECTION_SUR_PLAN_SIGNE } from "@/lib/signatures/verrou-contenu";
 import { LIBELLE_METHODE_COURT } from "@/lib/signatures/methode";
 import { BoutonCloturer, BoutonSupprimerPlan } from "@/components/plan-prevention/PlanActionsButtons";
-import { PILULE_FICHE } from "@/components/plan-prevention/classes-fiche";
+import { GESTE_FICHE } from "@/components/plan-prevention/classes-fiche";
+import { cn } from "@/lib/utils";
 import { getPlanPrevention } from "@/lib/plan-prevention/queries";
 import { etatAffichePlan } from "@/lib/plan-prevention/etats";
 import {
@@ -97,14 +98,19 @@ import {
  * serveur [2026-11-21, maquette « Switch A » : la bascule quitte l'en-tête et
  * se pose en haut de la carte du contenu, « Le plan » / « Suivi » soulignés,
  * « Télécharger le PDF » à droite ; « Modifier » disparaît dès la première
- * signature] :
- * - « Plan de prévention » : le plan d'un seul tenant, une carte, des
+ * signature] [2026-11-21, retour de la propriétaire, « toujours le même
+ * bloc » : une seule carte dans les deux onglets — onglets et TOUS les gestes
+ * en tête, puis le contenu ; ~~le suivi en sections à filet, plus en
+ * cartes~~ [maquette « Bloc Suivi » : l'action requise en carte intérieure,
+ * puis les sections]] :
+ * - ~~« Plan de prévention »~~ « Le plan » : le plan d'un seul tenant, des
  *   sections séparées d'un filet ; chaque rubrique de `R. 4512-8` remplie est
  *   une section sous son titre ; les vides se disent en une ligne tant que le
  *   plan n'est pas figé ; les blocs réglementaires d'avant restent tous, en
  *   bas, repliés ;
  * - « Suivi » : l'action requise (la proposition, la correction en cours, ou
- *   la signature), les signatures, puis ce qui s'est passé.
+ *   la signature) dans sa carte, les signatures, puis ~~ce qui s'est passé~~
+ *   l'« Historique », replié.
  * `?openSign=1` ouvre l'onglet « Suivi », qui porte la fenêtre de signature.
  *
  * ~~(2026-11-19, lots 3 et 4, maquette V2) l'en-tête, la barre d'actions
@@ -298,13 +304,23 @@ export default async function PlanPreventionDetailPage({
           tonAlerte: "proche",
         },
       ]}
+      // [2026-11-21, « toujours le même bloc »] TOUS les gestes du plan, sur
+      // la ligne des onglets, dans les deux onglets.
       droite={
-        <a
-          href={`/api/etablissements/${id}/plan-prevention/${plan.id}/pdf`}
-          className="text-[13.5px] text-[color:var(--board-blue-ink)] underline-offset-2 hover:underline"
-        >
-          Télécharger le PDF
-        </a>
+        <>
+          {!fige && (
+            <Link data-ecriture href={modifier} className={GESTE_FICHE}>
+              Modifier
+            </Link>
+          )}
+          <a href={`/api/etablissements/${id}/plan-prevention/${plan.id}/pdf`} className={cn(GESTE_FICHE, "text-[color:var(--board-blue-ink)]")}>
+            Télécharger le PDF
+          </a>
+          {(plan.statut === "valide" || plan.statut === "attente_signatures") && (
+            <BoutonCloturer planId={plan.id} entete />
+          )}
+          <BoutonSupprimerPlan planId={plan.id} entete />
+        </>
       }
     />
   );
@@ -395,11 +411,14 @@ export default async function PlanPreventionDetailPage({
       <div className="px-[var(--board-gutter)]">
         <div className="mx-auto flex w-full max-w-[980px] flex-col gap-[18px] pt-[22px]">
           <AnnonceFiche>
+            {/* TOUJOURS LE MÊME BLOC (2026-11-21, retour de la propriétaire) :
+                une seule carte — les onglets et les gestes en tête, puis le
+                contenu de l'onglet, en sections séparées d'un filet. */}
+            <div className="carte-board">
+            {bascule}
             {onglet === "suivi" ? (
-              <div className="flex flex-col gap-[18px]">
-                <div className="carte-board">{bascule}</div>
-                <div id={PANNEAU} role="tabpanel" aria-label="Suivi" className="flex flex-col gap-[18px]">
-                {/* Les cartes d'action lisent `attente`, comme la pastille : rien
+                <div id={PANNEAU} role="tabpanel" aria-label="Suivi" className="flex flex-col">
+                {/* Les sections d'action lisent `attente`, comme la pastille : rien
                     en lecture seule (2026-11-21) — l'état reste dit par la
                     pastille d'en-tête et par l'historique. */}
                 {attente === "proposition" && enAttente && (
@@ -436,7 +455,11 @@ export default async function PlanPreventionDetailPage({
                   ouvrirSigner={openSign === "1"}
                 />
 
-                <SignaturesSansPartie signatures={signatures.sansPartie} />
+                {signatures.sansPartie.length > 0 && (
+                  <div className="px-6 pb-7 md:px-10">
+                    <SignaturesSansPartie signatures={signatures.sansPartie} />
+                  </div>
+                )}
 
                 <HistoriquePlan
                   etablissementId={id}
@@ -450,31 +473,19 @@ export default async function PlanPreventionDetailPage({
                   })}
                 />
                 </div>
-              </div>
             ) : (
-              <div className="flex flex-col gap-[18px]">
-                {attente === "proposition" && enAttente && <RappelProposition proposition={enAttente} plan={plan} suiviHref={suivi} />}
-                {attente === "correction" && <RappelCorrection raisonEE={plan.entrepriseExterieureRaison} suiviHref={suivi} />}
-
-                {/* Supprimer reste avec les autres gestes du plan ; « Télécharger
-                    le PDF » est sur la bascule. */}
-                <div className="flex flex-wrap justify-end gap-2.5">
-                  {!fige && (
-                    <Link data-ecriture href={modifier} className={PILULE_FICHE}>
-                      Modifier
-                    </Link>
-                  )}
-                  {(plan.statut === "valide" || plan.statut === "attente_signatures") && (
-                    <BoutonCloturer planId={plan.id} entete />
-                  )}
-                  <BoutonSupprimerPlan planId={plan.id} entete />
-                </div>
-
-                {/* LE PLAN, D'UN SEUL TENANT (maquette V3), sous la bascule
-                    (« Switch A ») : une seule carte. */}
-                <div className="carte-board">
-                {bascule}
                 <article id={PANNEAU} role="tabpanel" aria-label="Le plan" className="px-6 pb-4 pt-1 md:px-10">
+                  {/* Les rappels, au-dessus du contenu, dans le bloc. */}
+                  {(attente === "proposition" || attente === "correction") && (
+                    <div className="flex flex-col gap-3 pt-5">
+                      {attente === "proposition" && enAttente && (
+                        <RappelProposition proposition={enAttente} plan={plan} suiviHref={suivi} />
+                      )}
+                      {attente === "correction" && (
+                        <RappelCorrection raisonEE={plan.entrepriseExterieureRaison} suiviHref={suivi} />
+                      )}
+                    </div>
+                  )}
                   <Section titre="Les parties">
                     <Faits>
                       <Fait cle="Entreprise utilisatrice">
@@ -785,9 +796,8 @@ export default async function PlanPreventionDetailPage({
                     </details>
                   </Section>
                 </article>
-                </div>
-              </div>
             )}
+            </div>
           </AnnonceFiche>
         </div>
       </div>
