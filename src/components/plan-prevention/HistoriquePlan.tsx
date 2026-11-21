@@ -12,8 +12,9 @@ import { formaterHeureFr } from "@/lib/dates";
  * (`historiqueDuPlan`), rien n'est écrit ici.
  *
  * ~~Dans une fenêtre, ouverte par un bouton « Historique »~~ [2026-11-21,
- * maquette V3 validée : une section de l'onglet « Suivi », « Ce qui s'est
- * passé » ; plus de bouton ni de fenêtre].
+ * maquette V3 validée : une section de l'onglet « Suivi », ~~« Ce qui s'est
+ * passé »~~ « Historique » (maquette « Bloc Suivi »), repliée ; plus de bouton
+ * ni de fenêtre].
  */
 
 const PASTILLE: Record<TonHistorique, string> = {
@@ -57,7 +58,7 @@ export function HistoriquePlan({
   return (
     <CarteRepliable
       id="historique"
-      titre="Ce qui s'est passé"
+      titre="Historique"
       compte={`${n} événement${n > 1 ? "s" : ""}`}
       ouverte={false}
       // Une section de la carte unique de la fiche (2026-11-21).

@@ -129,3 +129,50 @@ export function bandeauDeLaProposition(plan: PlanComparable, p: Proposition): Ba
     supprimes: e.supprimees.length,
   };
 }
+
+/**
+ * Le bandeau mis en tableau (2026-11-21, maquette « Bloc Suivi » validée) :
+ * une ligne par écart — « Ce qui change », « Aujourd'hui », « Proposé ».
+ * Lu sur le bandeau, pas recalculé : un champ de la fiche, chaque champ
+ * changé d'un risque modifié, un risque ajouté, un risque supprimé. Les
+ * risques inchangés n'y sont pas.
+ */
+export type LigneEcart = {
+  cle: string;
+  quoi: string;
+  /** Vide : rien aujourd'hui (risque ajouté). */
+  avant: string;
+  /** « Supprimé » pour un risque qui disparaîtrait. */
+  apres: string;
+  genre: "modifie" | "ajoute" | "supprime";
+};
+
+const CHAMPS_RISQUE = [
+  ["risque", "intitulé"],
+  ["famille", "famille"],
+  ["lieu", "lieu"],
+  ["frequence", "fréquence"],
+  ["eu", "votre mesure"],
+  ["ee", "sa mesure"],
+] as const;
+
+export function lignesDEcart(b: Bandeau): LigneEcart[] {
+  const out: LigneEcart[] = [];
+  for (const l of b.lignes) {
+    if (l.type === "fiche") {
+      out.push({ cle: l.cle, quoi: l.libelle, avant: l.avant, apres: l.apres, genre: "modifie" });
+    } else if (l.type === "modifie") {
+      for (const [champ, libelle] of CHAMPS_RISQUE) {
+        const c = l.changements[champ];
+        if (c) {
+          out.push({ cle: `${l.cle}-${champ}`, quoi: `Risque ${l.numero} · ${libelle}`, avant: c.avant, apres: c.apres, genre: "modifie" });
+        }
+      }
+    } else if (l.type === "ajoute") {
+      out.push({ cle: l.cle, quoi: "Risque ajouté", avant: "", apres: l.risque, genre: "ajoute" });
+    } else if (l.type === "supprime") {
+      out.push({ cle: l.cle, quoi: "Risque supprimé", avant: l.risque, apres: "Supprimé", genre: "supprime" });
+    }
+  }
+  return out;
+}

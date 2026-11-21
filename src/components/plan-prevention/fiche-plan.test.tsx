@@ -120,17 +120,18 @@ describe("la fiche du plan", () => {
     expect(lu).toContain("Brouillon");
     // Sa signature à poser : l'onglet « Suivi » le compte.
     expect(lu).toContain("Le plan Suivi 1");
-    expect(lu).toContain("Action requise Votre signature est attendue");
+    expect(lu).toContain("À signer Votre signature est attendue");
     expect(lu).toContain("Signatures · 0 sur 2");
     expect(lu).toContain("Signer et envoyer à l'entreprise extérieure");
     expect(lu).toContain("Faire signer un collègue");
     expect(lu).not.toContain("Cycle de vie");
     // L'historique est dans l'onglet ; plus de bouton ni de fenêtre.
-    expect(lu).toContain("Ce qui s'est passé");
-    expect(lu).not.toMatch(/\bHistorique\b/);
+    expect(lu).toContain("Historique");
+    // Une seule section « Historique », repliée ; pas de bouton qui ouvre une fenêtre.
+    expect(lu.match(/\bHistorique\b/g) ?? []).toHaveLength(1);
   });
 
-  it("« Ce qui s'est passé » : repliée, fermée par défaut, avec le nombre d'événements ; le contenu est là", async () => {
+  it("« Historique » : repliée, fermée par défaut, avec le nombre d'événements ; le contenu est là", async () => {
     planCourant.valeur = plan({ createdAt: new Date("2026-11-18T09:05:00Z"), liens: [lienEE] });
     const { default: Page } = await import("@/app/etablissements/[id]/plan-prevention/[planId]/page");
     const html = renderToStaticMarkup(
@@ -141,7 +142,7 @@ describe("la fiche du plan", () => {
     const balise = html.slice(debut, html.indexOf(">", debut));
     expect(balise).not.toContain("open");
     const details = html.slice(debut, html.indexOf("</details>", debut));
-    expect(details).toMatch(/<summary[^>]*>[\s\S]*Ce qui s&#x27;est passé[\s\S]*3 événements[\s\S]*<\/summary>/);
+    expect(details).toMatch(/<summary[^>]*>[\s\S]*Historique[\s\S]*3 événements[\s\S]*<\/summary>/);
     expect(details).toContain("Plan créé");
     // La carte « Signatures » n'est pas repliée.
     expect(html.slice(0, debut)).toContain('id="signatures-titre"');
@@ -197,8 +198,8 @@ describe("la fiche du plan", () => {
 
   it("Suivi, dans le même bloc : action requise en tête, signatures, puis l'historique — des sections, pas des cartes", async () => {
     const lu = await rendre(plan());
-    expect(lu.indexOf("Action requise")).toBeLessThan(lu.indexOf("Signatures · 0 sur 2"));
-    expect(lu.indexOf("Signatures · 0 sur 2")).toBeLessThan(lu.indexOf("Ce qui s'est passé"));
+    expect(lu.indexOf("Votre signature est attendue")).toBeLessThan(lu.indexOf("Signatures · 0 sur 2"));
+    expect(lu.indexOf("Signatures · 0 sur 2")).toBeLessThan(lu.indexOf("Historique"));
     planCourant.valeur = plan();
     const { default: Page } = await import("@/app/etablissements/[id]/plan-prevention/[planId]/page");
     const html = renderToStaticMarkup(
@@ -312,10 +313,13 @@ describe("la fiche du plan", () => {
     expect(lu).toContain("Modification proposée");
     expect(lu).not.toContain("En attente de signatures");
     expect(lu).toContain("Le plan Suivi 1");
-    expect(lu).toContain("Action requise · reçue le 19/11 à 15 h 35");
+    expect(lu).toContain("À décider reçue le 19/11 à 15 h 35");
+    // Les écarts en tableau : ce qui change, aujourd'hui, proposé.
+    expect(lu).toContain("Ce qui change Aujourd'hui Proposé Effectif qui interviendra 1 2");
+    expect(lu).toContain("Le plan ne se signe plus tant que vous n'avez pas répondu.");
     expect(lu).toContain("Nettoyage Pro SARL propose 1 modification");
     expect(lu).toContain("Paul Testeur, depuis son lien.");
-    expect(lu).toMatch(/Refuser.*Corriger.*Accepter sans modifier/);
+    expect(lu).toMatch(/Refuser.*Corriger.*Accepter\b/);
     // Le lien de l'entreprise extérieure attend la décision.
     expect(lu).toContain("En pause");
     expect(lu).toContain("signera après votre décision");
@@ -343,8 +347,8 @@ describe("la fiche du plan", () => {
       }),
       {},
     );
-    expect(lu).toContain("Nettoyage Pro SARL a proposé 1 modification le 19/11 à 15 h 35.");
-    expect(lu).toContain("Voir et décider →");
+    expect(lu).toContain("Nettoyage Pro SARL propose 1 modification. Le plan ne se signe plus avant votre réponse.");
+    expect(lu).toContain("Décider dans Suivi");
     expect(lu).not.toMatch(/Refuser.*Corriger/);
   });
 
@@ -390,8 +394,8 @@ describe("la fiche du plan", () => {
       }),
       {},
     );
-    expect(lu).toContain("Correction en cours : la proposition de Nettoyage Pro SARL est reprise dans le plan.");
-    expect(lu).toContain("Terminer la correction et signer →");
+    expect(lu).toContain("Correction en cours. La proposition de Nettoyage Pro SARL est reprise dans le plan");
+    expect(lu).toContain("Terminer dans Suivi");
   });
 
   it("votre signature posée, aucun lien parti : la carte « envoyer le lien », comptée sur « Suivi »", async () => {
@@ -426,8 +430,8 @@ describe("la fiche du plan", () => {
       const lu = await rendre(plan({ lectureSeule: true, liens: [lienEE], propositionEnAttente: proposition }), query);
       // L'état reste dit, par la pastille d'en-tête.
       expect(lu).toContain("Modification proposée");
-      expect(lu).not.toContain("Action requise");
-      expect(lu).not.toContain("Voir et décider");
+      expect(lu).not.toContain("À décider");
+      expect(lu).not.toContain("Décider dans Suivi");
     }
     const correction = await rendre(
       plan({

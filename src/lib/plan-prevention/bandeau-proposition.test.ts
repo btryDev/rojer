@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bandeauDeLaProposition } from "./bandeau-proposition";
+import { bandeauDeLaProposition, lignesDEcart } from "./bandeau-proposition";
 import type { PlanComparable, Proposition } from "./proposition";
 
 const plan: PlanComparable = {
@@ -47,5 +47,14 @@ describe("le bandeau d'une proposition", () => {
 
   it("compte : fiche et risques modifiés, ajoutés, à supprimer", () => {
     expect([b.modifies, b.ajoutes, b.supprimes]).toEqual([2, 1, 1]);
+  });
+
+  it("en tableau : une ligne par écart, l'inchangé omis (2026-11-21)", () => {
+    expect(lignesDEcart(b)).toEqual([
+      { cle: "fiche-efChefNom", quoi: expect.any(String), avant: "Jean Testeur", apres: "Paul Testeur", genre: "modifie" },
+      { cle: "l2-ee", quoi: "Risque 2 · sa mesure", avant: "Panneaux", apres: "Panneaux et balisage", genre: "modifie" },
+      { cle: "ajout-2", quoi: "Risque ajouté", avant: "", apres: "Produits corrosifs", genre: "ajoute" },
+      { cle: "suppr-l3", quoi: "Risque supprimé", avant: "Bruit de la hotte", apres: "Supprimé", genre: "supprime" },
+    ]);
   });
 });

@@ -83,7 +83,7 @@ export function OngletsPage({
         {/* Sur téléphone, sous les onglets, sur toute la largeur ; à droite
             sur la même ligne au-delà (2026-11-21). */}
         {droite && (
-          <div className="flex w-full flex-wrap items-center gap-2 pb-3.5 md:ml-auto md:w-auto md:justify-end">{droite}</div>
+          <div className="flex w-full flex-wrap items-center gap-x-5 gap-y-1 pb-3 md:ml-auto md:w-auto md:justify-end">{droite}</div>
         )}
       </div>
     );

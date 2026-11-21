@@ -1,11 +1,13 @@
 /**
- * Les gestes de la fiche du plan (maquette V2) : pilules blanches. Hors du
- * module client des boutons (`PlanActionsButtons`) : la page, rendue au
- * serveur, les lit aussi — une constante exportée d'un module `"use client"`
- * n'y arrive pas comme une chaîne.
+ * Les gestes de la fiche du plan, sur la ligne des onglets. ~~Pilules
+ * blanches (maquette V2)~~ [2026-11-21, maquette « Bloc Suivi / Bloc Plan »
+ * validée : des liens texte, sans fond ; le PDF en bleu, « Supprimer » en
+ * encre rouge (`PlanActionsButtons`)]. Hors du module client des boutons :
+ * la page, rendue au serveur, les lit aussi — une constante exportée d'un
+ * module `"use client"` n'y arrive pas comme une chaîne.
  */
-export const PILULE_FICHE =
-  "inline-flex min-h-11 items-center rounded-full border border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[18px] text-[14px] font-normal normal-case tracking-normal text-[color:var(--board-ink)] transition-colors hover:bg-[color:var(--board-slate-pale)] disabled:opacity-60";
+export const GESTE_FICHE =
+  "inline-flex h-auto min-h-10 items-center rounded-full border-0 bg-transparent px-1 text-[13.5px] font-normal normal-case tracking-normal text-[color:var(--board-slate-ink)] shadow-none ring-0 underline-offset-4 transition-colors hover:bg-transparent hover:underline disabled:opacity-60";
 
 /**
  * Une section de l'onglet « Suivi » (2026-11-21, « toujours le même bloc ») :

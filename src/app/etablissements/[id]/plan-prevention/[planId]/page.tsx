@@ -22,7 +22,8 @@ import { statutPlanSignable } from "@/lib/signatures/etat-signable";
 import { INSPECTION_SUR_PLAN_SIGNE } from "@/lib/signatures/verrou-contenu";
 import { LIBELLE_METHODE_COURT } from "@/lib/signatures/methode";
 import { BoutonCloturer, BoutonSupprimerPlan } from "@/components/plan-prevention/PlanActionsButtons";
-import { PILULE_FICHE } from "@/components/plan-prevention/classes-fiche";
+import { GESTE_FICHE } from "@/components/plan-prevention/classes-fiche";
+import { cn } from "@/lib/utils";
 import { getPlanPrevention } from "@/lib/plan-prevention/queries";
 import { etatAffichePlan } from "@/lib/plan-prevention/etats";
 import {
@@ -305,11 +306,11 @@ export default async function PlanPreventionDetailPage({
       droite={
         <>
           {!fige && (
-            <Link data-ecriture href={modifier} className={PILULE_FICHE}>
+            <Link data-ecriture href={modifier} className={GESTE_FICHE}>
               Modifier
             </Link>
           )}
-          <a href={`/api/etablissements/${id}/plan-prevention/${plan.id}/pdf`} className={PILULE_FICHE}>
+          <a href={`/api/etablissements/${id}/plan-prevention/${plan.id}/pdf`} className={cn(GESTE_FICHE, "text-[color:var(--board-blue-ink)]")}>
             Télécharger le PDF
           </a>
           {(plan.statut === "valide" || plan.statut === "attente_signatures") && (
