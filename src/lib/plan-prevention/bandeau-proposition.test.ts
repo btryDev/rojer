@@ -7,11 +7,13 @@ const plan: PlanComparable = {
   entrepriseExterieureSiret: null,
   efChefNom: "Jean Testeur",
   efEffectifIntervenant: 1,
+  entrepriseExterieureAdresse: null,
+  efChefTelephone: null,
   lignes: [
     { id: "l1", risque: "Graisses chaudes", mesureEntrepriseUtilisatrice: "Hors service", mesureEntrepriseExterieure: "Gants" },
     { id: "l2", risque: "Sol glissant", mesureEntrepriseUtilisatrice: "Zone balisée", mesureEntrepriseExterieure: "Panneaux" },
     { id: "l3", risque: "Bruit de la hotte", mesureEntrepriseUtilisatrice: null, mesureEntrepriseExterieure: null },
-  ],
+  ].map((l) => ({ ...l, famille: null, lieu: null, frequence: null })),
 };
 
 const proposition: Proposition = {

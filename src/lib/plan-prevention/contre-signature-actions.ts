@@ -10,7 +10,7 @@ import { revoquerLiensEnVol } from "@/lib/access-tokens/revocation";
 import { statutPlanSignable } from "@/lib/signatures/etat-signable";
 import { compterSignatures, MOTIF_CONTENU_MODIFIE, verrouillerObjetSigne } from "@/lib/signatures/verrou-contenu";
 import { calculerHashObjet, versionDeHash } from "@/lib/signatures/hash-objet";
-import { lireProposition } from "./proposition";
+import { famillesAAppliquer, lireProposition } from "./proposition";
 import {
   avertirDecision,
   avertirSignaturesRetirees,
@@ -132,7 +132,7 @@ export async function traiterProposition(
     if (!p) return { ok: false as const, message: "Cette proposition a déjà été traitée." };
     const plan = await tx.planPrevention.findFirst({
       where: { id: planId, etablissementId },
-      select: { statut: true, lignes: { select: { id: true } } },
+      select: { statut: true, lignes: { select: { id: true, famille: true } } },
     });
     // L'avis de décision va à qui a proposé : l'adresse de SON lien, qui a pu
     // différer de celle de la fiche.
@@ -188,6 +188,8 @@ export async function traiterProposition(
       };
     }
     const { fiche, lignes } = lecture.proposition;
+    // La famille proposée ; absente (proposition d'avant le 2026-11-21), celle du plan.
+    const familles = famillesAAppliquer(plan.lignes, lignes);
     // Accepter révoque les signatures déjà posées (ADR-061, revue de sécurité
     // du 2026-11-19) : elles portaient sur le plan d'avant la proposition.
     const retirees = await retirerSignaturesDuPlan(tx, {
@@ -202,6 +204,10 @@ export async function traiterProposition(
         entrepriseExterieureSiret: fiche.entrepriseExterieureSiret,
         efChefNom: fiche.efChefNom,
         efEffectifIntervenant: fiche.efEffectifIntervenant,
+        // Absentes d'une proposition d'avant le 2026-11-21 : `undefined`, que
+        // Prisma n'écrit pas — le plan garde ce qu'il porte.
+        entrepriseExterieureAdresse: fiche.entrepriseExterieureAdresse,
+        efChefTelephone: fiche.efChefTelephone,
         // Remplacées en bloc, dans l'ordre proposé — comme « Modifier ».
         lignes: {
           deleteMany: {},
@@ -211,6 +217,9 @@ export async function traiterProposition(
             risque: l.risque,
             mesureEntrepriseUtilisatrice: l.mesureEntrepriseUtilisatrice,
             mesureEntrepriseExterieure: l.mesureEntrepriseExterieure,
+            famille: familles[ordre],
+            lieu: l.lieu ?? null,
+            frequence: l.frequence ?? null,
           })),
         },
       },

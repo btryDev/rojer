@@ -37,6 +37,7 @@ import { construirePlanPreventionData } from "@/lib/pdf/builder-plan-prevention"
 import { nomFichierPlanPrevention } from "@/lib/pdf/PlanPreventionDocument";
 import { slugifyFilename } from "@/lib/pdf/styles";
 import { contenuR4512_8 } from "@/lib/plan-prevention/contenu-r4512-8";
+import { complementsRemplis, precisionsLigne } from "@/lib/plan-prevention/complements";
 import { etatAffichePlan } from "@/lib/plan-prevention/etats";
 import { lienOuSignatureParPlan } from "@/lib/plan-prevention/queries";
 import { annoncesZip, ligneHeuresRevisees } from "@/lib/plan-prevention/annonces-plan";
@@ -613,9 +614,11 @@ async function construireArchive(
       ...plansList.flatMap((p) => [
         `PP-${String(p.numero).padStart(3, "0")} · ${etatAffichePlan(p.statut, avecLien.has(p.id)).mot.toUpperCase()}`,
         `  Entreprise extérieure : ${p.entrepriseExterieureRaison}`,
-        `  Chef EE : ${p.efChefNom} (${p.efChefEmail})`,
+        `  Chef EE : ${p.efChefNom} (${p.efChefEmail}${p.efChefTelephone ? `, ${p.efChefTelephone}` : ""})`,
+        // Repris de RiskBoard (2026-11-21) : seulement ce qui est rempli.
+        ...(p.entrepriseExterieureAdresse ? [`  Adresse EE : ${p.entrepriseExterieureAdresse}`] : []),
         `  Effectif EE : ${p.efEffectifIntervenant}`,
-        `  Chef EU : ${p.euChefNom}${p.euChefFonction ? ` (${p.euChefFonction})` : ""}`,
+        `  Chef EU : ${p.euChefNom}${p.euChefFonction ? ` (${p.euChefFonction})` : ""}${p.euChefTelephone ? ` · ${p.euChefTelephone}` : ""}`,
         `  Période : ${formaterDateFr(p.dateDebut)} → ${formaterDateFr(p.dateFin)}${p.dureeHeuresEstimee ? ` · ${p.dureeHeuresEstimee} h` : ""}`,
         // R. 4512-7, 1°, seconde phrase (2026-10-12) : la révision notée en
         // cours de chantier, dans les mots de la fiche.
@@ -636,6 +639,7 @@ async function construireArchive(
         ...p.lignes.map(
           (l, i) =>
             `    ${i + 1}. ${l.risque}\n` +
+            precisionsLigne(l).map((x) => `       ${x}\n`).join("") +
             `       → EU : ${l.mesureEntrepriseUtilisatrice ?? "—"}\n` +
             `       → EE : ${l.mesureEntrepriseExterieure ?? "—"}`,
         ),
@@ -647,6 +651,9 @@ async function construireArchive(
         // ZIP est un inspecteur, un assureur ou un acquéreur, et une omission
         // silencieuse lui ferait lire un plan complet.
         ...contenuR4512_8(p),
+        // Les compléments repris de RiskBoard, hors du minimum de R. 4512-8 :
+        // remplis seulement, rien n'est signalé s'ils manquent.
+        ...complementsRemplis(p).map((x) => `  ${x.libelle} : ${x.texte}`),
         // R. 4512-12, sous sa propre condition — écrit obligatoire au sens de
         // R. 4512-7 — ou quand la durée manque et que Rojer ne peut pas dire
         // qu'il ne l'est pas. Le même diagnostic que la fiche, appelé dans le

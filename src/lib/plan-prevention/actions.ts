@@ -63,6 +63,9 @@ function extraireLignes(formData: FormData): LigneInput[] {
       mesureEntrepriseExterieure: formData.get(
         `lignes[${i}].mesureEntrepriseExterieure`,
       ),
+      famille: formData.get(`lignes[${i}].famille`),
+      lieu: formData.get(`lignes[${i}].lieu`),
+      frequence: formData.get(`lignes[${i}].frequence`),
     });
     if (ligne.success) {
       // On ne garde que les lignes au moins partiellement renseignées.
@@ -125,8 +128,11 @@ function lirePlanPrevention(formData: FormData) {
     efChefNom: formData.get("efChefNom"),
     efChefEmail: formData.get("efChefEmail"),
     efEffectifIntervenant: formData.get("efEffectifIntervenant"),
+    entrepriseExterieureAdresse: formData.get("entrepriseExterieureAdresse"),
+    efChefTelephone: formData.get("efChefTelephone"),
     euChefNom: formData.get("euChefNom"),
     euChefFonction: formData.get("euChefFonction"),
+    euChefTelephone: formData.get("euChefTelephone"),
     dateDebut: formData.get("dateDebut"),
     dateFin: formData.get("dateFin"),
     dureeHeuresEstimee: formData.get("dureeHeuresEstimee"),
@@ -134,8 +140,10 @@ function lirePlanPrevention(formData: FormData) {
     batimentId: formData.get("batimentId"),
     naturesTravaux: formData.get("naturesTravaux"),
     travauxDangereux: formData.get("travauxDangereux") === "on",
+    horaires: formData.get("horaires"),
     inspectionDate: formData.get("inspectionDate"),
     inspectionParticipants: formData.get("inspectionParticipants"),
+    cseAssocie: formData.get("cseAssocie"),
     lignes: extraireLignes(formData),
     // Les cinq rubriques de `R. 4512-8` — cf. `contenu-r4512-8.ts`.
     phases: extrairePhases(formData),
@@ -143,6 +151,9 @@ function lirePlanPrevention(formData: FormData) {
     instructionsTravailleurs: formData.get("instructionsTravailleurs"),
     organisationSecours: formData.get("organisationSecours"),
     participationCroisee: formData.get("participationCroisee"),
+    qualificationsRequises: formData.get("qualificationsRequises"),
+    moyensFournis: formData.get("moyensFournis"),
+    autresObservations: formData.get("autresObservations"),
   });
 }
 
@@ -155,20 +166,28 @@ function colonnesPlan(d: PlanPreventionInput) {
     efChefNom: d.efChefNom,
     efChefEmail: d.efChefEmail,
     efEffectifIntervenant: d.efEffectifIntervenant,
+    entrepriseExterieureAdresse: d.entrepriseExterieureAdresse ?? null,
+    efChefTelephone: d.efChefTelephone ?? null,
     euChefNom: d.euChefNom,
     euChefFonction: d.euChefFonction ?? null,
+    euChefTelephone: d.euChefTelephone ?? null,
     dateDebut: d.dateDebut,
     dateFin: d.dateFin,
     dureeHeuresEstimee: d.dureeHeuresEstimee ?? null,
     lieux: d.lieux,
     naturesTravaux: d.naturesTravaux,
     travauxDangereux: d.travauxDangereux,
+    horaires: d.horaires ?? null,
     inspectionDate: d.inspectionDate ?? null,
     inspectionParticipants: d.inspectionParticipants ?? null,
+    cseAssocie: d.cseAssocie ?? null,
     adaptationMateriels: d.adaptationMateriels ?? null,
     instructionsTravailleurs: d.instructionsTravailleurs ?? null,
     organisationSecours: d.organisationSecours ?? null,
     participationCroisee: d.participationCroisee ?? null,
+    qualificationsRequises: d.qualificationsRequises ?? null,
+    moyensFournis: d.moyensFournis ?? null,
+    autresObservations: d.autresObservations ?? null,
   };
 }
 
@@ -187,6 +206,9 @@ const lignesACreer = (d: PlanPreventionInput) =>
     risque: l.risque,
     mesureEntrepriseUtilisatrice: l.mesureEntrepriseUtilisatrice,
     mesureEntrepriseExterieure: l.mesureEntrepriseExterieure,
+    famille: l.famille ?? null,
+    lieu: l.lieu ?? null,
+    frequence: l.frequence ?? null,
   }));
 
 const PRESTATAIRE_INTROUVABLE: PlanActionState = {

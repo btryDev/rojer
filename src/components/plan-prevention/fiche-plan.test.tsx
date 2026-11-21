@@ -192,4 +192,59 @@ describe("la fiche du plan", () => {
     expect(lu).toContain("2 signatures sur 2");
     expect(lu).toContain("Les deux parties ont signé ce plan.");
   });
+
+  it("les champs repris de RiskBoard : seulement ce qui est rempli (2026-11-21)", async () => {
+    const vide = await rendre(
+      plan({
+        entrepriseExterieureAdresse: null,
+        efChefTelephone: null,
+        euChefTelephone: null,
+        horaires: null,
+        cseAssocie: null,
+        qualificationsRequises: null,
+        moyensFournis: null,
+        autresObservations: null,
+      }),
+    );
+    expect(vide).not.toContain("Compléments");
+    expect(vide).not.toContain("CSE associé");
+    expect(vide).not.toContain("Horaires de travail");
+
+    const rempli = await rendre(
+      plan({
+        entrepriseExterieureAdresse: "12 rue des Artisans, Lyon",
+        efChefTelephone: "06 00 00 00 00",
+        euChefTelephone: "04 00 00 00 00",
+        horaires: "8 h – 17 h",
+        cseAssocie: false,
+        qualificationsRequises: "Habilitation B1V",
+        moyensFournis: null,
+        autresObservations: "Accès par la cour",
+        lignes: [
+          {
+            id: "l1",
+            risque: "Chutes en hauteur",
+            mesureEntrepriseUtilisatrice: null,
+            mesureEntrepriseExterieure: null,
+            famille: "CHUTES_HAUTEUR",
+            lieu: "Toiture",
+            frequence: "Chaque matin",
+          },
+        ],
+      }),
+    );
+    expect(rempli).toContain("12 rue des Artisans, Lyon");
+    expect(rempli).toContain("06 00 00 00 00");
+    expect(rempli).toContain("04 00 00 00 00");
+    expect(rempli).toContain("Horaires de travail 8 h – 17 h");
+    expect(rempli).toContain("CSE associé à l'opération : Non");
+    expect(rempli).toContain("Compléments");
+    expect(rempli).toContain("Habilitation B1V");
+    expect(rempli).toContain("Accès par la cour");
+    expect(rempli).not.toContain("Moyens matériels mis à disposition");
+    expect(rempli).toContain("Lieu : Toiture");
+    expect(rempli).toContain("Fréquence : Chaque matin");
+    // Le risque prérempli par la famille ne la répète pas.
+    expect(rempli).not.toContain("Famille : Chutes en hauteur");
+  });
 });

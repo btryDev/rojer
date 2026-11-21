@@ -26,6 +26,7 @@ import {
   texteRubrique,
 } from "@/lib/plan-prevention/contenu-r4512-8";
 import { ligneHeuresRevisees } from "@/lib/plan-prevention/annonces-plan";
+import { complementsParPlace, precisionsLigne } from "@/lib/plan-prevention/complements";
 import { LABEL_NATURE } from "@/lib/permis-feu/schema";
 import { mesureParId, surListeAnterieure } from "@/lib/permis-feu/referentiel";
 import type { PartieSignataire } from "@prisma/client";
@@ -179,6 +180,8 @@ export default async function AccesParTokenPage({
               entrepriseExterieureSiret: contenu.entrepriseExterieureSiret,
               efChefNom: contenu.efChefNom,
               efEffectifIntervenant: contenu.efEffectifIntervenant,
+              entrepriseExterieureAdresse: contenu.entrepriseExterieureAdresse,
+              efChefTelephone: contenu.efChefTelephone,
             },
             lignes: contenu.lignes,
           }
@@ -523,6 +526,7 @@ function faitsPlan(c: ContenuPlanASigner, raisonSocialeEU: string, partie: Parti
         <span className={CLASSE_PRECISION}>
           {c.euChefNom}
           {c.euChefFonction ? `, ${c.euChefFonction}` : ""}
+          {c.euChefTelephone ? ` · ${c.euChefTelephone}` : ""}
         </span>
       </Fait>
       <Fait cle="Entreprise extérieure">
@@ -530,7 +534,11 @@ function faitsPlan(c: ContenuPlanASigner, raisonSocialeEU: string, partie: Parti
         {partie === "entreprise_exterieure" && vous()}
         <span className={CLASSE_PRECISION}>
           {c.efChefNom}
+          {c.efChefTelephone ? ` · ${c.efChefTelephone}` : ""}
           {c.entrepriseExterieureSiret ? ` · SIRET ${c.entrepriseExterieureSiret}` : ""}
+          {c.entrepriseExterieureAdresse ? (
+            <span className="block">{c.entrepriseExterieureAdresse}</span>
+          ) : null}
         </span>
       </Fait>
       <Fait cle="Lieu d'intervention">{c.lieux}</Fait>
@@ -561,7 +569,21 @@ function faitsPlan(c: ContenuPlanASigner, raisonSocialeEU: string, partie: Parti
           ? " — travaux figurant sur la liste dangereuse (arrêté du 19 mars 1993)"
           : ""}
       </Fait>
+      {/* Repris de RiskBoard (2026-11-21) : seulement ce qui est rempli. */}
+      {faitsComplements(c)}
     </dl>
+  );
+}
+
+/** Les compléments remplis : horaires et CSE en court, les textes longs en large. */
+function faitsComplements(c: ContenuPlanASigner) {
+  const { horaires, cse, autres } = complementsParPlace(c);
+  return [horaires, cse, ...autres].map((x) =>
+    x ? (
+      <Fait key={x.cle} cle={x.libelle} large={x !== horaires && x !== cse}>
+        {x.texte}
+      </Fait>
+    ) : null,
   );
 }
 
@@ -589,6 +611,11 @@ function sectionsPlan(c: ContenuPlanASigner) {
                 </span>
                 <div className="min-w-0 text-[14px] text-[color:var(--board-ink)]">
                   <p className="m-0 font-semibold whitespace-pre-wrap">{l.risque}</p>
+                  {precisionsLigne(l).map((x) => (
+                    <p key={x} className="m-0 mt-0.5 text-[13px] text-[color:var(--board-slate-mid)]">
+                      {x}
+                    </p>
+                  ))}
                   <p className="m-0 mt-1 whitespace-pre-wrap text-[13px] text-[color:var(--board-slate-mid)]">
                     Entreprise utilisatrice : {l.mesureEntrepriseUtilisatrice || "—"}
                   </p>

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ligneSchema } from "./schema";
+import { CODES_FAMILLE_RISQUE } from "./familles-risque";
 
 /**
  * La proposition de modification d'une entreprise extérieure (ADR-061 § 3).
@@ -19,10 +20,21 @@ import { ligneSchema } from "./schema";
  */
 
 export const LIGNES_MAX = 50;
-/** Longueur maximale du JSON reçu : 50 lignes de 3 × 500 caractères y tiennent. */
-export const PROPOSITION_TAILLE_MAX = 100_000;
+/**
+ * Longueur maximale du JSON reçu : 50 lignes de 3 × 500 caractères, plus le
+ * lieu et la fréquence de chacune (2 × 200, 2026-11-21), et la fiche, y
+ * tiennent avec les clés et l'échappement.
+ */
+export const PROPOSITION_TAILLE_MAX = 130_000;
 
 const SIRET_FMT = /^\d{14}$/;
+
+/** Absent : la clé n'était pas proposée ; vide : `null` ; sinon le texte. */
+const texteFacultatif = (max: number) =>
+  z.preprocess(
+    (v) => (typeof v === "string" ? v.trim() || null : v),
+    z.string().max(max).nullable().optional(),
+  );
 
 export const propositionSchema = z.object({
   fiche: z.object({
@@ -33,11 +45,25 @@ export const propositionSchema = z.object({
     ),
     efChefNom: z.string().trim().min(1, "Nom du chef d'entreprise requis").max(200),
     efEffectifIntervenant: z.coerce.number().int().min(1).max(9999),
+    // Repris de RiskBoard (2026-11-21). FACULTATIFS DANS LA FORME : une
+    // proposition enregistrée avant ce lot ne les porte pas, et doit encore se
+    // lire et s'appliquer — une clé absente ne change rien au plan
+    // (`ecartsDeLaProposition`, `traiterProposition`). Vide : `null`.
+    entrepriseExterieureAdresse: texteFacultatif(500),
+    efChefTelephone: texteFacultatif(30),
   }),
   lignes: z
     .array(
-      ligneSchema.extend({
+      // LA FAMILLE SE PROPOSE (2026-11-21, alignement sur RiskBoard,
+      // `proposedRiskSchema`) : validée par la liste, `null` pour « sans
+      // famille ». Absente — une proposition d'avant ce lot —, la ligne garde
+      // la famille du plan (`famillesAAppliquer`).
+      ligneSchema.omit({ famille: true }).extend({
         id: z.string().min(1).max(60).optional(),
+        famille: z.preprocess(
+          (v) => (typeof v === "string" ? v.trim() || null : v),
+          z.enum(CODES_FAMILLE_RISQUE, { error: "Famille de risque inconnue" }).nullable().optional(),
+        ),
       }),
     )
     .min(1, "Gardez au moins un risque identifié")
@@ -46,16 +72,27 @@ export const propositionSchema = z.object({
 
 export type Proposition = z.infer<typeof propositionSchema>;
 
+/**
+ * Le plan auquel une proposition se compare. Les champs repris de RiskBoard
+ * (2026-11-21) y sont REQUIS, pas facultatifs : un appelant qui oublierait de
+ * les lire comparerait la proposition à `undefined`, et une proposition qui
+ * ne change rien passerait pour un écart.
+ */
 export type PlanComparable = {
   entrepriseExterieureRaison: string;
   entrepriseExterieureSiret: string | null;
   efChefNom: string;
   efEffectifIntervenant: number;
+  entrepriseExterieureAdresse: string | null;
+  efChefTelephone: string | null;
   lignes: {
     id: string;
     risque: string;
     mesureEntrepriseUtilisatrice: string | null;
     mesureEntrepriseExterieure: string | null;
+    famille: string | null;
+    lieu: string | null;
+    frequence: string | null;
   }[];
 };
 
@@ -109,12 +146,17 @@ const LIBELLE_CHAMP: Record<keyof Proposition["fiche"], string> = {
   entrepriseExterieureSiret: "SIRET",
   efChefNom: "Chef de l'entreprise extérieure",
   efEffectifIntervenant: "Effectif qui interviendra",
+  entrepriseExterieureAdresse: "Adresse",
+  efChefTelephone: "Téléphone du chef de l'entreprise extérieure",
 };
 
 /** Ce que la proposition change au plan, pour le bandeau du dirigeant. */
 export function ecartsDeLaProposition(plan: PlanComparable, p: Proposition): Ecarts {
   const fiche: ChangementFiche[] = [];
   for (const champ of Object.keys(LIBELLE_CHAMP) as (keyof Proposition["fiche"])[]) {
+    // Une clé absente de la proposition n'a pas été proposée (proposition
+    // enregistrée avant que la fiche ne la porte) : elle ne change rien.
+    if (p.fiche[champ] === undefined) continue;
     const avant = String(plan[champ] ?? "");
     const apres = String(p.fiche[champ] ?? "");
     if (avant !== apres) fiche.push({ champ, libelle: LIBELLE_CHAMP[champ], avant, apres });
@@ -133,13 +175,33 @@ export function ecartsDeLaProposition(plan: PlanComparable, p: Proposition): Eca
     if (
       !egal(avant.risque, l.risque) ||
       !egal(avant.mesureEntrepriseUtilisatrice, l.mesureEntrepriseUtilisatrice) ||
-      !egal(avant.mesureEntrepriseExterieure, l.mesureEntrepriseExterieure)
+      !egal(avant.mesureEntrepriseExterieure, l.mesureEntrepriseExterieure) ||
+      !egal(avant.lieu, l.lieu) ||
+      !egal(avant.frequence, l.frequence) ||
+      // Absente : non proposée, rien ne change.
+      (l.famille !== undefined && !egal(avant.famille, l.famille))
     ) {
       modifiees.push({ avant, apres: l });
     }
   }
   const supprimees = plan.lignes.filter((l) => !gardees.has(l.id));
   return { fiche, modifiees, ajoutees, supprimees };
+}
+
+/**
+ * La famille de chaque ligne proposée, dans l'ordre proposé : la famille
+ * proposée, `null` comprise ; à défaut — proposition d'avant le 2026-11-21,
+ * sans la clé —, celle que la ligne porte au plan, et aucune pour une ligne
+ * ajoutée.
+ */
+export function famillesAAppliquer(
+  lignesDuPlan: readonly { id: string; famille: string | null }[],
+  proposees: readonly { id?: string; famille?: string | null }[],
+): (string | null)[] {
+  const parId = new Map(lignesDuPlan.map((l) => [l.id, l.famille]));
+  return proposees.map((l) =>
+    l.famille !== undefined ? l.famille : l.id ? (parId.get(l.id) ?? null) : null,
+  );
 }
 
 export function aucunEcart(e: Ecarts): boolean {

@@ -48,8 +48,20 @@ const PROPOSITION = {
     entrepriseExterieureSiret: null,
     efChefNom: "Jean Dupond",
     efEffectifIntervenant: 2,
+    entrepriseExterieureAdresse: null,
+    efChefTelephone: null,
   },
-  lignes: [{ id: "l1", risque: "Chute", mesureEntrepriseUtilisatrice: null, mesureEntrepriseExterieure: null }],
+  lignes: [
+    {
+      id: "l1",
+      risque: "Chute",
+      mesureEntrepriseUtilisatrice: null,
+      mesureEntrepriseExterieure: null,
+      famille: null,
+      lieu: null,
+      frequence: null,
+    },
+  ],
 };
 
 async function cliquer(nom: RegExp) {

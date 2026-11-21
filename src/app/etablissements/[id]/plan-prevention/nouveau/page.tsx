@@ -30,6 +30,7 @@ export default async function NouveauPlanPreventionPage({
     raisonSociale: p.raisonSociale,
     contactNom: p.contactNom,
     contactEmail: p.contactEmail,
+    contactTelephone: p.contactTelephone,
     siret: p.siret,
   }));
 
