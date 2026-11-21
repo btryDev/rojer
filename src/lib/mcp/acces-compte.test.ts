@@ -25,7 +25,9 @@ vi.mock("@better-auth/mcp", () => ({
 vi.mock("@/lib/auth/better-auth", () => ({ auth: {} }));
 vi.mock("@/lib/prisma", () => ({ prisma: { membre: { findUnique: h.membre } } }));
 
-const { resoudrePorteur, enteteJwt } = await import("./acces-compte");
+const { resoudrePorteur, enteteJwt, jetonPorteur, descriptionDuDefi, refusJetonInvalide } = await import(
+  "./acces-compte"
+);
 const { lookupKey } = await import("@/lib/abonnements/formules");
 
 const RESSOURCE = "https://rojer.test/api/mcp";
@@ -111,5 +113,28 @@ describe("enteteJwt", () => {
     expect(enteteJwt(jeton("at+jwt"))?.typ).toBe("at+jwt");
     expect(enteteJwt("pas-un-jwt")).toBeNull();
     expect(enteteJwt("")).toBeNull();
+  });
+});
+
+describe("jetonPorteur", () => {
+  const avec = (valeur: string) => new Request(RESSOURCE, { method: "POST", headers: { authorization: valeur } });
+  it("lit un jeton Bearer ou DPoP (vérifié en amont par requireMcpAuth), rien d'autre", () => {
+    expect(jetonPorteur(avec("Bearer abc.def.ghi"))).toBe("abc.def.ghi");
+    expect(jetonPorteur(avec("DPoP abc.def.ghi"))).toBe("abc.def.ghi");
+    expect(jetonPorteur(avec("Basic abc"))).toBeNull();
+    expect(jetonPorteur(requete(null))).toBeNull();
+  });
+});
+
+describe("refusJetonInvalide — le défi reste dans l'ASCII de RFC 6750 § 3", () => {
+  it("retire accents, guillemets et caractères hors ASCII ; garde le texte entier dans le corps", async () => {
+    const description = "Vous n'êtes plus membre « du » compte \"x\" \\ ici.";
+    expect(descriptionDuDefi(description)).toBe("Vous n'etes plus membre du compte x ici.");
+    const r = refusJetonInvalide(RESSOURCE, description);
+    expect(r.headers.get("www-authenticate")).toMatch(/^[\x20-\x7E]+$/);
+    expect(r.headers.get("www-authenticate")).toContain(
+      'resource_metadata="https://rojer.test/.well-known/oauth-protected-resource/api/mcp"',
+    );
+    expect((await r.json()).error.message).toBe(description);
   });
 });

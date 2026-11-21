@@ -21,17 +21,17 @@ async function servirOAuth(request: Request): Promise<Response> {
   if (!estCheminAuthServi(pathname)) return absent();
 
   if (pathname.endsWith("/oauth2/register")) {
-    const ip = ipPourLimite(request.headers);
-    if (ip) {
-      const verdict = await consommer([
-        { cle: cleLimite("oauth-enregistrement", "ip", ip), limite: LIMITES.oauthEnregistrementIp },
-      ]);
-      if (!verdict.ok) {
-        return Response.json(
-          { error: "too_many_requests", error_description: "Trop d'enregistrements depuis cette adresse." },
-          { status: 429, headers: { "retry-after": String(verdict.reessayerDansSecondes), "cache-control": "no-store" } },
-        );
-      }
+    // Sans adresse lue (en-tête du proxy absent), toutes ces requêtes
+    // partagent une même clé : la limite s'applique toujours.
+    const ip = ipPourLimite(request.headers) ?? "inconnue";
+    const verdict = await consommer([
+      { cle: cleLimite("oauth-enregistrement", "ip", ip), limite: LIMITES.oauthEnregistrementIp },
+    ]);
+    if (!verdict.ok) {
+      return Response.json(
+        { error: "too_many_requests", error_description: "Trop d'enregistrements depuis cette adresse." },
+        { status: 429, headers: { "retry-after": String(verdict.reessayerDansSecondes), "cache-control": "no-store" } },
+      );
     }
   }
 

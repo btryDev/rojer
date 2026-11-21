@@ -51,10 +51,13 @@ export function enteteJwt(jeton: string): { typ?: unknown } | null {
   }
 }
 
-/** Le jeton porteur de l'en-tête `Authorization`, ou `null`. */
+/**
+ * Le jeton de l'en-tête `Authorization`, ou `null`. `Bearer` ou `DPoP` :
+ * `requireMcpAuth` a déjà vérifié le jeton, et la preuve DPoP s'il est lié.
+ */
 export function jetonPorteur(request: Request): string | null {
   const valeur = request.headers.get("authorization") ?? "";
-  const m = /^Bearer\s+([A-Za-z0-9\-._~+/]+=*)$/i.exec(valeur.trim());
+  const m = /^(?:Bearer|DPoP)\s+([A-Za-z0-9\-._~+/]+=*)$/i.exec(valeur.trim());
   return m ? m[1] : null;
 }
 
@@ -64,6 +67,20 @@ export function claimsDuPorteur(claims: JWTPayload): { userId: string; compteId:
   const compteId = typeof claims[CLAIM_COMPTE] === "string" ? (claims[CLAIM_COMPTE] as string) : null;
   const clientId = typeof claims.azp === "string" ? claims.azp : null;
   return userId && compteId && clientId ? { userId, compteId, clientId } : null;
+}
+
+/**
+ * `error_description` du défi : RFC 6750 § 3 n'admet que l'ASCII imprimable,
+ * sans `"` ni `\`. Accents retirés, le reste remplacé par une espace ; le
+ * texte entier reste dans le corps JSON.
+ */
+export function descriptionDuDefi(description: string): string {
+  return description
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\x20\x21\x23-\x5B\x5D-\x7E]/g, " ")
+    .replace(/ {2,}/g, " ")
+    .trim();
 }
 
 /** 401 « jeton invalide » avec le défi qui relance l'autorisation (RFC 6750, RFC 9728). */
@@ -76,7 +93,7 @@ export function refusJetonInvalide(ressource: string, description: string): Resp
       headers: {
         "content-type": "application/json",
         "cache-control": "no-store",
-        "www-authenticate": `Bearer error="invalid_token", error_description="${description}", resource_metadata="${metadonnees}"`,
+        "www-authenticate": `Bearer error="invalid_token", error_description="${descriptionDuDefi(description)}", resource_metadata="${metadonnees}"`,
       },
     },
   );

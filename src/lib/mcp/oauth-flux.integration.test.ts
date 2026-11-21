@@ -46,7 +46,7 @@ describe.skipIf(!URL_BASE || !local)("connecteur MCP en OAuth — PostgreSQL et 
   const { auth } = await import("@/lib/auth/better-auth");
   const { compteDOnboarding } = await import("@/lib/auth/membres");
   const { resoudrePorteur } = await import("./acces-compte");
-  const { retirerAssistant, assistantsAutorises } = await import("@/lib/connecteur/assistants");
+  const { retirerAssistant, assistantsAutorises, oublierAssistants } = await import("@/lib/connecteur/assistants");
   const { lookupKey } = await import("@/lib/abonnements/formules");
 
   const suffixe = randomUUID().slice(0, 8);
@@ -259,6 +259,17 @@ describe.skipIf(!URL_BASE || !local)("connecteur MCP en OAuth — PostgreSQL et 
 
     const r = await jeton({ grant_type: "refresh_token", refresh_token: rafraichissement, client_id: clientId, resource: RESSOURCE });
     expect(r.status).toBe(400);
+    // Un identifiant qui n'est pas un uuid ne désigne rien, sans erreur.
+    expect(await retirerAssistant(userId, compteId, "abc")).toBe(false);
+  });
+
+  it("départ du compte : plus aucune ligne d'autorisation pour la personne sur ce compte", async () => {
+    expect(await prisma.oauthRefreshToken.count({ where: { userId, referenceId: compteId } })).toBeGreaterThan(0);
+    await oublierAssistants(compteId, userId);
+    const where = { userId, referenceId: compteId };
+    expect(await prisma.oauthRefreshToken.count({ where })).toBe(0);
+    expect(await prisma.oauthAccessToken.count({ where })).toBe(0);
+    expect(await prisma.oauthConsent.count({ where })).toBe(0);
   });
 
   it("plus membre du compte : le jeton encore valide ne sert plus", async () => {

@@ -23,6 +23,7 @@ import { MESSAGE_COMPTE_CHANGE, memeCompteQueLaPage } from "@/lib/auth/compte-at
 import { ROLES } from "@/lib/auth/roles";
 import { cleLimite, consommer, LIMITES, messageTropDeTentatives } from "@/lib/securite/limite-debit";
 import { envoiEnService, refusUrlPublique } from "@/lib/email";
+import { oublierAssistants } from "@/lib/connecteur/assistants";
 
 export type EtatMembres = { status: "idle" | "success" | "error"; message?: string };
 
@@ -207,8 +208,11 @@ export async function quitterCompte(_prev: EtatMembres, formData: FormData): Pro
     return refus(e, "quitter");
   }
   // Ses invitations en attente tombent avec son départ (l'acceptation les
-  // refuserait de toute façon : l'invitant n'est plus propriétaire).
+  // refuserait de toute façon : l'invitant n'est plus propriétaire), et ses
+  // assistants autorisés sur ce compte aussi (ADR-062 § 8) —
+  // `leaveOrganization` n'appelle aucun crochet du plugin.
   await annulerInvitationsEnAttenteDe(user.id, compte.compteId);
+  await oublierAssistants(compte.compteId, user.id);
   redirect("/entreprises");
 }
 

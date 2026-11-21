@@ -272,7 +272,15 @@ ou l'appartenance qui tombe.
   à la réponse de la connexion, il ne survit pas à la double
   authentification) : `/oauth/reprendre` vérifie la requête signée, renvoie
   vers `/login` avec elle en `next`, puis rejoue la requête d'autorisation
-  d'origine, que le fournisseur revérifie entièrement.
+  d'origine, que le fournisseur revérifie entièrement. [2026-11-21, relecture :
+  `prompt=login`, `prompt=create` et `max_age` ne s'y lèvent que si la session
+  est postérieure à la demande signée (`ba_iat`), la règle même du fournisseur ;
+  sinon un message demande de se reconnecter, rien n'est rejoué.]
+- **Les autorisations tombent avec le membre et le compte** (relecture du
+  2026-11-21) : consentements et jetons liés au compte par `referenceId`, sans
+  clé étrangère, sont effacés au retrait d'un membre, à son départ et à la
+  suppression du compte (`oublierAssistants`). Sans cela, une personne
+  réinvitée retrouvait un jeton de rafraîchissement vivant.
 - **`localhost` n'est plus un hôte admis en production** (audit S8).
 - **Preuve de bout en bout** : `mcp/oauth-flux.integration.test.ts` (CI,
   vrai PostgreSQL, vrai Better Auth) — découverte, enregistrement refusé pour

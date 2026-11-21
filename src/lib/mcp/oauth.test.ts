@@ -84,10 +84,14 @@ describe("estCheminAuthServi — la liste blanche de /api/auth (ADR-062 § 2)", 
 });
 
 describe("requeteARejouer — la reprise après /login (ADR-062 § 7)", () => {
-  it("retire la signature, prompt=login et max_age, garde le reste", () => {
+  // La demande signée à t = 1 000 000 ms ; une session ouverte après, une avant.
+  const apres = new Date(1_000_500);
+  const avant = new Date(999_000);
+
+  it("session postérieure : retire la signature, prompt=login et max_age, garde le reste", () => {
     const signee =
-      "response_type=code&client_id=c1&redirect_uri=https%3A%2F%2Fclaude.ai%2Fapi%2Fmcp%2Fauth_callback&code_challenge=abc&code_challenge_method=S256&state=s&scope=rojer%3Alecture&resource=https%3A%2F%2Frojer.fr%2Fapi%2Fmcp&prompt=login+consent&max_age=0&exp=123&sig=zzz&ba_iat=1&ba_pl=2";
-    const p = new URLSearchParams(requeteARejouer(signee));
+      "response_type=code&client_id=c1&redirect_uri=https%3A%2F%2Fclaude.ai%2Fapi%2Fmcp%2Fauth_callback&code_challenge=abc&code_challenge_method=S256&state=s&scope=rojer%3Alecture&resource=https%3A%2F%2Frojer.fr%2Fapi%2Fmcp&prompt=login+consent&max_age=0&exp=123&sig=zzz&ba_iat=1000000&ba_pl=2";
+    const p = new URLSearchParams(requeteARejouer(signee, apres) ?? "");
     expect(p.get("client_id")).toBe("c1");
     expect(p.get("code_challenge")).toBe("abc");
     expect(p.get("resource")).toBe("https://rojer.fr/api/mcp");
@@ -96,7 +100,25 @@ describe("requeteARejouer — la reprise après /login (ADR-062 § 7)", () => {
     for (const retire of ["sig", "exp", "ba_iat", "ba_pl", "max_age"]) expect(p.has(retire)).toBe(false);
   });
 
-  it("sans autre prompt, le paramètre disparaît", () => {
-    expect(new URLSearchParams(requeteARejouer("client_id=c1&prompt=login")).has("prompt")).toBe(false);
+  it("sans autre prompt, le paramètre disparaît ; prompt=create se lève comme login", () => {
+    for (const prompt of ["login", "create"]) {
+      const rejouee = requeteARejouer(`client_id=c1&prompt=${prompt}&ba_iat=1000000`, apres);
+      expect(rejouee, prompt).not.toBeNull();
+      expect(new URLSearchParams(rejouee ?? "").has("prompt"), prompt).toBe(false);
+    }
+  });
+
+  it("session antérieure à la demande : prompt=login, create ou max_age ne se lèvent pas", () => {
+    for (const q of ["prompt=login", "prompt=create", "max_age=0", "prompt=consent+login"]) {
+      expect(requeteARejouer(`client_id=c1&${q}&ba_iat=1000000`, avant), q).toBeNull();
+    }
+    // Sans `ba_iat` lisible, la fraîcheur ne se prouve pas.
+    expect(requeteARejouer("client_id=c1&prompt=login", apres)).toBeNull();
+  });
+
+  it("sans exigence de connexion, la requête se rejoue quelle que soit la session", () => {
+    const p = new URLSearchParams(requeteARejouer("client_id=c1&prompt=consent&ba_iat=1000000&sig=z", avant) ?? "");
+    expect(p.get("prompt")).toBe("consent");
+    expect(p.has("sig")).toBe(false);
   });
 });

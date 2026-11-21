@@ -122,7 +122,9 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous"; 
       "assistants autorisés (consentements OAuth, hors compte) bornés à la main par la personne ET le compte ; abonnement du compte pour la formule Pro",
     usages: ["prisma.oauthConsent.findMany", "prisma.$transaction", "prisma.abonnement.findUnique"],
     // La transaction du retrait : lecture du consentement, suppression, révocation des jetons.
-    valeur: ["$transaction(hors tableau)"],
+    // `<valeur>` : le client par défaut d'`oublierAssistants` (départ d'un
+    // membre) ; la suppression du compte lui passe sa transaction.
+    valeur: ["$transaction(hors tableau)", "<valeur>"],
   },
   "src/lib/mcp/compte-oauth.ts": {
     motif: "compte d'un consentement OAuth : appartenances de la personne connectée, relues avant que le compte soit choisi",

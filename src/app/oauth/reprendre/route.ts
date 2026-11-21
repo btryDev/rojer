@@ -4,7 +4,9 @@
 // fausse ou expirée : refus. Pas de session : `/login`, avec cette page (et
 // sa requête signée) en `next` — la connexion, double authentification
 // comprise, ramène ici. Session : la requête d'origine est rejouée sur
-// `/api/auth/oauth2/authorize`, que le fournisseur revérifie entièrement.
+// `/api/auth/oauth2/authorize`, que le fournisseur revérifie entièrement —
+// sauf si elle exige une connexion plus récente que la session
+// (`prompt=login`, `max_age`) : on le dit, sans rien rejouer.
 
 import { verifyOAuthQueryParams } from "@better-auth/oauth-provider";
 import { auth } from "@/lib/auth/better-auth";
@@ -26,15 +28,23 @@ export async function GET(request: Request): Promise<Response> {
   }
 
   const enTete = { "cache-control": "no-store" };
-  if (!(await lireSessionCourante())) {
+  const session = await lireSessionCourante();
+  if (!session) {
     const retour = `/oauth/reprendre?${requete}`;
     return new Response(null, {
       status: 303,
       headers: { ...enTete, location: `/login?next=${encodeURIComponent(retour)}` },
     });
   }
+  const rejouee = requeteARejouer(requete, new Date(session.session.createdAt));
+  if (rejouee === null) {
+    return new Response(
+      "Votre assistant demande une connexion récente. Déconnectez-vous de Rojer, puis relancez la connexion depuis votre assistant.",
+      { status: 400, headers: { "content-type": "text/plain; charset=utf-8", ...enTete } },
+    );
+  }
   return new Response(null, {
     status: 303,
-    headers: { ...enTete, location: `${CHEMIN_AUTH}/oauth2/authorize?${requeteARejouer(requete)}` },
+    headers: { ...enTete, location: `${CHEMIN_AUTH}/oauth2/authorize?${rejouee}` },
   });
 }

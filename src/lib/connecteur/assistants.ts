@@ -6,8 +6,11 @@ import "server-only";
 //
 // Module hors compte nommé (`portee/imports.test.ts`).
 
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { connecteurOuvert } from "@/lib/abonnements/connecteur";
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export type AssistantAutorise = { id: string; nom: string; autoriseLe: Date | null };
 
@@ -29,6 +32,9 @@ export async function assistantsAutorises(userId: string, compteId: string): Pro
  * consentement n'est pas celui de la personne sur ce compte.
  */
 export async function retirerAssistant(userId: string, compteId: string, consentementId: string): Promise<boolean> {
+  // La colonne est un `uuid` : un champ vide ou modifié à la main ne désigne
+  // rien, et ne doit pas faire échouer la requête.
+  if (!UUID.test(consentementId)) return false;
   return prisma.$transaction(async (tx) => {
     const consentement = await tx.oauthConsent.findFirst({
       where: { id: consentementId, userId, referenceId: compteId },
@@ -42,6 +48,26 @@ export async function retirerAssistant(userId: string, compteId: string, consent
     });
     return true;
   });
+}
+
+/** Ce qu'`oublierAssistants` touche : un client Prisma ou une transaction. */
+type ClientOAuth = Pick<Prisma.TransactionClient, "oauthConsent" | "oauthRefreshToken" | "oauthAccessToken">;
+
+/**
+ * Efface les autorisations d'assistant portées par un compte — d'une
+ * personne (`userId`), ou de tous ses membres : consentements, jetons de
+ * rafraîchissement et jetons d'accès enregistrés. Au départ d'un membre (retiré
+ * ou parti) et à la suppression du compte (ADR-058) : sans cela, une personne
+ * réinvitée retrouverait un jeton de rafraîchissement vivant sans nouveau
+ * consentement, et le compte effacé laisserait ces lignes derrière lui.
+ * `/api/mcp` refuse déjà tout jeton d'une personne qui n'est plus membre.
+ */
+export async function oublierAssistants(compteId: string, userId?: string, client: ClientOAuth = prisma): Promise<void> {
+  if (!compteId) throw new Error("oubli d'autorisations sans compte");
+  const where = { referenceId: compteId, ...(userId ? { userId } : {}) };
+  await client.oauthRefreshToken.deleteMany({ where });
+  await client.oauthAccessToken.deleteMany({ where });
+  await client.oauthConsent.deleteMany({ where });
 }
 
 /** Le connecteur est-il ouvert pour ce compte ? (`connecteurOuvert`, formule Pro.) */

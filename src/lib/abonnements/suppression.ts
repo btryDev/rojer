@@ -12,6 +12,7 @@ import "server-only";
 
 import type Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
+import { oublierAssistants } from "@/lib/connecteur/assistants";
 import { envoiEnService, motifErreur, publicAppUrl } from "@/lib/email";
 import { ajouterJours, ajouterMois, debutDuJour, formaterDateLongueFr } from "@/lib/dates";
 import { clesDesEtablissements } from "@/lib/suppression/fichiers";
@@ -650,6 +651,9 @@ export async function supprimerCompte(
       await tx.demandeAssistance.deleteMany({ where: { compteId } });
       await tx.acceptationConditions.deleteMany({ where: { compteId } });
       await tx.abonnement.deleteMany({ where: { compteId } });
+      // Les autorisations du connecteur (ADR-062 § 8) : liées au compte par
+      // `referenceId`, sans clé étrangère, aucune cascade ne les emporte.
+      await oublierAssistants(compteId, undefined, tx);
 
       const membres = await tx.membre.findMany({ where: { compteId }, select: { userId: true } });
       // Les personnes verrouillées avant de compter leurs attaches : une

@@ -20,6 +20,7 @@ import {
   ressourceMcp,
 } from "@/lib/mcp/oauth";
 import { CLAIM_COMPTE, compteDuConsentement, doitChoisirLeCompte } from "@/lib/mcp/compte-oauth";
+import { oublierAssistants } from "@/lib/connecteur/assistants";
 import { oublierAppareilsDeConfiance } from "./appareils-de-confiance";
 import { poserMotDePasseAvantConfirmation } from "./activation";
 import { prisma } from "@/lib/prisma";
@@ -415,10 +416,13 @@ export const auth = betterAuth({
           });
           if (invitant?.role !== "owner") throw new Error("invitation dont l'auteur n'est plus propriétaire du compte");
         },
-        // Ménage : les sessions de la personne retirée oublient ce compte, et
-        // ses invitations en attente tombent. La sécurité n'en dépend pas —
-        // `requireCompte` relit `Membre`, l'acceptation relit l'invitant.
+        // Ménage : les sessions de la personne retirée oublient ce compte, ses
+        // invitations en attente tombent, et ses assistants autorisés sur ce
+        // compte aussi (ADR-062 § 8). La sécurité n'en dépend pas —
+        // `requireCompte` et `/api/mcp` relisent `Membre`, l'acceptation
+        // relit l'invitant.
         afterRemoveMember: async ({ member }) => {
+          await oublierAssistants(member.organizationId, member.userId);
           await prisma.session.updateMany({
             where: { userId: member.userId, compteActifId: member.organizationId },
             data: { compteActifId: null },
