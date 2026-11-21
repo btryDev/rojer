@@ -32,7 +32,7 @@ export type LigneBandeau =
       lieu: string;
       frequence: string;
     }
-  | { type: "ajoute"; cle: string; risque: string; eu: string; ee: string }
+  | { type: "ajoute"; cle: string; risque: string; eu: string; ee: string; lieu: string; frequence: string }
   | { type: "supprime"; cle: string; risque: string };
 
 export type Bandeau = {
@@ -63,7 +63,16 @@ export function bandeauDeLaProposition(plan: PlanComparable, p: Proposition): Ba
     const ee = texte(l.mesureEntrepriseExterieure);
     const avant = l.id ? parId.get(l.id) : undefined;
     if (!avant) {
-      lignes.push({ type: "ajoute", cle: `ajout-${i}`, risque: texte(l.risque), eu, ee });
+      lignes.push({
+        type: "ajoute",
+        cle: `ajout-${i}`,
+        risque: texte(l.risque),
+        eu,
+        ee,
+        // Écrits à l'acceptation : le dirigeant les lit avant de décider.
+        lieu: texte(l.lieu),
+        frequence: texte(l.frequence),
+      });
       return;
     }
     const m = modifiees.get(avant.id);

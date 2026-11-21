@@ -41,8 +41,8 @@ type Ligne = {
   risque: string;
   mesureEntrepriseUtilisatrice: string;
   mesureEntrepriseExterieure: string;
-  /** La famille de la ligne, reportée telle quelle : elle ne se propose pas
-   *  ici, mais l'accepter ne doit pas l'effacer (2026-11-21). */
+  /** La famille de la ligne, affichée seulement : elle ne se propose pas, et
+   *  le serveur garde celle du plan (`famillesAAppliquer`, 2026-11-21). */
   famille: string | null;
   lieu: string;
   frequence: string;
@@ -50,6 +50,16 @@ type Ligne = {
 
 let compteur = 0;
 const nouvelleCle = () => `nouvelle-${++compteur}`;
+
+/** Une ligne ajoutée, vierge — sans clé ni identifiant. */
+const LIGNE_AJOUTEE: Omit<Ligne, "id" | "cle"> = {
+  risque: "",
+  mesureEntrepriseUtilisatrice: "",
+  mesureEntrepriseExterieure: "",
+  famille: null,
+  lieu: "",
+  frequence: "",
+};
 
 const CLASSE_ZONE = "champ-board min-h-[64px] resize-y";
 
@@ -137,17 +147,16 @@ export function PropositionPlanForm({
     );
   }
 
-  const changerLigne = (cle: string, champ: keyof Omit<Ligne, "id" | "cle">, valeur: string) =>
+  const changerLigne = (cle: string, champ: keyof Omit<Ligne, "id" | "cle" | "famille">, valeur: string) =>
     setLignes((ls) => ls.map((l) => (l.cle === cle ? { ...l, [champ]: valeur } : l)));
 
   const json = JSON.stringify({
     fiche,
-    lignes: lignes.map(({ id, risque, mesureEntrepriseUtilisatrice, mesureEntrepriseExterieure, famille, lieu, frequence }) => ({
+    lignes: lignes.map(({ id, risque, mesureEntrepriseUtilisatrice, mesureEntrepriseExterieure, lieu, frequence }) => ({
       ...(id ? { id } : {}),
       risque,
       mesureEntrepriseUtilisatrice,
       mesureEntrepriseExterieure,
-      ...(famille ? { famille } : {}),
       lieu,
       frequence,
     })),
@@ -310,18 +319,7 @@ export function PropositionPlanForm({
           size="board"
           disabled={lignes.length >= LIGNES_MAX}
           onClick={() =>
-            setLignes((ls) => [
-              ...ls,
-              {
-                cle: nouvelleCle(),
-                risque: "",
-                mesureEntrepriseUtilisatrice: "",
-                mesureEntrepriseExterieure: "",
-                famille: null,
-                lieu: "",
-                frequence: "",
-              },
-            ])
+            setLignes((ls) => [...ls, { cle: nouvelleCle(), ...LIGNE_AJOUTEE }])
           }
         >
           Ajouter un risque

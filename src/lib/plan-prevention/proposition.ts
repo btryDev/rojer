@@ -19,8 +19,12 @@ import { ligneSchema } from "./schema";
  */
 
 export const LIGNES_MAX = 50;
-/** Longueur maximale du JSON reçu : 50 lignes de 3 × 500 caractères y tiennent. */
-export const PROPOSITION_TAILLE_MAX = 100_000;
+/**
+ * Longueur maximale du JSON reçu : 50 lignes de 3 × 500 caractères, plus le
+ * lieu et la fréquence de chacune (2 × 200, 2026-11-21), et la fiche, y
+ * tiennent avec les clés et l'échappement.
+ */
+export const PROPOSITION_TAILLE_MAX = 130_000;
 
 const SIRET_FMT = /^\d{14}$/;
 
@@ -49,7 +53,11 @@ export const propositionSchema = z.object({
   }),
   lignes: z
     .array(
-      ligneSchema.extend({
+      // LA FAMILLE NE SE PROPOSE PAS (2026-11-21) : `omit` la retire du
+      // schéma, et zod écarte la clé si elle est envoyée quand même. À
+      // l'acceptation, une ligne connue garde la famille du plan, une ligne
+      // ajoutée n'en a pas (`famillesAAppliquer`).
+      ligneSchema.omit({ famille: true }).extend({
         id: z.string().min(1).max(60).optional(),
       }),
     )
@@ -163,7 +171,6 @@ export function ecartsDeLaProposition(plan: PlanComparable, p: Proposition): Eca
       !egal(avant.risque, l.risque) ||
       !egal(avant.mesureEntrepriseUtilisatrice, l.mesureEntrepriseUtilisatrice) ||
       !egal(avant.mesureEntrepriseExterieure, l.mesureEntrepriseExterieure) ||
-      !egal(avant.famille, l.famille) ||
       !egal(avant.lieu, l.lieu) ||
       !egal(avant.frequence, l.frequence)
     ) {
@@ -172,6 +179,19 @@ export function ecartsDeLaProposition(plan: PlanComparable, p: Proposition): Eca
   }
   const supprimees = plan.lignes.filter((l) => !gardees.has(l.id));
   return { fiche, modifiees, ajoutees, supprimees };
+}
+
+/**
+ * La famille de chaque ligne proposée, dans l'ordre proposé : celle que la
+ * ligne porte au plan si elle y est déjà, `null` pour une ligne ajoutée. Ce
+ * que la proposition aurait envoyé n'est jamais lu.
+ */
+export function famillesAAppliquer(
+  lignesDuPlan: readonly { id: string; famille: string | null }[],
+  proposees: readonly { id?: string }[],
+): (string | null)[] {
+  const parId = new Map(lignesDuPlan.map((l) => [l.id, l.famille]));
+  return proposees.map((l) => (l.id ? (parId.get(l.id) ?? null) : null));
 }
 
 export function aucunEcart(e: Ecarts): boolean {

@@ -196,7 +196,7 @@ beforeEach(() => {
       efChefEmail: "chef@exterieure.fr",
       entrepriseExterieureAdresse: "1 rue des Lilas, Lyon",
       efChefTelephone: "06 00 00 00 00",
-      lignes: [{ ...LIGNE_1, ordre: 0 }],
+      lignes: [{ ...LIGNE_1, ordre: 0, famille: "CHUTES_HAUTEUR" }],
       lieux: "Cuisine",
       dateDebut: new Date("2026-12-01T08:00:00Z"),
       dateFin: new Date("2026-12-05T17:00:00Z"),
@@ -340,6 +340,27 @@ describe("le dirigeant traite la proposition (ADR-061 § 4)", () => {
       entrepriseExterieureAdresse: "1 rue des Lilas, Lyon",
       efChefTelephone: "06 00 00 00 00",
     });
+  });
+
+  it("accepter garde la famille que la ligne porte au plan, même si la proposition en nomme une autre", async () => {
+    // Une proposition qui force une famille sur la ligne connue et en ajoute
+    // une autre : la famille ne se propose pas (2026-11-21).
+    await decider("refuser");
+    await proposer({
+      fiche: FICHE,
+      lignes: [
+        { ...LIGNE_1, mesureEntrepriseExterieure: "Panneaux et balisage", famille: "AMIANTE" },
+        { risque: "Poussières", mesureEntrepriseExterieure: "Masques", famille: "AMIANTE" },
+      ],
+    });
+    const id = prismaMock.propositionModificationPlan.lignes.find((x) => x.enAttente === true)?.id as string;
+    const fd = new FormData();
+    fd.set("decision", "accepter");
+    expect((await traiterProposition(id, { status: "idle" }, fd)).status).toBe("success");
+    expect((prismaMock.planPrevention.lignes[0].lignes as Ligne[]).map((l) => l.famille)).toEqual([
+      "CHUTES_HAUTEUR",
+      null,
+    ]);
   });
 
   it("corriger : la proposition s'applique, marquée « correction en cours » (2026-11-19)", async () => {

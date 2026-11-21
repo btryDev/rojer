@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { bandeauDeLaProposition } from "./bandeau-proposition";
-import { aucunEcart, ecartsDeLaProposition, lireProposition, type PlanComparable } from "./proposition";
+import {
+  aucunEcart,
+  ecartsDeLaProposition,
+  famillesAAppliquer,
+  lireProposition,
+  type PlanComparable,
+} from "./proposition";
 
 /**
  * La proposition de l'entreprise extérieure et les champs repris de RiskBoard
@@ -133,14 +139,45 @@ describe("une proposition qui touche aux champs neufs", () => {
     expect(aucunEcart(ecartsDeLaProposition(plan, p))).toBe(true);
   });
 
-  it("une famille hors de la liste est refusée", () => {
-    const r = lireProposition(
-      JSON.stringify({
-        fiche: ficheDuPlan,
-        lignes: [{ id: "l1", risque: "Chutes en hauteur", famille: "INVENTEE" }],
-      }),
-      ids,
-    );
-    expect(r.ok).toBe(false);
+  it("la famille ne se propose pas : envoyée quand même, elle est écartée", () => {
+    const p = lire({
+      fiche: ficheDuPlan,
+      lignes: [
+        {
+          id: "l1",
+          risque: "Chutes en hauteur",
+          mesureEntrepriseUtilisatrice: "Accès balisé",
+          mesureEntrepriseExterieure: "Harnais",
+          famille: "AMIANTE",
+          lieu: "Toiture",
+          frequence: "",
+        },
+        { risque: "Poussières", mesureEntrepriseUtilisatrice: "", mesureEntrepriseExterieure: "", famille: "AMIANTE" },
+      ],
+    });
+    expect(p.lignes.map((l) => "famille" in l)).toEqual([false, false]);
+    // Une famille « changée » n'est pas un écart : seule la ligne ajoutée l'est.
+    const e = ecartsDeLaProposition(plan, p);
+    expect([e.modifiees.length, e.ajoutees.length]).toEqual([0, 1]);
+    // À l'acceptation : la famille du plan pour la ligne connue, aucune pour l'ajoutée.
+    expect(famillesAAppliquer(plan.lignes, p.lignes)).toEqual(["CHUTES_HAUTEUR", null]);
+  });
+
+  it("une ligne ajoutée montre son lieu et sa fréquence au dirigeant", () => {
+    const p = lire({
+      fiche: ficheDuPlan,
+      lignes: [
+        ...plan.lignes.map(({ id, risque, mesureEntrepriseUtilisatrice, mesureEntrepriseExterieure, lieu }) => ({
+          id,
+          risque,
+          mesureEntrepriseUtilisatrice,
+          mesureEntrepriseExterieure,
+          lieu,
+        })),
+        { risque: "Poussières", mesureEntrepriseUtilisatrice: "", mesureEntrepriseExterieure: "", lieu: "Réserve", frequence: "Le matin" },
+      ],
+    });
+    const ajout = bandeauDeLaProposition(plan, p).lignes.find((l) => l.type === "ajoute");
+    expect(ajout).toMatchObject({ risque: "Poussières", lieu: "Réserve", frequence: "Le matin" });
   });
 });
