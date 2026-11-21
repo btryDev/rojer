@@ -12,6 +12,11 @@
  * `prisma/schema.prisma` annotait `inspectionDate` « (art. R4512-7) » quand
  * l'inspection commune est `R. 4512-2`.
  *
+ * [2026-11-21, décision de la propriétaire] Le PDF du plan n'imprime plus que
+ * les rubriques remplies, chacune sous son `titre` ; la fiche nomme les vides
+ * sur une ligne « À compléter » tant que le plan n'est pas figé ; le ZIP garde
+ * « NON RENSEIGNÉE » (`contenuR4512_8`, ci-dessous).
+ *
  * LE VERBATIM EST ICI, PAS DANS LES ÉCRANS. Chaque rubrique porte le texte
  * exact de son alinéa, relevé sur Légifrance le 2026-09-07
  * (LEGIARTI000018529781, version en vigueur au 1er mai 2008, décret
