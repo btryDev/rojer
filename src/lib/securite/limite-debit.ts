@@ -71,6 +71,13 @@ export const LIMITES = {
    */
   mcpIp: { max: 600, fenetreSecondes: 60 },
   mcpPortee: { max: 120, fenetreSecondes: 60 },
+  /**
+   * Enregistrement d'un client OAuth (DCR, ADR-062 § 3), ouvert sans jeton :
+   * un client par connecteur ajouté. claude.ai s'enregistre depuis ses
+   * adresses de sortie, partagées par tous ses utilisateurs : assez large
+   * pour eux, assez court pour qu'une boucle ne remplisse pas la table.
+   */
+  oauthEnregistrementIp: { max: 60, fenetreSecondes: 10 * 60 },
   /** Invitations à rejoindre un compte (ADR-054) : des e-mails Rojer vers des tiers. */
   invitationCompte: { max: 20, fenetreSecondes: 24 * 60 * 60 },
   /**

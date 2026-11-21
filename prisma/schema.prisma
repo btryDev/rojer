@@ -2489,6 +2489,13 @@ model User {
   membres                Membre[]
   invitationsEmises      InvitationCompte[]
 
+  // Connecteur MCP (ADR-062) : ce que le fournisseur OAuth de Better Auth
+  // tient pour cette personne. Tout part avec elle.
+  oauthClients       OauthClient[]
+  oauthRefreshTokens OauthRefreshToken[]
+  oauthAccessTokens  OauthAccessToken[]
+  oauthConsents      OauthConsent[]
+
   @@unique([email])
 }
 
@@ -2507,6 +2514,9 @@ model Session {
   /// appel (ADR-054 § 3). Sans clé étrangère : un compte disparu laisse une
   /// valeur que la relecture écarte.
   compteActifId String?  @db.Uuid
+
+  oauthRefreshTokens OauthRefreshToken[]
+  oauthAccessTokens  OauthAccessToken[]
 
   @@unique([token])
   @@index([userId])
@@ -2787,13 +2797,13 @@ model FichierStocke {
 }
 
 model Compte {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name      String
+  id                     String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                   String
   /// Exigé unique par le plugin ; tiré au hasard, jamais affiché.
-  slug      String
-  logo      String?
-  metadata  String?
-  createdAt DateTime @default(now())
+  slug                   String
+  logo                   String?
+  metadata               String?
+  createdAt              DateTime  @default(now())
   /// La suppression demandée par un propriétaire (ADR-058 § 8) : effacée 7 jours après par la tâche quotidienne ; `null` sans demande, ou annulée.
   suppressionDemandeeLe  DateTime?
   /// L'adresse de qui l'a demandée (reprise dans la trace).
@@ -2885,4 +2895,195 @@ model FichierALiberer {
   tentatives Int      @default(0)
 
   @@index([tentatives, noteLe])
+}
+
+// ─── Connecteur MCP : fournisseur OAuth 2.1 de Better Auth (ADR-062) ───
+//
+// Tables du plugin `mcp()` (`@better-auth/oauth-provider`) et du plugin
+// `jwt` (clés de signature des jetons d'accès). Noms et colonnes imposés par
+// le plugin (relevés en appelant la 1.7.27). Les listes ne sont jamais NULL
+// (Prisma n'écrit pas de liste nulle) : défaut vide. Secrets de client et
+// jetons stockés hachés par le plugin ; clé privée du JWKS chiffrée par
+// `BETTER_AUTH_SECRET`. Rien ici n'est une donnée de dossier : ni compte, ni
+// établissement — le compte du consentement vit dans `referenceId`.
+
+/// Un client OAuth : Claude (enregistré par DCR) ou un client CIMD.
+model OauthClient {
+  id                               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clientId                         String    @unique
+  clientSecret                     String?
+  clientDiscoveryId                String?
+  disabled                         Boolean?  @default(false)
+  skipConsent                      Boolean?
+  enableEndSession                 Boolean?
+  subjectType                      String?
+  scopes                           String[]  @default([])
+  clientCredentialsScopes          String[]  @default([])
+  userId                           String?   @db.Uuid
+  user                             User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt                        DateTime? @default(now())
+  updatedAt                        DateTime? @updatedAt
+  name                             String?
+  uri                              String?
+  icon                             String?
+  contacts                         String[]  @default([])
+  tos                              String?
+  policy                           String?
+  softwareId                       String?
+  softwareVersion                  String?
+  softwareStatement                String?
+  redirectUris                     String[]  @default([])
+  postLogoutRedirectUris           String[]  @default([])
+  backchannelLogoutUri             String?
+  backchannelLogoutSessionRequired Boolean?
+  tokenEndpointAuthMethod          String?
+  applicationType                  String?
+  jwks                             String?
+  jwksUri                          String?
+  grantTypes                       String[]  @default([])
+  responseTypes                    String[]  @default([])
+  requirePKCE                      Boolean?
+  dpopBoundAccessTokens            Boolean?  @default(false)
+  referenceId                      String?
+  metadata                         Json?
+
+  ressources    OauthClientResource[]
+  refreshTokens OauthRefreshToken[]
+  accessTokens  OauthAccessToken[]
+  consents      OauthConsent[]
+
+  @@index([userId])
+}
+
+/// La ressource protégée : le serveur MCP, une seule ligne (`resource`).
+model OauthResource {
+  id                            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  identifier                    String    @unique
+  name                          String
+  accessTokenTtl                Int?
+  refreshTokenTtl               Int?
+  signingAlgorithm              String?
+  signingKeyId                  String?
+  allowedScopes                 String[]  @default([])
+  customClaims                  Json?
+  dpopBoundAccessTokensRequired Boolean?  @default(false)
+  disabled                      Boolean?  @default(false)
+  createdAt                     DateTime? @default(now())
+  updatedAt                     DateTime? @updatedAt
+  policyVersion                 Int?      @default(1)
+  metadata                      Json?
+
+  clients OauthClientResource[]
+}
+
+model OauthClientResource {
+  id         String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clientId   String
+  client     OauthClient   @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  resourceId String
+  resource   OauthResource @relation(fields: [resourceId], references: [identifier], onDelete: Cascade)
+  metadata   Json?
+  createdAt  DateTime?     @default(now())
+
+  @@index([clientId])
+  @@index([resourceId])
+}
+
+/// Jeton de rafraîchissement (haché), tourné à chaque usage.
+model OauthRefreshToken {
+  id                      String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  token                   String      @unique
+  clientId                String
+  client                  OauthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  sessionId               String?     @db.Uuid
+  session                 Session?    @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  userId                  String      @db.Uuid
+  user                    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Le compte du consentement (ADR-062 § 4).
+  referenceId             String?
+  authorizationCodeId     String?
+  resources               String[]    @default([])
+  requestedUserInfoClaims String[]    @default([])
+  expiresAt               DateTime?
+  createdAt               DateTime?   @default(now())
+  revoked                 DateTime?
+  rotatedAt               DateTime?
+  rotationReplayResponse  String?
+  rotationReplayExpiresAt DateTime?
+  authTime                DateTime?
+  confirmation            Json?
+  scopes                  String[]    @default([])
+
+  accessTokens OauthAccessToken[]
+
+  @@index([clientId])
+  @@index([sessionId])
+  @@index([userId])
+  @@index([authorizationCodeId])
+}
+
+/// Jeton d'accès opaque (les jetons JWT, eux, ne sont pas stockés).
+model OauthAccessToken {
+  id                      String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  token                   String?            @unique
+  clientId                String
+  client                  OauthClient        @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  sessionId               String?            @db.Uuid
+  session                 Session?           @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  userId                  String?            @db.Uuid
+  user                    User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referenceId             String?
+  authorizationCodeId     String?
+  resources               String[]           @default([])
+  requestedUserInfoClaims String[]           @default([])
+  refreshId               String?            @db.Uuid
+  refresh                 OauthRefreshToken? @relation(fields: [refreshId], references: [id], onDelete: Cascade)
+  expiresAt               DateTime?
+  createdAt               DateTime?          @default(now())
+  revoked                 DateTime?
+  confirmation            Json?
+  scopes                  String[]           @default([])
+
+  @@index([clientId])
+  @@index([sessionId])
+  @@index([userId])
+  @@index([authorizationCodeId])
+  @@index([refreshId])
+}
+
+/// Consentement d'une personne à un client, pour un compte (`referenceId`).
+model OauthConsent {
+  id                      String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clientId                String
+  client                  OauthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  userId                  String?     @db.Uuid
+  user                    User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referenceId             String?
+  resources               String[]    @default([])
+  requestedUserInfoClaims String[]    @default([])
+  scopes                  String[]    @default([])
+  createdAt               DateTime?   @default(now())
+  updatedAt               DateTime?   @updatedAt
+
+  @@index([clientId])
+  @@index([userId])
+}
+
+/// Assertions de client déjà vues (anti-rejeu `private_key_jwt`).
+model OauthClientAssertion {
+  id        String   @id
+  expiresAt DateTime
+
+  @@index([expiresAt])
+}
+
+/// Clés de signature des jetons d'accès (plugin `jwt`). Clé privée chiffrée.
+model Jwks {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  publicKey  String
+  privateKey String
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime?
+  alg        String?
+  crv        String?
 }

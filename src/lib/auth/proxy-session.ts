@@ -33,8 +33,18 @@ const PUBLIC_PREFIXES = [
   "/accessibilite",
   // Route API qui sert l'affiche A4 du registre (QR + URL).
   "/api/accessibilite",
-  // Le serveur MCP par clé (`/api/mcp/[cle]`) porte sa propre garde.
+  // Le serveur MCP porte sa propre garde : la clé de `/api/mcp/[cle]`, le
+  // jeton OAuth de `/api/mcp` (ADR-062), qui doit répondre 401 avec son défi
+  // et non le refus JSON du proxy.
   "/api/mcp",
+  // ADR-062 : les points d'entrée OAuth qu'un client appelle sans session
+  // (jeton, enregistrement) — la route sert une liste blanche — et la
+  // découverte (RFC 8414, RFC 9728).
+  "/api/auth",
+  "/.well-known",
+  // ADR-062 : la page de connexion du fournisseur OAuth ; sans session, elle
+  // renvoie elle-même vers `/login` avec la requête signée en `next`.
+  "/oauth/reprendre",
   // ADR-053 § 8 : les conditions générales, lues avant l'essai et au paiement.
   "/conditions",
   // Mentions légales, confidentialité, cookies : lues avant tout compte.
