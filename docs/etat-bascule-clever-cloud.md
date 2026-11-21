@@ -187,8 +187,9 @@ Gestes de la propriétaire (Clever Cloud) :
    l'application « riskboard » ; `scripts/deployer-cc.sh` n'a donc rien à
    déployer.]
 2. Poser les variables : `BETTER_AUTH_SECRET`, `PUBLIC_APP_URL`,
-   `BASE_CA_PEM`, celles de Mailpace (nom exact à confirmer :
-   `MAILPACE_API_TOKEN`), `STORAGE_DRIVER=s3` et celles du stockage. En
+   `BASE_CA_PEM`, celles de Mailpace (~~nom exact à confirmer :
+   `MAILPACE_API_TOKEN`~~ [2026-11-21, audit de sécurité : la variable
+   s'appelle `MAILPACE_API_KEY`]), `STORAGE_DRIVER=s3` et celles du stockage. En
    production, `STORAGE_DRIVER=local` est refusé au démarrage, c'est voulu.
    [2026-11-10] Et, même avant l'ouverture des abonnements :
    `TACHES_SECRET` (`openssl rand -base64 32`), que présente la crontab de

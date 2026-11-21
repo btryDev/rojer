@@ -59,7 +59,7 @@ Pas de LLM pour traiter les réponses, pas de reformulation automatique, pas de 
 
 9. **Prestataires & obligation de vigilance** — annuaire des prestataires avec suivi des attestations (URSSAF, RC Pro, Kbis) et alertes d'expiration (art. L. 8222-1 / D. 8222-5 CT). Cf. ADR-007.
 10. **Accès externe sans compte** — lien magique + OTP email pour qu'un prestataire consulte, dépose un rapport ou signe, avec scopes. Cf. ADR-007.
-11. **Signature électronique simple** — hash SHA-256, horodatage, page publique de vérification de preuve. Signature de fichiers et d'objets métier (JSON canonique). Cf. ADR-006 et ADR-008. (Pas de signature qualifiée eIDAS — hors périmètre.)
+11. **Signature électronique simple** — hash SHA-256, horodatage, ~~page publique de vérification de preuve~~ [2026-11-21, décision de la propriétaire, ADR-006 amendée : plus de page publique ; « Vérifier » dans l'application, connecté ; la preuve transmise aux tiers est le PDF avec les empreintes]. Signature de fichiers et d'objets métier (JSON canonique). Cf. ADR-006 et ADR-008. (Pas de signature qualifiée eIDAS — hors périmètre.)
 
 ### Vie quotidienne
 

@@ -361,6 +361,8 @@ ne dit pas :
 | Actions correctives | Tant que la vérification liée existe | — | Suppression en cascade |
 | Fichiers physiques des rapports | Idem rapports | — | Supprimés avec la ligne |
 | Écrits annexés au registre (ADR-056) | Le fichier en cours, jusqu'à son remplacement ; une ligne qui cesse de s'appliquer garde ses fichiers, non affichés, jusqu'à la suppression de l'établissement | **Le fichier précédent, jusqu'au dépôt suivant** (ou au retrait suivant s'il remplace un fichier en cours) ; deux fichiers au plus par ligne | Choix d'exploitation, aucun texte ne fixe de durée pour ces écrits (`D. 4711-3` vise les rapports de vérification) ; suppression en cascade avec l'établissement |
+| **Signatures** (`Signature`) : nom, e-mail, adresse IP, user-agent, empreinte du document, consentement (texte et date) — 2026-11-21 | Tant que le compte vit ; une signature révoquée reste (ADR-061) | — | Preuve de la signature : intérêt légitime (6.1.f) ; supprimée avec le compte |
+| **Liens et codes de signature** (`AccessToken`, `CodeSignatureCompte`) : empreintes du lien et du code, adresse du destinataire — 2026-11-21 | Pas de purge automatique à ce jour | — | Supprimés avec l'établissement |
 | Demandes d'assistance (ADR-050) | **3 ans à compter de la demande** — durée proposée, **à valider** ; pas encore de purge automatique | — | Suppression en cascade avec l'établissement |
 
 ### 4.1 Correction d'une erreur de la version précédente
@@ -692,10 +694,12 @@ tous délibérés :
   publique du registre d'accessibilité, que le public consulte sans compte.
   Elle ne rend rien tant que `publie` est faux, et seulement les champs
   publiables.
-- `signatures/queries.ts` — la clé `(objetType, objetId)` n'est pas un secret,
+- ~~`signatures/queries.ts` — la clé `(objetType, objetId)` n'est pas un secret,
   et `getSignature` sert la page publique `/verifier/[signatureId]` qu'un tiers
   consulte sans compte. En contrepartie, l'identifiant est un UUID non
-  énumérable et la projection est limitée à ce qui fait preuve.
+  énumérable et la projection est limitée à ce qui fait preuve.~~
+  [2026-11-21, ADR-006 amendée : la page publique est retirée ; la
+  vérification se fait connecté, bornée au compte et à l'établissement.]
 - `mcp/queries.ts` — hors du runtime Next, il n'y a ni requête ni cookies, donc
   pas de session à lire : la portée vient de l'`etablissementId` reçu au
   démarrage du serveur, et **chaque `where` le porte**, relations comprises.
