@@ -6,6 +6,7 @@
 // L'affichage en cadre est refusé par l'en-tête global
 // (`frame-ancestors 'none'`, `securite/entetes.ts`).
 
+import { ChampCompteAttendu } from "@/components/compte/ChampCompteAttendu";
 import { auth } from "@/lib/auth/better-auth";
 import { comptesDeLaPersonne } from "@/lib/auth/membres";
 import { entetesDeSession, lireSessionCourante, requireUser } from "@/lib/auth/require-user";
@@ -66,6 +67,7 @@ export default async function ConsentementPage({ searchParams }: { searchParams:
 
       <form action={repondreConsentement} className="mt-6 flex flex-wrap gap-3">
         <input type="hidden" name="oauth_query" value={requete.toString()} />
+        <ChampCompteAttendu compteId={compteId} />
         {ouvert ? (
           <Button type="submit" name="reponse" value="accepter" variant="board" size="board">
             Autoriser

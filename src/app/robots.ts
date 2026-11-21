@@ -53,6 +53,9 @@ export const RACINES_EXCLUES = [
   "/etablissements/",
   "/invitation/",
   "/onboarding",
+  // Écrans du connecteur d'assistant (ADR-062) : consentement et choix du
+  // compte d'une autorisation OAuth, rien à explorer.
+  "/oauth/",
   // Routes.
   "/api/",
   "/.well-known/",

@@ -8,6 +8,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth/better-auth";
 import { requireCompte } from "@/lib/auth/compte";
+import { memeCompteQueLaPage } from "@/lib/auth/compte-attendu";
 import { comptesDeLaPersonne } from "@/lib/auth/membres";
 import { entetesDeSession, lireSessionCourante } from "@/lib/auth/require-user";
 import { compteDuConsentement } from "@/lib/mcp/compte-oauth";
@@ -41,16 +42,23 @@ export async function choisirCompteOAuth(formData: FormData): Promise<void> {
 /**
  * Consentir ou refuser. Hors formule Pro, le consentement est toujours un
  * refus : la page n'offre pas d'autre bouton, et le geste ne se fie pas à la
- * page.
+ * page. Accepter lie l'autorisation au compte actif : si un autre onglet en a
+ * changé depuis que la page l'a nommé, rien n'est accordé et la page est
+ * rendue de nouveau sur le compte actif (audit du 2026-11-10, point 8).
+ * Refuser n'accorde rien, quel que soit le compte.
  */
 export async function repondreConsentement(formData: FormData): Promise<void> {
   const { user } = await requireCompte();
   const session = await lireSessionCourante();
   const compteId = await compteDuConsentement(user.id, session?.session.activeOrganizationId);
+  const oauthQuery = texte(formData, "oauth_query");
+  if (texte(formData, "reponse") === "accepter" && !memeCompteQueLaPage(formData, compteId)) {
+    redirect(`/oauth/consentement?${new URLSearchParams(oauthQuery).toString()}`);
+  }
   const accepte = texte(formData, "reponse") === "accepter" && (await connecteurOuvertPour(compteId));
   const suite = await auth.api.oauth2Consent({
     headers: await entetesDeSession(),
-    body: { accept: accepte, oauth_query: texte(formData, "oauth_query") },
+    body: { accept: accepte, oauth_query: oauthQuery },
   });
   redirect(urlDeSuite(suite));
 }

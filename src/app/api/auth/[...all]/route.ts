@@ -9,7 +9,7 @@
 
 import { auth } from "@/lib/auth/better-auth";
 import { estCheminAuthServi } from "@/lib/mcp/oauth";
-import { ipClient } from "@/lib/securite/ip-client";
+import { ipPourLimite } from "@/lib/securite/ip-client";
 import { cleLimite, consommer, LIMITES } from "@/lib/securite/limite-debit";
 
 export const dynamic = "force-dynamic";
@@ -21,7 +21,7 @@ async function servirOAuth(request: Request): Promise<Response> {
   if (!estCheminAuthServi(pathname)) return absent();
 
   if (pathname.endsWith("/oauth2/register")) {
-    const ip = ipClient(request.headers);
+    const ip = ipPourLimite(request.headers);
     if (ip) {
       const verdict = await consommer([
         { cle: cleLimite("oauth-enregistrement", "ip", ip), limite: LIMITES.oauthEnregistrementIp },
