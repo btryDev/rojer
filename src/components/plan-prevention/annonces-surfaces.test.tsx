@@ -432,6 +432,14 @@ describe("formulaire rouvert, écrit obligatoire : les raisons sans citation", a
         instructionsTravailleurs: null,
         organisationSecours: null,
         participationCroisee: null,
+        entrepriseExterieureAdresse: null,
+        efChefTelephone: null,
+        euChefTelephone: null,
+        horaires: null,
+        cseAssocie: null,
+        qualificationsRequises: null,
+        moyensFournis: null,
+        autresObservations: null,
       }}
     />,
   );

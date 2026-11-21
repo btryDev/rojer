@@ -208,6 +208,67 @@ describe("un plan non signé se corrige, avec les validations de la création", 
     expect((db.plans[0].lignes as Ligne[])[0].mesureEntrepriseUtilisatrice).toBe("Accès balisé");
   });
 
+  it("les champs repris de RiskBoard s'enregistrent, vides comme remplis", async () => {
+    db.plans.push(planEnBase());
+
+    const r = await modifier(
+      saisie({
+        entrepriseExterieureAdresse: " 12 rue des Artisans, Lyon ",
+        efChefTelephone: "06 00 00 00 00",
+        euChefTelephone: "",
+        horaires: "8 h – 17 h",
+        cseAssocie: "non",
+        qualificationsRequises: "Travail en hauteur",
+        moyensFournis: "",
+        autresObservations: "Accès par la cour",
+        "lignes[0].famille": "CHUTES_HAUTEUR",
+        "lignes[0].lieu": "Toiture",
+        "lignes[0].frequence": "",
+        "lignes[1].risque": "Bruit du compresseur",
+        "lignes[1].mesureEntrepriseUtilisatrice": "",
+        "lignes[1].mesureEntrepriseExterieure": "",
+        "lignes[1].famille": "",
+        "lignes[1].lieu": "",
+        "lignes[1].frequence": "Chaque matin",
+      }),
+    );
+
+    expect(r.status).toBe("success");
+    expect(db.plans[0]).toMatchObject({
+      entrepriseExterieureAdresse: "12 rue des Artisans, Lyon",
+      efChefTelephone: "06 00 00 00 00",
+      euChefTelephone: null,
+      horaires: "8 h – 17 h",
+      // « Non » est une réponse : il s'écrit, distinct de « non renseigné ».
+      cseAssocie: false,
+      qualificationsRequises: "Travail en hauteur",
+      moyensFournis: null,
+      autresObservations: "Accès par la cour",
+    });
+    expect(db.plans[0].lignes).toMatchObject([
+      { risque: "Chute de hauteur", famille: "CHUTES_HAUTEUR", lieu: "Toiture", frequence: null },
+      { risque: "Bruit du compresseur", famille: null, lieu: null, frequence: "Chaque matin" },
+    ]);
+  });
+
+  it("« CSE associé » laissé sur « non renseigné » s'écrit NULL, pas « non »", async () => {
+    db.plans.push(planEnBase());
+
+    await modifier(saisie({ cseAssocie: "" }));
+
+    expect(db.plans[0].cseAssocie).toBeNull();
+  });
+
+  it("une famille de risque hors de la liste ne s'écrit pas", async () => {
+    db.plans.push(planEnBase());
+
+    await modifier(saisie({ "lignes[0].famille": "INVENTEE" }));
+
+    // La ligne invalide est écartée comme toute ligne invalide, et le
+    // minimum d'un risque fait refuser la saisie.
+    expect(db.plans[0].lignes).toEqual([{ risque: "Chute de hauteur" }]);
+  });
+
   it("la saisie invalide est refusée comme à la création", async () => {
     db.plans.push(planEnBase());
 

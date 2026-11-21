@@ -81,8 +81,11 @@ export default async function ModifierPlanPreventionPage({
               efChefNom: plan.efChefNom,
               efChefEmail: plan.efChefEmail,
               efEffectifIntervenant: plan.efEffectifIntervenant,
+              entrepriseExterieureAdresse: plan.entrepriseExterieureAdresse,
+              efChefTelephone: plan.efChefTelephone,
               euChefNom: plan.euChefNom,
               euChefFonction: plan.euChefFonction,
+              euChefTelephone: plan.euChefTelephone,
               dateDebut: versSaisieDateHeure(plan.dateDebut),
               dateFin: versSaisieDateHeure(plan.dateFin),
               dureeHeuresEstimee: plan.dureeHeuresEstimee,
@@ -90,12 +93,17 @@ export default async function ModifierPlanPreventionPage({
               batimentId: plan.batimentId,
               naturesTravaux: plan.naturesTravaux,
               travauxDangereux: plan.travauxDangereux,
+              horaires: plan.horaires,
               inspectionDate: plan.inspectionDate ? cleJourCivil(plan.inspectionDate) : null,
               inspectionParticipants: plan.inspectionParticipants,
+              cseAssocie: plan.cseAssocie,
               lignes: plan.lignes.map((l) => ({
                 risque: l.risque,
                 mesureEntrepriseUtilisatrice: l.mesureEntrepriseUtilisatrice ?? "",
                 mesureEntrepriseExterieure: l.mesureEntrepriseExterieure ?? "",
+                famille: l.famille ?? "",
+                lieu: l.lieu ?? "",
+                frequence: l.frequence ?? "",
               })),
               phases: plan.phasesDangereuses.map((f) => ({
                 phase: f.phase,
@@ -105,6 +113,9 @@ export default async function ModifierPlanPreventionPage({
               instructionsTravailleurs: plan.instructionsTravailleurs,
               organisationSecours: plan.organisationSecours,
               participationCroisee: plan.participationCroisee,
+              qualificationsRequises: plan.qualificationsRequises,
+              moyensFournis: plan.moyensFournis,
+              autresObservations: plan.autresObservations,
             }}
           />
         </div>

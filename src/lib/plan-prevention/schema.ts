@@ -6,6 +6,7 @@ import {
   estSaisieDateHeureReelle,
   formaterDateFr,
 } from "@/lib/dates";
+import { CODES_FAMILLE_RISQUE } from "./familles-risque";
 import {
   EN_CLAIR_ECRIT,
   RAISON_TRAVAUX_DANGEREUX,
@@ -87,6 +88,14 @@ export const ligneSchema = z.object({
   risque: z.string().trim().min(3, "Décrire le risque").max(500),
   mesureEntrepriseUtilisatrice: optionalTrimmed(500),
   mesureEntrepriseExterieure: optionalTrimmed(500),
+  // Repris de RiskBoard (2026-11-21) : la famille cochée, validée par la
+  // liste de `familles-risque.ts` ; vide, la ligne est libre.
+  famille: z.preprocess(
+    (v) => (typeof v === "string" && v.trim() ? v.trim() : undefined),
+    z.enum(CODES_FAMILLE_RISQUE, { error: "Famille de risque inconnue" }).optional(),
+  ),
+  lieu: optionalTrimmed(200),
+  frequence: optionalTrimmed(200),
 });
 
 export type LigneInput = z.infer<typeof ligneSchema>;
@@ -130,9 +139,13 @@ export const planPreventionSchema = z
     efChefNom: z.string().trim().min(1).max(200),
     efChefEmail: z.string().trim().toLowerCase().email().max(200),
     efEffectifIntervenant: z.coerce.number().int().min(1).max(9999),
+    // Coordonnées reprises de RiskBoard (2026-11-21), facultatives.
+    entrepriseExterieureAdresse: optionalTrimmed(500),
+    efChefTelephone: optionalTrimmed(30),
 
     euChefNom: z.string().trim().min(1).max(200),
     euChefFonction: optionalTrimmed(120),
+    euChefTelephone: optionalTrimmed(30),
 
     dateDebut: dateFromDatetime,
     dateFin: dateFromDatetime,
@@ -148,9 +161,16 @@ export const planPreventionSchema = z
     ),
     naturesTravaux: z.string().trim().min(10).max(4000),
     travauxDangereux: z.coerce.boolean().optional().default(false),
+    horaires: optionalTrimmed(200),
 
     inspectionDate: dateFromDate,
     inspectionParticipants: optionalTrimmed(2000),
+    // Trois états : « oui », « non », ou rien de répondu — le non-renseigné
+    // reste distinct du « non » (règle du non-renseigné).
+    cseAssocie: z.preprocess(
+      (v) => (v === "oui" ? true : v === "non" ? false : undefined),
+      z.boolean().optional(),
+    ),
 
     lignes: z
       .array(ligneSchema)
@@ -170,6 +190,11 @@ export const planPreventionSchema = z
     instructionsTravailleurs: optionalTrimmed(4000),
     organisationSecours: optionalTrimmed(4000),
     participationCroisee: optionalTrimmed(4000),
+
+    // Repris de RiskBoard (2026-11-21), hors du minimum de R. 4512-8.
+    qualificationsRequises: optionalTrimmed(4000),
+    moyensFournis: optionalTrimmed(4000),
+    autresObservations: optionalTrimmed(4000),
   })
   .refine((v) => v.dateFin > v.dateDebut, {
     message: "La date de fin doit être après la date de début",

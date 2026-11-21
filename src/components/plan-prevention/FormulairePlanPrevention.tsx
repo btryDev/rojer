@@ -49,6 +49,8 @@ import {
   URL_R4512_12,
   citeR4512_12,
 } from "@/lib/plan-prevention/annonces-plan";
+import { FAMILLES_RISQUE, libelleFamille } from "@/lib/plan-prevention/familles-risque";
+import { LIBELLES_COMPLEMENTS } from "@/lib/plan-prevention/complements";
 
 type PrestataireLite = {
   id: string;
@@ -83,7 +85,30 @@ type LigneState = {
   risque: string;
   mesureEntrepriseUtilisatrice: string;
   mesureEntrepriseExterieure: string;
+  /** La famille cochée (`familles-risque.ts`) ; vide : une ligne libre. */
+  famille: string;
+  lieu: string;
+  frequence: string;
 };
+
+const ligneVide = (cle: string, famille = "", risque = ""): LigneState => ({
+  cle,
+  risque,
+  mesureEntrepriseUtilisatrice: "",
+  mesureEntrepriseExterieure: "",
+  famille,
+  lieu: "",
+  frequence: "",
+});
+
+/** Une ligne que personne n'a touchée : la remplacer ne perd rien. */
+const estVierge = (l: LigneState) =>
+  !l.famille &&
+  !l.risque.trim() &&
+  !l.mesureEntrepriseUtilisatrice.trim() &&
+  !l.mesureEntrepriseExterieure.trim() &&
+  !l.lieu.trim() &&
+  !l.frequence.trim();
 
 type PhaseState = { cle: string; phase: string; moyensPrevention: string };
 
@@ -129,6 +154,18 @@ const PILULE_RETENUE =
 /** Le textarea du board : mêmes jetons que `.champ-board`, hauteur libre. */
 const TEXTAREA = "champ-board resize-y";
 
+/** Les trois rubriques reprises de RiskBoard (2026-11-21), hors du minimum
+ *  de R. 4512-8 ; les libellés viennent de `complements.ts`, que la fiche, le
+ *  PDF et le dossier de contrôle lisent aussi. */
+const COMPLEMENTS_TEXTE = [
+  { name: "qualificationsRequises",
+    placeholder: "Ex : habilitation électrique B1V, formation au travail en hauteur, aptitude médicale à jour." },
+  { name: "moyensFournis",
+    placeholder: "Ex : vestiaire du personnel, prise 16 A au local technique, accès au monte-charge." },
+  { name: "autresObservations",
+    placeholder: "Ex : livraisons de la cuisine entre 9 h et 10 h, accès par la cour." },
+] as const;
+
 /**
  * Un plan rouvert par l'écran « Modifier » (2026-10-12) : les valeurs telles
  * que le formulaire les affiche — dates déjà mises en saisie par le serveur,
@@ -142,8 +179,11 @@ export type PlanEdite = {
   efChefNom: string;
   efChefEmail: string;
   efEffectifIntervenant: number;
+  entrepriseExterieureAdresse: string | null;
+  efChefTelephone: string | null;
   euChefNom: string;
   euChefFonction: string | null;
+  euChefTelephone: string | null;
   /** « AAAA-MM-JJTHH:MM » */
   dateDebut: string;
   dateFin: string;
@@ -152,15 +192,20 @@ export type PlanEdite = {
   batimentId: string | null;
   naturesTravaux: string;
   travauxDangereux: boolean;
+  horaires: string | null;
   /** « AAAA-MM-JJ » */
   inspectionDate: string | null;
   inspectionParticipants: string | null;
+  cseAssocie: boolean | null;
   lignes: Omit<LigneState, "cle">[];
   phases: Omit<PhaseState, "cle">[];
   adaptationMateriels: string | null;
   instructionsTravailleurs: string | null;
   organisationSecours: string | null;
   participationCroisee: string | null;
+  qualificationsRequises: string | null;
+  moyensFournis: string | null;
+  autresObservations: string | null;
 };
 
 export function FormulairePlanPrevention({
@@ -213,14 +258,7 @@ export function FormulairePlanPrevention({
   const [lignes, setLignes] = useState<LigneState[]>(() =>
     plan && plan.lignes.length > 0
       ? plan.lignes.map((l, i) => ({ cle: initiale("ligne", i), ...l }))
-      : [
-          {
-            cle: initiale("ligne", 0),
-            risque: "",
-            mesureEntrepriseUtilisatrice: "",
-            mesureEntrepriseExterieure: "",
-          },
-        ],
+      : [ligneVide(initiale("ligne", 0))],
   );
 
   const [phases, setPhases] = useState<PhaseState[]>(() =>
@@ -246,15 +284,23 @@ export function FormulairePlanPrevention({
     state.status === "error" ? state.fieldErrors?.[champ]?.[0] : undefined;
 
   function ajouterLigne() {
-    setLignes((l) => [
-      ...l,
-      {
-        cle: nouvelleCle(),
-        risque: "",
-        mesureEntrepriseUtilisatrice: "",
-        mesureEntrepriseExterieure: "",
-      },
-    ]);
+    setLignes((l) => [...l, ligneVide(nouvelleCle())]);
+  }
+
+  /**
+   * Cocher une famille de RiskBoard (2026-11-21) ajoute sa ligne, le risque
+   * prérempli par le libellé ; la décocher la retire. La ligne vierge du
+   * premier affichage est remplacée plutôt que laissée vide au-dessus.
+   */
+  function basculerFamille(code: string) {
+    setLignes((l) => {
+      if (l.some((x) => x.famille === code)) {
+        const reste = l.filter((x) => x.famille !== code);
+        return reste.length > 0 ? reste : [ligneVide(nouvelleCle())];
+      }
+      const ajout = ligneVide(nouvelleCle(), code, libelleFamille(code));
+      return [...l.filter((x) => !estVierge(x)), ajout];
+    });
   }
 
   function retirerLigne(cle: string) {
@@ -335,6 +381,11 @@ export function FormulairePlanPrevention({
       titre: "Contenu minimal",
       remplie: rubriquesRemplies === RUBRIQUES_R4512_8.length,
       compte: `${rubriquesRemplies} / ${RUBRIQUES_R4512_8.length}`,
+    },
+    {
+      ancre: "pp-complements",
+      titre: "Compléments",
+      remplie: COMPLEMENTS_TEXTE.some((c) => v(c.name, plan?.[c.name])),
     },
   ];
   // Les rubriques ouvertes au premier affichage : celles qui portent déjà quelque chose.
@@ -540,7 +591,25 @@ export function FormulairePlanPrevention({
                   defaultValue={plan?.efEffectifIntervenant ?? 1}
                   erreur={err("efEffectifIntervenant")}
                 />
+                <ChampBoard
+                  id="efChefTelephone"
+                  name="efChefTelephone"
+                  type="tel"
+                  label="Téléphone (facultatif)"
+                  maxLength={30}
+                  defaultValue={valeur(plan?.efChefTelephone)}
+                  erreur={err("efChefTelephone")}
+                />
               </div>
+              <ChampBoard
+                id="entrepriseExterieureAdresse"
+                name="entrepriseExterieureAdresse"
+                label="Adresse (facultatif)"
+                maxLength={500}
+                placeholder="Ex : 12 rue des Artisans, 69007 Lyon"
+                defaultValue={valeur(plan?.entrepriseExterieureAdresse)}
+                erreur={err("entrepriseExterieureAdresse")}
+              />
 
               {/* L'entreprise utilisatrice — vous : qui signe côté site. */}
               <div className="border-t border-[color:var(--board-slate-pale)] pt-4">
@@ -565,6 +634,15 @@ export function FormulairePlanPrevention({
                     maxLength={120}
                     placeholder="Ex : Gérant, Directeur d'établissement…"
                     erreur={err("euChefFonction")}
+                  />
+                  <ChampBoard
+                    id="euChefTelephone"
+                    name="euChefTelephone"
+                    type="tel"
+                    label="Téléphone (facultatif)"
+                    maxLength={30}
+                    defaultValue={valeur(plan?.euChefTelephone)}
+                    erreur={err("euChefTelephone")}
                   />
                 </div>
               </div>
@@ -640,6 +718,15 @@ export function FormulairePlanPrevention({
                   requis
                   erreur={err("dateFin")}
                 />
+                <ChampBoard
+                  id="horaires"
+                  name="horaires"
+                  label="Horaires de travail (facultatif)"
+                  maxLength={200}
+                  placeholder="Ex : 8 h – 17 h, hors week-end"
+                  defaultValue={valeur(plan?.horaires)}
+                  erreur={err("horaires")}
+                />
               </div>
               {!scelle && (
                 <ChampBatiment
@@ -708,6 +795,23 @@ export function FormulairePlanPrevention({
                     placeholder="Ex : vous, le chef d'équipe de l'entreprise extérieure"
                   />
                 </div>
+                {/* Trois réponses : « non renseigné » reste distinct de
+                    « non » (repris de RiskBoard, 2026-11-21). */}
+                <div>
+                  <label className="label-board" htmlFor="cseAssocie">
+                    {LIBELLES_COMPLEMENTS.cseAssocie}
+                  </label>
+                  <select
+                    id="cseAssocie"
+                    name="cseAssocie"
+                    defaultValue={plan?.cseAssocie == null ? "" : plan.cseAssocie ? "oui" : "non"}
+                    className="champ-board"
+                  >
+                    <option value="">Non renseigné</option>
+                    <option value="oui">Oui</option>
+                    <option value="non">Non</option>
+                  </select>
+                </div>
               </div>
             </section>
 
@@ -724,6 +828,29 @@ export function FormulairePlanPrevention({
                 {EN_CLAIR_R4463_8}
               </p>
               <LegalBadge reference="Art. R. 4463-8 CT" href={URL_R4463_8} extrait={R4463_8} />
+              {/* LES FAMILLES DE RISQUE DE RISKBOARD (2026-11-21) : cocher en
+                  ajoute la ligne, risque prérempli ; décocher la retire. Les
+                  lignes libres restent possibles, plus bas. */}
+              <fieldset className="m-0 flex flex-wrap items-center gap-2 border-0 p-0">
+                <legend className="mb-2 text-[13px] text-[color:var(--board-slate-mid)]">
+                  Cochez les familles de risque présentes :
+                </legend>
+                {FAMILLES_RISQUE.map((f) => {
+                  const cochee = lignes.some((l) => l.famille === f.code);
+                  return (
+                    <button
+                      key={f.code}
+                      type="button"
+                      aria-pressed={cochee}
+                      onClick={() => basculerFamille(f.code)}
+                      className={`${PILULE} ${cochee ? PILULE_RETENUE : PILULE_REPOS}`}
+                    >
+                      {cochee && <Check className="size-3.5" strokeWidth={3} aria-hidden />}
+                      {f.libelle}
+                    </button>
+                  );
+                })}
+              </fieldset>
               <div
                 aria-hidden
                 className="hidden gap-2.5 px-0.5 font-mono text-[10.5px] uppercase tracking-[0.12em] text-[color:var(--board-slate-soft)] md:grid md:grid-cols-[34px_minmax(0,2fr)_minmax(0,1.5fr)_minmax(0,1.5fr)_72px]"
@@ -746,6 +873,12 @@ export function FormulairePlanPrevention({
                     {i + 1}
                   </span>
                   <div>
+                    <input type="hidden" name={`lignes[${i}].famille`} value={l.famille} />
+                    {l.famille && (
+                      <p className="m-0 mb-1 font-mono text-[10.5px] tracking-[0.08em] text-[color:var(--board-slate-soft)]">
+                        {libelleFamille(l.famille)}
+                      </p>
+                    )}
                     <label className="label-board md:sr-only" htmlFor={`risque-${l.cle}`}>
                       Risque {i + 1} *
                     </label>
@@ -801,6 +934,26 @@ export function FormulairePlanPrevention({
                         <span className="sr-only"> le risque {i + 1}</span>
                       </button>
                     )}
+                  </div>
+                  <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 md:col-span-3 md:col-start-2">
+                    <ChampBoard
+                      id={`lieu-${l.cle}`}
+                      name={`lignes[${i}].lieu`}
+                      label={`Lieu du risque ${i + 1}`}
+                      value={l.lieu}
+                      onChange={(e) => majLigne(l.cle, "lieu", e.target.value)}
+                      maxLength={200}
+                      placeholder="Ex : toiture"
+                    />
+                    <ChampBoard
+                      id={`frequence-${l.cle}`}
+                      name={`lignes[${i}].frequence`}
+                      label={`Fréquence du risque ${i + 1}`}
+                      value={l.frequence}
+                      onChange={(e) => majLigne(l.cle, "frequence", e.target.value)}
+                      maxLength={200}
+                      placeholder="Ex : chaque matin, pendant 1 h"
+                    />
                   </div>
                 </div>
               ))}
@@ -955,6 +1108,35 @@ export function FormulairePlanPrevention({
               >
                 <LegalBadge className="mt-2" reference="Art. R. 4512-11 CT" href={URL_R4512_11} extrait={R4512_11} />
               </ArticleEnClair>
+            </section>
+
+            {/* Repris de RiskBoard (2026-11-21) : facultatifs, hors du
+                minimum de R. 4512-8 — rien n'est signalé s'ils restent vides. */}
+            <section id="pp-complements" className={CARTE} aria-labelledby="pp-complements-titre">
+              <EnTeteCarte id="pp-complements-titre" titre="Compléments" note="Facultatif" />
+              {COMPLEMENTS_TEXTE.map((c) => (
+                <div key={c.name}>
+                  <label className="label-board" htmlFor={c.name}>
+                    {LIBELLES_COMPLEMENTS[c.name]}
+                  </label>
+                  <textarea
+                    id={c.name}
+                    name={c.name}
+                    defaultValue={valeur(plan?.[c.name])}
+                    rows={2}
+                    maxLength={4000}
+                    className={`${TEXTAREA} min-h-[72px]`}
+                    placeholder={c.placeholder}
+                    aria-invalid={Boolean(err(c.name))}
+                    aria-describedby={err(c.name) ? `${c.name}-erreur` : undefined}
+                  />
+                  {err(c.name) && (
+                    <p id={`${c.name}-erreur`} className="m-0 mt-1.5 text-[12.5px] text-[color:var(--board-signal-ink)]">
+                      {err(c.name)}
+                    </p>
+                  )}
+                </div>
+              ))}
             </section>
           </fieldset>
         </div>
