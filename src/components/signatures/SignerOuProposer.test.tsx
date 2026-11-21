@@ -8,12 +8,19 @@
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import type { RenvoiOtpState } from "@/lib/signatures/actions";
+import { formaterHeureEnLettresFr } from "@/lib/dates";
 
 const { renvoyer, proposer } = vi.hoisted(() => ({
-  renvoyer: vi.fn(async () => ({
-    status: "success" as const,
-    message: "Un code vient d'être envoyé à chef@ee.fr. Il vous reste 3 essais sur ce lien.",
-  })),
+  // Les heures viennent du serveur (2026-11-21) : la fin du code, le prochain renvoi.
+  renvoyer: vi.fn(
+    async (): Promise<RenvoiOtpState> => ({
+      status: "success",
+      message: "Un code vient d'être envoyé à chef@ee.fr. Il vous reste 3 essais sur ce lien.",
+      expireLe: new Date(Date.now() + 600_000).toISOString(),
+      renvoiPossibleLe: new Date(Date.now() + 60_000).toISOString(),
+    }),
+  ),
   proposer: vi.fn(async () => ({ status: "success" as const })),
 }));
 
@@ -32,6 +39,9 @@ afterEach(() => {
   cleanup();
   vi.clearAllMocks();
 });
+
+/** Les classes de mise en page, obligatoires : des valeurs quelconques ici. */
+const MISE_EN_PAGE = { classeConteneur: "c", classeCarte: "k" };
 
 const SIGNATURE = {
   token: "jeton",
@@ -73,7 +83,7 @@ async function cliquer(nom: RegExp) {
 
 describe("SignerOuProposer — la signature", () => {
   it("« Signer » demande le code, puis ouvre l'étape du code avec un renvoi à rebours", async () => {
-    render(<SignerOuProposer signature={SIGNATURE} />);
+    render(<SignerOuProposer {...MISE_EN_PAGE} signature={SIGNATURE} />);
     expect(screen.queryByLabelText(/Code reçu par e-mail/)).toBeNull();
 
     await cliquer(/^Signer$/);
@@ -97,8 +107,49 @@ describe("SignerOuProposer — la signature", () => {
     expect(screen.getByText(/Code valable jusqu'à \d{2} h \d{2}\. Le lien expire le/)).toBeTruthy();
   });
 
+  it("la fin du code est celle du serveur : un renvoi refusé la garde, un code non parti ne se dit plus valable", async () => {
+    const fin = new Date("2026-11-21T14:42:00Z"); // 15 h 42 à Paris
+    render(
+      <SignerOuProposer
+        {...MISE_EN_PAGE}
+        signature={{ ...SIGNATURE, codeDejaDemande: true, codeExpireLe: fin, renvoiPossibleLe: new Date(0) }}
+      />,
+    );
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 5));
+    });
+    // `fin` est passée pour l'horloge du test : le code se dit expiré.
+    expect(screen.getByText(/Ce code a expiré : demandez-en un nouveau\. Le lien expire le/)).toBeTruthy();
+
+    const plusTard = new Date(Date.now() + 600_000);
+    renvoyer.mockResolvedValueOnce({
+      status: "success",
+      message: "Un nouveau code vient d'être envoyé à chef@ee.fr. Il vous reste 3 essais sur ce lien.",
+      expireLe: plusTard.toISOString(),
+      renvoiPossibleLe: new Date(0).toISOString(),
+    });
+    await cliquer(/^Renvoyer un code$/);
+    const valable = new RegExp(`Code valable jusqu'à ${formaterHeureEnLettresFr(plusTard)}\\. Le lien`);
+    expect(screen.getByText(valable)).toBeTruthy();
+
+    // Refusé (trop tôt) : le code d'avant reste dit valable.
+    renvoyer.mockResolvedValueOnce({ status: "error", message: "Un code vient d'être envoyé. Patientez." });
+    await cliquer(/^Renvoyer un code$/);
+    expect(screen.getByText(valable)).toBeTruthy();
+
+    // Renouvelé mais pas parti : plus aucun code n'est dit valable.
+    renvoyer.mockResolvedValueOnce({
+      status: "error",
+      message: "Le code n'a pas pu être envoyé.",
+      codeAnnule: true,
+      renvoiPossibleLe: new Date(0).toISOString(),
+    });
+    await cliquer(/^Renvoyer un code$/);
+    expect(screen.getByText(/Ce code n'est plus valable : demandez-en un nouveau\. Le lien/)).toBeTruthy();
+  });
+
   it("un code déjà demandé ouvre directement l'étape du code", () => {
-    render(<SignerOuProposer signature={{ ...SIGNATURE, codeDejaDemande: true }} />);
+    render(<SignerOuProposer {...MISE_EN_PAGE} signature={{ ...SIGNATURE, codeDejaDemande: true }} />);
     expect(screen.queryByRole("button", { name: /^Signer$/ })).toBeNull();
     expect(screen.getByLabelText(/Code reçu par e-mail/)).toBeTruthy();
     expect(screen.getByText(/déjà été demandé sur ce lien/)).toBeTruthy();
@@ -106,21 +157,21 @@ describe("SignerOuProposer — la signature", () => {
 
   it("le code refusé à l'envoi : l'erreur s'affiche, l'étape du code ne s'ouvre pas", async () => {
     renvoyer.mockResolvedValueOnce({ status: "error", message: "Cinq codes ont déjà été envoyés" } as never);
-    render(<SignerOuProposer signature={SIGNATURE} />);
+    render(<SignerOuProposer {...MISE_EN_PAGE} signature={SIGNATURE} />);
     await cliquer(/^Signer$/);
     expect(screen.getByRole("alert").textContent).toMatch(/Cinq codes/);
     expect(screen.queryByLabelText(/Code reçu par e-mail/)).toBeNull();
   });
 
   it("sans proposition possible, aucun lien « Proposer des modifications »", () => {
-    render(<SignerOuProposer signature={SIGNATURE} proposition={null} />);
+    render(<SignerOuProposer {...MISE_EN_PAGE} signature={SIGNATURE} proposition={null} />);
     expect(screen.queryByRole("button", { name: /Proposer des modifications/ })).toBeNull();
   });
 });
 
 describe("SignerOuProposer — la proposition remplace la signature", () => {
   it("le lien sous « Signer » ouvre le mode proposition ; « Retour » ramène la signature", async () => {
-    render(<SignerOuProposer signature={SIGNATURE} proposition={PROPOSITION} />);
+    render(<SignerOuProposer {...MISE_EN_PAGE} signature={SIGNATURE} proposition={PROPOSITION} />);
 
     await cliquer(/Proposer des modifications/);
     expect(screen.queryByRole("button", { name: /^Signer$/ })).toBeNull();
@@ -135,7 +186,7 @@ describe("SignerOuProposer — la proposition remplace la signature", () => {
   });
 
   it("après l'envoi, seul l'encadré de succès reste : ni signature ni code", async () => {
-    render(<SignerOuProposer signature={{ ...SIGNATURE, codeDejaDemande: true }} proposition={PROPOSITION} />);
+    render(<SignerOuProposer {...MISE_EN_PAGE} signature={{ ...SIGNATURE, codeDejaDemande: true }} proposition={PROPOSITION} />);
     await cliquer(/Proposer des modifications/);
     await cliquer(/Envoyer ma demande de modification/);
 

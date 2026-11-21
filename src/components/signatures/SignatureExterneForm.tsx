@@ -1,11 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { formaterDateLongueFr, formaterHeureFr } from "@/lib/dates";
 import { ChampBoard } from "@/components/ui-kit/ChampBoard";
-import { phraseNouveauCode, phraseValiditeCode } from "./EtapesCodeSignature";
+import { phraseNouveauCode, phraseValiditeCode, useSecondesAvant } from "./EtapesCodeSignature";
+import { nomSansAdresse } from "@/lib/signatures/signataire";
 import {
   poserSignatureAvecToken,
   renvoyerCodeOtp,
@@ -26,24 +27,20 @@ import {
 
 const essais = (n: number) => `${n} essai${n > 1 ? "s" : ""}`;
 
-/** Le délai entre deux codes (`OTP_DELAI_RENVOI_SECONDES`, 60 s). */
-const DELAI_RENVOI_MS = 60_000;
-/** La validité d'un code (`OTP_TTL_MINUTES`, 10 min). */
-const VALIDITE_CODE_MS = 10 * 60_000;
-
-type EtatCode =
-  | Exclude<RenvoiOtpState, { status: "success" }>
-  | { status: "success"; message: string; renvoiA: number; expireA: number };
-
 /**
- * Les secondes qui restent avant `cible`, arrondies au-dessus ; 0 passé.
- * `null` : l'heure de l'écran n'est pas encore lue.
+ * La dernière réponse de `renvoyerCodeOtp`, et le code tel que le serveur
+ * l'a dit en dernier (2026-11-21) : sa fin et le prochain renvoi, à l'heure
+ * du serveur. Un renvoi refusé garde le code d'avant ; un code renouvelé
+ * mais pas parti (`codeAnnule`) n'est plus dit valable.
  */
-function secondesAvant(cible: number | null, maintenant: number | null): number | null {
-  if (cible === null) return 0;
-  if (maintenant === null) return null;
-  return Math.max(0, Math.ceil((cible - maintenant) / 1000));
-}
+type EtatCode = {
+  reponse: RenvoiOtpState;
+  expireA: number | null;
+  renvoiA: number | null;
+  annule: boolean;
+};
+
+const instant = (iso: string | undefined) => (iso ? Date.parse(iso) : null);
 
 export function SignatureExterneForm({
   token,
@@ -77,45 +74,45 @@ export function SignatureExterneForm({
     boundAction,
     { status: "idle" },
   );
-  // L'instant de l'envoi réussi, noté au retour de l'action : il ouvre le
-  // compte à rebours du renvoi (60 s, la règle de `renvoiOtpAutorise`).
-  const [codeState, demanderCode, codeEnCours] = useActionState<EtatCode>(
-    async () => {
-      const r = await renvoyerCodeOtp(token);
-      const t = Date.now();
-      return r.status === "success" ? { ...r, renvoiA: t + DELAI_RENVOI_MS, expireA: t + VALIDITE_CODE_MS } : r;
+  // Le code tel que le serveur l'a dit en dernier : la page au chargement,
+  // puis chaque réponse de `renvoyerCodeOtp`.
+  const [code, demanderCode, codeEnCours] = useActionState<EtatCode>(
+    async (avant) => {
+      const reponse = await renvoyerCodeOtp(token);
+      if (reponse.status === "success") {
+        return { reponse, expireA: instant(reponse.expireLe), renvoiA: instant(reponse.renvoiPossibleLe), annule: false };
+      }
+      if (reponse.status === "error" && reponse.codeAnnule) {
+        return { reponse, expireA: null, renvoiA: instant(reponse.renvoiPossibleLe), annule: true };
+      }
+      return { ...avant, reponse };
     },
-    { status: "idle" },
+    {
+      reponse: { status: "idle" },
+      expireA: codeExpireLe?.getTime() ?? null,
+      renvoiA: renvoiPossibleLe?.getTime() ?? null,
+      annule: false,
+    },
   );
+  const codeState = code.reponse;
   const codeDemande = codeDejaDemande || codeState.status === "success";
   const envoyeIci = codeState.status === "success";
   // Un code faux décompte un essai : la réponse dit combien il en reste.
   const restants =
     state.status === "error" && state.restants !== undefined ? state.restants : essaisRestants;
 
-  // Le compte à rebours, au navigateur seulement : l'heure du serveur et
-  // celle de l'écran ne coïncident pas au rendu. `null` tant qu'elle n'est
-  // pas lue — le lien reste alors fermé, sans chiffre.
-  const [maintenant, setMaintenant] = useState<number | null>(null);
-  useEffect(() => {
-    const tic = () => setMaintenant(Date.now());
-    const premier = setTimeout(tic, 0);
-    const minuterie = setInterval(tic, 1000);
-    return () => {
-      clearTimeout(premier);
-      clearInterval(minuterie);
-    };
-  }, []);
-  const renvoiA =
-    codeState.status === "success" ? codeState.renvoiA : (renvoiPossibleLe?.getTime() ?? null);
-  const attente = secondesAvant(renvoiA, maintenant);
-  const expireA = codeState.status === "success" ? codeState.expireA : (codeExpireLe?.getTime() ?? null);
-  const validite =
-    expireA === null
-      ? "Valable 10 minutes"
-      : maintenant !== null && expireA <= maintenant
-        ? "Ce code a expiré : demandez-en un nouveau"
-        : phraseValiditeCode(new Date(expireA));
+  // Les comptes à rebours, au navigateur seulement (`useSecondesAvant` :
+  // `null` tant que la page n'est pas montée — le renvoi reste fermé, sans
+  // chiffre).
+  const attente = useSecondesAvant(code.renvoiA);
+  const avantFin = useSecondesAvant(code.expireA);
+  const validite = code.annule
+    ? "Ce code n'est plus valable : demandez-en un nouveau. "
+    : code.expireA === null
+      ? ""
+      : avantFin === 0
+        ? "Ce code a expiré : demandez-en un nouveau. "
+        : `${phraseValiditeCode(new Date(code.expireA))}. `;
 
   // La confirmation reste sur le lien (2026-11-21, ADR-006 amendée : plus
   // d'accusé public `/signe`). `router.refresh` relit la page : le lien,
@@ -166,7 +163,7 @@ export function SignatureExterneForm({
           Vous signez en tant que
         </p>
         <dl className="m-0 mt-2 grid grid-cols-1 gap-y-1 text-[13.5px] sm:grid-cols-[auto_1fr] sm:gap-x-4">
-          {destinataire.nom && destinataire.nom.trim().toLowerCase() !== destinataire.email.trim().toLowerCase() && (
+          {nomSansAdresse(destinataire.nom, destinataire.email) && (
             <>
               <dt className="text-[color:var(--board-slate-mid)]">Nom</dt>
               <dd className="m-0 text-[color:var(--board-ink)]">{destinataire.nom}</dd>
@@ -231,7 +228,7 @@ export function SignatureExterneForm({
                 const champ = e.currentTarget;
                 champ.value = champ.value.replace(/\D/g, "").slice(0, 6);
               }}
-              aide={`${validite}. Le lien expire le ${formaterDateLongueFr(expireLe)} à ${formaterHeureFr(expireLe)}.`}
+              aide={`${validite}Le lien expire le ${formaterDateLongueFr(expireLe)} à ${formaterHeureFr(expireLe)}.`}
             />
 
             {state.status === "error" && (

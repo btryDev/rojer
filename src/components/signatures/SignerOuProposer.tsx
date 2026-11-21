@@ -44,8 +44,8 @@ export function SignerOuProposer({
   chapeauAction?: ReactNode;
   /** L'en-tête de l'écran de proposition. */
   enteteProposition?: ReactNode;
-  classeConteneur?: string;
-  classeCarte?: string;
+  classeConteneur: string;
+  classeCarte: string;
 }) {
   const [mode, setMode] = useState<"signature" | "proposition">("signature");
   const [propositionOuverte, setPropositionOuverte] = useState(false);
@@ -53,7 +53,7 @@ export function SignerOuProposer({
 
   const basculer = (m: "signature" | "proposition") => {
     setMode(m);
-    if (typeof window !== "undefined") window.scrollTo({ top: 0 });
+    window.scrollTo({ top: 0 });
   };
 
   return (
@@ -65,7 +65,7 @@ export function SignerOuProposer({
         {mode === "signature" && document}
         {!propositionEnvoyee && (
           <div hidden={mode !== "signature"}>
-            <section className={classeCarte} aria-label={chapeauAction ? "Signer" : undefined}>
+            <section className={classeCarte} aria-label="Signer">
               {chapeauAction}
               <div className={chapeauAction ? "mt-5" : undefined}>
                 <SignatureExterneForm
@@ -85,7 +85,7 @@ export function SignerOuProposer({
         )}
         {proposition && propositionOuverte && (
           <div hidden={mode !== "proposition"}>
-            <section className={classeCarte} aria-label={classeCarte ? "Proposer des modifications" : undefined}>
+            <section className={classeCarte} aria-label="Proposer des modifications">
               <PropositionPlanForm
                 {...proposition}
                 token={signature.token}

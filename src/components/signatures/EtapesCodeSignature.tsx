@@ -3,7 +3,8 @@
 import { useEffect, useState, useTransition } from "react";
 import { unstable_rethrow } from "next/navigation";
 import type { EnvoiCodeCompte } from "@/lib/signatures/code-compte";
-import { formaterHeureFr } from "@/lib/dates";
+import { formaterHeureEnLettresFr } from "@/lib/dates";
+import { useMonte } from "@/components/ui-kit/useMonte";
 
 /**
  * Les deux phrases du code, communes aux trois fenêtres de signature — les
@@ -15,21 +16,34 @@ export function phraseNouveauCode(secondes: number): string {
   return `Nouveau code possible dans ${Math.floor(secondes / 60)}:${String(secondes % 60).padStart(2, "0")}`;
 }
 
-/** « Code valable jusqu'à 15 h 42 » — l'heure de Paris (`formaterHeureFr`). */
+/** « Code valable jusqu'à 15 h 42 » — l'heure de Paris. */
 export function phraseValiditeCode(expireLe: Date): string {
-  return `Code valable jusqu'à ${formaterHeureFr(expireLe).replace(":", " h ")}`;
+  return `Code valable jusqu'à ${formaterHeureEnLettresFr(expireLe)}`;
 }
 
-/** Les secondes avant `cible` (ISO), arrondies au-dessus ; 0 passé ou sans cible. */
-export function useSecondesAvant(cible: string | null): number {
+/**
+ * Les secondes avant `cible` (en ms), arrondies au-dessus ; 0 passé ou sans
+ * cible. `null` tant que la page n'est pas montée : l'heure du serveur et
+ * celle de l'écran ne coïncident pas au rendu, le chiffre attend le
+ * navigateur. Partagé par les trois fenêtres de signature.
+ */
+export function useSecondesAvant(cible: number | null): number | null {
+  const monte = useMonte();
   const [maintenant, setMaintenant] = useState(Date.now);
   useEffect(() => {
-    if (!cible) return;
-    const t = setInterval(() => setMaintenant(Date.now()), 1000);
-    return () => clearInterval(t);
+    if (cible === null) return;
+    const tic = () => setMaintenant(Date.now());
+    // L'heure relue dès qu'une cible arrive, pas une seconde plus tard.
+    const premier = setTimeout(tic, 0);
+    const minuterie = setInterval(tic, 1000);
+    return () => {
+      clearTimeout(premier);
+      clearInterval(minuterie);
+    };
   }, [cible]);
-  if (!cible) return 0;
-  return Math.max(0, Math.ceil((new Date(cible).getTime() - maintenant) / 1000));
+  if (cible === null) return 0;
+  if (!monte) return null;
+  return Math.max(0, Math.ceil((cible - maintenant) / 1000));
 }
 
 /**
@@ -45,7 +59,7 @@ export function RenvoiDuCode({
   demande: boolean;
   demanderCode: () => void;
 }) {
-  const attente = useSecondesAvant(renvoiPossibleLe);
+  const attente = useSecondesAvant(Date.parse(renvoiPossibleLe)) ?? 0;
   return attente > 0 ? (
     <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-[color:var(--board-slate-soft)]">
       {phraseNouveauCode(attente)}

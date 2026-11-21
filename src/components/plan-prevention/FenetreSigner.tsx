@@ -16,6 +16,7 @@ import {
   type SignerEtEnvoyerState,
 } from "@/lib/plan-prevention/signature-fiche-actions";
 import { texteConsentement } from "@/lib/signatures/consentement";
+import { nomSansAdresse } from "@/lib/signatures/signataire";
 import { useAnnonceFiche } from "./AnnonceFiche";
 
 /**
@@ -33,16 +34,12 @@ const FMT_MAINTENANT = new Intl.DateTimeFormat("fr-FR", {
   timeStyle: "short",
 });
 
-/**
- * « Nom <adresse> », ou l'adresse seule quand le compte n'a pas d'autre nom
- * qu'elle (2026-11-21, retour de test : « x@y.fr <x@y.fr> »).
- */
+/** « Nom <adresse> », ou l'adresse seule quand le nom n'est qu'elle (`nomSansAdresse`). */
 export function signataireAffiche(vous: { nom: string; email: string }): string {
-  const nom = vous.nom.trim();
   const email = vous.email.trim();
-  if (!email) return nom;
-  if (!nom || nom.toLowerCase() === email.toLowerCase()) return email;
-  return `${nom} <${email}>`;
+  if (!email) return vous.nom.trim();
+  const nom = nomSansAdresse(vous.nom, email);
+  return nom ? `${nom} <${email}>` : email;
 }
 
 export function FenetreSigner({

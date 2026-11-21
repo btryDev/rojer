@@ -553,3 +553,19 @@ export function formaterHeureFr(d: Date): string {
   const c = composantesCiviles(d);
   return `${String(c.heure).padStart(2, "0")}:${String(c.minute).padStart(2, "0")}`;
 }
+
+/** « 14 h 05 », heure de Paris — l'heure dans une phrase (signatures, codes). */
+export function formaterHeureEnLettresFr(d: Date): string {
+  return formaterHeureFr(d).replace(":", " h ");
+}
+
+const FMT_JOUR_MOIS_CHIFFRES = new Intl.DateTimeFormat("fr-FR", {
+  timeZone: FUSEAU_REFERENCE,
+  day: "2-digit",
+  month: "2-digit",
+});
+
+/** « 19/11 » — jour et mois en chiffres, sans année (cf. `FMT_JOUR_MOIS`). */
+export function formaterJourMoisChiffresFr(d: Date): string {
+  return FMT_JOUR_MOIS_CHIFFRES.format(d);
+}
