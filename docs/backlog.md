@@ -9,6 +9,11 @@ l'architecture sort d'ici sous forme d'ADR avant d'être codé.
 
 ## Connecteur MCP par compte — avec Better Auth, à la migration
 
+> **[2026-11-21]** Chantier ouvert : ADR-062, branche `lot/mcp-par-compte`.
+> **Décision de la propriétaire (2026-11-17) : le connecteur n'est accessible
+> qu'en formule Pro** (`connecterUnAssistant`, à lire à chaque requête — il ne
+> l'est nulle part aujourd'hui).
+
 **État** (2026-09-27) : le connecteur de Claude.ai passe par l'adresse à clé
 `/api/mcp/<clé>` (clé changée le 2026-09-27 : l'ancienne apparaissait en clair
 dans les journaux Vercel, cf. `docs/revues/audit-mcp-2026-09-27.md`, S1/S2).
@@ -29,9 +34,11 @@ toute l'authentification sera refaite.
 À faire alors :
 1. Serveur d'autorisation Better Auth pour `/api/mcp` : découverte RFC 8414,
    métadonnées RFC 9728 (déjà servies, à repointer), DCR, consentement.
-2. Vérification du jeton dans `src/lib/mcp/acces-oauth.ts` réécrite pour
+2. ~~Vérification du jeton dans `src/lib/mcp/acces-oauth.ts` réécrite pour
    Better Auth (aujourd'hui `getClaims` Supabase), cloisonnement inchangé :
-   `sub → Entreprise.userId → Etablissement`.
+   `sub → Entreprise.userId → Etablissement`.~~ [2026-11-21 : le fichier est
+   retiré depuis la bascule ; la portée passe au compte (ADR-054), voir
+   ADR-062 § 4 et 5.]
 3. Test de bout en bout avec Claude Code, puis Claude.ai.
 4. Retrait de la route `/api/mcp/[cle]` et des variables `MCP_CLE`,
    `MCP_ETABLISSEMENT_ID` ; mise à jour de la page « Connecter ».
