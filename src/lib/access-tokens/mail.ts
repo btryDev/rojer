@@ -83,6 +83,7 @@ export async function envoyerMailAcces(args: MailAccesArgs): Promise<void> {
     .filter(Boolean);
   const message = mailSignature({
     titre: args.titre ?? "Document à signer",
+    surtitre: "Signature demandée",
     nom: args.nom,
     paragraphes: ouverture ? [ouverture] : [],
     encadre: args.encadre,
@@ -119,6 +120,7 @@ export async function envoyerMailCode(args: MailCodeArgs): Promise<void> {
   const essais = `${args.essaisRestants} essai${args.essaisRestants > 1 ? "s" : ""}`;
   const message = mailSignature({
     titre: "Votre code de confirmation",
+    surtitre: "Code de confirmation",
     nom: args.nom,
     paragraphes: args.document ? [`Il sert à signer : « ${args.document} ».`] : [],
     code: { libelle: "Votre code de confirmation", valeur: args.otp },
@@ -149,6 +151,7 @@ export async function envoyerMailCodeCompte(args: {
   if (args.nom) exigerUneLigne("nom du destinataire", args.nom);
   const message = mailSignature({
     titre: "Votre code de signature",
+    surtitre: "Code de confirmation",
     nom: args.nom,
     paragraphes: args.document
       ? [`Il confirme votre signature de : « ${args.document} ».`]

@@ -50,6 +50,11 @@ const COULEURS = {
 
 const POLICE =
   "'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+/** Titres et pastille (maquette V2, 2026-11-21) : Instrument Sans si le
+ *  poste l'a, sinon la police du corps. */
+const POLICE_TITRE = `'Instrument Sans',${POLICE}`;
+/** Les petits libellés en capitales. */
+const POLICE_MONO = "'JetBrains Mono','SFMono-Regular',Menlo,Consolas,monospace";
 
 export function echapperHtml(s: string): string {
   return s
@@ -90,7 +95,7 @@ function note(texte: string): string {
 function boutonHtml(href: string, libelle: string): string {
   return `<table role="presentation" align="center" cellpadding="0" cellspacing="0" style="margin:12px auto 14px;">
 <tr><td style="border-radius:999px;background:${COULEURS.encre};">
-<a href="${href}" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:999px;">${echapperHtml(libelle)}</a>
+<a href="${href}" style="display:inline-block;padding:15px 30px;font-family:${POLICE_TITRE};font-size:16px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:999px;">${echapperHtml(libelle)}</a>
 </td></tr>
 </table>`;
 }
@@ -98,7 +103,7 @@ function boutonHtml(href: string, libelle: string): string {
 /** Le lien en clair : le secours d'usage quand un bouton ne s'ouvre pas. */
 function lienDeSecours(href: string): string {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0 24px;">
-<tr><td align="center" style="background:${COULEURS.canvas};border-radius:12px;padding:14px 16px;text-align:center;">
+<tr><td align="center" style="background:${COULEURS.canvas};border-radius:14px;padding:12px 14px;text-align:center;">
 <p style="margin:0 0 4px;font-size:13px;line-height:1.5;color:${COULEURS.doux};">Le bouton ne s'ouvre pas&nbsp;? Copiez ce lien dans votre navigateur&nbsp;:</p>
 <p style="margin:0;font-size:13px;line-height:1.5;word-break:break-all;"><a href="${href}" style="color:${COULEURS.bleu};">${href}</a></p>
 </td></tr>
@@ -117,7 +122,7 @@ ${lignes.map(note).join("\n")}
  * ligne de pied. Une seule coquille pour les e-mails de compte et ceux de
  * signature.
  */
-function coquille(titre: string, contenu: string): string {
+function coquille(titre: string, contenu: string, surtitre?: string): string {
   // Une seule marque forte : la pastille bleue de Rojer en tête. Le reste est
   // calme — encre, gris de la charte, un seul bouton.
   return `<!doctype html>
@@ -134,11 +139,11 @@ function coquille(titre: string, contenu: string): string {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;font-family:${POLICE};">
 <tr><td align="center" style="padding:0 0 20px;">
 <table role="presentation" align="center" cellpadding="0" cellspacing="0"><tr>
-<td style="background:${COULEURS.bleuPale};border-radius:999px;padding:8px 18px;font-size:17px;line-height:1;font-weight:600;letter-spacing:-0.02em;color:${COULEURS.encre};">Rojer</td>
+<td style="background:${COULEURS.bleuPale};border-radius:999px;padding:8px 20px;font-family:${POLICE_TITRE};font-size:18px;line-height:1;font-weight:600;letter-spacing:-0.02em;color:${COULEURS.encre};">Rojer</td>
 </tr></table>
 </td></tr>
-<tr><td align="center" style="background:${COULEURS.carte};border-radius:20px;padding:36px 32px 32px;border:1px solid ${COULEURS.filet};text-align:center;">
-<h1 style="margin:0 0 22px;font-size:26px;line-height:1.2;font-weight:600;letter-spacing:-0.03em;color:${COULEURS.encre};">${echapperHtml(titre)}</h1>
+<tr><td align="center" style="background:${COULEURS.carte};border-radius:28px;padding:36px 32px 30px;text-align:center;">
+${surtitre ? `<p style="margin:0 0 14px;font-family:${POLICE_MONO};font-size:11px;line-height:1.4;letter-spacing:0.16em;text-transform:uppercase;color:${COULEURS.doux};">${echapperHtml(surtitre)}</p>\n` : ""}<h1 style="margin:0 0 22px;font-family:${POLICE_TITRE};font-size:30px;line-height:1.08;font-weight:600;letter-spacing:-0.035em;color:${COULEURS.encre};">${echapperHtml(titre)}</h1>
 ${contenu}
 </td></tr>
 <tr><td align="center" style="padding:18px 8px 0;font-size:12px;line-height:1.5;color:${COULEURS.doux};text-align:center;">Envoyé par Rojer. Ne&nbsp;répondez pas à ce&nbsp;message.</td></tr>
@@ -194,6 +199,8 @@ export function mailCompte(m: MailCompte): { text: string; html?: string } {
 export type MailSignature = {
   /** Le titre du message, en tête de carte. */
   titre: string;
+  /** Le petit libellé en capitales au-dessus du titre ; « Signature électronique » par défaut. */
+  surtitre?: string;
   /** Le nom du destinataire, pour « Bonjour …, » ; absent : « Bonjour, ». */
   nom?: string | null;
   /** Les phrases d'ouverture, une par paragraphe. */
@@ -217,18 +224,22 @@ function salutation(nom: string | null | undefined): string {
 }
 
 function encadreHtml(lignes: readonly { libelle: string; valeur: string }[]): string {
+  // Une grille libellé / valeur (maquette V2) : le libellé en mono capitales
+  // à gauche, la valeur à droite — un tableau, pour Outlook.
   const rangs = lignes
     .map(
       (l) =>
-        `<p style="margin:0 0 2px;font-size:12px;line-height:1.4;color:${COULEURS.doux};">${typographie(l.libelle)}</p>\n` +
+        `<tr><td valign="top" width="120" style="padding:6px 14px 6px 0;font-family:${POLICE_MONO};font-size:10.5px;line-height:1.5;letter-spacing:0.12em;text-transform:uppercase;color:${COULEURS.doux};">${typographie(l.libelle)}</td>` +
         // `overflow-wrap` : une empreinte de 64 caractères se coupe au bord
         // de la carte au lieu de la déborder.
-        `<p style="margin:0 0 12px;font-size:15px;line-height:1.5;font-weight:600;color:${COULEURS.encre};overflow-wrap:anywhere;word-break:break-word;">${typographie(l.valeur)}</p>`,
+        `<td valign="top" style="padding:4px 0;font-size:14.5px;line-height:1.5;color:${COULEURS.encre};overflow-wrap:anywhere;word-break:break-word;">${typographie(l.valeur)}</td></tr>`,
     )
     .join("\n");
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:4px 0 20px;">
-<tr><td style="background:${COULEURS.canvas};border-radius:12px;padding:16px 20px 4px;text-align:left;">
+<tr><td style="background:${COULEURS.canvas};border-radius:18px;padding:14px 22px;text-align:left;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
 ${rangs}
+</table>
 </td></tr>
 </table>`;
 }
@@ -257,6 +268,7 @@ export function htmlMailSignature(m: MailSignature): string {
     ]
       .filter(Boolean)
       .join("\n"),
+    m.surtitre ?? "Signature électronique",
   );
 }
 

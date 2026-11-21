@@ -135,7 +135,7 @@ export function SignatureExterneForm({
       <button
         type="button"
         onClick={proposer}
-        className="mt-1 text-[13.5px] font-semibold text-[color:var(--board-amber-ink)] underline-offset-4 hover:underline"
+        className="mt-1 text-[13.5px] font-semibold text-[color:var(--board-blue-ink)] underline-offset-4 hover:underline"
       >
         Proposer des modifications →
       </button>
@@ -151,8 +151,8 @@ export function SignatureExterneForm({
 
   return (
     <div className="space-y-5">
-      <div className="rounded-[18px] bg-[color:var(--board-card)] p-4 shadow-[inset_0_0_0_1px_var(--board-slate-line)]">
-        <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
+      <div className="rounded-[18px] bg-[color:var(--board-canvas)] px-4 py-3">
+        <p className="m-0 font-mono text-[10px] tracking-[0.12em] uppercase text-[color:var(--board-slate-soft)]">
           Vous signez en tant que
         </p>
         <dl className="m-0 mt-2 grid grid-cols-1 gap-y-1 text-[13.5px] sm:grid-cols-[auto_1fr] sm:gap-x-4">
@@ -169,7 +169,7 @@ export function SignatureExterneForm({
 
       {!codeDemande ? (
         <form action={demanderCode} className="space-y-3">
-          <Button type="submit" variant="board" size="board" className="w-full" disabled={codeEnCours}>
+          <Button type="submit" variant="board" size="board" className="min-h-14 w-full rounded-full font-display text-[18px]" disabled={codeEnCours}>
             {codeEnCours ? "Envoi du code…" : "Signer"}
           </Button>
           <p className="m-0 text-center text-[12.5px] text-[color:var(--board-slate-mid)]">
@@ -183,7 +183,7 @@ export function SignatureExterneForm({
         <div className="space-y-5">
           <div
             role="status"
-            className="rounded-[18px] bg-[color:var(--board-blue-pale)] p-4 text-[13.5px] leading-[1.55] text-[color:var(--board-blue-ink)]"
+            className="rounded-[18px] bg-[color:var(--board-canvas)] px-4 py-3 text-[13.5px] leading-[1.55] text-[color:var(--board-slate-ink)]"
           >
             {envoyeIci ? (
               <p className="m-0">Un code à 6 chiffres a été envoyé à <strong>{destinataire.email}</strong>.</p>
@@ -233,7 +233,7 @@ export function SignatureExterneForm({
               </div>
             )}
 
-            <Button type="submit" variant="board" size="board" className="w-full" disabled={pending}>
+            <Button type="submit" variant="board" size="board" className="min-h-14 w-full rounded-full font-display text-[18px]" disabled={pending}>
               {pending ? "Signature en cours…" : "Valider ma signature"}
             </Button>
 
@@ -252,7 +252,7 @@ export function SignatureExterneForm({
             <button
               type="submit"
               disabled={codeEnCours || attente !== 0}
-              className="text-[13px] font-semibold text-[color:var(--board-blue-ink)] underline-offset-4 hover:underline disabled:cursor-not-allowed disabled:text-[color:var(--board-slate-mid)] disabled:no-underline"
+              className="font-mono text-[11px] tracking-[0.08em] uppercase text-[color:var(--board-blue-ink)] underline-offset-4 hover:underline disabled:cursor-not-allowed disabled:text-[color:var(--board-slate-soft)] disabled:no-underline"
             >
               {codeEnCours
                 ? "Envoi du code…"

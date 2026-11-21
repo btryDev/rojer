@@ -1,13 +1,13 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, ChevronDown } from "lucide-react";
 import { clientDuProprietaire } from "@/lib/auth/compte-hors-session";
 import { notFound } from "next/navigation";
 import { verifierAccessToken } from "@/lib/access-tokens/verify";
 import { motifLisible } from "@/lib/access-tokens/motif-lisible";
 import { LegalBadge } from "@/components/ui-kit/LegalBadge";
 import { SignerOuProposer } from "@/components/signatures/SignerOuProposer";
-import { formaterDateFr } from "@/lib/dates";
+import { formaterDateFr, formaterJourMoisFr } from "@/lib/dates";
 import { objetEstSignable } from "@/lib/signatures/etat-signable";
 import { renvoiOtpPossibleLe } from "@/lib/signatures/otp";
 import {
@@ -36,9 +36,11 @@ import type { PartieSignataire } from "@prisma/client";
  * un message « à venir » avec les détails de l'objet.
  *
  * Gabarit repris de l'interface approuvée (cahier de reprise § 3.1,
- * 2026-11-19) : en-tête centré, UNE carte — référence, faits en grille,
- * badge « Vous », contenu du plan — et son pied « Action requise », qui porte
- * la signature ou la proposition (`SignerOuProposer`). Le contenu est celui
+ * 2026-11-19), habillé selon la maquette V2 (2026-11-21) : bandeau blanc à
+ * pastille Rojer, puis des cartes blanches — l'objet (tuile de date, faits
+ * en sous-blocs, badge « Vous »), les risques numérotés, le contenu minimal
+ * repliable, et « Action requise », qui porte la signature ou la
+ * proposition (`SignerOuProposer`). Le contenu est celui
  * d'avant, entier : parties, travaux, risques, rubriques de R. 4512-8, textes.
  * Les états d'un lien inutilisable partagent un même habillage (`EtatDuLien`),
  * leur motif traduit (`motifLisible`).
@@ -156,90 +158,88 @@ export default async function AccesParTokenPage({
     const engagee = entrepriseEngagee(contenu, partie, demandeur);
 
     return (
-      <main className="min-h-screen bg-[color:var(--board-canvas)] px-4 py-10 sm:px-6 sm:py-14">
-        <div className="mx-auto max-w-3xl">
-          <header className="text-center">
-            <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-              Rojer
+      <main className="min-h-screen bg-[color:var(--board-canvas)] pb-12">
+        <header className="bg-[color:var(--board-card)]">
+          <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 pt-5 pb-2 sm:px-6">
+            {pastilleRojer()}
+            <span className={CLASSE_MONO}>Signature demandée</span>
+          </div>
+          <div className="mx-auto max-w-3xl px-4 pt-3 pb-7 sm:px-6">
+            <p className={CLASSE_MONO}>De la part de {demandeur}</p>
+            <h1 className="m-0 mt-2 font-display text-[clamp(30px,4vw,40px)] leading-[1.02] font-semibold tracking-[-0.035em] text-[color:var(--board-ink)]">
+              {titreDePage(contenu)}
+            </h1>
+            <p className="m-0 mt-3 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.55] text-[color:var(--board-slate-ink)]">
+              Relisez-le ; signez-le s&apos;il vous convient
+              {proposition ? ", ou proposez une modification" : ""}.
             </p>
-            <h1 className="board-titre m-0 mt-2 text-[clamp(26px,3vw,34px)]">{titreDePage(contenu)}</h1>
-            <p className="m-0 mt-2 text-[14.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
-              Vérifiez les informations ci-dessous avant de signer électroniquement.
+          </div>
+        </header>
+
+        <div className="mx-auto mt-4 flex max-w-3xl flex-col gap-4 px-3 sm:px-6">
+          <section className={CLASSE_CARTE}>
+            <div className="flex items-center gap-4">
+              {tuileDate(contenu)}
+              <div className="min-w-0">
+                <p className={`${CLASSE_MONO} text-[color:var(--board-slate-ink)]`}>
+                  {[reference(contenu), etablissement.raisonDisplay].filter(Boolean).join(" · ")}
+                </p>
+                <h2 className="m-0 mt-1 font-display text-[21px] leading-[1.15] font-semibold tracking-[-0.02em] text-[color:var(--board-ink)]">
+                  {libelleObjet.titre}
+                </h2>
+              </div>
+            </div>
+            {/* ~~L'encadré « Ce que vous signez » (WhyCard)~~ : devenu le
+                chapeau de la carte (cahier § 3.1, 2026-11-19). */}
+            <p className="m-0 mt-4 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
+              {libelleObjet.description}
             </p>
-          </header>
-
-          <article className="carte-board mt-8 overflow-hidden">
-            <div className="px-5 py-6 sm:px-8">
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                {reference(contenu) && (
-                  <span className="font-mono text-[12px] tracking-[0.12em] text-[color:var(--board-slate-soft)]">
-                    {reference(contenu)}
-                  </span>
-                )}
-                <span className="pastille-board bg-[color:var(--board-amber)] text-[color:var(--board-amber-ink)]">
-                  En attente de signatures
-                </span>
-              </div>
-              <h2 className="board-titre m-0 mt-3 text-[22px]">{libelleObjet.titre}</h2>
-              <p className="m-0 mt-1 text-[13.5px] text-[color:var(--board-slate-mid)]">
-                Signature demandée par <strong className="text-[color:var(--board-ink)]">{demandeur}</strong>
-                {" · "}
-                {etablissement.raisonDisplay}
-              </p>
-              {/* ~~L'encadré « Ce que vous signez » (WhyCard)~~ : devenu le
-                  chapeau de la carte (cahier § 3.1, 2026-11-19). */}
-              <p className="m-0 mt-4 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">
-                {libelleObjet.description}
-              </p>
-              <div className="mt-3">
-                <LegalBadge
-                  libelle="Textes"
-                  reference="Textes : art. 1366 et 1367 du Code civil · règlement (UE) n° 910/2014"
-                  extrait="L'écrit électronique a la même force probante que l'écrit sur support papier, sous réserve que puisse être dûment identifiée la personne dont il émane et qu'il soit établi et conservé dans des conditions de nature à en garantir l'intégrité."
-                >
-                  Votre signature est posée avec une preuve d&apos;intégrité
-                  (empreinte SHA-256 du document) et un horodatage serveur.
-                  Vous pourrez à tout moment vérifier qu&apos;elle porte bien sur
-                  le document non modifié.
-                </LegalBadge>
-              </div>
-
-              {contenu?.type === "plan_prevention" && faitsPlan(contenu, demandeur, partie)}
-              {contenu?.type === "permis_feu" && faitsPermis(contenu, partie)}
+            <div className="mt-3">
+              <LegalBadge
+                libelle="Textes"
+                reference="Textes : art. 1366 et 1367 du Code civil · règlement (UE) n° 910/2014"
+                extrait="L'écrit électronique a la même force probante que l'écrit sur support papier, sous réserve que puisse être dûment identifiée la personne dont il émane et qu'il soit établi et conservé dans des conditions de nature à en garantir l'intégrité."
+              >
+                Votre signature est posée avec une preuve d&apos;intégrité
+                (empreinte SHA-256 du document) et un horodatage serveur.
+                Vous pourrez à tout moment vérifier qu&apos;elle porte bien sur
+                le document non modifié.
+              </LegalBadge>
             </div>
 
-            {contenu?.type === "plan_prevention" && sectionsPlan(contenu)}
-            {contenu?.type === "permis_feu" && sectionsPermis(contenu)}
+            {contenu?.type === "plan_prevention" && faitsPlan(contenu, demandeur, partie)}
+            {contenu?.type === "permis_feu" && faitsPermis(contenu, partie)}
+          </section>
 
-            <footer className="border-t border-[color:var(--board-slate-line)] bg-[color:var(--board-slate-pale)] px-5 py-6 sm:px-8">
-              <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">
-                Action requise
-              </p>
-              <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.6] text-[color:var(--board-ink)]">
-                {engagee ? (
-                  <>
-                    Vous engagez <strong>{engagee}</strong>.{" "}
-                  </>
-                ) : null}
-                Signez électroniquement si le document vous convient — le code de confirmation
-                part à <strong>{t.emailDestinataire}</strong>
-                {proposition ? " —, ou proposez des modifications." : "."}
-              </p>
-              <div className="mt-5">
-                <SignerOuProposer
-                  signature={{
-                    token,
-                    destinataire: { email: t.emailDestinataire, nom: t.nomDestinataire },
-                    expireLe: t.expireLe,
-                    codeDejaDemande: t.otpHash !== null,
-                    essaisRestants: t.otpEssaisRestants,
-                    renvoiPossibleLe: renvoiOtpPossibleLe(t.otpExpireLe),
-                  }}
-                  proposition={proposition}
-                />
-              </div>
-            </footer>
-          </article>
+          {contenu?.type === "plan_prevention" && sectionsPlan(contenu)}
+          {contenu?.type === "permis_feu" && sectionsPermis(contenu)}
+
+          <section className={CLASSE_CARTE} aria-label="Signer">
+            <p className={`${CLASSE_MONO} text-[color:var(--board-slate-ink)]`}>Action requise</p>
+            <p className="m-0 mt-2 max-w-[var(--board-mesure)] text-[14.5px] leading-[1.6] text-[color:var(--board-ink)]">
+              {engagee ? (
+                <>
+                  Vous engagez <strong>{engagee}</strong>.{" "}
+                </>
+              ) : null}
+              Signez électroniquement si le document vous convient — le code de confirmation
+              part à <strong>{t.emailDestinataire}</strong>
+              {proposition ? " —, ou proposez des modifications." : "."}
+            </p>
+            <div className="mt-5">
+              <SignerOuProposer
+                signature={{
+                  token,
+                  destinataire: { email: t.emailDestinataire, nom: t.nomDestinataire },
+                  expireLe: t.expireLe,
+                  codeDejaDemande: t.otpHash !== null,
+                  essaisRestants: t.otpEssaisRestants,
+                  renvoiPossibleLe: renvoiOtpPossibleLe(t.otpExpireLe),
+                }}
+                proposition={proposition}
+              />
+            </div>
+          </section>
         </div>
       </main>
     );
@@ -301,18 +301,23 @@ function etatDuLien({
   const qui = contact ?? "la personne qui vous a envoyé ce lien";
   const consigne = `contactez ${qui} pour obtenir un nouveau lien.`;
   return (
-    <main className="min-h-screen bg-[color:var(--board-canvas)] px-4 py-16 sm:px-6">
-      <div className="carte-board mx-auto max-w-xl px-6 py-8 text-center sm:px-8">
-        <span className="mx-auto flex size-11 items-center justify-center rounded-full bg-[color:var(--board-amber)] text-[color:var(--board-amber-ink)]">
-          <AlertTriangle aria-hidden className="size-5" />
-        </span>
-        <h1 className="board-titre m-0 mt-4 text-[22px]">{titre}</h1>
-        {phrase ? (
-          <p className="m-0 mt-3 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-mid)]">{phrase}</p>
-        ) : null}
-        <p className="m-0 mt-3 text-[13.5px] leading-[1.6] text-[color:var(--board-ink)]">
-          {si ? `${si}, ${consigne}` : consigne.charAt(0).toUpperCase() + consigne.slice(1)}
-        </p>
+    <main className="min-h-screen bg-[color:var(--board-canvas)] px-3 py-10 sm:px-6 sm:py-16">
+      <div className="mx-auto flex max-w-xl flex-col items-center gap-5">
+        {pastilleRojer()}
+        <div className={`${CLASSE_CARTE} w-full text-center`}>
+          <span className="mx-auto flex size-12 items-center justify-center rounded-[14px] bg-[color:var(--board-ink)] text-white">
+            <AlertTriangle aria-hidden className="size-5" />
+          </span>
+          <h1 className="m-0 mt-4 font-display text-[26px] leading-[1.1] font-semibold tracking-[-0.03em] text-[color:var(--board-ink)]">
+            {titre}
+          </h1>
+          {phrase ? (
+            <p className="m-0 mt-3 text-[14px] leading-[1.6] text-[color:var(--board-slate-mid)]">{phrase}</p>
+          ) : null}
+          <p className="m-0 mt-4 rounded-[18px] bg-[color:var(--board-canvas)] px-4 py-3 text-[13.5px] leading-[1.6] text-[color:var(--board-ink)]">
+            {si ? `${si}, ${consigne}` : consigne.charAt(0).toUpperCase() + consigne.slice(1)}
+          </p>
+        </div>
       </div>
     </main>
   );
@@ -382,11 +387,38 @@ function entrepriseEngagee(
   return null;
 }
 
-const CLASSE_SECTION = "border-t border-[color:var(--board-slate-line)] px-5 py-6 sm:px-8";
-const CLASSE_SURTITRE =
-  "board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]";
+/** Une carte de la page : blanche, rayon 28, sans ombre ni aplat (V2, 2026-11-21). */
+const CLASSE_CARTE = "rounded-[28px] bg-[color:var(--board-card)] p-5 sm:p-7";
+/** Les petits libellés : mono, capitales, espacés. */
+const CLASSE_MONO = "m-0 font-mono text-[10.5px] tracking-[0.14em] uppercase text-[color:var(--board-slate-soft)]";
+const CLASSE_TITRE_CARTE =
+  "m-0 font-display text-[22px] leading-[1.15] font-semibold tracking-[-0.02em] text-[color:var(--board-ink)]";
 const CLASSE_TEXTE = "m-0 mt-2 whitespace-pre-wrap text-[14px] leading-[1.55] text-[color:var(--board-ink)]";
 const CLASSE_VIDE = "m-0 mt-2 text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]";
+
+/** La pastille de marque, bleu ciel. */
+function pastilleRojer() {
+  return (
+    <span className="inline-flex rounded-full bg-[color:var(--board-sky)] px-4 py-1.5 font-display text-[16px] font-semibold tracking-[-0.02em] text-[color:var(--board-ink)]">
+      Rojer
+    </span>
+  );
+}
+
+/** La tuile noire du premier jour des travaux : « 27 / NOV. ». */
+function tuileDate(contenu: ContenuASigner | null) {
+  if (contenu?.type !== "plan_prevention" && contenu?.type !== "permis_feu") return null;
+  const [jour, mois] = formaterJourMoisFr(contenu.dateDebut).split(" ");
+  return (
+    <div
+      aria-hidden
+      className="flex size-14 flex-none flex-col items-center justify-center rounded-[14px] bg-[color:var(--board-ink)] text-white"
+    >
+      <span className="font-display text-[22px] leading-none font-bold">{jour}</span>
+      <span className="mt-0.5 font-mono text-[9px] tracking-[0.1em] uppercase">{mois}</span>
+    </div>
+  );
+}
 
 function periode(debut: Date, fin: Date): string {
   return `Du ${formaterDateFr(debut)} au ${formaterDateFr(fin)}`;
@@ -413,17 +445,19 @@ function Fait({
   large?: boolean;
 }) {
   return (
-    <div className={large ? "sm:col-span-2" : undefined}>
-      <dt className="text-[12.5px] text-[color:var(--board-slate-mid)]">{cle}</dt>
-      <dd className="m-0 mt-0.5 whitespace-pre-wrap text-[14px] leading-[1.45] text-[color:var(--board-ink)]">
+    <div
+      className={`rounded-[18px] bg-[color:var(--board-canvas)] px-4 py-3${large ? " sm:col-span-2" : ""}`}
+    >
+      <dt className="font-mono text-[10px] tracking-[0.12em] uppercase text-[color:var(--board-slate-soft)]">{cle}</dt>
+      <dd className="m-0 mt-1 whitespace-pre-wrap text-[14.5px] leading-[1.45] font-medium text-[color:var(--board-ink)]">
         {children}
       </dd>
     </div>
   );
 }
 
-const CLASSE_GRILLE = "m-0 mt-6 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2";
-const CLASSE_PRECISION = "block text-[13px] text-[color:var(--board-slate-mid)]";
+const CLASSE_GRILLE = "m-0 mt-5 grid grid-cols-1 gap-2.5 sm:grid-cols-2";
+const CLASSE_PRECISION = "block text-[13px] font-normal text-[color:var(--board-slate-mid)]";
 
 /**
  * Le plan tel que le signataire l'engage. Des fonctions qui rendent du JSX,
@@ -481,34 +515,52 @@ function faitsPlan(c: ContenuPlanASigner, raisonSocialeEU: string, partie: Parti
 }
 
 function sectionsPlan(c: ContenuPlanASigner) {
+  const n = c.lignes.length;
   return (
     <>
-      <section className={CLASSE_SECTION}>
-        <p className={CLASSE_SURTITRE}>Risques d&apos;interférence et mesures de chaque partie</p>
-        {c.lignes.length === 0 ? (
+      <section className={CLASSE_CARTE}>
+        <h2 className={CLASSE_TITRE_CARTE}>
+          {n === 0
+            ? "Risques d'interférence"
+            : `${n} risque${n > 1 ? "s" : ""} d'interférence et leurs mesures`}
+        </h2>
+        {n === 0 ? (
           <p className={CLASSE_VIDE}>Aucun risque d&apos;interférence n&apos;est inscrit au plan.</p>
         ) : (
-          <ol className="m-0 mt-3 flex list-decimal flex-col gap-3 pl-5 text-[14px] text-[color:var(--board-ink)]">
-            {c.lignes.map((l) => (
-              <li key={l.ordre}>
-                <p className="m-0 font-semibold whitespace-pre-wrap">{l.risque}</p>
-                <p className="m-0 mt-1 whitespace-pre-wrap">
-                  Entreprise utilisatrice : {l.mesureEntrepriseUtilisatrice || "—"}
-                </p>
-                <p className="m-0 whitespace-pre-wrap">
-                  Entreprise extérieure : {l.mesureEntrepriseExterieure || "—"}
-                </p>
+          <ol className="m-0 mt-2 list-none p-0">
+            {c.lignes.map((l, i) => (
+              <li key={l.ordre} className="flex gap-3 border-t border-[color:var(--board-slate-pale)] py-3 first:border-t-0">
+                <span
+                  aria-hidden
+                  className="flex size-[34px] flex-none items-center justify-center rounded-[10px] bg-[color:var(--board-ink)] font-display text-[15px] font-bold text-white"
+                >
+                  {i + 1}
+                </span>
+                <div className="min-w-0 text-[14px] text-[color:var(--board-ink)]">
+                  <p className="m-0 font-semibold whitespace-pre-wrap">{l.risque}</p>
+                  <p className="m-0 mt-1 whitespace-pre-wrap text-[13px] text-[color:var(--board-slate-mid)]">
+                    Entreprise utilisatrice : {l.mesureEntrepriseUtilisatrice || "—"}
+                  </p>
+                  <p className="m-0 whitespace-pre-wrap text-[13px] text-[color:var(--board-slate-mid)]">
+                    Entreprise extérieure : {l.mesureEntrepriseExterieure || "—"}
+                  </p>
+                </div>
               </li>
             ))}
           </ol>
         )}
       </section>
 
-      <section className={CLASSE_SECTION}>
-        <p className={CLASSE_SURTITRE}>Contenu minimal · art. R. 4512-8 CT</p>
+      <details className={`${CLASSE_CARTE} group`}>
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
+          <span className="font-display text-[18px] font-semibold tracking-[-0.01em] text-[color:var(--board-ink)]">
+            Contenu minimal (art. R. 4512-8 CT)
+          </span>
+          <ChevronDown aria-hidden className="size-4 flex-none transition-transform group-open:rotate-180" />
+        </summary>
         <p className={CLASSE_VIDE}>{CHAPEAU_R4512_8}</p>
         {RUBRIQUES_R4512_8.map((r) => (
-          <div key={r.numero} className="mt-4">
+          <div key={r.numero} className="mt-3 rounded-[18px] bg-[color:var(--board-canvas)] px-4 py-3">
             <p className="m-0 text-[14px] font-semibold text-[color:var(--board-ink)]">
               {r.numero}° {r.titre}
             </p>
@@ -527,7 +579,7 @@ function sectionsPlan(c: ContenuPlanASigner) {
             )}
           </div>
         ))}
-      </section>
+      </details>
     </>
   );
 }
@@ -562,8 +614,8 @@ function faitsPermis(c: ContenuPermisASigner, partie: PartieSignataire | null) {
 
 function sectionsPermis(c: ContenuPermisASigner) {
   return (
-    <section className={CLASSE_SECTION}>
-      <p className={CLASSE_SURTITRE}>Mesures de prévention retenues</p>
+    <section className={CLASSE_CARTE}>
+      <h2 className={CLASSE_TITRE_CARTE}>Mesures de prévention retenues</h2>
       {c.mesuresValidees.length === 0 ? (
         <p className={CLASSE_VIDE}>Aucune mesure n&apos;est cochée sur ce permis.</p>
       ) : (

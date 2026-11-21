@@ -101,8 +101,13 @@ export function PropositionPlanForm({
 
   if (state.status === "success") {
     return (
-      <div role="status" className="rounded-[22px] bg-[color:var(--board-green)] p-6">
-        <p className="m-0 text-[16px] font-semibold text-[color:var(--board-ink)]">Demande envoyée</p>
+      <div role="status" className="rounded-[18px] bg-[color:var(--board-canvas)] px-5 py-5">
+        <p className="m-0 font-mono text-[10.5px] tracking-[0.14em] uppercase text-[color:var(--board-slate-soft)]">
+          Proposition enregistrée
+        </p>
+        <p className="m-0 mt-1 font-display text-[22px] font-semibold tracking-[-0.02em] text-[color:var(--board-ink)]">
+          Demande envoyée
+        </p>
         <p className="m-0 mt-2 text-[13.5px] leading-[1.6] text-[color:var(--board-ink)]">
           Votre proposition est enregistrée. <strong>Vous n&apos;avez pas signé le plan.</strong>{" "}
           Votre interlocuteur accepte, corrige ou refuse votre proposition ; d&apos;ici là, le
@@ -131,14 +136,14 @@ export function PropositionPlanForm({
     <form action={formAction} className="space-y-6">
       <input type="hidden" name="proposition" value={json} />
 
-      <div className="rounded-[18px] bg-[color:var(--board-amber-wash)] p-4 shadow-[inset_0_0_0_1px_rgba(117,77,10,.22)]">
-        <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-amber-ink)]">
+      <div className="rounded-[18px] bg-[color:var(--board-canvas)] px-4 py-4">
+        <p className="m-0 font-mono text-[10.5px] tracking-[0.14em] uppercase text-[color:var(--board-slate-soft)]">
           Mode proposition de modifications
         </p>
-        <p className="m-0 mt-2 text-[13.5px] font-semibold leading-[1.55] text-[color:var(--board-amber-ink)]">
+        <p className="m-0 mt-2 font-display text-[18px] font-semibold tracking-[-0.01em] text-[color:var(--board-ink)]">
           Vous ne signez pas maintenant.
         </p>
-        <p className="m-0 mt-1 text-[13px] leading-[1.55] text-[color:var(--board-amber-ink)]">
+        <p className="m-0 mt-1 text-[13px] leading-[1.55] text-[color:var(--board-slate-ink)]">
           Votre interlocuteur accepte, corrige ou refuse votre proposition. Tant qu&apos;il
           n&apos;a pas répondu, le plan ne se signe pas. S&apos;il l&apos;accepte, chaque partie
           le signe de nouveau. Les dates, les lieux, la nature des travaux et les rubriques du
@@ -198,9 +203,9 @@ export function PropositionPlanForm({
           Risques d&apos;interférence et mesures
         </legend>
         {lignes.map((l, i) => (
-          <div key={l.cle} className="space-y-2 rounded-[18px] bg-[color:var(--board-slate-pale)] p-4">
+          <div key={l.cle} className="space-y-2 rounded-[18px] bg-[color:var(--board-canvas)] p-4">
             <div className="flex items-center justify-between gap-3">
-              <p className="board-eyebrow m-0 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)]">
+              <p className="m-0 font-mono text-[10px] tracking-[0.12em] uppercase text-[color:var(--board-slate-soft)]">
                 Risque {i + 1}
                 {!l.id && " (ajouté)"}
               </p>
@@ -272,7 +277,7 @@ export function PropositionPlanForm({
         <Button type="button" variant="boardClair" size="board" onClick={onRetour} disabled={pending}>
           ← Retour à la signature
         </Button>
-        <Button type="submit" variant="board" size="board" disabled={pending}>
+        <Button type="submit" variant="board" size="board" className="rounded-full font-display" disabled={pending}>
           {pending ? "Envoi…" : "Envoyer ma demande de modification"}
         </Button>
       </div>
