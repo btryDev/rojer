@@ -197,6 +197,12 @@ Gestes de la propriétaire (Clever Cloud) :
    lui, la route répond 404 et rien ne tourne ; `ALERTES_EMAIL` =
    `paloma.sanchez@btry.fr` (échec durable de la file Stripe, litige,
    remboursement ; sans elle, les alertes ne vont qu'au journal).
+   [2026-11-21] Et `SIGNATURE_CODE_SECRET` (`openssl rand -base64 32`, 32
+   caractères au moins, propre à chaque environnement) : la clé du HMAC des
+   codes de signature à 6 chiffres, liens et compte (`signatures/otp.ts`).
+   Absente en production, aucun code ne part — la signature électronique
+   est arrêtée — et le démarrage le signale ; la changer invalide les codes
+   en cours (10 minutes). À poser sur la préprod aussi.
    [2026-11-16] Et `TEMOIN_TACHES_URL` : l'adresse d'un témoin par
    battement (healthchecks.io ou équivalent, période 1 jour, grâce 2 h),
    appelée par la tâche du jour finie — seul signal d'une crontab arrêtée
@@ -587,6 +593,26 @@ n'est pas faite (texte brut) : ce n'est pas un défaut de la recette.
   `@testing-library/jest-dom` (aucun matcher, absent de `vitest.setup.ts`) et
   `@vitejs/plugin-react` (absent de `vitest.config.ts`) ; passer
   `@types/qrcode` des `dependencies` aux `devDependencies`.
+
+### Au branchement du nom de domaine définitif sur Clever Cloud — e-mails (2026-11-21)
+
+Constats de l'audit de sécurité du 2026-11-21 (dig sur le DNS public de
+`rojer.fr`) :
+
+1. **DMARC absent** sur `rojer.fr` : publier
+   `_dmarc.rojer.fr TXT "v=DMARC1; p=none; rua=mailto:<adresse de suivi>"`,
+   puis passer à `p=quarantine` après quelques semaines sans rejet légitime.
+2. **SPF** actuel : `v=spf1 include:mx.ovh.com -all`. Vérifier dans Mailpace
+   s'il faut y ajouter leur `include:` (selon l'expéditeur d'enveloppe).
+3. **DKIM** : relever dans Mailpace le sélecteur et l'enregistrement, le
+   publier chez OVH, attendre l'état « vérifié » du domaine.
+4. **Tableau de bord Mailpace** : durée de conservation des messages au
+   minimum (les liens de signature y passent en clair), suivi des clics et
+   des ouvertures désactivé.
+5. Vérifier que la boîte `no-reply@` existe, ou que les réponses ne
+   rebondissent pas mal.
+6. Variables à poser : `MAILPACE_API_KEY`, `EMAIL_DRIVER=mailpace`, et la
+   clé des codes de signature `SIGNATURE_CODE_SECRET`.
 
 ### À faire à la bascule (Vercel coupé)
 
