@@ -10,12 +10,13 @@ import { libelleFamille } from "./familles-risque";
  * ce lot se lit exactement comme avant.
  */
 
+/** Facultatifs dans le type : une donnée qui ne les porte pas se lit « vide ». */
 export type ComplementsPlan = {
-  horaires: string | null;
-  cseAssocie: boolean | null;
-  qualificationsRequises: string | null;
-  moyensFournis: string | null;
-  autresObservations: string | null;
+  horaires?: string | null;
+  cseAssocie?: boolean | null;
+  qualificationsRequises?: string | null;
+  moyensFournis?: string | null;
+  autresObservations?: string | null;
 };
 
 /** Les libellés, dans l'ordre d'affichage. Repris de RiskBoard, abréviations dépliées. */
@@ -27,7 +28,7 @@ export const LIBELLES_COMPLEMENTS: Record<keyof ComplementsPlan, string> = {
   autresObservations: "Observations particulières",
 };
 
-export type Complement = { cle: keyof ComplementsPlan; libelle: string; texte: string };
+type Complement = { cle: keyof ComplementsPlan; libelle: string; texte: string };
 
 /** Les compléments renseignés, dans l'ordre des libellés ; les vides sont omis. */
 export function complementsRemplis(p: ComplementsPlan): Complement[] {
@@ -42,7 +43,25 @@ export function complementsRemplis(p: ComplementsPlan): Complement[] {
   return out;
 }
 
-export type PrecisionsLigne = {
+/**
+ * Où chaque complément se dit, partout le même : les horaires à côté de la
+ * période, le CSE à côté de l'inspection commune, les trois textes longs
+ * ensemble (« Compléments »). Absent : non renseigné.
+ */
+export function complementsParPlace(p: ComplementsPlan): {
+  horaires?: Complement;
+  cse?: Complement;
+  autres: Complement[];
+} {
+  const remplis = complementsRemplis(p);
+  return {
+    horaires: remplis.find((x) => x.cle === "horaires"),
+    cse: remplis.find((x) => x.cle === "cseAssocie"),
+    autres: remplis.filter((x) => x.cle !== "horaires" && x.cle !== "cseAssocie"),
+  };
+}
+
+type PrecisionsLigne = {
   risque: string;
   famille?: string | null;
   lieu?: string | null;

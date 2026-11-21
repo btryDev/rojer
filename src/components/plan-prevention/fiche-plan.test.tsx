@@ -237,7 +237,7 @@ describe("la fiche du plan", () => {
     expect(rempli).toContain("06 00 00 00 00");
     expect(rempli).toContain("04 00 00 00 00");
     expect(rempli).toContain("Horaires de travail 8 h – 17 h");
-    expect(rempli).toContain("CSE associé à l'opération : non");
+    expect(rempli).toContain("CSE associé à l'opération : Non");
     expect(rempli).toContain("Compléments");
     expect(rempli).toContain("Habilitation B1V");
     expect(rempli).toContain("Accès par la cour");

@@ -26,7 +26,7 @@ import {
   texteRubrique,
 } from "@/lib/plan-prevention/contenu-r4512-8";
 import { ligneHeuresRevisees } from "@/lib/plan-prevention/annonces-plan";
-import { complementsRemplis, precisionsLigne } from "@/lib/plan-prevention/complements";
+import { complementsParPlace, precisionsLigne } from "@/lib/plan-prevention/complements";
 import { LABEL_NATURE } from "@/lib/permis-feu/schema";
 import { mesureParId, surListeAnterieure } from "@/lib/permis-feu/referentiel";
 import type { PartieSignataire } from "@prisma/client";
@@ -570,12 +570,20 @@ function faitsPlan(c: ContenuPlanASigner, raisonSocialeEU: string, partie: Parti
           : ""}
       </Fait>
       {/* Repris de RiskBoard (2026-11-21) : seulement ce qui est rempli. */}
-      {complementsRemplis(c).map((x) => (
-        <Fait key={x.cle} cle={x.libelle} large={x.cle !== "horaires" && x.cle !== "cseAssocie"}>
-          {x.texte}
-        </Fait>
-      ))}
+      {faitsComplements(c)}
     </dl>
+  );
+}
+
+/** Les compléments remplis : horaires et CSE en court, les textes longs en large. */
+function faitsComplements(c: ContenuPlanASigner) {
+  const { horaires, cse, autres } = complementsParPlace(c);
+  return [horaires, cse, ...autres].map((x) =>
+    x ? (
+      <Fait key={x.cle} cle={x.libelle} large={x !== horaires && x !== cse}>
+        {x.texte}
+      </Fait>
+    ) : null,
   );
 }
 
@@ -603,11 +611,11 @@ function sectionsPlan(c: ContenuPlanASigner) {
                 </span>
                 <div className="min-w-0 text-[14px] text-[color:var(--board-ink)]">
                   <p className="m-0 font-semibold whitespace-pre-wrap">{l.risque}</p>
-                  {precisionsLigne(l).length > 0 && (
-                    <p className="m-0 mt-0.5 text-[13px] text-[color:var(--board-slate-mid)]">
-                      {precisionsLigne(l).join(" · ")}
+                  {precisionsLigne(l).map((x) => (
+                    <p key={x} className="m-0 mt-0.5 text-[13px] text-[color:var(--board-slate-mid)]">
+                      {x}
                     </p>
-                  )}
+                  ))}
                   <p className="m-0 mt-1 whitespace-pre-wrap text-[13px] text-[color:var(--board-slate-mid)]">
                     Entreprise utilisatrice : {l.mesureEntrepriseUtilisatrice || "—"}
                   </p>

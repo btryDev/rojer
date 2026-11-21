@@ -10,7 +10,7 @@ import {
   rubriquesManquantes,
   texteRubrique,
 } from "@/lib/plan-prevention/contenu-r4512-8";
-import { complementsRemplis, precisionsLigne } from "@/lib/plan-prevention/complements";
+import { complementsParPlace, precisionsLigne } from "@/lib/plan-prevention/complements";
 import { BOARD, slugifyFilename, stylesCommuns as s } from "./styles";
 import { PiedFixe } from "./PiedFixe";
 
@@ -200,16 +200,7 @@ export function PlanPreventionDocument({ data }: { data: PlanPreventionData }) {
   const sansSignature = partiesSansSignature(data.signatures);
   const deTravail = sansSignature.length > 0;
   const manquantes = rubriquesManquantes(pl);
-  const complements = complementsRemplis({
-    horaires: pl.horaires ?? null,
-    cseAssocie: pl.cseAssocie ?? null,
-    qualificationsRequises: pl.qualificationsRequises ?? null,
-    moyensFournis: pl.moyensFournis ?? null,
-    autresObservations: pl.autresObservations ?? null,
-  });
-  const horaires = complements.find((x) => x.cle === "horaires");
-  const cse = complements.find((x) => x.cle === "cseAssocie");
-  const autres = complements.filter((x) => x.cle !== "horaires" && x.cle !== "cseAssocie");
+  const { horaires, cse, autres } = complementsParPlace(pl);
 
   return (
     <Document title={`Plan de prévention ${ref}`} author="Rojer">

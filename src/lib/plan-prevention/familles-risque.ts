@@ -29,16 +29,13 @@ export const FAMILLES_RISQUE = [
   { code: "AUTRE", libelle: "Autre risque" },
 ] as const;
 
-export type CodeFamilleRisque = (typeof FAMILLES_RISQUE)[number]["code"];
+type CodeFamilleRisque = (typeof FAMILLES_RISQUE)[number]["code"];
 
+/** Les codes, pour `z.enum` (`schema.ts`). */
 export const CODES_FAMILLE_RISQUE = FAMILLES_RISQUE.map((f) => f.code) as [
   CodeFamilleRisque,
   ...CodeFamilleRisque[],
 ];
-
-export function estCodeFamille(v: unknown): v is CodeFamilleRisque {
-  return typeof v === "string" && (CODES_FAMILLE_RISQUE as readonly string[]).includes(v);
-}
 
 /** Le libellé d'une famille ; un code inconnu de la liste se rend tel quel. */
 export function libelleFamille(code: string): string {

@@ -24,7 +24,7 @@ import {
   type EtatPartie,
 } from "@/lib/plan-prevention/fiche-signatures";
 import { diagnostiquerPlan } from "@/lib/plan-prevention/schema";
-import { complementsRemplis, LIBELLES_COMPLEMENTS, precisionsLigne } from "@/lib/plan-prevention/complements";
+import { complementsParPlace, precisionsLigne } from "@/lib/plan-prevention/complements";
 import {
   CHAPEAU_R4512_8,
   RUBRIQUES_R4512_8,
@@ -160,11 +160,9 @@ export default async function PlanPreventionDetailPage({
   // Le calcul vit dans `contenu-r4512-8.ts` : la fiche et le ZIP de contrôle
   // doivent dire la même chose du même plan.
   const manquantes = rubriquesManquantes(plan);
-  // Les compléments repris de RiskBoard, hors horaires et CSE, dits à côté de
-  // la période et de l'inspection.
-  const complementsAutres = complementsRemplis(plan).filter(
-    (x) => x.cle !== "horaires" && x.cle !== "cseAssocie",
-  );
+  // Les compléments repris de RiskBoard : horaires avec la période, CSE avec
+  // l'inspection, le reste dans sa carte.
+  const complements = complementsParPlace(plan);
   const texteRubrique: Record<number, string | null> = {
     2: plan.adaptationMateriels,
     3: plan.instructionsTravailleurs,
@@ -449,10 +447,10 @@ export default async function PlanPreventionDetailPage({
                     )}
                   </dd>
                 </div>
-                {plan.horaires && (
+                {complements.horaires && (
                   <div className="md:col-span-2">
-                    <dt className={ETIQUETTE}>{LIBELLES_COMPLEMENTS.horaires}</dt>
-                    <dd className="m-0 mt-0.5 whitespace-pre-wrap">{plan.horaires}</dd>
+                    <dt className={ETIQUETTE}>{complements.horaires.libelle}</dt>
+                    <dd className="m-0 mt-0.5 whitespace-pre-wrap">{complements.horaires.texte}</dd>
                   </div>
                 )}
                 <div className="md:col-span-2">
@@ -505,9 +503,9 @@ export default async function PlanPreventionDetailPage({
                   <LegalBadge className="mt-2" reference="Art. R. 4512-2 CT" href={URL_R4512_2} extrait={R4512_2} />
                 </>
               )}
-              {plan.cseAssocie != null && (
+              {complements.cse && (
                 <p className="m-0 mt-3 text-[13.5px] leading-[1.6] text-[color:var(--board-slate-ink)]">
-                  {LIBELLES_COMPLEMENTS.cseAssocie} : {plan.cseAssocie ? "oui" : "non"}
+                  {complements.cse.libelle} : {complements.cse.texte}
                 </p>
               )}
             </CarteFiche>
@@ -515,10 +513,10 @@ export default async function PlanPreventionDetailPage({
             {/* Repris de RiskBoard (2026-11-21), facultatifs : la carte
                 n'existe que si l'un d'eux est rempli. Horaires et CSE sont
                 dits plus haut, à côté de ce qu'ils précisent. */}
-            {complementsAutres.length > 0 && (
+            {complements.autres.length > 0 && (
               <CarteFiche titre="Compléments">
                 <dl className="m-0 flex flex-col gap-3">
-                  {complementsAutres.map((x) => (
+                  {complements.autres.map((x) => (
                     <div key={x.cle}>
                       <dt className={ETIQUETTE}>{x.libelle}</dt>
                       <dd className="m-0 mt-0.5 whitespace-pre-wrap text-[14px] leading-[1.6]">{x.texte}</dd>
