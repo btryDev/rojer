@@ -43,8 +43,10 @@ sauf le test depuis claude.ai, à faire sur la préproduction.]
 3. Test de bout en bout avec Claude Code, puis Claude.ai. [2026-11-21 : le
    flux est éprouvé en CI (`mcp/oauth-flux.integration.test.ts`) ; reste
    Claude.ai sur la préproduction.]
-4. Retrait de la route `/api/mcp/[cle]` et des variables `MCP_CLE`,
-   `MCP_ETABLISSEMENT_ID` ; mise à jour de la page « Connecter ».
+4. ~~Retrait de la route `/api/mcp/[cle]` et des variables `MCP_CLE`,
+   `MCP_ETABLISSEMENT_ID` ; mise à jour de la page « Connecter ».~~
+   [2026-11-21, `lot/mcp-par-compte` : route et variable retirées du code,
+   page refaite ; les variables n'ont jamais été posées chez Clever Cloud.]
 5. Reprendre les recommandations restantes de l'audit MCP : limitation de
    débit (S4), `localhost` en production (S8), efficience (E1–E4).
 

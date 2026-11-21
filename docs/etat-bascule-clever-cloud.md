@@ -520,8 +520,10 @@ ses boutons disparaissent.
   A1, il ne lit que A1.~~ [2026-11-21, ADR-062 : le connecteur s'ouvre en
   OAuth par compte, réservé au Pro. Recette : branché depuis le compte de A
   (Pro), il lit A1 et A2, jamais B ; hors Pro, chaque outil le dit et rien
-  n'est lu. Variables `MCP_CLE` et `MCP_ETABLISSEMENT_ID` à retirer de
-  l'application Clever Cloud — la route à clé n'existe plus.]
+  n'est lu. ~~Variables `MCP_CLE` et `MCP_ETABLISSEMENT_ID` à retirer de
+  l'application Clever Cloud~~ [2026-11-21, relevé par la propriétaire :
+  elles n'y ont jamais été posées, rien à retirer] — la route à clé n'existe
+  plus.]
 
 ### 8. Après la recette
 
