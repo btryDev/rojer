@@ -7,7 +7,9 @@ import { signOutAction } from "@/lib/auth/actions";
 
 /**
  * Header global persistant — visible partout où l'app n'a pas son propre
- * chrome : connexion, création de compte, pages publiques hors accueil. Il
+ * chrome : ~~connexion, création de compte,~~ pages publiques hors accueil
+ * [2026-11-21 : connexion, création de compte et vérification ont la marque
+ * seule, `EnTeteMarqueSeule` ; la page du lien n'en a plus]. Il
  * n'est rendu que par les segments qui l'affichent (`LayoutAvecEnTete`,
  * audit Next.js du 2026-10-14, M2) — un portillon client le masquait après
  * coup, et il s'exécutait donc sur tous les écrans.
@@ -78,6 +80,23 @@ export async function AppHeader() {
             </>
           )}
         </nav>
+      </div>
+    </header>
+  );
+}
+
+/**
+ * L'en-tête des pages de connexion, création de compte, vérification et
+ * réinitialisation (2026-11-21, retour de la propriétaire) : la marque seule,
+ * sans lecture de session. La barre de session (« Mon dossier », adresse,
+ * « Déconnexion ») s'affichait seule sur fond blanc pendant la redirection qui
+ * suit la connexion.
+ */
+export function EnTeteMarqueSeule() {
+  return (
+    <header className="sticky top-0 z-30 border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)]/95 backdrop-blur">
+      <div className="mx-auto flex max-w-6xl items-center px-6 py-3 sm:px-10">
+        <Marque />
       </div>
     </header>
   );

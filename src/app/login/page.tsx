@@ -3,6 +3,8 @@ import { cheminDeRetour } from "@/lib/auth/chemin-de-retour";
 import { LoginForm } from "./LoginForm";
 import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
 import { getOptionalUser } from "@/lib/auth/require-user";
+import { signOutAction } from "@/lib/auth/actions";
+import { getOptionalUserEtablissement } from "@/lib/auth/scope";
 
 export const metadata = {
   title: "Connexion — Rojer",
@@ -25,6 +27,8 @@ export default async function LoginPage({
   // Déjà connecté·e : on le dit, avec la sortie, plutôt que de montrer le
   // formulaire comme si personne ne l'était (retours de test du 2026-11-16).
   const ouverte = await getOptionalUser();
+  const etab = ouverte ? await getOptionalUserEtablissement() : null;
+  const dossier = etab ? `/etablissements/${etab.id}` : "/onboarding";
 
   return (
     // Colonne étroite centrée : c'est le seul cas où `mx-auto max-w-*` tient
@@ -62,12 +66,27 @@ export default async function LoginPage({
           </MessageFormulaire>
         ) : null}
 
-        {/* L'en-tête porte déjà l'adresse, la sortie et le lien vers le dossier. */}
+        {/* ~~L'en-tête porte déjà l'adresse, la sortie et le lien vers le
+            dossier.~~ [2026-11-21 : l'en-tête n'a plus que la marque ; le
+            dossier et la sortie sont ici, hors du message — un formulaire ne
+            se pose pas dans un paragraphe.] */}
         {ouverte?.email ? (
-          <MessageFormulaire ton="info" className="mt-6">
-            Ce navigateur est déjà connecté avec {ouverte.email}. Pour utiliser une autre adresse, déconnectez-vous
-            d&apos;abord, en haut de la page.
-          </MessageFormulaire>
+          <>
+            <MessageFormulaire ton="info" className="mt-6">
+              Ce navigateur est déjà connecté avec {ouverte.email}. Pour utiliser une autre adresse, déconnectez-vous
+              d&apos;abord.
+            </MessageFormulaire>
+            <div className="mt-3 flex flex-wrap items-center gap-4 text-[13.5px]">
+              <Link href={dossier} className="font-semibold text-[color:var(--board-blue-ink)] underline underline-offset-4">
+                Reprendre mon dossier
+              </Link>
+              <form action={signOutAction}>
+                <button type="submit" className="text-[color:var(--board-slate-ink)] underline underline-offset-4">
+                  Se déconnecter
+                </button>
+              </form>
+            </div>
+          </>
         ) : null}
 
         <div className="carte-board mt-7 px-7 py-6 sm:px-8">
