@@ -16,6 +16,7 @@ import {
   BOUTON_PLEIN,
   CaseConsentement,
   ChampCodeSignature,
+  RenvoiDuCode,
   useCodeDeSignature,
 } from "./EtapesCodeSignature";
 
@@ -90,7 +91,13 @@ export function SignerDepuisMonCompte({
           <CaseConsentement coche={coche} surChanger={setCoche} texte={texteConsentementPour(objetType, raisonSociale)} />
 
           {envoi ? (
-            <ChampCodeSignature id={`code-${objetId}`} email={envoi.email} code={code} surChanger={setCode} />
+            <ChampCodeSignature
+              id={`code-${objetId}`}
+              email={envoi.email}
+              expireLe={envoi.expireLe}
+              code={code}
+              surChanger={setCode}
+            />
           ) : null}
 
           {erreur && (
@@ -99,24 +106,23 @@ export function SignerDepuisMonCompte({
             </p>
           )}
 
-          <div className="flex flex-wrap justify-end gap-2.5">
-            <button type="button" onClick={() => setOuvert(false)} className={BOUTON_CLAIR}>
-              Annuler
-            </button>
-            {envoi ? (
-              <>
-                <button type="button" onClick={demanderCode} disabled={demande} className={BOUTON_CLAIR}>
-                  {demande ? "Envoi…" : "Renvoyer un code"}
-                </button>
+          <div className={`flex flex-wrap items-center gap-2.5 ${envoi ? "justify-between" : "justify-end"}`}>
+            {/* Le compte à rebours du renvoi, comme la fenêtre du plan (2026-11-21). */}
+            {envoi && <RenvoiDuCode renvoiPossibleLe={envoi.renvoiPossibleLe} demande={demande} demanderCode={demanderCode} />}
+            <div className="flex flex-wrap gap-2.5">
+              <button type="button" onClick={() => setOuvert(false)} className={BOUTON_CLAIR}>
+                Annuler
+              </button>
+              {envoi ? (
                 <button type="submit" data-ecriture disabled={!coche || code.length !== 6 || pending} className={BOUTON_PLEIN}>
                   {pending ? "Signature en cours…" : "Je signe"}
                 </button>
-              </>
-            ) : (
-              <button type="button" data-ecriture onClick={demanderCode} disabled={!coche || demande} className={BOUTON_PLEIN}>
-                {demande ? "Envoi du code…" : "Recevoir mon code"}
-              </button>
-            )}
+              ) : (
+                <button type="button" data-ecriture onClick={demanderCode} disabled={!coche || demande} className={BOUTON_PLEIN}>
+                  {demande ? "Envoi du code…" : "Recevoir mon code"}
+                </button>
+              )}
+            </div>
           </div>
         </form>
       </PanneauModal>

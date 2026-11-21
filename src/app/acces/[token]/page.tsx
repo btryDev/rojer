@@ -290,6 +290,7 @@ export default async function AccesParTokenPage({
             codeDejaDemande: t.otpHash !== null,
             essaisRestants: t.otpEssaisRestants,
             renvoiPossibleLe: renvoiOtpPossibleLe(t.otpExpireLe),
+            codeExpireLe: t.otpExpireLe,
           }}
           proposition={proposition}
         />

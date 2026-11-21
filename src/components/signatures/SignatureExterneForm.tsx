@@ -5,6 +5,7 @@ import { useActionState, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { formaterDateLongueFr, formaterHeureFr } from "@/lib/dates";
 import { ChampBoard } from "@/components/ui-kit/ChampBoard";
+import { phraseNouveauCode, phraseValiditeCode } from "./EtapesCodeSignature";
 import {
   poserSignatureAvecToken,
   renvoyerCodeOtp,
@@ -27,10 +28,12 @@ const essais = (n: number) => `${n} essai${n > 1 ? "s" : ""}`;
 
 /** Le délai entre deux codes (`OTP_DELAI_RENVOI_SECONDES`, 60 s). */
 const DELAI_RENVOI_MS = 60_000;
+/** La validité d'un code (`OTP_TTL_MINUTES`, 10 min). */
+const VALIDITE_CODE_MS = 10 * 60_000;
 
 type EtatCode =
   | Exclude<RenvoiOtpState, { status: "success" }>
-  | { status: "success"; message: string; renvoiA: number };
+  | { status: "success"; message: string; renvoiA: number; expireA: number };
 
 /**
  * Les secondes qui restent avant `cible`, arrondies au-dessus ; 0 passé.
@@ -49,6 +52,7 @@ export function SignatureExterneForm({
   codeDejaDemande,
   essaisRestants,
   renvoiPossibleLe,
+  codeExpireLe,
   proposer,
 }: {
   token: string;
@@ -60,6 +64,8 @@ export function SignatureExterneForm({
   essaisRestants: number;
   /** Quand un nouveau code pourra être demandé (`renvoiOtpPossibleLe`). */
   renvoiPossibleLe: Date | null;
+  /** La fin de validité du dernier code parti sur ce lien (`otpExpireLe`), dite sous le champ. */
+  codeExpireLe: Date | null;
   /**
    * « Proposer des modifications » : présent sur le lien de l'entreprise
    * extérieure d'un plan seulement (ADR-061 § 3).
@@ -76,7 +82,8 @@ export function SignatureExterneForm({
   const [codeState, demanderCode, codeEnCours] = useActionState<EtatCode>(
     async () => {
       const r = await renvoyerCodeOtp(token);
-      return r.status === "success" ? { ...r, renvoiA: Date.now() + DELAI_RENVOI_MS } : r;
+      const t = Date.now();
+      return r.status === "success" ? { ...r, renvoiA: t + DELAI_RENVOI_MS, expireA: t + VALIDITE_CODE_MS } : r;
     },
     { status: "idle" },
   );
@@ -102,6 +109,13 @@ export function SignatureExterneForm({
   const renvoiA =
     codeState.status === "success" ? codeState.renvoiA : (renvoiPossibleLe?.getTime() ?? null);
   const attente = secondesAvant(renvoiA, maintenant);
+  const expireA = codeState.status === "success" ? codeState.expireA : (codeExpireLe?.getTime() ?? null);
+  const validite =
+    expireA === null
+      ? "Valable 10 minutes"
+      : maintenant !== null && expireA <= maintenant
+        ? "Ce code a expiré : demandez-en un nouveau"
+        : phraseValiditeCode(new Date(expireA));
 
   // La confirmation reste sur le lien (2026-11-21, ADR-006 amendée : plus
   // d'accusé public `/signe`). `router.refresh` relit la page : le lien,
@@ -152,7 +166,7 @@ export function SignatureExterneForm({
           Vous signez en tant que
         </p>
         <dl className="m-0 mt-2 grid grid-cols-1 gap-y-1 text-[13.5px] sm:grid-cols-[auto_1fr] sm:gap-x-4">
-          {destinataire.nom && (
+          {destinataire.nom && destinataire.nom.trim().toLowerCase() !== destinataire.email.trim().toLowerCase() && (
             <>
               <dt className="text-[color:var(--board-slate-mid)]">Nom</dt>
               <dd className="m-0 text-[color:var(--board-ink)]">{destinataire.nom}</dd>
@@ -217,7 +231,7 @@ export function SignatureExterneForm({
                 const champ = e.currentTarget;
                 champ.value = champ.value.replace(/\D/g, "").slice(0, 6);
               }}
-              aide={`Valable 10 minutes. Le lien expire le ${formaterDateLongueFr(expireLe)} à ${formaterHeureFr(expireLe)}.`}
+              aide={`${validite}. Le lien expire le ${formaterDateLongueFr(expireLe)} à ${formaterHeureFr(expireLe)}.`}
             />
 
             {state.status === "error" && (
@@ -252,7 +266,7 @@ export function SignatureExterneForm({
               {codeEnCours
                 ? "Envoi du code…"
                 : attente
-                  ? `Renvoyer un code (dans ${attente} s)`
+                  ? phraseNouveauCode(attente)
                   : "Renvoyer un code"}
             </button>
             {erreurCode}

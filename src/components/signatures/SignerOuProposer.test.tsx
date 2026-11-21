@@ -40,6 +40,7 @@ const SIGNATURE = {
   codeDejaDemande: false,
   essaisRestants: 3,
   renvoiPossibleLe: null,
+  codeExpireLe: null,
 };
 
 const PROPOSITION = {
@@ -88,9 +89,12 @@ describe("SignerOuProposer — la signature", () => {
     await act(async () => {
       await new Promise((r) => setTimeout(r, 5));
     });
-    const renvoi = screen.getByRole("button", { name: /Renvoyer un code/ }) as HTMLButtonElement;
+    // [2026-11-21] « Nouveau code possible dans 0:59 », et la fin de validité
+    // du code sous le champ.
+    const renvoi = screen.getByRole("button", { name: /Nouveau code possible dans/ }) as HTMLButtonElement;
     expect(renvoi.disabled).toBe(true);
-    expect(renvoi.textContent).toMatch(/dans (59|60) s/);
+    expect(renvoi.textContent).toMatch(/dans [01]:[0-5]\d$/);
+    expect(screen.getByText(/Code valable jusqu'à \d{2} h \d{2}\. Le lien expire le/)).toBeTruthy();
   });
 
   it("un code déjà demandé ouvre directement l'étape du code", () => {
