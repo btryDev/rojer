@@ -33,8 +33,9 @@ import { borneeParConstruction, decoupe, etablitSaPorteeLocale, LECTURE } from "
  *  - `appelAutorise` contre `secretDesTaches` (tâches quotidiennes, appelées
  *    par la crontab : le secret partagé est vérifié avant toute tâche) ;
  *  - pour le MCP, `handler.servir` d'un gestionnaire construit par
- *    `creerHandlerMcpHttp` dont la portée sort de `resoudreScopeDepuisCle` ou
- *    `resoudreScopeDepuisJeton` (ADR-013).
+ *    `creerHandlerMcpHttp` dont la portée sort de ~~`resoudreScopeDepuisCle` ou
+ *    `resoudreScopeDepuisJeton` (ADR-013)~~ [2026-11-21 : `resoudrePorteur`,
+ *    le jeton OAuth relu à chaque requête (ADR-062)].
  *
  * Un appel à une query scopée importée NE COMPTE PAS : la route se garde
  * elle-même, comme chaque action. `exporterDonneesSalarie` montre pourquoi —
@@ -64,6 +65,10 @@ const PUBLIQUES = new Map<string, string>([
     "Affiche QR du registre public d'accessibilité : ne lit que par " +
       "`getRegistrePublicParSlug` (registre publié, champs publiables).",
   ],
+  // Le serveur MCP est sans état (ADR-062 § 9) : GET et DELETE répondent 405
+  // (ou 404 sans adresse publique), sans rien lire ni servir.
+  ["api/mcp/route.ts:GET", "MCP sans état : 405, sans lecture (ADR-062 § 9)."],
+  ["api/mcp/route.ts:DELETE", "MCP sans état : 405, sans lecture (ADR-062 § 9)."],
 ]);
 
 /**
@@ -146,10 +151,15 @@ function controle(m: Methode): string | null {
     }
   }
   // ~~La clé d'URL (`resoudreScopeDepuisCle`)~~ [2026-11-21, ADR-062 : retirée].
-  // Le serveur MCP : un handler dont le porteur est résolu par le jeton
-  // OAuth vérifié, l'appartenance et l'abonnement relus (`resoudrePorteur`).
-  // Ses autres méthodes (GET, DELETE) répondent 405 sans rien lire.
-  if (appelle("creerHandlerMcpHttp", m.source) && appelle("resoudrePorteur", m.source)) {
+  // Le serveur MCP : la méthode sert par `handler.servir`, d'un handler dont
+  // le porteur est résolu par le jeton OAuth vérifié, l'appartenance et
+  // l'abonnement relus (`resoudrePorteur`). GET et DELETE sont dans
+  // `PUBLIQUES`.
+  if (
+    /\bhandler\.servir\(/.test(m.corps) &&
+    appelle("creerHandlerMcpHttp", m.source) &&
+    appelle("resoudrePorteur", m.source)
+  ) {
     return "MCP";
   }
   // La route de Better Auth : liste blanche des points d'entrée OAuth, dont
@@ -159,7 +169,8 @@ function controle(m: Methode): string | null {
   }
   // Documents de découverte OAuth : publics par la spécification, construits
   // depuis la configuration, sans lecture du dossier.
-  if (appelle("servirDecouverte", m.corps)) return "découverte OAuth";
+  // Sous `.well-known/` seulement : ailleurs, la même délégation se relirait.
+  if (appelle("servirDecouverte", m.corps) && m.cle.startsWith(".well-known/")) return "découverte OAuth";
   // La page de connexion du fournisseur : requête signée vérifiée, puis la
   // session (ou `/login`).
   if (appelle("verifyOAuthQueryParams", m.corps) && appelle("lireSessionCourante", m.corps)) {

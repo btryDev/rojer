@@ -45,7 +45,8 @@ export const ADRESSES_DE_RETOUR_ADMISES: readonly string[] = [
   "https://claude.com/api/mcp/auth_callback",
 ];
 
-const BOUCLE_LOCALE = new Set(["localhost", "127.0.0.1", "[::1]"]);
+/** Boucle locale des adresses de retour d'un client natif (RFC 8252 § 7.3), `[::1]` compris. */
+const BOUCLE_LOCALE_RETOUR = new Set(["localhost", "127.0.0.1", "[::1]"]);
 
 /**
  * Une adresse de retour est admise si elle figure à la liste, à l'identique,
@@ -64,7 +65,7 @@ export function estAdresseDeRetourAdmise(adresse: string): boolean {
   }
   return (
     url.protocol === "http:" &&
-    BOUCLE_LOCALE.has(url.hostname) &&
+    BOUCLE_LOCALE_RETOUR.has(url.hostname) &&
     url.username === "" &&
     url.password === "" &&
     url.hash === ""

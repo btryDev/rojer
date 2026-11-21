@@ -36,3 +36,12 @@ export function publicAppUrl(): string {
     "",
   );
 }
+
+/**
+ * L'adresse publique de l'application, ou `null` quand elle n'est pas
+ * utilisable (`refusUrlPublique`). Une seule règle pour l'audience des jetons
+ * du connecteur, la page « Connecter » et le fournisseur OAuth (ADR-062).
+ */
+export function adressePubliqueOuNull(): string | null {
+  return refusUrlPublique() ? null : publicAppUrl();
+}

@@ -15,20 +15,23 @@ function versHote(valeur: string): string {
   return valeur.replace(/^https?:\/\//, "").split("/")[0];
 }
 
-const BOUCLE_LOCALE = ["localhost", "127.0.0.1"];
+/** Noms d'hôte de la boucle locale admis en `Host` hors production (pas `[::1]`). */
+const BOUCLE_LOCALE_HOTES = ["localhost", "127.0.0.1"];
 
 /**
- * Hôte de `PUBLIC_APP_URL`, ou `null`. La boucle locale est écartée : elle
- * est déjà acceptée, et l'URL de développement (`http://localhost:3000`) ne
- * doit pas devenir l'hôte « public » de l'identifiant de ressource. La
- * validation `Host` compare des noms d'hôte sans port : on rend `hostname`.
+ * Hôte de `PUBLIC_APP_URL`, ou `null`. La boucle locale est écartée :
+ * ~~elle est déjà acceptée, et l'URL de développement (`http://localhost:3000`)
+ * ne doit pas devenir l'hôte « public » de l'identifiant de ressource~~
+ * [2026-11-21, ADR-062 : elle n'est acceptée qu'hors production, et un
+ * `PUBLIC_APP_URL` en localhost ne doit pas la faire accepter en production].
+ * La validation `Host` compare des noms d'hôte sans port : on rend `hostname`.
  */
 function hoteDeLApplication(env: NodeJS.ProcessEnv): string | null {
   const url = env.PUBLIC_APP_URL?.trim();
   if (!url) return null;
   try {
     const hote = new URL(url).hostname;
-    return hote && !BOUCLE_LOCALE.includes(hote) ? hote : null;
+    return hote && !BOUCLE_LOCALE_HOTES.includes(hote) ? hote : null;
   } catch {
     return null;
   }
@@ -63,7 +66,7 @@ export function lireHotesAutorises(env: NodeJS.ProcessEnv): string[] {
     ...new Set([
       ...declares,
       ...(application ? [application] : []),
-      ...(env.NODE_ENV === "production" ? [] : BOUCLE_LOCALE),
+      ...(env.NODE_ENV === "production" ? [] : BOUCLE_LOCALE_HOTES),
     ]),
   ];
 }

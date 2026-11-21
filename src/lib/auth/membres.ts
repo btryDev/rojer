@@ -17,21 +17,12 @@ import { auth } from "./better-auth";
 import { lireSessionCourante } from "./require-user";
 import { estRole, type Role } from "./roles";
 
-export type Appartenance = { compteId: string; role: Role };
+// La lecture des appartenances vit dans un module feuille (`appartenances.ts`),
+// que le fournisseur OAuth lit aussi sans import circulaire (ADR-062).
+import { appartenancesDe, type Appartenance } from "./appartenances";
+export { appartenancesDe, type Appartenance };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-/** Les comptes dont la personne est membre, le plus ancien d'abord ; un rôle inconnu est écarté. */
-export async function appartenancesDe(userId: string): Promise<Appartenance[]> {
-  const lignes = await prisma.membre.findMany({
-    where: { userId },
-    select: { compteId: true, role: true },
-    // Le plus ancien d'abord, à égalité départagé par l'identifiant : deux
-    // lectures concurrentes désignent le même (`compteDOnboarding`).
-    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-  });
-  return lignes.filter((l): l is Appartenance => estRole(l.role));
-}
 
 /** Parmi les appartenances, celle du compte actif si la personne en est membre, sinon la plus ancienne. */
 function appartenanceRetenue(toutes: Appartenance[], compteActifId: string | null | undefined): Appartenance | null {

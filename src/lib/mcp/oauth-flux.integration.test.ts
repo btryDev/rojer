@@ -48,6 +48,8 @@ describe.skipIf(!URL_BASE || !local)("connecteur MCP en OAuth — PostgreSQL et 
   const { resoudrePorteur } = await import("./acces-compte");
   const { retirerAssistant, assistantsAutorises, oublierAssistants } = await import("@/lib/connecteur/assistants");
   const { lookupKey } = await import("@/lib/abonnements/formules");
+  const { requeteARejouer } = await import("./reprise-oauth");
+  const { verifyOAuthQueryParams } = await import("@better-auth/oauth-provider");
 
   const suffixe = randomUUID().slice(0, 8);
   const email = `connecteur-${suffixe}@exemple.test`;
@@ -172,12 +174,31 @@ describe.skipIf(!URL_BASE || !local)("connecteur MCP en OAuth — PostgreSQL et 
       code_challenge_method: "S256",
       resource: RESSOURCE,
     });
+    // Sans session : la page de connexion du fournisseur, avec la requête
+    // signée PAR LE PLUGIN — `requeteARejouer` en lit les noms (`ba_iat`,
+    // `sig`…) tels qu'il les émet, pas tels que le test les écrirait.
+    const connexion = await suite(
+      await appel(`/api/auth/oauth2/authorize?${requete}`, { headers: { accept: "text/html" } }),
+    );
+    expect(connexion.pathname).toBe("/oauth/reprendre");
+    const signee = connexion.search.replace(/^\?/, "");
+    expect(await verifyOAuthQueryParams(signee, (await auth.$context).secret)).toBe(true);
+    const rejouee = requeteARejouer(signee, new Date());
+    expect(rejouee).not.toBeNull();
+    for (const p of ["sig", "exp", "ba_iat", "ba_pl"]) expect(new URLSearchParams(rejouee!).has(p), p).toBe(false);
+    // `prompt=login` signé APRÈS l'ouverture de la session : elle ne le satisfait pas.
+    const avecLogin = await suite(
+      await appel(`/api/auth/oauth2/authorize?${requete}&prompt=login`, { headers: { accept: "text/html" } }),
+    );
+    const sessionOuverte = (await auth.api.getSession({ headers: cookie }))!.session.createdAt;
+    expect(requeteARejouer(avecLogin.search.replace(/^\?/, ""), new Date(sessionOuverte))).toBeNull();
+
+    // La requête rejouée, connecté : un seul compte, pas de choix, directement le consentement.
     const vers = await suite(
-      await appel(`/api/auth/oauth2/authorize?${requete}`, {
+      await appel(`/api/auth/oauth2/authorize?${rejouee}`, {
         headers: { cookie: cookie.get("cookie") ?? "", accept: "text/html" },
       }),
     );
-    // Un seul compte : pas de choix, directement le consentement.
     expect(vers.pathname).toBe("/oauth/consentement");
 
     const accorde = await auth.api.oauth2Consent({

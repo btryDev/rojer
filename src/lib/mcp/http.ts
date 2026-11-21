@@ -1,7 +1,9 @@
 // Serveur MCP en transport HTTP — les gardes, avant les outils.
 //
 // Le pendant distant de `scripts/mcp-server.ts`. Les outils ne changent pas
-// (c'est ce pour quoi `./tools` a été écrit sans rien savoir du transport) ;
+// (c'est ce pour quoi `./tools` a été écrit sans rien savoir du transport ;
+// [2026-11-21, ADR-062] `./outils-compte` les enveloppe d'un choix
+// d'établissement et de la formule) ;
 // ce qui change, c'est d'où vient la portée. En stdio elle était fixée au
 // démarrage par une variable d'environnement, sur une machine où seul le
 // propriétaire pouvait lancer le processus. Ici n'importe qui peut poster
@@ -267,8 +269,9 @@ export function creerHandlerMcpHttp(options: OptionsServeurHttp) {
       originValidationResponse(request, options.originesAutorisees);
     if (rejete) return rejete;
 
-    // Par IP AVANT l'authentification, qui peut coûter un appel au serveur
-    // Auth ; par portée APRÈS, pour qu'un porteur légitime ne puisse pas
+    // Par IP AVANT l'authentification, ~~qui peut coûter un appel au serveur
+    // Auth~~ [2026-11-21 : vérifiée en local, puis appartenance et abonnement
+    // relus en base, ADR-062] ; par portée APRÈS, pour qu'un porteur légitime ne puisse pas
     // marteler un établissement depuis plusieurs adresses. Adresse COMPLÈTE,
     // pas son /64 (exception à `ipPourLimite`, audit du 2026-11-10) : les
     // clients MCP hébergés partagent leurs réseaux de sortie entre leurs

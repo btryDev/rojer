@@ -11,7 +11,7 @@ import { assistantsAutorises, connecteurOuvertPour } from "@/lib/connecteur/assi
 import { OUTILS_COMPTE } from "@/lib/mcp/outils-compte";
 import { ressourceMcp } from "@/lib/mcp/oauth";
 import { formaterDateFr } from "@/lib/dates";
-import { MESSAGE_URL_PUBLIQUE_ABSENTE, publicAppUrl, refusUrlPublique } from "@/lib/url-publique";
+import { MESSAGE_URL_PUBLIQUE_ABSENTE, adressePubliqueOuNull } from "@/lib/url-publique";
 import { retirerAssistantAction } from "./actions";
 
 export const metadata = {
@@ -41,7 +41,8 @@ export default async function ConnecterPage({ params }: { params: Promise<{ id: 
     connecteurOuvertPour(compte.compteId),
     assistantsAutorises(user.id, compte.compteId),
   ]);
-  const adresse = refusUrlPublique() ? null : ressourceMcp(publicAppUrl());
+  const publique = adressePubliqueOuNull();
+  const adresse = publique ? ressourceMcp(publique) : null;
   const retirer = retirerAssistantAction.bind(null, id);
 
   return (

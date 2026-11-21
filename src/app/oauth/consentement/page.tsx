@@ -11,7 +11,7 @@ import { auth } from "@/lib/auth/better-auth";
 import { comptesDeLaPersonne } from "@/lib/auth/membres";
 import { entetesDeSession, lireSessionCourante, requireUser } from "@/lib/auth/require-user";
 import { MESSAGE_CONNECTEUR_PRO } from "@/lib/abonnements/connecteur";
-import { compteDuConsentement } from "@/lib/mcp/compte-oauth";
+import { compteRetenu } from "@/lib/mcp/compte-oauth";
 import { connecteurOuvertPour } from "@/lib/connecteur/assistants";
 import { hoteDeRetour, requeteSigneeDeLaPage, type ParametresDePage } from "@/lib/mcp/requete-oauth";
 import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
@@ -27,12 +27,16 @@ export default async function ConsentementPage({ searchParams }: { searchParams:
   if (!requete) return <DemandeExpiree />;
 
   const session = await lireSessionCourante();
-  const compteId = await compteDuConsentement(user.id, session?.session.activeOrganizationId);
-  const [client, comptes, ouvert] = await Promise.all([
+  // Une lecture de `Membre` : la règle de `compteDuConsentement`, sur les comptes de la page.
+  const comptes = await comptesDeLaPersonne(user.id);
+  const compteId = compteRetenu(
+    comptes.map((c) => c.compteId),
+    session?.session.activeOrganizationId,
+  );
+  const [client, ouvert] = await Promise.all([
     auth.api
       .getOAuthClientPublic({ headers: await entetesDeSession(), query: { client_id: requete.get("client_id") ?? "" } })
       .catch(() => null),
-    comptesDeLaPersonne(user.id),
     connecteurOuvertPour(compteId),
   ]);
   const nomClient = (client as { client_name?: string } | null)?.client_name?.trim() || "Un assistant";

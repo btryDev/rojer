@@ -14,13 +14,14 @@ import { lireHotesAutorises } from "@/lib/mcp/hotes";
 import { creerHandlerMcpHttp } from "@/lib/mcp/http";
 import { resoudrePorteur } from "@/lib/mcp/acces-compte";
 import { ressourceMcp } from "@/lib/mcp/oauth";
-import { publicAppUrl, refusUrlPublique } from "@/lib/url-publique";
+import { adressePubliqueOuNull } from "@/lib/url-publique";
 
 // Le serveur lit la base à chaque appel d'outil : rien à mettre en cache, et
 // une réponse mise en cache serait ici une fuite entre requêtes.
 export const dynamic = "force-dynamic";
 
-const ressource = refusUrlPublique() ? null : ressourceMcp(publicAppUrl());
+const adresse = adressePubliqueOuNull();
+const ressource = adresse ? ressourceMcp(adresse) : null;
 const hotes = lireHotesAutorises(process.env);
 
 const handler = ressource

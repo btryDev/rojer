@@ -245,9 +245,13 @@ ou l'appartenance qui tombe.
 ### 10. Ce qui part
 
 - La route `/api/mcp/[cle]`, `src/lib/mcp/acces-http.ts`, les variables
-  `MCP_CLE` et `MCP_ETABLISSEMENT_ID` : retirées une fois le flux validé de
+  `MCP_CLE` et ~~`MCP_ETABLISSEMENT_ID`~~ : retirées ~~une fois le flux validé de
   bout en bout depuis claude.ai en préproduction — dans le même lot si le
-  test passe, sinon au lot suivant, mais jamais servies en production.
+  test passe, sinon au lot suivant, mais jamais servies en production~~
+  [2026-11-21 : retirées dans ce lot, la route à clé n'ayant jamais été servie
+  en production ni en préproduction (variables absentes de Clever Cloud).
+  `MCP_ETABLISSEMENT_ID` reste, pour le seul serveur stdio de
+  développement.]
 - Le mode local (`scripts/mcp-server.ts`) reste un outil de développement ;
   il quitte la page « Connecter ».
 - `connecterUnAssistant` est lu (§ 4) et affiché dans les points de la

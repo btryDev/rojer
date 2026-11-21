@@ -115,7 +115,7 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous"; 
   // la formule Pro) se relit avant de construire le client borné.
   "src/lib/mcp/acces-compte.ts": {
     motif: "porteur d'un jeton MCP vérifié : appartenance au compte du jeton et abonnement de ce compte, relus avant la portée",
-    usages: ["prisma.membre.findUnique"],
+    usages: ["prisma.membre.findUnique", "prisma.abonnement.findUnique"],
   },
   "src/lib/connecteur/assistants.ts": {
     motif:
@@ -126,8 +126,9 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous"; 
     // membre) ; la suppression du compte lui passe sa transaction.
     valeur: ["$transaction(hors tableau)", "<valeur>"],
   },
-  "src/lib/mcp/compte-oauth.ts": {
-    motif: "compte d'un consentement OAuth : appartenances de la personne connectée, relues avant que le compte soit choisi",
+  "src/lib/auth/appartenances.ts": {
+    motif:
+      "appartenances d'une personne (ADR-054 § 3), lues avant la portée ; module feuille partagé par `membres.ts` et le fournisseur OAuth (ADR-062)",
     usages: ["prisma.membre.findMany"],
   },
   "src/lib/auth/membres.ts": {

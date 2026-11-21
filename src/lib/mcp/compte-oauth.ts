@@ -4,22 +4,16 @@ import "server-only";
 // avant le consentement : le compte actif de la session n'est qu'une
 // préférence, l'appartenance est relue dans `Membre`.
 //
-// Module hors compte nommé, comme `auth/membres.ts` : il lit `Membre` avant
-// que la portée existe. Il n'importe pas `auth/better-auth.ts`, qui l'importe.
+// Il lit `Membre` par `auth/appartenances.ts`, la même lecture que
+// `requireCompte`, sans importer `auth/better-auth.ts`, qui l'importe.
 
-import { prisma } from "@/lib/prisma";
-import { estRole } from "@/lib/auth/roles";
+import { appartenancesDe } from "@/lib/auth/appartenances";
 
 /** Nom du claim qui porte le compte dans le jeton d'accès. */
 export const CLAIM_COMPTE = "compte";
 
 async function comptesDe(userId: string): Promise<string[]> {
-  const lignes = await prisma.membre.findMany({
-    where: { userId },
-    select: { compteId: true, role: true },
-    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-  });
-  return lignes.filter((l) => estRole(l.role)).map((l) => l.compteId);
+  return (await appartenancesDe(userId)).map((a) => a.compteId);
 }
 
 /**
@@ -48,7 +42,11 @@ export async function compteDuConsentement(
   userId: string,
   compteActifId: string | null | undefined,
 ): Promise<string> {
-  const comptes = await comptesDe(userId);
+  return compteRetenu(await comptesDe(userId), compteActifId);
+}
+
+/** La règle de `compteDuConsentement`, sur des comptes déjà lus (la page de consentement). */
+export function compteRetenu(comptes: readonly string[], compteActifId: string | null | undefined): string {
   if (compteActifId && comptes.includes(compteActifId)) return compteActifId;
   if (comptes.length === 1) return comptes[0];
   throw new Error("consentement OAuth sans compte désigné dont la personne est membre");

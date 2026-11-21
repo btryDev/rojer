@@ -7,10 +7,9 @@ import "server-only";
 // Module hors compte nommé (`portee/imports.test.ts`).
 
 import type { Prisma } from "@prisma/client";
+import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { connecteurOuvert } from "@/lib/abonnements/connecteur";
-
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export type AssistantAutorise = { id: string; nom: string; autoriseLe: Date | null };
 
@@ -34,7 +33,7 @@ export async function assistantsAutorises(userId: string, compteId: string): Pro
 export async function retirerAssistant(userId: string, compteId: string, consentementId: string): Promise<boolean> {
   // La colonne est un `uuid` : un champ vide ou modifié à la main ne désigne
   // rien, et ne doit pas faire échouer la requête.
-  if (!UUID.test(consentementId)) return false;
+  if (!z.uuid().safeParse(consentementId).success) return false;
   return prisma.$transaction(async (tx) => {
     const consentement = await tx.oauthConsent.findFirst({
       where: { id: consentementId, userId, referenceId: compteId },

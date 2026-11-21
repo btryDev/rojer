@@ -22,7 +22,8 @@ import { estRole } from "@/lib/auth/roles";
 import { connecteurOuvert } from "@/lib/abonnements/connecteur";
 import { prisma } from "@/lib/prisma";
 import { CLAIM_COMPTE } from "./compte-oauth";
-import { CHEMIN_MCP, PORTEE_LECTURE } from "./oauth";
+import { getOAuthProtectedResourceMetadataUrl } from "@modelcontextprotocol/server";
+import { PORTEE_LECTURE } from "./oauth";
 
 /** Les claims d'un jeton vérifié (`jose` n'est pas une dépendance directe). */
 type JWTPayload = Record<string, unknown>;
@@ -85,7 +86,7 @@ export function descriptionDuDefi(description: string): string {
 
 /** 401 « jeton invalide » avec le défi qui relance l'autorisation (RFC 6750, RFC 9728). */
 export function refusJetonInvalide(ressource: string, description: string): Response {
-  const metadonnees = `${new URL(ressource).origin}/.well-known/oauth-protected-resource${CHEMIN_MCP}`;
+  const metadonnees = getOAuthProtectedResourceMetadataUrl(new URL(ressource));
   return new Response(
     JSON.stringify({ jsonrpc: "2.0", error: { code: -32001, message: description }, id: null }),
     {
@@ -128,11 +129,16 @@ export async function resoudrePorteur(request: Request, ressource: string): Prom
   const lus = claimsDuPorteur(claims);
   if (!lus) return { statut: "reponse", reponse: refusJetonInvalide(ressource, "Jeton incomplet.") };
 
-  // 3 et 4. Une lecture : l'appartenance, et l'abonnement du compte.
-  const membre = await prisma.membre.findUnique({
-    where: { compteId_userId: { compteId: lus.compteId, userId: lus.userId } },
-    select: { role: true, compte: { select: { abonnement: { select: { statut: true, formule: true } } } } },
-  });
+  // 3 et 4. L'appartenance et l'abonnement du compte, lus en parallèle : un
+  // aller-retour par requête (une lecture imbriquée en ferait trois en série,
+  // Prisma sans jointures). Le compte vient du jeton vérifié.
+  const [membre, abonnement] = await Promise.all([
+    prisma.membre.findUnique({
+      where: { compteId_userId: { compteId: lus.compteId, userId: lus.userId } },
+      select: { role: true },
+    }),
+    prisma.abonnement.findUnique({ where: { compteId: lus.compteId }, select: { statut: true, formule: true } }),
+  ]);
   if (!membre || !estRole(membre.role)) {
     return {
       statut: "reponse",
@@ -141,6 +147,6 @@ export async function resoudrePorteur(request: Request, ressource: string): Prom
   }
   return {
     statut: "ok",
-    porteur: { ...lus, ouvert: connecteurOuvert(membre.compte.abonnement ?? null) },
+    porteur: { ...lus, ouvert: connecteurOuvert(abonnement) },
   };
 }

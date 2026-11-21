@@ -34,9 +34,10 @@ const PUBLIC_PREFIXES = [
   "/accessibilite",
   // Route API qui sert l'affiche A4 du registre (QR + URL).
   "/api/accessibilite",
-  // Le serveur MCP porte sa propre garde : la clé de `/api/mcp/[cle]`, le
-  // jeton OAuth de `/api/mcp` (ADR-062), qui doit répondre 401 avec son défi
-  // et non le refus JSON du proxy.
+  // Le serveur MCP porte sa propre garde : ~~la clé de `/api/mcp/[cle]`~~
+  // [2026-11-21 : route retirée, ADR-062] le jeton OAuth de `/api/mcp`
+  // (ADR-062), qui doit répondre 401 avec son défi et non le refus JSON du
+  // proxy.
   "/api/mcp",
   // ADR-062 : la découverte OAuth (RFC 8414, RFC 9728). Les points d'entrée
   // de `/api/auth` sont publics un par un (`estCheminAuthServi`), pas le

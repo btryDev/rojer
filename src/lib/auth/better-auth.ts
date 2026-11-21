@@ -24,7 +24,8 @@ import { oublierAssistants } from "@/lib/connecteur/assistants";
 import { oublierAppareilsDeConfiance } from "./appareils-de-confiance";
 import { poserMotDePasseAvantConfirmation } from "./activation";
 import { prisma } from "@/lib/prisma";
-import { motifErreur, publicAppUrl, refusUrlPublique, sendMail } from "@/lib/email";
+import { motifErreur, sendMail } from "@/lib/email";
+import { adressePubliqueOuNull } from "@/lib/url-publique";
 import { mailCompte, type MailCompte } from "@/lib/email/gabarit";
 import { ENTETE_IP_CLIENT } from "./entete-ip";
 import { cleLimite, consommer, LIMITES, type Limite } from "@/lib/securite/limite-debit";
@@ -88,7 +89,7 @@ export const VERROU_DOUBLE_AUTH_MINUTES = 15;
  * build, elle peut manquer sans dommage (aucune session n'y est servie).
  */
 function adresseApp(): string | undefined {
-  return refusUrlPublique() ? undefined : publicAppUrl();
+  return adressePubliqueOuNull() ?? undefined;
 }
 
 /**
@@ -142,17 +143,20 @@ async function envoyer(
 function pluginsConnecteurMcp() {
   const adresse = adresseApp();
   if (!adresse) return [];
+  const ressource = ressourceMcp(adresse);
+  /** Le compte actif de la session (`organization`), que le type du plugin `mcp` ne connaît pas. */
+  const compteActif = (session: unknown) => (session as { activeOrganizationId?: string | null }).activeOrganizationId;
   return [
     // Le plugin `jwt` ne sert qu'à signer les jetons d'accès : sa route
     // `/token` (un JWT de session) est coupée (`disabledPaths`), et l'en-tête
     // `set-auth-jwt` aussi — aucun JWT de session n'atteint un navigateur.
     jwt({ disableSettingJwtHeader: true }),
     mcp({
-      resource: ressourceMcp(adresse),
+      resource: ressource,
       loginPage: "/oauth/reprendre",
       consentPage: "/oauth/consentement",
       scopes: [...PORTEES_FOURNISSEUR],
-      resources: [{ identifier: ressourceMcp(adresse), name: "Rojer", allowedScopes: [PORTEE_LECTURE] }],
+      resources: [{ identifier: ressource, name: "Rojer", allowedScopes: [PORTEE_LECTURE] }],
       // claude.ai s'enregistre par DCR, sans jeton préalable : c'est la seule
       // porte qu'il sait ouvrir. Bornée par les adresses de retour admises
       // (crochet `before` ci-dessous et `validateRedirectUri`) et par la
@@ -184,9 +188,9 @@ function pluginsConnecteurMcp() {
       postLogin: {
         page: "/oauth/compte",
         shouldRedirect: ({ user, session, isContinuation }) =>
-          doitChoisirLeCompte(user.id, (session as { activeOrganizationId?: string | null }).activeOrganizationId, isContinuation),
+          doitChoisirLeCompte(user.id, compteActif(session), isContinuation),
         consentReferenceId: ({ user, session }) =>
-          compteDuConsentement(user.id, (session as { activeOrganizationId?: string | null }).activeOrganizationId),
+          compteDuConsentement(user.id, compteActif(session)),
       },
       // Le compte du consentement entre au jeton : le serveur de ressource le
       // lit, puis relit l'appartenance et l'abonnement (ADR-062 § 4).

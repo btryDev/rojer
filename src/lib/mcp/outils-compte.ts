@@ -95,6 +95,9 @@ function pourLePorteur(outil: (typeof OUTILS_MCP)[number]): OutilServi {
     schema,
     executer: async (porteur, args, now) => {
       const { etablissement, ...reste } = args as { etablissement?: string } & Record<string, unknown>;
+      // L'établissement est choisi dans la liste du compte AVANT toute
+      // lecture : un identifiant d'un autre compte est refusé ici, en plus du
+      // client borné (deux remparts, pour une petite requête de plus).
       const cible = choisirEtablissement(await etablissementsDuCompte(porteur), etablissement);
       const ctx: ContexteMcp = {
         scope: { etablissementId: cible.id },

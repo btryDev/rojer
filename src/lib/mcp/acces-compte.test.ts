@@ -12,6 +12,7 @@ const h = vi.hoisted(() => ({
   refus: new Response(null, { status: 401 }),
   options: null as unknown,
   membre: vi.fn(),
+  abonnement: vi.fn(),
 }));
 
 vi.mock("@better-auth/mcp", () => ({
@@ -23,7 +24,9 @@ vi.mock("@better-auth/mcp", () => ({
     },
 }));
 vi.mock("@/lib/auth/better-auth", () => ({ auth: {} }));
-vi.mock("@/lib/prisma", () => ({ prisma: { membre: { findUnique: h.membre } } }));
+vi.mock("@/lib/prisma", () => ({
+  prisma: { membre: { findUnique: h.membre }, abonnement: { findUnique: h.abonnement } },
+}));
 
 const { resoudrePorteur, enteteJwt, jetonPorteur, descriptionDuDefi, refusJetonInvalide } = await import(
   "./acces-compte"
@@ -37,11 +40,12 @@ const requete = (j: string | null) =>
   new Request(RESSOURCE, { method: "POST", headers: j ? { authorization: `Bearer ${j}` } : {} });
 
 const CLAIMS: Record<string, string> = { sub: "user-1", compte: "compte-1", azp: "client-1", scope: "rojer:lecture" };
-const pro = { role: "member", compte: { abonnement: { statut: "active", formule: lookupKey("pro", "mensuel") } } };
+const pro = { statut: "active", formule: lookupKey("pro", "mensuel") };
 
 beforeEach(() => {
   h.claims = { ...CLAIMS };
-  h.membre.mockReset().mockResolvedValue(pro);
+  h.membre.mockReset().mockResolvedValue({ role: "member" });
+  h.abonnement.mockReset().mockResolvedValue(pro);
 });
 
 describe("resoudrePorteur", () => {
@@ -96,13 +100,14 @@ describe("resoudrePorteur", () => {
   });
 
   it("membre en lecture seule : servi aussi — le connecteur ne fait que lire", async () => {
-    h.membre.mockResolvedValue({ ...pro, role: "lecture" });
+    h.membre.mockResolvedValue({ role: "lecture" });
     const r = await resoudrePorteur(requete(jeton("at+jwt")), RESSOURCE);
     expect(r.statut === "ok" && r.porteur.ouvert).toBe(true);
   });
 
   it("membre, hors Pro : servi mais fermé — les outils le diront", async () => {
-    h.membre.mockResolvedValue({ role: "owner", compte: { abonnement: null } });
+    h.membre.mockResolvedValue({ role: "owner" });
+    h.abonnement.mockResolvedValue(null);
     const r = await resoudrePorteur(requete(jeton("at+jwt")), RESSOURCE);
     expect(r.statut === "ok" && r.porteur.ouvert).toBe(false);
   });
