@@ -108,7 +108,7 @@ export async function lienOuSignatureParPlan(
   if (planIds.length === 0) return new Set();
   const [liens, signatures] = await Promise.all([
     db.accessToken.findMany({
-      where: { etablissementId, objetType: "plan_prevention", objetId: { in: planIds }, ...LIEN_PARTI },
+      where: { etablissementId, objetType: "plan_prevention", objetId: { in: planIds }, scope: "signature", ...LIEN_PARTI },
       select: { objetId: true },
     }),
     db.signature.findMany({

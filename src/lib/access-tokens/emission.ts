@@ -1,4 +1,4 @@
-import { creerSousPlafond, prendreQuota, rendreQuota } from "@/lib/abonnements/quotas";
+import { creerSousPlafond, debutDeLAnneeDuCompte, prendreQuota, rendreQuota } from "@/lib/abonnements/quotas";
 import { randomUUID } from "node:crypto";
 import { notFound } from "next/navigation";
 import { z } from "zod";
@@ -307,7 +307,10 @@ export async function emettreAccessToken(
   const creation = await creerSousPlafond(db, compte.compteId, "liensAccesActifs", async (tx) => {
     if (
       params.scope === "signature" &&
-      !(await dejaCompteePourCetteAdresse(tx, params)) &&
+      !(await dejaCompteePourCetteAdresse(tx, {
+        ...params,
+        depuis: await debutDeLAnneeDuCompte(tx, compte.compteId),
+      })) &&
       !(await signatureDejaComptee(tx, { ...params, email: params.emailDestinataire }))
     )
       pris = await prendreQuota(tx, compte.compteId, "signaturesParAn");
@@ -439,15 +442,22 @@ function lienDeLaPartie(p: {
  * (`signaturesParAn`), et le nouveau lien — renvoi, lien après un refus — ne
  * la reprend pas (décision de la propriétaire du 2026-11-19). Un lien dont
  * l'e-mail n'est pas parti ne compte pas : sa place a été rendue
- * (`LIEN_PARTI`).
+ * (`LIEN_PARTI`). Seul un lien de l'année des plafonds en cours compte
+ * (`depuis`, relecture du 2026-11-21) : celui d'une année close n'a pas été
+ * compté dans celle-ci.
  */
 async function dejaCompteePourCetteAdresse(
   tx: Prisma.TransactionClient,
-  p: Parameters<typeof lienDeLaPartie>[0] & { emailDestinataire: string },
+  p: Parameters<typeof lienDeLaPartie>[0] & { emailDestinataire: string; depuis: Date },
 ): Promise<boolean> {
   if (!p.partie) return false;
   const n = await tx.accessToken.count({
-    where: { ...lienDeLaPartie(p), emailDestinataire: p.emailDestinataire, ...LIEN_PARTI },
+    where: {
+      ...lienDeLaPartie(p),
+      emailDestinataire: p.emailDestinataire,
+      createdAt: { gte: p.depuis },
+      ...LIEN_PARTI,
+    },
   });
   return n > 0;
 }

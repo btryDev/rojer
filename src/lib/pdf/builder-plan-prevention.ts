@@ -95,7 +95,7 @@ export async function construirePlanPreventionData(
   const lienOuSignature =
     signatures.length > 0 ||
     (await db.accessToken.count({
-      where: { etablissementId, objetType: "plan_prevention", objetId: planId, ...LIEN_PARTI },
+      where: { etablissementId, objetType: "plan_prevention", objetId: planId, scope: "signature", ...LIEN_PARTI },
     })) > 0;
 
   const { numero, statut, ...contenu } = plan;

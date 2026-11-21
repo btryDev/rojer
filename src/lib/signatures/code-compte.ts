@@ -242,6 +242,10 @@ export async function poserSignatureCompteAvecCode(
       if (!(await objetEstSignable(tx, o.objetType, o.objetId, o.etablissementId))) {
         return { ok: false as const, message: MESSAGE_NON_SIGNABLE_COMPTE };
       }
+      // L'empreinte AVANT de consommer le code (relecture du 2026-11-21) : un
+      // document illisible ne coûte pas le code.
+      const h = await calculerHashObjet(tx, o.objetType, o.objetId, o.etablissementId);
+      if (!h.ok) return { ok: false as const, message: "Le document à signer ne se lit plus." };
       // Le code se CONSOMME dans la transaction, sous condition : de deux
       // soumissions simultanées du bon code, une seule signe.
       const consomme = await tx.codeSignatureCompte.deleteMany({
@@ -250,8 +254,6 @@ export async function poserSignatureCompteAvecCode(
       if (consomme.count !== 1) {
         return { ok: false as const, message: "Ce code vient de servir. Rechargez la page." };
       }
-      const h = await calculerHashObjet(tx, o.objetType, o.objetId, o.etablissementId);
-      if (!h.ok) return { ok: false as const, message: "Le document à signer ne se lit plus." };
       if (
         !(await signatureDejaComptee(tx, {
           etablissementId: o.etablissementId,
@@ -299,12 +301,36 @@ export async function poserSignatureCompteAvecCode(
       return { ok: true as const, signatureId: signature.id };
     });
   } catch (e) {
+    // La transaction annulée remet le code ; l'essai, réservé hors d'elle,
+    // se rend ici — le bon code n'a pas à coûter un essai (2026-11-21).
+    await rendreEssai(db, o, ligne);
     if (estPartieDejaSignee(e)) return { ok: false, message: MESSAGE_PARTIE_DEJA_SIGNEE };
     if (e instanceof RefusQuota) return { ok: false, message: e.motif };
     throw e;
   }
-  if (!resultat.ok) return resultat;
+  if (!resultat.ok) {
+    await rendreEssai(db, o, ligne);
+    return resultat;
+  }
   const complet = await validerSiCoSigne(db, o.objetType, o.objetId, o.etablissementId);
   if (complet) after(() => envoyerAvisCoSignature(db, o.objetType, o.objetId, o.etablissementId));
   return { ok: true, signatureId: resultat.signatureId };
+}
+
+/**
+ * Rend l'essai réservé quand le bon code n'a pas abouti à une signature
+ * (quota, partie déjà signée, document illisible). Sans effet si le code a
+ * été consommé entre-temps : la ligne n'existe plus.
+ */
+async function rendreEssai(
+  db: Prisma.TransactionClient,
+  o: Objet,
+  ligne: { id: string; otpHash: string },
+): Promise<void> {
+  await db.codeSignatureCompte
+    .updateMany({
+      where: { id: ligne.id, etablissementId: o.etablissementId, otpHash: ligne.otpHash },
+      data: { essaisRestants: { increment: 1 } },
+    })
+    .catch(() => undefined);
 }

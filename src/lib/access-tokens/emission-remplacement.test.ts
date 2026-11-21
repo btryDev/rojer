@@ -64,6 +64,8 @@ vi.mock("@/lib/abonnements/quotas", async () => {
   return {
     RefusQuota,
     rendreQuota: vi.fn(async () => {}),
+    // L'année des plafonds : les trente derniers jours, pour le test.
+    debutDeLAnneeDuCompte: vi.fn(async () => new Date(Date.now() - 30 * 86_400_000)),
     prendreQuota: vi.fn(async () => {
       quotas.signatures += 1;
       return ["q"];
@@ -152,6 +154,12 @@ describe("un lien qui en remplace un autre", () => {
     db.accessToken.lignes[2].expireLe = new Date(Date.now() - 1000);
     await emission("pp-3", "ee3@exemple.fr");
     expect(quotas.signatures).toBe(0);
+  });
+
+  it("un lien à la même adresse d'une année des plafonds close : le nouveau reprend une signature", async () => {
+    db.accessToken.lignes[2].createdAt = new Date(Date.now() - 400 * 86_400_000);
+    await emission("pp-3", "ee3@exemple.fr");
+    expect(quotas.signatures).toBe(1);
   });
 
   it("une autre adresse pour la même partie reprend une signature", async () => {

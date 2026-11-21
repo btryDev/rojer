@@ -646,6 +646,9 @@ export async function renvoyerCodeOtp(
   };
 }
 
+/** Les objets que le compte signe d'un clic, sans code (`signerEnCompteConnecte`). */
+const OBJETS_SIGNES_SANS_CODE: readonly ObjetSignable[] = ["permis_feu"];
+
 /**
  * Signature directe par un utilisateur connecté (pas de token externe).
  * Utilisé pour la co-signature du donneur d'ordre sur ses propres documents.
@@ -675,6 +678,13 @@ export async function signerEnCompteConnecte(params: {
   | { ok: false; raison: "plafond"; message: string }
 > {
   await verifierSaisie();
+  // Liste blanche (relecture du 2026-11-21) : la signature directe ne sert
+  // que le permis de feu. Un plan de prévention se signe depuis le compte
+  // avec un code et un consentement (`poserSignatureCompteAvecCode`) ; un
+  // appel forgé avec un autre objet ne signe rien.
+  if (!OBJETS_SIGNES_SANS_CODE.includes(params.objetType)) {
+    return { ok: false, raison: "non_implemente" };
+  }
   const { user, compte, db } = await assertEtablissementDuCompte(params.etablissementId);
   // Sans abonnement payé, la seule signature de test du compte (ADR-053 § 15).
   await exigerSignatureDEssai(db, compte.compteId, user.email);

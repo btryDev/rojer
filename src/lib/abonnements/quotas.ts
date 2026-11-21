@@ -164,6 +164,17 @@ async function abonnementDesPlafonds(l: Lecteur, compteId: string) {
   return plafondsDeLaLigne(await l.abonnement.findUnique({ where: { compteId }, select: COLONNES_PLAFONDS }));
 }
 
+/**
+ * Le début de l'année des plafonds du compte — la fenêtre où `signaturesParAn`
+ * compte. Un lien d'avant n'a pas été compté dans cette année
+ * (`dejaCompteePourCetteAdresse`, relecture du 2026-11-21).
+ */
+export async function debutDeLAnneeDuCompte(l: Lecteur, compteId: string): Promise<Date> {
+  // Offre non lancée : aucun plafond ne se lit, les douze derniers mois.
+  if (!lancee()) return debutDeLAnnee(null, new Date());
+  return (await abonnementDesPlafonds(l, compteId)).debutAnnee;
+}
+
 /** Le verrou de la ligne du compte, pour la durée de la transaction. */
 async function verrouillerLeCompte(tx: Prisma.TransactionClient, compteId: string): Promise<void> {
   // NO KEY : verrou exclusif entre créations, sans bloquer les insertions

@@ -10,8 +10,13 @@ import { correspond, type Ligne } from "@/test/prisma-where";
 function table(lignes: Ligne[]) {
   const appliquer = (l: Ligne, data: Ligne) => {
     for (const [k, v] of Object.entries(data)) {
-      const op = v as { decrement?: number } | null;
-      l[k] = op && typeof op === "object" && "decrement" in op ? (l[k] as number) - (op.decrement as number) : v;
+      const op = v as { decrement?: number; increment?: number } | null;
+      l[k] =
+        op && typeof op === "object" && "decrement" in op
+          ? (l[k] as number) - (op.decrement as number)
+          : op && typeof op === "object" && "increment" in op
+            ? (l[k] as number) + (op.increment as number)
+            : v;
     }
   };
   return {
@@ -167,6 +172,28 @@ describe("la signature avec le code", () => {
     expect(codes()).toHaveLength(0);
     // Rejoué : le code a servi.
     expect((await poserSignatureCompteAvecCode({ ...OBJET, code, consentement: CONSENTEMENT })).ok).toBe(false);
+  });
+
+  it("le bon code refusé au plafond : aucune signature, l'essai est rendu (relecture du 2026-11-21)", async () => {
+    const { prendreQuota, RefusQuota } = await import("@/lib/abonnements/quotas");
+    vi.mocked(prendreQuota).mockRejectedValueOnce(new RefusQuota("Plafond atteint."));
+    const code = await codeEnvoye();
+    // L'annulation de la transaction, comme PostgreSQL : le code supprimé
+    // dedans revient, l'essai réservé dehors non.
+    db.$transaction = async (fn) => {
+      const avant = codes().map((l) => ({ ...l }));
+      try {
+        return await fn(db);
+      } catch (e) {
+        const essais = new Map(codes().map((l) => [l.id, l.essaisRestants]));
+        codes().splice(0, codes().length, ...avant.map((l) => ({ ...l, essaisRestants: essais.get(l.id) ?? l.essaisRestants })));
+        throw e;
+      }
+    };
+    const r = await poserSignatureCompteAvecCode({ ...OBJET, code, consentement: CONSENTEMENT });
+    expect(r.ok).toBe(false);
+    expect(signatures()).toHaveLength(0);
+    expect(codes()[0]?.essaisRestants).toBe(3);
   });
 
   it("un code expiré ne consomme aucun essai", async () => {
