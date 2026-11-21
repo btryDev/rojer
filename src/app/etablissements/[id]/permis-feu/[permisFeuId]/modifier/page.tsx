@@ -1,7 +1,6 @@
-import Link from "next/link";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { LienRetour } from "@/components/duerps/LienRetour";
 import { FormulairePermisFeu } from "@/components/permis-feu/FormulairePermisFeu";
 import { getPermisFeu } from "@/lib/permis-feu/queries";
 import { listPrestataires } from "@/lib/prestataires/queries";
@@ -42,13 +41,7 @@ export default async function ModifierPermisFeuPage({
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
       <header className="border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] py-[22px]">
-        <Link
-          href={`/etablissements/${id}/permis-feu/${permis.id}`}
-          className="board-eyebrow inline-flex items-center gap-2 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)] transition-colors hover:text-[color:var(--board-ink)]"
-        >
-          <ArrowLeft className="size-3" aria-hidden />
-          Permis {numero}
-        </Link>
+        <LienRetour href={`/etablissements/${id}/permis-feu/${permis.id}`}>Permis {numero}</LienRetour>
         <h1 className="board-titre m-0 mt-2.5 text-[clamp(22px,2.2vw,27px)]">
           Modifier le permis {numero}
         </h1>

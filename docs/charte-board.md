@@ -199,11 +199,13 @@ JetBrains Mono, 11 px, 500, `letter-spacing: .2em`, capitales,
 IBM Plex Sans, 12,5 px, 600, `--board-slate-soft`, chiffres tabulaires — le
 sur-titre **sans chasse fixe**, décision de la propriétaire. En place sur les
 pages du DUERP (`EnTeteEtape`, fil des étapes) ; le reste de l'app garde
-`.board-eyebrow` tant qu'il n'est pas repris. Sur le DUERP, le retour d'une
+`.board-eyebrow` tant qu'il n'est pas repris. ~~Sur le DUERP, le retour d'une
 page est `LienRetour` (bouton clair « ← … », en tête de page) plutôt que
-`FilRetour`. [2026-11-21, demande de la propriétaire : le plan de prévention
-— fiche, « Modifier », « Nouveau » — aussi ; la fiche garde les deux liens de
-l'ADR-014 (`retoursDeLaFiche`).]
+`FilRetour`.~~ [2026-11-21, décision de la propriétaire, « il faut unifier » :
+le retour est partout le bouton clair « ← … » de `LienRetour`. Les fiches de
+détail passent par `FilRetour`, qui garde les deux liens de l'ADR-014
+(`retoursDeLaFiche`) et rend chacun avec `LienRetour` ; les pages de saisie
+(nouveau, modifier) posent `LienRetour` directement.]
 
 ### `.pastille-board` (l. 821)
 `inline-flex`, `gap: 7px`, `rounded-full`, `padding: 6px 13px`, `12px`, 600.
@@ -251,7 +253,7 @@ Trois polices, chargées dans `src/app/layout.tsx` :
 | Méta de ligne | `text-[12.5px]` + `--board-slate-mid` |
 | Clé de champ (`dt`) | `text-[12.5px]` + `--board-slate-mid`, `sm:w-[168px]` |
 | Valeur de champ (`dd`) | `text-[14px] leading-[1.45]` + `--board-ink` |
-| Fil de retour | `font-mono text-[10.5px] uppercase tracking-[0.16em]` |
+| Fil de retour | ~~`font-mono text-[10.5px] uppercase tracking-[0.16em]`~~ [2026-11-21 : le bouton clair de `LienRetour`, `boardClair` / `boardSm`] |
 | ~~Fil d'Ariane~~ | ~~`text-[12.5px]` + `--board-slate-mid`, page courante en `--board-ink` `font-medium`, chevron `›` en `--board-slate` — `FilAriane`, seul composant (ADR-014 : où la page est rangée)~~ [2026-10-25 : retiré des pages d'entrée avec le composant, décision de la propriétaire — la marque du rail et la gélule de compte mènent à l'établissement ; le retour de provenance des fiches reste `FilRetour`.] |
 
 **Règle de `tracking`** : positif (0.1 → 0.2em) uniquement en mono capitales.

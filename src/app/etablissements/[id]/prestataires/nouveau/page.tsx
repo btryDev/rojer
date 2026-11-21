@@ -1,6 +1,5 @@
 import { PlafondDeCreation } from "@/components/quotas/PlafondDeCreation";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { LienRetour } from "@/components/duerps/LienRetour";
 import { FormulairePrestataire } from "@/components/prestataires/FormulairePrestataire";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { creerPrestataire } from "@/lib/prestataires/actions";
@@ -20,13 +19,7 @@ export default async function NouveauPrestatairePage({
       {/* Le plafond de la formule, annoncé avant la saisie (ADR-053 § 14). */}
       <PlafondDeCreation cle="prestataires" etStockage className="mx-[var(--board-gutter)] mt-4">
       <header className="border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[var(--board-gutter)] py-[22px]">
-        <Link
-          href={`/etablissements/${id}/prestataires`}
-          className="board-eyebrow inline-flex items-center gap-2 text-[10px] tracking-[0.16em] text-[color:var(--board-slate-soft)] transition-colors hover:text-[color:var(--board-ink)]"
-        >
-          <ArrowLeft className="size-3" aria-hidden />
-          Prestataires
-        </Link>
+        <LienRetour href={`/etablissements/${id}/prestataires`}>Prestataires</LienRetour>
         <h1 className="board-titre m-0 mt-2.5 text-[clamp(22px,2.2vw,27px)]">
           Ajouter un prestataire
         </h1>
