@@ -21,7 +21,20 @@ import { signOutAction } from "@/lib/auth/actions";
  * Server component : lit la session (Better Auth, ADR-052) pour afficher l'email + logout
  * quand l'utilisateur est connecté, ou les liens de connexion sinon.
  */
-export async function AppHeader() {
+export async function AppHeader({ marqueSeule = false }: { marqueSeule?: boolean } = {}) {
+  // Connexion, création de compte, vérification (2026-11-21, retour de la
+  // propriétaire) : la marque seule. La barre de session (« Mon dossier »,
+  // adresse, « Déconnexion ») s'affichait seule sur fond blanc pendant la
+  // redirection qui suit la connexion.
+  if (marqueSeule) {
+    return (
+      <header className="sticky top-0 z-30 border-b border-[color:var(--board-slate-line)] bg-[color:var(--board-card)]/95 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center px-6 py-3 sm:px-10">
+          <Marque />
+        </div>
+      </header>
+    );
+  }
   const user = await getOptionalUser();
   const etab = user ? await getOptionalUserEtablissement() : null;
   const dashboardHref = etab ? `/etablissements/${etab.id}` : "/onboarding";

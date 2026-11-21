@@ -3,7 +3,8 @@ import { AppHeader } from "./AppHeader";
 /**
  * Le layout des segments qui portent l'en-tête global (audit Next.js du
  * 2026-10-14, M2) : connexion, création de compte, réinitialisation, pages
- * publiques (`/acces`, `/accessibilite` ; ~~`/signe`, `/verifier`~~, retirées
+ * publiques (~~`/acces`~~ [2026-11-21 : la page du lien a sa propre pastille,
+ * plus d'en-tête global], `/accessibilite` ; ~~`/signe`, `/verifier`~~, retirées
  * le 2026-11-21) et
  * `/entreprises`.
  *
@@ -37,6 +38,21 @@ export default function LayoutAvecEnTete({
   return (
     <>
       <AppHeader />
+      {children}
+    </>
+  );
+}
+
+/**
+ * Connexion, création de compte, vérification et réinitialisation
+ * (2026-11-21) : l'en-tête réduit à la marque, sans lecture de session.
+ */
+export function LayoutMarqueSeule({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <>
+      <AppHeader marqueSeule />
       {children}
     </>
   );

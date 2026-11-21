@@ -3,6 +3,7 @@ import { cheminDeRetour } from "@/lib/auth/chemin-de-retour";
 import { LoginForm } from "./LoginForm";
 import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
 import { getOptionalUser } from "@/lib/auth/require-user";
+import { signOutAction } from "@/lib/auth/actions";
 
 export const metadata = {
   title: "Connexion — Rojer",
@@ -66,7 +67,13 @@ export default async function LoginPage({
         {ouverte?.email ? (
           <MessageFormulaire ton="info" className="mt-6">
             Ce navigateur est déjà connecté avec {ouverte.email}. Pour utiliser une autre adresse, déconnectez-vous
-            d&apos;abord, en haut de la page.
+            d&apos;abord.{" "}
+            {/* La barre du haut n'a plus de « Déconnexion » ici (2026-11-21). */}
+            <form action={signOutAction} className="inline">
+              <button type="submit" className="underline underline-offset-4">
+                Se déconnecter
+              </button>
+            </form>
           </MessageFormulaire>
         ) : null}
 
