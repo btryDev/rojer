@@ -312,6 +312,21 @@ describe("un plan signé : ce que l'empreinte couvre ne se réécrit pas", () =>
     expect(db.plans[0].inspectionDate).toEqual(new Date("2026-10-01"));
   });
 
+  it("un champ repris de RiskBoard est scellé comme les autres (2026-11-21)", async () => {
+    db.plans.push(planEnBase({ inspectionDate: new Date("2026-10-01") }));
+    db.signatures.push({ objetType: "plan_prevention", objetId: "pp-1", etablissementId: "etab-a-moi", active: true });
+    for (const champ of ["horaires", "cseAssocie", "efChefTelephone", "autresObservations", "lignes[0].lieu"]) {
+      const fd = new FormData();
+      fd.set("batimentId", "");
+      fd.set(champ, champ === "cseAssocie" ? "oui" : "Valeur glissée après signature");
+
+      const r = await modifier(fd);
+
+      expect(r.status, champ).toBe("error");
+      expect(db.plans[0][champ], champ).toBeUndefined();
+    }
+  });
+
   it("la zone, hors de l'empreinte, se modifie encore", async () => {
     db.plans.push(planEnBase());
     db.signatures.push({ objetType: "plan_prevention", objetId: "pp-1", etablissementId: "etab-a-moi", active: true });
