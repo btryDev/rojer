@@ -239,17 +239,10 @@ describe("chaque échange se termine", () => {
   });
 
   it("GET et DELETE : 405, pas de flux serveur → client", async () => {
-    const get = await GET(
-      new Request(URL_MCP, {
-        method: "GET",
-        headers: { host: "rojer.test", accept: "text/event-stream" },
-      }),
-    );
-    expect(get.status).toBe(405);
-    const del = await DELETE(
-      new Request(URL_MCP, { method: "DELETE", headers: { host: "rojer.test" } }),
-    );
-    expect(del.status).toBe(405);
+    // Sans état : ni flux serveur → client, ni session à fermer, quelle que
+    // soit la requête — la méthode n'en lit rien.
+    expect((await GET()).status).toBe(405);
+    expect((await DELETE()).status).toBe(405);
   });
 });
 

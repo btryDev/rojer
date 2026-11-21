@@ -59,6 +59,7 @@ describe.skipIf(!URL_BASE || !local)("connecteur MCP en OAuth — PostgreSQL et 
   let cookie = new Headers();
   const entreprises: string[] = [];
   const clients: string[] = [];
+  const autres: string[] = [];
 
   const b64url = (b: Buffer) => b.toString("base64url");
   const verifieur = b64url(randomBytes(32));
@@ -124,7 +125,7 @@ describe.skipIf(!URL_BASE || !local)("connecteur MCP en OAuth — PostgreSQL et 
     await prisma.abonnement.deleteMany({ where: { compteId } });
     await prisma.entreprise.deleteMany({ where: { id: { in: entreprises } } });
     await prisma.compte.deleteMany({ where: { id: compteId } });
-    await prisma.user.deleteMany({ where: { id: userId } });
+    await prisma.user.deleteMany({ where: { id: { in: [userId, ...autres] } } });
   });
 
   it("découverte : la ressource désigne le serveur, le serveur d'autorisation annonce PKCE S256", async () => {
@@ -230,18 +231,6 @@ describe.skipIf(!URL_BASE || !local)("connecteur MCP en OAuth — PostgreSQL et 
     expect(corps.expires_in).toBeLessThanOrEqual(15 * 60);
   });
 
-  it("un code ne sert qu'une fois", async () => {
-    const r = await jeton({
-      grant_type: "authorization_code",
-      code,
-      redirect_uri: RETOUR,
-      client_id: clientId,
-      code_verifier: verifieur,
-      resource: RESSOURCE,
-    });
-    expect(r.status).toBe(400);
-  });
-
   const requeteMcp = (j: string) =>
     new Request(RESSOURCE, { method: "POST", headers: { authorization: `Bearer ${j}` } });
 
@@ -294,8 +283,30 @@ describe.skipIf(!URL_BASE || !local)("connecteur MCP en OAuth — PostgreSQL et 
   });
 
   it("plus membre du compte : le jeton encore valide ne sert plus", async () => {
+    // Un compte garde au moins un propriétaire (ADR-054 § 2) : un second, avant
+    // de retirer la personne du jeton.
+    const autre = await prisma.user.create({
+      data: { email: `proprietaire-${suffixe}@exemple.test`, name: "Autre", emailVerified: true },
+    });
+    autres.push(autre.id);
+    await prisma.membre.create({ data: { compteId, userId: autre.id, role: "owner" } });
     await prisma.membre.deleteMany({ where: { compteId, userId } });
     const r = await resoudrePorteur(requeteMcp(acces), RESSOURCE);
     expect(r.statut === "reponse" && r.reponse.status).toBe(401);
+  });
+
+  // En dernier : rejouer un code fait effacer par le fournisseur les jetons
+  // émis pour lui (RFC 6749 § 4.1.2), ce qui aurait coupé le rafraîchissement
+  // éprouvé plus haut.
+  it("un code ne sert qu'une fois", async () => {
+    const r = await jeton({
+      grant_type: "authorization_code",
+      code,
+      redirect_uri: RETOUR,
+      client_id: clientId,
+      code_verifier: verifieur,
+      resource: RESSOURCE,
+    });
+    expect(r.status).toBe(400);
   });
 });

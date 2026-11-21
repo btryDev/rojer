@@ -118,7 +118,7 @@ export default async function ConnecterPage({ params }: { params: Promise<{ id: 
                       <h3 className={titreBloc}>Claude (web, application de bureau, mobile)</h3>
                       <p className={`${texteBloc} mb-3.5`}>
                         Paramètres → Connecteurs → Ajouter un connecteur personnalisé. Nommez-le « Rojer », collez
-                        cette adresse, puis cliquez sur Connecter : Claude vous envoie sur Rojer pour vous identifier
+                        cette adresse, puis cliquez sur Connecter : Claude ouvre Rojer pour vous identifier
                         et autoriser l&apos;accès.
                       </p>
                       <BlocConfig titre="Adresse du connecteur" langue="url" contenu={adresse} />
@@ -158,21 +158,21 @@ export default async function ConnecterPage({ params }: { params: Promise<{ id: 
               </p>
             ) : (
               <ul className="carte-board m-0 list-none p-0">
-                {assistants.map((a) => (
+                {assistants.map((assistant) => (
                   <li
-                    key={a.id}
+                    key={assistant.id}
                     className="flex items-center justify-between gap-5 border-t border-[color:var(--board-slate-line)] px-7 py-4 first:border-t-0 sm:px-8"
                   >
                     <div className="min-w-0">
-                      <p className="m-0 text-[15px] font-semibold text-[color:var(--board-ink)]">{a.nom}</p>
-                      {a.autoriseLe ? (
+                      <p className="m-0 text-[15px] font-semibold text-[color:var(--board-ink)]">{assistant.nom}</p>
+                      {assistant.autoriseLe ? (
                         <p className="m-0 mt-0.5 text-[12.5px] text-[color:var(--board-slate-mid)]">
-                          Autorisé le {formaterDateFr(a.autoriseLe)}
+                          Autorisé le {formaterDateFr(assistant.autoriseLe)}
                         </p>
                       ) : null}
                     </div>
                     <form action={retirer}>
-                      <input type="hidden" name="consentement" value={a.id} />
+                      <input type="hidden" name="consentement" value={assistant.id} />
                       <Button type="submit" variant="boardClair" size="board">
                         Retirer
                       </Button>

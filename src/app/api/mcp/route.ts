@@ -42,10 +42,10 @@ export async function POST(request: Request) {
   return handler ? handler.servir(request) : absent();
 }
 
-export async function GET(_request?: Request) {
+export async function GET() {
   return handler ? sansEtat() : absent();
 }
 
-export async function DELETE(_request?: Request) {
+export async function DELETE() {
   return handler ? sansEtat() : absent();
 }
