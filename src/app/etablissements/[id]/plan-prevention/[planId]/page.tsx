@@ -376,14 +376,17 @@ export default async function PlanPreventionDetailPage({
           <AnnonceFiche>
             {onglet === "suivi" ? (
               <div className="flex flex-col gap-[18px]">
-                {enAttente && (
+                {/* Les cartes d'action lisent `attente`, comme la pastille : rien
+                    en lecture seule (2026-11-21) — l'état reste dit par la
+                    pastille d'en-tête et par l'historique. */}
+                {attente === "proposition" && enAttente && (
                   <PropositionEnAttente
                     proposition={enAttente}
                     plan={plan}
                     auteur={lienAuteur?.nomDestinataire ?? lienAuteur?.emailDestinataire ?? null}
                   />
                 )}
-                {correction && (
+                {attente === "correction" && (
                   <CorrectionEnCours
                     raisonEE={plan.entrepriseExterieureRaison}
                     modifierHref={modifier}
@@ -426,8 +429,8 @@ export default async function PlanPreventionDetailPage({
               </div>
             ) : (
               <div className="flex flex-col gap-[18px]">
-                {enAttente && <RappelProposition proposition={enAttente} plan={plan} suiviHref={suivi} />}
-                {correction && <RappelCorrection raisonEE={plan.entrepriseExterieureRaison} suiviHref={suivi} />}
+                {attente === "proposition" && enAttente && <RappelProposition proposition={enAttente} plan={plan} suiviHref={suivi} />}
+                {attente === "correction" && <RappelCorrection raisonEE={plan.entrepriseExterieureRaison} suiviHref={suivi} />}
 
                 {/* Supprimer reste avec les autres gestes du plan. */}
                 <div className="flex flex-wrap justify-end gap-2.5">

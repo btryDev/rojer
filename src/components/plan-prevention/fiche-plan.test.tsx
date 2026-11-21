@@ -316,6 +316,49 @@ describe("la fiche du plan", () => {
     expect(lu).not.toContain("Votre signature est attendue");
   });
 
+  it("lecture seule : ni la proposition à trancher ni la correction ne s'affichent en appel à l'action", async () => {
+    const proposition = {
+      id: "prop-1",
+      accessTokenId: "atk-1",
+      createdAt: new Date("2026-11-19T14:35:00Z"),
+      contenu: {
+        fiche: {
+          entrepriseExterieureRaison: "Nettoyage Pro SARL",
+          entrepriseExterieureSiret: null,
+          efChefNom: "Paul Testeur",
+          efEffectifIntervenant: 2,
+        },
+        lignes: [{ id: "l1", risque: "Graisses chaudes", mesureEntrepriseUtilisatrice: "Hors service", mesureEntrepriseExterieure: "Gants" }],
+      },
+    };
+    for (const query of [{ onglet: "suivi" }, {}]) {
+      const lu = await rendre(plan({ lectureSeule: true, liens: [lienEE], propositionEnAttente: proposition }), query);
+      // L'état reste dit, par la pastille d'en-tête.
+      expect(lu).toContain("Modification proposée");
+      expect(lu).not.toContain("Action requise");
+      expect(lu).not.toContain("Voir et décider");
+    }
+    const correction = await rendre(
+      plan({
+        lectureSeule: true,
+        propositions: [
+          {
+            id: "prop-1",
+            accessTokenId: "atk-1",
+            statut: "acceptee",
+            createdAt: new Date("2026-11-19T14:35:00Z"),
+            traiteeLe: new Date("2026-11-19T14:38:00Z"),
+            traiteeParEmail: "paloma@exemple.fr",
+            corrigeeLe: new Date("2026-11-19T14:38:00Z"),
+            finaliseeLe: null,
+          },
+        ],
+      }),
+    );
+    expect(correction).not.toContain("Correction en cours");
+    expect(correction).not.toContain("Terminer la correction et signer");
+  });
+
   it("signé des deux parties : « Signé », et plus de grande action", async () => {
     const lu = await rendre(
       plan({
