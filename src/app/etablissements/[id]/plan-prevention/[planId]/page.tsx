@@ -1,9 +1,9 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
-import { lireProvenance } from "@/lib/navigation/provenance";
+import { lireProvenance, retoursDeLaFiche } from "@/lib/navigation/provenance";
 import { LegalBadge, PastilleFiche } from "@/components/ui-kit";
-import { FilRetour } from "@/components/ui-kit/FilRetour";
+import { LienRetour } from "@/components/duerps/LienRetour";
 import { OngletsPage } from "@/components/ui-kit/OngletsPage";
 import { ChevronRepli } from "@/components/ui/repli";
 import { SignaturesSansPartie } from "@/components/signatures/SignaturesParties";
@@ -202,6 +202,7 @@ export default async function PlanPreventionDetailPage({
     href: `/etablissements/${id}/plan-prevention`,
     label: "Plans de prévention",
   };
+  const retours = retoursDeLaFiche(provenance, registre);
   // `?openSign=1` ouvre la fenêtre de signature, qui vit dans « Suivi ».
   const onglet: OngletFiche = ongletDemande === "suivi" || openSign === "1" ? "suivi" : "plan";
 
@@ -348,7 +349,12 @@ export default async function PlanPreventionDetailPage({
       {/* L'EN-TÊTE (maquette V3) : centré, sur la trame de points. */}
       <header className="entete-trame">
         <div className="mx-auto flex w-full max-w-[1180px] flex-col items-center gap-3.5 px-4 pb-7 pt-8 text-center md:px-6 md:pt-11">
-          <FilRetour provenance={provenance} canonique={registre} className="self-start" />
+          {/* Le retour lisible des autres modules (`LienRetour`, 2026-11-21,
+              demande de la propriétaire), sur les deux liens de l'ADR-014. */}
+          <nav aria-label="Retour" className="flex flex-wrap gap-2 self-start">
+            <LienRetour href={retours.retour.href}>{retours.retour.label}</LienRetour>
+            {retours.parent && <LienRetour href={retours.parent.href}>{retours.parent.label}</LienRetour>}
+          </nav>
           <span
             className="flex size-16 flex-none flex-col items-center justify-center rounded-[16px] bg-[color:var(--board-ink)] text-white"
             aria-hidden

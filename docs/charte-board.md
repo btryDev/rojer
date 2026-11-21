@@ -201,7 +201,9 @@ sur-titre **sans chasse fixe**, décision de la propriétaire. En place sur les
 pages du DUERP (`EnTeteEtape`, fil des étapes) ; le reste de l'app garde
 `.board-eyebrow` tant qu'il n'est pas repris. Sur le DUERP, le retour d'une
 page est `LienRetour` (bouton clair « ← … », en tête de page) plutôt que
-`FilRetour`.
+`FilRetour`. [2026-11-21, demande de la propriétaire : le plan de prévention
+— fiche, « Modifier », « Nouveau » — aussi ; la fiche garde les deux liens de
+l'ADR-014 (`retoursDeLaFiche`).]
 
 ### `.pastille-board` (l. 821)
 `inline-flex`, `gap: 7px`, `rounded-full`, `padding: 6px 13px`, `12px`, 600.

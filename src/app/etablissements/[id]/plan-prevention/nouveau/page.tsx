@@ -1,6 +1,5 @@
 import { PlafondDeCreation } from "@/components/quotas/PlafondDeCreation";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { LienRetour } from "@/components/duerps/LienRetour";
 import { FormulairePlanPrevention } from "@/components/plan-prevention/FormulairePlanPrevention";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { listPrestataires } from "@/lib/prestataires/queries";
@@ -41,13 +40,9 @@ export default async function NouveauPlanPreventionPage({
       {/* L'en-tête centré sur la trame de points (maquette V2, 2026-11-19). */}
       <header className="entete-trame">
         <div className="mx-auto flex max-w-[1180px] flex-col items-center gap-2.5 px-4 pb-9 pt-8 text-center md:px-6 md:pt-10">
-          <Link
-            href={`/etablissements/${id}/plan-prevention`}
-            className="board-eyebrow inline-flex items-center gap-2 self-start text-[11px] tracking-[0.14em] text-[color:var(--board-slate-soft)] transition-colors hover:text-[color:var(--board-ink)]"
-          >
-            <ArrowLeft className="size-3" aria-hidden />
-            Plans de prévention
-          </Link>
+          <div className="self-start">
+            <LienRetour href={`/etablissements/${id}/plan-prevention`}>Plans de prévention</LienRetour>
+          </div>
           <h1 className="board-titre m-0 text-[34px] leading-none md:text-[46px]">Nouveau plan de prévention</h1>
           <p className="m-0 max-w-[560px] text-[15.5px] leading-[1.5] text-[color:var(--board-slate-ink)]">
             Pour une entreprise extérieure qui intervient chez vous. Vous le complétez ensemble à

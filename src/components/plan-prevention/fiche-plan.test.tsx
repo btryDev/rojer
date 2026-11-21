@@ -169,6 +169,31 @@ describe("la fiche du plan", () => {
     }
   });
 
+  it("le retour : `LienRetour`, vers la liste, et d'où l'on vient quand c'est ailleurs (ADR-014)", async () => {
+    planCourant.valeur = plan();
+    const { default: Page } = await import("@/app/etablissements/[id]/plan-prevention/[planId]/page");
+    const sans = renderToStaticMarkup(
+      await Page({ params: Promise.resolve({ id: "e1", planId: "p1" }), searchParams: Promise.resolve({}) }),
+    );
+    const retourSans = sans.slice(sans.indexOf('aria-label="Retour"'), sans.indexOf("</nav>"));
+    expect(retourSans).toContain('href="/etablissements/e1/plan-prevention"');
+    expect(retourSans).toContain("← Plans de prévention");
+    expect(retourSans).not.toContain("font-mono");
+
+    const depuisCalendrier = renderToStaticMarkup(
+      await Page({
+        params: Promise.resolve({ id: "e1", planId: "p1" }),
+        searchParams: Promise.resolve({ de: "/etablissements/e1/calendrier" }),
+      }),
+    );
+    const retour = depuisCalendrier.slice(
+      depuisCalendrier.indexOf('aria-label="Retour"'),
+      depuisCalendrier.indexOf("</nav>"),
+    );
+    expect(retour).toContain('href="/etablissements/e1/calendrier"');
+    expect(retour).toContain('href="/etablissements/e1/plan-prevention"');
+  });
+
   it("« Modifier » jusqu'à la première signature, plus après", async () => {
     expect(await rendre(plan(), {})).toMatch(/\bModifier\b/);
     const signe = await rendre(plan({ signatures: [signatureEU], liens: [lienEE] }), {});

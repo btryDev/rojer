@@ -11,7 +11,7 @@
 // d'actions, seulement cesser d'y renvoyer de force.
 
 import Link from "next/link";
-import { retourDistinct, type Provenance } from "@/lib/navigation/provenance";
+import { retoursDeLaFiche, type Provenance } from "@/lib/navigation/provenance";
 
 // Jetons du board, pas du papier : le fil ouvre une fiche qui vit dans la
 // même page que le calendrier — `text-muted-foreground` y posait un gris
@@ -31,16 +31,11 @@ export function FilRetour({
 }) {
   // Deux liens vers le même écran ne s'affichent pas deux fois parce que
   // l'un porte des filtres : la provenance ne s'ajoute que si elle mène
-  // ailleurs.
-  const ailleurs = retourDistinct(provenance, canonique.href);
-  // Une provenance qui mène au parent garde son adresse (ses filtres) mais
-  // prend son nom : « ← Équipement » quand la page sait dire « ← BAES salle »
-  // (contrôle visuel du 2026-10-24).
-  const retour = !provenance
-    ? canonique
-    : ailleurs
-      ? provenance
-      : { href: provenance.href, label: canonique.label };
+  // ailleurs. Une provenance qui mène au parent garde son adresse (ses
+  // filtres) mais prend son nom : « ← Équipement » quand la page sait dire
+  // « ← BAES salle » (contrôle visuel du 2026-10-24). Le calcul vit dans
+  // `retoursDeLaFiche` (2026-11-21).
+  const { retour, parent: ailleurs } = retoursDeLaFiche(provenance, canonique);
 
   return (
     <nav

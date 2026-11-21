@@ -1,7 +1,6 @@
-import Link from "next/link";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { LienRetour } from "@/components/duerps/LienRetour";
 import { FormulairePlanPrevention } from "@/components/plan-prevention/FormulairePlanPrevention";
 import { getPlanPrevention } from "@/lib/plan-prevention/queries";
 import { listPrestataires } from "@/lib/prestataires/queries";
@@ -56,13 +55,9 @@ export default async function ModifierPlanPreventionPage({
       {/* L'en-tête centré sur la trame de points (maquette V2, 2026-11-19). */}
       <header className="entete-trame">
         <div className="mx-auto flex max-w-[1180px] flex-col items-center gap-2.5 px-4 pb-9 pt-8 text-center md:px-6 md:pt-10">
-          <Link
-            href={retour}
-            className="board-eyebrow inline-flex items-center gap-2 self-start text-[11px] tracking-[0.14em] text-[color:var(--board-slate-soft)] transition-colors hover:text-[color:var(--board-ink)]"
-          >
-            <ArrowLeft className="size-3" aria-hidden />
-            Plan {numero}
-          </Link>
+          <div className="self-start">
+            <LienRetour href={retour}>Plan {numero}</LienRetour>
+          </div>
           <h1 className="board-titre m-0 text-[34px] leading-none md:text-[46px]">Modifier le plan {numero}</h1>
         </div>
       </header>
