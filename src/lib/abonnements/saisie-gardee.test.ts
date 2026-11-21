@@ -65,6 +65,13 @@ const RGPD: Ouverte = { motif: "supprimer ses données reste possible à tout mo
 
 /** Écritures qui restent ouvertes quand la saisie est fermée. */
 const OUVERTES = new Map<string, Ouverte>([
+  // « Vérifier » une signature (2026-11-21) : recalcule une empreinte en lisant
+  // l'objet ou le fichier signé (stockage), n'écrit rien — un compte impayé et
+  // un membre en lecture seule gardent la vérification.
+  [
+    "lib/signatures/verification-actions.ts:verifierSignatureDuCompte",
+    { motif: "vérifier une signature : une lecture du stockage, aucune écriture", lectureSeule: true },
+  ],
   ["lib/auth/actions.ts:activerCompteAction", COMPTE],
   ["lib/auth/actions.ts:activerDoubleAuthAction", COMPTE],
   ["lib/auth/actions.ts:changerMotDePasseAction", COMPTE],
@@ -188,20 +195,16 @@ const GARDE_LOCALE_MEMBRES = { fichier: "lib/membres/actions.ts", garde: "propri
  */
 const ECRITURES_A_LA_LECTURE = new Map<string, string>([
   [
+    "lib/access-tokens/limite-lien.ts:limiterPageDuLien",
+    "le compteur anti-abus de la page d'un lien (`limite-debit`, 2026-11-21) : ni donnée du compte, ni saisie",
+  ],
+  [
     "lib/calendrier/regeneration-sure.ts:assurerCalendrierAJour",
     "réparation du calendrier à l'affichage (tableau de bord, calendrier) : des lignes dérivées du référentiel, pas une saisie — la lecture d'un impayé reste juste",
   ],
   [
-    "lib/signatures/verification-publique.ts:verifierSousLimite",
-    "le compteur anti-abus de la page publique de vérification d'une signature (`limite-debit`) : ni donnée du compte, ni saisie",
-  ],
-  [
     "lib/stripe/synchronisation.ts:synchroniserClientStripe",
     "la copie de l'abonnement relue chez Stripe au retour de Checkout (`?paiement=termine`, 2026-11-17) : Stripe fait foi, ce n'est pas une saisie — sans elle, qui vient de payer voyait encore « Essai terminé »",
-  ],
-  [
-    "lib/signatures/verification-publique.ts:lireSignatureSousLimite",
-    "le même compteur anti-abus, pour la page de confirmation /signe (2026-11-09) : ni donnée du compte, ni saisie",
   ],
 ]);
 

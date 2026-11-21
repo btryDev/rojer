@@ -148,7 +148,7 @@ model AccessToken {
 
 - Seul un utilisateur authentifié (`requireUser()`) peut émettre un token.
 - Le **token clair** est une ULID (26 car. Crockford, 128 bits, collision quasi-impossible) **envoyée uniquement par email**. Seul son hash SHA-256 est stocké.
-- Expiration par défaut : **7 jours** (configurable par scope : `consultation` 30 j, `signature` 72 h).
+- Expiration par défaut : **7 jours** (configurable par scope : `consultation` 30 j, `signature` ~~72 h~~ 7 jours [2026-11-19, décision de la propriétaire, `TOKEN_TTL_HOURS_SIGNATURE`]).
 - URL publique : `https://app.../acces/[token]` (route unique qui route vers la vue adaptée selon scope).
 
 #### Usage du token

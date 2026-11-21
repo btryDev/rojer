@@ -1,7 +1,7 @@
 // Champs d'une signature qui constituent la preuve, et rien d'autre : ceux
 // qu'affichent `SignatureBlock`, la page publique de vérification et la
 // confirmation. Module sans effet de bord, partagé par les lectures de session
-// (`queries.ts`) et le module public (`verification-publique.ts`).
+// (`queries.ts`) et ~~le module public (`verification-publique.ts`)~~ [retiré le 2026-11-21].
 export const SELECT_PREUVE = {
   id: true,
   signataireNom: true,

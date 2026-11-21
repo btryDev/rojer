@@ -78,6 +78,11 @@ const { prismaMock } = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
+// La limite par réseau des liens (2026-11-21) : éprouvée dans `limite-lien.test.ts`.
+vi.mock("@/lib/access-tokens/limite-lien", () => ({
+  limiterPageDuLien: async () => ({ ok: true }),
+  refusActionDuLien: async () => null,
+}));
 // Sans session, le compte vient du propriétaire de l'établissement du jeton
 // (ADR-051, `compte-hors-session.ts`) : ici, le client borné simulé.
 const { comptesDemandes, proprietaire } = vi.hoisted(() => ({
@@ -161,11 +166,10 @@ import {
   demanderSignature,
   poserSignatureAvecToken,
   renvoyerCodeOtp,
-  signerEnCompteConnecte,
 } from "./actions";
 import { hashToken } from "@/lib/access-tokens/token";
 import { MESSAGE_ENVOI_ECHOUE } from "@/lib/access-tokens/emission";
-import { MOTIF_REVOCATION_ENVOI_ECHOUE } from "@/lib/access-tokens/revocation";
+import { MOTIF_REVOCATION_ENVOI_ECHOUE, MOTIF_REVOCATION_NOUVEAU_LIEN } from "@/lib/access-tokens/revocation";
 import { hashOtp } from "./otp";
 
 async function sansRedirection(p: Promise<unknown>): Promise<void> {
@@ -179,7 +183,19 @@ function plan(id: string, etablissementId: string, statut: string): Ligne {
   // périmètre du compte (`etablissement: { entreprise: { compteId: compte.compteId } }`, audit du
   // 2026-10-13), et `correspond` la traverse.
   const userId = etablissementId === "etab-a-moi" ? "user-1" : "user-voisin";
-  return { id, etablissementId, statut, numero: 1, propositions: [], etablissement: { entreprise: { compteId: userId } } };
+  return {
+    id,
+    etablissementId,
+    statut,
+    numero: 1,
+    // Ce que le courriel de demande lit d'un plan (encadré, 2026-11-19).
+    entrepriseExterieureRaison: "EF",
+    lieux: "Cuisine",
+    dateDebut: new Date("2026-12-01T08:00:00Z"),
+    dateFin: new Date("2026-12-05T17:00:00Z"),
+    propositions: [],
+    etablissement: { entreprise: { compteId: userId } },
+  };
 }
 
 function signature(objetType: string, objetId: string, etablissementId: string): Ligne {
@@ -441,7 +457,8 @@ describe("relecture du jeton non consommé : celle de l'établissement du jeton"
       return reserver({ ...a, where: { ...a.where, etablissementId: "etab-a-moi" } });
     });
 
-    expect(await signer()).toEqual({ status: "error", message: "Ce lien a été révoqué : Contenu modifié" });
+    // Le motif traduit en phrase (`motifLisible`, 2026-11-19).
+    expect(await signer()).toEqual({ status: "error", message: "Ce lien a été révoqué. Contenu modifié." });
     expect(prismaMock.signature.create).not.toHaveBeenCalled();
   });
 });
@@ -540,19 +557,6 @@ describe("garantie 2b — un objet clos ou annulé ne se signe plus, même avec 
     prismaMock.accessToken.lignes.push(lienValide("plan_prevention", "pp-1"));
 
     expect((await signer()).status).toBe("error");
-    expect(prismaMock.signature.create).not.toHaveBeenCalled();
-  });
-
-  it("le donneur d'ordre connecté ne signe pas non plus un plan clos", async () => {
-    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "clos"));
-
-    const r = await signerEnCompteConnecte({
-      etablissementId: "etab-a-moi",
-      objetType: "plan_prevention",
-      objetId: "pp-1",
-    });
-
-    expect(r).toEqual({ ok: false, raison: "non_signable" });
     expect(prismaMock.signature.create).not.toHaveBeenCalled();
   });
 
@@ -736,33 +740,6 @@ describe("garantie 3 — la partie qui signe est enregistrée, jamais devinée",
     expect(prismaMock.signature.lignes).toHaveLength(1);
   });
 
-  it("le compte connecté signe toujours au nom de l'entreprise utilisatrice", async () => {
-    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
-
-    const r = await signerEnCompteConnecte({
-      etablissementId: "etab-a-moi",
-      objetType: "plan_prevention",
-      objetId: "pp-1",
-    });
-
-    expect(r.ok).toBe(true);
-    expect(prismaMock.signature.lignes[0].partie).toBe("entreprise_utilisatrice");
-  });
-
-  it("le compte connecté ne signe pas deux fois", async () => {
-    unicitePartie();
-    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
-    const signerMoi = () =>
-      signerEnCompteConnecte({
-        etablissementId: "etab-a-moi",
-        objetType: "plan_prevention",
-        objetId: "pp-1",
-      });
-
-    expect((await signerMoi()).ok).toBe(true);
-    expect(await signerMoi()).toEqual({ ok: false, raison: "deja_signee" });
-    expect(prismaMock.signature.lignes).toHaveLength(1);
-  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -771,15 +748,26 @@ describe("garantie 3 — la partie qui signe est enregistrée, jamais devinée",
 // signatures ».
 // ─────────────────────────────────────────────────────────────────────────
 
-const signerCommeDirigeant = (objetType: "plan_prevention" | "permis_feu", objetId: string) =>
-  signerEnCompteConnecte({ etablissementId: "etab-a-moi", objetType, objetId });
+// ~~`signerEnCompteConnecte`~~ (retirée le 2026-11-21) : la signature du
+// dirigeant passe par le code (`code-compte.test.ts`) ; ici, elle est posée.
+const signatureDuDirigeant = (objetType: "permis_feu", objetId: string) =>
+  prismaMock.signature.lignes.push({
+    ...signature(objetType, objetId, "etab-a-moi"),
+    id: `sig_eu_${objetId}`,
+    partie: "entreprise_utilisatrice",
+  });
 
 describe("garantie 4 — le statut suit les signatures", () => {
   it("plan : la seconde partie signe, le plan passe « valide »", async () => {
     prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
     prismaMock.accessToken.lignes.push(lienValide("plan_prevention", "pp-1"));
 
-    await signerCommeDirigeant("plan_prevention", "pp-1");
+    // Le dirigeant signe un plan par le code (`poserSignatureCompteAvecCode`) :
+    // sa signature est posée directement.
+    prismaMock.signature.lignes.push({
+      ...signature("plan_prevention", "pp-1", "etab-a-moi"),
+      partie: "entreprise_utilisatrice",
+    });
     expect(prismaMock.planPrevention.lignes[0].statut).toBe("attente_signatures");
 
     expect((await signer()).status).toBe("success");
@@ -790,8 +778,8 @@ describe("garantie 4 — le statut suit les signatures", () => {
     prismaMock.permisFeu.lignes.push(plan("pf-1", "etab-a-moi", "attente_signatures"));
     prismaMock.accessToken.lignes.push(lienValide("permis_feu", "pf-1"));
 
+    signatureDuDirigeant("permis_feu", "pf-1");
     expect((await signer()).status).toBe("success");
-    await signerCommeDirigeant("permis_feu", "pf-1");
 
     expect(prismaMock.permisFeu.lignes[0].statut).toBe("valide");
   });
@@ -834,7 +822,7 @@ describe("garantie 4 — le statut suit les signatures", () => {
     prismaMock.permisFeu.lignes.push(plan("pf-1", "etab-a-moi", "en_cours"));
     prismaMock.accessToken.lignes.push(lienValide("permis_feu", "pf-1"));
 
-    await signerCommeDirigeant("permis_feu", "pf-1");
+    signatureDuDirigeant("permis_feu", "pf-1");
     await signer();
 
     expect(prismaMock.permisFeu.lignes[0].statut).toBe("en_cours");
@@ -863,13 +851,6 @@ describe("garantie 5 — la signature prend le verrou de l'objet que prend la mo
     expect(verrous[0]).toBe('SELECT 1 FROM "PlanPrevention" WHERE "id" = ? AND "etablissementId" = ? FOR UPDATE pp-1,etab-a-moi');
   });
 
-  it("en compte connecté : le verrou du permis est pris avant la signature", async () => {
-    prismaMock.permisFeu.lignes.push(plan("pf-1", "etab-a-moi", "attente_signatures"));
-
-    expect((await signerCommeDirigeant("permis_feu", "pf-1")).ok).toBe(true);
-
-    expect(verrous).toEqual(['SELECT 1 FROM "PermisFeu" WHERE "id" = ? AND "etablissementId" = ? FOR UPDATE pf-1,etab-a-moi']);
-  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -942,5 +923,140 @@ describe("envoi échoué : rien de valable ne reste, et l'écran le dit", () => 
     const r = await demanderSignature({ ...DEMANDE_PLAN, partie: "entreprise_exterieure" });
 
     expect(r).toEqual({ ok: false, message: expect.stringMatching(/Trop de liens/) });
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+// 2026-11-19 (cahier de reprise § 8.6) — un nouvel envoi à une partie révoque
+// son ancien lien encore ouvert : un seul lien ouvert par partie et par objet.
+// ─────────────────────────────────────────────────────────────────────────
+
+describe("un nouveau lien remplace l'ancien de la même partie", () => {
+  const UNE_HEURE_AVANT = () => new Date(Date.now() - 3_600_000);
+
+  function ancienLien(extra: Ligne = {}): Ligne {
+    return {
+      ...lienValide("plan_prevention", "pp-1"),
+      id: "atk_ancien",
+      tokenHash: "ancien",
+      createdAt: UNE_HEURE_AVANT(),
+      ...extra,
+    };
+  }
+
+  beforeEach(() => {
+    // `createdAt` posé par la base (`@default(now())`), comme en vrai : la
+    // révocation compare l'âge des liens.
+    const creer = prismaMock.accessToken.create.getMockImplementation()!;
+    prismaMock.accessToken.create.mockImplementation(async (args: { data: Ligne }) =>
+      creer({ data: { createdAt: new Date(), ...args.data } }),
+    );
+  });
+
+  it("deux envois simultanés ne se révoquent pas l'un l'autre : un lien plus récent reste intact", async () => {
+    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
+    // Le lien de l'envoi concurrent, créé APRÈS celui de cette demande.
+    const concurrent = ancienLien({ id: "atk_concurrent", tokenHash: "concurrent", createdAt: new Date(Date.now() + 60_000) });
+    const ancien = ancienLien();
+    prismaMock.accessToken.lignes.push(concurrent, ancien);
+
+    const r = await demanderSignature({ ...DEMANDE_PLAN, partie: "entreprise_exterieure" });
+
+    expect(r).toEqual({ ok: true });
+    expect(concurrent.revoqueLe).toBeNull();
+    expect(ancien.revoqueMotif).toBe(MOTIF_REVOCATION_NOUVEAU_LIEN);
+  });
+
+  it("une révocation qui échoue après l'envoi ne défait pas l'envoi réussi", async () => {
+    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
+    const ancien = ancienLien();
+    prismaMock.accessToken.lignes.push(ancien);
+    const erreur = vi.spyOn(console, "error").mockImplementation(() => {});
+    prismaMock.accessToken.updateMany.mockRejectedValueOnce(new Error("base indisponible"));
+
+    const r = await demanderSignature({ ...DEMANDE_PLAN, partie: "entreprise_exterieure" });
+
+    expect(r).toEqual({ ok: true });
+    expect(mailsEnvoyes).toHaveLength(1);
+    expect(ancien.revoqueLe).toBeNull();
+    expect(erreur).toHaveBeenCalledWith("[access-tokens] ancien lien non révoqué :", "base indisponible");
+    erreur.mockRestore();
+  });
+
+  it("l'ancien lien encore ouvert de la partie est révoqué, avec un motif lisible", async () => {
+    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
+    const ancien = ancienLien();
+    prismaMock.accessToken.lignes.push(ancien);
+
+    const r = await demanderSignature({ ...DEMANDE_PLAN, partie: "entreprise_exterieure" });
+
+    expect(r).toEqual({ ok: true });
+    expect(ancien.revoqueLe).toBeInstanceOf(Date);
+    expect(ancien.revoqueMotif).toBe(MOTIF_REVOCATION_NOUVEAU_LIEN);
+    const nouveau = prismaMock.accessToken.lignes.find((l) => l.id !== "atk_ancien");
+    expect(nouveau?.revoqueLe ?? null).toBeNull();
+  });
+
+  it("le lien de l'autre partie, d'un autre objet ou d'un autre établissement n'est pas touché", async () => {
+    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
+    const autrePartie = ancienLien({ id: "atk_eu", tokenHash: "eu", partie: "entreprise_utilisatrice" });
+    const autreObjet = ancienLien({ id: "atk_pp2", tokenHash: "pp2", objetId: "pp-2" });
+    const voisin = ancienLien({ id: "atk_voisin", tokenHash: "voisin", etablissementId: "etab-voisin" });
+    prismaMock.accessToken.lignes.push(autrePartie, autreObjet, voisin);
+
+    await demanderSignature({ ...DEMANDE_PLAN, partie: "entreprise_exterieure" });
+
+    for (const l of [autrePartie, autreObjet, voisin]) expect(l.revoqueLe, String(l.id)).toBeNull();
+  });
+
+  it("un lien déjà consommé ou déjà révoqué garde sa trace", async () => {
+    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
+    const avant = new Date("2026-11-01T10:00:00Z");
+    const utilise = ancienLien({ id: "atk_u", tokenHash: "u", utiliseLe: avant });
+    const revoque = ancienLien({ id: "atk_r", tokenHash: "r", revoqueLe: avant, revoqueMotif: "Plan de prévention clos" });
+    prismaMock.accessToken.lignes.push(utilise, revoque);
+
+    await demanderSignature({ ...DEMANDE_PLAN, partie: "entreprise_exterieure" });
+
+    expect(utilise.revoqueLe).toBeNull();
+    expect(revoque.revoqueLe).toEqual(avant);
+    expect(revoque.revoqueMotif).toBe("Plan de prévention clos");
+  });
+
+  it("l'ancien lien n'est révoqué qu'APRÈS l'envoi du nouveau : l'e-mail parti, puis la révocation", async () => {
+    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
+    const ancien = ancienLien();
+    prismaMock.accessToken.lignes.push(ancien);
+    let ancienOuvertALEnvoi: boolean | null = null;
+    const { sendMail } = await import("@/lib/email");
+    vi.mocked(sendMail).mockImplementationOnce(async (p) => {
+      ancienOuvertALEnvoi = ancien.revoqueLe == null;
+      mailsEnvoyes.push(p as { to: string; subject: string; text: string });
+    });
+
+    const r = await demanderSignature({ ...DEMANDE_PLAN, partie: "entreprise_exterieure" });
+
+    expect(r).toEqual({ ok: true });
+    expect(ancienOuvertALEnvoi).toBe(true);
+    expect(ancien.revoqueMotif).toBe(MOTIF_REVOCATION_NOUVEAU_LIEN);
+  });
+
+  it("si l'e-mail du nouveau lien ne part pas, l'ancien n'est jamais touché", async () => {
+    prismaMock.planPrevention.lignes.push(planComplet("pp-1", "etab-a-moi", "attente_signatures"));
+    const ancien = ancienLien();
+    prismaMock.accessToken.lignes.push(ancien);
+    envoi.echoue = true;
+
+    const r = await demanderSignature({ ...DEMANDE_PLAN, partie: "entreprise_exterieure" });
+
+    expect(r).toEqual({ ok: false, message: MESSAGE_ENVOI_ECHOUE });
+    expect(ancien.revoqueLe).toBeNull();
+    expect(ancien.revoqueMotif).toBeNull();
+    const nouveau = prismaMock.accessToken.lignes.find((l) => l.id !== "atk_ancien");
+    expect(nouveau?.revoqueMotif).toBe(MOTIF_REVOCATION_ENVOI_ECHOUE);
+    // Aucune écriture n'a visé l'ancien lien, pas même pour le rétablir.
+    for (const appel of prismaMock.accessToken.updateMany.mock.calls) {
+      expect(JSON.stringify(appel[0])).not.toContain(MOTIF_REVOCATION_NOUVEAU_LIEN);
+    }
   });
 });

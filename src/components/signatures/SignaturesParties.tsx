@@ -1,5 +1,7 @@
 import type { Signature } from "@prisma/client";
 import { BlocCreux, SignatureBlock } from "@/components/ui-kit";
+import { LIEN_VERIFIER } from "@/components/ui-kit/SignatureBlock";
+import { VerifierSignature } from "./VerifierSignature";
 
 /**
  * Le scellé d'une signature sur une fiche board — la même projection pour les
@@ -18,7 +20,14 @@ export function SceauSignature({ s }: { s: Signature }) {
       hashDocument={s.hashDocument}
       nomDocument={s.nomDocument}
       signatureId={s.id}
-      verifierHref={`/verifier/${s.id}`}
+      verifier={
+        <VerifierSignature
+          etablissementId={s.etablissementId}
+          signatureId={s.id}
+          libelle="Vérifier l'intégrité"
+          className={LIEN_VERIFIER.board}
+        />
+      }
     />
   );
 }

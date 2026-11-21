@@ -21,8 +21,6 @@ describe("robots.txt", () => {
     for (const p of [
       "/acces/",
       "/accessibilite/",
-      "/signe/",
-      "/verifier/",
       "/etablissements/",
       "/duerp/",
       "/entreprises",

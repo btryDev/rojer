@@ -23,9 +23,11 @@ const PUBLIC_PREFIXES = [
   "/favicon.ico",
   // ADR-007 : accès prestataire par lien magique.
   "/acces",
-  // ADR-006 : vérification publique d'une preuve de signature.
+  // ADR-006, amendée le 2026-11-21 : `/verifier` et `/signe` n'ont plus de
+  // page — la vérification se fait dans l'application. Les adresses restent
+  // sans session pour répondre 404 à tous, tiers compris : un lien d'un
+  // ancien PDF ou d'un ancien e-mail ne mène pas à un écran de connexion.
   "/verifier",
-  // ADR-006 : accusé de réception après signature (public).
   "/signe",
   // Registre public d'accessibilité.
   "/accessibilite",

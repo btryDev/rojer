@@ -72,16 +72,16 @@ export async function adressesDesProprietaires(compteId: string, proprietaires =
  * échoué. L'appelant décide de rendre sa marque (rien parti à cause d'un
  * échec) — un e-mail parti la garde, réessayer enverrait un doublon.
  */
-export function ecrireAuxProprietaires(compteId: string, message: { subject: string; text: string }, contexte: string) {
+export function ecrireAuxProprietaires(compteId: string, message: { subject: string; text: string; html?: string }, contexte: string) {
   return ecrireA(compteId, true, message, contexte);
 }
 
 /** Le même, aux membres qui ne sont pas propriétaires. */
-export function ecrireAuxMembres(compteId: string, message: { subject: string; text: string }, contexte: string) {
+export function ecrireAuxMembres(compteId: string, message: { subject: string; text: string; html?: string }, contexte: string) {
   return ecrireA(compteId, false, message, contexte);
 }
 
-async function ecrireA(compteId: string, proprietaires: boolean, message: { subject: string; text: string }, contexte: string) {
+async function ecrireA(compteId: string, proprietaires: boolean, message: { subject: string; text: string; html?: string }, contexte: string) {
   let partis = 0;
   let echec = false;
   try {

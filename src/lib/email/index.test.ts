@@ -55,6 +55,72 @@ describe("envoiEnService — l'envoi se sait hors service avant d'écrire", () =
   });
 });
 
+describe("sendMail — pièces jointes (2026-11-19)", () => {
+  const PIECE = {
+    name: "Plan_prevention_PP-001.pdf",
+    content: Buffer.alloc(3 * 1024).toString("base64"),
+    contentType: "application/pdf",
+  };
+
+  it("console : la pièce est nommée avec sa taille, jamais imprimée, et la boîte de dev la garde", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    delete process.env.EMAIL_DRIVER;
+    const m = await charger();
+    const outbox = await import("./dev-outbox");
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    await m.sendMail({ to: "a@exemple.test", subject: "s", text: "t", attachments: [PIECE] });
+    const imprime = log.mock.calls.map((c) => String(c[0])).join("\n");
+    expect(imprime).toContain("Pièce jointe : Plan_prevention_PP-001.pdf (3 Ko)");
+    expect(imprime).not.toContain(PIECE.content.slice(0, 40));
+    expect(outbox.capturerMail).toHaveBeenCalledWith(
+      expect.objectContaining({ piecesJointes: ["Plan_prevention_PP-001.pdf (3 Ko)"] }),
+    );
+    log.mockRestore();
+  });
+
+  async function avecMailpace(reponses: Response[]) {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("EMAIL_DRIVER", "mailpace");
+    vi.stubEnv("MAILPACE_API_KEY", "cle-de-test");
+    const corps: Array<Record<string, unknown>> = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_url: unknown, init?: RequestInit) => {
+        corps.push(JSON.parse(String(init?.body)));
+        return reponses.shift() ?? new Response("{}", { status: 200 });
+      }),
+    );
+    return { m: await charger(), corps };
+  }
+
+  it("Mailpace refuse la pièce (4xx) : le message repart sans elle, et le journal le dit", async () => {
+    const { m, corps } = await avecMailpace([
+      new Response(JSON.stringify({ errors: { attachments: ["invalid"] } }), { status: 400 }),
+      new Response("{}", { status: 200 }),
+    ]);
+    const err = vi.spyOn(console, "error").mockImplementation(() => {});
+    await m.sendMail({ to: "a@exemple.test", subject: "s", text: "t", attachments: [PIECE] });
+    expect(corps).toHaveLength(2);
+    expect(corps[0]).toHaveProperty("attachments");
+    expect(corps[1]).not.toHaveProperty("attachments");
+    expect(corps[1].textbody).toBe("t");
+    expect(String(err.mock.calls[0]?.[0])).toMatch(/pièce jointe refusée.*Plan_prevention_PP-001\.pdf/);
+    err.mockRestore();
+    vi.unstubAllGlobals();
+  });
+
+  it("un refus de la clé (401) n'est pas celui de la pièce : il remonte, sans second envoi", async () => {
+    const { m, corps } = await avecMailpace([
+      new Response(JSON.stringify({ error: "Invalid API Token" }), { status: 401 }),
+    ]);
+    await expect(
+      m.sendMail({ to: "a@exemple.test", subject: "s", text: "t", attachments: [PIECE] }),
+    ).rejects.toThrow(/401/);
+    expect(corps).toHaveLength(1);
+    vi.unstubAllGlobals();
+  });
+});
+
 describe("publicAppUrl — pas de localhost en production (audit du 2026-10-12, B7)", () => {
   it("en production sans PUBLIC_APP_URL : refus nommé, et la lecture lève", async () => {
     vi.stubEnv("NODE_ENV", "production");

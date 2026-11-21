@@ -15,7 +15,8 @@ import { describe, expect, it } from "vitest";
 const RACINE = join(process.cwd(), "src");
 
 const EXEMPTEES: Record<string, string> = {
-  "lib/signatures/verification-publique.ts": "la page publique montre aussi une signature révoquée, comme telle",
+  // ~~`verification-publique.ts`~~ (page publique retirée le 2026-11-21).
+  "lib/signatures/verification.ts": "« Vérifier » dans l'application porte aussi sur une signature révoquée, et le dit",
   "lib/signatures/trace.ts": "une signature révoquée reste une trace : le plan ne s'efface pas",
   "lib/abonnements/suppression.ts": "la suppression du compte compte tout ce qui part",
   "lib/salaries/suppression.ts": "la suppression d'un salarié compte tout ce qui le désigne",

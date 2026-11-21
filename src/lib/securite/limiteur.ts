@@ -2,7 +2,7 @@
  * Un sémaphore de processus, borné en places, en file et en attente, avec une
  * part par demandeur (audit de sécurité du 2026-11-10). Sans dépendance : les
  * exports (`exports/limite.ts`) et la vérification publique des signatures
- * (`signatures/verification-publique.ts`) en ont chacun un.
+ * (`signatures/verification.ts`) en ont chacun un.
  *
  * Ce n'est pas un ordonnanceur : rien n'est conservé entre deux requêtes, et
  * une file pleine se dit au lieu de grossir.

@@ -52,8 +52,8 @@ import {
  *   helper : elle n'est pas un contrôle reconnu. Elle n'est un oracle que si
  *   les deux branches répondent différemment — à relire au cas par cas ;
  * - un helper d'un AUTRE module qui lirait nu pour nous ;
- * - les parcours publics, par conception : `/acces/[token]` et
- *   `/verifier/[signatureId]` lisent un jeton ou une signature par leur
+ * - les parcours publics, par conception : `/acces/[token]` (et
+ *   ~~`/verifier/[signatureId]`~~, retirée le 2026-11-21) lisent un jeton ou une signature par leur
  *   identifiant, sans contrôle de compte qui suive — la règle ne s'y déclenche
  *   pas, et c'est voulu : leur garantie est que la réponse ne révèle rien
  *   au-delà de la preuve, pas une appartenance.

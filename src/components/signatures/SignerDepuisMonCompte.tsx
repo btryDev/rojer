@@ -1,102 +1,125 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ObjetSignable } from "@prisma/client";
 import { Button } from "@/components/ui/button";
-import { signerEnCompteConnecte } from "@/lib/signatures/actions";
-
-type Raison = Exclude<
-  Awaited<ReturnType<typeof signerEnCompteConnecte>>,
-  { ok: true }
->["raison"];
-
-const MESSAGES: Record<Exclude<Raison, "plafond">, string> = {
-  non_signable: "Ce document n'est pas à signer pour l'instant : il est clos, annulé, ou une modification proposée attend une réponse.",
-  deja_signee: "Cette partie a déjà signé ce document.",
-  objet_introuvable: "Ce document n'existe plus.",
-  fichier_introuvable: "Le document à signer n'est plus accessible sur le serveur.",
-  stockage_non_configure:
-    "Le stockage des fichiers n'est pas encore configuré sur ce serveur : le document ne peut pas être lu pour être signé.",
-  non_implemente: "La signature de ce type de document n'est pas encore disponible.",
-};
+import { PanneauModal } from "@/components/ui-kit/PanneauModal";
+import {
+  demanderCodeSignatureDuCompte,
+  signerDuCompteAvecCode,
+  type SignerDuCompteState,
+} from "@/lib/signatures/signature-compte-actions";
+import { texteConsentementPour } from "@/lib/signatures/consentement";
+import {
+  BOUTON_CLAIR,
+  BOUTON_PLEIN,
+  CaseConsentement,
+  ChampCodeSignature,
+  useCodeDeSignature,
+} from "./EtapesCodeSignature";
 
 /**
- * La signature du dirigeant depuis son propre compte (audit du 2026-10-12,
- * constat 8). `signerEnCompteConnecte` existait, gardée et testée, et aucun
- * écran ne l'appelait : le dirigeant ne pouvait signer son plan ou son permis
- * qu'en s'envoyant un lien par courriel — et l'envoi de courriels n'est pas en
- * service en production.
- *
- * Deux temps, et non un clic : une signature est un acte, et un bouton seul se
- * déclenche par erreur. La partie n'est pas choisie ici — le serveur signe au
- * nom de l'entreprise utilisatrice, toujours (`signerEnCompteConnecte`).
+ * La signature du dirigeant depuis son propre compte, pour tout objet
+ * signable autre que le plan (dont la fiche a sa fenêtre « Signer et
+ * envoyer »). ~~Deux temps, un clic sur `signerEnCompteConnecte`~~
+ * [2026-11-21, décision de la propriétaire : une seule voie, celle du plan —
+ * le récapitulatif, la case de consentement, un code à l'adresse du compte,
+ * et la signature posée par le serveur avec le bon code seulement
+ * (`signerDuCompteAvecCode`)]. La partie n'est pas choisie ici : le serveur
+ * signe au nom de l'entreprise utilisatrice, toujours.
  */
+
 export function SignerDepuisMonCompte({
   etablissementId,
   objetType,
   objetId,
   auNomDe,
+  raisonSociale,
+  surtitre,
 }: {
   etablissementId: string;
   objetType: ObjetSignable;
   objetId: string;
-  /** Ce que la fiche appelle cette partie : « l'entreprise utilisatrice »,
-   *  « le donneur d'ordre ». */
+  /** Ce que la fiche appelle cette partie : « le donneur d'ordre ». */
   auNomDe: string;
+  /** L'entreprise engagée, nommée dans le consentement. */
+  raisonSociale: string;
+  /** « Permis de feu · PF-004 ». */
+  surtitre: string;
 }) {
   const router = useRouter();
   const [ouvert, setOuvert] = useState(false);
-  const [erreur, setErreur] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
+  const objet = { etablissementId, objetType, objetId };
+  const [state, formAction, pending] = useActionState<SignerDuCompteState, FormData>(
+    signerDuCompteAvecCode.bind(null, objet),
+    { status: "idle" },
+  );
+  const { coche, setCoche, code, setCode, envoi, erreurCode, demande, demanderCode } = useCodeDeSignature(
+    () => demanderCodeSignatureDuCompte(objet),
+    state,
+  );
 
-  function signer() {
-    setErreur(null);
-    startTransition(async () => {
-      const r = await signerEnCompteConnecte({ etablissementId, objetType, objetId });
-      if (r.ok) {
-        setOuvert(false);
-        router.refresh();
-      } else {
-        // Le plafond de la formule porte son propre message (ADR-053 § 14).
-        setErreur(r.raison === "plafond" ? r.message : MESSAGES[r.raison]);
-      }
-    });
+  useEffect(() => {
+    if (state.status === "success") router.refresh();
+  }, [state, router]);
+  // Signée : la fenêtre se ferme, décidé au rendu qui reçoit la réponse (le
+  // retour à l'étape du code est dans `useCodeDeSignature`).
+  const [reponseVue, setReponseVue] = useState(state);
+  if (state !== reponseVue) {
+    setReponseVue(state);
+    if (state.status === "success") setOuvert(false);
   }
 
-  if (!ouvert) {
-    return (
+  const erreur =
+    erreurCode ?? (state.status === "error" ? state.message : null);
+
+  return (
+    <>
       <Button data-ecriture type="button" variant="board" size="boardSm" onClick={() => setOuvert(true)}>
         Signer depuis mon compte
       </Button>
-    );
-  }
+      <PanneauModal ouvert={ouvert} surFermer={() => setOuvert(false)} surtitre={surtitre} titre="Signer depuis mon compte">
+        <form action={formAction} className="flex flex-col gap-5">
+          <p className="m-0 rounded-[18px] bg-[color:var(--board-slate-pale)] px-5 py-4 text-[14px] leading-[1.6] text-[color:var(--board-ink)]">
+            Vous signez au nom de {auNomDe} ({raisonSociale}). Seront enregistrés : votre adresse, votre
+            adresse IP, l&apos;empreinte SHA-256 des données signées, le texte de votre consentement et
+            l&apos;horodatage serveur.
+          </p>
 
-  return (
-    <div className="rounded-[18px] bg-[color:var(--board-card)] p-4 ring-1 ring-[color:var(--board-slate-line)]">
-      <p className="m-0 text-[13.5px] leading-[1.6] text-[color:var(--board-ink)]">
-        Vous signez au nom de {auNomDe}, avec votre compte. Seront enregistrés :
-        votre adresse, votre adresse IP, l&apos;empreinte SHA-256 du document
-        tel qu&apos;il se présente et l&apos;horodatage serveur.
-      </p>
-      {erreur && (
-        <p className="m-0 mt-2 text-[13px] text-[color:var(--board-signal-ink)]">{erreur}</p>
-      )}
-      <div className="mt-3 flex items-center gap-2">
-        <Button type="button" variant="board" size="boardSm" disabled={pending} onClick={signer}>
-          {pending ? "Signature…" : "Signer"}
-        </Button>
-        <button
-          type="button"
-          onClick={() => {
-            setOuvert(false);
-            setErreur(null);
-          }}
-          className="text-[12.5px] font-semibold text-[color:var(--board-slate-mid)] hover:text-[color:var(--board-ink)]"
-        >
-          Annuler
-        </button>
-      </div>
-    </div>
+          <CaseConsentement coche={coche} surChanger={setCoche} texte={texteConsentementPour(objetType, raisonSociale)} />
+
+          {envoi ? (
+            <ChampCodeSignature id={`code-${objetId}`} email={envoi.email} code={code} surChanger={setCode} />
+          ) : null}
+
+          {erreur && (
+            <p role="alert" className="m-0 text-[13px] text-[color:var(--board-signal-ink)]">
+              {erreur}
+            </p>
+          )}
+
+          <div className="flex flex-wrap justify-end gap-2.5">
+            <button type="button" onClick={() => setOuvert(false)} className={BOUTON_CLAIR}>
+              Annuler
+            </button>
+            {envoi ? (
+              <>
+                <button type="button" onClick={demanderCode} disabled={demande} className={BOUTON_CLAIR}>
+                  {demande ? "Envoi…" : "Renvoyer un code"}
+                </button>
+                <button type="submit" data-ecriture disabled={!coche || code.length !== 6 || pending} className={BOUTON_PLEIN}>
+                  {pending ? "Signature en cours…" : "Je signe"}
+                </button>
+              </>
+            ) : (
+              <button type="button" data-ecriture onClick={demanderCode} disabled={!coche || demande} className={BOUTON_PLEIN}>
+                {demande ? "Envoi du code…" : "Recevoir mon code"}
+              </button>
+            )}
+          </div>
+        </form>
+      </PanneauModal>
+    </>
   );
 }

@@ -30,6 +30,10 @@ describe("AccessToken", () => {
     expect(ttlHoursFor("depot_rapport")).toBe(168); // default 7j
   });
 
+  it("un lien de signature vit 7 jours (décision du 2026-11-19, 72 h avant)", () => {
+    expect(ttlHoursFor("signature")).toBe(168);
+  });
+
   it("calcule l'expiration dans le futur", () => {
     const now = new Date("2026-04-23T12:00:00Z");
     const exp = expirationFromNow(72, now);

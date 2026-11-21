@@ -3525,3 +3525,12 @@ Relevés en passant la liste de contrôle de production de Next.js
   Next 16) n'est à envisager que si cette mesure montre une lenteur
   d'interface : 165 composants client, 30 mémoïsations manuelles ciblées,
   aucune lenteur rapportée.
+
+## 25. Fichier de preuve téléchargeable (2026-11-21)
+
+Fichier de preuve téléchargeable (les données signées en JSON canonique, à
+côté du PDF), pour qu'un tiers recalcule lui-même l'empreinte. Ce n'est pas
+un manque : la vérification se fait dans Rojer (décision de la propriétaire
+du 2026-11-21) ; c'est une piste si un client demande une vérification
+indépendante. L'horodatage tiers (RFC 3161) et le cachet PAdES sont écartés
+(décision du même jour).

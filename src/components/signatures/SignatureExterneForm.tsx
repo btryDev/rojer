@@ -1,10 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { formaterDateLongueFr, formaterHeureFr } from "@/lib/dates";
+import { ChampBoard } from "@/components/ui-kit/ChampBoard";
 import {
   poserSignatureAvecToken,
   renvoyerCodeOtp,
@@ -13,170 +13,253 @@ import {
 } from "@/lib/signatures/actions";
 
 /**
- * Formulaire de signature via lien magique, en deux temps (2026-11-19) :
- * l'adresse est connue par le jeton ; le signataire demande son code
- * (« Recevoir mon code »), qui part par un second courriel, puis le saisit
- * avec, s'il le souhaite, sa fonction.
+ * Formulaire de signature via lien magique (cahier de reprise § 3.2,
+ * 2026-11-19). ~~« Recevoir mon code », puis le code~~ : le bouton
+ * principal est « Signer » ; le clic demande le code (`renvoyerCodeOtp`,
+ * inchangée — 60 s entre deux codes, 5 par heure et par adresse, 3 essais
+ * par lien) et ouvre l'étape du code. Un code déjà demandé sur ce lien
+ * (page rechargée, retour plus tard) ouvre directement cette étape.
+ *
+ * Le signataire ne tape ni son nom ni son adresse : ils viennent du jeton.
  */
+
+const essais = (n: number) => `${n} essai${n > 1 ? "s" : ""}`;
+
+/** Le délai entre deux codes (`OTP_DELAI_RENVOI_SECONDES`, 60 s). */
+const DELAI_RENVOI_MS = 60_000;
+
+type EtatCode =
+  | Exclude<RenvoiOtpState, { status: "success" }>
+  | { status: "success"; message: string; renvoiA: number };
+
+/**
+ * Les secondes qui restent avant `cible`, arrondies au-dessus ; 0 passé.
+ * `null` : l'heure de l'écran n'est pas encore lue.
+ */
+function secondesAvant(cible: number | null, maintenant: number | null): number | null {
+  if (cible === null) return 0;
+  if (maintenant === null) return null;
+  return Math.max(0, Math.ceil((cible - maintenant) / 1000));
+}
+
 export function SignatureExterneForm({
   token,
   destinataire,
   expireLe,
   codeDejaDemande,
+  essaisRestants,
+  renvoiPossibleLe,
+  proposer,
 }: {
   token: string;
   destinataire: { email: string; nom: string | null };
   expireLe: Date;
   /** Un code est déjà parti sur ce lien (page rechargée, retour plus tard). */
   codeDejaDemande: boolean;
+  /** Les essais de code qui restent sur le lien (`otpEssaisRestants`). */
+  essaisRestants: number;
+  /** Quand un nouveau code pourra être demandé (`renvoiOtpPossibleLe`). */
+  renvoiPossibleLe: Date | null;
+  /**
+   * « Proposer des modifications » : présent sur le lien de l'entreprise
+   * extérieure d'un plan seulement (ADR-061 § 3).
+   */
+  proposer?: () => void;
 }) {
   const boundAction = poserSignatureAvecToken.bind(null, token);
-  const [state, formAction, pending] = useActionState<
-    PoserSignatureState,
-    FormData
-  >(boundAction, { status: "idle" });
-  const [codeState, demanderCode, codeEnCours] = useActionState<RenvoiOtpState>(
-    () => renvoyerCodeOtp(token),
+  const [state, formAction, pending] = useActionState<PoserSignatureState, FormData>(
+    boundAction,
+    { status: "idle" },
+  );
+  // L'instant de l'envoi réussi, noté au retour de l'action : il ouvre le
+  // compte à rebours du renvoi (60 s, la règle de `renvoiOtpAutorise`).
+  const [codeState, demanderCode, codeEnCours] = useActionState<EtatCode>(
+    async () => {
+      const r = await renvoyerCodeOtp(token);
+      return r.status === "success" ? { ...r, renvoiA: Date.now() + DELAI_RENVOI_MS } : r;
+    },
     { status: "idle" },
   );
   const codeDemande = codeDejaDemande || codeState.status === "success";
+  const envoyeIci = codeState.status === "success";
+  // Un code faux décompte un essai : la réponse dit combien il en reste.
+  const restants =
+    state.status === "error" && state.restants !== undefined ? state.restants : essaisRestants;
 
-  // Vers l'accusé de réception dès que la signature est posée. `/signe/[id]`
-  // est une route dynamique sous le même layout racine, jamais visitée
-  // avant (l'identifiant vient de naître) : `router.push` la rend au
-  // serveur avec la signature fraîche, sans rechargement complet. Ni
-  // session ni cookie n'a changé, rien n'impose une navigation « hard ».
-  // (L'ancien `window.location` invoquait une iframe de démo qui n'existe
-  // plus dans le dépôt.)
+  // Le compte à rebours, au navigateur seulement : l'heure du serveur et
+  // celle de l'écran ne coïncident pas au rendu. `null` tant qu'elle n'est
+  // pas lue — le lien reste alors fermé, sans chiffre.
+  const [maintenant, setMaintenant] = useState<number | null>(null);
+  useEffect(() => {
+    const tic = () => setMaintenant(Date.now());
+    const premier = setTimeout(tic, 0);
+    const minuterie = setInterval(tic, 1000);
+    return () => {
+      clearTimeout(premier);
+      clearInterval(minuterie);
+    };
+  }, []);
+  const renvoiA =
+    codeState.status === "success" ? codeState.renvoiA : (renvoiPossibleLe?.getTime() ?? null);
+  const attente = secondesAvant(renvoiA, maintenant);
+
+  // La confirmation reste sur le lien (2026-11-21, ADR-006 amendée : plus
+  // d'accusé public `/signe`). `router.refresh` relit la page : le lien,
+  // consommé, y affiche la date de la signature.
   const router = useRouter();
   useEffect(() => {
-    if (state.status === "success") {
-      router.push(`/signe/${state.signatureId}`);
-    }
+    if (state.status === "success") router.refresh();
   }, [state, router]);
 
   if (state.status === "success") {
-    // Transition — la page de confirmation va s'afficher immédiatement.
     return (
-      <div className="rounded-2xl border border-[color:var(--board-green-ink)]/40 bg-[color:var(--board-green)] p-8 text-center">
-        <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">Redirection…</p>
-        <p className="mt-2 text-[0.9rem] text-[color:var(--board-ink)]">
-          Votre signature est enregistrée. Vous allez être redirigé(e) vers
-          l&apos;accusé de réception.
+      <div role="status" className="rounded-[18px] bg-[color:var(--board-canvas)] px-5 py-5 text-center">
+        <p className="m-0 font-mono text-[10.5px] tracking-[0.14em] uppercase text-[color:var(--board-slate-soft)]">
+          Signature enregistrée
+        </p>
+        <p className="m-0 mt-2 text-[14px] leading-[1.55] text-[color:var(--board-ink)]">
+          Quand toutes les parties auront signé, Rojer adresse à chaque signataire
+          un e-mail avec l&apos;empreinte du document.
         </p>
       </div>
     );
   }
 
+  const lienProposer = proposer ? (
+    <div className="border-t border-[color:var(--board-slate-line)] pt-4 text-center">
+      <p className="m-0 text-[13px] text-[color:var(--board-slate-mid)]">Un point ne convient pas ?</p>
+      <button
+        type="button"
+        onClick={proposer}
+        className="mt-1 text-[13.5px] font-semibold text-[color:var(--board-blue-ink)] underline-offset-4 hover:underline"
+      >
+        Proposer des modifications →
+      </button>
+    </div>
+  ) : null;
+
+  const erreurCode =
+    codeState.status === "error" ? (
+      <p role="alert" className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">
+        {codeState.message}
+      </p>
+    ) : null;
+
   return (
-    <div className="space-y-6">
-      <div className="rounded-xl border border-[color:var(--board-slate-line)] bg-[color:var(--board-slate-pale)] p-4">
-        <p className="board-eyebrow m-0 text-[10.5px] tracking-[0.18em] text-[color:var(--board-slate-soft)]">Identité (remplie automatiquement)</p>
-        <dl className="mt-2 grid grid-cols-1 gap-y-1 text-[0.85rem] sm:grid-cols-[auto_1fr] sm:gap-x-4">
+    <div className="space-y-5">
+      <div className="rounded-[18px] bg-[color:var(--board-canvas)] px-4 py-3">
+        <p className="m-0 font-mono text-[10px] tracking-[0.12em] uppercase text-[color:var(--board-slate-soft)]">
+          Vous signez en tant que
+        </p>
+        <dl className="m-0 mt-2 grid grid-cols-1 gap-y-1 text-[13.5px] sm:grid-cols-[auto_1fr] sm:gap-x-4">
           {destinataire.nom && (
             <>
-              <dt className="text-[color:var(--muted-foreground)]">Nom :</dt>
-              <dd className="text-[color:var(--board-ink)]">{destinataire.nom}</dd>
+              <dt className="text-[color:var(--board-slate-mid)]">Nom</dt>
+              <dd className="m-0 text-[color:var(--board-ink)]">{destinataire.nom}</dd>
             </>
           )}
-          <dt className="text-[color:var(--muted-foreground)]">Email :</dt>
-          <dd className="font-mono text-[color:var(--board-ink)]">{destinataire.email}</dd>
+          <dt className="text-[color:var(--board-slate-mid)]">Adresse</dt>
+          <dd className="m-0 font-mono text-[color:var(--board-ink)] break-all">{destinataire.email}</dd>
         </dl>
       </div>
 
-      <form action={demanderCode} className="space-y-2">
-        <Button type="submit" variant={codeDemande ? "outline" : "default"} disabled={codeEnCours}>
-          {codeEnCours
-            ? "Envoi du code…"
-            : codeDemande
-              ? "Renvoyer un code"
-              : "Recevoir mon code"}
-        </Button>
-        {codeState.status === "idle" && !codeDemande && (
-          <p className="text-[0.78rem] text-[color:var(--muted-foreground)]">
-            Rojer adresse le code de confirmation à {destinataire.email}, dans un
-            second e-mail.
+      {!codeDemande ? (
+        <form action={demanderCode} className="space-y-3">
+          <Button type="submit" variant="board" size="board" className="min-h-14 w-full rounded-full font-display text-[18px]" disabled={codeEnCours}>
+            {codeEnCours ? "Envoi du code…" : "Signer"}
+          </Button>
+          <p className="m-0 text-center text-[12.5px] text-[color:var(--board-slate-mid)]">
+            Le clic sur « Signer » adresse un code de confirmation à {destinataire.email},
+            dans un second e-mail, à saisir ici.
           </p>
-        )}
-        {codeState.status !== "idle" && (
-          <p
+          {erreurCode}
+          {lienProposer}
+        </form>
+      ) : (
+        <div className="space-y-5">
+          <div
             role="status"
-            className={
-              codeState.status === "error"
-                ? "text-[0.85rem] text-[color:var(--board-signal-ink)]"
-                : "text-[0.85rem] text-[color:var(--board-ink)]"
-            }
+            className="rounded-[18px] bg-[color:var(--board-canvas)] px-4 py-3 text-[13.5px] leading-[1.55] text-[color:var(--board-slate-ink)]"
           >
-            {codeState.message}
-          </p>
-        )}
-      </form>
+            {envoyeIci ? (
+              <p className="m-0">Un code à 6 chiffres a été envoyé à <strong>{destinataire.email}</strong>.</p>
+            ) : (
+              <p className="m-0">
+                Un code à 6 chiffres a déjà été demandé sur ce lien : cherchez-le dans la
+                boîte de <strong>{destinataire.email}</strong>.
+              </p>
+            )}
+            <p className="m-0 mt-1">
+              Il vous reste {essais(restants)} sur ce lien, nouveaux codes compris.
+            </p>
+          </div>
 
-      {codeDemande && (
-        <form action={formAction} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="signataireRole">
-              Votre fonction <span className="text-[color:var(--muted-foreground)]">(facultatif)</span>
-            </Label>
-            <Input
+          <form action={formAction} className="space-y-4">
+            <ChampBoard
               id="signataireRole"
               name="signataireRole"
+              label="Votre fonction (facultatif)"
               placeholder="Ex : Technicien, Chef d'entreprise, Contrôleur…"
               maxLength={120}
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="otp">Code reçu par e-mail *</Label>
-            <Input
+            <ChampBoard
               id="otp"
               name="otp"
-              required
+              label="Code reçu par e-mail"
+              requis
               inputMode="numeric"
               pattern="\d{6}"
               maxLength={6}
               placeholder="• • • • • •"
-              className="text-center font-mono text-2xl tracking-[0.4em]"
               autoComplete="one-time-code"
+              champClassName="text-center font-mono text-2xl tracking-[0.4em]"
+              onInput={(e) => {
+                const champ = e.currentTarget;
+                champ.value = champ.value.replace(/\D/g, "").slice(0, 6);
+              }}
+              aide={`Valable 10 minutes. Le lien expire le ${formaterDateLongueFr(expireLe)} à ${formaterHeureFr(expireLe)}.`}
             />
-            <p className="text-[0.78rem] text-[color:var(--muted-foreground)]">
-              Code à 6 chiffres reçu par e-mail. Valable 10 minutes,
-              3 essais au total sur ce lien, nouveaux codes compris. Le lien expire
-              le{" "}
-              {expireLe.toLocaleDateString("fr-FR", {
-                day: "2-digit",
-                month: "long",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-                timeZone: "Europe/Paris",
-              })}
-              .
-            </p>
-          </div>
 
-          {state.status === "error" && (
-            <div className="rounded-lg border border-[color:var(--board-signal-ink)]/40 bg-[color:color-mix(in_oklch,var(--board-signal-ink)_8%,transparent)] p-3 text-[0.85rem] text-[color:var(--board-signal-ink)]">
-              {state.message}
-            </div>
-          )}
+            {state.status === "error" && (
+              <div
+                role="alert"
+                className="rounded-[18px] bg-[color:var(--board-signal-wash)] p-3 text-[12.5px] text-[color:var(--board-signal-ink)]"
+              >
+                {state.message}
+              </div>
+            )}
 
-          <div className="flex items-center gap-3">
-            <Button type="submit" disabled={pending}>
-              {pending ? "Signature en cours…" : "Signer électroniquement"}
+            <Button type="submit" variant="board" size="board" className="min-h-14 w-full rounded-full font-display text-[18px]" disabled={pending}>
+              {pending ? "Signature en cours…" : "Valider ma signature"}
             </Button>
-          </div>
 
-          <p className="text-[0.72rem] leading-relaxed text-[color:var(--muted-foreground)]">
-            {/* ~~« vous apposez une signature au sens de l'article 1367 du Code
-                civil »~~ — une qualification (vérification du 2026-09-26) :
-                aligné sur `/verifier`. */}
-            En cliquant sur « Signer électroniquement », vous signez ce document.
-            Seront enregistrés : votre email, votre adresse IP, l&apos;empreinte
-            SHA-256 du document et l&apos;horodatage serveur. Textes : art. 1366 et
-            1367 du Code civil · règlement (UE) n° 910/2014.
-          </p>
-        </form>
+            <p className="m-0 text-[12px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+              {/* ~~« vous apposez une signature au sens de l'article 1367 du Code
+                  civil »~~ — une qualification (vérification du 2026-09-26). */}
+              En cliquant sur « Valider ma signature », vous signez ce document.
+              Seront enregistrés : votre email, votre adresse IP, l&apos;empreinte
+              SHA-256 du document et l&apos;horodatage serveur. Textes : art. 1366 et
+              1367 du Code civil · règlement (UE) n° 910/2014.
+            </p>
+          </form>
+
+          <form action={demanderCode} className="space-y-2 text-center">
+            <button
+              type="submit"
+              disabled={codeEnCours || attente !== 0}
+              className="font-mono text-[11px] tracking-[0.08em] uppercase text-[color:var(--board-blue-ink)] underline-offset-4 hover:underline disabled:cursor-not-allowed disabled:text-[color:var(--board-slate-soft)] disabled:no-underline"
+            >
+              {codeEnCours
+                ? "Envoi du code…"
+                : attente
+                  ? `Renvoyer un code (dans ${attente} s)`
+                  : "Renvoyer un code"}
+            </button>
+            {erreurCode}
+          </form>
+
+          {lienProposer}
+        </div>
       )}
     </div>
   );

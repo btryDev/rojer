@@ -5,6 +5,21 @@
 - **Auteur** : Claude Code (sur brief Paloma)
 - **Relatif à** : ADR-002 (Action unifiée), ADR-007 (Prestataires & accès externe)
 
+> **Amendement du 2026-11-21, décision de la propriétaire : plus de page
+> publique de vérification ; la vérification se fait dans l'application,
+> pour un utilisateur connecté ; la preuve transmise aux tiers est le PDF
+> avec les empreintes.** Les pages `/verifier/[signatureId]` et
+> `/signe/[signatureId]` sont retirées (404 pour tous, tiers compris), pour
+> tous les objets signables. « Vérifier », sur chaque signature affichée dans
+> l'application (scellé, panneau Signatures, historique — révoquées
+> comprises), recalcule l'empreinte de l'objet ou du fichier, borné au compte
+> et à l'établissement (`verifierSignatureDuCompte`,
+> `src/lib/signatures/verification.ts`). Après une signature par lien, la
+> confirmation s'affiche sur `/acces/[token]`. Le PDF et l'e-mail de fin de
+> signature portent l'empreinte, sans lien : l'empreinte imprimée sur le PDF
+> et reçue par e-mail se compare à celle affichée dans Rojer par l'émetteur.
+> Ce qui suit, sur la page publique, est l'état antérieur.
+
 ## Contexte
 
 À partir de la V2, plusieurs modules vont matérialiser un acte juridique de type signature :

@@ -65,15 +65,17 @@ function table(lignes: Ligne[]) {
   };
 }
 
-const { prismaMock, mails, aux } = vi.hoisted(() => ({
+const { prismaMock, mails, aux, envoiAcces } = vi.hoisted(() => ({
   prismaMock: {} as Record<string, unknown> & {
     accessToken: ReturnType<typeof table>;
     signature: ReturnType<typeof table>;
     planPrevention: ReturnType<typeof table>;
     propositionModificationPlan: ReturnType<typeof table>;
   },
-  mails: [] as { to: string; subject: string; text: string }[],
-  aux: [] as { compteId: string; subject: string }[],
+  mails: [] as { to: string; subject: string; text: string; html?: string }[],
+  aux: [] as { compteId: string; subject: string; text: string; html?: string }[],
+  // Un lien d'accès dont l'envoi part en erreur (fournisseur injoignable).
+  envoiAcces: { echoue: false },
 }));
 
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
@@ -90,6 +92,17 @@ vi.mock("@/lib/auth/compte", async () => {
     }),
   };
 });
+// L'émission du nouveau lien d'un refus passe par la garde de l'établissement.
+vi.mock("@/lib/auth/scope", async () => {
+  const { clientDuCompteSimule } = await import("@/test/garde-simulee");
+  return {
+    assertEtablissementDuCompte: async () => ({
+      user: { id: "user-1", email: "dirigeant@utilisatrice.fr" },
+      compte: { compteId: "user-1", role: "owner" },
+      db: await clientDuCompteSimule(),
+    }),
+  };
+});
 vi.mock("@/lib/abonnements/saisie", () => ({ verifierSaisie: async () => undefined }));
 vi.mock("next/headers", () => ({ headers: async () => new Map() }));
 vi.mock("next/server", () => ({ after: (fn: () => unknown) => void fn() }));
@@ -100,18 +113,20 @@ vi.mock("@/lib/securite/limite-debit", async (orig) => ({
   consommer: async () => ({ ok: true }),
 }));
 vi.mock("@/lib/abonnements/rappels", () => ({
-  ecrireAuxProprietaires: vi.fn(async (compteId: string, m: { subject: string }) => {
-    aux.push({ compteId, subject: m.subject });
+  ecrireAuxProprietaires: vi.fn(async (compteId: string, m: { subject: string; text: string; html?: string }) => {
+    aux.push({ compteId, ...m });
     return { partis: 1, echec: false };
   }),
 }));
 vi.mock("@/lib/email", () => ({
   motifErreur: (e: unknown) => (e instanceof Error ? e.message : "erreur inconnue"),
-  sendMail: vi.fn(async (m: { to: string; subject: string; text: string }) => {
+  sendMail: vi.fn(async (m: { to: string; subject: string; text: string; html?: string }) => {
+    if (envoiAcces.echoue && m.text.includes("/acces/")) throw new Error("fournisseur injoignable");
     mails.push(m);
   }),
   envoiEnService: () => true,
   publicAppUrl: () => "http://localhost:3000",
+  refusUrlPublique: () => null,
 }));
 
 import { hashToken } from "@/lib/access-tokens/token";
@@ -178,6 +193,9 @@ beforeEach(() => {
       ...FICHE,
       efChefEmail: "chef@exterieure.fr",
       lignes: [{ ...LIGNE_1, ordre: 0 }],
+      lieux: "Cuisine",
+      dateDebut: new Date("2026-12-01T08:00:00Z"),
+      dateFin: new Date("2026-12-05T17:00:00Z"),
       phasesDangereuses: [],
       propositions: [],
       ...COMPTE,
@@ -198,6 +216,12 @@ beforeEach(() => {
     },
   ]);
   prismaMock.propositionModificationPlan = table([]);
+  // Ce que lit l'émission d'un nouveau lien (raison sociale, plafonds).
+  prismaMock.etablissement = table([
+    { id: "etab-1", entreprise: { raisonSociale: "Boulangerie <Martin>", compteId: "user-1" } },
+  ]);
+  prismaMock.consommationQuota = table([]);
+  envoiAcces.echoue = false;
   prismaMock.$transaction = async (fn: (tx: unknown) => Promise<unknown>) => fn(prismaMock);
   prismaMock.$queryRaw = async () => [];
 });
@@ -222,6 +246,11 @@ describe("l'entreprise extérieure propose une modification (ADR-061 § 3)", () 
     await vi.waitFor(() => expect(aux).toHaveLength(1));
     expect(aux[0].compteId).toBe("user-1");
     expect(mails).toHaveLength(0);
+    // E3 en HTML, avec son bouton vers la fiche du plan (2026-11-19).
+    expect(aux[0].subject).toBe("Modifications proposées : Plan de prévention PP-001 — Nettoyage SARL");
+    expect(aux[0].html).toContain(">Voir les modifications proposées</a>");
+    expect(aux[0].html).toContain('href="http://localhost:3000/etablissements/etab-1/plan-prevention/pp-1"');
+    expect(aux[0].text).toContain("Le plan ne se signe pas tant que vous n'avez pas décidé.");
   });
 
   it("une proposition qui ne change rien est refusée, sans rien révoquer", async () => {
@@ -295,6 +324,29 @@ describe("le dirigeant traite la proposition (ADR-061 § 4)", () => {
       expect(mails.map((m) => m.to).sort()).toEqual(["chef@exterieure.fr", "marie@utilisatrice.fr"]),
     );
     expect(mails.find((m) => m.to === "chef@exterieure.fr")?.subject).toMatch(/^Proposition acceptée/);
+    expect(mails.find((m) => m.to === "chef@exterieure.fr")?.html).toContain(">Proposition acceptée</h1>");
+  });
+
+  it("corriger : la proposition s'applique, marquée « correction en cours » (2026-11-19)", async () => {
+    await decider("corriger").catch((e: { digest?: string; message?: string }) => {
+      if (e?.digest !== "NEXT_REDIRECT" && e?.message !== "NEXT_REDIRECT") throw e;
+    });
+    const p = prismaMock.propositionModificationPlan.lignes[0];
+    expect(p.statut).toBe("acceptee");
+    expect(p.finaliseeLe ?? null).toBeNull();
+    expect(p.corrigeeLe).toBeInstanceOf(Date);
+    expect(prismaMock.planPrevention.lignes[0].efChefNom).toBe("Paul Dupond");
+  });
+
+  it("un plan modifié depuis la proposition ne se l'applique pas, il se refuse encore", async () => {
+    // Le dirigeant a retouché le plan pendant que la proposition attendait.
+    prismaMock.planPrevention.lignes[0].lieux = "Réserve, corrigé à la main";
+    expect(await decider("accepter")).toMatchObject({
+      status: "error",
+      message: "Le plan a changé depuis la proposition : refusez-la et corrigez le plan à la main.",
+    });
+    expect(prismaMock.signature.lignes[0].active).toBe(true);
+    expect((await decider("refuser")).status).toBe("success");
   });
 
   it("refuser ne touche ni au plan ni aux signatures", async () => {
@@ -303,6 +355,77 @@ describe("le dirigeant traite la proposition (ADR-061 § 4)", () => {
     expect(prismaMock.signature.lignes[0].active).toBe(true);
     expect(prismaMock.planPrevention.lignes[0].efChefNom).toBe("Jean Dupond");
     expect(prismaMock.propositionModificationPlan.lignes[0].statut).toBe("refusee");
+  });
+
+  it("refuser émet un nouveau lien à l'auteur, et l'avis de décision le porte (2026-11-19)", async () => {
+    const r = await decider("refuser");
+    expect(r).toMatchObject({
+      status: "success",
+      message: "Proposition refusée. Un nouveau lien de signature est parti à chef@exterieure.fr : le plan se signe tel qu'il est.",
+    });
+
+    const nouveaux = prismaMock.accessToken.lignes.filter((t) => t.id !== "atk_ee");
+    expect(nouveaux).toHaveLength(1);
+    expect(nouveaux[0]).toMatchObject({
+      scope: "signature",
+      objetType: "plan_prevention",
+      objetId: "pp-1",
+      partie: "entreprise_exterieure",
+      emailDestinataire: "chef@exterieure.fr",
+      nomDestinataire: "Jean Dupond",
+      createdByUserId: "user-1",
+    });
+
+    // UN message : l'avis de décision EST le courriel du lien.
+    await vi.waitFor(() => expect(mails).toHaveLength(1));
+    const [m] = mails;
+    expect(m.to).toBe("chef@exterieure.fr");
+    expect(m.subject).toBe("Proposition non retenue — PP-001");
+    expect(m.text).toContain("le plan reste tel qu'il était");
+    expect(m.text).toMatch(/Consulter et signer le plan : http:\/\/localhost:3000\/acces\/\S+/);
+    expect(m.html).toContain(">Consulter et signer le plan</a>");
+    // La raison sociale du compte, échappée.
+    expect(m.html).toContain("Boulangerie &lt;Martin&gt; n&#39;a pas retenu");
+    expect(m.html).not.toContain("<Martin>");
+  });
+
+  it("refuser, lien en échec : le refus tient, l'avis part sans lien et renvoie au lien d'origine", async () => {
+    envoiAcces.echoue = true;
+    const r = await decider("refuser");
+    expect(r).toMatchObject({
+      status: "success",
+      message: expect.stringContaining("Le nouveau lien de signature n'a pas pu partir"),
+    });
+    expect(prismaMock.propositionModificationPlan.lignes[0].statut).toBe("refusee");
+    // Le lien préparé est révoqué par l'émission (envoi échoué).
+    const nouveaux = prismaMock.accessToken.lignes.filter((t) => t.id !== "atk_ee");
+    expect(nouveaux.every((t) => t.revoqueLe instanceof Date)).toBe(true);
+
+    await vi.waitFor(() => expect(mails).toHaveLength(1));
+    const [m] = mails;
+    expect(m.to).toBe("chef@exterieure.fr");
+    expect(m.subject).toMatch(/^Proposition non retenue : /);
+    expect(m.text).not.toContain("/acces/");
+    expect(m.text).toContain("Pour le signer, reprenez le lien reçu précédemment");
+  });
+
+  it("refuser quand l'entreprise extérieure a déjà signé : aucun lien, l'avis seul", async () => {
+    prismaMock.signature.lignes.push({
+      id: "sig_ee",
+      etablissementId: "etab-1",
+      objetType: "plan_prevention",
+      objetId: "pp-1",
+      partie: "entreprise_exterieure",
+      signataireNom: "Jean Dupond",
+      signataireEmail: "chef@exterieure.fr",
+      active: true,
+      revoqueLe: null,
+      ...COMPTE,
+    });
+    expect(await decider("refuser")).toEqual({ status: "success", message: "Proposition refusée." });
+    expect(prismaMock.accessToken.lignes.filter((t) => t.id !== "atk_ee")).toHaveLength(0);
+    await vi.waitFor(() => expect(mails).toHaveLength(1));
+    expect(mails[0].text).not.toContain("/acces/");
   });
 
   it("une proposition déjà traitée ne se traite pas deux fois", async () => {
@@ -319,6 +442,26 @@ describe("révoquer les signatures pour corriger (ADR-061 § 2)", () => {
     expect(prismaMock.signature.lignes[0]).toMatchObject({ active: null });
     expect(prismaMock.signature.lignes[0].revoqueMotif).toMatch(/corrige le plan/);
     await vi.waitFor(() => expect(mails.map((m) => m.to)).toEqual(["marie@utilisatrice.fr"]));
+    expect(mails[0].html).toContain(">Signature révoquée</h1>");
+    expect(mails[0].text).toContain("Elle reste enregistrée, avec sa date");
+  });
+
+  it("qui révoque ne reçoit pas l'avis de sa propre révocation (2026-11-19)", async () => {
+    prismaMock.signature.lignes[0].signataireEmail = "Dirigeant@Utilisatrice.fr";
+    prismaMock.signature.lignes.push({
+      id: "sig_ee",
+      etablissementId: "etab-1",
+      objetType: "plan_prevention",
+      objetId: "pp-1",
+      partie: "entreprise_exterieure",
+      signataireNom: "Jean Dupond",
+      signataireEmail: "chef@exterieure.fr",
+      active: true,
+      revoqueLe: null,
+      ...COMPTE,
+    });
+    expect((await revoquerSignaturesPlan("pp-1", { status: "idle" })).status).toBe("success");
+    await vi.waitFor(() => expect(mails.map((m) => m.to)).toEqual(["chef@exterieure.fr"]));
   });
 
   it("sans signature active, rien à révoquer", async () => {
@@ -381,5 +524,23 @@ describe("la re-signature ne compte pas dans la formule (ADR-061 § 6)", () => {
 
   it("hors plan de prévention, rien n'est épargné", async () => {
     expect(await compte("entreprise_exterieure", "chef@exterieure.fr", "permis_feu")).toBe(false);
+  });
+});
+
+describe("avis de décision au refus d'office (plan clos ou annulé)", () => {
+  it("dit que le plan est clos, sans promettre de le soumettre de nouveau", async () => {
+    const { avertirDecision } = await import("./contre-signature");
+    await avertirDecision(prismaMock as never, {
+      etablissementId: "etab-1",
+      planId: "pp-1",
+      to: "chef@exterieure.fr",
+      acceptee: false,
+      planFerme: true,
+    });
+    expect(mails).toHaveLength(1);
+    expect(mails[0].text).toContain("votre interlocuteur a clos ce plan");
+    expect(mails[0].text).toContain("Ce plan ne se signe plus.");
+    expect(mails[0].text).not.toContain("soumettre de nouveau");
+    expect(mails[0].text).not.toContain("reste tel qu'il était");
   });
 });

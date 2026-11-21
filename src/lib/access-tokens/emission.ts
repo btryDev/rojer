@@ -1,10 +1,10 @@
-import { creerSousPlafond, prendreQuota, rendreQuota } from "@/lib/abonnements/quotas";
+import { creerSousPlafond, debutDeLAnneeDuCompte, prendreQuota, rendreQuota } from "@/lib/abonnements/quotas";
 import { randomUUID } from "node:crypto";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { assertEtablissementDuCompte } from "@/lib/auth/scope";
 import { objetAppartientAEtablissement } from "@/lib/signatures/appartenance";
-import { PartieSignataire, ScopeAccessToken } from "@prisma/client";
+import { PartieSignataire, ScopeAccessToken, type Prisma } from "@prisma/client";
 import {
   expirationFromNow,
   generateToken,
@@ -13,7 +13,13 @@ import {
 } from "./token";
 import { envoyerMailAcces, urlAccesPourToken } from "./mail";
 import { envoiEnService, motifErreur } from "@/lib/email";
-import { LIEN_PARTI, MOTIF_REVOCATION_ENVOI_ECHOUE, estAUsageUnique } from "./revocation";
+import {
+  LIEN_PARTI,
+  MOTIF_REVOCATION_ENVOI_ECHOUE,
+  MOTIF_REVOCATION_NOUVEAU_LIEN,
+  estAUsageUnique,
+  lienActif,
+} from "./revocation";
 import { signatureDejaComptee } from "@/lib/plan-prevention/resignature";
 
 /**
@@ -83,7 +89,21 @@ export const emissionSchema = z.object({
   // La partie invitée à signer (2026-10-12), recopiée sur la signature.
   partie: z.enum(PartieSignataire).optional(),
   sujetMail: z.string().trim().min(1).max(200).regex(SANS_CONTROLE),
+  // Les paragraphes du message, séparés par une ligne vide.
   messageMail: z.string().trim().min(1).max(2000),
+  // La mise en page du courriel (2026-11-19) : titre, encadré, libellé du
+  // bouton. Facultatifs ; chaque valeur tient sur une ligne.
+  titreMail: z.string().trim().min(1).max(120).regex(SANS_CONTROLE).optional(),
+  boutonMail: z.string().trim().min(1).max(60).regex(SANS_CONTROLE).optional(),
+  encadreMail: z
+    .array(
+      z.object({
+        libelle: z.string().trim().min(1).max(40).regex(SANS_CONTROLE),
+        valeur: z.string().trim().min(1).max(300).regex(SANS_CONTROLE),
+      }),
+    )
+    .max(6)
+    .optional(),
 });
 
 /**
@@ -105,7 +125,7 @@ export const emissionSchema = z.object({
  * demandeur : le code remontait donc à celui-là même dont la signature du
  * tiers doit être indépendante. Un demandeur tenant les deux facteurs signe
  * lui-même à la place du signataire, et il en sort une `Signature`
- * `otp_email` qu'un `/verifier/<id>` public confirme. La séparation des
+ * `otp_email` que la vérification confirme. La séparation des
  * canaux — lien et code ne partent qu'à la boîte du destinataire — était la
  * seule chose qui distinguait cette signature d'une case cochée par le
  * donneur d'ordre.
@@ -154,6 +174,9 @@ export type EmissionTokenParams = {
   partie?: PartieSignataire;
   sujetMail: string;
   messageMail: string;
+  titreMail?: string;
+  boutonMail?: string;
+  encadreMail?: { libelle: string; valeur: string }[];
 };
 
 export type EmissionResultat =
@@ -262,10 +285,34 @@ export async function emettreAccessToken(
   // Plafonds de la formule (ADR-053 § 14) : les liens actifs, et pour une
   // demande de signature, les signatures de l'année — comptées à la demande,
   // comme une enveloppe : la signature du tiers, plus tard, ne recompte pas.
+  //
+  // UN LIEN QUI EN REMPLACE UN AUTRE NE PREND PAS DE PLACE (2026-11-19,
+  // « Renvoyer le lien » et nouveau lien au refus d'une proposition). Le
+  // lien encore ouvert de la même partie sera révoqué après l'envoi (plus
+  // bas) : le compter ici refusait le renvoi d'un compte arrivé au plafond
+  // des liens actifs, alors que le nombre de liens ouverts ne change pas.
+  // La révocation reste APRÈS l'envoi : pendant l'envoi, l'ancien et le
+  // nouveau coexistent, une place de plus pour quelques secondes.
+  const remplaces = params.partie
+    ? await db.accessToken.count({
+        where: { ...lienDeLaPartie(params), ...lienActif() },
+      })
+    : 0;
+  // Une re-signature après correction ne compte pas (ADR-061 § 6) ; un
+  // nouveau lien à la MÊME adresse, pour la même partie, non plus : le
+  // premier, parti et jamais consommé, a déjà été compté (décision du
+  // 2026-11-19). Un lien consommé a produit une signature : la suivante
+  // relève de la re-signature, plafonnée par `signatureDejaComptee`.
   let pris: string[] = [];
   const creation = await creerSousPlafond(db, compte.compteId, "liensAccesActifs", async (tx) => {
-    // Une re-signature après correction ne compte pas (ADR-061 § 6).
-    if (params.scope === "signature" && !(await signatureDejaComptee(tx, { ...params, email: params.emailDestinataire })))
+    if (
+      params.scope === "signature" &&
+      !(await dejaCompteePourCetteAdresse(tx, {
+        ...params,
+        depuis: await debutDeLAnneeDuCompte(tx, compte.compteId),
+      })) &&
+      !(await signatureDejaComptee(tx, { ...params, email: params.emailDestinataire }))
+    )
       pris = await prendreQuota(tx, compte.compteId, "signaturesParAn");
     return tx.accessToken.create({
       data: {
@@ -282,7 +329,7 @@ export async function emettreAccessToken(
         createdByUserId: user.id,
       },
     });
-  });
+  }, remplaces > 0 ? 0 : 1);
   if (!creation.ok) return { ok: false, raison: "plafond", message: creation.motif };
   const access = creation.valeur;
 
@@ -292,6 +339,9 @@ export async function emettreAccessToken(
       nom: params.nomDestinataire,
       sujet: params.sujetMail,
       message: params.messageMail,
+      titre: params.titreMail,
+      bouton: params.boutonMail,
+      encadre: params.encadreMail,
       urlAcces,
       codeALaDemande: estAUsageUnique(params.scope),
       expireLe,
@@ -320,9 +370,94 @@ export async function emettreAccessToken(
     return { ok: false, raison: "envoi_echoue", message: MESSAGE_ENVOI_ECHOUE };
   }
 
+  // Un seul lien ouvert par partie et par objet (2026-11-19, cahier de
+  // reprise § 8.6) : le nouveau lien PARTI, l'ancien lien encore ouvert de la
+  // même partie est révoqué, quelle que soit l'adresse qui l'avait reçu.
+  // APRÈS l'envoi, jamais avant : un envoi échoué ne retire rien à personne,
+  // et rien n'a à être rétabli (un lien rétabli aurait pu entre-temps devenir
+  // obsolète — plan modifié, clos, proposition). Conditionnelle : un lien
+  // consommé garde sa trace « utilisé », une révocation antérieure son motif.
+  // Sans partie (un rapport), rien ne dit que deux liens visent la même
+  // personne : rien n'est révoqué. Les plafonds ne changent pas.
+  //
+  // Seuls les liens créés AVANT celui-ci (`createdAt`, l'horloge de la base
+  // pour les deux côtés) : deux envois simultanés à la même partie ne se
+  // révoquent pas l'un l'autre — le plus récent reste valable, au pire les
+  // deux.
+  //
+  // Un échec ici ne défait pas l'envoi réussi : il se journalise, et
+  // l'ancien lien reste valable à côté du nouveau (même partie, même objet).
+  // C'est acceptable : aucun lien obsolète n'est remis en service — l'ancien
+  // n'a jamais cessé de l'être —, et la garde de fond reste
+  // `objetEstSignable` au moment de signer, avec la révocation à chaque
+  // modification, clôture ou annulation (`revoquerLiensEnVol`). C'est l'état
+  // d'avant le 2026-11-19, où les liens d'une partie s'empilaient.
+  if (params.partie) {
+    await db.accessToken
+      .updateMany({
+        where: {
+          etablissementId: params.etablissementId,
+          objetType: params.objetType,
+          objetId: params.objetId,
+          scope: params.scope,
+          partie: params.partie,
+          id: { not: access.id },
+          createdAt: { lt: access.createdAt },
+          revoqueLe: null,
+          utiliseLe: null,
+        },
+        data: { revoqueLe: new Date(), revoqueMotif: MOTIF_REVOCATION_NOUVEAU_LIEN },
+      })
+      .catch((e: unknown) => console.error("[access-tokens] ancien lien non révoqué :", motifErreur(e)));
+  }
+
   return {
     ok: true,
     accessTokenId: access.id,
     expireLe,
   };
+}
+
+/** Les liens de la même partie sur le même objet — ceux qu'un nouvel envoi remplace. */
+function lienDeLaPartie(p: {
+  etablissementId: string;
+  objetType: string;
+  objetId: string;
+  scope: ScopeAccessToken;
+  partie?: PartieSignataire;
+}): Prisma.AccessTokenWhereInput {
+  return {
+    etablissementId: p.etablissementId,
+    objetType: p.objetType,
+    objetId: p.objetId,
+    scope: p.scope,
+    partie: p.partie,
+    utiliseLe: null,
+  };
+}
+
+/**
+ * Un lien de signature est-il déjà parti à cette adresse, pour cette partie,
+ * sans avoir été consommé ? Alors sa signature a été comptée à son émission
+ * (`signaturesParAn`), et le nouveau lien — renvoi, lien après un refus — ne
+ * la reprend pas (décision de la propriétaire du 2026-11-19). Un lien dont
+ * l'e-mail n'est pas parti ne compte pas : sa place a été rendue
+ * (`LIEN_PARTI`). Seul un lien de l'année des plafonds en cours compte
+ * (`depuis`, relecture du 2026-11-21) : celui d'une année close n'a pas été
+ * compté dans celle-ci.
+ */
+async function dejaCompteePourCetteAdresse(
+  tx: Prisma.TransactionClient,
+  p: Parameters<typeof lienDeLaPartie>[0] & { emailDestinataire: string; depuis: Date },
+): Promise<boolean> {
+  if (!p.partie) return false;
+  const n = await tx.accessToken.count({
+    where: {
+      ...lienDeLaPartie(p),
+      emailDestinataire: p.emailDestinataire,
+      createdAt: { gte: p.depuis },
+      ...LIEN_PARTI,
+    },
+  });
+  return n > 0;
 }

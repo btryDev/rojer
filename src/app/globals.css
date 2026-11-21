@@ -947,6 +947,16 @@
      copies d'un même objet, qui dérivent au premier ajustement de rayon.
      Les fiches de détail s'y branchent plutôt que d'en fabriquer une
      quatrième. */
+  /* L'en-tête centré du plan de prévention (fiche et formulaire, maquette V2
+     validée le 2026-11-19) : un gris-bleu pâle à trame de points, filet en
+     bas. Une surface, pas une couleur d'état. */
+  .entete-trame {
+    background-color: #eef4f7;
+    background-image: radial-gradient(#c9d8e2 1px, transparent 1.2px);
+    background-size: 18px 18px;
+    border-bottom: 1px solid var(--board-slate-line);
+  }
+
   .carte-board {
     background: var(--board-card);
     border-radius: 30px;

@@ -99,6 +99,10 @@ const schema = z
     PUBLIC_APP_URL: z.preprocess(vide, urlHttp.optional()),
     EMAIL_DRIVER: enumeration(["console", "mailpace"] as const),
     MAILPACE_API_KEY: optionnelle,
+    // La clé du HMAC des codes de signature (`signatures/otp.ts`, 2026-11-21).
+    // Absente en production : aucun code ne part (refus à l'envoi), et le
+    // démarrage le signale.
+    SIGNATURE_CODE_SECRET: z.preprocess(vide, z.string().min(32, "doit faire au moins 32 caractères").optional()),
     SIGNATURE_MAIL_FROM: optionnelle,
 
     // Stockage des fichiers (`storage/index.ts`).
@@ -234,6 +238,12 @@ export function avertissementsEnvironnement(env: Env = process.env): string[] {
       "APP_ENV absente : un serveur de production doit dire ce qu'il est " +
         "(production | preview | development). Sans elle, la réparation automatique " +
         "du calendrier ne s'exécute pas (lib/environnement.ts).",
+    );
+  }
+  if (vide(env.NODE_ENV) === "production" && !vide(env.SIGNATURE_CODE_SECRET)) {
+    avertissements.push(
+      "SIGNATURE_CODE_SECRET absente : aucun code de signature ne peut partir (liens et compte) ; " +
+        "la signature électronique est arrêtée tant qu'elle n'est pas posée.",
     );
   }
   // Une configuration Stripe posée mais refusée ferme les abonnements, pas le

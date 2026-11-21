@@ -61,8 +61,8 @@ export const LIMITES = {
    */
   verificationEnvoiAdresse: { max: 5, fenetreSecondes: 60 * 60 },
   reinitialisationIp: { max: 20, fenetreSecondes: 60 * 60 },
-  /** Vérification publique : recalcule une empreinte (jusqu'à 20 Mo lus). */
-  verificationIp: { max: 30, fenetreSecondes: 10 * 60 },
+  // ~~`verificationIp`~~ (2026-11-21) : les pages publiques `/verifier` et
+  // `/signe` sont retirées, la vérification se fait connecté.
   /**
    * MCP : la limite par IP précède l'authentification (qui peut coûter un
    * appel au serveur Auth). Large, parce que les clients MCP hébergés
@@ -79,6 +79,13 @@ export const LIMITES = {
    * écrit au dirigeant.
    */
   propositionPlanIp: { max: 5, fenetreSecondes: 15 * 60 },
+  /**
+   * La page d'un lien (`/acces/[token]`) et ses actions, tous scopes
+   * (2026-11-21, `access-tokens/limite-lien.ts`) : par réseau, avant la
+   * lecture du jeton. Un prestataire recharge sa page, il n'en fait pas trente.
+   */
+  lienPageIp: { max: 30, fenetreSecondes: 10 * 60 },
+  lienActionIp: { max: 10, fenetreSecondes: 10 * 60 },
 } as const satisfies Record<string, Limite>;
 
 export type Verdict =

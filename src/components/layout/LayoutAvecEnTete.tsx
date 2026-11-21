@@ -3,7 +3,8 @@ import { AppHeader } from "./AppHeader";
 /**
  * Le layout des segments qui portent l'en-tête global (audit Next.js du
  * 2026-10-14, M2) : connexion, création de compte, réinitialisation, pages
- * publiques (`/acces`, `/accessibilite`, `/signe`, `/verifier`) et
+ * publiques (`/acces`, `/accessibilite` ; ~~`/signe`, `/verifier`~~, retirées
+ * le 2026-11-21) et
  * `/entreprises`.
  *
  * L'en-tête vivait dans le layout RACINE, masqué après coup par un portillon

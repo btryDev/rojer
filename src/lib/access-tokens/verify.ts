@@ -17,11 +17,24 @@ import { hashToken } from "./token";
  */
 
 export type TokenValide = { ok: true; token: AccessToken };
+/**
+ * `etablissementId` sur les liens qui ont existé (2026-11-19) : la page du
+ * lien nomme l'entreprise à contacter pour en obtenir un nouveau. Le porteur
+ * du lien la lisait déjà quand le lien était valable ; un lien inexistant
+ * n'apprend rien.
+ */
 export type TokenInvalide =
   | { ok: false; raison: "inexistant" }
-  | { ok: false; raison: "expire"; expireLe: Date }
-  | { ok: false; raison: "revoque"; motif: string | null }
-  | { ok: false; raison: "deja_utilise"; utiliseLe: Date };
+  | { ok: false; raison: "expire"; expireLe: Date; etablissementId: string }
+  | { ok: false; raison: "revoque"; motif: string | null; etablissementId: string }
+  | {
+      ok: false;
+      raison: "deja_utilise";
+      utiliseLe: Date;
+      etablissementId: string;
+      /** De quoi retrouver la signature posée par ce lien (page `/acces`). */
+      signe: { objetType: string | null; objetId: string | null; partie: string | null; email: string };
+    };
 
 export async function verifierAccessToken(
   tokenClair: string,
@@ -30,16 +43,28 @@ export async function verifierAccessToken(
   const tokenHash = hashToken(tokenClair);
   const token = await prisma.accessToken.findUnique({ where: { tokenHash } });
   if (!token) return { ok: false, raison: "inexistant" };
+  const { etablissementId } = token;
   if (token.revoqueLe)
-    return { ok: false, raison: "revoque", motif: token.revoqueMotif };
+    return { ok: false, raison: "revoque", motif: token.revoqueMotif, etablissementId };
   if (token.expireLe.getTime() < Date.now())
-    return { ok: false, raison: "expire", expireLe: token.expireLe };
+    return { ok: false, raison: "expire", expireLe: token.expireLe, etablissementId };
   // `consultation` est multi-usage ; `signature` et `depot_rapport` mono-usage.
   if (
     token.utiliseLe &&
     estAUsageUnique(token.scope)
   ) {
-    return { ok: false, raison: "deja_utilise", utiliseLe: token.utiliseLe };
+    return {
+      ok: false,
+      raison: "deja_utilise",
+      utiliseLe: token.utiliseLe,
+      etablissementId,
+      signe: {
+        objetType: token.objetType ?? null,
+        objetId: token.objetId ?? null,
+        partie: token.partie ?? null,
+        email: token.emailDestinataire,
+      },
+    };
   }
   return { ok: true, token };
 }

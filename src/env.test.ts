@@ -26,6 +26,8 @@ function erreurDe(env: Record<string, string | undefined>): ErreurEnvironnement 
   throw new Error("aucune erreur levée");
 }
 
+const CLE_CODES = "c".repeat(32);
+
 describe("validerEnvironnement", () => {
   it("accepte le minimum, toutes les optionnelles absentes", () => {
     expect(() => validerEnvironnement(BASE)).not.toThrow();
@@ -87,7 +89,7 @@ describe("validerEnvironnement", () => {
   // APP_ENV absente d'une production : un avertissement, pas une faute
   // (revue du 2026-10-14, B1).
   it("signale APP_ENV absente d'une production sans fermer le serveur", () => {
-    const prod = { ...BASE, NODE_ENV: "production", PUBLIC_APP_URL: "https://rojer.fr" };
+    const prod = { ...BASE, NODE_ENV: "production", PUBLIC_APP_URL: "https://rojer.fr", SIGNATURE_CODE_SECRET: CLE_CODES };
     expect(() => validerEnvironnement(prod)).not.toThrow();
     expect(avertissementsEnvironnement(prod)).toHaveLength(1);
     expect(avertissementsEnvironnement(prod)[0]).toMatch(/^APP_ENV absente/);
@@ -102,6 +104,7 @@ describe("variables Stripe (ADR-053)", () => {
     const prod = {
       ...BASE,
       NODE_ENV: "production",
+      SIGNATURE_CODE_SECRET: CLE_CODES,
       APP_ENV: "production",
       PUBLIC_APP_URL: "https://rojer.fr",
       STRIPE_SECRET_KEY: "sk_test_abc",
@@ -124,6 +127,7 @@ describe("variables Stripe (ADR-053)", () => {
     const prod = {
       ...BASE,
       NODE_ENV: "production",
+      SIGNATURE_CODE_SECRET: CLE_CODES,
       APP_ENV: "production",
       PUBLIC_APP_URL: "https://rojer.fr",
       STRIPE_SECRET_KEY: "rk_live_abc",
@@ -135,7 +139,7 @@ describe("variables Stripe (ADR-053)", () => {
       expect.stringMatching(/sans TEMOIN_TACHES_URL/),
     ]);
     expect(() => validerEnvironnement({ ...prod, TEMOIN_TACHES_URL: "http://hc-ping.com/abc" })).toThrow(/TEMOIN_TACHES_URL/);
-    const sansStripe = { ...BASE, NODE_ENV: "production", APP_ENV: "production", PUBLIC_APP_URL: "https://rojer.fr", ABONNEMENT_EXIGE: "oui" };
+    const sansStripe = { ...BASE, NODE_ENV: "production", APP_ENV: "production", PUBLIC_APP_URL: "https://rojer.fr", ABONNEMENT_EXIGE: "oui", SIGNATURE_CODE_SECRET: CLE_CODES };
     expect(avertissementsEnvironnement(sansStripe)).toEqual([expect.stringMatching(/ABONNEMENT_EXIGE=oui alors que Stripe est désactivé/)]);
     // Une clé refusée : son motif une fois, puis l'offre ouverte — sans le redire dedans.
     const refusee = avertissementsEnvironnement({ ...prod, STRIPE_SECRET_KEY: "sk_test_abc", ABONNEMENT_EXIGE: "oui", TACHES_SECRET: "x".repeat(32), ALERTES_EMAIL: "a@b.fr", TEMOIN_TACHES_URL: "https://hc-ping.com/abc" });
@@ -175,5 +179,17 @@ describe("ABONNEMENT_EXIGE (ADR-053 § 3)", () => {
       expect.stringMatching(/la saisie reste ouverte à tous/),
     ]);
     expect(avertissementsEnvironnement({ ABONNEMENT_EXIGE: "non" })).toEqual([]);
+  });
+});
+
+describe("la clé des codes de signature (2026-11-21)", () => {
+  it("absente d'une production : signalée au démarrage, sans fermer le serveur", () => {
+    const prod = { ...BASE, NODE_ENV: "production", APP_ENV: "production", PUBLIC_APP_URL: "https://rojer.fr" };
+    expect(() => validerEnvironnement(prod)).not.toThrow();
+    expect(avertissementsEnvironnement(prod)).toEqual([expect.stringMatching(/^SIGNATURE_CODE_SECRET absente/)]);
+  });
+
+  it("trop courte : refusée", () => {
+    expect(erreurDe({ ...BASE, SIGNATURE_CODE_SECRET: "court" }).variables).toEqual(["SIGNATURE_CODE_SECRET"]);
   });
 });

@@ -210,20 +210,25 @@ const ADMISES: { fichier: string; ligne: string; motif: string }[] = [
       "Renvoi devancé par un autre sur le même lien (`renouvelerOtp` rendu `false`), " +
       "contrôlé APRÈS le refus d'envoi hors service : c'est l'autre renvoi qui a écrit le code et l'envoie.",
   },
+  // ~~DemanderSignatureForm, « Le destinataire va recevoir un email avec le
+  // lien et son code de »~~ — retirée le 2026-11-19 : la phrase était fausse
+  // (le code part à la demande, dans un second e-mail) et sa réécriture ne
+  // promet plus d'envoi.
+  // ~~« Code à 6 chiffres reçu par e-mail. Valable 10 minutes, »~~ et
+  // ~~`<Label htmlFor="otp">Code reçu par e-mail *</Label>`~~ — réécrites le
+  // 2026-11-19 (cahier de reprise § 3.2) : l'aide ne dit plus « reçu par
+  // e-mail », le libellé passe à `ChampBoard`.
   {
-    fichier: "src/components/signatures/DemanderSignatureForm.tsx",
-    ligne: "Le destinataire va recevoir un email avec le lien et son code de",
-    motif: "Affichée sur `ok: true` seulement, c'est-à-dire après un envoi parti (`emettreAccessToken`).",
+    fichier: "src/components/signatures/SignatureExterneForm.tsx",
+    ligne: 'label="Code reçu par e-mail"',
+    motif: "Sur la page ouverte par le lien, à l'étape du code, qui ne s'ouvre qu'après une demande de code.",
   },
   {
     fichier: "src/components/signatures/SignatureExterneForm.tsx",
-    ligne: "Code à 6 chiffres reçu par e-mail. Valable 10 minutes,",
-    motif: "Sur la page ouverte par le lien, qui n'existe que si le message est parti.",
-  },
-  {
-    fichier: "src/components/signatures/SignatureExterneForm.tsx",
-    ligne: '<Label htmlFor="otp">Code reçu par e-mail *</Label>',
-    motif: "Sur la page ouverte par le lien, qui n'existe que si le message est parti.",
+    ligne: '<p className="m-0">Un code à 6 chiffres a été envoyé à <strong>{destinataire.email}</strong>.</p>',
+    motif:
+      "Libellé du cahier de reprise § 3.2, affiché sur le seul `status: \"success\"` de `renvoyerCodeOtp`, " +
+      "qui ne le rend qu'après `envoyerMailCode` réussi. Un code demandé lors d'une visite précédente se dit autrement (« déjà été demandé »).",
   },
 ];
 

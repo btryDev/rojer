@@ -125,10 +125,6 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous"; 
     motif: "accès sans session : le compte propriétaire de l'établissement d'une preuve vérifiée (jeton, signature publique, clé MCP)",
     usages: ["prisma.etablissement.findUnique"],
   },
-  "src/lib/signatures/verification-publique.ts": {
-    motif: "vérification publique d'une signature et confirmation /signe, sans session",
-    usages: ["prisma.signature.findUnique"],
-  },
   "src/lib/access-tokens/verify.ts": {
     motif: "recherche d'un jeton par son empreinte, quotas d'OTP",
     usages: [
@@ -199,7 +195,6 @@ const NOMMES_ROUAGES: Record<string, Record<string, Nomme>> = {
     "src/lib/mcp/db.ts": { motif: "MCP : établissement de la clé", symboles: ["clientDuProprietaire"] },
     "src/lib/signatures/actions.ts": { motif: "pose de signature par jeton vérifié", symboles: ["clientDuProprietaire"] },
     "src/lib/plan-prevention/proposition-actions.ts": { motif: "proposition de modification par jeton vérifié (ADR-061)", symboles: ["clientDuProprietaire"] },
-    "src/lib/signatures/verification-publique.ts": { motif: "établissement d'une signature lue par son identifiant", symboles: ["clientDuProprietaire"] },
     "src/app/acces/[token]/page.tsx": { motif: "page d'un jeton vérifié", symboles: ["clientDuProprietaire"] },
     "src/lib/stripe/synchronisation.ts": {
       motif: "webhook Stripe : le compte du client Stripe relu après une notification signée (ADR-053)",

@@ -33,8 +33,12 @@ import {
 } from "@/lib/pdf/builders";
 import { historiqueJusqua } from "@/lib/versions/historique";
 import { raisonEchecRendu, rendrePdf } from "@/lib/pdf/rendre";
+import { construirePlanPreventionData } from "@/lib/pdf/builder-plan-prevention";
+import { nomFichierPlanPrevention } from "@/lib/pdf/PlanPreventionDocument";
 import { slugifyFilename } from "@/lib/pdf/styles";
 import { contenuR4512_8 } from "@/lib/plan-prevention/contenu-r4512-8";
+import { etatAffichePlan } from "@/lib/plan-prevention/etats";
+import { lienOuSignatureParPlan } from "@/lib/plan-prevention/queries";
 import { annoncesZip, ligneHeuresRevisees } from "@/lib/plan-prevention/annonces-plan";
 import {
   ligneInspectionZip,
@@ -591,6 +595,12 @@ async function construireArchive(
     plansPreventionDuDossier(db, id, maintenant),
   );
   if (plansList.length > 0) {
+    // Le statut dans les mots de la fiche (2026-11-19, cahier de reprise
+    // § 1.3) : « Brouillon » tant que rien n'est parti, « Signé » et non le
+    // statut brut de la base. Au mieux : sans la lecture, le statut de la base.
+    const avecLien = await lienOuSignatureParPlan(db, id, plansList.map((p) => p.id)).catch(
+      () => new Set(plansList.map((p) => p.id)),
+    );
     const txt = [
       `PLANS DE PRÉVENTION — 12 derniers mois (${plansList.length})`,
       `Art. R. 4512-6 à R. 4512-12 du code du travail.`,
@@ -601,7 +611,7 @@ async function construireArchive(
       "",
       "────────────────────────────────────────────────────────────",
       ...plansList.flatMap((p) => [
-        `PP-${String(p.numero).padStart(3, "0")} · ${p.statut.toUpperCase()}`,
+        `PP-${String(p.numero).padStart(3, "0")} · ${etatAffichePlan(p.statut, avecLien.has(p.id)).mot.toUpperCase()}`,
         `  Entreprise extérieure : ${p.entrepriseExterieureRaison}`,
         `  Chef EE : ${p.efChefNom} (${p.efChefEmail})`,
         `  Effectif EE : ${p.efEffectifIntervenant}`,
@@ -646,6 +656,23 @@ async function construireArchive(
       ]),
     ].join("\n");
     zip.file(PIECES_ZIP.plansPrevention, txt);
+  }
+  // Le PDF de chaque plan du 07, signatures comprises (2026-11-19, ADR-061
+  // § 7) : rendu ici, depuis les données, comme sur la fiche. Un rendu en
+  // échec prive son seul plan, et le README le compte.
+  const plansPdf = { rendus: 0, echecs: 0 };
+  for (const p of plansList) {
+    try {
+      const data = await construirePlanPreventionData(db, id, p.id, maintenant);
+      if (!data) continue;
+      const buf = await rendrePdf({ type: "plan-prevention", props: { data } }, RENDU_DU_ZIP);
+      const nom = `${PIECES_ZIP.plansPreventionPdf}${nomFichierPlanPrevention(data.numero, data.etablissement)}`;
+      zip.file(nom, new Uint8Array(buf));
+      plansPdf.rendus++;
+    } catch (e) {
+      plansPdf.echecs++;
+      if (!raisonEchecRendu(e)) console.error("controle-zip : PDF d'un plan de prévention non inclus", e);
+    }
   }
 
   // ── 08 Carnet sanitaire (résumé) ─────────────────────────────────────
@@ -728,6 +755,7 @@ async function construireArchive(
       : prestataires.map(datesAttestationZip),
     nbPermisFeu: permisFeuList.length,
     nbPlansPrevention: plansList.length,
+    plansPreventionPdf: plansPdf,
     aCarnetSanitaire: Boolean(
       carnetSan && (carnetSan.pointsReleve.length > 0 || carnetSan.analyses.length > 0),
     ),

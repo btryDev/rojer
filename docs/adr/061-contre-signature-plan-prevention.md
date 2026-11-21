@@ -4,7 +4,8 @@
 - **Portée** : `Signature` (révocation datée), nouveau modèle
   `PropositionModificationPlan`, `src/lib/plan-prevention/`,
   `src/lib/signatures/` (lectures des signatures actives), page
-  `/acces/[token]`, fiche du plan, `/verifier/[signatureId]`.
+  `/acces/[token]`, fiche du plan, ~~`/verifier/[signatureId]`~~ [2026-11-21,
+  ADR-006 amendée : page retirée, « Vérifier » dans l'application].
 - **Amende** l'ADR-006 (une signature peut être révoquée, jamais effacée) et
   l'ADR-008 (l'empreinte d'une signature révoquée reste vérifiable).
 - **Clôt** `docs/chantiers-ouverts.md` § 10, décidé le 2026-09-07.
@@ -40,9 +41,9 @@ différence d'un index partiel (même montage que `PieceEtatPermanent`).
 
 Partout où une signature compte — statut de l'acte, verrou du contenu, fiche,
 registre, ZIP de contrôle —, seules les signatures **actives** comptent. Un
-test relit le code pour qu'aucune lecture ne l'oublie. `/verifier/[id]`
-affiche une signature révoquée comme telle (« révoquée le …, motif »), sans
-la cacher.
+test relit le code pour qu'aucune lecture ne l'oublie. ~~`/verifier/[id]`~~
+[2026-11-21 : « Vérifier », dans l'historique de la fiche] affiche une
+signature révoquée comme telle (« révoquée le … »), sans la cacher.
 
 ### 2. Une seule opération : remettre le plan en brouillon
 
@@ -57,7 +58,9 @@ en brouillon » ici ; aucun statut nouveau n'est créé.
 Tant qu'une proposition attend une décision, le plan ne se signe pas
 (`objetEstSignable`), ni par lien ni depuis le compte.
 
-Une signature révoquée se vérifie toujours à `/verifier` : la page la dit
+[2026-11-21 : `/verifier` est retirée ; une signature révoquée se vérifie
+depuis l'historique de la fiche, qui la dit révoquée avant de dire si le
+document a changé.] ~~Une signature révoquée se vérifie toujours à `/verifier` :~~ la page la dit
 « révoquée », avec sa date et son motif, sans recalculer l'empreinte — la
 comparer au plan corrigé rendrait « document modifié », vrai du document,
 faux comme accusation. L'écriture est conditionnelle sur le statut : une
@@ -118,13 +121,20 @@ par ligne, et trois choix :
 
 Puis « Demander les signatures », comme aujourd'hui.
 
+[2026-11-19, relecture GestBAT : « Accepter » et « Accepter puis modifier »
+refusent si le plan a changé depuis la proposition — son empreinte
+(`hashVersion`, relevée à l'envoi) est relue sous le verrou ; deux formes
+d'empreinte différentes ne se comparent pas. « Refuser » reste possible. Et
+la proposition refusée d'office par une clôture ou une annulation prévient
+son auteur, comme un refus du dirigeant (§ 5).]
+
 ### 5. Personne n'est laissé sans nouvelle
 
 | Événement | Qui reçoit un e-mail |
 |---|---|
 | Proposition reçue | le dirigeant (adresse de son compte) |
-| Proposition acceptée ou refusée | l'entreprise extérieure |
-| Signatures révoquées (par l'une ou l'autre porte) | chaque signataire dont la signature tombe |
+| Proposition acceptée ou refusée | l'entreprise extérieure [2026-11-19 : au refus, l'avis porte un nouveau lien de signature, émis à l'adresse de l'auteur de la proposition par le chemin ordinaire (fréquence, plafonds, essai) ; s'il ne part pas, l'avis dit de demander un nouveau lien] |
+| Signatures révoquées (par l'une ou l'autre porte) | chaque signataire dont la signature tombe [2026-11-19 : sauf qui a fait le geste — le dirigeant qui révoque ou accepte] |
 | Plan signé par toutes les parties | chaque signataire (lot A, déjà fait) |
 
 ### 6. Le plafond de signatures de la formule
@@ -157,6 +167,15 @@ et par signataire ; au-delà, la signature compte.]
   le fait ; pour la cible de Rojer, c'est disproportionné. L'empreinte envoyée
   à chaque partie (lot A) et la page publique de vérification sortent déjà la
   preuve de l'auto-attestation.
+  [2026-11-19 : un **PDF du plan** est rendu à la demande depuis ses données
+  (`PlanPreventionDocument`, route `…/plan-prevention/[planId]/pdf`, ZIP de
+  contrôle) et **joint au dernier e-mail** (« signé par toutes les
+  parties »). Il n'est toujours ni scellé ni horodaté : il imprime, pour
+  chaque signature en vigueur, l'empreinte des DONNÉES signées et son
+  ~~adresse `/verifier/{id}`~~ [2026-11-21 : sans adresse, ADR-006 amendée],
+  dit qu'il n'est pas l'original scellé, et porte
+  « Document de travail — non signé par toutes les parties » tant qu'une
+  partie manque.]
 - **Commentaire libre, pièces jointes, refus sans proposition** : une
   entreprise qui n'est pas d'accord dit sur quoi, ligne par ligne.
 - **Le permis de feu** : il dure le temps d'une intervention et se refait plus

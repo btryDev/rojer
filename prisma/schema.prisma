@@ -276,6 +276,7 @@ model Etablissement {
   permisFeu                  PermisFeu[]
   plansPrevention            PlanPrevention[]
   propositionsPlan           PropositionModificationPlan[]
+  codesSignatureCompte       CodeSignatureCompte[]
   carnetSanitaire            CarnetSanitaire?
   interventions              Intervention[]
   prescriptionsParticulieres PrescriptionParticuliere[]
@@ -1379,6 +1380,13 @@ model Signature {
 
   createdAt DateTime @default(now())
 
+  // Le consentement exprimé avant une signature depuis le compte (2026-11-19,
+  // fenêtre « Signer et envoyer » du plan de prévention) : le texte affiché
+  // tel quel, et l'heure serveur à laquelle la case cochée a été reçue. NULL
+  // pour les signatures d'avant, et pour celles qui n'ont pas de case.
+  consentementTexte String?
+  consentementLe    DateTime?
+
   // Révocation datée (ADR-061) : une signature révoquée garde tout — nom,
   // date, IP, empreinte — et reste vérifiable à `/verifier`. `active` vaut
   // `true` ou NULL, jamais `false` (CHECK de la migration) : seules les
@@ -1415,6 +1423,37 @@ enum ObjetSignable {
 enum MethodeSignature {
   compte_connecte
   otp_email
+  // Depuis le compte, confirmée par un code envoyé à l'adresse du compte
+  // (2026-11-19, décision de la propriétaire) : `CodeSignatureCompte`.
+  compte_code_email
+}
+
+/// Le code qui confirme une signature donnée depuis le compte (2026-11-19,
+/// fenêtre « Signer et envoyer » du plan de prévention). Mêmes règles que le
+/// code d'un lien (`signatures/otp.ts`) : empreinte seule, 10 minutes, trois
+/// essais, un nouveau code au plus par minute, cinq par heure et par adresse
+/// (`QuotaEnvoiOtp`). Une ligne par personne et par document : un nouveau
+/// code remplace le précédent, et la ligne disparaît quand la signature est
+/// posée ou que ses essais sont épuisés.
+model CodeSignatureCompte {
+  id              String        @id @default(cuid())
+  etablissementId String
+  etablissement   Etablissement @relation(fields: [etablissementId], references: [id], onDelete: Cascade)
+  userId          String        @db.Uuid
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  objetType ObjetSignable
+  objetId   String
+
+  /// L'adresse à laquelle le code est parti : celle du compte, à l'envoi.
+  email          String
+  otpHash        String
+  otpExpireLe    DateTime
+  essaisRestants Int      @default(3)
+  createdAt      DateTime @default(now())
+
+  @@unique([userId, objetType, objetId])
+  @@index([etablissementId])
 }
 
 // ----------------------------------------------------------------------------
@@ -1867,6 +1906,13 @@ model PropositionModificationPlan {
 
   traiteeLe       DateTime?
   traiteeParEmail String?
+
+  /// « Corriger » (2026-11-19) : la proposition est appliquée, puis le
+  /// dirigeant retouche le plan avant de signer. `corrigeeLe` dit que la
+  /// décision a été « corriger » ; `finaliseeLe`, que la correction est
+  /// terminée. Entre les deux, la fiche montre « Correction en cours ».
+  corrigeeLe  DateTime?
+  finaliseeLe DateTime?
 
   ipAddress String?
   userAgent String?
@@ -2413,6 +2459,7 @@ model User {
 
   signatures             Signature[]
   accessTokensEmis       AccessToken[]
+  codesSignatureCompte   CodeSignatureCompte[]
   demandesAssistance     DemandeAssistance[]
   acceptationsConditions AcceptationConditions[]
   membres                Membre[]

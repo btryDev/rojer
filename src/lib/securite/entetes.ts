@@ -5,7 +5,8 @@ import { NOINDEX, OUVERT_AUX_MOTEURS } from "../indexation";
  *
  * Aucune page n'a à être encadrée : le dépôt ne contient aucun `<iframe>`, le
  * registre public d'accessibilité s'ouvre par lien ou QR code et n'offre
- * aucun code d'intégration, et les pages `/verifier`, `/signe`, `/acces` sont
+ * aucun code d'intégration, et la page `/acces` (~~`/verifier`, `/signe`~~,
+ * retirées le 2026-11-21) est
  * des pages de premier niveau. L'interdiction d'encadrement vaut donc partout,
  * sans exception — vérifié le 2026-09-19.
  *

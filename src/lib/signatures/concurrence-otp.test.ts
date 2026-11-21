@@ -49,8 +49,11 @@ function table(lignes: Ligne[]) {
     }),
     create: vi.fn(async ({ data }: { data: Ligne }) => {
       await cede();
-      lignes.push({ ...data });
-      return { ...data };
+      // Le défaut de la base pour une signature (`horodatageIso @default(now())`),
+      // que l'avis de fin lit.
+      const ligne = "hashDocument" in data ? { horodatageIso: new Date(), ...data } : { ...data };
+      lignes.push(ligne);
+      return { ...ligne };
     }),
     count: vi.fn(async ({ where }: { where: Ligne }) => {
       await cede();
@@ -110,10 +113,10 @@ vi.mock("next/server", () => ({ after: (fn: () => unknown) => void fn() }));
 vi.mock("@/lib/storage", () => ({ getStorage: vi.fn() }));
 vi.mock("@/lib/auth/require-user", () => ({ requireUser: vi.fn(), getOptionalUser: vi.fn() }));
 vi.mock("@/lib/auth/scope", () => ({ assertEtablissementOwnership: vi.fn() }));
-const { mails } = vi.hoisted(() => ({ mails: [] as { to: string; text: string }[] }));
+const { mails } = vi.hoisted(() => ({ mails: [] as { to: string; text: string; html?: string }[] }));
 vi.mock("@/lib/email", () => ({
   motifErreur: (e: unknown) => (e instanceof Error ? e.message : "erreur inconnue"),
-  sendMail: vi.fn(async (m: { to: string; text: string }) => {
+  sendMail: vi.fn(async (m: { to: string; text: string; html?: string }) => {
     mails.push(m);
   }),
   envoiEnService: () => true,
@@ -181,7 +184,8 @@ describe("trois essais, même en rafale", () => {
       Array.from({ length: 10 }, (_, i) => soumettre(String(100000 + i))),
     );
     const messages = r.map((x) => (x.status === "error" ? x.message : x.status));
-    const compares = messages.filter((m) => /^Code incorrect|^Trop d'essais/.test(m));
+    // ~~`^Trop d'essais`~~ : message traduit le 2026-11-19.
+    const compares = messages.filter((m) => /^Code incorrect|^Les 3 essais de code/.test(m));
     const refuses = messages.filter((m) => /^Ce lien n'accepte plus de code/.test(m));
 
     expect(compares).toHaveLength(3);
@@ -438,8 +442,30 @@ describe("l'avis de fin : toutes les parties ont signé (2026-11-19)", () => {
     );
     const avis = mails.filter((m) => /signé par toutes les parties/.test(m.text));
     expect(avis.map((m) => m.to).sort()).toEqual(["chef@exterieure.fr", "marie@utilisatrice.fr"]);
-    expect(avis[0].text).toContain("a".repeat(64));
-    expect(avis[0].text).toContain("http://localhost:3000/verifier/sig_eu");
+
+    // Simplifié (2026-11-19) : chacun SA signature, une empreinte. Plus de
+    // lien « Vérifier » (2026-11-21, ADR-006 amendée) : la preuve est le PDF.
+    const marie = avis.find((m) => m.to === "marie@utilisatrice.fr")!;
+    const chef = avis.find((m) => m.to === "chef@exterieure.fr")!;
+    const sigChef = prismaMock.signature.lignes.find((s) => s.signataireEmail === "chef@exterieure.fr")!;
+    expect(marie.text).toContain("a".repeat(64));
+    expect(chef.text).toContain(sigChef.hashDocument as string);
+    for (const m of [marie, chef]) {
+      expect(m.text).not.toMatch(/\/verifier\/|\/signe\//);
+      expect(m.html).not.toMatch(/\/verifier\/|\/signe\//);
+    }
+    for (const [m, autre] of [
+      [marie, ["chef@exterieure.fr", "Jean Dupond"]],
+      [chef, ["marie@utilisatrice.fr", "Marie Martin", "sig_eu", "a".repeat(64)]],
+    ] as const) {
+      expect(m.text.match(/Empreinte SHA-256/g)).toHaveLength(1);
+      for (const x of autre) {
+        expect(m.text).not.toContain(x);
+        expect(m.html).not.toContain(x);
+      }
+      expect(m.text).toContain("au moins 5 ans : il peut être demandé par l'inspection du travail.");
+      expect(m.html).not.toContain("Vérifier ma signature");
+    }
   });
 
   it("une signature qui ne complète pas l'acte n'envoie rien", async () => {

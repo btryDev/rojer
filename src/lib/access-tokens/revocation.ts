@@ -9,6 +9,14 @@ import type { Prisma } from "@prisma/client";
 export const MOTIF_REVOCATION_ENVOI_ECHOUE =
   "l'e-mail n'a pas pu être envoyé ; demandez un nouveau lien à votre interlocuteur";
 
+/**
+ * Le motif écrit sur l'ancien lien d'une partie quand un nouveau lui est
+ * envoyé (2026-11-19, `emettreAccessToken`, écrit APRÈS l'envoi réussi) : un
+ * seul lien ouvert par partie et par objet. La page du lien le traduit
+ * (`motifLisible`).
+ */
+export const MOTIF_REVOCATION_NOUVEAU_LIEN = "un lien plus récent le remplace";
+
 /** Les liens à usage unique : consommés, ils ne servent plus. */
 export const SCOPES_USAGE_UNIQUE = ["signature", "depot_rapport"] as const;
 export const estAUsageUnique = (scope: string) => (SCOPES_USAGE_UNIQUE as readonly string[]).includes(scope);

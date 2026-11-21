@@ -6,6 +6,7 @@ import {
   otpEstExpire,
   otpExpirationDate,
   renvoiOtpAutorise,
+  renvoiOtpPossibleLe,
   verifyOtp,
 } from "./otp";
 
@@ -59,8 +60,9 @@ describe("expiration du code", () => {
     expect(otpEstExpire(expireLe, new Date("2026-04-23T12:10:01Z"))).toBe(true);
   });
 
-  it("refuse un code bien après, alors que le lien lui court encore 72 h", () => {
-    // C'est exactement le défaut corrigé : le lien de signature vit 72 h,
+  it("refuse un code bien après, alors que le lien lui court encore des jours", () => {
+    // C'est exactement le défaut corrigé : le lien de signature vit ~~72 h~~
+    // 7 jours (2026-11-19),
     // le code ne doit pas vivre aussi longtemps.
     expect(otpEstExpire(expireLe, new Date("2026-04-25T09:00:00Z"))).toBe(true);
   });
@@ -98,5 +100,44 @@ describe("renvoi d'un nouveau code", () => {
   it("autorise le renvoi sur un token sans expiration enregistrée", () => {
     const r = renvoiOtpAutorise(null, new Date("2026-04-23T12:00:01Z"));
     expect(r.autorise).toBe(true);
+  });
+
+  it("le compte à rebours de la page suit la même règle que le renvoi (2026-11-19)", () => {
+    const emis = new Date("2026-04-23T12:00:00Z");
+    const expire = otpExpirationDate(emis);
+    const possible = renvoiOtpPossibleLe(expire)!;
+    expect(possible.toISOString()).toBe("2026-04-23T12:01:00.000Z");
+    expect(renvoiOtpAutorise(expire, new Date(possible.getTime() - 1000)).autorise).toBe(false);
+    expect(renvoiOtpAutorise(expire, possible).autorise).toBe(true);
+    expect(renvoiOtpPossibleLe(null)).toBeNull();
+  });
+});
+
+describe("le HMAC des codes (2026-11-21)", () => {
+  it("dépend de la clé : une autre clé ne reconnaît pas le code", async () => {
+    const { cleDesCodes } = await import("./otp");
+    const avant = process.env.SIGNATURE_CODE_SECRET;
+    try {
+      process.env.SIGNATURE_CODE_SECRET = "a".repeat(32);
+      const h = hashOtp("123456");
+      expect(verifyOtp("123456", h)).toBe(true);
+      process.env.SIGNATURE_CODE_SECRET = "b".repeat(32);
+      expect(verifyOtp("123456", h)).toBe(false);
+      expect(cleDesCodes()).toBe("b".repeat(32));
+    } finally {
+      if (avant === undefined) delete process.env.SIGNATURE_CODE_SECRET;
+      else process.env.SIGNATURE_CODE_SECRET = avant;
+    }
+  });
+
+  it("n'est pas le SHA-256 nu du code", async () => {
+    const { sha256Hex } = await import("./hash");
+    expect(hashOtp("123456")).not.toBe(sha256Hex("123456"));
+  });
+
+  it("absente en production : refus clair, jamais la clé de développement", async () => {
+    const { cleDesCodes } = await import("./otp");
+    expect(() => cleDesCodes({ NODE_ENV: "production" } as NodeJS.ProcessEnv)).toThrow(/SIGNATURE_CODE_SECRET absente/);
+    expect(cleDesCodes({ NODE_ENV: "test" } as NodeJS.ProcessEnv)).toMatch(/developpement/);
   });
 });

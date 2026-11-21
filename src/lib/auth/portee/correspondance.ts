@@ -59,6 +59,7 @@ export const CORRESPONDANCE = {
   DeclarationEtatPermanent: { parent: "etablissement" },
   PieceEtatPermanent: { parent: "etablissement" }, // ADR-056
   PropositionModificationPlan: { parent: "etablissement" }, // ADR-061
+  CodeSignatureCompte: { parent: "etablissement" }, // signature depuis le compte, avec code (2026-11-19)
   Intervention: { parent: "etablissement" }, // module retiré (ADR-018), table encore là
 
   // Un cran plus loin

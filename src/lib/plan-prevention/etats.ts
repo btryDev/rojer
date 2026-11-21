@@ -41,7 +41,25 @@ export const ETAT_PLAN: Record<
   // qu'elle corrigeait, à l'envers.
   inspection_faite: { ton: "neutre", mot: "Inspection commune faite" },
   attente_signatures: { ton: "proche", mot: "En attente de signatures" },
-  valide: { ton: "bleu", mot: "Validé" },
+  // ~~« Validé »~~ (2026-11-19, cahier de reprise § 1.3) : le plan est
+  // « valide » en base quand les deux parties ont signé — l'écran dit le fait.
+  valide: { ton: "bleu", mot: "Signé" },
   clos: { ton: "fait", mot: "Plan clos" },
   annule: { ton: "neutre", mot: "Annulé" },
 };
+
+/**
+ * Le statut AFFICHÉ, dérivé sans changer la base (2026-11-19, cahier de
+ * reprise § 1.3). Rojer crée le plan directement en `attente_signatures` —
+ * le statut est lu par les plafonds, le calendrier et l'état signable, il ne
+ * change pas. Mais tant qu'aucun lien n'est parti et qu'aucune signature
+ * n'est posée, rien n'attend personne : l'écran dit « Brouillon ».
+ */
+export function etatAffichePlan(
+  statut: StatutPlanPrevention,
+  /** Un lien de signature parti, ou une signature en vigueur. */
+  lienOuSignature: boolean,
+): { ton: "fait" | "bleu" | "proche" | "neutre"; mot: string } {
+  if (statut === "attente_signatures" && !lienOuSignature) return ETAT_PLAN.brouillon;
+  return ETAT_PLAN[statut];
+}

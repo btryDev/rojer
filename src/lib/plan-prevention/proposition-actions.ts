@@ -1,5 +1,6 @@
 "use server";
 
+import { refusActionDuLien } from "@/lib/access-tokens/limite-lien";
 import { randomUUID } from "node:crypto";
 import { headers } from "next/headers";
 import { after } from "next/server";
@@ -44,6 +45,9 @@ export async function proposerModificationPlan(
   _prev: PropositionState,
   formData: FormData,
 ): Promise<PropositionState> {
+  // La limite des actions d'un lien, avant toute lecture (2026-11-21).
+  const tropDeDemandes = await refusActionDuLien();
+  if (tropDeDemandes) return { status: "error", message: tropDeDemandes };
   const res = await verifierAccessToken(tokenClair);
   if (!res.ok) return LIEN_INVALIDE;
   const token = res.token;

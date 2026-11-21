@@ -5,7 +5,13 @@ import { Button } from "@/components/ui/button";
 import { useConfirmation } from "@/components/ui-kit/Confirmation";
 import { cloturerPlan, supprimerPlan } from "@/lib/plan-prevention/actions";
 
-export function BoutonCloturer({ planId }: { planId: string }) {
+/** L'en-tête de la fiche (maquette V2) : pilules blanches, « Supprimer » en encre rouge. */
+const ENTETE =
+  "inline-flex min-h-11 items-center rounded-full border border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-[18px] text-[14px] font-normal normal-case tracking-normal text-[color:var(--board-ink)] transition-colors hover:bg-[color:var(--board-slate-pale)] disabled:opacity-60";
+const ENTETE_SUPPRIMER =
+  "inline-flex min-h-11 items-center rounded-full border-0 bg-transparent px-[18px] text-[14px] font-normal normal-case tracking-normal text-[color:var(--board-signal-ink)] shadow-none ring-0 transition-colors hover:bg-[color:var(--board-signal-wash)] disabled:opacity-60";
+
+export function BoutonCloturer({ planId, entete = false }: { planId: string; entete?: boolean }) {
   const [pending, startTransition] = useTransition();
   const { demander, confirmation } = useConfirmation();
 
@@ -15,6 +21,7 @@ export function BoutonCloturer({ planId }: { planId: string }) {
         type="button"
         variant="board"
         size="board"
+        className={entete ? ENTETE : undefined}
         disabled={pending}
         onClick={() =>
           demander({
@@ -32,14 +39,14 @@ export function BoutonCloturer({ planId }: { planId: string }) {
           })
         }
       >
-        {pending ? "…" : "Clôturer le plan"}
+        {pending ? "…" : entete ? "Clôturer" : "Clôturer le plan"}
       </Button>
       {confirmation}
     </>
   );
 }
 
-export function BoutonSupprimerPlan({ planId }: { planId: string }) {
+export function BoutonSupprimerPlan({ planId, entete = false }: { planId: string; entete?: boolean }) {
   const [pending, startTransition] = useTransition();
   const { demander, confirmation } = useConfirmation();
 
@@ -49,6 +56,7 @@ export function BoutonSupprimerPlan({ planId }: { planId: string }) {
         type="button"
         variant="boardClair"
         size="boardSm"
+        className={entete ? ENTETE_SUPPRIMER : undefined}
         disabled={pending}
         onClick={() =>
           // Le serveur décide entre les deux sorties selon l'état du plan

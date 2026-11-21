@@ -41,7 +41,21 @@ export async function exigerSignatureDEssai(
   emailDuCompte: string | null | undefined,
   destinataire?: string,
 ): Promise<void> {
-  if (await aDejaPaye(db, compteId)) return;
+  if (!(await signatureDEssaiPermise(db, compteId, emailDuCompte, destinataire))) redirect(PAGE_S_ABONNER);
+}
+
+/**
+ * La même règle, sans redirection : pour un lien émis en marge d'un autre
+ * geste (le nouveau lien d'un refus de proposition, ADR-061), qui ne part
+ * pas plutôt que d'interrompre le geste.
+ */
+export async function signatureDEssaiPermise(
+  db: Db,
+  compteId: string,
+  emailDuCompte: string | null | undefined,
+  destinataire?: string,
+): Promise<boolean> {
+  if (await aDejaPaye(db, compteId)) return true;
   const aSoiMeme = destinataire === undefined || destinataire === (emailDuCompte ?? "").toLowerCase();
-  if (!aSoiMeme || !(await signatureDEssaiDisponible(db, compteId))) redirect(PAGE_S_ABONNER);
+  return aSoiMeme && (await signatureDEssaiDisponible(db, compteId));
 }

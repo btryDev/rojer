@@ -1,8 +1,7 @@
 "use server";
 
 import { exigerSignatureDEssai } from "@/lib/abonnements/validation";
-import { prendreQuota, RefusQuota } from "@/lib/abonnements/quotas";
-import { signatureDejaComptee } from "@/lib/plan-prevention/resignature";
+import { refusActionDuLien } from "@/lib/access-tokens/limite-lien";
 import { randomUUID } from "node:crypto";
 import { headers } from "next/headers";
 import { after } from "next/server";
@@ -23,13 +22,17 @@ import {
   verifierAccessToken,
 } from "@/lib/access-tokens/verify";
 import {
+  OTP_ESSAIS_MAX,
   generateOtp,
+  codesEnService,
   hashOtp,
+  MESSAGE_CODES_HORS_SERVICE,
   otpEstExpire,
   otpExpirationDate,
   renvoiOtpAutorise,
   verifyOtp,
 } from "./otp";
+import { motifLisible } from "@/lib/access-tokens/motif-lisible";
 import { calculerHashObjet } from "./hash-objet";
 import { verrouillerObjetSigne } from "./verrou-contenu";
 import { objetEstSignable } from "./etat-signable";
@@ -40,9 +43,9 @@ import {
   MESSAGE_PARTIE_DEJA_SIGNEE,
   estPartieDejaSignee,
   partieRecevable,
-  partiesAttendues,
 } from "./parties";
 import { libelleDocumentSignable } from "./libelle-document";
+import { lireContexteDemande, presentationDemandeSignature } from "./mail-demande";
 import { notFound, redirect } from "next/navigation";
 import { ipClient } from "@/lib/securite/ip-client";
 import { verifierSaisie } from "@/lib/abonnements/saisie";
@@ -65,6 +68,12 @@ const MESSAGE_NON_SIGNABLE =
 /** Vrai à la lettre : le refus arrive avant le renouvellement du code. */
 const MESSAGE_RENVOI_HORS_SERVICE =
   "Aucun nouveau code n'a été envoyé : l'envoi d'e-mails n'est pas encore en service dans Rojer. Le code précédent n'a pas été modifié.";
+
+/** « Ce lien a été révoqué. » suivi de son motif traduit (`motifLisible`, 2026-11-19). */
+function messageLienRevoque(motif: string | null | undefined): string {
+  const pourquoi = motifLisible(motif);
+  return pourquoi ? `Ce lien a été révoqué. ${pourquoi}` : "Ce lien a été révoqué.";
+}
 
 /**
  * Les entrées de `demanderSignature`, validées. C'est une server action,
@@ -192,13 +201,15 @@ export async function demanderSignature(
     return { ok: false, message: MESSAGE_PARTIE_DEJA_SIGNEE };
   }
 
-  const libelle = await libelleDocumentSignable(
+  // Le libellé, et ce que le courriel dit autour — qui demande, l'encadré du
+  // plan (2026-11-19) : tout est lu sur l'objet, borné à l'établissement.
+  const contexte = await lireContexteDemande(
     db,
     params.objetType,
     params.objetId,
     params.etablissementId,
   );
-  if (!libelle) notFound();
+  if (!contexte) notFound();
 
   const r = await emettreAccessToken({
     etablissementId: params.etablissementId,
@@ -208,17 +219,7 @@ export async function demanderSignature(
     emailDestinataire: params.signataireEmail,
     nomDestinataire: params.signataireNom,
     partie: params.partie,
-    sujetMail: `Signature à apporter : ${libelle}`,
-    messageMail:
-      // ~~« la même valeur probatoire qu'une signature manuscrite (art.
-      // 1366-1367 du Code civil, règlement eIDAS niveau simple) »~~ — une
-      // qualification (contre-lecture du 2026-09-26) : l'al. 2 de l'art. 1367
-      // ne présume la fiabilité que « dans des conditions fixées par décret en
-      // Conseil d'Etat ». Même texte que la page `/signe`.
-      `Vous êtes invité(e) à signer électroniquement le document suivant : ` +
-      `« ${libelle} ». ` +
-      `Rojer enregistrera votre signature avec son horodatage et l'empreinte ` +
-      `du document tel qu'il se présentait.`,
+    ...presentationDemandeSignature(contexte),
   });
   if (!r.ok) return { ok: false, message: r.message };
   // Un accusé de réception, rien d'autre. Aucun appelant n'a besoin de
@@ -240,6 +241,9 @@ export async function poserSignatureAvecToken(
   _prev: PoserSignatureState,
   formData: FormData,
 ): Promise<PoserSignatureState> {
+  // La limite des actions d'un lien, avant toute lecture (2026-11-21).
+  const tropDeDemandes = await refusActionDuLien();
+  if (tropDeDemandes) return { status: "error", message: tropDeDemandes };
   const otp = (formData.get("otp") ?? "").toString().trim();
   // La fonction se valide AVANT le jeton et le code : un refus ici ne
   // consomme aucun essai, et rien n'est écrit (ASVS V2.2.1, 2026-10-13).
@@ -267,7 +271,9 @@ export async function poserSignatureAvecToken(
       case "revoque":
         return {
           status: "error",
-          message: `Ce lien a été révoqué${res.motif ? ` : ${res.motif}` : ""}.`,
+          // Le motif traduit (2026-11-19) : le brut « OTP épuisé (3 essais) »
+          // ne se montre plus au signataire.
+          message: messageLienRevoque(res.motif),
         };
       case "deja_utilise":
         return {
@@ -285,7 +291,9 @@ export async function poserSignatureAvecToken(
   if (!token.otpHash) {
     return {
       status: "error",
-      message: "Demandez d'abord votre code de confirmation (bouton « Recevoir mon code »).",
+      // ~~(bouton « Recevoir mon code »)~~ — le bouton s'appelle « Signer »
+      // depuis le 2026-11-19 (cahier de reprise § 3.2).
+      message: "Demandez d'abord votre code de confirmation (bouton « Signer »).",
     };
   }
   // Le client borné au compte propriétaire de l'établissement DU JETON
@@ -337,6 +345,7 @@ export async function poserSignatureAvecToken(
   // L'essai se RÉSERVE avant que le code soit comparé (`reserverEssaiOtp`) :
   // une rafale de soumissions parallèles n'éprouve jamais plus de codes que
   // le compteur n'en accorde. Celle qui n'obtient pas d'essai ne compare rien.
+  if (!codesEnService()) return { status: "error", message: MESSAGE_CODES_HORS_SERVICE };
   const essai = await reserverEssaiOtp(token.id);
   if (!essai.ok) {
     return {
@@ -348,9 +357,11 @@ export async function poserSignatureAvecToken(
   if (!verifyOtp(otp, token.otpHash)) {
     if (essai.restants === 0) {
       await revoquerOtpEpuise(token.id);
+      // ~~« Trop d'essais OTP. Ce lien est révoqué. »~~ (2026-11-19) : en
+      // français, et le geste suivant dit.
       return {
         status: "error",
-        message: "Trop d'essais OTP. Ce lien est révoqué.",
+        message: `Les ${OTP_ESSAIS_MAX} essais de code de ce lien sont épuisés : il est révoqué. Demandez un nouveau lien à votre interlocuteur.`,
       };
     }
     return {
@@ -455,9 +466,7 @@ export async function poserSignatureAvecToken(
     if (etat?.revoqueLe) {
       return {
         status: "error",
-        message: etat.revoqueMotif
-          ? `Ce lien a été révoqué : ${etat.revoqueMotif}`
-          : "Ce lien a été révoqué.",
+        message: messageLienRevoque(etat.revoqueMotif),
       };
     }
     return {
@@ -492,7 +501,8 @@ export async function poserSignatureAvecToken(
  * un lien encore valide (72 h) mais un code mort, donc un document
  * impossible à signer.~~ [2026-11-19 : c'est désormais l'envoi du code tout
  * court, premier compris — le lien part sans code, le destinataire le
- * demande sur la page (« Recevoir mon code »), et il arrive par un second
+ * demande sur la page (~~« Recevoir mon code »~~ « Signer », le même jour,
+ * cahier de reprise § 3.2), et il arrive par un second
  * courriel, sans le lien. Aucun écran n'appelait cette action jusqu'ici :
  * le courriel promettait un renvoi que la page ne proposait pas.]
  *
@@ -519,6 +529,8 @@ export type RenvoiOtpState =
 export async function renvoyerCodeOtp(
   tokenClair: string,
 ): Promise<RenvoiOtpState> {
+  const tropDeDemandes = await refusActionDuLien();
+  if (tropDeDemandes) return { status: "error", message: tropDeDemandes };
   const res = await verifierAccessToken(tokenClair);
   if (!res.ok) {
     return {
@@ -527,7 +539,7 @@ export async function renvoyerCodeOtp(
         res.raison === "expire"
           ? `Ce lien a expiré le ${formaterDateFr(res.expireLe)}. Demandez-en un nouveau à votre interlocuteur.`
           : res.raison === "revoque"
-            ? "Ce lien a été révoqué."
+            ? messageLienRevoque(res.motif)
             : res.raison === "deja_utilise"
               ? "Ce lien a déjà servi."
               : "Ce lien est invalide.",
@@ -557,6 +569,7 @@ export async function renvoyerCodeOtp(
   if (!envoiEnService()) {
     return { status: "error", message: MESSAGE_RENVOI_HORS_SERVICE };
   }
+  if (!codesEnService()) return { status: "error", message: MESSAGE_CODES_HORS_SERVICE };
 
   const maintenant = new Date();
   const renvoi = renvoiOtpAutorise(token.otpExpireLe, maintenant);
@@ -640,140 +653,11 @@ export async function renvoyerCodeOtp(
   };
 }
 
-/**
- * Signature directe par un utilisateur connecté (pas de token externe).
- * Utilisé pour la co-signature du donneur d'ordre sur ses propres documents.
- *
- * `assertEtablissementDuCompte` est le garde décisif : `requireUser` seul
- * établissait qu'il y a *un* utilisateur, pas qu'il a quoi que ce soit à
- * voir avec `etablissementId` et `objetId`. On pouvait ainsi signer le
- * document d'un tiers — et en récupérer l'empreinte au passage.
- */
-export async function signerEnCompteConnecte(params: {
-  etablissementId: string;
-  objetType: ObjetSignable;
-  objetId: string;
-  role?: string;
-}): Promise<
-  | { ok: true; signatureId: string }
-  | {
-      ok: false;
-      raison:
-        | "objet_introuvable"
-        | "fichier_introuvable"
-        | "stockage_non_configure"
-        | "non_implemente"
-        | "non_signable"
-        | "deja_signee";
-    }
-  | { ok: false; raison: "plafond"; message: string }
-> {
-  await verifierSaisie();
-  const { user, compte, db } = await assertEtablissementDuCompte(params.etablissementId);
-  // Sans abonnement payé, la seule signature de test du compte (ADR-053 § 15).
-  await exigerSignatureDEssai(db, compte.compteId, user.email);
-  // Même règle que les deux autres portes. Aucun écran ne passe de fonction
-  // ici : seul un appel forgé est refusé, d'où l'exception plutôt qu'une
-  // raison de plus dans le retour.
-  const role =
-    params.role === undefined ? undefined : roleSignataireSchema.parse(params.role);
+// ~~`signerEnCompteConnecte`~~ (2026-11-21, décision de la propriétaire) :
+// la signature d'un clic depuis le compte est retirée. Une seule voie depuis
+// le compte, pour tout objet : le code par e-mail et le consentement
+// (`./code-compte`, `./signature-compte-actions`).
 
-  // Même garde que pour le signataire externe : un objet clos ou annulé ne
-  // se signe plus, par personne.
-  if (
-    !(await objetEstSignable(
-      db,
-      params.objetType,
-      params.objetId,
-      params.etablissementId,
-    ))
-  ) {
-    return { ok: false, raison: "non_signable" };
-  }
-
-  const hh = await headers();
-  const ip = ipClient(hh);
-  const ua = hh.get("user-agent");
-
-  // Le titulaire du compte tient l'établissement : sur un acte co-signé, il
-  // ne signe jamais qu'au nom de l'entreprise utilisatrice — le donneur
-  // d'ordre du permis. La partie n'est pas un paramètre : un appel qui la
-  // choisirait pourrait signer à la place de l'entreprise extérieure.
-  const partie: PartieSignataire | null = partiesAttendues(
-    params.objetType,
-  ).includes("entreprise_utilisatrice")
-    ? "entreprise_utilisatrice"
-    : null;
-
-  // L'empreinte se calcule SOUS LE VERROU de l'objet, celui que prend
-  // `modifier*` (2026-10-12, relecture indépendante) : une correction en
-  // cours dans un autre onglet finit avant, et la signature porte sur ce
-  // qu'elle a écrit. L'objet est cherché dans ce seul établissement : un
-  // objetId d'un autre périmètre ressort « introuvable ».
-  let resultat;
-  try {
-    resultat = await db.$transaction(async (tx) => {
-      await verrouillerObjetSigne(tx, params.objetType, params.objetId, params.etablissementId);
-      // Relu SOUS LE VERROU (ADR-061), comme pour la signature par lien.
-      if (!(await objetEstSignable(tx, params.objetType, params.objetId, params.etablissementId))) {
-        return { ok: false as const, raison: "non_signable" as const };
-      }
-      const h = await calculerHashObjet(
-        tx,
-        params.objetType,
-        params.objetId,
-        params.etablissementId,
-      );
-      if (!h.ok) return h;
-      // Plafond annuel de signatures de la formule (ADR-053 § 14) — sauf une
-      // re-signature après correction (ADR-061 § 6).
-      if (
-        !(await signatureDejaComptee(tx, {
-          etablissementId: params.etablissementId,
-          objetType: params.objetType,
-          objetId: params.objetId,
-          partie,
-          email: user.email,
-        }))
-      ) {
-        await prendreQuota(tx, compte.compteId, "signaturesParAn");
-      }
-      const signature = await tx.signature.create({
-        data: {
-          id: `sig_${randomUUID()}`,
-          etablissementId: params.etablissementId,
-          objetType: params.objetType,
-          objetId: params.objetId,
-          partie,
-          signataireNom: user.email ?? "Utilisateur",
-          signataireEmail: user.email ?? "",
-          signataireRole: role || null,
-          userId: user.id,
-          hashDocument: h.hash,
-          nomDocument: h.nomDocument,
-          methode: "compte_connecte",
-          active: true,
-          ipAddress: ip,
-          userAgent: ua?.slice(0, 500) ?? null,
-        },
-      });
-      return { ok: true as const, signature };
-    });
-  } catch (e) {
-    if (estPartieDejaSignee(e)) return { ok: false, raison: "deja_signee" };
-    if (e instanceof RefusQuota) return { ok: false, raison: "plafond", message: e.motif };
-    throw e;
-  }
-  if (!resultat.ok) return { ok: false, raison: resultat.raison };
-  const { signature } = resultat;
-  const complet = await validerSiCoSigne(db, params.objetType, params.objetId, params.etablissementId);
-  if (complet) {
-    after(() => envoyerAvisCoSignature(db, params.objetType, params.objetId, params.etablissementId));
-  }
-  return { ok: true, signatureId: signature.id };
-}
-
-// `verifierIntegriteSignature` vit dans `./verification-publique` (audit
-// OWASP B14, 2026-10-14) : exportée d'ici, module `"use server"`, elle était
-// aussi une action serveur publique, appelable par POST sur n'importe quelle
-// page, et hachait jusqu'à 20 Mo par appel.
+// ~~`verifierIntegriteSignature` vit dans `./verification-publique`~~
+// (2026-11-21) : la vérification publique est retirée ; « Vérifier » se fait
+// dans l'application, connecté (`./verification-actions`, ADR-006 amendée).

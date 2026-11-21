@@ -70,7 +70,9 @@ describe("les gestes qui demandent l'abonnement passent par la règle", () => {
     ["src/app/api/etablissements/[id]/controle-zip/route.ts", "GET", "await exigerUnPaiement(db, compte.compteId)"],
     ["src/app/api/etablissements/[id]/registre/pdf/route.ts", "GET", "await exigerUnPaiement(db, compte.compteId)"],
     ["src/lib/signatures/actions.ts", "demanderSignature", "await exigerSignatureDEssai(db, compte.compteId, user.email, params.signataireEmail)"],
-    ["src/lib/signatures/actions.ts", "signerEnCompteConnecte", "await exigerSignatureDEssai(db, compte.compteId, user.email)"],
+    // ~~`signerEnCompteConnecte`~~ (retirée le 2026-11-21) : la signature du compte passe par le code.
+    ["src/lib/signatures/code-compte.ts", "poserSignatureCompteAvecCode", "await exigerSignatureDEssai(db, compte.compteId, user.email)"],
+    ["src/lib/signatures/code-compte.ts", "envoyerCodeSignatureCompte", "await exigerSignatureDEssai(db, compte.compteId, user.email)"],
     ["src/app/api/etablissements/[id]/dossier-conformite/pdf/route.ts", "GET", "projet: !(await aDejaPaye(db, compte.compteId))"],
   ];
   it.each(GESTES)("%s : %s", (fichier, fonction, appel) => {
