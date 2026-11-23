@@ -6,13 +6,16 @@
  * d'utilisateurs est refusée avant le clic (ADR-053 §§ 9, 10 et 14).
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 
+const m = vi.hoisted(() => ({ apercu: vi.fn() }));
 vi.mock("@/lib/abonnements/actions", () => ({
   sAbonnerAction: vi.fn(),
   changerFormuleAction: vi.fn(),
   annulerBaisseAction: vi.fn(),
+  apercuMonteeAction: m.apercu,
 }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 const { GesteChangement, GesteSAbonner } = await import("./GestesDeFormule");
 
@@ -68,6 +71,26 @@ describe("GesteSAbonner", () => {
 });
 
 describe("GesteChangement", () => {
+  const baisse = {
+    cle: "rojer_essentiel_mensuel",
+    sens: "baisse" as const,
+    libelle: "Essentiel",
+    actuelle: "Pro",
+    ensuiteCentimes: 2900,
+    unite: "mois",
+    rythme: null,
+    finPeriode: "2026-12-03T10:00:00.000Z",
+    changements: ["2 établissements sur 3 passent en lecture seule, les plus récents : consultables et exportables, plus modifiables"],
+  };
+  const montee = {
+    ...baisse,
+    cle: "rojer_pro_mensuel",
+    sens: "montee" as const,
+    libelle: "Pro",
+    actuelle: "Essentiel",
+    ensuiteCentimes: 8900,
+    changements: ["5 établissements au lieu de 1", "Connecter un assistant IA"],
+  };
   const option = {
     cle: "rojer_essentiel_mensuel",
     libelle: "Essentiel",
@@ -75,12 +98,50 @@ describe("GesteChangement", () => {
     effet: "À la fin de votre période payée.",
     prixConnu: true,
     depassements: [],
+    changement: baisse,
   };
+  const optionMontee = { ...option, cle: "rojer_pro_mensuel", libelle: "Pro", sens: "montee" as const, effet: "Tout de suite.", changement: montee };
 
   it("une montée tout de suite : son effet, puis « Passer à … »", () => {
-    render(<GesteChangement option={{ ...option, cle: "rojer_pro_mensuel", libelle: "Pro", sens: "montee", effet: "Tout de suite." }} compteId="c1" carte="encre" />);
+    render(<GesteChangement option={optionMontee} compteId="c1" carte="encre" />);
     expect(screen.getByText("Tout de suite.")).toBeTruthy();
     expect((screen.getByRole("button", { name: "Passer à Pro" }) as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it("monter ouvre une fenêtre : rien ne part au clic ; le montant du jour, calculé par Stripe, puis le prix ensuite et ce qui s'ouvre (retour de test du 2026-11-23)", async () => {
+    m.apercu.mockResolvedValue({ aujourdhuiCentimes: 2000, jusquAu: "2026-12-03T10:00:00.000Z", prorationDate: 1795000000 });
+    render(<GesteChangement option={optionMontee} compteId="c1" carte="encre" />);
+    fireEvent.click(screen.getByRole("button", { name: "Passer à Pro" }));
+    const dialogue = screen.getByRole("dialog");
+    expect(dialogue.textContent).toMatch(/Calcul/);
+    expect(await screen.findByRole("button", { name: /Confirmer et payer 20,00/ })).toBeTruthy();
+    expect(m.apercu.mock.calls[0][0].get("formule")).toBe("rojer_pro_mensuel");
+    expect(dialogue.textContent).toMatch(/La différence avec Essentiel, jusqu.au 0?3 décembre 2026/);
+    expect(dialogue.textContent).toMatch(/89,00\s€ TTC par mois/);
+    expect(dialogue.textContent).toMatch(/Connecter un assistant IA/);
+    expect((dialogue.querySelector('input[name="prorationDate"]') as HTMLInputElement).value).toBe("1795000000");
+    expect(formuleEnvoyee(dialogue)).toBe("rojer_pro_mensuel");
+  });
+
+  it("sans aperçu de Stripe : la fenêtre le dit, et le paiement reste fermé", async () => {
+    m.apercu.mockResolvedValue({ erreur: true });
+    render(<GesteChangement option={optionMontee} compteId="c1" carte="encre" />);
+    fireEvent.click(screen.getByRole("button", { name: "Passer à Pro" }));
+    expect(await screen.findByText(/n.a pas pu être calculé/)).toBeTruthy();
+    expect((screen.getByRole("button", { name: "Confirmer et payer" }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("baisser ouvre une fenêtre : rien aujourd'hui, la formule gardée jusqu'à la fin de la période, ce qui change ce jour-là", () => {
+    m.apercu.mockClear();
+    render(<GesteChangement option={option} compteId="c1" carte="claire" />);
+    fireEvent.click(screen.getByRole("button", { name: "Prévoir ce changement" }));
+    const dialogue = screen.getByRole("dialog");
+    expect(dialogue.textContent).toMatch(/Vous gardez Pro jusqu.au 0?3 décembre 2026/);
+    expect(dialogue.textContent).toMatch(/0 €/);
+    expect(dialogue.textContent).toMatch(/2 établissements sur 3 passent en lecture seule/);
+    expect(screen.getByRole("button", { name: "Garder Pro" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Passer à Essentiel le 0?3 décembre 2026/ })).toBeTruthy();
+    expect(m.apercu).not.toHaveBeenCalled();
   });
 
   it("une baisse avec trop d'utilisateurs : refusée avant le clic, et le bouton le dit", () => {

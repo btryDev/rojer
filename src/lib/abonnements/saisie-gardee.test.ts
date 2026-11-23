@@ -142,6 +142,7 @@ const OUVERTES = new Map<string, Ouverte>([
   ["lib/abonnements/actions.ts:ouvrirPortailAction", { motif: "le portail : payer, reprendre, résilier — propriétaire seul" }],
   ["lib/abonnements/actions.ts:sAbonnerAction", { motif: "s'abonner : formule, rythme, puis la page de Stripe — c'est par là qu'un compte en essai, à l'essai fini ou résilié reprend la main ; propriétaire seul" }],
   ["lib/abonnements/actions.ts:changerFormuleAction", { motif: "changer de formule : un geste d'abonnement, refusé par l'action elle-même hors d'un abonnement à jour ; propriétaire seul" }],
+  ["lib/abonnements/actions.ts:apercuMonteeAction", { motif: "l'aperçu d'une montée de formule (2026-11-23) : lit chez Stripe ce qui serait prélevé, n'écrit rien ; propriétaire seul" }],
   ["lib/abonnements/actions.ts:annulerBaisseAction", { motif: "garder sa formule (renoncer à une baisse planifiée) — propriétaire seul" }],
   ["lib/compte/actions-suppression.ts:demanderSuppressionAction", { ...RGPD, motif: `${RGPD.motif} : supprimer le compte (ADR-058 § 8) — propriétaire seul` }],
   ["lib/compte/actions-suppression.ts:annulerSuppressionAction", { motif: "renoncer à la suppression du compte (ADR-058 § 8) — propriétaire seul" }],
