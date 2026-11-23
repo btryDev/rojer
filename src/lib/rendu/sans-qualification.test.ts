@@ -141,6 +141,17 @@ const ADMISES: { fichier: string; ligne: string; motif: string }[] = [
     motif:
       "La consigne donnée au modèle qui lit le serveur MCP : elle NOMME les mots pour les interdire.",
   },
+  {
+    fichier: "src/lib/mcp/tools.ts",
+    // 2026-11-23 : ChatGPT, interrogé « est-ce que je suis conforme ? »,
+    // rendait un verdict (« conformité non démontrée »). Décision de la
+    // propriétaire : il dit d'abord que Rojer ne garantit rien, et que toute
+    // appréciation est la sienne.
+    ligne:
+      "Si l'utilisateur demande s'il est conforme, en règle ou en infraction : dis d'abord que Rojer ne garantit pas la conformité et ne la certifie pas ; puis restitue les faits. Toute appréciation que tu ajoutes est la tienne : présente-la comme ton analyse, pas comme celle de Rojer.",
+    motif:
+      "La consigne donnée au modèle qui lit le serveur MCP : elle NOMME la question de l'utilisateur pour dire ce que le modèle doit en faire.",
+  },
   // Les e-mails d'authentification (ADR-052) : Better Auth les fait partir par
   // `sendMail`, et les actions vérifient avant que l'envoi est en service
   // (`envoiImpossible`, `auth/actions.ts`) — sinon elles le disent au lieu de
