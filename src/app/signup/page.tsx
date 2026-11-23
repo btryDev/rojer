@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { inscriptionAffichee, PAGE_BIENTOT } from "@/lib/ouverture";
 import { cheminDeRetour } from "@/lib/auth/chemin-de-retour";
 import { SignupForm } from "./SignupForm";
 import { contexteDroits, offreLancee } from "@/lib/abonnements/saisie";
@@ -19,6 +21,10 @@ export default async function SignupPage({
   // formulaire (l'action la rejuge, `offre-choisie.ts`).
   const offre = estLookupKey(offreBrute) ? offreBrute : null;
   const next = nextBrut === undefined ? undefined : cheminDeRetour(nextBrut);
+  // Inscriptions fermées (`lib/ouverture.ts`) : on renvoie à /bientot, sauf
+  // la personne invitée qui revient à son invitation. L'action rejuge : elle
+  // n'admet que l'adresse qu'une invitation valable attend.
+  if (!inscriptionAffichee({ next })) redirect(PAGE_BIENTOT);
 
   return (
     // Même enveloppe que /login : colonne étroite centrée sur le canvas. Cf.

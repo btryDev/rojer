@@ -41,6 +41,9 @@ export const RACINES_EXCLUES = [
   "/legal/",
   // L'écran d'essai gratuit (ADR-053 § 8), derrière la connexion.
   "/essai",
+  // « Rojer ouvre bientôt » (2026-11-23, `lib/ouverture.ts`) : page d'attente
+  // tant que les inscriptions sont fermées, rien à y trouver par un moteur.
+  "/bientot",
   // Pages publiques, à lien ou par slug.
   "/acces/",
   "/accessibilite/",

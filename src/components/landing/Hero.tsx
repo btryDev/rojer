@@ -7,6 +7,7 @@
 import { getImageProps } from "next/image";
 import Link from "next/link";
 import type { CompteLanding } from "./compte";
+import { lienInscription } from "@/lib/ouverture";
 import photoHero from "@/assets/landing/hero-restaurateur.jpg";
 import photoHeroPortrait from "@/assets/landing/hero-restaurateur-portrait.jpg";
 
@@ -126,10 +127,11 @@ export function Hero({
           </p>
 
           {/* Un compte connecté retrouve son dossier par « Mon espace »,
-              dans l'en-tête : le hero ne le lui redemande pas. */}
+              dans l'en-tête : le hero ne le lui redemande pas. Inscriptions
+              fermées (`lib/ouverture.ts`) : le bouton mène à /bientot. */}
           <div className="mt-10 flex flex-wrap items-center gap-4">
             {!compte ? (
-              <Link href="/signup" className="lp-btn lp-btn-blanc">
+              <Link href={lienInscription("/signup")} className="lp-btn lp-btn-blanc">
                 Essayer 30 jours
                 <span className="lp-fleche" aria-hidden>
                   →

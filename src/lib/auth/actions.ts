@@ -28,6 +28,8 @@ import { cheminDeRetour } from "./chemin-de-retour";
 import { erreurMotDePasse, LIEN_ACTIVATION_INVALIDE, LONGUEUR_MAX_MOT_DE_PASSE } from "./mot-de-passe";
 import { avecActivation } from "./activation";
 import { COOKIE_OFFRE_CHOISIE, retenirOffreChoisie } from "@/lib/abonnements/offre-choisie";
+import { INSCRIPTIONS_OUVERTES } from "@/lib/ouverture";
+import { invitationsPourAdresse } from "./membres";
 
 const emailSchema = z.string().email("Adresse e-mail invalide");
 
@@ -120,7 +122,10 @@ export type AuthActionState = {
 const ENVOI_IMPOSSIBLE =
   "L'envoi d'e-mails n'est pas configuré sur ce serveur : aucun lien ne peut partir. Prévenez l'équipe Rojer.";
 
-const MOT_DE_PASSE_TROP_LONG = "Le mot de passe est trop long (128 caractères au plus).";
+const INSCRIPTIONS_FERMEES =
+  "Les inscriptions ne sont pas encore ouvertes. Laissez votre adresse sur la page « Rojer ouvre bientôt » : nous vous écrirons le jour de l'ouverture.";
+
+const MOT_DE_PASSE_TROP_LONG ="Le mot de passe est trop long (128 caractères au plus).";
 
 const LIEN_INVALIDE =
   "Ce lien de réinitialisation est invalide ou a expiré. Redemandez un lien.";
@@ -213,6 +218,14 @@ export async function signUpAction(
 
   const limite = await refusParLimite("inscription", LIMITES.inscriptionIp);
   if (limite) return { error: limite };
+
+  // Inscriptions fermées (`lib/ouverture.ts`, 2026-11-23) : refus côté
+  // serveur, pour qu'un POST forgé ne contourne pas la redirection de
+  // `/signup`. Seule passe l'adresse qu'une invitation valable attend
+  // (ADR-054 § 5) — le `next` vers l'invitation ne prouve rien.
+  if (!INSCRIPTIONS_OUVERTES && (await invitationsPourAdresse(parsed.data.email)).length === 0) {
+    return { error: INSCRIPTIONS_FERMEES };
+  }
 
   if (envoiImpossible()) return { error: ENVOI_IMPOSSIBLE };
   // L'offre choisie sur la page publique, gardée pour l'essai et la page

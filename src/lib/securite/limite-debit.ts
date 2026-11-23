@@ -51,6 +51,12 @@ export const LIMITES = {
   connexionIp: { max: 30, fenetreSecondes: 15 * 60 },
   /** Inscription : création de comptes en série. */
   inscriptionIp: { max: 10, fenetreSecondes: 60 * 60 },
+  /**
+   * « Être prévenu de l'ouverture » (`/bientot`, 2026-11-23) : une table
+   * remplie en série. Une personne laisse son adresse une fois, deux s'il
+   * s'est trompé ; un bureau en laisse quelques-unes.
+   */
+  demandeOuvertureIp: { max: 10, fenetreSecondes: 60 * 60 },
   /** Réinitialisation : envoi de courriels en série vers une adresse. */
   reinitialisationCompte: { max: 5, fenetreSecondes: 60 * 60 },
   /**

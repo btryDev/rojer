@@ -5,9 +5,26 @@
  * est passé par `cheminDeRetour` (revue du lot audit-1013-auth, A2).
  */
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const recu = vi.hoisted(() => ({ login: [] as string[] }));
+const recu = vi.hoisted(() => ({ login: [] as string[], ouvertes: true }));
+
+// L'interrupteur des inscriptions (`lib/ouverture.ts`) : ouvert pour les
+// tests du filtre, fermé pour ceux de la fermeture, plus bas.
+vi.mock("@/lib/ouverture", async (original) => {
+  const o = await original<typeof import("@/lib/ouverture")>();
+  type Options = Parameters<typeof o.inscriptionAffichee>[0];
+  return {
+    ...o,
+    inscriptionAffichee: (opts: Options = {}) => o.inscriptionAffichee({ ...opts, ouvertes: recu.ouvertes }),
+    lienInscription: (chemin: string, opts: Options = {}) => o.lienInscription(chemin, { ...opts, ouvertes: recu.ouvertes }),
+  };
+});
+vi.mock("next/navigation", () => ({
+  redirect: (cible: string) => {
+    throw new Error(`NEXT_REDIRECT ${cible}`);
+  },
+}));
 
 vi.mock("./LoginForm", () => ({
   LoginForm: ({ next }: { next: string }) => {
@@ -52,5 +69,38 @@ describe("filtre de `next` dans les pages d'entrée", () => {
     const html = await rendre(LoginPage, "/etablissements/e1");
     expect(recu.login.at(-1)).toBe("/etablissements/e1");
     expect(html).toContain(`/signup?next=${encodeURIComponent("/etablissements/e1")}`);
+  });
+});
+
+/**
+ * Inscriptions fermées (`lib/ouverture.ts`, 2026-11-23) : `/signup` renvoie
+ * à /bientot, et le lien de /login y mène — sauf pour la personne invitée qui
+ * revient à son invitation (ADR-054 § 5).
+ */
+describe("inscriptions fermées", () => {
+  beforeEach(() => {
+    recu.ouvertes = false;
+  });
+  afterEach(() => {
+    recu.ouvertes = true;
+  });
+
+  it("/signup renvoie à /bientot", async () => {
+    await expect(SignupPage({ searchParams: Promise.resolve({}) })).rejects.toThrow("NEXT_REDIRECT /bientot");
+    await expect(
+      SignupPage({ searchParams: Promise.resolve({ next: "/compte", offre: "rojer_pro_annuel" }) }),
+    ).rejects.toThrow("NEXT_REDIRECT /bientot");
+  });
+
+  it("/signup s'affiche pour revenir à une invitation", async () => {
+    const html = await rendre(SignupPage, "/invitation/inv-1");
+    expect(html).toContain('href="/login?next=%2Finvitation%2Finv-1"');
+  });
+
+  it("/login : « Créer un compte » mène à /bientot, et à /signup pour une invitation", async () => {
+    expect(await rendre(LoginPage, "/etablissements/e1")).toContain('href="/bientot"');
+    const invitation = await rendre(LoginPage, "/invitation/inv-1");
+    expect(invitation).toContain(`href="/signup?next=${encodeURIComponent("/invitation/inv-1")}"`);
+    expect(invitation).not.toContain('href="/bientot"');
   });
 });

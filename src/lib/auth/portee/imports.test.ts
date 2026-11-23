@@ -110,6 +110,11 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous"; 
     motif: "compteurs techniques, hors de tout compte",
     usages: ["prisma.$executeRaw", "prisma.$queryRaw"],
   },
+  "src/lib/demandes-ouverture/actions.ts": {
+    motif:
+      "adresse laissée sur /bientot pour être prévenu de l'ouverture (2026-11-23, `lib/ouverture.ts`) : écrite sans session, hors de tout compte, jamais relue",
+    usages: ["prisma.demandeOuverture.createMany"],
+  },
   // ADR-062 : le connecteur MCP en OAuth. Le compte du jeton vérifié n'est
   // pas encore une portée : son appartenance (et l'abonnement du compte, pour
   // la formule Pro) se relit avant de construire le client borné.

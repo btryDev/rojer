@@ -94,6 +94,15 @@ const EXEMPTIONS = new Map<string, Exemption>([
     },
   ],
   [
+    "lib/demandes-ouverture/actions.ts:demanderOuvertureAction",
+    {
+      garde: "consommer",
+      raison:
+        "« Me prévenir » sur /bientot (2026-11-23), sans session : la seule écriture est l'adresse " +
+        "saisie, dans une table hors compte (`DemandeOuverture`), sous limite de débit par réseau.",
+    },
+  ],
+  [
     "lib/auth/actions.ts:requestPasswordResetAction",
     {
       garde: "refusParLimite",
