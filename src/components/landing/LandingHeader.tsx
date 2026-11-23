@@ -23,19 +23,20 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { CompteLanding } from "./compte";
 import { Marque } from "@/components/marque/Marque";
+import { BoutonContact } from "./BoutonContact";
 
-// « Tarif » mène à la section du même nom (`/#tarif` : depuis la racine,
-// l'en-tête sert aussi aux pages légales et à /bientot). ~~« Comprendre » n'a
-// pas encore de destination : `#comprendre` ne correspond à aucune ancre,
-// le clic mène en haut de l'accueil, sans rien casser. À rebrancher sur /comprendre le
-// jour où la page existe.~~ [2026-11-23, décision de la propriétaire : un
-// lien sans destination se rebranche ou se retire — « Comprendre » mène à
-// « Ce que Rojer tient à jour » (`/#documents`), la première section qui
-// explique ce que fait Rojer, la même ancre que le pied de page.] Sous `md`,
-// la barre ne garde que la marque et le bouton : la page se parcourt en
-// défilant.
+// La barre du haut : « À propos », « Tarif », « Contact » (2026-11-23,
+// décision de la propriétaire — « Comprendre » seul ne disait pas où il
+// menait ; ~~`#comprendre`, une ancre que rien ne portait~~, puis
+// ~~`/#documents`~~). Les deux premiers mènent à leur section de l'accueil
+// (`/#…` : depuis la racine, l'en-tête sert aussi aux pages légales et à
+// /bientot) ; « À propos » à « Concentrez-vous sur votre activité »
+// (`#avantages`), ce que Rojer apporte. « Contact » ouvre le formulaire du pied
+// de page (`BoutonContact`), sans faire défiler. Sous `md`, la barre ne garde
+// que la marque et le bouton : la page se parcourt en défilant, et le contact
+// est au pied de page.
 export const LIENS_ENTETE = [
-  { href: "/#documents", label: "Comprendre" },
+  { href: "/#avantages", label: "À propos" },
   { href: "/#tarif", label: "Tarif" },
 ];
 
@@ -49,6 +50,9 @@ export function LandingHeader({
 }) {
   const [pose, setPose] = useState(false);
   const blanc = surPhoto && !pose;
+  const couleurLien = blanc
+    ? "text-white/80 hover:text-white"
+    : "text-[color:var(--board-slate-mid)] hover:text-[color:var(--board-ink)]";
 
   useEffect(() => {
     // Deux seuils plutôt qu'un : sans cette hystérésis, un défilement qui
@@ -72,19 +76,17 @@ export function LandingHeader({
           <div className="flex items-center gap-8">
             <nav className="hidden items-center gap-8 md:flex">
               {LIENS_ENTETE.map((l) => (
-                <a
-                  key={l.href}
-                  href={l.href}
-                  className={cn(
-                    "text-[0.875rem] transition-colors",
-                    blanc
-                      ? "text-white/80 hover:text-white"
-                      : "text-[color:var(--board-slate-mid)] hover:text-[color:var(--board-ink)]",
-                  )}
-                >
+                <a key={l.href} href={l.href} className={cn("text-[0.875rem] transition-colors", couleurLien)}>
                   {l.label}
                 </a>
               ))}
+              {/* Un bouton qui se lit comme les liens voisins : les utilitaires
+                  passent devant `.lp-btn` (couche `components`). */}
+              <BoutonContact
+                className={cn("rounded-none p-0 text-[0.875rem] font-normal leading-normal tracking-normal", couleurLien)}
+              >
+                Contact
+              </BoutonContact>
             </nav>
             <Link
               href={compte?.href ?? "/login"}
