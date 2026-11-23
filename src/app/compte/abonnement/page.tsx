@@ -154,6 +154,10 @@ export default async function AbonnementPage({
       <MessageFormulaire ton="alerte">
         {stripe === "indisponible" ? "L'opération n'a pas abouti. Réessayez un peu plus tard ; rien ne vous a été facturé." : null}
       </MessageFormulaire>
+      {/* « S'abonner » avant l'ouverture au public (`lib/ouverture.ts`). */}
+      <MessageFormulaire ton="info">
+        {stripe === "bientot" ? "L'abonnement ouvre très bientôt : vous pourrez souscrire depuis cette page." : null}
+      </MessageFormulaire>
       <MessageFormulaire ton="info">
         {messageDeLaPage({ paiementTermine, phase: etat.phase, formuleChange, abonnement })}
       </MessageFormulaire>

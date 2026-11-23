@@ -4,7 +4,7 @@ import { compteDeLaSession } from "@/components/landing/compte-session";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { PhotoCadre } from "@/components/landing/PhotoCadre";
 import { SiteFooter } from "@/components/landing/SiteFooter";
-import { INSCRIPTIONS_OUVERTES } from "@/lib/ouverture";
+import { OUVERT_AU_PUBLIC } from "@/lib/ouverture";
 import { FormulaireBientot } from "./FormulaireBientot";
 
 export const metadata = {
@@ -28,7 +28,7 @@ export const metadata = {
 export default async function PageBientot() {
   // Rouvert, la page n'a plus rien à promettre : l'inscription (relecture du
   // 2026-11-23 — elle restait trouvable et promettait un e-mail déjà parti).
-  if (INSCRIPTIONS_OUVERTES) redirect("/signup");
+  if (OUVERT_AU_PUBLIC) redirect("/signup");
   const compte = await compteDeLaSession();
 
   return (

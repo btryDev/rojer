@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { PAGES_LEGALES } from "@/components/landing/pages-legales";
 import { OUVERT_AUX_MOTEURS } from "@/lib/indexation";
-import { INSCRIPTIONS_OUVERTES } from "@/lib/ouverture";
+import { OUVERT_AU_PUBLIC } from "@/lib/ouverture";
 import { adressePubliqueOuNull } from "@/lib/url-publique";
 
 /**
@@ -17,7 +17,7 @@ import { adressePubliqueOuNull } from "@/lib/url-publique";
 export const PAGES_DU_PLAN: readonly string[] = [
   "/",
   // La page d'attente, tant que les inscriptions sont fermées seulement.
-  ...(INSCRIPTIONS_OUVERTES ? [] : ["/bientot"]),
+  ...(OUVERT_AU_PUBLIC ? [] : ["/bientot"]),
   "/conditions",
   ...PAGES_LEGALES.map((p) => `/legal/${p.slug}`),
 ];

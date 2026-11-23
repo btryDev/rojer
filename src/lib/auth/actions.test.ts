@@ -41,19 +41,7 @@ const h = vi.hoisted(() => ({
       { ok: true } | { ok: false; reessayerDansSecondes: number }
     >
   >(async () => ({ ok: true })),
-  // L'interrupteur des inscriptions (`lib/ouverture.ts`) : ouvert par défaut
-  // ici, pour que les tests de l'inscription ouverte restent ce qu'ils sont ;
-  // la fermeture a ses propres tests, plus bas.
-  inscriptionsOuvertes: true,
-  invitations: vi.fn<(email: string) => Promise<{ id: string }[]>>(async () => []),
 }));
-
-vi.mock("@/lib/ouverture", () => ({
-  get INSCRIPTIONS_OUVERTES() {
-    return h.inscriptionsOuvertes;
-  },
-}));
-vi.mock("./membres", () => ({ invitationsPourAdresse: h.invitations }));
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("next/navigation", () => ({ redirect: h.redirect }));
@@ -148,56 +136,7 @@ beforeEach(() => {
   h.cookiesEffaces = [];
   h.cookiesPoses = [];
   h.sessionOuverte = null;
-  h.inscriptionsOuvertes = true;
-  h.invitations.mockReset();
-  h.invitations.mockResolvedValue([]);
   vi.unstubAllEnvs();
-});
-
-/**
- * Inscriptions fermées (`lib/ouverture.ts`, 2026-11-23, Stripe non validé) :
- * l'action refuse côté serveur — un POST forgé ne contourne pas la
- * redirection de `/signup`. Seule l'adresse qu'une invitation attend passe.
- */
-describe("inscription, interrupteur fermé", () => {
-  beforeEach(() => {
-    h.inscriptionsOuvertes = false;
-    vi.stubEnv("PUBLIC_APP_URL", "https://app.rojer.fr");
-  });
-
-  it("refuse, sans créer de compte ni retenir d'offre", async () => {
-    const r = await signUpAction({}, formulaire({ email: "a@exemple.fr", offre: "rojer_pro_annuel" }));
-    expect(r.error).toMatch(/^Les inscriptions ne sont pas encore ouvertes\./);
-    expect(h.auth.signUpEmail).not.toHaveBeenCalled();
-    expect(h.cookiesPoses).toEqual([]);
-    expect(h.invitations).toHaveBeenCalledWith("a@exemple.fr");
-  });
-
-  it("une adresse invalide reçoit d'abord son erreur de saisie", async () => {
-    const r = await signUpAction({}, formulaire({ email: "pas-une-adresse" }));
-    expect(r.error).toBe("Adresse e-mail invalide");
-    expect(h.invitations).not.toHaveBeenCalled();
-  });
-
-  it("la limite de débit passe avant la lecture des invitations", async () => {
-    h.limite.mockResolvedValueOnce({ ok: false, reessayerDansSecondes: 60 });
-    const r = await signUpAction({}, formulaire({ email: "a@exemple.fr" }));
-    expect(r.error).toMatch(/Trop de tentatives/);
-    expect(h.invitations).not.toHaveBeenCalled();
-  });
-
-  it("laisse passer la personne qu'une invitation valable attend (ADR-054 § 5)", async () => {
-    h.invitations.mockResolvedValue([{ id: "inv-1" }]);
-    const cible = await cibleDeRedirection(signUpAction({}, formulaire({ email: "invitee@exemple.fr" })));
-    expect(cible).toBe("/signup/verification-en-attente?email=invitee%40exemple.fr");
-    expect(h.auth.signUpEmail).toHaveBeenCalledOnce();
-  });
-
-  it("ouvert, l'action ne lit pas les invitations", async () => {
-    h.inscriptionsOuvertes = true;
-    await expect(signUpAction({}, formulaire({ email: "a@exemple.fr" }))).rejects.toThrow("NEXT_REDIRECT");
-    expect(h.invitations).not.toHaveBeenCalled();
-  });
 });
 
 describe("connexion : le champ `next` ne mène que dans l'application (C1)", () => {

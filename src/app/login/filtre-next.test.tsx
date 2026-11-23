@@ -7,24 +7,18 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const recu = vi.hoisted(() => ({ login: [] as string[], ouvertes: true }));
+const recu = vi.hoisted(() => ({ login: [] as string[], ouvert: true }));
 
-// L'interrupteur des inscriptions (`lib/ouverture.ts`) : ouvert pour les
-// tests du filtre, fermé pour ceux de la fermeture, plus bas.
+// L'interrupteur de l'ouverture (`lib/ouverture.ts`) : ouvert pour les tests
+// du filtre, fermé pour ceux du lien « Créer un compte », plus bas.
 vi.mock("@/lib/ouverture", async (original) => {
   const o = await original<typeof import("@/lib/ouverture")>();
-  type Options = Parameters<typeof o.inscriptionAffichee>[0];
   return {
     ...o,
-    inscriptionAffichee: (opts: Options = {}) => o.inscriptionAffichee({ ...opts, ouvertes: recu.ouvertes }),
-    lienInscription: (chemin: string, opts: Options = {}) => o.lienInscription(chemin, { ...opts, ouvertes: recu.ouvertes }),
+    lienInscription: (chemin: string, opts: { next?: string | null } = {}) =>
+      o.lienInscription(chemin, { ...opts, ouvert: recu.ouvert }),
   };
 });
-vi.mock("next/navigation", () => ({
-  redirect: (cible: string) => {
-    throw new Error(`NEXT_REDIRECT ${cible}`);
-  },
-}));
 
 vi.mock("./LoginForm", () => ({
   LoginForm: ({ next }: { next: string }) => {
@@ -73,28 +67,16 @@ describe("filtre de `next` dans les pages d'entrée", () => {
 });
 
 /**
- * Inscriptions fermées (`lib/ouverture.ts`, 2026-11-23) : `/signup` renvoie
- * à /bientot, et le lien de /login y mène — sauf pour la personne invitée qui
- * revient à son invitation (ADR-054 § 5).
+ * Rojer pas encore ouvert au public (`lib/ouverture.ts`, 2026-11-23) : le lien
+ * « Créer un compte » de /login mène à /bientot — sauf pour la personne
+ * invitée qui revient à son invitation (ADR-054 § 5). `/signup` reste servi.
  */
-describe("inscriptions fermées", () => {
+describe("Rojer pas encore ouvert", () => {
   beforeEach(() => {
-    recu.ouvertes = false;
+    recu.ouvert = false;
   });
   afterEach(() => {
-    recu.ouvertes = true;
-  });
-
-  it("/signup renvoie à /bientot", async () => {
-    await expect(SignupPage({ searchParams: Promise.resolve({}) })).rejects.toThrow("NEXT_REDIRECT /bientot");
-    await expect(
-      SignupPage({ searchParams: Promise.resolve({ next: "/compte", offre: "rojer_pro_annuel" }) }),
-    ).rejects.toThrow("NEXT_REDIRECT /bientot");
-  });
-
-  it("/signup s'affiche pour revenir à une invitation", async () => {
-    const html = await rendre(SignupPage, "/invitation/inv-1");
-    expect(html).toContain('href="/login?next=%2Finvitation%2Finv-1"');
+    recu.ouvert = true;
   });
 
   it("/login : « Créer un compte » mène à /bientot, et à /signup pour une invitation", async () => {
@@ -102,5 +84,10 @@ describe("inscriptions fermées", () => {
     const invitation = await rendre(LoginPage, "/invitation/inv-1");
     expect(invitation).toContain(`href="/signup?next=${encodeURIComponent("/invitation/inv-1")}"`);
     expect(invitation).not.toContain('href="/bientot"');
+  });
+
+  it("/signup reste servi : le formulaire, même fermé", async () => {
+    const html = await rendre(SignupPage, "/compte");
+    expect(html).toContain('href="/login?next=%2Fcompte"');
   });
 });

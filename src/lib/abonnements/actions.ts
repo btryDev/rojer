@@ -5,6 +5,7 @@
 // liste OUVERTES). L'essai se compte chez Rojer (ADR-053 § 9, amendé le
 // 2026-11-16) : pas de client Stripe avant « s'abonner ».
 
+import { OUVERT_AU_PUBLIC } from "@/lib/ouverture";
 import Stripe from "stripe";
 import { redirect } from "next/navigation";
 import { publicAppUrl } from "@/lib/email";
@@ -119,6 +120,10 @@ export async function ouvrirPortailAction(formData: FormData): Promise<void> {
  */
 export async function sAbonnerAction(formData: FormData): Promise<void> {
   const proprietaire = await verifierProprietaire();
+  // Rojer pas encore ouvert au public (`lib/ouverture.ts`, 2026-11-23,
+  // décision de la propriétaire : Stripe non validé) : pas de paiement, ni
+  // carte réelle ni carte de test en préproduction. La page le dit.
+  if (!OUVERT_AU_PUBLIC) redirect(`${PAGE_ABONNEMENT}?stripe=bientot`);
   // S'abonner se fait AUSSI quand la saisie est fermée (essai fini, abonnement
   // terminé) : le client Stripe s'écrit alors sur la ligne d'abonnement
   // (répétition locale du 2026-11-17 — sans cela, impossible de s'abonner

@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import { INSCRIPTIONS_OUVERTES } from "@/lib/ouverture";
+import { OUVERT_AU_PUBLIC } from "@/lib/ouverture";
 
 // La photo du hero : ses props d'image (aperçu flou) ne se calculent que sous
 // le compilateur de Next. Seuls les liens comptent ici.
@@ -20,7 +20,7 @@ import { TarifOffres } from "./TarifOffres";
 const liens = (html: string) => [...html.matchAll(/href="([^"]*)"/g)].map((m) => m[1].replace(/&amp;/g, "&"));
 const COMPTE = { href: "/etablissements/etab-1", label: "Reprendre mon dossier" };
 
-describe.skipIf(INSCRIPTIONS_OUVERTES)("les boutons d'inscription de la page publique, fermée", () => {
+describe.skipIf(OUVERT_AU_PUBLIC)("les boutons d'inscription de la page publique, fermée", () => {
   it("le hero : « Essayer 30 jours » mène à /bientot", () => {
     const html = renderToStaticMarkup(<Hero />);
     expect(html).toContain("Essayer 30 jours");

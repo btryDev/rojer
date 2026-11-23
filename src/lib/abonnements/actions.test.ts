@@ -26,8 +26,16 @@ const m = vi.hoisted(() => ({
   depassements: vi.fn(),
   marquer: vi.fn(async () => ({ count: 1 })),
   demande: vi.fn(async () => null as unknown),
+  ouvert: true,
 }));
 vi.mock("next/navigation", () => ({ redirect: m.redirect }));
+// L'ouverture au public (`lib/ouverture.ts`) : ouverte ici, pour que les
+// tests du paiement restent ce qu'ils sont ; la fermeture a son test.
+vi.mock("@/lib/ouverture", () => ({
+  get OUVERT_AU_PUBLIC() {
+    return m.ouvert;
+  },
+}));
 vi.mock("@/lib/email", () => ({ publicAppUrl: () => "https://rojer.test" }));
 vi.mock("@/lib/stripe/client", () => ({ clientStripe: () => ({ customers: { retrieve: async () => ({ deleted: true }) } }) }));
 vi.mock("@/lib/stripe/config", () => ({ configurationStripe: () => ({ active: true }) }));
@@ -98,6 +106,18 @@ beforeEach(() => {
 });
 
 describe("sAbonnerAction", () => {
+  it("Rojer pas encore ouvert au public : pas de paiement, la page le dit (2026-11-23)", async () => {
+    m.ouvert = false;
+    try {
+      expect(await redirigeVers(sAbonnerAction(formulaire()))).toBe("/compte/abonnement?stripe=bientot");
+      expect(m.ouvrirCheckout).not.toHaveBeenCalled();
+      expect(m.clientStripeDuCompte).not.toHaveBeenCalled();
+      expect(m.marquer).not.toHaveBeenCalled();
+    } finally {
+      m.ouvert = true;
+    }
+  });
+
   it("pendant l'essai (aucun client Stripe encore) : le client naît, puis Checkout en mode abonnement, paiement immédiat", async () => {
     m.ligne.statut = null;
     m.ligne.stripeCustomerId = null;

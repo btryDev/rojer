@@ -3,7 +3,7 @@ import { BoutonContact } from "./BoutonContact";
 import type { CompteLanding } from "./compte";
 import { Marque } from "@/components/marque/Marque";
 import { LIENS_INFORMATIONS } from "./pages-legales";
-import { INSCRIPTIONS_OUVERTES, PAGE_BIENTOT } from "@/lib/ouverture";
+import { OUVERT_AU_PUBLIC, PAGE_BIENTOT } from "@/lib/ouverture";
 
 // Le pied de page de la page publique, classique : la marque et le contact à
 // gauche, les liens en colonnes à droite, les mentions en bas. Les ancres
@@ -38,7 +38,7 @@ const ORIGINE_IMAGES = "Photos et illustrations générées avec Krea 2 et Nano 
  * Inscriptions fermées (`lib/ouverture.ts`) : « Créer un compte » cède la
  * place à « Être prévenu de l'ouverture », vers /bientot.
  */
-export function colonneCompte(compte?: CompteLanding, ouvertes = INSCRIPTIONS_OUVERTES) {
+export function colonneCompte(compte?: CompteLanding, ouvertes = OUVERT_AU_PUBLIC) {
   return {
     titre: "Compte",
     liens: compte

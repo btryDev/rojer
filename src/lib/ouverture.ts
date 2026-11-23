@@ -1,26 +1,30 @@
-// L'ouverture des inscriptions au public — UN SEUL interrupteur.
+// L'ouverture de Rojer au public — UN SEUL interrupteur.
 //
 // 2026-11-23, décision de la propriétaire : la page publique part en ligne
 // pour que Stripe vérifie le site, mais le compte Stripe n'est pas encore
-// validé. Personne ne doit pouvoir s'inscrire ni s'abonner depuis le site
-// public : chaque bouton qui menait à l'inscription mène à `/bientot`, où
-// l'on laisse son adresse pour être prévenu (`DemandeOuverture`). `/signup`
-// renvoie là aussi, et l'action d'inscription refuse côté serveur.
+// validé. Fermé, l'interrupteur :
+//  - mène chaque bouton d'inscription de la page publique à `/bientot`, où
+//    l'on laisse son adresse pour être prévenu (`DemandeOuverture`) ;
+//  - ferme le paiement : « S'abonner » (`sAbonnerAction`, seul chemin vers
+//    `ouvrirCheckout`) ne mène pas à Stripe, la page Abonnement le dit — ni
+//    carte réelle, ni carte de test en préproduction.
 //
-// ROUVRIR : passer `INSCRIPTIONS_OUVERTES` à `true`. Rien d'autre à toucher —
-// les boutons retrouvent `/signup`, la page et l'action se rouvrent. Pas de
-// variable d'environnement, par décision : l'état se lit dans le code et
-// s'ouvre par un commit.
+// ~~`/signup` renvoie à /bientot, l'action d'inscription refuse côté serveur,
+// sauf l'adresse qu'une invitation attend~~ [2026-11-23, décision de la
+// propriétaire, sur la relecture : cette fermeture disait qui est invité (un
+// essai d'adresse suffisait) et cassait le parcours d'un invité dont le lien
+// avait expiré. On ferme le paiement à la place : `/signup` reste servi
+// (invitations, testeurs) ; qui le tape à la main ouvre un essai, sans pouvoir
+// payer.]
 //
-// Ce qui reste ouvert, fermé ou non : la connexion, et l'inscription d'une
-// personne INVITÉE à rejoindre un compte (ADR-054 § 5) — son e-mail lui dit
-// de créer son compte, et le parcours passe par `/signup?next=/invitation/…`.
-// L'action ne la laisse passer que si une invitation valable attend cette
-// adresse (`signUpAction`) : le `next` seul ne prouve rien.
+// ROUVRIR : passer `OUVERT_AU_PUBLIC` à `true`. Les boutons retrouvent
+// `/signup`, le paiement s'ouvre, `/bientot` renvoie à l'inscription et sort
+// du plan du site. Pas de variable d'environnement, par décision : l'état se
+// lit dans le code et s'ouvre par un commit.
 //
 // Module sans `server-only` : les cartes d'offres, composant client, le lisent.
 
-export const INSCRIPTIONS_OUVERTES: boolean = false;
+export const OUVERT_AU_PUBLIC: boolean = false;
 
 /** La page « Rojer ouvre bientôt ». */
 export const PAGE_BIENTOT = "/bientot";
@@ -30,20 +34,14 @@ export function versInvitation(next: string | null | undefined): boolean {
   return typeof next === "string" && next.startsWith("/invitation/");
 }
 
-type Options = { next?: string | null; ouvertes?: boolean };
-
-/**
- * La page `/signup` s'affiche-t-elle ? Oui tant que les inscriptions sont
- * ouvertes, ou quand le parcours revient à une invitation.
- */
-export function inscriptionAffichee({ next, ouvertes = INSCRIPTIONS_OUVERTES }: Options = {}): boolean {
-  return ouvertes || versInvitation(next);
-}
-
 /**
  * Le lien d'un bouton d'inscription : `cheminInscription` (vers `/signup`)
- * quand la page s'affiche (`inscriptionAffichee`), `/bientot` sinon.
+ * une fois Rojer ouvert, ou pour revenir à une invitation (ADR-054 § 5) ;
+ * `/bientot` sinon. `ouvert` : pour les tests.
  */
-export function lienInscription(cheminInscription: string, options: Options = {}): string {
-  return inscriptionAffichee(options) ? cheminInscription : PAGE_BIENTOT;
+export function lienInscription(
+  cheminInscription: string,
+  { next, ouvert = OUVERT_AU_PUBLIC }: { next?: string | null; ouvert?: boolean } = {},
+): string {
+  return ouvert || versInvitation(next) ? cheminInscription : PAGE_BIENTOT;
 }
