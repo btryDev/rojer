@@ -382,7 +382,7 @@ export default async function PlanPreventionDetailPage({
             </p>
             <h1
               title={objet}
-              className="board-titre m-0 max-w-full text-balance break-words text-[30px] leading-[1.08] md:truncate md:text-[48px] md:leading-[1.05]"
+              className="board-titre m-0 max-w-full break-words text-[30px] leading-[1.08] max-md:line-clamp-3 md:truncate md:text-[48px] md:leading-[1.05]"
             >
               {objet}
             </h1>

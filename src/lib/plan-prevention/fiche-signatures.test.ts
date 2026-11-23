@@ -136,6 +136,25 @@ describe("l'historique", () => {
     expect(lignes).toContain("Proposition refusée d'office : le plan a été clos ou annulé");
   });
 
+  it("raison sociale à voyelle : « d'Entretien », jamais « de Entretien » ; un lien expiré se dit", () => {
+    const hv = historiqueDuPlan({
+      creeLe: T0,
+      raisonEE: "Entretien Test A-Z",
+      liens: [lien("lx", { otpExpireLe: null, utiliseLe: null, revoqueLe: null, expireLe: plus(30) })],
+      signatures: [],
+      propositions: [
+        { id: "pa", accessTokenId: "lx", statut: "acceptee", createdAt: plus(10), traiteeLe: plus(12), traiteeParEmail: "moi@exemple.fr", corrigeeLe: null },
+        { id: "pb", accessTokenId: "lx", statut: "refusee", createdAt: plus(13), traiteeLe: plus(14), traiteeParEmail: "moi@exemple.fr", corrigeeLe: null },
+      ],
+      maintenant: plus(60),
+    });
+    const lv = hv.map((e) => e.ligne);
+    expect(lv).toContain("Vous acceptez la proposition d'Entretien Test A-Z");
+    expect(lv).toContain("Vous refusez la proposition d'Entretien Test A-Z");
+    expect(lv).toContain("Lien adressé à Entretien Test A-Z expiré");
+    for (const l of lv) expect(l, l).not.toMatch(/\bde [aeiouyàâéèêîôû]/i);
+  });
+
   it("les signatures révoquées d'un même geste : une ligne, chacune vérifiable", () => {
     const r = h.filter((e) => e.cle.startsWith("revocation-signatures-"));
     expect(r).toHaveLength(1);

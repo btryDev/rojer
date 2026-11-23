@@ -2,11 +2,12 @@ import { VerifierSignature } from "@/components/signatures/VerifierSignature";
 import { CarteRepliable } from "@/components/ui-kit/CarteRepliable";
 import { FILET_SUIVI, SECTION_SUIVI } from "./classes-fiche";
 import type { EvenementHistorique, TonHistorique } from "@/lib/plan-prevention/fiche-signatures";
-import { formaterHeureEnLettresFr } from "@/lib/dates";
+import { FUSEAU_REFERENCE, formaterHeureEnLettresFr } from "@/lib/dates";
 
 /**
  * L'historique du plan (2026-11-19, maquette V2 « Historique ») : une ligne
- * par fait, façon calendrier — tuile noire du jour et de l'heure, la phrase,
+ * par fait, façon calendrier — ~~tuile noire du jour et de l'heure~~ [2026-11-23 :
+ * tuile noire du jour et du mois, l'heure sur la ligne grise], la phrase,
  * sa précision, une pastille. Les signatures révoquées y sont, chacune
  * vérifiable : la fiche n'en tient plus de liste à part. Lu par la page
  * (`historiqueDuPlan`), rien n'est écrit ici.
@@ -25,16 +26,17 @@ const PASTILLE: Record<TonHistorique, string> = {
   retard: "bg-[color:var(--board-signal-wash)] text-[color:var(--board-signal-ink)]",
 };
 
-const FMT_JOUR = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", day: "2-digit" });
-const FMT_MOIS = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", month: "short" });
+const FMT_JOUR = new Intl.DateTimeFormat("fr-FR", { timeZone: FUSEAU_REFERENCE, day: "2-digit" });
+const FMT_MOIS = new Intl.DateTimeFormat("fr-FR", { timeZone: FUSEAU_REFERENCE, month: "short" });
 const FMT_COMPLET = new Intl.DateTimeFormat("fr-FR", {
-  timeZone: "Europe/Paris",
+  timeZone: FUSEAU_REFERENCE,
   dateStyle: "long",
   timeStyle: "short",
 });
 
 // Le jour et le mois dans la tuile, l'heure sur la ligne grise (2026-11-23,
 // contrôle en préprod : le mois tombait seul sous le texte de chaque ligne).
+// Le mois s'écrit comme sur la tuile de l'en-tête de la fiche (« NOV. »).
 function TuileJourMois({ date }: { date: Date }) {
   return (
     <span
@@ -42,7 +44,7 @@ function TuileJourMois({ date }: { date: Date }) {
       className="flex size-12 flex-none flex-col items-center justify-center rounded-[12px] bg-[color:var(--board-ink)] text-white"
     >
       <span className="font-display text-[17px] font-bold leading-none tabular-nums">{FMT_JOUR.format(date)}</span>
-      <span className="mt-0.5 font-mono text-[9px] uppercase tracking-[0.08em]">{FMT_MOIS.format(date).replace(".", "")}</span>
+      <span className="mt-0.5 font-mono text-[9px] uppercase tracking-[0.08em]">{FMT_MOIS.format(date)}</span>
     </span>
   );
 }
