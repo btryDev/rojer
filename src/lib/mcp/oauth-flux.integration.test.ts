@@ -168,8 +168,10 @@ describe.skipIf(!URL_BASE || !local)("connecteur MCP en OAuth — PostgreSQL et 
 
   it("client_credentials : fermé au guichet des jetons", async () => {
     const r = await jeton({ grant_type: "client_credentials", client_id: "nimporte", client_secret: "quoi" });
-    expect(r.status).toBeGreaterThanOrEqual(400);
-    expect(r.status).toBeLessThan(500);
+    // Le mode lui-même est refusé, avant tout examen du client : un client
+    // inconnu seul donnerait déjà un 4xx (`invalid_client`), qui ne prouve rien.
+    expect(r.status).toBe(400);
+    expect(((await r.json()) as { error?: string }).error).toBe("unsupported_grant_type");
   });
 
   it("enregistrement : une adresse de retour étrangère est refusée", async () => {
