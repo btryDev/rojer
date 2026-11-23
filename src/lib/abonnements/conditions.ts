@@ -29,7 +29,9 @@ export type Section = { titre: string; paragraphes: string[] };
 // abonnement depuis douze mois est supprimé (ADR-058) ; l'ancien texte
 // promettait l'inverse.] [2026-11-19 : « 2026-11-17-provisoire » remplacée
 // par le texte complet, sans la section « Version provisoire ».]
-export const VERSION_CONDITIONS = "2026-11-19";
+// [2026-11-23 : « 2026-11-19 » remplacée — article 9, le connecteur s'ouvre
+// à d'autres outils qu'un assistant d'IA (ADR-062 § 12, PR #369).]
+export const VERSION_CONDITIONS = "2026-11-23";
 
 export const CONDITIONS: Section[] = [
   {
@@ -104,7 +106,7 @@ export const CONDITIONS: Section[] = [
   {
     titre: "9. Services de tiers reliés à Rojer",
     paragraphes: [
-      "Le Client peut relier Rojer à un assistant d'intelligence artificielle de son choix (offre Pro). Les informations que cet assistant lit dans Rojer quittent alors le service, sous la seule responsabilité du Client et selon les conditions du fournisseur de l'assistant, que le Client a choisi. Les réponses de l'assistant ne sont pas produites par Rojer ; BTRY n'en répond pas.",
+      "Le Client peut relier Rojer, en lecture seule, à un assistant ou à un outil de son choix (offre Pro), dans les conditions de l'annexe (« Outils reliés par le Client »). Les informations que l'outil lit sont alors traitées sous la seule responsabilité du Client, le cas échéant selon les conditions du fournisseur de l'outil. Les réponses et traitements de l'outil ne sont pas produits par Rojer ; BTRY n'en répond pas.",
       "Le paiement est assuré par Stripe, qui recueille directement les données de la carte bancaire et en est seul dépositaire.",
     ],
   },
@@ -255,6 +257,7 @@ export const CONDITIONS: Section[] = [
       "Instructions. BTRY ne traite ces données que sur instruction documentée du Client — les Conditions et l'usage qu'il fait du service —, y compris pour un transfert hors de l'Union européenne, sauf obligation légale dont elle l'informe. Elle l'avertit si une instruction lui paraît contraire au RGPD.",
       "Confidentialité et sécurité. Les personnes de BTRY autorisées à traiter ces données sont tenues à la confidentialité. BTRY met en œuvre les mesures de sécurité de l'article 32 du RGPD décrites dans la politique de confidentialité : chiffrement des échanges, cloisonnement des comptes, double authentification proposée, stockage privé des fichiers.",
       "Sous-traitants ultérieurs. BTRY recourt aux sous-traitants listés dans la politique de confidentialité et leur impose les mêmes obligations de protection. Elle informe le Client par e-mail de tout ajout ou remplacement au moins trente jours à l'avance ; le Client peut s'y opposer pour un motif légitime et, à défaut d'accord, résilier son abonnement avec remboursement de la part non consommée.",
+      "Outils reliés par le Client. Lorsque le Client relie Rojer à un assistant ou à un outil de son choix, il donne instruction à BTRY de mettre à la disposition de cet outil les informations que celui-ci interroge. L'outil est choisi et mis en œuvre par le Client, le cas échéant auprès d'un fournisseur avec lequel il contracte directement : ni l'outil ni son fournisseur ne sont des sous-traitants ultérieurs de BTRY au sens de la présente annexe. Il appartient au Client de s'assurer que cet outil présente les garanties requises par le RGPD, y compris en cas de transfert hors de l'Union européenne.",
       "Assistance. BTRY aide le Client, dans la mesure du possible, à répondre aux demandes d'exercice des droits des personnes, à assurer la sécurité du traitement, à réaliser une analyse d'impact et, le cas échéant, à consulter la CNIL. Toute violation de données personnelles est signalée au Client dans les quarante-huit heures après que BTRY en a pris connaissance.",
       "Fin du traitement. À la fin du contrat, au choix du Client, BTRY lui restitue les données sans frais dans un format structuré et couramment utilisé, puis les supprime, ou les supprime directement, dans les conditions de l'article 17, sauf obligation légale de conservation.",
       "Audit. BTRY met à la disposition du Client les informations nécessaires pour démontrer le respect de ces obligations. Elle permet un audit, au plus une fois par an et sauf violation de données, à la demande écrite du Client faite trente jours à l'avance, à ses frais, par lui-même ou par un auditeur indépendant tenu au secret.",

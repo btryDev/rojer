@@ -125,7 +125,11 @@ const CONFIDENTIALITE: PageLegale = {
         `Seules les personnes de ${EDITEUR.denomination} qui en ont besoin pour le service, et, pour une demande faite à l'expert de l'offre Pro, cet expert. Nos prestataires techniques, qui traitent les données pour notre compte : Clever Cloud (hébergement de l'application, de la base de données et des fichiers, Union européenne), Mailpace (envoi des e-mails du service ; données hébergées en France, envoi par des serveurs situés au Royaume-Uni, pays reconnu par la Commission européenne comme assurant une protection adéquate), Stripe (paiement et factures).`,
         "Transferts hors de l'Union européenne : Stripe peut transférer les données de paiement et de facturation vers les États-Unis, avec les garanties prévues par le RGPD (décision d'adéquation « Data Privacy Framework » ou clauses contractuelles types de la Commission européenne). Les données de votre dossier — établissements, salariés, rapports — ne sont pas transmises à Stripe.",
         "Au moment de choisir ou changer un mot de passe, nous vérifions qu'il ne figure pas parmi des mots de passe divulgués (service « Pwned Passwords ») : seuls les cinq premiers caractères d'une empreinte du mot de passe quittent Rojer, jamais le mot de passe ni votre adresse.",
-        "Si vous reliez Rojer à un assistant d'intelligence artificielle, les informations que cet assistant lit quittent Rojer selon les conditions de son fournisseur, que vous avez choisi.",
+        // [2026-11-23 : « Si vous reliez Rojer à un assistant d'intelligence
+        // artificielle… » remplacée — le connecteur s'ouvre à d'autres outils
+        // (ADR-062 § 12, PR #369) ; l'outil n'est pas un sous-traitant de BTRY
+        // (conditions, article 9).]
+        "Une personne d'un compte client peut relier Rojer à un assistant ou à un outil de son choix. Sur cette instruction, l'outil lit, sans rien pouvoir modifier, les informations du dossier qu'il interroge ; elles sont ensuite traitées selon les règles de cet outil, choisi par le client. Les noms des salariés et des responsables d'actions ne lui sont pas communiqués ; ce que le client a saisi librement (intitulés des risques, des actions, des équipements) l'est tel quel.",
       ],
     },
     {
