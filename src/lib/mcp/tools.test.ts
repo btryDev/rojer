@@ -57,7 +57,7 @@ vi.mock("@/lib/referentiels/conformite/mention-de-ligne", () => ({
       : null,
 }));
 
-import { ErreurOutilMcp, OUTILS_MCP, depuisLe, type ContexteMcp } from "./tools";
+import { ErreurOutilMcp, OUTILS_MCP, type ContexteMcp } from "./tools";
 import { SCEAU_CALENDRIER } from "@/lib/calendrier/version-moteur";
 import { getEtatDuerp, getFraicheurCalendrier, getParcEquipements, listerActions, listerEquipements } from "./queries";
 import { couvertureDeLInventaire } from "@/lib/perimetre/couverture";
@@ -331,12 +331,15 @@ describe("plan d'actions", () => {
     prismaMock.action.findMany.mockResolvedValue([
       action({ risque: { libelle: "Chute", unite: { nom: "Cuisine" } } }),
       action({ risque: { libelle: "Chute", unite: { nom: "Salle" } } }),
+      action({ risque: { libelle: "Bruit", unite: { nom: "Risques transverses", estTransverse: true } } }),
     ]);
 
     const texte = await outil("plan_actions").executer(ctx, {});
 
     expect(texte).toContain("origine DUERP : Chute (unité « Cuisine »)");
     expect(texte).toContain("origine DUERP : Chute (unité « Salle »)");
+    // La forme de `etat_duerp` pour l'unité transverse.
+    expect(texte).toContain("origine DUERP : Bruit (unité « Risques transverses (transverse) »)");
   });
 
   it("le statut se dit avec le mot de l'écran, pas la valeur de l'énumération", async () => {
@@ -1110,17 +1113,5 @@ describe("le serveur dit qu'aucun équipement n'est déclaré (§ 15)", () => {
     for (const where of parEtablissement) {
       expect(where).toEqual({ id: ETABLISSEMENT_ID });
     }
-  });
-});
-
-describe("formulations relevées depuis claude.ai (2026-11-23)", () => {
-  it("l'ancienneté se dit en jours sous le mois, jamais « 0 mois »", () => {
-    expect(depuisLe(0)).toBe("aujourd'hui");
-    expect(depuisLe(1)).toBe("hier");
-    expect(depuisLe(9)).toBe("il y a 9 jours");
-    expect(depuisLe(15)).toBe("il y a 15 jours");
-    expect(depuisLe(29)).toBe("il y a 29 jours");
-    expect(depuisLe(30)).toBe("il y a 1 mois");
-    expect(depuisLe(400)).toBe("il y a 13 mois");
   });
 });

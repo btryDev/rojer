@@ -37,7 +37,7 @@ import {
   LIBELLE_SANS_RENDEZ_VOUS,
 } from "@/lib/calendrier/etats";
 import { MENTION_POUR_INFORMATION_DOCUMENT } from "@/lib/referentiels/conformite/initiative";
-import { ageEnMois, EFFECTIF_MAJ_ANNUELLE } from "@/lib/dashboard/duerp";
+import { depuisLe, EFFECTIF_MAJ_ANNUELLE } from "@/lib/dashboard/duerp";
 import { LABEL_STATUT_ACTION } from "@/lib/actions/labels";
 import { LABEL_STATUT_POINT } from "@/lib/points-a-corriger/libelles";
 import { mentionAConfirmer } from "@/lib/matching/effectif-entreprise";
@@ -538,19 +538,6 @@ const LIBELLE_ETAT: Record<VerificationLue["etat"], string> = {
   // C64 : la phrase même des autres surfaces, en minuscule d'attaque.
   pour_information: `${MENTION_POUR_INFORMATION_DOCUMENT.charAt(0).toLowerCase()}${MENTION_POUR_INFORMATION_DOCUMENT.slice(1)}`,
 };
-
-/**
- * L'ancienneté d'une version, dite comme on la lit : en jours sous trente
- * (« il y a 0 mois », relevé le 2026-11-23 depuis claude.ai ; l'arrondi du
- * tableau de bord aurait dit « 1 mois » à quinze jours), en mois au-delà,
- * avec ce même arrondi (`ageEnMois`).
- */
-export function depuisLe(ageJours: number): string {
-  if (ageJours <= 0) return "aujourd'hui";
-  if (ageJours === 1) return "hier";
-  if (ageJours < 30) return `il y a ${ageJours} jours`;
-  return `il y a ${ageEnMois(ageJours)} mois`;
-}
 
 function formaterVerifications(verifs: VerificationLue[], filtre = true): string {
   if (verifs.length === 0) {
