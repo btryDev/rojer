@@ -125,7 +125,19 @@ const CONFIDENTIALITE: PageLegale = {
         `Seules les personnes de ${EDITEUR.denomination} qui en ont besoin pour le service, et, pour une demande faite à l'expert de l'offre Pro, cet expert. Nos prestataires techniques, qui traitent les données pour notre compte : Clever Cloud (hébergement de l'application, de la base de données et des fichiers, Union européenne), Mailpace (envoi des e-mails du service ; données hébergées en France, envoi par des serveurs situés au Royaume-Uni, pays reconnu par la Commission européenne comme assurant une protection adéquate), Stripe (paiement et factures).`,
         "Transferts hors de l'Union européenne : Stripe peut transférer les données de paiement et de facturation vers les États-Unis, avec les garanties prévues par le RGPD (décision d'adéquation « Data Privacy Framework » ou clauses contractuelles types de la Commission européenne). Les données de votre dossier — établissements, salariés, rapports — ne sont pas transmises à Stripe.",
         "Au moment de choisir ou changer un mot de passe, nous vérifions qu'il ne figure pas parmi des mots de passe divulgués (service « Pwned Passwords ») : seuls les cinq premiers caractères d'une empreinte du mot de passe quittent Rojer, jamais le mot de passe ni votre adresse.",
-        "Si vous reliez Rojer à un assistant d'intelligence artificielle, les informations que cet assistant lit quittent Rojer selon les conditions de son fournisseur, que vous avez choisi.",
+        // [2026-11-23 : la phrase sur l'assistant d'intelligence artificielle
+        // devient la section « Assistants et outils connectés » (ADR-062 § 12).]
+      ],
+    },
+    {
+      titre: "Assistants et outils connectés",
+      // [2026-11-23 : le connecteur s'ouvre au-delà de Claude, décision de la
+      // propriétaire (ADR-062 § 12, PR #369).]
+      paragraphes: [
+        "Vous pouvez relier Rojer à un assistant ou à un autre outil de votre choix depuis « Connecter un assistant ». L'outil relié lit alors, sans pouvoir rien modifier, les données qu'il interroge — fiche établissement, DUERP, plan d'actions, équipements, calendrier —, pour les établissements de votre compte.",
+        "Les données que l'outil lit quittent Rojer et suivent les règles de cet outil et de son fournisseur, que vous avez choisi ; elles ne relèvent plus de la présente politique.",
+        "Trois sortes d'outils peuvent être reliés : les assistants vérifiés par Rojer (Claude, d'Anthropic, et ChatGPT, d'OpenAI), un programme installé sur votre ordinateur, et tout autre outil, non vérifié. Les outils non vérifiés sont fermés par défaut : seul le propriétaire du compte peut les autoriser.",
+        "Vous retirez l'accès d'un outil à tout moment, depuis « Connecter un assistant ».",
       ],
     },
     {
