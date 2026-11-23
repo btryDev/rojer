@@ -24,8 +24,12 @@ const EXEMPTIONS: Record<string, string> = {
     "gabarit XLSX vierge, identique pour tous : aucune donnée de compte",
   "api/accessibilite/[slug]/affiche/route.ts":
     "affiche du registre PUBLIC d'accessibilité, faite pour être imprimée et vue de tous",
-  "api/mcp/[cle]/route.ts":
-    "protocole MCP (JSON-RPC en POST, `force-dynamic`), pas un document téléchargé — hors classe, voir le rapport du lot",
+  ".well-known/oauth-protected-resource/route.ts":
+    "métadonnées publiques du serveur de ressource (RFC 9728, ADR-062), identiques pour tous : aucune donnée de compte",
+  ".well-known/oauth-protected-resource/api/mcp/route.ts":
+    "métadonnées publiques du serveur de ressource (RFC 9728, ADR-062), identiques pour tous : aucune donnée de compte",
+  ".well-known/oauth-authorization-server/api/auth/route.ts":
+    "métadonnées publiques du serveur d'autorisation (RFC 8414, ADR-062), identiques pour tous : aucune donnée de compte",
 };
 
 function routes(): string[] {

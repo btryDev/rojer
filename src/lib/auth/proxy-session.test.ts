@@ -67,8 +67,13 @@ describe("chemins publics", () => {
       "/entreprises",
       "/api/etablissements/etab_1/controle-zip",
       "/api/duerp/import",
-      // Aucune route HTTP de Better Auth n'est montée : rien à ouvrir.
+      // La route de Better Auth ne sert que l'OAuth (ADR-062 § 2) : le reste
+      // n'est pas ouvert, ni par la route ni par le proxy.
       "/api/auth/sign-in/email",
+      "/api/auth/get-session",
+      "/api/auth/oauth2/consent",
+      "/oauth/consentement",
+      "/oauth/compte",
     ]) {
       expect(cheminPublic(p), p).toBe(false);
     }
@@ -76,6 +81,20 @@ describe("chemins publics", () => {
 
   it("les anciennes adresses de signature restent sans session, pour répondre 404 à tous (2026-11-21)", () => {
     for (const p of ["/verifier/sig_1", "/signe/sig_1"]) {
+      expect(cheminPublic(p), p).toBe(true);
+    }
+  });
+
+  it("ouvre ce qu'un client OAuth appelle sans session (ADR-062)", () => {
+    for (const p of [
+      "/api/mcp",
+      "/api/auth/oauth2/token",
+      "/api/auth/oauth2/register",
+      "/api/auth/oauth2/authorize",
+      "/.well-known/oauth-protected-resource/api/mcp",
+      "/.well-known/oauth-authorization-server/api/auth",
+      "/oauth/reprendre",
+    ]) {
       expect(cheminPublic(p), p).toBe(true);
     }
   });

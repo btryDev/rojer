@@ -1,24 +1,25 @@
 import { describe, expect, it } from "vitest";
-import { lireHotePublic, lireHotesAutorises } from "./hotes";
+import { lireHotesAutorises } from "./hotes";
 
 /**
  * Liste des hôtes acceptés — une garde de sécurité, pas une commodité.
  *
- * Elle sert deux choses qu'il ne faut pas confondre :
- *
- *   - `lireHotesAutorises` alimente la validation `Host`/`Origin`, qui
- *     protège de la reliaison DNS. Trop permissive, elle laisse une page web
- *     visitée par l'utilisateur faire parler son navigateur au serveur ;
- *   - `lireHotePublic` construit l'identifiant de ressource (RFC 9728), qui
- *     doit désigner l'URL que le client a réellement saisie. S'y glisser un
- *     `localhost` en production enverrait les clients découvrir un serveur
- *     d'autorisation à une adresse qui n'existe pas pour eux.
+ * `lireHotesAutorises` alimente la validation `Host`/`Origin`, qui protège de
+ * la reliaison DNS. Trop permissive, elle laisse une page web visitée par
+ * l'utilisateur faire parler son navigateur au serveur. ~~`lireHotePublic`~~
+ * [2026-11-21, ADR-062 : retiré ; l'identifiant de ressource est
+ * `PUBLIC_APP_URL` + `/api/mcp`, `mcp/oauth.ts`.]
  */
 
 const env = (over: Record<string, string | undefined> = {}) =>
   over as unknown as NodeJS.ProcessEnv;
 
 describe("lireHotesAutorises", () => {
+  it("n'accepte pas la boucle locale en production (audit S8, ADR-062 § 9)", () => {
+    const hotes = lireHotesAutorises(env({ NODE_ENV: "production", PUBLIC_APP_URL: "https://rojer.fr" }));
+    expect(hotes).toEqual(["rojer.fr"]);
+  });
+
   it("accepte toujours la boucle locale, pour le développement", () => {
     expect(lireHotesAutorises(env())).toEqual(
       expect.arrayContaining(["localhost", "127.0.0.1"]),
@@ -62,8 +63,8 @@ describe("lireHotesAutorises — PUBLIC_APP_URL", () => {
     expect(hotes).toContain("app.rojer.fr");
   });
 
-  it("n'en fait pas un hôte public quand c'est la boucle locale", () => {
-    expect(lireHotePublic(env({ PUBLIC_APP_URL: "http://localhost:3000" }))).toBe("localhost");
+  it("n'ajoute rien quand c'est la boucle locale, déjà admise en développement", () => {
+    expect(lireHotesAutorises(env({ PUBLIC_APP_URL: "http://localhost:3000" }))).toEqual(["localhost", "127.0.0.1"]);
   });
 
   it("ignore une PUBLIC_APP_URL illisible plutôt que de lever", () => {
@@ -71,25 +72,5 @@ describe("lireHotesAutorises — PUBLIC_APP_URL", () => {
       "localhost",
       "127.0.0.1",
     ]);
-  });
-});
-
-describe("lireHotePublic", () => {
-  it("sans MCP_HOTES, annonce l'hôte de PUBLIC_APP_URL", () => {
-    expect(lireHotePublic(env({ PUBLIC_APP_URL: "https://app.rojer.fr" }))).toBe("app.rojer.fr");
-  });
-
-  it("MCP_HOTES prime sur PUBLIC_APP_URL", () => {
-    expect(
-      lireHotePublic(env({ MCP_HOTES: "mcp.rojer.fr", PUBLIC_APP_URL: "https://app.rojer.fr" })),
-    ).toBe("mcp.rojer.fr");
-  });
-
-  it("écarte la boucle locale au profit d'un hôte joignable", () => {
-    expect(lireHotePublic(env({ MCP_HOTES: "rojer.fr" }))).toBe("rojer.fr");
-  });
-
-  it("retombe sur la boucle locale seulement à défaut de tout le reste", () => {
-    expect(lireHotePublic(env())).toBe("localhost");
   });
 });

@@ -6,11 +6,26 @@ import { nextCookies } from "better-auth/next-js";
 import { twoFactor } from "better-auth/plugins/two-factor";
 import { organization } from "better-auth/plugins/organization";
 import { estRole, libelleRole, ROLES_DU_PLUGIN } from "./roles";
-import { createAuthMiddleware, isAPIError } from "better-auth/api";
+import { APIError, createAuthMiddleware, isAPIError } from "better-auth/api";
+import { jwt } from "better-auth/plugins/jwt";
+import { mcp } from "@better-auth/mcp";
+import { cimd } from "@better-auth/cimd";
+import { fetchClientMetadataResource } from "@better-auth/cimd/node";
+import {
+  DUREES_OAUTH,
+  PORTEE_LECTURE,
+  PORTEES_FOURNISSEUR,
+  estAdresseDeRetourAdmise,
+  estDocumentCimdAdmis,
+  ressourceMcp,
+} from "@/lib/mcp/oauth";
+import { CLAIM_COMPTE, compteDuConsentement, doitChoisirLeCompte } from "@/lib/mcp/compte-oauth";
+import { oublierAssistants } from "@/lib/connecteur/assistants";
 import { oublierAppareilsDeConfiance } from "./appareils-de-confiance";
 import { poserMotDePasseAvantConfirmation } from "./activation";
 import { prisma } from "@/lib/prisma";
-import { motifErreur, publicAppUrl, refusUrlPublique, sendMail } from "@/lib/email";
+import { motifErreur, sendMail } from "@/lib/email";
+import { adressePubliqueOuNull } from "@/lib/url-publique";
 import { mailCompte, type MailCompte } from "@/lib/email/gabarit";
 import { ENTETE_IP_CLIENT } from "./entete-ip";
 import { cleLimite, consommer, LIMITES, type Limite } from "@/lib/securite/limite-debit";
@@ -74,7 +89,7 @@ export const VERROU_DOUBLE_AUTH_MINUTES = 15;
  * build, elle peut manquer sans dommage (aucune session n'y est servie).
  */
 function adresseApp(): string | undefined {
-  return refusUrlPublique() ? undefined : publicAppUrl();
+  return adressePubliqueOuNull() ?? undefined;
 }
 
 /**
@@ -118,6 +133,83 @@ async function envoyer(
   });
 }
 
+/**
+ * Le fournisseur OAuth du connecteur MCP (ADR-062). Absent quand l'adresse
+ * publique est inconnue (compilation sans environnement, production mal
+ * configurée) : l'identifiant de ressource EST cette adresse, et un jeton
+ * émis pour `localhost` en production ne vaudrait rien. Le connecteur reste
+ * alors fermé, et `/api/mcp` répond comme une route absente.
+ */
+function pluginsConnecteurMcp() {
+  const adresse = adresseApp();
+  if (!adresse) return [];
+  const ressource = ressourceMcp(adresse);
+  /** Le compte actif de la session (`organization`), que le type du plugin `mcp` ne connaît pas. */
+  const compteActif = (session: unknown) => (session as { activeOrganizationId?: string | null }).activeOrganizationId;
+  return [
+    // Le plugin `jwt` ne sert qu'à signer les jetons d'accès : sa route
+    // `/token` (un JWT de session) est coupée (`disabledPaths`), et l'en-tête
+    // `set-auth-jwt` aussi — aucun JWT de session n'atteint un navigateur.
+    jwt({ disableSettingJwtHeader: true }),
+    mcp({
+      resource: ressource,
+      loginPage: "/oauth/reprendre",
+      consentPage: "/oauth/consentement",
+      scopes: [...PORTEES_FOURNISSEUR],
+      resources: [{ identifier: ressource, name: "Rojer", allowedScopes: [PORTEE_LECTURE] }],
+      // claude.ai s'enregistre par DCR, sans jeton préalable : c'est la seule
+      // porte qu'il sait ouvrir. Bornée par les adresses de retour admises
+      // (crochet `before` ci-dessous et `validateRedirectUri`) et par la
+      // limite de débit (route `/api/auth/[...all]`).
+      allowDynamicClientRegistration: true,
+      allowUnauthenticatedClientRegistration: true,
+      clientRegistrationDefaultScopes: [...PORTEES_FOURNISSEUR],
+      clientRegistrationAllowedScopes: [...PORTEES_FOURNISSEUR],
+      clientRegistrationDefaultApplicationType: "infer",
+      // Au-delà de la correspondance exacte du plugin, l'adresse doit être
+      // celle d'un assistant admis : un client enregistré avant un
+      // resserrement de la liste n'en passe pas davantage.
+      validateRedirectUri: (adresseRetour, _enregistrees, parDefaut) =>
+        parDefaut && estAdresseDeRetourAdmise(adresseRetour),
+      // Les limites du plugin comptent par IP, et les serveurs de claude.ai
+      // rafraîchissent les jetons de TOUS ses utilisateurs depuis quelques
+      // adresses : les défauts (20 jetons, 5 enregistrements par minute)
+      // couperaient le connecteur dès une poignée de clients. L'enregistrement
+      // garde en plus sa limite en base (route `/api/auth/[...all]`).
+      rateLimit: {
+        token: { window: 60, max: 600 },
+        register: { window: 60, max: 60 },
+      },
+      accessTokenExpiresIn: DUREES_OAUTH.jetonAcces,
+      refreshTokenExpiresIn: DUREES_OAUTH.jetonRafraichissement,
+      codeExpiresIn: DUREES_OAUTH.codeAutorisation,
+      // Le compte, choisi après la connexion (ADR-062 § 4, ADR-054) : une
+      // personne membre de plusieurs comptes passe par `/oauth/compte`.
+      postLogin: {
+        page: "/oauth/compte",
+        shouldRedirect: ({ user, session, isContinuation }) =>
+          doitChoisirLeCompte(user.id, compteActif(session), isContinuation),
+        consentReferenceId: ({ user, session }) =>
+          compteDuConsentement(user.id, compteActif(session)),
+      },
+      // Le compte du consentement entre au jeton : le serveur de ressource le
+      // lit, puis relit l'appartenance et l'abonnement (ADR-062 § 4).
+      customAccessTokenClaims: ({ referenceId }) => {
+        if (!referenceId) throw new APIError("BAD_REQUEST", { message: "consentement sans compte" });
+        return { [CLAIM_COMPTE]: referenceId };
+      },
+    }),
+    // Claude Code s'identifie par un document CIMD : récupéré par le
+    // transport du plugin (résolution unique, adresses spéciales refusées,
+    // sans redirection), et seulement chez les éditeurs admis.
+    cimd({
+      fetchClientMetadataResource,
+      metadataProfile: "mcp-2026-07-28",
+      isMetadataDocumentUrlAllowed: (identifiant) => estDocumentCimdAdmis(identifiant),
+    }),
+  ];
+}
+
 /** Les limites du plugin d'organisation pour un compte (`abonnements/quotas.ts`). */
 const limitesMembres = async (compteId: string) =>
   (await import("@/lib/abonnements/quotas")).limitesMembresDuPlugin(prisma, compteId);
@@ -128,6 +220,8 @@ export const auth = betterAuth({
   trustedOrigins: () => [adresseApp()],
   database: prismaAdapter(prisma, { provider: "postgresql" }),
   verification: { modelName: "authVerification" },
+  // Le JWT de session du plugin `jwt` n'est jamais servi (ADR-062 § 1).
+  disabledPaths: ["/token"],
   advanced: {
     // Pas de `joins` : avec Prisma (chargement des relations par requêtes
     // séparées), la session puis son compte restent deux requêtes, mesuré en
@@ -227,6 +321,23 @@ export const auth = betterAuth({
     disableSessionRefresh: true,
   },
   hooks: {
+    // Enregistrement d'un client OAuth (ADR-062 § 3) : chaque adresse de
+    // retour déclarée doit être celle d'un assistant admis, sinon le client
+    // n'est pas créé. `validateRedirectUri` garde aussi l'autorisation.
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path !== "/oauth2/register") return;
+      const adresses: unknown = (ctx.body as { redirect_uris?: unknown } | undefined)?.redirect_uris;
+      const admises =
+        Array.isArray(adresses) &&
+        adresses.length > 0 &&
+        adresses.every((a) => typeof a === "string" && estAdresseDeRetourAdmise(a));
+      if (!admises) {
+        throw new APIError("BAD_REQUEST", {
+          error: "invalid_redirect_uri",
+          error_description: "Cette adresse de retour n'est pas celle d'un assistant admis par Rojer.",
+        });
+      }
+    }),
     // Désactiver la double authentification oublie TOUS les appareils de
     // confiance du compte : le plugin n'efface que celui du navigateur qui
     // désactive, et les autres passeraient sans code à la réactivation.
@@ -309,10 +420,13 @@ export const auth = betterAuth({
           });
           if (invitant?.role !== "owner") throw new Error("invitation dont l'auteur n'est plus propriétaire du compte");
         },
-        // Ménage : les sessions de la personne retirée oublient ce compte, et
-        // ses invitations en attente tombent. La sécurité n'en dépend pas —
-        // `requireCompte` relit `Membre`, l'acceptation relit l'invitant.
+        // Ménage : les sessions de la personne retirée oublient ce compte, ses
+        // invitations en attente tombent, et ses assistants autorisés sur ce
+        // compte aussi (ADR-062 § 8). La sécurité n'en dépend pas —
+        // `requireCompte` et `/api/mcp` relisent `Membre`, l'acceptation
+        // relit l'invitant.
         afterRemoveMember: async ({ member }) => {
+          await oublierAssistants(member.organizationId, member.userId);
           await prisma.session.updateMany({
             where: { userId: member.userId, compteActifId: member.organizationId },
             data: { compteActifId: null },
@@ -332,6 +446,7 @@ export const auth = betterAuth({
     }),
     // `nextCookies` en dernier : sans lui, une connexion faite dans une action
     // serveur ne pose pas de cookie — ni celui du défi de double authentification.
+    ...pluginsConnecteurMcp(),
     nextCookies(),
   ],
 });

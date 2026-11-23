@@ -38,6 +38,8 @@ const EXEMPTEES: Record<string, string> = {
   "lib/membres/actions.ts:changerRoleMembre": "le plugin refuse un membre d'un autre compte (FORBIDDEN)",
   "lib/membres/actions.ts:retirerMembre": "le plugin refuse un membre d'un autre compte (MEMBER_NOT_FOUND)",
   "lib/membres/actions.ts:choisirCompte": "le geste choisit le compte posté : il ne lit l'actif que pour la personne",
+  "app/oauth/actions.ts:choisirCompteOAuth":
+    "le geste choisit le compte posté, vérifié parmi ceux de la personne, et le rend actif (ADR-062)",
   "lib/membres/actions.ts:refuserInvitation": "l'invitation de la session ; le compte actif ne sert qu'à choisir la redirection",
 };
 

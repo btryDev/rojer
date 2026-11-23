@@ -22,8 +22,8 @@ import { fonctions, sansCommentairesNiChaines } from "./tenancy-sonde";
  *     `timingSafeEqual`.
  *  2. Comportement : `node:crypto` est espionné (les vraies fonctions restent
  *     appelées). Le tirage d'un jeton DOIT passer par `randomBytes` (≥ 32
- *     octets), celui d'un OTP par `randomInt`, et `verifyOtp` comme la clé MCP
- *     par `timingSafeEqual`. Plus la forme des valeurs, et une distribution
+ *     octets), celui d'un OTP par `randomInt`, et `verifyOtp` par
+ *     `timingSafeEqual` (la clé MCP est retirée, ADR-062). Plus la forme des valeurs, et une distribution
  *     grossière — qui n'attraperait pas un `Math.random` bien déguisé, d'où
  *     l'espion.
  */
@@ -45,7 +45,6 @@ vi.mock("node:crypto", async (importOriginal) => {
 
 import { generateToken } from "@/lib/access-tokens/token";
 import { generateOtp, hashOtp, verifyOtp } from "@/lib/signatures/otp";
-import { clesEgales, resoudreScopeDepuisCle } from "@/lib/mcp/acces-http";
 
 const RACINE = join(process.cwd(), "src/lib");
 const MODULES_SECRETS = ["access-tokens", "signatures", "mcp", "auth"];
@@ -89,7 +88,9 @@ describe("statique — le hasard et les comparaisons de secrets", () => {
     expect(importeDeCrypto("signatures/otp.ts", "randomInt")).toBe(true);
   });
 
-  it("verifyOtp et la clé MCP se comparent par timingSafeEqual, jamais par ===", () => {
+  // ~~et la clé MCP~~ [2026-11-21, ADR-062 : la clé MCP est retirée ; le
+  // connecteur vérifie un jeton OAuth signé, par Better Auth (`mcp/acces-compte.ts`).]
+  it("verifyOtp se compare par timingSafeEqual, jamais par ===", () => {
     const otp = corpsDe("signatures/otp.ts", "verifyOtp");
     expect(otp).toMatch(/\btimingSafeEqual\(/);
     expect(importeDeCrypto("signatures/otp.ts", "timingSafeEqual")).toBe(true);
@@ -98,13 +99,6 @@ describe("statique — le hasard et les comparaisons de secrets", () => {
     expect(egalites.filter((l) => !/\.length\b|OTP_LENGTH/.test(l))).toEqual([]);
     expect(otp).not.toMatch(/\.equals\(/);
 
-    const cles = corpsDe("mcp/acces-http.ts", "clesEgales");
-    expect(cles).toMatch(/\btimingSafeEqual\(/);
-    expect(cles).not.toMatch(/[!=]==|\.equals\(/);
-    expect(importeDeCrypto("mcp/acces-http.ts", "timingSafeEqual")).toBe(true);
-    const resolution = corpsDe("mcp/acces-http.ts", "resoudreScopeDepuisCle");
-    expect(resolution).toMatch(/\bclesEgales\(/);
-    expect(resolution).not.toMatch(/cleAttendue\s*[!=]==|[!=]==\s*\w*\.?cleAttendue/);
   });
 });
 
@@ -164,25 +158,3 @@ describe("comportement — OTP", () => {
   });
 });
 
-describe("comportement — clé MCP", () => {
-  const config = {
-    cleAttendue: "k".repeat(40),
-    etablissementId: "etab-1",
-    hotesAutorises: [],
-    originesAutorisees: [],
-  };
-
-  it("la clé fournie est comparée par timingSafeEqual", () => {
-    expect(resoudreScopeDepuisCle("k".repeat(40), config)).toEqual({
-      etablissementId: "etab-1",
-    });
-    expect(crypto.timingSafeEqual).toHaveBeenCalledTimes(1);
-  });
-
-  it("refuse une clé fausse, même de même longueur ou préfixe de la bonne", () => {
-    expect(resoudreScopeDepuisCle("k".repeat(39) + "x", config)).toBeNull();
-    expect(resoudreScopeDepuisCle("k".repeat(20), config)).toBeNull();
-    expect(clesEgales("a", "b")).toBe(false);
-    expect(crypto.timingSafeEqual).toHaveBeenCalled();
-  });
-});

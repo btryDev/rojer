@@ -30,10 +30,6 @@ vi.mock("@/lib/securite/limite-debit", async (original) => ({
   consommer: async () => ({ ok: true }),
 }));
 
-vi.mock("./db", () => {
-  const client = { etablissement: { findUnique: vi.fn() } };
-  return { clientMcp: async () => client };
-});
 
 vi.mock("@modelcontextprotocol/server", async (importOriginal) => {
   const reel = await importOriginal<typeof import("@modelcontextprotocol/server")>();
@@ -81,15 +77,24 @@ function fluxSansFin(d: Decoupage): Response {
   });
 }
 
-const CLE = "K7dQx2mNpR4vTzL9wYbF3sJhC6nAeU8gXtM1oPqW5rE";
-process.env.MCP_CLE = CLE;
-process.env.MCP_ETABLISSEMENT_ID = "etab_1";
-process.env.MCP_HOTES = "rojer.test";
+// Le porteur (ADR-062) : simulé, éprouvé par `acces-compte.test.ts`. Aucun
+// outil n'est appelé ici : le client borné est vide.
+vi.mock("@/lib/mcp/acces-compte", () => ({
+  resoudrePorteur: async () => ({
+    statut: "ok",
+    porteur: { userId: "user-1", compteId: "compte-1", clientId: "claude", ouvert: true },
+  }),
+}));
+vi.mock("@/lib/auth/compte-hors-session", () => ({
+  clientDuPorteurMcp: () => ({ etablissement: { findUnique: vi.fn(), findMany: vi.fn().mockResolvedValue([]) } }),
+}));
 
-const { POST } = await import("@/app/api/mcp/[cle]/route");
+process.env.PUBLIC_APP_URL = "https://rojer.test";
+
+const { POST } = await import("@/app/api/mcp/route");
 
 function ecoute(id: number, params: Record<string, unknown>): Request {
-  return new Request(`https://rojer.test/api/mcp/${CLE}`, {
+  return new Request("https://rojer.test/api/mcp", {
     method: "POST",
     headers: {
       "content-type": "application/json",

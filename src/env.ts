@@ -28,14 +28,14 @@ import "server-only";
 //     dépendent du contexte restent là où elles vivent et où leur message est
 //     le plus juste : stockage (`storage/index.ts`, `STORAGE_DRIVER=local`
 //     refusé en production au premier dépôt), e-mail (`email/index.ts`),
-//     URL publique (`refusUrlPublique`), MCP (`mcp/acces-*.ts`, route fermée
+//     URL publique (`refusUrlPublique`), MCP (`api/mcp/route.ts`, route fermée
 //     plutôt que serveur en panne), Légifrance (`configurationDepuisEnv`).
 //     Les rapatrier ici aurait fait tomber au démarrage des serveurs qui
 //     servent correctement tout le reste.
 //
 // CE QUI N'EST PAS MIGRÉ. Le code continue de lire `process.env.X` là où il le
 // lisait. Plusieurs lecteurs prennent l'environnement en PARAMÈTRE pour être
-// testés sans muter `process.env` (`mcp/hotes.ts`, `mcp/acces-*.ts`,
+// testés sans muter `process.env` (`mcp/hotes.ts`,
 // `legifrance/client.ts`, `lib/environnement.ts`) ; ~~les modules Supabase sont
 // au lot sécurité puis à Better Auth~~ [2026-10-30 : Better Auth lit son
 // secret et l'adresse publique dans `auth/better-auth.ts`]. Les remplacer par un objet importé d'ici
@@ -116,8 +116,7 @@ const schema = z
     CELLAR_ADDON_KEY_ID: optionnelle,
     CELLAR_ADDON_KEY_SECRET: optionnelle,
 
-    // Serveur MCP (`mcp/acces-*.ts`, `mcp/hotes.ts`).
-    MCP_CLE: optionnelle,
+    // Serveur MCP : `mcp/hotes.ts` ; le stdio de développement (`scripts/mcp-server.ts`).
     MCP_ETABLISSEMENT_ID: optionnelle,
     MCP_HOTES: optionnelle,
 

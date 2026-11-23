@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * Durée de vie des réponses du serveur MCP distant — audit du 2026-09-27.
  *
  * Ce que la production a montré : 143 « Task timed out after 300 seconds »
- * sur `POST /api/mcp/[cle]`, un toutes les quatre minutes. La cause est une
+ * sur `POST /api/mcp/[cle]` (l'ancienne route à clé), un toutes les quatre minutes. La cause est une
  * requête `subscriptions/listen` (révision 2026-07-28) : le SDK y répond par
  * un flux SSE qui ne se termine que lorsque le client le ferme. Sur une
  * fonction serverless, « jamais » veut dire « jusqu'au plafond de la
@@ -15,14 +15,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * fait échouer le test sur le délai, pas sur une assertion.
  */
 
-const CLE = "K7dQx2mNpR4vTzL9wYbF3sJhC6nAeU8gXtM1oPqW5rE";
 const ETAB = "etab_1";
 
 const { prismaMock } = vi.hoisted(() => ({
   prismaMock: {
     $on: vi.fn(),
     // `findFirst` : les marques « à confirmer » (`marquesAConfirmerDuDossier`), rien par défaut.
-    etablissement: { findUnique: vi.fn(), findFirst: vi.fn().mockResolvedValue(null) },
+    etablissement: {
+      findUnique: vi.fn(),
+      findFirst: vi.fn().mockResolvedValue(null),
+      // Les établissements du compte du porteur : un seul.
+      findMany: vi.fn().mockResolvedValue([{ id: "etab_1", raisonDisplay: "Café du Port", adresse: "1 quai Neuf" }]),
+    },
     verification: { count: vi.fn(), findMany: vi.fn() },
     // Le parc (`getParcEquipements`, axe `inventaire`) : vide par défaut.
     equipement: { findMany: vi.fn().mockResolvedValue([]) },
@@ -36,25 +40,32 @@ vi.mock("@/lib/securite/limite-debit", async (original) => ({
   consommer: async () => ({ ok: true }),
 }));
 
-// Le client des lectures : le client borné simulé sur le faux Prisma, tant
-// que l'établissement existe (`./db.ts`).
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
-vi.mock("./db", async () => (await import("@/test/garde-simulee")).clientMcpSimule(prismaMock));
 
-process.env.MCP_CLE = CLE;
-process.env.MCP_ETABLISSEMENT_ID = ETAB;
-process.env.MCP_HOTES = "rojer.test";
+// Le porteur (ADR-062) : simulé, éprouvé par `acces-compte.test.ts`. Le
+// client borné du porteur : le faux Prisma, avec un seul établissement au
+// compte (`etablissement.findMany`).
+vi.mock("@/lib/mcp/acces-compte", () => ({
+  resoudrePorteur: async () => ({
+    statut: "ok",
+    porteur: { userId: "user-1", compteId: "compte-1", clientId: "claude", ouvert: true },
+  }),
+}));
+vi.mock("@/lib/auth/compte-hors-session", () => ({ clientDuPorteurMcp: () => prismaMock }));
 
-const route = await import("@/app/api/mcp/[cle]/route");
+process.env.PUBLIC_APP_URL = "https://rojer.test";
+
+const route = await import("@/app/api/mcp/route");
 const { POST, GET, DELETE } = route;
 
 const VERSION_MODERNE = "2026-07-28";
-const URL_MCP = `https://rojer.test/api/mcp/${CLE}`;
+const URL_MCP = "https://rojer.test/api/mcp";
 
 const entetesBase = {
   "content-type": "application/json",
   accept: "application/json, text/event-stream",
   host: "rojer.test",
+  authorization: "Bearer jeton",
 };
 
 /** Requête de la révision 2026-07-28 : métadonnées dans `_meta` ET en en-têtes. */
@@ -228,17 +239,10 @@ describe("chaque échange se termine", () => {
   });
 
   it("GET et DELETE : 405, pas de flux serveur → client", async () => {
-    const get = await GET(
-      new Request(URL_MCP, {
-        method: "GET",
-        headers: { host: "rojer.test", accept: "text/event-stream" },
-      }),
-    );
-    expect(get.status).toBe(405);
-    const del = await DELETE(
-      new Request(URL_MCP, { method: "DELETE", headers: { host: "rojer.test" } }),
-    );
-    expect(del.status).toBe(405);
+    // Sans état : ni flux serveur → client, ni session à fermer, quelle que
+    // soit la requête — la méthode n'en lit rien.
+    expect((await GET()).status).toBe(405);
+    expect((await DELETE()).status).toBe(405);
   });
 });
 
@@ -258,7 +262,7 @@ async function resultat(res: Response) {
 const appel = (id: number, name: string, args: Record<string, unknown>) =>
   POST(requeteModerne(id, "tools/call", { name, arguments: args }, name));
 
-describe("établissement introuvable (MCP_ETABLISSEMENT_ID supprimé)", () => {
+describe("établissement introuvable (supprimé entre la liste du compte et la lecture)", () => {
   it("répond tout de suite, en erreur d'outil, sans rien lire d'autre", async () => {
     prismaMock.etablissement.findUnique.mockResolvedValue(null);
     const debut = performance.now();

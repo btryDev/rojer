@@ -1,5 +1,10 @@
 # ADR-013 — Serveur MCP distant authentifié en OAuth 2.1
 
+> **Remplacée le 2026-11-21 par l'ADR-062** (proposée) : sa prémisse — Better
+> Auth écarté parce qu'il aurait créé une seconde identité — est tombée avec
+> l'ADR-052. L'autorisation passe au fournisseur OAuth de Better Auth, et le
+> connecteur est réservé à la formule Pro.
+
 > **Amendée le 2026-09-01 par l'ADR-028.** Ce document suppose qu'un utilisateur
 > n'a qu'un seul établissement — l'affirmation « la requête ne peut pas rendre
 > deux résultats » ne tient plus. L'outil MCP doit désambiguïser. Le reste de

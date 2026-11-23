@@ -42,6 +42,20 @@ export async function clientDuProprietaire(etablissementId: string): Promise<Cli
 }
 
 /**
+ * Le porteur d'un jeton du connecteur MCP (ADR-062 § 5) : le compte et la
+ * personne du jeton VÉRIFIÉ, dont l'appartenance vient d'être relue
+ * (`mcp/acces-compte.ts`) — jamais un identifiant reçu de l'appelant. En
+ * lecture seule quel que soit son rôle : le connecteur ne fait que lire, et
+ * toute écriture est refusée par le client lui-même. Avec un établissement,
+ * borné à celui-là aussi : un établissement d'un autre compte y est absent,
+ * quel que soit l'argument d'outil qui l'a désigné. Réservé à
+ * `mcp/outils-compte.ts` (`portee/imports.test.ts`).
+ */
+export function clientDuPorteurMcp(compteId: string, userId: string, etablissementId?: string): ClientBorne {
+  return clientBorne({ type: "compte", compteId, userId, lectureSeule: true, ...(etablissementId ? { etablissementId } : {}) });
+}
+
+/**
  * La session du serveur MCP stdio, lue UNE fois au démarrage, sur son propre
  * client brut (`mcp/prisma.ts` : rien sur la sortie standard, qui appartient
  * au protocole) : le nom de l'établissement servi et le client borné au compte

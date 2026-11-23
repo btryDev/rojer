@@ -1,9 +1,9 @@
 // Hôtes et origines acceptés par le serveur MCP distant.
 //
-// Extrait de `./acces-http` pour être partagé avec ~~`./acces-oauth`~~ [retiré
-// le 2026-10-30, ADR-052] l'accès par compte à venir (`@better-auth/mcp`) : la
-// validation `Host`/`Origin` est une garde de transport, elle ne dépend pas
-// de la façon dont on authentifie derrière.
+// ~~Extrait de `./acces-http` pour être partagé avec l'accès par compte~~
+// [2026-11-21, ADR-062 : la clé est retirée ; seul l'accès OAuth reste]. La
+// validation `Host`/`Origin` est une garde de transport, elle ne dépend pas de
+// la façon dont on authentifie derrière.
 //
 // Pourquoi cette garde existe : sans validation de `Host`, une page web
 // visitée par l'utilisateur peut faire parler son navigateur au serveur
@@ -15,20 +15,23 @@ function versHote(valeur: string): string {
   return valeur.replace(/^https?:\/\//, "").split("/")[0];
 }
 
-const BOUCLE_LOCALE = ["localhost", "127.0.0.1"];
+/** Noms d'hôte de la boucle locale admis en `Host` hors production (pas `[::1]`). */
+const BOUCLE_LOCALE_HOTES = ["localhost", "127.0.0.1"];
 
 /**
- * Hôte de `PUBLIC_APP_URL`, ou `null`. La boucle locale est écartée : elle
- * est déjà acceptée, et l'URL de développement (`http://localhost:3000`) ne
- * doit pas devenir l'hôte « public » de l'identifiant de ressource. La
- * validation `Host` compare des noms d'hôte sans port : on rend `hostname`.
+ * Hôte de `PUBLIC_APP_URL`, ou `null`. La boucle locale est écartée :
+ * ~~elle est déjà acceptée, et l'URL de développement (`http://localhost:3000`)
+ * ne doit pas devenir l'hôte « public » de l'identifiant de ressource~~
+ * [2026-11-21, ADR-062 : elle n'est acceptée qu'hors production, et un
+ * `PUBLIC_APP_URL` en localhost ne doit pas la faire accepter en production].
+ * La validation `Host` compare des noms d'hôte sans port : on rend `hostname`.
  */
 function hoteDeLApplication(env: NodeJS.ProcessEnv): string | null {
   const url = env.PUBLIC_APP_URL?.trim();
   if (!url) return null;
   try {
     const hote = new URL(url).hostname;
-    return hote && !BOUCLE_LOCALE.includes(hote) ? hote : null;
+    return hote && !BOUCLE_LOCALE_HOTES.includes(hote) ? hote : null;
   } catch {
     return null;
   }
@@ -42,7 +45,9 @@ function hoteDeLApplication(env: NodeJS.ProcessEnv): string | null {
  *      exigée en production pour les liens et QR codes (`email/index.ts`) ;
  *   3. ~~les domaines que Vercel pose lui-même~~ [2026-11-17 : retirés avec
  *      Vercel] ;
- *   4. la boucle locale, pour le développement.
+ *   4. la boucle locale, pour le développement — HORS production (audit MCP
+ *      du 2026-09-27, S8 ; ADR-062 § 9) : un `Host: localhost` n'y désigne
+ *      jamais le déploiement.
  *
  * Le 2 (audit Next.js du 2026-10-14, H5) sert le domaine de `PUBLIC_APP_URL`
  * sans configuration de plus ; `MCP_HOTES` ne sert qu'à ajouter un domaine
@@ -61,22 +66,7 @@ export function lireHotesAutorises(env: NodeJS.ProcessEnv): string[] {
     ...new Set([
       ...declares,
       ...(application ? [application] : []),
-      ...BOUCLE_LOCALE,
+      ...(env.NODE_ENV === "production" ? [] : BOUCLE_LOCALE_HOTES),
     ]),
   ];
-}
-
-/**
- * Hôte public du déploiement — celui sous lequel les clients distants
- * atteignent le serveur. Sert à construire l'identifiant de ressource
- * (RFC 9728), qui doit être une URL absolue et non un chemin.
- *
- * On prend le premier hôte déclaré, en écartant la boucle locale : un
- * identifiant de ressource en `localhost` n'a de sens qu'en développement,
- * et seulement à défaut d'autre chose.
- */
-export function lireHotePublic(env: NodeJS.ProcessEnv): string | null {
-  const hotes = lireHotesAutorises(env);
-  const distant = hotes.find((h) => !BOUCLE_LOCALE.includes(h));
-  return distant ?? hotes[0] ?? null;
 }

@@ -7,6 +7,8 @@
  * et aucune pour un outil qui ne l'est pas.
  */
 export const DETAIL_OUTIL_PRODUIT: Readonly<Record<string, string>> = {
+  etablissements:
+    "Les établissements de votre compte, pour que l'assistant sache de quel site vous parlez quand vous en suivez plusieurs.",
   fiche_etablissement:
     "Raison sociale, adresse, régimes réglementaires, effectifs, et le volume du dossier (équipements, vérifications, actions).",
   etat_duerp:

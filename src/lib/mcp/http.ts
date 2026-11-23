@@ -1,7 +1,9 @@
 // Serveur MCP en transport HTTP — les gardes, avant les outils.
 //
 // Le pendant distant de `scripts/mcp-server.ts`. Les outils ne changent pas
-// (c'est ce pour quoi `./tools` a été écrit sans rien savoir du transport) ;
+// (c'est ce pour quoi `./tools` a été écrit sans rien savoir du transport ;
+// [2026-11-21, ADR-062] `./outils-compte` les enveloppe d'un choix
+// d'établissement et de la formule) ;
 // ce qui change, c'est d'où vient la portée. En stdio elle était fixée au
 // démarrage par une variable d'environnement, sur une machine où seul le
 // propriétaire pouvait lancer le processus. Ici n'importe qui peut poster
@@ -9,10 +11,9 @@
 // et refusée par défaut.
 //
 // Ce module ne décide pas *comment* on authentifie. Il pose les gardes de
-// transport et délègue l'identification à `resoudreScope`, fourni par la
-// route. Aujourd'hui c'est un secret dans l'URL ; demain ce sera un jeton
-// OAuth vérifié — le SDK expose `requireBearerAuth` pour ça, et seul
-// `resoudreScope` changera. Le reste de ce fichier, non.
+// transport et délègue l'identification à `resoudrePorteur`, fourni par la
+// route : ~~un secret dans l'URL~~ [2026-11-21, ADR-062 : un jeton OAuth
+// vérifié, puis l'appartenance et l'abonnement relus — `./acces-compte`].
 //
 // Deux gardes de transport, avant qu'une ligne du protocole ne soit lue :
 //
@@ -20,8 +21,8 @@
 //      l'utilisateur peut faire parler son navigateur au serveur (attaque
 //      par reliaison DNS). Le SDK fournit les deux contrôles et se déclare
 //      explicitement « validation-free » : c'est à nous de les poser devant.
-//   2. **Portée.** Pas de portée, pas de serveur : on ne construit jamais
-//      d'instance sans savoir quel établissement elle a le droit de lire.
+//   2. **Portée.** Pas de porteur, pas de serveur : on ne construit jamais
+//      d'instance sans savoir quel compte elle a le droit de lire.
 
 import {
   createMcpHandler,
@@ -38,64 +39,33 @@ import {
   LIMITES,
   type Limite,
 } from "@/lib/securite/limite-debit";
-import {
-  CONSIGNE_SERVEUR,
-  ErreurOutilMcp,
-  OUTILS_MCP,
-  contexteMcp,
-  type ScopeMcp,
-} from "./tools";
+import { CONSIGNE_SERVEUR, ErreurOutilMcp } from "./tools";
+import { OUTILS_COMPTE } from "./outils-compte";
+import type { PorteurMcp, ResolutionPorteur } from "./acces-compte";
 
 export const NOM_SERVEUR = "rojer";
 export const VERSION_SERVEUR = "0.1.0";
 
-/**
- * Ce que `resoudreScope` rend : servir, refuser, ou renvoyer une réponse que
- * le mécanisme d'authentification a construite lui-même.
- *
- * Ce troisième cas est né avec l'ADR-028. Un porteur OAuth qui possède
- * plusieurs établissements et n'en désigne aucun n'est pas refusé — son jeton
- * est valide — mais il n'est pas servi non plus : il doit choisir, et on lui
- * répond en listant. Ce transport-ci n'a pas à connaître ce cas ; il lui suffit
- * de laisser passer une réponse toute faite plutôt que d'imposer le binaire
- * « portée ou refus », qui aurait obligé à répondre `401` — et à faire boucler
- * le client sur une authentification qui réussit sans jamais rien débloquer.
- */
-export type ResolutionPortee =
-  | { statut: "ok"; scope: ScopeMcp }
-  | { statut: "refus" }
-  | { statut: "reponse"; reponse: Response };
-
 export type OptionsServeurHttp = {
   /**
-   * Établit la portée d'une requête. C'est le seul point d'authentification
-   * du serveur.
+   * Établit le porteur d'une requête, ou rend la réponse de refus que le
+   * mécanisme d'authentification a construite (401 avec son défi, 403). C'est
+   * le seul point d'authentification du serveur.
    */
-  resoudreScope: (request: Request) => Promise<ResolutionPortee>;
+  resoudrePorteur: (request: Request) => Promise<ResolutionPorteur>;
   /** Hôtes acceptés dans l'en-tête `Host` (le domaine de déploiement). */
   hotesAutorises: string[];
   /** Origines acceptées dans l'en-tête `Origin`. */
   originesAutorisees: string[];
-  /**
-   * Réponse rendue quand `resoudreScope` refuse. La forme du refus dépend du
-   * mécanisme d'authentification, pas du transport : un secret dans l'URL se
-   * refuse en `404` muet (cf. `./acces-http`), un jeton OAuth en `401`
-   * désignant les métadonnées de ressource (~~cf. `./acces-oauth`~~
-   * [2026-10-30, ADR-052 : l'accès OAuth Supabase est retiré ; l'accès par
-   * compte reviendra avec `@better-auth/mcp`]).
-   *
-   * Par défaut, le `404` muet.
-   */
-  reponseRefus?: (request: Request) => Response;
 };
 
 /**
- * Construit le serveur servi pour **une** requête, avec sa portée déjà
- * résolue. Les outils reçoivent cette portée en argument : ils n'ont aucun
- * moyen d'en désigner une autre, et le client non plus — aucun schéma
- * d'entrée ne comporte d'identifiant d'établissement.
+ * Construit le serveur servi pour **une** requête, avec son porteur déjà
+ * résolu. Les outils reçoivent ce porteur en argument : ils n'ont aucun moyen
+ * d'en désigner un autre. L'argument `etablissement` ne choisit qu'à
+ * l'intérieur du compte du porteur (`./outils-compte`).
  */
-function construireServeur(scope: ScopeMcp): McpServer {
+function construireServeur(porteur: PorteurMcp): McpServer {
   const server = new McpServer(
     { name: NOM_SERVEUR, version: VERSION_SERVEUR },
     {
@@ -109,7 +79,7 @@ function construireServeur(scope: ScopeMcp): McpServer {
     },
   );
 
-  for (const outil of OUTILS_MCP) {
+  for (const outil of OUTILS_COMPTE) {
     server.registerTool(
       outil.nom,
       {
@@ -124,7 +94,7 @@ function construireServeur(scope: ScopeMcp): McpServer {
       },
       async (args: unknown) => {
         try {
-          const texte = await outil.executer(await contexteMcp(scope, new Date()), args);
+          const texte = await outil.executer(porteur, (args ?? {}) as Record<string, unknown>, new Date());
           return { content: [{ type: "text" as const, text: texte }] };
         } catch (erreur) {
           // Une erreur que l'outil destine au client (établissement
@@ -274,13 +244,6 @@ async function refusParLimite(
   );
 }
 
-/** Refus par défaut, volontairement muet — cf. `servir`. */
-const refusMuet = () =>
-  new Response(JSON.stringify({ error: "not_found" }), {
-    status: 404,
-    headers: { "content-type": "application/json" },
-  });
-
 /**
  * Rend le gestionnaire `fetch` à monter dans une route Next.
  *
@@ -291,13 +254,13 @@ export function creerHandlerMcpHttp(options: OptionsServeurHttp) {
   // Une seule instance de handler, un serveur neuf par requête : deux
   // sessions concurrentes ne peuvent pas se voir.
   const handler = createMcpHandler(async (ctx) => {
-    const scope = ctx.authInfo?.extra?.scope as ScopeMcp | undefined;
-    if (!scope) {
+    const porteur = ctx.authInfo?.extra?.porteur as PorteurMcp | undefined;
+    if (!porteur) {
       // Ne devrait pas arriver — `servir` refuse avant d'appeler le
       // handler. Filet de sécurité : jamais de serveur sans portée.
       throw new Error("portée absente pour une requête acceptée");
     }
-    return construireServeur(scope);
+    return construireServeur(porteur);
   });
 
   async function servir(request: Request): Promise<Response> {
@@ -306,8 +269,9 @@ export function creerHandlerMcpHttp(options: OptionsServeurHttp) {
       originValidationResponse(request, options.originesAutorisees);
     if (rejete) return rejete;
 
-    // Par IP AVANT l'authentification, qui peut coûter un appel au serveur
-    // Auth ; par portée APRÈS, pour qu'un porteur légitime ne puisse pas
+    // Par IP AVANT l'authentification, ~~qui peut coûter un appel au serveur
+    // Auth~~ [2026-11-21 : vérifiée en local, puis appartenance et abonnement
+    // relus en base, ADR-062] ; par portée APRÈS, pour qu'un porteur légitime ne puisse pas
     // marteler un établissement depuis plusieurs adresses. Adresse COMPLÈTE,
     // pas son /64 (exception à `ipPourLimite`, audit du 2026-11-10) : les
     // clients MCP hébergés partagent leurs réseaux de sortie entre leurs
@@ -319,15 +283,12 @@ export function creerHandlerMcpHttp(options: OptionsServeurHttp) {
       if (trop) return trop;
     }
 
-    const resolution = await options.resoudreScope(request);
-    if (resolution.statut === "refus") {
-      return (options.reponseRefus ?? refusMuet)(request);
-    }
+    const resolution = await options.resoudrePorteur(request);
     if (resolution.statut === "reponse") return resolution.reponse;
 
-    const scope = resolution.scope;
+    const porteur = resolution.porteur;
     const tropPourLaPortee = await refusParLimite(
-      cleLimite("mcp", "portee", scope.etablissementId),
+      cleLimite("mcp", "portee", porteur.compteId),
       LIMITES.mcpPortee,
     );
     if (tropPourLaPortee) return tropPourLaPortee;
@@ -343,12 +304,12 @@ export function creerHandlerMcpHttp(options: OptionsServeurHttp) {
     const reponse = await handler.fetch(request, {
       authInfo: {
         // Le SDK exige la forme d'un jeton vérifié ; on la remplit avec ce
-        // que l'on sait réellement. `extra.scope` est ce que lit le factory.
+        // que l'on sait réellement. `extra.porteur` est ce que lit le factory.
         token: "",
-        clientId: NOM_SERVEUR,
+        clientId: porteur.clientId,
         scopes: [],
         expiresAt: Math.floor(Date.now() / 1000) + 300,
-        extra: { scope },
+        extra: { porteur },
       },
     });
 

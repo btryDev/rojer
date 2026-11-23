@@ -2,8 +2,9 @@
 //
 // Un outil est ici une donnée : un nom, une description, un schéma d'entrée,
 // et une fonction qui rend du texte. Rien dans ce fichier ne sait qu'il
-// tourne derrière stdio. C'est ce découplage qui doit permettre de brancher
-// un jour le même jeu d'outils derrière un serveur HTTP authentifié en OAuth
+// tourne derrière stdio. C'est ce découplage qui ~~doit permettre de brancher
+// un jour~~ [2026-11-21 : a permis de brancher, ADR-062, `outils-compte.ts`]
+// le même jeu d'outils derrière un serveur HTTP authentifié en OAuth
 // sans y toucher : seul le code qui fabrique le `ContexteMcp` change.
 //
 // Deux règles de sécurité s'écrivent dans les types plutôt que dans un
@@ -120,9 +121,11 @@ export const MESSAGE_ETABLISSEMENT_INTROUVABLE =
 
 /**
  * Portée de la session : l'établissement que le serveur a le droit de lire.
- * Clé et stdio n'ont pas d'identité : le client borné l'est au propriétaire de
+ * ~~Clé et stdio n'ont pas d'identité : le client borné l'est au propriétaire de
  * l'établissement (ADR-051). [2026-10-31, cc : ~~`userId` du porteur OAuth~~,
- * pas de connecteur OAuth sur cc (ADR-052).]
+ * pas de connecteur OAuth sur cc (ADR-052).]~~ [2026-11-21, ADR-062 : le
+ * client borné l'est au porteur OAuth (`clientDuPorteurMcp`, son compte, en
+ * lecture seule) ; le stdio, sans identité, au propriétaire.]
  */
 export type ScopeMcp = { etablissementId: string };
 

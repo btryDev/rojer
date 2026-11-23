@@ -24,6 +24,7 @@ const h = vi.hoisted(() => ({
   consommer: vi.fn(async () => ({ ok: true })),
   envoi: true,
   annuler: vi.fn(async () => undefined),
+  oublier: vi.fn(async () => undefined),
   motifPlafond: vi.fn(async () => "Votre formule Essentiel couvre 1 utilisateur : passez à Pro."),
 }));
 vi.mock("next/cache", () => ({ revalidatePath: () => undefined }));
@@ -40,6 +41,7 @@ vi.mock("@/lib/auth/compte", () => ({
   getOptionalCompte: async () => ({ user: { id: "u1" }, compte: h.compte }),
 }));
 vi.mock("@/lib/auth/better-auth", () => ({ auth: { api: h.api } }));
+vi.mock("@/lib/connecteur/assistants", () => ({ oublierAssistants: h.oublier }));
 vi.mock("@/lib/auth/require-user", () => ({ entetesDeSession: async () => new Headers() }));
 vi.mock("@/lib/auth/scope", () => ({ requireInvitationDeLaSession: async () => ({}) }));
 vi.mock("@/lib/auth/membres", () => ({
@@ -198,10 +200,11 @@ describe("un autre onglet a changé de compte (audit du 2026-11-10)", () => {
 });
 
 describe("quitterCompte", () => {
-  it("à son départ, les invitations en attente de la personne tombent", async () => {
+  it("à son départ, les invitations en attente de la personne tombent, et ses assistants autorisés (ADR-062)", async () => {
     await expect(actions.quitterCompte(IDLE, fd({}))).rejects.toThrow("REDIRECT /entreprises");
     expect(h.api.leaveOrganization).toHaveBeenCalledWith(expect.objectContaining({ body: { organizationId: "compte-a" } }));
     expect(h.annuler).toHaveBeenCalledWith("u1", "compte-a");
+    expect(h.oublier).toHaveBeenCalledWith("compte-a", "u1");
   });
 
   it("un départ refusé (dernier propriétaire) n'annule rien", async () => {
