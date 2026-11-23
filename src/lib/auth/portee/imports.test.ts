@@ -119,8 +119,9 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous"; 
   // pas encore une portée : son appartenance (et l'abonnement du compte, pour
   // la formule Pro) se relit avant de construire le client borné.
   "src/lib/mcp/acces-compte.ts": {
-    motif: "porteur d'un jeton MCP vérifié : appartenance au compte du jeton et abonnement de ce compte, relus avant la portée",
-    usages: ["prisma.membre.findUnique", "prisma.abonnement.findUnique"],
+    motif:
+      "porteur d'un jeton MCP vérifié : appartenance au compte du jeton, consentement qui l'a émis (client, personne, compte) et abonnement de ce compte, relus avant la portée",
+    usages: ["prisma.membre.findUnique", "prisma.oauthConsent.findFirst", "prisma.abonnement.findUnique"],
   },
   "src/lib/connecteur/assistants.ts": {
     motif:

@@ -12,6 +12,7 @@ const h = vi.hoisted(() => ({
   refus: new Response(null, { status: 401 }),
   options: null as unknown,
   membre: vi.fn(),
+  consentement: vi.fn(),
   abonnement: vi.fn(),
 }));
 
@@ -25,10 +26,14 @@ vi.mock("@better-auth/mcp", () => ({
 }));
 vi.mock("@/lib/auth/better-auth", () => ({ auth: {} }));
 vi.mock("@/lib/prisma", () => ({
-  prisma: { membre: { findUnique: h.membre }, abonnement: { findUnique: h.abonnement } },
+  prisma: {
+    membre: { findUnique: h.membre },
+    oauthConsent: { findFirst: h.consentement },
+    abonnement: { findUnique: h.abonnement },
+  },
 }));
 
-const { resoudrePorteur, enteteJwt, jetonPorteur, descriptionDuDefi, refusJetonInvalide } = await import(
+const { resoudrePorteur, enteteJwt, jetonPorteur, descriptionDuDefi, refusJetonInvalide, consentementValable } = await import(
   "./acces-compte"
 );
 const { lookupKey } = await import("@/lib/abonnements/formules");
@@ -39,12 +44,16 @@ const jeton = (typ: string | undefined) => `${b64(typ ? { alg: "EdDSA", typ } : 
 const requete = (j: string | null) =>
   new Request(RESSOURCE, { method: "POST", headers: j ? { authorization: `Bearer ${j}` } : {} });
 
-const CLAIMS: Record<string, string> = { sub: "user-1", compte: "compte-1", azp: "client-1", scope: "rojer:lecture" };
+/** Émis le 2026-11-23 à 12:00:00 UTC (secondes). */
+const IAT = Date.UTC(2026, 10, 23, 12, 0, 0) / 1000;
+const CLAIMS: Record<string, unknown> = { sub: "user-1", compte: "compte-1", azp: "client-1", scope: "rojer:lecture", iat: IAT };
 const pro = { statut: "active", formule: lookupKey("pro", "mensuel") };
 
 beforeEach(() => {
   h.claims = { ...CLAIMS };
   h.membre.mockReset().mockResolvedValue({ role: "member" });
+  // Consenti une minute avant l'émission du jeton.
+  h.consentement.mockReset().mockResolvedValue({ createdAt: new Date((IAT - 60) * 1000) });
   h.abonnement.mockReset().mockResolvedValue(pro);
 });
 
@@ -143,3 +152,36 @@ describe("refusJetonInvalide — le défi reste dans l'ASCII de RFC 6750 § 3", 
     expect((await r.json()).error.message).toBe(description);
   });
 });
+
+describe("le consentement qui a émis le jeton (retrait immédiat, 2026-11-23)", () => {
+  it("lu pour ce client, cette personne et ce compte", async () => {
+    await resoudrePorteur(requete(jeton("at+jwt")), RESSOURCE);
+    expect(h.consentement).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { clientId: "client-1", userId: "user-1", referenceId: "compte-1" } }),
+    );
+  });
+
+  it("retiré : le jeton encore valide est refusé (401), avec la raison", async () => {
+    h.consentement.mockResolvedValue(null);
+    const r = await resoudrePorteur(requete(jeton("at+jwt")), RESSOURCE);
+    expect(r.statut === "reponse" && r.reponse.status).toBe(401);
+    expect(r.statut === "reponse" && r.reponse.headers.get("www-authenticate")).toContain('error="invalid_token"');
+  });
+
+  it("rebranché après le retrait : un jeton émis avant le nouveau consentement ne revit pas", async () => {
+    h.consentement.mockResolvedValue({ createdAt: new Date((IAT + 120) * 1000) });
+    const r = await resoudrePorteur(requete(jeton("at+jwt")), RESSOURCE);
+    expect(r.statut === "reponse" && r.reponse.status).toBe(401);
+  });
+
+  it("consentement et jeton dans la même seconde : servi (iat est arrondi à l'inférieur)", () => {
+    expect(consentementValable({ createdAt: new Date(IAT * 1000 + 700) }, IAT)).toBe(true);
+    expect(consentementValable({ createdAt: new Date((IAT + 2) * 1000) }, IAT)).toBe(false);
+  });
+
+  it("sans iat lisible : refusé", () => {
+    expect(consentementValable({ createdAt: new Date(0) }, undefined)).toBe(false);
+    expect(consentementValable({ createdAt: new Date(0) }, "123")).toBe(false);
+  });
+});
+

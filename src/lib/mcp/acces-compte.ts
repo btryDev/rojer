@@ -12,6 +12,12 @@ import "server-only";
 //      départage ;
 //   3. la personne est toujours membre du compte du jeton (`Membre`, comme
 //      `requireCompte`) — sinon 401 : le jeton ne vaut plus rien ;
+//   3 bis. [2026-11-23] le consentement qui a émis le jeton existe toujours
+//      (client, personne, compte), et ne lui est pas postérieur — sinon 401.
+//      « Retirer » coupe donc l'accès tout de suite : le JWT de quinze
+//      minutes, vérifié en mémoire seule, survivait au retrait jusqu'à son
+//      expiration (relevé depuis claude.ai en préproduction). Et un jeton émis
+//      avant un retrait ne revit pas au rebranchement ;
 //   4. la formule : lue ici, appliquée par les outils (`ouvert`), qui
 //      répondent « réservé au Pro » — un refus HTTP laisserait l'assistant
 //      devant une erreur de connexion muette.
@@ -63,6 +69,18 @@ export function jetonPorteur(request: Request): string | null {
 }
 
 /** Les claims utiles, ou `null` s'il en manque un. */
+/**
+ * Le consentement vaut-il pour ce jeton ? Il existe, et le jeton n'est pas
+ * plus ancien que lui : `iat` est en secondes arrondies à l'inférieur, d'où
+ * la seconde de marge — le jeton est émis après le consentement, au plus tôt
+ * dans la même seconde. Sans `iat` lisible, le jeton est refusé.
+ */
+export function consentementValable(consentement: { createdAt: Date | null } | null, iat: unknown): boolean {
+  if (!consentement) return false;
+  if (typeof iat !== "number" || !Number.isFinite(iat)) return false;
+  return !consentement.createdAt || consentement.createdAt.getTime() <= (iat + 1) * 1000;
+}
+
 export function claimsDuPorteur(claims: JWTPayload): { userId: string; compteId: string; clientId: string } | null {
   const userId = typeof claims.sub === "string" ? claims.sub : null;
   const compteId = typeof claims[CLAIM_COMPTE] === "string" ? (claims[CLAIM_COMPTE] as string) : null;
@@ -129,13 +147,19 @@ export async function resoudrePorteur(request: Request, ressource: string): Prom
   const lus = claimsDuPorteur(claims);
   if (!lus) return { statut: "reponse", reponse: refusJetonInvalide(ressource, "Jeton incomplet.") };
 
-  // 3 et 4. L'appartenance et l'abonnement du compte, lus en parallèle : un
-  // aller-retour par requête (une lecture imbriquée en ferait trois en série,
-  // Prisma sans jointures). Le compte vient du jeton vérifié.
-  const [membre, abonnement] = await Promise.all([
+  // 3, 3 bis et 4. L'appartenance, le consentement et l'abonnement du
+  // compte, lus en parallèle : un aller-retour par requête (une lecture
+  // imbriquée en ferait trois en série, Prisma sans jointures). Le compte et
+  // le client viennent du jeton vérifié.
+  const [membre, consentement, abonnement] = await Promise.all([
     prisma.membre.findUnique({
       where: { compteId_userId: { compteId: lus.compteId, userId: lus.userId } },
       select: { role: true },
+    }),
+    prisma.oauthConsent.findFirst({
+      where: { clientId: lus.clientId, userId: lus.userId, referenceId: lus.compteId },
+      select: { createdAt: true },
+      orderBy: { createdAt: "desc" },
     }),
     prisma.abonnement.findUnique({ where: { compteId: lus.compteId }, select: { statut: true, formule: true } }),
   ]);
@@ -143,6 +167,12 @@ export async function resoudrePorteur(request: Request, ressource: string): Prom
     return {
       statut: "reponse",
       reponse: refusJetonInvalide(ressource, "Vous n'êtes plus membre du compte de cette connexion."),
+    };
+  }
+  if (!consentementValable(consentement, claims.iat)) {
+    return {
+      statut: "reponse",
+      reponse: refusJetonInvalide(ressource, "L'accès de cet assistant a été retiré : reconnectez-le depuis l'assistant."),
     };
   }
   return {

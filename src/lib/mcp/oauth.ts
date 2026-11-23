@@ -16,7 +16,12 @@ export const PORTEES_FOURNISSEUR = [PORTEE_LECTURE, "offline_access"] as const;
 
 /** Durées, en secondes (ADR-062 § 6). */
 export const DUREES_OAUTH = {
-  /** Un JWT d'accès ne se révoque pas : il vit peu. Claude le rafraîchit cinq minutes avant. */
+  /**
+   * ~~Un JWT d'accès ne se révoque pas : il vit peu.~~ [2026-11-23 : il se
+   * révoque — `/api/mcp` relit son consentement à chaque requête
+   * (`acces-compte.ts`). Il vit peu quand même.] Claude le rafraîchit cinq
+   * minutes avant.
+   */
   jetonAcces: 15 * 60,
   /** Glissant : repart de zéro à chaque rafraîchissement. */
   jetonRafraichissement: 30 * 24 * 60 * 60,

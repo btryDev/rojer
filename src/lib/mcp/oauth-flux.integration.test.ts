@@ -286,11 +286,18 @@ describe.skipIf(!URL_BASE || !local)("connecteur MCP en OAuth — PostgreSQL et 
     rafraichissement = corps.refresh_token;
   });
 
-  it("retirer l'assistant : plus de consentement, et le rafraîchissement est refusé", async () => {
+  it("retirer l'assistant : plus de consentement, le jeton d'accès encore valide est refusé tout de suite, le rafraîchissement aussi", async () => {
+    // Avant : le jeton d'accès sert.
+    expect((await resoudrePorteur(requeteMcp(acces), RESSOURCE)).statut).toBe("ok");
     const [assistant] = await assistantsAutorises(userId, compteId);
     expect(assistant?.nom).toBe("Claude");
     expect(await retirerAssistant(userId, compteId, assistant.id)).toBe(true);
     expect(await assistantsAutorises(userId, compteId)).toEqual([]);
+
+    // Le même jeton, non expiré, ne sert plus (relevé en préproduction le
+    // 2026-11-23 : il survivait jusqu'à son expiration).
+    const apres = await resoudrePorteur(requeteMcp(acces), RESSOURCE);
+    expect(apres.statut === "reponse" && apres.reponse.status).toBe(401);
 
     const r = await jeton({ grant_type: "refresh_token", refresh_token: rafraichissement, client_id: clientId, resource: RESSOURCE });
     expect(r.status).toBe(400);
