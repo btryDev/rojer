@@ -31,9 +31,11 @@ génération d'origine ne faisait que 928 px, trop peu pour un écran Retina.
 `bientot-ouverture.jpg` : Nano Banana Pro via Krea, 2026-11-23, au trait de
 `transparence-sources.jpg` (donnée en référence) : une enveloppe ouverte, la
 lettre en traits bleus, sans texte. Deux passes — l'enveloppe seule, puis
-des lignes ajoutées sur la lettre — et le fond rendu uni à la main (les ronds
-flous retirés, décision de la propriétaire). Couleur du fond : `#d0e4fc`,
-reprise par le cadre de la page.
+des lignes ajoutées sur la lettre — puis les aplats nettoyés à la main
+(`aplats.py`, hors dépôt) : les ronds flous du fond retirés (décision de la
+propriétaire), et chaque aplat — fond, ombre, papier, barres — ramené à sa
+couleur médiane, le grain de la génération effacé. Couleur du fond :
+`#cfe3fc`, reprise par le cadre de la page.
 
 `documents/` : six pictos générés en une planche avec Nano Banana Pro
 (2026-11-07) d'après cette illustration, pour en garder le trait noir et les

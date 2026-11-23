@@ -62,7 +62,7 @@ export default async function PageBientot() {
               ne change pas de teinte. */}
           <PhotoCadre
             photo={{ src: illustrationOuverture, alt: "" }}
-            fond="#d0e4fc"
+            fond="#cfe3fc"
             ratio="4 / 3"
             sizes="(max-width: 1023px) 92vw, (max-width: 1600px) 52vw, 820px"
           />
