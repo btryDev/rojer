@@ -17,6 +17,7 @@ va dans `docs/illustrations/photos-reserve/`.
 | `manifeste-boulangere.jpg` | « Concentrez-vous », gauche | 4/5 vertical | `PHOTO_MANIFESTE` (`Manifeste.tsx`) |
 | `transparence-sources.jpg` | « Transparent sur ses sources » | 4/3 | `OutilSimple.tsx` |
 | `documents/*.webp` | Liste « Ce que Rojer tient à jour » (téléphone) | 1/1, 264 px | `PICTOS` (`Cadran.tsx`) |
+| `bientot-ouverture.jpg` | Page « Rojer ouvre très bientôt », à droite | 4/3 | `src/app/bientot/page.tsx` |
 
 **Origine** : générées avec Krea le 2026-11-06 (Krea 2 Large ; le
 restaurateur est une retouche Nano Banana Pro de la restauratrice, même
@@ -27,6 +28,15 @@ génération d'origine ne faisait que 928 px, trop peu pour un écran Retina.
 
 `transparence-sources.jpg` : Nano Banana Pro, 2026-11-06, piste de
 `docs/marketing/direction-illustration.md` (branche `docs/communication`).
+`bientot-ouverture.jpg` : Nano Banana Pro via Krea, 2026-11-23, au trait de
+`transparence-sources.jpg` (donnée en référence) : une enveloppe ouverte, la
+lettre en traits bleus, sans texte. Deux passes — l'enveloppe seule, puis
+des lignes ajoutées sur la lettre — puis les aplats nettoyés à la main
+(`aplats.py`, hors dépôt) : les ronds flous du fond retirés (décision de la
+propriétaire), et chaque aplat — fond, ombre, papier, barres — ramené à sa
+couleur médiane, le grain de la génération effacé. Couleur du fond :
+`#cfe3fc`, reprise par le cadre de la page.
+
 `documents/` : six pictos générés en une planche avec Nano Banana Pro
 (2026-11-07) d'après cette illustration, pour en garder le trait noir et les
 bleus, puis découpés et détourés. Décoratifs (`alt=""`) ; servis tels quels

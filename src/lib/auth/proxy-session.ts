@@ -50,11 +50,16 @@ const PUBLIC_PREFIXES = [
   "/conditions",
   // Mentions légales, confidentialité, cookies : lues avant tout compte.
   "/legal",
+  // « Rojer ouvre bientôt » (2026-11-23, `lib/ouverture.ts`) : là où mènent
+  // les boutons d'inscription tant qu'elles sont fermées.
+  "/bientot",
   // ADR-053 : le webhook Stripe, sans session ; la signature est sa garde.
   "/api/stripe/webhook",
   // Les tâches (file Stripe, tâches du jour), appelées chaque minute par la crontab ; le secret partagé est leur garde.
   "/api/taches/chaque-minute",
   "/robots.txt",
+  // Le plan du site, pour les moteurs (2026-11-23, `app/sitemap.ts`).
+  "/sitemap.xml",
 ];
 
 function sousPrefixe(pathname: string, prefixes: readonly string[]): boolean {

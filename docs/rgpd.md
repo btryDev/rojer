@@ -323,6 +323,19 @@ reconnaissable »). Deux mesures la gardent de le devenir :
   stockage au remplacement, au retrait et à la suppression de l'établissement
   (`suppression/fichiers.ts`).
 
+### 2.10 Liste d'attente de l'ouverture (`/bientot`, 2026-11-23)
+
+Tant que les inscriptions sont fermées (`src/lib/ouverture.ts`), la page
+« Rojer ouvre très bientôt » recueille une adresse e-mail, et rien d'autre
+(`DemandeOuverture` : adresse en minuscules, date). Finalité unique : un seul
+e-mail, le jour de l'ouverture. Fondement : le consentement de la personne
+(art. 6.1.a), retiré par une demande d'effacement.
+Conservation : jusqu'à cet envoi, puis la table se vide ; effacement sur
+simple demande avant. La table n'est lue nulle part dans l'application, RLS
+active sans politique ; une limite de débit par réseau et un champ piège
+freinent les inscriptions automatiques. Écrit aussi dans la politique de
+confidentialité (`pages-legales.ts`).
+
 ## 3. Hébergement
 
 - Base de données et authentification : **Supabase**, région UE (Francfort).

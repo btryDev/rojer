@@ -5,6 +5,7 @@ import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
 import { getOptionalUser } from "@/lib/auth/require-user";
 import { signOutAction } from "@/lib/auth/actions";
 import { getOptionalUserEtablissement } from "@/lib/auth/scope";
+import { lienInscription } from "@/lib/ouverture";
 
 export const metadata = {
   title: "Connexion — Rojer",
@@ -118,8 +119,10 @@ export default async function LoginPage({
         {ouverte?.email ? null : (
         <p className="m-0 mt-6 text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           Pas de compte ?{" "}
+          {/* Inscriptions fermées (`lib/ouverture.ts`) : /bientot, sauf
+              pour revenir à une invitation (ADR-054 § 5). */}
           <Link
-            href={`/signup${next ? `?next=${encodeURIComponent(next)}` : ""}`}
+            href={lienInscription(`/signup${next ? `?next=${encodeURIComponent(next)}` : ""}`, { next })}
             className="font-semibold text-[color:var(--board-blue-ink)] underline decoration-[color:var(--board-blue-soft)] underline-offset-4 transition-colors hover:decoration-[color:var(--board-blue-ink)]"
           >
             Créer un compte →

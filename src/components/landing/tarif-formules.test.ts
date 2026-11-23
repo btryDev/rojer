@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { FORMULES, type Quotas } from "@/lib/abonnements/formules";
+import { FORMULES, LIMITES_ESSAI, type Quotas } from "@/lib/abonnements/formules";
+import { MAX_ZONES } from "@/lib/batiments/schema";
 import { GRILLE, INCLUS, NON_INCLUS } from "./tarif-grille";
 
 /**
@@ -47,4 +48,30 @@ describe("la grille du tarif suit FORMULES", () => {
     expect(caseDe("Rendez-vous avec l'expert", 1)).toBe(NON_INCLUS);
     expect(nombre(caseDe("Rendez-vous avec l'expert", 2))).toBe(FORMULES.pro.quotas.heuresExpertParAn);
   });
+});
+
+/**
+ * La taille du dossier (2026-11-23, relecture de la page publique : la
+ * grille annonçait « 5 » unités de travail dans les formules payantes, sans
+ * limite depuis l'ADR-033 amendée). L'essai suit `LIMITES_ESSAI` ; les
+ * formules payantes suivent `FORMULES`, sans limite sauf les zones, bornées à
+ * `MAX_ZONES` (ADR-029).
+ */
+describe("la taille du dossier suit l'essai et les formules", () => {
+  const TAILLE: Record<string, "unitesTravail" | "zones" | "equipements" | "prescriptions"> = {
+    "Unités de travail du DUERP": "unitesTravail",
+    Zones: "zones",
+    Équipements: "equipements",
+    "Prescriptions particulières": "prescriptions",
+  };
+  for (const [libelle, cle] of Object.entries(TAILLE)) {
+    it(libelle, () => {
+      expect(nombre(caseDe(libelle, 0))).toBe(LIMITES_ESSAI[cle]);
+      for (const [colonne, formule] of [[1, FORMULES.essentiel], [2, FORMULES.pro]] as const) {
+        const quota = formule.quotas[cle];
+        const attendu = cle === "zones" ? String(MAX_ZONES) : quota === null ? /^illimité/ : String(quota);
+        expect(caseDe(libelle, colonne)).toMatch(attendu);
+      }
+    });
+  }
 });

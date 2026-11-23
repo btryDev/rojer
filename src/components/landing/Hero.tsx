@@ -7,6 +7,7 @@
 import { getImageProps } from "next/image";
 import Link from "next/link";
 import type { CompteLanding } from "./compte";
+import { lienInscription } from "@/lib/ouverture";
 import photoHero from "@/assets/landing/hero-restaurateur.jpg";
 import photoHeroPortrait from "@/assets/landing/hero-restaurateur-portrait.jpg";
 
@@ -49,7 +50,16 @@ export function Hero({
 }) {
   // Deux cadrages, une image : `<picture>` choisit la source, l'`<img>`
   // reste unique (un seul téléchargement, un seul aperçu flou).
-  const commun = { alt: PHOTO_HERO.alt, fill: true, preload: true, placeholder: "blur" as const };
+  // `preload` ne fait ici que retirer le chargement différé : `getImageProps`
+  // n'émet ni préchargement ni priorité. `fetchPriority` dit au navigateur que
+  // c'est l'image principale de la page (relecture du 2026-11-23).
+  const commun = {
+    alt: PHOTO_HERO.alt,
+    fill: true,
+    preload: true,
+    fetchPriority: "high" as const,
+    placeholder: "blur" as const,
+  };
   const portrait = getImageProps({ ...commun, src: PHOTO_HERO.portrait, sizes: "100vw" }).props;
   const paysage = getImageProps({
     ...commun,
@@ -126,10 +136,11 @@ export function Hero({
           </p>
 
           {/* Un compte connecté retrouve son dossier par « Mon espace »,
-              dans l'en-tête : le hero ne le lui redemande pas. */}
+              dans l'en-tête : le hero ne le lui redemande pas. Inscriptions
+              fermées (`lib/ouverture.ts`) : le bouton mène à /bientot. */}
           <div className="mt-10 flex flex-wrap items-center gap-4">
             {!compte ? (
-              <Link href="/signup" className="lp-btn lp-btn-blanc">
+              <Link href={lienInscription("/signup")} className="lp-btn lp-btn-blanc">
                 Essayer 30 jours
                 <span className="lp-fleche" aria-hidden>
                   →

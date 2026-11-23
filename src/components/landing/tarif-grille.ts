@@ -1,6 +1,6 @@
 // La grille complète des offres (« Voir le détail des offres ») : grille
 // tarifaire du 2026-11-05, colonne « Essai » comprise. Séparée des cartes
-// (`tarif-donnees.ts`). Le tableau (`Tarif`, serveur) la lit ; au téléphone,
+// (`tarif-donnees.ts`). Le tableau (`GrilleDesOffres`) la lit ; au téléphone,
 // la fenêtre `DetailOffresMobile` la reçoit en props.
 
 /** Ce qu'une case dit, hors valeur chiffrée : inclus, non inclus, abonnement requis. */
@@ -40,7 +40,10 @@ export const GRILLE: GroupeGrille[] = [
     lignes: [
       { libelle: "Établissements", cases: ["1", "1", "jusqu'à 5", "au-delà de 5"] },
       { libelle: "Utilisateurs", cases: ["1", "1", "jusqu'à 5", "illimités"] },
-      { libelle: "Unités de travail du DUERP", cases: ["3", "5", "5", "5"] },
+      // [2026-11-23 : « 5 » dans les formules payantes — faux depuis le
+      // 2026-11-11 (ADR-033 amendée, plafond levé). Relu par
+      // `tarif-formules.test.ts`.]
+      { libelle: "Unités de travail du DUERP", cases: ["3", "illimité", "illimité", "illimité"] },
       { libelle: "Zones", cases: ["1", "3", "3", "3"] },
       { libelle: "Équipements", cases: ["5", "illimité", "illimité", "illimité"] },
       { libelle: "Prescriptions particulières", cases: ["1", "illimité", "illimité", "illimité"] },

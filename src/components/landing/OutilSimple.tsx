@@ -10,13 +10,11 @@
 // Les apparitions sont « amples » (Reveal) : la section se découvre au
 // défilement, le texte d'abord, le média ensuite.
 
-import { fichiersVisite } from "@/lib/visite/visites";
 import { ExtraitVideo } from "./ExtraitVideo";
 import illustrationSources from "@/assets/landing/transparence-sources.jpg";
 import { PhotoCadre } from "./PhotoCadre";
 import { Reveal } from "./Reveal";
 
-const VISITE = fichiersVisite("equipements");
 
 /** Le bloc texte d'un temps : sur-titre, titre, paragraphe. */
 function Temps({
@@ -60,11 +58,12 @@ export function OutilSimple() {
           />
           <Reveal ample="media" delai={180}>
             <div className="lp-fiche-carte overflow-hidden">
+              {/* Le passage 30→47 s de la visite « Équipements », coupé à
+                  part et sans son (2026-11-23) : la visite entière reste
+                  celle de l'application. */}
               <ExtraitVideo
-                src={VISITE.video}
-                poster={VISITE.affiche}
-                debut={30}
-                fin={47}
+                src="/videos/extrait-equipements.mp4"
+                poster="/videos/extrait-equipements.jpg"
                 label="Démonstration : dépôt du rapport des extincteurs et calcul de la prochaine échéance"
               />
             </div>

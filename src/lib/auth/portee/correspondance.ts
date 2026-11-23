@@ -82,6 +82,9 @@ export const CORRESPONDANCE = {
   LimiteDebit: {
     horsCompte: "limitation de débit par clé (IP, jeton) : compteur technique, lu avant toute identité",
   },
+  DemandeOuverture: {
+    horsCompte: "adresse laissée sur /bientot pour être prévenu de l'ouverture (`lib/ouverture.ts`) : écrite sans session, jamais lue par l'application",
+  },
   EssaiEntreprise: {
     horsCompte: "un essai par entreprise (ADR-053 § 8) : le SIREN déjà essayé, lu à travers les comptes par `abonnements/essai-entreprise.ts`",
   },
