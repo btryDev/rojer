@@ -7,10 +7,12 @@ import { publicAppUrl, refusUrlPublique } from "@/lib/url-publique";
 
 // Le titre et la description que montrent l'onglet, les moteurs et les
 // aperçus de lien (2026-11-23, décision de la propriétaire : « plus approprié
-// et malin pour le référencement »). Les mots qu'un dirigeant tape — DUERP,
-// registre de sécurité — d'abord, en moins de 60 signes ; la description dit
-// le reste en moins de 160, sans jamais promettre la conformité (règle 8).
-const TITRE = "Rojer — DUERP et registre de sécurité pour TPE-PME";
+// et malin pour le référencement », puis « trop limitant » pour DUERP et
+// registre seuls). La promesse du hero et le terme que l'on cherche —
+// « prévention des risques » — en moins de 60 signes ; la description nomme
+// les pièces (DUERP, vérifications, registre, plan d'actions) en moins de 160,
+// sans jamais promettre la conformité (règle 8).
+const TITRE = "Rojer — Votre copilote prévention des risques pour TPE-PME";
 const DESCRIPTION =
   "Rojer tient à jour la prévention de votre entreprise : DUERP, vérifications périodiques, registre de sécurité, plan d'actions. Sources Légifrance à l'appui.";
 
