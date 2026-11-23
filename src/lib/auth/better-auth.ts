@@ -17,6 +17,9 @@ import {
   MODES_DE_JETON,
   PORTEES_FOURNISSEUR,
   estAdresseDeRetourAdmise,
+  adressesDUnSeulTenant,
+  niveauDuClient,
+  nomReserve,
   estDocumentCimdAdmis,
   ressourceMcp,
 } from "@/lib/mcp/oauth";
@@ -171,8 +174,11 @@ function pluginsConnecteurMcp() {
       // Au-delà de la correspondance exacte du plugin, l'adresse doit être
       // celle d'un assistant admis : un client enregistré avant un
       // resserrement de la liste n'en passe pas davantage.
-      validateRedirectUri: (adresseRetour, _enregistrees, parDefaut) =>
-        parDefaut && estAdresseDeRetourAdmise(adresseRetour),
+      // Et, pour TOUT client — enregistré ou CIMD, que le crochet
+      // d'enregistrement ne voit pas —, des adresses d'un seul tenant : sans
+      // quoi le consentement donné par l'une servirait l'autre (ADR-062 § 12).
+      validateRedirectUri: (adresseRetour, enregistrees, parDefaut) =>
+        parDefaut && estAdresseDeRetourAdmise(adresseRetour) && adressesDUnSeulTenant(enregistrees),
       // Les limites du plugin comptent par IP, et les serveurs de claude.ai
       // rafraîchissent les jetons de TOUS ses utilisateurs depuis quelques
       // adresses : les défauts (20 jetons, 5 enregistrements par minute)
@@ -323,20 +329,33 @@ export const auth = betterAuth({
     disableSessionRefresh: true,
   },
   hooks: {
-    // Enregistrement d'un client OAuth (ADR-062 § 3) : chaque adresse de
-    // retour déclarée doit être celle d'un assistant admis, sinon le client
-    // n'est pas créé. `validateRedirectUri` garde aussi l'autorisation.
+    // Enregistrement d'un client OAuth (ADR-062 §§ 3 et 12) : aucune adresse
+    // de retour refusée (`http` hors boucle locale, schéma d'application…),
+    // sinon le client n'est pas créé ; et un client qui n'est pas vérifié ne
+    // porte pas le nom d'un assistant vérifié ni celui de Rojer.
+    // `validateRedirectUri` garde aussi l'autorisation.
     before: createAuthMiddleware(async (ctx) => {
       if (ctx.path !== "/oauth2/register") return;
-      const adresses: unknown = (ctx.body as { redirect_uris?: unknown } | undefined)?.redirect_uris;
-      const admises =
-        Array.isArray(adresses) &&
-        adresses.length > 0 &&
-        adresses.every((a) => typeof a === "string" && estAdresseDeRetourAdmise(a));
-      if (!admises) {
+      const corps = ctx.body as { redirect_uris?: unknown; client_name?: unknown } | undefined;
+      const adresses = corps?.redirect_uris;
+      const lisibles = Array.isArray(adresses) && adresses.length > 0 && adresses.every((a) => typeof a === "string");
+      if (!lisibles || !(adresses as string[]).every(estAdresseDeRetourAdmise)) {
         throw new APIError("BAD_REQUEST", {
           error: "invalid_redirect_uri",
-          error_description: "Cette adresse de retour n'est pas celle d'un assistant admis par Rojer.",
+          error_description: "Adresse de retour refusée : HTTPS exigé, ou la boucle locale d'un programme de cet ordinateur.",
+        });
+      }
+      if (!adressesDUnSeulTenant(adresses as string[])) {
+        throw new APIError("BAD_REQUEST", {
+          error: "invalid_redirect_uri",
+          error_description: "Une adresse de retour non vérifiée ne se déclare pas avec d'autres : un client par outil.",
+        });
+      }
+      const nom = typeof corps?.client_name === "string" ? corps.client_name : "";
+      if (niveauDuClient(adresses as string[]) === "non_verifie" && nomReserve(nom)) {
+        throw new APIError("BAD_REQUEST", {
+          error: "invalid_client_metadata",
+          error_description: "Ce nom est celui d'un assistant vérifié ou de Rojer : un outil non vérifié ne peut pas le porter.",
         });
       }
     }),

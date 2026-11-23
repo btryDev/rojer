@@ -3,16 +3,17 @@ import { EnTetePage } from "@/components/entete-page/EnTetePage";
 import { BlocConfig } from "@/components/mcp/BlocConfig";
 import { WhyCard } from "@/components/ui-kit";
 import { Button } from "@/components/ui/button";
+import { ChampCompteAttendu } from "@/components/compte/ChampCompteAttendu";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { SurOrdinateur } from "@/components/layout/SurOrdinateur";
 import { DETAIL_OUTIL_PRODUIT } from "@/components/mcp/outils-produit";
 import { MESSAGE_CONNECTEUR_PRO } from "@/lib/abonnements/connecteur";
-import { assistantsAutorises, connecteurOuvertPour } from "@/lib/connecteur/assistants";
+import { assistantsAutorises, connecteurOuvertPour, outilsNonVerifiesOuverts } from "@/lib/connecteur/assistants";
 import { OUTILS_COMPTE } from "@/lib/mcp/outils-compte";
 import { ressourceMcp } from "@/lib/mcp/oauth";
 import { formaterDateFr } from "@/lib/dates";
 import { MESSAGE_URL_PUBLIQUE_ABSENTE, adressePubliqueOuNull } from "@/lib/url-publique";
-import { retirerAssistantAction } from "./actions";
+import { reglerOutilsNonVerifiesAction, retirerAssistantAction } from "./actions";
 
 export const metadata = {
   title: "Connecter — Consulter votre dossier depuis un assistant",
@@ -33,14 +34,24 @@ const chapo = "m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.55]
 const titreBloc = "m-0 text-[16px] font-semibold leading-[1.3] tracking-[-0.01em] text-[color:var(--board-ink)]";
 const texteBloc = "m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]";
 
-export default async function ConnecterPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ConnecterPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ compte?: string }>;
+}) {
   const { id } = await params;
+  const compteChange = (await searchParams).compte === "change";
   const { user, compte } = await requireEtablissement(id);
   // ADR-062 : réservé à la formule Pro ; l'adresse n'est montrée qu'en Pro.
-  const [ouvert, assistants] = await Promise.all([
+  const [ouvert, assistants, nonVerifiesOuverts] = await Promise.all([
     connecteurOuvertPour(compte.compteId),
     assistantsAutorises(user.id, compte.compteId),
+    outilsNonVerifiesOuverts(compte.compteId),
   ]);
+  const proprietaire = compte.role === "owner";
+  const regler = reglerOutilsNonVerifiesAction.bind(null, id);
   const publique = adressePubliqueOuNull();
   const adresse = publique ? ressourceMcp(publique) : null;
   const retirer = retirerAssistantAction.bind(null, id);
@@ -131,6 +142,14 @@ export default async function ConnecterPage({ params }: { params: Promise<{ id: 
                       </p>
                       <BlocConfig titre="Terminal" langue="shell" contenu={`claude mcp add --transport http rojer ${adresse}`} />
                     </div>
+                    <div>
+                      <h3 className={titreBloc}>ChatGPT</h3>
+                      <p className={`${texteBloc} mb-3.5`}>
+                        Réglages → Applications et connecteurs → Créer (le mode développeur doit être activé). Collez la
+                        même adresse, authentification OAuth : ChatGPT ouvre Rojer pour vous identifier et autoriser
+                        l&apos;accès.
+                      </p>
+                    </div>
                     <p className="m-0 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]">
                       Pour vérifier, demandez à l&apos;assistant : « quels établissements suis-tu ? ». Il doit
                       répondre par les établissements de votre compte.
@@ -164,7 +183,14 @@ export default async function ConnecterPage({ params }: { params: Promise<{ id: 
                     className="flex items-center justify-between gap-5 border-t border-[color:var(--board-slate-line)] px-7 py-4 first:border-t-0 sm:px-8"
                   >
                     <div className="min-w-0">
-                      <p className="m-0 text-[15px] font-semibold text-[color:var(--board-ink)]">{assistant.nom}</p>
+                      <p className="m-0 flex flex-wrap items-center gap-2 text-[15px] font-semibold text-[color:var(--board-ink)]">
+                        {assistant.nom}
+                        {assistant.niveau === "non_verifie" ? (
+                          <span className="pastille-board bg-[color:var(--board-signal-wash)] text-[11px] text-[color:var(--board-signal-ink)]">
+                            non vérifié
+                          </span>
+                        ) : null}
+                      </p>
                       {assistant.autoriseLe ? (
                         <p className="m-0 mt-0.5 text-[12.5px] text-[color:var(--board-slate-mid)]">
                           Autorisé le {formaterDateFr(assistant.autoriseLe)}
@@ -182,6 +208,53 @@ export default async function ConnecterPage({ params }: { params: Promise<{ id: 
               </ul>
             )}
           </section>
+
+          {/* LES OUTILS NON VÉRIFIÉS (ADR-062 § 12) — montrés hors Pro aussi
+              tant qu'ils sont ouverts : les fermer reste toujours possible. */}
+          {ouvert || nonVerifiesOuverts ? (
+            <section>
+              <header className="mb-4">
+                <p className={sourcil}>Autres outils</p>
+                <h2 className={titreSection}>n8n, agents et outils non vérifiés</h2>
+                <p className={chapo}>
+                  Claude et ChatGPT sont vérifiés par Rojer. Tout autre outil (n8n, un agent, un script) peut se brancher
+                  avec la même adresse, mais Rojer ne le connaît pas : un lien piégé pourrait faire autoriser un faux
+                  outil. Ils restent donc fermés tant que le propriétaire du compte ne les a pas ouverts ; ouverts,
+                  chaque autorisation affiche un avertissement et l&apos;adresse qui recevra l&apos;accès.
+                </p>
+              </header>
+              {compteChange ? (
+                <p className="m-0 mb-3 text-[13px] font-semibold text-[color:var(--board-signal-ink)]">
+                  Rien n&apos;a été changé : le compte actif a changé dans un autre onglet. Vérifiez le compte, puis
+                  recommencez.
+                </p>
+              ) : null}
+              <div className="carte-board flex flex-wrap items-center justify-between gap-4 px-7 py-5 sm:px-8">
+                <p className="m-0 text-[14px] text-[color:var(--board-ink)]">
+                  {nonVerifiesOuverts
+                    ? "Les outils non vérifiés peuvent se connecter à ce compte."
+                    : "Seuls les assistants vérifiés (Claude, ChatGPT) et les programmes lancés sur votre ordinateur peuvent se connecter à ce compte."}
+                </p>
+                {proprietaire ? (
+                  <form action={regler}>
+                    <ChampCompteAttendu compteId={compte.compteId} />
+                    <input type="hidden" name="ouvrir" value={nonVerifiesOuverts ? "non" : "oui"} />
+                    <Button type="submit" variant="boardClair" size="board">
+                      {nonVerifiesOuverts ? "Fermer aux outils non vérifiés" : "Ouvrir aux outils non vérifiés"}
+                    </Button>
+                  </form>
+                ) : (
+                  <p className="m-0 text-[12.5px] text-[color:var(--board-slate-mid)]">Réglé par le propriétaire du compte.</p>
+                )}
+              </div>
+              {nonVerifiesOuverts && proprietaire ? (
+                <p className={`${texteBloc} mt-3`}>
+                  Fermer retire aussitôt l&apos;accès de tous les outils non vérifiés déjà autorisés sur ce compte, pour
+                  tous ses membres.
+                </p>
+              ) : null}
+            </section>
+          ) : null}
 
           {/* CE QUI EST LISIBLE */}
           <section>

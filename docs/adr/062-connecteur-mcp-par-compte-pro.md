@@ -12,6 +12,10 @@
   de navigateur, prouvée par un jeton).
 - **Décision de la propriétaire** (2026-11-17) : le connecteur n'est
   accessible qu'en formule Pro.
+- **Amendée le 2026-11-23** (décision de la propriétaire, § 12) : le
+  connecteur s'ouvre à tout outil, en trois niveaux de confiance — vérifié
+  (Claude, ChatGPT), local, non vérifié — ; le non vérifié est fermé tant que
+  le propriétaire du compte ne l'a pas ouvert.
 
 ## Contexte
 
@@ -145,9 +149,12 @@ défauts auraient coupé le connecteur dès une poignée de clients.]
   admises sont une liste fermée** : `https://claude.ai/api/mcp/auth_callback`,
   `https://claude.com/api/mcp/auth_callback`, et la boucle locale
   (`localhost`, `127.0.0.1`, port libre) pour les clients en ligne de
-  commande. Un client qui déclare une autre adresse est refusé à
+  commande. ~~Un client qui déclare une autre adresse est refusé à
   l'enregistrement. Le connecteur promis est « Claude » ; un autre assistant
-  s'ajoute en ajoutant son adresse de retour, par décision.
+  s'ajoute en ajoutant son adresse de retour, par décision.~~ [2026-11-23,
+  § 12 : toute adresse HTTPS est admise à l'enregistrement ; la liste
+  fermée devient celle des assistants VÉRIFIÉS, qui décide du niveau de
+  confiance, pas de l'entrée.]
 - Portée accordée à l'enregistrement : `rojer:lecture` (et `offline_access`
   pour le rafraîchissement), rien d'autre.
 
@@ -310,6 +317,71 @@ un jeton émis avant un retrait ne revit pas au rebranchement.]
   une adresse étrangère, autorisation PKCE, consentement, jeton, porteur,
   formule, rafraîchissement, retrait, départ du compte. Reste à éprouver
   depuis claude.ai, sur la préproduction.
+
+### 12. Ouvrir à tout outil, en trois niveaux de confiance (2026-11-23)
+
+**Prémisse tombée** (règle 13) : « le connecteur promis est Claude ». La
+propriétaire veut brancher aussi ChatGPT et des agents (n8n, Hermes…). Repartir
+de zéro donnait trois montages : une liste d'éditeurs qui s'allonge à la main ;
+une clé d'accès personnelle (pour les automatisations sans personne) ; l'OAuth
+ouvert à tout client. Retenu : **l'OAuth ouvert, gradué** — une seule mécanique,
+celle que les outils savent déjà parler (n8n fait de l'OAuth avec
+enregistrement dynamique), sans clé à garder. La clé personnelle reste
+possible plus tard, par décision, si un client en a besoin.
+
+**Le risque** (lu le 2026-11-23 : OWASP, fiches MCP et OAuth 2.0 ; Obsidian
+Security sur les serveurs MCP ; spécification MCP 2026-07-28, considérations
+de sécurité) : un client ouvert peut déclarer n'importe quelle adresse de
+retour. Un attaquant enregistre un faux outil, envoie un lien d'autorisation
+vers le VRAI Rojer, et reçoit l'accès en lecture si la personne clique
+« Autoriser » — un hameçonnage par consentement, qu'aucun correctif de code
+n'empêche : il ne se borne que par ce que montre l'écran et par qui a le
+droit d'autoriser. Un avertissement seul est jugé insuffisant (discussion
+publique du protocole MCP).
+
+**Les niveaux**, décidés sur l'adresse de retour (c'est là que part le code) :
+
+| Niveau | Adresse de retour | Consentement |
+|---|---|---|
+| Vérifié | celles de Claude et de ChatGPT (`ADRESSES_VERIFIEES`, préfixe pour `chatgpt.com/connector/oauth/`) | l'écran d'aujourd'hui |
+| Local | boucle locale en `http` (RFC 8252) | l'écran d'aujourd'hui, plus « l'accès part vers un programme de cet ordinateur » (spécification MCP) |
+| Non vérifié | toute autre adresse `https` | **fermé** tant que le propriétaire du compte n'a pas ouvert « les outils non vérifiés » ; ouvert, un avertissement : le domaine en gros, « non vérifié par Rojer », et une case à cocher exigée par le geste |
+| Refusé | tout le reste (`http` hors boucle locale, schémas d'application, identifiants dans l'URL, fragment) | pas d'enregistrement |
+
+- **Le réglage** `Compte.outilsNonVerifiesAutorises`, faux par défaut, ne se
+  change que par un propriétaire (page « Connecter un assistant »). Le
+  refermer **efface** les autorisations des outils non vérifiés du compte,
+  pour tous ses membres — l'accès tombe à la requête suivante (§ 8).
+- **Un client non vérifié n'a qu'une adresse de retour** (relectures de
+  sécurité du 2026-11-23) : le fournisseur réutilisant un consentement par
+  client, le consentement donné pour une adresse servirait sinon les autres,
+  sans écran — celle de Claude mêlée à celle d'un attaquant, ou deux domaines
+  non vérifiés dont un seul est affiché. Vérifiée par l'enregistrement ET à
+  chaque autorisation (`validateRedirectUri`, qui voit aussi les clients
+  CIMD). Les documents CIMD ne se lisent que sur des hôtes exacts.
+- **Risque accepté — les adresses partagées des assistants vérifiés**
+  (revue de sécurité du 2026-11-23). L'adresse de retour de Claude, comme
+  celle de ChatGPT, est commune à tous leurs utilisateurs : un tiers peut
+  créer son propre connecteur vers Rojer et faire suivre le lien
+  d'autorisation ; l'écran est alors celui d'un vérifié, sans encadré. Le
+  code repart chez Claude ou ChatGPT, qui doivent rejeter un retour dont
+  leur session n'a pas lancé la demande (paramètre `state`) : la protection
+  est la leur. Le risque existait pour Claude avant le § 12 ; ChatGPT
+  l'étend. L'écran le borne en nommant l'adresse de retour (« si ce n'est
+  pas l'assistant que vous venez d'utiliser, refusez »).
+- **Le nom d'un outil non vérifié n'est jamais affiché** — ni à l'écran de
+  consentement ni dans la liste des assistants : son domaine en tient lieu.
+- **Un nom ne fait pas un vérifié** : un client dont une adresse n'est pas
+  vérifiée ne peut pas s'appeler comme un assistant vérifié ou comme Rojer
+  (« Claude », « Anthropic », « ChatGPT », « OpenAI », « Rojer ») — refusé à
+  l'enregistrement. Le niveau, lui, ne se lit jamais sur le nom.
+- **CIMD reste borné aux éditeurs vérifiés** (Anthropic, OpenAI) : récupérer
+  le document d'un domaine quelconque ouvrirait une surface de requêtes
+  sortantes ; les outils non vérifiés passent par l'enregistrement dynamique.
+- Rien ne change à ce qu'un jeton permet : lecture seule, compte du
+  consentement, formule Pro, PKCE, quinze minutes, retrait immédiat.
+- **Données** : chaque outil branché reçoit ce qu'il lit ; la politique de
+  confidentialité le dit (session des textes légaux).
 
 ## Conséquences
 

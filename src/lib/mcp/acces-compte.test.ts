@@ -13,6 +13,7 @@ const h = vi.hoisted(() => ({
   options: null as unknown,
   membre: vi.fn(),
   consentement: vi.fn(),
+  compte: vi.fn(),
   abonnement: vi.fn(),
 }));
 
@@ -29,6 +30,7 @@ vi.mock("@/lib/prisma", () => ({
   prisma: {
     membre: { findUnique: h.membre },
     oauthConsent: { findFirst: h.consentement },
+    compte: { findUnique: h.compte },
     abonnement: { findUnique: h.abonnement },
   },
 }));
@@ -53,7 +55,11 @@ beforeEach(() => {
   h.claims = { ...CLAIMS };
   h.membre.mockReset().mockResolvedValue({ role: "member" });
   // Consenti une minute avant l'émission du jeton.
-  h.consentement.mockReset().mockResolvedValue({ createdAt: new Date((IAT - 60) * 1000) });
+  h.consentement
+    .mockReset()
+    .mockResolvedValue({ createdAt: new Date((IAT - 60) * 1000), client: { redirectUris: ["https://claude.ai/api/mcp/auth_callback"] } });
+  h.compte.mockReset().mockResolvedValue({ outilsNonVerifiesAutorises: false });
+  // (Lu seulement pour un client qui n'est pas de confiance.)
   h.abonnement.mockReset().mockResolvedValue(pro);
 });
 
@@ -169,7 +175,10 @@ describe("le consentement qui a émis le jeton (retrait immédiat, 2026-11-23)",
   });
 
   it("rebranché après le retrait : un jeton émis avant le nouveau consentement ne revit pas", async () => {
-    h.consentement.mockResolvedValue({ createdAt: new Date((IAT + 120) * 1000) });
+    h.consentement.mockResolvedValue({
+      createdAt: new Date((IAT + 120) * 1000),
+      client: { redirectUris: ["https://claude.ai/api/mcp/auth_callback"] },
+    });
     const r = await resoudrePorteur(requete(jeton("at+jwt")), RESSOURCE);
     expect(r.statut === "reponse" && r.reponse.status).toBe(401);
   });
@@ -190,3 +199,23 @@ describe("le consentement qui a émis le jeton (retrait immédiat, 2026-11-23)",
   });
 });
 
+describe("un outil non vérifié n'est servi que sur un compte qui l'admet encore (ADR-062 § 12)", () => {
+  const n8n = { createdAt: new Date((IAT - 60) * 1000), client: { redirectUris: ["https://n8n.exemple.fr/cb"] } };
+
+  it("compte fermé (refermé depuis, ou consentement posé pendant la fermeture) : 401", async () => {
+    h.consentement.mockResolvedValue(n8n);
+    const r = await resoudrePorteur(requete(jeton("at+jwt")), RESSOURCE);
+    expect(r.statut === "reponse" && r.reponse.status).toBe(401);
+  });
+
+  it("compte ouvert : servi", async () => {
+    h.consentement.mockResolvedValue(n8n);
+    h.compte.mockResolvedValue({ outilsNonVerifiesAutorises: true });
+    expect((await resoudrePorteur(requete(jeton("at+jwt")), RESSOURCE)).statut).toBe("ok");
+  });
+
+  it("un assistant vérifié reste servi sur un compte fermé aux non vérifiés, sans lire le réglage", async () => {
+    expect((await resoudrePorteur(requete(jeton("at+jwt")), RESSOURCE)).statut).toBe("ok");
+    expect(h.compte).not.toHaveBeenCalled();
+  });
+});

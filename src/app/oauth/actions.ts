@@ -12,7 +12,8 @@ import { memeCompteQueLaPage } from "@/lib/auth/compte-attendu";
 import { comptesDeLaPersonne } from "@/lib/auth/membres";
 import { entetesDeSession, lireSessionCourante } from "@/lib/auth/require-user";
 import { compteDuConsentement } from "@/lib/mcp/compte-oauth";
-import { connecteurOuvertPour } from "@/lib/connecteur/assistants";
+import { connecteurOuvertPour, outilsNonVerifiesOuverts } from "@/lib/connecteur/assistants";
+import { issueDuConsentement, niveauDeLaDemande } from "@/lib/mcp/oauth";
 
 const texte = (formData: FormData, nom: string) => String(formData.get(nom) ?? "");
 
@@ -55,7 +56,15 @@ export async function repondreConsentement(formData: FormData): Promise<void> {
   if (texte(formData, "reponse") === "accepter" && !memeCompteQueLaPage(formData, compteId)) {
     redirect(`/oauth/consentement?${new URLSearchParams(oauthQuery).toString()}`);
   }
-  const accepte = texte(formData, "reponse") === "accepter" && (await connecteurOuvertPour(compteId));
+  // ADR-062 § 12 : le niveau de l'adresse de retour de la demande, revu ici —
+  // un outil non vérifié n'est accepté que si le compte l'a ouvert ET que la
+  // case est cochée. Le fournisseur revérifie la signature de la demande.
+  const [ouvert, nonVerifiesOuverts] = await Promise.all([connecteurOuvertPour(compteId), outilsNonVerifiesOuverts(compteId)]);
+  const issue = issueDuConsentement(niveauDeLaDemande(new URLSearchParams(oauthQuery).get("redirect_uri")), nonVerifiesOuverts);
+  const accepte =
+    texte(formData, "reponse") === "accepter" &&
+    ouvert &&
+    (issue === "autoriser" || (issue === "confirmer" && texte(formData, "confirme") === "oui"));
   const suite = await auth.api.oauth2Consent({
     headers: await entetesDeSession(),
     body: { accept: accepte, oauth_query: oauthQuery },

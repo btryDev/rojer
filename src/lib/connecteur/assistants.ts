@@ -10,17 +10,68 @@ import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { connecteurOuvert } from "@/lib/abonnements/connecteur";
+import { clientDeConfiance, niveauDuClient, type NiveauDeConfiance } from "@/lib/mcp/oauth";
 
-export type AssistantAutorise = { id: string; nom: string; autoriseLe: Date | null };
+export type AssistantAutorise = { id: string; nom: string; autoriseLe: Date | null; niveau: NiveauDeConfiance };
 
-/** Les consentements de la personne pour ce compte, le plus récent d'abord. */
+/** Les consentements de la personne pour ce compte, le plus récent d'abord, avec le niveau du client (ADR-062 § 12). */
 export async function assistantsAutorises(userId: string, compteId: string): Promise<AssistantAutorise[]> {
   const lignes = await prisma.oauthConsent.findMany({
     where: { userId, referenceId: compteId },
-    select: { id: true, createdAt: true, updatedAt: true, client: { select: { name: true } } },
+    select: { id: true, createdAt: true, updatedAt: true, client: { select: { name: true, redirectUris: true } } },
     orderBy: [{ updatedAt: "desc" }, { id: "asc" }],
   });
-  return lignes.map((l) => ({ id: l.id, nom: l.client.name ?? "Assistant sans nom", autoriseLe: l.updatedAt ?? l.createdAt }));
+  return lignes.map((l) => ({
+    id: l.id,
+    // Le nom d'un outil qui n'est pas de confiance n'est jamais montré : il
+    // peut imiter un autre (homoglyphes) ; son domaine dit où part l'accès.
+    nom: clientDeConfiance(l.client.redirectUris)
+      ? (l.client.name ?? "Assistant sans nom")
+      : `Outil non vérifié — ${hoteDe(l.client.redirectUris[0])}`,
+    autoriseLe: l.updatedAt ?? l.createdAt,
+    niveau: niveauDuClient(l.client.redirectUris),
+  }));
+}
+
+function hoteDe(adresse: string | undefined): string {
+  try {
+    return new URL(adresse ?? "").host || "adresse inconnue";
+  } catch {
+    return "adresse inconnue";
+  }
+}
+
+/** Les outils non vérifiés peuvent-ils se connecter à ce compte ? (ADR-062 § 12, faux par défaut.) */
+export async function outilsNonVerifiesOuverts(compteId: string): Promise<boolean> {
+  const c = await prisma.compte.findUnique({ where: { id: compteId }, select: { outilsNonVerifiesAutorises: true } });
+  return c?.outilsNonVerifiesAutorises === true;
+}
+
+/**
+ * Ouvre ou ferme le compte aux outils non vérifiés (ADR-062 § 12). Le rôle
+ * de propriétaire se vérifie AVANT, dans l'action : ici, le compte est celui
+ * qu'elle a jugé. Fermer efface, pour tous les membres, les autorisations des
+ * clients qui ne sont pas de confiance (`clientDeConfiance`) — consentements
+ * et jetons : `/api/mcp` relisant le consentement à chaque requête, l'accès
+ * tombe tout de suite. OUVRIR les efface aussi (relecture du 2026-11-23) :
+ * compte fermé, aucune n'a pu naître, sauf un consentement posé pendant la
+ * fermeture même, que la transaction n'a pas vu ; il ne revit pas à la
+ * réouverture, l'outil repasse par l'écran. Rend le nombre d'autorisations
+ * effacées.
+ */
+export async function reglerOutilsNonVerifies(compteId: string, ouvert: boolean): Promise<number> {
+  if (!compteId) throw new Error("réglage des outils non vérifiés sans compte");
+  return prisma.$transaction(async (tx) => {
+    await tx.compte.update({ where: { id: compteId }, data: { outilsNonVerifiesAutorises: ouvert } });
+    const consentements = await tx.oauthConsent.findMany({
+      where: { referenceId: compteId },
+      select: { id: true, clientId: true, client: { select: { redirectUris: true } } },
+    });
+    const aEffacer = consentements.filter((c) => !clientDeConfiance(c.client.redirectUris));
+    if (aEffacer.length === 0) return 0;
+    await oublierAssistants(compteId, undefined, tx, [...new Set(aEffacer.map((c) => c.clientId))]);
+    return aEffacer.length;
+  });
 }
 
 /**
@@ -63,9 +114,15 @@ type ClientOAuth = Pick<Prisma.TransactionClient, "oauthConsent" | "oauthRefresh
  * consentement, et le compte effacé laisserait ces lignes derrière lui.
  * `/api/mcp` refuse déjà tout jeton d'une personne qui n'est plus membre.
  */
-export async function oublierAssistants(compteId: string, userId?: string, client: ClientOAuth = prisma): Promise<void> {
+export async function oublierAssistants(
+  compteId: string,
+  userId?: string,
+  client: ClientOAuth = prisma,
+  /** Seulement ces clients OAuth (fermeture aux outils non vérifiés, ADR-062 § 12). */
+  clientIds?: readonly string[],
+): Promise<void> {
   if (!compteId) throw new Error("oubli d'autorisations sans compte");
-  const where = { referenceId: compteId, ...(userId ? { userId } : {}) };
+  const where = { referenceId: compteId, ...(userId ? { userId } : {}), ...(clientIds ? { clientId: { in: [...clientIds] } } : {}) };
   await client.oauthRefreshToken.deleteMany({ where });
   await client.oauthAccessToken.deleteMany({ where });
   await client.oauthConsent.deleteMany({ where });

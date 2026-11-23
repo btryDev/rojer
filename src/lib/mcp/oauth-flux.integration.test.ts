@@ -46,7 +46,8 @@ describe.skipIf(!URL_BASE || !local)("connecteur MCP en OAuth — PostgreSQL et 
   const { auth } = await import("@/lib/auth/better-auth");
   const { compteDOnboarding } = await import("@/lib/auth/membres");
   const { resoudrePorteur } = await import("./acces-compte");
-  const { retirerAssistant, assistantsAutorises, oublierAssistants } = await import("@/lib/connecteur/assistants");
+  const { retirerAssistant, assistantsAutorises, oublierAssistants, reglerOutilsNonVerifies, outilsNonVerifiesOuverts } =
+    await import("@/lib/connecteur/assistants");
   const { lookupKey } = await import("@/lib/abonnements/formules");
   const { requeteARejouer } = await import("./reprise-oauth");
   const { servirDecouverte } = await import("./decouverte");
@@ -69,12 +70,12 @@ describe.skipIf(!URL_BASE || !local)("connecteur MCP en OAuth — PostgreSQL et 
   /** Une requête vers le gestionnaire de Better Auth, comme la route la lui passe. */
   const appel = (chemin: string, init: RequestInit = {}) => auth.handler(new Request(`${BASE}${chemin}`, init));
 
-  async function enregistrer(redirect_uris: string[]) {
+  async function enregistrer(redirect_uris: string[], client_name = "Claude") {
     return appel("/api/auth/oauth2/register", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        client_name: "Claude",
+        client_name,
         redirect_uris,
         token_endpoint_auth_method: "none",
         grant_types: ["authorization_code", "refresh_token"],
@@ -174,9 +175,28 @@ describe.skipIf(!URL_BASE || !local)("connecteur MCP en OAuth — PostgreSQL et 
     expect(((await r.json()) as { error?: string }).error).toBe("unsupported_grant_type");
   });
 
-  it("enregistrement : une adresse de retour étrangère est refusée", async () => {
-    const r = await enregistrer(["https://evil.example/callback"]);
-    expect(r.status).toBe(400);
+  // ~~« enregistrement : une adresse de retour étrangère est refusée »~~
+  // [2026-11-23, ADR-062 § 12 : toute adresse https s'enregistre ; son niveau
+  // décide du consentement.]
+  it("enregistrement : une adresse http hors boucle locale est refusée", async () => {
+    expect((await enregistrer(["http://evil.example/callback"], "Mon outil")).status).toBe(400);
+  });
+
+  it("enregistrement : un outil non vérifié ne peut pas porter le nom d'un assistant vérifié", async () => {
+    expect((await enregistrer(["https://evil.example/callback"], "Claude")).status).toBe(400);
+    expect((await enregistrer(["https://evil.example/callback"], "Chat GPT")).status).toBe(400);
+  });
+
+  it("enregistrement : une adresse non vérifiée mêlée à celle de Claude est refusée", async () => {
+    expect((await enregistrer([RETOUR, "https://evil.example/callback"], "Mon outil")).status).toBe(400);
+  });
+
+  let outilNonVerifie = "";
+  it("enregistrement : un outil non vérifié s'enregistre sous son propre nom", async () => {
+    const r = await enregistrer(["https://n8n.exemple.test/rest/oauth2-credential/callback"], "n8n");
+    expect(r.status).toBeLessThan(300);
+    outilNonVerifie = ((await r.json()) as { client_id: string }).client_id;
+    clients.push(outilNonVerifie);
   });
 
   let clientId = "";
@@ -269,6 +289,28 @@ describe.skipIf(!URL_BASE || !local)("connecteur MCP en OAuth — PostgreSQL et 
   it("/api/mcp : le jeton ne vaut pas pour une autre ressource", async () => {
     const r = await resoudrePorteur(requeteMcp(acces), "http://localhost:3000/api/autre");
     expect(r.statut).toBe("reponse");
+  });
+
+  it("fermer le compte aux outils non vérifiés efface leurs autorisations, pas celle de Claude", async () => {
+    // Un consentement d'outil non vérifié posé à la main : le parcours de
+    // l'écran est éprouvé par les tests de la règle (`issueDuConsentement`).
+    // Un reste d'une fermeture (course avec un consentement) : ouvrir l'efface.
+    await prisma.oauthConsent.create({
+      data: { clientId: outilNonVerifie, userId, referenceId: compteId, scopes: ["rojer:lecture"] },
+    });
+    expect(await reglerOutilsNonVerifies(compteId, true)).toBe(1);
+    expect(await outilsNonVerifiesOuverts(compteId)).toBe(true);
+    await prisma.oauthConsent.create({
+      data: { clientId: outilNonVerifie, userId, referenceId: compteId, scopes: ["rojer:lecture"] },
+    });
+    expect((await assistantsAutorises(userId, compteId)).map((a) => a.niveau).sort()).toEqual(["non_verifie", "verifie"]);
+
+    expect(await reglerOutilsNonVerifies(compteId, false)).toBe(1);
+    expect(await outilsNonVerifiesOuverts(compteId)).toBe(false);
+    const restants = await assistantsAutorises(userId, compteId);
+    expect(restants.map((a) => a.nom)).toEqual(["Claude"]);
+    // Le jeton de Claude sert toujours.
+    expect((await resoudrePorteur(requeteMcp(acces), RESSOURCE)).statut).toBe("ok");
   });
 
   it("/api/mcp : hors Pro, servi mais fermé", async () => {

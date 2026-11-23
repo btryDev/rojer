@@ -29,7 +29,7 @@ import { connecteurOuvert } from "@/lib/abonnements/connecteur";
 import { prisma } from "@/lib/prisma";
 import { CLAIM_COMPTE } from "./compte-oauth";
 import { getOAuthProtectedResourceMetadataUrl } from "@modelcontextprotocol/server";
-import { PORTEE_LECTURE } from "./oauth";
+import { clientDeConfiance, PORTEE_LECTURE } from "./oauth";
 
 /** Les claims d'un jeton vérifié (`jose` n'est pas une dépendance directe). */
 type JWTPayload = Record<string, unknown>;
@@ -169,7 +169,7 @@ export async function resoudrePorteur(request: Request, ressource: string): Prom
     // l'interdit) serait refusé ici.
     prisma.oauthConsent.findFirst({
       where: { clientId: lus.clientId, userId: lus.userId, referenceId: lus.compteId },
-      select: { createdAt: true },
+      select: { createdAt: true, client: { select: { redirectUris: true } } },
       orderBy: { createdAt: "desc" },
     }),
     prisma.abonnement.findUnique({ where: { compteId: lus.compteId }, select: { statut: true, formule: true } }),
@@ -184,6 +184,21 @@ export async function resoudrePorteur(request: Request, ressource: string): Prom
     return {
       statut: "reponse",
       reponse: refusJetonInvalide(ressource, "L'accès de cet assistant a été retiré : reconnectez-le depuis l'assistant."),
+    };
+  }
+  // ADR-062 § 12 : un outil qui n'est pas de confiance n'est servi que si le
+  // compte l'admet encore — relu ici, et pas seulement au consentement : un
+  // consentement posé pendant que le propriétaire fermait, ou un retour en Pro
+  // après une fermeture, ne rouvre rien. Lu seulement pour lui : Claude et
+  // ChatGPT n'en paient pas la requête.
+  if (
+    !clientDeConfiance(consentement?.client.redirectUris ?? []) &&
+    (await prisma.compte.findUnique({ where: { id: lus.compteId }, select: { outilsNonVerifiesAutorises: true } }))
+      ?.outilsNonVerifiesAutorises !== true
+  ) {
+    return {
+      statut: "reponse",
+      reponse: refusJetonInvalide(ressource, "Ce compte n'accepte plus les outils non vérifiés par Rojer."),
     };
   }
   return {
