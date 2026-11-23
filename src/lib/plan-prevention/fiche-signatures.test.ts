@@ -122,6 +122,9 @@ describe("l'historique", () => {
 
   it("liens envoyés, ouverts, remplacés", () => {
     expect(lignes).toContain("Lien adressé à Nettoyage Pro SARL");
+    // « Lien adressé à … révoqué », jamais « Lien de Nettoyage… » : pas d'élision à faire (2026-11-23).
+    expect(lignes).toContain("Lien adressé à Nettoyage Pro SARL révoqué");
+    expect(lignes.some((l) => l.startsWith("Lien de "))).toBe(false);
     expect(lignes).toContain("Paul Testeur ouvre le lien et demande un code");
     expect(h.find((e) => e.cle === "revocation-l1")?.sousLigne).toBe("remplacé par un lien plus récent");
   });

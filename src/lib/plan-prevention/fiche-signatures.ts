@@ -200,7 +200,7 @@ export function historiqueDuPlan(p: {
       e.push({
         cle: `revocation-${l.id}`,
         date: l.revoqueLe,
-        ligne: `Lien de ${qui(l.partie, l.nomDestinataire)} révoqué`,
+        ligne: `Lien adressé à ${qui(l.partie, l.nomDestinataire)} révoqué`,
         sousLigne: motifLienPourLaFiche(l.revoqueMotif),
         pastille: { mot: "Révoqué", ton: "neutre" },
       });
@@ -208,7 +208,7 @@ export function historiqueDuPlan(p: {
       e.push({
         cle: `expiration-${l.id}`,
         date: l.expireLe,
-        ligne: `Lien de ${qui(l.partie, l.nomDestinataire)} expiré`,
+        ligne: `Lien adressé à ${qui(l.partie, l.nomDestinataire)} expiré`,
         sousLigne: "Sans signature",
         pastille: { mot: "Expiré", ton: "neutre" },
       });

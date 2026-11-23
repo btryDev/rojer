@@ -89,9 +89,14 @@ export default async function LoginPage({
           </>
         ) : null}
 
-        <div className="carte-board mt-7 px-7 py-6 sm:px-8">
-          <LoginForm next={cheminDeRetour(next)} />
-        </div>
+        {/* Déjà connecté·e : pas de formulaire (2026-11-23, contrôle en
+            préprod) — il se remplissait seul et laissait croire qu'il fallait
+            se reconnecter. Le message et ses deux sorties suffisent. */}
+        {ouverte?.email ? null : (
+          <div className="carte-board mt-7 px-7 py-6 sm:px-8">
+            <LoginForm next={cheminDeRetour(next)} />
+          </div>
+        )}
 
         <p className="m-0 mt-6 text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           Pas de compte ?{" "}

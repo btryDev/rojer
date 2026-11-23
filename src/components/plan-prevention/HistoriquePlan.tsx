@@ -2,7 +2,7 @@ import { VerifierSignature } from "@/components/signatures/VerifierSignature";
 import { CarteRepliable } from "@/components/ui-kit/CarteRepliable";
 import { FILET_SUIVI, SECTION_SUIVI } from "./classes-fiche";
 import type { EvenementHistorique, TonHistorique } from "@/lib/plan-prevention/fiche-signatures";
-import { formaterHeureFr } from "@/lib/dates";
+import { formaterHeureEnLettresFr } from "@/lib/dates";
 
 /**
  * L'historique du plan (2026-11-19, maquette V2 « Historique ») : une ligne
@@ -33,14 +33,16 @@ const FMT_COMPLET = new Intl.DateTimeFormat("fr-FR", {
   timeStyle: "short",
 });
 
-function TuileJourHeure({ date }: { date: Date }) {
+// Le jour et le mois dans la tuile, l'heure sur la ligne grise (2026-11-23,
+// contrôle en préprod : le mois tombait seul sous le texte de chaque ligne).
+function TuileJourMois({ date }: { date: Date }) {
   return (
     <span
       aria-hidden
       className="flex size-12 flex-none flex-col items-center justify-center rounded-[12px] bg-[color:var(--board-ink)] text-white"
     >
       <span className="font-display text-[17px] font-bold leading-none tabular-nums">{FMT_JOUR.format(date)}</span>
-      <span className="mt-0.5 font-mono text-[9px] uppercase tracking-[0.08em]">{formaterHeureFr(date)}</span>
+      <span className="mt-0.5 font-mono text-[9px] uppercase tracking-[0.08em]">{FMT_MOIS.format(date).replace(".", "")}</span>
     </span>
   );
 }
@@ -73,15 +75,17 @@ export function HistoriquePlan({
               key={e.cle}
               className="flex items-center gap-4 border-t border-[color:var(--board-slate-pale)] py-3 first:border-t-0"
             >
-              <TuileJourHeure date={e.date} />
+              <TuileJourMois date={e.date} />
               <div className="min-w-0 flex-1">
                 <p className="m-0 text-[15px] font-medium leading-[1.35] text-[color:var(--board-ink)]">
                   {e.ligne}
                   <span className="sr-only">, le {FMT_COMPLET.format(e.date)}</span>
                 </p>
-                {e.sousLigne && (
-                  <p className="m-0 mt-0.5 text-[13px] text-[color:var(--board-slate-soft)]">{e.sousLigne}</p>
-                )}
+                <p className="m-0 mt-0.5 text-[13px] text-[color:var(--board-slate-soft)]">
+                  <span aria-hidden>à {formaterHeureEnLettresFr(e.date)}</span>
+                  {e.sousLigne && <span aria-hidden> · </span>}
+                  {e.sousLigne}
+                </p>
                 {e.verifier && (
                   <div className="mt-1 flex flex-col gap-1">
                     {e.verifier.map((v) => (
@@ -94,9 +98,6 @@ export function HistoriquePlan({
                     ))}
                   </div>
                 )}
-                <p className="m-0 mt-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-[color:var(--board-slate-soft)]">
-                  {FMT_MOIS.format(e.date)}
-                </p>
               </div>
               <span className={`pastille-board flex-none text-[12.5px] ${PASTILLE[e.pastille.ton]}`}>
                 {e.pastille.mot}
