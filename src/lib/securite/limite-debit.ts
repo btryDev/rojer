@@ -57,6 +57,15 @@ export const LIMITES = {
    * s'est trompé ; un bureau en laisse quelques-unes.
    */
   demandeOuvertureIp: { max: 10, fenetreSecondes: 60 * 60 },
+  /**
+   * Le même geste, tous réseaux confondus (contrôle de sécurité du
+   * 2026-11-23) : un envoi réparti sur beaucoup de réseaux (IPv6 en /48,
+   * machines louées) passe sous la limite par réseau et remplirait la table
+   * d'adresses de pacotille — autant de rebonds le jour de l'e-mail
+   * d'ouverture. Avant l'ouverture, trois cents personnes par heure sont hors
+   * d'atteinte ; au-delà, la page dit de réessayer.
+   */
+  demandeOuvertureGlobale: { max: 300, fenetreSecondes: 60 * 60 },
   /** Réinitialisation : envoi de courriels en série vers une adresse. */
   reinitialisationCompte: { max: 5, fenetreSecondes: 60 * 60 },
   /**

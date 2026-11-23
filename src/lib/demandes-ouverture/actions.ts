@@ -30,15 +30,16 @@ export async function demanderOuvertureAction(
     return { erreur: parsed.error.issues[0]?.message ?? "Adresse e-mail invalide." };
   }
 
-  // Par réseau, comme l'inscription ; sans IP lisible (local, appel direct),
-  // pas de limite — `ip-client.ts`.
-  const ip = ipPourLimite(await headers());
-  if (ip) {
-    const verdict = await consommer([
-      { cle: cleLimite("demande-ouverture", "ip", ip), limite: LIMITES.demandeOuvertureIp },
-    ]);
-    if (!verdict.ok) return { erreur: messageTropDeTentatives(verdict.reessayerDansSecondes) };
-  }
+  // Par réseau, et tous réseaux confondus (contrôle de sécurité du
+  // 2026-11-23). Sans IP lisible (appel direct, en-tête absent), toutes ces
+  // requêtes partagent une même clé : la limite s'applique toujours — comme
+  // l'enregistrement des clients OAuth (`api/auth/[...all]`).
+  const ip = ipPourLimite(await headers()) ?? "inconnue";
+  const verdict = await consommer([
+    { cle: cleLimite("demande-ouverture", "ip", ip), limite: LIMITES.demandeOuvertureIp },
+    { cle: cleLimite("demande-ouverture", "global", "tout"), limite: LIMITES.demandeOuvertureGlobale },
+  ]);
+  if (!verdict.ok) return { erreur: messageTropDeTentatives(verdict.reessayerDansSecondes) };
 
   try {
     await prisma.demandeOuverture.createMany({ data: [{ email: parsed.data.email }], skipDuplicates: true });

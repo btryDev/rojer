@@ -36,7 +36,7 @@ describe("/bientot", () => {
   it("dit à quoi sert l'adresse, et renvoie à la page de confidentialité", async () => {
     const html = renderToStaticMarkup(await PageBientot());
     expect(html).toContain("ne sert qu&#x27;à cet e-mail");
-    expect(html).toContain("effacée après l&#x27;envoi, et sur simple demande avant.");
+    expect(html).toContain("puis elle est effacée.");
     expect(html).toContain('href="/legal/confidentialite"');
   });
 

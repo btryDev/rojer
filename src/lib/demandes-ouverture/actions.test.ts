@@ -83,11 +83,25 @@ describe("demanderOuvertureAction", () => {
     expect(h.limite.mock.calls[0][0][0].cle).toMatch(/^demande-ouverture:ip:/);
   });
 
-  it("sans IP lisible, pas de limite par IP (comme l'inscription)", async () => {
+  it("sans IP lisible, la limite s'applique quand même : une clé commune", async () => {
     h.entetes = new Headers();
     const r = await demanderOuvertureAction({}, formulaire({ email: "a@exemple.fr" }));
     expect(r).toEqual({ email: "a@exemple.fr" });
-    expect(h.limite).not.toHaveBeenCalled();
+    const cles = h.limite.mock.calls[0][0].map((d) => d.cle);
+    expect(cles[0]).toMatch(/^demande-ouverture:ip:/);
+    expect(cles[1]).toMatch(/^demande-ouverture:global:/);
+  });
+
+  it("un plafond tous réseaux confondus, en plus de la limite par réseau", async () => {
+    h.entetes = new Headers({ "x-forwarded-for": "203.0.113.7" });
+    await demanderOuvertureAction({}, formulaire({ email: "a@exemple.fr" }));
+    await demanderOuvertureAction({}, formulaire({ email: "b@exemple.fr" }));
+    h.entetes = new Headers({ "x-forwarded-for": "198.51.100.9" });
+    await demanderOuvertureAction({}, formulaire({ email: "c@exemple.fr" }));
+    const globales = h.limite.mock.calls.map(([d]) => d[1].cle);
+    expect(new Set(globales).size).toBe(1);
+    const parReseau = h.limite.mock.calls.map(([d]) => d[0].cle);
+    expect(new Set(parReseau).size).toBe(2);
   });
 
   it("base injoignable : un message, pas de faux succès", async () => {

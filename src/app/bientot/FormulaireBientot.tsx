@@ -1,6 +1,7 @@
 "use client";
 
 import { Check } from "lucide-react";
+import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { demanderOuvertureAction } from "@/lib/demandes-ouverture/actions";
 import { CHAMP_PIEGE, type EtatDemandeOuverture } from "@/lib/demandes-ouverture/formulaire";
@@ -68,10 +69,19 @@ export function FormulaireBientot({ etatInitial = ETAT_INITIAL }: { etatInitial?
 
   return (
     <form action={action} onSubmit={() => setCorrection(false)}>
-      <label htmlFor={ID_CHAMP} className="label-board">
+      {/* Le chapeau dit déjà quoi saisir : l'intitulé reste pour les
+          lecteurs d'écran, la pilule porte le champ et le bouton d'un seul
+          tenant (2026-11-23, « pas très bien organisé »). */}
+      <label htmlFor={ID_CHAMP} className="sr-only">
         Votre adresse e-mail
       </label>
-      <div className="flex flex-col gap-3 sm:flex-row">
+      <div
+        className={`flex items-center gap-2 rounded-full bg-[color:var(--board-slate-pale)] p-1.5 pl-5 transition-[background-color,box-shadow] duration-150 focus-within:bg-[color:var(--board-card)] focus-within:shadow-[inset_0_0_0_2px_var(--board-blue-strong)] ${
+          etat.erreur
+            ? "shadow-[inset_0_0_0_1px_var(--board-signal-ink)]"
+            : "shadow-[inset_0_0_0_1px_var(--board-slate-line)]"
+        }`}
+      >
         <input
           ref={champ}
           id={ID_CHAMP}
@@ -85,21 +95,33 @@ export function FormulaireBientot({ etatInitial = ETAT_INITIAL }: { etatInitial?
           onChange={(e) => setEmail(e.target.value)}
           aria-invalid={Boolean(etat.erreur)}
           aria-describedby={etat.erreur ? ID_ERREUR : undefined}
-          className="champ-board h-12 min-w-0 flex-1 text-[15px]"
+          className="h-11 min-w-0 flex-1 bg-transparent text-[15px] text-[color:var(--board-ink)] outline-none placeholder:text-[color:var(--board-slate-soft)]"
         />
         <button
           type="submit"
           disabled={pending}
-          className="lp-btn lp-btn-ink h-12 flex-none justify-center disabled:opacity-70"
+          className="lp-btn lp-btn-ink h-11 flex-none justify-center disabled:opacity-70"
         >
           {pending ? "Envoi…" : "Me prévenir"}
         </button>
       </div>
       {etat.erreur && (
-        <p id={ID_ERREUR} className="m-0 mt-2 text-[12.5px] text-[color:var(--board-signal-ink)]">
+        <p id={ID_ERREUR} className="m-0 mt-2 pl-5 text-[12.5px] text-[color:var(--board-signal-ink)]">
           {etat.erreur}
         </p>
       )}
+      {/* Au moment où l'adresse est demandée, ce qu'on en fait : une ligne,
+          alignée sur le texte du champ. Le détail (effacement sur demande,
+          durée) est dans la politique de confidentialité. */}
+      <p className="m-0 mt-3 pl-5 text-[0.8125rem] leading-[1.55] text-[color:var(--board-slate-mid)]">
+        Votre adresse ne sert qu&apos;à cet e-mail, puis elle est effacée.{" "}
+        <Link
+          href="/legal/confidentialite"
+          className="font-medium text-[color:var(--board-ink)] underline decoration-[color:var(--board-slate-line)] underline-offset-4 transition-colors hover:decoration-[color:var(--board-ink)]"
+        >
+          Confidentialité
+        </Link>
+      </p>
 
       {/* Le piège à robots (`CHAMP_PIEGE`) : hors écran, hors tabulation,
           tu aux lecteurs d'écran. Une personne ne le voit pas. */}
