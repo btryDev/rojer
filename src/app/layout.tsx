@@ -12,7 +12,7 @@ import { publicAppUrl, refusUrlPublique } from "@/lib/url-publique";
 // « prévention des risques » — en moins de 60 signes ; la description nomme
 // les pièces (DUERP, vérifications, registre, plan d'actions) en moins de 160,
 // sans jamais promettre la conformité (règle 8).
-const TITRE = "Rojer — Le copilote prévention des TPE-PME";
+const TITRE = "Rojer — Votre copilote prévention des risques pour TPE-PME";
 const DESCRIPTION =
   "Rojer tient à jour la prévention de votre entreprise : DUERP, vérifications périodiques, registre de sécurité, plan d'actions. Sources Légifrance à l'appui.";
 
