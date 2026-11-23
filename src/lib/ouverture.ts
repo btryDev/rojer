@@ -5,9 +5,13 @@
 // validé. Fermé, l'interrupteur :
 //  - mène chaque bouton d'inscription de la page publique à `/bientot`, où
 //    l'on laisse son adresse pour être prévenu (`DemandeOuverture`) ;
-//  - ferme le paiement : « S'abonner » (`sAbonnerAction`, seul chemin vers
-//    `ouvrirCheckout`) ne mène pas à Stripe, la page Abonnement le dit — ni
-//    carte réelle, ni carte de test en préproduction.
+//  - ferme le paiement EN PRODUCTION : « S'abonner » (`sAbonnerAction`, seul
+//    chemin vers `ouvrirCheckout`) ne mène pas à Stripe, la page Abonnement le
+//    dit. ~~ni carte réelle, ni carte de test en préproduction~~ [2026-11-23,
+//    décision de la propriétaire : la préproduction et le développement gardent
+//    le paiement, pour répéter les parcours avec les cartes de test de
+//    Stripe ; `paiementOuvert`. Dans le doute (environnement indéterminé),
+//    fermé.]
 //
 // ~~`/signup` renvoie à /bientot, l'action d'inscription refuse côté serveur,
 // sauf l'adresse qu'une invitation attend~~ [2026-11-23, décision de la
@@ -23,6 +27,8 @@
 // lit dans le code et s'ouvre par un commit.
 //
 // Module sans `server-only` : les cartes d'offres, composant client, le lisent.
+
+import { environnementApp, type Env } from "@/lib/environnement";
 
 export const OUVERT_AU_PUBLIC: boolean = false;
 
@@ -45,3 +51,16 @@ export function lienInscription(
 ): string {
   return ouvert || versInvitation(next) ? cheminInscription : PAGE_BIENTOT;
 }
+
+/**
+ * Le paiement est-il ouvert ? Oui une fois Rojer ouvert au public ; avant,
+ * seulement hors production — préproduction et développement, pour les
+ * répétitions avec les cartes de test (2026-11-23). Un environnement
+ * indéterminé (production sans `APP_ENV`) reste fermé. À lire côté serveur.
+ */
+export function paiementOuvert(env: Env = process.env, ouvert: boolean = OUVERT_AU_PUBLIC): boolean {
+  if (ouvert) return true;
+  const e = environnementApp(env);
+  return e === "preview" || e === "development";
+}
+

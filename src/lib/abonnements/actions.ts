@@ -5,7 +5,7 @@
 // liste OUVERTES). L'essai se compte chez Rojer (ADR-053 § 9, amendé le
 // 2026-11-16) : pas de client Stripe avant « s'abonner ».
 
-import { OUVERT_AU_PUBLIC } from "@/lib/ouverture";
+import { paiementOuvert } from "@/lib/ouverture";
 import Stripe from "stripe";
 import { redirect } from "next/navigation";
 import { publicAppUrl } from "@/lib/email";
@@ -128,11 +128,12 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
   // après l'essai).
   ouvrirAuGel();
   // Rojer pas encore ouvert au public (`lib/ouverture.ts`, 2026-11-23,
-  // décision de la propriétaire : Stripe non validé) : pas de paiement, ni
-  // carte réelle ni carte de test en préproduction. La page le dit. Après
-  // `ouvrirAuGel` : la garde du gel veut l'ouverture juste après la garde de
-  // rôle (`quotas-gel-garde.test.ts`).
-  if (!OUVERT_AU_PUBLIC) redirect(`${PAGE_ABONNEMENT}?stripe=bientot`);
+  // décision de la propriétaire : Stripe non validé) : pas de paiement en
+  // production ; la préproduction le garde pour les répétitions avec les
+  // cartes de test (`paiementOuvert`). La page le dit. Après `ouvrirAuGel` :
+  // la garde du gel veut l'ouverture juste après la garde de rôle
+  // (`quotas-gel-garde.test.ts`).
+  if (!paiementOuvert()) redirect(`${PAGE_ABONNEMENT}?stripe=bientot`);
   const { stripe, db, ligne, compteId, conditionsSurCheckout } = await clientDuCompte(proprietaire, formData);
   const formule = String(formData.get("formule") ?? "");
   if (!estLookupKey(formule)) redirect(PAGE_ABONNEMENT);

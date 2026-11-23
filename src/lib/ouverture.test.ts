@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { lienInscription, OUVERT_AU_PUBLIC, PAGE_BIENTOT, versInvitation } from "./ouverture";
+import { lienInscription, OUVERT_AU_PUBLIC, PAGE_BIENTOT, paiementOuvert, versInvitation } from "./ouverture";
 
 /**
  * L'interrupteur de l'ouverture au public (2026-11-23, décision de la
@@ -37,3 +37,19 @@ describe("l'ouverture au public", () => {
     expect(lienInscription("/signup")).toBe(OUVERT_AU_PUBLIC ? "/signup" : "/bientot");
   });
 });
+
+describe("le paiement avant l'ouverture (2026-11-23)", () => {
+  it("fermé en production, ouvert en préproduction et en développement", () => {
+    expect(paiementOuvert({ APP_ENV: "production", NODE_ENV: "production" }, false)).toBe(false);
+    expect(paiementOuvert({ APP_ENV: "preview", NODE_ENV: "production" }, false)).toBe(true);
+    expect(paiementOuvert({ NODE_ENV: "development" }, false)).toBe(true);
+  });
+  it("dans le doute (production sans APP_ENV, valeur inconnue), fermé", () => {
+    expect(paiementOuvert({ NODE_ENV: "production" }, false)).toBe(false);
+    expect(paiementOuvert({ APP_ENV: "prod", NODE_ENV: "production" }, false)).toBe(false);
+  });
+  it("une fois Rojer ouvert, ouvert partout", () => {
+    expect(paiementOuvert({ APP_ENV: "production", NODE_ENV: "production" }, true)).toBe(true);
+  });
+});
+
