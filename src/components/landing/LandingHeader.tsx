@@ -30,13 +30,14 @@ import { BoutonContact } from "./BoutonContact";
 // menait ; ~~`#comprendre`, une ancre que rien ne portait~~, puis
 // ~~`/#documents`~~). Les deux premiers mènent à leur section de l'accueil
 // (`/#…` : depuis la racine, l'en-tête sert aussi aux pages légales et à
-// /bientot) ; « À propos » à « Concentrez-vous sur votre activité »
-// (`#avantages`), ce que Rojer apporte. « Contact » ouvre le formulaire du pied
+// /bientot) ; « À propos » à « Ce que Rojer tient à jour » (`#documents`, la
+// roue — ~~`#avantages`~~, même jour, décision de la propriétaire). « Contact »
+// ouvre le formulaire du pied
 // de page (`BoutonContact`), sans faire défiler. Sous `md`, la barre ne garde
 // que la marque et le bouton : la page se parcourt en défilant, et le contact
 // est au pied de page.
 export const LIENS_ENTETE = [
-  { href: "/#avantages", label: "À propos" },
+  { href: "/#documents", label: "À propos" },
   { href: "/#tarif", label: "Tarif" },
 ];
 
