@@ -14,7 +14,7 @@ import { TarifOffres } from "@/components/landing/TarifOffres";
 import { buttonVariants } from "@/components/ui/button";
 import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
 import type { Db } from "@/lib/auth/compte";
-import { ceQuiSeFerme, ceQuiSOuvre, sensDuChangement } from "@/lib/abonnements/changement";
+import { fermeParLaBaisse, ouvertParLaMontee, sensDuChangement } from "@/lib/abonnements/changement";
 import { REFUS_CHANGEMENT } from "@/lib/abonnements/refus-changement";
 import { PAGE_ESSAI } from "@/lib/abonnements/essai";
 import {
@@ -415,7 +415,7 @@ async function CartesPourChanger({
             unite: LIBELLE_PERIODICITE[periodicite].unite,
             rythme: sens === "montee" ? rythmeDeLaMontee(actuelle, cle) : null,
             finPeriode: finPeriode?.toISOString() ?? null,
-            changements: sens === "montee" ? ceQuiSOuvre(de, f) : ceQuiSeFerme(de, f, depasse),
+            changements: sens === "montee" ? ouvertParLaMontee(de, f) : fermeParLaBaisse(de, f, depasse),
           },
         };
         return [cle, <GesteChangement key={cle} option={option} compteId={pageCompteId} carte={carteDe(f)} />];

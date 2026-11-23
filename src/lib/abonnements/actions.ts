@@ -271,7 +271,7 @@ function prorationDeLApercu(formData: FormData): number | undefined {
  * reviennent à la fenêtre de confirmation (2026-11-23) ; une facture à
  * régler mène à sa page.
  */
-export async function changerFormuleAction(_avant: ResultatChangement, formData: FormData): Promise<ResultatChangement> {
+export async function changerFormuleAction(_prev: ResultatChangement, formData: FormData): Promise<ResultatChangement> {
   const proprietaire = await verifierProprietaire();
   const { stripe, db, customerId, compteId } = await avecClient(proprietaire, formData);
   const formule = String(formData.get("formule") ?? "");

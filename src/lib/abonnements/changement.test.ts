@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ceQuiSeFerme, ceQuiSOuvre, sensDuChangement } from "./changement";
+import { fermeParLaBaisse, ouvertParLaMontee, sensDuChangement } from "./changement";
 
 describe("sensDuChangement", () => {
   it("la formule d'abord, puis le rythme", () => {
@@ -19,19 +19,19 @@ describe("sensDuChangement", () => {
 
 describe("ce qu'un changement ouvre ou ferme, dit dans la fenêtre (2026-11-23)", () => {
   it("monter d'Essentiel à Pro : sites, personnes, volumes, assistant, expert ; un simple changement de rythme n'ouvre rien", () => {
-    expect(ceQuiSOuvre("essentiel", "pro")).toEqual([
+    expect(ouvertParLaMontee("essentiel", "pro")).toEqual([
       "5 établissements au lieu de 1",
       "5 utilisateurs au lieu de 1",
       "Volumes d'usage triplés",
       "Connecter un assistant IA",
       "L'expert : vos questions, et 1 h de rendez-vous par an",
     ]);
-    expect(ceQuiSOuvre("pro", "pro")).toEqual([]);
+    expect(ouvertParLaMontee("pro", "pro")).toEqual([]);
   });
 
   it("baisser de Pro à Essentiel : ce qui passe en lecture seule (jamais les personnes, qui bloquent), volumes, assistant, expert", () => {
     expect(
-      ceQuiSeFerme("pro", "essentiel", [
+      fermeParLaBaisse("pro", "essentiel", [
         { quota: "etablissements", utilise: 3, plafond: 1 },
         { quota: "prestataires", utilise: 11, plafond: 10 },
         { quota: "membres", utilise: 2, plafond: 1 },

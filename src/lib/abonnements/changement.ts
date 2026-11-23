@@ -41,7 +41,7 @@ function evolutionDesVolumes(de: Quotas, vers: Quotas): string | null {
  * sites et personnes, volumes, assistant, expert. Vide pour un simple
  * changement de rythme.
  */
-export function ceQuiSOuvre(de: CleFormule, vers: CleFormule): string[] {
+export function ouvertParLaMontee(de: CleFormule, vers: CleFormule): string[] {
   const a = FORMULES[de].quotas;
   const b = FORMULES[vers].quotas;
   const lignes: string[] = [];
@@ -62,16 +62,16 @@ export function ceQuiSOuvre(de: CleFormule, vers: CleFormule): string[] {
  * (`depassements` ; trop de personnes empêche la baisse, et la carte le dit),
  * volumes, assistant, expert.
  */
-export function ceQuiSeFerme(de: CleFormule, vers: CleFormule, depassements: readonly Depassement[]): string[] {
+export function fermeParLaBaisse(de: CleFormule, vers: CleFormule, depasse: readonly Depassement[]): string[] {
   const a = FORMULES[de].quotas;
   const b = FORMULES[vers].quotas;
-  const lignes = depassements.flatMap((d) => {
+  const lignes = depasse.flatMap((d) => {
     if (d.quota === "membres") return [];
-    const libelle = LIBELLES_PLAFONDS[d.quota as keyof typeof LIBELLES_PLAFONDS];
-    if (!libelle) return [];
+    const nommer = LIBELLES_PLAFONDS[d.quota as keyof typeof LIBELLES_PLAFONDS];
+    if (!nommer) return [];
     const n = d.utilise - d.plafond;
     return [
-      `${libelle(n)} sur ${d.utilise} ${n > 1 ? "passent" : "passe"} en lecture seule, ${n > 1 ? "les plus récents" : "le plus récent"} : consultables et exportables, plus modifiables`,
+      `${nommer(n)} sur ${d.utilise} ${n > 1 ? "passent" : "passe"} en lecture seule, ${n > 1 ? "les plus récents" : "le plus récent"} : consultables et exportables, plus modifiables`,
     ];
   });
   const volumes = evolutionDesVolumes(a, b);
