@@ -54,11 +54,7 @@ export async function reglerOutilsNonVerifies(compteId: string, ouvert: boolean)
     });
     const aEffacer = consentements.filter((c) => niveauDuClient(c.client.redirectUris) === "non_verifie");
     if (aEffacer.length === 0) return 0;
-    const clients = [...new Set(aEffacer.map((c) => c.clientId))];
-    const where = { referenceId: compteId, clientId: { in: clients } };
-    await tx.oauthRefreshToken.deleteMany({ where });
-    await tx.oauthAccessToken.deleteMany({ where });
-    await tx.oauthConsent.deleteMany({ where: { id: { in: aEffacer.map((c) => c.id) } } });
+    await oublierAssistants(compteId, undefined, tx, [...new Set(aEffacer.map((c) => c.clientId))]);
     return aEffacer.length;
   });
 }
@@ -103,9 +99,15 @@ type ClientOAuth = Pick<Prisma.TransactionClient, "oauthConsent" | "oauthRefresh
  * consentement, et le compte effacé laisserait ces lignes derrière lui.
  * `/api/mcp` refuse déjà tout jeton d'une personne qui n'est plus membre.
  */
-export async function oublierAssistants(compteId: string, userId?: string, client: ClientOAuth = prisma): Promise<void> {
+export async function oublierAssistants(
+  compteId: string,
+  userId?: string,
+  client: ClientOAuth = prisma,
+  /** Seulement ces clients OAuth (fermeture aux outils non vérifiés, ADR-062 § 12). */
+  clientIds?: readonly string[],
+): Promise<void> {
   if (!compteId) throw new Error("oubli d'autorisations sans compte");
-  const where = { referenceId: compteId, ...(userId ? { userId } : {}) };
+  const where = { referenceId: compteId, ...(userId ? { userId } : {}), ...(clientIds ? { clientId: { in: [...clientIds] } } : {}) };
   await client.oauthRefreshToken.deleteMany({ where });
   await client.oauthAccessToken.deleteMany({ where });
   await client.oauthConsent.deleteMany({ where });

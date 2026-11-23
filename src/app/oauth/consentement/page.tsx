@@ -34,25 +34,32 @@ export default async function ConsentementPage({ searchParams }: { searchParams:
     comptes.map((c) => c.compteId),
     session?.session.activeOrganizationId,
   );
+  // ADR-062 § 12 : le niveau se lit sur l'adresse où repart le code, jamais sur le nom.
+  const adresseRetour = requete.get("redirect_uri");
+  const niveau = adresseRetour ? niveauAdresseDeRetour(adresseRetour) : "refuse";
   const [client, ouvert, nonVerifiesOuverts] = await Promise.all([
     auth.api
       .getOAuthClientPublic({ headers: await entetesDeSession(), query: { client_id: requete.get("client_id") ?? "" } })
       .catch(() => null),
     connecteurOuvertPour(compteId),
-    outilsNonVerifiesOuverts(compteId),
+    // Le réglage ne compte que pour un outil non vérifié.
+    niveau === "non_verifie" ? outilsNonVerifiesOuverts(compteId) : false,
   ]);
-  // ADR-062 § 12 : le niveau se lit sur l'adresse où repart le code, jamais sur le nom.
-  const adresseRetour = requete.get("redirect_uri");
   const issue = issueDuConsentement(adresseRetour, nonVerifiesOuverts);
-  const local = adresseRetour !== null && niveauAdresseDeRetour(adresseRetour) === "local";
   const peutAutoriser = ouvert && issue !== "ferme";
-  const nomClient = (client as { client_name?: string } | null)?.client_name?.trim() || "Un assistant";
+  // Le nom déclaré n'est montré que pour un assistant vérifié ou local : celui
+  // d'un outil non vérifié peut imiter un autre (homoglyphes, « Cl4ude »), et
+  // seul le domaine compte.
+  const nomClient =
+    niveau === "non_verifie"
+      ? "Un outil non vérifié"
+      : (client as { client_name?: string } | null)?.client_name?.trim() || "Un assistant";
   const nomCompte = comptes.find((c) => c.compteId === compteId)?.nom ?? "votre compte";
   const hote = hoteDeRetour(requete);
 
   return (
     <CadreOAuth sourcil="Connexion d'un assistant" titre={`Autoriser « ${nomClient} » à lire votre dossier ?`}>
-      {issue === "ferme" ? (
+      {issue === "ferme" && ouvert ? (
         <MessageFormulaire ton="alerte" className="mb-5">
           {`Cet outil n'est pas vérifié par Rojer, et le compte « ${nomCompte} » n'accepte que les assistants vérifiés (Claude, ChatGPT). Le propriétaire du compte peut ouvrir les outils non vérifiés depuis « Connecter un assistant ».`}
         </MessageFormulaire>
@@ -73,7 +80,7 @@ export default async function ConsentementPage({ searchParams }: { searchParams:
           </p>
         </div>
       ) : null}
-      {local ? (
+      {niveau === "local" ? (
         <p className="m-0 mb-4 text-[13px] leading-[1.55] text-[color:var(--board-ink)]">
           L&apos;accès partira vers un programme de cet ordinateur. N&apos;autorisez que si vous venez de le lancer.
         </p>

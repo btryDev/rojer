@@ -29,7 +29,7 @@ import { connecteurOuvert } from "@/lib/abonnements/connecteur";
 import { prisma } from "@/lib/prisma";
 import { CLAIM_COMPTE } from "./compte-oauth";
 import { getOAuthProtectedResourceMetadataUrl } from "@modelcontextprotocol/server";
-import { PORTEE_LECTURE } from "./oauth";
+import { niveauDuClient, PORTEE_LECTURE } from "./oauth";
 
 /** Les claims d'un jeton vérifié (`jose` n'est pas une dépendance directe). */
 type JWTPayload = Record<string, unknown>;
@@ -158,7 +158,7 @@ export async function resoudrePorteur(request: Request, ressource: string): Prom
   // compte, lus en parallèle : un aller-retour par requête (une lecture
   // imbriquée en ferait trois en série, Prisma sans jointures). Le compte et
   // le client viennent du jeton vérifié.
-  const [membre, consentement, abonnement] = await Promise.all([
+  const [membre, consentement, abonnement, compte] = await Promise.all([
     prisma.membre.findUnique({
       where: { compteId_userId: { compteId: lus.compteId, userId: lus.userId } },
       select: { role: true },
@@ -169,10 +169,15 @@ export async function resoudrePorteur(request: Request, ressource: string): Prom
     // l'interdit) serait refusé ici.
     prisma.oauthConsent.findFirst({
       where: { clientId: lus.clientId, userId: lus.userId, referenceId: lus.compteId },
-      select: { createdAt: true },
+      select: { createdAt: true, client: { select: { redirectUris: true } } },
       orderBy: { createdAt: "desc" },
     }),
     prisma.abonnement.findUnique({ where: { compteId: lus.compteId }, select: { statut: true, formule: true } }),
+    // ADR-062 § 12 : un outil non vérifié n'est servi que si le compte l'admet
+    // encore — relu ici, et pas seulement au consentement : un consentement
+    // posé pendant que le propriétaire fermait, ou un retour en Pro après une
+    // fermeture, ne rouvre rien.
+    prisma.compte.findUnique({ where: { id: lus.compteId }, select: { outilsNonVerifiesAutorises: true } }),
   ]);
   if (!membre || !estRole(membre.role)) {
     return {
@@ -184,6 +189,12 @@ export async function resoudrePorteur(request: Request, ressource: string): Prom
     return {
       statut: "reponse",
       reponse: refusJetonInvalide(ressource, "L'accès de cet assistant a été retiré : reconnectez-le depuis l'assistant."),
+    };
+  }
+  if (niveauDuClient(consentement?.client.redirectUris ?? []) === "non_verifie" && compte?.outilsNonVerifiesAutorises !== true) {
+    return {
+      statut: "reponse",
+      reponse: refusJetonInvalide(ressource, "Ce compte n'accepte plus les outils non vérifiés par Rojer."),
     };
   }
   return {

@@ -817,8 +817,10 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     renverser
 62. **062** — Le connecteur MCP s'ouvre par compte, en OAuth servi par Better
     Auth (`@better-auth/mcp`), et seulement en formule Pro : route
-    `/api/auth/[...all]` en liste blanche, adresses de retour de Claude
-    seules, jeton relu à chaque requête (audience, `typ`, appartenance,
+    `/api/auth/[...all]` en liste blanche, ~~adresses de retour de Claude
+    seules~~ [2026-11-23, § 12 : ouvert à tout outil en trois niveaux — vérifié
+    (Claude, ChatGPT), local, non vérifié (fermé par défaut, ouvert par le
+    propriétaire)], jeton relu à chaque requête (audience, `typ`, appartenance,
     formule), outils bornés au compte en lecture seule. Remplace l'ADR-013 ;
     la route à clé est retirée (2026-11-21)
 

@@ -5,6 +5,7 @@
 // borne par la personne ET par le compte.
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { reglerOutilsNonVerifies, retirerAssistant } from "@/lib/connecteur/assistants";
 import { verifierProprietaire } from "@/lib/abonnements/saisie";
@@ -24,7 +25,7 @@ export async function retirerAssistantAction(etablissementId: string, formData: 
 export async function reglerOutilsNonVerifiesAction(etablissementId: string, formData: FormData): Promise<void> {
   const { compte } = await verifierProprietaire();
   // Le compte que la page montrait : un autre onglet a pu changer de compte actif.
-  if (!memeCompteQueLaPage(formData, compte.compteId)) return;
+  if (!memeCompteQueLaPage(formData, compte.compteId)) redirect(`/etablissements/${etablissementId}/connecter?compte=change`);
   await reglerOutilsNonVerifies(compte.compteId, String(formData.get("ouvrir") ?? "") === "oui");
   revalidatePath(`/etablissements/${etablissementId}/connecter`);
 }

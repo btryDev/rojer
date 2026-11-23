@@ -75,9 +75,13 @@ describe("niveauDuClient — la moins sûre de ses adresses", () => {
 });
 
 describe("adressesDUnSeulTenant — une adresse non vérifiée ne se mêle à rien", () => {
-  it("vérifiée + boucle locale : admis (Claude Code) ; non vérifiées seules : admis", () => {
+  it("vérifiée + boucle locale : admis (Claude Code) ; une seule adresse non vérifiée : admis", () => {
     expect(adressesDUnSeulTenant(["https://claude.ai/api/mcp/auth_callback", "http://localhost:3000/cb"])).toBe(true);
-    expect(adressesDUnSeulTenant(["https://a.exemple/cb", "https://b.exemple/cb"])).toBe(true);
+    expect(adressesDUnSeulTenant(["https://n8n.exemple/cb"])).toBe(true);
+  });
+  it("deux adresses non vérifiées : refusé — consenti pour l'une, le code partirait vers l'autre", () => {
+    expect(adressesDUnSeulTenant(["https://a.exemple/cb", "https://b.exemple/cb"])).toBe(false);
+    expect(adressesDUnSeulTenant(["https://a.exemple/cb", "https://a.exemple/autre"])).toBe(false);
   });
   it("non vérifiée avec une vérifiée ou une locale : refusé — le consentement de l'une servirait l'autre", () => {
     expect(adressesDUnSeulTenant(["https://claude.ai/api/mcp/auth_callback", "https://evil.example/cb"])).toBe(false);

@@ -34,8 +34,15 @@ const chapo = "m-0 mt-2 max-w-[var(--board-mesure)] text-[13.5px] leading-[1.55]
 const titreBloc = "m-0 text-[16px] font-semibold leading-[1.3] tracking-[-0.01em] text-[color:var(--board-ink)]";
 const texteBloc = "m-0 mt-1.5 max-w-[var(--board-mesure)] text-[12.5px] leading-[1.55] text-[color:var(--board-slate-mid)]";
 
-export default async function ConnecterPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ConnecterPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ compte?: string }>;
+}) {
   const { id } = await params;
+  const compteChange = (await searchParams).compte === "change";
   const { user, compte } = await requireEtablissement(id);
   // ADR-062 : réservé à la formule Pro ; l'adresse n'est montrée qu'en Pro.
   const [ouvert, assistants, nonVerifiesOuverts] = await Promise.all([
@@ -202,8 +209,9 @@ export default async function ConnecterPage({ params }: { params: Promise<{ id: 
             )}
           </section>
 
-          {/* LES OUTILS NON VÉRIFIÉS (ADR-062 § 12) */}
-          {ouvert ? (
+          {/* LES OUTILS NON VÉRIFIÉS (ADR-062 § 12) — montrés hors Pro aussi
+              tant qu'ils sont ouverts : les fermer reste toujours possible. */}
+          {ouvert || nonVerifiesOuverts ? (
             <section>
               <header className="mb-4">
                 <p className={sourcil}>Autres outils</p>
@@ -215,6 +223,12 @@ export default async function ConnecterPage({ params }: { params: Promise<{ id: 
                   chaque autorisation affiche un avertissement et l&apos;adresse qui recevra l&apos;accès.
                 </p>
               </header>
+              {compteChange ? (
+                <p className="m-0 mb-3 text-[13px] font-semibold text-[color:var(--board-signal-ink)]">
+                  Rien n&apos;a été changé : le compte actif a changé dans un autre onglet. Vérifiez le compte, puis
+                  recommencez.
+                </p>
+              ) : null}
               <div className="carte-board flex flex-wrap items-center justify-between gap-4 px-7 py-5 sm:px-8">
                 <p className="m-0 text-[14px] text-[color:var(--board-ink)]">
                   {nonVerifiesOuverts

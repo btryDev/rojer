@@ -352,10 +352,13 @@ publique du protocole MCP).
   change que par un propriétaire (page « Connecter un assistant »). Le
   refermer **efface** les autorisations des outils non vérifiés du compte,
   pour tous ses membres — l'accès tombe à la requête suivante (§ 8).
-- **Un client par outil** (relecture de sécurité du 2026-11-23) : une adresse
-  non vérifiée ne s'enregistre pas avec une adresse vérifiée ou locale. Le
-  fournisseur réutilisant un consentement par client, le consentement donné
-  par l'adresse de Claude servirait sinon l'autre adresse, sans écran.
+- **Un client non vérifié n'a qu'une adresse de retour** (relectures de
+  sécurité du 2026-11-23) : le fournisseur réutilisant un consentement par
+  client, le consentement donné pour une adresse servirait sinon les autres,
+  sans écran — celle de Claude mêlée à celle d'un attaquant, ou deux domaines
+  non vérifiés dont un seul est affiché. Vérifiée par l'enregistrement ET à
+  chaque autorisation (`validateRedirectUri`, qui voit aussi les clients
+  CIMD). Les documents CIMD ne se lisent que sur des hôtes exacts.
 - **Un nom ne fait pas un vérifié** : un client dont une adresse n'est pas
   vérifiée ne peut pas s'appeler comme un assistant vérifié ou comme Rojer
   (« Claude », « Anthropic », « ChatGPT », « OpenAI », « Rojer ») — refusé à

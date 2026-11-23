@@ -104,16 +104,17 @@ export function niveauDuClient(adresses: readonly string[]): NiveauDeConfiance {
 }
 
 /**
- * Les adresses d'un client sont-elles d'un seul tenant ? Une adresse non
- * vérifiée ne se mêle à aucune autre (relecture de sécurité du 2026-11-23) :
+ * Les adresses d'un client sont-elles d'un seul tenant ? Un client qui a une
+ * adresse non vérifiée n'en a qu'UNE (relectures de sécurité du 2026-11-23) :
  * le fournisseur réutilise un consentement PAR CLIENT, sans reposer la
- * question ; un client « Claude + attaquant » consenti par l'adresse de
- * Claude obtiendrait ensuite un code vers l'autre sans repasser par l'écran.
+ * question. ~~Une adresse non vérifiée ne se mêle à aucune autre~~ : deux
+ * adresses non vérifiées de deux domaines laissaient consentir pour le
+ * domaine affiché, puis envoyer le code à l'autre sans écran ; et « Claude +
+ * attaquant », consenti par l'adresse de Claude, faisait de même.
  * Vérifiée et boucle locale ensemble restent admises (Claude Code).
  */
 export function adressesDUnSeulTenant(adresses: readonly string[]): boolean {
-  const niveaux = new Set(adresses.map(niveauAdresseDeRetour));
-  return !niveaux.has("non_verifie") || niveaux.size === 1;
+  return !adresses.some((a) => niveauAdresseDeRetour(a) === "non_verifie") || adresses.length === 1;
 }
 
 /**
