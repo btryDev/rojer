@@ -40,10 +40,10 @@ export const GRILLE: GroupeGrille[] = [
     lignes: [
       { libelle: "Établissements", cases: ["1", "1", "jusqu'à 5", "au-delà de 5"] },
       { libelle: "Utilisateurs", cases: ["1", "1", "jusqu'à 5", "illimités"] },
-      // [2026-11-23 : « 5 » dans les formules payantes — faux depuis le
-      // 2026-11-11 (ADR-033 amendée, plafond levé). Relu par
-      // `tarif-formules.test.ts`.]
-      { libelle: "Unités de travail du DUERP", cases: ["3", "illimité", "illimité", "illimité"] },
+      // ~~{ libelle: "Unités de travail du DUERP", … }~~ [2026-11-23, décision
+      // de la propriétaire : la ligne est retirée — « 5 » était faux depuis le
+      // plafond levé du 2026-11-11 (ADR-033 amendée), et « illimité » n'a rien
+      // à vendre. L'essai reste borné à trois unités (`LIMITES_ESSAI`).]
       { libelle: "Zones", cases: ["1", "3", "3", "3"] },
       { libelle: "Équipements", cases: ["5", "illimité", "illimité", "illimité"] },
       { libelle: "Prescriptions particulières", cases: ["1", "illimité", "illimité", "illimité"] },

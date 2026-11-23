@@ -58,8 +58,7 @@ describe("la grille du tarif suit FORMULES", () => {
  * `MAX_ZONES` (ADR-029).
  */
 describe("la taille du dossier suit l'essai et les formules", () => {
-  const TAILLE: Record<string, "unitesTravail" | "zones" | "equipements" | "prescriptions"> = {
-    "Unités de travail du DUERP": "unitesTravail",
+  const TAILLE: Record<string, "zones" | "equipements" | "prescriptions"> = {
     Zones: "zones",
     Équipements: "equipements",
     "Prescriptions particulières": "prescriptions",
@@ -74,4 +73,8 @@ describe("la taille du dossier suit l'essai et les formules", () => {
       }
     });
   }
+});
+
+it("plus de ligne « Unités de travail » dans la grille (2026-11-23)", () => {
+  expect(lignes.some((l) => /unités de travail/i.test(l.libelle))).toBe(false);
 });
