@@ -406,6 +406,18 @@ liste) :
   fermé aux outils non vérifiés). Puis, en chantier à part, une alerte sur
   un volume anormal. Sources : checklists MCP de Practical DevSecOps et de
   SlowMist (« Detailed Logging », « Operation Logging », priorité haute).
+- **Limite de débit du connecteur MCP par adresse IP** (2026-11-23,
+  décision de la propriétaire : peut attendre, en queue de liste).
+  `/api/mcp` compte toutes les requêtes par adresse (600/min,
+  `LIMITES.mcpIp`), avant le jeton ; or ChatGPT et Claude appellent depuis
+  des adresses partagées entre tous leurs utilisateurs. Pas un problème
+  aux premiers clients : ChatGPT répartit sur au moins 16 adresses
+  (relevé des journaux du 2026-11-23), soit ~9 600 requêtes/min, et une
+  question coûte 2 à 6 requêtes. À faire avant la montée en charge : ne
+  compter par adresse que les requêtes REFUSÉES (jeton absent ou
+  invalide), et limiter par personne et par compte plutôt que par compte
+  seul (120/min partagés, `LIMITES.mcpPortee`). Même défaut au guichet des
+  jetons (600/min par adresse, `better-auth.ts`).
 
 ## Recette « pages × comptes à plusieurs membres » (avant la bascule)
 
