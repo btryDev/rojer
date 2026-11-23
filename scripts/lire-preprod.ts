@@ -6,6 +6,7 @@
  *   pnpm lire-preprod abonnement julien@rojer.invalid
  *   pnpm lire-preprod taches
  *   pnpm lire-preprod base
+ *   pnpm lire-preprod attente [adresse@…]
  *
  * `connexions` : le compte existe-t-il, depuis quand, combien de sessions
  * ouvertes, date de la dernière. `activite` : ce que le compte de cette
@@ -16,6 +17,9 @@
  * le témoin du cron (2026-11-16) — les dernières tâches du jour finies, et
  * la file Stripe (dernier événement reçu, traité, en attente). Un cron
  * arrêté ne peut pas le dire lui-même : ses alertes partent de lui.
+ * `attente` (2026-11-23) : la liste d'attente de `/bientot` — combien
+ * d'adresses, la première et la dernière laissées, et, pour des adresses
+ * NOMMÉES, si elles y sont et depuis quand. Jamais la liste.
  *
  * POURQUOI CE SCRIPT (2026-11-13). Sans recette écrite, chaque session
  * improvisait : l'une a lancé Docker pour y trouver `psql`, tronqué puis
@@ -54,7 +58,8 @@ const USAGE =
   "        pnpm lire-preprod activite <e-mail>\n" +
   "        pnpm lire-preprod abonnement <e-mail>\n" +
   "        pnpm lire-preprod taches\n" +
-  "        pnpm lire-preprod base";
+  "        pnpm lire-preprod base\n" +
+  "        pnpm lire-preprod attente [<e-mail>…]";
 
 function refus(message: string): never {
   console.error(`Refusé : ${message}`);
@@ -62,7 +67,7 @@ function refus(message: string): never {
 }
 
 type Demande =
-  | { question: "connexions"; adresses: string[] }
+  | { question: "connexions" | "attente"; adresses: string[] }
   | { question: "activite" | "abonnement"; adresse: string }
   | { question: "taches" }
   | { question: "base" };
@@ -75,8 +80,11 @@ function lireDemande(args: string[]): Demande {
   }
   // Better Auth écrit les adresses en minuscules : « Julien@… » ne trouverait rien.
   const adresses = saisies.map((a) => a.toLowerCase());
-  if (question !== "connexions" && question !== "activite" && question !== "abonnement") refus(USAGE);
-  if (adresses.length === 0) refus(`quelle adresse ?\n${USAGE}`);
+  if (question !== "connexions" && question !== "activite" && question !== "abonnement" && question !== "attente") {
+    refus(USAGE);
+  }
+  // `attente` répond aussi sans adresse : des nombres et des dates.
+  if (adresses.length === 0 && question !== "attente") refus(`quelle adresse ?\n${USAGE}`);
   if (adresses.length > MAX_ADRESSES) {
     refus(`${MAX_ADRESSES} adresses au plus : ce script répond pour des comptes nommés.`);
   }
@@ -428,6 +436,38 @@ async function taches(db: Lecteur) {
 }
 
 /**
+ * La liste d'attente de `/bientot` (`DemandeOuverture`, 2026-11-23) : combien
+ * d'adresses, la première et la dernière laissées ; pour des adresses nommées,
+ * présentes ou non, et depuis quand. L'adresse est écrite en minuscules par
+ * l'action : la recherche aussi. Jamais la liste — ce qui s'affiche ici entre
+ * dans une conversation.
+ */
+async function attente(db: Lecteur, adresses: string[]) {
+  const {
+    rows: [t],
+  } = await db.query<{ n: number; premiere: Date | null; derniere: Date | null }>(
+    `SELECT count(*)::int AS n,
+            min("creeLe") AT TIME ZONE 'UTC' AS premiere,
+            max("creeLe") AT TIME ZONE 'UTC' AS derniere
+       FROM "DemandeOuverture"`,
+  );
+  console.log(
+    `Liste d'attente : ${t.n} adresse(s)` +
+      (t.n > 0 ? `, la première laissée le ${dater(t.premiere!)}, la dernière le ${dater(t.derniere!)}.` : "."),
+  );
+  if (adresses.length === 0) return;
+  const { rows } = await db.query<{ email: string; cree: Date }>(
+    `SELECT email, "creeLe" AT TIME ZONE 'UTC' AS cree FROM "DemandeOuverture" WHERE email = ANY($1::text[])`,
+    [adresses],
+  );
+  for (const adresse of adresses) {
+    const l = rows.find((x) => x.email === adresse);
+    console.log(l ? `${adresse} : dans la liste, laissée le ${dater(l.cree)}.` : `${adresse} : pas dans la liste.`);
+  }
+  console.log("(Heure de Paris. Une adresse laissée deux fois n'a qu'une ligne : la date est celle de la première.)");
+}
+
+/**
  * Les réglages du serveur qui ferment des connexions (2026-11-16 : des
  * « Error in PostgreSQL connection: kind: Closed » au journal, à la minute du
  * cron), et l'âge des connexions de l'application ouvertes en ce moment.
@@ -489,6 +529,7 @@ async function lire(demande: Demande) {
     if (demande.question === "connexions") await connexions(db, demande.adresses);
     else if (demande.question === "taches") await taches(db);
     else if (demande.question === "base") await reglagesDeLaBase(db);
+    else if (demande.question === "attente") await attente(db, demande.adresses);
     else if (demande.question === "activite") await activite(db, demande.adresse);
     else await abonnement(db, demande.adresse);
   } finally {

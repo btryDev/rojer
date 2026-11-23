@@ -30,6 +30,9 @@ pnpm lire-preprod base
 - `base` : les réglages du serveur qui ferment des connexions
   (`idle_session_timeout`, sondes TCP…) et l'âge des connexions inactives
   de l'application. Aucune donnée.
+- `attente` : la liste d'attente de `/bientot` — combien d'adresses, la
+  première et la dernière laissées ; avec des adresses nommées, si elles y
+  sont et depuis quand. Jamais la liste.
 
 Depuis n'importe quel checkout qui a ses `node_modules` et la CLI `clever`
 connectée. Heures de Paris.
