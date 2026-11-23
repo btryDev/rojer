@@ -12,7 +12,8 @@ import { comptesDeLaPersonne } from "@/lib/auth/membres";
 import { entetesDeSession, lireSessionCourante, requireUser } from "@/lib/auth/require-user";
 import { MESSAGE_CONNECTEUR_PRO } from "@/lib/abonnements/connecteur";
 import { compteRetenu } from "@/lib/mcp/compte-oauth";
-import { connecteurOuvertPour } from "@/lib/connecteur/assistants";
+import { connecteurOuvertPour, outilsNonVerifiesOuverts } from "@/lib/connecteur/assistants";
+import { issueDuConsentement, niveauAdresseDeRetour } from "@/lib/mcp/oauth";
 import { hoteDeRetour, requeteSigneeDeLaPage, type ParametresDePage } from "@/lib/mcp/requete-oauth";
 import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
 import { Button } from "@/components/ui/button";
@@ -33,18 +34,50 @@ export default async function ConsentementPage({ searchParams }: { searchParams:
     comptes.map((c) => c.compteId),
     session?.session.activeOrganizationId,
   );
-  const [client, ouvert] = await Promise.all([
+  const [client, ouvert, nonVerifiesOuverts] = await Promise.all([
     auth.api
       .getOAuthClientPublic({ headers: await entetesDeSession(), query: { client_id: requete.get("client_id") ?? "" } })
       .catch(() => null),
     connecteurOuvertPour(compteId),
+    outilsNonVerifiesOuverts(compteId),
   ]);
+  // ADR-062 § 12 : le niveau se lit sur l'adresse où repart le code, jamais sur le nom.
+  const adresseRetour = requete.get("redirect_uri");
+  const issue = issueDuConsentement(adresseRetour, nonVerifiesOuverts);
+  const local = adresseRetour !== null && niveauAdresseDeRetour(adresseRetour) === "local";
+  const peutAutoriser = ouvert && issue !== "ferme";
   const nomClient = (client as { client_name?: string } | null)?.client_name?.trim() || "Un assistant";
   const nomCompte = comptes.find((c) => c.compteId === compteId)?.nom ?? "votre compte";
   const hote = hoteDeRetour(requete);
 
   return (
     <CadreOAuth sourcil="Connexion d'un assistant" titre={`Autoriser « ${nomClient} » à lire votre dossier ?`}>
+      {issue === "ferme" ? (
+        <MessageFormulaire ton="alerte" className="mb-5">
+          {`Cet outil n'est pas vérifié par Rojer, et le compte « ${nomCompte} » n'accepte que les assistants vérifiés (Claude, ChatGPT). Le propriétaire du compte peut ouvrir les outils non vérifiés depuis « Connecter un assistant ».`}
+        </MessageFormulaire>
+      ) : null}
+      {issue === "confirmer" ? (
+        <div className="mb-5 rounded-[18px] border-2 border-[color:var(--board-signal-ink)] bg-[color:var(--board-signal-wash)] px-5 py-4">
+          <p className="m-0 text-[12px] font-semibold uppercase tracking-[0.12em] text-[color:var(--board-signal-ink)]">
+            Outil non vérifié par Rojer
+          </p>
+          <p className="m-0 mt-2 text-[13.5px] leading-[1.55] text-[color:var(--board-ink)]">
+            L&apos;accès à votre dossier partira vers :
+          </p>
+          <p className="m-0 mt-1 break-all text-[20px] font-semibold text-[color:var(--board-ink)]">{hote ?? "une adresse inconnue"}</p>
+          <p className="m-0 mt-2 text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
+            Rojer ne connaît pas cet outil. N&apos;autorisez que si vous l&apos;avez branché vous-même, à l&apos;instant,
+            et que vous reconnaissez cette adresse. Si vous êtes arrivé ici par un lien venu d&apos;un e-mail ou d&apos;un
+            message, c&apos;est un signal d&apos;hameçonnage : refusez.
+          </p>
+        </div>
+      ) : null}
+      {local ? (
+        <p className="m-0 mb-4 text-[13px] leading-[1.55] text-[color:var(--board-ink)]">
+          L&apos;accès partira vers un programme de cet ordinateur. N&apos;autorisez que si vous venez de le lancer.
+        </p>
+      ) : null}
       <p className="m-0 text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
         Le nom ci-dessus est celui que l&apos;application déclare elle-même. Après votre réponse, vous serez renvoyé
         vers <strong className="text-[color:var(--board-ink)]">{hote ?? "une adresse inconnue"}</strong> : si ce
@@ -69,17 +102,27 @@ export default async function ConsentementPage({ searchParams }: { searchParams:
         </MessageFormulaire>
       )}
 
-      <form action={repondreConsentement} className="mt-6 flex flex-wrap gap-3">
+      <form action={repondreConsentement} className="mt-6 flex flex-col gap-4">
         <input type="hidden" name="oauth_query" value={requete.toString()} />
         <ChampCompteAttendu compteId={compteId} />
-        {ouvert ? (
-          <Button type="submit" name="reponse" value="accepter" variant="board" size="board">
-            Autoriser
-          </Button>
+        {peutAutoriser && issue === "confirmer" ? (
+          <label className="flex items-start gap-2.5 text-[13.5px] leading-[1.5] text-[color:var(--board-ink)]">
+            <input type="checkbox" name="confirme" value="oui" required className="mt-1" />
+            <span>
+              Je reconnais <strong>{hote ?? "cette adresse"}</strong> : c&apos;est l&apos;outil que je viens de brancher.
+            </span>
+          </label>
         ) : null}
-        <Button type="submit" name="reponse" value="refuser" variant="boardClair" size="board">
-          {ouvert ? "Refuser" : "Revenir à l'assistant"}
-        </Button>
+        <div className="flex flex-wrap gap-3">
+          {peutAutoriser ? (
+            <Button type="submit" name="reponse" value="accepter" variant="board" size="board">
+              Autoriser
+            </Button>
+          ) : null}
+          <Button type="submit" name="reponse" value="refuser" variant="boardClair" size="board" formNoValidate>
+            {peutAutoriser ? "Refuser" : "Revenir à l'assistant"}
+          </Button>
+        </div>
       </form>
     </CadreOAuth>
   );

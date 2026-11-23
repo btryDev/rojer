@@ -1777,13 +1777,13 @@ model PlanPrevention {
   // Entreprise extérieure — SetNull pour les mêmes raisons que PermisFeu :
   // le plan de prévention est une pièce de traçabilité, il survit au retrait
   // du prestataire de l'annuaire.
-  prestataireId              String?
-  prestataire                Prestataire? @relation(fields: [prestataireId], references: [id], onDelete: SetNull)
-  entrepriseExterieureRaison String
-  entrepriseExterieureSiret  String?
-  efChefNom                  String // chef de l'entreprise extérieure
-  efChefEmail                String
-  efEffectifIntervenant      Int
+  prestataireId               String?
+  prestataire                 Prestataire? @relation(fields: [prestataireId], references: [id], onDelete: SetNull)
+  entrepriseExterieureRaison  String
+  entrepriseExterieureSiret   String?
+  efChefNom                   String // chef de l'entreprise extérieure
+  efChefEmail                 String
+  efEffectifIntervenant       Int
   // Coordonnées reprises du formulaire de RiskBoard (2026-11-21, décision de
   // la propriétaire). Facultatives ; dans l'empreinte de signature quand
   // elles sont remplies, absentes du canonique sinon (`hash-objet.ts`).
@@ -2810,19 +2810,21 @@ model FichierStocke {
 }
 
 model Compte {
-  id                     String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name                   String
+  id                         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                       String
   /// Exigé unique par le plugin ; tiré au hasard, jamais affiché.
-  slug                   String
-  logo                   String?
-  metadata               String?
-  createdAt              DateTime  @default(now())
+  slug                       String
+  logo                       String?
+  metadata                   String?
+  createdAt                  DateTime  @default(now())
   /// La suppression demandée par un propriétaire (ADR-058 § 8) : effacée 7 jours après par la tâche quotidienne ; `null` sans demande, ou annulée.
-  suppressionDemandeeLe  DateTime?
+  suppressionDemandeeLe      DateTime?
   /// L'adresse de qui l'a demandée (reprise dans la trace).
-  suppressionDemandeePar String?
+  suppressionDemandeePar     String?
   /// La demande a programmé la fin de l'abonnement à son échéance (renouvellement avant la date) : à retirer si elle est annulée.
-  suppressionFinPosee    Boolean   @default(false)
+  suppressionFinPosee        Boolean   @default(false)
+  /// ADR-062 § 12 : les outils non vérifiés (ni Claude, ni ChatGPT, ni la boucle locale) peuvent-ils se connecter au compte ? Faux par défaut ; seul un propriétaire le change.
+  outilsNonVerifiesAutorises Boolean   @default(false)
 
   membres                Membre[]
   invitations            InvitationCompte[]

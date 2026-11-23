@@ -202,6 +202,17 @@ const EXEMPTIONS = new Map<string, Exemption>([
       ] as const,
   ),
   [
+    "app/etablissements/[id]/connecter/actions.ts:reglerOutilsNonVerifiesAction",
+    {
+      garde: "verifierProprietaire",
+      raison:
+        "Le réglage des outils non vérifiés (ADR-062 § 12) : `verifierProprietaire` rend le compte où la " +
+        "personne est PROPRIÉTAIRE, comparé au compte de la page (`memeCompteQueLaPage`) ; " +
+        "`reglerOutilsNonVerifies` n'écrit que ce compte et ses autorisations (`referenceId: compteId`). " +
+        "L'établissement de l'URL ne sert qu'à la revalidation ; aucun identifiant reçu ne désigne la ligne.",
+    },
+  ],
+  [
     "lib/signatures/actions.ts:poserSignatureAvecToken",
     {
       garde: "verifierAccessToken",

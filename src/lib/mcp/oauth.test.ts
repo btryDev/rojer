@@ -4,6 +4,10 @@ import {
   estAdresseDeRetourAdmise,
   estCheminAuthServi,
   estDocumentCimdAdmis,
+  issueDuConsentement,
+  niveauAdresseDeRetour,
+  niveauDuClient,
+  nomReserve,
   ressourceMcp,
 } from "./oauth";
 import { requeteARejouer } from "./reprise-oauth";
@@ -15,36 +19,88 @@ describe("ressourceMcp — l'audience des jetons (ADR-062 § 4)", () => {
   });
 });
 
-describe("estAdresseDeRetourAdmise — les assistants admis (ADR-062 § 3)", () => {
+describe("niveauAdresseDeRetour — trois niveaux de confiance (ADR-062 § 12)", () => {
   it.each([
     "https://claude.ai/api/mcp/auth_callback",
     "https://claude.com/api/mcp/auth_callback",
-    "http://localhost:53682/callback",
-    "http://127.0.0.1/callback",
-    "http://[::1]:8080/callback",
-  ])("admet %s", (a) => expect(estAdresseDeRetourAdmise(a)).toBe(true));
+    "https://chatgpt.com/connector_platform_oauth_redirect",
+    "https://chatgpt.com/connector/oauth/abc123XYZ",
+  ])("vérifiée : %s", (a) => expect(niveauAdresseDeRetour(a)).toBe("verifie"));
+
+  it.each(["http://localhost:53682/callback", "http://127.0.0.1/callback", "http://[::1]:8080/callback"])(
+    "boucle locale : %s",
+    (a) => expect(niveauAdresseDeRetour(a)).toBe("local"),
+  );
 
   it.each([
-    // Un autre chemin, un autre hôte, un sous-domaine : refusés.
+    // Un faux Claude ou un faux ChatGPT : un autre chemin, un sous-domaine, un
+    // hôte voisin ne sont jamais vérifiés — non vérifiés, donc fermés par défaut.
     "https://claude.ai/api/mcp/auth_callback/x",
     "https://claude.ai.attaquant.example/api/mcp/auth_callback",
-    "https://evil.example/api/mcp/auth_callback",
-    // La boucle locale en https n'est pas un client en ligne de commande ;
-    // une boucle locale déguisée non plus.
+    "https://chatgpt.com.attaquant.example/connector_platform_oauth_redirect",
+    "https://chatgpt.com/connector/oauth/",
+    "https://chatgpt.com/connector/oauth/abc/../../autre",
+    "https://chatgpt.com/connector/oauth/abc/suite",
+    "https://n8n.exemple.fr/rest/oauth2-credential/callback",
     "https://localhost/callback",
+  ])("non vérifiée : %s", (a) => expect(niveauAdresseDeRetour(a)).toBe("non_verifie"));
+
+  it.each([
+    "http://evil.example/callback",
     "http://localhost.attaquant.example/callback",
     "http://user:mdp@localhost/callback",
     "http://localhost/callback#fragment",
+    "https://user:mdp@n8n.exemple.fr/callback",
+    "https://n8n.exemple.fr/callback#x",
     "http://192.168.1.10/callback",
     "javascript:alert(1)",
+    "monapp://callback",
     "pas une url",
-  ])("refuse %s", (a) => expect(estAdresseDeRetourAdmise(a)).toBe(false));
+  ])("refusée : %s", (a) => {
+    expect(niveauAdresseDeRetour(a)).toBe("refuse");
+    expect(estAdresseDeRetourAdmise(a)).toBe(false);
+  });
+});
+
+describe("niveauDuClient — la moins sûre de ses adresses", () => {
+  it("vérifiée seule, ou avec la boucle locale", () => {
+    expect(niveauDuClient(["https://claude.ai/api/mcp/auth_callback"])).toBe("verifie");
+    expect(niveauDuClient(["https://claude.ai/api/mcp/auth_callback", "http://localhost/cb"])).toBe("local");
+  });
+  it("une adresse non vérifiée suffit à faire un client non vérifié ; aucune adresse : refusé", () => {
+    expect(niveauDuClient(["https://claude.ai/api/mcp/auth_callback", "https://evil.example/cb"])).toBe("non_verifie");
+    expect(niveauDuClient([])).toBe("refuse");
+  });
+});
+
+describe("nomReserve — un nom ne fait pas un vérifié", () => {
+  it.each(["Claude", "claude", "Claude Desktop", "C-l-a-u-d-e", "ChatGPT", "Chat GPT", "OpenAI", "Anthropic", "Rojer", "Assistant Rojer", "Röjer"])(
+    "réservé : %s",
+    (n) => expect(nomReserve(n)).toBe(true),
+  );
+  it.each(["n8n", "Hermes", "Mon agent", ""])("libre : %s", (n) => expect(nomReserve(n)).toBe(false));
+});
+
+describe("issueDuConsentement — ce que l'écran permet", () => {
+  it("vérifié ou local : autoriser, quel que soit le réglage", () => {
+    expect(issueDuConsentement("https://claude.ai/api/mcp/auth_callback", false)).toBe("autoriser");
+    expect(issueDuConsentement("http://localhost:3000/cb", false)).toBe("autoriser");
+  });
+  it("non vérifié : fermé par défaut, à confirmer si le compte l'a ouvert", () => {
+    expect(issueDuConsentement("https://n8n.exemple.fr/cb", false)).toBe("ferme");
+    expect(issueDuConsentement("https://n8n.exemple.fr/cb", true)).toBe("confirmer");
+  });
+  it("adresse absente ou refusée : fermé, même ouvert", () => {
+    expect(issueDuConsentement(null, true)).toBe("ferme");
+    expect(issueDuConsentement("http://evil.example/cb", true)).toBe("ferme");
+  });
 });
 
 describe("estDocumentCimdAdmis — éditeurs dont un document CIMD est lu", () => {
-  it("admet un document servi en https par Anthropic", () => {
+  it("admet un document servi en https par Anthropic ou OpenAI", () => {
     expect(estDocumentCimdAdmis("https://claude.ai/oauth/claude-code-client-metadata")).toBe(true);
     expect(estDocumentCimdAdmis("https://console.anthropic.com/client.json")).toBe(true);
+    expect(estDocumentCimdAdmis("https://chatgpt.com/oauth/client.json")).toBe(true);
   });
 
   it.each([

@@ -95,6 +95,13 @@ const OUVERTES = new Map<string, Ouverte>([
   ["app/oauth/actions.ts:choisirCompteOAuth", CONNECTEUR],
   ["app/oauth/actions.ts:repondreConsentement", CONNECTEUR],
   ["app/etablissements/[id]/connecter/actions.ts:retirerAssistantAction", CONNECTEUR],
+  [
+    "app/etablissements/[id]/connecter/actions.ts:reglerOutilsNonVerifiesAction",
+    {
+      motif:
+        "réglage de sécurité du connecteur (ADR-062 § 12), propriétaire seul : le fermer reste toujours possible ; l'ouvrir n'accorde rien sans la formule Pro, revérifiée au consentement",
+    },
+  ],
   ["lib/auth/actions.ts:activerCompteAction", COMPTE],
   ["lib/auth/actions.ts:activerDoubleAuthAction", COMPTE],
   ["lib/auth/actions.ts:changerMotDePasseAction", COMPTE],
