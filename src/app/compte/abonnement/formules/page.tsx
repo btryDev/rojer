@@ -14,7 +14,7 @@ import { TarifOffres } from "@/components/landing/TarifOffres";
 import { buttonVariants } from "@/components/ui/button";
 import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
 import type { Db } from "@/lib/auth/compte";
-import { sensDuChangement } from "@/lib/abonnements/changement";
+import { ceQuiSeFerme, ceQuiSOuvre, sensDuChangement } from "@/lib/abonnements/changement";
 import { PAGE_ESSAI } from "@/lib/abonnements/essai";
 import {
   CLES_FORMULES,
@@ -334,6 +334,27 @@ function effetDuChangement(sens: "montee" | "baisse", actuelle: string | null, v
 }
 
 /**
+ * Le nom d'une formule visée, tel que la fenêtre le dit : « Pro » ; pour un
+ * simple changement de rythme, « Pro à l'année » ou « Pro au mois ».
+ */
+function nomVise(actuelle: string | null, visee: string): string {
+  const a = formuleDeLookupKey(actuelle);
+  const v = formuleDeLookupKey(visee)!;
+  const nom = FORMULES[v.formule].libelle;
+  if (a?.formule !== v.formule) return nom;
+  return `${nom} ${v.periodicite === "annuel" ? "à l'année" : "au mois"}`;
+}
+
+/** Une montée qui change de rythme : ce qui est prélevé aujourd'hui, à la place de « la différence avec … ». */
+function rythmeDeLaMontee(actuelle: string | null, visee: string): string | null {
+  const de = formuleDeLookupKey(actuelle)?.periodicite;
+  const vers = formuleDeLookupKey(visee)?.periodicite;
+  if (de === "mensuel" && vers === "annuel") return "L'année entière, moins ce qui reste de votre mois en cours";
+  if (de === "annuel" && vers === "mensuel") return "Un mois, moins ce qui reste de votre année ; la période repart aujourd'hui";
+  return null;
+}
+
+/**
  * Changer de formule (ADR-053 § 10) : dans chaque carte, ce que fait le
  * passage vers cette formule et ce rythme ; la carte de la formule du compte
  * porte « Votre formule », sans geste. Les prix, les stocks (pour une baisse)
@@ -376,14 +397,29 @@ async function CartesPourChanger({
       // dit pourquoi (ci-dessous).
       .filter((o) => o.cle !== prevue?.lookupKey)
       .map(({ cle, sens }) => {
-        const f = formuleDeLookupKey(cle)!.formule;
+        const { formule: f, periodicite } = formuleDeLookupKey(cle)!;
+        const de = formuleDeLookupKey(actuelle)?.formule ?? f;
+        const depasse = sens === "baisse" && stocks ? depassementsDe(stocks, cle) : [];
         const option: OptionDeFormule = {
           cle,
           sens,
           libelle: FORMULES[f].libelle,
           effet: effetDuChangement(sens, actuelle, cle, finPeriode),
           prixConnu: typeof prix[cle] === "number",
-          depassements: sens === "baisse" && stocks ? depassementsDe(stocks, cle) : [],
+          depassements: depasse,
+          // La fenêtre de confirmation (retour de test du 2026-11-23) : ce
+          // que le changement coûte et change, avant le geste.
+          changement: {
+            cle,
+            sens,
+            libelle: nomVise(actuelle, cle),
+            actuelle: FORMULES[de].libelle,
+            ensuiteCentimes: prix[cle] ?? null,
+            unite: LIBELLE_PERIODICITE[periodicite].unite,
+            rythme: sens === "montee" ? rythmeDeLaMontee(actuelle, cle) : null,
+            finPeriode: finPeriode?.toISOString() ?? null,
+            changements: sens === "montee" ? ceQuiSOuvre(de, f) : ceQuiSeFerme(de, f, depasse),
+          },
         };
         return [cle, <GesteChangement key={cle} option={option} compteId={pageCompteId} carte={carteDe(f)} />];
       }),

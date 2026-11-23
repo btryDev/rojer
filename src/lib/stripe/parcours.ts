@@ -168,20 +168,65 @@ async function factureOuverte(stripe: Stripe, derniere: Stripe.Subscription["lat
 
 const tauxEnVigueur = (stripe: Stripe) => tauxDeTva(stripe).catch(() => null);
 
+type Visee = { priceId: string; intervalle: (typeof INTERVALLE_STRIPE)[keyof typeof INTERVALLE_STRIPE] };
+
+/** Ce qu'une montée prélèverait aujourd'hui, et jusqu'à quand : dit dans la fenêtre de confirmation, avant le clic. */
+export type ApercuDeMontee = {
+  /** Le montant prélevé aujourd'hui, TTC (la facture de prorata, crédit du client déduit). */
+  aujourdhuiCentimes: number;
+  /** La fin de la période que ce prélèvement couvre : le prochain prélèvement. */
+  jusquAu: Date | null;
+  /** L'instant du prorata, repris par `monterDeFormule` : le montant prélevé est celui annoncé. */
+  prorationDate: number;
+};
+
+/**
+ * L'aperçu d'une montée (retour de test du 2026-11-23 : « passer à Pro
+ * n'est pas clair ») : la facture que Stripe émettrait, sans rien créer ni
+ * prélever (`invoices.createPreview`), aux mêmes réglages que la montée.
+ */
+export async function apercuDeMontee(stripe: Stripe, abonnement: Stripe.Subscription, { priceId, intervalle }: Visee, maintenant = new Date()): Promise<ApercuDeMontee> {
+  const item = abonnement.items.data[0];
+  const customer = idStripe(abonnement.customer);
+  if (!item || !customer) throw new Error("abonnement sans article ni client");
+  const prorationDate = Math.floor(maintenant.getTime() / 1000);
+  const facture = await stripe.invoices.createPreview(
+    {
+      customer,
+      subscription: abonnement.id,
+      subscription_details: {
+        items: [{ id: item.id, price: priceId }],
+        proration_behavior: "always_invoice",
+        proration_date: prorationDate,
+        ...(item.price.recurring?.interval !== intervalle ? { billing_cycle_anchor: { type: "now" as const } } : {}),
+      },
+    },
+    OPTIONS_RELECTURE,
+  );
+  const fin = Math.max(0, ...facture.lines.data.map((l) => l.period?.end ?? 0));
+  return { aujourdhuiCentimes: facture.amount_due, jusquAu: fin ? new Date(fin * 1000) : null, prorationDate };
+}
+
+/** Ce qu'une montée a fait : la facture à régler s'il en reste une, sinon le montant prélevé et le prochain prélèvement. */
+export type MonteeFaite = { aRegler: string | null; preleveCentimes: number | null; prochainLe: Date | null };
+
 /**
  * Monter de formule (ADR-053 § 10, client qui paie) : tout de suite, la
  * différence facturée au prorata et prélevée aussitôt. `pending_if_incomplete`
  * : la nouvelle formule ne s'applique que si ce paiement passe — sinon
  * l'abonnement garde l'ancienne, et la facture attend (rendue à régler). Une
  * baisse déjà planifiée est abandonnée d'abord : le dernier choix l'emporte.
+ * `prorationDate` : celle de l'aperçu montré (`apercuDeMontee`), pour que le
+ * montant prélevé soit celui annoncé.
  */
 export async function monterDeFormule(
   stripe: Stripe,
   abonnement: Stripe.Subscription,
-  { priceId, intervalle }: { priceId: string; intervalle: (typeof INTERVALLE_STRIPE)[keyof typeof INTERVALLE_STRIPE] },
-): Promise<string | null> {
+  { priceId, intervalle }: Visee,
+  prorationDate?: number,
+): Promise<MonteeFaite> {
   const item = abonnement.items.data[0];
-  if (!item || item.price.id === priceId) return null;
+  if (!item || item.price.id === priceId) return { aRegler: null, preleveCentimes: null, prochainLe: null };
   // Le rythme change (mois ↔ année) : la période repart aujourd'hui, comme la
   // page l'annonce. Stripe garde sinon la date d'origine de l'abonnement
   // (répétition du 2026-11-17 : passé à l'année le 10 juin, payé jusqu'au
@@ -198,6 +243,7 @@ export async function monterDeFormule(
       proration_behavior: "always_invoice",
       // Un objet, `{ type }` (stripe-node 23, API `2026-10-28.endive`).
       ...(rythmeChange ? { billing_cycle_anchor: { type: "now" as const } } : {}),
+      ...(prorationDate ? { proration_date: prorationDate } : {}),
       payment_behavior: "pending_if_incomplete",
       expand: ["latest_invoice"],
     },
@@ -220,7 +266,13 @@ export async function monterDeFormule(
       console.error(`stripe : baisse prévue non rendue après une montée (${planning}) — ${e instanceof Error ? e.name : "erreur"}`);
     }
   }
-  return factureARegler(stripe, misAJour.latest_invoice);
+  const facture = typeof misAJour.latest_invoice === "object" ? misAJour.latest_invoice : null;
+  const fin = misAJour.items?.data[0]?.current_period_end;
+  return {
+    aRegler: await factureARegler(stripe, misAJour.latest_invoice),
+    preleveCentimes: facture?.status === "paid" ? facture.amount_paid : null,
+    prochainLe: fin ? new Date(fin * 1000) : null,
+  };
 }
 
 /**

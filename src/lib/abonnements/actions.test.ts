@@ -101,7 +101,7 @@ beforeEach(() => {
   m.prixDesFormules.mockResolvedValue(new Map([["rojer_pro_annuel", { priceId: "price_pa" }], ["rojer_essentiel_mensuel", { priceId: "price_em" }]]));
   m.tauxDeTva.mockResolvedValue("txr_tva");
   m.ouvrirCheckout.mockResolvedValue("https://checkout.stripe.test/abonnement");
-  m.monterDeFormule.mockResolvedValue(null);
+  m.monterDeFormule.mockResolvedValue({ aRegler: null, preleveCentimes: 2000, prochainLe: new Date("2026-12-03T00:00:00Z") });
   m.depassements.mockResolvedValue([]);
 });
 
@@ -193,37 +193,45 @@ describe("sAbonnerAction", () => {
 describe("changerFormuleAction", () => {
   const actif = (lookup: string) => ({ id: "sub_actif", status: "active", created: 1, items: { data: [{ id: "si_1", price: { id: "p", lookup_key: lookup } }] } });
 
-  it("montée : tout de suite ; une facture à régler renvoie vers elle", async () => {
+  it("montée : tout de suite, le montant prélevé et le prochain prélèvement rendus à la fenêtre ; une facture à régler renvoie vers elle", async () => {
     m.abonnementsDuClient.mockResolvedValue([actif("rojer_essentiel_mensuel")]);
-    expect(await redirigeVers(changerFormuleAction(formulaire("rojer_pro_annuel")))).toBe("/compte/abonnement?formule=changee");
-    expect(m.monterDeFormule).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ id: "sub_actif" }), { priceId: "price_pa", intervalle: "year" });
-    m.monterDeFormule.mockResolvedValue("https://invoice.stripe.com/i/3");
-    expect(await redirigeVers(changerFormuleAction(formulaire("rojer_pro_annuel")))).toBe("https://invoice.stripe.com/i/3");
+    expect(await changerFormuleAction(null, formulaire("rojer_pro_annuel"))).toEqual({ etat: "changee", preleveCentimes: 2000, prochainLe: "2026-12-03T00:00:00.000Z" });
+    expect(m.monterDeFormule).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ id: "sub_actif" }), { priceId: "price_pa", intervalle: "year" }, undefined);
+    // L'instant du prorata de l'aperçu montré est repris ; un instant futur ou trop ancien ne l'est pas.
+    const maintenant = Math.floor(Date.now() / 1000);
+    for (const [v, attendu] of [[maintenant - 60, maintenant - 60], [maintenant + 600, undefined], [maintenant - 7200, undefined]] as const) {
+      const f = formulaire("rojer_pro_annuel");
+      f.set("prorationDate", String(v));
+      await changerFormuleAction(null, f);
+      expect(m.monterDeFormule.mock.calls.at(-1)?.[3]).toBe(attendu);
+    }
+    m.monterDeFormule.mockResolvedValue({ aRegler: "https://invoice.stripe.com/i/3", preleveCentimes: null, prochainLe: null });
+    expect(await redirigeVers(changerFormuleAction(null, formulaire("rojer_pro_annuel")))).toBe("https://invoice.stripe.com/i/3");
     expect(m.planifierBaisse).not.toHaveBeenCalled();
   });
 
   it("baisse : planifiée en fin de période ; refusée tant qu'il y a trop d'utilisateurs ; l'excédent d'établissements ne la bloque pas", async () => {
     m.abonnementsDuClient.mockResolvedValue([actif("rojer_pro_annuel")]);
     m.depassements.mockResolvedValue([{ quota: "etablissements", utilise: 3, plafond: 1 }]);
-    expect(await redirigeVers(changerFormuleAction(formulaire("rojer_essentiel_mensuel")))).toBe("/compte/abonnement?formule=prevue");
+    expect(await changerFormuleAction(null, formulaire("rojer_essentiel_mensuel"))).toEqual({ etat: "prevue", le: null });
     expect(m.planifierBaisse).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ id: "sub_actif" }), { priceId: "price_em", intervalle: "month" });
     m.planifierBaisse.mockClear();
     m.depassements.mockResolvedValue([{ quota: "membres", utilise: 3, plafond: 1 }]);
-    expect(await redirigeVers(changerFormuleAction(formulaire("rojer_essentiel_mensuel")))).toBe("/compte/abonnement/formules?formule=trop-d-utilisateurs");
+    expect(await redirigeVers(changerFormuleAction(null, formulaire("rojer_essentiel_mensuel")))).toBe("/compte/abonnement/formules?formule=trop-d-utilisateurs");
     expect(m.planifierBaisse).not.toHaveBeenCalled();
     expect(m.monterDeFormule).not.toHaveBeenCalled();
   });
 
   it("une résiliation déjà prévue : pas de changement de formule", async () => {
     m.abonnementsDuClient.mockResolvedValue([{ ...actif("rojer_essentiel_mensuel"), cancel_at_period_end: true }]);
-    expect(await redirigeVers(changerFormuleAction(formulaire("rojer_pro_annuel")))).toBe("/compte/abonnement/formules?formule=resiliation-prevue");
+    expect(await redirigeVers(changerFormuleAction(null, formulaire("rojer_pro_annuel")))).toBe("/compte/abonnement/formules?formule=resiliation-prevue");
     expect(m.monterDeFormule).not.toHaveBeenCalled();
   });
 
   it("course avec une invitation : revérifié après le planning, la baisse est rendue si elle ne tient plus", async () => {
     m.abonnementsDuClient.mockResolvedValue([actif("rojer_pro_annuel")]);
     m.depassements.mockResolvedValueOnce([]).mockResolvedValueOnce([{ quota: "membres", utilise: 2, plafond: 1 }]);
-    expect(await redirigeVers(changerFormuleAction(formulaire("rojer_essentiel_mensuel")))).toBe("/compte/abonnement/formules?formule=trop-d-utilisateurs");
+    expect(await redirigeVers(changerFormuleAction(null, formulaire("rojer_essentiel_mensuel")))).toBe("/compte/abonnement/formules?formule=trop-d-utilisateurs");
     expect(m.planifierBaisse).toHaveBeenCalled();
     expect(m.annulerBaisse).toHaveBeenCalled();
   });
@@ -232,15 +240,15 @@ describe("changerFormuleAction", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     m.abonnementsDuClient.mockResolvedValue([actif("rojer_essentiel_mensuel")]);
     m.monterDeFormule.mockRejectedValueOnce(Object.assign(new Error("en cours"), { statusCode: 409 }));
-    expect(await redirigeVers(changerFormuleAction(formulaire("rojer_pro_annuel")))).toBe("/compte/abonnement");
+    expect(await redirigeVers(changerFormuleAction(null, formulaire("rojer_pro_annuel")))).toBe("/compte/abonnement");
   });
 
   it("hors d'un abonnement à jour (impayé) : rien ; formule hors catalogue : rien", async () => {
     for (const status of ["incomplete", "past_due"]) {
       m.abonnementsDuClient.mockResolvedValue([{ ...actif("rojer_essentiel_mensuel"), status }]);
-      expect(await redirigeVers(changerFormuleAction(formulaire("rojer_pro_annuel"))), status).toBe("/compte/abonnement/formules?formule=impossible");
+      expect(await redirigeVers(changerFormuleAction(null, formulaire("rojer_pro_annuel"))), status).toBe("/compte/abonnement/formules?formule=impossible");
     }
-    expect(await redirigeVers(changerFormuleAction(formulaire("rojer_surmesure_mensuel")))).toBe("/compte/abonnement");
+    expect(await redirigeVers(changerFormuleAction(null, formulaire("rojer_surmesure_mensuel")))).toBe("/compte/abonnement");
     expect(m.monterDeFormule).not.toHaveBeenCalled();
   });
 
@@ -260,7 +268,7 @@ describe("un autre onglet a changé de compte (audit du 2026-11-10)", () => {
   };
   it.each([
     ["s'abonner", sAbonnerAction],
-    ["changer de formule", changerFormuleAction],
+    ["changer de formule", (f: FormData) => changerFormuleAction(null, f)],
     ["garder sa formule", annulerBaisseAction],
     ["ouvrir le portail", ouvrirPortailAction],
   ])("%s : rien chez Stripe, la page rendue sur le compte actif le dit", async (_geste, action) => {
@@ -280,7 +288,7 @@ describe("un autre onglet a changé de compte (audit du 2026-11-10)", () => {
 
 describe("sans client Stripe (essai) : les gestes sur un abonnement n'ont rien à gérer", () => {
   it.each([
-    ["changer de formule", changerFormuleAction],
+    ["changer de formule", (f: FormData) => changerFormuleAction(null, f)],
     ["garder sa formule", annulerBaisseAction],
     ["ouvrir le portail", ouvrirPortailAction],
   ])("%s : la page de l'abonnement, rien chez Stripe", async (_geste, action) => {

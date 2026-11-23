@@ -6,7 +6,8 @@
 // claire ou d'encre.
 
 import { BoutonEnvoi } from "./BoutonEnvoi";
-import { annulerBaisseAction, changerFormuleAction, sAbonnerAction } from "@/lib/abonnements/actions";
+import { FenetreChangement, type ChangementPropose } from "./FenetreChangement";
+import { annulerBaisseAction, sAbonnerAction } from "@/lib/abonnements/actions";
 import { ChampCompteAttendu } from "@/components/compte/ChampCompteAttendu";
 import { euros } from "@/lib/abonnements/affichage";
 import { CE_QUE_L_ABONNEMENT_OUVRE, LIBELLES_PLAFONDS, LIBELLE_PERIODICITE, type Periodicite } from "@/lib/abonnements/formules";
@@ -83,6 +84,8 @@ export type OptionDeFormule = {
   /** Le prix est lu chez Stripe : sans lui, rien ne part. */
   prixConnu: boolean;
   depassements: Depassement[];
+  /** Ce que la fenêtre de confirmation dit avant le geste (2026-11-23). */
+  changement: ChangementPropose;
 };
 
 /**
@@ -96,9 +99,7 @@ export function GesteChangement({ option, compteId, carte }: { option: OptionDeF
   const enLecture = option.depassements.filter((d) => d.quota !== "membres");
   const idRefus = `refus-${option.cle}`;
   return (
-    <form action={changerFormuleAction} className="flex flex-col gap-3">
-      <input type="hidden" name="formule" value={option.cle} />
-      <ChampCompteAttendu compteId={compteId} />
+    <div className="flex flex-col gap-3">
       <p className={NOTE}>{option.effet}</p>
       {/* Un bouton fermé dit pourquoi (retour de test du 2026-11-17). */}
       {!option.prixConnu ? <p className={NOTE_FORTE}>Prix indisponible pour le moment.</p> : null}
@@ -116,15 +117,15 @@ export function GesteChangement({ option, compteId, carte }: { option: OptionDeF
           , {enLecture.length === 1 && enLecture[0].utilise - enLecture[0].plafond === 1 ? "le plus récent" : "les plus récents"}.
         </p>
       ) : null}
-      <BoutonEnvoi
-        variant="board"
+      {/* Le bouton ouvre la fenêtre de confirmation : rien ne part avant elle. */}
+      <FenetreChangement
+        changement={option.changement}
+        compteId={compteId}
         carte={carte}
         disabled={!option.prixConnu || !!tropDeMembres}
         describedBy={tropDeMembres ? idRefus : undefined}
-      >
-        {option.sens === "montee" ? `Passer à ${option.libelle}` : "Prévoir ce changement"}
-      </BoutonEnvoi>
-    </form>
+      />
+    </div>
   );
 }
 

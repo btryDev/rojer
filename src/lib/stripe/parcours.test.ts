@@ -8,6 +8,7 @@ import { carteQuiAPaye,
   oublierLesPrix,
   annulerBaisse,
   baissePrevue,
+  apercuDeMontee,
   monterDeFormule,
   ouvrirCheckout,
   planifierBaisse,
@@ -146,7 +147,7 @@ describe("parcours Stripe", () => {
     const sub = { id: "sub_1", schedule: "sub_sched_1", items: { data: [{ id: "si_1", price: { id: "price_em", recurring: { interval: "month" } } }] } } as unknown as Stripe.Subscription;
     const pm = { priceId: "price_pm", intervalle: "month" as const };
     api.subscriptions.update.mockResolvedValue({ latest_invoice: { status: "paid" } });
-    expect(await monterDeFormule(stripe, sub, pm)).toBeNull();
+    expect((await monterDeFormule(stripe, sub, pm)).aRegler).toBeNull();
     expect(api.subscriptionSchedules.release).toHaveBeenCalledWith("sub_sched_1");
     // La mise à jour d'abord : si elle échoue, la baisse prévue reste intacte.
     expect(api.subscriptions.update.mock.invocationCallOrder.at(-1)).toBeLessThan(api.subscriptionSchedules.release.mock.invocationCallOrder.at(-1)!);
@@ -166,17 +167,46 @@ describe("parcours Stripe", () => {
       { idempotencyKey: "monter-sub_1-price_em-price_pm-sans-facture" },
     );
     api.subscriptions.update.mockResolvedValue({ latest_invoice: { status: "open", hosted_invoice_url: "https://invoice.stripe.com/i/2" } });
-    expect(await monterDeFormule(stripe, { ...sub, schedule: null } as unknown as Stripe.Subscription, pm)).toBe("https://invoice.stripe.com/i/2");
+    expect((await monterDeFormule(stripe, { ...sub, schedule: null } as unknown as Stripe.Subscription, pm)).aRegler).toBe("https://invoice.stripe.com/i/2");
     // Montée en attente de son paiement : la baisse prévue est rendue quand même — le dernier choix l'emporte.
     api.subscriptionSchedules.release.mockClear();
     api.subscriptions.update.mockResolvedValue({ pending_update: { expires_at: 1 }, latest_invoice: { status: "open", hosted_invoice_url: "https://invoice.stripe.com/i/3" } });
-    expect(await monterDeFormule(stripe, { ...sub, latest_invoice: "in_9" } as unknown as Stripe.Subscription, pm)).toBe("https://invoice.stripe.com/i/3");
+    expect((await monterDeFormule(stripe, { ...sub, latest_invoice: "in_9" } as unknown as Stripe.Subscription, pm)).aRegler).toBe("https://invoice.stripe.com/i/3");
     expect(api.subscriptionSchedules.release).toHaveBeenCalledWith("sub_sched_1");
     expect(api.subscriptions.update.mock.calls.at(-1)?.[2]).toEqual({ idempotencyKey: "monter-sub_1-price_em-price_pm-in_9" });
     // Le rythme change (mois → année) : la période repart aujourd'hui (répétition du 2026-11-17).
     api.subscriptions.update.mockResolvedValue({ latest_invoice: { status: "paid" } });
     await monterDeFormule(stripe, { ...sub, schedule: null } as unknown as Stripe.Subscription, { priceId: "price_ea", intervalle: "year" });
     expect(api.subscriptions.update.mock.calls.at(-1)?.[1]).toMatchObject({ billing_cycle_anchor: { type: "now" }, proration_behavior: "always_invoice" });
+    // L'instant du prorata de l'aperçu montré : le montant prélevé est celui annoncé ; le montant payé et le prochain prélèvement sont rendus.
+    api.subscriptions.update.mockResolvedValue({ latest_invoice: { status: "paid", amount_paid: 2000 }, items: { data: [{ current_period_end: 1796000000 }] } });
+    expect(await monterDeFormule(stripe, { ...sub, schedule: null } as unknown as Stripe.Subscription, pm, 1795000000)).toEqual({
+      aRegler: null,
+      preleveCentimes: 2000,
+      prochainLe: new Date(1796000000 * 1000),
+    });
+    expect(api.subscriptions.update.mock.calls.at(-1)?.[1]).toMatchObject({ proration_date: 1795000000 });
+  });
+
+  it("l'aperçu d'une montée : la facture que Stripe émettrait, aux mêmes réglages, sans rien prélever", async () => {
+    const createPreview = vi.fn().mockResolvedValue({
+      amount_due: 2000,
+      lines: { data: [{ period: { end: 1796000000 } }, { period: { end: 1795500000 } }] },
+    });
+    const avecApercu = { ...api, invoices: { ...api.invoices, createPreview } } as unknown as Stripe;
+    const sub = { id: "sub_1", customer: "cus_1", items: { data: [{ id: "si_1", price: { id: "price_em", recurring: { interval: "month" } } }] } } as unknown as Stripe.Subscription;
+    expect(await apercuDeMontee(avecApercu, sub, { priceId: "price_pm", intervalle: "month" }, new Date(1795000000 * 1000))).toEqual({
+      aujourdhuiCentimes: 2000,
+      jusquAu: new Date(1796000000 * 1000),
+      prorationDate: 1795000000,
+    });
+    expect(createPreview.mock.calls[0][0]).toEqual({
+      customer: "cus_1",
+      subscription: "sub_1",
+      subscription_details: { items: [{ id: "si_1", price: "price_pm" }], proration_behavior: "always_invoice", proration_date: 1795000000 },
+    });
+    await apercuDeMontee(avecApercu, sub, { priceId: "price_pa", intervalle: "year" });
+    expect(createPreview.mock.calls[1][0].subscription_details).toMatchObject({ billing_cycle_anchor: { type: "now" } });
   });
 
   it("baisser : un planning — la période en cours, puis la nouvelle formule une période, puis rendu à lui-même ; annuler = rendre", async () => {

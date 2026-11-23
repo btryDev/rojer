@@ -16,6 +16,7 @@ import { abonnementCourant, motifDErreur, synchroniserClientStripe } from "@/lib
 import {
   abonnementsDuClient,
   annulerBaisse,
+  apercuDeMontee,
   monterDeFormule,
   ouvrirCheckout,
   ouvrirPortail,
@@ -201,13 +202,58 @@ const dejaEnCours = (e: unknown) =>
  * formule visée n'en permet ; ce qui dépasse d'autre passera en lecture
  * seule (§ 14, la page le dit avant le clic).
  */
-export async function changerFormuleAction(formData: FormData): Promise<void> {
+export type ApercuDeChangement = { aujourdhuiCentimes: number; jusquAu: string | null; prorationDate: number } | { erreur: true };
+
+/**
+ * L'aperçu d'une montée, pour la fenêtre de confirmation (retour de test du
+ * 2026-11-23) : ce que Stripe prélèverait aujourd'hui, sans rien prélever.
+ * Les mêmes gardes que le changement lui-même.
+ */
+export async function apercuMonteeAction(formData: FormData): Promise<ApercuDeChangement> {
+  const proprietaire = await verifierProprietaire();
+  const { stripe, customerId } = await avecClient(proprietaire, formData);
+  const formule = String(formData.get("formule") ?? "");
+  const visee = formuleDeLookupKey(formule);
+  if (!visee) return { erreur: true };
+  try {
+    const { courant } = abonnementCourant(await abonnementsDuClient(stripe, customerId));
+    const item = courant?.items.data[0];
+    if (!courant || courant.status !== "active" || !item || resiliationDemandee(courant)) return { erreur: true };
+    if (sensDuChangement(formuleDuPrix(item.price), formule) !== "montee") return { erreur: true };
+    const prix = (await prixDesFormules(stripe)).get(formule);
+    if (!prix) return { erreur: true };
+    const a = await apercuDeMontee(stripe, courant, { priceId: prix.priceId, intervalle: INTERVALLE_STRIPE[visee.periodicite] });
+    return { aujourdhuiCentimes: a.aujourdhuiCentimes, jusquAu: a.jusquAu?.toISOString() ?? null, prorationDate: a.prorationDate };
+  } catch (e) {
+    console.error(`abonnement : aperçu d'une montée en échec — ${motifDErreur(e)}`);
+    return { erreur: true };
+  }
+}
+
+/** Ce que le changement a fait, dit dans la fenêtre de confirmation ; un refus, lui, ramène sur la page qui le dit. */
+export type ResultatChangement =
+  | { etat: "changee"; preleveCentimes: number | null; prochainLe: string | null }
+  | { etat: "prevue"; le: string | null }
+  | null;
+
+/**
+ * L'instant du prorata de l'aperçu montré : repris s'il date de moins d'une
+ * heure et n'est pas dans le futur, sinon Stripe prend l'instant présent.
+ */
+function prorationDeLApercu(formData: FormData): number | undefined {
+  const v = Number(formData.get("prorationDate"));
+  const maintenant = Math.floor(Date.now() / 1000);
+  return Number.isInteger(v) && v <= maintenant && v > maintenant - 3600 ? v : undefined;
+}
+
+export async function changerFormuleAction(_avant: ResultatChangement, formData: FormData): Promise<ResultatChangement> {
   const proprietaire = await verifierProprietaire();
   const { stripe, db, customerId, compteId } = await avecClient(proprietaire, formData);
   const formule = String(formData.get("formule") ?? "");
   const visee = formuleDeLookupKey(formule);
   if (!visee) redirect(PAGE_ABONNEMENT);
   let cible = PAGE_ABONNEMENT;
+  let resultat: ResultatChangement = null;
   try {
     const { courant } = abonnementCourant(await abonnementsDuClient(stripe, customerId));
     const item = courant?.items.data[0];
@@ -221,9 +267,15 @@ export async function changerFormuleAction(formData: FormData): Promise<void> {
       const prix = (await prixDesFormules(stripe)).get(formule);
       if (!prix) throw new Error("prix introuvable");
       if (sens === "montee") {
-        const aRegler = await monterDeFormule(stripe, courant, { priceId: prix.priceId, intervalle: INTERVALLE_STRIPE[visee.periodicite] });
+        const fait = await monterDeFormule(
+          stripe,
+          courant,
+          { priceId: prix.priceId, intervalle: INTERVALLE_STRIPE[visee.periodicite] },
+          prorationDeLApercu(formData),
+        );
         await synchroniserClientStripe(stripe, customerId).catch(() => null);
-        cible = aRegler ?? `${PAGE_ABONNEMENT}?formule=changee`;
+        if (fait.aRegler) cible = fait.aRegler;
+        else resultat = { etat: "changee", preleveCentimes: fait.preleveCentimes, prochainLe: fait.prochainLe?.toISOString() ?? null };
       } else if (sens === "baisse") {
         const trop = await depassements(db, compteId, formule);
         if (trop.some((d) => d.quota === "membres")) {
@@ -235,7 +287,10 @@ export async function changerFormuleAction(formData: FormData): Promise<void> {
           if ((await depassements(db, compteId, formule)).some((d) => d.quota === "membres")) {
             await annulerBaisse(stripe, (await abonnementsDuClient(stripe, customerId)).find((a) => a.id === courant.id) ?? courant);
             cible = `${PAGE_FORMULES}?formule=trop-d-utilisateurs`;
-          } else cible = `${PAGE_ABONNEMENT}?formule=prevue`;
+          } else {
+            const fin = item.current_period_end;
+            resultat = { etat: "prevue", le: fin ? new Date(fin * 1000).toISOString() : null };
+          }
         }
       }
     }
@@ -246,6 +301,7 @@ export async function changerFormuleAction(formData: FormData): Promise<void> {
     console.error(`abonnement : changement de formule en échec — ${motifDErreur(e)}`);
     redirect(`${PAGE_ABONNEMENT}?stripe=indisponible`);
   }
+  if (resultat) return resultat;
   redirect(cible);
 }
 
