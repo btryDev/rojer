@@ -56,7 +56,7 @@ vi.mock("@/lib/referentiels/conformite/mention-de-ligne", () => ({
       : null,
 }));
 
-import { ErreurOutilMcp, OUTILS_MCP, type ContexteMcp } from "./tools";
+import { ErreurOutilMcp, OUTILS_MCP, depuisLe, type ContexteMcp } from "./tools";
 import { SCEAU_CALENDRIER } from "@/lib/calendrier/version-moteur";
 import { getEtatDuerp, getFraicheurCalendrier, getParcEquipements, listerActions, listerEquipements } from "./queries";
 import { couvertureDeLInventaire } from "@/lib/perimetre/couverture";
@@ -326,6 +326,28 @@ describe("plan d'actions", () => {
     expect(texte).toContain("origine DUERP : Chute dans l'escalier");
   });
 
+  it("une action du DUERP nomme l'unité de son risque : deux unités, deux lignes distinctes", async () => {
+    prismaMock.action.findMany.mockResolvedValue([
+      action({ risque: { libelle: "Chute", unite: { nom: "Cuisine" } } }),
+      action({ risque: { libelle: "Chute", unite: { nom: "Salle" } } }),
+    ]);
+
+    const texte = await outil("plan_actions").executer(ctx, {});
+
+    expect(texte).toContain("origine DUERP : Chute (unité « Cuisine »)");
+    expect(texte).toContain("origine DUERP : Chute (unité « Salle »)");
+  });
+
+  it("le statut se dit avec le mot de l'écran, pas la valeur de l'énumération", async () => {
+    prismaMock.action.findMany.mockResolvedValue([action({ statut: "levee" }), action({ statut: "en_cours" })]);
+
+    const texte = await outil("plan_actions").executer(ctx, {});
+
+    expect(texte).toContain("statut levée");
+    expect(texte).toContain("statut en cours");
+    expect(texte).not.toMatch(/statut (levee|en_cours)\b/);
+  });
+
   it("filtre les actions en retard après évaluation, pas en SQL", async () => {
     prismaMock.action.findMany.mockResolvedValue([
       action(),
@@ -499,7 +521,10 @@ describe("équipements et calendrier", () => {
     // un `toContain("en retard")` sur le texte entier.
     const ligne = texte.split("\n").find((l) => l.startsWith("•")) ?? "";
     expect(ligne).toContain("en retard");
-    expect(ligne).toContain("sans échéance connue");
+    // ~~« sans échéance connue »~~ [2026-11-23 : se contredisait avec « en
+    // retard », relevé depuis claude.ai.]
+    expect(ligne).toContain("due, jamais réalisée");
+    expect(ligne).not.toContain("sans échéance connue");
     expect(ligne).not.toContain("jour(s) de retard");
     expect(ligne).not.toContain("01/07/2026");
   });
@@ -878,6 +903,9 @@ describe("une ligne retenue par prudence le dit à l'assistant (2026-09-27)", ()
     const texte = await outil("verifications").executer(ctx, {});
     expect(texte).toContain("aucune en retard");
     expect(texte).not.toContain("jour(s) de retard");
+    // Une seule fois, avec sa raison (« à confirmer, à confirmer : … »,
+    // relevé le 2026-11-23 depuis claude.ai).
+    expect(texte.match(/à confirmer/g)).toHaveLength(1);
   });
 
   it("« oui » déclaré, échue : la ligne est due, et en retard", async () => {
@@ -1060,5 +1088,16 @@ describe("le serveur dit qu'aucun équipement n'est déclaré (§ 15)", () => {
     for (const where of parEtablissement) {
       expect(where).toEqual({ id: ETABLISSEMENT_ID });
     }
+  });
+});
+
+describe("formulations relevées depuis claude.ai (2026-11-23)", () => {
+  it("l'ancienneté se dit en jours sous le mois, jamais « 0 mois »", () => {
+    expect(depuisLe(0)).toBe("aujourd'hui");
+    expect(depuisLe(1)).toBe("hier");
+    expect(depuisLe(9)).toBe("il y a 9 jours");
+    expect(depuisLe(14)).toBe("il y a 14 jours");
+    expect(depuisLe(15)).toBe("il y a 1 mois");
+    expect(depuisLe(400)).toBe("il y a 13 mois");
   });
 });

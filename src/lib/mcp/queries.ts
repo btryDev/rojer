@@ -357,7 +357,7 @@ export async function listerActions(
       echeance: true,
       risqueId: true,
       verificationId: true,
-      risque: { select: { libelle: true } },
+      risque: { select: { libelle: true, unite: { select: { nom: true } } } },
       verification: { select: { libelleObligation: true } },
     },
     orderBy: [{ statut: "asc" }, { echeance: "asc" }, { criticite: "desc" }],
@@ -370,8 +370,14 @@ export async function listerActions(
     criticite: a.criticite,
     echeance: a.echeance,
     origine: a.risqueId ? "duerp" : a.verificationId ? "verification" : "libre",
-    origineLibelle:
-      a.risque?.libelle ?? a.verification?.libelleObligation ?? null,
+    // L'unité de travail avec le risque : un même risque coté dans deux
+    // unités portait deux actions identiques à la lecture, qui se lisaient
+    // comme un doublon (relevé le 2026-11-23 depuis claude.ai).
+    origineLibelle: a.risque
+      ? a.risque.unite?.nom
+        ? `${a.risque.libelle} (unité « ${a.risque.unite.nom} »)`
+        : a.risque.libelle
+      : (a.verification?.libelleObligation ?? null),
     enRetard: estActionEnRetard(a, now),
   }));
 
