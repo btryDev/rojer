@@ -25,13 +25,17 @@ import type { CompteLanding } from "./compte";
 import { Marque } from "@/components/marque/Marque";
 
 // « Tarif » mène à la section du même nom (`/#tarif` : depuis la racine,
-// l'en-tête sert aussi aux pages légales). « Comprendre » n'a
+// l'en-tête sert aussi aux pages légales et à /bientot). ~~« Comprendre » n'a
 // pas encore de destination : `#comprendre` ne correspond à aucune ancre,
 // le clic mène en haut de l'accueil, sans rien casser. À rebrancher sur /comprendre le
-// jour où la page existe. Sous `md`, la barre ne garde que la marque et le
-// bouton : la page se parcourt en défilant.
-const LIENS = [
-  { href: "/#comprendre", label: "Comprendre" },
+// jour où la page existe.~~ [2026-11-23, décision de la propriétaire : un
+// lien sans destination se rebranche ou se retire — « Comprendre » mène à
+// « Ce que Rojer tient à jour » (`/#documents`), la première section qui
+// explique ce que fait Rojer, la même ancre que le pied de page.] Sous `md`,
+// la barre ne garde que la marque et le bouton : la page se parcourt en
+// défilant.
+export const LIENS_ENTETE = [
+  { href: "/#documents", label: "Comprendre" },
   { href: "/#tarif", label: "Tarif" },
 ];
 
@@ -67,7 +71,7 @@ export function LandingHeader({
 
           <div className="flex items-center gap-8">
             <nav className="hidden items-center gap-8 md:flex">
-              {LIENS.map((l) => (
+              {LIENS_ENTETE.map((l) => (
                 <a
                   key={l.href}
                   href={l.href}
