@@ -5,9 +5,14 @@ import "./globals.css";
 import { OUVERT_AUX_MOTEURS } from "@/lib/indexation";
 import { publicAppUrl, refusUrlPublique } from "@/lib/url-publique";
 
-const TITRE = "Rojer — Conformité santé-sécurité TPE/PME";
+// Le titre et la description que montrent l'onglet, les moteurs et les
+// aperçus de lien (2026-11-23, décision de la propriétaire : « plus approprié
+// et malin pour le référencement »). Les mots qu'un dirigeant tape — DUERP,
+// registre de sécurité — d'abord, en moins de 60 signes ; la description dit
+// le reste en moins de 160, sans jamais promettre la conformité (règle 8).
+const TITRE = "Rojer — Logiciel DUERP et registre de sécurité pour TPE-PME";
 const DESCRIPTION =
-  "Plateforme continue d'accompagnement à la conformité santé-sécurité pour dirigeants de TPE/PME : DUERP, calendrier de vérifications, registre de sécurité, plan d'actions.";
+  "Rojer tient à jour la prévention de votre entreprise : DUERP, vérifications périodiques, registre de sécurité, plan d'actions. Sources Légifrance à l'appui.";
 
 export const metadata: Metadata = {
   // Les images de partage (`opengraph-image.jpg`) sont annoncées en adresse

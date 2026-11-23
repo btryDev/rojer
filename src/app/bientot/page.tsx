@@ -8,7 +8,7 @@ import { OUVERT_AU_PUBLIC } from "@/lib/ouverture";
 import { FormulaireBientot } from "./FormulaireBientot";
 
 export const metadata = {
-  title: "Rojer ouvre très bientôt — Rojer",
+  title: "Rojer ouvre très bientôt",
 };
 
 // « Rojer ouvre bientôt » (2026-11-23, décision de la propriétaire) : là où
