@@ -10,8 +10,8 @@
 // enverrait alors des e-mails de Rojer à n'importe quelle adresse saisie.
 
 import { headers } from "next/headers";
-import { CHAMP_PIEGE, CONTACT } from "@/components/landing/contact";
-import { courrielDeContact, schemaMessageContact } from "@/lib/contact/message";
+import { CHAMP_PIEGE } from "@/components/landing/contact";
+import { CONTACT, courrielDeContact, schemaMessageContact } from "@/lib/contact/message";
 import { envoiEnService, motifErreur, sendMail } from "@/lib/email";
 import { ipPourLimite } from "@/lib/securite/ip-client";
 import {

@@ -1,20 +1,14 @@
 /**
- * Le contact de la page publique : l'adresse, les sujets que le formulaire
- * propose (pied de page, tarif « Sur mesure », mise en route accompagnée), et
- * les bornes des champs, lues par le formulaire et par la règle du serveur
+ * Le contact de la page publique : les sujets que le formulaire propose (pied
+ * de page, tarif « Sur mesure », mise en route accompagnée), et les bornes des
+ * champs, lues par le formulaire et par la règle du serveur
  * (`lib/contact/message.ts`). Sans zod, à dessein : ce module part dans le
  * JavaScript de chaque page publique.
  *
- * L'adresse n'est pas affichée sur la page (décision de la propriétaire,
- * 2026-11-07) : elle ne sert que de destinataire au formulaire.
- *
- * ⚠︎ À confirmer avant la mise en ligne : c'est l'adresse du compte, pas
- * forcément celle qu'on veut exposer publiquement. La même adresse est le
- * point d'entrée RGPD (`docs/rgpd.md`) : si elle change, vérifier si celle-ci
- * suit.
+ * [2026-11-23 : l'adresse de destination (`CONTACT`) n'est plus ici, décision
+ * de la propriétaire — ce module part dans le navigateur ; elle vit côté
+ * serveur, `lib/contact/message.ts`.]
  */
-
-export const CONTACT = "contact@btry.fr";
 
 export const SUJETS_CONTACT = [
   "Une question sur Rojer",

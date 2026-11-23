@@ -21,7 +21,7 @@ vi.mock("@/lib/securite/limite-debit", async (original) => ({
 }));
 
 const { envoyerMessageContact } = await import("./actions");
-const { CONTACT } = await import("@/components/landing/contact");
+const { CONTACT } = await import("@/lib/contact/message");
 
 function formulaire(champs: Record<string, string> = {}): FormData {
   const f = new FormData();

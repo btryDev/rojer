@@ -13,6 +13,15 @@ import {
   SUJETS_CONTACT,
 } from "@/components/landing/contact";
 import { surUneLigne, texteSaisi } from "@/lib/validation/texte";
+import { EDITEUR } from "@/components/landing/editeur";
+
+/**
+ * La boîte qui reçoit les messages du formulaire. Côté serveur seulement :
+ * l'adresse ne part pas dans le JavaScript des pages publiques (décision de
+ * la propriétaire, 2026-11-23). C'est aussi le point d'entrée RGPD
+ * (`docs/rgpd.md`) : si elle change, vérifier si celui-ci suit.
+ */
+export const CONTACT = EDITEUR.email;
 
 export const schemaMessageContact = z.object({
   sujet: z.enum(SUJETS_CONTACT, "Choisissez un sujet dans la liste."),
