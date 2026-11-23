@@ -9,6 +9,7 @@ import {
   niveauDuClient,
   nomReserve,
   ressourceMcp,
+  adressesDUnSeulTenant,
 } from "./oauth";
 import { requeteARejouer } from "./reprise-oauth";
 
@@ -70,6 +71,17 @@ describe("niveauDuClient — la moins sûre de ses adresses", () => {
   it("une adresse non vérifiée suffit à faire un client non vérifié ; aucune adresse : refusé", () => {
     expect(niveauDuClient(["https://claude.ai/api/mcp/auth_callback", "https://evil.example/cb"])).toBe("non_verifie");
     expect(niveauDuClient([])).toBe("refuse");
+  });
+});
+
+describe("adressesDUnSeulTenant — une adresse non vérifiée ne se mêle à rien", () => {
+  it("vérifiée + boucle locale : admis (Claude Code) ; non vérifiées seules : admis", () => {
+    expect(adressesDUnSeulTenant(["https://claude.ai/api/mcp/auth_callback", "http://localhost:3000/cb"])).toBe(true);
+    expect(adressesDUnSeulTenant(["https://a.exemple/cb", "https://b.exemple/cb"])).toBe(true);
+  });
+  it("non vérifiée avec une vérifiée ou une locale : refusé — le consentement de l'une servirait l'autre", () => {
+    expect(adressesDUnSeulTenant(["https://claude.ai/api/mcp/auth_callback", "https://evil.example/cb"])).toBe(false);
+    expect(adressesDUnSeulTenant(["http://localhost:3000/cb", "https://evil.example/cb"])).toBe(false);
   });
 });
 

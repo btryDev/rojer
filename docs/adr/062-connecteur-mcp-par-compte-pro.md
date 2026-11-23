@@ -352,6 +352,10 @@ publique du protocole MCP).
   change que par un propriétaire (page « Connecter un assistant »). Le
   refermer **efface** les autorisations des outils non vérifiés du compte,
   pour tous ses membres — l'accès tombe à la requête suivante (§ 8).
+- **Un client par outil** (relecture de sécurité du 2026-11-23) : une adresse
+  non vérifiée ne s'enregistre pas avec une adresse vérifiée ou locale. Le
+  fournisseur réutilisant un consentement par client, le consentement donné
+  par l'adresse de Claude servirait sinon l'autre adresse, sans écran.
 - **Un nom ne fait pas un vérifié** : un client dont une adresse n'est pas
   vérifiée ne peut pas s'appeler comme un assistant vérifié ou comme Rojer
   (« Claude », « Anthropic », « ChatGPT », « OpenAI », « Rojer ») — refusé à

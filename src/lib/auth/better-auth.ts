@@ -17,6 +17,7 @@ import {
   MODES_DE_JETON,
   PORTEES_FOURNISSEUR,
   estAdresseDeRetourAdmise,
+  adressesDUnSeulTenant,
   niveauDuClient,
   nomReserve,
   estDocumentCimdAdmis,
@@ -339,6 +340,12 @@ export const auth = betterAuth({
         throw new APIError("BAD_REQUEST", {
           error: "invalid_redirect_uri",
           error_description: "Adresse de retour refusée : HTTPS exigé, ou la boucle locale d'un programme de cet ordinateur.",
+        });
+      }
+      if (!adressesDUnSeulTenant(adresses as string[])) {
+        throw new APIError("BAD_REQUEST", {
+          error: "invalid_redirect_uri",
+          error_description: "Une adresse de retour non vérifiée ne se déclare pas avec d'autres : un client par outil.",
         });
       }
       const nom = typeof corps?.client_name === "string" ? corps.client_name : "";

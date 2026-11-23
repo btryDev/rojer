@@ -187,6 +187,10 @@ describe.skipIf(!URL_BASE || !local)("connecteur MCP en OAuth — PostgreSQL et 
     expect((await enregistrer(["https://evil.example/callback"], "Chat GPT")).status).toBe(400);
   });
 
+  it("enregistrement : une adresse non vérifiée mêlée à celle de Claude est refusée", async () => {
+    expect((await enregistrer([RETOUR, "https://evil.example/callback"], "Mon outil")).status).toBe(400);
+  });
+
   let outilNonVerifie = "";
   it("enregistrement : un outil non vérifié s'enregistre sous son propre nom", async () => {
     const r = await enregistrer(["https://n8n.exemple.test/rest/oauth2-credential/callback"], "n8n");

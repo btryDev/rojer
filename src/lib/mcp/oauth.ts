@@ -104,6 +104,19 @@ export function niveauDuClient(adresses: readonly string[]): NiveauDeConfiance {
 }
 
 /**
+ * Les adresses d'un client sont-elles d'un seul tenant ? Une adresse non
+ * vérifiée ne se mêle à aucune autre (relecture de sécurité du 2026-11-23) :
+ * le fournisseur réutilise un consentement PAR CLIENT, sans reposer la
+ * question ; un client « Claude + attaquant » consenti par l'adresse de
+ * Claude obtiendrait ensuite un code vers l'autre sans repasser par l'écran.
+ * Vérifiée et boucle locale ensemble restent admises (Claude Code).
+ */
+export function adressesDUnSeulTenant(adresses: readonly string[]): boolean {
+  const niveaux = new Set(adresses.map(niveauAdresseDeRetour));
+  return !niveaux.has("non_verifie") || niveaux.size === 1;
+}
+
+/**
  * Les noms qu'un client non vérifié ne peut pas porter (ADR-062 § 12) : ceux
  * des assistants vérifiés, de leurs éditeurs, et de Rojer. Comparés sans
  * casse, sans accents ni séparateurs, sur le nom entier comme sur ses mots.
