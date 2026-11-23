@@ -13,7 +13,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
 import { ipClient } from "@/lib/securite/ip-client";
 import { ENTETE_IP_CLIENT } from "./entete-ip";
-import { estCheminAuthServi } from "@/lib/mcp/oauth";
+import { CHEMIN_AUTH, estCheminAuthServi } from "@/lib/mcp/oauth";
 
 // Préfixes publics (non authentifiés), comparés par segment entier.
 const PUBLIC_PREFIXES = [
@@ -82,6 +82,16 @@ function refusApi(): NextResponse {
   );
 }
 
+/**
+ * Un chemin de `/api/auth` que la route ne sert pas (ADR-062 § 2) : `404`,
+ * avec ou sans session, comme la route elle-même. Un `401` y laissait croire
+ * qu'une session ouvrirait la porte (`openid-configuration`, relevé par un
+ * contrôle externe le 2026-11-23) ; la route reste la garde.
+ */
+function horsListeAuth(pathname: string): boolean {
+  return (pathname === CHEMIN_AUTH || pathname.startsWith(`${CHEMIN_AUTH}/`)) && !estCheminAuthServi(pathname);
+}
+
 function versConnexion(request: NextRequest): NextResponse {
   const url = request.nextUrl.clone();
   url.pathname = "/login";
@@ -114,6 +124,9 @@ export function garderSession(
 ): NextResponse {
   const pathname = request.nextUrl.pathname;
   const api = pathname === "/api" || pathname.startsWith("/api/");
+  if (horsListeAuth(pathname)) {
+    return new NextResponse(null, { status: 404, headers: { "Cache-Control": "no-store" } });
+  }
   if (!cheminPublic(pathname) && !getSessionCookie(request) && !actionServeur(request, api)) {
     return api ? refusApi() : versConnexion(request);
   }
