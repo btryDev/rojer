@@ -107,7 +107,7 @@ const CONFIDENTIALITE: PageLegale = {
       paragraphes: [
         "Compte et données du dossier : tant que le compte est actif. Un compte sans abonnement depuis douze mois est supprimé avec toutes ses données, après deux e-mails d'avertissement (trente jours puis sept jours avant). Le propriétaire peut aussi demander la suppression du compte depuis l'application : elle intervient le septième jour.",
         "Inscription jamais activée : trente jours, puis effacée.",
-        "Factures : dix ans (article L. 123-22 du Code de commerce).",
+        "Factures : dix ans, la durée que la loi impose aux pièces comptables.",
         "Trace d'un compte supprimé (nom du compte, adresses des propriétaires, acceptations des conditions, dates) : cinq ans, pour la preuve en cas de litige.",
         "Messages de contact et demandes d'assistance : le temps de traiter la demande, puis trois ans au plus.",
         "Journaux techniques de l'hébergeur (dont l'adresse IP) : trente jours. Sessions de connexion : sept jours au plus.",
@@ -122,7 +122,7 @@ const CONFIDENTIALITE: PageLegale = {
       paragraphes: [
         `Seules les personnes de ${EDITEUR.denomination} qui en ont besoin pour le service, et, pour une demande faite à l'expert de l'offre Pro, cet expert. Nos prestataires techniques, qui traitent les données pour notre compte : Clever Cloud (hébergement de l'application, de la base de données et des fichiers, Union européenne), Mailpace (envoi des e-mails du service ; données hébergées en France, envoi par des serveurs situés au Royaume-Uni, pays reconnu par la Commission européenne comme assurant une protection adéquate), Stripe (paiement et factures).`,
         "Transferts hors de l'Union européenne : Stripe peut transférer les données de paiement et de facturation vers les États-Unis, avec les garanties prévues par le RGPD (décision d'adéquation « Data Privacy Framework » ou clauses contractuelles types de la Commission européenne). Les données de votre dossier — établissements, salariés, rapports — ne sont pas transmises à Stripe.",
-        "Au moment de choisir ou changer un mot de passe, nous vérifions qu'il ne figure pas parmi des mots de passe divulgués (service « Pwned Passwords ») : seuls les cinq premiers caractères d'une empreinte du mot de passe sont transmis, jamais le mot de passe ni votre adresse.",
+        "Au moment de choisir ou changer un mot de passe, nous vérifions qu'il ne figure pas parmi des mots de passe divulgués (service « Pwned Passwords ») : seuls les cinq premiers caractères d'une empreinte du mot de passe quittent Rojer, jamais le mot de passe ni votre adresse.",
         "Si vous reliez Rojer à un assistant d'intelligence artificielle, les informations que cet assistant lit quittent Rojer selon les conditions de son fournisseur, que vous avez choisi.",
       ],
     },

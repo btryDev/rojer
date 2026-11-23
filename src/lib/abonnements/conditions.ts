@@ -79,7 +79,7 @@ export const CONDITIONS: Section[] = [
     titre: "6. Évolutions de la réglementation et exactitude du référentiel",
     paragraphes: [
       "BTRY assure une veille des textes et intègre leurs évolutions au référentiel dans un délai raisonnable, sans délai garanti. Entre la publication ou l'entrée en vigueur d'un texte et son intégration, Rojer peut présenter une obligation, une périodicité ou une échéance qui ne correspond plus au droit en vigueur, ou ne pas présenter une obligation nouvelle.",
-      "Malgré le soin apporté à son établissement, le référentiel peut comporter des erreurs, des omissions ou des interprétations discutables. Seuls font foi les textes officiels publiés (Journal officiel, Légifrance) et les décisions des autorités compétentes. Le Client qui relève une erreur la signale à BTRY, qui l'examine et la corrige le cas échéant dans un délai raisonnable.",
+      "Malgré le soin apporté à son établissement, le référentiel peut comporter des erreurs, des omissions ou des interprétations discutables. Seuls s'imposent les textes officiels publiés (Journal officiel, Légifrance) et les décisions des autorités compétentes. Le Client qui relève une erreur la signale à BTRY, qui l'examine et la corrige le cas échéant dans un délai raisonnable.",
       "Les échéances sont calculées à partir des dates et des faits saisis par le Client (dernier rapport, mise en service, date d'entrée d'un salarié…) et des périodicités du référentiel. Elles sont indicatives : une périodicité ou une date fixée par un texte, une prescription de l'administration, la commission de sécurité, un rapport de vérification ou l'assureur du Client prime sur celle que Rojer affiche.",
       "Lorsque le texte n'écrit pas de rythme précis, Rojer retient un rythme par défaut et l'affiche comme un choix de Rojer, non comme une exigence du texte.",
     ],
@@ -87,7 +87,7 @@ export const CONDITIONS: Section[] = [
   {
     titre: "7. Rappels et notifications",
     paragraphes: [
-      "Les rappels, alertes et e-mails envoyés par Rojer sont une aide. BTRY ne garantit pas leur réception (adresse erronée, filtre de messagerie, indisponibilité), et leur absence ne décharge le Client d'aucune obligation. Le Client consulte régulièrement son calendrier dans l'application. La responsabilité de BTRY à ce titre ne peut être recherchée que dans les conditions de l'article 20.",
+      "Les rappels, alertes et e-mails de Rojer sont une aide. BTRY ne garantit pas leur réception (adresse erronée, filtre de messagerie, indisponibilité), et leur absence ne décharge le Client d'aucune obligation. Le Client consulte régulièrement son calendrier dans l'application. La responsabilité de BTRY à ce titre ne peut être recherchée que dans les conditions de l'article 20.",
     ],
   },
   {
@@ -135,7 +135,7 @@ export const CONDITIONS: Section[] = [
   {
     titre: "13. Formules, prix et paiement",
     paragraphes: [
-      "Les formules, leurs limites et leurs prix sont ceux de la page des tarifs à la date de souscription ; le prix est rappelé au moment du paiement et sur la facture. L'abonnement est mensuel ou annuel, payable d'avance par carte bancaire. Les prix sont indiqués toutes taxes comprises (TVA de 20 % incluse) ; toute variation du taux de TVA est répercutée. Le paiement et l'émission des factures sont assurés par Stripe ; les factures sont envoyées par e-mail et restent disponibles dans l'espace de gestion de l'abonnement.",
+      "Les formules, leurs limites et leurs prix sont ceux de la page des tarifs à la date de souscription ; le prix est rappelé au moment du paiement et sur la facture. L'abonnement est mensuel ou annuel, payable d'avance par carte bancaire. Les prix sont indiqués toutes taxes comprises (TVA de 20 % incluse) ; toute variation du taux de TVA est répercutée. Le paiement et l'émission des factures sont assurés par Stripe ; les factures restent disponibles dans l'espace de gestion de l'abonnement.",
       "L'abonnement se renouvelle automatiquement à la fin de chaque période, au prix en vigueur, jusqu'à sa résiliation. BTRY peut modifier ses prix ; le Client en est informé par e-mail au moins trente jours à l'avance, et le nouveau prix s'applique à la période suivante.",
       "Passer à une formule supérieure prend effet immédiatement ; la différence pour la période en cours est facturée au prorata. Passer à une formule inférieure prend effet à la fin de la période payée.",
       // À VALIDER (expert-comptable) : le taux des pénalités de retard.
@@ -176,7 +176,7 @@ export const CONDITIONS: Section[] = [
       "Le Client consulte ses données à tout moment et exporte ses documents depuis l'application. À tout moment, et jusqu'à la suppression du compte, il peut aussi demander par écrit la restitution sans frais de l'ensemble de ses données dans un format structuré et couramment utilisé ; BTRY la lui fournit dans un délai raisonnable.",
       "La conservation du document unique d'évaluation des risques pendant quarante ans (article L. 4121-3-1 du Code du travail) et celle des rapports de vérification incombent au Client. Rojer n'est pas un service d'archivage : le Client télécharge et conserve lui-même ses versions validées et ses rapports.",
       "Un compte sans abonnement depuis douze mois (après l'essai, une résiliation ou un impayé) est supprimé avec toutes ses données. Deux e-mails le préviennent, trente jours puis sept jours avant, avec la date. La suppression est définitive.",
-      "Le propriétaire du compte peut aussi en demander la suppression depuis l'application : elle intervient le septième jour, et peut être annulée d'ici là. BTRY conserve les factures pendant dix ans (article L. 123-22 du Code de commerce), et la trace d'un compte supprimé — dont les acceptations des Conditions — pendant cinq ans, pour la preuve en cas de litige.",
+      "Le propriétaire du compte peut aussi en demander la suppression depuis l'application : elle intervient le septième jour, et peut être annulée d'ici là. BTRY conserve les factures pendant dix ans, comme la loi l'impose aux pièces comptables, et la trace d'un compte supprimé — dont les acceptations des Conditions — pendant cinq ans, pour la preuve en cas de litige.",
     ],
   },
   {
@@ -255,7 +255,7 @@ export const CONDITIONS: Section[] = [
       "Instructions. BTRY ne traite ces données que sur instruction documentée du Client — les Conditions et l'usage qu'il fait du service —, y compris pour un transfert hors de l'Union européenne, sauf obligation légale dont elle l'informe. Elle l'avertit si une instruction lui paraît contraire au RGPD.",
       "Confidentialité et sécurité. Les personnes de BTRY autorisées à traiter ces données sont tenues à la confidentialité. BTRY met en œuvre les mesures de sécurité de l'article 32 du RGPD décrites dans la politique de confidentialité : chiffrement des échanges, cloisonnement des comptes, double authentification proposée, stockage privé des fichiers.",
       "Sous-traitants ultérieurs. BTRY recourt aux sous-traitants listés dans la politique de confidentialité et leur impose les mêmes obligations de protection. Elle informe le Client par e-mail de tout ajout ou remplacement au moins trente jours à l'avance ; le Client peut s'y opposer pour un motif légitime et, à défaut d'accord, résilier son abonnement avec remboursement de la part non consommée.",
-      "Assistance. BTRY aide le Client, dans la mesure du possible, à répondre aux demandes d'exercice des droits des personnes, à assurer la sécurité du traitement, à réaliser une analyse d'impact et, le cas échéant, à consulter la CNIL. Elle lui notifie toute violation de données personnelles dans les quarante-huit heures après en avoir pris connaissance.",
+      "Assistance. BTRY aide le Client, dans la mesure du possible, à répondre aux demandes d'exercice des droits des personnes, à assurer la sécurité du traitement, à réaliser une analyse d'impact et, le cas échéant, à consulter la CNIL. Toute violation de données personnelles est signalée au Client dans les quarante-huit heures après que BTRY en a pris connaissance.",
       "Fin du traitement. À la fin du contrat, au choix du Client, BTRY lui restitue les données sans frais dans un format structuré et couramment utilisé, puis les supprime, ou les supprime directement, dans les conditions de l'article 17, sauf obligation légale de conservation.",
       "Audit. BTRY met à la disposition du Client les informations nécessaires pour démontrer le respect de ces obligations. Elle permet un audit, au plus une fois par an et sauf violation de données, à la demande écrite du Client faite trente jours à l'avance, à ses frais, par lui-même ou par un auditeur indépendant tenu au secret.",
     ],
