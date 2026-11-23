@@ -374,9 +374,7 @@ export async function listerActions(
     // unités portait deux actions identiques à la lecture, qui se lisaient
     // comme un doublon (relevé le 2026-11-23 depuis claude.ai).
     origineLibelle: a.risque
-      ? a.risque.unite?.nom
-        ? `${a.risque.libelle} (unité « ${a.risque.unite.nom} »)`
-        : a.risque.libelle
+      ? `${a.risque.libelle} (unité « ${a.risque.unite.nom} »)`
       : (a.verification?.libelleObligation ?? null),
     enRetard: estActionEnRetard(a, now),
   }));
@@ -788,7 +786,9 @@ export async function listerVerifications(
     // statut le dit, la colonne ne le dit plus (ADR-034).
     // Une ligne SANS ÉCHÉANCE CONNUE passe le filtre, et c'est voulu : due et
     // jamais faite, elle compte en retard dès le lendemain de sa création.
-    // L'assistant la reçoit nommée « sans échéance connue », jamais datée ; la
+    // ~~L'assistant la reçoit nommée « sans échéance connue », jamais datée~~
+    // [2026-11-23 : en retard, elle porte « aucune vérification enregistrée »
+    // ou sa dernière réalisation — `formaterVerifications`] ; jamais datée, la
     // description de l'outil le dit (relecture système du 2026-09-14).
     lues = lues.filter(
       (v) =>

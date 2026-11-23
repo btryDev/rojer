@@ -32,12 +32,14 @@ import { formaterDateFr } from "@/lib/dates";
 import { estVerificationRealisee } from "@/lib/dates/retard";
 import {
   LIBELLE_ETAT as LIBELLE_ETAT_CALENDRIER,
+  LIBELLE_AUCUNE_VERIFICATION,
   LIBELLE_SANS_ECHEANCE,
   LIBELLE_SANS_RENDEZ_VOUS,
 } from "@/lib/calendrier/etats";
 import { MENTION_POUR_INFORMATION_DOCUMENT } from "@/lib/referentiels/conformite/initiative";
 import { ageEnMois, EFFECTIF_MAJ_ANNUELLE } from "@/lib/dashboard/duerp";
 import { LABEL_STATUT_ACTION } from "@/lib/actions/labels";
+import { LABEL_STATUT_POINT } from "@/lib/points-a-corriger/libelles";
 import { mentionAConfirmer } from "@/lib/matching/effectif-entreprise";
 import {
   getEtatDuerp,
@@ -100,7 +102,7 @@ Restitue ce que les outils rendent, sans le compléter.
 - « Version validée » est un état de l'application, pas une catégorie juridique : n'en déduis aucune conséquence de droit.
 - Si tu ajoutes une analyse, une priorisation ou une recommandation, dis explicitement qu'elle vient de toi et non de Rojer.
 - Quand une information manque, dis-le plutôt que de l'inférer.
-- Si le compte suit plusieurs établissements et que l'utilisateur n'a pas dit lequel, demande-lui avant d'appeler un outil d'établissement ; ne choisis pas à sa place.
+- Si l'outil \`etablissements\` en liste plusieurs et que l'utilisateur n'a pas dit lequel, demande-lui ; ne choisis pas à sa place.
 
 Rojer calcule, il n'avise pas.`;
 
@@ -312,10 +314,12 @@ function formaterActions(actions: ActionLue[], filtre = true): string {
 
   const lignes = actions.map((a) => {
     const details = [
-      // Le mot de l'écran (« levée »), pas la valeur de l'énumération
-      // (`levee`), relevé le 2026-11-23 depuis claude.ai. Le filtre de l'outil
-      // garde les valeurs : ce sont des arguments, pas du texte.
-      `statut ${LABEL_STATUT_ACTION[a.statut].toLowerCase()}`,
+      // Le mot de l'écran, pas la valeur de l'énumération (`levee`), relevé
+      // le 2026-11-23 depuis claude.ai : « levée » pour une mesure du DUERP,
+      // « corrigé » pour un point né d'un rapport — la règle de
+      // `BadgeStatutAction`. Le filtre de l'outil garde les valeurs : ce sont
+      // des arguments, pas du texte.
+      `statut ${(a.origine === "verification" ? LABEL_STATUT_POINT : LABEL_STATUT_ACTION)[a.statut].toLowerCase()}`,
       a.criticite !== null ? `criticité ${a.criticite}` : null,
       a.echeance
         ? `échéance ${formaterDateFr(a.echeance)}${a.enRetard ? " — en retard" : ""}`
@@ -594,12 +598,18 @@ function formaterVerifications(verifs: VerificationLue[], filtre = true): string
         : v.echeanceConnue
           ? `échéance ${formaterDateFr(v.datePrevue)}`
           // [2026-11-23, relevé depuis claude.ai : « sans échéance connue, en
-          // retard » se contredisait.] Une ligne due et jamais faite est en
-          // retard dès sa création : la phrase de la description de l'outil.
-          // EN RETARD seulement : « à confirmer » dit qu'elle n'est peut-être
-          // pas due ; et jamais quand un rapport est consigné.
-          : v.etat === "en_retard" && !v.derniereRealisation
-            ? "due, jamais réalisée"
+          // retard » se contredisait.] Sur une ligne EN RETARD, la mention
+          // tombe : le retard se dit seul, précédé du fait que Rojer détient
+          // — « aucune vérification enregistrée », le mot des autres surfaces
+          // (`LIBELLE_AUCUNE_VERIFICATION`), ou la dernière réalisation, dite
+          // plus haut. ~~« due, jamais réalisée »~~ (relecture du même jour) :
+          // Rojer ne sait pas qu'elle n'a jamais été faite, seulement qu'il
+          // n'en a aucune trace ; et « due » qualifiait, jusque sur un
+          // engagement d'assurance.
+          : v.etat === "en_retard"
+            ? v.derniereRealisation
+              ? null
+              : LIBELLE_AUCUNE_VERIFICATION.toLowerCase()
             : LIBELLE_SANS_ECHEANCE.toLowerCase(),
       // « à confirmer » une seule fois : la mention qui suit le redit avec
       // sa raison (« à confirmer, à confirmer : … », relevé le 2026-11-23).
@@ -670,7 +680,7 @@ const schemaVerifications = z.object({
     .max(3650)
     .optional()
     .describe(
-      "Ne garder que les vérifications non réalisées dont l'échéance tombe dans ce nombre de jours, échéances dépassées comprises, ainsi que celles sans échéance connue (dues, jamais faites), listées en premier.",
+      "Ne garder que les vérifications non réalisées dont l'échéance tombe dans ce nombre de jours, échéances dépassées comprises, ainsi que celles sans échéance connue (aucune vérification enregistrée dans Rojer), listées en premier.",
     ),
 }).strict();
 
