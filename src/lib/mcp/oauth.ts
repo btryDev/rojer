@@ -94,8 +94,11 @@ export function estDocumentCimdAdmis(identifiantClient: string): boolean {
  * Chemins de Better Auth que la route HTTP sert (ADR-062 § 2), relatifs à
  * `CHEMIN_AUTH` : ceux qu'un client OAuth appelle lui-même, et rien d'autre.
  * Le consentement et la reprise après le choix du compte passent par nos
- * actions serveur (`auth.api.*`), le JWKS est lu en mémoire par le serveur
- * de ressource. Connexion, inscription, double authentification, membres
+ * actions serveur (`auth.api.*`). ~~Le JWKS est lu en mémoire par le serveur
+ * de ressource~~ [2026-11-23 : il l'est toujours, mais `/jwks` est servi —
+ * les métadonnées annoncent `jwks_uri`, et une adresse annoncée qui répond
+ * 401 est relevée par tout contrôle externe ; ce sont des clés publiques.]
+ * Connexion, inscription, double authentification, membres
  * restent aux actions serveur, avec leurs gardes : la route répond `404`.
  */
 export const CHEMINS_AUTH_SERVIS: readonly string[] = [
@@ -103,8 +106,17 @@ export const CHEMINS_AUTH_SERVIS: readonly string[] = [
   "/oauth2/token",
   "/oauth2/register",
   "/oauth2/revoke",
+  "/jwks",
   "/.well-known/oauth-authorization-server",
 ];
+
+/**
+ * Les modes d'obtention d'un jeton : le code d'autorisation (PKCE) et son
+ * rafraîchissement. `client_credentials` — un client qui agit pour lui-même,
+ * sans personne ni compte — n'a pas de sens ici : il est fermé au guichet des
+ * jetons et retiré des métadonnées.
+ */
+export const MODES_DE_JETON = ["authorization_code", "refresh_token"] as const;
 
 /** Le chemin demandé (sous `CHEMIN_AUTH`) est-il servi ? Comparaison exacte. */
 export function estCheminAuthServi(pathname: string): boolean {
