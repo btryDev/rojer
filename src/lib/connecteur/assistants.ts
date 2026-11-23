@@ -26,8 +26,10 @@ export async function assistantsAutorises(userId: string, compteId: string): Pro
 /**
  * Retire un assistant : le consentement disparaît, et ses jetons de
  * rafraîchissement pour ce compte sont révoqués — sans quoi l'assistant
- * continuerait d'en obtenir de nouveaux. Le jeton d'accès en cours (un JWT,
- * non révocable) meurt au plus tard quinze minutes après. Rend `false` si le
+ * continuerait d'en obtenir de nouveaux. ~~Le jeton d'accès en cours (un JWT,
+ * non révocable) meurt au plus tard quinze minutes après.~~ [2026-11-23 :
+ * il est refusé tout de suite — `/api/mcp` relit le consentement à chaque
+ * requête (`mcp/acces-compte.ts`).] Rend `false` si le
  * consentement n'est pas celui de la personne sur ce compte.
  */
 export async function retirerAssistant(userId: string, compteId: string, consentementId: string): Promise<boolean> {
