@@ -6,10 +6,10 @@ import { SiteFooter } from "@/components/landing/SiteFooter";
 import { BoutonContact } from "@/components/landing/BoutonContact";
 import { PAGES_LEGALES } from "@/components/landing/pages-legales";
 
-// Les pages d'information (mentions légales, confidentialité…). Publiques
-// (`/legal` dans les préfixes ouverts du proxy). Leur texte n'est pas encore
-// écrit : la page le dit, plutôt qu'un lien du pied de page qui mènerait à
-// une erreur.
+// Les pages d'information (mentions légales, confidentialité, cookies).
+// Publiques (`/legal` dans les préfixes ouverts du proxy). Le texte vit dans
+// `components/landing/pages-legales.ts` [2026-11-19 : il disait « en cours de
+// rédaction »].
 
 type Props = { params: Promise<{ page: string }> };
 
@@ -31,12 +31,26 @@ export default async function PageLegale({ params }: Props) {
     <main className="flex min-h-svh flex-col bg-[color:var(--board-card)]">
       <LandingHeader compte={compte} />
       <section className="lp-shell flex-1 py-20 sm:py-28">
-        <h1 className="lp-titre lp-h2">{page.titre}</h1>
-        <p className="lp-lede mt-6 max-w-[var(--board-mesure)]">
-          Cette page est en cours de rédaction. Pour toute question d&apos;ici
-          là, écrivez-nous.
-        </p>
-        <BoutonContact className="lp-btn-ink mt-8" />
+        <article className="max-w-[var(--board-mesure)]">
+          <h1 className="lp-titre lp-h2">{page.titre}</h1>
+          <p className="m-0 mt-3 text-[13px] text-[color:var(--board-slate-mid)]">
+            Dernière mise à jour : {page.misAJour}
+          </p>
+          {page.sections.map((s) => (
+            <section key={s.titre} className="mt-10">
+              <h2 className="lp-titre lp-h3">{s.titre}</h2>
+              {s.paragraphes.map((p, i) => (
+                <p key={i} className="m-0 mt-3 text-[15px] leading-[1.65] text-[color:var(--board-slate-ink)]">
+                  {p}
+                </p>
+              ))}
+            </section>
+          ))}
+          <p className="m-0 mt-10 text-[15px] leading-[1.65] text-[color:var(--board-slate-ink)]">
+            Une question sur cette page ?
+          </p>
+          <BoutonContact className="lp-btn-ink mt-4" />
+        </article>
       </section>
       <SiteFooter compte={compte} />
     </main>
