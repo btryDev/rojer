@@ -120,15 +120,17 @@ export async function ouvrirPortailAction(formData: FormData): Promise<void> {
  */
 export async function sAbonnerAction(formData: FormData): Promise<void> {
   const proprietaire = await verifierProprietaire();
-  // Rojer pas encore ouvert au public (`lib/ouverture.ts`, 2026-11-23,
-  // décision de la propriétaire : Stripe non validé) : pas de paiement, ni
-  // carte réelle ni carte de test en préproduction. La page le dit.
-  if (!OUVERT_AU_PUBLIC) redirect(`${PAGE_ABONNEMENT}?stripe=bientot`);
   // S'abonner se fait AUSSI quand la saisie est fermée (essai fini, abonnement
   // terminé) : le client Stripe s'écrit alors sur la ligne d'abonnement
   // (répétition locale du 2026-11-17 — sans cela, impossible de s'abonner
   // après l'essai).
   ouvrirAuGel();
+  // Rojer pas encore ouvert au public (`lib/ouverture.ts`, 2026-11-23,
+  // décision de la propriétaire : Stripe non validé) : pas de paiement, ni
+  // carte réelle ni carte de test en préproduction. La page le dit. Après
+  // `ouvrirAuGel` : la garde du gel veut l'ouverture juste après la garde de
+  // rôle (`quotas-gel-garde.test.ts`).
+  if (!OUVERT_AU_PUBLIC) redirect(`${PAGE_ABONNEMENT}?stripe=bientot`);
   const { stripe, db, ligne, compteId, conditionsSurCheckout } = await clientDuCompte(proprietaire, formData);
   const formule = String(formData.get("formule") ?? "");
   if (!estLookupKey(formule)) redirect(PAGE_ABONNEMENT);
