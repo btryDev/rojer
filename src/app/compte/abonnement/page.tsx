@@ -79,12 +79,10 @@ async function relireApresPaiement(db: Db, compteId: string, session: string | u
 const RETOUR_DE_PAIEMENT_MS = 25 * 3_600_000;
 
 /**
- * Ce que la page dit après un changement de formule (`changerFormuleAction`).
- * Les refus reviennent sur Formules, à côté du choix (2026-11-17).
+ * Ce que la page dit après avoir gardé sa formule (`annulerBaisseAction`). Un
+ * changement fait ou prévu se dit dans la fenêtre de confirmation (2026-11-23).
  */
 const MESSAGES_FORMULE = {
-  changee: "C'est fait : votre nouvelle formule s'applique dès maintenant.",
-  prevue: "C'est noté : votre nouvelle formule s'appliquera à la fin de la période payée.",
   gardee: "Vous gardez votre formule actuelle.",
 } as const;
 

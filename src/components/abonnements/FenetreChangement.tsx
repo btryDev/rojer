@@ -26,6 +26,7 @@ import {
   type ResultatChangement,
 } from "@/lib/abonnements/actions";
 import { eurosAuCentime } from "@/lib/abonnements/affichage";
+import { REFUS_CHANGEMENT } from "@/lib/abonnements/refus-changement";
 import { CHAMP_COMPTE_ATTENDU } from "@/lib/auth/compte-attendu";
 import { PAGE_PAIEMENT } from "@/lib/abonnements/sous-pages";
 import { formaterDateLongueFr } from "@/lib/dates";
@@ -136,6 +137,21 @@ function Contenu({
           </Link>
           .
         </p>
+        <div className={BOUTONS}>
+          <button type="button" onClick={fermer} className={PLEIN}>
+            Fermer
+          </button>
+        </div>
+      </PanneauModal>
+    );
+  }
+
+  // Un refus (trop d'utilisateurs, abonnement plus à jour…) : dit ici, la
+  // page se relit à la fermeture.
+  if (resultat?.etat === "refus") {
+    return (
+      <PanneauModal ouvert surFermer={fermer} surtitre="Changer de formule" titre="Rien n'a changé">
+        <p className="m-0">{REFUS_CHANGEMENT[resultat.refus]}</p>
         <div className={BOUTONS}>
           <button type="button" onClick={fermer} className={PLEIN}>
             Fermer

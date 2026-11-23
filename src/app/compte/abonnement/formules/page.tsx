@@ -15,6 +15,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
 import type { Db } from "@/lib/auth/compte";
 import { ceQuiSeFerme, ceQuiSOuvre, sensDuChangement } from "@/lib/abonnements/changement";
+import { REFUS_CHANGEMENT } from "@/lib/abonnements/refus-changement";
 import { PAGE_ESSAI } from "@/lib/abonnements/essai";
 import {
   CLES_FORMULES,
@@ -58,12 +59,8 @@ export const metadata = {
  * les prix de la page publique et rien n'est lu chez Stripe.
  */
 
-/** Un changement de formule refusé (`changerFormuleAction`), dit à côté du choix. */
-const REFUS = {
-  impossible: "Le changement de formule n'est possible que pour un abonnement à jour de ses paiements.",
-  "resiliation-prevue": "Votre abonnement prend fin à la date prévue : reprenez-le d'abord depuis Paiement et factures pour changer de formule.",
-  "trop-d-utilisateurs": "Cette formule permet moins d'utilisateurs que votre compte n'en a : retirez-en d'abord depuis Membres du compte.",
-} as const;
+/** Un changement de formule refusé, dit à côté du choix (la fenêtre de confirmation le dit aussi). */
+const REFUS = REFUS_CHANGEMENT;
 
 /** La carte d'encre de la page publique : le bouton y est blanc. */
 const carteDe = (f: CleFormule) => (OFFRES.find((o) => o.formule === f)?.misEnAvant ? "encre" : "claire");

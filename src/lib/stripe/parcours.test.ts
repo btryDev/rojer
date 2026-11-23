@@ -182,10 +182,16 @@ describe("parcours Stripe", () => {
     api.subscriptions.update.mockResolvedValue({ latest_invoice: { status: "paid", amount_paid: 2000 }, items: { data: [{ current_period_end: 1796000000 }] } });
     expect(await monterDeFormule(stripe, { ...sub, schedule: null } as unknown as Stripe.Subscription, pm, 1795000000)).toEqual({
       aRegler: null,
+      appliquee: true,
       preleveCentimes: 2000,
       prochainLe: new Date(1796000000 * 1000),
     });
     expect(api.subscriptions.update.mock.calls.at(-1)?.[1]).toMatchObject({ proration_date: 1795000000 });
+    // L'instant entre dans la clé d'idempotence : une nouvelle tentative, depuis un nouvel aperçu, n'est pas un rejeu.
+    expect(api.subscriptions.update.mock.calls.at(-1)?.[2]).toEqual({ idempotencyKey: "monter-sub_1-price_em-price_pm-sans-facture-1795000000" });
+    // Le rythme change : pas d'instant figé, la période repart maintenant.
+    await monterDeFormule(stripe, { ...sub, schedule: null } as unknown as Stripe.Subscription, { priceId: "price_ea", intervalle: "year" }, 1795000000);
+    expect(api.subscriptions.update.mock.calls.at(-1)?.[1]).not.toHaveProperty("proration_date");
   });
 
   it("l'aperçu d'une montée : la facture que Stripe émettrait, aux mêmes réglages, sans rien prélever", async () => {
@@ -207,6 +213,7 @@ describe("parcours Stripe", () => {
     });
     await apercuDeMontee(avecApercu, sub, { priceId: "price_pa", intervalle: "year" });
     expect(createPreview.mock.calls[1][0].subscription_details).toMatchObject({ billing_cycle_anchor: { type: "now" } });
+    expect(createPreview.mock.calls[1][0].subscription_details).not.toHaveProperty("proration_date");
   });
 
   it("baisser : un planning — la période en cours, puis la nouvelle formule une période, puis rendu à lui-même ; annuler = rendre", async () => {

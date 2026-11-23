@@ -28,7 +28,8 @@ import { clientStripeDuCompte } from "./client-stripe";
 import { demarrerEssaiDuCompte, PAGE_ESSAI, type EtatEssai } from "./essai";
 import { aNomProvisoire, abonnementEnCours, resiliationDemandee } from "./droits";
 import { INTERVALLE_STRIPE, estLookupKey, formuleDeLookupKey, formuleDuPrix } from "./formules";
-import { sensDuChangement } from "./changement";
+import { sensDuChangement, type Sens } from "./changement";
+import type { RefusChangement } from "./refus-changement";
 import { depassements } from "./quotas";
 import { PAGE_ABONNEMENT, verifierProprietaire, verifierRole, type Proprietaire } from "./saisie";
 import { PAGE_FORMULES } from "./sous-pages";
@@ -194,20 +195,37 @@ const dejaEnCours = (e: unknown) =>
   (e as { statusCode?: number })?.statusCode === 409 ||
   /already (has|attached to) a (subscription )?schedule/i.test(e instanceof Error ? e.message : "");
 
-/**
- * Changer de formule, pour un abonnement qui paie (§ 10, amendé le
- * 2026-11-06). Montée : tout de suite, la différence prélevée aussitôt et la
- * formule appliquée seulement si ce paiement passe. Baisse : à la fin de la
- * période payée, refusée tant que le compte a plus d'utilisateurs que la
- * formule visée n'en permet ; ce qui dépasse d'autre passera en lecture
- * seule (§ 14, la page le dit avant le clic).
- */
+/** L'aperçu d'une montée, ou rien : la fenêtre le dit, et le paiement reste fermé. */
 export type ApercuDeChangement = { aujourdhuiCentimes: number; jusquAu: string | null; prorationDate: number } | { erreur: true };
+
+type Visee = { priceId: string; intervalle: (typeof INTERVALLE_STRIPE)[keyof typeof INTERVALLE_STRIPE] };
+
+/**
+ * L'abonnement à changer, relu chez Stripe, et le prix visé — ou le refus :
+ * un abonnement qui n'est pas à jour, une résiliation prévue. Une seule
+ * écriture de ces règles, pour l'aperçu et pour le changement.
+ */
+async function aChanger(
+  stripe: Stripe,
+  customerId: string,
+  formule: string,
+  periodicite: keyof typeof INTERVALLE_STRIPE,
+): Promise<{ refus: RefusChangement } | { courant: Stripe.Subscription; item: Stripe.SubscriptionItem; sens: Sens | null; visee: Visee }> {
+  const [abonnements, catalogue] = await Promise.all([abonnementsDuClient(stripe, customerId), prixDesFormules(stripe)]);
+  const { courant } = abonnementCourant(abonnements);
+  const item = courant?.items.data[0];
+  if (!courant || courant.status !== "active" || !item) return { refus: "impossible" };
+  // Une résiliation est prévue : on ne change pas une formule qui s'arrête.
+  if (resiliationDemandee(courant)) return { refus: "resiliation-prevue" };
+  const prix = catalogue.get(formule);
+  if (!prix) throw new Error("prix introuvable");
+  return { courant, item, sens: sensDuChangement(formuleDuPrix(item.price), formule), visee: { priceId: prix.priceId, intervalle: INTERVALLE_STRIPE[periodicite] } };
+}
 
 /**
  * L'aperçu d'une montée, pour la fenêtre de confirmation (retour de test du
  * 2026-11-23) : ce que Stripe prélèverait aujourd'hui, sans rien prélever.
- * Les mêmes gardes que le changement lui-même.
+ * Les mêmes gardes que le changement lui-même (`aChanger`).
  */
 export async function apercuMonteeAction(formData: FormData): Promise<ApercuDeChangement> {
   const proprietaire = await verifierProprietaire();
@@ -216,13 +234,9 @@ export async function apercuMonteeAction(formData: FormData): Promise<ApercuDeCh
   const visee = formuleDeLookupKey(formule);
   if (!visee) return { erreur: true };
   try {
-    const { courant } = abonnementCourant(await abonnementsDuClient(stripe, customerId));
-    const item = courant?.items.data[0];
-    if (!courant || courant.status !== "active" || !item || resiliationDemandee(courant)) return { erreur: true };
-    if (sensDuChangement(formuleDuPrix(item.price), formule) !== "montee") return { erreur: true };
-    const prix = (await prixDesFormules(stripe)).get(formule);
-    if (!prix) return { erreur: true };
-    const a = await apercuDeMontee(stripe, courant, { priceId: prix.priceId, intervalle: INTERVALLE_STRIPE[visee.periodicite] });
+    const c = await aChanger(stripe, customerId, formule, visee.periodicite);
+    if ("refus" in c || c.sens !== "montee") return { erreur: true };
+    const a = await apercuDeMontee(stripe, c.courant, c.visee);
     return { aujourdhuiCentimes: a.aujourdhuiCentimes, jusquAu: a.jusquAu?.toISOString() ?? null, prorationDate: a.prorationDate };
   } catch (e) {
     console.error(`abonnement : aperçu d'une montée en échec — ${motifDErreur(e)}`);
@@ -230,10 +244,11 @@ export async function apercuMonteeAction(formData: FormData): Promise<ApercuDeCh
   }
 }
 
-/** Ce que le changement a fait, dit dans la fenêtre de confirmation ; un refus, lui, ramène sur la page qui le dit. */
+/** Ce que le changement a fait, ou pourquoi il est refusé : dit dans la fenêtre de confirmation. */
 export type ResultatChangement =
   | { etat: "changee"; preleveCentimes: number | null; prochainLe: string | null }
   | { etat: "prevue"; le: string | null }
+  | { etat: "refus"; refus: RefusChangement }
   | null;
 
 /**
@@ -246,6 +261,16 @@ function prorationDeLApercu(formData: FormData): number | undefined {
   return Number.isInteger(v) && v <= maintenant && v > maintenant - 3600 ? v : undefined;
 }
 
+/**
+ * Changer de formule, pour un abonnement qui paie (§ 10, amendé le
+ * 2026-11-06). Montée : tout de suite, la différence prélevée aussitôt et la
+ * formule appliquée seulement si ce paiement passe. Baisse : à la fin de la
+ * période payée, refusée tant que le compte a plus d'utilisateurs que la
+ * formule visée n'en permet ; ce qui dépasse d'autre passera en lecture
+ * seule (§ 14, la fenêtre le dit avant le geste). Le résultat et les refus
+ * reviennent à la fenêtre de confirmation (2026-11-23) ; une facture à
+ * régler mène à sa page.
+ */
 export async function changerFormuleAction(_avant: ResultatChangement, formData: FormData): Promise<ResultatChangement> {
   const proprietaire = await verifierProprietaire();
   const { stripe, db, customerId, compteId } = await avecClient(proprietaire, formData);
@@ -255,42 +280,31 @@ export async function changerFormuleAction(_avant: ResultatChangement, formData:
   let cible = PAGE_ABONNEMENT;
   let resultat: ResultatChangement = null;
   try {
-    const { courant } = abonnementCourant(await abonnementsDuClient(stripe, customerId));
-    const item = courant?.items.data[0];
-    if (!courant || courant.status !== "active" || !item) {
-      cible = `${PAGE_FORMULES}?formule=impossible`;
-    } else if (resiliationDemandee(courant)) {
-      // Une résiliation est prévue : on ne change pas une formule qui s'arrête.
-      cible = `${PAGE_FORMULES}?formule=resiliation-prevue`;
-    } else {
-      const sens = sensDuChangement(formuleDuPrix(item.price), formule);
-      const prix = (await prixDesFormules(stripe)).get(formule);
-      if (!prix) throw new Error("prix introuvable");
-      if (sens === "montee") {
-        const fait = await monterDeFormule(
-          stripe,
-          courant,
-          { priceId: prix.priceId, intervalle: INTERVALLE_STRIPE[visee.periodicite] },
-          prorationDeLApercu(formData),
-        );
-        await synchroniserClientStripe(stripe, customerId).catch(() => null);
-        if (fait.aRegler) cible = fait.aRegler;
-        else resultat = { etat: "changee", preleveCentimes: fait.preleveCentimes, prochainLe: fait.prochainLe?.toISOString() ?? null };
-      } else if (sens === "baisse") {
-        const trop = await depassements(db, compteId, formule);
-        if (trop.some((d) => d.quota === "membres")) {
-          cible = `${PAGE_FORMULES}?formule=trop-d-utilisateurs`;
+    const c = await aChanger(stripe, customerId, formule, visee.periodicite);
+    if ("refus" in c) {
+      resultat = { etat: "refus", refus: c.refus };
+    } else if (c.sens === "montee") {
+      const fait = await monterDeFormule(stripe, c.courant, c.visee, prorationDeLApercu(formData));
+      await synchroniserClientStripe(stripe, customerId).catch(() => null);
+      // Une facture à régler mène à sa page ; une montée pas encore
+      // appliquée (paiement en attente) ne se dit pas faite : la page la relit.
+      if (fait.aRegler) cible = fait.aRegler;
+      else if (fait.appliquee) {
+        resultat = { etat: "changee", preleveCentimes: fait.preleveCentimes, prochainLe: fait.prochainLe?.toISOString() ?? null };
+      }
+    } else if (c.sens === "baisse") {
+      if ((await depassements(db, compteId, formule)).some((d) => d.quota === "membres")) {
+        resultat = { etat: "refus", refus: "trop-d-utilisateurs" };
+      } else {
+        await planifierBaisse(stripe, c.courant, c.visee);
+        // Une invitation partie entre la vérification et le planning : on
+        // revérifie, et la baisse est rendue si elle ne tient plus.
+        if ((await depassements(db, compteId, formule)).some((d) => d.quota === "membres")) {
+          await annulerBaisse(stripe, (await abonnementsDuClient(stripe, customerId)).find((a) => a.id === c.courant.id) ?? c.courant);
+          resultat = { etat: "refus", refus: "trop-d-utilisateurs" };
         } else {
-          await planifierBaisse(stripe, courant, { priceId: prix.priceId, intervalle: INTERVALLE_STRIPE[visee.periodicite] });
-          // Une invitation partie entre la vérification et le planning : on
-          // revérifie, et la baisse est rendue si elle ne tient plus.
-          if ((await depassements(db, compteId, formule)).some((d) => d.quota === "membres")) {
-            await annulerBaisse(stripe, (await abonnementsDuClient(stripe, customerId)).find((a) => a.id === courant.id) ?? courant);
-            cible = `${PAGE_FORMULES}?formule=trop-d-utilisateurs`;
-          } else {
-            const fin = item.current_period_end;
-            resultat = { etat: "prevue", le: fin ? new Date(fin * 1000).toISOString() : null };
-          }
+          const fin = c.item.current_period_end;
+          resultat = { etat: "prevue", le: fin ? new Date(fin * 1000).toISOString() : null };
         }
       }
     }

@@ -101,7 +101,7 @@ beforeEach(() => {
   m.prixDesFormules.mockResolvedValue(new Map([["rojer_pro_annuel", { priceId: "price_pa" }], ["rojer_essentiel_mensuel", { priceId: "price_em" }]]));
   m.tauxDeTva.mockResolvedValue("txr_tva");
   m.ouvrirCheckout.mockResolvedValue("https://checkout.stripe.test/abonnement");
-  m.monterDeFormule.mockResolvedValue({ aRegler: null, preleveCentimes: 2000, prochainLe: new Date("2026-12-03T00:00:00Z") });
+  m.monterDeFormule.mockResolvedValue({ aRegler: null, appliquee: true, preleveCentimes: 2000, prochainLe: new Date("2026-12-03T00:00:00Z") });
   m.depassements.mockResolvedValue([]);
 });
 
@@ -205,7 +205,10 @@ describe("changerFormuleAction", () => {
       await changerFormuleAction(null, f);
       expect(m.monterDeFormule.mock.calls.at(-1)?.[3]).toBe(attendu);
     }
-    m.monterDeFormule.mockResolvedValue({ aRegler: "https://invoice.stripe.com/i/3", preleveCentimes: null, prochainLe: null });
+    // Une montée en attente de son paiement, sans facture à régler : rien ne se dit fait, la page la relit.
+    m.monterDeFormule.mockResolvedValueOnce({ aRegler: null, appliquee: false, preleveCentimes: null, prochainLe: null });
+    expect(await redirigeVers(changerFormuleAction(null, formulaire("rojer_pro_annuel")))).toBe("/compte/abonnement");
+    m.monterDeFormule.mockResolvedValue({ aRegler: "https://invoice.stripe.com/i/3", appliquee: false, preleveCentimes: null, prochainLe: null });
     expect(await redirigeVers(changerFormuleAction(null, formulaire("rojer_pro_annuel")))).toBe("https://invoice.stripe.com/i/3");
     expect(m.planifierBaisse).not.toHaveBeenCalled();
   });
@@ -217,21 +220,21 @@ describe("changerFormuleAction", () => {
     expect(m.planifierBaisse).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ id: "sub_actif" }), { priceId: "price_em", intervalle: "month" });
     m.planifierBaisse.mockClear();
     m.depassements.mockResolvedValue([{ quota: "membres", utilise: 3, plafond: 1 }]);
-    expect(await redirigeVers(changerFormuleAction(null, formulaire("rojer_essentiel_mensuel")))).toBe("/compte/abonnement/formules?formule=trop-d-utilisateurs");
+    expect(await changerFormuleAction(null, formulaire("rojer_essentiel_mensuel"))).toEqual({ etat: "refus", refus: "trop-d-utilisateurs" });
     expect(m.planifierBaisse).not.toHaveBeenCalled();
     expect(m.monterDeFormule).not.toHaveBeenCalled();
   });
 
   it("une résiliation déjà prévue : pas de changement de formule", async () => {
     m.abonnementsDuClient.mockResolvedValue([{ ...actif("rojer_essentiel_mensuel"), cancel_at_period_end: true }]);
-    expect(await redirigeVers(changerFormuleAction(null, formulaire("rojer_pro_annuel")))).toBe("/compte/abonnement/formules?formule=resiliation-prevue");
+    expect(await changerFormuleAction(null, formulaire("rojer_pro_annuel"))).toEqual({ etat: "refus", refus: "resiliation-prevue" });
     expect(m.monterDeFormule).not.toHaveBeenCalled();
   });
 
   it("course avec une invitation : revérifié après le planning, la baisse est rendue si elle ne tient plus", async () => {
     m.abonnementsDuClient.mockResolvedValue([actif("rojer_pro_annuel")]);
     m.depassements.mockResolvedValueOnce([]).mockResolvedValueOnce([{ quota: "membres", utilise: 2, plafond: 1 }]);
-    expect(await redirigeVers(changerFormuleAction(null, formulaire("rojer_essentiel_mensuel")))).toBe("/compte/abonnement/formules?formule=trop-d-utilisateurs");
+    expect(await changerFormuleAction(null, formulaire("rojer_essentiel_mensuel"))).toEqual({ etat: "refus", refus: "trop-d-utilisateurs" });
     expect(m.planifierBaisse).toHaveBeenCalled();
     expect(m.annulerBaisse).toHaveBeenCalled();
   });
@@ -246,7 +249,7 @@ describe("changerFormuleAction", () => {
   it("hors d'un abonnement à jour (impayé) : rien ; formule hors catalogue : rien", async () => {
     for (const status of ["incomplete", "past_due"]) {
       m.abonnementsDuClient.mockResolvedValue([{ ...actif("rojer_essentiel_mensuel"), status }]);
-      expect(await redirigeVers(changerFormuleAction(null, formulaire("rojer_pro_annuel"))), status).toBe("/compte/abonnement/formules?formule=impossible");
+      expect(await changerFormuleAction(null, formulaire("rojer_pro_annuel")), status).toEqual({ etat: "refus", refus: "impossible" });
     }
     expect(await redirigeVers(changerFormuleAction(null, formulaire("rojer_surmesure_mensuel")))).toBe("/compte/abonnement");
     expect(m.monterDeFormule).not.toHaveBeenCalled();
