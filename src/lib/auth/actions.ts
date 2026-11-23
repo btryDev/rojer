@@ -125,7 +125,7 @@ const ENVOI_IMPOSSIBLE =
 const INSCRIPTIONS_FERMEES =
   "Les inscriptions ne sont pas encore ouvertes. Laissez votre adresse sur la page « Rojer ouvre bientôt » : nous vous écrirons le jour de l'ouverture.";
 
-const MOT_DE_PASSE_TROP_LONG ="Le mot de passe est trop long (128 caractères au plus).";
+const MOT_DE_PASSE_TROP_LONG = "Le mot de passe est trop long (128 caractères au plus).";
 
 const LIEN_INVALIDE =
   "Ce lien de réinitialisation est invalide ou a expiré. Redemandez un lien.";
