@@ -56,7 +56,11 @@ export default async function LoginPage({
 
         {confirmation === "deja" ? (
           <MessageFormulaire ton="info" className="mt-6">
-            Cette adresse était déjà confirmée : votre mot de passe n’a pas changé. Mot de passe oublié ? Demandez-en un nouveau.
+            Cette adresse était déjà confirmée : votre mot de passe n’a pas changé. Mot de passe oublié ?{" "}
+            <Link href="/login/mot-de-passe-oublie" className="font-semibold underline underline-offset-4">
+              Demandez-en un nouveau
+            </Link>
+            .
           </MessageFormulaire>
         ) : null}
 
@@ -77,9 +81,20 @@ export default async function LoginPage({
               d&apos;abord.
             </MessageFormulaire>
             <div className="mt-3 flex flex-wrap items-center gap-4 text-[13.5px]">
-              <Link href={dossier} className="font-semibold text-[color:var(--board-blue-ink)] underline underline-offset-4">
-                Reprendre mon dossier
-              </Link>
+              {/* Un retour demandé prime sur le dossier (relecture du
+                  2026-11-23) : la connexion d'un assistant revient par
+                  `/oauth/reprendre`. `<a>` et non `<Link>` : `next` peut viser
+                  une route, pas seulement une page. Déjà filtré par
+                  `cheminDeRetour`. */}
+              {next ? (
+                <a href={next} className="font-semibold text-[color:var(--board-blue-ink)] underline underline-offset-4">
+                  Continuer
+                </a>
+              ) : (
+                <Link href={dossier} className="font-semibold text-[color:var(--board-blue-ink)] underline underline-offset-4">
+                  Reprendre mon dossier
+                </Link>
+              )}
               <form action={signOutAction}>
                 <button type="submit" className="text-[color:var(--board-slate-ink)] underline underline-offset-4">
                   Se déconnecter
@@ -89,10 +104,18 @@ export default async function LoginPage({
           </>
         ) : null}
 
-        <div className="carte-board mt-7 px-7 py-6 sm:px-8">
-          <LoginForm next={cheminDeRetour(next)} />
-        </div>
+        {/* Déjà connecté·e : pas de formulaire (2026-11-23, contrôle en
+            préprod) — il se remplissait seul et laissait croire qu'il fallait
+            se reconnecter. Le message et ses deux sorties suffisent. */}
+        {ouverte?.email ? null : (
+          <div className="carte-board mt-7 px-7 py-6 sm:px-8">
+            <LoginForm next={cheminDeRetour(next)} />
+          </div>
+        )}
 
+        {/* Sans session seulement : connecté·e, la page ne propose ni de se
+            connecter ni de créer un compte (relecture du 2026-11-23). */}
+        {ouverte?.email ? null : (
         <p className="m-0 mt-6 text-[13px] leading-[1.55] text-[color:var(--board-slate-mid)]">
           Pas de compte ?{" "}
           <Link
@@ -102,6 +125,7 @@ export default async function LoginPage({
             Créer un compte →
           </Link>
         </p>
+        )}
       </div>
     </main>
   );

@@ -144,6 +144,10 @@ describe("la fiche du plan", () => {
     const details = html.slice(debut, html.indexOf("</details>", debut));
     expect(details).toMatch(/<summary[^>]*>[\s\S]*Historique[\s\S]*3 événements[\s\S]*<\/summary>/);
     expect(details).toContain("Plan créé");
+    // Le jour et le mois dans la tuile, l'heure sur la ligne grise (2026-11-23) ;
+    // « Plan créé » n'a pas de précision : pas de « · » orphelin.
+    expect(details).toContain("à 10 h 05");
+    expect(details).not.toMatch(/à 10 h 05<\/span><span aria-hidden="true"> · <\/span><\/p>/);
     // La carte « Signatures » n'est pas repliée.
     expect(html.slice(0, debut)).toContain('id="signatures-titre"');
   });

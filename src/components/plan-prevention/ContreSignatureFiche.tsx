@@ -1,3 +1,4 @@
+import { deNom } from "@/lib/texte/elision";
 import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 import { propositionSchema, type PlanComparable } from "@/lib/plan-prevention/proposition";
@@ -108,7 +109,7 @@ export function RappelProposition({
 export function RappelCorrection({ raisonEE, suiviHref }: { raisonEE: string; suiviHref: string }) {
   return (
     <RappelSuivi href={suiviHref} action="Terminer dans Suivi">
-      <strong className="font-semibold">Correction en cours.</strong> La proposition de {raisonEE} est reprise dans le
+      <strong className="font-semibold">Correction en cours.</strong> La proposition {deNom(raisonEE)} est reprise dans le
       plan : signez pour la terminer.
     </RappelSuivi>
   );
@@ -173,7 +174,7 @@ export function CorrectionEnCours({
       pied={
         <div className="flex flex-wrap items-center justify-between gap-4">
           <p className="m-0 max-w-[440px] text-[12.5px] text-[color:var(--board-slate-mid)]">
-            La proposition de {raisonEE} est reprise dans le plan :{" "}
+            La proposition {deNom(raisonEE)} est reprise dans le plan :{" "}
             <Link href={modifierHref} className="text-[color:var(--board-blue-ink)] underline-offset-2 hover:underline">
               retouchez ce que vous voulez
             </Link>

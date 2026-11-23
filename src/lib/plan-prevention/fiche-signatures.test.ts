@@ -122,6 +122,9 @@ describe("l'historique", () => {
 
   it("liens envoyés, ouverts, remplacés", () => {
     expect(lignes).toContain("Lien adressé à Nettoyage Pro SARL");
+    // « Lien adressé à … révoqué », jamais « Lien de Nettoyage… » : pas d'élision à faire (2026-11-23).
+    expect(lignes).toContain("Lien adressé à Nettoyage Pro SARL révoqué");
+    expect(lignes.some((l) => l.startsWith("Lien de "))).toBe(false);
     expect(lignes).toContain("Paul Testeur ouvre le lien et demande un code");
     expect(h.find((e) => e.cle === "revocation-l1")?.sousLigne).toBe("remplacé par un lien plus récent");
   });
@@ -131,6 +134,25 @@ describe("l'historique", () => {
     expect(lignes).toContain("Vous refusez la proposition de Nettoyage Pro SARL");
     expect(lignes).toContain("Vous acceptez la proposition de Nettoyage Pro SARL et la corrigez");
     expect(lignes).toContain("Proposition refusée d'office : le plan a été clos ou annulé");
+  });
+
+  it("raison sociale à voyelle : « d'Entretien », jamais « de Entretien » ; un lien expiré se dit", () => {
+    const hv = historiqueDuPlan({
+      creeLe: T0,
+      raisonEE: "Entretien Test A-Z",
+      liens: [lien("lx", { otpExpireLe: null, utiliseLe: null, revoqueLe: null, expireLe: plus(30) })],
+      signatures: [],
+      propositions: [
+        { id: "pa", accessTokenId: "lx", statut: "acceptee", createdAt: plus(10), traiteeLe: plus(12), traiteeParEmail: "moi@exemple.fr", corrigeeLe: null },
+        { id: "pb", accessTokenId: "lx", statut: "refusee", createdAt: plus(13), traiteeLe: plus(14), traiteeParEmail: "moi@exemple.fr", corrigeeLe: null },
+      ],
+      maintenant: plus(60),
+    });
+    const lv = hv.map((e) => e.ligne);
+    expect(lv).toContain("Vous acceptez la proposition d'Entretien Test A-Z");
+    expect(lv).toContain("Vous refusez la proposition d'Entretien Test A-Z");
+    expect(lv).toContain("Lien adressé à Entretien Test A-Z expiré");
+    for (const l of lv) expect(l, l).not.toMatch(/\bde [aeiouyàâéèêîôû]/i);
   });
 
   it("les signatures révoquées d'un même geste : une ligne, chacune vérifiable", () => {

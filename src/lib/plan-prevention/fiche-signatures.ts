@@ -1,3 +1,4 @@
+import { deNom } from "@/lib/texte/elision";
 import type { MethodeSignature, PartieSignataire, StatutPropositionPlan } from "@prisma/client";
 import { MOTIF_REVOCATION_ENVOI_ECHOUE, MOTIF_REVOCATION_NOUVEAU_LIEN } from "@/lib/access-tokens/revocation";
 import { OTP_ESSAIS_MAX, OTP_TTL_MINUTES } from "@/lib/signatures/otp";
@@ -200,7 +201,7 @@ export function historiqueDuPlan(p: {
       e.push({
         cle: `revocation-${l.id}`,
         date: l.revoqueLe,
-        ligne: `Lien de ${qui(l.partie, l.nomDestinataire)} révoqué`,
+        ligne: `Lien adressé à ${qui(l.partie, l.nomDestinataire)} révoqué`,
         sousLigne: motifLienPourLaFiche(l.revoqueMotif),
         pastille: { mot: "Révoqué", ton: "neutre" },
       });
@@ -208,7 +209,7 @@ export function historiqueDuPlan(p: {
       e.push({
         cle: `expiration-${l.id}`,
         date: l.expireLe,
-        ligne: `Lien de ${qui(l.partie, l.nomDestinataire)} expiré`,
+        ligne: `Lien adressé à ${qui(l.partie, l.nomDestinataire)} expiré`,
         sousLigne: "Sans signature",
         pastille: { mot: "Expiré", ton: "neutre" },
       });
@@ -259,10 +260,10 @@ export function historiqueDuPlan(p: {
     const decision =
       pr.statut === "acceptee"
         ? pr.corrigeeLe
-          ? { ligne: `Vous acceptez la proposition de ${p.raisonEE} et la corrigez`, mot: "Corrigée", ton: "fait" as const }
-          : { ligne: `Vous acceptez la proposition de ${p.raisonEE}`, mot: "Acceptée", ton: "fait" as const }
+          ? { ligne: `Vous acceptez la proposition ${deNom(p.raisonEE)} et la corrigez`, mot: "Corrigée", ton: "fait" as const }
+          : { ligne: `Vous acceptez la proposition ${deNom(p.raisonEE)}`, mot: "Acceptée", ton: "fait" as const }
         : pr.traiteeParEmail
-          ? { ligne: `Vous refusez la proposition de ${p.raisonEE}`, mot: "Refusée", ton: "retard" as const }
+          ? { ligne: `Vous refusez la proposition ${deNom(p.raisonEE)}`, mot: "Refusée", ton: "retard" as const }
           : { ligne: "Proposition refusée d'office : le plan a été clos ou annulé", mot: "Refusée", ton: "retard" as const };
     e.push({
       cle: `decision-${pr.id}`,
