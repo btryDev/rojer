@@ -1,8 +1,10 @@
+import { redirect } from "next/navigation";
 import illustrationOuverture from "@/assets/landing/bientot-ouverture.jpg";
 import { compteDeLaSession } from "@/components/landing/compte-session";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { PhotoCadre } from "@/components/landing/PhotoCadre";
 import { SiteFooter } from "@/components/landing/SiteFooter";
+import { INSCRIPTIONS_OUVERTES } from "@/lib/ouverture";
 import { FormulaireBientot } from "./FormulaireBientot";
 
 export const metadata = {
@@ -14,9 +16,9 @@ export const metadata = {
 // inscriptions sont fermées (`lib/ouverture.ts`). Publique (`/bientot` dans
 // les préfixes ouverts du proxy), habillée comme la page publique. Aucune
 // date promise, et rien sur la raison de l'attente : le visiteur n'a pas à
-// la connaître (2026-11-23, décision de la propriétaire). La page reste
-// servie une fois les inscriptions rouvertes — plus rien n'y mène, et
-// l'adresse laissée vaut toujours.
+// la connaître (2026-11-23, décision de la propriétaire). ~~La page reste
+// servie une fois les inscriptions rouvertes~~ [2026-11-23 : rouvertes, elle
+// renvoie à l'inscription, et sort du plan du site.]
 //
 // Mise en page (2026-11-23, décision de la propriétaire) : le texte et le
 // champ à gauche, l'illustration à droite, dans le cadre et le trait de
@@ -24,6 +26,9 @@ export const metadata = {
 // passe avant l'illustration.
 
 export default async function PageBientot() {
+  // Rouvert, la page n'a plus rien à promettre : l'inscription (relecture du
+  // 2026-11-23 — elle restait trouvable et promettait un e-mail déjà parti).
+  if (INSCRIPTIONS_OUVERTES) redirect("/signup");
   const compte = await compteDeLaSession();
 
   return (

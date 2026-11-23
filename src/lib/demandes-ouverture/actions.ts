@@ -30,23 +30,18 @@ export async function demanderOuvertureAction(
     return { erreur: parsed.error.issues[0]?.message ?? "Adresse e-mail invalide." };
   }
 
-  // Par réseau, et tous réseaux confondus (contrôle de sécurité du
-  // 2026-11-23). Sans IP lisible (appel direct, en-tête absent), toutes ces
-  // requêtes partagent une même clé : la limite s'applique toujours — comme
-  // l'enregistrement des clients OAuth (`api/auth/[...all]`).
-  // Le plafond global ne compte que ce qui a passé la limite par réseau :
-  // sinon un seul réseau, une fois bloqué, continuerait de remplir le
-  // compteur commun et fermerait la page à tout le monde (relecture de
-  // sécurité du 2026-11-23).
+  // Par réseau, comme l'inscription. Sans IP lisible (appel direct, en-tête
+  // absent), toutes ces requêtes partagent une même clé : la limite
+  // s'applique toujours — comme l'enregistrement des clients OAuth
+  // (`api/auth/[...all]`). ~~Plus un plafond tous réseaux confondus~~
+  // [2026-11-23, relecture : retiré — 30 réseaux /64 suffisaient à fermer la
+  // page à tout le monde ; des adresses de pacotille se trient avant l'envoi
+  // de l'e-mail d'ouverture.]
   const ip = ipPourLimite(await headers()) ?? "inconnue";
-  const parReseau = await consommer([
+  const verdict = await consommer([
     { cle: cleLimite("demande-ouverture", "ip", ip), limite: LIMITES.demandeOuvertureIp },
   ]);
-  if (!parReseau.ok) return { erreur: messageTropDeTentatives(parReseau.reessayerDansSecondes) };
-  const global = await consommer([
-    { cle: cleLimite("demande-ouverture", "global", "tout"), limite: LIMITES.demandeOuvertureGlobale },
-  ]);
-  if (!global.ok) return { erreur: messageTropDeTentatives(global.reessayerDansSecondes) };
+  if (!verdict.ok) return { erreur: messageTropDeTentatives(verdict.reessayerDansSecondes) };
 
   try {
     await prisma.demandeOuverture.createMany({ data: [{ email: parsed.data.email }], skipDuplicates: true });

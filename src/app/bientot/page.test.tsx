@@ -62,14 +62,15 @@ describe("le formulaire, selon la réponse", () => {
     const html = renderToStaticMarkup(<FormulaireBientot etatInitial={{ email: "paul@exemple.fr" }} />);
     expect(html).toContain('role="status"');
     expect(html).toContain("C&#x27;est noté. Nous vous écrirons à paul@exemple.fr le jour de l&#x27;ouverture.");
-    expect(html).toContain("Corriger l&#x27;adresse");
+    // Plus de « Corriger l'adresse » (relecture du 2026-11-23).
+    expect(html).not.toContain("Corriger");
     expect(html).not.toContain('type="email"');
   });
 
   it("refus : le message est lié au champ", () => {
     const html = renderToStaticMarkup(<FormulaireBientot etatInitial={{ erreur: "Adresse e-mail invalide." }} />);
     expect(html).toMatch(/<input[^>]*aria-invalid="true"[^>]*aria-describedby="bientot-email-erreur"/);
-    expect(html).toContain('id="bientot-email-erreur"');
+    expect(html).toMatch(/<p id="bientot-email-erreur" role="alert"/);
     expect(html).toContain("Adresse e-mail invalide.");
     expect(html).toContain("Me prévenir");
   });

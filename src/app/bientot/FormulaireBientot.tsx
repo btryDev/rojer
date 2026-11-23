@@ -14,8 +14,10 @@ const ID_ERREUR = "bientot-email-erreur";
 /**
  * L'adresse, et rien d'autre : le champ et le bouton sur une ligne. Une fois
  * notée, le formulaire cède la place à l'accusé de réception, qui redit
- * l'adresse — une faute de frappe se voit, et « Corriger l'adresse » rouvre le
- * champ, la saisie gardée.
+ * l'adresse. ~~« Corriger l'adresse » rouvre le champ~~ [2026-11-23,
+ * relecture : la correction laissait l'adresse mal tapée en base, qui aurait
+ * reçu l'e-mail d'ouverture — retirée ; une autre adresse se laisse en
+ * rechargeant la page.]
  *
  * `etatInitial` : la réponse de départ, pour montrer un état sans passer par
  * l'action (tests).
@@ -24,18 +26,13 @@ export function FormulaireBientot({ etatInitial = ETAT_INITIAL }: { etatInitial?
   const [etat, action, pending] = useActionState(demanderOuvertureAction, etatInitial);
   // Champ tenu ici : un refus (adresse mal tapée, limite) ne vide pas la saisie.
   const [email, setEmail] = useState("");
-  const [correction, setCorrection] = useState(false);
-  const notee = Boolean(etat.email) && !correction;
+  const notee = Boolean(etat.email);
 
   // Le formulaire disparaît sous le doigt : le focus suit ce qui le remplace.
   const accuse = useRef<HTMLParagraphElement>(null);
-  const champ = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (notee) accuse.current?.focus();
-  }, [notee, etat]);
-  useEffect(() => {
-    if (correction) champ.current?.focus();
-  }, [correction]);
+  }, [notee]);
 
   if (notee) {
     return (
@@ -55,20 +52,13 @@ export function FormulaireBientot({ etatInitial = ETAT_INITIAL }: { etatInitial?
           >
             {`C'est noté. Nous vous écrirons à ${etat.email} le jour de l'ouverture.`}
           </p>
-          <button
-            type="button"
-            onClick={() => setCorrection(true)}
-            className="mt-2 text-[13px] font-semibold text-[color:var(--board-blue-ink)] underline decoration-[color:var(--board-blue-soft)] underline-offset-4 transition-colors hover:decoration-[color:var(--board-blue-ink)]"
-          >
-            Corriger l&apos;adresse
-          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <form action={action} onSubmit={() => setCorrection(false)}>
+    <form action={action}>
       {/* Le chapeau dit déjà quoi saisir : l'intitulé reste pour les
           lecteurs d'écran, la pilule porte le champ et le bouton d'un seul
           tenant (2026-11-23, « pas très bien organisé »). */}
@@ -83,7 +73,6 @@ export function FormulaireBientot({ etatInitial = ETAT_INITIAL }: { etatInitial?
         }`}
       >
         <input
-          ref={champ}
           id={ID_CHAMP}
           name="email"
           type="email"
@@ -106,7 +95,7 @@ export function FormulaireBientot({ etatInitial = ETAT_INITIAL }: { etatInitial?
         </button>
       </div>
       {etat.erreur && (
-        <p id={ID_ERREUR} className="m-0 mt-2 pl-5 text-[12.5px] text-[color:var(--board-signal-ink)]">
+        <p id={ID_ERREUR} role="alert" className="m-0 mt-2 pl-5 text-[12.5px] text-[color:var(--board-signal-ink)]">
           {etat.erreur}
         </p>
       )}

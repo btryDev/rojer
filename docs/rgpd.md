@@ -328,7 +328,8 @@ reconnaissable »). Deux mesures la gardent de le devenir :
 Tant que les inscriptions sont fermées (`src/lib/ouverture.ts`), la page
 « Rojer ouvre très bientôt » recueille une adresse e-mail, et rien d'autre
 (`DemandeOuverture` : adresse en minuscules, date). Finalité unique : un seul
-e-mail, le jour de l'ouverture. Fondement : la demande de la personne.
+e-mail, le jour de l'ouverture. Fondement : le consentement de la personne
+(art. 6.1.a), retiré par une demande d'effacement.
 Conservation : jusqu'à cet envoi, puis la table se vide ; effacement sur
 simple demande avant. La table n'est lue nulle part dans l'application, RLS
 active sans politique ; une limite de débit par réseau et un champ piège

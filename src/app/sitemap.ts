@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
 import { PAGES_LEGALES } from "@/components/landing/pages-legales";
 import { OUVERT_AUX_MOTEURS } from "@/lib/indexation";
-import { publicAppUrl } from "@/lib/url-publique";
+import { INSCRIPTIONS_OUVERTES } from "@/lib/ouverture";
+import { adressePubliqueOuNull } from "@/lib/url-publique";
 
 /**
  * `sitemap.xml` (2026-11-23, décision de la propriétaire : la page publique
@@ -13,16 +14,17 @@ import { publicAppUrl } from "@/lib/url-publique";
  * Vide tant que le site est fermé aux moteurs, ou que l'adresse publique est
  * inconnue : jamais un `localhost` dans un plan servi.
  */
-export const PAGES_DU_PLAN = [
+export const PAGES_DU_PLAN: readonly string[] = [
   "/",
-  "/bientot",
+  // La page d'attente, tant que les inscriptions sont fermées seulement.
+  ...(INSCRIPTIONS_OUVERTES ? [] : ["/bientot"]),
   "/conditions",
   ...PAGES_LEGALES.map((p) => `/legal/${p.slug}`),
-] as const;
+];
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  if (!OUVERT_AUX_MOTEURS || !process.env.PUBLIC_APP_URL) return [];
-  const base = publicAppUrl();
+  const base = adressePubliqueOuNull();
+  if (!OUVERT_AUX_MOTEURS || !base || !process.env.PUBLIC_APP_URL) return [];
   return PAGES_DU_PLAN.map((chemin) => ({
     url: chemin === "/" ? base : `${base}${chemin}`,
     changeFrequency: chemin === "/" ? "weekly" : "monthly",
