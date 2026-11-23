@@ -897,6 +897,20 @@ describe("une ligne retenue par prudence le dit à l'assistant (2026-09-27)", ()
   // Éprouvé en rendant « en_retard » sans lire la prudence dans `etatDe`.
   const exerciceEchu = { ...ligneExercice, datePrevue: jour("2026-03-01") };
 
+  it("muet, à planifier : ni « due », ni « à confirmer » deux fois (2026-11-23)", async () => {
+    // Le cas relevé depuis claude.ai : exercices d'évacuation, sans échéance
+    // connue, retenus par prudence. « due, jamais réalisée » y contredirait
+    // « à confirmer » : la ligne n'est peut-être pas due.
+    prismaMock.etablissement.findFirst.mockResolvedValue(bureauMuet);
+    prismaMock.verification.findMany.mockResolvedValue([{ ...ligneExercice, statut: "a_planifier", datePrevue: jour("2026-07-01") }]);
+    const texte = await outil("verifications").executer(ctx, {});
+    const ligne = texte.split("\n").find((l) => l.includes("exercices d'évacuation"))!;
+    expect(ligne).toContain("sans échéance connue");
+    expect(ligne).not.toContain("due, jamais réalisée");
+    expect(ligne.match(/à confirmer/g)).toHaveLength(1);
+    expect(texte).toContain("aucune en retard");
+  });
+
   it("muet, échue : « à confirmer », aucune en retard", async () => {
     prismaMock.etablissement.findFirst.mockResolvedValue(bureauMuet);
     prismaMock.verification.findMany.mockResolvedValue([exerciceEchu]);
@@ -1096,8 +1110,9 @@ describe("formulations relevées depuis claude.ai (2026-11-23)", () => {
     expect(depuisLe(0)).toBe("aujourd'hui");
     expect(depuisLe(1)).toBe("hier");
     expect(depuisLe(9)).toBe("il y a 9 jours");
-    expect(depuisLe(14)).toBe("il y a 14 jours");
-    expect(depuisLe(15)).toBe("il y a 1 mois");
+    expect(depuisLe(15)).toBe("il y a 15 jours");
+    expect(depuisLe(29)).toBe("il y a 29 jours");
+    expect(depuisLe(30)).toBe("il y a 1 mois");
     expect(depuisLe(400)).toBe("il y a 13 mois");
   });
 });

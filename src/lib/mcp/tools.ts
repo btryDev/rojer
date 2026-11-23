@@ -88,7 +88,9 @@ import {
  * demandée ici : restituer ce que les outils rendent, et signaler comme
  * sienne toute lecture qui va au-delà.
  */
-export const CONSIGNE_SERVEUR = `Ce serveur donne accès en lecture au dossier de conformité santé-sécurité d'un établissement, tenu dans Rojer.
+// ~~« au dossier […] d'un établissement »~~ [2026-11-23 : depuis l'ADR-062,
+// le jeton porte un compte, qui suit un ou plusieurs établissements.]
+export const CONSIGNE_SERVEUR = `Ce serveur donne accès en lecture aux dossiers de conformité santé-sécurité d'un compte Rojer, qui suit un ou plusieurs établissements. L'outil \`etablissements\` les liste.
 
 Restitue ce que les outils rendent, sans le compléter.
 
@@ -534,15 +536,16 @@ const LIBELLE_ETAT: Record<VerificationLue["etat"], string> = {
 };
 
 /**
- * L'ancienneté d'une version, dite comme on la lit : en jours sous le mois
- * (« il y a 0 mois », relevé le 2026-11-23 depuis claude.ai), en mois
- * au-delà — le même arrondi que le tableau de bord (`ageEnMois`).
+ * L'ancienneté d'une version, dite comme on la lit : en jours sous trente
+ * (« il y a 0 mois », relevé le 2026-11-23 depuis claude.ai ; l'arrondi du
+ * tableau de bord aurait dit « 1 mois » à quinze jours), en mois au-delà,
+ * avec ce même arrondi (`ageEnMois`).
  */
 export function depuisLe(ageJours: number): string {
-  const mois = ageEnMois(ageJours);
-  if (mois > 0) return `il y a ${mois} mois`;
   if (ageJours <= 0) return "aujourd'hui";
-  return ageJours === 1 ? "hier" : `il y a ${ageJours} jours`;
+  if (ageJours === 1) return "hier";
+  if (ageJours < 30) return `il y a ${ageJours} jours`;
+  return `il y a ${ageEnMois(ageJours)} mois`;
 }
 
 function formaterVerifications(verifs: VerificationLue[], filtre = true): string {
@@ -593,7 +596,9 @@ function formaterVerifications(verifs: VerificationLue[], filtre = true): string
           // [2026-11-23, relevé depuis claude.ai : « sans échéance connue, en
           // retard » se contredisait.] Une ligne due et jamais faite est en
           // retard dès sa création : la phrase de la description de l'outil.
-          : v.etat === "en_retard" || v.etat === "a_confirmer"
+          // EN RETARD seulement : « à confirmer » dit qu'elle n'est peut-être
+          // pas due ; et jamais quand un rapport est consigné.
+          : v.etat === "en_retard" && !v.derniereRealisation
             ? "due, jamais réalisée"
             : LIBELLE_SANS_ECHEANCE.toLowerCase(),
       // « à confirmer » une seule fois : la mention qui suit le redit avec
