@@ -68,19 +68,26 @@ export function jetonPorteur(request: Request): string | null {
   return m ? m[1] : null;
 }
 
-/** Les claims utiles, ou `null` s'il en manque un. */
 /**
- * Le consentement vaut-il pour ce jeton ? Il existe, et le jeton n'est pas
- * plus ancien que lui : `iat` est en secondes arrondies à l'inférieur, d'où
- * la seconde de marge — le jeton est émis après le consentement, au plus tôt
- * dans la même seconde. Sans `iat` lisible, le jeton est refusé.
+ * Le consentement vaut-il pour ce jeton ? Il existe, il est daté, et le jeton
+ * n'est pas plus ancien que lui. Sans marge : le fournisseur date le
+ * consentement à la seconde entière (`new Date(iat * 1e3)`, oauth-provider
+ * 1.7.27), comme l'`iat` du jeton, émis après lui — une seconde de marge
+ * laissait revivre un jeton d'avant un retrait suivi d'un rebranchement dans
+ * la seconde (relecture du 2026-11-23). Tout doute refuse : pas d'`iat`
+ * lisible, pas de date de consentement.
+ *
+ * Suppose une seule horloge entre le consentement et le jeton : vrai tant que
+ * l'application tourne sur une instance. Sur plusieurs, un écart d'horloge
+ * refuserait un jeton tout neuf — à revoir avant de passer à l'échelle.
  */
 export function consentementValable(consentement: { createdAt: Date | null } | null, iat: unknown): boolean {
-  if (!consentement) return false;
+  if (!consentement?.createdAt) return false;
   if (typeof iat !== "number" || !Number.isFinite(iat)) return false;
-  return !consentement.createdAt || consentement.createdAt.getTime() <= (iat + 1) * 1000;
+  return consentement.createdAt.getTime() <= iat * 1000;
 }
 
+/** Les claims utiles, ou `null` s'il en manque un. */
 export function claimsDuPorteur(claims: JWTPayload): { userId: string; compteId: string; clientId: string } | null {
   const userId = typeof claims.sub === "string" ? claims.sub : null;
   const compteId = typeof claims[CLAIM_COMPTE] === "string" ? (claims[CLAIM_COMPTE] as string) : null;
@@ -156,6 +163,10 @@ export async function resoudrePorteur(request: Request, ressource: string): Prom
       where: { compteId_userId: { compteId: lus.compteId, userId: lus.userId } },
       select: { role: true },
     }),
+    // Le fournisseur n'en garde qu'un par client, personne et compte (il met
+    // à jour l'existant) ; le tri ne sert que si cela changeait. Un client
+    // dispensé de consentement (`skipConsent`, qu'aucun n'a : la DCR
+    // l'interdit) serait refusé ici.
     prisma.oauthConsent.findFirst({
       where: { clientId: lus.clientId, userId: lus.userId, referenceId: lus.compteId },
       select: { createdAt: true },

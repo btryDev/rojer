@@ -73,8 +73,10 @@ Règle 13 du CLAUDE.md : la prémisse tombée rouvre la décision, et l'option
   `postLogin` + `consentReferenceId` lient le consentement à une
   organisation (notre `Compte`). **Écart connu de la 1.7** : un JWT signé par
   les clés du fournisseur et portant `azp` et une audience admise passe pour
-  un jeton d'accès ; il faut exiger `typ: "at+jwt"` explicitement. Un JWT
-  d'accès ne se révoque pas : il vit jusqu'à son expiration.
+  un jeton d'accès ; il faut exiger `typ: "at+jwt"` explicitement. ~~Un JWT
+  d'accès ne se révoque pas : il vit jusqu'à son expiration.~~ [2026-11-23 :
+  le fournisseur ne le révoque pas, mais `/api/mcp` relit son consentement à
+  chaque requête — § 8.]
 - **Versions** : `@better-auth/mcp`, `@better-auth/cimd` et
   `@better-auth/oauth-provider` 1.7.27 exigent `better-auth ^1.7.27` ; nous
   sommes en 1.7.14. `@modelcontextprotocol/server` 2.4.0 sert jusqu'à
@@ -199,7 +201,8 @@ l'argument.
 
 ### 6. Durées
 
-- Jeton d'accès : **15 minutes** (non révocable : court ; Claude le
+- Jeton d'accès : **15 minutes** (~~non révocable~~ [2026-11-23 : refusé dès
+  le retrait, § 8] : court ; Claude le
   rafraîchit avant l'expiration).
 - Jeton de rafraîchissement : **30 jours** glissants, rotation à chaque
   usage ; fenêtre de réutilisation laissée au défaut de `mcp()` (30 s), pour
@@ -316,8 +319,10 @@ un jeton émis avant un retrait ne revit pas au rebranchement.]
 - Négatives : une route HTTP de Better Auth à surveiller (d'où la liste
   blanche et sa garde) ; une montée de version de Better Auth à relire ;
   sept tables de plus, à couvrir par les gardes RLS et de portée ; DCR
-  ouverte (bornée par les adresses de retour et la limite de débit) ; un
-  JWT d'accès vit 15 minutes après un retrait.
+  ouverte (bornée par les adresses de retour et la limite de débit) ; ~~un
+  JWT d'accès vit 15 minutes après un retrait~~ [2026-11-23 : corrigé, § 8 —
+  au prix d'une lecture du consentement par requête, en parallèle des deux
+  autres (§ 9), et d'une seule horloge supposée entre consentement et jeton].
 - Coût de rétractation : moyen. Les outils et les gardes de transport ne
   dépendent pas du mode d'authentification ; revenir en arrière retire des
   plugins, une route et des tables.

@@ -174,9 +174,14 @@ describe("le consentement qui a émis le jeton (retrait immédiat, 2026-11-23)",
     expect(r.statut === "reponse" && r.reponse.status).toBe(401);
   });
 
-  it("consentement et jeton dans la même seconde : servi (iat est arrondi à l'inférieur)", () => {
-    expect(consentementValable({ createdAt: new Date(IAT * 1000 + 700) }, IAT)).toBe(true);
-    expect(consentementValable({ createdAt: new Date((IAT + 2) * 1000) }, IAT)).toBe(false);
+  it("consentement et jeton dans la même seconde : servi ; la seconde suivante : refusé, sans marge", () => {
+    // Le fournisseur date le consentement à la seconde entière.
+    expect(consentementValable({ createdAt: new Date(IAT * 1000) }, IAT)).toBe(true);
+    expect(consentementValable({ createdAt: new Date((IAT + 1) * 1000) }, IAT)).toBe(false);
+  });
+
+  it("consentement sans date : refusé — tout doute refuse", () => {
+    expect(consentementValable({ createdAt: null }, IAT)).toBe(false);
   });
 
   it("sans iat lisible : refusé", () => {
