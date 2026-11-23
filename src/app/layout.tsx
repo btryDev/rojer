@@ -10,7 +10,7 @@ import { publicAppUrl, refusUrlPublique } from "@/lib/url-publique";
 // et malin pour le référencement »). Les mots qu'un dirigeant tape — DUERP,
 // registre de sécurité — d'abord, en moins de 60 signes ; la description dit
 // le reste en moins de 160, sans jamais promettre la conformité (règle 8).
-const TITRE = "Rojer — Logiciel DUERP et registre de sécurité pour TPE-PME";
+const TITRE = "Rojer — DUERP et registre de sécurité pour TPE-PME";
 const DESCRIPTION =
   "Rojer tient à jour la prévention de votre entreprise : DUERP, vérifications périodiques, registre de sécurité, plan d'actions. Sources Légifrance à l'appui.";
 
