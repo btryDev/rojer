@@ -18,7 +18,11 @@ export const EDITEUR = {
   denomination: "BTRY",
   forme: "société à responsabilité limitée (SARL)",
   capital: "4\u00a0000\u00a0€",
-  siege: "301 avenue du Pascalet, ZA de la Montée Rouge, 30310 Vergèze, France",
+  // [2026-11-23 : siège donné par la propriétaire ; il était « 301 avenue
+  // du Pascalet, ZA de la Montée Rouge, 30310 Vergèze, France », repris des
+  // textes de RiskBoard. À confirmer : le greffe (RCS) et le SIRET, qui
+  // suivent normalement le siège.]
+  siege: "C/O Guya Call, Bâtiment Horizon, Boîte 4, rue de l'Astrolabe, 97354 Remire-Montjoly, Guyane",
   rcs: "RCS Nîmes 934\u00a0765\u00a0769",
   siret: "934\u00a0765\u00a0769\u00a000021",
   tva: "FR62934765769",
