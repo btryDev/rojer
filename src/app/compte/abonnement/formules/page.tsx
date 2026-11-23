@@ -36,6 +36,7 @@ import { PAGE_PAIEMENT } from "@/lib/abonnements/sous-pages";
 import { abonnementEnCours, essaiProche, finPrevueDe } from "@/lib/abonnements/droits";
 import { GESTE_DU_PORTAIL, type VueAbonnement } from "@/lib/abonnements/vue-abonnement";
 import { formaterDateLongueFr } from "@/lib/dates";
+import { demandeDuCompte, PAGE_SUPPRESSION } from "@/lib/compte/suppression";
 import { clientStripeLecture } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
 import { baissePrevue, prixDesFormules } from "@/lib/stripe/parcours";
@@ -70,13 +71,17 @@ export default async function FormulesPage({ searchParams }: { searchParams: Pro
   // `Object.hasOwn` et non `in` : `?formule=toString` ne doit pas trouver le prototype.
   const refus = refus0 && Object.hasOwn(REFUS, refus0) ? REFUS[refus0 as keyof typeof REFUS] : null;
   const { c, compteId, ligne, vue, formule, phase, ctx } = await etatDeLAbonnement();
+  // Une suppression demandée ferme tous les gestes d'abonnement (ADR-058 § 8,
+  // `clientDuCompte`) : la page ne les propose pas, et dit pourquoi
+  // (essai local du 2026-11-23 : les boutons restaient, refusés au clic).
+  const suppression = compteId ? await demandeDuCompte(compteId) : null;
   const finEssai = phase.type === "essai" ? phase.fin : null;
   // La formule d'un abonnement qui court, et lui seul — jamais un essai (sa
   // formule est `FORMULE_D_ESSAI`), ni un abonnement terminé (relecture du
   // 2026-11-17).
   const actuelle = !finEssai && ligne && abonnementEnCours(ligne.statut) ? ligne.formule : null;
   // Changer de formule, ou résilier : un abonnement payé et à jour.
-  const paye = vue.cas === "portail" && vue.situation === "a-jour" && ligne?.statut === "active" && c ? { ligne, c } : null;
+  const paye = !suppression && vue.cas === "portail" && vue.situation === "a-jour" && ligne?.statut === "active" && c ? { ligne, c } : null;
   // Le rythme montré d'abord, le même pour le repli et pour les cartes :
   // l'offre choisie sur la page publique, sinon celui de l'abonnement.
   const offreChoisie = vue.cas === "formulaire" ? await lireOffreChoisie() : null;
@@ -84,8 +89,9 @@ export default async function FormulesPage({ searchParams }: { searchParams: Pro
   const enEssai = finEssai ? FORMULE_D_ESSAI : null;
   const sansGeste = <Cartes actuelle={actuelle} enEssai={enEssai} periodeInitiale={periodeInitiale} />;
 
+  // Une suppression demandée : les cartes, sans geste ; la carte de la suppression dit pourquoi.
   let cartes: ReactNode = sansGeste;
-  if (vue.cas === "formulaire") {
+  if (!suppression && vue.cas === "formulaire") {
     cartes = (
       <Suspense fallback={sansGeste}>
         <CartesPourSAbonner compteId={compteId} finEssai={finEssai} maintenant={ctx.maintenant} periodeInitiale={periodeInitiale} />
@@ -116,7 +122,19 @@ export default async function FormulesPage({ searchParams }: { searchParams: Pro
     >
       <MessageFormulaire ton="alerte">{refus}</MessageFormulaire>
       {vue.cas === "fermee" ? <OffreFermee /> : null}
-      {vue.cas !== "fermee" && vue.cas !== "formulaire" && !paye ? (
+      {suppression ? (
+        <CarteAbonnement>
+          <div className="flex flex-col items-start gap-5">
+            <p className={TEXTE_AIDE}>
+              La suppression de ce compte est prévue le {formaterDateLongueFr(suppression.effacementLe)}&nbsp;: d&apos;ici là, la formule ne
+              se change pas et l&apos;abonnement ne se gère pas. Annulez d&apos;abord la suppression pour le faire.
+            </p>
+            <Link href={PAGE_SUPPRESSION} className={buttonVariants({ variant: "board", size: "board" })}>
+              Voir la suppression
+            </Link>
+          </div>
+        </CarteAbonnement>
+      ) : vue.cas !== "fermee" && vue.cas !== "formulaire" && !paye ? (
         <CarteAbonnement>
           <RienAChanger vue={vue} />
         </CarteAbonnement>
@@ -131,7 +149,7 @@ export default async function FormulesPage({ searchParams }: { searchParams: Pro
         <Suspense fallback={null}>
           <ResiliationDuPaye compteId={compteId} finPeriode={paye.ligne.finPeriode} subscriptionId={paye.ligne.stripeSubscriptionId} />
         </Suspense>
-      ) : vue.cas === "portail" && vue.situation === "fin-prevue" && ligne ? (
+      ) : !suppression && vue.cas === "portail" && vue.situation === "fin-prevue" && ligne ? (
         <Resiliation situation="fin-prevue" compteId={compteId} finPeriode={finPrevueDe(ligne)} baissePrevue={false} />
       ) : null}
     </PageDuCompte>
