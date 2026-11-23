@@ -13,7 +13,7 @@ import { entetesDeSession, lireSessionCourante, requireUser } from "@/lib/auth/r
 import { MESSAGE_CONNECTEUR_PRO } from "@/lib/abonnements/connecteur";
 import { compteRetenu } from "@/lib/mcp/compte-oauth";
 import { connecteurOuvertPour, outilsNonVerifiesOuverts } from "@/lib/connecteur/assistants";
-import { issueDuConsentement, niveauAdresseDeRetour } from "@/lib/mcp/oauth";
+import { issueDuConsentement, niveauDeLaDemande } from "@/lib/mcp/oauth";
 import { hoteDeRetour, requeteSigneeDeLaPage, type ParametresDePage } from "@/lib/mcp/requete-oauth";
 import { MessageFormulaire } from "@/components/ui-kit/MessageFormulaire";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,7 @@ export default async function ConsentementPage({ searchParams }: { searchParams:
   );
   // ADR-062 § 12 : le niveau se lit sur l'adresse où repart le code, jamais sur le nom.
   const adresseRetour = requete.get("redirect_uri");
-  const niveau = adresseRetour ? niveauAdresseDeRetour(adresseRetour) : "refuse";
+  const niveau = niveauDeLaDemande(adresseRetour);
   const [client, ouvert, nonVerifiesOuverts] = await Promise.all([
     auth.api
       .getOAuthClientPublic({ headers: await entetesDeSession(), query: { client_id: requete.get("client_id") ?? "" } })
@@ -45,7 +45,7 @@ export default async function ConsentementPage({ searchParams }: { searchParams:
     // Le réglage ne compte que pour un outil non vérifié.
     niveau === "non_verifie" ? outilsNonVerifiesOuverts(compteId) : false,
   ]);
-  const issue = issueDuConsentement(adresseRetour, nonVerifiesOuverts);
+  const issue = issueDuConsentement(niveau, nonVerifiesOuverts);
   const peutAutoriser = ouvert && issue !== "ferme";
   // Le nom déclaré n'est montré que pour un assistant vérifié ou local : celui
   // d'un outil non vérifié peut imiter un autre (homoglyphes, « Cl4ude »), et
@@ -64,7 +64,7 @@ export default async function ConsentementPage({ searchParams }: { searchParams:
           {`Cet outil n'est pas vérifié par Rojer, et le compte « ${nomCompte} » n'accepte que les assistants vérifiés (Claude, ChatGPT). Le propriétaire du compte peut ouvrir les outils non vérifiés depuis « Connecter un assistant ».`}
         </MessageFormulaire>
       ) : null}
-      {issue === "confirmer" ? (
+      {peutAutoriser && issue === "confirmer" ? (
         <div className="mb-5 rounded-[18px] border-2 border-[color:var(--board-signal-ink)] bg-[color:var(--board-signal-wash)] px-5 py-4">
           <p className="m-0 text-[12px] font-semibold uppercase tracking-[0.12em] text-[color:var(--board-signal-ink)]">
             Outil non vérifié par Rojer

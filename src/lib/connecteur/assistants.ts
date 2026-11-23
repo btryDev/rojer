@@ -23,10 +23,22 @@ export async function assistantsAutorises(userId: string, compteId: string): Pro
   });
   return lignes.map((l) => ({
     id: l.id,
-    nom: l.client.name ?? "Assistant sans nom",
+    // Le nom d'un outil qui n'est pas de confiance n'est jamais montré : il
+    // peut imiter un autre (homoglyphes) ; son domaine dit où part l'accès.
+    nom: clientDeConfiance(l.client.redirectUris)
+      ? (l.client.name ?? "Assistant sans nom")
+      : `Outil non vérifié — ${hoteDe(l.client.redirectUris[0])}`,
     autoriseLe: l.updatedAt ?? l.createdAt,
     niveau: niveauDuClient(l.client.redirectUris),
   }));
+}
+
+function hoteDe(adresse: string | undefined): string {
+  try {
+    return new URL(adresse ?? "").host || "adresse inconnue";
+  } catch {
+    return "adresse inconnue";
+  }
 }
 
 /** Les outils non vérifiés peuvent-ils se connecter à ce compte ? (ADR-062 § 12, faux par défaut.) */
@@ -39,15 +51,18 @@ export async function outilsNonVerifiesOuverts(compteId: string): Promise<boolea
  * Ouvre ou ferme le compte aux outils non vérifiés (ADR-062 § 12). Le rôle
  * de propriétaire se vérifie AVANT, dans l'action : ici, le compte est celui
  * qu'elle a jugé. Fermer efface, pour tous les membres, les autorisations des
- * clients dont une adresse de retour n'est pas vérifiée — consentements et
- * jetons : `/api/mcp` relisant le consentement à chaque requête, l'accès
- * tombe tout de suite. Rend le nombre d'autorisations effacées.
+ * clients qui ne sont pas de confiance (`clientDeConfiance`) — consentements
+ * et jetons : `/api/mcp` relisant le consentement à chaque requête, l'accès
+ * tombe tout de suite. OUVRIR les efface aussi (relecture du 2026-11-23) :
+ * compte fermé, aucune n'a pu naître, sauf un consentement posé pendant la
+ * fermeture même, que la transaction n'a pas vu ; il ne revit pas à la
+ * réouverture, l'outil repasse par l'écran. Rend le nombre d'autorisations
+ * effacées.
  */
 export async function reglerOutilsNonVerifies(compteId: string, ouvert: boolean): Promise<number> {
   if (!compteId) throw new Error("réglage des outils non vérifiés sans compte");
   return prisma.$transaction(async (tx) => {
     await tx.compte.update({ where: { id: compteId }, data: { outilsNonVerifiesAutorises: ouvert } });
-    if (ouvert) return 0;
     const consentements = await tx.oauthConsent.findMany({
       where: { referenceId: compteId },
       select: { id: true, clientId: true, client: { select: { redirectUris: true } } },

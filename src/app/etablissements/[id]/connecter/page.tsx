@@ -233,7 +233,7 @@ export default async function ConnecterPage({
                 <p className="m-0 text-[14px] text-[color:var(--board-ink)]">
                   {nonVerifiesOuverts
                     ? "Les outils non vérifiés peuvent se connecter à ce compte."
-                    : "Seuls les assistants vérifiés (Claude, ChatGPT) peuvent se connecter à ce compte."}
+                    : "Seuls les assistants vérifiés (Claude, ChatGPT) et les programmes lancés sur votre ordinateur peuvent se connecter à ce compte."}
                 </p>
                 {proprietaire ? (
                   <form action={regler}>

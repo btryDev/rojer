@@ -294,11 +294,15 @@ describe.skipIf(!URL_BASE || !local)("connecteur MCP en OAuth — PostgreSQL et 
   it("fermer le compte aux outils non vérifiés efface leurs autorisations, pas celle de Claude", async () => {
     // Un consentement d'outil non vérifié posé à la main : le parcours de
     // l'écran est éprouvé par les tests de la règle (`issueDuConsentement`).
+    // Un reste d'une fermeture (course avec un consentement) : ouvrir l'efface.
     await prisma.oauthConsent.create({
       data: { clientId: outilNonVerifie, userId, referenceId: compteId, scopes: ["rojer:lecture"] },
     });
-    await reglerOutilsNonVerifies(compteId, true);
+    expect(await reglerOutilsNonVerifies(compteId, true)).toBe(1);
     expect(await outilsNonVerifiesOuverts(compteId)).toBe(true);
+    await prisma.oauthConsent.create({
+      data: { clientId: outilNonVerifie, userId, referenceId: compteId, scopes: ["rojer:lecture"] },
+    });
     expect((await assistantsAutorises(userId, compteId)).map((a) => a.niveau).sort()).toEqual(["non_verifie", "verifie"]);
 
     expect(await reglerOutilsNonVerifies(compteId, false)).toBe(1);

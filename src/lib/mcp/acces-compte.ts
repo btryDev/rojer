@@ -158,7 +158,7 @@ export async function resoudrePorteur(request: Request, ressource: string): Prom
   // compte, lus en parallèle : un aller-retour par requête (une lecture
   // imbriquée en ferait trois en série, Prisma sans jointures). Le compte et
   // le client viennent du jeton vérifié.
-  const [membre, consentement, abonnement, compte] = await Promise.all([
+  const [membre, consentement, abonnement] = await Promise.all([
     prisma.membre.findUnique({
       where: { compteId_userId: { compteId: lus.compteId, userId: lus.userId } },
       select: { role: true },
@@ -173,11 +173,6 @@ export async function resoudrePorteur(request: Request, ressource: string): Prom
       orderBy: { createdAt: "desc" },
     }),
     prisma.abonnement.findUnique({ where: { compteId: lus.compteId }, select: { statut: true, formule: true } }),
-    // ADR-062 § 12 : un outil non vérifié n'est servi que si le compte l'admet
-    // encore — relu ici, et pas seulement au consentement : un consentement
-    // posé pendant que le propriétaire fermait, ou un retour en Pro après une
-    // fermeture, ne rouvre rien.
-    prisma.compte.findUnique({ where: { id: lus.compteId }, select: { outilsNonVerifiesAutorises: true } }),
   ]);
   if (!membre || !estRole(membre.role)) {
     return {
@@ -191,7 +186,16 @@ export async function resoudrePorteur(request: Request, ressource: string): Prom
       reponse: refusJetonInvalide(ressource, "L'accès de cet assistant a été retiré : reconnectez-le depuis l'assistant."),
     };
   }
-  if (!clientDeConfiance(consentement?.client.redirectUris ?? []) && compte?.outilsNonVerifiesAutorises !== true) {
+  // ADR-062 § 12 : un outil qui n'est pas de confiance n'est servi que si le
+  // compte l'admet encore — relu ici, et pas seulement au consentement : un
+  // consentement posé pendant que le propriétaire fermait, ou un retour en Pro
+  // après une fermeture, ne rouvre rien. Lu seulement pour lui : Claude et
+  // ChatGPT n'en paient pas la requête.
+  if (
+    !clientDeConfiance(consentement?.client.redirectUris ?? []) &&
+    (await prisma.compte.findUnique({ where: { id: lus.compteId }, select: { outilsNonVerifiesAutorises: true } }))
+      ?.outilsNonVerifiesAutorises !== true
+  ) {
     return {
       statut: "reponse",
       reponse: refusJetonInvalide(ressource, "Ce compte n'accepte plus les outils non vérifiés par Rojer."),

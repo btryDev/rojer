@@ -13,7 +13,7 @@ import { comptesDeLaPersonne } from "@/lib/auth/membres";
 import { entetesDeSession, lireSessionCourante } from "@/lib/auth/require-user";
 import { compteDuConsentement } from "@/lib/mcp/compte-oauth";
 import { connecteurOuvertPour, outilsNonVerifiesOuverts } from "@/lib/connecteur/assistants";
-import { issueDuConsentement } from "@/lib/mcp/oauth";
+import { issueDuConsentement, niveauDeLaDemande } from "@/lib/mcp/oauth";
 
 const texte = (formData: FormData, nom: string) => String(formData.get(nom) ?? "");
 
@@ -60,7 +60,7 @@ export async function repondreConsentement(formData: FormData): Promise<void> {
   // un outil non vérifié n'est accepté que si le compte l'a ouvert ET que la
   // case est cochée. Le fournisseur revérifie la signature de la demande.
   const [ouvert, nonVerifiesOuverts] = await Promise.all([connecteurOuvertPour(compteId), outilsNonVerifiesOuverts(compteId)]);
-  const issue = issueDuConsentement(new URLSearchParams(oauthQuery).get("redirect_uri"), nonVerifiesOuverts);
+  const issue = issueDuConsentement(niveauDeLaDemande(new URLSearchParams(oauthQuery).get("redirect_uri")), nonVerifiesOuverts);
   const accepte =
     texte(formData, "reponse") === "accepter" &&
     ouvert &&

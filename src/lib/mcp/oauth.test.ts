@@ -5,6 +5,7 @@ import {
   estCheminAuthServi,
   estDocumentCimdAdmis,
   issueDuConsentement,
+  niveauDeLaDemande,
   niveauAdresseDeRetour,
   niveauDuClient,
   nomReserve,
@@ -43,6 +44,9 @@ describe("niveauAdresseDeRetour — trois niveaux de confiance (ADR-062 § 12)",
     "https://chatgpt.com/connector/oauth/",
     "https://chatgpt.com/connector/oauth/abc/../../autre",
     "https://chatgpt.com/connector/oauth/abc/suite",
+    // Le préfixe sans identifiant, ou suivi d'une requête ou d'un fragment.
+    "https://chatgpt.com/connector/oauth/?a=b",
+    "https://chatgpt.com/connector/oauth/abc?a=b",
     "https://n8n.exemple.fr/rest/oauth2-credential/callback",
     "https://localhost/callback",
   ])("non vérifiée : %s", (a) => expect(niveauAdresseDeRetour(a)).toBe("non_verifie"));
@@ -111,17 +115,18 @@ describe("nomReserve — un nom ne fait pas un vérifié", () => {
 });
 
 describe("issueDuConsentement — ce que l'écran permet", () => {
+  const issue = (a: string | null, ouvert: boolean) => issueDuConsentement(niveauDeLaDemande(a), ouvert);
   it("vérifié ou local : autoriser, quel que soit le réglage", () => {
-    expect(issueDuConsentement("https://claude.ai/api/mcp/auth_callback", false)).toBe("autoriser");
-    expect(issueDuConsentement("http://localhost:3000/cb", false)).toBe("autoriser");
+    expect(issue("https://claude.ai/api/mcp/auth_callback", false)).toBe("autoriser");
+    expect(issue("http://localhost:3000/cb", false)).toBe("autoriser");
   });
   it("non vérifié : fermé par défaut, à confirmer si le compte l'a ouvert", () => {
-    expect(issueDuConsentement("https://n8n.exemple.fr/cb", false)).toBe("ferme");
-    expect(issueDuConsentement("https://n8n.exemple.fr/cb", true)).toBe("confirmer");
+    expect(issue("https://n8n.exemple.fr/cb", false)).toBe("ferme");
+    expect(issue("https://n8n.exemple.fr/cb", true)).toBe("confirmer");
   });
   it("adresse absente ou refusée : fermé, même ouvert", () => {
-    expect(issueDuConsentement(null, true)).toBe("ferme");
-    expect(issueDuConsentement("http://evil.example/cb", true)).toBe("ferme");
+    expect(issue(null, true)).toBe("ferme");
+    expect(issue("http://evil.example/cb", true)).toBe("ferme");
   });
 });
 

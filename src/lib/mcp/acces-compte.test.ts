@@ -59,6 +59,7 @@ beforeEach(() => {
     .mockReset()
     .mockResolvedValue({ createdAt: new Date((IAT - 60) * 1000), client: { redirectUris: ["https://claude.ai/api/mcp/auth_callback"] } });
   h.compte.mockReset().mockResolvedValue({ outilsNonVerifiesAutorises: false });
+  // (Lu seulement pour un client qui n'est pas de confiance.)
   h.abonnement.mockReset().mockResolvedValue(pro);
 });
 
@@ -213,7 +214,8 @@ describe("un outil non vérifié n'est servi que sur un compte qui l'admet encor
     expect((await resoudrePorteur(requete(jeton("at+jwt")), RESSOURCE)).statut).toBe("ok");
   });
 
-  it("un assistant vérifié reste servi sur un compte fermé aux non vérifiés", async () => {
+  it("un assistant vérifié reste servi sur un compte fermé aux non vérifiés, sans lire le réglage", async () => {
     expect((await resoudrePorteur(requete(jeton("at+jwt")), RESSOURCE)).statut).toBe("ok");
+    expect(h.compte).not.toHaveBeenCalled();
   });
 });

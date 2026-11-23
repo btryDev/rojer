@@ -83,8 +83,9 @@ export function niveauAdresseDeRetour(adresse: string): NiveauDeConfiance {
   if (url.protocol === "http:") return BOUCLE_LOCALE_RETOUR.has(url.hostname) ? "local" : "refuse";
   if (url.protocol !== "https:" || url.hostname === "") return "refuse";
   // Le préfixe se compare sur l'adresse relue (chemin normalisé), suivi d'un identifiant.
+  // Suivi d'un identifiant, et de rien d'autre : ni chemin, ni requête (relecture du 2026-11-23).
   const relue = url.href;
-  if (PREFIXES_VERIFIES.some((p) => relue.startsWith(p) && relue.length > p.length && !relue.slice(p.length).includes("/"))) {
+  if (PREFIXES_VERIFIES.some((p) => relue.startsWith(p) && /^[A-Za-z0-9_-]+$/.test(relue.slice(p.length)))) {
     return "verifie";
   }
   return "non_verifie";
@@ -214,8 +215,12 @@ export function estCheminAuthServi(pathname: string): boolean {
  */
 export type IssueDuConsentement = "autoriser" | "confirmer" | "ferme";
 
-export function issueDuConsentement(adresseRetour: string | null, outilsNonVerifiesOuverts: boolean): IssueDuConsentement {
-  const niveau = adresseRetour ? niveauAdresseDeRetour(adresseRetour) : "refuse";
+/** Le niveau de l'adresse de retour d'une demande (`refuse` si elle manque). */
+export function niveauDeLaDemande(adresseRetour: string | null): NiveauDeConfiance {
+  return adresseRetour ? niveauAdresseDeRetour(adresseRetour) : "refuse";
+}
+
+export function issueDuConsentement(niveau: NiveauDeConfiance, outilsNonVerifiesOuverts: boolean): IssueDuConsentement {
   if (niveau === "verifie" || niveau === "local") return "autoriser";
   if (niveau === "non_verifie" && outilsNonVerifiesOuverts) return "confirmer";
   return "ferme";

@@ -359,6 +359,18 @@ publique du protocole MCP).
   non vérifiés dont un seul est affiché. Vérifiée par l'enregistrement ET à
   chaque autorisation (`validateRedirectUri`, qui voit aussi les clients
   CIMD). Les documents CIMD ne se lisent que sur des hôtes exacts.
+- **Risque accepté — les adresses partagées des assistants vérifiés**
+  (revue de sécurité du 2026-11-23). L'adresse de retour de Claude, comme
+  celle de ChatGPT, est commune à tous leurs utilisateurs : un tiers peut
+  créer son propre connecteur vers Rojer et faire suivre le lien
+  d'autorisation ; l'écran est alors celui d'un vérifié, sans encadré. Le
+  code repart chez Claude ou ChatGPT, qui doivent rejeter un retour dont
+  leur session n'a pas lancé la demande (paramètre `state`) : la protection
+  est la leur. Le risque existait pour Claude avant le § 12 ; ChatGPT
+  l'étend. L'écran le borne en nommant l'adresse de retour (« si ce n'est
+  pas l'assistant que vous venez d'utiliser, refusez »).
+- **Le nom d'un outil non vérifié n'est jamais affiché** — ni à l'écran de
+  consentement ni dans la liste des assistants : son domaine en tient lieu.
 - **Un nom ne fait pas un vérifié** : un client dont une adresse n'est pas
   vérifiée ne peut pas s'appeler comme un assistant vérifié ou comme Rojer
   (« Claude », « Anthropic », « ChatGPT », « OpenAI », « Rojer ») — refusé à
