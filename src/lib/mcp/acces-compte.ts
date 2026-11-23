@@ -29,7 +29,7 @@ import { connecteurOuvert } from "@/lib/abonnements/connecteur";
 import { prisma } from "@/lib/prisma";
 import { CLAIM_COMPTE } from "./compte-oauth";
 import { getOAuthProtectedResourceMetadataUrl } from "@modelcontextprotocol/server";
-import { niveauDuClient, PORTEE_LECTURE } from "./oauth";
+import { clientDeConfiance, PORTEE_LECTURE } from "./oauth";
 
 /** Les claims d'un jeton vérifié (`jose` n'est pas une dépendance directe). */
 type JWTPayload = Record<string, unknown>;
@@ -191,7 +191,7 @@ export async function resoudrePorteur(request: Request, ressource: string): Prom
       reponse: refusJetonInvalide(ressource, "L'accès de cet assistant a été retiré : reconnectez-le depuis l'assistant."),
     };
   }
-  if (niveauDuClient(consentement?.client.redirectUris ?? []) === "non_verifie" && compte?.outilsNonVerifiesAutorises !== true) {
+  if (!clientDeConfiance(consentement?.client.redirectUris ?? []) && compte?.outilsNonVerifiesAutorises !== true) {
     return {
       statut: "reponse",
       reponse: refusJetonInvalide(ressource, "Ce compte n'accepte plus les outils non vérifiés par Rojer."),

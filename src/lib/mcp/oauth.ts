@@ -97,6 +97,18 @@ export function estAdresseDeRetourAdmise(adresse: string): boolean {
 
 const RANG: Record<NiveauDeConfiance, number> = { verifie: 0, local: 1, non_verifie: 2, refuse: 3 };
 
+/**
+ * Un client de confiance : toutes ses adresses vérifiées ou locales. Tout le
+ * reste — non vérifié, et même refusé, qu'aucune voie ne laisse entrer
+ * aujourd'hui — se traite comme non vérifié (revue de sécurité du
+ * 2026-11-23 : une règle qui ne vise que `non_verifie` laisserait passer un
+ * client qu'une voie future ferait entrer).
+ */
+export function clientDeConfiance(adresses: readonly string[]): boolean {
+  const niveau = niveauDuClient(adresses);
+  return niveau === "verifie" || niveau === "local";
+}
+
 /** Le niveau d'un client : celui de la moins sûre de ses adresses de retour (aucune : refusé). */
 export function niveauDuClient(adresses: readonly string[]): NiveauDeConfiance {
   if (adresses.length === 0) return "refuse";

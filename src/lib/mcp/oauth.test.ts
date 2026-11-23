@@ -10,6 +10,7 @@ import {
   nomReserve,
   ressourceMcp,
   adressesDUnSeulTenant,
+  clientDeConfiance,
 } from "./oauth";
 import { requeteARejouer } from "./reprise-oauth";
 
@@ -86,6 +87,18 @@ describe("adressesDUnSeulTenant — une adresse non vérifiée ne se mêle à ri
   it("non vérifiée avec une vérifiée ou une locale : refusé — le consentement de l'une servirait l'autre", () => {
     expect(adressesDUnSeulTenant(["https://claude.ai/api/mcp/auth_callback", "https://evil.example/cb"])).toBe(false);
     expect(adressesDUnSeulTenant(["http://localhost:3000/cb", "https://evil.example/cb"])).toBe(false);
+  });
+});
+
+describe("clientDeConfiance — vérifié ou local, et rien d'autre", () => {
+  it("vérifié, local, les deux : de confiance", () => {
+    expect(clientDeConfiance(["https://claude.ai/api/mcp/auth_callback"])).toBe(true);
+    expect(clientDeConfiance(["https://claude.ai/api/mcp/auth_callback", "http://localhost/cb"])).toBe(true);
+  });
+  it("non vérifié, refusé mêlé, aucune adresse : pas de confiance", () => {
+    expect(clientDeConfiance(["https://n8n.exemple/cb"])).toBe(false);
+    expect(clientDeConfiance(["https://claude.ai/api/mcp/auth_callback", "monapp://cb"])).toBe(false);
+    expect(clientDeConfiance([])).toBe(false);
   });
 });
 

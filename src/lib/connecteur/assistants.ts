@@ -10,7 +10,7 @@ import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { connecteurOuvert } from "@/lib/abonnements/connecteur";
-import { niveauDuClient, type NiveauDeConfiance } from "@/lib/mcp/oauth";
+import { clientDeConfiance, niveauDuClient, type NiveauDeConfiance } from "@/lib/mcp/oauth";
 
 export type AssistantAutorise = { id: string; nom: string; autoriseLe: Date | null; niveau: NiveauDeConfiance };
 
@@ -52,7 +52,7 @@ export async function reglerOutilsNonVerifies(compteId: string, ouvert: boolean)
       where: { referenceId: compteId },
       select: { id: true, clientId: true, client: { select: { redirectUris: true } } },
     });
-    const aEffacer = consentements.filter((c) => niveauDuClient(c.client.redirectUris) === "non_verifie");
+    const aEffacer = consentements.filter((c) => !clientDeConfiance(c.client.redirectUris));
     if (aEffacer.length === 0) return 0;
     await oublierAssistants(compteId, undefined, tx, [...new Set(aEffacer.map((c) => c.clientId))]);
     return aEffacer.length;

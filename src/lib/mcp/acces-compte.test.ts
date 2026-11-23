@@ -174,7 +174,10 @@ describe("le consentement qui a émis le jeton (retrait immédiat, 2026-11-23)",
   });
 
   it("rebranché après le retrait : un jeton émis avant le nouveau consentement ne revit pas", async () => {
-    h.consentement.mockResolvedValue({ createdAt: new Date((IAT + 120) * 1000), client: { redirectUris: [] } });
+    h.consentement.mockResolvedValue({
+      createdAt: new Date((IAT + 120) * 1000),
+      client: { redirectUris: ["https://claude.ai/api/mcp/auth_callback"] },
+    });
     const r = await resoudrePorteur(requete(jeton("at+jwt")), RESSOURCE);
     expect(r.statut === "reponse" && r.reponse.status).toBe(401);
   });
