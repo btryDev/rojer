@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LIBELLE_CATEGORIE } from "./tools";
+import { LABEL_STATUT_POINT } from "@/lib/points-a-corriger/libelles";
 import { CATEGORIES_EQUIPEMENT } from "@/lib/referentiels/types-communs";
 
 /**
@@ -307,7 +308,7 @@ describe("plan d'actions", () => {
     echeance: jour("2026-08-01"),
     risqueId: "risq_1",
     verificationId: null,
-    risque: { libelle: "Chute dans l'escalier" },
+    risque: { libelle: "Chute dans l'escalier", unite: { nom: "Salle" } },
     verification: null,
     ...over,
   });
@@ -323,7 +324,37 @@ describe("plan d'actions", () => {
 
     expect(texte).toContain("2 action(s), dont 1 en retard.");
     expect(texte).toContain("Poser une main courante");
-    expect(texte).toContain("origine DUERP : Chute dans l'escalier");
+    expect(texte).toContain("origine DUERP : Chute dans l'escalier (unité « Salle »)");
+  });
+
+  it("une action du DUERP nomme l'unité de son risque : deux unités, deux lignes distinctes", async () => {
+    prismaMock.action.findMany.mockResolvedValue([
+      action({ risque: { libelle: "Chute", unite: { nom: "Cuisine" } } }),
+      action({ risque: { libelle: "Chute", unite: { nom: "Salle" } } }),
+      action({ risque: { libelle: "Bruit", unite: { nom: "Risques transverses", estTransverse: true } } }),
+    ]);
+
+    const texte = await outil("plan_actions").executer(ctx, {});
+
+    expect(texte).toContain("origine DUERP : Chute (unité « Cuisine »)");
+    expect(texte).toContain("origine DUERP : Chute (unité « Salle »)");
+    // La forme de `etat_duerp` pour l'unité transverse.
+    expect(texte).toContain("origine DUERP : Bruit (unité « Risques transverses (transverse) »)");
+  });
+
+  it("le statut se dit avec le mot de l'écran, pas la valeur de l'énumération", async () => {
+    prismaMock.action.findMany.mockResolvedValue([action({ statut: "levee" }), action({ statut: "en_cours" })]);
+
+    const texte = await outil("plan_actions").executer(ctx, {});
+
+    expect(texte).toContain("statut levée");
+    expect(texte).toContain("statut en cours");
+    // Un point né d'un rapport : les mots du point (`BadgeStatutAction`).
+    prismaMock.action.findMany.mockResolvedValue([
+      action({ statut: "levee", risqueId: null, risque: null, verificationId: "v1", verification: { libelleObligation: "Extincteurs" } }),
+    ]);
+    expect(await outil("plan_actions").executer(ctx, {})).toContain(`statut ${LABEL_STATUT_POINT.levee.toLowerCase()}`);
+    expect(texte).not.toMatch(/statut (levee|en_cours)\b/);
   });
 
   it("filtre les actions en retard après évaluation, pas en SQL", async () => {
@@ -499,7 +530,12 @@ describe("équipements et calendrier", () => {
     // un `toContain("en retard")` sur le texte entier.
     const ligne = texte.split("\n").find((l) => l.startsWith("•")) ?? "";
     expect(ligne).toContain("en retard");
-    expect(ligne).toContain("sans échéance connue");
+    // ~~« sans échéance connue »~~ [2026-11-23 : se contredisait avec « en
+    // retard », relevé depuis claude.ai.]
+    expect(ligne).toContain("aucune vérification enregistrée");
+    // Ni un fait que Rojer ne détient pas, ni une qualification.
+    expect(ligne).not.toMatch(/due|jamais/);
+    expect(ligne).not.toContain("sans échéance connue");
     expect(ligne).not.toContain("jour(s) de retard");
     expect(ligne).not.toContain("01/07/2026");
   });
@@ -872,12 +908,29 @@ describe("une ligne retenue par prudence le dit à l'assistant (2026-09-27)", ()
   // Éprouvé en rendant « en_retard » sans lire la prudence dans `etatDe`.
   const exerciceEchu = { ...ligneExercice, datePrevue: jour("2026-03-01") };
 
+  it("muet, à planifier : ni « due », ni « à confirmer » deux fois (2026-11-23)", async () => {
+    // Le cas relevé depuis claude.ai : exercices d'évacuation, sans échéance
+    // connue, retenus par prudence. « due, jamais réalisée » y contredirait
+    // « à confirmer » : la ligne n'est peut-être pas due.
+    prismaMock.etablissement.findFirst.mockResolvedValue(bureauMuet);
+    prismaMock.verification.findMany.mockResolvedValue([{ ...ligneExercice, statut: "a_planifier", datePrevue: jour("2026-07-01") }]);
+    const texte = await outil("verifications").executer(ctx, {});
+    const ligne = texte.split("\n").find((l) => l.includes("exercices d'évacuation"))!;
+    expect(ligne).toContain("sans échéance connue");
+    expect(ligne).not.toContain("aucune vérification enregistrée");
+    expect(ligne.match(/à confirmer/g)).toHaveLength(1);
+    expect(texte).toContain("aucune en retard");
+  });
+
   it("muet, échue : « à confirmer », aucune en retard", async () => {
     prismaMock.etablissement.findFirst.mockResolvedValue(bureauMuet);
     prismaMock.verification.findMany.mockResolvedValue([exerciceEchu]);
     const texte = await outil("verifications").executer(ctx, {});
     expect(texte).toContain("aucune en retard");
     expect(texte).not.toContain("jour(s) de retard");
+    // Une seule fois, avec sa raison (« à confirmer, à confirmer : … »,
+    // relevé le 2026-11-23 depuis claude.ai).
+    expect(texte.match(/à confirmer/g)).toHaveLength(1);
   });
 
   it("« oui » déclaré, échue : la ligne est due, et en retard", async () => {

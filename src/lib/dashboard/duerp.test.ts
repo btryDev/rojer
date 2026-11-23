@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { instantCivil } from "@/lib/dates";
-import { ageEnMois, EFFECTIF_MAJ_ANNUELLE, evaluerEtatDuerp } from "./duerp";
+import { ageEnMois, depuisLe, EFFECTIF_MAJ_ANNUELLE, evaluerEtatDuerp } from "./duerp";
 
 // 10 août 2026, 08:00 heure de Paris — le matin, moment où les anciennes
 // règles basculaient à tort en « en retard ».
@@ -127,5 +127,17 @@ describe("ageEnMois", () => {
   it("arrondit au mois le plus proche", () => {
     expect(ageEnMois(400)).toBe(13);
     expect(ageEnMois(30)).toBe(1);
+  });
+});
+
+describe("depuisLe — l'ancienneté dite (relevé depuis claude.ai, 2026-11-23)", () => {
+  it("l'ancienneté se dit en jours sous le mois, jamais « 0 mois »", () => {
+    expect(depuisLe(0)).toBe("aujourd'hui");
+    expect(depuisLe(1)).toBe("hier");
+    expect(depuisLe(9)).toBe("il y a 9 jours");
+    expect(depuisLe(15)).toBe("il y a 15 jours");
+    expect(depuisLe(29)).toBe("il y a 29 jours");
+    expect(depuisLe(30)).toBe("il y a 1 mois");
+    expect(depuisLe(400)).toBe("il y a 13 mois");
   });
 });

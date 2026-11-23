@@ -357,7 +357,7 @@ export async function listerActions(
       echeance: true,
       risqueId: true,
       verificationId: true,
-      risque: { select: { libelle: true } },
+      risque: { select: { libelle: true, unite: { select: { nom: true, estTransverse: true } } } },
       verification: { select: { libelleObligation: true } },
     },
     orderBy: [{ statut: "asc" }, { echeance: "asc" }, { criticite: "desc" }],
@@ -370,8 +370,13 @@ export async function listerActions(
     criticite: a.criticite,
     echeance: a.echeance,
     origine: a.risqueId ? "duerp" : a.verificationId ? "verification" : "libre",
-    origineLibelle:
-      a.risque?.libelle ?? a.verification?.libelleObligation ?? null,
+    // L'unité de travail avec le risque : un même risque coté dans deux
+    // unités portait deux actions identiques à la lecture, qui se lisaient
+    // comme un doublon (relevé le 2026-11-23 depuis claude.ai).
+    // L'unité se nomme comme dans `etat_duerp` (« Nom (transverse) »).
+    origineLibelle: a.risque
+      ? `${a.risque.libelle} (unité « ${a.risque.unite.nom}${a.risque.unite.estTransverse ? " (transverse)" : ""} »)`
+      : (a.verification?.libelleObligation ?? null),
     enRetard: estActionEnRetard(a, now),
   }));
 
@@ -782,7 +787,9 @@ export async function listerVerifications(
     // statut le dit, la colonne ne le dit plus (ADR-034).
     // Une ligne SANS ÉCHÉANCE CONNUE passe le filtre, et c'est voulu : due et
     // jamais faite, elle compte en retard dès le lendemain de sa création.
-    // L'assistant la reçoit nommée « sans échéance connue », jamais datée ; la
+    // ~~L'assistant la reçoit nommée « sans échéance connue », jamais datée~~
+    // [2026-11-23 : en retard, elle porte « aucune vérification enregistrée »
+    // ou sa dernière réalisation — `formaterVerifications`] ; jamais datée, la
     // description de l'outil le dit (relecture système du 2026-09-14).
     lues = lues.filter(
       (v) =>

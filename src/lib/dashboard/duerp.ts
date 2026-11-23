@@ -162,3 +162,16 @@ export function evaluerEtatDuerp(e: EntreeEtatDuerp, now: Date): EtatDuerp {
 export function ageEnMois(ageJours: number): number {
   return Math.round(ageJours / 30);
 }
+
+/**
+ * L'ancienneté d'une version, dite comme on la lit : en jours sous trente
+ * (« il y a 0 mois », relevé le 2026-11-23 depuis claude.ai ; l'arrondi seul
+ * aurait dit « 1 mois » à quinze jours), en mois au-delà (`ageEnMois`).
+ * Seule phrase d'ancienneté : le connecteur et le tableau de bord la lisent.
+ */
+export function depuisLe(ageJours: number): string {
+  if (ageJours <= 0) return "aujourd'hui";
+  if (ageJours === 1) return "hier";
+  if (ageJours < 30) return `il y a ${ageJours} jours`;
+  return `il y a ${ageEnMois(ageJours)} mois`;
+}

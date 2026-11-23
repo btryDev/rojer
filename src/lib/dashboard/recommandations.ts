@@ -66,7 +66,7 @@ import {
   aUnRendezVous,
   LIBELLE_AUCUNE_VERIFICATION,
 } from "@/lib/calendrier/etats";
-import { ageEnMois, EFFECTIF_MAJ_ANNUELLE, type EtatDuerp } from "./duerp";
+import { depuisLe, EFFECTIF_MAJ_ANNUELLE, type EtatDuerp } from "./duerp";
 import { mentionAConfirmer } from "@/lib/matching/effectif-entreprise";
 import { TIERS_LUI_MEME_OBLIGATOIRE } from "@/lib/prestataires/domaines";
 import type { DomaineObligation } from "@/lib/referentiels/conformite/types";
@@ -381,8 +381,8 @@ export function genererRecommandations(
         cle: "duerp:maj-echue",
         titre: "DUERP à mettre à jour",
         sousTitre: duerp.majAnnuelleAConfirmer
-          ? `Dernière version il y a ${ageEnMois(duerp.ageJours ?? 0)} mois — ${mentionAConfirmer(EFFECTIF_MAJ_ANNUELLE)}`
-          : `Dernière version il y a ${ageEnMois(duerp.ageJours ?? 0)} mois`,
+          ? `Dernière version ${depuisLe(duerp.ageJours ?? 0)} — ${mentionAConfirmer(EFFECTIF_MAJ_ANNUELLE)}`
+          : `Dernière version ${depuisLe(duerp.ageJours ?? 0)}`,
         href,
         priorite: 5,
         date: duerp.dateLimiteMaj ?? undefined,
