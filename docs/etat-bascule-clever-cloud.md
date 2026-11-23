@@ -396,6 +396,16 @@ liste) :
   Remède, déjà écrit dans `next.config.ts` : déposer les rapports par URL
   pré-signée (et les autres fichiers déposés : import DUERP, pièces des
   prestataires…), puis abaisser la limite.
+- **Journal des appels du connecteur MCP** (2026-11-23, décision de la
+  propriétaire : pas urgent, en queue de liste). `/api/mcp` ne journalise
+  aujourd'hui que les erreurs : un appel réussi ne laisse aucune trace, et
+  après un hameçonnage par consentement réussi (ADR-062 § 12) on ne
+  saurait pas ce qui a été lu. À faire : une ligne structurée par appel
+  (compte, personne, client OAuth et son niveau de confiance, outil,
+  résultat — jamais le contenu lu), refus compris (jeton retiré, compte
+  fermé aux outils non vérifiés). Puis, en chantier à part, une alerte sur
+  un volume anormal. Sources : checklists MCP de Practical DevSecOps et de
+  SlowMist (« Detailed Logging », « Operation Logging », priorité haute).
 
 ## Recette « pages × comptes à plusieurs membres » (avant la bascule)
 
