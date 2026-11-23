@@ -114,7 +114,11 @@ passer QUE les chemins qu'un client OAuth appelle lui-même —
 découverte (`CHEMINS_AUTH_SERVIS`, `mcp/oauth.ts`). [2026-11-21 :
 ~~`oauth2/consent`, `oauth2/continue`, `jwks`~~ — le consentement et le choix
 du compte passent par nos actions serveur (`auth.api.*`), et le JWKS est lu en
-mémoire par le serveur de ressource.] Tout autre chemin répond `404`, et le
+mémoire par le serveur de ressource.] [2026-11-23, contrôle externe en
+préproduction : `jwks` est servi — le serveur de ressource lit toujours les
+clés en mémoire, mais les métadonnées annoncent `jwks_uri`, et une adresse
+annoncée qui répond 401 est relevée par tout contrôle ; ce sont des clés
+publiques.] Tout autre chemin répond `404`, et le
 proxy ne rend publics que ces chemins-là, un par un.
 L'ADR-052 tient pour le reste : connexion, inscription, double
 authentification, membres restent des actions serveur avec leurs propres
@@ -286,6 +290,12 @@ ou l'appartenance qui tombe.
   suppression du compte (`oublierAssistants`). Sans cela, une personne
   réinvitée retrouvait un jeton de rafraîchissement vivant.
 - **`localhost` n'est plus un hôte admis en production** (audit S8).
+- **L'annoncé est le servi** (2026-11-23, contrôle externe en préproduction) :
+  les modes de jeton sont bornés au code d'autorisation et à son
+  rafraîchissement (`MODES_DE_JETON`) — `client_credentials`, déjà refusé aux
+  clients publics et à l'enregistrement sans session, est fermé au guichet et
+  retiré des métadonnées ; l'introspection, que la liste blanche ne sert pas,
+  en est retirée aussi (`servirDecouverte`).
 - **Preuve de bout en bout** : `mcp/oauth-flux.integration.test.ts` (CI,
   vrai PostgreSQL, vrai Better Auth) — découverte, enregistrement refusé pour
   une adresse étrangère, autorisation PKCE, consentement, jeton, porteur,

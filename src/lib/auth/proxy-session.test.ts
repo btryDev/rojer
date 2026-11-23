@@ -139,6 +139,29 @@ describe("garderSession : refus sans cookie de session", () => {
   });
 });
 
+describe("garderSession : /api/auth hors liste blanche (ADR-062 § 2)", () => {
+  it.each([
+    "/api/auth/.well-known/openid-configuration",
+    "/api/auth/sign-in/email",
+    "/api/auth/get-session",
+    "/api/auth/oauth2/introspect",
+    "/api/auth",
+  ])("%s répond 404, avec ou sans session", (chemin) => {
+    expect(garderSession(requete(chemin)).status).toBe(404);
+    expect(garderSession(requete(chemin, { cookie: COOKIE })).status).toBe(404);
+  });
+
+  it("un chemin servi passe, sans session", () => {
+    expect(garderSession(requete("/api/auth/jwks")).status).toBe(200);
+    expect(garderSession(requete("/api/auth/oauth2/token")).status).toBe(200);
+  });
+
+  it("un préfixe voisin n'est pas visé", async () => {
+    const r = garderSession(requete("/api/authx/oauth2/token"));
+    expect(r.status).toBe(401);
+  });
+});
+
 describe("garderSession : action serveur sans cookie (audit du 2026-11-05)", () => {
   function post(chemin: string, entetes: Record<string, string> = {}): NextRequest {
     return new NextRequest(`http://localhost${chemin}`, { method: "POST", headers: entetes });

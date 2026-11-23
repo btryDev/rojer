@@ -8,6 +8,7 @@
 // contournerait. Tout autre chemin répond 404, sans corps qui renseigne.
 
 import { auth } from "@/lib/auth/better-auth";
+import { servirDecouverte } from "@/lib/mcp/decouverte";
 import { estCheminAuthServi } from "@/lib/mcp/oauth";
 import { ipPourLimite } from "@/lib/securite/ip-client";
 import { cleLimite, consommer, LIMITES } from "@/lib/securite/limite-debit";
@@ -35,6 +36,8 @@ async function servirOAuth(request: Request): Promise<Response> {
     }
   }
 
+  // La découverte, ici comme sous `/.well-known` : le même document.
+  if (pathname.replace(/\/+$/, "").endsWith("/.well-known/oauth-authorization-server")) return servirDecouverte(request);
   return auth.handler(request);
 }
 

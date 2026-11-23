@@ -49,6 +49,7 @@ describe.skipIf(!URL_BASE || !local)("connecteur MCP en OAuth — PostgreSQL et 
   const { retirerAssistant, assistantsAutorises, oublierAssistants } = await import("@/lib/connecteur/assistants");
   const { lookupKey } = await import("@/lib/abonnements/formules");
   const { requeteARejouer } = await import("./reprise-oauth");
+  const { servirDecouverte } = await import("./decouverte");
   const { verifyOAuthQueryParams } = await import("@better-auth/oauth-provider");
 
   const suffixe = randomUUID().slice(0, 8);
@@ -139,14 +140,38 @@ describe.skipIf(!URL_BASE || !local)("connecteur MCP en OAuth — PostgreSQL et 
 
     const emetteur = prm.authorization_servers[0];
     expect(emetteur).toBe(`${BASE}/api/auth`);
-    const as = (await (await appel("/.well-known/oauth-authorization-server/api/auth")).json()) as {
+    // Par `servirDecouverte`, comme les routes : c'est lui qui retire ce que
+    // Rojer ne sert pas.
+    const decouverte = await servirDecouverte(new Request(`${BASE}/.well-known/oauth-authorization-server/api/auth`));
+    const as = (await decouverte.json()) as {
       issuer: string;
       registration_endpoint: string;
       code_challenge_methods_supported: string[];
+      grant_types_supported: string[];
+      jwks_uri: string;
     };
     expect(as.issuer).toBe(emetteur);
     expect(as.registration_endpoint).toBe(`${BASE}/api/auth/oauth2/register`);
     expect(as.code_challenge_methods_supported).toEqual(["S256"]);
+    // L'annoncé est le servi : ni `client_credentials`, ni introspection, et
+    // le JWKS annoncé répond.
+    expect(as.grant_types_supported).toEqual(["authorization_code", "refresh_token"]);
+    expect(Object.keys(as).filter((c) => c.startsWith("introspection_"))).toEqual([]);
+    expect(as.jwks_uri).toBe(`${BASE}/api/auth/jwks`);
+    const jwks = await appel("/api/auth/jwks");
+    expect(jwks.status).toBe(200);
+    const cles = ((await jwks.json()) as { keys: Record<string, unknown>[] }).keys;
+    expect(cles.length).toBeGreaterThan(0);
+    // Des clés PUBLIQUES : aucun paramètre privé (RFC 7518 : `d`, `p`, `q`…).
+    for (const cle of cles) expect(Object.keys(cle).filter((c) => ["d", "p", "q", "dp", "dq", "qi", "k"].includes(c))).toEqual([]);
+  });
+
+  it("client_credentials : fermé au guichet des jetons", async () => {
+    const r = await jeton({ grant_type: "client_credentials", client_id: "nimporte", client_secret: "quoi" });
+    // Le mode lui-même est refusé, avant tout examen du client : un client
+    // inconnu seul donnerait déjà un 4xx (`invalid_client`), qui ne prouve rien.
+    expect(r.status).toBe(400);
+    expect(((await r.json()) as { error?: string }).error).toBe("unsupported_grant_type");
   });
 
   it("enregistrement : une adresse de retour étrangère est refusée", async () => {

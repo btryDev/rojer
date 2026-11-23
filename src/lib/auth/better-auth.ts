@@ -14,6 +14,7 @@ import { fetchClientMetadataResource } from "@better-auth/cimd/node";
 import {
   DUREES_OAUTH,
   PORTEE_LECTURE,
+  MODES_DE_JETON,
   PORTEES_FOURNISSEUR,
   estAdresseDeRetourAdmise,
   estDocumentCimdAdmis,
@@ -156,6 +157,7 @@ function pluginsConnecteurMcp() {
       loginPage: "/oauth/reprendre",
       consentPage: "/oauth/consentement",
       scopes: [...PORTEES_FOURNISSEUR],
+      grantTypes: [...MODES_DE_JETON],
       resources: [{ identifier: ressource, name: "Rojer", allowedScopes: [PORTEE_LECTURE] }],
       // claude.ai s'enregistre par DCR, sans jeton préalable : c'est la seule
       // porte qu'il sait ouvrir. Bornée par les adresses de retour admises
