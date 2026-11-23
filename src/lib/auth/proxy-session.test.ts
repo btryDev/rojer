@@ -37,6 +37,7 @@ describe("chemins publics", () => {
       "/accessibilite/mon-erp",
       "/api/accessibilite/mon-erp/affiche",
       "/robots.txt",
+      "/sitemap.xml",
       "/legal/mentions-legales",
       // « Rojer ouvre bientôt » (2026-11-23, `lib/ouverture.ts`).
       "/bientot",

@@ -58,6 +58,8 @@ const PUBLIC_PREFIXES = [
   // Les tâches (file Stripe, tâches du jour), appelées chaque minute par la crontab ; le secret partagé est leur garde.
   "/api/taches/chaque-minute",
   "/robots.txt",
+  // Le plan du site, pour les moteurs (2026-11-23, `app/sitemap.ts`).
+  "/sitemap.xml",
 ];
 
 function sousPrefixe(pathname: string, prefixes: readonly string[]): boolean {

@@ -34,12 +34,19 @@ export async function demanderOuvertureAction(
   // 2026-11-23). Sans IP lisible (appel direct, en-tête absent), toutes ces
   // requêtes partagent une même clé : la limite s'applique toujours — comme
   // l'enregistrement des clients OAuth (`api/auth/[...all]`).
+  // Le plafond global ne compte que ce qui a passé la limite par réseau :
+  // sinon un seul réseau, une fois bloqué, continuerait de remplir le
+  // compteur commun et fermerait la page à tout le monde (relecture de
+  // sécurité du 2026-11-23).
   const ip = ipPourLimite(await headers()) ?? "inconnue";
-  const verdict = await consommer([
+  const parReseau = await consommer([
     { cle: cleLimite("demande-ouverture", "ip", ip), limite: LIMITES.demandeOuvertureIp },
+  ]);
+  if (!parReseau.ok) return { erreur: messageTropDeTentatives(parReseau.reessayerDansSecondes) };
+  const global = await consommer([
     { cle: cleLimite("demande-ouverture", "global", "tout"), limite: LIMITES.demandeOuvertureGlobale },
   ]);
-  if (!verdict.ok) return { erreur: messageTropDeTentatives(verdict.reessayerDansSecondes) };
+  if (!global.ok) return { erreur: messageTropDeTentatives(global.reessayerDansSecondes) };
 
   try {
     await prisma.demandeOuverture.createMany({ data: [{ email: parsed.data.email }], skipDuplicates: true });

@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { OUVERT_AUX_MOTEURS } from "@/lib/indexation";
+import { publicAppUrl } from "@/lib/url-publique";
 
 /**
  * `robots.txt` (audit Next.js du 2026-10-14, B11).
@@ -30,20 +31,21 @@ import { OUVERT_AUX_MOTEURS } from "@/lib/indexation";
  * Tant que le site n'est pas ouvert aux moteurs (`OUVERT_AUX_MOTEURS`,
  * `lib/indexation.ts`), tout est interdit, accueil compris.
  */
-export const RACINES_INDEXABLES = ["/", "/login", "/signup", "/legal/"] as const;
+// [2026-11-23, décision de la propriétaire : la page publique part en ligne
+// et doit être trouvée — « enlever, et justement favoriser ». Les pages
+// légales et les conditions générales, rédigées depuis (#360), et la page
+// d'attente passent du côté indexable ; `sitemap.xml` les annonce.]
+export const RACINES_INDEXABLES = ["/", "/login", "/signup", "/legal/", "/conditions", "/bientot"] as const;
 
 export const RACINES_EXCLUES = [
-  // Les conditions générales (ADR-053 § 8) : publiques, mais provisoires —
-  // à rendre indexables quand le texte relu par un juriste les remplacera.
-  "/conditions",
-  // Mentions légales, confidentialité, cookies : publiques, mais leur texte
-  // reste à écrire — à rendre indexables avec lui.
-  "/legal/",
+  // ~~Les conditions générales (ADR-053 § 8) : publiques, mais provisoires —
+  // à rendre indexables quand le texte relu par un juriste les remplacera.~~
+  // ~~Mentions légales, confidentialité, cookies : publiques, mais leur texte
+  // reste à écrire — à rendre indexables avec lui.~~
+  // ~~« Rojer ouvre bientôt » : page d'attente, rien à y trouver par un
+  // moteur.~~ [2026-11-23 : les trois sont indexables, voir plus haut.]
   // L'écran d'essai gratuit (ADR-053 § 8), derrière la connexion.
   "/essai",
-  // « Rojer ouvre bientôt » (2026-11-23, `lib/ouverture.ts`) : page d'attente
-  // tant que les inscriptions sont fermées, rien à y trouver par un moteur.
-  "/bientot",
   // Pages publiques, à lien ou par slug.
   "/acces/",
   "/accessibilite/",
@@ -72,5 +74,8 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: [...RACINES_EXCLUES],
     },
+    // Annoncé seulement quand l'adresse publique est connue : jamais un
+    // `localhost` dans un robots.txt servi.
+    ...(process.env.PUBLIC_APP_URL ? { sitemap: `${publicAppUrl()}/sitemap.xml` } : {}),
   };
 }
