@@ -129,7 +129,7 @@ const CONFIDENTIALITE: PageLegale = {
         // artificielle… » remplacée — le connecteur s'ouvre à d'autres outils
         // (ADR-062 § 12, PR #369) ; l'outil n'est pas un sous-traitant de BTRY
         // (conditions, article 9).]
-        "Le titulaire d'un compte peut relier Rojer à un assistant ou à un outil de son choix. Sur son instruction, l'outil lit, sans rien pouvoir modifier, les informations du dossier qu'il interroge ; elles sont ensuite traitées selon les règles de cet outil, que le client a choisi. Les noms des salariés et des responsables d'actions ne lui sont pas communiqués ; ce que le client a saisi librement (intitulés des risques, des actions, des équipements) l'est tel quel.",
+        "Une personne d'un compte client peut relier Rojer à un assistant ou à un outil de son choix. Sur cette instruction, l'outil lit, sans rien pouvoir modifier, les informations du dossier qu'il interroge ; elles sont ensuite traitées selon les règles de cet outil, choisi par le client. Les noms des salariés et des responsables d'actions ne lui sont pas communiqués ; ce que le client a saisi librement (intitulés des risques, des actions, des équipements) l'est tel quel.",
       ],
     },
     {
