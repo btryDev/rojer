@@ -127,7 +127,8 @@ export default async function FormulesPage({ searchParams }: { searchParams: Pro
           <div className="flex flex-col items-start gap-5">
             <p className={TEXTE_AIDE}>
               La suppression de ce compte est prévue le {formaterDateLongueFr(suppression.effacementLe)}&nbsp;: d&apos;ici là, la formule ne
-              se change pas et l&apos;abonnement ne se gère pas. Annulez d&apos;abord la suppression pour le faire.
+              se change pas et l&apos;abonnement ne se gère pas.{" "}
+              {vue.cas === "membre" ? "Seul un propriétaire du compte peut annuler la suppression." : "Annulez d'abord la suppression pour le faire."}
             </p>
             <Link href={PAGE_SUPPRESSION} className={buttonVariants({ variant: "board", size: "board" })}>
               Voir la suppression
