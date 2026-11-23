@@ -32,6 +32,11 @@ export type EmailPayload = {
   text: string;
   html?: string;
   attachments?: PieceJointe[];
+  /**
+   * L'adresse où part une réponse (en-tête `Reply-To`), une seule — par
+   * exemple celle du visiteur qui écrit depuis le formulaire de contact.
+   */
+  replyTo?: string;
 };
 
 /** « Plan.pdf (12 Ko) » — pour un journal ou la boîte de développement. */
@@ -50,6 +55,7 @@ class ConsoleEmailDriver implements EmailDriver {
     console.log("\n" + "─".repeat(72));
     console.log(`✉  [email:console] À : ${payload.to}`);
     console.log(`   Sujet : ${payload.subject}`);
+    if (payload.replyTo) console.log(`   Répondre à : ${payload.replyTo}`);
     console.log(`   ${"─".repeat(66)}`);
     console.log(payload.text);
     for (const p of payload.attachments ?? []) {

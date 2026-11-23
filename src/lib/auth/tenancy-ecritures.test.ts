@@ -110,6 +110,16 @@ const EXEMPTIONS = new Map<string, Exemption>([
     },
   ],
   [
+    "lib/contact/actions.ts:envoyerMessageContact",
+    {
+      garde: "consommer",
+      raison:
+        "Formulaire de contact de la page publique, sans session : la seule écriture est le " +
+        "compteur de limitation de débit (`LimiteDebit`, clé : empreinte de l'IP). Le message " +
+        "part par e-mail, aucune donnée de dossier.",
+    },
+  ],
+  [
     "lib/auth/actions.ts:activerCompteAction",
     {
       garde: "auth.api.verifyEmail",
