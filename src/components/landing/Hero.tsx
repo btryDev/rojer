@@ -50,7 +50,16 @@ export function Hero({
 }) {
   // Deux cadrages, une image : `<picture>` choisit la source, l'`<img>`
   // reste unique (un seul téléchargement, un seul aperçu flou).
-  const commun = { alt: PHOTO_HERO.alt, fill: true, preload: true, placeholder: "blur" as const };
+  // `preload` ne fait ici que retirer le chargement différé : `getImageProps`
+  // n'émet ni préchargement ni priorité. `fetchPriority` dit au navigateur que
+  // c'est l'image principale de la page (relecture du 2026-11-23).
+  const commun = {
+    alt: PHOTO_HERO.alt,
+    fill: true,
+    preload: true,
+    fetchPriority: "high" as const,
+    placeholder: "blur" as const,
+  };
   const portrait = getImageProps({ ...commun, src: PHOTO_HERO.portrait, sizes: "100vw" }).props;
   const paysage = getImageProps({
     ...commun,

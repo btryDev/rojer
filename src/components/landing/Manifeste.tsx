@@ -68,7 +68,13 @@ export function Manifeste() {
 
         <div className="mt-16 grid grid-cols-1 items-center gap-14 md:grid-cols-[0.85fr_1.15fr] md:gap-10 lg:gap-[clamp(56px,8vw,140px)]">
           <Reveal>
-            <PhotoCadre photo={PHOTO_MANIFESTE} fond="rgba(255,255,255,0.05)" />
+            {/* Sur tablette, la colonne ne fait qu'un gros tiers de l'écran
+                (relecture du 2026-11-23) : la photo 1920w y était servie. */}
+            <PhotoCadre
+              photo={PHOTO_MANIFESTE}
+              fond="rgba(255,255,255,0.05)"
+              sizes="(max-width: 767px) 92vw, (max-width: 1023px) 40vw, 34vw"
+            />
           </Reveal>
 
           <ol className="m-0 list-none p-0">

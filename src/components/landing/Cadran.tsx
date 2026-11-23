@@ -14,7 +14,7 @@
 // est le même, écrit une seule fois.
 
 import Image, { type StaticImageData } from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 // Le TYPE seul : un composant client qui importerait le référentiel en
 // embarquerait le référentiel entier — notes internes comprises — dans le
 // paquet envoyé au navigateur. Les chiffres sont calculés côté serveur
@@ -238,22 +238,20 @@ export function Cadran({ chiffres }: { chiffres: ChiffresReferentielSuivi }) {
     };
   }, [reduit, grand]);
 
+  // La liste (téléphone, mouvement réduit) ne dépend que des chiffres : créée
+  // une fois, elle n'est plus re-rendue à chaque cran de la roue, où elle est
+  // cachée (relecture du 2026-11-23 : 19 composants sur 20 par frame).
+  const liste = useMemo(() => <CadranListe chiffres={chiffres} />, [chiffres]);
+
   // L'ancre `#documents` est sur l'enveloppe : elle vaut pour la vue montrée.
-  if (reduit)
-    return (
-      <div id="documents">
-        <CadranListe chiffres={chiffres} />
-      </div>
-    );
+  if (reduit) return <div id="documents">{liste}</div>;
 
   const actif = Math.round(pos);
   const avancement = pos / (DOCUMENTS.length - 1);
 
   return (
     <div id="documents">
-    <div className="lg:hidden">
-      <CadranListe chiffres={chiffres} />
-    </div>
+    <div className="lg:hidden">{liste}</div>
     <section
       aria-labelledby="documents-titre"
       className="hidden bg-[color:var(--board-card)] lg:block"
@@ -391,9 +389,11 @@ export function Cadran({ chiffres }: { chiffres: ChiffresReferentielSuivi }) {
                   {DOCUMENTS.map((d, i) => {
                     const ici = i === actif;
                     return (
+                      // Plus d'`aria-hidden` sur les articles inactifs (relecture
+                      // du 2026-11-23) : un lecteur d'écran ne fait pas défiler
+                      // la page, il ne lisait que le premier des six.
                       <article
                         key={d.numero}
-                        aria-hidden={!ici}
                         className={
                           "transition-[opacity,transform] ease-[cubic-bezier(.16,1,.3,1)] " +
                           (ici
@@ -430,9 +430,11 @@ export function Cadran({ chiffres }: { chiffres: ChiffresReferentielSuivi }) {
                   recouvrir. */}
               <div className="absolute inset-x-0 bottom-6">
                 <div className="mx-[7%] h-px bg-[rgba(10,10,10,.16)]">
+                  {/* `scaleX` et non `width` : la barre bouge sans relancer la
+                      mise en page à chaque frame. */}
                   <div
-                    className="h-px bg-[color:var(--board-ink)] transition-[width] duration-150 ease-linear"
-                    style={{ width: `${Math.round(avancement * 100)}%` }}
+                    className="h-px w-full origin-left bg-[color:var(--board-ink)] transition-transform duration-150 ease-linear"
+                    style={{ transform: `scaleX(${avancement.toFixed(3)})` }}
                   />
                 </div>
                 <p className="ml-[42%] mr-[7%] mt-3 text-[0.78rem] text-[color:var(--board-slate-ink)]">

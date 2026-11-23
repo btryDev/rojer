@@ -1,79 +1,58 @@
 "use client";
 
-// Un passage d'une vidéo, joué en boucle, muet. `preload="none"` : rien
+// Un court extrait vidéo, joué en boucle, muet. `preload="none"` : rien
 // n'est téléchargé avant que la section approche de l'écran. Avec
 // `prefers-reduced-motion`, rien ne joue : l'image d'aperçu reste. Si le
 // navigateur refuse la lecture automatique, un bouton la lance au toucher.
 //
-// Le passage est lu dans la visite entière, faute d'extrait coupé (FFmpeg
-// n'est pas installé) : quand il le sera, `debut`/`fin` disparaissent au
-// profit de l'attribut `loop`.
+// ~~Le passage est lu dans la visite entière, faute d'extrait coupé (FFmpeg
+// n'est pas installé)~~ [2026-11-23, relecture de la page publique : le
+// passage est coupé à part (`public/videos/extrait-*.mp4`, 17 s, sans piste
+// son — 0,78 Mo au lieu de la visite entière, son compris) ; `debut`/`fin`
+// cèdent la place à l'attribut `loop`.] Un bouton met en pause : une vidéo
+// qui tourne plus de cinq secondes doit pouvoir s'arrêter (WCAG 2.2.2).
 
 import { useEffect, useRef, useState } from "react";
-import { Play } from "lucide-react";
+import { Pause, Play } from "lucide-react";
 
-export function ExtraitVideo({
-  src,
-  poster,
-  debut,
-  fin,
-  label,
-}: {
-  src: string;
-  poster: string;
-  /** Début et fin du passage, en secondes. */
-  debut: number;
-  fin: number;
-  label: string;
-}) {
+export function ExtraitVideo({ src, poster, label }: { src: string; poster: string; label: string }) {
   const ref = useRef<HTMLVideoElement | null>(null);
-  // Le navigateur a refusé la lecture automatique (iPhone en mode
-  // économie d'énergie, réglage du navigateur) : un bouton la lance.
+  // `bloquee` : la lecture automatique a été refusée. `arretee` : la personne
+  // a mis en pause — la vidéo ne repart plus d'elle-même.
   const [bloquee, setBloquee] = useState(false);
+  const [arretee, setArretee] = useState(false);
+  const arreteeRef = useRef(false);
 
   useEffect(() => {
     const video = ref.current;
     if (!video) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    // Muette par la propriété, pas seulement par l'attribut : React ne
-    // rend pas `muted` dans le HTML, et Safari iOS ne joue sans geste
-    // qu'une vidéo muette.
     video.muted = true;
     video.defaultMuted = true;
-
-    // Ramène au début du passage hors des bornes — au premier départ comme
-    // à chaque tour.
-    const boucler = () => {
-      if (video.currentTime >= fin || video.currentTime < debut - 0.5) {
-        video.currentTime = debut;
-      }
-    };
-    // Au premier chargement, se placer au début du passage avant de jouer :
-    // sinon l'image d'ouverture de la visite passe un instant.
-    const placer = () => {
-      video.currentTime = debut;
-    };
-    video.addEventListener("loadedmetadata", placer, { once: true });
     const observateur = new IntersectionObserver(
       ([entree]) => {
-        if (entree.isIntersecting) {
+        if (entree.isIntersecting && !arreteeRef.current) {
           video.play().then(
             () => setBloquee(false),
             () => setBloquee(true),
           );
-        }
-        else video.pause();
+        } else video.pause();
       },
       { rootMargin: "200px 0px" },
     );
-    video.addEventListener("timeupdate", boucler);
     observateur.observe(video);
-    return () => {
-      observateur.disconnect();
-      video.removeEventListener("timeupdate", boucler);
-      video.removeEventListener("loadedmetadata", placer);
-    };
-  }, [debut, fin]);
+    return () => observateur.disconnect();
+  }, []);
+
+  const basculer = () => {
+    const video = ref.current;
+    if (!video) return;
+    const pause = !arreteeRef.current;
+    arreteeRef.current = pause;
+    setArretee(pause);
+    if (pause) video.pause();
+    else void video.play().then(() => setBloquee(false), () => setBloquee(true));
+  };
 
   return (
     <div className="relative">
@@ -82,6 +61,7 @@ export function ExtraitVideo({
         src={src}
         poster={poster}
         muted
+        loop
         playsInline
         preload="none"
         aria-label={label}
@@ -94,6 +74,8 @@ export function ExtraitVideo({
             const video = ref.current;
             if (!video) return;
             video.muted = true;
+            arreteeRef.current = false;
+            setArretee(false);
             void video.play().then(() => setBloquee(false), () => {});
           }}
           aria-label={`Lire la vidéo : ${label}`}
@@ -103,7 +85,20 @@ export function ExtraitVideo({
             <Play aria-hidden size={22} className="ml-0.5" fill="currentColor" />
           </span>
         </button>
-      ) : null}
+      ) : (
+        <button
+          type="button"
+          onClick={basculer}
+          aria-label={arretee ? `Reprendre la vidéo : ${label}` : `Mettre la vidéo en pause : ${label}`}
+          className="absolute bottom-3 right-3 flex size-9 items-center justify-center rounded-full bg-white/85 text-[color:var(--board-ink)] shadow-[0_4px_12px_rgba(13,18,36,0.2)] transition-colors hover:bg-white motion-reduce:hidden"
+        >
+          {arretee ? (
+            <Play aria-hidden size={15} className="ml-0.5" fill="currentColor" />
+          ) : (
+            <Pause aria-hidden size={15} fill="currentColor" />
+          )}
+        </button>
+      )}
     </div>
   );
 }
