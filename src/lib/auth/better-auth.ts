@@ -174,8 +174,11 @@ function pluginsConnecteurMcp() {
       // Au-delà de la correspondance exacte du plugin, l'adresse doit être
       // celle d'un assistant admis : un client enregistré avant un
       // resserrement de la liste n'en passe pas davantage.
-      validateRedirectUri: (adresseRetour, _enregistrees, parDefaut) =>
-        parDefaut && estAdresseDeRetourAdmise(adresseRetour),
+      // Et, pour TOUT client — enregistré ou CIMD, que le crochet
+      // d'enregistrement ne voit pas —, des adresses d'un seul tenant : sans
+      // quoi le consentement donné par l'une servirait l'autre (ADR-062 § 12).
+      validateRedirectUri: (adresseRetour, enregistrees, parDefaut) =>
+        parDefaut && estAdresseDeRetourAdmise(adresseRetour) && adressesDUnSeulTenant(enregistrees),
       // Les limites du plugin comptent par IP, et les serveurs de claude.ai
       // rafraîchissent les jetons de TOUS ses utilisateurs depuis quelques
       // adresses : les défauts (20 jetons, 5 enregistrements par minute)

@@ -140,7 +140,9 @@ export function nomReserve(nom: string): boolean {
  * l'enregistrement dynamique ; récupérer le document d'un domaine quelconque
  * ouvrirait une surface de requêtes sortantes (ADR-062 § 12).]
  */
-const HOTES_CIMD_ADMIS = ["claude.ai", "claude.com", "anthropic.com", "chatgpt.com", "openai.com"];
+// Hôtes EXACTS (relecture de sécurité du 2026-11-23) : ~~un sous-domaine
+// quelconque~~ d'un éditeur peut servir du contenu qui n'est pas le sien.
+const HOTES_CIMD_ADMIS = ["claude.ai", "claude.com", "anthropic.com", "console.anthropic.com", "chatgpt.com", "openai.com"];
 
 export function estDocumentCimdAdmis(identifiantClient: string): boolean {
   let url: URL;
@@ -150,7 +152,7 @@ export function estDocumentCimdAdmis(identifiantClient: string): boolean {
     return false;
   }
   if (url.protocol !== "https:" || url.username !== "" || url.password !== "" || url.port !== "") return false;
-  return HOTES_CIMD_ADMIS.some((h) => url.hostname === h || url.hostname.endsWith(`.${h}`));
+  return HOTES_CIMD_ADMIS.includes(url.hostname);
 }
 
 /**

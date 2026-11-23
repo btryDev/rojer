@@ -120,6 +120,9 @@ describe("estDocumentCimdAdmis — éditeurs dont un document CIMD est lu", () =
     "https://claude.ai:8443/client.json",
     "https://claude.ai.attaquant.example/client.json",
     "https://attaquantclaude.ai/client.json",
+    // Un sous-domaine quelconque d'un éditeur n'est pas l'éditeur.
+    "https://contenu.chatgpt.com/client.json",
+    "https://communaute.openai.com/client.json",
     "https://evil.example/client.json",
     "client-id-ordinaire",
   ])("refuse %s", (id) => expect(estDocumentCimdAdmis(id)).toBe(false));
