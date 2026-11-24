@@ -653,6 +653,25 @@ Constats de l'audit de sécurité du 2026-11-21 (dig sur le DNS public de
 - ~~Retirer `vercel.json`.~~ [2026-11-17, PR #337 : retiré.]
 - Les tables `Intervention` et `CommentaireIntervention` (ADR-018, sans code)
   attendent toujours leur migration de suppression.
+- **Compte offert pour l'équipe** (2026-11-24, décision de la propriétaire :
+  à faire à la bascule, pas avant). Un compte de la production où l'on
+  regarde sans payer : un script, lancé du terminal, passe le compte en
+  « offert » (formule Pro, sans client Stripe) ; l'écran Abonnement le dit,
+  sans bouton de paiement ; une ligne dans l'ADR-053. Vérifié le
+  2026-11-24 : les droits se lisent sur la ligne `Abonnement`, et le
+  rapprochement quotidien ne relit que les lignes qui ont un
+  `stripeCustomerId` (`stripe/rapprochement.ts`). À régler en l'écrivant :
+  `debutPayantLe` (sans lui, plafonds de l'essai et export fermé), la
+  formule en clé de prix (`formuleDeLookupKey`). En préprod, le même script
+  met un compte de test dans une situation donnée (essai en cours ou
+  terminé, Essentiel, Pro, impayé) ; en production, il refuse tout sauf
+  « offert ». Écarté : payer en production puis rembourser — le contrat de
+  Stripe interdit d'y tester avec une vraie carte, et les cartes de test y
+  sont refusées (`docs.stripe.com/testing`, code `testmode_decline`).
+- **La préprod se laisse indexer** (relevé le 2026-11-24 : son `robots.txt`
+  dit `Allow: /` et son plan du site liste ses pages) : une fois `rojer.fr`
+  en ligne, elle ferait doublon chez les moteurs. Fermer l'indexation hors
+  production (`environnementApp()`) avant de recréer une préprod.
 
 ### À faire après la bascule : ce que les conditions générales promettent (2026-11-19)
 
