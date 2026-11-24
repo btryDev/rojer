@@ -30,6 +30,8 @@ const EXEMPTIONS: Record<string, string> = {
     "métadonnées publiques du serveur de ressource (RFC 9728, ADR-062), identiques pour tous : aucune donnée de compte",
   ".well-known/oauth-authorization-server/api/auth/route.ts":
     "métadonnées publiques du serveur d'autorisation (RFC 8414, ADR-062), identiques pour tous : aucune donnée de compte",
+  "llms.txt/route.ts":
+    "résumé public du site pour les assistants (2026-11-24), identique pour tous : aucune donnée de compte",
 };
 
 function routes(): string[] {
