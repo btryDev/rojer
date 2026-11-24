@@ -1,5 +1,7 @@
 import type { MetadataRoute } from "next";
+import { headers } from "next/headers";
 import { OUVERT_AUX_MOTEURS } from "@/lib/indexation";
+import { hoteOuvertAuxMoteurs } from "@/lib/securite/hote-canonique";
 import { adressePubliqueOuNull } from "@/lib/url-publique";
 
 /**
@@ -30,7 +32,10 @@ import { adressePubliqueOuNull } from "@/lib/url-publique";
  * l'autre : `robots.test.ts` le vérifie.
  *
  * Tant que le site n'est pas ouvert aux moteurs (`OUVERT_AUX_MOTEURS`,
- * `lib/indexation.ts`), tout est interdit, accueil compris.
+ * `lib/indexation.ts`), tout est interdit, accueil compris. De même sur tout
+ * autre hôte que celui de l'adresse publique (2026-11-24) : l'adresse
+ * technique de Clever Cloud sert la même application, et ne doit pas en
+ * offrir une seconde copie aux moteurs (`hoteOuvertAuxMoteurs`).
  */
 // [2026-11-23, décision de la propriétaire : la page publique part en ligne
 // et doit être trouvée — « enlever, et justement favoriser ». Les pages
@@ -67,8 +72,11 @@ export const RACINES_EXCLUES = [
   "/.well-known/",
 ] as const;
 
-export default function robots(): MetadataRoute.Robots {
-  if (!OUVERT_AUX_MOTEURS) return { rules: { userAgent: "*", disallow: "/" } };
+export default async function robots(): Promise<MetadataRoute.Robots> {
+  const hote = (await headers()).get("host");
+  if (!OUVERT_AUX_MOTEURS || !hoteOuvertAuxMoteurs(hote, adressePubliqueOuNull())) {
+    return { rules: { userAgent: "*", disallow: "/" } };
+  }
   return {
     rules: {
       userAgent: "*",

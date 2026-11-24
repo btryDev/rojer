@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { redirectionWww } from "./hote-canonique";
+import { hoteOuvertAuxMoteurs, redirectionWww } from "./hote-canonique";
 
 const PUBLIQUE = "https://rojer.fr";
 
@@ -43,5 +43,24 @@ describe("redirectionWww", () => {
     const cible = redirectionWww("www.rojer.fr", "//ailleurs.example/piege", "", PUBLIQUE);
     expect(cible).not.toBeNull();
     expect(new URL(cible!).host).toBe("rojer.fr");
+  });
+});
+
+describe("hoteOuvertAuxMoteurs", () => {
+  it("ouvre l'hôte de l'adresse publique, casse et port ignorés", () => {
+    expect(hoteOuvertAuxMoteurs("rojer.fr", PUBLIQUE)).toBe(true);
+    expect(hoteOuvertAuxMoteurs("Rojer.FR:443", "https://rojer.fr/")).toBe(true);
+  });
+
+  it("ferme l'adresse technique de Clever Cloud et tout autre hôte", () => {
+    expect(hoteOuvertAuxMoteurs("app-818c5cef-038d-4b93-bf27-efc6a78b9e1c.cleverapps.io", PUBLIQUE)).toBe(false);
+    expect(hoteOuvertAuxMoteurs("www.rojer.fr", PUBLIQUE)).toBe(false);
+    expect(hoteOuvertAuxMoteurs("rojer.fr.ailleurs.example", PUBLIQUE)).toBe(false);
+  });
+
+  it("fermé sans hôte ni adresse publique lisible", () => {
+    expect(hoteOuvertAuxMoteurs(null, PUBLIQUE)).toBe(false);
+    expect(hoteOuvertAuxMoteurs("rojer.fr", null)).toBe(false);
+    expect(hoteOuvertAuxMoteurs("rojer.fr", "pas une adresse")).toBe(false);
   });
 });

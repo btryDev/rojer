@@ -31,3 +31,23 @@ export function redirectionWww(
   // chemin de l'adresse publique, jamais un autre hôte.
   return `${publique.origin}${chemin}${recherche}`;
 }
+
+/**
+ * L'hôte demandé est-il celui de l'adresse publique ? (2026-11-24, après la
+ * bascule de rojer.fr.) Seul celui-là est ouvert aux moteurs : la même
+ * application répond aussi sur son adresse technique de Clever Cloud
+ * (`app-….cleverapps.io`), qui servirait sinon une seconde copie du site à
+ * Google. Tout autre hôte reçoit `X-Robots-Tag: noindex` (`src/proxy.ts`) et
+ * un `robots.txt` qui interdit tout (`app/robots.ts`). Sans hôte ou sans
+ * adresse publique lisible : fermé.
+ */
+export function hoteOuvertAuxMoteurs(hote: string | null, adressePublique: string | null): boolean {
+  if (!hote || !adressePublique) return false;
+  let publique: URL;
+  try {
+    publique = new URL(adressePublique);
+  } catch {
+    return false;
+  }
+  return hote.trim().toLowerCase().replace(/:\d+$/, "") === publique.hostname.toLowerCase();
+}

@@ -2,9 +2,12 @@
  * Le site est-il ouvert aux moteurs de recherche ?
  *
  * Oui (décision de la propriétaire du 2026-11-06, quand `cc` préparait la
- * production). [2026-11-17 : `cc` est devenue `main` et Vercel est retiré ;
+ * production). ~~[2026-11-17 : `cc` est devenue `main` et Vercel est retiré ;
  * la préproduction est donc ouverte aussi — à régler au passage en
- * production, décision de la propriétaire du même jour.]
+ * production, décision de la propriétaire du même jour.]~~ [2026-11-24 :
+ * réglé — ouvert seulement sur l'hôte de `PUBLIC_APP_URL`
+ * (`hoteOuvertAuxMoteurs`, `lib/securite/hote-canonique.ts`) ; tout autre
+ * hôte, l'adresse technique de Clever Cloud comprise, est fermé.]
  *
  * Fermé, le site pose trois verrous : `robots.txt` qui interdit tout
  * (`app/robots.ts`), la balise `noindex, nofollow` (`app/layout.tsx`) et

@@ -6,7 +6,9 @@
 //
 // En tête, avant tout (2026-11-24, bascule de rojer.fr) : « www. » + l'hôte
 // de `PUBLIC_APP_URL` est renvoyé vers l'adresse publique, en 308
-// (`lib/securite/hote-canonique.ts`).
+// (`lib/securite/hote-canonique.ts`). Tout autre hôte que celui de
+// `PUBLIC_APP_URL` — l'adresse technique de Clever Cloud — reçoit
+// `X-Robots-Tag: noindex` : une seule copie du site chez les moteurs.
 //
 // Deux rôles :
 //   - la session (présence du cookie, refus sans session hors chemins
@@ -21,7 +23,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { garderSession } from "@/lib/auth/proxy-session";
 import { nonceCsp, politiqueContenu } from "@/lib/securite/entetes";
-import { redirectionWww } from "@/lib/securite/hote-canonique";
+import { NOINDEX } from "@/lib/indexation";
+import { hoteOuvertAuxMoteurs, redirectionWww } from "@/lib/securite/hote-canonique";
 
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
@@ -32,9 +35,15 @@ export async function proxy(request: NextRequest) {
     process.env.PUBLIC_APP_URL || null,
   );
   if (versAdressePublique) return NextResponse.redirect(versAdressePublique, 308);
+  const fermerAuxMoteurs = (reponse: NextResponse) => {
+    if (!hoteOuvertAuxMoteurs(request.headers.get("host"), process.env.PUBLIC_APP_URL || null)) {
+      reponse.headers.set("X-Robots-Tag", NOINDEX);
+    }
+    return reponse;
+  };
 
   if (pathname === "/api" || pathname.startsWith("/api/")) {
-    return garderSession(request);
+    return fermerAuxMoteurs(garderSession(request));
   }
 
   const csp = politiqueContenu({
@@ -45,7 +54,7 @@ export async function proxy(request: NextRequest) {
     entetesRequete: { "Content-Security-Policy": csp },
   });
   reponse.headers.set("Content-Security-Policy", csp);
-  return reponse;
+  return fermerAuxMoteurs(reponse);
 }
 
 export const config = {
