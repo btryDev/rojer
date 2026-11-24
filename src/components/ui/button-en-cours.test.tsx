@@ -33,7 +33,10 @@ describe("Button — enCours", () => {
     expect(b.getAttribute("aria-busy")).toBeNull();
   });
 
-  it("le socle porte la cible tactile de 44 px", () => {
-    expect(buttonVariants()).toContain("cible-tactile");
+  it("la cible tactile de 44 px : pilules oui, petits formats non", () => {
+    expect(buttonVariants({ size: "board" })).toContain("cible-tactile");
+    expect(buttonVariants({ size: "boardSm" })).toContain("cible-tactile");
+    expect(buttonVariants({ size: "sm" })).not.toContain("cible-tactile");
+    expect(buttonVariants({ size: "icon-xs" })).not.toContain("cible-tactile");
   });
 });

@@ -52,9 +52,9 @@ function useAnnoncer(state: ContreSignatureState) {
 }
 
 const BOUTON_CLAIR =
-  "inline-flex min-h-11 items-center rounded-full border border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-5 text-[14px] transition-colors hover:bg-[color:var(--board-slate-pale)] disabled:opacity-60";
+  "inline-flex gap-2 min-h-11 items-center rounded-full border border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-5 text-[14px] transition-colors hover:bg-[color:var(--board-slate-pale)] disabled:opacity-60";
 const BOUTON_PLEIN =
-  "inline-flex min-h-11 items-center rounded-full bg-[color:var(--board-ink)] px-6 font-display text-[15px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60";
+  "inline-flex gap-2 min-h-11 items-center rounded-full bg-[color:var(--board-ink)] px-6 font-display text-[15px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60";
 
 export function TraiterPropositionBoutons({
   propositionId,
@@ -68,6 +68,9 @@ export function TraiterPropositionBoutons({
     status: "idle",
   });
   const [refus, setRefus] = useState(false);
+  // Le bouton d'envoi choisi : la roue ne tourne que sur lui (les trois
+  // partagent l'attente du même formulaire).
+  const [choix, setChoix] = useState<"corriger" | "accepter" | null>(null);
   useAnnoncer(state);
 
   return (
@@ -112,12 +115,31 @@ export function TraiterPropositionBoutons({
             >
               Refuser
             </button>
-            <button type="submit" name="decision" value="corriger" disabled={pending} data-ecriture className={`${BOUTON_CLAIR} text-[color:var(--board-ink)]`}>
+            <button
+              type="submit"
+              name="decision"
+              value="corriger"
+              onClick={() => setChoix("corriger")}
+              disabled={pending}
+              aria-busy={(pending && choix === "corriger") || undefined}
+              data-ecriture
+              className={`${BOUTON_CLAIR} text-[color:var(--board-ink)]`}
+            >
+              {pending && choix === "corriger" ? <RoueAttente className="size-4" /> : null}
               Corriger
             </button>
-            <button type="submit" name="decision" value="accepter" disabled={pending} aria-busy={pending || undefined} data-ecriture className={BOUTON_PLEIN}>
-              {pending ? <RoueAttente className="size-4" /> : null}
-              {pending ? "Application…" : "Accepter"}
+            <button
+              type="submit"
+              name="decision"
+              value="accepter"
+              onClick={() => setChoix("accepter")}
+              disabled={pending}
+              aria-busy={(pending && choix === "accepter") || undefined}
+              data-ecriture
+              className={BOUTON_PLEIN}
+            >
+              {pending && choix === "accepter" ? <RoueAttente className="size-4" /> : null}
+              {pending && choix === "accepter" ? "Application…" : "Accepter"}
             </button>
           </div>
         </div>

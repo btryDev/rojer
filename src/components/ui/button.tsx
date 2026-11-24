@@ -9,7 +9,7 @@ import { RoueAttente } from "@/components/ui/roue-attente"
  * `buttonVariants` juste en dessous.
  */
 const classesBrutes = cva(
-  "group/button cible-tactile inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-[0.78rem] font-medium tracking-[0.08em] uppercase whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5 [font-family:var(--font-mono)]",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-[0.78rem] font-medium tracking-[0.08em] uppercase whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5 [font-family:var(--font-mono)]",
   {
     variants: {
       variant: {
@@ -44,14 +44,18 @@ const classesBrutes = cva(
           "normal-case tracking-[-0.01em] [font-family:var(--font-body)] font-semibold bg-[color:var(--board-amber)] text-[color:var(--board-amber-ink)] shadow-[inset_0_0_0_1px_rgba(117,77,10,.22)] hover:brightness-[.97]",
       },
       size: {
-        default: "h-9 gap-2 px-4 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3",
+        // `cible-tactile` (globals.css) : zone de clic de 44 px sur écran
+        // tactile, aux seules tailles de pilule (36 à 40 px). Pas sur `xs`,
+        // `sm`, `icon-*` : posés en grappe, leurs halos se recouvriraient
+        // (Apple HIG, « Buttons », 2026-11-24). `lg` fait déjà 44 px.
+        default: "cible-tactile h-9 gap-2 px-4 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3",
         xs: "h-6 gap-1 px-2.5 text-[0.62rem] [&_svg:not([class*='size-'])]:size-3",
         sm: "h-7 gap-1.5 px-3 text-[0.68rem] has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
         lg: "h-11 gap-2 px-6 text-[0.82rem] has-data-[icon=inline-end]:pr-4 has-data-[icon=inline-start]:pl-4",
         // Gabarit des pilules du board : 40 px de haut, 12,5 px de texte.
         board:
-          "h-10 gap-2 px-[18px] text-[12.5px] [&_svg:not([class*='size-'])]:size-4",
-        boardSm: "h-8 gap-1.5 px-3.5 text-[12px]",
+          "cible-tactile h-10 gap-2 px-[18px] text-[12.5px] [&_svg:not([class*='size-'])]:size-4",
+        boardSm: "cible-tactile h-8 gap-1.5 px-3.5 text-[12px]",
         icon: "size-9",
         "icon-xs": "size-6 [&_svg:not([class*='size-'])]:size-3",
         "icon-sm": "size-7",

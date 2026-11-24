@@ -47,7 +47,7 @@ export function BoutonEnvoi({
         aria-describedby={describedBy}
         className={
           discret
-            ? "w-full cursor-pointer rounded-full bg-transparent py-1 text-center text-[0.88rem] font-semibold text-current underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current disabled:cursor-not-allowed disabled:opacity-45"
+            ? "inline-flex w-full items-center justify-center gap-2 cursor-pointer rounded-full bg-transparent py-1 text-center text-[0.88rem] font-semibold text-current underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current disabled:cursor-not-allowed disabled:opacity-45"
             : `lp-btn w-full justify-center disabled:cursor-not-allowed disabled:opacity-45 ${carte === "encre" ? "lp-btn-blanc" : "lp-btn-ink"}`
         }
       >

@@ -56,9 +56,9 @@ const META = "m-0 mt-0.5 text-[13px] text-[color:var(--board-slate-soft)]";
 const NOM = "m-0 text-[15px] font-semibold leading-[1.35] text-[color:var(--board-ink)]";
 const LIGNE = "flex flex-wrap items-center gap-3.5 border-t border-[color:var(--board-slate-pale)] py-3";
 const PILULE_CLAIRE =
-  "inline-flex min-h-10 items-center rounded-full border border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-3.5 text-[13px] text-[color:var(--board-ink)] transition-colors hover:bg-[color:var(--board-slate-pale)] disabled:opacity-60";
+  "inline-flex gap-2 min-h-10 items-center rounded-full border border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-3.5 text-[13px] text-[color:var(--board-ink)] transition-colors hover:bg-[color:var(--board-slate-pale)] disabled:opacity-60";
 const GRANDE_ACTION =
-  "inline-flex min-h-12 items-center justify-center rounded-full bg-[color:var(--board-ink)] px-8 py-4 text-center font-display text-[17px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60";
+  "inline-flex gap-2 min-h-12 items-center justify-center rounded-full bg-[color:var(--board-ink)] px-8 py-4 text-center font-display text-[17px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60";
 const LIEN_DISCRET = "text-[13px] text-[color:var(--board-blue-ink)] underline-offset-2 hover:underline";
 const ARDOISE = "bg-[color:var(--board-slate-pale)] text-[color:var(--board-slate-mid)]";
 const AMBRE = "bg-[color:var(--board-amber)] text-[color:var(--board-amber-ink)]";

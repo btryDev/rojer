@@ -326,7 +326,7 @@
      bouton fait main qui n'en déclare pas (`active:` dans ses classes)
      pâlit sous le doigt ou le clic. Couche de base et spécificité nulle :
      une classe d'opacité posée sur le bouton passe devant. */
-  :where(button:not(:disabled):not(.lp-btn):not([class*="active:"])):active {
+  :where(button:not(:disabled):not(.lp-btn):not([class*="active:"]):active) {
     opacity: 0.7;
   }
 }

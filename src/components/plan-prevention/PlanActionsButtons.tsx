@@ -38,7 +38,7 @@ export function BoutonCloturer({ planId, entete = false }: { planId: string; ent
           })
         }
       >
-        {pending ? "…" : entete ? "Clôturer" : "Clôturer le plan"}
+        {pending ? "Clôture…" : entete ? "Clôturer" : "Clôturer le plan"}
       </Button>
       {confirmation}
     </>
@@ -80,7 +80,7 @@ export function BoutonSupprimerPlan({ planId, entete = false }: { planId: string
           })
         }
       >
-        {pending ? "…" : "Supprimer"}
+        {pending ? "Suppression…" : "Supprimer"}
       </Button>
       {confirmation}
     </>

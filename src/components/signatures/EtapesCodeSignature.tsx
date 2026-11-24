@@ -86,7 +86,7 @@ export function RenvoiDuCode({
  */
 
 export const BOUTON_PLEIN =
-  "inline-flex min-h-12 items-center justify-center rounded-full bg-[color:var(--board-ink)] px-7 font-display text-[16px] font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex gap-2 min-h-12 items-center justify-center rounded-full bg-[color:var(--board-ink)] px-7 font-display text-[16px] font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50";
 export const BOUTON_CLAIR =
   "inline-flex min-h-12 items-center justify-center rounded-full border border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-6 text-[14px] text-[color:var(--board-ink)] hover:bg-[color:var(--board-slate-pale)]";
 

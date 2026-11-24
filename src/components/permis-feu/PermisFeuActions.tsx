@@ -23,7 +23,7 @@ export function BoutonDemarrer({ permisFeuId }: { permisFeuId: string }) {
         })
       }
     >
-      {pending ? "…" : "Démarrer les travaux"}
+      {pending ? "Démarrage…" : "Démarrer les travaux"}
     </Button>
   );
 }
@@ -59,7 +59,7 @@ export function BoutonTerminer({ permisFeuId }: { permisFeuId: string }) {
           })
         }
       >
-        {pending ? "…" : "Marquer terminé"}
+        {pending ? "Enregistrement…" : "Marquer terminé"}
       </Button>
       {confirmation}
     </>
@@ -100,7 +100,7 @@ export function BoutonSupprimer({ permisFeuId }: { permisFeuId: string }) {
           })
         }
       >
-        {pending ? "…" : "Supprimer"}
+        {pending ? "Suppression…" : "Supprimer"}
       </Button>
       {confirmation}
     </>
