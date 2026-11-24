@@ -678,6 +678,15 @@ Constats de l'audit de sécurité du 2026-11-21 (dig sur le DNS public de
   « environnement de test rojer », archiver les 6 anciens prix sans clé
   (hors taxe, dont 69 € et 699 €) et l'ancien taux de TVA « exclusif ». La
   destination d'événements de la préprod y a été supprimée le 2026-11-24.
+- **Surveillance des tâches planifiées** (2026-11-24, décision de la
+  propriétaire : plus tard). `TEMOIN_TACHES_URL` manque en production, et
+  Rojer le signale au démarrage : « Stripe actif sans TEMOIN_TACHES_URL ».
+  Sans elle, une crontab arrêtée ne se voit pas — ni file Stripe, ni
+  rappels, ni suppressions. À faire : un compte gratuit sur healthchecks.io
+  (ou Better Stack Heartbeat) ; un check « Rojer — tâches du jour », période
+  1 jour, délai de grâce 2 h, alerte par e-mail ; son adresse de ping dans
+  `TEMOIN_TACHES_URL` de l'application de production (`taches/temoin.ts`),
+  puis un redémarrage.
 
 ### À faire après la bascule : ce que les conditions générales promettent (2026-11-19)
 
