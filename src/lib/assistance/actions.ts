@@ -8,13 +8,13 @@ import { requireEtablissement } from "@/lib/auth/scope";
 import { decouperCheminInterne } from "@/lib/navigation/provenance";
 import { envoiEnService, motifErreur, sendMail } from "@/lib/email";
 import { CONTACT, ENVOI_IMPOSSIBLE } from "@/lib/contact/message";
+import { LIMITES, cleLimite, consommer } from "@/lib/securite/limite-debit";
 import { texteSaisi } from "@/lib/validation/texte";
 import { courrielDAssistance } from "./courriel";
 import { formuleDAssistance } from "./formule";
 import {
   CATEGORIES_ASSISTANCE,
   CONTEXTE_MAX,
-  DEMANDES_PAR_JOUR_MAX,
   MESSAGE_FORMULE_PRO,
   MESSAGE_MAX,
   TOUT_LE_COMPTE,
@@ -85,16 +85,20 @@ export async function demanderAssistance(
       ? undefined
       : (d.etablissementId ?? (deLaPage && deLaPage !== "nouveau" ? deLaPage : undefined));
 
-  // Trois lectures indépendantes, ensemble (revue du 2026-11-24).
-  const depuis = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const [formule, garde, recentes] = await Promise.all([
+  // Deux lectures indépendantes, ensemble (revue du 2026-11-24).
+  const [formule, garde] = await Promise.all([
     formuleDAssistance(db, compte.compteId),
     voulu ? requireEtablissement(voulu) : null,
-    db.demandeAssistance.count({ where: { createdAt: { gte: depuis } } }),
   ]);
   const etablissement = garde?.etablissement ?? null;
   if (exigeLaFormulePro(d.categorie) && !formule.pro) return { status: "error", message: MESSAGE_FORMULE_PRO };
-  if (recentes >= DEMANDES_PAR_JOUR_MAX) {
+  // Le plafond du jour, par le compteur atomique (`LIMITES.assistanceCompte`) :
+  // compter les demandes puis écrire laissait passer des envois simultanés
+  // (revue de sécurité du commit, 2026-11-24).
+  const verdict = await consommer([
+    { cle: cleLimite("assistance", "compte", compte.compteId), limite: LIMITES.assistanceCompte },
+  ]);
+  if (!verdict.ok) {
     return {
       status: "error",
       message: "Vos demandes du jour sont bien arrivées : nous vous répondons par e-mail.",

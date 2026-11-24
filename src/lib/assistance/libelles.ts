@@ -97,5 +97,4 @@ export const MESSAGE_FORMULE_PRO =
 
 export const MESSAGE_MAX = 2000;
 export const CONTEXTE_MAX = 300;
-/** Au-delà, la demande est refusée : une main qui insiste, ou un robot. */
-export const DEMANDES_PAR_JOUR_MAX = 10;
+// Le plafond des demandes par jour : `LIMITES.assistanceCompte` (`securite/limite-debit.ts`).

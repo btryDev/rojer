@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // ce qu'elle enregistre, et ce qu'elle refuse.
 
 const h = vi.hoisted(() => ({
-  count: vi.fn(async () => 0),
+  consommer: vi.fn(async (): Promise<{ ok: true } | { ok: false; reessayerDansSecondes: number }> => ({ ok: true })),
   create: vi.fn(async () => ({ id: "d1" })),
   supprimer: vi.fn(async () => ({})),
   sendMail: vi.fn(async () => {}),
@@ -20,7 +20,7 @@ vi.mock("@/lib/auth/compte", () => ({
   requireCompte: vi.fn(async () => ({
     user: { id: "u1", email: "m.durand@example.fr", name: "Marie Durand" },
     compte: { compteId: "c1", role: "owner" },
-    db: { demandeAssistance: { count: h.count, create: h.create, delete: h.supprimer } },
+    db: { demandeAssistance: { create: h.create, delete: h.supprimer } },
   })),
 }));
 vi.mock("@/lib/abonnements/gel-saisie", () => ({ ouvrirAuGel: vi.fn() }));
@@ -30,6 +30,11 @@ vi.mock("next/headers", () => ({
 vi.mock("@/lib/auth/scope", () => ({ requireEtablissement: h.requireEtablissement }));
 vi.mock("@/lib/assistance/formule", () => ({ formuleDAssistance: h.formule }));
 vi.mock("@/lib/contact/message", () => ({ CONTACT: "contact@rojer.test", ENVOI_IMPOSSIBLE: "Votre message n'a pas pu partir." }));
+vi.mock("@/lib/securite/limite-debit", () => ({
+  LIMITES: { assistanceCompte: { max: 10, fenetreSecondes: 86_400 } },
+  cleLimite: (a: string, d: string, v: string) => `${a}:${d}:${v}`,
+  consommer: h.consommer,
+}));
 vi.mock("@/lib/email", () => ({
   sendMail: h.sendMail,
   envoiEnService: h.envoiEnService,
@@ -51,7 +56,7 @@ const envoye = () => (h.sendMail.mock.calls[0] as unknown as [Record<string, str
 
 beforeEach(() => {
   vi.clearAllMocks();
-  h.count.mockResolvedValue(0);
+  h.consommer.mockResolvedValue({ ok: true });
   h.envoiEnService.mockReturnValue(true);
   h.formule.mockResolvedValue({ pro: true, libelle: "Pro" });
 });
@@ -135,8 +140,12 @@ describe("demanderAssistance", () => {
   });
 
   it("au-delà du plafond du jour, rien ne part", async () => {
-    h.count.mockResolvedValue(10);
+    h.consommer.mockResolvedValue({ ok: false, reessayerDansSecondes: 600 });
     expect((await demanderAssistance(IDLE, fd({}))).status).toBe("error");
+    expect(h.consommer).toHaveBeenCalledWith([
+      { cle: "assistance:compte:c1", limite: { max: 10, fenetreSecondes: 86_400 } },
+    ]);
+    expect(h.create).not.toHaveBeenCalled();
     expect(h.sendMail).not.toHaveBeenCalled();
   });
 

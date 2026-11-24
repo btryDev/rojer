@@ -113,6 +113,8 @@ export const LIMITES = {
    * sécurité du 2026-11-24).
    */
   rendezVousCompte: { max: 10, fenetreSecondes: 24 * 60 * 60 },
+  /** Les questions à l'Assistance (ADR-050) : chacune écrit à l'équipe. */
+  assistanceCompte: { max: 10, fenetreSecondes: 24 * 60 * 60 },
 } as const satisfies Record<string, Limite>;
 
 export type Verdict =
