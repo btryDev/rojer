@@ -225,6 +225,17 @@ export const FABRIQUES: Record<string, Fabrique[]> = {
   DemandeAssistance: [
     (g) => ({ compteId: g.compte, userId: g.user, categorie: "diagnostic", message: "x", page: "/x", etablissementId: g.Etablissement }),
   ],
+  // Le créneau est hors compte, sans relation : un identifiant opaque suffit (ADR-063).
+  RendezVousAssistance: [
+    (g) => ({
+      compteId: g.compte,
+      userId: g.user,
+      creneauId: randomUUID(),
+      debut: JOUR,
+      fin: PLUS_TARD,
+      mode: "visio",
+    }),
+  ],
   AcceptationConditions: [(g) => ({ compteId: g.compte, userId: g.user, version: "v", empreinte: "e", contexte: "c" })],
   ConsommationQuota: [(g) => ({ compteId: g.compte, quota: "q" })],
   FichierStocke: [(g) => ({ cle: `${g.compte}/${randomUUID()}`, compteId: g.compte, octets: 1 })],

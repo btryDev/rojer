@@ -143,6 +143,8 @@ export const PAS_UNE_CLE_DE_COMPTE: Readonly<Record<string, string>> = {
   "Abonnement.stripeCustomerId": "identifiant chez Stripe",
   "Abonnement.stripeSubscriptionId": "identifiant chez Stripe",
   "Abonnement.stripePriceId": "identifiant chez Stripe",
+  "RendezVousAssistance.creneauId":
+    "créneau du rendez-vous annuel (ADR-063) : table hors compte, commune à tous les comptes, sans donnée d'un compte",
 };
 
 /** Un lien à sonder : la cible est jointe à la source `s0` sous l'alias `c0`. */

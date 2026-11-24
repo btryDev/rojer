@@ -34,6 +34,7 @@ import { prendreLeJour, terminerLeJour } from "./jour";
 import { battre } from "./temoin";
 import { controlerLesReglagesStripe } from "@/lib/stripe/controles";
 import { purgerComptesNonActives } from "@/lib/auth/comptes-non-actives";
+import { annulerRendezVousHorsPro } from "@/lib/assistance/hors-pro";
 
 function horlogeReelle(): Date {
   return new Date();
@@ -93,16 +94,21 @@ export async function lancerTachesQuotidiennes(maintenant: Date) {
   // nulle part ce que l'e-mail lui annonce. Les suppressions DEMANDÉES par
   // un propriétaire (ADR-058 § 8), elles, s'effacent : leur date a été dite
   // (relecture du 2026-11-18).
+  // Le rendez-vous annuel d'un compte sorti de la formule Pro (ADR-063 § 7) :
+  // la formule se lit avant comme après le lancement de l'offre.
+  const rendezVousHorsPro = () => tenter("rendez-vous hors formule Pro", () => annulerRendezVousHorsPro(maintenant));
   if (!offreLancee(contexteDroits())) {
     return {
       offreLancee: false as const,
       configuration,
       suppressions: await tenter("suppressions demandées", () => supprimerComptesEchus(maintenant, stripe, false)),
+      rendezVousHorsPro: await rendezVousHorsPro(),
       ...(await menage()),
     };
   }
   return {
     configuration,
+    rendezVousHorsPro: await rendezVousHorsPro(),
     rappelsSemaineFinEssai: await tenter("rappel d'une semaine avant la fin d'essai", () => rappelerLaSemaineDeLaFinDEssai(maintenant)),
     rappelsVeilleFinEssai: await tenter("rappel de fin d'essai", () => rappelerLaVeilleDeLaFinDEssai(maintenant)),
     rappelsRenouvellementAnnuel: await tenter("rappel de renouvellement annuel", () => rappelerLeRenouvellementAnnuel(maintenant, stripe)),

@@ -595,7 +595,7 @@ export function EtablissementForm({
                       {/* Doute technique typique (2026-10-24) : une ligne. */}
                       <DemandeAide
                         variante="lien"
-                        libelle="Vous ne savez pas ? Un technicien peut l'identifier."
+                        libelle="Vous ne savez pas ? Demandez une visite sur place."
                         categorie="diagnostic"
                         contexte="Catégorie du SSI (A ou B)"
                       />

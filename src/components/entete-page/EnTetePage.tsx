@@ -1,6 +1,5 @@
 import { CadreEnTete, type CadreEnTeteProps } from "./CadreEnTete";
 import { IllustrationEnTete } from "./illustrations";
-import { aUneIllustration } from "./illustrations/liste";
 
 /**
  * L'en-tête des pages d'entrée du rail — un seul pour toutes (2026-10-25).
@@ -34,11 +33,7 @@ export function EnTetePage({ children, ...cadre }: CadreEnTeteProps) {
   // Le cadre (titre, teinte, mise en page) vit dans `CadreEnTete`, partagé
   // avec le repli de chargement.
   return (
-    <CadreEnTete
-      {...cadre}
-      avecPanneau={cadre.item ? aUneIllustration(cadre.item) : false}
-      dessin={cadre.item ? <IllustrationEnTete item={cadre.item} /> : null}
-    >
+    <CadreEnTete {...cadre} dessin={cadre.item ? <IllustrationEnTete item={cadre.item} /> : null}>
       {children}
     </CadreEnTete>
   );

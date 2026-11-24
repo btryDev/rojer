@@ -104,6 +104,14 @@ describe("deduireActif", () => {
     );
   });
 
+  // 2026-11-24, ADR-050 amendée : la page « Assistance » a sa tuile au pied du
+  // rail ; aucune catégorie ne s'allume, pas même la marque.
+  it("reconnaît l'assistance, sans allumer de catégorie", () => {
+    expect(deduireActif(`/etablissements/${ID}/assistance`, ID)).toBe("assistance");
+    expect(categorieDeItem("assistance")).toBeNull();
+    expect(sections().flatMap((s) => s.items.map((i) => i.id))).not.toContain("assistance");
+  });
+
   it("retombe sur le tableau de bord pour un chemin inconnu", () => {
     expect(deduireActif(`/etablissements/${ID}/inconnu`, ID)).toBe("tableau");
   });

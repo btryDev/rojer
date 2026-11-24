@@ -2,6 +2,7 @@
 
 import { useParams, usePathname } from "next/navigation";
 
+import { useAssistancePro } from "@/components/assistance/FormuleAssistance";
 import { ChargementSection } from "@/components/entete-page/ChargementSection";
 import { repliDeChargement } from "@/components/entete-page/repli-de-chargement";
 import { ChargementNeutre } from "@/components/layout/ChargementNeutre";
@@ -39,6 +40,11 @@ import { ChargementNeutre } from "@/components/layout/ChargementNeutre";
  */
 export default function ChargementEtablissement() {
   const { id } = useParams<{ id: string }>();
+  const pro = useAssistancePro();
   const repli = repliDeChargement(usePathname(), id);
-  return repli ? <ChargementSection {...repli} /> : <ChargementNeutre />;
+  if (!repli) return <ChargementNeutre />;
+  // L'Assistance n'a ses onglets qu'en formule Pro (ADR-063) : hors Pro, le
+  // repli ne leur garde pas de place, et l'en-tête ne saute pas à l'arrivée de
+  // la page. Le repli est rendu sous `FormuleAssistance`, posé par la coquille.
+  return <ChargementSection {...repli} bascule={repli.item === "assistance" && !pro ? undefined : repli.bascule} />;
 }

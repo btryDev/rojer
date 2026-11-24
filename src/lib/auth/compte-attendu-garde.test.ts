@@ -34,6 +34,12 @@ const SANS_IDENTIFIANT = /^(?:_?prev\w*|formData)$/;
 const EXEMPTEES: Record<string, string> = {
   "lib/assistance/actions.ts:demanderAssistance":
     "l'établissement posté est vérifié (404 hors du compte) ; sans lui, une demande d'aide rangée ailleurs, sans effet sur les données",
+  "lib/assistance/rendez-vous-actions.ts:reserverRendezVous":
+    "l'établissement posté est vérifié (404 hors du compte actif) avant toute écriture : un onglet resté sur un autre compte est refusé",
+  "lib/assistance/rendez-vous-actions.ts:completerRendezVous":
+    "l'établissement posté est vérifié (404 hors du compte actif) avant toute écriture, et le rendez-vous posté est lu par le client borné",
+  "lib/assistance/rendez-vous-actions.ts:annulerRendezVous":
+    "l'établissement posté est vérifié (404 hors du compte actif) avant toute écriture, et le rendez-vous posté est lu par le client borné",
   "lib/membres/actions.ts:annulerInvitation": "l'invitation postée doit être au compte vérifié (`invitationsDuCompte`)",
   "lib/membres/actions.ts:changerRoleMembre": "le plugin refuse un membre d'un autre compte (FORBIDDEN)",
   "lib/membres/actions.ts:retirerMembre": "le plugin refuse un membre d'un autre compte (MEMBER_NOT_FOUND)",

@@ -45,6 +45,7 @@ vi.mock("@/lib/abonnements/suppression", () => ({
 }));
 vi.mock("@/lib/stripe/config", () => ({ configurationStripe: () => ({ active: false }) }));
 vi.mock("@/lib/auth/comptes-non-actives", () => ({ purgerComptesNonActives: vi.fn().mockResolvedValue({ supprimes: 0 }) }));
+vi.mock("@/lib/assistance/hors-pro", () => ({ annulerRendezVousHorsPro: vi.fn().mockResolvedValue({ annules: 0 }) }));
 vi.mock("@/lib/stripe/client", () => ({ clientStripe: vi.fn(), clientStripeWebhook: vi.fn() }));
 
 import { appelAutorise, lancerTachesDuJour, lancerTachesQuotidiennes, secretDesTaches } from "./quotidiennes";
@@ -108,6 +109,7 @@ describe("tâches quotidiennes", () => {
   it("le bilan des tâches du jour", async () => {
     expect(await lancerTachesQuotidiennes(aParis(9))).toEqual({
       configuration: { problemes: 0 },
+      rendezVousHorsPro: { annules: 0 },
       rappelsSemaineFinEssai: { envoyes: 1, echecs: 0 },
       rappelsVeilleFinEssai: { envoyes: 2, echecs: 0 },
       rappelsRenouvellementAnnuel: { envoyes: 1, echecs: 0 },
@@ -148,6 +150,8 @@ describe("tâches quotidiennes", () => {
       offreLancee: false,
       configuration: { problemes: 0 },
       suppressions: expect.anything(),
+      // Le rendez-vous annuel suit la formule, offre lancée ou non (ADR-063 § 7).
+      rendezVousHorsPro: { annules: 0 },
       fichiersALiberer: { liberes: 3, echecs: 0, restants: 0 },
       tracesPurgees: { effacees: 1 },
       comptesNonActives: { supprimes: 0 },

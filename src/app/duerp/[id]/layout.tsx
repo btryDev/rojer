@@ -1,4 +1,6 @@
 import { SaisieDuSite } from "@/components/quotas/SaisieDuSite";
+import { FormuleAssistance } from "@/components/assistance/FormuleAssistance";
+import { formuleDAssistanceDeLaSession } from "@/lib/assistance/formule";
 import { MarqueLectureSeule } from "@/components/quotas/MarqueLectureSeule";
 import { Suspense } from "react";
 import { BandeauAbonnementDuCompte } from "@/components/abonnements/BandeauAbonnementDuCompte";
@@ -56,11 +58,14 @@ export default async function DuerpLayout({
   // disparaître les retards (ADR-015).
   // La fratrie vient avec, pour le sélecteur de la barre haute : le shell DUERP
   // partage la même barre, donc la même règle (ADR-028).
-  const [modules, counts, fratrie, comptes] = await Promise.all([
+  // La formule du compte, pour l'encart « Besoin d'aide ? » de la cotation
+  // (ADR-050, amendée le 2026-11-24).
+  const [modules, counts, fratrie, comptes, formule] = await Promise.all([
     getEtatModules(etab.id, etab.estERP),
     chargerSidebarCounts(etab.id),
     listerEtablissementsDuCompte(),
     comptesDeLaSession(),
+    formuleDAssistanceDeLaSession(),
   ]);
 
   // Le fil des étapes, calculé pour chaque page : la mise en page ne sait pas
@@ -159,7 +164,7 @@ export default async function DuerpLayout({
           <Suspense fallback={null}>
             <SaisieDuSite etablissementId={etab.id} />
           </Suspense>
-          {children}
+          <FormuleAssistance pro={formule.pro}>{children}</FormuleAssistance>
         </div>
         {/* La même visite qu'à la porte d'entrée : l'assistant est la page
             où l'on passe son temps. */}

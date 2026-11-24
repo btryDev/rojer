@@ -29,6 +29,11 @@ export type MailCompte = {
   titre: string;
   /** Les phrases avant le bouton, une par paragraphe. */
   paragraphes: readonly string[];
+  /**
+   * Une ligne mise en avant, en gras et seule, après le premier paragraphe :
+   * la date d'un rendez-vous (2026-11-24, décision de la propriétaire).
+   */
+  enAvant?: string;
   bouton: { libelle: string; url: string };
   /** La durée de validité du lien : « une heure », « 24 heures »… */
   validite?: string;
@@ -86,6 +91,16 @@ function paragraphe(texte: string): string {
   return `<p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:${COULEURS.texte};">${typographie(texte)}</p>`;
 }
 
+/** La ligne mise en avant : en gras, à l'encre, seule sur sa ligne. */
+function enAvantHtml(texte: string): string {
+  return `<p style="margin:0 0 16px;font-size:17px;line-height:1.5;font-weight:600;color:${COULEURS.encre};">${typographie(texte)}</p>`;
+}
+
+/** Les paragraphes du texte brut, la ligne mise en avant après le premier. */
+function paragraphesAvecEnAvant(m: Pick<MailCompte, "paragraphes" | "enAvant">): string[] {
+  return m.enAvant ? [...m.paragraphes.slice(0, 1), m.enAvant, ...m.paragraphes.slice(1)] : [...m.paragraphes];
+}
+
 /** Les phrases secondaires : plus petites, toutes à la même taille. */
 function note(texte: string): string {
   return `<p style="margin:0 0 8px;font-size:13px;line-height:1.5;color:${COULEURS.doux};">${typographie(texte)}</p>`;
@@ -122,7 +137,13 @@ ${lignes.map(note).join("\n")}
  * ligne de pied. Une seule coquille pour les e-mails de compte et ceux de
  * signature.
  */
-function coquille(titre: string, contenu: string, surtitre?: string): string {
+function coquille(
+  titre: string,
+  contenu: string,
+  surtitre?: string,
+  /** La ligne de pied, en texte (échappée ici, comme le reste) ; par défaut, ne pas répondre. */
+  pied = "Envoyé par Rojer. Ne répondez pas à ce message.",
+): string {
   // Une seule marque forte : la pastille bleue de Rojer en tête. Le reste est
   // calme — encre, gris de la charte, un seul bouton.
   return `<!doctype html>
@@ -146,7 +167,7 @@ function coquille(titre: string, contenu: string, surtitre?: string): string {
 ${surtitre ? `<p style="margin:0 0 14px;font-family:${POLICE_MONO};font-size:11px;line-height:1.4;letter-spacing:0.16em;text-transform:uppercase;color:${COULEURS.doux};">${echapperHtml(surtitre)}</p>\n` : ""}<h1 style="margin:0 0 22px;font-family:${POLICE_TITRE};font-size:30px;line-height:1.08;font-weight:600;letter-spacing:-0.035em;color:${COULEURS.encre};">${echapperHtml(titre)}</h1>
 ${contenu}
 </td></tr>
-<tr><td align="center" style="padding:18px 8px 0;font-size:12px;line-height:1.5;color:${COULEURS.doux};text-align:center;">Envoyé par Rojer. Ne&nbsp;répondez pas à ce&nbsp;message.</td></tr>
+<tr><td align="center" style="padding:18px 8px 0;font-size:12px;line-height:1.5;color:${COULEURS.doux};text-align:center;">${typographie(pied)}</td></tr>
 </table>
 </td></tr>
 </table>
@@ -159,7 +180,7 @@ export function htmlMailCompte(m: MailCompte): string {
   return coquille(
     m.titre,
     [
-      m.paragraphes.map((p) => paragraphe(p)).join("\n"),
+      m.paragraphes.map((p, i) => (i === 0 && m.enAvant ? `${paragraphe(p)}\n${enAvantHtml(m.enAvant)}` : paragraphe(p))).join("\n"),
       boutonHtml(href, m.bouton.libelle),
       m.validite ? note(`Le lien est valable ${m.validite}.`) : "",
       lienDeSecours(href),
@@ -176,7 +197,7 @@ export function texteMailCompte(m: MailCompte): string {
   return [
     "Bonjour,",
     "",
-    ...m.paragraphes,
+    ...paragraphesAvecEnAvant(m),
     "",
     m.validite ? `Ouvrez ce lien (valable ${m.validite}) :` : "Ouvrez ce lien :",
     m.bouton.url,
@@ -305,4 +326,43 @@ export function texteMailSignature(m: MailSignature): string {
 export function mailSignature(m: MailSignature): { text: string; html?: string } {
   const text = texteMailSignature(m);
   return !m.bouton || /^https?:\/\//i.test(m.bouton.url) ? { text, html: htmlMailSignature(m) } : { text };
+}
+
+// ── L'e-mail d'une demande d'assistance (2026-11-24) ───────────────────────
+
+/**
+ * Une demande d'assistance, telle qu'elle arrive dans la boîte de Rojer
+ * (ADR-050, amendée le 2026-11-24). La même coquille, avec un encadré (qui
+ * écrit, d'où, sous quelle formule) et le message, aligné à gauche et ses
+ * retours à la ligne gardés. On y RÉPOND : le pied le dit, à rebours des
+ * e-mails de compte. Tout ce qui vient de la personne passe par
+ * `echapperHtml`.
+ */
+export type MailAssistance = {
+  /** Le sujet choisi (« Un rapport de contrôle »). */
+  titre: string;
+  /** La phrase d'ouverture (« Marie Durand vous écrit depuis Rojer. »). */
+  chapeau: string;
+  encadre: readonly { libelle: string; valeur: string }[];
+  /** Le message de la personne, tel qu'elle l'a écrit. */
+  message: string;
+  /** L'adresse où part une réponse (`Reply-To`). */
+  repondreA: string;
+};
+
+/** Un texte saisi, échappé, ses retours à la ligne gardés. */
+function texteSaisiHtml(texte: string): string {
+  return typographie(texte).replace(/\r?\n/g, "<br>");
+}
+
+export function htmlMailAssistance(m: MailAssistance): string {
+  const message = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 8px;">
+<tr><td style="border:1px solid ${COULEURS.filet};border-radius:18px;padding:18px 22px;text-align:left;font-size:15px;line-height:1.65;color:${COULEURS.encre};overflow-wrap:anywhere;word-break:break-word;">${texteSaisiHtml(m.message)}</td></tr>
+</table>`;
+  return coquille(
+    m.titre,
+    [paragraphe(m.chapeau), encadreHtml(m.encadre), message].join("\n"),
+    "Assistance",
+    `Répondez à ce message : la réponse part à ${m.repondreA}.`,
+  );
 }

@@ -5,6 +5,8 @@ import { listerEtablissementsDuCompte } from "@/lib/etablissements/queries";
 import { Suspense } from "react";
 import { BandeauAbonnementDuCompte } from "@/components/abonnements/BandeauAbonnementDuCompte";
 import { SaisieDuSite } from "@/components/quotas/SaisieDuSite";
+import { FormuleAssistance } from "@/components/assistance/FormuleAssistance";
+import { formuleDAssistanceDeLaSession } from "@/lib/assistance/formule";
 
 /**
  * Layout imbriqué pour toutes les pages d'un établissement.
@@ -37,10 +39,14 @@ export default async function EtablissementLayout({
   // temps : une lecture des établissements du compte, qui ne dépend pas de
   // la garde. Elle est lue ici et non dans `BarreCompte` : le composant est
   // client.
-  const [{ user, etablissement }, fratrie, comptes] = await Promise.all([
+  //
+  // La formule du compte, pour les encarts « Besoin d'aide ? » des pages
+  // (ADR-050, amendée le 2026-11-24) : une lecture, par son identifiant.
+  const [{ user, etablissement }, fratrie, comptes, formule] = await Promise.all([
     requireEtablissement(id),
     listerEtablissementsDuCompte(),
     comptesDeLaSession(),
+    formuleDAssistanceDeLaSession(),
   ]);
   // Le client ne reçoit que ce que la barre affiche — l'entreprise chargée
   // par la garde reste ici.
@@ -69,7 +75,7 @@ export default async function EtablissementLayout({
         <Suspense fallback={null}>
           <SaisieDuSite etablissementId={etab.id} />
         </Suspense>
-        {children}
+        <FormuleAssistance pro={formule.pro}>{children}</FormuleAssistance>
       </div>
     </CadreDuDossier>
   );

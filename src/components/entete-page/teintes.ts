@@ -1,4 +1,4 @@
-import type { RailCategorieId } from "@/components/layout/sidebar-nav";
+import { categorieDeItem, type RailCategorieId, type SidebarItemId } from "@/components/layout/sidebar-nav";
 
 /**
  * La teinte de chaque section du rail (décision de la propriétaire du
@@ -50,3 +50,13 @@ export const TEINTE_SECTION: Record<RailCategorieId, string | null> = {
 
 /** Les sections qui ont une teinte propre — les autres prennent le gris. */
 export const SECTIONS_TEINTEES = ["a-faire", "sante-securite", "equipement-batiment"] as const;
+
+/**
+ * La section dont l'en-tête d'une entrée prend la teinte : celle de son axe
+ * du rail — sauf l'Assistance, au pied du rail et hors des axes (2026-11-24) :
+ * son en-tête prend le gris des Paramètres, sans que la tuile Paramètres du
+ * rail s'allume (`categorieDeItem` la laisse hors axe).
+ */
+export function sectionDeLEnTete(item: SidebarItemId): RailCategorieId | null {
+  return item === "assistance" ? "parametres" : categorieDeItem(item);
+}

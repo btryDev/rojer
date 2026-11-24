@@ -102,7 +102,10 @@ export type SidebarItemId =
   | "prescriptions"
   | "equipe"
   | "perimetre"
-  | "documents";
+  | "documents"
+  // La page « Assistance » (2026-11-24, ADR-050 amendée) : sa tuile est au
+  // pied du rail, hors des catégories (`categorieDeItem` → null).
+  | "assistance";
 
 /**
  * Le nom de chaque écran, en un seul endroit. La sidebar s'en sert pour
@@ -139,6 +142,7 @@ export const LABEL_ITEM: Record<SidebarItemId, string> = {
   // qu'il fait et c'est ce qu'il dit. Le libellé est celui que `CLAUDE.md`
   // annonçait déjà pour cette entrée.
   connecter: "Connecter un assistant",
+  assistance: "Assistance",
   equipements: "Équipements",
   batiments: "Zones",
   prestataires: "Prestataires",
@@ -280,6 +284,9 @@ export function deduireActif(
   if (pathname.startsWith(`${base}/documents`)) return "documents";
   if (pathname.startsWith(`${base}/perimetre`)) return "perimetre";
   if (pathname.startsWith(`${base}/connecter`)) return "connecter";
+  // Sa tuile est au pied du rail (`LienAssistance`) ; aucune catégorie ne
+  // s'allume (`categorieDeItem`), pas même la marque (2026-11-24).
+  if (pathname.startsWith(`${base}/assistance`)) return "assistance";
   return "tableau";
 }
 
@@ -667,6 +674,10 @@ export function categorieDeItem(id: SidebarItemId): RailCategorieId | null {
   switch (id) {
     case "tableau":
       return "tableau";
+    // L'assistance a sa tuile à elle, au pied du rail (2026-11-24) : aucun
+    // panneau ne s'ouvre, aucune entrée ne s'allume.
+    case "assistance":
+      return null;
     case "connecter":
     case "fiche":
     case "batiments":

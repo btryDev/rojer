@@ -17,7 +17,7 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
-import { DemandeAide } from "@/components/assistance/DemandeAide";
+import { LienAssistance } from "@/components/assistance/LienAssistance";
 import { unPanneauModalEstOuvert } from "@/components/ui-kit/PanneauModal";
 import { LogoRojer } from "@/components/marque/LogoRojer";
 import { NavLink, RailEntree } from "./entrees-navigation";
@@ -68,9 +68,10 @@ export function NavigationMobile({
     zoneFeuille.current?.querySelector<HTMLElement>("a, button")?.focus();
     const auClavier = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
-      // Une fenêtre ouverte depuis la feuille (« Besoin d'aide ? ») a son
-      // propre Échap : refermer la feuille sous elle la démonterait, et le
-      // message en cours de saisie avec.
+      // Une fenêtre ouverte sous la feuille a son propre Échap : refermer la
+      // feuille aussi ferait deux fermetures pour une touche. ~~La feuille
+      // ouvrait « Besoin d'aide ? »~~ [2026-11-24 : elle mène à la page
+      // « Assistance » ; la garde reste pour les fenêtres de la page.]
       if (unPanneauModalEstOuvert()) return;
       const onglet = barre.current?.querySelector<HTMLElement>('[aria-expanded="true"]');
       surChoisir(null);
@@ -118,7 +119,7 @@ export function NavigationMobile({
             ))}
           </nav>
           <div className="mt-2 border-t border-white/10 pt-2">
-            <DemandeAide variante="feuille" etablissementId={etablissementId} />
+            <LienAssistance variante="feuille" etablissementId={etablissementId} actif={actif} auChoix={() => surChoisir(null)} />
           </div>
         </div>
       ) : null}

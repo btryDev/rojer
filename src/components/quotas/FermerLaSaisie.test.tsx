@@ -112,4 +112,29 @@ describe("VerrouDeLaPage (frère des pages d'une mise en page)", () => {
     fireEvent.submit(screen.getByTestId("hors-zone"));
     expect(envoye).toHaveBeenCalledTimes(1);
   });
+
+  // Le rendez-vous annuel (ADR-063) est un geste du compte : le gel d'un site
+  // ne le ferme pas ; une saisie fermée pour le compte, si (2026-11-24).
+  it.each([
+    [true, 1],
+    [false, 0],
+  ])("gel du site = %s : un geste du compte part %i fois", (gel, attendus) => {
+    envoye.mockClear();
+    render(
+      <div data-zone-saisie data-testid="zone">
+        <VerrouDeLaPage motif="Ce site est gelé." gel={gel} />
+        <form method="post" data-geste-du-compte data-testid="rendez-vous" onSubmit={envoye}>
+          <button type="submit">Réserver ce rendez-vous</button>
+        </form>
+        <form method="post" data-testid="saisie-du-site" onSubmit={envoye}>
+          <button type="submit">Enregistrer</button>
+        </form>
+      </div>,
+    );
+    expect(screen.getByTestId("zone").hasAttribute("data-saisie-gel")).toBe(gel);
+    fireEvent.submit(screen.getByTestId("rendez-vous"));
+    fireEvent.submit(screen.getByTestId("saisie-du-site"));
+    expect(envoye).toHaveBeenCalledTimes(attendus);
+    expect(screen.getByText("Réserver ce rendez-vous").hasAttribute("aria-disabled")).toBe(!gel);
+  });
 });

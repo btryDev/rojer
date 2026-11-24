@@ -1,10 +1,15 @@
 import { segmentsSousEtablissement } from "@/lib/navigation/provenance";
 
-import type { SidebarItemId } from "@/components/layout/sidebar-nav";
+import type { RailCategorieId, SidebarItemId } from "@/components/layout/sidebar-nav";
 import type { CadreEnTeteProps } from "./CadreEnTete";
 
-/** L'en-tête qu'annonce le repli de chargement d'une page. */
-export type RepliSection = Pick<Extract<CadreEnTeteProps, { item: SidebarItemId }>, "item" | "titre"> & {
+/** L'en-tête qu'annonce le repli de chargement d'une page : une entrée du
+ *  rail, ou — pour une page hors du rail, comme l'assistance (2026-11-24) —
+ *  un titre et la section dont elle prend la teinte. */
+export type RepliSection = (
+  | Pick<Extract<CadreEnTeteProps, { item: SidebarItemId }>, "item" | "titre">
+  | Pick<Extract<CadreEnTeteProps, { section: RailCategorieId }>, "item" | "titre" | "section">
+) & {
   /** La page porte une bascule de vue sous son titre : le repli lui garde
    *  sa place, sans quoi l'en-tête grandirait à l'arrivée de la page. */
   bascule?: true;
@@ -22,6 +27,9 @@ export type RepliSection = Pick<Extract<CadreEnTeteProps, { item: SidebarItemId 
 const REPLIS: Readonly<Record<string, RepliSection>> = {
   accessibilite: { item: "accessibilite" },
   actions: { item: "actions" },
+  // La bascule « Poser une question / Rendez-vous annuel » : en formule Pro
+  // seulement (ADR-063) — le repli ne connaît pas la formule, il la réserve.
+  assistance: { item: "assistance", bascule: true },
   batiments: { item: "batiments" },
   calendrier: { item: "calendrier", bascule: true },
   "carnet-sanitaire": { item: "carnet-sanitaire" },

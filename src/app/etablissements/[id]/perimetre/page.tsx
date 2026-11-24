@@ -201,8 +201,8 @@ export default async function PerimetrePage({
         {/* La page des limites : un seul encart, en fin de page (2026-10-24). */}
         <DemandeAide
           variante="encart"
-          accroche="Ce que Rojer ne suit pas, nos experts peuvent le prendre en charge avec vous."
-          libelle="En parler à un expert"
+          accroche="Ce que Rojer ne suit pas, posez-nous la question : nous vous disons comment le prendre en charge."
+          libelle="Poser la question"
           categorie="hors_couverture"
           contexte="Ce que Rojer ne couvre pas"
           etablissementId={id}

@@ -115,8 +115,9 @@ function RailLibelle({ cat, allume, m }: { cat: RailCategorie; allume: boolean; 
 
 export const CLASSES_ITEM =
   "flex w-full items-center gap-3 rounded-full px-3.5 py-[10px] text-[13.5px] transition-colors";
-/** Le ton d'une entrée de panneau au repos — repris par « Besoin d'aide ? »
- *  au pied de la feuille du téléphone, qui doit s'aligner sur ses voisines. */
+/** Le ton d'une entrée de panneau au repos. ~~Repris par « Besoin d'aide ? »
+ *  au pied de la feuille du téléphone~~ [2026-11-24 : l'entrée « Assistance »
+ *  y passe par `NavLink`, comme ses voisines]. */
 export const TON_ITEM_REPOS = "text-white/60 hover:bg-white/10 hover:text-white";
 
 /**

@@ -30,6 +30,7 @@ export const ITEMS_ILLUSTRES = [
   "guide",
   "fiche",
   "connecter",
+  "assistance",
 ] as const satisfies readonly SidebarItemId[];
 
 export type ItemIllustre = (typeof ITEMS_ILLUSTRES)[number];

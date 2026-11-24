@@ -13,7 +13,7 @@ import {
 import { EnTetePage } from "./EnTetePage";
 import { ITEMS_ILLUSTRES } from "./illustrations/liste";
 import { CadreIllustration } from "./illustrations/motifs";
-import { SECTIONS_TEINTEES, TEINTE_SECTION } from "./teintes";
+import { SECTIONS_TEINTEES, TEINTE_SECTION, sectionDeLEnTete } from "./teintes";
 
 afterEach(cleanup);
 
@@ -80,10 +80,11 @@ describe("EnTetePage", () => {
 
 describe("les teintes de section", () => {
   // Chaque page illustrée appartient à une section teintée — une page qui
-  // tomberait hors des sections (`categorieDeItem` → tableau) aurait un
-  // en-tête blanc sans que rien ne le signale.
+  // tomberait hors des sections (`sectionDeLEnTete` → tableau) aurait un
+  // en-tête blanc sans que rien ne le signale. L'Assistance, hors des axes du
+  // rail, prend le gris des Paramètres (2026-11-24).
   it.each(ITEMS_ILLUSTRES)("%s : sa section a une teinte", (item) => {
-    const section = categorieDeItem(item as SidebarItemId) ?? "tableau";
+    const section = sectionDeLEnTete(item as SidebarItemId) ?? "tableau";
     expect(TEINTE_SECTION[section]).toMatch(/^#[0-9a-f]{6}$/);
   });
 

@@ -29,6 +29,8 @@ const TRAITEES: Record<string, string> = {
   "AccessToken.createdBy": "un lien d'accès créé garde la personne (compté)",
   "DemandeAssistance.compte": "les demandes du compte sont effacées avant lui",
   "DemandeAssistance.user": "une demande sur un autre compte garde la personne (comptée)",
+  "RendezVousAssistance.compte": "les rendez-vous du compte sont effacés avant lui, leurs créneaux à venir rendus",
+  "RendezVousAssistance.user": "un rendez-vous sur un autre compte garde la personne (compté)",
   "Abonnement.compte": "la ligne d'abonnement est effacée avant le compte",
   "AcceptationConditions.compte": "les acceptations du compte sont effacées avant lui (la trace les garde)",
   "AcceptationConditions.user": "une acceptation sur un autre compte garde la personne (comptée)",

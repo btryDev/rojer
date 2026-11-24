@@ -91,7 +91,7 @@ export class RefusQuota extends Error {
 type Lecteur = Db | Prisma.TransactionClient;
 
 /** L'anniversaire d'`ancre` dans l'année `annee` (le 29 février tombe le 28). */
-function anniversaire(ancre: Date, annee: number): Date {
+export function anniversaire(ancre: Date, annee: number): Date {
   const d = new Date(ancre);
   const dernierJour = new Date(Date.UTC(annee, ancre.getUTCMonth() + 1, 0)).getUTCDate();
   d.setUTCFullYear(annee, ancre.getUTCMonth(), Math.min(ancre.getUTCDate(), dernierJour));
@@ -175,8 +175,11 @@ export async function debutDeLAnneeDuCompte(l: Lecteur, compteId: string): Promi
   return (await abonnementDesPlafonds(l, compteId)).debutAnnee;
 }
 
-/** Le verrou de la ligne du compte, pour la durée de la transaction. */
-async function verrouillerLeCompte(tx: Prisma.TransactionClient, compteId: string): Promise<void> {
+/**
+ * Le verrou de la ligne du compte, pour la durée de la transaction : les
+ * plafonds, et le rendez-vous annuel (ADR-063, un par année du compte).
+ */
+export async function verrouillerLeCompte(tx: Prisma.TransactionClient, compteId: string): Promise<void> {
   // NO KEY : verrou exclusif entre créations, sans bloquer les insertions
   // d'autres transactions qui référencent le compte (clé étrangère).
   await tx.$queryRaw`SELECT 1 FROM "Compte" WHERE "id" = ${compteId}::uuid FOR NO KEY UPDATE`;

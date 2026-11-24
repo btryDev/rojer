@@ -296,13 +296,34 @@ de 30 jours (§ 4).]
 
 ### 2.8 Demandes d'assistance (« Besoin d'aide ? », ADR-050, 2026-10-24)
 
-Le dirigeant peut demander l'aide d'un expert depuis l'application
-(`DemandeAssistance`) : une catégorie, sa question en texte libre, un
-téléphone **facultatif**, la page d'où il écrit. Base légale : sa demande
+Le dirigeant peut ~~demander l'aide d'un expert~~ [2026-11-24 : écrire à
+l'assistance — page « Assistance », ADR-050 amendée] depuis l'application
+(`DemandeAssistance`) : une catégorie, sa question en texte libre, ~~un
+téléphone **facultatif**~~ [2026-11-24 : plus demandé ; la colonne garde les
+demandes passées], la page d'où il écrit. Base légale : sa demande
 (mesures précontractuelles, 6.1.b), jamais un consentement à la prospection.
-Rien n'est envoyé hors de la base tant que l'e-mail n'est pas branché. Le
-texte libre peut contenir ce que l'utilisateur y écrit : l'écran ne
+~~Rien n'est envoyé hors de la base tant que l'e-mail n'est pas branché.~~
+[2026-11-24 : la demande part par e-mail vers la boîte de Rojer (Mailpace,
+déjà sous-traitant pour les e-mails du service), avec, pour un problème
+technique, le nom du navigateur — qui n'est pas gardé en base ; la réponse
+part par e-mail. La ligne en base est écrite juste avant l'envoi (elle compte
+au plafond du jour) et retirée si l'envoi échoue — sauf pour un membre en
+lecture seule, qui ne peut que créer.]
+Le texte libre peut contenir ce que l'utilisateur y écrit : l'écran ne
 l'invite à aucune donnée de santé ni de salarié.
+
+**Le rendez-vous annuel de la formule Pro** (ADR-063, 2026-11-24)
+(`RendezVousAssistance`) : le créneau (début, fin), le mode (téléphone ou
+visio), le téléphone pour un rendez-vous au téléphone, ce que la personne veut
+aborder (texte libre, facultatif), qui a réservé, et la date d'annulation.
+Base légale : l'exécution du contrat (6.1.b) — le rendez-vous est une
+prestation de la formule. Chaque réservation, déplacement ou annulation part
+par e-mail vers la boîte de Rojer (Mailpace), et une confirmation vers la
+personne. Les créneaux (`CreneauAssistance`) ne portent aucune donnée d'un
+compte. Les rendez-vous sont supprimés avec le compte, et le créneau d'un
+rendez-vous à venir est rendu. Les rendez-vous passés de plus de trois ans
+seront purgés, comme les demandes d'assistance (même dette : pas encore de
+purge automatique).
 
 ---
 
@@ -388,6 +409,7 @@ ne dit pas :
 | **Signatures** (`Signature`) : nom, e-mail, adresse IP, user-agent, empreinte du document, consentement (texte et date) — 2026-11-21 | Tant que le compte vit ; une signature révoquée reste (ADR-061) | — | Preuve de la signature : intérêt légitime (6.1.f) ; supprimée avec le compte |
 | **Liens et codes de signature** (`AccessToken`, `CodeSignatureCompte`) : empreintes du lien et du code, adresse du destinataire — 2026-11-21 | Pas de purge automatique à ce jour | — | Supprimés avec l'établissement |
 | Demandes d'assistance (ADR-050) | **3 ans à compter de la demande** — durée proposée, **à valider** ; pas encore de purge automatique | — | Suppression en cascade avec l'établissement |
+| Rendez-vous annuels (ADR-063) : créneau, mode, téléphone, ce qui est à aborder — 2026-11-24 | **3 ans après le rendez-vous** — durée proposée, **à valider** ; pas encore de purge automatique | — | Supprimés avec le compte ; le créneau d'un rendez-vous à venir est rendu |
 
 ### 4.1 Correction d'une erreur de la version précédente
 
