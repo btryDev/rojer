@@ -112,7 +112,7 @@ export function PanneauModal({
             type="button"
             onClick={surFermer}
             aria-label="Fermer"
-            className="flex size-10 flex-none items-center md:size-8 justify-center rounded-full text-[color:var(--board-slate-mid)] shadow-[inset_0_0_0_1px_rgba(10,10,10,.14)] transition-colors hover:bg-[color:var(--board-slate-pale)] hover:text-[color:var(--board-ink)]"
+            className="cible-tactile flex size-10 flex-none items-center md:size-8 justify-center rounded-full text-[color:var(--board-slate-mid)] shadow-[inset_0_0_0_1px_rgba(10,10,10,.14)] transition-colors hover:bg-[color:var(--board-slate-pale)] hover:text-[color:var(--board-ink)]"
           >
             <X className="size-4" />
           </button>

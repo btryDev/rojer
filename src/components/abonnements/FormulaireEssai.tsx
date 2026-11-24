@@ -39,7 +39,7 @@ export function FormulaireEssai({ compteId }: { compteId: string | null }) {
       </label>
       <MessageFormulaire ton="alerte">{etat.status === "error" ? etat.message : null}</MessageFormulaire>
       <div>
-        <Button type="submit" variant="board" size="board" disabled={!accepte || enCours}>
+        <Button type="submit" variant="board" size="board" enCours={enCours} disabled={!accepte}>
           {enCours ? "Démarrage de l'essai…" : "Démarrer mon essai"}
         </Button>
       </div>

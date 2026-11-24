@@ -18,6 +18,7 @@ import {
 } from "@/lib/plan-prevention/signature-fiche-actions";
 import { SENS_R4512_7, URL_R4512_7 } from "@/lib/plan-prevention/annonces-plan";
 import { formaterHeureEnLettresFr, formaterJourMoisChiffresFr } from "@/lib/dates";
+import { BoutonOccupe } from "@/components/ui/bouton-occupe";
 
 /**
  * Les signatures de la fiche du plan (2026-11-19, lot 3, maquette V2
@@ -55,9 +56,9 @@ const META = "m-0 mt-0.5 text-[13px] text-[color:var(--board-slate-soft)]";
 const NOM = "m-0 text-[15px] font-semibold leading-[1.35] text-[color:var(--board-ink)]";
 const LIGNE = "flex flex-wrap items-center gap-3.5 border-t border-[color:var(--board-slate-pale)] py-3";
 const PILULE_CLAIRE =
-  "inline-flex min-h-10 items-center rounded-full border border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-3.5 text-[13px] text-[color:var(--board-ink)] transition-colors hover:bg-[color:var(--board-slate-pale)] disabled:opacity-60";
+  "inline-flex gap-2 min-h-10 items-center rounded-full border border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-3.5 text-[13px] text-[color:var(--board-ink)] transition-colors hover:bg-[color:var(--board-slate-pale)] disabled:opacity-60";
 const GRANDE_ACTION =
-  "inline-flex min-h-12 items-center justify-center rounded-full bg-[color:var(--board-ink)] px-8 py-4 text-center font-display text-[17px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60";
+  "inline-flex gap-2 min-h-12 items-center justify-center rounded-full bg-[color:var(--board-ink)] px-8 py-4 text-center font-display text-[17px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60";
 const LIEN_DISCRET = "text-[13px] text-[color:var(--board-blue-ink)] underline-offset-2 hover:underline";
 const ARDOISE = "bg-[color:var(--board-slate-pale)] text-[color:var(--board-slate-mid)]";
 const AMBRE = "bg-[color:var(--board-amber)] text-[color:var(--board-amber-ink)]";
@@ -80,9 +81,9 @@ function BoutonRenvoyer({ planId, lienId }: { planId: string; lienId: string }) 
   });
   return (
     <form action={action} className="contents">
-      <button type="submit" data-ecriture disabled={pending} className={PILULE_CLAIRE}>
+      <BoutonOccupe type="submit" data-ecriture enCours={pending} className={PILULE_CLAIRE}>
         {pending ? "Envoi…" : "Renvoyer le lien"}
-      </button>
+      </BoutonOccupe>
       <MessageGeste state={state} />
     </form>
   );
@@ -193,9 +194,9 @@ function BoutonEnvoyerLien({ planId }: { planId: string }) {
   });
   return (
     <form action={action} className="flex flex-col items-start gap-2">
-      <button type="submit" data-ecriture disabled={pending} className={GRANDE_ACTION}>
+      <BoutonOccupe type="submit" data-ecriture enCours={pending} className={GRANDE_ACTION}>
         {pending ? "Envoi…" : "Envoyer le lien à l'entreprise extérieure"}
-      </button>
+      </BoutonOccupe>
       <MessageGeste state={state} />
     </form>
   );

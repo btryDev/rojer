@@ -16,14 +16,14 @@ export function BoutonDemarrer({ permisFeuId }: { permisFeuId: string }) {
       type="button"
       variant="board"
       size="board"
-      disabled={pending}
+      enCours={pending}
       onClick={() =>
         startTransition(async () => {
           await marquerEnCours(permisFeuId);
         })
       }
     >
-      {pending ? "…" : "Démarrer les travaux"}
+      {pending ? "Démarrage…" : "Démarrer les travaux"}
     </Button>
   );
 }
@@ -38,7 +38,7 @@ export function BoutonTerminer({ permisFeuId }: { permisFeuId: string }) {
         type="button"
         variant="board"
         size="board"
-        disabled={pending}
+        enCours={pending}
         onClick={() =>
           // La seule des seize questions qui ne garde pas une perte de données
           // mais une déclaration : le permis passe en « terminé », et c'est
@@ -59,7 +59,7 @@ export function BoutonTerminer({ permisFeuId }: { permisFeuId: string }) {
           })
         }
       >
-        {pending ? "…" : "Marquer terminé"}
+        {pending ? "Enregistrement…" : "Marquer terminé"}
       </Button>
       {confirmation}
     </>
@@ -76,7 +76,7 @@ export function BoutonSupprimer({ permisFeuId }: { permisFeuId: string }) {
         type="button"
         variant="boardClair"
         size="boardSm"
-        disabled={pending}
+        enCours={pending}
         onClick={() =>
           // « Cette action est définitive » était faux une fois sur deux :
           // `supprimerPermisFeu` n'efface qu'un permis en brouillon ou en
@@ -100,7 +100,7 @@ export function BoutonSupprimer({ permisFeuId }: { permisFeuId: string }) {
           })
         }
       >
-        {pending ? "…" : "Supprimer"}
+        {pending ? "Suppression…" : "Supprimer"}
       </Button>
       {confirmation}
     </>

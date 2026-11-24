@@ -319,6 +319,43 @@
     background: color-mix(in oklch, var(--ink) 92%, transparent);
     color: var(--paper-elevated);
   }
+
+  /* État appuyé (Apple HIG, « Buttons » : « Always include a press state
+     for a custom button », 2026-11-24). Le bouton de base a le sien
+     (`active:translate-y-px`), la pilule publique aussi (`.lp-btn`) ; un
+     bouton fait main qui n'en déclare pas (`active:` dans ses classes)
+     pâlit sous le doigt ou le clic. Couche de base et spécificité nulle :
+     une classe d'opacité posée sur le bouton passe devant. */
+  :where(button:not(:disabled):not(.lp-btn):not([class*="active:"]):active) {
+    opacity: 0.7;
+  }
+}
+
+@layer components {
+  /* Cible tactile de 44 px (Apple HIG, « Buttons » : une zone de clic d'au
+     moins 44 × 44 pt, 2026-11-24). Sur écran tactile seulement, un halo
+     invisible et centré agrandit la zone de clic, sans toucher au dessin ni
+     à la mise en page. Posée par le bouton de base (`button.tsx`) et par les
+     petits boutons faits main ISOLÉS (flèches précédent / suivant, croix de
+     fermeture) — jamais sur une grappe de mini-boutons collés, où les halos
+     se recouvriraient : le dernier peint prendrait le bord de son voisin.
+     `position: relative` en couche et à spécificité nulle : un bouton
+     `absolute` ou `fixed` le reste. Un bouton qui dessine son propre
+     `::after` ne la prend pas. */
+  @media (pointer: coarse) {
+    :where(.cible-tactile) {
+      position: relative;
+    }
+    .cible-tactile::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: max(100%, 44px);
+      height: max(100%, 44px);
+      translate: -50% -50%;
+    }
+  }
 }
 
 @layer components {
@@ -1069,6 +1106,12 @@
       color 200ms ease,
       border-color 200ms ease,
       transform 200ms ease;
+  }
+  /* Appuyée : un pixel plus bas, comme le bouton de base (Apple HIG,
+     « Buttons », 2026-11-24). `translate` n'est pas dans la transition :
+     le geste répond tout de suite. */
+  .lp-btn:active:not(:disabled):not([aria-haspopup]) {
+    translate: 0 1px;
   }
   .lp-btn-ink {
     background: var(--board-ink);

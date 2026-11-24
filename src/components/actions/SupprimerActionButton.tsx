@@ -22,7 +22,7 @@ export function SupprimerActionButton({
       <Button data-ecriture
         variant="boardClair"
         size="boardSm"
-        disabled={pending}
+        enCours={pending}
         onClick={() =>
           demander({
             titre: "Supprimer cette action du plan ?",

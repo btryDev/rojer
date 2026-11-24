@@ -64,7 +64,7 @@ export function SupprimerEtablissementButton({
         variant="boardClair"
         size="board"
         className="text-[color:var(--board-signal-ink)]"
-        disabled={pending}
+        enCours={pending}
         onClick={() =>
           demander({
             titre: "Supprimer cet établissement et tout ce qu'il porte ?",

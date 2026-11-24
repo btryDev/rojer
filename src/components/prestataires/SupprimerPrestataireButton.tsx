@@ -20,7 +20,7 @@ export function SupprimerPrestataireButton({
       <Button data-ecriture
         variant="outline"
         size="sm"
-        disabled={pending}
+        enCours={pending}
         onClick={() =>
           demander({
             titre: "Supprimer ce prestataire de votre annuaire ?",

@@ -246,7 +246,7 @@ export function AjoutPointReleveForm({
       )}
 
       <div className="flex items-center gap-3">
-        <Button type="submit" variant="board" size="boardSm" disabled={pending}>
+        <Button type="submit" variant="board" size="boardSm" enCours={pending}>
           {pending ? "Enregistrement…" : point ? "Enregistrer le point" : "Ajouter le point"}
         </Button>
         <button

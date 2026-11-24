@@ -79,7 +79,7 @@ export function AjouterRisqueCustomForm({
         type="submit"
         variant="board"
         size="board"
-        disabled={pending}
+        enCours={pending}
         className="mt-4"
       >
         {pending ? "Ajout…" : "Ajouter"}

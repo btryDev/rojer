@@ -68,7 +68,7 @@ export function DeclarationTitre({ personne, children, ...formulaire }: Props) {
             type="button"
             onClick={fermer}
             aria-label="Fermer"
-            className="grid size-9 flex-none place-items-center rounded-full text-[color:var(--board-slate-mid)] transition-colors hover:bg-[color:var(--board-slate-pale)] hover:text-[color:var(--board-ink)] focus-visible:outline-2 focus-visible:outline-[color:var(--board-blue-strong)]"
+            className="cible-tactile grid size-9 flex-none place-items-center rounded-full text-[color:var(--board-slate-mid)] transition-colors hover:bg-[color:var(--board-slate-pale)] hover:text-[color:var(--board-ink)] focus-visible:outline-2 focus-visible:outline-[color:var(--board-blue-strong)]"
           >
             <X className="size-4" aria-hidden />
           </button>

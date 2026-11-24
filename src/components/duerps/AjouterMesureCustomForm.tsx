@@ -94,7 +94,7 @@ export function AjouterMesureCustomForm({ risqueId }: { risqueId: string }) {
         />
       </div>
 
-      <Button type="submit" variant="board" size="board" disabled={pending}>
+      <Button type="submit" variant="board" size="board" enCours={pending}>
         {pending ? "Ajout…" : "Ajouter la mesure"}
       </Button>
     </form>

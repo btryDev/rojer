@@ -293,7 +293,7 @@ function SaisieZone({
         <Erreur state={state} />
       )}
       <div>
-        <Button type="submit" variant="board" size="boardSm" disabled={pending}>
+        <Button type="submit" variant="board" size="boardSm" enCours={pending}>
           {pending ? "Ajout…" : "Ajouter"}
         </Button>
       </div>
@@ -349,7 +349,7 @@ function FormulaireRenommage({
         <Erreur state={state} />
       )}
       <div className="flex gap-2">
-        <Button type="submit" variant="board" size="boardSm" disabled={pending}>
+        <Button type="submit" variant="board" size="boardSm" enCours={pending}>
           {pending ? "Enregistrement…" : "Enregistrer"}
         </Button>
         <Button
@@ -433,7 +433,7 @@ function FormulaireSuppression({
         <Button
           variant="board"
           size="boardSm"
-          disabled={pending}
+          enCours={pending}
           onClick={() => {
             setErreur(null);
             startTransition(async () => {

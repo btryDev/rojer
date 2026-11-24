@@ -121,7 +121,7 @@ export function CreerVersionForm({
         </p>
       )}
 
-      <Button type="submit" variant="board" size="board" disabled={pending}>
+      <Button type="submit" variant="board" size="board" enCours={pending}>
         {pending ? "Création…" : "Valider — créer une nouvelle version"}
       </Button>
     </form>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { demanderOuvertureAction } from "@/lib/demandes-ouverture/actions";
 import { CHAMP_PIEGE, type EtatDemandeOuverture } from "@/lib/demandes-ouverture/formulaire";
+import { BoutonOccupe } from "@/components/ui/bouton-occupe";
 
 const ETAT_INITIAL: EtatDemandeOuverture = {};
 
@@ -86,13 +87,13 @@ export function FormulaireBientot({ etatInitial = ETAT_INITIAL }: { etatInitial?
           aria-describedby={etat.erreur ? ID_ERREUR : undefined}
           className="h-11 min-w-0 flex-1 bg-transparent text-[15px] text-[color:var(--board-ink)] outline-none placeholder:text-[color:var(--board-slate-soft)]"
         />
-        <button
+        <BoutonOccupe
           type="submit"
-          disabled={pending}
+          enCours={pending}
           className="lp-btn lp-btn-ink h-11 flex-none justify-center disabled:opacity-70"
         >
           {pending ? "Envoi…" : "Me prévenir"}
-        </button>
+        </BoutonOccupe>
       </div>
       {etat.erreur && (
         <p id={ID_ERREUR} role="alert" className="m-0 mt-2 pl-5 text-[12.5px] text-[color:var(--board-signal-ink)]">

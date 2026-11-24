@@ -190,7 +190,7 @@ export function AjoutAnalyseForm({
       )}
 
       <div className="flex items-center gap-3">
-        <Button type="submit" variant="board" size="boardSm" disabled={pending}>
+        <Button type="submit" variant="board" size="boardSm" enCours={pending}>
           {pending
             ? "Enregistrement…"
             : analyse

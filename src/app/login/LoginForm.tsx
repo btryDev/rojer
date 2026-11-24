@@ -59,7 +59,7 @@ export function LoginForm({ next }: { next: string }) {
         type="submit"
         variant="board"
         size="board"
-        disabled={pending}
+        enCours={pending}
         className="w-full"
       >
         {pending ? "Connexion…" : "Se connecter →"}

@@ -86,7 +86,7 @@ function FormulaireUnite({ duerpId, surAjout }: { duerpId: string; surAjout: () 
         </p>
       )}
       <div className="flex flex-wrap gap-2">
-        <Button type="submit" variant="board" size="board" disabled={pending}>
+        <Button type="submit" variant="board" size="board" enCours={pending}>
           {pending ? "Ajout…" : "Ajouter"}
         </Button>
         <Button type="button" variant="boardClair" size="board" onClick={surAjout}>

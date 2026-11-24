@@ -55,7 +55,7 @@ export function BoutonNav({
       onClick={onClick}
       disabled={!actif}
       aria-label={label}
-      className="flex size-8 items-center justify-center rounded-full border border-[color:rgba(10,10,10,.16)] text-[color:var(--board-ink)] transition-colors hover:bg-[color:var(--board-blue-pale)] disabled:cursor-not-allowed disabled:border-[color:var(--board-slate-line)] disabled:text-[color:var(--board-slate-soft)] disabled:hover:bg-transparent"
+      className="cible-tactile flex size-8 items-center justify-center rounded-full border border-[color:rgba(10,10,10,.16)] text-[color:var(--board-ink)] transition-colors hover:bg-[color:var(--board-blue-pale)] disabled:cursor-not-allowed disabled:border-[color:var(--board-slate-line)] disabled:text-[color:var(--board-slate-soft)] disabled:hover:bg-transparent"
     >
       {children}
     </button>

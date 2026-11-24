@@ -53,7 +53,7 @@ export function FormulaireInvitation({ compteId }: { compteId: string }) {
         </select>
       </div>
       <Message etat={etat} />
-      <Button type="submit" variant="board" size="board" disabled={pending} className="w-full">
+      <Button type="submit" variant="board" size="board" enCours={pending} className="w-full">
         {pending ? "Envoi…" : "Envoyer l'invitation →"}
       </Button>
     </form>

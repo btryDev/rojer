@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
+import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import {
   revoquerSignaturesPlan,
@@ -8,6 +9,7 @@ import {
   type ContreSignatureState,
 } from "@/lib/plan-prevention/contre-signature-actions";
 import { useAnnonceFiche } from "./AnnonceFiche";
+import { BoutonOccupe } from "@/components/ui/bouton-occupe";
 
 /**
  * Les boutons de la contre-signature sur la fiche du plan (ADR-061) :
@@ -51,9 +53,42 @@ function useAnnoncer(state: ContreSignatureState) {
 }
 
 const BOUTON_CLAIR =
-  "inline-flex min-h-11 items-center rounded-full border border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-5 text-[14px] transition-colors hover:bg-[color:var(--board-slate-pale)] disabled:opacity-60";
+  "inline-flex gap-2 min-h-11 items-center rounded-full border border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] px-5 text-[14px] transition-colors hover:bg-[color:var(--board-slate-pale)] disabled:opacity-60";
 const BOUTON_PLEIN =
-  "inline-flex min-h-11 items-center rounded-full bg-[color:var(--board-ink)] px-6 font-display text-[15px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60";
+  "inline-flex gap-2 min-h-11 items-center rounded-full bg-[color:var(--board-ink)] px-6 font-display text-[15px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60";
+
+/**
+ * Un bouton d'envoi du formulaire de décision. Les trois partagent l'attente
+ * du formulaire ; la roue ne tourne que sur celui qui a été envoyé, lu dans
+ * les données en cours d'envoi (`useFormStatus`).
+ */
+function BoutonDecision({
+  valeur,
+  enCoursLibelle,
+  className,
+  children,
+}: {
+  valeur: "refuser" | "corriger" | "accepter";
+  enCoursLibelle?: string;
+  className: string;
+  children: React.ReactNode;
+}) {
+  const { pending, data } = useFormStatus();
+  const envoye = pending && data?.get("decision") === valeur;
+  return (
+    <BoutonOccupe
+      type="submit"
+      name="decision"
+      value={valeur}
+      enCours={envoye}
+      disabled={pending}
+      data-ecriture
+      className={className}
+    >
+      {envoye && enCoursLibelle ? enCoursLibelle : children}
+    </BoutonOccupe>
+  );
+}
 
 export function TraiterPropositionBoutons({
   propositionId,
@@ -78,16 +113,9 @@ export function TraiterPropositionBoutons({
             de la proposition est conservée. Rojer adresse un nouveau lien de signature à {raisonEE}.
           </p>
           <div className="flex flex-wrap gap-2.5">
-            <button
-              type="submit"
-              name="decision"
-              value="refuser"
-              disabled={pending}
-              data-ecriture
-              className={`${BOUTON_CLAIR} text-[color:var(--board-signal-ink)]`}
-            >
-              {pending ? "Refus…" : "Confirmer le refus"}
-            </button>
+            <BoutonDecision valeur="refuser" enCoursLibelle="Refus…" className={`${BOUTON_CLAIR} text-[color:var(--board-signal-ink)]`}>
+              Confirmer le refus
+            </BoutonDecision>
             <button type="button" onClick={() => setRefus(false)} disabled={pending} className={BOUTON_CLAIR}>
               Annuler
             </button>
@@ -109,12 +137,12 @@ export function TraiterPropositionBoutons({
             >
               Refuser
             </button>
-            <button type="submit" name="decision" value="corriger" disabled={pending} data-ecriture className={`${BOUTON_CLAIR} text-[color:var(--board-ink)]`}>
+            <BoutonDecision valeur="corriger" className={`${BOUTON_CLAIR} text-[color:var(--board-ink)]`}>
               Corriger
-            </button>
-            <button type="submit" name="decision" value="accepter" disabled={pending} data-ecriture className={BOUTON_PLEIN}>
-              {pending ? "Application…" : "Accepter"}
-            </button>
+            </BoutonDecision>
+            <BoutonDecision valeur="accepter" enCoursLibelle="Application…" className={BOUTON_PLEIN}>
+              Accepter
+            </BoutonDecision>
           </div>
         </div>
       )}
@@ -165,7 +193,7 @@ export function BoutonRevoquerSignatures({
         correction. {PHRASE_PLAFOND}
       </p>
       <div className="flex flex-wrap justify-center gap-3">
-        <Button type="submit" disabled={pending} data-ecriture>
+        <Button type="submit" enCours={pending} data-ecriture>
           {pending ? "Révocation…" : "Confirmer la révocation"}
         </Button>
         <Button type="button" variant="ghost" onClick={() => setConfirmer(false)} disabled={pending}>

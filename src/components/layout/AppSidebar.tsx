@@ -230,7 +230,7 @@ export function AppSidebar({
               onClick={() => setOuverte(null)}
               aria-label="Replier le panneau"
               aria-expanded
-              className="grid size-8 place-items-center rounded-lg text-white/40 transition-colors hover:bg-white/10 hover:text-white"
+              className="cible-tactile grid size-8 place-items-center rounded-lg text-white/40 transition-colors hover:bg-white/10 hover:text-white"
             >
               <PanelLeftClose aria-hidden className="size-4" />
             </button>

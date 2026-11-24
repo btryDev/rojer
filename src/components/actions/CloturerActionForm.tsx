@@ -110,7 +110,7 @@ export function CloturerActionForm({ action, rapportsDisponibles, point = false 
       </MessageFait>
 
       <div>
-        <Button type="submit" variant="board" size="board" disabled={pending}>
+        <Button type="submit" variant="board" size="board" enCours={pending}>
           {pending ? "Enregistrement…" : point ? "Marquer comme corrigé" : "Clôturer l'action"}
         </Button>
       </div>

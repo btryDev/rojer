@@ -115,7 +115,7 @@ export function FormulaireSalarie({
       )}
 
       <div className="flex flex-wrap items-center gap-3">
-        <Button variant="board" size="board" type="submit" disabled={pending}>
+        <Button variant="board" size="board" type="submit" enCours={pending}>
           {pending ? "Enregistrement…" : libelleSoumission}
         </Button>
         <Link

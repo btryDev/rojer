@@ -66,7 +66,7 @@ export function SecteurCard({
           type="button"
           variant="boardClair"
           size="boardSm"
-          disabled={pending}
+          enCours={pending}
           onClick={() => {
             startTransition(async () => {
               await choisirSecteur(duerpId, secteurId);

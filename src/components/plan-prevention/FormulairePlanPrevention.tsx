@@ -1122,7 +1122,7 @@ export function FormulairePlanPrevention({
               variant="board"
               size="board"
               type="submit"
-              disabled={pending}
+              enCours={pending}
               className="min-h-12 rounded-full px-7 font-display text-[16px] font-semibold normal-case tracking-normal"
             >
               {plan

@@ -25,7 +25,7 @@ export function ChangerMotDePasseForm() {
       <ChampMotDePasse label="Nouveau mot de passe" />
       <MessageFormulaire ton="alerte">{state.error}</MessageFormulaire>
       <MessageFormulaire ton="info">{state.message}</MessageFormulaire>
-      <Button type="submit" variant="board" size="board" disabled={pending} className="w-full">
+      <Button type="submit" variant="board" size="board" enCours={pending} className="w-full">
         {pending ? "Changement…" : "Changer le mot de passe →"}
       </Button>
     </form>

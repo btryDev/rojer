@@ -37,7 +37,7 @@ export function SignupForm({ offre = null }: { offre?: string | null }) {
         type="submit"
         variant="board"
         size="board"
-        disabled={pending}
+        enCours={pending}
         className="w-full"
       >
         {pending ? "Création…" : "Créer mon compte →"}

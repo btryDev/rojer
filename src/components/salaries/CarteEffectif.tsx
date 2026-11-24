@@ -110,7 +110,7 @@ export function CarteEffectif({
         ) : null}
 
         <div>
-          <Button variant="board" size="board" type="submit" disabled={pending}>
+          <Button variant="board" size="board" type="submit" enCours={pending}>
             {pending ? "Enregistrement…" : "Enregistrer l'effectif"}
           </Button>
         </div>

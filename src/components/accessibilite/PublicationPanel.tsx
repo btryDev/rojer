@@ -90,7 +90,7 @@ export function PublicationPanel({
             variant="board"
             size="board"
             onClick={onPublier}
-            disabled={pending}
+            enCours={pending}
             data-ecriture
           >
             {pending ? "Publication…" : "Publier le registre"}
@@ -199,18 +199,16 @@ export function PublicationPanel({
             >
               Prévisualiser ↗
             </a>
-            <button
+            <Button
               type="button"
               onClick={onDepublier}
-              disabled={pending}
+              enCours={pending}
               data-ecriture
-              className={buttonVariants({
-                variant: "boardClair",
-                size: "boardSm",
-              })}
+              variant="boardClair"
+              size="boardSm"
             >
-              {pending ? "…" : "Retirer la publication"}
-            </button>
+              {pending ? "Retrait…" : "Retirer la publication"}
+            </Button>
           </div>
 
           {confirmation}

@@ -46,7 +46,7 @@ export function CodeForm({ next }: { next: string }) {
 
       <MessageFormulaire ton="alerte">{state.error}</MessageFormulaire>
 
-      <Button type="submit" variant="board" size="board" disabled={pending} className="w-full">
+      <Button type="submit" variant="board" size="board" enCours={pending} className="w-full">
         {pending ? "Vérification…" : "Valider →"}
       </Button>
     </form>

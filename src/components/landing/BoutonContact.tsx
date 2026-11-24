@@ -21,6 +21,7 @@ import {
   SUJETS_CONTACT,
   type SujetContact,
 } from "./contact";
+import { BoutonOccupe } from "@/components/ui/bouton-occupe";
 
 export function BoutonContact({
   sujet = "Une question sur Rojer",
@@ -126,9 +127,9 @@ function FormulaireContact({ sujet, fermer }: { sujet: SujetContact; fermer: () 
       </p>
       {etat.status === "erreur" ? <MessageFormulaire ton="alerte">{etat.message}</MessageFormulaire> : null}
       <div className="flex flex-wrap items-center gap-3">
-        <button type="submit" disabled={enCours} className="lp-btn lp-btn-ink">
+        <BoutonOccupe type="submit" enCours={enCours} className="lp-btn lp-btn-ink">
           {enCours ? "Envoi…" : "Envoyer"}
-        </button>
+        </BoutonOccupe>
         <button type="button" onClick={fermer} className="lp-btn lp-btn-clair">
           Annuler
         </button>

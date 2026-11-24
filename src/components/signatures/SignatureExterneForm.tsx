@@ -241,7 +241,7 @@ export function SignatureExterneForm({
               </div>
             )}
 
-            <Button type="submit" variant="board" size="board" className="min-h-14 w-full rounded-full font-display text-[18px]" disabled={pending}>
+            <Button type="submit" variant="board" size="board" className="min-h-14 w-full rounded-full font-display text-[18px]" enCours={pending}>
               {pending ? "Signature en cours…" : "Valider ma signature"}
             </Button>
 

@@ -430,7 +430,7 @@ export function PrescriptionForm({
         </p>
       )}
       <div>
-        <Button type="submit" variant="board" size="board" disabled={pending}>
+        <Button type="submit" variant="board" size="board" enCours={pending}>
           {pending ? "Enregistrement…" : "Enregistrer la prescription"}
         </Button>
       </div>

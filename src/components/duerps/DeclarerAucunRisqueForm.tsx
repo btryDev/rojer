@@ -59,7 +59,7 @@ export function DeclarerAucunRisqueForm({
         <Button
           variant="board"
           size="boardSm"
-          disabled={pending || !valeur.trim()}
+          enCours={pending} disabled={!valeur.trim()}
           onClick={() => {
             startTransition(async () => {
               await declarerAucunRisque(uniteId, valeur);

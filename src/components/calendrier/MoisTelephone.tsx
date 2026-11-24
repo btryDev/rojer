@@ -185,7 +185,7 @@ function BoutonMois({
       onClick={onClick}
       disabled={!onClick}
       aria-label={label}
-      className="grid size-10 flex-none place-items-center rounded-full text-[color:var(--board-ink)] transition-colors hover:bg-[color:var(--board-slate-pale)] disabled:opacity-30"
+      className="cible-tactile grid size-10 flex-none place-items-center rounded-full text-[color:var(--board-ink)] transition-colors hover:bg-[color:var(--board-slate-pale)] disabled:opacity-30"
     >
       {children}
     </button>

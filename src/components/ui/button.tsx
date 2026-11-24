@@ -2,6 +2,7 @@ import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
+import { RoueAttente } from "@/components/ui/roue-attente"
 
 /**
  * Le calcul brut des classes. Ne pas l'exporter tel quel — cf.
@@ -43,14 +44,18 @@ const classesBrutes = cva(
           "normal-case tracking-[-0.01em] [font-family:var(--font-body)] font-semibold bg-[color:var(--board-amber)] text-[color:var(--board-amber-ink)] shadow-[inset_0_0_0_1px_rgba(117,77,10,.22)] hover:brightness-[.97]",
       },
       size: {
-        default: "h-9 gap-2 px-4 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3",
+        // `cible-tactile` (globals.css) : zone de clic de 44 px sur écran
+        // tactile, aux seules tailles de pilule (36 à 40 px). Pas sur `xs`,
+        // `sm`, `icon-*` : posés en grappe, leurs halos se recouvriraient
+        // (Apple HIG, « Buttons », 2026-11-24). `lg` fait déjà 44 px.
+        default: "cible-tactile h-9 gap-2 px-4 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3",
         xs: "h-6 gap-1 px-2.5 text-[0.62rem] [&_svg:not([class*='size-'])]:size-3",
         sm: "h-7 gap-1.5 px-3 text-[0.68rem] has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
         lg: "h-11 gap-2 px-6 text-[0.82rem] has-data-[icon=inline-end]:pr-4 has-data-[icon=inline-start]:pl-4",
         // Gabarit des pilules du board : 40 px de haut, 12,5 px de texte.
         board:
-          "h-10 gap-2 px-[18px] text-[12.5px] [&_svg:not([class*='size-'])]:size-4",
-        boardSm: "h-8 gap-1.5 px-3.5 text-[12px]",
+          "cible-tactile h-10 gap-2 px-[18px] text-[12.5px] [&_svg:not([class*='size-'])]:size-4",
+        boardSm: "cible-tactile h-8 gap-1.5 px-3.5 text-[12px]",
         icon: "size-9",
         "icon-xs": "size-6 [&_svg:not([class*='size-'])]:size-3",
         "icon-sm": "size-7",
@@ -95,14 +100,40 @@ function Button({
   className,
   variant = "default",
   size = "default",
+  enCours = false,
+  disabled,
+  children,
   ...props
-}: ButtonPrimitive.Props & VariantProps<typeof classesBrutes>) {
+}: ButtonPrimitive.Props &
+  VariantProps<typeof classesBrutes> & {
+    /**
+     * L'action du bouton est en cours — un envoi, une écriture (Apple HIG,
+     * « Buttons », 2026-11-24). Une roue (`RoueAttente`) remplace l'icône ;
+     * le bouton se ferme — pas de double envoi — et se dit occupé
+     * (`aria-busy`), sans pâlir : il n'est pas indisponible, il travaille.
+     * Le libellé reste à l'appelant (« Enregistrer » → « Enregistrement… »).
+     * Un `disabled` passé avec reste lu : fermé si l'un ou l'autre.
+     */
+    enCours?: boolean
+  }) {
   return (
     <ButtonPrimitive
       data-slot="button"
-      className={buttonVariants({ variant, size, className })}
+      className={buttonVariants({
+        variant,
+        size,
+        className: cn(
+          enCours && "disabled:opacity-100 [&>svg:not([data-roue])]:hidden",
+          className,
+        ),
+      })}
+      disabled={disabled || enCours}
+      aria-busy={enCours || undefined}
       {...props}
-    />
+    >
+      {enCours ? <RoueAttente /> : null}
+      {children}
+    </ButtonPrimitive>
   )
 }
 

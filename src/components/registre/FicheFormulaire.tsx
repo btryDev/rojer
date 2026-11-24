@@ -93,7 +93,7 @@ export function FicheFormulaire({
         </p>
       )}
 
-      <Button type="submit" variant="board" size="board" disabled={pending}>
+      <Button type="submit" variant="board" size="board" enCours={pending}>
         {pending ? "Enregistrement…" : libelleEnvoi}
       </Button>
     </form>

@@ -210,7 +210,7 @@ export function DemanderSignatureForm({
         </p>
       )}
       <div className="flex items-center gap-2">
-        <Button type="submit" variant="board" size="boardSm" disabled={pending}>
+        <Button type="submit" variant="board" size="boardSm" enCours={pending}>
           {pending ? "Envoi…" : "Envoyer le lien de signature"}
         </Button>
         <button

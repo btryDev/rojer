@@ -21,7 +21,8 @@
 
 import { useEffect, useOptimistic, useRef, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { LoaderCircle, SlidersHorizontal, X } from "lucide-react";
+import { SlidersHorizontal, X } from "lucide-react";
+import { RoueAttente } from "@/components/ui/roue-attente";
 import {
   LABEL_FAMILLE,
   LABEL_FAMILLE_LONG,
@@ -281,14 +282,14 @@ export function FiltresCalendrier({
             // que la bascule de vue de l'en-tête (piste arrondie), parce que
             // ce n'est pas la même commande — celle-ci règle ce que la règle
             // montre, l'autre change la vue (2026-10-25).
-            "inline-flex h-9 items-center gap-2 rounded-[10px] border px-3.5 text-[13px] font-semibold transition-colors " +
+            "cible-tactile inline-flex h-9 items-center gap-2 rounded-[10px] border px-3.5 text-[13px] font-semibold transition-colors " +
             (ouvert
               ? "border-transparent bg-[color:var(--board-ink)] text-white"
               : "border-[color:var(--board-slate-line)] bg-[color:var(--board-card)] text-[color:var(--board-ink)] hover:bg-[color:var(--board-slate-pale)]")
           }
         >
           {enCours ? (
-            <LoaderCircle className="size-3.5 animate-spin" />
+            <RoueAttente className="size-3.5" />
           ) : (
             <SlidersHorizontal className="size-3.5" />
           )}

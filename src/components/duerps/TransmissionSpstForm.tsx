@@ -61,7 +61,7 @@ export function TransmissionSpstForm({
         type="submit"
         variant="boardClair"
         size="boardSm"
-        disabled={pending}
+        enCours={pending}
       >
         {pending ? "Enregistrement…" : "Noter la date"}
       </Button>
