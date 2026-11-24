@@ -9,7 +9,7 @@ référence :
   retire ce contour du j et on pose un cercle au même centre (rayon : 1,08
   fois sa demi-largeur, un rond paraissant plus petit qu'un carré).
 
-Sortie : le `d` d'un seul chemin, et sa viewBox, à recopier dans
+Sortie : le `d` d'un seul chemin, sa viewBox et la hauteur, à recopier dans
 `src/components/marque/LogoRojer.tsx`. À relancer seulement si les règles
 changent :
 
@@ -62,21 +62,24 @@ upm = police["head"].unitsPerEm
 hauteur_x = police["OS/2"].sxHeight
 
 pen_svg = SVGPathPen(glyphes, ntos=lambda v: str(round(v)))  # 1 unité = 1/1000 em : l'entier suffit
+tout = BoundsPen(glyphes)  # l'encre du mot entier, pour la viewBox
 x = 0.0
 cercle = None
-for i, lettre in enumerate(MOT):
+for lettre in MOT:
     nom = cmap[ord(lettre)]
     enr = RecordingPen()
     glyphes[nom].draw(enr)
+    # SVG : l'axe des y descend ; la ligne de base est à y = 0.
+    vers_svg = (1, 0, 0, -1, x, 0)
+    enr.replay(TransformPen(tout, vers_svg))
     for ops in contours(enr):
         x_min, y_min, x_max, y_max = bornes(ops, glyphes)
         if lettre == "j" and y_min > hauteur_x:
             # Le point carré : remplacé par un rond de même centre.
             cercle = (x + (x_min + x_max) / 2, (y_min + y_max) / 2, (x_max - x_min) / 2 * FACTEUR_ROND)
             continue
-        # SVG : l'axe des y descend ; la ligne de base est à y = 0.
-        rejouer(ops, TransformPen(pen_svg, (1, 0, 0, -1, x, 0)))
-    x += glyphes[nom].width + (INTERLETTRAGE * upm if i < len(MOT) - 1 else 0)
+        rejouer(ops, TransformPen(pen_svg, vers_svg))
+    x += glyphes[nom].width + INTERLETTRAGE * upm
 
 if cercle is None:
     raise SystemExit(f"Point du j introuvable dans « {MOT} » : aucun contour du j au-dessus de la hauteur d'x.")
@@ -87,14 +90,9 @@ d = pen_svg.getCommands()
 d += f"M{x0_rond} {y_rond}a{r} {r} 0 1 0 {2 * r} 0a{r} {r} 0 1 0 {-2 * r} 0Z"
 
 # viewBox serrée sur l'encre : du haut du point au bas du jambage du j.
-tout = BoundsPen(glyphes)
-x = 0.0
-for i, lettre in enumerate(MOT):
-    nom = cmap[ord(lettre)]
-    glyphes[nom].draw(TransformPen(tout, (1, 0, 0, -1, x, 0)))
-    x += glyphes[nom].width + (INTERLETTRAGE * upm if i < len(MOT) - 1 else 0)
 x0, y0, x1, y1 = tout.bounds
 y0 = min(y0, -cy - r)
 print(f'viewBox="{x0:.0f} {y0:.0f} {x1 - x0:.0f} {y1 - y0:.0f}"')
+print(f"hauteur dans LogoRojer : h-[{(y1 - y0) / upm:.3f}em]")
 print(f"d ({len(d)} caractères) :")
 print(d)

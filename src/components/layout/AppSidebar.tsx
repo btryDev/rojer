@@ -183,7 +183,7 @@ export function AppSidebar({
             }
           >
             {/* [2026-11-24] Le logo, à la place du nom écrit (`LogoRojer`). */}
-            <LogoRojer className="block" />
+            <LogoRojer />
           </Link>
         </div>
 

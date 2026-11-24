@@ -18,7 +18,7 @@ export function LogoRojer({ className }: { className?: string }) {
   return (
     <svg
       viewBox="82 -753 2111 953"
-      className={cn("h-[0.953em] w-auto", className)}
+      className={cn("block h-[0.953em] w-auto", className)}
       fill="currentColor"
       aria-hidden="true"
       focusable="false"

@@ -268,7 +268,7 @@ export function WizardShell({
           aria-label="Rojer"
           className="self-start text-[17px] leading-none text-white transition-colors hover:text-white/75"
         >
-          <LogoRojer className="block" />
+          <LogoRojer />
         </Link>
 
         <h2 className="board-titre m-0 text-[26px] text-white">
@@ -357,7 +357,7 @@ export function WizardShell({
             aria-label="Rojer"
             className="text-[16px] leading-none text-[color:var(--board-ink)]"
           >
-            <LogoRojer className="block" />
+            <LogoRojer />
           </Link>
 
           {/* Le rail — et donc la déconnexion qu'il porte — est replié sous

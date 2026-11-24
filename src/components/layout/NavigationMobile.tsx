@@ -93,9 +93,7 @@ export function NavigationMobile({
           className="flex min-w-0 flex-col rounded-lg py-1 pr-2 leading-none"
         >
           {/* [2026-11-24] Le logo, à la place du nom écrit (`LogoRojer`). */}
-          <span className="text-[18px] text-[color:var(--board-ink)]">
-            <LogoRojer className="block" />
-          </span>
+          <LogoRojer className="text-[18px] text-[color:var(--board-ink)]" />
           <span className="mt-1 truncate text-[11.5px] text-[color:var(--board-slate-mid)]">
             {raisonDisplay}
           </span>

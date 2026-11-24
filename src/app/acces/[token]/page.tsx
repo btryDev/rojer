@@ -459,7 +459,7 @@ function pastilleRojer() {
       className="inline-flex rounded-full bg-[color:var(--board-sky)] px-4 py-[0.55em] text-[16px] text-[color:var(--board-ink)]"
     >
       {/* [2026-11-24] Le logo, à la place du nom écrit (`LogoRojer`). */}
-      <LogoRojer className="block" />
+      <LogoRojer />
     </span>
   );
 }
