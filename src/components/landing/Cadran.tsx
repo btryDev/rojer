@@ -492,9 +492,10 @@ function CadranListe({ chiffres }: { chiffres: ChiffresReferentielSuivi }) {
                   sont trop proches. Au téléphone, il se range à gauche du
                   titre : le texte reste aligné à gauche, il se lit mieux
                   ainsi sur quatre ou cinq lignes. */}
-              {/* `unoptimized` : le fichier est déjà à sa taille (264 px
-                  couvrent 88 px en densité 3) ; le repasser par l'optimiseur
-                  coûterait un encodage par largeur pour quelques octets. */}
+              {/* ~~`unoptimized` : le fichier est déjà à sa taille~~
+                  [2026-11-24 : par l'optimiseur — le fichier de 264 px pèse
+                  15 Ko, la largeur de 128 px qu'il sert au téléphone 4 Ko ;
+                  six pictos, une soixantaine de Ko de moins (PageSpeed).] */}
               <Image
                 src={d.picto}
                 alt=""
@@ -502,7 +503,7 @@ function CadranListe({ chiffres }: { chiffres: ChiffresReferentielSuivi }) {
                 // qu'un chemin, sans dimensions.
                 width={264}
                 height={264}
-                unoptimized
+                sizes="(min-width: 640px) 88px, 64px"
                 className="size-16 rounded-[16px] bg-[color:var(--board-card)] p-1.5 sm:row-span-2 sm:size-[88px] sm:rounded-[22px] sm:p-2"
               />
               <div>

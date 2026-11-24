@@ -69,6 +69,8 @@ const PUBLIQUES = new Map<string, string>([
   // (ou 404 sans adresse publique), sans rien lire ni servir.
   ["api/mcp/route.ts:GET", "MCP sans état : 405, sans lecture (ADR-062 § 9)."],
   ["api/mcp/route.ts:DELETE", "MCP sans état : 405, sans lecture (ADR-062 § 9)."],
+  // 2026-11-24 : le résumé du site pour les assistants, texte fixe.
+  ["llms.txt/route.ts:GET", "Résumé public du site (llmstxt.org) : texte fixe, sans lecture."],
 ]);
 
 /**
