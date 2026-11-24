@@ -106,6 +106,13 @@ export const LIMITES = {
    */
   contactIp: { max: 5, fenetreSecondes: 60 * 60 },
   contactTous: { max: 100, fenetreSecondes: 24 * 60 * 60 },
+  /**
+   * Le rendez-vous annuel (ADR-063) : réserver, déplacer, annuler, préparer —
+   * chaque geste écrit à l'équipe. Un compte en fait quelques-uns l'an ; dix
+   * par jour bornent une boucle qui remplirait la boîte (relecture de
+   * sécurité du 2026-11-24).
+   */
+  rendezVousCompte: { max: 10, fenetreSecondes: 24 * 60 * 60 },
 } as const satisfies Record<string, Limite>;
 
 export type Verdict =

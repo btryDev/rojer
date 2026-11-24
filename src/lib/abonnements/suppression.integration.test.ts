@@ -27,6 +27,8 @@ describe.skipIf(!URL_BASE || !local)("suppression d'un compte sans abonnement ‚Ä
   const SEUL = "00000000-0000-0000-0000-5e1e700001aa"; // membre de A seul
   const DEUX = "00000000-0000-0000-0000-5e1e700001bb"; // membre de A et de B
   const MAINTENANT = new Date("2027-12-01T09:00:00Z");
+  /** Un cr√©neau du rendez-vous annuel, apr√®s `MAINTENANT` (ADR-063). */
+  const CRENEAU = new Date("2027-12-10T09:00:00Z");
   const ECHU = {
     statut: "canceled",
     sansAbonnementDepuis: new Date("2026-11-01T00:00:00Z"),
@@ -40,6 +42,7 @@ describe.skipIf(!URL_BASE || !local)("suppression d'un compte sans abonnement ‚Ä
       await prisma.duerpVersion.deleteMany({ where: { duerp: { etablissement: { entreprise: { compteId } } } } });
       await prisma.entreprise.deleteMany({ where: { compteId } });
       await prisma.demandeAssistance.deleteMany({ where: { compteId } });
+      await prisma.rendezVousAssistance.deleteMany({ where: { compteId } });
       await prisma.acceptationConditions.deleteMany({ where: { compteId } });
       await prisma.abonnement.deleteMany({ where: { compteId } });
     }
@@ -48,6 +51,7 @@ describe.skipIf(!URL_BASE || !local)("suppression d'un compte sans abonnement ‚Ä
     await prisma.user.deleteMany({ where: { id: { in: [SEUL, DEUX] } } });
     await prisma.compteSupprime.deleteMany({ where: { ancienCompteId: { in: [A, B] } } });
     await prisma.fichierALiberer.deleteMany({ where: { cle: { startsWith: "5e1e7/" } } });
+    await prisma.creneauAssistance.deleteMany({ where: { debut: CRENEAU } });
   }
 
   async function semer() {
@@ -79,6 +83,13 @@ describe.skipIf(!URL_BASE || !local)("suppression d'un compte sans abonnement ‚Ä
     await prisma.fichierStocke.create({ data: { cle: "5e1e7/a/rapport.pdf", compteId: A, octets: 10 } });
     await prisma.demandeAssistance.create({
       data: { compteId: A, userId: SEUL, categorie: "duerp", message: "aide", page: "/" },
+    });
+    // Un rendez-vous annuel √† venir, sur un cr√©neau pris (ADR-063).
+    const creneau = await prisma.creneauAssistance.create({
+      data: { debut: CRENEAU, fin: new Date(CRENEAU.getTime() + 3_600_000), reserveLe: MAINTENANT },
+    });
+    await prisma.rendezVousAssistance.create({
+      data: { compteId: A, userId: SEUL, creneauId: creneau.id, debut: creneau.debut, fin: creneau.fin, mode: "visio" },
     });
     // Ce qu'un dossier vivant porte, et dont plusieurs liens refusent
     // l'effacement de leur cible (Restrict, `suppression-schema.test.ts`) : une
@@ -148,6 +159,9 @@ describe.skipIf(!URL_BASE || !local)("suppression d'un compte sans abonnement ‚Ä
     expect(await prisma.abonnement.count({ where: { compteId: A } })).toBe(0);
     expect(await prisma.acceptationConditions.count({ where: { compteId: A } })).toBe(0);
     expect(await prisma.demandeAssistance.count({ where: { compteId: A } })).toBe(0);
+    expect(await prisma.rendezVousAssistance.count({ where: { compteId: A } })).toBe(0);
+    // Le cr√©neau du rendez-vous √† venir est rendu : il redevient libre.
+    expect((await prisma.creneauAssistance.findUnique({ where: { debut: CRENEAU } }))?.reserveLe).toBeNull();
     expect(await prisma.user.findUnique({ where: { id: SEUL } })).toBeNull();
     // Le dossier vivant est parti avec, sans qu'un lien bloque la transaction.
     expect(await prisma.signature.count({ where: { signataireEmail: `${SEUL}@exemple.invalid` } })).toBe(0);

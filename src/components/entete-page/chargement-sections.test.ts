@@ -46,12 +46,14 @@ function entetes(fichier: string): RepliSection[] {
   };
   // `toEqual` ignore les clés `undefined` : pas de titre, pas de bascule,
   // c'est la même chose que des clés absentes dans la table.
+  // Une page hors du rail (l'assistance) nomme sa section au lieu d'une entrée.
   const noter = (el: ts.JsxOpeningLikeElement, bascule: boolean) =>
     trouves.push({
-      item: lire(el, "item") as RepliSection["item"],
+      item: lire(el, "item"),
       titre: lire(el, "titre"),
+      section: lire(el, "section"),
       bascule: bascule || undefined,
-    });
+    } as RepliSection);
   const visiter = (n: ts.Node) => {
     // Des enfants à l'en-tête, c'est sa bascule de vue (`EnTetePage`).
     if (ts.isJsxElement(n) && n.openingElement.tagName.getText() === "EnTetePage") {

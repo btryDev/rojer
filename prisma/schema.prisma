@@ -2426,6 +2426,11 @@ model PieceEtatPermanent {
 // téléphone, saisis par l'utilisateur (base légale : sa demande).
 // ----------------------------------------------------------------------------
 
+/// Le sujet d'une demande d'assistance (ADR-050). Les questions de
+/// prévention (rapport, commission, DUERP, prestataire, hors couverture)
+/// sont réservées à la formule Pro ; une visite sur devis (`diagnostic`) et
+/// les sujets de l'application (`ecran`, `connexion`, `abonnement`, `autre`)
+/// sont ouverts à toutes (amendement du 2026-11-24, `assistance/libelles.ts`).
 enum CategorieAssistance {
   diagnostic
   commission_securite
@@ -2434,6 +2439,9 @@ enum CategorieAssistance {
   rapport
   hors_couverture
   autre
+  ecran
+  connexion
+  abonnement
 }
 
 model DemandeAssistance {
@@ -2459,6 +2467,54 @@ model DemandeAssistance {
   // se compte par compte ; l'index de l'auteur ne servait plus.]
   @@index([compteId, createdAt])
   @@index([etablissementId])
+}
+
+/// Un créneau d'une heure ouvert au rendez-vous annuel de la formule Pro
+/// (ADR-063). Écrit HORS de l'application : par script, puis par un agent qui
+/// lit un agenda (décision de la propriétaire du 2026-11-24). Rojer n'y écrit
+/// que `reserveLe`, pour prendre le créneau et le rendre. Hors compte : il ne
+/// porte aucune donnée d'un compte.
+model CreneauAssistance {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  debut     DateTime  @unique
+  fin       DateTime
+  /// Posé quand un compte prend le créneau, effacé quand il le rend.
+  reserveLe DateTime?
+  creeLe    DateTime  @default(now())
+}
+
+enum ModeRendezVous {
+  telephone
+  visio
+}
+
+/// Le rendez-vous annuel d'un compte en formule Pro (ADR-063) : un par année
+/// d'abonnement, tous établissements compris. Le créneau est recopié (début,
+/// fin) : la table des créneaux est hors compte, aucune relation n'y mène.
+model RendezVousAssistance {
+  id        String         @id @default(cuid())
+  /// Racine de compte (ADR-054).
+  compteId  String         @db.Uuid
+  compte    Compte         @relation(fields: [compteId], references: [id], onDelete: Restrict)
+  /// La personne qui a réservé : un membre du compte.
+  userId    String         @db.Uuid
+  user      User           @relation(fields: [userId], references: [id], onDelete: Restrict)
+  /// Le créneau pris (hors compte) : un identifiant opaque, sans relation ni
+  /// type UUID — ce n'est pas une identité du compte.
+  creneauId String
+  debut     DateTime
+  fin       DateTime
+  mode      ModeRendezVous
+  telephone String?
+  /// Ce que la personne veut aborder, transmis avant le rendez-vous.
+  sujet     String?
+  /// Annulé ou déplacé au moins 24 h avant : l'année retrouve son rendez-vous.
+  annuleLe  DateTime?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([compteId, debut])
+  @@index([userId])
 }
 
 // ============================================================================
@@ -2498,6 +2554,7 @@ model User {
   accessTokensEmis       AccessToken[]
   codesSignatureCompte   CodeSignatureCompte[]
   demandesAssistance     DemandeAssistance[]
+  rendezVousAssistance   RendezVousAssistance[]
   acceptationsConditions AcceptationConditions[]
   membres                Membre[]
   invitationsEmises      InvitationCompte[]
@@ -2831,6 +2888,7 @@ model Compte {
   entreprises            Entreprise[]
   abonnement             Abonnement?
   demandesAssistance     DemandeAssistance[]
+  rendezVousAssistance   RendezVousAssistance[]
   acceptationsConditions AcceptationConditions[]
   consommationsQuota     ConsommationQuota[]
   fichiersStockes        FichierStocke[]

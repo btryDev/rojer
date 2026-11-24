@@ -675,7 +675,7 @@ export default async function VerificationDetailPage({
       {pourInformation ? (
         <DemandeAide
           variante="encart"
-          accroche="La commission de sécurité va passer ? Nos experts la préparent avec vous : registre, consignes, levée des prescriptions."
+          accroche="La commission de sécurité va passer ? Posez vos questions pour la préparer : registre, consignes, levée des prescriptions."
           libelle="Préparer la visite"
           categorie="commission_securite"
           contexte={v.libelleObligation}
@@ -950,8 +950,8 @@ export default async function VerificationDetailPage({
       {recoit && v.rapports[0]?.resultat === "ecart_majeur" && !rapportApres ? (
         <DemandeAide
           variante="encart"
-          accroche="Un écart majeur relevé ? Un expert vous dit quoi corriger, et dans quel ordre."
-          libelle="Faire le point avec un expert"
+          accroche="Un écart majeur relevé ? Demandez-nous quoi corriger, et dans quel ordre."
+          libelle="Poser une question"
           categorie="rapport"
           contexte={v.libelleObligation}
           etablissementId={id}
@@ -992,7 +992,7 @@ export default async function VerificationDetailPage({
                   <p className="m-0 text-[12.5px] text-[color:var(--board-slate-mid)]">
                     <DemandeAide
                       variante="lien"
-                      libelle="Un écart majeur ? Un expert vous dit quoi corriger, et dans quel ordre."
+                      libelle="Un écart majeur ? Demandez-nous quoi corriger, et dans quel ordre."
                       categorie="rapport"
                       contexte={v.libelleObligation}
                       etablissementId={id}

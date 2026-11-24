@@ -145,20 +145,42 @@ const DANS_LA_BANDE =
   "md:absolute md:inset-x-auto md:bottom-auto md:left-[var(--board-gutter)] md:top-[19px] md:w-fit " +
   "md:max-w-[calc(100%-var(--board-gutter)*2-9rem)]";
 
-export function VerrouDeLaPage({ motif, annonce = false }: { motif: string | null; annonce?: boolean }) {
+export function VerrouDeLaPage({
+  motif,
+  annonce = false,
+  gel = false,
+}: {
+  motif: string | null;
+  annonce?: boolean;
+  /**
+   * Le motif est le gel du site, pas une saisie fermée pour le compte : un
+   * geste du compte (`data-geste-du-compte` — le rendez-vous annuel, ADR-063)
+   * reste ouvert, le serveur ne regardant que le compte (2026-11-24).
+   */
+  gel?: boolean;
+}) {
   const repere = useRef<HTMLSpanElement>(null);
   const id = useId();
   const zone = () => repere.current?.closest<HTMLElement>("[data-zone-saisie]") ?? null;
   // Sur le document : un panneau en portail sort de la zone dans le DOM, pas de la page.
-  const alerte = useVerrou(motif, () => (zone() ? document : null), (form) => (zone()?.contains(form) ?? false) || form.closest("[data-portail-saisie]") !== null, id);
+  const alerte = useVerrou(
+    motif,
+    () => (zone() ? document : null),
+    (form) =>
+      !(gel && form.hasAttribute("data-geste-du-compte")) &&
+      ((zone()?.contains(form) ?? false) || form.closest("[data-portail-saisie]") !== null),
+    id,
+  );
   useEffect(() => {
     const z = zone();
     if (!z || !motif) return;
     z.dataset.saisieFermee = "";
+    if (gel) z.dataset.saisieGel = "";
     return () => {
       delete z.dataset.saisieFermee;
+      delete z.dataset.saisieGel;
     };
-  }, [motif]);
+  }, [motif, gel]);
   return (
     <>
       <span ref={repere} hidden />

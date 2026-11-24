@@ -333,7 +333,7 @@ export function RevueEnPlace({
                   <p className="m-0">
                     <DemandeAide
                       variante="lien"
-                      libelle="Toujours un doute ? Un expert peut vérifier sur place."
+                      libelle="Toujours un doute ? Demandez une vérification sur place."
                       categorie="diagnostic"
                       contexte={l.question}
                       etablissementId={etablissementId}

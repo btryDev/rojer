@@ -23,6 +23,10 @@ import { EDITEUR } from "@/components/landing/editeur";
  */
 export const CONTACT = EDITEUR.email;
 
+/** Ce que disent le formulaire de contact et l'assistance quand un message ne part pas. */
+export const ENVOI_IMPOSSIBLE =
+  "Votre message n'a pas pu partir. Réessayez un peu plus tard : ce que vous avez écrit est conservé.";
+
 export const schemaMessageContact = z.object({
   sujet: z.enum(SUJETS_CONTACT, "Choisissez un sujet dans la liste."),
   nom: texteSaisi(NOM_MAX, `Le nom tient en ${NOM_MAX} caractères au plus.`)

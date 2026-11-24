@@ -20,6 +20,7 @@ import type { SidebarItemId } from "@/components/layout/sidebar-nav";
 import { ImageEnTete } from "./ImageEnTete";
 import { aUneIllustration, type ItemIllustre } from "./liste";
 
+import { IllustrationAssistance } from "./Assistance";
 import { IllustrationConnecter } from "./Connecter";
 import { IllustrationControle } from "./Controle";
 import { IllustrationDocuments } from "./Documents";
@@ -59,6 +60,7 @@ const ILLUSTRATIONS: Record<ItemIllustre, StaticImageData | ComponentType> = {
   guide: IllustrationGuide,
   fiche: IllustrationFiche,
   connecter: IllustrationConnecter,
+  assistance: IllustrationAssistance,
 };
 
 export function IllustrationEnTete({ item }: { item: SidebarItemId }) {

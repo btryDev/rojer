@@ -1,7 +1,6 @@
 import { CorpsEnAttente } from "@/components/layout/CorpsEnAttente";
 
 import { CadreEnTete } from "./CadreEnTete";
-import { aUneIllustration } from "./illustrations/liste";
 import type { RepliSection } from "./repli-de-chargement";
 
 /**
@@ -23,18 +22,13 @@ import type { RepliSection } from "./repli-de-chargement";
  * les enverrait au navigateur sur chaque écran (`CadreEnTete`). Le panneau
  * tient sa hauteur minimale ; un dessin plus haut l'allonge à l'arrivée.
  */
-export function ChargementSection({ item, titre, bascule }: RepliSection) {
+export function ChargementSection({ bascule, ...entete }: RepliSection) {
   return (
     <main className="flex flex-1 flex-col bg-[color:var(--board-canvas)] pb-16">
       <p role="status" className="sr-only">
         Chargement…
       </p>
-      <CadreEnTete
-        item={item}
-        titre={titre}
-        description={<DescriptifEnAttente />}
-        avecPanneau={aUneIllustration(item)}
-      >
+      <CadreEnTete {...entete} description={<DescriptifEnAttente />}>
         {bascule ? (
           // La hauteur des deux bascules de l'en-tête (`SelecteurLecture`,
           // `OngletsPage`) : une pastille `p-1` autour de boutons de 13 px.

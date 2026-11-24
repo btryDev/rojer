@@ -534,9 +534,9 @@ export function WizardShell({
           <div className="mt-6 max-w-[720px]">
             <DemandeAide
               variante="encart"
-              accroche="Rojer ne suit pas encore votre situation, mais nos experts, si. Décrivez-nous votre établissement."
+              accroche="Rojer ne suit pas encore votre situation. Décrivez-nous votre établissement : nous vous disons comment être accompagné."
               libelle="Être accompagné"
-              categorie="hors_couverture"
+              categorie="diagnostic"
             />
           </div>
         ) : null}

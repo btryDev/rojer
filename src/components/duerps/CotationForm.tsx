@@ -316,7 +316,7 @@ export function CotationForm({
           <p className="m-0 mt-3 text-[12.5px] text-[color:var(--board-slate-mid)]">
             <DemandeAide
               variante="lien"
-              libelle="Pas sûr de votre cotation ? Un préventeur peut l'évaluer avec vous."
+              libelle="Pas sûr de votre cotation ? Posez-nous la question."
               categorie="duerp"
               contexte={`Cotation : ${libelleRisque}`}
               etablissementId={etablissementId}

@@ -30,6 +30,9 @@ export const CORRESPONDANCE = {
   // Posée par l'action d'un membre connecté, qui en est l'auteur (`userId`) ;
   // son `etablissementId` est facultatif (ADR-050).
   DemandeAssistance: { racine: "compteId" },
+  // Le rendez-vous annuel de la formule Pro (ADR-063) : un par compte et par
+  // année, posé par un membre connecté (`userId`).
+  RendezVousAssistance: { racine: "compteId" },
   AcceptationConditions: { racine: "compteId" },
   ConsommationQuota: { racine: "compteId" },
   FichierStocke: { racine: "compteId" },
@@ -102,6 +105,10 @@ export const CORRESPONDANCE = {
   },
   EvenementStripe: {
     horsCompte: "événement Stripe reçu (ADR-053) : dédoublonnage des livraisons, écrit avant toute identité",
+  },
+  CreneauAssistance: {
+    horsCompte:
+      "créneau d'une heure ouvert au rendez-vous annuel (ADR-063) : écrit hors de l'application (script, agenda), commun à tous les comptes, sans aucune donnée d'un compte",
   },
 
   // Better Auth (ADR-052) : lues et écrites par son adaptateur, avec le client

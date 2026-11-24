@@ -12,8 +12,11 @@ import "server-only";
 
 import type Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
+import { rendreLeCreneau } from "@/lib/assistance/creneaux";
+import { courrielEquipeRendezVous, type RendezVousPourCourriel } from "@/lib/assistance/courriel-rendez-vous";
+import { CONTACT } from "@/lib/contact/message";
 import { oublierAssistants } from "@/lib/connecteur/assistants";
-import { envoiEnService, motifErreur, publicAppUrl } from "@/lib/email";
+import { envoiEnService, motifErreur, publicAppUrl, sendMail } from "@/lib/email";
 import { ajouterJours, ajouterMois, debutDuJour, formaterDateLongueFr } from "@/lib/dates";
 import { clesDesEtablissements } from "@/lib/suppression/fichiers";
 import { getStorage } from "@/lib/storage";
@@ -24,6 +27,7 @@ import { HORS_ABONNEMENT_OUVERT, OUVRENT, TERMINES } from "./droits";
 import { alerter, alerterUneFoisParJour } from "@/lib/alertes";
 import { ecrireAuxMembres, ecrireAuxProprietaires } from "./rappels";
 import { PAGE_ABONNEMENT } from "./saisie";
+import { verrouillerLeCompte } from "./quotas";
 
 export const MOIS_SANS_ABONNEMENT = 12;
 /** Comptes supprimés au plus par passe : la tâche reste courte, le reste attend le lendemain. */
@@ -580,7 +584,11 @@ export async function supprimerCompte(
   maintenant: Date,
   motif: MotifDeSuppression = "sans_abonnement",
 ): Promise<string[] | null> {
-  return prisma.$transaction(
+  // Les rendez-vous annuels à venir, annoncés à l'équipe une fois la
+  // suppression faite (relecture du 2026-11-24) : elle ne les lit que dans
+  // ses e-mails (ADR-063 § 8).
+  let rendezVousAnnules: RendezVousPourCourriel[] = [];
+  const cles = await prisma.$transaction(
     async (tx) => {
       // Le compte, puis sa ligne d'abonnement : une demande annulée, un
       // réabonnement ou un paiement ouvert de dernière minute attendent la
@@ -649,6 +657,35 @@ export async function supprimerCompte(
       await tx.duerpVersion.deleteMany({ where: { duerp: { etablissement: { entreprise: { compteId } } } } });
       await tx.entreprise.deleteMany({ where: { compteId } });
       await tx.demandeAssistance.deleteMany({ where: { compteId } });
+      // Les rendez-vous annuels (ADR-063) : ceux à venir rendent leur créneau,
+      // qui redevient libre pour les autres comptes.
+      // Sous le verrou du compte, comme ses gestes : un déplacement en cours
+      // ne fait pas rendre un créneau périmé (relecture de sécurité).
+      await verrouillerLeCompte(tx, compteId);
+      const aVenir = await tx.rendezVousAssistance.findMany({
+        where: { compteId, annuleLe: null, debut: { gt: maintenant } },
+        select: {
+          creneauId: true,
+          debut: true,
+          fin: true,
+          mode: true,
+          telephone: true,
+          sujet: true,
+          user: { select: { name: true, email: true } },
+        },
+      });
+      for (const { creneauId } of aVenir) await rendreLeCreneau(tx, creneauId);
+      rendezVousAnnules = aVenir.map((r) => ({
+        evenement: "annule_suppression" as const,
+        debut: r.debut,
+        fin: r.fin,
+        mode: r.mode,
+        telephone: r.telephone,
+        sujet: r.sujet,
+        personne: { nom: r.user.name, email: r.user.email },
+        compteId,
+      }));
+      await tx.rendezVousAssistance.deleteMany({ where: { compteId } });
       await tx.acceptationConditions.deleteMany({ where: { compteId } });
       await tx.abonnement.deleteMany({ where: { compteId } });
       // Les autorisations du connecteur (ADR-062 § 8) : liées au compte par
@@ -669,18 +706,20 @@ export async function supprimerCompte(
 
       // Les personnes qui ne sont membres d'aucun autre compte, et dont rien
       // ne garde la trace ailleurs (une signature, un lien d'accès, une
-      // demande, une acceptation, une invitation envoyée : sur un autre
-      // compte, la personne reste — l'invitation la suit en cascade).
+      // demande, un rendez-vous, une acceptation, une invitation envoyée : sur
+      // un autre compte, la personne reste — l'invitation la suit en cascade).
       for (const { userId } of membres) {
-        const [ailleurs, signatures, liens, demandes, acceptations, invitations] = await Promise.all([
+        const [ailleurs, signatures, liens, demandes, rendezVous, acceptations, invitations] = await Promise.all([
           tx.membre.count({ where: { userId } }),
           tx.signature.count({ where: { userId } }),
           tx.accessToken.count({ where: { createdByUserId: userId } }),
           tx.demandeAssistance.count({ where: { userId } }),
+          tx.rendezVousAssistance.count({ where: { userId } }),
           tx.acceptationConditions.count({ where: { userId } }),
           tx.invitationCompte.count({ where: { inviterId: userId } }),
         ]);
-        if (ailleurs + signatures + liens + demandes + acceptations + invitations === 0) await tx.user.delete({ where: { id: userId } });
+        if (ailleurs + signatures + liens + demandes + rendezVous + acceptations + invitations === 0)
+          await tx.user.delete({ where: { id: userId } });
       }
       const aLiberer = [...new Set([...cles, ...comptes.map((f) => f.cle)])];
       await tx.fichierALiberer.createMany({
@@ -691,6 +730,20 @@ export async function supprimerCompte(
     },
     { timeout: 60_000 },
   );
+  if (cles !== null) await annoncerLesRendezVousAnnules(rendezVousAnnules);
+  return cles;
+}
+
+/** Dit à l'équipe qu'un rendez-vous annuel est annulé avec son compte ; un échec n'est que noté. */
+async function annoncerLesRendezVousAnnules(rendezVous: readonly RendezVousPourCourriel[]): Promise<void> {
+  if (rendezVous.length === 0 || !envoiEnService()) return;
+  for (const r of rendezVous) {
+    try {
+      await sendMail({ to: CONTACT, replyTo: r.personne.email, ...courrielEquipeRendezVous(r) });
+    } catch (e) {
+      console.error(`[rendez-vous] annulation par suppression du compte non annoncée : ${motifErreur(e)}`);
+    }
+  }
 }
 
 /**

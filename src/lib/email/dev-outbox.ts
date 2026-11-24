@@ -73,6 +73,10 @@ export type MailCapture = {
   to: string;
   subject: string;
   text: string;
+  /** La mise en page, quand le message en a une : montrée dans un cadre isolé. */
+  html?: string;
+  /** L'adresse où part une réponse (`Reply-To`), quand le message en porte une. */
+  replyTo?: string;
   /** Les pièces jointes, par nom et taille — jamais leur contenu. */
   piecesJointes: string[];
 };
@@ -93,14 +97,20 @@ export function capturerMail(payload: {
   to: string;
   subject: string;
   text: string;
+  html?: string;
+  replyTo?: string;
   piecesJointes?: string[];
 }): void {
+  // Champ par champ, exprès : le message reçu porte aussi les pièces
+  // jointes elles-mêmes, que la boîte ne garde jamais.
   messages.push({
     id: `mail_${Date.now()}_${messages.length}`,
     recuLe: new Date(),
     to: payload.to,
     subject: payload.subject,
     text: payload.text,
+    html: payload.html,
+    replyTo: payload.replyTo,
     piecesJointes: payload.piecesJointes ?? [],
   });
   while (messages.length > BOITE_CAPACITE) messages.shift();

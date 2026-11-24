@@ -44,7 +44,17 @@ const COLONNES = {
 
 /** La ligne d'abonnement du compte (ADR-054 : une par compte), lue seulement une fois l'offre lancée. */
 export const abonnementDuCompte = cache(async (db: Db, compteId: string) =>
-  offreLancee(contexteDroits()) ? db.abonnement.findUnique({ where: { compteId }, select: COLONNES }) : null,
+  offreLancee(contexteDroits()) ? ligneAbonnementDuCompte(db, compteId) : null,
+);
+
+/**
+ * La ligne d'abonnement du compte, QUEL QUE SOIT le lancement de l'offre —
+ * pour les droits par formule (connecteur, assistance de prévention), qui ne
+ * s'ouvrent qu'en Pro même avant le lancement. Une lecture par rendu,
+ * partagée avec `abonnementDuCompte` (revue du 2026-11-24).
+ */
+export const ligneAbonnementDuCompte = cache(async (db: Db, compteId: string) =>
+  db.abonnement.findUnique({ where: { compteId }, select: COLONNES }),
 );
 
 /** Les droits d'un compte ; aucune lecture tant que l'offre n'est pas lancée. */

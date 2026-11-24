@@ -8,15 +8,14 @@
 // l'Essentiel (`FORMULE_D_ESSAI`) : il n'ouvre pas le connecteur, et une
 // ligne sans formule non plus.
 
-import { OUVRENT } from "./droits";
-import { FORMULES, formuleDeLookupKey } from "./formules";
+import { formuleOuverte, type LigneFormule } from "./droits";
+import { FORMULES } from "./formules";
 
-export type LigneConnecteur = { statut: string | null; formule: string | null } | null;
+export type LigneConnecteur = LigneFormule;
 
 export function connecteurOuvert(ligne: LigneConnecteur): boolean {
-  if (!ligne?.statut || !OUVRENT.has(ligne.statut)) return false;
-  const formule = formuleDeLookupKey(ligne.formule)?.formule;
-  return formule !== undefined && FORMULES[formule].quotas.connecterUnAssistant;
+  const formule = formuleOuverte(ligne);
+  return formule !== null && FORMULES[formule].quotas.connecterUnAssistant;
 }
 
 export const MESSAGE_CONNECTEUR_PRO =

@@ -16,6 +16,7 @@
 //   de l'ouvrir.
 
 import { formaterDateLongueFr as jour } from "@/lib/dates";
+import { formuleDeLookupKey, type CleFormule } from "./formules";
 
 export type LigneAbonnement = {
   statut: string | null;
@@ -45,6 +46,20 @@ export type ContexteDroits = {
 
 /** Les états Stripe qui ouvrent la saisie, et dont la période court. */
 export const OUVRENT: ReadonlySet<string> = new Set(["active", "past_due"]);
+
+/** Une ligne d'abonnement réduite à ce qui ouvre une formule. */
+export type LigneFormule = { statut: string | null; formule: string | null } | null;
+
+/**
+ * La formule payante en cours, si l'abonnement est ouvert (`OUVRENT`) ; sinon
+ * `null` — l'essai, une ligne sans formule, une clé inconnue. Une seule
+ * lecture pour les droits par formule : le connecteur (ADR-062) et
+ * l'assistance de prévention (ADR-050 amendée) y lisent chacun leur quota.
+ */
+export function formuleOuverte(ligne: LigneFormule): CleFormule | null {
+  if (!ligne?.statut || !OUVRENT.has(ligne.statut)) return null;
+  return formuleDeLookupKey(ligne.formule)?.formule ?? null;
+}
 /**
  * Les états où une facture attend d'être réglée : tous se règlent au portail
  * de Stripe, qui enregistre la carte, demande la confirmation de la banque et

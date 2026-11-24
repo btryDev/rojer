@@ -1,14 +1,10 @@
 import type { ReactNode } from "react";
 
-import {
-  LABEL_ITEM,
-  categorieDeItem,
-  type RailCategorieId,
-  type SidebarItemId,
-} from "@/components/layout/sidebar-nav";
+import { LABEL_ITEM, type RailCategorieId, type SidebarItemId } from "@/components/layout/sidebar-nav";
 
+import { aUneIllustration } from "./illustrations/liste";
 import { TITRE_EN_TETE } from "./titres";
-import { TEINTE_SECTION } from "./teintes";
+import { TEINTE_SECTION, sectionDeLEnTete } from "./teintes";
 
 /** Ce que porte l'en-tête, page ou repli. */
 export type CadreEnTeteProps = (
@@ -61,15 +57,16 @@ export function CadreEnTete({
   description,
   children,
   pied,
-  avecPanneau,
   dessin,
 }: CadreEnTeteProps & {
-  /** Le panneau teinté de droite. Sans lui, l'en-tête tient sur une colonne. */
-  avecPanneau: boolean;
   /** Ce que le panneau montre ; le repli de chargement n'y met rien. */
   dessin?: ReactNode;
 }) {
-  const fond = TEINTE_SECTION[section ?? (item ? categorieDeItem(item) : null) ?? "tableau"];
+  const fond = TEINTE_SECTION[section ?? (item ? sectionDeLEnTete(item) : null) ?? "tableau"];
+  // Le panneau teinté de droite : seulement pour une page qui a son dessin —
+  // sans lui, l'en-tête tient sur une colonne. Décidé ici, une fois, pour la
+  // page et pour son repli de chargement (revue du 2026-11-24).
+  const avecPanneau = item ? aUneIllustration(item) : false;
 
   return (
     // `flex-none` n'est pas décoratif : la colonne de contenu du shell est un

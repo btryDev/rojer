@@ -34,6 +34,8 @@ const SQL_BRUT_ECRIT: Record<string, string> = {
   "src/lib/securite/limite-debit.ts": "compteurs techniques, hors de tout compte",
   "src/lib/stripe/file.ts": "file des relectures Stripe, hors de tout compte (aucune saisie)",
   "src/lib/auth/portee/client.ts": "l'extension (lecture seule)",
+  "src/lib/assistance/creneaux.ts":
+    "créneaux du rendez-vous annuel, hors compte (ADR-063) : rien n'y est gelé ; les actions qui les prennent et les rendent appellent verifierSaisie",
 };
 
 /**

@@ -1,64 +1,71 @@
 "use server";
 
+import { headers } from "next/headers";
 import { requireCompte } from "@/lib/auth/compte";
 import { ouvrirAuGel } from "@/lib/abonnements/gel-saisie";
 import { z } from "zod";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { decouperCheminInterne } from "@/lib/navigation/provenance";
+import { envoiEnService, motifErreur, sendMail } from "@/lib/email";
+import { CONTACT, ENVOI_IMPOSSIBLE } from "@/lib/contact/message";
+import { texteSaisi } from "@/lib/validation/texte";
+import { courrielDAssistance } from "./courriel";
+import { formuleDAssistance } from "./formule";
 import {
   CATEGORIES_ASSISTANCE,
   CONTEXTE_MAX,
   DEMANDES_PAR_JOUR_MAX,
+  MESSAGE_FORMULE_PRO,
   MESSAGE_MAX,
-  TELEPHONE_MAX,
+  TOUT_LE_COMPTE,
+  estUnSujetDeLApplication,
+  exigeLaFormulePro,
 } from "./libelles";
 
 export type DemandeAssistanceState =
   | { status: "idle" }
-  | { status: "success" }
+  | { status: "success"; email: string }
   | { status: "error"; message: string; fieldErrors?: Record<string, string[]> };
 
-// Un champ absent du formulaire arrive `null` (`FormData.get`), un champ
-// vide arrive "" : les deux valent « non renseigné ».
-const texte = (max: number) =>
+/**
+ * Un champ caché, né des données de la page : il se tronque, jamais ne
+ * refuse — l'utilisateur ne pourrait rien y corriger (revue du 2026-10-24).
+ */
+const tronque = (max: number) =>
   z.preprocess(
-    (v) => (v === null ? undefined : typeof v === "string" ? v.trim() || undefined : v),
-    z.string().max(max).optional(),
+    (v) => (typeof v === "string" ? v.trim().slice(0, max) || undefined : undefined),
+    z.string().optional(),
   );
 
 const schema = z.object({
   categorie: z.enum(CATEGORIES_ASSISTANCE),
-  message: z.preprocess(
-    (v) => (typeof v === "string" ? v.trim() : v),
-    z.string().min(1, "Décrivez votre besoin en quelques mots").max(MESSAGE_MAX),
+  // `texteSaisi` compte un retour à la ligne pour un caractère, comme le
+  // champ du navigateur (`maxLength`).
+  message: texteSaisi(MESSAGE_MAX, `Votre message tient en ${MESSAGE_MAX} caractères au plus.`).min(
+    1,
+    "Écrivez votre question en quelques mots",
   ),
-  telephone: texte(TELEPHONE_MAX),
-  // Champs cachés, nés des données de la page : ils se tronquent, jamais ne
-  // refusent — l'utilisateur ne pourrait rien y corriger (revue du 2026-10-24).
-  contexte: z.preprocess(
-    (v) => (typeof v === "string" ? v.trim().slice(0, CONTEXTE_MAX) || undefined : undefined),
-    z.string().optional(),
-  ),
+  contexte: tronque(CONTEXTE_MAX),
   page: z.preprocess((v) => (typeof v === "string" && v.length <= 512 ? v : ""), z.string()),
-  etablissementId: texte(64),
+  etablissementId: tronque(64),
 });
 
 /**
- * Enregistre une demande d'assistance (« Besoin d'aide ? »). L'établissement,
- * s'il est donné, doit être celui du compte ; la page n'est gardée que si
- * c'est un chemin de ce site. L'envoi par e-mail viendra plus tard : la
- * demande est en base, et rien ne part.
+ * Envoie une demande d'assistance à la boîte de Rojer, par e-mail, et la
+ * garde en base (ADR-050, amendée le 2026-11-24). La réponse se fait par
+ * e-mail, à l'adresse de la personne. Les questions de prévention demandent
+ * la formule Pro ; l'établissement, s'il est donné, doit être celui du
+ * compte ; la page n'est gardée que si c'est un chemin de ce site.
  */
 export async function demanderAssistance(
   _prev: DemandeAssistanceState,
   formData: FormData,
 ): Promise<DemandeAssistanceState> {
   const { user, compte, db } = await requireCompte();
-  ouvrirAuGel(); // supprimer, retirer : ouvert sur un site gelé (ADR-053 § 14)
+  ouvrirAuGel(); // supprimer, retirer, demander de l'aide : ouvert sur un site gelé (ADR-053 § 14)
   const parsed = schema.safeParse({
     categorie: formData.get("categorie"),
     message: formData.get("message"),
-    telephone: formData.get("telephone"),
     contexte: formData.get("contexte"),
     page: formData.get("page") ?? "",
     etablissementId: formData.get("etablissementId"),
@@ -68,35 +75,74 @@ export async function demanderAssistance(
   }
   const d = parsed.data;
 
-  // L'établissement donné, à défaut celui de la page (« /etablissements/{id}/… ») ;
-  // 404 pour celui d'un autre compte, comme partout.
+  // L'établissement choisi, à défaut celui de la page (« /etablissements/{id}/… ») ;
+  // « Tout le compte » n'en retient aucun. 404 pour celui d'un autre compte.
   const chemin = decouperCheminInterne(d.page);
-  const deLaPage = chemin ? /^\/etablissements\/([^/]+)/.exec(chemin.pathname)?.[1] : undefined;
-  const voulu = d.etablissementId ?? (deLaPage && deLaPage !== "nouveau" ? deLaPage : undefined);
-  const etablissementId = voulu ? (await requireEtablissement(voulu)).etablissement.id : null;
+  const page = chemin?.pathname ?? "";
+  const deLaPage = /^\/etablissements\/([^/]+)/.exec(page)?.[1];
+  const voulu =
+    d.etablissementId === TOUT_LE_COMPTE
+      ? undefined
+      : (d.etablissementId ?? (deLaPage && deLaPage !== "nouveau" ? deLaPage : undefined));
 
+  // Trois lectures indépendantes, ensemble (revue du 2026-11-24).
   const depuis = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const recentes = await db.demandeAssistance.count({
-    where: { createdAt: { gte: depuis } },
-  });
+  const [formule, garde, recentes] = await Promise.all([
+    formuleDAssistance(db, compte.compteId),
+    voulu ? requireEtablissement(voulu) : null,
+    db.demandeAssistance.count({ where: { createdAt: { gte: depuis } } }),
+  ]);
+  const etablissement = garde?.etablissement ?? null;
+  if (exigeLaFormulePro(d.categorie) && !formule.pro) return { status: "error", message: MESSAGE_FORMULE_PRO };
   if (recentes >= DEMANDES_PAR_JOUR_MAX) {
     return {
       status: "error",
-      message: "Vos demandes du jour sont bien enregistrées : nos experts reviennent vers vous.",
+      message: "Vos demandes du jour sont bien arrivées : nous vous répondons par e-mail.",
     };
   }
 
-  await db.demandeAssistance.create({
+  if (!user.email || !envoiEnService()) return { status: "error", message: ENVOI_IMPOSSIBLE };
+
+  // La ligne d'abord : elle compte au plafond du jour dès maintenant, même
+  // si deux envois partent ensemble (revue du 2026-11-24). Le téléphone n'est
+  // plus demandé (2026-11-24).
+  const contexte = d.contexte ?? null;
+  const demande = await db.demandeAssistance.create({
     data: {
       compteId: compte.compteId,
       userId: user.id,
-      etablissementId,
+      etablissementId: etablissement?.id ?? null,
       categorie: d.categorie,
       message: d.message,
-      telephone: d.telephone ?? null,
-      contexte: d.contexte ?? null,
-      page: chemin ? chemin.pathname : "",
+      contexte,
+      page,
     },
+    select: { id: true },
   });
-  return { status: "success" };
+
+  const courriel = courrielDAssistance({
+    categorie: d.categorie,
+    message: d.message,
+    contexte,
+    page,
+    formule: formule.libelle,
+    personne: { nom: user.name ?? null, email: user.email },
+    etablissement: etablissement?.raisonDisplay ?? null,
+    compteId: compte.compteId,
+    // Le navigateur, pour un problème technique seulement : c'est ce que
+    // l'écran et la politique de confidentialité annoncent.
+    navigateur: estUnSujetDeLApplication(d.categorie)
+      ? ((await headers()).get("user-agent")?.slice(0, 300) ?? null)
+      : null,
+  });
+  try {
+    await sendMail({ to: CONTACT, replyTo: user.email, ...courriel });
+  } catch (e) {
+    console.error(`[assistance] demande non envoyée : ${motifErreur(e)}`);
+    // Partie nulle part : la ligne s'en va, et l'essai suivant repart à neuf.
+    // Un membre en lecture seule ne peut que créer (ADR-054) : sa ligne reste.
+    await db.demandeAssistance.delete({ where: { id: demande.id } }).catch(() => {});
+    return { status: "error", message: ENVOI_IMPOSSIBLE };
+  }
+  return { status: "success", email: user.email };
 }

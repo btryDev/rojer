@@ -11,7 +11,7 @@
 
 import { headers } from "next/headers";
 import { CHAMP_PIEGE } from "@/components/landing/contact";
-import { CONTACT, courrielDeContact, schemaMessageContact } from "@/lib/contact/message";
+import { CONTACT, ENVOI_IMPOSSIBLE, courrielDeContact, schemaMessageContact } from "@/lib/contact/message";
 import { envoiEnService, motifErreur, sendMail } from "@/lib/email";
 import { ipPourLimite } from "@/lib/securite/ip-client";
 import {
@@ -25,9 +25,6 @@ export type EtatContact =
   | { status: "saisie" }
   | { status: "envoye"; email: string }
   | { status: "erreur"; message: string };
-
-const ENVOI_IMPOSSIBLE =
-  "Votre message n'a pas pu partir. Réessayez un peu plus tard : ce que vous avez écrit est conservé.";
 
 export async function envoyerMessageContact(
   _prev: EtatContact,

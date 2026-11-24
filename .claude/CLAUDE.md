@@ -765,8 +765,12 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     l'équipement qu'il concerne (2026-10-24)
 49. **049** — Un contrôle a un prestataire attitré et un rendez-vous, qui ne
     le datent pas (2026-10-24)
-50. **050** — Une demande d'assistance s'enregistre là où le doute naît, et
-    ne part pas encore (2026-10-24)
+50. **050** — Une demande d'assistance s'enregistre là où le doute naît, ~~et
+    ne part pas encore~~ (2026-10-24) [2026-11-24, amendée : une seule entrée
+    « Assistance » pour toutes les formules (page, au pied du rail) ; les
+    questions de prévention réservées à la formule Pro, les sujets de
+    l'application ouverts à tous ; la demande part par e-mail et la réponse
+    aussi, sans fil dans Rojer ; ni BTRY ni « l'expert » à l'écran]
 53. **053** — L'abonnement est porté par le compte ; Stripe en garde la
     vérité, Rojer une copie écrite depuis un webhook signé, après relecture
     de l'abonnement. Un impayé ferme la saisie, jamais la lecture ni
@@ -823,6 +827,13 @@ Il n'y a **pas** de modèle `Obligation` en base : le référentiel d'obligation
     propriétaire)], jeton relu à chaque requête (audience, `typ`, appartenance,
     formule), outils bornés au compte en lecture seule. Remplace l'ADR-013 ;
     la route à clé est retirée (2026-11-21)
+63. **063** — Le rendez-vous annuel de la formule Pro : un par année
+    d'abonnement et par compte, tous établissements compris ; des créneaux
+    ouverts hors de l'application (`CreneauAssistance`, hors compte), le
+    client ne voit que les libres, sur un mois ; réserver, déplacer, annuler
+    jusqu'à 24 h avant ; e-mails à l'équipe et à la personne, `.ics` ; la
+    tâche quotidienne annule le rendez-vous d'un compte sorti de la formule
+    Pro (2026-11-24, codée sur `lot/assistance`, écrans de la maquette validée)
 
 [2026-10-15, ménage des ADR : 037, 038 et 043 manquaient à cette liste ;
 **il n'existe pas d'ADR-044** — annoncée dans

@@ -56,7 +56,7 @@
 import { Fragment, useState } from "react";
 import Link from "next/link";
 import { NavLink, RailEntree } from "./entrees-navigation";
-import { DemandeAide } from "@/components/assistance/DemandeAide";
+import { LienAssistance } from "@/components/assistance/LienAssistance";
 import { usePathname, useSearchParams } from "next/navigation";
 import { PanelLeftClose } from "lucide-react";
 import {
@@ -203,9 +203,11 @@ export function AppSidebar({
           ))}
         </nav>
 
-        {/* « Besoin d'aide ? », en permanence (décision du 2026-10-24). */}
+        {/* L'assistance, en permanence (décision du 2026-10-24) — ~~le
+            panneau « Aide »~~ [2026-11-24, ADR-050 amendée : la page
+            « Assistance », la même pour toutes les formules]. */}
         <div className="shrink-0 px-2 pb-2">
-          <DemandeAide variante="rail" libelle="Aide" etablissementId={etablissement.id} />
+          <LienAssistance variante="rail" etablissementId={etablissement.id} actif={actif} auChoix={() => setOuverte(null)} />
         </div>
 
       </div>

@@ -65,7 +65,20 @@ export default async function BoiteMailDevPage() {
                 </div>
                 <p className="mt-1 text-[12.5px] text-[color:var(--muted-foreground)]">
                   À : {m.to}
+                  {m.replyTo ? ` · Répondre à : ${m.replyTo}` : null}
                 </p>
+
+                {/* La mise en page, comme la messagerie l'affichera (2026-11-24).
+                    `sandbox` vide : ni script, ni formulaire, ni même origine —
+                    le HTML d'un e-mail ne fait rien d'autre que s'afficher. */}
+                {m.html && (
+                  <iframe
+                    title={`Aperçu : ${m.subject}`}
+                    sandbox=""
+                    srcDoc={m.html}
+                    className="mt-4 h-[720px] w-full rounded-[12px] bg-white ring-1 ring-[color:var(--board-slate-line)]"
+                  />
+                )}
 
                 <pre className="mt-4 overflow-x-auto whitespace-pre-wrap break-words rounded-[12px] bg-[color:var(--board-slate-line)]/30 p-4 font-mono text-[12.5px] leading-relaxed text-[color:var(--board-ink)]">
                   {m.text}

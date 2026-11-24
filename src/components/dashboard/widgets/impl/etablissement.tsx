@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { regimesAffiches } from "@/lib/etablissements/types-erp-affiches";
-import { Pencil, Phone } from "lucide-react";
+import { LifeBuoy, Pencil } from "lucide-react";
+import { cheminAssistance } from "@/lib/assistance/libelles";
+import { LienProvenance } from "@/components/navigation/LienProvenance";
 import type { DashboardBundle } from "../types";
 import { hrefEffectifEntreprise } from "@/components/entreprises/LienEffectifEntreprise";
 
@@ -127,16 +129,16 @@ export function WidgetEtablissement({ bundle }: { bundle: DashboardBundle }) {
         <p className="text-[12px] leading-snug text-[color:var(--board-slate-mid)]">
           Un doute sur une obligation ?
         </p>
-        <button
-          type="button"
-          disabled
-          aria-disabled
-          title="Bientôt disponible"
-          className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-[color:var(--board-blue-ink)]/25 bg-[color:var(--board-card)]/70 px-3 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[color:var(--board-blue-ink)] transition-colors hover:border-[color:var(--board-blue-ink)]/45 hover:bg-[color:var(--board-card)] disabled:cursor-not-allowed"
+        {/* ~~Un bouton inerte « Bientôt disponible »~~ [2026-11-24 : la
+            page « Assistance » existe, ADR-050 amendée]. */}
+        {/* La page d'où l'on vient part avec la question (`?de=`, relecture du 2026-11-24). */}
+        <LienProvenance
+          href={cheminAssistance(etab.id)}
+          className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-[color:var(--board-blue-ink)]/25 bg-[color:var(--board-card)]/70 px-3 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[color:var(--board-blue-ink)] transition-colors hover:border-[color:var(--board-blue-ink)]/45 hover:bg-[color:var(--board-card)]"
         >
-          <Phone aria-hidden className="h-3 w-3" />
-          Contacter un expert
-        </button>
+          <LifeBuoy aria-hidden className="h-3 w-3" />
+          Poser une question
+        </LienProvenance>
       </div>
     </section>
   );
