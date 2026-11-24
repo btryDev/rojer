@@ -29,6 +29,7 @@ import { complementsParPlace, precisionsLigne } from "@/lib/plan-prevention/comp
 import { LABEL_NATURE } from "@/lib/permis-feu/schema";
 import { mesureParId, surListeAnterieure } from "@/lib/permis-feu/referentiel";
 import type { PartieSignataire } from "@prisma/client";
+import { LogoRojer } from "@/components/marque/LogoRojer";
 
 /**
  * Page publique non authentifiée : un prestataire arrive ici via un lien
@@ -452,8 +453,13 @@ const CLASSE_VIDE = "m-0 mt-2 text-[13px] leading-[1.55] text-[color:var(--board
 /** La pastille de marque, bleu ciel. */
 function pastilleRojer() {
   return (
-    <span className="inline-flex rounded-full bg-[color:var(--board-sky)] px-4 py-1.5 font-display text-[16px] font-semibold tracking-[-0.02em] text-[color:var(--board-ink)]">
-      Rojer
+    <span
+      role="img"
+      aria-label="Rojer"
+      className="inline-flex rounded-full bg-[color:var(--board-sky)] px-4 py-[0.55em] text-[16px] text-[color:var(--board-ink)]"
+    >
+      {/* [2026-11-24] Le logo, à la place du nom écrit (`LogoRojer`). */}
+      <LogoRojer />
     </span>
   );
 }

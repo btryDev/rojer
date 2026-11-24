@@ -19,6 +19,7 @@ import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { DemandeAide } from "@/components/assistance/DemandeAide";
 import { unPanneauModalEstOuvert } from "@/components/ui-kit/PanneauModal";
+import { LogoRojer } from "@/components/marque/LogoRojer";
 import { NavLink, RailEntree } from "./entrees-navigation";
 import { useEstTelephone } from "./useEstTelephone";
 import {
@@ -91,9 +92,8 @@ export function NavigationMobile({
           aria-label={`${LABEL_ITEM.tableau} — Rojer, ${raisonDisplay}`}
           className="flex min-w-0 flex-col rounded-lg py-1 pr-2 leading-none"
         >
-          <span className="font-[family-name:var(--font-titre)] text-[18px] font-semibold tracking-[-0.025em] text-[color:var(--board-ink)]">
-            Rojer
-          </span>
+          {/* [2026-11-24] Le logo, à la place du nom écrit (`LogoRojer`). */}
+          <LogoRojer className="text-[18px] text-[color:var(--board-ink)]" />
           <span className="mt-1 truncate text-[11.5px] text-[color:var(--board-slate-mid)]">
             {raisonDisplay}
           </span>
