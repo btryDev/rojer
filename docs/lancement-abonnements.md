@@ -73,6 +73,16 @@ leur clé et écarte un prix dont l'intervalle contredit la clé.
 - « Sur mesure » : sur devis, sans prix dans Stripe — un client sur mesure se
   traite à la main le jour où il arrive (décision à prendre ce jour-là).
 
+[2026-11-24 : **fait en mode réel** (compte « rojer », à la demande de la
+propriétaire) : taux « TVA » 20 %, TTC, France, libellé « France » ;
+produits Essentiel (`prod_Vge1tFcrEa6cJH`) et Pro (`prod_Vge2DCrrTSw1zu`) ;
+les 4 prix du tableau, chacun avec sa clé, sa description et ses métadonnées
+`formule` et `periodicite`. Le formulaire de produit ne proposait pas
+« Inclure la taxe dans le prix » : `tax_behavior` reste non précisé, sans
+effet ici — ce réglage ne sert qu'au calcul automatique de Stripe Tax,
+alors que Rojer pose le taux lui-même (`default_tax_rates`,
+`stripe/parcours.ts`).]
+
 ## 3. Factures, relances, e-mails — propriétaire, tableau de bord
 
 - **Factures** (Billing > Factures) : numérotation au niveau du compte (une
@@ -121,6 +131,38 @@ paiement) : **carte bancaire seulement** — Klarna, Bancontact et Satispay,
 proposés par défaut, sont à désactiver (Rojer ne gère ni le paiement
 fractionné ni les prélèvements différés). Vérifier à l'écran sur Checkout.
 
+[2026-11-24 : **§§ 1.4, 3 et 4 faits en mode réel**, à la demande de la
+propriétaire, relus après rechargement :
+- Moyens de paiement : carte, Apple Pay et Link (des cartes) ; douze autres
+  coupés, dont Klarna, Bancontact, Satispay, EPS, BLIK et Pix. La carte reste
+  « action requise » jusqu'à la vérification d'identité.
+- Portail : nom, e-mail, adresse de facturation et numéro de TVA
+  modifiables (téléphone retiré) ; factures et carte : oui ; résiliation en
+  fin de période ; changement de formule fermé.
+- Échecs de paiement : relance intelligente déjà réglée (8 essais en 2
+  semaines) ; toutes les tentatives échouées → abonnement « non payé ».
+- Litiges : annulation immédiate sans prorata.
+- Confirmations bancaires : lien de Stripe envoyé au client, rappels à 3, 5
+  et 7 jours ; non finalisé sous 15 jours → « non payé ».
+- E-mails : carte expirée, échec de paiement par carte, reçus des paiements
+  et des remboursements ; renouvellements à venir et fin d'essai laissés
+  coupés. Mise à jour de la carte par la page de Stripe seulement — choix
+  irréversible, confirmé par la propriétaire.
+- Numérotation : déjà au niveau du compte.
+- Image de marque (Paramètres > Adaptation à votre marque) : icône « R sur
+  bleu » (`src/app/icon.png`), couleur de marque `#b2daf2`, accentuation
+  `#0f1216` (l'encre du site) ; pas de logo — Checkout, portail, factures et
+  reçus les reprennent.
+- Informations publiques (session « mis_place_stripe » et la propriétaire) :
+  conditions, confidentialité, e-mail `contact@btry.fr`, adresse du siège ;
+  pied de facture : pas d'escompte, pénalités au taux BCE + 10 points,
+  indemnité de 40 €.
+
+Restait à la propriétaire, fait le même jour : le pied de facture (taux des pénalités de retard
+avec l'expert-comptable, indemnité de 40 €) et les informations publiques du
+§ 1.3, dont l'adresse des conditions générales, obligatoire pour Checkout,
+et le libellé de relevé bancaire.]
+
 ## 5. Webhook — propriétaire, tableau de bord
 
 Développeurs > Webhooks > nouvelle destination :
@@ -134,6 +176,11 @@ Développeurs > Webhooks > nouvelle destination :
   `v1.invoice.payment_action_required`, et depuis le 2026-11-10
   `v1.charge.dispute.created`, `v1.charge.refunded` ;
 - noter le secret de signature `whsec_…` (étape 7).
+
+[2026-11-24 : **fait en mode réel** — destination « rojer-production »,
+`https://rojer.fr/api/stripe/webhook`, charge légère, les 9 événements. Le
+secret de signature reste à copier dans `STRIPE_WEBHOOK_SECRET` par la
+propriétaire, avec la clé restreinte (étape 7).]
 
 ## 6. Répétition complète en TEST, sur la préproduction — propriétaire, avec Claude
 
@@ -154,7 +201,7 @@ sur la préproduction, où fermer la saisie ne gêne personne.
    | Subscriptions, et Subscription schedules s'ils sont listés à part | écriture |
    | Checkout Sessions | écriture |
    | Customer portal | écriture [2026-11-16 : la tâche quotidienne relit aussi sa configuration, `billingPortal.configurations.list` — vérifier l'absence de 403 à la répétition] |
-   | Invoices | ~~lecture~~ ~~écriture [2026-11-16 : la reprise d'une pause annule une facture en attente d'une autre formule, `invoices.voidInvoice`]~~ lecture [2026-11-16, ADR-053 § 9 amendé : plus de pause, Rojer n'écrit plus aucune facture ; la tâche quotidienne liste les factures ouvertes d'un impayé] |
+   | Invoices | ~~lecture~~ ~~écriture [2026-11-16 : la reprise d'une pause annule une facture en attente d'une autre formule, `invoices.voidInvoice`]~~ ~~lecture [2026-11-16, ADR-053 § 9 amendé : plus de pause, Rojer n'écrit plus aucune facture ; la tâche quotidienne liste les factures ouvertes d'un impayé]~~ **écriture** [2026-11-24, relevé dans le code en créant la clé réelle : la suppression d'un compte annule ses factures ouvertes — `abonnements/suppression.ts`, `invoices.voidInvoice`, `.del`, `.finalizeInvoice` — et l'aperçu d'un changement de formule appelle `invoices.createPreview`] |
    | Prices, Products | lecture |
    | Tax Rates | lecture |
    | ~~SetupIntents~~ | ~~lecture~~ [2026-11-16 : plus de Checkout « setup », ADR-053 § 9 amendé] |
@@ -163,6 +210,15 @@ sur la préproduction, où fermer la saisie ne gêne personne.
    | Charges | lecture [2026-11-16 : les remboursements, `charges.retrieve`, `traitement.ts`] |
 
    Tout le reste : aucun. La clé ne se colle jamais dans une conversation.
+
+   [2026-11-24 : la clé **réelle** « Rojer production » est créée directement
+   en mode réel, sans répétition en test (étape 5 non faite), avec ces droits
+   tels que Stripe les nomme : écriture sur Customers, Subscriptions (qui
+   couvre `/v1/subscription_schedules`), Checkout Sessions, Customer Portal,
+   Invoices ; lecture sur Charges and Refunds, Payment Disputes, Payment
+   Methods, Prices, Products, Tax Rates. Elle commence par `rk_live_`, et
+   Rojer l'accepte (`configurationStripe` : actif, mode réel). Un 403 dans les
+   journaux dira s'il manque un droit.]
 3. Variables de la **préproduction** : `APP_ENV=preview`,
    `STRIPE_SECRET_KEY=rk_test_…`, `STRIPE_WEBHOOK_SECRET` (destination de
    test vers l'URL de préproduction), `TACHES_SECRET`,
