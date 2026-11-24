@@ -56,10 +56,14 @@ export default async function PageBientot() {
               Banana Pro, 2026-11-23 ; fond rendu uni à la main, les ronds
               retirés — décision de la propriétaire). Le cadre prend la
               couleur exacte du fond de l'image : l'aperçu flou du chargement
-              ne change pas de teinte. */}
+              ne change pas de teinte. [2026-11-24, demande de la propriétaire :
+              les bleus de l'image ramenés au bleu de la marque, `--board-sky`
+              `#b2daf2` (celui de l'icône et de la pastille), au lieu du
+              `#cfe3fc` d'origine — rotation de teinte et chroma en OKLab, les
+              blancs et les traits inchangés.] */}
           <PhotoCadre
             photo={{ src: illustrationOuverture, alt: "" }}
-            fond="#cfe3fc"
+            fond="#b2daf2"
             ratio="4 / 3"
             sizes="(max-width: 1023px) 92vw, (max-width: 1600px) 52vw, 820px"
           />
