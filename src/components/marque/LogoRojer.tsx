@@ -1,3 +1,5 @@
+import { cn } from "@/lib/utils";
+
 /**
  * Le logo « Rojer » (décision de la propriétaire du 2026-11-24) : IBM Plex
  * Sans, graisse 600, interlettrage -0,06 em, point du j ROND — Plex le dessine
@@ -7,14 +9,16 @@
  *
  * - Couleur : celle du texte (`currentColor`).
  * - Taille : la viewBox va du haut du point du j au bas de son jambage, soit
- *   0,953 em ; `h-[0.953em]` le met à l'échelle du texte voisin.
+ *   0,953 em — hauteur posée ici, à l'échelle du texte voisin : l'appelant
+ *   règle la taille par `text-[…]`, jamais par une hauteur. Si le script
+ *   change la viewBox, ce rapport change avec elle.
  * - Décoratif : le lien qui l'entoure porte le nom accessible.
  */
 export function LogoRojer({ className }: { className?: string }) {
   return (
     <svg
       viewBox="82 -753 2111 953"
-      className={className}
+      className={cn("h-[0.953em] w-auto", className)}
       fill="currentColor"
       aria-hidden="true"
       focusable="false"

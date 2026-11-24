@@ -1,5 +1,6 @@
 "use client";
 
+import { LogoRojer } from "@/components/marque/LogoRojer";
 import type { EntrepriseConnue } from "@/lib/onboarding/rattachement";
 import { DemandeAide } from "@/components/assistance/DemandeAide";
 import { BandeauAbonnement } from "@/components/abonnements/BandeauAbonnement";
@@ -257,15 +258,17 @@ export function WizardShell({
     <div inert={accueil} className="grid min-h-dvh grid-cols-1 bg-[color:var(--board-canvas)] text-[color:var(--board-ink)] lg:grid-cols-[320px_1fr]">
       {/* ─── Rail ─────────────────────────────────────────────── */}
       {/* Même chrome que `AppSidebar` : encre pleine, blancs voilés,
-          marque en toutes lettres. La mise en place est le premier écran
+          ~~marque en toutes lettres~~ [2026-11-24 : le logo, `LogoRojer`].
+          La mise en place est le premier écran
           de l'application, pas son antichambre — un rail au dessin propre
           se lirait comme un autre produit. */}
       <aside className="hidden flex-col gap-8 bg-[color:var(--board-ink)] px-7 py-8 text-white lg:sticky lg:top-0 lg:flex lg:h-dvh lg:overflow-y-auto">
         <Link
           href="/"
-          className="text-[17px] font-semibold leading-none tracking-[-0.025em] text-white transition-colors hover:text-white/75"
+          aria-label="Rojer"
+          className="self-start text-[17px] leading-none text-white transition-colors hover:text-white/75"
         >
-          Rojer
+          <LogoRojer className="block" />
         </Link>
 
         <h2 className="board-titre m-0 text-[26px] text-white">
@@ -351,9 +354,10 @@ export function WizardShell({
         <div className="mb-6 flex items-center justify-between lg:hidden">
           <Link
             href="/"
-            className="text-[16px] font-semibold leading-none tracking-[-0.025em] text-[color:var(--board-ink)]"
+            aria-label="Rojer"
+            className="text-[16px] leading-none text-[color:var(--board-ink)]"
           >
-            Rojer
+            <LogoRojer className="block" />
           </Link>
 
           {/* Le rail — et donc la déconnexion qu'il porte — est replié sous

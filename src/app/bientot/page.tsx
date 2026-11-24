@@ -60,7 +60,9 @@ export default async function PageBientot() {
               les bleus de l'image ramenés au bleu de la marque, `--board-sky`
               `#b2daf2` (celui de l'icône et de la pastille), au lieu du
               `#cfe3fc` d'origine — rotation de teinte et chroma en OKLab, les
-              blancs et les traits inchangés.] */}
+              blancs et les traits inchangés. Littéral, pas
+              `var(--board-sky)` : le cadre suit les pixels de l'image, qui ne
+              suivraient pas un changement du jeton.] */}
           <PhotoCadre
             photo={{ src: illustrationOuverture, alt: "" }}
             fond="#b2daf2"

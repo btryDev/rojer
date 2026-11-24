@@ -78,9 +78,13 @@ for i, lettre in enumerate(MOT):
         rejouer(ops, TransformPen(pen_svg, (1, 0, 0, -1, x, 0)))
     x += glyphes[nom].width + (INTERLETTRAGE * upm if i < len(MOT) - 1 else 0)
 
+if cercle is None:
+    raise SystemExit(f"Point du j introuvable dans « {MOT} » : aucun contour du j au-dessus de la hauteur d'x.")
 cx, cy, r = cercle
+r = round(r)  # arrondi une fois : le diamètre de l'arc vaut exactement 2 r
+x0_rond, y_rond = round(cx - r), round(-cy)
 d = pen_svg.getCommands()
-d += f"M{cx - r:.0f} {-cy:.0f}a{r:.0f} {r:.0f} 0 1 0 {2 * r:.0f} 0a{r:.0f} {r:.0f} 0 1 0 {-2 * r:.0f} 0Z"
+d += f"M{x0_rond} {y_rond}a{r} {r} 0 1 0 {2 * r} 0a{r} {r} 0 1 0 {-2 * r} 0Z"
 
 # viewBox serrée sur l'encre : du haut du point au bas du jambage du j.
 tout = BoundsPen(glyphes)

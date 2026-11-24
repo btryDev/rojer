@@ -167,7 +167,8 @@ export function AppSidebar({
     >
       {/* ---- Rail : entrées de premier niveau ---- */}
       <div className="flex w-[88px] shrink-0 flex-col border-r border-white/10">
-        {/* Marque : le nom en toutes lettres, et le retour au tableau de
+        {/* Marque : ~~le nom en toutes lettres~~ [2026-11-24 : le logo,
+            `LogoRojer`], et le retour au tableau de
             bord. Le panneau, lui, ne la répète plus — elle était affichée
             deux fois côte à côte. */}
         <div className="grid h-[67px] shrink-0 place-items-center border-b border-white/10">
@@ -182,7 +183,7 @@ export function AppSidebar({
             }
           >
             {/* [2026-11-24] Le logo, à la place du nom écrit (`LogoRojer`). */}
-            <LogoRojer className="block h-[0.953em] w-auto" />
+            <LogoRojer className="block" />
           </Link>
         </div>
 
