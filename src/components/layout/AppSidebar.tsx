@@ -71,6 +71,7 @@ import {
   type SidebarModules,
 } from "./sidebar-nav";
 import { NavigationMobile } from "./NavigationMobile";
+import { LogoRojer } from "@/components/marque/LogoRojer";
 
 type Etablissement = {
   id: string;
@@ -176,11 +177,12 @@ export function AppSidebar({
             aria-current={catActive === "tableau" ? "page" : undefined}
             aria-label={`${LABEL_ITEM.tableau} — Rojer`}
             className={
-              "rounded-lg px-2 py-1 text-[17px] font-semibold leading-none tracking-[-0.025em] transition-colors hover:text-white " +
+              "rounded-lg px-2 py-1 text-[17px] leading-none transition-colors hover:text-white " +
               (catActive === "tableau" ? "text-white" : "text-white/70")
             }
           >
-            Rojer
+            {/* [2026-11-24] Le logo, à la place du nom écrit (`LogoRojer`). */}
+            <LogoRojer className="block h-[0.953em] w-auto" />
           </Link>
         </div>
 
