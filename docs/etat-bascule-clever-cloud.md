@@ -672,6 +672,12 @@ Constats de l'audit de sécurité du 2026-11-21 (dig sur le DNS public de
   dit `Allow: /` et son plan du site liste ses pages) : une fois `rojer.fr`
   en ligne, elle ferait doublon chez les moteurs. Fermer l'indexation hors
   production (`environnementApp()`) avant de recréer une préprod.
+- **Ménage des environnements de test Stripe** (2026-11-24, décision de la
+  propriétaire : après le lancement). Relevé le même jour en lecture :
+  supprimer le bac à sable « Rojer local (à supprimer) » ; dans
+  « environnement de test rojer », archiver les 6 anciens prix sans clé
+  (hors taxe, dont 69 € et 699 €) et l'ancien taux de TVA « exclusif ». La
+  destination d'événements de la préprod y a été supprimée le 2026-11-24.
 
 ### À faire après la bascule : ce que les conditions générales promettent (2026-11-19)
 
