@@ -38,7 +38,9 @@ describe("llms.txt", () => {
 
   it("site fermé aux moteurs : 404", () => {
     vi.stubEnv("PUBLIC_APP_URL", "https://rojer.exemple");
-    vi.spyOn(indexation, "OUVERT_AUX_MOTEURS", "get").mockReturnValue(false);
+    // La constante est typée `true` tant que le site est ouvert : on la lit
+    // comme un booléen pour simuler la fermeture.
+    vi.spyOn(indexation as { OUVERT_AUX_MOTEURS: boolean }, "OUVERT_AUX_MOTEURS", "get").mockReturnValue(false);
     expect(GET().status).toBe(404);
   });
 });
