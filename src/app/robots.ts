@@ -36,7 +36,8 @@ import { adressePubliqueOuNull } from "@/lib/url-publique";
 // et doit être trouvée — « enlever, et justement favoriser ». Les pages
 // légales et les conditions générales, rédigées depuis (#360), et la page
 // d'attente passent du côté indexable ; `sitemap.xml` les annonce.]
-export const RACINES_INDEXABLES = ["/", "/login", "/signup", "/legal/", "/conditions", "/bientot"] as const;
+// [2026-11-24 : `/llms.txt`, le résumé du site pour les assistants.]
+export const RACINES_INDEXABLES = ["/", "/login", "/signup", "/legal/", "/conditions", "/bientot", "/llms.txt"] as const;
 
 export const RACINES_EXCLUES = [
   // ~~Les conditions générales (ADR-053 § 8) : publiques, mais provisoires —

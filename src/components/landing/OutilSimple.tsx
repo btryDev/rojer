@@ -10,11 +10,26 @@
 // Les apparitions sont « amples » (Reveal) : la section se découvre au
 // défilement, le texte d'abord, le média ensuite.
 
+import { getImageProps } from "next/image";
 import { ExtraitVideo } from "./ExtraitVideo";
 import illustrationSources from "@/assets/landing/transparence-sources.jpg";
 import { PhotoCadre } from "./PhotoCadre";
 import { Reveal } from "./Reveal";
 
+
+/**
+ * L'image d'aperçu de l'extrait, par l'optimiseur (2026-11-24, PageSpeed
+ * mobile) : le JPEG de 1280 px pesait 44 Ko et partait dès l'ouverture de la
+ * page, en concurrence avec la photo du hero — un `poster` ne se charge pas
+ * en différé. `src` est la variante 2× d'une largeur de 414 px, soit 828 px
+ * en WebP, 13 Ko : assez net pour le cadre, qui ne dépasse pas 650 px.
+ */
+const POSTER_EXTRAIT = getImageProps({
+  src: "/videos/extrait-equipements.jpg",
+  width: 414,
+  height: 233,
+  alt: "",
+}).props.src;
 
 /** Le bloc texte d'un temps : sur-titre, titre, paragraphe. */
 function Temps({
@@ -63,7 +78,7 @@ export function OutilSimple() {
                   celle de l'application. */}
               <ExtraitVideo
                 src="/videos/extrait-equipements.mp4"
-                poster="/videos/extrait-equipements.jpg"
+                poster={POSTER_EXTRAIT}
                 label="Démonstration : dépôt du rapport des extincteurs et calcul de la prochaine échéance"
               />
             </div>

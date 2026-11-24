@@ -60,6 +60,8 @@ const PUBLIC_PREFIXES = [
   "/robots.txt",
   // Le plan du site, pour les moteurs (2026-11-23, `app/sitemap.ts`).
   "/sitemap.xml",
+  // Le résumé du site pour les assistants (2026-11-24, `app/llms.txt`).
+  "/llms.txt",
 ];
 
 function sousPrefixe(pathname: string, prefixes: readonly string[]): boolean {
