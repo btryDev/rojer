@@ -44,7 +44,7 @@ export function ForgotPasswordForm() {
         type="submit"
         variant="board"
         size="board"
-        disabled={pending}
+        enCours={pending}
         className="w-full"
       >
         {pending ? "Envoi…" : "Recevoir le lien →"}

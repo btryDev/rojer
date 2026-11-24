@@ -72,7 +72,7 @@ export function ModifierRisqueCustomButton({
           variant="board"
           size="boardSm"
           type="submit"
-          disabled={pending}
+          enCours={pending}
         >
           {pending ? "…" : "OK"}
         </Button>

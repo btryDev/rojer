@@ -71,7 +71,7 @@ export function HeuresReviseesForm({
           Je corrige une erreur de saisie
         </label>
       )}
-      <Button type="submit" variant="boardClair" size="boardSm" disabled={pending}>
+      <Button type="submit" variant="boardClair" size="boardSm" enCours={pending}>
         {pending ? "Enregistrement…" : "Noter"}
       </Button>
       {state.status === "error" && (

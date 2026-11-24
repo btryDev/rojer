@@ -352,7 +352,7 @@ export function PropositionPlanForm({
         <Button type="button" variant="boardClair" size="board" onClick={onRetour} disabled={pending}>
           ← Retour à la signature
         </Button>
-        <Button type="submit" variant="board" size="board" className="rounded-full font-display" disabled={pending}>
+        <Button type="submit" variant="board" size="board" className="rounded-full font-display" enCours={pending}>
           {pending ? "Envoi…" : "Envoyer ma demande de modification"}
         </Button>
       </div>

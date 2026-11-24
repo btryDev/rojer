@@ -97,7 +97,7 @@ export function FormSection1({
       )}
 
       <div>
-        <Button type="submit" variant="board" size="board" disabled={pending}>
+        <Button type="submit" variant="board" size="board" enCours={pending}>
           {pending ? "Enregistrement…" : "Enregistrer la section 1"}
         </Button>
       </div>

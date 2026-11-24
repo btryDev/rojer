@@ -355,7 +355,7 @@ export function CotationForm({
                   type="submit"
                   variant="boardClair"
                   size="board"
-                  disabled={pending || !toutesReponses}
+                  enCours={pending} disabled={!toutesReponses}
                 >
                   {pending ? "Enregistrement…" : "Mettre à jour la cotation"}
                 </Button>
@@ -377,7 +377,7 @@ export function CotationForm({
                 type="submit"
                 variant="board"
                 size="board"
-                disabled={pending || !toutesReponses}
+                enCours={pending} disabled={!toutesReponses}
               >
                 {pending
                   ? "Enregistrement…"

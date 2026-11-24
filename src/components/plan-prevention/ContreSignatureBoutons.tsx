@@ -8,6 +8,7 @@ import {
   type ContreSignatureState,
 } from "@/lib/plan-prevention/contre-signature-actions";
 import { useAnnonceFiche } from "./AnnonceFiche";
+import { RoueAttente } from "@/components/ui/roue-attente";
 
 /**
  * Les boutons de la contre-signature sur la fiche du plan (ADR-061) :
@@ -83,9 +84,11 @@ export function TraiterPropositionBoutons({
               name="decision"
               value="refuser"
               disabled={pending}
+              aria-busy={pending || undefined}
               data-ecriture
               className={`${BOUTON_CLAIR} text-[color:var(--board-signal-ink)]`}
             >
+              {pending ? <RoueAttente className="size-4" /> : null}
               {pending ? "Refus…" : "Confirmer le refus"}
             </button>
             <button type="button" onClick={() => setRefus(false)} disabled={pending} className={BOUTON_CLAIR}>
@@ -112,7 +115,8 @@ export function TraiterPropositionBoutons({
             <button type="submit" name="decision" value="corriger" disabled={pending} data-ecriture className={`${BOUTON_CLAIR} text-[color:var(--board-ink)]`}>
               Corriger
             </button>
-            <button type="submit" name="decision" value="accepter" disabled={pending} data-ecriture className={BOUTON_PLEIN}>
+            <button type="submit" name="decision" value="accepter" disabled={pending} aria-busy={pending || undefined} data-ecriture className={BOUTON_PLEIN}>
+              {pending ? <RoueAttente className="size-4" /> : null}
               {pending ? "Application…" : "Accepter"}
             </button>
           </div>
@@ -165,7 +169,7 @@ export function BoutonRevoquerSignatures({
         correction. {PHRASE_PLAFOND}
       </p>
       <div className="flex flex-wrap justify-center gap-3">
-        <Button type="submit" disabled={pending} data-ecriture>
+        <Button type="submit" enCours={pending} data-ecriture>
           {pending ? "Révocation…" : "Confirmer la révocation"}
         </Button>
         <Button type="button" variant="ghost" onClick={() => setConfirmer(false)} disabled={pending}>

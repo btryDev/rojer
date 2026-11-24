@@ -18,6 +18,7 @@ import {
 import { texteConsentement } from "@/lib/signatures/consentement";
 import { nomSansAdresse } from "@/lib/signatures/signataire";
 import { useAnnonceFiche } from "./AnnonceFiche";
+import { RoueAttente } from "@/components/ui/roue-attente";
 
 /**
  * La fenêtre « Signer et envoyer » (2026-11-19, lot 3 ; cahier de reprise
@@ -173,7 +174,8 @@ export function FenetreSigner({
                 <button type="button" onClick={surFermer} className={BOUTON_CLAIR}>
                   Annuler
                 </button>
-                <button type="submit" data-ecriture disabled={!coche || code.length !== 6 || pending} className={BOUTON_PLEIN}>
+                <button type="submit" data-ecriture disabled={!coche || code.length !== 6 || pending} aria-busy={pending || undefined} className={BOUTON_PLEIN}>
+                  {pending ? <RoueAttente className="size-4" /> : null}
                   {pending ? "Signature en cours…" : envoyer ? "Je signe et j'envoie" : "Je signe"}
                 </button>
               </div>

@@ -46,7 +46,7 @@ export function InformationInspectionForm({
           className="champ-board mt-1 max-w-[12rem]"
         />
       </div>
-      <Button type="submit" variant="boardClair" size="boardSm" disabled={pending}>
+      <Button type="submit" variant="boardClair" size="boardSm" enCours={pending}>
         {pending ? "Enregistrement…" : "Noter la date"}
       </Button>
       {state.status === "error" && (

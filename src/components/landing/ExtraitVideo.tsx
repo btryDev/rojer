@@ -90,7 +90,7 @@ export function ExtraitVideo({ src, poster, label }: { src: string; poster: stri
           type="button"
           onClick={basculer}
           aria-label={arretee ? `Reprendre la vidéo : ${label}` : `Mettre la vidéo en pause : ${label}`}
-          className="absolute bottom-3 right-3 flex size-9 items-center justify-center rounded-full bg-white/85 text-[color:var(--board-ink)] shadow-[0_4px_12px_rgba(13,18,36,0.2)] transition-colors hover:bg-white motion-reduce:hidden"
+          className="cible-tactile absolute bottom-3 right-3 flex size-9 items-center justify-center rounded-full bg-white/85 text-[color:var(--board-ink)] shadow-[0_4px_12px_rgba(13,18,36,0.2)] transition-colors hover:bg-white motion-reduce:hidden"
         >
           {arretee ? (
             <Play aria-hidden size={15} className="ml-0.5" fill="currentColor" />

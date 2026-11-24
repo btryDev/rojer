@@ -192,7 +192,7 @@ export function PrescriptionActions({
             type="submit"
             variant="board"
             size="boardSm"
-            disabled={pending}
+            enCours={pending}
           >
             {pending ? "Enregistrement…" : "Confirmer la levée"}
           </Button>

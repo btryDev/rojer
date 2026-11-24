@@ -86,7 +86,7 @@ export function EntrepriseForm({
       )}
 
       <div className="flex gap-3">
-        <Button type="submit" variant="board" size="board" disabled={pending}>
+        <Button type="submit" variant="board" size="board" enCours={pending}>
           {pending ? "Enregistrement…" : libelleSubmit}
         </Button>
         {labelAnnuler && (

@@ -4,6 +4,7 @@
 
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
+import { RoueAttente } from "@/components/ui/roue-attente";
 
 export function BoutonEnvoi({
   children,
@@ -42,6 +43,7 @@ export function BoutonEnvoi({
         name={name}
         value={value}
         disabled={disabled || pending}
+        aria-busy={pending || undefined}
         aria-describedby={describedBy}
         className={
           discret
@@ -49,6 +51,7 @@ export function BoutonEnvoi({
             : `lp-btn w-full justify-center disabled:cursor-not-allowed disabled:opacity-45 ${carte === "encre" ? "lp-btn-blanc" : "lp-btn-ink"}`
         }
       >
+        {pending ? <RoueAttente className="size-4" /> : null}
         {pending ? "Un instant…" : children}
       </button>
     );
@@ -59,7 +62,7 @@ export function BoutonEnvoi({
       size="board"
       name={name}
       value={value}
-      disabled={disabled || pending}
+      enCours={pending} disabled={disabled}
       aria-describedby={describedBy}
     >
       {pending ? "Un instant…" : children}

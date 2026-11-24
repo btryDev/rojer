@@ -18,7 +18,7 @@ export function SupprimerRapportButton({ id }: { id: string }) {
       <Button
         variant="outline"
         size="sm"
-        disabled={pending}
+        enCours={pending}
         data-ecriture
         onClick={() =>
           demander({

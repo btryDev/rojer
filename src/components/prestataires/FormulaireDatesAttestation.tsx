@@ -37,7 +37,7 @@ export function FormulaireDatesAttestation({
         <ChampsDatesAttestation erreur={err} remiseLe={remiseLe} emiseLe={emiseLe} />
       </div>
       <div className="flex flex-wrap items-center gap-3">
-        <Button variant="board" size="board" type="submit" disabled={pending}>
+        <Button variant="board" size="board" type="submit" enCours={pending}>
           {pending ? "Enregistrement…" : "Enregistrer les dates"}
         </Button>
         {state.status === "error" && !state.fieldErrors && (

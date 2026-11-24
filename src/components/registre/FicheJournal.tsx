@@ -166,7 +166,7 @@ export function FicheJournal({
           )}
 
           <div className="flex flex-wrap items-center gap-4">
-            <Button type="submit" variant="board" size="board" disabled={pending}>
+            <Button type="submit" variant="board" size="board" enCours={pending}>
               {pending ? "Enregistrement…" : libelleAjout}
             </Button>
             <p className="m-0 text-[12px] text-[color:var(--board-slate-soft)]">

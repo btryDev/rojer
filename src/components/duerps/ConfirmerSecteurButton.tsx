@@ -18,7 +18,7 @@ export function ConfirmerSecteurButton({
       data-ecriture
       variant="board"
       size="board"
-      disabled={pending}
+      enCours={pending}
       onClick={() => {
         startTransition(async () => {
           await choisirSecteur(duerpId, secteurId);

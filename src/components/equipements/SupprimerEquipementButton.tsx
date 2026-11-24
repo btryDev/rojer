@@ -61,7 +61,7 @@ export function SupprimerEquipementButton({
       <Button
         variant="boardClair"
         size="boardSm"
-        disabled={pending}
+        enCours={pending}
         data-ecriture
         onClick={() =>
           demander({

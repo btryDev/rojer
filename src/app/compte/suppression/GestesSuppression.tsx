@@ -25,7 +25,7 @@ export function FormulaireSuppression({ compteId, nomCompte }: { compteId: strin
       />
       <ChampBoard id="password" name="password" type="password" label="Votre mot de passe" autoComplete="current-password" requis />
       <MessageFormulaire ton="alerte">{etat.erreur}</MessageFormulaire>
-      <Button type="submit" variant="boardAttention" size="board" disabled={pending} className="w-full">
+      <Button type="submit" variant="boardAttention" size="board" enCours={pending} className="w-full">
         {pending ? "Vérification…" : "Supprimer le compte dans 7 jours"}
       </Button>
     </form>
@@ -38,7 +38,7 @@ export function AnnulationSuppression({ compteId }: { compteId: string }) {
     <form action={action} className="flex flex-col gap-3">
       <ChampCompteAttendu compteId={compteId} />
       <MessageFormulaire ton="alerte">{etat.erreur}</MessageFormulaire>
-      <Button type="submit" variant="board" size="board" disabled={pending}>
+      <Button type="submit" variant="board" size="board" enCours={pending}>
         {pending ? "Annulation…" : "Annuler la suppression"}
       </Button>
     </form>

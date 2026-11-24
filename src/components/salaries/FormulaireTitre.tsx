@@ -349,7 +349,7 @@ export function FormulaireTitre({
             variant="board"
             size="board"
             type="submit"
-            disabled={pending || catalogue.length === 0 || bloque !== undefined}
+            enCours={pending} disabled={catalogue.length === 0 || bloque !== undefined}
           >
             {pending
               ? "Enregistrement…"

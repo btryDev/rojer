@@ -306,7 +306,7 @@ export function PreRemplissagePanel({
             type="submit"
             variant="board"
             size="board"
-            disabled={pending}
+            enCours={pending}
           >
             {pending
               ? "Création…"

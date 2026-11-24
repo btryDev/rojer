@@ -217,7 +217,7 @@ function Formulaire({
         <p className="m-0 text-[12.5px] text-[color:var(--board-signal-ink)]">{state.message}</p>
       )}
       <div className="flex items-center gap-3">
-        <Button type="submit" variant="board" size="boardSm" disabled={pending}>
+        <Button type="submit" variant="board" size="boardSm" enCours={pending}>
           {pending ? "Envoi…" : "Envoyer ma demande"}
         </Button>
         <Button type="button" variant="boardClair" size="boardSm" onClick={surFermer}>

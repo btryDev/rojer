@@ -2,13 +2,14 @@ import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
+import { RoueAttente } from "@/components/ui/roue-attente"
 
 /**
  * Le calcul brut des classes. Ne pas l'exporter tel quel — cf.
  * `buttonVariants` juste en dessous.
  */
 const classesBrutes = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-[0.78rem] font-medium tracking-[0.08em] uppercase whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5 [font-family:var(--font-mono)]",
+  "group/button cible-tactile inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-[0.78rem] font-medium tracking-[0.08em] uppercase whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5 [font-family:var(--font-mono)]",
   {
     variants: {
       variant: {
@@ -95,14 +96,40 @@ function Button({
   className,
   variant = "default",
   size = "default",
+  enCours = false,
+  disabled,
+  children,
   ...props
-}: ButtonPrimitive.Props & VariantProps<typeof classesBrutes>) {
+}: ButtonPrimitive.Props &
+  VariantProps<typeof classesBrutes> & {
+    /**
+     * L'action du bouton est en cours — un envoi, une écriture (Apple HIG,
+     * « Buttons », 2026-11-24). Une roue (`RoueAttente`) remplace l'icône ;
+     * le bouton se ferme — pas de double envoi — et se dit occupé
+     * (`aria-busy`), sans pâlir : il n'est pas indisponible, il travaille.
+     * Le libellé reste à l'appelant (« Enregistrer » → « Enregistrement… »).
+     * Un `disabled` passé avec reste lu : fermé si l'un ou l'autre.
+     */
+    enCours?: boolean
+  }) {
   return (
     <ButtonPrimitive
       data-slot="button"
-      className={buttonVariants({ variant, size, className })}
+      className={buttonVariants({
+        variant,
+        size,
+        className: cn(
+          enCours && "disabled:opacity-100 [&>svg:not([data-roue])]:hidden",
+          className,
+        ),
+      })}
+      disabled={disabled || enCours}
+      aria-busy={enCours || undefined}
       {...props}
-    />
+    >
+      {enCours ? <RoueAttente /> : null}
+      {children}
+    </ButtonPrimitive>
   )
 }
 

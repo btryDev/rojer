@@ -548,7 +548,7 @@ function FlecheAnnee({
       onClick={onClick}
       disabled={!onClick}
       aria-label={`Afficher l'année ${cible}`}
-      className="flex size-8 flex-none items-center justify-center rounded-full text-[color:var(--board-ink)] transition-colors hover:bg-[color:var(--board-slate-pale)] disabled:cursor-default disabled:opacity-30 disabled:hover:bg-transparent"
+      className="cible-tactile flex size-8 flex-none items-center justify-center rounded-full text-[color:var(--board-ink)] transition-colors hover:bg-[color:var(--board-slate-pale)] disabled:cursor-default disabled:opacity-30 disabled:hover:bg-transparent"
     >
       <Chevron className="size-4" />
     </button>

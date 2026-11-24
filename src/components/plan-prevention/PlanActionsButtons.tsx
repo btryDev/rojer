@@ -21,7 +21,7 @@ export function BoutonCloturer({ planId, entete = false }: { planId: string; ent
         variant="board"
         size="board"
         className={entete ? GESTE_FICHE : undefined}
-        disabled={pending}
+        enCours={pending}
         onClick={() =>
           demander({
             titre: "Clôturer ce plan de prévention ?",
@@ -56,7 +56,7 @@ export function BoutonSupprimerPlan({ planId, entete = false }: { planId: string
         variant="boardClair"
         size="boardSm"
         className={entete ? ENTETE_SUPPRIMER : undefined}
-        disabled={pending}
+        enCours={pending}
         onClick={() =>
           // Le serveur décide entre les deux sorties selon l'état du plan
           // (`supprimerPlan`) : un plan non encore signé est effacé, un plan

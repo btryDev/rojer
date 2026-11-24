@@ -21,6 +21,7 @@ import {
   SUJETS_CONTACT,
   type SujetContact,
 } from "./contact";
+import { RoueAttente } from "@/components/ui/roue-attente";
 
 export function BoutonContact({
   sujet = "Une question sur Rojer",
@@ -126,7 +127,8 @@ function FormulaireContact({ sujet, fermer }: { sujet: SujetContact; fermer: () 
       </p>
       {etat.status === "erreur" ? <MessageFormulaire ton="alerte">{etat.message}</MessageFormulaire> : null}
       <div className="flex flex-wrap items-center gap-3">
-        <button type="submit" disabled={enCours} className="lp-btn lp-btn-ink">
+        <button type="submit" disabled={enCours} aria-busy={enCours || undefined} className="lp-btn lp-btn-ink">
+          {enCours ? <RoueAttente className="size-4" /> : null}
           {enCours ? "Envoi…" : "Envoyer"}
         </button>
         <button type="button" onClick={fermer} className="lp-btn lp-btn-clair">

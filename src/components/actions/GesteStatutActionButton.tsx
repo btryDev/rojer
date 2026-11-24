@@ -93,7 +93,7 @@ export function GesteStatutActionButton({
       <Button data-ecriture
         variant="boardClair"
         size="boardSm"
-        disabled={pending}
+        enCours={pending}
         onClick={() => demander(question)}
       >
         {geste === "rouvrir"

@@ -103,7 +103,7 @@ export function IlotVideoVisite({ cle }: { cle: CleVisite }) {
             type="button"
             onClick={() => setVisible(false)}
             aria-label="Masquer pour cette fois"
-            className="-mr-1 -mt-1 flex size-7 flex-none items-center justify-center rounded-full text-[#a3a3a3] max-md:m-0 max-md:size-9 transition-colors hover:bg-white/10 hover:text-white"
+            className="cible-tactile -mr-1 -mt-1 flex size-7 flex-none items-center justify-center rounded-full text-[#a3a3a3] max-md:m-0 max-md:size-9 transition-colors hover:bg-white/10 hover:text-white"
           >
             <X className="size-4" />
           </button>

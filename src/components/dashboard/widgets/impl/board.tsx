@@ -724,7 +724,7 @@ function FlecheDefilement({
           : "Avancer dans la frise"
       }
       className={
-        "absolute top-[100px] z-20 hidden size-10 items-center justify-center rounded-full border border-[color:rgba(10,10,10,.12)] bg-[color:var(--board-card)] text-[color:var(--board-ink)] shadow-[0_2px_10px_rgba(10,10,10,.10)] transition-opacity md:flex " +
+        "cible-tactile absolute top-[100px] z-20 hidden size-10 items-center justify-center rounded-full border border-[color:rgba(10,10,10,.12)] bg-[color:var(--board-card)] text-[color:var(--board-ink)] shadow-[0_2px_10px_rgba(10,10,10,.10)] transition-opacity md:flex " +
         (sens === "gauche" ? "left-1" : "right-1") +
         (visible ? " opacity-100 hover:bg-[color:var(--board-blue-pale)]" : " opacity-0")
       }

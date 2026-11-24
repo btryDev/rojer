@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { demanderOuvertureAction } from "@/lib/demandes-ouverture/actions";
 import { CHAMP_PIEGE, type EtatDemandeOuverture } from "@/lib/demandes-ouverture/formulaire";
+import { RoueAttente } from "@/components/ui/roue-attente";
 
 const ETAT_INITIAL: EtatDemandeOuverture = {};
 
@@ -89,8 +90,10 @@ export function FormulaireBientot({ etatInitial = ETAT_INITIAL }: { etatInitial?
         <button
           type="submit"
           disabled={pending}
+          aria-busy={pending || undefined}
           className="lp-btn lp-btn-ink h-11 flex-none justify-center disabled:opacity-70"
         >
+          {pending ? <RoueAttente className="size-4" /> : null}
           {pending ? "Envoi…" : "Me prévenir"}
         </button>
       </div>

@@ -43,7 +43,7 @@ export function BasculerEffectif({
       <Button
         variant="boardClair"
         size="boardSm"
-        disabled={pending}
+        enCours={pending}
         onClick={() =>
           startTransition(async () => {
             const r = await basculerActif(etablissementId, salarieId, !actif);
@@ -149,7 +149,7 @@ export function SupprimerSalarieButton({
         data-ecriture
         variant="boardClair"
         size="boardSm"
-        disabled={pending}
+        enCours={pending}
         onClick={() =>
           demander({
             titre: `Supprimer ${nom} et tout ce qui le concerne ?`,

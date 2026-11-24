@@ -516,7 +516,7 @@ export function WizardShell({
                 type="submit"
                 variant="board"
                 size="board"
-                disabled={submitting}
+                enCours={submitting}
               >
                 {submitting ? "Création en cours…" : "Créer l'établissement →"}
               </Button>

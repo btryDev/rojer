@@ -8,6 +8,7 @@ import {
   depublierRegistre,
   publierRegistre,
 } from "@/lib/accessibilite/actions";
+import { RoueAttente } from "@/components/ui/roue-attente";
 
 export function PublicationPanel({
   etablissementId,
@@ -90,7 +91,7 @@ export function PublicationPanel({
             variant="board"
             size="board"
             onClick={onPublier}
-            disabled={pending}
+            enCours={pending}
             data-ecriture
           >
             {pending ? "Publication…" : "Publier le registre"}
@@ -203,12 +204,14 @@ export function PublicationPanel({
               type="button"
               onClick={onDepublier}
               disabled={pending}
+              aria-busy={pending || undefined}
               data-ecriture
               className={buttonVariants({
                 variant: "boardClair",
                 size: "boardSm",
               })}
             >
+              {pending ? <RoueAttente className="size-4" /> : null}
               {pending ? "…" : "Retirer la publication"}
             </button>
           </div>

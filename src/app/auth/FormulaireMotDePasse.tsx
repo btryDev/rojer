@@ -63,7 +63,7 @@ export function FormulaireMotDePasse({
 
       <MessageFormulaire ton="alerte">{error}</MessageFormulaire>
 
-      <Button type="submit" variant="board" size="board" disabled={pending} className="w-full">
+      <Button type="submit" variant="board" size="board" enCours={pending} className="w-full">
         {pending ? libelleEnCours : libelleBouton}
       </Button>
     </form>

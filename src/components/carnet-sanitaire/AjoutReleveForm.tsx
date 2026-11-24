@@ -183,7 +183,7 @@ export function AjoutReleveForm({
       )}
 
       <div className="flex items-center gap-3">
-        <Button type="submit" variant="board" size="boardSm" disabled={pending}>
+        <Button type="submit" variant="board" size="boardSm" enCours={pending}>
           {pending ? "…" : releve ? "Enregistrer la correction" : "Enregistrer le relevé"}
         </Button>
         <button
