@@ -131,6 +131,30 @@ paiement) : **carte bancaire seulement** — Klarna, Bancontact et Satispay,
 proposés par défaut, sont à désactiver (Rojer ne gère ni le paiement
 fractionné ni les prélèvements différés). Vérifier à l'écran sur Checkout.
 
+[2026-11-24 : **§§ 1.4, 3 et 4 faits en mode réel**, à la demande de la
+propriétaire, relus après rechargement :
+- Moyens de paiement : carte, Apple Pay et Link (des cartes) ; douze autres
+  coupés, dont Klarna, Bancontact, Satispay, EPS, BLIK et Pix. La carte reste
+  « action requise » jusqu'à la vérification d'identité.
+- Portail : nom, e-mail, adresse de facturation et numéro de TVA
+  modifiables (téléphone retiré) ; factures et carte : oui ; résiliation en
+  fin de période ; changement de formule fermé.
+- Échecs de paiement : relance intelligente déjà réglée (8 essais en 2
+  semaines) ; toutes les tentatives échouées → abonnement « non payé ».
+- Litiges : annulation immédiate sans prorata.
+- Confirmations bancaires : lien de Stripe envoyé au client, rappels à 3, 5
+  et 7 jours ; non finalisé sous 15 jours → « non payé ».
+- E-mails : carte expirée, échec de paiement par carte, reçus des paiements
+  et des remboursements ; renouvellements à venir et fin d'essai laissés
+  coupés. Mise à jour de la carte par la page de Stripe seulement — choix
+  irréversible, confirmé par la propriétaire.
+- Numérotation : déjà au niveau du compte.
+
+Restent à la propriétaire : le pied de facture (taux des pénalités de retard
+avec l'expert-comptable, indemnité de 40 €) et les informations publiques du
+§ 1.3, dont l'adresse des conditions générales, obligatoire pour Checkout,
+et le libellé de relevé bancaire.]
+
 ## 5. Webhook — propriétaire, tableau de bord
 
 Développeurs > Webhooks > nouvelle destination :
