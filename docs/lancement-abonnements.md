@@ -149,8 +149,16 @@ propriétaire, relus après rechargement :
   coupés. Mise à jour de la carte par la page de Stripe seulement — choix
   irréversible, confirmé par la propriétaire.
 - Numérotation : déjà au niveau du compte.
+- Image de marque (Paramètres > Adaptation à votre marque) : icône « R sur
+  bleu » (`src/app/icon.png`), couleur de marque `#b2daf2`, accentuation
+  `#0f1216` (l'encre du site) ; pas de logo — Checkout, portail, factures et
+  reçus les reprennent.
+- Informations publiques (session « mis_place_stripe » et la propriétaire) :
+  conditions, confidentialité, e-mail `contact@btry.fr`, adresse du siège ;
+  pied de facture : pas d'escompte, pénalités au taux BCE + 10 points,
+  indemnité de 40 €.
 
-Restent à la propriétaire : le pied de facture (taux des pénalités de retard
+Restait à la propriétaire, fait le même jour : le pied de facture (taux des pénalités de retard
 avec l'expert-comptable, indemnité de 40 €) et les informations publiques du
 § 1.3, dont l'adresse des conditions générales, obligatoire pour Checkout,
 et le libellé de relevé bancaire.]
