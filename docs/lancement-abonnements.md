@@ -73,6 +73,16 @@ leur clé et écarte un prix dont l'intervalle contredit la clé.
 - « Sur mesure » : sur devis, sans prix dans Stripe — un client sur mesure se
   traite à la main le jour où il arrive (décision à prendre ce jour-là).
 
+[2026-11-24 : **fait en mode réel** (compte « rojer », à la demande de la
+propriétaire) : taux « TVA » 20 %, TTC, France, libellé « France » ;
+produits Essentiel (`prod_Vge1tFcrEa6cJH`) et Pro (`prod_Vge2DCrrTSw1zu`) ;
+les 4 prix du tableau, chacun avec sa clé, sa description et ses métadonnées
+`formule` et `periodicite`. Le formulaire de produit ne proposait pas
+« Inclure la taxe dans le prix » : `tax_behavior` reste non précisé, sans
+effet ici — ce réglage ne sert qu'au calcul automatique de Stripe Tax,
+alors que Rojer pose le taux lui-même (`default_tax_rates`,
+`stripe/parcours.ts`).]
+
 ## 3. Factures, relances, e-mails — propriétaire, tableau de bord
 
 - **Factures** (Billing > Factures) : numérotation au niveau du compte (une
@@ -134,6 +144,11 @@ Développeurs > Webhooks > nouvelle destination :
   `v1.invoice.payment_action_required`, et depuis le 2026-11-10
   `v1.charge.dispute.created`, `v1.charge.refunded` ;
 - noter le secret de signature `whsec_…` (étape 7).
+
+[2026-11-24 : **fait en mode réel** — destination « rojer-production »,
+`https://rojer.fr/api/stripe/webhook`, charge légère, les 9 événements. Le
+secret de signature reste à copier dans `STRIPE_WEBHOOK_SECRET` par la
+propriétaire, avec la clé restreinte (étape 7).]
 
 ## 6. Répétition complète en TEST, sur la préproduction — propriétaire, avec Claude
 
