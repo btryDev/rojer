@@ -18,7 +18,7 @@ import {
 } from "@/lib/plan-prevention/signature-fiche-actions";
 import { SENS_R4512_7, URL_R4512_7 } from "@/lib/plan-prevention/annonces-plan";
 import { formaterHeureEnLettresFr, formaterJourMoisChiffresFr } from "@/lib/dates";
-import { RoueAttente } from "@/components/ui/roue-attente";
+import { BoutonOccupe } from "@/components/ui/bouton-occupe";
 
 /**
  * Les signatures de la fiche du plan (2026-11-19, lot 3, maquette V2
@@ -81,10 +81,9 @@ function BoutonRenvoyer({ planId, lienId }: { planId: string; lienId: string }) 
   });
   return (
     <form action={action} className="contents">
-      <button type="submit" data-ecriture disabled={pending} aria-busy={pending || undefined} className={PILULE_CLAIRE}>
-        {pending ? <RoueAttente className="size-4" /> : null}
+      <BoutonOccupe type="submit" data-ecriture enCours={pending} className={PILULE_CLAIRE}>
         {pending ? "Envoi…" : "Renvoyer le lien"}
-      </button>
+      </BoutonOccupe>
       <MessageGeste state={state} />
     </form>
   );
@@ -195,10 +194,9 @@ function BoutonEnvoyerLien({ planId }: { planId: string }) {
   });
   return (
     <form action={action} className="flex flex-col items-start gap-2">
-      <button type="submit" data-ecriture disabled={pending} aria-busy={pending || undefined} className={GRANDE_ACTION}>
-        {pending ? <RoueAttente className="size-4" /> : null}
+      <BoutonOccupe type="submit" data-ecriture enCours={pending} className={GRANDE_ACTION}>
         {pending ? "Envoi…" : "Envoyer le lien à l'entreprise extérieure"}
-      </button>
+      </BoutonOccupe>
       <MessageGeste state={state} />
     </form>
   );

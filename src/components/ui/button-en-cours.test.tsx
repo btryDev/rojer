@@ -40,3 +40,19 @@ describe("Button — enCours", () => {
     expect(buttonVariants({ size: "icon-xs" })).not.toContain("cible-tactile");
   });
 });
+
+describe("BoutonOccupe — le même contrat pour un bouton fait main", () => {
+  it("en cours : roue, fermé, occupé ; au repos : rien", async () => {
+    const { BoutonOccupe } = await import("./bouton-occupe");
+    const { rerender } = render(<BoutonOccupe enCours>Envoi…</BoutonOccupe>);
+    let b = screen.getByRole("button", { name: "Envoi…" });
+    expect(b.getAttribute("aria-busy")).toBe("true");
+    expect(b.hasAttribute("disabled")).toBe(true);
+    expect(b.querySelector("[data-roue]")).not.toBeNull();
+    rerender(<BoutonOccupe disabled={false}>Envoyer</BoutonOccupe>);
+    b = screen.getByRole("button", { name: "Envoyer" });
+    expect(b.getAttribute("aria-busy")).toBeNull();
+    expect(b.hasAttribute("disabled")).toBe(false);
+    expect(b.querySelector("[data-roue]")).toBeNull();
+  });
+});

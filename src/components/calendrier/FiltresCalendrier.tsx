@@ -21,7 +21,8 @@
 
 import { useEffect, useOptimistic, useRef, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { LoaderCircle, SlidersHorizontal, X } from "lucide-react";
+import { SlidersHorizontal, X } from "lucide-react";
+import { RoueAttente } from "@/components/ui/roue-attente";
 import {
   LABEL_FAMILLE,
   LABEL_FAMILLE_LONG,
@@ -288,7 +289,7 @@ export function FiltresCalendrier({
           }
         >
           {enCours ? (
-            <LoaderCircle className="size-3.5 animate-spin" />
+            <RoueAttente className="size-3.5" />
           ) : (
             <SlidersHorizontal className="size-3.5" />
           )}

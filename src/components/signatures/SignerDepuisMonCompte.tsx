@@ -19,7 +19,7 @@ import {
   RenvoiDuCode,
   useCodeDeSignature,
 } from "./EtapesCodeSignature";
-import { RoueAttente } from "@/components/ui/roue-attente";
+import { BoutonOccupe } from "@/components/ui/bouton-occupe";
 
 /**
  * La signature du dirigeant depuis son propre compte, pour tout objet
@@ -115,14 +115,13 @@ export function SignerDepuisMonCompte({
                 Annuler
               </button>
               {envoi ? (
-                <button type="submit" data-ecriture disabled={!coche || code.length !== 6 || pending} aria-busy={pending || undefined} className={BOUTON_PLEIN}>
-                  {pending ? <RoueAttente className="size-4" /> : null}
+                <BoutonOccupe type="submit" data-ecriture enCours={pending} disabled={!coche || code.length !== 6} className={BOUTON_PLEIN}>
                   {pending ? "Signature en cours…" : "Je signe"}
-                </button>
+                </BoutonOccupe>
               ) : (
-                <button type="button" data-ecriture onClick={demanderCode} disabled={!coche || demande} className={BOUTON_PLEIN}>
+                <BoutonOccupe type="button" data-ecriture onClick={demanderCode} enCours={demande} disabled={!coche} className={BOUTON_PLEIN}>
                   {demande ? "Envoi du code…" : "Recevoir mon code"}
-                </button>
+                </BoutonOccupe>
               )}
             </div>
           </div>

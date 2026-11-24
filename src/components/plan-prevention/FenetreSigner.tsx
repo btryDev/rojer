@@ -18,7 +18,7 @@ import {
 import { texteConsentement } from "@/lib/signatures/consentement";
 import { nomSansAdresse } from "@/lib/signatures/signataire";
 import { useAnnonceFiche } from "./AnnonceFiche";
-import { RoueAttente } from "@/components/ui/roue-attente";
+import { BoutonOccupe } from "@/components/ui/bouton-occupe";
 
 /**
  * La fenêtre « Signer et envoyer » (2026-11-19, lot 3 ; cahier de reprise
@@ -141,9 +141,9 @@ export function FenetreSigner({
               <button type="button" onClick={surFermer} className={BOUTON_CLAIR}>
                 Annuler
               </button>
-              <button type="button" data-ecriture onClick={demanderCode} disabled={!coche || demande} className={BOUTON_PLEIN}>
+              <BoutonOccupe type="button" data-ecriture onClick={demanderCode} enCours={demande} disabled={!coche} className={BOUTON_PLEIN}>
                 {demande ? "Envoi du code…" : "Recevoir mon code"}
-              </button>
+              </BoutonOccupe>
             </div>
             <p className="m-0 text-right text-[12.5px] text-[color:var(--board-slate-soft)]">
               Un code à 6 chiffres arrive à votre adresse : il confirme que c&apos;est bien vous qui signez.
@@ -174,10 +174,9 @@ export function FenetreSigner({
                 <button type="button" onClick={surFermer} className={BOUTON_CLAIR}>
                   Annuler
                 </button>
-                <button type="submit" data-ecriture disabled={!coche || code.length !== 6 || pending} aria-busy={pending || undefined} className={BOUTON_PLEIN}>
-                  {pending ? <RoueAttente className="size-4" /> : null}
+                <BoutonOccupe type="submit" data-ecriture enCours={pending} disabled={!coche || code.length !== 6} className={BOUTON_PLEIN}>
                   {pending ? "Signature en cours…" : envoyer ? "Je signe et j'envoie" : "Je signe"}
-                </button>
+                </BoutonOccupe>
               </div>
             </div>
           </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
+import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import {
   revoquerSignaturesPlan,
@@ -8,7 +9,7 @@ import {
   type ContreSignatureState,
 } from "@/lib/plan-prevention/contre-signature-actions";
 import { useAnnonceFiche } from "./AnnonceFiche";
-import { RoueAttente } from "@/components/ui/roue-attente";
+import { BoutonOccupe } from "@/components/ui/bouton-occupe";
 
 /**
  * Les boutons de la contre-signature sur la fiche du plan (ADR-061) :
@@ -56,6 +57,39 @@ const BOUTON_CLAIR =
 const BOUTON_PLEIN =
   "inline-flex gap-2 min-h-11 items-center rounded-full bg-[color:var(--board-ink)] px-6 font-display text-[15px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60";
 
+/**
+ * Un bouton d'envoi du formulaire de décision. Les trois partagent l'attente
+ * du formulaire ; la roue ne tourne que sur celui qui a été envoyé, lu dans
+ * les données en cours d'envoi (`useFormStatus`).
+ */
+function BoutonDecision({
+  valeur,
+  enCoursLibelle,
+  className,
+  children,
+}: {
+  valeur: "refuser" | "corriger" | "accepter";
+  enCoursLibelle?: string;
+  className: string;
+  children: React.ReactNode;
+}) {
+  const { pending, data } = useFormStatus();
+  const envoye = pending && data?.get("decision") === valeur;
+  return (
+    <BoutonOccupe
+      type="submit"
+      name="decision"
+      value={valeur}
+      enCours={envoye}
+      disabled={pending}
+      data-ecriture
+      className={className}
+    >
+      {envoye && enCoursLibelle ? enCoursLibelle : children}
+    </BoutonOccupe>
+  );
+}
+
 export function TraiterPropositionBoutons({
   propositionId,
   raisonEE,
@@ -68,9 +102,6 @@ export function TraiterPropositionBoutons({
     status: "idle",
   });
   const [refus, setRefus] = useState(false);
-  // Le bouton d'envoi choisi : la roue ne tourne que sur lui (les trois
-  // partagent l'attente du même formulaire).
-  const [choix, setChoix] = useState<"corriger" | "accepter" | null>(null);
   useAnnoncer(state);
 
   return (
@@ -82,18 +113,9 @@ export function TraiterPropositionBoutons({
             de la proposition est conservée. Rojer adresse un nouveau lien de signature à {raisonEE}.
           </p>
           <div className="flex flex-wrap gap-2.5">
-            <button
-              type="submit"
-              name="decision"
-              value="refuser"
-              disabled={pending}
-              aria-busy={pending || undefined}
-              data-ecriture
-              className={`${BOUTON_CLAIR} text-[color:var(--board-signal-ink)]`}
-            >
-              {pending ? <RoueAttente className="size-4" /> : null}
-              {pending ? "Refus…" : "Confirmer le refus"}
-            </button>
+            <BoutonDecision valeur="refuser" enCoursLibelle="Refus…" className={`${BOUTON_CLAIR} text-[color:var(--board-signal-ink)]`}>
+              Confirmer le refus
+            </BoutonDecision>
             <button type="button" onClick={() => setRefus(false)} disabled={pending} className={BOUTON_CLAIR}>
               Annuler
             </button>
@@ -115,32 +137,12 @@ export function TraiterPropositionBoutons({
             >
               Refuser
             </button>
-            <button
-              type="submit"
-              name="decision"
-              value="corriger"
-              onClick={() => setChoix("corriger")}
-              disabled={pending}
-              aria-busy={(pending && choix === "corriger") || undefined}
-              data-ecriture
-              className={`${BOUTON_CLAIR} text-[color:var(--board-ink)]`}
-            >
-              {pending && choix === "corriger" ? <RoueAttente className="size-4" /> : null}
+            <BoutonDecision valeur="corriger" className={`${BOUTON_CLAIR} text-[color:var(--board-ink)]`}>
               Corriger
-            </button>
-            <button
-              type="submit"
-              name="decision"
-              value="accepter"
-              onClick={() => setChoix("accepter")}
-              disabled={pending}
-              aria-busy={(pending && choix === "accepter") || undefined}
-              data-ecriture
-              className={BOUTON_PLEIN}
-            >
-              {pending && choix === "accepter" ? <RoueAttente className="size-4" /> : null}
-              {pending && choix === "accepter" ? "Application…" : "Accepter"}
-            </button>
+            </BoutonDecision>
+            <BoutonDecision valeur="accepter" enCoursLibelle="Application…" className={BOUTON_PLEIN}>
+              Accepter
+            </BoutonDecision>
           </div>
         </div>
       )}
