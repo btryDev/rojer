@@ -14,9 +14,9 @@ export function texteLlms(base: string): string {
   return [
     "# Rojer",
     "",
-    "> Rojer construit et coordonne la prévention des risques des TPE-PME de moins de cinquante salariés : document unique (DUERP), vérifications périodiques, registre de sécurité, plan d'actions. Chaque obligation suivie cite sa source (Légifrance, INRS).",
+    "> Rojer construit et coordonne la prévention des risques des TPE-PME de moins de cinquante salariés : document unique (DUERP), vérifications périodiques, registre de sécurité, plan d'actions. Chaque obligation suivie cite son texte réglementaire ou sa norme ; un rythme que le texte ne fixe pas est affiché comme le choix de Rojer.",
     "",
-    "Rojer s'adresse au dirigeant non expert. Il calcule les échéances des vérifications d'après les équipements et le type d'établissement déclarés (Code du travail, règlement de sécurité des ERP), centralise les rapports, suit les actions correctives jusqu'à leur levée et prépare les documents à présenter lors d'un contrôle. Il ne délivre aucune attestation de conformité et ne remplace pas la lecture des textes. Aucune intelligence artificielle ne traite les données : les règles sont déterministes.",
+    "Rojer s'adresse au dirigeant non expert. Il calcule les échéances des vérifications d'après les équipements et le type d'établissement déclarés (Code du travail, règlement de sécurité des ERP), centralise les rapports, suit les actions correctives jusqu'à leur levée et prépare les documents à présenter lors d'un contrôle. Il ne délivre aucune attestation de conformité et ne remplace pas la lecture des textes. Les obligations et leurs échéances sont calculées par des règles déterministes, sans intelligence artificielle. En formule Pro, l'utilisateur peut ouvrir ses données en lecture à un assistant (Claude, ChatGPT) par un connecteur MCP.",
     "",
     "## Pages",
     "",

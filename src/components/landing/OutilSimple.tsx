@@ -21,13 +21,15 @@ import { Reveal } from "./Reveal";
  * L'image d'aperçu de l'extrait, par l'optimiseur (2026-11-24, PageSpeed
  * mobile) : le JPEG de 1280 px pesait 44 Ko et partait dès l'ouverture de la
  * page, en concurrence avec la photo du hero — un `poster` ne se charge pas
- * en différé. `src` est la variante 2× d'une largeur de 414 px, soit 828 px
- * en WebP, 13 Ko : assez net pour le cadre, qui ne dépasse pas 650 px.
+ * en différé. `src` est la variante 2× d'une largeur de 600 px, soit
+ * 1200 px en WebP, 24 Ko : le cadre monte à 650 px, et un `poster` n'a pas
+ * de `srcset` — la variante 2× le garde net sur un écran haute densité, où
+ * il reste seul affiché si les animations sont réduites.
  */
 const POSTER_EXTRAIT = getImageProps({
   src: "/videos/extrait-equipements.jpg",
-  width: 414,
-  height: 233,
+  width: 600,
+  height: 338,
   alt: "",
 }).props.src;
 

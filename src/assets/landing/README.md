@@ -39,8 +39,9 @@ couleur médiane, le grain de la génération effacé. Couleur du fond :
 
 `documents/` : six pictos générés en une planche avec Nano Banana Pro
 (2026-11-07) d'après cette illustration, pour en garder le trait noir et les
-bleus, puis découpés et détourés. Décoratifs (`alt=""`) ; servis tels quels
-(`unoptimized`), ils sont déjà à leur taille.
+bleus, puis découpés et détourés. Décoratifs (`alt=""`) ; ~~servis tels quels
+(`unoptimized`), ils sont déjà à leur taille~~ [2026-11-24 : servis par
+l'optimiseur (`sizes`) — 4 Ko au lieu de 15 au téléphone, PageSpeed].
 
 La mention des modèles, en pied de page, vient de `src/components/landing/`
 — à tenir à jour si une image change d'origine.

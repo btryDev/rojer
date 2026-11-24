@@ -1,10 +1,14 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import * as indexation from "@/lib/indexation";
 import { cheminPublic } from "@/lib/auth/proxy-session";
 import { GET } from "./route";
 import { texteLlms } from "./texte";
 
 describe("llms.txt", () => {
-  afterEach(() => vi.unstubAllEnvs());
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+  });
 
   it("suit le format de llmstxt.org : titre, citation, liens absolus", () => {
     const texte = texteLlms("https://rojer.exemple");
@@ -30,5 +34,11 @@ describe("llms.txt", () => {
     const r = GET();
     expect(r.headers.get("Content-Type")).toMatch(/^text\/plain/);
     expect(await r.text()).toContain("https://rojer.exemple/conditions");
+  });
+
+  it("site fermé aux moteurs : 404", () => {
+    vi.stubEnv("PUBLIC_APP_URL", "https://rojer.exemple");
+    vi.spyOn(indexation, "OUVERT_AUX_MOTEURS", "get").mockReturnValue(false);
+    expect(GET().status).toBe(404);
   });
 });
