@@ -10,7 +10,10 @@
  *   dans ses mentions légales~~ [2026-11-19 : 00021, donné par la
  *   propriétaire] ;
  * - ~~le téléphone de BTRY~~ [2026-11-19 : donné par la propriétaire] et
- *   celui de l'hébergeur (LCEN, art. 1-1 depuis la loi SREN du 21 mai 2024) ;
+ *   ~~celui de l'hébergeur~~ (LCEN, art. 1-1 depuis la loi SREN du 21 mai
+ *   2024) [2026-11-24 : relevé sur les mentions légales de Clever Cloud,
+ *   https://www.clever.cloud/legal-notice/, avec leur siège, déménagé le
+ *   2023-12-20 — « 3 rue de l'Allier » était l'ancien] ;
  * - ~~le directeur de la publication (le gérant, par défaut)~~ [2026-11-19 :
  *   le gérant, confirmé par la propriétaire].
  */
@@ -34,9 +37,9 @@ export const EDITEUR = {
 
 export const HEBERGEUR = {
   nom: "Clever Cloud SAS",
-  adresse: "3 rue de l'Allier, 44000 Nantes, France",
-  site: "https://www.clever-cloud.com",
-  telephone: "[à compléter]",
+  adresse: "4 rue Voltaire, 44000 Nantes, France",
+  site: "https://www.clever.cloud",
+  telephone: "02 85 52 07 69",
 } as const;
 
 /** « BTRY, SARL au capital de 4 000 €, … » : l'identité en une phrase. */
