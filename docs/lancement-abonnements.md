@@ -169,7 +169,7 @@ sur la préproduction, où fermer la saisie ne gêne personne.
    | Subscriptions, et Subscription schedules s'ils sont listés à part | écriture |
    | Checkout Sessions | écriture |
    | Customer portal | écriture [2026-11-16 : la tâche quotidienne relit aussi sa configuration, `billingPortal.configurations.list` — vérifier l'absence de 403 à la répétition] |
-   | Invoices | ~~lecture~~ ~~écriture [2026-11-16 : la reprise d'une pause annule une facture en attente d'une autre formule, `invoices.voidInvoice`]~~ lecture [2026-11-16, ADR-053 § 9 amendé : plus de pause, Rojer n'écrit plus aucune facture ; la tâche quotidienne liste les factures ouvertes d'un impayé] |
+   | Invoices | ~~lecture~~ ~~écriture [2026-11-16 : la reprise d'une pause annule une facture en attente d'une autre formule, `invoices.voidInvoice`]~~ ~~lecture [2026-11-16, ADR-053 § 9 amendé : plus de pause, Rojer n'écrit plus aucune facture ; la tâche quotidienne liste les factures ouvertes d'un impayé]~~ **écriture** [2026-11-24, relevé dans le code en créant la clé réelle : la suppression d'un compte annule ses factures ouvertes — `abonnements/suppression.ts`, `invoices.voidInvoice`, `.del`, `.finalizeInvoice` — et l'aperçu d'un changement de formule appelle `invoices.createPreview`] |
    | Prices, Products | lecture |
    | Tax Rates | lecture |
    | ~~SetupIntents~~ | ~~lecture~~ [2026-11-16 : plus de Checkout « setup », ADR-053 § 9 amendé] |
@@ -178,6 +178,15 @@ sur la préproduction, où fermer la saisie ne gêne personne.
    | Charges | lecture [2026-11-16 : les remboursements, `charges.retrieve`, `traitement.ts`] |
 
    Tout le reste : aucun. La clé ne se colle jamais dans une conversation.
+
+   [2026-11-24 : la clé **réelle** « Rojer production » est créée directement
+   en mode réel, sans répétition en test (étape 5 non faite), avec ces droits
+   tels que Stripe les nomme : écriture sur Customers, Subscriptions (qui
+   couvre `/v1/subscription_schedules`), Checkout Sessions, Customer Portal,
+   Invoices ; lecture sur Charges and Refunds, Payment Disputes, Payment
+   Methods, Prices, Products, Tax Rates. Elle commence par `rk_live_`, et
+   Rojer l'accepte (`configurationStripe` : actif, mode réel). Un 403 dans les
+   journaux dira s'il manque un droit.]
 3. Variables de la **préproduction** : `APP_ENV=preview`,
    `STRIPE_SECRET_KEY=rk_test_…`, `STRIPE_WEBHOOK_SECRET` (destination de
    test vers l'URL de préproduction), `TACHES_SECRET`,
