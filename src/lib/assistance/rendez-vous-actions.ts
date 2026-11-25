@@ -5,10 +5,11 @@ import { z } from "zod";
 import { requireCompte } from "@/lib/auth/compte";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { assistanceProOuverte } from "@/lib/abonnements/assistance";
+import { finPrevueDe } from "@/lib/abonnements/droits";
 import { verrouillerLeCompte } from "@/lib/abonnements/quotas";
 import { ligneAbonnementDuCompte, verifierSaisie } from "@/lib/abonnements/saisie";
 import { envoiEnService, motifErreur, publicAppUrl, sendMail } from "@/lib/email";
-import { CONTACT, ENVOI_IMPOSSIBLE } from "@/lib/contact/message";
+import { CONTACT } from "@/lib/contact/message";
 import { LIMITES, cleLimite, consommer, messageTropDeTentatives } from "@/lib/securite/limite-debit";
 import { texteSaisi } from "@/lib/validation/texte";
 import { courrielEquipeRendezVous, courrielPersonneRendezVous, type RendezVousPourCourriel } from "./courriel-rendez-vous";
@@ -17,8 +18,11 @@ import { cheminAssistance } from "./libelles";
 import { anneeDuRendezVous } from "./rendez-vous";
 import {
   MESSAGE_ANNEE_PRISE,
+  MESSAGE_APRES_FIN_PRO,
   MESSAGE_CRENEAU_HORS_FENETRE,
   MESSAGE_CRENEAU_PRIS,
+  MESSAGE_DEJA_A_VENIR,
+  MESSAGE_ECHEC,
   MESSAGE_MOINS_DE_24H,
   MESSAGE_RENDEZ_VOUS_INTROUVABLE,
   MESSAGE_RENDEZ_VOUS_PRO,
@@ -32,7 +36,15 @@ import { calendrierDuRendezVous } from "./agenda";
 
 export type RendezVousState =
   | { status: "idle" }
-  | { status: "success"; evenement: "reserve" | "deplace" | "complete" | "annule"; email: string }
+  | {
+      status: "success";
+      evenement: "reserve" | "deplace" | "annule";
+      email: string;
+      /** La confirmation est bien partie à la personne (l'écran ne l'annonce que si oui). */
+      confirmation: boolean;
+    }
+  /** « Préparer » : `inchange` quand rien de nouveau n'est transmis. */
+  | { status: "success"; evenement: "complete" | "inchange"; email: string }
   | {
       status: "error";
       message: string;
@@ -58,12 +70,14 @@ function refus(e: Refus): RendezVousState {
 }
 
 /**
- * Chaque geste écrit à l'équipe : dix par jour et par compte au plus
- * (`LIMITES.rendezVousCompte`, relecture de sécurité du 2026-11-24).
+ * Chaque geste qui écrit à l'équipe : dix par jour et par compte au plus
+ * (`LIMITES.rendezVousCompte`, relecture de sécurité du 2026-11-24). Débité
+ * juste avant l'envoi, une fois les refus passés : un geste refusé ou sans
+ * rien de nouveau ne compte pas (relecture du 2026-11-25).
  */
-async function refusDuDebit(compteId: string): Promise<RendezVousState | null> {
+async function debiter(compteId: string): Promise<void> {
   const verdict = await consommer([{ cle: cleLimite("rendez-vous", "compte", compteId), limite: LIMITES.rendezVousCompte }]);
-  return verdict.ok ? null : { status: "error", message: messageTropDeTentatives(verdict.reessayerDansSecondes) };
+  if (!verdict.ok) throw new Refus(messageTropDeTentatives(verdict.reessayerDansSecondes));
 }
 
 /**
@@ -113,14 +127,15 @@ function lienDuRendezVous(etablissementId: string): string {
 
 /**
  * La confirmation à la personne, après coup — un envoi raté ne défait rien —,
- * avec l'invitation pour son agenda tant que le rendez-vous tient.
+ * avec l'invitation pour son agenda tant que le rendez-vous tient. Rend si
+ * elle est partie : l'écran ne l'annonce pas sinon.
  */
 async function confirmer(
   email: string,
   r: RendezVousPourCourriel & { id: string },
   etablissementId: string,
   maintenant: Date,
-): Promise<void> {
+): Promise<boolean> {
   // L'invitation, ou son annulation, qui retire l'événement de l'agenda
   // (relecture du 2026-11-24).
   const annule = r.evenement === "annule";
@@ -135,8 +150,10 @@ async function confirmer(
       ...courrielPersonneRendezVous(r, lienDuRendezVous(etablissementId)),
       attachments: [invitation],
     });
+    return true;
   } catch (e) {
     console.error(`[rendez-vous] confirmation non envoyée : ${motifErreur(e)}`);
+    return false;
   }
 }
 
@@ -165,9 +182,7 @@ export async function reserverRendezVous(_prev: RendezVousState, formData: FormD
   // 404 pour l'établissement d'un autre compte ; il ne sert qu'au lien de l'e-mail.
   const [ligne] = await Promise.all([ligneAbonnementDuCompte(db, compte.compteId), requireEtablissement(d.etablissementId)]);
   if (!assistanceProOuverte(ligne)) return { status: "error", message: MESSAGE_RENDEZ_VOUS_PRO };
-  if (!user.email || !envoiEnService()) return { status: "error", message: ENVOI_IMPOSSIBLE };
-  const debit = await refusDuDebit(compte.compteId);
-  if (debit) return debit;
+  if (!user.email || !envoiEnService()) return { status: "error", message: MESSAGE_ECHEC.reserver };
   const email = user.email;
 
   const maintenant = new Date();
@@ -181,6 +196,15 @@ export async function reserverRendezVous(_prev: RendezVousState, formData: FormD
           : null;
         if (d.remplace && !ancien) throw new Refus(MESSAGE_RENDEZ_VOUS_INTROUVABLE);
         if (ancien && !aPlusDe24h(ancien.debut, maintenant)) throw new Refus(MESSAGE_MOINS_DE_24H);
+        // Un seul rendez-vous à venir pour le compte : un second, même sur
+        // l'année suivante, n'aurait ni carte ni geste (relecture du 2026-11-25).
+        if (!ancien) {
+          const aVenir = await tx.rendezVousAssistance.findFirst({
+            where: { annuleLe: null, fin: { gt: maintenant } },
+            select: { id: true },
+          });
+          if (aVenir) throw new Refus(MESSAGE_DEJA_A_VENIR);
+        }
 
         const creneau = await prendreLeCreneau(tx, d.creneauId, fenetreDesCreneaux(maintenant));
         // Pris par un autre compte, ou sorti de la fenêtre depuis l'affichage :
@@ -191,6 +215,10 @@ export async function reserverRendezVous(_prev: RendezVousState, formData: FormD
             "creneau",
           );
         }
+        // Une résiliation connue (copie de Rojer) : pas de créneau après la fin
+        // du Pro, que la tâche du jour annulerait (relecture du 2026-11-25).
+        const finPro = ligne ? finPrevueDe(ligne) : null;
+        if (finPro && creneau.debut >= finPro) throw new Refus(MESSAGE_APRES_FIN_PRO, "creneau");
         // L'année où tombe le créneau : un rendez-vous compte pour l'année où il tombe.
         const annee = anneeDuRendezVous(ligne?.debutPayantLe, creneau.debut);
         const autre = await tx.rendezVousAssistance.findFirst({
@@ -230,6 +258,7 @@ export async function reserverRendezVous(_prev: RendezVousState, formData: FormD
           personne: { nom: user.name ?? null, email },
           compteId: compte.compteId,
         };
+        await debiter(compte.compteId);
         await sendMail({ to: CONTACT, replyTo: email, ...courrielEquipeRendezVous(r) });
         return r;
       },
@@ -238,12 +267,17 @@ export async function reserverRendezVous(_prev: RendezVousState, formData: FormD
   } catch (e) {
     if (e instanceof Refus) return refus(e);
     console.error(`[rendez-vous] non réservé : ${motifErreur(e)}`);
-    return { status: "error", message: ENVOI_IMPOSSIBLE };
+    return { status: "error", message: MESSAGE_ECHEC.reserver };
   }
 
-  await confirmer(email, courriel, d.etablissementId, maintenant);
+  const confirmation = await confirmer(email, courriel, d.etablissementId, maintenant);
   revalidatePath("/etablissements/[id]/assistance", "page");
-  return { status: "success", evenement: courriel.evenement === "deplace" ? "deplace" : "reserve", email };
+  return {
+    status: "success",
+    evenement: courriel.evenement === "deplace" ? "deplace" : "reserve",
+    email,
+    confirmation,
+  };
 }
 
 const schemaRendezVous = z.object({
@@ -274,19 +308,24 @@ export async function completerRendezVous(_prev: RendezVousState, formData: Form
   ]);
   // Préparer le rendez-vous reste un geste de la formule Pro (relecture de sécurité du 2026-11-24).
   if (!assistanceProOuverte(ligne)) return { status: "error", message: MESSAGE_RENDEZ_VOUS_PRO };
-  if (!user.email || !envoiEnService()) return { status: "error", message: ENVOI_IMPOSSIBLE };
-  const debit = await refusDuDebit(compte.compteId);
-  if (debit) return debit;
+  if (!user.email || !envoiEnService()) return { status: "error", message: MESSAGE_ECHEC.completer };
   const email = user.email;
 
   const maintenant = new Date();
   try {
-    await db.$transaction(
+    const transmis = await db.$transaction(
       async (tx) => {
+        // Sous le verrou du compte, comme les autres gestes : un déplacement ou
+        // une annulation concurrents ne laissent pas partir une date périmée
+        // (relecture du 2026-11-25).
+        await verrouillerLeCompte(tx, compte.compteId);
         const r = await tx.rendezVousAssistance.findFirst({ where: { id: parsed.data.rendezVousId, annuleLe: null } });
         if (!r) throw new Refus(MESSAGE_RENDEZ_VOUS_INTROUVABLE);
         if (!aPlusDe24h(r.debut, maintenant)) throw new Refus(MESSAGE_MOINS_DE_24H);
         const nouveau = parsed.data.sujet ?? null;
+        // Rien de changé : rien à transmettre.
+        if (nouveau === r.sujet) return false;
+        await debiter(compte.compteId);
         await tx.rendezVousAssistance.update({ where: { id: r.id }, data: { sujet: nouveau } });
         await sendMail({
           to: CONTACT,
@@ -302,16 +341,17 @@ export async function completerRendezVous(_prev: RendezVousState, formData: Form
             compteId: compte.compteId,
           }),
         });
+        return true;
       },
       { timeout: DUREE_TRANSACTION_MS },
     );
+    revalidatePath("/etablissements/[id]/assistance", "page");
+    return { status: "success", evenement: transmis ? "complete" : "inchange", email };
   } catch (e) {
     if (e instanceof Refus) return refus(e);
     console.error(`[rendez-vous] non complété : ${motifErreur(e)}`);
-    return { status: "error", message: ENVOI_IMPOSSIBLE };
+    return { status: "error", message: MESSAGE_ECHEC.completer };
   }
-  revalidatePath("/etablissements/[id]/assistance", "page");
-  return { status: "success", evenement: "complete", email };
 }
 
 /**
@@ -328,9 +368,7 @@ export async function annulerRendezVous(_prev: RendezVousState, formData: FormDa
   });
   if (!parsed.success) return { status: "error", message: MESSAGE_RENDEZ_VOUS_INTROUVABLE };
   await requireEtablissement(parsed.data.etablissementId);
-  if (!user.email || !envoiEnService()) return { status: "error", message: ENVOI_IMPOSSIBLE };
-  const debit = await refusDuDebit(compte.compteId);
-  if (debit) return debit;
+  if (!user.email || !envoiEnService()) return { status: "error", message: MESSAGE_ECHEC.annuler };
   const email = user.email;
 
   const maintenant = new Date();
@@ -355,6 +393,7 @@ export async function annulerRendezVous(_prev: RendezVousState, formData: FormDa
           personne: { nom: user.name ?? null, email },
           compteId: compte.compteId,
         };
+        await debiter(compte.compteId);
         await sendMail({ to: CONTACT, replyTo: email, ...courrielEquipeRendezVous(c) });
         return c;
       },
@@ -363,10 +402,10 @@ export async function annulerRendezVous(_prev: RendezVousState, formData: FormDa
   } catch (e) {
     if (e instanceof Refus) return refus(e);
     console.error(`[rendez-vous] non annulé : ${motifErreur(e)}`);
-    return { status: "error", message: ENVOI_IMPOSSIBLE };
+    return { status: "error", message: MESSAGE_ECHEC.annuler };
   }
 
-  await confirmer(email, courriel, parsed.data.etablissementId, maintenant);
+  const confirmation = await confirmer(email, courriel, parsed.data.etablissementId, maintenant);
   revalidatePath("/etablissements/[id]/assistance", "page");
-  return { status: "success", evenement: "annule", email };
+  return { status: "success", evenement: "annule", email, confirmation };
 }

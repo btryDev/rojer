@@ -3,7 +3,6 @@ import "server-only";
 // et ce que la page Assistance en montre. Lu par le client borné au compte ;
 // les créneaux, hors compte, par `creneaux.ts`.
 
-import type { ModeRendezVous } from "@prisma/client";
 import { anniversaire, debutDeLAnnee } from "@/lib/abonnements/quotas";
 import type { Db } from "@/lib/auth/compte";
 import { creneauxLibres } from "./creneaux";
@@ -24,17 +23,8 @@ export function anneeDuRendezVous(ancre: Date | null | undefined, date: Date): {
   return { debut, fin: anniversaire(ancre, debut.getUTCFullYear() + 1) };
 }
 
-/** La fin connue de l'abonnement : une date programmée, ou la fin de la période d'un abonnement résilié. */
-export function finConnueDeLAbonnement(
-  ligne: { finPrevueLe: Date | null; resilieEnFinDePeriode: boolean | null; finPeriode: Date | null } | null,
-): Date | null {
-  if (!ligne) return null;
-  return ligne.finPrevueLe ?? (ligne.resilieEnFinDePeriode ? ligne.finPeriode : null);
-}
-
 const COLONNES_RENDEZ_VOUS = {
   id: true,
-  creneauId: true,
   debut: true,
   fin: true,
   mode: true,
@@ -43,19 +33,6 @@ const COLONNES_RENDEZ_VOUS = {
   userId: true,
   createdAt: true,
 } as const;
-
-export type RendezVousDuCompte = {
-  id: string;
-  creneauId: string;
-  debut: Date;
-  fin: Date;
-  mode: ModeRendezVous;
-  telephone: string | null;
-  sujet: string | null;
-  /** Qui l'a réservé, et quand : « Réservé par Marie Durand le 24 novembre ». */
-  userId: string;
-  createdAt: Date;
-};
 
 /**
  * Ce que l'onglet « Rendez-vous annuel » montre :

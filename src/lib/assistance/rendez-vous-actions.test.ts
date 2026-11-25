@@ -22,6 +22,8 @@ const h = vi.hoisted(() => ({
   consommer: vi.fn(async (): Promise<{ ok: true } | { ok: false; reessayerDansSecondes: number }> => ({ ok: true })),
   envoiEnService: vi.fn(() => true),
   revalidatePath: vi.fn(),
+  /** Les transactions validées : une transaction qui lève n'y entre pas (elle est défaite). */
+  valides: 0,
   requireEtablissement: vi.fn(async (id: string) => {
     if (id !== "e1") throw new Error("NEXT_NOT_FOUND");
     return {};
@@ -36,7 +38,13 @@ vi.mock("@/lib/auth/compte", () => ({
   requireCompte: vi.fn(async () => ({
     user: { id: "u1", email: "m.durand@example.fr", name: "Marie Durand" },
     compte: { compteId: "c1", role: "owner" },
-    db: { $transaction: async (fn: (t: typeof tx) => Promise<unknown>) => fn(tx) },
+    db: {
+      $transaction: async (fn: (t: typeof tx) => Promise<unknown>) => {
+        const r = await fn(tx);
+        h.valides++;
+        return r;
+      },
+    },
   })),
 }));
 vi.mock("@/lib/auth/scope", () => ({ requireEtablissement: h.requireEtablissement }));
@@ -47,7 +55,7 @@ vi.mock("@/lib/abonnements/quotas", async (orig) => ({
   verrouillerLeCompte: h.verrou,
 }));
 vi.mock("./creneaux", () => ({ prendreLeCreneau: h.prendre, rendreLeCreneau: h.rendre, creneauEstPris: h.estPris }));
-vi.mock("@/lib/contact/message", () => ({ CONTACT: "contact@rojer.test", ENVOI_IMPOSSIBLE: "Votre message n'a pas pu partir." }));
+vi.mock("@/lib/contact/message", () => ({ CONTACT: "contact@rojer.test" }));
 vi.mock("@/lib/securite/limite-debit", () => ({
   LIMITES: { rendezVousCompte: { max: 10, fenetreSecondes: 86_400 } },
   cleLimite: (a: string, d: string, v: string) => `${a}:${d}:${v}`,
@@ -79,6 +87,7 @@ const mail = (i: number) => (h.sendMail.mock.calls[i] as unknown as [Record<stri
 
 beforeEach(() => {
   vi.clearAllMocks();
+  h.valides = 0;
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(MAINTENANT);
   h.pro.mockReturnValue(true);
@@ -92,7 +101,8 @@ beforeEach(() => {
 describe("reserverRendezVous", () => {
   it("prend le créneau sous le verrou du compte, enregistre, prévient l'équipe puis la personne", async () => {
     const r = await reserverRendezVous(IDLE, fd({ sujet: "La commission de mars" }));
-    expect(r).toEqual({ status: "success", evenement: "reserve", email: "m.durand@example.fr" });
+    expect(r).toEqual({ status: "success", evenement: "reserve", email: "m.durand@example.fr", confirmation: true });
+    expect(h.valides).toBe(1);
     expect(h.verifierSaisie).toHaveBeenCalled();
     expect(h.verrou).toHaveBeenCalledWith(tx, "c1");
     // Le créneau se prend dans le mois qui vient, à plus de 24 h de maintenant.
@@ -191,14 +201,37 @@ describe("reserverRendezVous", () => {
     });
   });
 
-  it("au-delà de dix gestes par jour pour le compte, refuse avant toute écriture", async () => {
+  it("au-delà de dix gestes par jour pour le compte, refuse sans rien écrire ni envoyer", async () => {
     h.consommer.mockResolvedValueOnce({ ok: false, reessayerDansSecondes: 600 });
     expect(await reserverRendezVous(IDLE, fd({}))).toEqual({ status: "error", message: "Trop de tentatives en peu de temps." });
     expect(h.consommer).toHaveBeenCalledWith([
       { cle: "rendez-vous:compte:c1", limite: { max: 10, fenetreSecondes: 86_400 } },
     ]);
-    expect(h.verrou).not.toHaveBeenCalled();
+    expect(h.valides).toBe(0);
     expect(h.sendMail).not.toHaveBeenCalled();
+  });
+
+  it("un geste refusé ne consomme pas le débit du compte", async () => {
+    h.prendre.mockResolvedValue(null);
+    await reserverRendezVous(IDLE, fd({}));
+    expect(h.consommer).not.toHaveBeenCalled();
+  });
+
+  it("une résiliation connue : pas de créneau après la fin du Pro", async () => {
+    h.ligne.mockResolvedValueOnce({
+      statut: "active",
+      formule: "rojer_pro_annuel",
+      debutPayantLe: new Date("2026-03-01T00:00:00Z"),
+      finPrevueLe: new Date("2026-12-01T00:00:00Z"),
+      resilieEnFinDePeriode: false,
+      finPeriode: null,
+    } as never);
+    expect(await reserverRendezVous(IDLE, fd({}))).toEqual({
+      status: "error",
+      message: L.MESSAGE_APRES_FIN_PRO,
+      code: "creneau",
+    });
+    expect(h.valides).toBe(0);
   });
 
   it("un créneau devenu imprenable revient avec le code qui ramène au choix du créneau", async () => {
@@ -208,15 +241,30 @@ describe("reserverRendezVous", () => {
   });
 
   it("un seul rendez-vous par année : un autre non annulé dans l'année refuse", async () => {
-    h.trouver.mockResolvedValue({ id: "r0" });
+    // Passé (pas « à venir »), mais dans l'année du créneau.
+    h.trouver.mockImplementation(async ({ where }: { where: { debut?: unknown } }) => (where.debut ? { id: "r0" } : null));
     expect(await reserverRendezVous(IDLE, fd({}))).toEqual({ status: "error", message: L.MESSAGE_ANNEE_PRISE });
     expect(h.creer).not.toHaveBeenCalled();
   });
 
-  it("si l'équipe n'est pas prévenue, rien n'est réservé (la transaction tombe) et la personne n'a rien", async () => {
+  it("si l'équipe n'est pas prévenue, rien n'est réservé (la transaction est défaite) et la personne n'a rien", async () => {
     h.sendMail.mockRejectedValueOnce(new Error("panne"));
-    expect(await reserverRendezVous(IDLE, fd({}))).toEqual({ status: "error", message: "Votre message n'a pas pu partir." });
+    expect(await reserverRendezVous(IDLE, fd({}))).toEqual({ status: "error", message: L.MESSAGE_ECHEC.reserver });
+    expect(h.valides).toBe(0);
     expect(h.sendMail).toHaveBeenCalledTimes(1);
+  });
+
+  it("un rendez-vous déjà à venir pour le compte : une seconde réservation est refusée, même sur l'année suivante", async () => {
+    h.trouver.mockImplementation(async ({ where }: { where: { fin?: unknown } }) => (where.fin ? { id: "r0" } : null));
+    expect(await reserverRendezVous(IDLE, fd({}))).toEqual({ status: "error", message: L.MESSAGE_DEJA_A_VENIR });
+    expect(h.trouver).toHaveBeenCalledWith({ where: { annuleLe: null, fin: { gt: MAINTENANT } }, select: { id: true } });
+    expect(h.creer).not.toHaveBeenCalled();
+  });
+
+  it("la confirmation à la personne échoue : la réservation tient, l'écran ne dit pas qu'elle est partie", async () => {
+    h.sendMail.mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error("panne"));
+    expect(await reserverRendezVous(IDLE, fd({}))).toMatchObject({ status: "success", confirmation: false });
+    expect(h.valides).toBe(1);
   });
 
   it("déplace le rendez-vous à venir : le nouveau créneau pris, l'ancien rendu", async () => {
@@ -228,7 +276,7 @@ describe("reserverRendezVous", () => {
     };
     h.trouver.mockImplementation(async ({ where }: { where: { id?: string } }) => (where.id === "r1" ? ancien : null));
     const r = await reserverRendezVous(IDLE, fd({ remplace: "r1" }));
-    expect(r).toEqual({ status: "success", evenement: "deplace", email: "m.durand@example.fr" });
+    expect(r).toEqual({ status: "success", evenement: "deplace", email: "m.durand@example.fr", confirmation: true });
     expect(h.modifier).toHaveBeenCalledWith({ where: { id: "r1" }, data: expect.objectContaining({ creneauId: CRENEAU }) });
     expect(h.rendre).toHaveBeenCalledWith(tx, "ancien");
     expect(h.creer).not.toHaveBeenCalled();
@@ -259,8 +307,28 @@ describe("completerRendezVous", () => {
       evenement: "complete",
       email: "m.durand@example.fr",
     });
+    // Sous le verrou du compte, comme les autres gestes.
+    expect(h.verrou).toHaveBeenCalledWith(tx, "c1");
     expect(h.modifier).toHaveBeenCalledWith({ where: { id: "r1" }, data: { sujet: "Le plan d'actions" } });
     expect(mail(0).subject).toContain("Rendez-vous à préparer");
+  });
+
+  it("rien de changé : rien n'est écrit ni transmis", async () => {
+    h.trouver.mockResolvedValue({ ...rdv, sujet: "Le plan d'actions" });
+    expect(await completerRendezVous(IDLE, completer("Le plan d'actions"))).toMatchObject({
+      status: "success",
+      evenement: "inchange",
+    });
+    expect(h.modifier).not.toHaveBeenCalled();
+    expect(h.sendMail).not.toHaveBeenCalled();
+    expect(h.consommer).not.toHaveBeenCalled();
+  });
+
+  it("si l'équipe n'est pas prévenue, rien n'est écrit, et l'écran dit que le texte est conservé", async () => {
+    h.trouver.mockResolvedValue(rdv);
+    h.sendMail.mockRejectedValueOnce(new Error("panne"));
+    expect(await completerRendezVous(IDLE, completer("x"))).toEqual({ status: "error", message: L.MESSAGE_ECHEC.completer });
+    expect(h.valides).toBe(0);
   });
 
   it("demande la formule Pro", async () => {
@@ -287,7 +355,8 @@ describe("annulerRendezVous", () => {
   it("annule, rend le créneau, prévient l'équipe et la personne", async () => {
     h.trouver.mockResolvedValue(rdv);
     const r = await annulerRendezVous(IDLE, annulation());
-    expect(r).toEqual({ status: "success", evenement: "annule", email: "m.durand@example.fr" });
+    expect(r).toEqual({ status: "success", evenement: "annule", email: "m.durand@example.fr", confirmation: true });
+    expect(h.consommer).toHaveBeenCalledWith([{ cle: "rendez-vous:compte:c1", limite: { max: 10, fenetreSecondes: 86_400 } }]);
     expect(h.modifier).toHaveBeenCalledWith({ where: { id: "r1" }, data: { annuleLe: MAINTENANT } });
     expect(h.rendre).toHaveBeenCalledWith(tx, CRENEAU);
     expect(mail(0).subject).toContain("Rendez-vous annulé");
@@ -303,6 +372,13 @@ describe("annulerRendezVous", () => {
     h.pro.mockReturnValue(false);
     h.trouver.mockResolvedValue(rdv);
     expect((await annulerRendezVous(IDLE, annulation())).status).toBe("success");
+  });
+
+  it("si l'équipe n'est pas prévenue, rien n'est annulé", async () => {
+    h.trouver.mockResolvedValue(rdv);
+    h.sendMail.mockRejectedValueOnce(new Error("panne"));
+    expect(await annulerRendezVous(IDLE, annulation())).toEqual({ status: "error", message: L.MESSAGE_ECHEC.annuler });
+    expect(h.valides).toBe(0);
   });
 
   it("à moins de 24 h, n'annule plus", async () => {

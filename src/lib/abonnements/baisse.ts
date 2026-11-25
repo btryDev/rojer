@@ -8,13 +8,28 @@ import "server-only";
 
 import type { Db } from "@/lib/auth/compte";
 import { invitationsDuCompte, membresDuCompte } from "@/lib/auth/membres";
-import { clientStripe } from "@/lib/stripe/client";
+import { clientStripeLecture } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
 import { baissePrevue } from "@/lib/stripe/parcours";
 import { formaterDateLongueFr } from "@/lib/dates";
 import { FORMULES, LIBELLES_PLAFONDS } from "./formules";
 import { formuleDesPlafonds, plafondDe } from "./quotas";
 import { contexteDroits, offreLancee } from "./saisie";
+
+/**
+ * La baisse de formule planifiée chez Stripe (ADR-053 § 10), ou `null` — offre
+ * non lancée, Stripe désactivé, pas d'abonnement, pas de baisse. La copie de
+ * Rojer ne la garde pas : elle se relit chez Stripe, qui lève si injoignable.
+ */
+export async function lireBaissePrevue(
+  stripeSubscriptionId: string | null | undefined,
+): Promise<Awaited<ReturnType<typeof baissePrevue>>> {
+  if (!stripeSubscriptionId || !offreLancee(contexteDroits())) return null;
+  const config = configurationStripe();
+  if (!config.active) return null;
+  const stripe = clientStripeLecture(config);
+  return baissePrevue(stripe, await stripe.subscriptions.retrieve(stripeSubscriptionId));
+}
 
 /**
  * Le refus d'une invitation de plus quand une baisse planifiée ne la
@@ -26,15 +41,12 @@ export async function refusInvitationBaissePrevue(
   compteId: string,
   { apresCreation = false }: { apresCreation?: boolean } = {},
 ): Promise<string | null> {
-  if (!offreLancee(contexteDroits())) return null;
-  const config = configurationStripe();
-  if (!config.active) return null;
+  // La même garde que `lireBaissePrevue`, avant elle : pas de lecture en base sans Stripe.
+  if (!offreLancee(contexteDroits()) || !configurationStripe().active) return null;
   const ligne = await db.abonnement.findUnique({ where: { compteId }, select: { stripeSubscriptionId: true } });
-  if (!ligne?.stripeSubscriptionId) return null;
-  const stripe = clientStripe(config);
   let prevue: Awaited<ReturnType<typeof baissePrevue>>;
   try {
-    prevue = await baissePrevue(stripe, await stripe.subscriptions.retrieve(ligne.stripeSubscriptionId));
+    prevue = await lireBaissePrevue(ligne?.stripeSubscriptionId);
   } catch {
     return "Les invitations sont momentanément indisponibles. Réessayez dans quelques minutes.";
   }

@@ -4,6 +4,7 @@ import "server-only";
 // sorti du module partagé avec l'écran (relecture React du 2026-11-24).
 
 import type { ModeRendezVous } from "@prisma/client";
+import { CONTACT } from "@/lib/contact/message";
 import { commentSeParler } from "./rendez-vous-libelles";
 
 /** Un texte d'iCalendar échappé (RFC 5545, § 3.3.11) : antislash, virgule, point-virgule, retour à la ligne. */
@@ -57,6 +58,9 @@ export function calendrierDuRendezVous(
     `METHOD:${annule ? "CANCEL" : "PUBLISH"}`,
     "BEGIN:VEVENT",
     `UID:${r.id}@rojer.fr`,
+    // L'organisateur, que la RFC 5546 exige pour PUBLISH et pour CANCEL : sans
+    // lui, un agenda peut ignorer l'annulation (relecture du 2026-11-25).
+    `ORGANIZER;CN=Rojer:mailto:${CONTACT}`,
     `SEQUENCE:${Math.floor(revision.getTime() / 1000)}`,
     `STATUS:${annule ? "CANCELLED" : "CONFIRMED"}`,
     `DTSTAMP:${instantIcs(maintenant)}`,

@@ -79,5 +79,7 @@ describe("courrielPersonneRendezVous", () => {
     const m = courrielPersonneRendezVous({ ...BASE, evenement: "annule_hors_pro" }, "https://rojer.test/x");
     expect(m.subject).toContain("Rendez-vous annulé");
     expect(m.text).toContain("Votre formule Pro a pris fin");
+    // Plus de rendez-vous à voir : le bouton ne le promet pas.
+    expect(m.text).not.toContain("Voir mon rendez-vous");
   });
 });

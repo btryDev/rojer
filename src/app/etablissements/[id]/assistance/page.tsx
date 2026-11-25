@@ -6,11 +6,13 @@ import { OngletsPage } from "@/components/ui-kit/OngletsPage";
 import type { Db } from "@/lib/auth/compte";
 import { membresDuCompte } from "@/lib/auth/membres";
 import { requireEtablissement } from "@/lib/auth/scope";
+import { finPrevueDe } from "@/lib/abonnements/droits";
 import { ligneAbonnementDuCompte } from "@/lib/abonnements/saisie";
 import { PAGE_FORMULES } from "@/lib/abonnements/sous-pages";
 import { formuleDAssistanceDeLaSession } from "@/lib/assistance/formule";
 import { cheminAssistance } from "@/lib/assistance/libelles";
-import { finConnueDeLAbonnement, rendezVousDuCompte } from "@/lib/assistance/rendez-vous";
+import { finDuProPrevue } from "@/lib/assistance/fin-du-pro";
+import { rendezVousDuCompte } from "@/lib/assistance/rendez-vous";
 import { aPlusDe24h } from "@/lib/assistance/rendez-vous-libelles";
 import { listerEtablissementsDuCompte } from "@/lib/etablissements/queries";
 import { PARAM_PROVENANCE, avecProvenance, decouperCheminInterne, nommerEcran } from "@/lib/navigation/provenance";
@@ -136,11 +138,17 @@ async function donneesDuRendezVous(db: Db, compteId: string) {
   const ligne = await ligneAbonnementDuCompte(db, compteId);
   // Qui a réservé : un membre du compte (une personne partie n'est plus
   // nommée) — lu en même temps que le rendez-vous (relecture du 2026-11-24).
-  const [{ prochain, passe, creneaux, finDeLAnnee }, membres] = await Promise.all([
-    rendezVousDuCompte(db, ligne?.debutPayantLe, maintenant),
-    membresDuCompte(compteId),
+  const membresLus = membresDuCompte(compteId);
+  const { prochain, passe, creneaux, finDeLAnnee } = await rendezVousDuCompte(db, ligne?.debutPayantLe, maintenant);
+  // La fin du Pro : la résiliation se lit sur la copie ; la baisse, chez
+  // Stripe, seulement avec un rendez-vous à venir (relecture du 2026-11-25).
+  const [membres, finPro] = await Promise.all([
+    membresLus,
+    prochain ? finDuProPrevue(ligne) : Promise.resolve(ligne ? finPrevueDe(ligne) : null),
   ]);
-  const finPro = finConnueDeLAbonnement(ligne);
+  const finDuPro = prochain && finPro && finPro < prochain.debut ? finPro : null;
+  // Aucun créneau d'après la fin du Pro : ni à réserver, ni pour un déplacement.
+  const prenables = finPro ? creneaux.filter((c) => c.debut < finPro) : creneaux;
   return {
     maintenant: maintenant.toISOString(),
     prochain: prochain
@@ -158,7 +166,7 @@ async function donneesDuRendezVous(db: Db, compteId: string) {
       : null,
     passe: passe ? { debut: passe.debut.toISOString() } : null,
     finDeLAnnee: finDeLAnnee.toISOString(),
-    creneaux: creneaux.map((c) => ({ id: c.id, debut: c.debut.toISOString(), fin: c.fin.toISOString() })),
-    finDuPro: prochain && finPro && finPro < prochain.debut ? finPro.toISOString() : null,
+    creneaux: prenables.map((c) => ({ id: c.id, debut: c.debut.toISOString(), fin: c.fin.toISOString() })),
+    finDuPro: finDuPro?.toISOString() ?? null,
   };
 }

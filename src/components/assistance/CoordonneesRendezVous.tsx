@@ -258,7 +258,13 @@ export function CoordonneesRendezVous({
             l&apos;année.
           </p>
           <MessageFormulaire ton="alerte">
-            {etat.status === "error" && !err("telephone") && !err("sujet") ? etat.message : null}
+            {/* Une erreur de champ se dit aussi près du bouton, et s'annonce : sur
+                téléphone, le champ est loin (relecture du 2026-11-25). */}
+            {etat.status !== "error"
+              ? null
+              : err("telephone") || err("sujet")
+                ? `Vérifiez le champ signalé plus haut : ${err("telephone") ?? err("sujet")}`
+                : etat.message}
           </MessageFormulaire>
           <Button type="submit" variant="board" enCours={reservation} className="h-11 w-full">
             {reservation ? "Réservation…" : remplace ? "Déplacer le rendez-vous" : "Réserver ce rendez-vous"}

@@ -8,11 +8,14 @@
 // l'assistance de prévention, une ligne sans formule non plus.
 
 import { formuleOuverte, type LigneFormule } from "./droits";
-import { FORMULES } from "./formules";
+import { FORMULES, type CleFormule } from "./formules";
+
+/** Une formule qui compte des heures avec l'expert : l'assistance de prévention et le rendez-vous annuel. */
+export const formuleAvecAssistancePro = (formule: CleFormule): boolean => FORMULES[formule].quotas.heuresExpertParAn > 0;
 
 export function assistanceProOuverte(ligne: LigneFormule): boolean {
   const formule = formuleOuverte(ligne);
-  return formule !== null && FORMULES[formule].quotas.heuresExpertParAn > 0;
+  return formule !== null && formuleAvecAssistancePro(formule);
 }
 
 /** Ce que l'e-mail adressé à l'équipe dit de la formule du compte. */

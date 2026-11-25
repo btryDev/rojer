@@ -12,8 +12,6 @@ import {
   majuscule,
   moisAnnee,
   moisDe,
-  moisSeul,
-  moisSuivant,
   plageHoraire,
   type CreneauAffiche,
 } from "@/lib/assistance/rendez-vous-libelles";
@@ -24,7 +22,7 @@ import { useFocusAuMontage } from "./useFocusAuMontage";
 const JOURS_SEMAINE = ["lun.", "mar.", "mer.", "jeu.", "ven.", "sam.", "dim."];
 
 const BOUTON_ROND =
-  "grid size-9 place-items-center rounded-full bg-white text-[color:var(--board-ink)] shadow-[inset_0_0_0_1px_rgba(10,10,10,.14)] hover:bg-[color:var(--board-slate-pale)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--board-blue-strong)] disabled:cursor-not-allowed disabled:bg-white disabled:text-[color:var(--board-slate)] disabled:shadow-[inset_0_0_0_1px_var(--board-slate-line)]";
+  "cible-tactile grid size-9 place-items-center rounded-full bg-white text-[color:var(--board-ink)] shadow-[inset_0_0_0_1px_rgba(10,10,10,.14)] hover:bg-[color:var(--board-slate-pale)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--board-blue-strong)] disabled:cursor-not-allowed disabled:bg-white disabled:text-[color:var(--board-slate)] disabled:shadow-[inset_0_0_0_1px_var(--board-slate-line)]";
 
 // 44 px de haut, et une grille aussi large que la carte le permet : la
 // cible tactile (Apple HIG) se tient par la case elle-même — pas de halo
@@ -170,7 +168,7 @@ export function ChoixDuCreneau({
             </p>
             {moisAffiche && rang >= mois.length - 1 ? (
               <p className={PETIT}>
-                Les créneaux de {moisSeul(premierDuMois(moisSuivant(moisAffiche)))} ne sont pas encore ouverts.
+                Les créneaux se réservent jusqu&apos;à un mois à l&apos;avance : d&apos;autres s&apos;ouvrent au fil des jours.
               </p>
             ) : null}
           </div>

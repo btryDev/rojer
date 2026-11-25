@@ -56,12 +56,19 @@ réservation, et la règle qui borne à un par an.
 3. **Réserver** demande trois conditions :
    - la formule Pro (`assistanceProOuverte`, la règle de l'ADR-050 amendée) ;
    - une saisie ouverte (`verifierSaisie` : ni lecture seule ni impayé) ;
+     [2026-11-25 : « impayé » au sens de l'ADR-053 § 3 — `unpaid`,
+     `incomplete` ; un paiement en retard (`past_due`) garde la saisie et la
+     formule, comme au § 7.]
    - un créneau à plus de 24 h.
 
    Sous le verrou du compte, l'action vérifie qu'aucun autre rendez-vous non
    annulé ne tombe dans l'année du créneau. Le créneau se prend par une
    écriture conditionnelle (`reserveLe` encore vide) : deux comptes ne prennent
    jamais le même.
+   [2026-11-25, décision de la propriétaire : **un seul rendez-vous à venir
+   par compte**. Tant qu'il y en a un, une nouvelle réservation est refusée,
+   même sur l'année suivante — elle n'aurait ni carte ni geste à l'écran ;
+   on déplace celui qui existe.]
 4. **Déplacer ou annuler**, jusqu'à 24 h avant.
    - Déplacer rend l'ancien créneau et prend le nouveau dans le même geste.
    - Annuler rend le créneau, et l'année retrouve son rendez-vous.
@@ -87,7 +94,27 @@ réservation, et la règle qui borne à un par an.
      « À avancer » : la tâche quotidienne annule le rendez-vous à venir d'un
      compte qui n'est plus en Pro dès le jour où il ne l'est plus — un impayé
      (`past_due`) garde la formule —, rend le créneau, et prévient les deux
-     côtés (`assistance/hors-pro.ts`).]
+     côtés (`assistance/hors-pro.ts`).] [2026-11-25, relecture : comme les
+     gestes de la personne, l'e-mail à l'équipe part dans la transaction —
+     s'il échoue, rien n'est annulé et la passe du lendemain recommence ; la
+     formule est relue sous le verrou ; un compte en échec n'arrête pas les
+     autres. Côté compte, l'annonce va à la personne qui avait réservé si
+     elle en est encore membre, sinon aux propriétaires. Limite connue : un
+     rendez-vous qui tombe le jour où le Pro s'arrête, avant la passe du
+     lendemain, a lieu (`docs/chantiers-ouverts.md` § 26).]
+   - [2026-11-25 : « l'écran l'annonce dès que la fin est connue » valait
+     pour la résiliation seule — la baisse planifiée ne vit que chez Stripe.
+     Elle se relit désormais là (`assistance/fin-du-pro.ts`, la lecture de
+     `abonnements/baisse.ts` partagée avec les invitations), seulement pour
+     un compte Pro qui a un rendez-vous à venir, et seulement si la formule
+     visée n'a pas de rendez-vous (une formule visée inconnue n'est pas dite
+     une fin). Stripe injoignable : rien n'est annoncé, c'est noté. Un
+     déplacement ne propose alors que les créneaux d'avant la fin du Pro. Une
+     résiliation connue (copie de Rojer) borne aussi les créneaux sans
+     rendez-vous à venir, et l'action refuse un créneau d'après ; une baisse
+     ne se relit pas chez Stripe dans l'action — un créneau d'après, posté
+     quand même, sera annulé par la tâche du jour (limite assumée,
+     2026-11-25).]
 8. **Pas d'écran pour l'équipe.** Les rendez-vous se lisent dans les e-mails
    et par script.
 9. **Données personnelles.** Sont gardés le mode, le téléphone et ce qui est
@@ -126,3 +153,17 @@ réservation, et la règle qui borne à un par an.
     compte relisent le rendez-vous sous le verrou du compte avant de rendre
     son créneau ; la suppression d'un compte prévient l'équipe de son
     rendez-vous à venir.
+- [2026-11-25, relecture multi-axes] Corrigés sur `lot/rdv-annuel-relecture` :
+  - « Préparer » prend le verrou du compte, et ne transmet rien quand le
+    texte n'a pas changé ;
+  - le compteur de dix gestes par jour se débite juste avant l'envoi à
+    l'équipe, une fois les refus passés : un geste refusé ou sans rien de
+    nouveau ne compte pas, et des réservations refusées en rafale ne privent
+    plus le compte d'annuler ;
+  - un geste qui échoue dit ce qui n'a pas changé, plus la phrase du
+    formulaire de contact ; l'écran ne dit la confirmation partie que si
+    elle l'est ;
+  - le `.ics` porte son organisateur (RFC 5546) ;
+  - le SQL des créneaux est éprouvé sur une vraie base
+    (`creneaux.integration.test.ts`, en CI) ; les transactions simulées des
+    tests défont ce qu'elles ont écrit.

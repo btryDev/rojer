@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 const h = vi.hoisted(() => ({ libres: vi.fn() }));
 vi.mock("./creneaux", () => ({ creneauxLibres: h.libres }));
 
-const { anneeDuRendezVous, finConnueDeLAbonnement, rendezVousDuCompte } = await import("./rendez-vous");
+const { anneeDuRendezVous, rendezVousDuCompte } = await import("./rendez-vous");
 
 const d = (iso: string) => new Date(iso);
 
@@ -31,16 +31,6 @@ describe("anneeDuRendezVous", () => {
   });
 });
 
-describe("finConnueDeLAbonnement", () => {
-  it("une fin programmée, sinon la fin de période d'un abonnement résilié", () => {
-    const fin = d("2026-12-15T00:00:00Z");
-    expect(finConnueDeLAbonnement({ finPrevueLe: fin, resilieEnFinDePeriode: false, finPeriode: null })).toEqual(fin);
-    expect(finConnueDeLAbonnement({ finPrevueLe: null, resilieEnFinDePeriode: true, finPeriode: fin })).toEqual(fin);
-    expect(finConnueDeLAbonnement({ finPrevueLe: null, resilieEnFinDePeriode: false, finPeriode: fin })).toBeNull();
-    expect(finConnueDeLAbonnement(null)).toBeNull();
-  });
-});
-
 describe("rendezVousDuCompte", () => {
   const MAINTENANT = d("2026-11-24T16:00:00Z");
   const ancre = d("2026-03-01T00:00:00Z"); // année : 2026-03-01 → 2027-03-01
@@ -51,7 +41,12 @@ describe("rendezVousDuCompte", () => {
 
   it("sans rendez-vous : tous les créneaux libres du mois qui vient", async () => {
     h.libres.mockResolvedValue(LIBRES);
-    const r = await rendezVousDuCompte(db([]), ancre, MAINTENANT);
+    const base = db([]);
+    const r = await rendezVousDuCompte(base, ancre, MAINTENANT);
+    // Un rendez-vous annulé ne compte pas, ceux d'avant l'année non plus.
+    expect(base.rendezVousAssistance.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { annuleLe: null, debut: { gte: d("2026-03-01T00:00:00Z") } } }),
+    );
     expect(r.prochain).toBeNull();
     expect(r.creneaux.map((c) => c.id)).toEqual(["a", "b"]);
     // Le mois qui vient, à plus de 24 h.
