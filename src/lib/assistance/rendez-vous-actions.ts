@@ -36,7 +36,8 @@ export type RendezVousState =
   | { status: "idle" }
   | {
       status: "success";
-      evenement: "reserve" | "deplace" | "complete" | "annule";
+      /** `inchange` : « Préparer » sans rien de nouveau — rien n'est transmis. */
+      evenement: "reserve" | "deplace" | "complete" | "inchange" | "annule";
       email: string;
       /** La confirmation est bien partie à la personne (l'écran ne l'annonce que si oui). */
       confirmation: boolean;
@@ -308,8 +309,9 @@ export async function completerRendezVous(_prev: RendezVousState, formData: Form
   const email = user.email;
 
   const maintenant = new Date();
+  let transmis = false;
   try {
-    await db.$transaction(
+    transmis = await db.$transaction(
       async (tx) => {
         // Sous le verrou du compte, comme les autres gestes : un déplacement ou
         // une annulation concurrents ne laissent pas partir une date périmée
@@ -320,7 +322,7 @@ export async function completerRendezVous(_prev: RendezVousState, formData: Form
         if (!aPlusDe24h(r.debut, maintenant)) throw new Refus(MESSAGE_MOINS_DE_24H);
         const nouveau = parsed.data.sujet ?? null;
         // Rien de changé : rien à transmettre.
-        if (nouveau === r.sujet) return;
+        if (nouveau === r.sujet) return false;
         await tx.rendezVousAssistance.update({ where: { id: r.id }, data: { sujet: nouveau } });
         await sendMail({
           to: CONTACT,
@@ -336,6 +338,7 @@ export async function completerRendezVous(_prev: RendezVousState, formData: Form
             compteId: compte.compteId,
           }),
         });
+        return true;
       },
       { timeout: DUREE_TRANSACTION_MS },
     );
@@ -345,7 +348,7 @@ export async function completerRendezVous(_prev: RendezVousState, formData: Form
     return { status: "error", message: MESSAGE_ECHEC.completer };
   }
   revalidatePath("/etablissements/[id]/assistance", "page");
-  return { status: "success", evenement: "complete", email, confirmation: false };
+  return { status: "success", evenement: transmis ? "complete" : "inchange", email, confirmation: false };
 }
 
 /**

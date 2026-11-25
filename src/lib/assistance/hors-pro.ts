@@ -37,7 +37,7 @@ async function destinatairesDuCompte(compteId: string, reservePar: string): Prom
 }
 
 /** Annule les rendez-vous à venir des comptes sortis de la formule Pro ; rend leur nombre. */
-export async function annulerRendezVousHorsPro(maintenant: Date): Promise<{ annules: number; echecs: number }> {
+export async function annulerRendezVousHorsPro(maintenant: Date): Promise<{ annules: number }> {
   const aVenir = await prisma.rendezVousAssistance.findMany({
     where: { annuleLe: null, debut: { gt: maintenant } },
     select: {
@@ -70,7 +70,10 @@ export async function annulerRendezVousHorsPro(maintenant: Date): Promise<{ annu
       console.error(`[rendez-vous] annulation hors Pro non faite (compte ${r.compteId}) : ${motifErreur(e)}`);
     }
   }
-  return { annules, echecs };
+  // Un échec, après avoir traité tous les comptes, remonte à `tenter` : la
+  // tâche est dite en échec et l'alerte du jour part (relecture du 2026-11-25).
+  if (echecs > 0) throw new Error(`${echecs} annulation(s) hors Pro non faite(s), ${annules} faite(s)`);
+  return { annules };
 }
 
 /**
@@ -111,7 +114,8 @@ async function annulerUn(
         mode: encore.mode,
         telephone: encore.telephone,
         sujet: encore.sujet,
-        personne: personnes[0] ?? { nom: null, email: CONTACT },
+        // Personne à prévenir (réservante partie, aucun propriétaire) : l'équipe le lit.
+        personne: personnes[0] ?? { nom: "Aucune personne à prévenir dans le compte", email: "—" },
         compteId,
       };
       if (envoiEnService()) {

@@ -531,7 +531,11 @@ function PreparerLeRendezVous({ prochain, etablissementId }: { prochain: RendezV
             </p>
           </div>
           {affiche.status === "success" ? (
-            <MessageFormulaire ton="info">C&apos;est enregistré, et transmis pour préparer le rendez-vous.</MessageFormulaire>
+            <MessageFormulaire ton="info">
+              {affiche.evenement === "inchange"
+                ? "Rien de changé : rien n'a été transmis de nouveau."
+                : "C'est enregistré, et transmis pour préparer le rendez-vous."}
+            </MessageFormulaire>
           ) : null}
           <div className="flex flex-wrap items-center gap-x-[18px] gap-y-2.5">
             <Button ref={modifierRef} type="button" variant="boardClair" onClick={() => basculer(true)}>

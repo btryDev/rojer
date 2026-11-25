@@ -34,6 +34,11 @@ describe("finDuProPrevue", () => {
     expect(await finDuProPrevue(LIGNE)).toBeNull();
   });
 
+  it("une formule visée inconnue (prix sans clé) n'est pas dite une fin", async () => {
+    h.baisse.mockResolvedValue({ priceId: "p", lookupKey: null, le: LE });
+    expect(await finDuProPrevue(LIGNE)).toBeNull();
+  });
+
   it("Stripe injoignable : rien n'est annoncé", async () => {
     h.baisse.mockRejectedValue(new Error("réseau"));
     vi.spyOn(console, "error").mockImplementation(() => {});

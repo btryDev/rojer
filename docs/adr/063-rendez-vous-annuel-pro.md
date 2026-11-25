@@ -107,9 +107,12 @@ réservation, et la règle qui borne à un par an.
      Elle se relit désormais là (`assistance/fin-du-pro.ts`, la lecture de
      `abonnements/baisse.ts` partagée avec les invitations), seulement pour
      un compte Pro qui a un rendez-vous à venir, et seulement si la formule
-     visée n'a pas de rendez-vous. Stripe injoignable : rien n'est annoncé,
-     c'est noté. Un déplacement ne propose alors que les créneaux d'avant la
-     fin du Pro.]
+     visée n'a pas de rendez-vous (une formule visée inconnue n'est pas dite
+     une fin). Stripe injoignable : rien n'est annoncé, c'est noté. Un
+     déplacement ne propose alors que les créneaux d'avant la fin du Pro —
+     à l'écran seulement : l'action ne relit pas Stripe, et un créneau
+     d'après, posté quand même, sera annulé par la tâche du jour (limite
+     assumée, 2026-11-25).]
 8. **Pas d'écran pour l'équipe.** Les rendez-vous se lisent dans les e-mails
    et par script.
 9. **Données personnelles.** Sont gardés le mode, le téléphone et ce qui est

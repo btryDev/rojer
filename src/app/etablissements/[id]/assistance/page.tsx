@@ -137,12 +137,13 @@ async function donneesDuRendezVous(db: Db, compteId: string) {
   const ligne = await ligneAbonnementDuCompte(db, compteId);
   // Qui a réservé : un membre du compte (une personne partie n'est plus
   // nommée) — lu en même temps que le rendez-vous (relecture du 2026-11-24).
-  const [{ prochain, passe, creneaux, finDeLAnnee }, membres] = await Promise.all([
-    rendezVousDuCompte(db, ligne?.debutPayantLe, maintenant),
+  const { prochain, passe, creneaux, finDeLAnnee } = await rendezVousDuCompte(db, ligne?.debutPayantLe, maintenant);
+  // La fin du Pro ne se lit (chez Stripe, pour une baisse) qu'avec un
+  // rendez-vous à venir ; en même temps que les membres.
+  const [membres, finPro] = await Promise.all([
     membresDuCompte(compteId),
+    prochain ? finDuProPrevue(ligne) : Promise.resolve(null),
   ]);
-  // La fin du Pro ne se lit (chez Stripe, pour une baisse) qu'avec un rendez-vous à venir.
-  const finPro = prochain ? await finDuProPrevue(ligne) : null;
   const finDuPro = prochain && finPro && finPro < prochain.debut ? finPro : null;
   // Le Pro qui s'arrête : un déplacement ne vise que les créneaux d'avant sa fin.
   const prenables = finDuPro ? creneaux.filter((c) => c.debut < finDuPro) : creneaux;

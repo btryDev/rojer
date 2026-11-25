@@ -293,7 +293,10 @@ describe("completerRendezVous", () => {
 
   it("rien de changé : rien n'est écrit ni transmis", async () => {
     h.trouver.mockResolvedValue({ ...rdv, sujet: "Le plan d'actions" });
-    expect((await completerRendezVous(IDLE, completer("Le plan d'actions"))).status).toBe("success");
+    expect(await completerRendezVous(IDLE, completer("Le plan d'actions"))).toMatchObject({
+      status: "success",
+      evenement: "inchange",
+    });
     expect(h.modifier).not.toHaveBeenCalled();
     expect(h.sendMail).not.toHaveBeenCalled();
   });

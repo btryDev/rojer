@@ -17,11 +17,6 @@ import { formuleDesPlafonds, plafondDe } from "./quotas";
 import { contexteDroits, offreLancee } from "./saisie";
 
 /**
- * Le refus d'une invitation de plus quand une baisse planifiée ne la
- * permettrait pas, ou `null`. Stripe injoignable : refus (on ne sait pas s'il
- * y a une baisse, et une invitation peut attendre).
- */
-/**
  * La baisse de formule planifiée chez Stripe (ADR-053 § 10), ou `null` — offre
  * non lancée, Stripe désactivé, pas d'abonnement, pas de baisse. La copie de
  * Rojer ne la garde pas : elle se relit chez Stripe, qui lève si injoignable.
@@ -36,6 +31,11 @@ export async function lireBaissePrevue(
   return baissePrevue(stripe, await stripe.subscriptions.retrieve(stripeSubscriptionId));
 }
 
+/**
+ * Le refus d'une invitation de plus quand une baisse planifiée ne la
+ * permettrait pas, ou `null`. Stripe injoignable : refus (on ne sait pas s'il
+ * y a une baisse, et une invitation peut attendre).
+ */
 export async function refusInvitationBaissePrevue(
   db: Db,
   compteId: string,

@@ -5,8 +5,7 @@ import "server-only";
 
 import { lireBaissePrevue } from "@/lib/abonnements/baisse";
 import { finPrevueDe } from "@/lib/abonnements/droits";
-import { FORMULES } from "@/lib/abonnements/formules";
-import { formuleDesPlafonds } from "@/lib/abonnements/quotas";
+import { FORMULES, formuleDeLookupKey } from "@/lib/abonnements/formules";
 
 type Ligne = {
   stripeSubscriptionId: string | null;
@@ -25,8 +24,11 @@ export async function finDuProPrevue(ligne: Ligne | null): Promise<Date | null> 
   if (resiliation) return resiliation;
   try {
     const baisse = await lireBaissePrevue(ligne.stripeSubscriptionId);
-    if (!baisse) return null;
-    return FORMULES[formuleDesPlafonds(baisse.lookupKey)].quotas.heuresExpertParAn > 0 ? null : baisse.le;
+    // Une formule visée inconnue (prix sans `lookup_key`) n'est pas dite une
+    // fin : la tâche quotidienne n'annulera qu'au vu de la copie (relecture).
+    const visee = baisse ? formuleDeLookupKey(baisse.lookupKey) : null;
+    if (!baisse || !visee) return null;
+    return FORMULES[visee.formule].quotas.heuresExpertParAn > 0 ? null : baisse.le;
   } catch (e) {
     console.error(`[rendez-vous] baisse prévue non lue : ${e instanceof Error ? e.message : String(e)}`);
     return null;

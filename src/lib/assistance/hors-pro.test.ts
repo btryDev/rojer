@@ -85,7 +85,7 @@ beforeEach(() => {
 describe("annulerRendezVousHorsPro", () => {
   it("sous le verrou du compte, annule, rend le créneau relu, prévient l'équipe puis la personne", async () => {
     h.aVenir.mockResolvedValue([rdv("r1", ESSENTIEL)]);
-    expect(await annulerRendezVousHorsPro(MAINTENANT)).toEqual({ annules: 1, echecs: 0 });
+    expect(await annulerRendezVousHorsPro(MAINTENANT)).toEqual({ annules: 1 });
     expect(h.verrou).toHaveBeenCalledWith(tx, "c-r1");
     expect(tx.rendezVousAssistance.updateMany).toHaveBeenCalledWith({
       where: { id: "r1", annuleLe: null },
@@ -104,8 +104,9 @@ describe("annulerRendezVousHorsPro", () => {
     h.sendMail.mockImplementationOnce(async () => {
       throw new Error("Mailpace injoignable");
     });
-    // Le premier compte échoue sans arrêter le second.
-    expect(await annulerRendezVousHorsPro(MAINTENANT)).toEqual({ annules: 1, echecs: 1 });
+    // Le premier compte échoue sans arrêter le second ; l'échec remonte
+    // ensuite, pour que l'alerte du jour parte.
+    await expect(annulerRendezVousHorsPro(MAINTENANT)).rejects.toThrow("1 annulation(s) hors Pro non faite(s), 1 faite(s)");
     expect(h.valide).toEqual([
       { quoi: "annuler", id: "r2" },
       { quoi: "rendre", id: "k-r2" },
@@ -122,7 +123,7 @@ describe("annulerRendezVousHorsPro", () => {
 
   it("laisse un compte en Pro, impayé compris", async () => {
     h.aVenir.mockResolvedValue([rdv("r1", PRO), rdv("r2", { statut: "past_due", formule: "rojer_pro_mensuel" })]);
-    expect(await annulerRendezVousHorsPro(MAINTENANT)).toEqual({ annules: 0, echecs: 0 });
+    expect(await annulerRendezVousHorsPro(MAINTENANT)).toEqual({ annules: 0 });
     expect(h.valide).toEqual([]);
     expect(h.sendMail).not.toHaveBeenCalled();
   });
@@ -130,7 +131,7 @@ describe("annulerRendezVousHorsPro", () => {
   it("un compte repassé en Pro depuis la lecture : relu sous le verrou, il garde son rendez-vous", async () => {
     h.aVenir.mockResolvedValue([rdv("r1", ESSENTIEL)]);
     h.relire.mockResolvedValue(relu("r1", PRO));
-    expect(await annulerRendezVousHorsPro(MAINTENANT)).toEqual({ annules: 0, echecs: 0 });
+    expect(await annulerRendezVousHorsPro(MAINTENANT)).toEqual({ annules: 0 });
     expect(h.valide).toEqual([]);
     expect(h.sendMail).not.toHaveBeenCalled();
   });
@@ -138,7 +139,7 @@ describe("annulerRendezVousHorsPro", () => {
   it("un rendez-vous annulé ou déplacé entre-temps : relu sous le verrou, il ne l'est pas deux fois", async () => {
     h.aVenir.mockResolvedValue([rdv("r1", null)]);
     h.relire.mockResolvedValue(null);
-    expect(await annulerRendezVousHorsPro(MAINTENANT)).toEqual({ annules: 0, echecs: 0 });
+    expect(await annulerRendezVousHorsPro(MAINTENANT)).toEqual({ annules: 0 });
     expect(h.valide).toEqual([]);
     expect(h.sendMail).not.toHaveBeenCalled();
   });
