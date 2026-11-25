@@ -159,6 +159,10 @@ const schema = z
     // Les tâches (`taches/quotidiennes.ts`, `clevercloud/cron.json`, chaque
     // minute) : le secret que la crontab présente. Absente, la route répond 404.
     TACHES_SECRET: z.preprocess(vide, z.string().min(32, "doit faire au moins 32 caractères").optional()),
+    // La synchronisation de l'agenda du préventeur (ADR-064) : le secret que
+    // l'agent présente. Absente, la route répond 404. Distincte de
+    // TACHES_SECRET (`fautesDeContexte`).
+    AGENDA_SECRET: z.preprocess(vide, z.string().min(32, "doit faire au moins 32 caractères").optional()),
     // Les alertes d'exploitation (`lib/alertes.ts`) : échec durable de la
     // file Stripe, litige, remboursement. Absente, elles ne vont qu'au journal.
     ALERTES_EMAIL: z.preprocess(vide, z.string().email("doit être une adresse e-mail").optional()),
@@ -174,16 +178,20 @@ const schema = z
  * temps au lieu de nommer toutes les fautes d'un coup.
  */
 function fautesDeContexte(env: Env): { variable: string; message: string }[] {
+  const fautes: { variable: string; message: string }[] = [];
   if (vide(env.NODE_ENV) === "production" && !vide(env.PUBLIC_APP_URL)) {
-    return [
-      {
-        variable: "PUBLIC_APP_URL",
-        message:
-          "requise en production : origine de confiance de l'authentification et adresse des liens envoyés par e-mail",
-      },
-    ];
+    fautes.push({
+      variable: "PUBLIC_APP_URL",
+      message:
+        "requise en production : origine de confiance de l'authentification et adresse des liens envoyés par e-mail",
+    });
   }
-  return [];
+  // ADR-064 § 3 : un secret par porte — celui de l'agenda n'ouvre pas les tâches.
+  const agenda = env.AGENDA_SECRET?.trim();
+  if (agenda && agenda === env.TACHES_SECRET?.trim()) {
+    fautes.push({ variable: "AGENDA_SECRET", message: "doit être différente de TACHES_SECRET" });
+  }
+  return fautes;
 }
 
 export type EnvValide = z.infer<typeof schema>;

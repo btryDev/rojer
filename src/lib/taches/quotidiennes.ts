@@ -13,7 +13,6 @@ import "server-only";
 //   manquée est rattrapée à la suivante. Chaque tâche est en outre sans
 //   doublon par elle-même (marques conditionnelles).
 
-import { createHash, timingSafeEqual } from "node:crypto";
 import { rappelerLaSemaineDeLaFinDEssai, rappelerLaVeilleDeLaFinDEssai, rappelerLeRenouvellementAnnuel } from "@/lib/abonnements/rappels";
 import {
   avertirAvantSuppression,
@@ -35,6 +34,7 @@ import { battre } from "./temoin";
 import { controlerLesReglagesStripe } from "@/lib/stripe/controles";
 import { purgerComptesNonActives } from "@/lib/auth/comptes-non-actives";
 import { annulerRendezVousHorsPro } from "@/lib/assistance/hors-pro";
+import { purgerLeJournalDeLAgenda } from "@/lib/assistance/agenda-preventeur/base";
 
 function horlogeReelle(): Date {
   return new Date();
@@ -49,12 +49,8 @@ export function secretDesTaches(env: Record<string, string | undefined> = proces
   return s ? s : null;
 }
 
-/** L'en-tête `Authorization: Bearer <secret>` est-il le bon ? Comparaison à temps constant. */
-export function appelAutorise(entete: string | null, secret: string): boolean {
-  const recu = /^Bearer (.+)$/.exec(entete ?? "")?.[1] ?? "";
-  const empreinte = (v: string) => createHash("sha256").update(v).digest();
-  return timingSafeEqual(empreinte(recu), empreinte(secret));
-}
+/** La comparaison du secret présenté, partagée avec les autres routes de machine. */
+export { appelAutorise } from "@/lib/securite/requete-machine";
 
 /**
  * Dans cet ordre : les avertissements avant la suppression (une date posée
@@ -87,6 +83,8 @@ export async function lancerTachesQuotidiennes(maintenant: Date) {
         }
       : {}),
     evenementsOublies: await tenter("ménage des événements Stripe", () => oublierLesAnciens(maintenant)),
+    // Le journal de l'agent de l'agenda du préventeur se garde un an (ADR-064).
+    journalAgenda: await tenter("journal de l'agenda du préventeur", () => purgerLeJournalDeLAgenda(maintenant)),
   });
   const stripe = config.active ? clientStripe(config) : null;
   // L'offre pas lancée (ou retirée) : la saisie est ouverte à tous, rien ne

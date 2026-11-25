@@ -2481,6 +2481,30 @@ model CreneauAssistance {
   /// Posé quand un compte prend le créneau, effacé quand il le rend.
   reserveLe DateTime?
   creeLe    DateTime  @default(now())
+  /// L'événement de l'agenda du préventeur qui porte le créneau (ADR-064) ;
+  /// `null` pour un créneau ouvert par script.
+  evenementAgendaId String? @unique
+}
+
+/// Le journal des envois de l'agent qui synchronise l'agenda du préventeur
+/// (ADR-064 § 3, point 7) : un envoi authentifié, accepté ou refusé, et ce
+/// qu'il a fait. Aucun contenu d'événement. Sert aussi l'anti-rejeu (dernier
+/// `envoyeLe` accepté). Hors compte ; purgé après un an.
+model ImportAgenda {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  recuLe    DateTime @default(now())
+  envoyeLe  DateTime
+  accepte   Boolean
+  /// Le motif d'un refus : `rejeu`, `plafond`.
+  motif     String?
+  ouverts   Int      @default(0)
+  deplaces  Int      @default(0)
+  fermes    Int      @default(0)
+  rattaches Int      @default(0)
+  conflits  Int      @default(0)
+
+  @@index([recuLe])
+  @@index([accepte, envoyeLe])
 }
 
 enum ModeRendezVous {

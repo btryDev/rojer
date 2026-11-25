@@ -32,6 +32,9 @@ import { borneeParConstruction, decoupe, etablitSaPorteeLocale, LECTURE } from "
  *    vérifiée avant toute lecture ; le compte vient du client Stripe relu) ;
  *  - `appelAutorise` contre `secretDesTaches` (tâches quotidiennes, appelées
  *    par la crontab : le secret partagé est vérifié avant toute tâche) ;
+ *  - `appelAutorise` contre `secretDeLAgenda` (agenda du préventeur,
+ *    ADR-064 : l'agent planifié présente son secret, vérifié avant toute
+ *    lecture du corps ; aucun compte n'est lu) ;
  *  - pour le MCP, `handler.servir` d'un gestionnaire construit par
  *    `creerHandlerMcpHttp` dont la portée sort de ~~`resoudreScopeDepuisCle` ou
  *    `resoudreScopeDepuisJeton` (ADR-013)~~ [2026-11-21 : `resoudrePorteur`,
@@ -135,6 +138,7 @@ function controle(m: Methode): string | null {
   if (appelle("verifierAccessToken", m.corps)) return "verifierAccessToken";
   if (appelle("verifierNotificationStripe", m.corps)) return "signature Stripe";
   if (appelle("appelAutorise", m.corps) && appelle("secretDesTaches", m.corps)) return "secret des tâches";
+  if (appelle("appelAutorise", m.corps) && appelle("secretDeLAgenda", m.corps)) return "secret de l'agenda";
   // ~~« requireUser + userId »~~ [2026-11-03, ADR-054 : `userId` ne désigne
   // plus un compte, et `requireUser` ne prouve pas l'appartenance (`Membre`).
   // Une route du compte passe par un helper de `scope.ts` ou `requireCompte`.]

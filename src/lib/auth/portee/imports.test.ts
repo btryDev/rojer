@@ -62,6 +62,16 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous"; 
     motif: "un essai par entreprise (ADR-053 § 8) : le SIREN déjà essayé, lu à travers les comptes (table hors compte `EssaiEntreprise`)",
     usages: ["prisma.essaiEntreprise.createMany", "prisma.essaiEntreprise.findUnique"],
   },
+  "src/lib/assistance/agenda-preventeur/base.ts": {
+    motif:
+      "synchronisation de l'agenda du préventeur, hors session (ADR-064) : le titre des créneaux réservés (mode et raison sociale de la première entreprise du compte), la purge du journal ; le reste en SQL paramétré",
+    usages: ["prisma.rendezVousAssistance.findMany", "prisma.$executeRaw"],
+  },
+  "src/lib/assistance/agenda-preventeur/synchronisation.ts": {
+    motif: "synchronisation de l'agenda du préventeur, hors session (ADR-064) : la transaction qui tient le verrou",
+    usages: ["prisma.$transaction"],
+    valeur: ["$transaction(hors tableau)"],
+  },
   "src/lib/assistance/hors-pro.ts": {
     motif:
       "annulation, par la tâche quotidienne hors session, du rendez-vous annuel d'un compte sorti de la formule Pro (ADR-063 § 7) : les rendez-vous à venir de tous les comptes, leur formule, et la seule écriture de leur annulation",
@@ -476,6 +486,8 @@ const SQL_BRUT_NOMMES: Record<string, string> = {
     "verrou FOR NO KEY UPDATE de la ligne du compte de la portée (plafonds, ADR-053 § 14 ; rendez-vous annuel, ADR-063)",
   "src/lib/assistance/creneaux.ts":
     "créneaux du rendez-vous annuel, hors compte (ADR-063) : lecture des libres, prise conditionnelle (UPDATE … WHERE reserveLe IS NULL RETURNING) et remise, dans la transaction du compte",
+  "src/lib/assistance/agenda-preventeur/base.ts":
+    "créneaux du rendez-vous annuel et journal de l'agent, hors compte (ADR-064) : verrou consultatif, lecture de la fenêtre, écritures conditionnelles (reserveLe IS NULL, événement lu), journal et sa purge",
   "src/lib/stripe/file.ts":
     "file des relectures Stripe, hors compte : demande (INSERT … ON CONFLICT), bail à jeton (UPDATE … RETURNING), verrou FOR UPDATE sous le jeton, clôture",
   "src/lib/taches/jour.ts": "bail à jeton de l'exécution du jour (UPDATE … RETURNING), hors compte",

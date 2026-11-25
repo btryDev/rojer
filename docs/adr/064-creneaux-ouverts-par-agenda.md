@@ -1,7 +1,11 @@
 # ADR-064 — Les créneaux du rendez-vous annuel s'ouvrent dans un agenda Google, qu'un agent planifié synchronise par une route dédiée
 
-- **Statut** : **proposée**, 2026-11-25. À valider par la propriétaire avant
-  d'être codée (CLAUDE.md, règle 2 : une colonne et une table neuves).
+- **Statut** : ~~**proposée**, 2026-11-25. À valider par la propriétaire avant
+  d'être codée (CLAUDE.md, règle 2 : une colonne et une table neuves).~~
+  [2026-11-25 : **acceptée** par la propriétaire (« ok vas y »), codée sur
+  `lot/agenda-preventeur`. Trois précisions du codage sont datées dans le
+  texte : le plafond d'un envoi vide (§ 3, point 5), le chemin des alertes
+  (Conséquences), l'index posé à part (Conséquences).]
 - **Amende** l'ADR-063, § 1 : « par script, puis par un agent qui lit un
   agenda ». Cette ADR dit comment l'agent écrit, et ce qu'il relit.
 - **Décisions de la propriétaire du 2026-11-25** :
@@ -107,8 +111,10 @@ Chaque couche borne une panne différente.
    Deux exécutions qui se chevauchent passent donc l'une après l'autre, et la
    plus ancienne est refusée.
 5. **Plafond de dégâts** : l'envoi est refusé, et l'équipe prévenue, s'il
-   fermerait d'un coup plus de 10 créneaux, ou tous les créneaux liés de la
-   fenêtre. Un agenda mal lu (liste vide, mauvais agenda) n'efface rien.
+   fermerait d'un coup plus de 10 créneaux, ~~ou tous les créneaux liés de la
+   fenêtre~~ [2026-11-25, au codage : ou si, vide, il en fermerait 3 ou plus —
+   « tous » refusait au préventeur de fermer son dernier créneau]. Un agenda
+   mal lu (liste vide, mauvais agenda) n'efface rien.
 6. **Écritures conditionnelles** : fermer ou déplacer un créneau ne passe que
    si `reserveLe` est encore vide, dans la même requête. Une réservation
    prise entre la lecture de l'agent et l'envoi gagne toujours, et l'envoi
@@ -207,7 +213,8 @@ classe un contenu d'utilisateur (CLAUDE.md, règle 7).
 ## Conséquences
 
 - **Migration additive** :
-  - une colonne et un index unique ;
+  - une colonne et un index unique ~~;~~ [2026-11-25 : l'index unique est posé
+    `CONCURRENTLY`, seul dans une seconde migration (`migrations-index`)] ;
   - une table, avec RLS activée (`migrations-rls`).
 - **`portee/correspondance.ts`** : `ImportAgenda` est déclarée hors compte.
   `CreneauAssistance` l'est déjà.
@@ -216,8 +223,10 @@ classe un contenu d'utilisateur (CLAUDE.md, règle 7).
   SQL brut.
 - **`LIMITES`** gagne `agendaIp` et `agendaRoute`.
 - **E-mails à l'équipe** : un créneau réservé déplacé ou supprimé, et un envoi
-  refusé par le plafond de dégâts, prennent le chemin des e-mails de
-  l'ADR-063.
+  refusé par le plafond de dégâts, ~~prennent le chemin des e-mails de
+  l'ADR-063~~ [2026-11-25, au codage : sont des alertes d'exploitation
+  (`lib/alertes.ts`, `ALERTES_EMAIL`) — un conflit se dit une fois par jour et
+  par créneau, tant que l'agent n'a pas remis l'événement].
 - **Ce qui ne change pas** :
   - la réservation, le déplacement et l'annulation du client ;
   - la fenêtre d'un mois (ADR-063 § 5) ;
