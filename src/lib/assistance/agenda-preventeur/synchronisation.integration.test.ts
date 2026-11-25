@@ -76,6 +76,23 @@ describe.skipIf(!URL_BASE || !local)("synchronisation de l'agenda — PostgreSQL
     expect((await creneaux()).find((c) => c.reserve)?.evenementAgendaId).toBe("e3bis");
   });
 
+  it("deux libres échangent leurs heures en un envoi, sous de nouveaux identifiants", async () => {
+    await synchroniser(envoi([{ id: "e1", heure: 2 }, { id: "e2", heure: 3 }]), maintenant);
+    const avant = await prisma.$queryRaw<{ id: string }[]>`
+      SELECT "id" FROM "CreneauAssistance" WHERE "debut" >= '2099-01-01' AND "debut" < '2100-01-01'`;
+    const r = await synchroniser(envoi([{ id: "e1", heure: 3 }, { id: "e2", heure: 2 }]), maintenant);
+    expect(r.statut === 200 && r.corps.bilan.deplaces).toBe(2);
+    expect(r.statut === 200 && r.corps.evenements.map((e) => e.titre)).toEqual(["Dispo", "Dispo"]);
+    expect((await creneaux()).map((c) => [c.debut.toISOString(), c.evenementAgendaId])).toEqual([
+      [a(2).toISOString(), "e2"],
+      [a(3).toISOString(), "e1"],
+    ]);
+    // Un client qui avait choisi l'ancien créneau ne le prend plus : son identifiant n'existe plus.
+    const apres = await prisma.$queryRaw<{ id: string }[]>`
+      SELECT "id" FROM "CreneauAssistance" WHERE "debut" >= '2099-01-01' AND "debut" < '2100-01-01'`;
+    expect(apres.some((c) => avant.some((v) => v.id === c.id))).toBe(false);
+  });
+
   it("refuse un rejeu, et ne garde qu'un des deux envois simultanés de même heure", async () => {
     const e = envoi([{ id: "e1", heure: 2 }]);
     const [x, y] = await Promise.all([synchroniser(e, maintenant), synchroniser(e, maintenant)]);

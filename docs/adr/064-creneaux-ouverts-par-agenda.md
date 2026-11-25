@@ -154,7 +154,13 @@ Pour chaque événement reçu :
 - **Inconnu, à un début déjà tenu par un autre événement** : aucun créneau.
   Consigne « ⚠ Doublon ».
 - **Connu, créneau libre** : si l'heure a changé, le créneau se déplace.
-  Consigne « Dispo ».
+  Consigne « Dispo ». [2026-11-25, revue de code : « se déplacer », c'est
+  se fermer et se rouvrir sous un nouvel identifiant — la réservation prend
+  un créneau par son identifiant, et un client ne doit pas être inscrit à
+  une heure qu'il n'a pas choisie. Les débuts se libèrent avant de se
+  reprendre : deux créneaux qui échangent leurs heures passent en un envoi.
+  Un événement connu se reconnaît même déplacé hors de la fenêtre : un
+  réservé y est remis, un libre se ferme.]
 - **Connu, créneau réservé** : si l'heure a changé, rien ne bouge, consigne de
   remettre l'événement et e-mail à l'équipe. Sinon, consigne « Réservé — … ».
 

@@ -51,6 +51,8 @@ export type Plan = {
   /** Les événements à recréer : ceux de créneaux réservés que l'agenda a perdus. */
   aCreer: { debut: Date; fin: Date; titre: string }[];
   conflits: Conflit[];
+  /** Les événements reçus qui commencent dans la fenêtre : le plafond d'un envoi « vide » se lit sur eux. */
+  evenementsDansLaFenetre: number;
 };
 
 const instant = (d: Date) => d.getTime();
@@ -66,14 +68,17 @@ export function titreDuCreneau(c: Pick<CreneauConnu, "reserve" | "titreReserve">
 
 /**
  * `creneaux` : ceux qui commencent dans la fenêtre, et ceux, où qu'ils soient,
- * dont l'événement est reçu. Un événement qui commence hors de la fenêtre est
- * ignoré (l'agenda rend aussi ceux qui la chevauchent) ; un créneau hors de la
- * fenêtre dont l'événement n'est pas reçu n'est pas touché.
+ * dont l'événement est reçu. Un événement inconnu qui commence hors de la
+ * fenêtre est ignoré (l'agenda rend aussi ceux qui la chevauchent) ; un
+ * créneau hors de la fenêtre dont l'événement n'est pas reçu n'est pas touché.
  */
 export function reconcilier(entree: { fenetre: Fenetre; evenements: EvenementRecu[]; creneaux: CreneauConnu[] }): Plan {
   const { depuis, jusqua } = entree.fenetre;
   const dansFenetre = (d: Date) => instant(d) >= instant(depuis) && instant(d) < instant(jusqua);
-  const recus = entree.evenements.filter((ev) => dansFenetre(ev.debut)).sort(parDebut);
+  // Tout événement reçu compte pour reconnaître son créneau, même déplacé hors
+  // de la fenêtre (revue du 2026-11-25) ; seul un événement inconnu qui
+  // commence hors de la fenêtre est ignoré.
+  const recus = [...entree.evenements].sort(parDebut);
   const idsRecus = new Set(recus.map((ev) => ev.id));
   const parEvenement = new Map(
     entree.creneaux.filter((c) => c.evenementId !== null).map((c) => [c.evenementId as string, c]),
@@ -84,6 +89,7 @@ export function reconcilier(entree: { fenetre: Fenetre; evenements: EvenementRec
     consignes: [],
     aCreer: [],
     conflits: [],
+    evenementsDansLaFenetre: recus.filter((ev) => dansFenetre(ev.debut)).length,
   };
   // L'occupation des débuts une fois l'envoi appliqué (`debut` est unique).
   const occupe = new Map<number, string>();
@@ -129,7 +135,11 @@ export function reconcilier(entree: { fenetre: Fenetre; evenements: EvenementRec
     }
   }
   for (const [ev, c] of aDeplacer) {
-    if (!dureeExacte(ev)) {
+    if (!dansFenetre(ev.debut)) {
+      // Un libre emporté hors de la fenêtre (passé, trop loin) se ferme ;
+      // l'événement, hors d'atteinte, n'a pas de consigne.
+      plan.operations.fermer.push({ creneauId: c.id, evenementId: c.evenementId });
+    } else if (!dureeExacte(ev)) {
       plan.operations.fermer.push({ creneauId: c.id, evenementId: c.evenementId });
       plan.consignes.push({ id: ev.id, titre: TITRE.duree });
     } else if (occupe.has(instant(ev.debut))) {
@@ -144,7 +154,7 @@ export function reconcilier(entree: { fenetre: Fenetre; evenements: EvenementRec
 
   // 2. Les événements inconnus : reprendre un créneau à son début, ou en ouvrir un.
   for (const ev of recus) {
-    if (parEvenement.has(ev.id)) continue;
+    if (parEvenement.has(ev.id) || !dansFenetre(ev.debut)) continue;
     if (!dureeExacte(ev)) {
       plan.consignes.push({ id: ev.id, titre: TITRE.duree });
       continue;

@@ -75,6 +75,26 @@ describe("reconcilier — créneaux libres : l'agenda fait foi", () => {
     expect(titres(p)).toEqual({ e1: TITRE.doublon, e2: TITRE.dispo });
   });
 
+  it("deux libres qui échangent leurs heures se déplacent tous les deux", () => {
+    const p = reconcilier({
+      fenetre,
+      evenements: [ev("e1", 3), ev("e2", 2)],
+      creneaux: [creneau("c1", 2, { evenementId: "e1" }), creneau("c2", 3, { evenementId: "e2" })],
+    });
+    expect(p.operations.deplacer.map((d) => [d.creneauId, d.debut])).toEqual([
+      ["c2", a(2)],
+      ["c1", a(3)],
+    ]);
+    expect(p.operations.fermer).toEqual([]);
+  });
+
+  it("un libre emporté avant la fenêtre se ferme, sans consigne", () => {
+    const p = reconcilier({ fenetre, evenements: [ev("e1", -48)], creneaux: [creneau("c1", 2, { evenementId: "e1" })] });
+    expect(p.operations.fermer).toEqual([{ creneauId: "c1", evenementId: "e1" }]);
+    expect(p.consignes).toEqual([]);
+    expect(p.evenementsDansLaFenetre).toBe(0);
+  });
+
   it("un événement qui commence avant la fenêtre est ignoré, sans consigne", () => {
     const p = reconcilier({ fenetre, evenements: [ev("e1", -48)], creneaux: [] });
     expect(rien(p)).toBe(true);
@@ -97,6 +117,13 @@ describe("reconcilier — créneaux réservés : Rojer fait foi", () => {
   it("un réservé déplacé dans l'agenda ne bouge pas : l'événement est remis, l'équipe prévenue", () => {
     const p = reconcilier({ fenetre, evenements: [ev("e1", 5)], creneaux: [reserve("c1", 2, "e1")] });
     expect(p.operations).toEqual({ ouvrir: [], deplacer: [], fermer: [], rattacher: [] });
+    expect(p.consignes).toEqual([{ id: "e1", titre: "Réservé — Boulangerie — visio", remettre: { debut: a(2), fin: a(3) } }]);
+    expect(p.conflits.map((c) => c.nature)).toEqual(["deplace"]);
+  });
+
+  it("un réservé emporté hors de la fenêtre est remis, pas recréé (revue du 2026-11-25)", () => {
+    const p = reconcilier({ fenetre, evenements: [ev("e1", -48)], creneaux: [reserve("c1", 2, "e1")] });
+    expect(p.aCreer).toEqual([]);
     expect(p.consignes).toEqual([{ id: "e1", titre: "Réservé — Boulangerie — visio", remettre: { debut: a(2), fin: a(3) } }]);
     expect(p.conflits.map((c) => c.nature)).toEqual(["deplace"]);
   });

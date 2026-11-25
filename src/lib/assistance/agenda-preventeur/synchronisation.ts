@@ -17,7 +17,6 @@ import { quandLeRendezVous } from "../rendez-vous-libelles";
 import {
   creneauxConcernes,
   dernierEnvoiAccepte,
-  deplacer,
   enCreneauxConnus,
   fermer,
   journaliser,
@@ -51,10 +50,10 @@ export type Resultat =
   | { statut: 409 | 422; corps: { erreur: "rejeu" | "plafond" } };
 
 /** Le plan dépasse-t-il le plafond de dégâts ? Exporté pour les tests. */
-export function depasseLePlafond(plan: Plan, envoi: Envoi): boolean {
+export function depasseLePlafond(plan: Plan): boolean {
   const fermetures = plan.operations.fermer.length;
   if (fermetures > PLAFOND_FERMETURES) return true;
-  return envoi.evenements.length === 0 && fermetures >= PLAFOND_FERMETURES_ENVOI_VIDE;
+  return plan.evenementsDansLaFenetre === 0 && fermetures >= PLAFOND_FERMETURES_ENVOI_VIDE;
 }
 
 type Applique = { bilan: Bilan; ecartes: Set<string> };
@@ -64,13 +63,20 @@ async function appliquer(tx: Prisma.TransactionClient, plan: Plan): Promise<Appl
   // Les événements dont l'écriture n'a pas pris : pas de consigne pour eux.
   const ecartes = new Set<string>();
   const { operations: o } = plan;
+  // D'abord libérer les débuts (fermés, puis déplacés), ensuite les occuper :
+  // deux créneaux qui échangent leurs heures passent dans le même envoi.
   for (const f of o.fermer) if (await fermer(tx, f)) bilan.fermes++;
+  const deplaces = [];
+  for (const d of o.deplacer) {
+    if (await fermer(tx, { creneauId: d.creneauId, evenementId: d.evenementId })) deplaces.push(d);
+    else ecartes.add(d.evenementId);
+  }
   for (const r of o.rattacher) {
     if (await rattacher(tx, r)) bilan.rattaches++;
     else ecartes.add(r.evenementId);
   }
-  for (const d of o.deplacer) {
-    if (await deplacer(tx, d)) bilan.deplaces++;
+  for (const d of deplaces) {
+    if (await ouvrir(tx, d)) bilan.deplaces++;
     else ecartes.add(d.evenementId);
   }
   for (const n of o.ouvrir) {
@@ -124,9 +130,9 @@ export async function synchroniser(envoi: Envoi, maintenant: Date): Promise<Resu
         envoi.fenetre,
         envoi.evenements.map((ev) => ev.id),
       );
-      const titres = await titresDesReserves(lignes.filter((l) => l.reserve).map((l) => l.id));
+      const titres = await titresDesReserves(tx, lignes.filter((l) => l.reserve).map((l) => l.id));
       const plan = reconcilier({ fenetre: envoi.fenetre, evenements: envoi.evenements, creneaux: enCreneauxConnus(lignes, titres) });
-      if (depasseLePlafond(plan, envoi)) {
+      if (depasseLePlafond(plan)) {
         await journaliser(tx, { envoyeLe: envoi.envoyeLe, accepte: false, motif: "plafond" });
         return { refus: "plafond" as const, fermetures: plan.operations.fermer.length };
       }

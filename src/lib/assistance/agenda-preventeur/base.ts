@@ -1,9 +1,10 @@
 import "server-only";
 // Ce que la synchronisation de l'agenda du préventeur (ADR-064) lit et écrit
 // en base. Hors session, hors compte : `CreneauAssistance` et `ImportAgenda`
-// en SQL paramétré (nommé dans la garde du SQL brut), et la seule lecture des
-// rendez-vous qui donne leur titre aux créneaux réservés (client brut, nommé
-// dans `portee/imports.test.ts`).
+// en SQL paramétré (nommé dans la garde du SQL brut) ; la lecture des
+// rendez-vous qui donne leur titre aux créneaux réservés passe par la
+// transaction ; le client brut ne sert qu'à la purge (nommé dans
+// `portee/imports.test.ts`).
 //
 // Les colonnes sont des TIMESTAMP(3) sans fuseau où Prisma range de l'UTC
 // (ADR-011 § 1), comme `assistance/creneaux.ts`.
@@ -50,9 +51,11 @@ export function titreReserve(raisonSociale: string | null, mode: ModeRendezVous)
 }
 
 /** Les titres des créneaux réservés, par créneau : ni téléphone ni sujet, qui restent à l'équipe. */
-export async function titresDesReserves(creneauIds: string[]): Promise<Map<string, string>> {
+export async function titresDesReserves(tx: Tx, creneauIds: string[]): Promise<Map<string, string>> {
   if (creneauIds.length === 0) return new Map();
-  const rendezVous = await prisma.rendezVousAssistance.findMany({
+  // Dans la transaction qui tient le verrou : une seule connexion par
+  // synchronisation (revue du 2026-11-25).
+  const rendezVous = await tx.rendezVousAssistance.findMany({
     where: { creneauId: { in: creneauIds }, annuleLe: null },
     select: {
       creneauId: true,
@@ -80,6 +83,12 @@ export function enCreneauxConnus(lignes: LigneCreneau[], titres: Map<string, str
 // s'il est encore libre (`reserveLe IS NULL`) et encore dans l'état lu — une
 // réservation prise entre-temps gagne toujours (§ 3, point 6). `false` : rien
 // n'a été écrit.
+//
+// Un créneau déplacé se ferme et se rouvre, sous un NOUVEL identifiant
+// (revue du 2026-11-25) : la réservation prend un créneau par son
+// identifiant, et un client qui a choisi mardi 10 h ne doit pas se retrouver
+// jeudi 15 h parce que le préventeur l'a déplacé entre-temps. Sa demande
+// tombe alors sur « créneau déjà pris ou retiré ».
 
 export async function ouvrir(tx: Tx, o: { evenementId: string; debut: Date; fin: Date }): Promise<boolean> {
   const lignes = await tx.$queryRaw<{ id: string }[]>`
@@ -87,21 +96,6 @@ export async function ouvrir(tx: Tx, o: { evenementId: string; debut: Date; fin:
     VALUES ((${o.debut}::timestamptz AT TIME ZONE 'UTC'), (${o.fin}::timestamptz AT TIME ZONE 'UTC'), ${o.evenementId})
     ON CONFLICT DO NOTHING
     RETURNING "id"`;
-  return lignes.length > 0;
-}
-
-export async function deplacer(
-  tx: Tx,
-  d: { creneauId: string; evenementId: string; debut: Date; fin: Date },
-): Promise<boolean> {
-  const lignes = await tx.$queryRaw<{ id: string }[]>`
-    UPDATE "CreneauAssistance" c
-    SET "debut" = (${d.debut}::timestamptz AT TIME ZONE 'UTC'), "fin" = (${d.fin}::timestamptz AT TIME ZONE 'UTC')
-    WHERE c."id" = ${d.creneauId}::uuid AND c."reserveLe" IS NULL AND c."evenementAgendaId" = ${d.evenementId}
-      AND NOT EXISTS (
-        SELECT 1 FROM "CreneauAssistance" autre
-        WHERE autre."debut" = (${d.debut}::timestamptz AT TIME ZONE 'UTC') AND autre."id" <> c."id")
-    RETURNING c."id"`;
   return lignes.length > 0;
 }
 
@@ -133,8 +127,8 @@ export async function journaliser(
 ): Promise<void> {
   const b = j.bilan ?? { ouverts: 0, deplaces: 0, fermes: 0, rattaches: 0, conflits: 0 };
   await tx.$executeRaw`
-    INSERT INTO "ImportAgenda" ("envoyeLe", "accepte", "motif", "ouverts", "deplaces", "fermes", "rattaches", "conflits")
-    VALUES ((${j.envoyeLe}::timestamptz AT TIME ZONE 'UTC'), ${j.accepte}, ${j.motif},
+    INSERT INTO "ImportAgenda" ("recuLe", "envoyeLe", "accepte", "motif", "ouverts", "deplaces", "fermes", "rattaches", "conflits")
+    VALUES ((now() AT TIME ZONE 'UTC'), (${j.envoyeLe}::timestamptz AT TIME ZONE 'UTC'), ${j.accepte}, ${j.motif},
             ${b.ouverts}, ${b.deplaces}, ${b.fermes}, ${b.rattaches}, ${b.conflits})`;
 }
 
