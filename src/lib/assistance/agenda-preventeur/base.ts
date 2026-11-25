@@ -41,11 +41,23 @@ export async function creneauxConcernes(tx: Tx, fenetre: Fenetre, evenementIds: 
     ORDER BY "debut"`;
 }
 
-const LONGUEUR_RAISON_SOCIALE = 60;
+const LONGUEUR_RAISON_SOCIALE = 40;
+
+/**
+ * La raison sociale telle qu'elle part vers l'agent : saisie par un client,
+ * elle finit dans l'agenda, qu'un agent relit. Seuls les lettres, chiffres,
+ * espaces et `- ' & .` passent, sur 40 caractères (checklist du 2026-11-25 :
+ * un texte de client ne doit pas pouvoir porter une consigne à l'agent).
+ */
+export function nomPourLAgenda(raisonSociale: string): string {
+  return surUneLigne(raisonSociale.normalize("NFC").replace(/[^\p{L}\p{N} \-'&.]/gu, " "))
+    .slice(0, LONGUEUR_RAISON_SOCIALE)
+    .trim();
+}
 
 /** « Réservé — <raison sociale> — visio » : la raison sociale de la première entreprise du compte. */
 export function titreReserve(raisonSociale: string | null, mode: ModeRendezVous): string {
-  const nom = raisonSociale ? surUneLigne(raisonSociale).slice(0, LONGUEUR_RAISON_SOCIALE) : "";
+  const nom = raisonSociale ? nomPourLAgenda(raisonSociale) : "";
   const comment = mode === "visio" ? "visio" : "téléphone";
   return nom ? `${TITRE.reserve} — ${nom} — ${comment}` : `${TITRE.reserve} — ${comment}`;
 }
@@ -130,6 +142,13 @@ export async function journaliser(
     INSERT INTO "ImportAgenda" ("recuLe", "envoyeLe", "accepte", "motif", "ouverts", "deplaces", "fermes", "rattaches", "conflits")
     VALUES ((now() AT TIME ZONE 'UTC'), (${j.envoyeLe}::timestamptz AT TIME ZONE 'UTC'), ${j.accepte}, ${j.motif},
             ${b.ouverts}, ${b.deplaces}, ${b.fermes}, ${b.rattaches}, ${b.conflits})`;
+}
+
+/** L'heure du dernier envoi accepté, lue hors synchronisation (tâche quotidienne). `null` : jamais. */
+export async function derniereSynchronisation(): Promise<Date | null> {
+  const [ligne] = await prisma.$queryRaw<{ recuLe: Date | null }[]>`
+    SELECT max("recuLe") AS "recuLe" FROM "ImportAgenda" WHERE "accepte"`;
+  return ligne?.recuLe ?? null;
 }
 
 /** La tâche quotidienne : le journal se garde un an. */

@@ -127,9 +127,29 @@ Chaque couche borne une panne différente.
 8. **Hors session** : le chemin est déclaré dans `proxy-session.ts`, comme
    `/api/taches/chaque-minute`. La réponse porte `Cache-Control: no-store`.
 
+9. [2026-11-25, checklist de sécurité des routes d'agent, décision de la
+   propriétaire] **Le seul texte qui sort vers l'agent est filtré** : la
+   raison sociale, saisie par un client, ne garde que lettres, chiffres,
+   espaces et `- ' & .`, sur 40 caractères (`nomPourLAgenda`) — elle finit
+   dans un agenda qu'un agent relit, et l'agent peut écrire dans tous les
+   agendas du compte Google connecté. Les consignes de l'agent tiennent tout
+   titre pour une donnée.
+10. [2026-11-25, même checklist] **Les refus se voient** : un jeton refusé et
+    la limite par réseau laissent une ligne au journal de l'application ; le
+    quota de la route atteint avec le bon jeton alerte (une fois par jour) ;
+    la tâche quotidienne alerte si aucun envoi n'a été accepté depuis 26 h
+    un jour ouvré (74 h le lundi) — un agent arrêté ne se voit nulle part
+    ailleurs.
+
 **Écartés** :
 - **Le filtrage par IP** : les adresses de sortie de l'agent sont partagées
   et changeantes.
+- **Refuser l'HTTP dans l'application** [2026-11-25] : essayé, puis retiré.
+  Next pose lui-même `x-forwarded-proto: http` sur ce qu'il reçoit en
+  local : le signal n'est pas fiable derrière lui, et la règle aurait pu
+  fermer la route en production. Le HTTPS se garantit à l'appelant (adresse
+  `https://` fixe dans le script de l'agent, secret réseau rattaché à
+  l'hôte) et à l'hébergeur (redirection HTTPS, HSTS).
 - **La signature HMAC** : le secret vit dans l'environnement de l'agent comme
   le jeton ; sur TLS, elle n'ajoute rien à l'anti-rejeu du point 4.
 

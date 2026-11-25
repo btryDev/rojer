@@ -11,6 +11,7 @@ import { lireEnvoi } from "@/lib/assistance/agenda-preventeur/envoi";
 import { secretDeLAgenda, synchroniser } from "@/lib/assistance/agenda-preventeur/synchronisation";
 import { ipPourLimite } from "@/lib/securite/ip-client";
 import { LIMITES, cleLimite, consommer } from "@/lib/securite/limite-debit";
+import { alerterUneFoisParJour } from "@/lib/alertes";
 import { appelAutorise, lireCorpsBorne } from "@/lib/securite/requete-machine";
 
 export const dynamic = "force-dynamic";
@@ -32,12 +33,26 @@ export async function POST(request: Request) {
 
   const reseau = ipPourLimite(request.headers) ?? "inconnue";
   const parReseau = await consommer([{ cle: cleLimite("agenda", "ip", reseau), limite: LIMITES.agendaIp }]);
-  if (!parReseau.ok) return tropDAppels(parReseau.reessayerDansSecondes);
+  if (!parReseau.ok) {
+    console.warn("agenda : limite par réseau atteinte");
+    return tropDAppels(parReseau.reessayerDansSecondes);
+  }
 
-  if (!appelAutorise(request.headers.get("authorization"), secret)) return vide(401);
+  if (!appelAutorise(request.headers.get("authorization"), secret)) {
+    console.warn("agenda : jeton refusé");
+    return vide(401);
+  }
 
   const parRoute = await consommer([{ cle: cleLimite("agenda", "route", "toutes"), limite: LIMITES.agendaRoute }]);
-  if (!parRoute.ok) return tropDAppels(parRoute.reessayerDansSecondes);
+  if (!parRoute.ok) {
+    // Le quota du jour, atteint avec le bon jeton : une boucle de l'agent, ou
+    // un jeton qui a fui.
+    await alerterUneFoisParJour("agenda:quota", "Agenda du préventeur : quota d'appels atteint", [
+      `Plus de ${LIMITES.agendaRoute.max} appels authentifiés en 24 h : l'agent boucle, ou son jeton est utilisé ailleurs.`,
+      "Vérifier la tâche planifiée ; au moindre doute, changer AGENDA_SECRET et le secret réseau de l'agent.",
+    ]);
+    return tropDAppels(parRoute.reessayerDansSecondes);
+  }
 
   if (!(request.headers.get("content-type") ?? "").toLowerCase().startsWith("application/json")) return vide(415);
   const corps = await lireCorpsBorne(request, TAILLE_MAX);

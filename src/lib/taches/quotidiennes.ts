@@ -35,6 +35,7 @@ import { controlerLesReglagesStripe } from "@/lib/stripe/controles";
 import { purgerComptesNonActives } from "@/lib/auth/comptes-non-actives";
 import { annulerRendezVousHorsPro } from "@/lib/assistance/hors-pro";
 import { purgerLeJournalDeLAgenda } from "@/lib/assistance/agenda-preventeur/base";
+import { verifierQueLAgentPasse } from "@/lib/assistance/agenda-preventeur/synchronisation";
 
 function horlogeReelle(): Date {
   return new Date();
@@ -85,6 +86,8 @@ export async function lancerTachesQuotidiennes(maintenant: Date) {
     evenementsOublies: await tenter("ménage des événements Stripe", () => oublierLesAnciens(maintenant)),
     // Le journal de l'agent de l'agenda du préventeur se garde un an (ADR-064).
     journalAgenda: await tenter("journal de l'agenda du préventeur", () => purgerLeJournalDeLAgenda(maintenant)),
+    // Un agent arrêté ne se voit nulle part : il se dit (ADR-064).
+    agentAgenda: await tenter("passage de l'agent de l'agenda", () => verifierQueLAgentPasse(maintenant)),
   });
   const stripe = config.active ? clientStripe(config) : null;
   // L'offre pas lancée (ou retirée) : la saisie est ouverte à tous, rien ne

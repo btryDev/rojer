@@ -13,9 +13,10 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 import { alerter, alerterUneFoisParJour } from "@/lib/alertes";
 import { prisma } from "@/lib/prisma";
-import { quandLeRendezVous } from "../rendez-vous-libelles";
+import { heureCourte, jourAvecAnnee, quandLeRendezVous } from "../rendez-vous-libelles";
 import {
   creneauxConcernes,
+  derniereSynchronisation,
   dernierEnvoiAccepte,
   enCreneauxConnus,
   fermer,
@@ -155,4 +156,35 @@ export async function synchroniser(envoi: Envoi, maintenant: Date): Promise<Resu
   }
   await signalerLesConflits(issue.plan.conflits, maintenant);
   return { statut: 200, corps: enReponse(issue.plan, issue.applique) };
+}
+
+const H = 60 * 60 * 1000;
+
+/**
+ * Le silence admis depuis le dernier envoi accepté, au passage de la tâche
+ * quotidienne (9 h, Paris) : l'agent passe de 8 h à 19 h en semaine. Le lundi
+ * couvre le week-end ; le samedi et le dimanche, rien n'est attendu.
+ */
+export function silenceAdmis(maintenant: Date): number | null {
+  const jour = new Intl.DateTimeFormat("en-GB", { weekday: "short", timeZone: "Europe/Paris" }).format(maintenant);
+  if (jour === "Sat" || jour === "Sun") return null;
+  return jour === "Mon" ? 74 * H : 26 * H;
+}
+
+/**
+ * La tâche quotidienne : un agent arrêté ne se voit nulle part (plus de
+ * créneau ouvert, plus de « Réservé » dans l'agenda) — on le dit. Rien
+ * avant la première synchronisation : l'agent n'est pas encore en service.
+ */
+export async function verifierQueLAgentPasse(maintenant: Date): Promise<{ silencieux: boolean }> {
+  const admis = silenceAdmis(maintenant);
+  if (!secretDeLAgenda() || admis === null) return { silencieux: false };
+  const derniere = await derniereSynchronisation();
+  if (!derniere || maintenant.getTime() - derniere.getTime() <= admis) return { silencieux: false };
+  await alerter("Agenda du préventeur : l'agent ne passe plus", [
+    `Dernière synchronisation acceptée : ${jourAvecAnnee(derniere)} à ${heureCourte(derniere)}.`,
+    "Les créneaux ouverts dans l'agenda n'arrivent plus dans Rojer, et les réservations n'y sont plus reportées.",
+    "Vérifier la tâche planifiée de l'agent et son connecteur Google Calendar.",
+  ]);
+  return { silencieux: true };
 }

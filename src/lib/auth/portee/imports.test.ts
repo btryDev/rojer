@@ -64,8 +64,8 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous"; 
   },
   "src/lib/assistance/agenda-preventeur/base.ts": {
     motif:
-      "synchronisation de l'agenda du préventeur, hors session (ADR-064) : la purge du journal par la tâche quotidienne ; le reste passe par la transaction de la synchronisation",
-    usages: ["prisma.$executeRaw"],
+      "synchronisation de l'agenda du préventeur, hors session (ADR-064) : la tâche quotidienne purge le journal et lit l'heure du dernier envoi accepté ; le reste passe par la transaction de la synchronisation",
+    usages: ["prisma.$executeRaw", "prisma.$queryRaw"],
   },
   "src/lib/assistance/agenda-preventeur/synchronisation.ts": {
     motif: "synchronisation de l'agenda du préventeur, hors session (ADR-064) : la transaction qui tient le verrou",
