@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useId, useState, type ReactNode } from "react";
+import { useActionState, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import type { ModeRendezVous } from "@prisma/client";
 import { CalendarDays, Check } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -22,6 +22,7 @@ import {
   lesEtablissementsYPassent,
   majuscule,
   plageHoraire,
+  premierJourEntier,
   type CreneauAffiche,
 } from "@/lib/assistance/rendez-vous-libelles";
 import { ajouterJours, cleJourCivil, joursCivilsEntre } from "@/lib/dates";
@@ -153,10 +154,12 @@ export function RendezVousAnnuel(props: Props) {
   }
 
   // Sans rendez-vous à venir, l'étape 1 se montre sous la carte — sauf en
-  // lecture seule, ou sans créneau libre : la carte le dit seule.
+  // lecture seule, ou sans créneau libre : la carte le dit seule. Le dernier
+  // créneau pris entre-temps ne laisse pas un calendrier vide (relecture du
+  // 2026-11-25) : la carte revient, avec l'alerte.
   const peutChoisir = !lectureSeule && creneaux.length > 0;
   const vue: Etape =
-    etape === "coordonnees" && choisi ? "coordonnees" : etape === "choisir" || (!prochain && peutChoisir) ? "choisir" : "carte";
+    etape === "coordonnees" && choisi ? "coordonnees" : (etape === "choisir" && creneaux.length > 0) || (!prochain && peutChoisir) ? "choisir" : "carte";
 
   const ouvrir = (e: Etape) => {
     setAnnonce(null);
@@ -239,7 +242,10 @@ function Annonce({ annonce, mode }: { annonce: Succes; mode: ModeRendezVous | nu
     return (
       <div ref={ref} tabIndex={-1} className="focus:outline-none">
         <MessageFormulaire ton="info">
-          Le rendez-vous est annulé, et son créneau rendu. Une confirmation vient de partir à {annonce.email}.
+          Le rendez-vous est annulé, et son créneau rendu.{" "}
+          {annonce.confirmation
+            ? `Une confirmation vient de partir à ${annonce.email}.`
+            : "La confirmation par e-mail n'a pas pu partir : retirez l'événement de votre agenda vous-même."}
         </MessageFormulaire>
       </div>
     );
@@ -259,7 +265,9 @@ function Annonce({ annonce, mode }: { annonce: Succes; mode: ModeRendezVous | nu
           {annonce.evenement === "deplace" ? "C'est déplacé." : "C'est réservé."}
         </p>
         <p className="m-0 text-[13.5px] leading-[1.55] text-[color:var(--board-green-ink)]">
-          Une confirmation vient de partir à {annonce.email}, avec l&apos;invitation pour votre agenda.
+          {annonce.confirmation
+            ? `Une confirmation vient de partir à ${annonce.email}, avec l'invitation pour votre agenda.`
+            : "La confirmation par e-mail n'a pas pu partir : le rendez-vous est bien enregistré, et « Ajouter à mon agenda » l'ajoute à votre agenda."}
           {mode === "visio" ? " Le lien de la visio suivra avant le rendez-vous." : ""}
         </p>
       </div>
@@ -302,11 +310,20 @@ function CarteDeLAnnee({
   deplacer: () => void;
 }) {
   const [confirmer, setConfirmer] = useState(false);
+  // « Non, le garder » démonte le bouton qui avait le focus : il revient à
+  // « Annuler le rendez-vous » (relecture du 2026-11-25).
+  const annulerRef = useRef<HTMLButtonElement>(null);
+  const [retourFocus, setRetourFocus] = useState(0);
+  useEffect(() => {
+    if (retourFocus) annulerRef.current?.focus();
+  }, [retourFocus]);
   const titreId = useId();
   const titreRef = useFocusAuMontage<HTMLHeadingElement>(focaliser);
   const ici = new Date(maintenant);
   const fin = new Date(finDeLAnnee);
   const veille = ajouterJours(fin, -1);
+  // Les créneaux proposés qui tombent dans l'année suivante (déjà ouverte).
+  const apresLAnnee = creneaux.some((c) => new Date(c.debut) >= fin);
   // Déplacer ouvre l'étape 1 : seulement s'il y a un autre créneau où aller.
   const peutDeplacer = creneaux.length > 0;
 
@@ -345,12 +362,23 @@ function CarteDeLAnnee({
       const finPro = dateLongue(new Date(finDuPro));
       pastille = { ton: "ambre", texte: "À avancer" };
       corps = `Votre formule Pro s'arrête le ${finPro}. Ce rendez-vous, prévu après, sera annulé ce jour-là : avancez-le avant le ${finPro} pour le garder.`;
-      gestes =
-        lectureSeule || !peutDeplacer ? null : (
+      if (lectureSeule) {
+        petit = "Votre accès est en lecture seule : le propriétaire ou un membre du compte peut le déplacer.";
+      } else if (peutDeplacer) {
+        gestes = (
           <Button type="button" variant="boardClair" onClick={deplacer}>
             Déplacer
           </Button>
         );
+      } else {
+        // Aucun créneau libre avant la fin du Pro : la consigne garde un geste.
+        petit = "Aucun créneau libre avant cette date pour le moment.";
+        gestes = (
+          <Link href={lienQuestion} className={buttonVariants({ variant: "boardClair" })}>
+            Poser une question
+          </Link>
+        );
+      }
     } else {
       pastille = { ton: "vert", texte: "Réservé" };
       corps = commentSeParler(prochain.mode, prochain.telephone);
@@ -367,7 +395,15 @@ function CarteDeLAnnee({
                 {annulation ? "Annulation…" : "Oui, l'annuler"}
               </Button>
               {/* Le focus va au choix sans conséquence (relecture du 2026-11-24). */}
-              <Button type="button" variant="boardClair" autoFocus onClick={() => setConfirmer(false)}>
+              <Button
+                type="button"
+                variant="boardClair"
+                autoFocus
+                onClick={() => {
+                  setConfirmer(false);
+                  setRetourFocus((n) => n + 1);
+                }}
+              >
                 Non, le garder
               </Button>
             </form>
@@ -378,7 +414,7 @@ function CarteDeLAnnee({
                   Déplacer
                 </Button>
               ) : null}
-              <Button type="button" variant="boardClair" onClick={() => setConfirmer(true)}>
+              <Button ref={annulerRef} type="button" variant="boardClair" onClick={() => setConfirmer(true)}>
                 Annuler le rendez-vous
               </Button>
               <span className={`${PETIT} ml-1.5`}>Possible jusqu&apos;au {jusquAQuand(debut)}.</span>
@@ -387,18 +423,20 @@ function CarteDeLAnnee({
         </>
       );
       if (lectureSeule) {
-        petit = `${petit} Votre accès est en lecture seule : le titulaire ou un membre du compte peut le déplacer ou l'annuler.`;
+        petit = `${petit} Votre accès est en lecture seule : le propriétaire ou un membre du compte peut le déplacer ou l'annuler.`;
       }
     }
   } else if (passe) {
     pastille = { ton: "vert", texte: `Fait le ${jourMois(new Date(passe.debut))}` };
     titre = "Votre rendez-vous annuel a eu lieu";
-    corps = `Le prochain se réserve à partir du ${dateLongue(fin)}. D'ici là, posez vos questions par écrit.`;
+    // L'année bascule à l'heure du premier paiement : le premier jour ENTIER
+    // de la suivante est le seul qui se dise sans mentir (relecture du 2026-11-25).
+    corps = `Le prochain se réserve à partir du ${dateLongue(premierJourEntier(fin))}. D'ici là, posez vos questions par écrit.`;
   } else {
     pastille = { ton: "bleu", texte: "À réserver" };
     titre = "Une heure pour faire le point sur votre dossier";
     if (lectureSeule) {
-      corps = "Votre accès est en lecture seule : le titulaire ou un membre du compte peut le réserver.";
+      corps = "Votre accès est en lecture seule : le propriétaire ou un membre du compte peut le réserver.";
       gestes = (
         <Button type="button" variant="board" disabled>
           Choisir un créneau
@@ -412,12 +450,16 @@ function CarteDeLAnnee({
         </Link>
       );
     } else {
+      // Le rendez-vous de l'année doit AVOIR LIEU avant sa fin ; il se réserve
+      // 24 h à l'avance (relecture du 2026-11-25 : « à réserver d'ici la
+      // veille » annonçait un jour où plus rien ne se prend).
       const jours = joursCivilsEntre(ici, veille);
       corps =
-        `Un seul pour tout le compte : ${lesEtablissementsYPassent(etablissements.length)}. À réserver d'ici le ${dateLongue(veille)}` +
+        `Un seul pour tout le compte : ${lesEtablissementsYPassent(etablissements.length)}. Celui de cette année a lieu au plus tard le ${dateLongue(veille)}` +
         (etape === "coordonnees"
           ? "."
-          : `, dans ${jours} jour${jours > 1 ? "s" : ""} ; non pris, il ne se reporte pas sur l'année suivante.`);
+          : ` (dans ${jours} jour${jours > 1 ? "s" : ""}), réservé au moins 24 h avant ; non pris, il ne se reporte pas.` +
+            (apresLAnnee ? ` Les créneaux à partir du ${dateLongue(premierJourEntier(fin))} comptent pour l'année suivante.` : ""));
     }
   }
 
@@ -448,12 +490,22 @@ function PreparerLeRendezVous({ prochain, etablissementId }: { prochain: RendezV
   // Le texte enregistré se lit hors du champ ; « Modifier » rouvre le champ
   // (2026-11-24, décision de la propriétaire). Sans texte, le champ est ouvert.
   const [enEdition, setEnEdition] = useState(false);
+  // Le formulaire refermé (Enregistrer, Annuler) démonte le bouton qui avait
+  // le focus : il revient à « Modifier » (relecture du 2026-11-25).
+  const modifierRef = useRef<HTMLButtonElement>(null);
+  const [retourFocus, setRetourFocus] = useState(0);
+  useEffect(() => {
+    if (retourFocus) modifierRef.current?.focus();
+  }, [retourFocus]);
   // Un état déjà lu (Modifier, Annuler) ne réapparaît pas (relecture).
   const [lu, setLu] = useState(etat);
   const [vu, setVu] = useState(etat);
   if (vu !== etat) {
     setVu(etat);
-    if (etat.status === "success") setEnEdition(false);
+    if (etat.status === "success") {
+      setEnEdition(false);
+      setRetourFocus((n) => n + 1);
+    }
   }
   const affiche = etat === lu ? IDLE : etat;
   const enregistre = prochain.sujet?.trim() ?? "";
@@ -461,8 +513,10 @@ function PreparerLeRendezVous({ prochain, etablissementId }: { prochain: RendezV
   const basculer = (ouvrir: boolean) => {
     setLu(etat);
     if (ouvrir) setSujet(enregistre);
+    else setRetourFocus((n) => n + 1);
     setEnEdition(ouvrir);
   };
+  const jusqua = `Transmis avant le rendez-vous. Vous pouvez le compléter jusqu'au ${jusquAQuand(new Date(prochain.debut))}.`;
   return (
     <section aria-labelledby={`${id}-t`} className="carte-board flex flex-col gap-4 px-6 py-7 sm:px-8">
       <h2 id={`${id}-t`} className="board-titre m-0 text-[22px]">
@@ -480,10 +534,10 @@ function PreparerLeRendezVous({ prochain, etablissementId }: { prochain: RendezV
             <MessageFormulaire ton="info">C&apos;est enregistré, et transmis pour préparer le rendez-vous.</MessageFormulaire>
           ) : null}
           <div className="flex flex-wrap items-center gap-x-[18px] gap-y-2.5">
-            <Button type="button" variant="boardClair" onClick={() => basculer(true)}>
+            <Button ref={modifierRef} type="button" variant="boardClair" onClick={() => basculer(true)}>
               Modifier
             </Button>
-            <p className={PETIT}>Transmis avant le rendez-vous. Vous pouvez le compléter jusqu&apos;à la veille.</p>
+            <p className={PETIT}>{jusqua}</p>
           </div>
         </div>
       ) : (
@@ -517,7 +571,7 @@ function PreparerLeRendezVous({ prochain, etablissementId }: { prochain: RendezV
                 Annuler
               </Button>
             ) : null}
-            <p className={PETIT}>Transmis avant le rendez-vous. Vous pouvez le compléter jusqu&apos;à la veille.</p>
+            <p className={PETIT}>{jusqua}</p>
           </div>
         </form>
       )}

@@ -21,6 +21,10 @@
 #   simulé, n'efface que ses propres lignes.
 # - `entreprises/effectif-migration.integration` (2026-11-03) : le remplissage
 #   de la migration des effectifs, rejoué sur une base peuplée.
+# - `assistance/creneaux.integration` (ADR-063, 2026-11-25) : le SQL des
+#   créneaux du rendez-vous annuel — un créneau pris une seule fois, même par
+#   deux transactions concurrentes, et la fenêtre de 24 h à un mois ; n'efface
+#   que ses propres créneaux.
 # - `auth/scope.integration` (ADR-054) : chaque garde de `scope.ts`, d'un
 #   compte à l'autre et à plusieurs membres (propriétaire, membre, lecteur,
 #   membres retirés) ; n'efface que ses propres lignes.
@@ -97,6 +101,7 @@ jobs:
           LIMITE_DEBIT_INTEGRATION_URL: postgresql://duerp:duerp@localhost:5432/rojer_integration_ci
           STRIPE_INTEGRATION_URL: postgresql://duerp:duerp@localhost:5432/rojer_integration_ci
           EFFECTIF_INTEGRATION_URL: postgresql://duerp:duerp@localhost:5432/rojer_integration_ci
+          RENDEZ_VOUS_INTEGRATION_URL: postgresql://duerp:duerp@localhost:5432/rojer_integration_ci
         # Un fichier après l'autre : ils partagent la base, et
         # client.integration, matrice-isolation et portee-etablissement la vident (TRUNCATE
         # "Entreprise", "Compte" et "User" CASCADE) : jamais en parallèle.
@@ -119,6 +124,7 @@ jobs:
           src/lib/mcp/oauth-flux.integration
           src/lib/stripe/synchronisation.integration
           src/lib/abonnements/suppression.integration
+          src/lib/assistance/creneaux.integration
           src/lib/entreprises/effectif-migration.integration
           --no-file-parallelism
           --reporter=default --reporter=json --outputFile.json=integration.json

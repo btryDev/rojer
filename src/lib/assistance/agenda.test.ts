@@ -17,6 +17,8 @@ describe("calendrierDuRendezVous", () => {
     expect(ics).toContain("\r\nDTEND:20261202T090000Z\r\n");
     expect(ics).toContain("\r\nDTSTAMP:20261124T160509Z\r\n");
     expect(ics).toContain("\r\nUID:r1@rojer.fr\r\n");
+    // L'organisateur, exigé par la RFC 5546 pour PUBLISH et CANCEL.
+    expect(ics).toMatch(/\r\nORGANIZER;CN=Rojer:mailto:[^\r]+@[^\r]+\r\n/);
     expect(ics.split("\r\n").every((l) => !l.includes("\n"))).toBe(true);
   });
 

@@ -21,20 +21,31 @@ import { contexteDroits, offreLancee } from "./saisie";
  * permettrait pas, ou `null`. Stripe injoignable : refus (on ne sait pas s'il
  * y a une baisse, et une invitation peut attendre).
  */
+/**
+ * La baisse de formule planifiée chez Stripe (ADR-053 § 10), ou `null` — offre
+ * non lancée, Stripe désactivé, pas d'abonnement, pas de baisse. La copie de
+ * Rojer ne la garde pas : elle se relit chez Stripe, qui lève si injoignable.
+ */
+export async function lireBaissePrevue(
+  stripeSubscriptionId: string | null | undefined,
+): Promise<Awaited<ReturnType<typeof baissePrevue>>> {
+  if (!stripeSubscriptionId || !offreLancee(contexteDroits())) return null;
+  const config = configurationStripe();
+  if (!config.active) return null;
+  const stripe = clientStripe(config);
+  return baissePrevue(stripe, await stripe.subscriptions.retrieve(stripeSubscriptionId));
+}
+
 export async function refusInvitationBaissePrevue(
   db: Db,
   compteId: string,
   { apresCreation = false }: { apresCreation?: boolean } = {},
 ): Promise<string | null> {
-  if (!offreLancee(contexteDroits())) return null;
-  const config = configurationStripe();
-  if (!config.active) return null;
+  if (!offreLancee(contexteDroits()) || !configurationStripe().active) return null;
   const ligne = await db.abonnement.findUnique({ where: { compteId }, select: { stripeSubscriptionId: true } });
-  if (!ligne?.stripeSubscriptionId) return null;
-  const stripe = clientStripe(config);
   let prevue: Awaited<ReturnType<typeof baissePrevue>>;
   try {
-    prevue = await baissePrevue(stripe, await stripe.subscriptions.retrieve(ligne.stripeSubscriptionId));
+    prevue = await lireBaissePrevue(ligne?.stripeSubscriptionId);
   } catch {
     return "Les invitations sont momentanément indisponibles. Réessayez dans quelques minutes.";
   }

@@ -9,7 +9,7 @@ import {
   jourSansAnnee,
   jusquAQuand,
   lesEtablissementsYPassent,
-  moisSuivant,
+  premierJourEntier,
   plageHoraire,
   quandLeRendezVous,
 } from "./rendez-vous-libelles";
@@ -68,9 +68,15 @@ describe("la grille du mois", () => {
     expect(g).toHaveLength(32);
   });
 
-  it("le mois suivant, à travers l'année", () => {
-    expect(moisSuivant("2026-12")).toBe("2027-01");
-    expect(moisSuivant("2027-01")).toBe("2027-02");
+});
+
+describe("premierJourEntier", () => {
+  it("le jour même à minuit (Paris), sinon le lendemain", () => {
+    // Minuit à Paris en hiver : 23 h UTC la veille.
+    expect(premierJourEntier(new Date("2027-03-14T23:00:00Z"))).toEqual(new Date("2027-03-14T23:00:00Z"));
+    // L'année bascule à 15 h 23 : le premier jour entier est le lendemain.
+    expect(dateLongue(premierJourEntier(new Date("2027-03-15T14:23:00Z")))).toBe("16 mars 2027");
+    expect(dateLongue(premierJourEntier(new Date("2027-03-14T23:00:00Z")))).toBe("15 mars 2027");
   });
 });
 

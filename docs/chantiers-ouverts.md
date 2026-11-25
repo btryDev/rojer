@@ -3544,3 +3544,28 @@ un manque : la vérification se fait dans Rojer (décision de la propriétaire
 du 2026-11-21) ; c'est une piste si un client demande une vérification
 indépendante. L'horodatage tiers (RFC 3161) et le cachet PAdES sont écartés
 (décision du même jour).
+
+## 26. Rendez-vous annuel : ce que la relecture du 2026-11-25 laisse ouvert
+
+Relecture multi-axes du rendez-vous annuel Pro (ADR-063), corrigée sur
+`lot/rdv-annuel-relecture`. Restent, par décision de la propriétaire du
+2026-11-25 :
+
+1. **Purge à trois ans** des rendez-vous passés et des demandes
+   d'assistance. La politique de confidentialité l'annonce
+   (`pages-legales.ts`, « trois ans au plus ») ; aucun code ne la fait. Rien
+   n'est faux avant novembre 2029 (table créée le 2026-11-24) ; la durée est
+   encore « à valider » (`docs/rgpd.md`). Une seule tâche pour les deux
+   tables, dans la tâche quotidienne.
+2. **Rendez-vous entre la fin du Pro et la passe de 9 h** : la tâche
+   quotidienne ne lit que les rendez-vous à venir ; un rendez-vous qui tombe
+   le jour où le Pro s'arrête, avant la passe du lendemain, a lieu. Fenêtre
+   de quelques heures ; l'anticiper demanderait de lire chez Stripe la fin
+   de chaque compte.
+3. **Créneaux qui se chevauchent** : seule l'unicité de `debut` les garde.
+   Le script d'ouverture n'est pas dans le dépôt ; à garder en tête quand il
+   y entrera.
+4. **Remaniements sans effet de comportement** : préambule commun aux trois
+   actions, annulation écrite trois fois (`suppression.ts`, `hors-pro.ts`,
+   l'action), fonctions de dates et de texte recopiées dans
+   `rendez-vous-libelles.ts`, `RendezVousAnnuel.tsx` à découper.

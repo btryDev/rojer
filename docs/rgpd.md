@@ -314,7 +314,8 @@ l'invite à aucune donnée de santé ni de salarié.
 
 **Le rendez-vous annuel de la formule Pro** (ADR-063, 2026-11-24)
 (`RendezVousAssistance`) : le créneau (début, fin), le mode (téléphone ou
-visio), le téléphone pour un rendez-vous au téléphone, ce que la personne veut
+visio), le téléphone — où appeler pour un rendez-vous au téléphone, et un
+numéro de secours facultatif en visio [2026-11-25] —, ce que la personne veut
 aborder (texte libre, facultatif), qui a réservé, et la date d'annulation.
 Base légale : l'exécution du contrat (6.1.b) — le rendez-vous est une
 prestation de la formule. Chaque réservation, déplacement ou annulation part
@@ -323,7 +324,7 @@ personne. Les créneaux (`CreneauAssistance`) ne portent aucune donnée d'un
 compte. Les rendez-vous sont supprimés avec le compte, et le créneau d'un
 rendez-vous à venir est rendu. Les rendez-vous passés de plus de trois ans
 seront purgés, comme les demandes d'assistance (même dette : pas encore de
-purge automatique).
+purge automatique — `docs/chantiers-ouverts.md` § 26).
 
 ---
 

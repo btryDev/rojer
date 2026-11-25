@@ -103,7 +103,10 @@ export function courrielPersonneRendezVous(
   // (2026-11-24, décision de la propriétaire).
   const paragraphes =
     r.evenement === "annule_hors_pro"
-      ? ["Votre formule Pro a pris fin : votre rendez-vous annuel est annulé.", "Le rendez-vous annuel vient avec la formule Pro."]
+      ? [
+          "Votre formule Pro a pris fin : votre rendez-vous annuel est annulé.",
+          "Le rendez-vous annuel vient avec la formule Pro. Pensez à retirer l'événement de votre agenda.",
+        ]
       : r.evenement === "annule"
         ? [
             "Votre rendez-vous annuel est annulé.",
@@ -121,7 +124,12 @@ export function courrielPersonneRendezVous(
       titre,
       paragraphes,
       enAvant: majuscule(quand),
-      bouton: { libelle: "Voir mon rendez-vous", url: lien },
+      // Annulé, il n'y a plus de rendez-vous à voir (relecture du 2026-11-25).
+      bouton: {
+        libelle:
+          r.evenement === "annule_hors_pro" ? "Ouvrir Rojer" : r.evenement === "annule" ? "Ouvrir l'Assistance" : "Voir mon rendez-vous",
+        url: lien,
+      },
       apres: [],
     }),
   };

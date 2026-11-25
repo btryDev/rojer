@@ -10,7 +10,8 @@ import { ligneAbonnementDuCompte } from "@/lib/abonnements/saisie";
 import { PAGE_FORMULES } from "@/lib/abonnements/sous-pages";
 import { formuleDAssistanceDeLaSession } from "@/lib/assistance/formule";
 import { cheminAssistance } from "@/lib/assistance/libelles";
-import { finConnueDeLAbonnement, rendezVousDuCompte } from "@/lib/assistance/rendez-vous";
+import { finDuProPrevue } from "@/lib/assistance/fin-du-pro";
+import { rendezVousDuCompte } from "@/lib/assistance/rendez-vous";
 import { aPlusDe24h } from "@/lib/assistance/rendez-vous-libelles";
 import { listerEtablissementsDuCompte } from "@/lib/etablissements/queries";
 import { PARAM_PROVENANCE, avecProvenance, decouperCheminInterne, nommerEcran } from "@/lib/navigation/provenance";
@@ -140,7 +141,11 @@ async function donneesDuRendezVous(db: Db, compteId: string) {
     rendezVousDuCompte(db, ligne?.debutPayantLe, maintenant),
     membresDuCompte(compteId),
   ]);
-  const finPro = finConnueDeLAbonnement(ligne);
+  // La fin du Pro ne se lit (chez Stripe, pour une baisse) qu'avec un rendez-vous à venir.
+  const finPro = prochain ? await finDuProPrevue(ligne) : null;
+  const finDuPro = prochain && finPro && finPro < prochain.debut ? finPro : null;
+  // Le Pro qui s'arrête : un déplacement ne vise que les créneaux d'avant sa fin.
+  const prenables = finDuPro ? creneaux.filter((c) => c.debut < finDuPro) : creneaux;
   return {
     maintenant: maintenant.toISOString(),
     prochain: prochain
@@ -158,7 +163,7 @@ async function donneesDuRendezVous(db: Db, compteId: string) {
       : null,
     passe: passe ? { debut: passe.debut.toISOString() } : null,
     finDeLAnnee: finDeLAnnee.toISOString(),
-    creneaux: creneaux.map((c) => ({ id: c.id, debut: c.debut.toISOString(), fin: c.fin.toISOString() })),
-    finDuPro: prochain && finPro && finPro < prochain.debut ? finPro.toISOString() : null,
+    creneaux: prenables.map((c) => ({ id: c.id, debut: c.debut.toISOString(), fin: c.fin.toISOString() })),
+    finDuPro: finDuPro?.toISOString() ?? null,
   };
 }

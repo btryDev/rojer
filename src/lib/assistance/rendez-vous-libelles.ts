@@ -3,7 +3,7 @@
 // présent est toujours passé par l'appelant.
 
 import type { ModeRendezVous } from "@prisma/client";
-import { FUSEAU_REFERENCE, ajouterMois, cleJourCivil, composantesCiviles } from "@/lib/dates";
+import { FUSEAU_REFERENCE, ajouterJours, ajouterMois, cleJourCivil, composantesCiviles } from "@/lib/dates";
 
 /** Réserver, déplacer, annuler, compléter : jusqu'à 24 h avant le début (ADR-063 § 3, § 4). */
 export const DELAI_RENDEZ_VOUS_MS = 24 * 60 * 60 * 1000;
@@ -46,6 +46,19 @@ export const MESSAGE_ANNEE_PRISE =
 export const MESSAGE_MOINS_DE_24H =
   "À moins de 24 h, le rendez-vous ne se déplace plus et ne s'annule plus en ligne.";
 export const MESSAGE_RENDEZ_VOUS_INTROUVABLE = "Ce rendez-vous n'est plus à venir.";
+export const MESSAGE_DEJA_A_VENIR =
+  "Un rendez-vous est déjà prévu pour le compte : déplacez-le plutôt que d'en réserver un autre.";
+
+/**
+ * Ce que dit l'écran quand un geste échoue sans refus (envoi en panne, base
+ * indisponible) : rien n'a changé, et ce qui est à refaire (relecture du
+ * 2026-11-25 — la phrase du formulaire de contact ne disait pas cela).
+ */
+export const MESSAGE_ECHEC: Record<"reserver" | "annuler" | "completer", string> = {
+  reserver: "Rien n'a changé : le rendez-vous n'a pas pu être enregistré. Réessayez dans quelques minutes.",
+  annuler: "Rien n'a changé : le rendez-vous n'a pas pu être annulé. Réessayez dans quelques minutes.",
+  completer: "Ce que vous avez écrit n'a pas pu être transmis. Réessayez dans quelques minutes : votre texte est conservé.",
+};
 
 // --- Les dates dites, à l'heure de Paris -----------------------------------
 
@@ -57,7 +70,6 @@ const FMT_JOUR = new Intl.DateTimeFormat("fr-FR", {
 });
 const FMT_JOUR_MOIS = new Intl.DateTimeFormat("fr-FR", { timeZone: FUSEAU_REFERENCE, day: "numeric", month: "long" });
 const FMT_MOIS = new Intl.DateTimeFormat("fr-FR", { timeZone: FUSEAU_REFERENCE, month: "long", year: "numeric" });
-const FMT_MOIS_SEUL = new Intl.DateTimeFormat("fr-FR", { timeZone: FUSEAU_REFERENCE, month: "long" });
 
 /** Le premier du mois s'écrit « 1er ». */
 const premier = (s: string) => s.replace(/(^|\s)1(\s)/, "$11er$2");
@@ -93,14 +105,19 @@ export function dateLongue(d: Date): string {
   return `${jourMois(d)} ${composantesCiviles(d).annee}`;
 }
 
+/**
+ * Le premier jour civil (Paris) qui commence après `d` ou à `d` : le jour
+ * même si `d` tombe à minuit, sinon le lendemain. Une année d'abonnement qui
+ * bascule à 15 h 23 n'a commencé, pour un jour entier, que le lendemain.
+ */
+export function premierJourEntier(d: Date): Date {
+  const { heure, minute, seconde, milliseconde } = composantesCiviles(d);
+  return heure === 0 && minute === 0 && seconde === 0 && milliseconde === 0 ? d : ajouterJours(d, 1);
+}
+
 /** « décembre 2026 ». */
 export function moisAnnee(d: Date): string {
   return FMT_MOIS.format(d);
-}
-
-/** « janvier ». */
-export function moisSeul(d: Date): string {
-  return FMT_MOIS_SEUL.format(d);
 }
 
 /** « jeudi 3 décembre 2026, 10 h – 11 h » : l'objet des e-mails, la date du rendez-vous. */
@@ -161,12 +178,6 @@ export function grilleDuMois(mois: string): (number | null)[] {
   const premierJour = (new Date(Date.UTC(annee, m - 1, 1)).getUTCDay() + 6) % 7;
   const longueur = new Date(Date.UTC(annee, m, 0)).getUTCDate();
   return [...Array<null>(premierJour).fill(null), ...Array.from({ length: longueur }, (_, i) => i + 1)];
-}
-
-/** Le mois qui suit (« 2026-12 » → « 2027-01 »). */
-export function moisSuivant(mois: string): string {
-  const [annee, m] = mois.split("-").map(Number);
-  return m === 12 ? `${annee + 1}-01` : `${annee}-${String(m + 1).padStart(2, "0")}`;
 }
 
 /** Comment on se parle : la carte, les e-mails et l'invitation le disent ainsi. */
