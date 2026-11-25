@@ -48,14 +48,57 @@ describe("reconcilier — créneaux libres : l'agenda fait foi", () => {
     expect(p.operations.fermer).toEqual([{ creneauId: "c1", evenementId: "e1" }]);
   });
 
-  it("un événement qui ne dure pas une heure n'ouvre rien et est signalé", () => {
-    const p = reconcilier({ fenetre, evenements: [ev("e1", 2, 3)], creneaux: [] });
-    expect(p.operations.ouvrir).toEqual([]);
-    expect(titres(p)).toEqual({ e1: TITRE.duree });
+  it("une plage de quatre heures se découpe : la première heure reste à l'événement, les autres sont à créer", () => {
+    const p = reconcilier({ fenetre, evenements: [ev("e1", 2, 4)], creneaux: [] });
+    expect(p.operations.ouvrir).toEqual([
+      { evenementId: "e1", debut: a(2), fin: a(3) },
+      { evenementId: null, debut: a(3), fin: a(4) },
+      { evenementId: null, debut: a(4), fin: a(5) },
+      { evenementId: null, debut: a(5), fin: a(6) },
+    ]);
+    expect(p.consignes).toEqual([{ id: "e1", titre: TITRE.dispo, remettre: { debut: a(2), fin: a(3) } }]);
+    expect(p.aCreer).toEqual([3, 4, 5].map((h) => ({ debut: a(h), fin: a(h + 1), titre: TITRE.dispo })));
   });
 
-  it("un créneau libre dont l'événement passe à deux heures est fermé et signalé", () => {
+  it("les événements créés au découpage se rattachent à leurs heures à l'envoi suivant", () => {
+    const p = reconcilier({
+      fenetre,
+      evenements: [ev("e1", 2), ev("e2", 3), ev("e3", 4)],
+      creneaux: [creneau("c1", 2, { evenementId: "e1" }), creneau("c2", 3), creneau("c3", 4)],
+    });
+    expect(p.operations.rattacher.map((r) => [r.creneauId, r.evenementId])).toEqual([
+      ["c2", "e2"],
+      ["c3", "e3"],
+    ]);
+    expect(p.operations.ouvrir).toEqual([]);
+    expect(p.aCreer).toEqual([]);
+  });
+
+  it("une heure déjà tenue n'est pas rouverte au découpage", () => {
+    const p = reconcilier({ fenetre, evenements: [ev("e1", 2, 3), ev("e2", 3)], creneaux: [creneau("c2", 3, { evenementId: "e2" })] });
+    expect(p.operations.ouvrir.map((o) => o.debut)).toEqual([a(2), a(4)]);
+  });
+
+  it("une durée qui n'est pas en heures pleines, ou de plus de 10 h, n'ouvre rien et est signalée", () => {
+    for (const duree of [1.5, 11]) {
+      const p = reconcilier({ fenetre, evenements: [ev("e1", 2, duree)], creneaux: [] });
+      expect(p.operations.ouvrir).toEqual([]);
+      expect(titres(p)).toEqual({ e1: TITRE.duree });
+    }
+  });
+
+  it("un créneau libre dont l'événement s'allonge à deux heures est rouvert et découpé", () => {
     const p = reconcilier({ fenetre, evenements: [ev("e1", 2, 2)], creneaux: [creneau("c1", 2, { evenementId: "e1" })] });
+    expect(p.operations.fermer).toEqual([{ creneauId: "c1", evenementId: "e1", deplacement: true }]);
+    expect(p.operations.ouvrir.map((o) => [o.evenementId, o.debut])).toEqual([
+      ["e1", a(2)],
+      [null, a(3)],
+    ]);
+    expect(p.consignes).toEqual([{ id: "e1", titre: TITRE.dispo, remettre: { debut: a(2), fin: a(3) } }]);
+  });
+
+  it("un créneau libre dont l'événement prend une durée impossible est fermé et signalé", () => {
+    const p = reconcilier({ fenetre, evenements: [ev("e1", 2, 1.5)], creneaux: [creneau("c1", 2, { evenementId: "e1" })] });
     expect(p.operations.fermer).toEqual([{ creneauId: "c1", evenementId: "e1" }]);
     expect(titres(p)).toEqual({ e1: TITRE.duree });
   });
@@ -165,9 +208,10 @@ describe("reconcilier — créneaux réservés : Rojer fait foi", () => {
 });
 
 describe("reconcilier — créneaux ouverts par script", () => {
-  it("un créneau sans événement n'est jamais fermé", () => {
+  it("un créneau sans événement n'est jamais fermé : son événement est demandé à l'agent", () => {
     const p = reconcilier({ fenetre, evenements: [], creneaux: [creneau("c1", 2)] });
-    expect(rien(p)).toBe(true);
+    expect(Object.values(p.operations).every((l) => l.length === 0)).toBe(true);
+    expect(p.aCreer).toEqual([{ debut: a(2), fin: a(3), titre: TITRE.dispo }]);
   });
 
   it("un événement posé à son heure le rattache à l'agenda", () => {

@@ -103,7 +103,7 @@ export function enCreneauxConnus(lignes: LigneCreneau[], titres: Map<string, str
 // jeudi 15 h parce que le préventeur l'a déplacé entre-temps. Sa demande
 // tombe alors sur « créneau déjà pris ou retiré ».
 
-export async function ouvrir(tx: Tx, o: { evenementId: string; debut: Date; fin: Date }): Promise<boolean> {
+export async function ouvrir(tx: Tx, o: { evenementId: string | null; debut: Date; fin: Date }): Promise<boolean> {
   const lignes = await tx.$queryRaw<{ id: string }[]>`
     INSERT INTO "CreneauAssistance" ("debut", "fin", "evenementAgendaId")
     VALUES ((${o.debut}::timestamptz AT TIME ZONE 'UTC'), (${o.fin}::timestamptz AT TIME ZONE 'UTC'), ${o.evenementId})

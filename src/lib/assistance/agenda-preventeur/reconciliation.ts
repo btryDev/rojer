@@ -10,12 +10,14 @@
 import type { Fenetre } from "../creneaux";
 
 const DUREE_CRENEAU_MS = 60 * 60 * 1000;
+/** Un événement plus long se découpe en créneaux d'une heure, jusqu'à cette durée (décision du 2026-11-25). */
+const HEURES_MAX = 10;
 
 /** Les titres que l'agent pose : tous fabriqués ici, aucun ne vient de l'agenda. */
 export const TITRE = {
   dispo: "Dispo",
   reserve: "Réservé",
-  duree: "⚠ Créneau d'1 h exactement",
+  duree: "⚠ Durée en heures pleines (10 h au plus)",
   doublon: "⚠ Doublon : un créneau commence déjà à cette heure",
 } as const;
 
@@ -42,7 +44,8 @@ export type CreneauConnu = {
 type Operations = {
   fermer: { creneauId: string; evenementId: string | null; deplacement?: true }[];
   rattacher: { creneauId: string; evenementId: string; ancien: string | null }[];
-  ouvrir: { evenementId: string; debut: Date; fin: Date; deplacement?: true }[];
+  /** `evenementId` nul : une heure découpée, dont l'événement reste à créer (`aCreer`). */
+  ouvrir: { evenementId: string | null; debut: Date; fin: Date; deplacement?: true }[];
 };
 
 /** Ce que l'agent fait d'un événement : le retitrer, et le remettre à une heure s'il y en a une. */
@@ -59,7 +62,16 @@ export type Plan = {
 };
 
 const instant = (d: Date) => d.getTime();
-const dureeExacte = (ev: { debut: Date; fin: Date }) => instant(ev.fin) - instant(ev.debut) === DUREE_CRENEAU_MS;
+/** Le nombre d'heures pleines de l'événement, ou `null` s'il ne se découpe pas en créneaux. */
+function heuresPleines(ev: { debut: Date; fin: Date }): number | null {
+  const duree = instant(ev.fin) - instant(ev.debut);
+  const heures = duree / DUREE_CRENEAU_MS;
+  return Number.isInteger(heures) && heures >= 1 && heures <= HEURES_MAX ? heures : null;
+}
+const heure = (debut: Date, rang: number) => ({
+  debut: new Date(instant(debut) + rang * DUREE_CRENEAU_MS),
+  fin: new Date(instant(debut) + (rang + 1) * DUREE_CRENEAU_MS),
+});
 const memesHeures = (a: { debut: Date; fin: Date }, b: { debut: Date; fin: Date }) =>
   instant(a.debut) === instant(b.debut) && instant(a.fin) === instant(b.fin);
 const parDebut = (a: EvenementRecu, b: EvenementRecu) =>
@@ -128,53 +140,64 @@ export function reconcilier(entree: { fenetre: Fenetre; evenements: EvenementRec
       aDeplacer.push([ev, c]);
     }
   }
-  for (const [ev, c] of aDeplacer) {
-    // Un libre emporté hors de la fenêtre se ferme, sans consigne : l'événement est hors d'atteinte.
-    const refus = !dansFenetre(ev.debut)
-      ? null
-      : !dureeExacte(ev)
-        ? TITRE.duree
-        : occupe.has(instant(ev.debut))
-          ? TITRE.doublon
-          : undefined;
-    if (refus === undefined) {
-      fermer(c, true);
-      plan.operations.ouvrir.push({ evenementId: ev.id, debut: ev.debut, fin: ev.fin, deplacement: true });
-      occupe.set(instant(ev.debut), `deplace:${ev.id}`);
-      plan.consignes.push({ id: ev.id, titre: TITRE.dispo });
-    } else {
-      fermer(c);
-      if (refus) plan.consignes.push({ id: ev.id, titre: refus });
+  /**
+   * Place un événement : sa première heure lui revient (rattachée, ou
+   * ouverte), les suivantes s'ouvrent et deviennent des événements à créer —
+   * le préventeur pose une plage, l'agenda la rend découpée, un événement
+   * par créneau. `ancien` : le créneau libre que l'événement portait avant
+   * d'être déplacé ou allongé ; il se ferme.
+   */
+  const placer = (ev: EvenementRecu, ancien?: CreneauConnu) => {
+    const heures = heuresPleines(ev);
+    const premiere = heure(ev.debut, 0);
+    const debut = instant(premiere.debut);
+    const c = ancien ? undefined : rattachables.get(debut);
+    const reprendre = c && instant(c.fin) === instant(premiere.fin) && (!occupe.has(debut) || occupe.get(debut) === c.id);
+    if (heures === null || (!reprendre && occupe.has(debut))) {
+      if (ancien) fermer(ancien);
+      plan.consignes.push({ id: ev.id, titre: heures === null ? TITRE.duree : TITRE.doublon });
+      return;
     }
-  }
-
-  // 2. Les événements inconnus : reprendre un créneau à son début, ou en ouvrir un.
-  for (const ev of recus) {
-    if (parEvenement.has(ev.id)) continue;
-    if (!dureeExacte(ev)) {
-      plan.consignes.push({ id: ev.id, titre: TITRE.duree });
-      continue;
-    }
-    const debut = instant(ev.debut);
-    const c = rattachables.get(debut);
-    const libre = !occupe.has(debut) || occupe.get(debut) === c?.id;
-    if (c && memesHeures(ev, c) && libre) {
+    const remettre = heures > 1 ? { remettre: premiere } : {};
+    if (reprendre && c) {
       rattachables.delete(debut);
       repris.add(c.id);
       occupe.set(debut, c.id);
       plan.operations.rattacher.push({ creneauId: c.id, evenementId: ev.id, ancien: c.evenementId });
-      plan.consignes.push({ id: ev.id, titre: titreDuCreneau(c) });
-    } else if (occupe.has(debut)) {
-      plan.consignes.push({ id: ev.id, titre: TITRE.doublon });
+      plan.consignes.push({ id: ev.id, titre: titreDuCreneau(c), ...remettre });
     } else {
+      if (ancien) fermer(ancien, true);
       occupe.set(debut, `nouveau:${ev.id}`);
-      plan.operations.ouvrir.push({ evenementId: ev.id, debut: ev.debut, fin: ev.fin });
-      plan.consignes.push({ id: ev.id, titre: TITRE.dispo });
+      plan.operations.ouvrir.push({ evenementId: ev.id, ...premiere, ...(ancien && { deplacement: true as const }) });
+      plan.consignes.push({ id: ev.id, titre: TITRE.dispo, ...remettre });
     }
+    for (let rang = 1; rang < heures; rang++) {
+      const h = heure(ev.debut, rang);
+      if (occupe.has(instant(h.debut))) continue; // une heure déjà tenue n'est pas ouverte deux fois
+      occupe.set(instant(h.debut), `decoupe:${ev.id}:${rang}`);
+      plan.operations.ouvrir.push({ evenementId: null, ...h });
+      plan.aCreer.push({ ...h, titre: TITRE.dispo });
+    }
+  };
+
+  for (const [ev, c] of aDeplacer) {
+    // Un libre emporté hors de la fenêtre se ferme, sans consigne : l'événement est hors d'atteinte.
+    if (dansFenetre(ev.debut)) placer(ev, c);
+    else fermer(c);
   }
+
+  // 2. Les événements inconnus : reprendre un créneau à son début, ou en ouvrir.
+  for (const ev of recus) if (!parEvenement.has(ev.id)) placer(ev);
 
   // 3. Les créneaux dont l'événement a disparu sans être repris.
   for (const c of entree.creneaux) {
+    // Un créneau sans événement (heure découpée que l'agent n'a pas créée,
+    // créneau ouvert par script) : son événement est (re)demandé, l'agenda
+    // montre tout ce qui est ouvert.
+    if (c.evenementId === null && dansFenetre(c.debut) && !repris.has(c.id)) {
+      plan.aCreer.push({ debut: c.debut, fin: c.fin, titre: titreDuCreneau(c) });
+      continue;
+    }
     if (!estOrphelin(c) || repris.has(c.id)) continue;
     if (c.reserve) {
       const titre = titreDuCreneau(c);

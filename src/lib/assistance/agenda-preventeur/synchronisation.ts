@@ -87,9 +87,9 @@ async function appliquer(tx: Prisma.TransactionClient, plan: Plan): Promise<Appl
   }
   for (const o of aOuvrir) {
     // Un déplacé dont la fermeture n'a pas pris (réservé entre-temps) ne se rouvre pas.
-    if (ecartes.has(o.evenementId)) continue;
+    if (o.evenementId && ecartes.has(o.evenementId)) continue;
     if (await ouvrir(tx, o)) bilan[o.deplacement ? "deplaces" : "ouverts"]++;
-    else ecartes.add(o.evenementId);
+    else if (o.evenementId) ecartes.add(o.evenementId);
   }
   return { bilan, ecartes };
 }

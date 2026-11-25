@@ -193,6 +193,19 @@ Pour chaque créneau lié de la fenêtre dont l'événement n'est plus reçu :
 L'agent ne réécrit un titre ou une heure que s'il diffère de la consigne.
 Une exécution sans changement n'écrit donc rien dans l'agenda.
 
+[2026-11-25, décision de la propriétaire au premier essai (« il faut
+subdiviser ») : **une plage se découpe**. Un événement de 1 à 10 heures
+pleines ouvre un créneau par heure. La première heure reste à l'événement,
+que l'agent ramène à une heure ; les suivantes s'ouvrent aussitôt et
+deviennent des événements « Dispo » à créer, qui se rattachent à leur
+créneau à l'envoi suivant. Le préventeur pose une matinée, l'agenda la rend
+découpée : un événement par créneau, chacun avec son titre. Une durée qui
+n'est pas en heures pleines, ou de plus de 10 h, n'ouvre rien et porte
+« ⚠ Durée en heures pleines (10 h au plus) ». Un créneau sans événement
+(heure découpée que l'agent n'a pas créée, créneau ouvert par script) voit
+son événement redemandé à chaque envoi. Le découpage est fait par Rojer, pas
+par l'agent : la règle reste déterministe et testée.]
+
 ### 5. L'agent
 
 - **Une tâche planifiée cloud** de Claude Code, au compte de la propriétaire.
