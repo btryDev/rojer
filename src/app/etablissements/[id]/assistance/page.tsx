@@ -6,6 +6,7 @@ import { OngletsPage } from "@/components/ui-kit/OngletsPage";
 import type { Db } from "@/lib/auth/compte";
 import { membresDuCompte } from "@/lib/auth/membres";
 import { requireEtablissement } from "@/lib/auth/scope";
+import { finPrevueDe } from "@/lib/abonnements/droits";
 import { ligneAbonnementDuCompte } from "@/lib/abonnements/saisie";
 import { PAGE_FORMULES } from "@/lib/abonnements/sous-pages";
 import { formuleDAssistanceDeLaSession } from "@/lib/assistance/formule";
@@ -137,16 +138,17 @@ async function donneesDuRendezVous(db: Db, compteId: string) {
   const ligne = await ligneAbonnementDuCompte(db, compteId);
   // Qui a réservé : un membre du compte (une personne partie n'est plus
   // nommée) — lu en même temps que le rendez-vous (relecture du 2026-11-24).
+  const membresLus = membresDuCompte(compteId);
   const { prochain, passe, creneaux, finDeLAnnee } = await rendezVousDuCompte(db, ligne?.debutPayantLe, maintenant);
-  // La fin du Pro ne se lit (chez Stripe, pour une baisse) qu'avec un
-  // rendez-vous à venir ; en même temps que les membres.
+  // La fin du Pro : la résiliation se lit sur la copie ; la baisse, chez
+  // Stripe, seulement avec un rendez-vous à venir (relecture du 2026-11-25).
   const [membres, finPro] = await Promise.all([
-    membresDuCompte(compteId),
-    prochain ? finDuProPrevue(ligne) : Promise.resolve(null),
+    membresLus,
+    prochain ? finDuProPrevue(ligne) : Promise.resolve(ligne ? finPrevueDe(ligne) : null),
   ]);
   const finDuPro = prochain && finPro && finPro < prochain.debut ? finPro : null;
-  // Le Pro qui s'arrête : un déplacement ne vise que les créneaux d'avant sa fin.
-  const prenables = finDuPro ? creneaux.filter((c) => c.debut < finDuPro) : creneaux;
+  // Aucun créneau d'après la fin du Pro : ni à réserver, ni pour un déplacement.
+  const prenables = finPro ? creneaux.filter((c) => c.debut < finPro) : creneaux;
   return {
     maintenant: maintenant.toISOString(),
     prochain: prochain

@@ -89,6 +89,7 @@ async function annulerUn(
   maintenant: Date,
 ): Promise<{ c: RendezVousPourCourriel; personnes: Personne[] } | null> {
   const personnes = await destinatairesDuCompte(compteId, reservePar);
+  const envoi = envoiEnService();
   return prisma.$transaction(
     async (tx) => {
       await verrouillerLeCompte(tx, compteId);
@@ -118,14 +119,14 @@ async function annulerUn(
         personne: personnes[0] ?? { nom: "Aucune personne à prévenir dans le compte", email: "—" },
         compteId,
       };
-      if (envoiEnService()) {
+      if (envoi) {
         await sendMail({
           to: CONTACT,
           ...(personnes[0] ? { replyTo: personnes[0].email } : {}),
           ...courrielEquipeRendezVous(c),
         });
       }
-      return { c, personnes: envoiEnService() ? personnes : [] };
+      return { c, personnes: envoi ? personnes : [] };
     },
     { timeout: DUREE_TRANSACTION_MS },
   );

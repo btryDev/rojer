@@ -8,7 +8,7 @@ import "server-only";
 
 import type { Db } from "@/lib/auth/compte";
 import { invitationsDuCompte, membresDuCompte } from "@/lib/auth/membres";
-import { clientStripe } from "@/lib/stripe/client";
+import { clientStripeLecture } from "@/lib/stripe/client";
 import { configurationStripe } from "@/lib/stripe/config";
 import { baissePrevue } from "@/lib/stripe/parcours";
 import { formaterDateLongueFr } from "@/lib/dates";
@@ -27,7 +27,7 @@ export async function lireBaissePrevue(
   if (!stripeSubscriptionId || !offreLancee(contexteDroits())) return null;
   const config = configurationStripe();
   if (!config.active) return null;
-  const stripe = clientStripe(config);
+  const stripe = clientStripeLecture(config);
   return baissePrevue(stripe, await stripe.subscriptions.retrieve(stripeSubscriptionId));
 }
 
@@ -41,6 +41,7 @@ export async function refusInvitationBaissePrevue(
   compteId: string,
   { apresCreation = false }: { apresCreation?: boolean } = {},
 ): Promise<string | null> {
+  // La même garde que `lireBaissePrevue`, avant elle : pas de lecture en base sans Stripe.
   if (!offreLancee(contexteDroits()) || !configurationStripe().active) return null;
   const ligne = await db.abonnement.findUnique({ where: { compteId }, select: { stripeSubscriptionId: true } });
   let prevue: Awaited<ReturnType<typeof baissePrevue>>;

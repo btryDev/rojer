@@ -109,10 +109,12 @@ réservation, et la règle qui borne à un par an.
      un compte Pro qui a un rendez-vous à venir, et seulement si la formule
      visée n'a pas de rendez-vous (une formule visée inconnue n'est pas dite
      une fin). Stripe injoignable : rien n'est annoncé, c'est noté. Un
-     déplacement ne propose alors que les créneaux d'avant la fin du Pro —
-     à l'écran seulement : l'action ne relit pas Stripe, et un créneau
-     d'après, posté quand même, sera annulé par la tâche du jour (limite
-     assumée, 2026-11-25).]
+     déplacement ne propose alors que les créneaux d'avant la fin du Pro. Une
+     résiliation connue (copie de Rojer) borne aussi les créneaux sans
+     rendez-vous à venir, et l'action refuse un créneau d'après ; une baisse
+     ne se relit pas chez Stripe dans l'action — un créneau d'après, posté
+     quand même, sera annulé par la tâche du jour (limite assumée,
+     2026-11-25).]
 8. **Pas d'écran pour l'équipe.** Les rendez-vous se lisent dans les e-mails
    et par script.
 9. **Données personnelles.** Sont gardés le mode, le téléphone et ce qui est
@@ -154,8 +156,10 @@ réservation, et la règle qui borne à un par an.
 - [2026-11-25, relecture multi-axes] Corrigés sur `lot/rdv-annuel-relecture` :
   - « Préparer » prend le verrou du compte, et ne transmet rien quand le
     texte n'a pas changé ;
-  - l'annulation a son propre compteur de dix par jour : des réservations
-    refusées en rafale ne privent pas le compte d'annuler ;
+  - le compteur de dix gestes par jour se débite juste avant l'envoi à
+    l'équipe, une fois les refus passés : un geste refusé ou sans rien de
+    nouveau ne compte pas, et des réservations refusées en rafale ne privent
+    plus le compte d'annuler ;
   - un geste qui échoue dit ce qui n'a pas changé, plus la phrase du
     formulaire de contact ; l'écran ne dit la confirmation partie que si
     elle l'est ;

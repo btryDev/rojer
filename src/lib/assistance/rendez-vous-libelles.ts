@@ -3,7 +3,7 @@
 // présent est toujours passé par l'appelant.
 
 import type { ModeRendezVous } from "@prisma/client";
-import { FUSEAU_REFERENCE, ajouterJours, ajouterMois, cleJourCivil, composantesCiviles } from "@/lib/dates";
+import { FUSEAU_REFERENCE, ajouterJours, ajouterMois, cleJourCivil, composantesCiviles, debutDuJour } from "@/lib/dates";
 
 /** Réserver, déplacer, annuler, compléter : jusqu'à 24 h avant le début (ADR-063 § 3, § 4). */
 export const DELAI_RENDEZ_VOUS_MS = 24 * 60 * 60 * 1000;
@@ -46,6 +46,8 @@ export const MESSAGE_ANNEE_PRISE =
 export const MESSAGE_MOINS_DE_24H =
   "À moins de 24 h, le rendez-vous ne se déplace plus et ne s'annule plus en ligne.";
 export const MESSAGE_RENDEZ_VOUS_INTROUVABLE = "Ce rendez-vous n'est plus à venir.";
+export const MESSAGE_APRES_FIN_PRO =
+  "Ce créneau tombe après la fin de votre formule Pro : choisissez-en un avant.";
 export const MESSAGE_DEJA_A_VENIR =
   "Un rendez-vous est déjà prévu pour le compte : déplacez-le plutôt que d'en réserver un autre.";
 
@@ -111,8 +113,7 @@ export function dateLongue(d: Date): string {
  * bascule à 15 h 23 n'a commencé, pour un jour entier, que le lendemain.
  */
 export function premierJourEntier(d: Date): Date {
-  const { heure, minute, seconde, milliseconde } = composantesCiviles(d);
-  return heure === 0 && minute === 0 && seconde === 0 && milliseconde === 0 ? d : ajouterJours(d, 1);
+  return debutDuJour(d).getTime() === d.getTime() ? d : ajouterJours(d, 1);
 }
 
 /** « décembre 2026 ». */

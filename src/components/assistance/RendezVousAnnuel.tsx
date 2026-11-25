@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useActionState, useId, useState, type ReactNode } from "react";
 import type { ModeRendezVous } from "@prisma/client";
 import { CalendarDays, Check } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -72,7 +72,8 @@ type Props = {
 };
 
 type Etape = "carte" | "choisir" | "coordonnees";
-type Succes = Extract<RendezVousState, { status: "success" }>;
+/** Le succès d'une réservation, d'un déplacement ou d'une annulation (pas de « Préparer »). */
+type Succes = Extract<RendezVousState, { confirmation: boolean }>;
 
 const IDLE: RendezVousState = { status: "idle" };
 
@@ -120,7 +121,7 @@ export function RendezVousAnnuel(props: Props) {
   if (vus.r !== etatReserve || vus.a !== etatAnnule) {
     setVus({ r: etatReserve, a: etatAnnule });
     const nouveau = etatReserve !== vus.r ? etatReserve : etatAnnule;
-    if (nouveau.status === "success") {
+    if (nouveau.status === "success" && "confirmation" in nouveau) {
       setEtape("carte");
       setChoisi(null);
       setRemplace(null);
@@ -312,11 +313,8 @@ function CarteDeLAnnee({
   const [confirmer, setConfirmer] = useState(false);
   // « Non, le garder » démonte le bouton qui avait le focus : il revient à
   // « Annuler le rendez-vous » (relecture du 2026-11-25).
-  const annulerRef = useRef<HTMLButtonElement>(null);
   const [retourFocus, setRetourFocus] = useState(0);
-  useEffect(() => {
-    if (retourFocus) annulerRef.current?.focus();
-  }, [retourFocus]);
+  const annulerRef = useFocusAuMontage<HTMLButtonElement>(retourFocus);
   const titreId = useId();
   const titreRef = useFocusAuMontage<HTMLHeadingElement>(focaliser);
   const ici = new Date(maintenant);
@@ -492,11 +490,8 @@ function PreparerLeRendezVous({ prochain, etablissementId }: { prochain: RendezV
   const [enEdition, setEnEdition] = useState(false);
   // Le formulaire refermé (Enregistrer, Annuler) démonte le bouton qui avait
   // le focus : il revient à « Modifier » (relecture du 2026-11-25).
-  const modifierRef = useRef<HTMLButtonElement>(null);
   const [retourFocus, setRetourFocus] = useState(0);
-  useEffect(() => {
-    if (retourFocus) modifierRef.current?.focus();
-  }, [retourFocus]);
+  const modifierRef = useFocusAuMontage<HTMLButtonElement>(retourFocus);
   // Un état déjà lu (Modifier, Annuler) ne réapparaît pas (relecture).
   const [lu, setLu] = useState(etat);
   const [vu, setVu] = useState(etat);

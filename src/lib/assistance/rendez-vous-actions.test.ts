@@ -201,14 +201,37 @@ describe("reserverRendezVous", () => {
     });
   });
 
-  it("au-delà de dix gestes par jour pour le compte, refuse avant toute écriture", async () => {
+  it("au-delà de dix gestes par jour pour le compte, refuse sans rien écrire ni envoyer", async () => {
     h.consommer.mockResolvedValueOnce({ ok: false, reessayerDansSecondes: 600 });
     expect(await reserverRendezVous(IDLE, fd({}))).toEqual({ status: "error", message: "Trop de tentatives en peu de temps." });
     expect(h.consommer).toHaveBeenCalledWith([
       { cle: "rendez-vous:compte:c1", limite: { max: 10, fenetreSecondes: 86_400 } },
     ]);
-    expect(h.verrou).not.toHaveBeenCalled();
+    expect(h.valides).toBe(0);
     expect(h.sendMail).not.toHaveBeenCalled();
+  });
+
+  it("un geste refusé ne consomme pas le débit du compte", async () => {
+    h.prendre.mockResolvedValue(null);
+    await reserverRendezVous(IDLE, fd({}));
+    expect(h.consommer).not.toHaveBeenCalled();
+  });
+
+  it("une résiliation connue : pas de créneau après la fin du Pro", async () => {
+    h.ligne.mockResolvedValueOnce({
+      statut: "active",
+      formule: "rojer_pro_annuel",
+      debutPayantLe: new Date("2026-03-01T00:00:00Z"),
+      finPrevueLe: new Date("2026-12-01T00:00:00Z"),
+      resilieEnFinDePeriode: false,
+      finPeriode: null,
+    } as never);
+    expect(await reserverRendezVous(IDLE, fd({}))).toEqual({
+      status: "error",
+      message: L.MESSAGE_APRES_FIN_PRO,
+      code: "creneau",
+    });
+    expect(h.valides).toBe(0);
   });
 
   it("un créneau devenu imprenable revient avec le code qui ramène au choix du créneau", async () => {
@@ -283,7 +306,6 @@ describe("completerRendezVous", () => {
       status: "success",
       evenement: "complete",
       email: "m.durand@example.fr",
-      confirmation: false,
     });
     // Sous le verrou du compte, comme les autres gestes.
     expect(h.verrou).toHaveBeenCalledWith(tx, "c1");
@@ -299,6 +321,7 @@ describe("completerRendezVous", () => {
     });
     expect(h.modifier).not.toHaveBeenCalled();
     expect(h.sendMail).not.toHaveBeenCalled();
+    expect(h.consommer).not.toHaveBeenCalled();
   });
 
   it("si l'équipe n'est pas prévenue, rien n'est écrit, et l'écran dit que le texte est conservé", async () => {
@@ -333,10 +356,7 @@ describe("annulerRendezVous", () => {
     h.trouver.mockResolvedValue(rdv);
     const r = await annulerRendezVous(IDLE, annulation());
     expect(r).toEqual({ status: "success", evenement: "annule", email: "m.durand@example.fr", confirmation: true });
-    // L'annulation a son propre compteur : des gestes refusés ne la bloquent pas.
-    expect(h.consommer).toHaveBeenCalledWith([
-      { cle: "rendez-vous-annulation:compte:c1", limite: { max: 10, fenetreSecondes: 86_400 } },
-    ]);
+    expect(h.consommer).toHaveBeenCalledWith([{ cle: "rendez-vous:compte:c1", limite: { max: 10, fenetreSecondes: 86_400 } }]);
     expect(h.modifier).toHaveBeenCalledWith({ where: { id: "r1" }, data: { annuleLe: MAINTENANT } });
     expect(h.rendre).toHaveBeenCalledWith(tx, CRENEAU);
     expect(mail(0).subject).toContain("Rendez-vous annulé");

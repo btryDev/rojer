@@ -5,6 +5,7 @@ import { z } from "zod";
 import { requireCompte } from "@/lib/auth/compte";
 import { requireEtablissement } from "@/lib/auth/scope";
 import { assistanceProOuverte } from "@/lib/abonnements/assistance";
+import { finPrevueDe } from "@/lib/abonnements/droits";
 import { verrouillerLeCompte } from "@/lib/abonnements/quotas";
 import { ligneAbonnementDuCompte, verifierSaisie } from "@/lib/abonnements/saisie";
 import { envoiEnService, motifErreur, publicAppUrl, sendMail } from "@/lib/email";
@@ -17,6 +18,7 @@ import { cheminAssistance } from "./libelles";
 import { anneeDuRendezVous } from "./rendez-vous";
 import {
   MESSAGE_ANNEE_PRISE,
+  MESSAGE_APRES_FIN_PRO,
   MESSAGE_CRENEAU_HORS_FENETRE,
   MESSAGE_CRENEAU_PRIS,
   MESSAGE_DEJA_A_VENIR,
@@ -36,12 +38,13 @@ export type RendezVousState =
   | { status: "idle" }
   | {
       status: "success";
-      /** `inchange` : « Préparer » sans rien de nouveau — rien n'est transmis. */
-      evenement: "reserve" | "deplace" | "complete" | "inchange" | "annule";
+      evenement: "reserve" | "deplace" | "annule";
       email: string;
       /** La confirmation est bien partie à la personne (l'écran ne l'annonce que si oui). */
       confirmation: boolean;
     }
+  /** « Préparer » : `inchange` quand rien de nouveau n'est transmis. */
+  | { status: "success"; evenement: "complete" | "inchange"; email: string }
   | {
       status: "error";
       message: string;
@@ -67,15 +70,14 @@ function refus(e: Refus): RendezVousState {
 }
 
 /**
- * Chaque geste écrit à l'équipe : dix par jour et par compte au plus
- * (`LIMITES.rendezVousCompte`, relecture de sécurité du 2026-11-24).
- * L'annulation a son propre compteur : des réservations refusées en rafale
- * ne privent pas le compte d'annuler (relecture du 2026-11-25).
+ * Chaque geste qui écrit à l'équipe : dix par jour et par compte au plus
+ * (`LIMITES.rendezVousCompte`, relecture de sécurité du 2026-11-24). Débité
+ * juste avant l'envoi, une fois les refus passés : un geste refusé ou sans
+ * rien de nouveau ne compte pas (relecture du 2026-11-25).
  */
-async function refusDuDebit(compteId: string, geste: "gestes" | "annulation" = "gestes"): Promise<RendezVousState | null> {
-  const action = geste === "annulation" ? "rendez-vous-annulation" : "rendez-vous";
-  const verdict = await consommer([{ cle: cleLimite(action, "compte", compteId), limite: LIMITES.rendezVousCompte }]);
-  return verdict.ok ? null : { status: "error", message: messageTropDeTentatives(verdict.reessayerDansSecondes) };
+async function debiter(compteId: string): Promise<void> {
+  const verdict = await consommer([{ cle: cleLimite("rendez-vous", "compte", compteId), limite: LIMITES.rendezVousCompte }]);
+  if (!verdict.ok) throw new Refus(messageTropDeTentatives(verdict.reessayerDansSecondes));
 }
 
 /**
@@ -181,8 +183,6 @@ export async function reserverRendezVous(_prev: RendezVousState, formData: FormD
   const [ligne] = await Promise.all([ligneAbonnementDuCompte(db, compte.compteId), requireEtablissement(d.etablissementId)]);
   if (!assistanceProOuverte(ligne)) return { status: "error", message: MESSAGE_RENDEZ_VOUS_PRO };
   if (!user.email || !envoiEnService()) return { status: "error", message: MESSAGE_ECHEC.reserver };
-  const debit = await refusDuDebit(compte.compteId);
-  if (debit) return debit;
   const email = user.email;
 
   const maintenant = new Date();
@@ -215,6 +215,10 @@ export async function reserverRendezVous(_prev: RendezVousState, formData: FormD
             "creneau",
           );
         }
+        // Une résiliation connue (copie de Rojer) : pas de créneau après la fin
+        // du Pro, que la tâche du jour annulerait (relecture du 2026-11-25).
+        const finPro = ligne ? finPrevueDe(ligne) : null;
+        if (finPro && creneau.debut >= finPro) throw new Refus(MESSAGE_APRES_FIN_PRO, "creneau");
         // L'année où tombe le créneau : un rendez-vous compte pour l'année où il tombe.
         const annee = anneeDuRendezVous(ligne?.debutPayantLe, creneau.debut);
         const autre = await tx.rendezVousAssistance.findFirst({
@@ -254,6 +258,7 @@ export async function reserverRendezVous(_prev: RendezVousState, formData: FormD
           personne: { nom: user.name ?? null, email },
           compteId: compte.compteId,
         };
+        await debiter(compte.compteId);
         await sendMail({ to: CONTACT, replyTo: email, ...courrielEquipeRendezVous(r) });
         return r;
       },
@@ -304,14 +309,11 @@ export async function completerRendezVous(_prev: RendezVousState, formData: Form
   // Préparer le rendez-vous reste un geste de la formule Pro (relecture de sécurité du 2026-11-24).
   if (!assistanceProOuverte(ligne)) return { status: "error", message: MESSAGE_RENDEZ_VOUS_PRO };
   if (!user.email || !envoiEnService()) return { status: "error", message: MESSAGE_ECHEC.completer };
-  const debit = await refusDuDebit(compte.compteId);
-  if (debit) return debit;
   const email = user.email;
 
   const maintenant = new Date();
-  let transmis = false;
   try {
-    transmis = await db.$transaction(
+    const transmis = await db.$transaction(
       async (tx) => {
         // Sous le verrou du compte, comme les autres gestes : un déplacement ou
         // une annulation concurrents ne laissent pas partir une date périmée
@@ -323,6 +325,7 @@ export async function completerRendezVous(_prev: RendezVousState, formData: Form
         const nouveau = parsed.data.sujet ?? null;
         // Rien de changé : rien à transmettre.
         if (nouveau === r.sujet) return false;
+        await debiter(compte.compteId);
         await tx.rendezVousAssistance.update({ where: { id: r.id }, data: { sujet: nouveau } });
         await sendMail({
           to: CONTACT,
@@ -342,13 +345,13 @@ export async function completerRendezVous(_prev: RendezVousState, formData: Form
       },
       { timeout: DUREE_TRANSACTION_MS },
     );
+    revalidatePath("/etablissements/[id]/assistance", "page");
+    return { status: "success", evenement: transmis ? "complete" : "inchange", email };
   } catch (e) {
     if (e instanceof Refus) return refus(e);
     console.error(`[rendez-vous] non complété : ${motifErreur(e)}`);
     return { status: "error", message: MESSAGE_ECHEC.completer };
   }
-  revalidatePath("/etablissements/[id]/assistance", "page");
-  return { status: "success", evenement: transmis ? "complete" : "inchange", email, confirmation: false };
 }
 
 /**
@@ -366,8 +369,6 @@ export async function annulerRendezVous(_prev: RendezVousState, formData: FormDa
   if (!parsed.success) return { status: "error", message: MESSAGE_RENDEZ_VOUS_INTROUVABLE };
   await requireEtablissement(parsed.data.etablissementId);
   if (!user.email || !envoiEnService()) return { status: "error", message: MESSAGE_ECHEC.annuler };
-  const debit = await refusDuDebit(compte.compteId, "annulation");
-  if (debit) return debit;
   const email = user.email;
 
   const maintenant = new Date();
@@ -392,6 +393,7 @@ export async function annulerRendezVous(_prev: RendezVousState, formData: FormDa
           personne: { nom: user.name ?? null, email },
           compteId: compte.compteId,
         };
+        await debiter(compte.compteId);
         await sendMail({ to: CONTACT, replyTo: email, ...courrielEquipeRendezVous(c) });
         return c;
       },
