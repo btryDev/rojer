@@ -27,18 +27,21 @@ import {
   verrouillerLaSynchronisation,
   type Bilan,
 } from "./base";
+import { composantesCiviles } from "@/lib/dates";
 import type { Envoi } from "./envoi";
-import { reconcilier, type Conflit, type Plan } from "./reconciliation";
+import { dansLaFenetre, reconcilier, type Conflit, type Plan } from "./reconciliation";
 
 /** Le secret que l'agent présente, ou `null` : la route répond alors 404. */
-export function secretDeLAgenda(env: Record<string, string | undefined> = process.env): string | null {
-  return env.AGENDA_SECRET?.trim() || null;
+export function secretDeLAgenda(): string | null {
+  return process.env.AGENDA_SECRET?.trim() || null;
 }
+
+const HEURE = 60 * 60 * 1000;
 
 /** Au-delà, un envoi qui fermerait des créneaux est tenu pour un agenda mal lu. */
 export const PLAFOND_FERMETURES = 10;
 /** Un envoi vide qui fermerait au moins autant de créneaux est refusé. */
-export const PLAFOND_FERMETURES_ENVOI_VIDE = 3;
+const PLAFOND_FERMETURES_ENVOI_VIDE = 3;
 
 export type ReponseAgent = {
   evenements: { id: string; titre: string; debut?: string; fin?: string }[];
@@ -50,11 +53,16 @@ export type Resultat =
   | { statut: 200; corps: ReponseAgent }
   | { statut: 409 | 422; corps: { erreur: "rejeu" | "plafond" } };
 
-/** Le plan dépasse-t-il le plafond de dégâts ? Exporté pour les tests. */
-export function depasseLePlafond(plan: Plan): boolean {
-  const fermetures = plan.operations.fermer.length;
-  if (fermetures > PLAFOND_FERMETURES) return true;
-  return plan.evenementsDansLaFenetre === 0 && fermetures >= PLAFOND_FERMETURES_ENVOI_VIDE;
+/**
+ * Les créneaux que le plan ferme pour de bon (un déplacement rouvre aussitôt),
+ * ou `null` s'il reste sous le plafond de dégâts. « Vide » se lit sur les
+ * événements de la fenêtre : un événement entamé n'en fait pas un agenda.
+ */
+function fermeturesAuDelaDuPlafond(plan: Plan, envoi: Envoi): number | null {
+  const fermetures = plan.operations.fermer.filter((f) => !f.deplacement).length;
+  const vide = !envoi.evenements.some((ev) => dansLaFenetre(envoi.fenetre, ev.debut));
+  const depasse = fermetures > PLAFOND_FERMETURES || (vide && fermetures >= PLAFOND_FERMETURES_ENVOI_VIDE);
+  return depasse ? fermetures : null;
 }
 
 type Applique = { bilan: Bilan; ecartes: Set<string> };
@@ -63,26 +71,25 @@ async function appliquer(tx: Prisma.TransactionClient, plan: Plan): Promise<Appl
   const bilan: Bilan = { ouverts: 0, deplaces: 0, fermes: 0, rattaches: 0, conflits: plan.conflits.length };
   // Les événements dont l'écriture n'a pas pris : pas de consigne pour eux.
   const ecartes = new Set<string>();
-  const { operations: o } = plan;
-  // D'abord libérer les débuts (fermés, puis déplacés), ensuite les occuper :
-  // deux créneaux qui échangent leurs heures passent dans le même envoi.
-  for (const f of o.fermer) if (await fermer(tx, f)) bilan.fermes++;
-  const deplaces = [];
-  for (const d of o.deplacer) {
-    if (await fermer(tx, { creneauId: d.creneauId, evenementId: d.evenementId })) deplaces.push(d);
-    else ecartes.add(d.evenementId);
+  const { fermer: aFermer, rattacher: aRattacher, ouvrir: aOuvrir } = plan.operations;
+  // D'abord libérer les débuts, ensuite les occuper : deux créneaux qui
+  // échangent leurs heures passent dans le même envoi.
+  for (const f of aFermer) {
+    if (await fermer(tx, f)) {
+      if (!f.deplacement) bilan.fermes++;
+    } else if (f.deplacement && f.evenementId) {
+      ecartes.add(f.evenementId);
+    }
   }
-  for (const r of o.rattacher) {
+  for (const r of aRattacher) {
     if (await rattacher(tx, r)) bilan.rattaches++;
     else ecartes.add(r.evenementId);
   }
-  for (const d of deplaces) {
-    if (await ouvrir(tx, d)) bilan.deplaces++;
-    else ecartes.add(d.evenementId);
-  }
-  for (const n of o.ouvrir) {
-    if (await ouvrir(tx, n)) bilan.ouverts++;
-    else ecartes.add(n.evenementId);
+  for (const o of aOuvrir) {
+    // Un déplacé dont la fermeture n'a pas pris (réservé entre-temps) ne se rouvre pas.
+    if (ecartes.has(o.evenementId)) continue;
+    if (await ouvrir(tx, o)) bilan[o.deplacement ? "deplaces" : "ouverts"]++;
+    else ecartes.add(o.evenementId);
   }
   return { bilan, ecartes };
 }
@@ -133,9 +140,10 @@ export async function synchroniser(envoi: Envoi, maintenant: Date): Promise<Resu
       );
       const titres = await titresDesReserves(tx, lignes.filter((l) => l.reserve).map((l) => l.id));
       const plan = reconcilier({ fenetre: envoi.fenetre, evenements: envoi.evenements, creneaux: enCreneauxConnus(lignes, titres) });
-      if (depasseLePlafond(plan)) {
+      const fermetures = fermeturesAuDelaDuPlafond(plan, envoi);
+      if (fermetures !== null) {
         await journaliser(tx, { envoyeLe: envoi.envoyeLe, accepte: false, motif: "plafond" });
-        return { refus: "plafond" as const, fermetures: plan.operations.fermer.length };
+        return { refus: "plafond" as const, fermetures };
       }
       const applique = await appliquer(tx, plan);
       await journaliser(tx, { envoyeLe: envoi.envoyeLe, accepte: true, motif: null, bilan: applique.bilan });
@@ -158,17 +166,16 @@ export async function synchroniser(envoi: Envoi, maintenant: Date): Promise<Resu
   return { statut: 200, corps: enReponse(issue.plan, issue.applique) };
 }
 
-const H = 60 * 60 * 1000;
-
 /**
  * Le silence admis depuis le dernier envoi accepté, au passage de la tâche
  * quotidienne (9 h, Paris) : l'agent passe de 8 h à 19 h en semaine. Le lundi
  * couvre le week-end ; le samedi et le dimanche, rien n'est attendu.
  */
 export function silenceAdmis(maintenant: Date): number | null {
-  const jour = new Intl.DateTimeFormat("en-GB", { weekday: "short", timeZone: "Europe/Paris" }).format(maintenant);
-  if (jour === "Sat" || jour === "Sun") return null;
-  return jour === "Mon" ? 74 * H : 26 * H;
+  const { annee, mois, jour } = composantesCiviles(maintenant);
+  const semaine = new Date(Date.UTC(annee, mois - 1, jour)).getUTCDay(); // 0 = dimanche
+  if (semaine === 0 || semaine === 6) return null;
+  return (semaine === 1 ? 74 : 26) * HEURE;
 }
 
 /**

@@ -34,3 +34,9 @@ export async function lireCorpsBorne(request: Request, max: number): Promise<str
   }
   return Buffer.concat(morceaux).toString("utf8");
 }
+
+/** Une réponse de route de machine : jamais mise en cache. */
+export function reponseMachine(status: number, corps?: unknown, entetes: Record<string, string> = {}): Response {
+  const headers = { "Cache-Control": "no-store", ...entetes };
+  return corps === undefined ? new Response(null, { status, headers }) : Response.json(corps, { status, headers });
+}

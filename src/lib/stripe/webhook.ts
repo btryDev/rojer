@@ -17,7 +17,6 @@ import Stripe from "stripe";
 import type { ModeStripe } from "./config";
 import { enregistrer } from "./evenements";
 import { motifDErreur } from "./synchronisation";
-import { lireCorpsBorne as lireCorpsBorneMachine } from "@/lib/securite/requete-machine";
 
 /** Une notification légère pèse moins d'un kilo-octet. */
 export const TAILLE_MAX_NOTIFICATION = 64 * 1024;
@@ -37,11 +36,6 @@ export const EVENEMENTS_ECOUTES = [
   "v1.charge.dispute.created",
   "v1.charge.refunded",
 ] as const satisfies readonly NotificationStripe["type"][];
-
-/** Le corps brut, lu au plus `max` octets (`securite/requete-machine.ts`). `null` : trop gros. */
-export function lireCorpsBorne(request: Request, max = TAILLE_MAX_NOTIFICATION): Promise<string | null> {
-  return lireCorpsBorneMachine(request, max);
-}
 
 export type Verification = { ok: true; notification: NotificationStripe } | { ok: false; motif: string };
 

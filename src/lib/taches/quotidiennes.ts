@@ -50,8 +50,6 @@ export function secretDesTaches(env: Record<string, string | undefined> = proces
   return s ? s : null;
 }
 
-/** La comparaison du secret présenté, partagée avec les autres routes de machine. */
-export { appelAutorise } from "@/lib/securite/requete-machine";
 
 /**
  * Dans cet ordre : les avertissements avant la suppression (une date posée

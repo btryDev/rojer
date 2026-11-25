@@ -38,7 +38,9 @@ describe("reconcilier — créneaux libres : l'agenda fait foi", () => {
 
   it("un événement déplacé déplace son créneau libre", () => {
     const p = reconcilier({ fenetre, evenements: [ev("e1", 5)], creneaux: [creneau("c1", 2, { evenementId: "e1" })] });
-    expect(p.operations.deplacer).toEqual([{ creneauId: "c1", evenementId: "e1", debut: a(5), fin: a(6) }]);
+    // Fermé puis rouvert sous un nouvel identifiant : un client ne suit pas un créneau déplacé.
+    expect(p.operations.fermer).toEqual([{ creneauId: "c1", evenementId: "e1", deplacement: true }]);
+    expect(p.operations.ouvrir).toEqual([{ evenementId: "e1", debut: a(5), fin: a(6), deplacement: true }]);
   });
 
   it("un événement supprimé ferme son créneau libre", () => {
@@ -70,7 +72,7 @@ describe("reconcilier — créneaux libres : l'agenda fait foi", () => {
       evenements: [ev("e1", 4), ev("e2", 4)],
       creneaux: [creneau("c1", 2, { evenementId: "e1" }), creneau("c2", 4, { evenementId: "e2" })],
     });
-    expect(p.operations.deplacer).toEqual([]);
+    expect(p.operations.ouvrir).toEqual([]);
     expect(p.operations.fermer).toEqual([{ creneauId: "c1", evenementId: "e1" }]);
     expect(titres(p)).toEqual({ e1: TITRE.doublon, e2: TITRE.dispo });
   });
@@ -81,18 +83,18 @@ describe("reconcilier — créneaux libres : l'agenda fait foi", () => {
       evenements: [ev("e1", 3), ev("e2", 2)],
       creneaux: [creneau("c1", 2, { evenementId: "e1" }), creneau("c2", 3, { evenementId: "e2" })],
     });
-    expect(p.operations.deplacer.map((d) => [d.creneauId, d.debut])).toEqual([
-      ["c2", a(2)],
-      ["c1", a(3)],
+    expect(p.operations.fermer.map((f) => f.creneauId).sort()).toEqual(["c1", "c2"]);
+    expect(p.operations.ouvrir.map((o) => [o.evenementId, o.debut])).toEqual([
+      ["e2", a(2)],
+      ["e1", a(3)],
     ]);
-    expect(p.operations.fermer).toEqual([]);
+    expect(p.operations.fermer.every((f) => f.deplacement)).toBe(true);
   });
 
   it("un libre emporté avant la fenêtre se ferme, sans consigne", () => {
     const p = reconcilier({ fenetre, evenements: [ev("e1", -48)], creneaux: [creneau("c1", 2, { evenementId: "e1" })] });
     expect(p.operations.fermer).toEqual([{ creneauId: "c1", evenementId: "e1" }]);
     expect(p.consignes).toEqual([]);
-    expect(p.evenementsDansLaFenetre).toBe(0);
   });
 
   it("un événement qui commence avant la fenêtre est ignoré, sans consigne", () => {
@@ -116,7 +118,7 @@ describe("reconcilier — créneaux réservés : Rojer fait foi", () => {
 
   it("un réservé déplacé dans l'agenda ne bouge pas : l'événement est remis, l'équipe prévenue", () => {
     const p = reconcilier({ fenetre, evenements: [ev("e1", 5)], creneaux: [reserve("c1", 2, "e1")] });
-    expect(p.operations).toEqual({ ouvrir: [], deplacer: [], fermer: [], rattacher: [] });
+    expect(p.operations).toEqual({ ouvrir: [], fermer: [], rattacher: [] });
     expect(p.consignes).toEqual([{ id: "e1", titre: "Réservé — Boulangerie — visio", remettre: { debut: a(2), fin: a(3) } }]);
     expect(p.conflits.map((c) => c.nature)).toEqual(["deplace"]);
   });
@@ -148,7 +150,7 @@ describe("reconcilier — créneaux réservés : Rojer fait foi", () => {
       evenements: [ev("e1", 2), ev("e2", 2)],
       creneaux: [reserve("c1", 2, "e1"), creneau("c2", 5, { evenementId: "e2" })],
     });
-    expect(p.operations.deplacer).toEqual([]);
+    expect(p.operations.ouvrir).toEqual([]);
     expect(p.operations.fermer).toEqual([{ creneauId: "c2", evenementId: "e2" }]);
   });
 

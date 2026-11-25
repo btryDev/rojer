@@ -62,19 +62,25 @@ describe("routes de documents personnels — Cache-Control: no-store", () => {
   });
 
   it.each(routes().filter((f) => !(f in EXEMPTIONS)))(
-    "%s répond no-store (ou passe par servirFichier ou reponsePdf)",
+    "%s répond no-store (ou passe par servirFichier, reponsePdf ou reponseMachine)",
     (f) => {
       const source = readFileSync(path.join(APP, f), "utf8");
       const valeurs = valeursCacheControl(source);
-      // Délégué à servir.ts (fichiers déposés) ou à pdf/reponse.ts (PDF,
-      // audit Next.js du 2026-10-14, B8), qui sont tenus plus bas.
-      const parServir = /\b(?:servirFichier|reponsePdf)\(/.test(source);
+      // Délégué à servir.ts (fichiers déposés), à pdf/reponse.ts (PDF,
+      // audit Next.js du 2026-10-14, B8) ou à securite/requete-machine.ts
+      // (routes de machine, ADR-064), qui sont tenus plus bas.
+      const parServir = /\b(?:servirFichier|reponsePdf|reponseMachine)\(/.test(source);
       // Au moins un chemin : no-store écrit, ou délégué.
       expect(parServir || valeurs.length > 0, `${f} : aucun Cache-Control`).toBe(true);
       // Et aucune valeur écrite qui ne le soit pas.
       for (const v of valeurs) expect(v, f).toBe("no-store");
     },
   );
+
+  it("requete-machine.ts, par où répondent les routes de machine, répond no-store", () => {
+    const source = readFileSync(path.resolve(__dirname, "./requete-machine.ts"), "utf8");
+    expect(valeursCacheControl(source)).toEqual(["no-store"]);
+  });
 
   it("servir.ts, par où passent les fichiers déposés, répond no-store", () => {
     const source = readFileSync(path.resolve(__dirname, "../storage/servir.ts"), "utf8");

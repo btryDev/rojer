@@ -12,20 +12,16 @@ import { secretDeLAgenda, synchroniser } from "@/lib/assistance/agenda-preventeu
 import { ipPourLimite } from "@/lib/securite/ip-client";
 import { LIMITES, cleLimite, consommer } from "@/lib/securite/limite-debit";
 import { alerterUneFoisParJour } from "@/lib/alertes";
-import { appelAutorise, lireCorpsBorne } from "@/lib/securite/requete-machine";
+import { appelAutorise, lireCorpsBorne, reponseMachine } from "@/lib/securite/requete-machine";
 
 export const dynamic = "force-dynamic";
 
 /** 200 événements d'identifiants et d'heures tiennent largement dans 256 Ko. */
 const TAILLE_MAX = 256 * 1024;
 
-const SANS_CACHE = { "Cache-Control": "no-store" };
-
-const vide = (status: number, entetes: Record<string, string> = {}) =>
-  new Response(null, { status, headers: { ...SANS_CACHE, ...entetes } });
-const json = (status: number, corps: unknown) => Response.json(corps, { status, headers: SANS_CACHE });
-
-const tropDAppels = (secondes: number) => vide(429, { "Retry-After": String(secondes) });
+const vide = (status: number) => reponseMachine(status);
+const json = (status: number, corps: unknown) => reponseMachine(status, corps);
+const tropDAppels = (secondes: number) => reponseMachine(429, undefined, { "Retry-After": String(secondes) });
 
 export async function POST(request: Request) {
   const secret = secretDeLAgenda();

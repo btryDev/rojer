@@ -11,9 +11,10 @@ import { after } from "next/server";
 import { configurationStripe } from "@/lib/stripe/config";
 import { clientStripeWebhook } from "@/lib/stripe/client";
 import { traiterLaFileIci } from "@/lib/stripe/traitement";
-import { lireCorpsBorne, recevoirNotificationStripe, verifierNotificationStripe } from "@/lib/stripe/webhook";
+import { lireCorpsBorne, reponseMachine } from "@/lib/securite/requete-machine";
+import { TAILLE_MAX_NOTIFICATION, recevoirNotificationStripe, verifierNotificationStripe } from "@/lib/stripe/webhook";
 
-const reponse = (status: number) => new Response(null, { status, headers: { "Cache-Control": "no-store" } });
+const reponse = (status: number) => reponseMachine(status);
 
 export async function POST(request: Request) {
   const config = configurationStripe();
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
     return reponse(503);
   }
 
-  const corps = await lireCorpsBorne(request);
+  const corps = await lireCorpsBorne(request, TAILLE_MAX_NOTIFICATION);
   if (corps === null) return reponse(413);
 
   const stripe = clientStripeWebhook(config);

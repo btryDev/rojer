@@ -4,14 +4,16 @@
 // identifiants et des heures. Module pur.
 
 import { z } from "zod";
-import type { EvenementRecu, Fenetre } from "./reconciliation";
+import { MS_PAR_JOUR } from "@/lib/dates";
+import type { Fenetre } from "../creneaux";
+import type { EvenementRecu } from "./reconciliation";
 
 export const MAX_EVENEMENTS = 200;
-export const FENETRE_MAX_MS = 90 * 24 * 60 * 60 * 1000;
+const FENETRE_MAX_MS = 90 * MS_PAR_JOUR;
 /** L'écart admis entre l'heure de l'envoi et celle du serveur (anti-rejeu). */
-export const DERIVE_MAX_MS = 5 * 60 * 1000;
+const DERIVE_MAX_MS = 5 * 60 * 1000;
 /** Le début de la fenêtre : « maintenant » pour l'agent, à l'exécution près. */
-export const DEBUT_FENETRE_MAX_MS = 15 * 60 * 1000;
+const DEBUT_FENETRE_MAX_MS = 15 * 60 * 1000;
 
 // La forme des identifiants d'événement Google (base32hex), occurrences d'un
 // événement récurrent comprises (`<id>_<date>`).
@@ -28,7 +30,7 @@ const schema = z.strictObject({
 
 export type Envoi = { envoyeLe: Date; fenetre: Fenetre; evenements: EvenementRecu[] };
 
-export type LectureEnvoi = { ok: true; envoi: Envoi } | { ok: false; motif: string };
+type LectureEnvoi = { ok: true; envoi: Envoi } | { ok: false; motif: string };
 
 export function lireEnvoi(json: unknown, maintenant: Date): LectureEnvoi {
   const r = schema.safeParse(json);

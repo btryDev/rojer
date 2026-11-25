@@ -7,7 +7,9 @@
 // réservé — jamais déplacé ni fermé par l'agenda ; son événement est remis en
 // place, ou recréé.
 
-export const DUREE_CRENEAU_MS = 60 * 60 * 1000;
+import type { Fenetre } from "../creneaux";
+
+const DUREE_CRENEAU_MS = 60 * 60 * 1000;
 
 /** Les titres que l'agent pose : tous fabriqués ici, aucun ne vient de l'agenda. */
 export const TITRE = {
@@ -16,8 +18,6 @@ export const TITRE = {
   duree: "⚠ Créneau d'1 h exactement",
   doublon: "⚠ Doublon : un créneau commence déjà à cette heure",
 } as const;
-
-export type Fenetre = { depuis: Date; jusqua: Date };
 
 /** Un événement de l'agenda : son identifiant Google et ses heures, rien d'autre. */
 export type EvenementRecu = { id: string; debut: Date; fin: Date };
@@ -33,15 +33,20 @@ export type CreneauConnu = {
   titreReserve: string | null;
 };
 
-export type Operations = {
-  ouvrir: { evenementId: string; debut: Date; fin: Date }[];
-  deplacer: { creneauId: string; evenementId: string; debut: Date; fin: Date }[];
-  fermer: { creneauId: string; evenementId: string | null }[];
+/**
+ * Un créneau déplacé se FERME et se ROUVRE sous un nouvel identifiant (revue
+ * du 2026-11-25) : la réservation prend un créneau par son identifiant, et un
+ * client ne doit pas être inscrit à une heure qu'il n'a pas choisie. La
+ * marque `deplacement` ne sert qu'au bilan et au plafond de dégâts.
+ */
+type Operations = {
+  fermer: { creneauId: string; evenementId: string | null; deplacement?: true }[];
   rattacher: { creneauId: string; evenementId: string; ancien: string | null }[];
+  ouvrir: { evenementId: string; debut: Date; fin: Date; deplacement?: true }[];
 };
 
 /** Ce que l'agent fait d'un événement : le retitrer, et le remettre à une heure s'il y en a une. */
-export type Consigne = { id: string; titre: string; remettre?: { debut: Date; fin: Date } };
+type Consigne = { id: string; titre: string; remettre?: { debut: Date; fin: Date } };
 
 export type Conflit = { creneauId: string; debut: Date; fin: Date; nature: "deplace" | "supprime"; titre: string };
 
@@ -51,8 +56,6 @@ export type Plan = {
   /** Les événements à recréer : ceux de créneaux réservés que l'agenda a perdus. */
   aCreer: { debut: Date; fin: Date; titre: string }[];
   conflits: Conflit[];
-  /** Les événements reçus qui commencent dans la fenêtre : le plafond d'un envoi « vide » se lit sur eux. */
-  evenementsDansLaFenetre: number;
 };
 
 const instant = (d: Date) => d.getTime();
@@ -66,51 +69,44 @@ export function titreDuCreneau(c: Pick<CreneauConnu, "reserve" | "titreReserve">
   return c.reserve ? (c.titreReserve ?? TITRE.reserve) : TITRE.dispo;
 }
 
+export const dansLaFenetre = ({ depuis, jusqua }: Fenetre, d: Date) =>
+  instant(d) >= instant(depuis) && instant(d) < instant(jusqua);
+
 /**
  * `creneaux` : ceux qui commencent dans la fenêtre, et ceux, où qu'ils soient,
- * dont l'événement est reçu. Un événement inconnu qui commence hors de la
- * fenêtre est ignoré (l'agenda rend aussi ceux qui la chevauchent) ; un
- * créneau hors de la fenêtre dont l'événement n'est pas reçu n'est pas touché.
+ * dont l'événement est reçu. Un événement connu se reconnaît où qu'il soit ;
+ * un événement inconnu qui commence hors de la fenêtre est ignoré (l'agenda
+ * rend aussi ceux qui la chevauchent) ; un créneau hors de la fenêtre dont
+ * l'événement n'est pas reçu n'est pas touché.
  */
 export function reconcilier(entree: { fenetre: Fenetre; evenements: EvenementRecu[]; creneaux: CreneauConnu[] }): Plan {
-  const { depuis, jusqua } = entree.fenetre;
-  const dansFenetre = (d: Date) => instant(d) >= instant(depuis) && instant(d) < instant(jusqua);
-  // Tout événement reçu compte pour reconnaître son créneau, même déplacé hors
-  // de la fenêtre (revue du 2026-11-25) ; seul un événement inconnu qui
-  // commence hors de la fenêtre est ignoré.
-  const recus = [...entree.evenements].sort(parDebut);
-  const idsRecus = new Set(recus.map((ev) => ev.id));
+  const dansFenetre = (d: Date) => dansLaFenetre(entree.fenetre, d);
   const parEvenement = new Map(
     entree.creneaux.filter((c) => c.evenementId !== null).map((c) => [c.evenementId as string, c]),
   );
+  // Le seul filtre de la fenêtre sur les événements.
+  const recus = entree.evenements.filter((ev) => parEvenement.has(ev.id) || dansFenetre(ev.debut)).sort(parDebut);
+  const idsRecus = new Set(recus.map((ev) => ev.id));
 
-  const plan: Plan = {
-    operations: { ouvrir: [], deplacer: [], fermer: [], rattacher: [] },
-    consignes: [],
-    aCreer: [],
-    conflits: [],
-    evenementsDansLaFenetre: recus.filter((ev) => dansFenetre(ev.debut)).length,
-  };
+  const plan: Plan = { operations: { fermer: [], rattacher: [], ouvrir: [] }, consignes: [], aCreer: [], conflits: [] };
+  const fermer = (c: CreneauConnu, deplacement?: true) =>
+    plan.operations.fermer.push({ creneauId: c.id, evenementId: c.evenementId, ...(deplacement && { deplacement }) });
   // L'occupation des débuts une fois l'envoi appliqué (`debut` est unique).
   const occupe = new Map<number, string>();
   // Les créneaux qu'un événement inconnu peut reprendre à leur début : ouverts
   // par script, ou liés à un événement que l'agenda ne rend plus.
   const rattachables = new Map<number, CreneauConnu>();
+  const repris = new Set<string>();
   // Liés, dans la fenêtre, et dont l'événement n'est plus reçu.
-  const orphelins = new Map<string, CreneauConnu>();
+  const estOrphelin = (c: CreneauConnu) => c.evenementId !== null && !idsRecus.has(c.evenementId) && dansFenetre(c.debut);
 
   for (const c of entree.creneaux) {
     if (c.evenementId !== null && idsRecus.has(c.evenementId)) continue;
-    if (c.evenementId !== null && dansFenetre(c.debut)) {
-      orphelins.set(c.id, c);
-      rattachables.set(instant(c.debut), c);
-      // Un réservé reste à sa place quoi qu'il arrive ; un libre sera fermé
-      // s'il n'est pas repris.
-      if (c.reserve) occupe.set(instant(c.debut), c.id);
-      continue;
-    }
-    occupe.set(instant(c.debut), c.id);
-    if (c.evenementId === null && dansFenetre(c.debut)) rattachables.set(instant(c.debut), c);
+    const orphelin = estOrphelin(c);
+    if (orphelin || (c.evenementId === null && dansFenetre(c.debut))) rattachables.set(instant(c.debut), c);
+    // Un réservé reste à sa place quoi qu'il arrive ; un libre orphelin sera
+    // fermé s'il n'est pas repris.
+    if (!orphelin || c.reserve) occupe.set(instant(c.debut), c.id);
   }
 
   // 1. Les événements connus. Ceux qui restent en place prennent leur début
@@ -121,12 +117,10 @@ export function reconcilier(entree: { fenetre: Fenetre; evenements: EvenementRec
     if (!c) continue;
     if (c.reserve) {
       occupe.set(instant(c.debut), c.id);
-      if (memesHeures(ev, c)) {
-        plan.consignes.push({ id: ev.id, titre: titreDuCreneau(c) });
-      } else {
-        plan.consignes.push({ id: ev.id, titre: titreDuCreneau(c), remettre: { debut: c.debut, fin: c.fin } });
-        plan.conflits.push({ creneauId: c.id, debut: c.debut, fin: c.fin, nature: "deplace", titre: titreDuCreneau(c) });
-      }
+      const titre = titreDuCreneau(c);
+      const bouge = !memesHeures(ev, c);
+      plan.consignes.push({ id: ev.id, titre, ...(bouge && { remettre: { debut: c.debut, fin: c.fin } }) });
+      if (bouge) plan.conflits.push({ creneauId: c.id, debut: c.debut, fin: c.fin, nature: "deplace", titre });
     } else if (memesHeures(ev, c)) {
       occupe.set(instant(c.debut), c.id);
       plan.consignes.push({ id: ev.id, titre: TITRE.dispo });
@@ -135,39 +129,41 @@ export function reconcilier(entree: { fenetre: Fenetre; evenements: EvenementRec
     }
   }
   for (const [ev, c] of aDeplacer) {
-    if (!dansFenetre(ev.debut)) {
-      // Un libre emporté hors de la fenêtre (passé, trop loin) se ferme ;
-      // l'événement, hors d'atteinte, n'a pas de consigne.
-      plan.operations.fermer.push({ creneauId: c.id, evenementId: c.evenementId });
-    } else if (!dureeExacte(ev)) {
-      plan.operations.fermer.push({ creneauId: c.id, evenementId: c.evenementId });
-      plan.consignes.push({ id: ev.id, titre: TITRE.duree });
-    } else if (occupe.has(instant(ev.debut))) {
-      plan.operations.fermer.push({ creneauId: c.id, evenementId: c.evenementId });
-      plan.consignes.push({ id: ev.id, titre: TITRE.doublon });
-    } else {
-      plan.operations.deplacer.push({ creneauId: c.id, evenementId: ev.id, debut: ev.debut, fin: ev.fin });
-      occupe.set(instant(ev.debut), c.id);
+    // Un libre emporté hors de la fenêtre se ferme, sans consigne : l'événement est hors d'atteinte.
+    const refus = !dansFenetre(ev.debut)
+      ? null
+      : !dureeExacte(ev)
+        ? TITRE.duree
+        : occupe.has(instant(ev.debut))
+          ? TITRE.doublon
+          : undefined;
+    if (refus === undefined) {
+      fermer(c, true);
+      plan.operations.ouvrir.push({ evenementId: ev.id, debut: ev.debut, fin: ev.fin, deplacement: true });
+      occupe.set(instant(ev.debut), `deplace:${ev.id}`);
       plan.consignes.push({ id: ev.id, titre: TITRE.dispo });
+    } else {
+      fermer(c);
+      if (refus) plan.consignes.push({ id: ev.id, titre: refus });
     }
   }
 
   // 2. Les événements inconnus : reprendre un créneau à son début, ou en ouvrir un.
   for (const ev of recus) {
-    if (parEvenement.has(ev.id) || !dansFenetre(ev.debut)) continue;
+    if (parEvenement.has(ev.id)) continue;
     if (!dureeExacte(ev)) {
       plan.consignes.push({ id: ev.id, titre: TITRE.duree });
       continue;
     }
     const debut = instant(ev.debut);
-    const repris = rattachables.get(debut);
-    const libre = !occupe.has(debut) || occupe.get(debut) === repris?.id;
-    if (repris && memesHeures(ev, repris) && libre) {
+    const c = rattachables.get(debut);
+    const libre = !occupe.has(debut) || occupe.get(debut) === c?.id;
+    if (c && memesHeures(ev, c) && libre) {
       rattachables.delete(debut);
-      orphelins.delete(repris.id);
-      occupe.set(debut, repris.id);
-      plan.operations.rattacher.push({ creneauId: repris.id, evenementId: ev.id, ancien: repris.evenementId });
-      plan.consignes.push({ id: ev.id, titre: titreDuCreneau(repris) });
+      repris.add(c.id);
+      occupe.set(debut, c.id);
+      plan.operations.rattacher.push({ creneauId: c.id, evenementId: ev.id, ancien: c.evenementId });
+      plan.consignes.push({ id: ev.id, titre: titreDuCreneau(c) });
     } else if (occupe.has(debut)) {
       plan.consignes.push({ id: ev.id, titre: TITRE.doublon });
     } else {
@@ -178,12 +174,14 @@ export function reconcilier(entree: { fenetre: Fenetre; evenements: EvenementRec
   }
 
   // 3. Les créneaux dont l'événement a disparu sans être repris.
-  for (const c of orphelins.values()) {
+  for (const c of entree.creneaux) {
+    if (!estOrphelin(c) || repris.has(c.id)) continue;
     if (c.reserve) {
-      plan.aCreer.push({ debut: c.debut, fin: c.fin, titre: titreDuCreneau(c) });
-      plan.conflits.push({ creneauId: c.id, debut: c.debut, fin: c.fin, nature: "supprime", titre: titreDuCreneau(c) });
+      const titre = titreDuCreneau(c);
+      plan.aCreer.push({ debut: c.debut, fin: c.fin, titre });
+      plan.conflits.push({ creneauId: c.id, debut: c.debut, fin: c.fin, nature: "supprime", titre });
     } else {
-      plan.operations.fermer.push({ creneauId: c.id, evenementId: c.evenementId });
+      fermer(c);
     }
   }
   return plan;

@@ -12,7 +12,8 @@ import "server-only";
 import type { ModeRendezVous, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { surUneLigne } from "@/lib/validation/texte";
-import { TITRE, type CreneauConnu, type Fenetre } from "./reconciliation";
+import type { Fenetre } from "../creneaux";
+import { TITRE, type CreneauConnu } from "./reconciliation";
 
 type Tx = Prisma.TransactionClient;
 

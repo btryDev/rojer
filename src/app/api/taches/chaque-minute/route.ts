@@ -5,15 +5,14 @@
 // Une exécution coupée par un déploiement est reprise par les baux en base.
 
 import { after } from "next/server";
-import { appelAutorise, lancerTaches, secretDesTaches } from "@/lib/taches/quotidiennes";
-
-const SANS_CACHE = { "Cache-Control": "no-store" };
+import { appelAutorise, reponseMachine } from "@/lib/securite/requete-machine";
+import { lancerTaches, secretDesTaches } from "@/lib/taches/quotidiennes";
 
 export async function POST(request: Request) {
   const secret = secretDesTaches();
-  if (!secret) return new Response(null, { status: 404, headers: SANS_CACHE });
+  if (!secret) return reponseMachine(404);
   if (!appelAutorise(request.headers.get("authorization"), secret)) {
-    return new Response(null, { status: 401, headers: SANS_CACHE });
+    return reponseMachine(401);
   }
   after(async () => {
     try {
@@ -22,5 +21,5 @@ export async function POST(request: Request) {
       console.error(`tâches en échec — ${e instanceof Error ? e.name : "erreur"}`);
     }
   });
-  return new Response(null, { status: 202, headers: SANS_CACHE });
+  return reponseMachine(202);
 }
