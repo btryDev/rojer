@@ -273,11 +273,18 @@ classe un contenu d'utilisateur (CLAUDE.md, règle 7).
 - **Délai de visibilité** : une annulation client apparaît dans l'agenda au
   plus une heure après, en journée ouvrée. Un événement posé le soir est
   repris le lendemain à 8 h.
-- **Mise en service** :
+- **Mise en service** ~~: code, revues et CI ; déploiement en préprod, puis
+  `AGENDA_SECRET` sur rojer-preprod ; environnement et tâche de l'agent ;
+  recette sur un agenda de test ; partage avec le préventeur.~~
+  [2026-11-25, décision de la propriétaire : il n'y a plus de préprod, les
+  tests locaux et la prod.]
   1. code, revues et CI ;
-  2. déploiement en préprod, puis `AGENDA_SECRET` sur rojer-preprod ;
-  3. environnement et tâche de l'agent ;
-  4. recette sur un agenda de test ;
+  2. recette en local, l'agent joué sur le vrai agenda contre
+     `localhost` (faite le 2026-11-25 : ouverture, découpage, rattachement,
+     réservation, annulation, fermeture) ;
+  3. mise en prod sur décision de la propriétaire, puis `AGENDA_SECRET`
+     sur l'application de prod ;
+  4. environnement et tâche cloud de l'agent ;
   5. partage avec le préventeur.
 - **Dépendance** : la fonction de tâches planifiées cloud est en « research
   preview ». Si elle disparaît, la route ne change pas ; seul l'appelant
