@@ -14,7 +14,7 @@ const m = vi.hoisted(() => ({
 }));
 vi.mock("@/lib/alertes", () => ({ alerterUneFoisParJour: m.alerte }));
 vi.mock("./base", () => ({ prendreLePassage: m.prendre, lierEvenement: m.lier, marquerEchec: m.echec }));
-vi.mock("./synchronisation", () => ({ synchroniser: m.synchroniser, INTERVALLE_MS: 15 * 60_000 }));
+vi.mock("./synchronisation", () => ({ synchroniser: m.synchroniser, INTERVALLE_MS: 60_000 }));
 vi.mock("./google", async (importOriginal) => ({
   ...(await importOriginal<typeof import("./google")>()),
   configurationGoogle: m.config,
@@ -53,6 +53,30 @@ describe("synchroniserLAgenda", () => {
     expect(await synchroniserLAgenda(maintenant)).toMatchObject({ agenda: { crees: 50 } });
   });
 
+  it("prend un bail de 50 s : la crontab rappelle chaque minute", async () => {
+    m.prendre.mockResolvedValue(null);
+    await synchroniserLAgenda(maintenant);
+    expect(m.prendre).toHaveBeenCalledWith(maintenant, 50_000);
+  });
+
+  it("ne commence plus d'écriture après 30 s : le passage suivant ne la doublerait pas", async () => {
+    m.lister.mockResolvedValue([]);
+    let t = 0;
+    // Chaque création prend 10 s : la quatrième commencerait à 30 s.
+    m.creer.mockImplementation(async () => {
+      t += 10_000;
+      return "n";
+    });
+    m.synchroniser.mockResolvedValue({
+      etat: "fait",
+      bilan: {},
+      ecartes: new Set(),
+      plan: plan(),
+      aCreer: Array.from({ length: 10 }, (_, i) => ({ creneauId: `c${i}`, debut: h(9), fin: h(10), titre: "Dispo" })),
+    });
+    expect(await synchroniserLAgenda(maintenant, () => t)).toMatchObject({ agenda: { crees: 3 } });
+  });
+
   it("hors service sans configuration, sans rien lire", async () => {
     m.config.mockReturnValue(null);
     expect(await synchroniserLAgenda(maintenant)).toEqual({ etat: "hors-service" });
@@ -70,7 +94,7 @@ describe("synchroniserLAgenda", () => {
     expect(await synchroniserLAgenda(maintenant)).toEqual({ etat: "echec", motif: "lecture de l'agenda refusée (HTTP 403)" });
     expect(m.synchroniser).not.toHaveBeenCalled();
     expect(m.alerte).toHaveBeenCalledWith("agenda:lecture", expect.any(String), expect.any(Array), maintenant);
-    // Journalisé : la cadence de 15 minutes vaut aussi en panne (revue du 2026-11-26).
+    // Journalisé : la cadence vaut aussi en panne (revue du 2026-11-26).
     expect(m.echec).toHaveBeenCalledWith("passage-1");
   });
 

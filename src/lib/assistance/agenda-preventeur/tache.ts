@@ -1,7 +1,8 @@
 import "server-only";
 // La synchronisation de l'agenda du préventeur, lancée par la crontab de
-// chaque minute (`taches/quotidiennes.ts`), un passage toutes les 15 minutes
-// (ADR-064, amendée le 2026-11-26 : plus d'agent ni de route).
+// chaque minute (`taches/quotidiennes.ts`), un passage par minute
+// (ADR-064, amendée le 2026-11-26 : plus d'agent ni de route ; 15 minutes,
+// puis une minute le même jour).
 //
 // 1. Prendre le passage (`prendreLePassage`) AVANT d'appeler Google : deux
 //    instances à la même minute n'en font qu'un, et une panne ne fait pas
@@ -39,6 +40,19 @@ const FENETRE_MS = 56 * 24 * 60 * 60_000;
  * Google par utilisateur est faible, et la crontab tourne chaque minute.
  */
 const ECRITURES_PAR_PASSAGE = 50;
+/**
+ * Le bail d'un passage : la crontab rappelle chaque minute, à quelques
+ * secondes près ; un appel arrivé moins de 50 s après le précédent n'en
+ * prend pas un second.
+ */
+const BAIL_MS = INTERVALLE_MS - 10_000;
+/**
+ * Aucune écriture dans l'agenda ne COMMENCE au-delà de 30 s de passage :
+ * chaque appel à Google abandonne au bout de 15 s (`google.ts`), donc un
+ * passage a fini d'écrire avant que le bail suivant ne s'ouvre. Deux passages
+ * qui écriraient en même temps créeraient deux fois l'événement d'un créneau.
+ */
+const ECRITURES_JUSQU_A_MS = 30_000;
 
 export type Passage =
   | { etat: "hors-service" | "pas-encore" | "plafond" }
@@ -72,14 +86,20 @@ async function signalerLesConflits(conflits: Conflit[], maintenant: Date): Promi
 }
 
 /** Écrit dans l'agenda ce qui diffère de ce que Rojer y veut, dans la limite d'un passage. */
-async function ecrireDansLAgenda(config: ConfigGoogle, lus: EvenementGoogle[], consignes: Consigne[], aCreer: ACreer[]) {
+async function ecrireDansLAgenda(
+  config: ConfigGoogle,
+  lus: EvenementGoogle[],
+  consignes: Consigne[],
+  aCreer: ACreer[],
+  encoreLeTemps: () => boolean,
+) {
   const parId = new Map(lus.map((ev) => [ev.id, ev]));
   const bilan = { modifies: 0, crees: 0, echecs: 0 };
   let restantes = ECRITURES_PAR_PASSAGE;
   for (const c of consignes) {
     const ev = parId.get(c.id);
     if (!ev || (ev.titre === c.titre && (!c.remettre || memesHeures(ev, c.remettre)))) continue;
-    if (restantes-- <= 0) return bilan;
+    if (restantes-- <= 0 || !encoreLeTemps()) return bilan;
     try {
       if (await modifierEvenement(config, ev, { titre: c.titre, ...(c.remettre ?? {}) })) bilan.modifies++;
     } catch (e) {
@@ -88,7 +108,7 @@ async function ecrireDansLAgenda(config: ConfigGoogle, lus: EvenementGoogle[], c
     }
   }
   for (const a of aCreer) {
-    if (restantes-- <= 0) return bilan;
+    if (restantes-- <= 0 || !encoreLeTemps()) return bilan;
     try {
       // Non lié (le créneau a changé entre-temps) : l'événement sera repris par son heure au passage suivant.
       await lierEvenement(a.creneauId, await creerEvenement(config, a));
@@ -101,10 +121,12 @@ async function ecrireDansLAgenda(config: ConfigGoogle, lus: EvenementGoogle[], c
   return bilan;
 }
 
-export async function synchroniserLAgenda(maintenant: Date): Promise<Passage> {
+/** `horloge` : le temps réel du passage, pour borner ses écritures (les tests le fixent). */
+export async function synchroniserLAgenda(maintenant: Date, horloge: () => number = Date.now): Promise<Passage> {
   const config = configurationGoogle();
   if (!config) return { etat: "hors-service" };
-  const passage = await prendreLePassage(maintenant, INTERVALLE_MS - 60_000);
+  const debut = horloge();
+  const passage = await prendreLePassage(maintenant, BAIL_MS);
   if (!passage) return { etat: "pas-encore" };
 
   const fenetre = { depuis: maintenant, jusqua: new Date(maintenant.getTime() + FENETRE_MS) };
@@ -131,7 +153,7 @@ export async function synchroniserLAgenda(maintenant: Date): Promise<Passage> {
   }
   await signalerLesConflits(r.plan.conflits, maintenant);
   const consignes = r.plan.consignes.filter((c) => !r.ecartes.has(c.id));
-  const agenda = await ecrireDansLAgenda(config, lus, consignes, r.aCreer);
+  const agenda = await ecrireDansLAgenda(config, lus, consignes, r.aCreer, () => horloge() - debut < ECRITURES_JUSQU_A_MS);
   if (agenda.echecs > 0) {
     await alerterUneFoisParJour("agenda:ecriture", "Agenda du préventeur : écritures en échec", [
       `${agenda.echecs} écriture(s) dans l'agenda n'ont pas abouti ; elles sont reprises au passage suivant.`,

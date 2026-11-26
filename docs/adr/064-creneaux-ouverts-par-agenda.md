@@ -35,8 +35,11 @@
 > doit pouvoir appeler Rojer » — Rojer appelle Google lui-même.
 >
 > - **Appelant** : `lancerTaches` (crontab de chaque minute) lance
->   `agenda-preventeur/tache.ts`, après les tâches du jour, un passage toutes
->   les 15 minutes. Le passage est PRIS au journal, sous verrou, AVANT
+>   `agenda-preventeur/tache.ts`, après les tâches du jour, ~~un passage toutes
+>   les 15 minutes~~ [2026-11-26, décision de la propriétaire, avant une
+>   démonstration : un passage par minute, au rythme de la crontab — bail de
+>   50 s, et aucune écriture dans l'agenda ne commence après 30 s de passage,
+>   pour que deux passages n'écrivent jamais en même temps]. Le passage est PRIS au journal, sous verrou, AVANT
 >   d'appeler Google (`prendreLePassage`) : deux instances à la même minute
 >   n'en font qu'un, et une panne ne fait pas rappeler Google chaque minute.
 >   Au plus 50 écritures dans l'agenda par passage ; le reste suit.
