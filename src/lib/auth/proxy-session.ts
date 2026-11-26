@@ -28,6 +28,8 @@ const PUBLIC_PREFIXES = [
   // page — la vérification se fait dans l'application. Les adresses restent
   // sans session pour répondre 404 à tous, tiers compris : un lien d'un
   // ancien PDF ou d'un ancien e-mail ne mène pas à un écran de connexion.
+  // (Une adresse retirée dont une page reprend le rôle se redirige plutôt,
+  // dans `next.config.ts` : `/bientot` → `/signup`, 2026-11-26.)
   "/verifier",
   "/signe",
   // Registre public d'accessibilité.

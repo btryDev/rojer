@@ -34,10 +34,10 @@ import { adressePubliqueOuNull } from "@/lib/url-publique";
  */
 // [2026-11-23, décision de la propriétaire : la page publique part en ligne
 // et doit être trouvée — « enlever, et justement favoriser ». Les pages
-// légales et les conditions générales, rédigées depuis (#360), et la page
-// d'attente passent du côté indexable ; `sitemap.xml` les annonce.]
-// [2026-11-26 : la page d'attente `/bientot` est retirée.]
+// légales et les conditions générales, rédigées depuis (#360), ~~et la page
+// d'attente~~ passent du côté indexable ; `sitemap.xml` les annonce.]
 // [2026-11-24 : `/llms.txt`, le résumé du site pour les assistants.]
+// [2026-11-26 : la page d'attente `/bientot` est retirée.]
 export const RACINES_INDEXABLES = ["/", "/login", "/signup", "/legal/", "/conditions", "/llms.txt"] as const;
 
 export const RACINES_EXCLUES = [

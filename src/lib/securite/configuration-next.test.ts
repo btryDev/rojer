@@ -36,3 +36,13 @@ describe("next.config", () => {
     expect(nextConfig.poweredByHeader).toBe(false);
   });
 });
+
+/**
+ * `/bientot`, retirée le 2026-11-26 : figurait au plan du site. Sans la
+ * redirection, l'adresse retomberait sur la connexion (proxy) puis une 404.
+ */
+describe("next.config : adresses retirées", () => {
+  it("/bientot renvoie en permanence à l'inscription", async () => {
+    expect(await nextConfig.redirects?.()).toContainEqual({ source: "/bientot", destination: "/signup", permanent: true });
+  });
+});
