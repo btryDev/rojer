@@ -13,8 +13,9 @@
 // existera (`cc`), le lien devra porter l'offre choisie~~ [2026-11-16 : le
 // lien porte l'offre et la période (`/signup?offre=rojer_pro_annuel`),
 // gardées pour l'écran d'essai et la page Abonnement — `offre-choisie.ts`].
-// [2026-11-23 : tant que les inscriptions sont fermées (`lib/ouverture.ts`,
-// Stripe non validé), le bouton mène à /bientot, libellé inchangé.]
+// ~~[2026-11-23 : tant que les inscriptions sont fermées (`lib/ouverture.ts`,
+// Stripe non validé), le bouton mène à /bientot, libellé inchangé.]~~
+// [2026-11-26 : /bientot et l'interrupteur retirés, le bouton mène à /signup.]
 
 import { ESPACE_UNITE, formaterNombreFr } from "@/lib/rendu/mesures";
 import type { CleFormule, Periodicite } from "@/lib/abonnements/formules";

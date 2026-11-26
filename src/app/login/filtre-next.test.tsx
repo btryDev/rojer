@@ -5,20 +5,9 @@
  * est passé par `cheminDeRetour` (revue du lot audit-1013-auth, A2).
  */
 import { renderToStaticMarkup } from "react-dom/server";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-const recu = vi.hoisted(() => ({ login: [] as string[], ouvert: true }));
-
-// L'interrupteur de l'ouverture (`lib/ouverture.ts`) : ouvert pour les tests
-// du filtre, fermé pour ceux du lien « Créer un compte », plus bas.
-vi.mock("@/lib/ouverture", async (original) => {
-  const o = await original<typeof import("@/lib/ouverture")>();
-  return {
-    ...o,
-    lienInscription: (chemin: string, opts: { next?: string | null } = {}) =>
-      o.lienInscription(chemin, { ...opts, ouvert: recu.ouvert }),
-  };
-});
+const recu = vi.hoisted(() => ({ login: [] as string[] }));
 
 vi.mock("./LoginForm", () => ({
   LoginForm: ({ next }: { next: string }) => {
@@ -63,31 +52,5 @@ describe("filtre de `next` dans les pages d'entrée", () => {
     const html = await rendre(LoginPage, "/etablissements/e1");
     expect(recu.login.at(-1)).toBe("/etablissements/e1");
     expect(html).toContain(`/signup?next=${encodeURIComponent("/etablissements/e1")}`);
-  });
-});
-
-/**
- * Rojer pas encore ouvert au public (`lib/ouverture.ts`, 2026-11-23) : le lien
- * « Créer un compte » de /login mène à /bientot — sauf pour la personne
- * invitée qui revient à son invitation (ADR-054 § 5). `/signup` reste servi.
- */
-describe("Rojer pas encore ouvert", () => {
-  beforeEach(() => {
-    recu.ouvert = false;
-  });
-  afterEach(() => {
-    recu.ouvert = true;
-  });
-
-  it("/login : « Créer un compte » mène à /bientot, et à /signup pour une invitation", async () => {
-    expect(await rendre(LoginPage, "/etablissements/e1")).toContain('href="/bientot"');
-    const invitation = await rendre(LoginPage, "/invitation/inv-1");
-    expect(invitation).toContain(`href="/signup?next=${encodeURIComponent("/invitation/inv-1")}"`);
-    expect(invitation).not.toContain('href="/bientot"');
-  });
-
-  it("/signup reste servi : le formulaire, même fermé", async () => {
-    const html = await rendre(SignupPage, "/compte");
-    expect(html).toContain('href="/login?next=%2Fcompte"');
   });
 });

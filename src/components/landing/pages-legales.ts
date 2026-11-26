@@ -78,7 +78,7 @@ const MENTIONS_LEGALES: PageLegale = {
 const CONFIDENTIALITE: PageLegale = {
   slug: "confidentialite",
   titre: "Politique de confidentialité",
-  misAJour: "24 novembre 2026",
+  misAJour: "26 novembre 2026",
   sections: [
     {
       titre: "Qui traite vos données",
@@ -96,7 +96,6 @@ const CONFIDENTIALITE: PageLegale = {
         "Formulaire de contact : sujet, nom, adresse e-mail, structure, message. Le message nous parvient par e-mail ; il n'est pas enregistré dans Rojer. Fondement : les mesures précontractuelles prises à votre demande, ou notre intérêt légitime à vous répondre.",
         "Demandes d'assistance faites depuis l'application : sujet, question, page d'origine et, pour un problème technique, le nom de votre navigateur. La demande nous parvient par e-mail, et la réponse vous parvient par e-mail. Fondement : l'exécution du contrat.",
         "Rendez-vous annuel de la formule Pro : date et heure, téléphone ou visio, numéro où vous appeler, ce que vous voulez aborder. La réservation nous parvient par e-mail, et la confirmation vous parvient par e-mail. Fondement : l'exécution du contrat.",
-        "Liste d'attente de l'ouverture : adresse e-mail laissée sur la page « Rojer ouvre très bientôt ». Elle ne sert qu'à vous prévenir de l'ouverture, par un seul e-mail. Fondement : votre consentement, que vous retirez en demandant l'effacement.",
         "Sécurité : adresse IP réduite à une empreinte pour limiter les tentatives répétées, journaux techniques. Fondement : notre intérêt légitime à protéger le service.",
         "Les champs marqués d'un astérisque sont nécessaires pour créer un compte, souscrire ou nous écrire ; sans eux, nous ne pouvons pas rendre le service demandé. Les autres sont facultatifs.",
         "Nous ne faisons ni publicité ciblée, ni revente de données, ni profilage, et aucune décision n'est prise à votre égard de façon entièrement automatisée. Rojer n'utilise aucune intelligence artificielle pour traiter vos données.",
@@ -112,7 +111,6 @@ const CONFIDENTIALITE: PageLegale = {
         "Factures : dix ans, la durée que la loi impose aux pièces comptables.",
         "Trace d'un compte supprimé (nom du compte, adresses des propriétaires, acceptations des conditions, dates) : cinq ans, pour la preuve en cas de litige.",
         "Messages de contact et demandes d'assistance : le temps de traiter la demande, puis trois ans au plus. Rendez-vous annuels : trois ans au plus après le rendez-vous.",
-        "Liste d'attente de l'ouverture : jusqu'à l'e-mail d'ouverture, puis effacée ; effacée aussi sur simple demande.",
         "Journaux techniques de l'hébergeur (dont l'adresse IP) : trente jours. Sessions de connexion : sept jours au plus.",
       ],
     },
