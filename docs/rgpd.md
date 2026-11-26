@@ -344,7 +344,7 @@ reconnaissable »). Deux mesures la gardent de le devenir :
   stockage au remplacement, au retrait et à la suppression de l'établissement
   (`suppression/fichiers.ts`).
 
-### 2.10 Liste d'attente de l'ouverture (`/bientot`, 2026-11-23)
+### 2.10 ~~Liste d'attente de l'ouverture (`/bientot`, 2026-11-23)~~ — retirée le 2026-11-26
 
 [2026-11-26, décision de la propriétaire : la page `/bientot`, le formulaire et la table `DemandeOuverture` sont retirés ; la table est supprimée avec ses adresses (migration `20261126180000_retirer_demande_ouverture`), sans e-mail d'ouverture. Le traitement n'existe plus, la politique de confidentialité ne le cite plus.]
 

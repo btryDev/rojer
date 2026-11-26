@@ -78,7 +78,7 @@ const MENTIONS_LEGALES: PageLegale = {
 const CONFIDENTIALITE: PageLegale = {
   slug: "confidentialite",
   titre: "Politique de confidentialité",
-  misAJour: "24 novembre 2026",
+  misAJour: "26 novembre 2026",
   sections: [
     {
       titre: "Qui traite vos données",
