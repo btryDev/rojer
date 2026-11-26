@@ -24,9 +24,13 @@
 //
 // Module sans `server-only` : les cartes d'offres, composant client, le lisent.
 
-// [2026-11-26, décision de la propriétaire : Stripe validé et vérifié en production
-// (`pnpm verifier-stripe-prod`, #385) — Rojer ouvre.]
-export const OUVERT_AU_PUBLIC: boolean = true;
+// ~~[2026-11-26, décision de la propriétaire : Stripe validé et vérifié en production
+// (`pnpm verifier-stripe-prod`, #385) — Rojer ouvre.]~~
+// [2026-11-26 (après-midi), décision de la propriétaire : refermé le temps de
+// ses tests en production — les boutons mènent de nouveau à /bientot, /signup
+// reste servi au lien direct. Le PAIEMENT, lui, ne dépend plus de cet
+// interrupteur (`sAbonnerAction`) : Stripe est validé.]
+export const OUVERT_AU_PUBLIC: boolean = false;
 
 /** La page « Rojer ouvre bientôt ». */
 export const PAGE_BIENTOT = "/bientot";

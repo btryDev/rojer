@@ -8,8 +8,8 @@ import { lienInscription, OUVERT_AU_PUBLIC, PAGE_BIENTOT, versInvitation } from 
  * rouvert, décision de la propriétaire.]
  */
 describe("l'ouverture au public", () => {
-  it("~~est fermée (Stripe non validé, 2026-11-23)~~ est ouverte (Stripe validé et vérifié, 2026-11-26)", () => {
-    expect(OUVERT_AU_PUBLIC).toBe(true);
+  it("est fermée le temps des tests de la propriétaire (2026-11-26, après-midi)", () => {
+    expect(OUVERT_AU_PUBLIC).toBe(false);
   });
 
   it("fermée, un bouton d'inscription mène à /bientot, offre comprise", () => {

@@ -119,7 +119,7 @@ describe("recevoirNotificationStripe : enregistrer, répondre, rien d'autre", ()
 
 describe("motifDErreur", () => {
   it("ne reprend jamais le message d'une erreur", () => {
-    expect(motifDErreur(new Error("client@exemple.fr"))).toBe("erreur inattendue");
+    expect(motifDErreur(new Error("client@exemple.fr"))).toBe("erreur inattendue (Error)");
     expect(motifDErreur(new Stripe.errors.StripeConnectionError({ message: "client@exemple.fr" } as never))).toBe(
       "API Stripe : StripeConnectionError",
     );

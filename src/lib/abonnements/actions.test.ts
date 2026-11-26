@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Stripe from "stripe";
 import { redirigeVers } from "@/test/redirection";
+import { argumentsBornes } from "@/lib/auth/portee/borne";
 
 // S'abonner (ADR-053 § 9, amendé le 2026-11-16) : jamais un second
 // abonnement ; pendant l'essai, après lui ou après une résiliation, Checkout
@@ -106,13 +107,10 @@ beforeEach(() => {
 });
 
 describe("sAbonnerAction", () => {
-  it("Rojer pas encore ouvert au public : pas de paiement, la page le dit (2026-11-23)", async () => {
+  it("~~Rojer pas encore ouvert au public : pas de paiement (2026-11-23)~~ la page publique fermée ne ferme plus le paiement (2026-11-26)", async () => {
     m.ouvert = false;
     try {
-      expect(await redirigeVers(sAbonnerAction(formulaire()))).toBe("/compte/abonnement?stripe=bientot");
-      expect(m.ouvrirCheckout).not.toHaveBeenCalled();
-      expect(m.clientStripeDuCompte).not.toHaveBeenCalled();
-      expect(m.marquer).not.toHaveBeenCalled();
+      expect(await redirigeVers(sAbonnerAction(formulaire()))).toBe("https://checkout.stripe.test/abonnement");
     } finally {
       m.ouvert = true;
     }
@@ -131,8 +129,19 @@ describe("sAbonnerAction", () => {
       expect.objectContaining({ customerId: "cus_neuf", priceId: "price_pa", tauxTva: "txr_tva", succes: "https://rojer.test/compte/abonnement?paiement=termine&session={CHECKOUT_SESSION_ID}" }),
     );
     // La marque du paiement ouvert, AVANT Checkout : la suppression du compte l'attend (ADR-058).
-    expect(m.marquer).toHaveBeenCalledWith({ where: { compteId: "c1", compte: { suppressionDemandeeLe: null } }, data: { paiementOuvertLe: expect.any(Date) } });
+    expect(m.marquer).toHaveBeenCalledWith({ where: { compteId: "c1" }, data: { paiementOuvertLe: expect.any(Date) } });
     expect(m.marquer.mock.invocationCallOrder[0]).toBeLessThan(m.ouvrirCheckout.mock.invocationCallOrder[0]);
+    // La marque passe par le client borné : ses arguments doivent y être admis
+    // (2026-11-26 — un filtre vers `Compte` y était refusé, et rien ne le testait).
+    const portee = { compteId: "c1", userId: "u1" } as Parameters<typeof argumentsBornes>[3];
+    expect(() => argumentsBornes("Abonnement", "updateMany", m.marquer.mock.calls[0][0], portee)).not.toThrow();
+  });
+
+  it("une suppression demandée entre la lecture et la marque : pas de paiement (ADR-058 § 8)", async () => {
+    m.demande.mockResolvedValueOnce(null).mockResolvedValueOnce({ demandeeLe: new Date(), par: "a@b.fr", effacementLe: new Date() });
+    expect(await redirigeVers(sAbonnerAction(formulaire()))).toBe("/compte/abonnement");
+    expect(m.marquer).toHaveBeenCalled();
+    expect(m.ouvrirCheckout).not.toHaveBeenCalled();
   });
 
   it("une suppression du compte est demandée : pas de paiement, la page de la suppression (ADR-058 § 8)", async () => {

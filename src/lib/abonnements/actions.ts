@@ -5,7 +5,6 @@
 // liste OUVERTES). L'essai se compte chez Rojer (ADR-053 § 9, amendé le
 // 2026-11-16) : pas de client Stripe avant « s'abonner ».
 
-import { OUVERT_AU_PUBLIC } from "@/lib/ouverture";
 import Stripe from "stripe";
 import { redirect } from "next/navigation";
 import { publicAppUrl } from "@/lib/email";
@@ -127,12 +126,11 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
   // (répétition locale du 2026-11-17 — sans cela, impossible de s'abonner
   // après l'essai).
   ouvrirAuGel();
-  // Rojer pas encore ouvert au public (`lib/ouverture.ts`, 2026-11-23,
-  // décision de la propriétaire : Stripe non validé) : pas de paiement, ni
-  // carte réelle ni carte de test en préproduction. La page le dit. Après
-  // `ouvrirAuGel` : la garde du gel veut l'ouverture juste après la garde de
-  // rôle (`quotas-gel-garde.test.ts`).
-  if (!OUVERT_AU_PUBLIC) redirect(`${PAGE_ABONNEMENT}?stripe=bientot`);
+  // ~~Rojer pas encore ouvert au public (`lib/ouverture.ts`, 2026-11-23,
+  // décision de la propriétaire : Stripe non validé) : pas de paiement.~~
+  // [2026-11-26 : Stripe validé ; le paiement ne dépend plus de l'ouverture
+  // au public — la page publique peut être fermée pendant que les comptes
+  // venus par lien direct paient. Décision de la propriétaire.]
   const { stripe, db, ligne, compteId, conditionsSurCheckout } = await clientDuCompte(proprietaire, formData);
   const formule = String(formData.get("formule") ?? "");
   if (!estLookupKey(formule)) redirect(PAGE_ABONNEMENT);
@@ -158,13 +156,17 @@ export async function sAbonnerAction(formData: FormData): Promise<void> {
       // La marque d'abord : la suppression du compte (ADR-058) la lit sous
       // verrou et attend une heure, le temps que la page expire. Plus de
       // ligne (compte effacé entre-temps) : pas de paiement.
-      // … ni de demande de suppression posée depuis la lecture (ADR-058 § 8).
+      // … ni de demande de suppression posée depuis la lecture (ADR-058 § 8) :
+      // relue APRÈS la marque. ~~Filtre `compte: { suppressionDemandeeLe: null }`
+      // dans la marque~~ [2026-11-26 : le client borné refuse tout filtre vers
+      // `Compte` (ErreurPortee) — « S'abonner » échouait en production pour
+      // tous ; les tests simulaient la base et ne l'ont pas vu.]
       const marque = await db.abonnement.updateMany({
-        where: { compteId, compte: { suppressionDemandeeLe: null } },
+        where: { compteId },
         data: { paiementOuvertLe: new Date() },
       });
       url =
-        marque.count !== 1
+        marque.count !== 1 || (await demandeDuCompte(compteId))
           ? PAGE_ABONNEMENT
           : await ouvrirCheckout(stripe, {
               customerId,
