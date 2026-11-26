@@ -229,7 +229,9 @@ export function motifDErreur(e: unknown): string {
   }
   if (e instanceof ListeTronquee) return `liste Stripe tronquée (${e.max})`;
   const code = codePrisma(e);
-  return code ? `base : ${code}` : "erreur inattendue";
+  // Le nom du type, jamais le message (il peut porter une adresse) : sans lui,
+  // l'échec de « S'abonner » du 2026-11-26 (ErreurPortee) ne se lisait pas.
+  return code ? `base : ${code}` : `erreur inattendue (${e instanceof Error ? e.constructor.name : typeof e})`;
 }
 
 /** Le bail a été repris par un autre worker pendant la relecture : rien n'est écrit. */
