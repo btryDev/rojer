@@ -1,18 +1,15 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import robots, { RACINES_INDEXABLES } from "./robots";
 import sitemap, { PAGES_DU_PLAN } from "./sitemap";
-import { OUVERT_AU_PUBLIC } from "@/lib/ouverture";
 
 /** Le plan du site et son annonce (2026-11-23). */
 describe("sitemap.xml", () => {
   afterEach(() => vi.unstubAllEnvs());
 
-  it("annonce l'accueil, les conditions et les pages légales ; la page d'attente tant que Rojer est fermé", () => {
+  it("annonce l'accueil, les conditions et les pages légales", () => {
     vi.stubEnv("PUBLIC_APP_URL", "https://rojer.exemple");
     const urls = sitemap().map((e) => e.url);
     expect(urls).toContain("https://rojer.exemple");
-    // [2026-11-26 : ouvert — /bientot redirige vers l'inscription et sort du plan.]
-    expect(urls.includes("https://rojer.exemple/bientot")).toBe(!OUVERT_AU_PUBLIC);
     expect(urls).toContain("https://rojer.exemple/conditions");
     expect(urls).toContain("https://rojer.exemple/legal/confidentialite");
   });

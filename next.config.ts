@@ -61,6 +61,14 @@ const nextConfig: NextConfig = {
   async headers() {
     return reglesEntetes();
   },
+  // `/bientot`, la page d'attente retirée le 2026-11-26 (décision de la
+  // propriétaire) : elle a figuré au plan du site et a pu être indexée ou
+  // partagée. Une redirection permanente vers l'inscription — sa destination
+  // depuis l'ouverture — plutôt qu'un renvoi à la connexion par le proxy, puis
+  // une 404. Les redirections de la configuration passent avant le proxy.
+  async redirects() {
+    return [{ source: "/bientot", destination: "/signup", permanent: true }];
+  },
 };
 
 export default nextConfig;

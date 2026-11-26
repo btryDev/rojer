@@ -5,8 +5,8 @@ const PUBLIQUE = "https://rojer.fr";
 
 describe("redirectionWww", () => {
   it("renvoie www vers l'adresse publique, chemin et paramètres compris", () => {
-    expect(redirectionWww("www.rojer.fr", "/bientot", "?source=stripe", PUBLIQUE)).toBe(
-      "https://rojer.fr/bientot?source=stripe",
+    expect(redirectionWww("www.rojer.fr", "/conditions", "?source=stripe", PUBLIQUE)).toBe(
+      "https://rojer.fr/conditions?source=stripe",
     );
     expect(redirectionWww("www.rojer.fr", "/", "", PUBLIQUE)).toBe("https://rojer.fr/");
   });

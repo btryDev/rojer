@@ -80,15 +80,8 @@ const CONNECTEUR: Ouverte = {
   lectureSeule: true,
 };
 
-/** « Me prévenir » de `/bientot` (2026-11-23) : un visiteur sans compte. */
-const PUBLIC: Ouverte = {
-  motif: "geste d'un visiteur sans compte sur la page publique : aucun abonnement à juger",
-  lectureSeule: true,
-};
-
 /** Écritures qui restent ouvertes quand la saisie est fermée. */
 const OUVERTES = new Map<string, Ouverte>([
-  ["lib/demandes-ouverture/actions.ts:demanderOuvertureAction", PUBLIC],
   // « Vérifier » une signature (2026-11-21) : recalcule une empreinte en lisant
   // l'objet ou le fichier signé (stockage), n'écrit rien — un compte impayé et
   // un membre en lecture seule gardent la vérification.

@@ -4,7 +4,6 @@ import { buttonVariants } from "@/components/ui/button";
 import { getOptionalUser } from "@/lib/auth/require-user";
 import { getOptionalUserEtablissement } from "@/lib/auth/scope";
 import { signOutAction } from "@/lib/auth/actions";
-import { lienInscription } from "@/lib/ouverture";
 
 /**
  * Header global persistant — visible partout où l'app n'a pas son propre
@@ -73,8 +72,7 @@ export async function AppHeader() {
                 Se connecter
               </Link>
               <Link
-                // Inscriptions fermées (`lib/ouverture.ts`) : /bientot.
-                href={lienInscription("/signup")}
+                href="/signup"
                 className={buttonVariants({ variant: "board", size: "boardSm" })}
               >
                 Créer un compte

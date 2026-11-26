@@ -29,8 +29,8 @@ import { BoutonContact } from "./BoutonContact";
 // décision de la propriétaire — « Comprendre » seul ne disait pas où il
 // menait ; ~~`#comprendre`, une ancre que rien ne portait~~, puis
 // ~~`/#documents`~~). Les deux premiers mènent à leur section de l'accueil
-// (`/#…` : depuis la racine, l'en-tête sert aussi aux pages légales et à
-// /bientot) ; « À propos » à « Ce que Rojer tient à jour » (`#documents`, la
+// (`/#…` : depuis la racine, l'en-tête sert aussi aux pages légales) ;
+// « À propos » à « Ce que Rojer tient à jour » (`#documents`, la
 // roue — ~~`#avantages`~~, même jour, décision de la propriétaire). « Contact »
 // ouvre le formulaire du pied
 // de page (`BoutonContact`), sans faire défiler. Sous `md`, la barre ne garde

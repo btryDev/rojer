@@ -11,9 +11,9 @@ import type { CompteLanding } from "./compte";
  * `getOptionalUserEtablissement` porte le défaut, une fois pour tout le
  * produit. Sans aucun dossier, on aiguille vers /onboarding. Personne de
  * connecté : `undefined`, et les sections mènent à /signup (la création d'un
- * dossier nécessite un compte, ADR-005) et à /login. [2026-11-23 : à
+ * dossier nécessite un compte, ADR-005) et à /login. ~~[2026-11-23 : à
  * /bientot au lieu de /signup tant que les inscriptions sont fermées,
- * `lib/ouverture.ts`.]
+ * `lib/ouverture.ts`.]~~ [2026-11-26 : /bientot retirée.]
  */
 export async function compteDeLaSession(): Promise<CompteLanding | undefined> {
   const user = await getOptionalUser();

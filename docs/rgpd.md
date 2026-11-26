@@ -346,7 +346,9 @@ reconnaissable »). Deux mesures la gardent de le devenir :
 
 ### 2.10 Liste d'attente de l'ouverture (`/bientot`, 2026-11-23)
 
-Tant que les inscriptions sont fermées (`src/lib/ouverture.ts`), la page
+[2026-11-26, décision de la propriétaire : la page `/bientot`, le formulaire et la table `DemandeOuverture` sont retirés ; la table est supprimée avec ses adresses (migration `20261126180000_retirer_demande_ouverture`), sans e-mail d'ouverture. Le traitement n'existe plus, la politique de confidentialité ne le cite plus.]
+
+~~Tant que les inscriptions sont fermées (`src/lib/ouverture.ts`), la page
 « Rojer ouvre très bientôt » recueille une adresse e-mail, et rien d'autre
 (`DemandeOuverture` : adresse en minuscules, date). Finalité unique : un seul
 e-mail, le jour de l'ouverture. Fondement : le consentement de la personne
@@ -355,7 +357,7 @@ Conservation : jusqu'à cet envoi, puis la table se vide ; effacement sur
 simple demande avant. La table n'est lue nulle part dans l'application, RLS
 active sans politique ; une limite de débit par réseau et un champ piège
 freinent les inscriptions automatiques. Écrit aussi dans la politique de
-confidentialité (`pages-legales.ts`).
+confidentialité (`pages-legales.ts`).~~
 
 ### 2.11 Formulaire de contact de la page publique (2026-11-19)
 

@@ -12,7 +12,6 @@ import { BoutonContact } from "./BoutonContact";
 import { SEGMENT, SEGMENTS } from "./segment";
 import { enEuros, OFFRES, parMoisSurUnAn, PERIODICITE_DE, type Offre, type Periode } from "./tarif-donnees";
 import { formuleDeLookupKey, lookupKey, type CleFormule } from "@/lib/abonnements/formules";
-import { lienInscription } from "@/lib/ouverture";
 
 /** Les deux teintes d'une carte : claire, ou d'encre pour l'offre mise en avant. */
 const TEINTE = {
@@ -166,13 +165,10 @@ export function TarifOffres({
                 ) : null
               ) : o.prix ? (
                 <Link
-                  // Inscriptions fermées (`lib/ouverture.ts`) : /bientot, même
-                  // libellé ; un compte connecté garde son dossier.
+                  // Un compte connecté garde son dossier.
                   href={
                     compte?.href ??
-                    lienInscription(
-                      o.formule ? `/signup?offre=${lookupKey(o.formule, PERIODICITE_DE[periode])}` : "/signup",
-                    )
+                    (o.formule ? `/signup?offre=${lookupKey(o.formule, PERIODICITE_DE[periode])}` : "/signup")
                   }
                   className={cn("lp-btn mt-auto justify-center", t.bouton)}
                 >

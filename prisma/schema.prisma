@@ -1541,19 +1541,6 @@ model LimiteDebit {
   @@index([fenetreFin])
 }
 
-/// Une adresse laissée sur la page « Rojer ouvre bientôt » (`/bientot`,
-/// 2026-11-23, décision de la propriétaire : inscriptions fermées tant que
-/// Stripe n'a pas validé le compte, `lib/ouverture.ts`). Hors compte : écrite
-/// sans session, jamais lue par l'application — la liste ne s'expose nulle
-/// part. Elle ne sert qu'à un e-mail, le jour de l'ouverture, et s'efface
-/// après l'envoi (et sur simple demande avant). `email` en minuscules : une
-/// même adresse n'a qu'une ligne.
-model DemandeOuverture {
-  id     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email  String   @unique
-  creeLe DateTime @default(now())
-}
-
 enum ScopeAccessToken {
   signature
   depot_rapport

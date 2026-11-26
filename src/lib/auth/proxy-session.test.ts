@@ -39,8 +39,6 @@ describe("chemins publics", () => {
       "/robots.txt",
       "/sitemap.xml",
       "/legal/mentions-legales",
-      // « Rojer ouvre bientôt » (2026-11-23, `lib/ouverture.ts`).
-      "/bientot",
     ]) {
       expect(cheminPublic(p), p).toBe(true);
     }
