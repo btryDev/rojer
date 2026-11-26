@@ -61,18 +61,6 @@ const nextConfig: NextConfig = {
   async headers() {
     return reglesEntetes();
   },
-  // `/bientot`, la page d'attente retirée le 2026-11-26 (décision de la
-  // propriétaire) : elle a figuré au plan du site et a pu être indexée ou
-  // partagée. Une redirection permanente vers l'inscription — sa destination
-  // depuis l'ouverture — plutôt qu'un renvoi à la connexion par le proxy, puis
-  // une 404. Les redirections de la configuration passent avant le proxy.
-  // L'autre façon de retirer une adresse — la garder publique pour qu'elle
-  // réponde 404 sans passer par la connexion — sert `/verifier` et `/signe`
-  // (`PUBLIC_PREFIXES`, `lib/auth/proxy-session.ts`) : rediriger quand une page
-  // reprend le rôle, 404 sinon.
-  async redirects() {
-    return [{ source: "/bientot", destination: "/signup", permanent: true }];
-  },
 };
 
 export default nextConfig;
