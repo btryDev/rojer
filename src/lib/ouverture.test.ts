@@ -4,11 +4,12 @@ import { lienInscription, OUVERT_AU_PUBLIC, PAGE_BIENTOT, versInvitation } from 
 /**
  * L'interrupteur de l'ouverture au public (2026-11-23, décision de la
  * propriétaire : Stripe non validé). Le premier test casse le jour où on le
- * rouvre — c'est voulu : rouvrir passe par un commit qui le dit.
+ * rouvre — c'est voulu : rouvrir passe par un commit qui le dit. [2026-11-26 :
+ * rouvert, décision de la propriétaire.]
  */
 describe("l'ouverture au public", () => {
-  it("est fermée (Stripe non validé, 2026-11-23)", () => {
-    expect(OUVERT_AU_PUBLIC).toBe(false);
+  it("~~est fermée (Stripe non validé, 2026-11-23)~~ est ouverte (Stripe validé et vérifié, 2026-11-26)", () => {
+    expect(OUVERT_AU_PUBLIC).toBe(true);
   });
 
   it("fermée, un bouton d'inscription mène à /bientot, offre comprise", () => {

@@ -3,6 +3,9 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/components/landing/compte-session", () => ({ compteDeLaSession: async () => undefined }));
 vi.mock("@/lib/demandes-ouverture/actions", () => ({ demanderOuvertureAction: async () => ({}) }));
+// La page telle qu'elle se sert Rojer fermé ; ouvert, elle renvoie à l'inscription
+// (2026-11-26) — gardée pour une prochaine fermeture.
+vi.mock("@/lib/ouverture", async (original) => ({ ...(await original<typeof import("@/lib/ouverture")>()), OUVERT_AU_PUBLIC: false }));
 // Sous vitest, une image importée n'a pas d'aperçu flou : `next/image`
 // refuserait `placeholder="blur"`. Le cadre est remplacé par ce qu'il
 // transmet — le texte alternatif.
