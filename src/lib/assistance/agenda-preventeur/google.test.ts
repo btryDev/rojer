@@ -101,7 +101,11 @@ describe("modifierEvenement et creerEvenement", () => {
     expect(a.url).toContain("/events/a1?sendUpdates=none");
     expect(a.init?.method).toBe("PATCH");
     expect(a.init?.headers).toMatchObject({ "If-Match": '"e1"' });
-    expect(JSON.parse(String(a.init?.body))).toEqual({ summary: "Dispo", start: { dateTime: debut.toISOString() }, end: { dateTime: fin.toISOString() } });
+    expect(JSON.parse(String(a.init?.body))).toEqual({
+      summary: "Dispo",
+      start: { dateTime: debut.toISOString(), timeZone: "Europe/Paris" },
+      end: { dateTime: fin.toISOString(), timeZone: "Europe/Paris" },
+    });
   });
 
   it("un événement changé depuis la lecture (412) n'est pas écrasé", async () => {

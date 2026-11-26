@@ -18,6 +18,9 @@ const JETON_URL = "https://oauth2.googleapis.com/token";
 const API = "https://www.googleapis.com/calendar/v3/calendars";
 const PORTEE = "https://www.googleapis.com/auth/calendar.events";
 const DELAI_MS = 15_000;
+/** Le fuseau des événements que Rojer écrit : celui du préventeur, pas UTC. */
+const FUSEAU = "Europe/Paris";
+const heure = (d: Date) => ({ dateTime: d.toISOString(), timeZone: FUSEAU });
 /** Au-delà, la lecture est tenue pour anormale et le passage s'arrête. */
 export const MAX_EVENEMENTS = 1000;
 
@@ -151,8 +154,8 @@ export async function modifierEvenement(
   const corps = {
     summary: changement.titre,
     ...(changement.debut && changement.fin && {
-      start: { dateTime: changement.debut.toISOString() },
-      end: { dateTime: changement.fin.toISOString() },
+      start: heure(changement.debut),
+      end: heure(changement.fin),
     }),
   };
   const r = await appeler(config, `/events/${encodeURIComponent(ev.id)}?sendUpdates=none`, {
@@ -169,7 +172,7 @@ export async function modifierEvenement(
 export async function creerEvenement(config: ConfigGoogle, ev: { titre: string; debut: Date; fin: Date }): Promise<string> {
   const r = await appeler(config, "/events?sendUpdates=none", {
     method: "POST",
-    body: JSON.stringify({ summary: ev.titre, start: { dateTime: ev.debut.toISOString() }, end: { dateTime: ev.fin.toISOString() } }),
+    body: JSON.stringify({ summary: ev.titre, start: heure(ev.debut), end: heure(ev.fin) }),
   });
   const cree = z.object({ id: z.string().regex(/^[A-Za-z0-9_-]{1,1024}$/) }).safeParse(await r.json().catch(() => null));
   if (!r.ok || !cree.success) throw new ErreurGoogle("création d'un événement refusée", r.status);
