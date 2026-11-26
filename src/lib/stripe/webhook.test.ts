@@ -5,7 +5,7 @@ vi.mock("server-only", () => ({}));
 vi.mock("./evenements", () => ({ enregistrer: vi.fn() }));
 
 import * as evenements from "./evenements";
-import { recevoirNotificationStripe, verifierNotificationStripe, type NotificationStripe } from "./webhook";
+import { lireCorpsBorne, recevoirNotificationStripe, verifierNotificationStripe, type NotificationStripe } from "./webhook";
 import { motifDErreur } from "./synchronisation";
 
 const SECRET = "whsec_essai";
@@ -23,6 +23,32 @@ const leger = (type: string, objet: string, livemode = false) => ({
 
 const signe = (corps: string, timestamp?: number) =>
   stripe.webhooks.generateTestHeaderString({ payload: corps, secret: SECRET, timestamp });
+
+describe("lireCorpsBorne", () => {
+  const morceaux = (...parties: string[]) =>
+    new ReadableStream<Uint8Array>({
+      start(c) {
+        for (const p of parties) c.enqueue(new TextEncoder().encode(p));
+        c.close();
+      },
+    });
+
+  it("rend le corps brut, octet pour octet", async () => {
+    const corps = '{"é":"€"}';
+    expect(await lireCorpsBorne(new Request("http://x", { method: "POST", body: corps }))).toBe(corps);
+  });
+
+  it("refuse un corps annoncé trop gros, sans le lire", async () => {
+    const r = new Request("http://x", { method: "POST", body: "x", headers: { "content-length": "999999" } });
+    expect(await lireCorpsBorne(r, 10)).toBeNull();
+  });
+
+  it("refuse un corps envoyé par morceaux sans taille annoncée, compté en octets", async () => {
+    const r = new Request("http://x", { method: "POST", body: morceaux("€€", "€€"), duplex: "half" } as RequestInit);
+    // 4 caractères, 12 octets.
+    expect(await lireCorpsBorne(r, 10)).toBeNull();
+  });
+});
 
 describe("verifierNotificationStripe", () => {
   const corps = JSON.stringify(leger("v1.customer.subscription.updated", "sub_1"));

@@ -64,8 +64,9 @@ const NOMMES_PRISMA: Record<string, { motif: string; usages: string[] | "tous"; 
   },
   "src/lib/assistance/agenda-preventeur/base.ts": {
     motif:
-      "synchronisation de l'agenda du préventeur, hors session (ADR-064) : purge du journal, heure du dernier passage (cadence), passage en échec journalisé, lien d'un événement créé après la transaction ; le reste passe par la transaction de la synchronisation",
-    usages: ["prisma.$executeRaw", "prisma.$queryRaw"],
+      "synchronisation de l'agenda du préventeur, hors session (ADR-064) : prise du passage sous verrou (cadence), passage en échec, lien d'un événement créé après la transaction, purge du journal ; le reste passe par la transaction de la synchronisation",
+    usages: ["prisma.$executeRaw", "prisma.$transaction"],
+    valeur: ["$transaction(hors tableau)"],
   },
   "src/lib/assistance/agenda-preventeur/synchronisation.ts": {
     motif: "synchronisation de l'agenda du préventeur, hors session (ADR-064) : la transaction qui tient le verrou",
@@ -487,7 +488,7 @@ const SQL_BRUT_NOMMES: Record<string, string> = {
   "src/lib/assistance/creneaux.ts":
     "créneaux du rendez-vous annuel, hors compte (ADR-063) : lecture des libres, prise conditionnelle (UPDATE … WHERE reserveLe IS NULL RETURNING) et remise, dans la transaction du compte",
   "src/lib/assistance/agenda-preventeur/base.ts":
-    "créneaux du rendez-vous annuel et journal de l'agent, hors compte (ADR-064) : verrou consultatif, lecture de la fenêtre, écritures conditionnelles (reserveLe IS NULL, événement lu), journal et sa purge",
+    "créneaux du rendez-vous annuel et journal de la synchronisation, hors compte (ADR-064) : verrou consultatif, prise du passage, lecture de la fenêtre, écritures conditionnelles (reserveLe IS NULL, événement lu), journal et sa purge",
   "src/lib/stripe/file.ts":
     "file des relectures Stripe, hors compte : demande (INSERT … ON CONFLICT), bail à jeton (UPDATE … RETURNING), verrou FOR UPDATE sous le jeton, clôture",
   "src/lib/taches/jour.ts": "bail à jeton de l'exécution du jour (UPDATE … RETURNING), hors compte",

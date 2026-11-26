@@ -13,16 +13,18 @@ import "server-only";
 
 import { createSign } from "node:crypto";
 import { z } from "zod";
+import { FUSEAU_REFERENCE } from "@/lib/dates";
+import { fetchAvecDelai } from "@/lib/reseau/delai";
 
 const JETON_URL = "https://oauth2.googleapis.com/token";
 const API = "https://www.googleapis.com/calendar/v3/calendars";
 const PORTEE = "https://www.googleapis.com/auth/calendar.events";
-const DELAI_MS = 15_000;
+/** Chaque appel à Google abandonne au bout de 15 s, corps compris. */
+const appelGoogle = fetchAvecDelai(15_000);
 /** Le fuseau des événements que Rojer écrit : celui du préventeur, pas UTC. */
-const FUSEAU = "Europe/Paris";
-const heure = (d: Date) => ({ dateTime: d.toISOString(), timeZone: FUSEAU });
+const heure = (d: Date) => ({ dateTime: d.toISOString(), timeZone: FUSEAU_REFERENCE });
 /** Au-delà, la lecture est tenue pour anormale et le passage s'arrête. */
-export const MAX_EVENEMENTS = 1000;
+const MAX_EVENEMENTS = 1000;
 
 export type ConfigGoogle = { agendaId: string; email: string; cle: string };
 
@@ -66,11 +68,10 @@ async function jeton(config: ConfigGoogle, maintenant = Date.now()): Promise<str
   const t = Math.floor(maintenant / 1000);
   const corps = `${b64({ alg: "RS256", typ: "JWT" })}.${b64({ iss: config.email, scope: PORTEE, aud: JETON_URL, iat: t, exp: t + 3600 })}`;
   const signature = createSign("RSA-SHA256").update(corps).sign(config.cle, "base64url");
-  const r = await fetch(JETON_URL, {
+  const r = await appelGoogle(JETON_URL, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({ grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer", assertion: `${corps}.${signature}` }),
-    signal: AbortSignal.timeout(DELAI_MS),
   });
   const j = z.object({ access_token: z.string(), expires_in: z.number() }).safeParse(await r.json().catch(() => null));
   if (!r.ok || !j.success) throw new ErreurGoogle("jeton du compte de service refusé", r.status);
@@ -98,10 +99,9 @@ const schemaEvenement = z.object({
 const schemaPage = z.object({ items: z.array(z.unknown()).default([]), nextPageToken: z.string().optional() });
 
 async function appeler(config: ConfigGoogle, chemin: string, init: RequestInit = {}): Promise<Response> {
-  return fetch(`${API}/${encodeURIComponent(config.agendaId)}${chemin}`, {
+  return appelGoogle(`${API}/${encodeURIComponent(config.agendaId)}${chemin}`, {
     ...init,
     headers: { Authorization: `Bearer ${await jeton(config)}`, "Content-Type": "application/json", ...init.headers },
-    signal: AbortSignal.timeout(DELAI_MS),
   });
 }
 

@@ -1,7 +1,7 @@
 import "server-only";
 // Les créneaux du rendez-vous annuel (ADR-063) : une table hors compte, que le
 // client borné ne lit ni n'écrit (`portee/correspondance.ts`). Ils sont ouverts
-// hors de l'application — par script, puis par un agent qui lit un agenda.
+// hors de l'application — par script, puis par la synchronisation de l'agenda du préventeur (ADR-064).
 // Rojer n'en fait que trois choses, en SQL paramétré : lire les libres,
 // prendre un créneau s'il l'est encore, le rendre. Nommé dans la garde du SQL
 // brut (`portee/imports.test.ts`).

@@ -18,7 +18,7 @@
 #   rien d'un autre compte ;
 # - `assistance/agenda-preventeur/synchronisation.integration` (ADR-064) : la
 #   synchronisation de l'agenda du préventeur, ses écritures conditionnelles,
-#   l'anti-rejeu et le plafond ; ses créneaux sont en 2099 ;
+#   la prise du passage et le plafond ; ses créneaux sont en 2099 ;
 # - `stripe/synchronisation.integration` (ADR-053) : la prise en charge des
 #   événements Stripe et l'écriture conditionnelle de l'abonnement ; Stripe
 #   simulé, n'efface que ses propres lignes.

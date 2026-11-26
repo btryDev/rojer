@@ -21,7 +21,7 @@ const reserve = (id: string, heure: number, evenementId: string | null) =>
 
 const titres = (p: ReturnType<typeof reconcilier>) => Object.fromEntries(p.consignes.map((c) => [c.id, c.titre]));
 const rien = (p: ReturnType<typeof reconcilier>) =>
-  Object.values(p.operations).every((l) => l.length === 0) && p.aCreer.length === 0 && p.conflits.length === 0;
+  Object.values(p.operations).every((l) => l.length === 0) && p.conflits.length === 0;
 
 describe("reconcilier — créneaux libres : l'agenda fait foi", () => {
   it("un événement nouveau d'une heure ouvre un créneau, titré « Dispo »", () => {
@@ -58,7 +58,6 @@ describe("reconcilier — créneaux libres : l'agenda fait foi", () => {
     ]);
     expect(p.consignes).toEqual([{ id: "e1", titre: TITRE.dispo, remettre: { debut: a(2), fin: a(3) } }]);
     // Leurs événements sont créés après la transaction, à partir des créneaux sans événement (`tache.ts`).
-    expect(p.aCreer).toEqual([]);
   });
 
   it("les événements créés au découpage se rattachent à leurs heures à l'envoi suivant", () => {
@@ -72,7 +71,6 @@ describe("reconcilier — créneaux libres : l'agenda fait foi", () => {
       ["c3", "e3"],
     ]);
     expect(p.operations.ouvrir).toEqual([]);
-    expect(p.aCreer).toEqual([]);
   });
 
   it("une heure déjà tenue n'est pas rouverte au découpage", () => {
@@ -198,22 +196,21 @@ describe("reconcilier — créneaux réservés : Rojer fait foi", () => {
 
   it("un réservé emporté hors de la fenêtre est remis, pas recréé (revue du 2026-11-25)", () => {
     const p = reconcilier({ fenetre, evenements: [ev("e1", -48)], creneaux: [reserve("c1", 2, "e1")] });
-    expect(p.aCreer).toEqual([]);
+    expect(p.operations.rattacher).toEqual([]);
     expect(p.consignes).toEqual([{ id: "e1", titre: "Réservé — Boulangerie — visio", remettre: { debut: a(2), fin: a(3) } }]);
     expect(p.conflits.map((c) => c.nature)).toEqual(["deplace"]);
   });
 
-  it("un réservé supprimé de l'agenda n'est pas fermé : l'événement est à recréer", () => {
+  it("un réservé supprimé de l'agenda n'est pas fermé : détaché, son événement sera recréé", () => {
     const p = reconcilier({ fenetre, evenements: [], creneaux: [reserve("c1", 2, "e1")] });
     expect(p.operations.fermer).toEqual([]);
-    expect(p.aCreer).toEqual([{ creneauId: "c1", ancien: "e1", debut: a(2), fin: a(3), titre: "Réservé — Boulangerie — visio" }]);
+    expect(p.operations.rattacher).toEqual([{ creneauId: "c1", evenementId: null, ancien: "e1" }]);
     expect(p.conflits.map((c) => c.nature)).toEqual(["supprime"]);
   });
 
   it("l'événement recréé se rattache au réservé par son heure", () => {
     const p = reconcilier({ fenetre, evenements: [ev("e2", 2)], creneaux: [reserve("c1", 2, "e1")] });
     expect(p.operations.rattacher).toEqual([{ creneauId: "c1", evenementId: "e2", ancien: "e1" }]);
-    expect(p.aCreer).toEqual([]);
     expect(titres(p)).toEqual({ e2: "Réservé — Boulangerie — visio" });
   });
 

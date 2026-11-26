@@ -13,6 +13,7 @@ import "server-only";
 //   manquée est rattrapée à la suivante. Chaque tâche est en outre sans
 //   doublon par elle-même (marques conditionnelles).
 
+import { createHash, timingSafeEqual } from "node:crypto";
 import { rappelerLaSemaineDeLaFinDEssai, rappelerLaVeilleDeLaFinDEssai, rappelerLeRenouvellementAnnuel } from "@/lib/abonnements/rappels";
 import {
   avertirAvantSuppression,
@@ -50,6 +51,12 @@ export function secretDesTaches(env: Record<string, string | undefined> = proces
   return s ? s : null;
 }
 
+/** L'en-tête `Authorization: Bearer <secret>` est-il le bon ? Comparaison à temps constant. */
+export function appelAutorise(entete: string | null, secret: string): boolean {
+  const recu = /^Bearer (.+)$/.exec(entete ?? "")?.[1] ?? "";
+  const empreinte = (v: string) => createHash("sha256").update(v).digest();
+  return timingSafeEqual(empreinte(recu), empreinte(secret));
+}
 
 /**
  * Dans cet ordre : les avertissements avant la suppression (une date posée
@@ -82,7 +89,7 @@ export async function lancerTachesQuotidiennes(maintenant: Date) {
         }
       : {}),
     evenementsOublies: await tenter("ménage des événements Stripe", () => oublierLesAnciens(maintenant)),
-    // Le journal de l'agent de l'agenda du préventeur se garde un an (ADR-064).
+    // Le journal de la synchronisation de l'agenda du préventeur se garde un an (ADR-064).
     journalAgenda: await tenter("journal de l'agenda du préventeur", () => purgerLeJournalDeLAgenda(maintenant)),
   });
   const stripe = config.active ? clientStripe(config) : null;
@@ -139,15 +146,16 @@ async function signalerLaFile(maintenant: Date) {
 }
 
 /**
- * Ce que la crontab de chaque minute lance : la file Stripe, l'agenda du
- * préventeur (un passage toutes les 15 minutes, ADR-064), puis les tâches du
- * jour si elles sont dues (dès `HEURE_DES_TACHES`, une fois par jour civil).
+ * Ce que la crontab de chaque minute lance : la file Stripe, les tâches du
+ * jour si elles sont dues (dès `HEURE_DES_TACHES`, une fois par jour civil),
+ * puis l'agenda du préventeur (un passage toutes les 15 minutes, ADR-064) —
+ * en dernier : un Google lent ne retarde pas les tâches du jour.
  */
 export async function lancerTaches(maintenant: () => Date = horlogeReelle) {
   const config = configurationStripe();
   const fileStripe = config.active ? await traiterLaFileIci(clientStripeWebhook(config)) : null;
-  const agenda = await synchroniserLAgendaSansLever(maintenant());
-  return { fileStripe, agenda, jour: await lancerTachesDuJour(maintenant()) };
+  const jour = await lancerTachesDuJour(maintenant());
+  return { fileStripe, jour, agenda: await synchroniserLAgendaSansLever(maintenant()) };
 }
 
 /**

@@ -3,9 +3,9 @@ import "server-only";
 // en base. Hors session, hors compte : `CreneauAssistance` et `ImportAgenda`
 // en SQL paramétré (nommé dans la garde du SQL brut) ; la lecture des
 // rendez-vous qui donne leur titre aux créneaux réservés passe par la
-// transaction ; le client brut ne sert qu'à la purge, à la cadence et au lien d'un
-// événement créé après la transaction (nommé
-// dans `portee/imports.test.ts`).
+// transaction. Le client brut sert à prendre et à marquer un passage, à lier
+// un événement créé après la transaction et à la purge (nommé dans
+// `portee/imports.test.ts`).
 //
 // Les colonnes sont des TIMESTAMP(3) sans fuseau où Prisma range de l'UTC
 // (ADR-011 § 1), comme `assistance/creneaux.ts`.
@@ -24,34 +24,41 @@ export async function verrouillerLaSynchronisation(tx: Tx): Promise<void> {
 }
 
 /**
- * L'heure du dernier passage, accepté ou refusé : la cadence se lit dessus
- * (`tache.ts`). Lue sous le verrou, elle départage deux instances que la
- * crontab lance à la même minute.
+ * Prend le passage : une ligne « en cours » au journal, si aucun passage n'a
+ * eu lieu depuis `intervalleMs`. Sous le verrou : deux instances que la
+ * crontab lance à la même minute n'en prennent qu'un, AVANT d'appeler Google ;
+ * un passage en échec compte aussi, la cadence vaut en panne. Rend
+ * l'identifiant de la ligne, ou `null`.
  */
-export async function dernierPassage(tx: Tx): Promise<Date | null> {
-  const [ligne] = await tx.$queryRaw<{ recuLe: Date | null }[]>`
-    SELECT max("recuLe") AS "recuLe" FROM "ImportAgenda"`;
-  return ligne?.recuLe ?? null;
+export async function prendreLePassage(quand: Date, intervalleMs: number): Promise<string | null> {
+  return prisma.$transaction(async (tx) => {
+    await verrouillerLaSynchronisation(tx);
+    const [ligne] = await tx.$queryRaw<{ id: string }[]>`
+      INSERT INTO "ImportAgenda" ("recuLe", "accepte", "motif")
+      SELECT (${quand}::timestamptz AT TIME ZONE 'UTC'), false, 'en-cours'
+      WHERE NOT EXISTS (
+        SELECT 1 FROM "ImportAgenda"
+        WHERE "recuLe" > ((${quand}::timestamptz AT TIME ZONE 'UTC') - make_interval(secs => ${intervalleMs / 1000})))
+      RETURNING "id"`;
+    return ligne?.id ?? null;
+  });
 }
 
-/** La même heure, lue sans verrou : une économie avant d'appeler Google. */
-export async function dernierPassageHorsVerrou(): Promise<Date | null> {
-  const [ligne] = await prisma.$queryRaw<{ recuLe: Date | null }[]>`
-    SELECT max("recuLe") AS "recuLe" FROM "ImportAgenda"`;
-  return ligne?.recuLe ?? null;
+export type Bilan = { ouverts: number; deplaces: number; fermes: number; rattaches: number; conflits: number };
+
+/** Clôt la ligne du passage : accepté avec son bilan, ou refusé avec son motif. */
+export async function clorePassage(tx: Tx, id: string, j: { accepte: boolean; motif: string | null; bilan?: Bilan }): Promise<void> {
+  const b = j.bilan ?? { ouverts: 0, deplaces: 0, fermes: 0, rattaches: 0, conflits: 0 };
+  await tx.$executeRaw`
+    UPDATE "ImportAgenda" SET "accepte" = ${j.accepte}, "motif" = ${j.motif},
+      "ouverts" = ${b.ouverts}, "deplaces" = ${b.deplaces}, "fermes" = ${b.fermes},
+      "rattaches" = ${b.rattaches}, "conflits" = ${b.conflits}
+    WHERE "id" = ${id}::uuid`;
 }
 
-/**
- * Lie un créneau à l'événement que Rojer vient de créer, s'il porte encore
- * l'événement d'avant (`ancien`). `false` : le créneau a changé entre-temps ;
- * l'événement créé sera repris par son heure au passage suivant.
- */
-export async function lierEvenement(l: { creneauId: string; ancien: string | null; evenementId: string }): Promise<boolean> {
-  const lignes = await prisma.$queryRaw<{ id: string }[]>`
-    UPDATE "CreneauAssistance" SET "evenementAgendaId" = ${l.evenementId}
-    WHERE "id" = ${l.creneauId}::uuid AND "evenementAgendaId" IS NOT DISTINCT FROM ${l.ancien}
-    RETURNING "id"`;
-  return lignes.length > 0;
+/** Un passage qui n'a pas pu lire l'agenda (Google en panne, accès retiré). */
+export async function marquerEchec(id: string): Promise<void> {
+  await prisma.$executeRaw`UPDATE "ImportAgenda" SET "motif" = 'google' WHERE "id" = ${id}::uuid`;
 }
 
 type LigneCreneau = { id: string; debut: Date; fin: Date; evenementAgendaId: string | null; reserve: boolean };
@@ -67,6 +74,21 @@ export async function creneauxConcernes(tx: Tx, fenetre: Fenetre, evenementIds: 
     ORDER BY "debut"`;
 }
 
+/**
+ * Les créneaux de la fenêtre sans événement : heures découpées, détachés,
+ * ouverts par script, ou dont la création d'événement a échoué. Leur
+ * événement est créé après la transaction (`tache.ts`).
+ */
+export async function creneauxSansEvenement(tx: Tx, fenetre: Fenetre): Promise<{ id: string; debut: Date; fin: Date }[]> {
+  return tx.$queryRaw<{ id: string; debut: Date; fin: Date }[]>`
+    SELECT "id", "debut", "fin"
+    FROM "CreneauAssistance"
+    WHERE "evenementAgendaId" IS NULL
+      AND "debut" >= (${fenetre.depuis}::timestamptz AT TIME ZONE 'UTC')
+      AND "debut" < (${fenetre.jusqua}::timestamptz AT TIME ZONE 'UTC')
+    ORDER BY "debut"`;
+}
+
 /** La raison sociale dans un titre d'agenda : sur une ligne, 40 caractères au plus. */
 const LONGUEUR_RAISON_SOCIALE = 40;
 
@@ -78,25 +100,27 @@ export function titreReserve(raisonSociale: string | null, mode: ModeRendezVous)
   return nom ? `${TITRE.reserve} — ${nom} — ${comment}` : `${TITRE.reserve} — ${comment}`;
 }
 
-/** Les titres des créneaux réservés, par créneau : ni téléphone ni sujet, qui restent à l'équipe. */
-export async function titresDesReserves(tx: Tx, creneauIds: string[]): Promise<Map<string, string>> {
-  if (creneauIds.length === 0) return new Map();
-  // Dans la transaction qui tient le verrou : une seule connexion par
-  // synchronisation (revue du 2026-11-25).
-  const rendezVous = await tx.rendezVousAssistance.findMany({
-    where: { creneauId: { in: creneauIds }, annuleLe: null },
-    select: {
-      creneauId: true,
-      mode: true,
-      compte: { select: { entreprises: { select: { raisonSociale: true }, orderBy: { createdAt: "asc" }, take: 1 } } },
-    },
-  });
-  return new Map(
+/**
+ * Les lignes lues, avec le titre de celles qui sont réservées : ni téléphone
+ * ni sujet, qui restent à l'équipe. Dans la transaction qui tient le verrou :
+ * une seule connexion par synchronisation (revue du 2026-11-25).
+ */
+export async function enCreneauxConnus(tx: Tx, lignes: LigneCreneau[]): Promise<CreneauConnu[]> {
+  const reserves = lignes.filter((l) => l.reserve).map((l) => l.id);
+  const rendezVous =
+    reserves.length === 0
+      ? []
+      : await tx.rendezVousAssistance.findMany({
+          where: { creneauId: { in: reserves }, annuleLe: null },
+          select: {
+            creneauId: true,
+            mode: true,
+            compte: { select: { entreprises: { select: { raisonSociale: true }, orderBy: { createdAt: "asc" }, take: 1 } } },
+          },
+        });
+  const titres = new Map(
     rendezVous.map((r) => [r.creneauId, titreReserve(r.compte.entreprises[0]?.raisonSociale ?? null, r.mode)]),
   );
-}
-
-export function enCreneauxConnus(lignes: LigneCreneau[], titres: Map<string, string>): CreneauConnu[] {
   return lignes.map((l) => ({
     id: l.id,
     debut: l.debut,
@@ -136,21 +160,7 @@ export async function fermer(tx: Tx, f: { creneauId: string; evenementId: string
   return lignes.length > 0;
 }
 
-/**
- * Les créneaux de la fenêtre sans événement : heures découpées, ouvertes par
- * script, ou dont la création d'événement a échoué. Leur événement est créé
- * après la transaction (`tache.ts`).
- */
-export async function creneauxSansEvenement(tx: Tx, fenetre: Fenetre): Promise<LigneCreneau[]> {
-  return tx.$queryRaw<LigneCreneau[]>`
-    SELECT "id", "debut", "fin", "evenementAgendaId", ("reserveLe" IS NOT NULL) AS "reserve"
-    FROM "CreneauAssistance"
-    WHERE "evenementAgendaId" IS NULL
-      AND "debut" >= (${fenetre.depuis}::timestamptz AT TIME ZONE 'UTC')
-      AND "debut" < (${fenetre.jusqua}::timestamptz AT TIME ZONE 'UTC')
-    ORDER BY "debut"`;
-}
-
+/** Lie le créneau à un événement — ou l'en détache (`null`) —, s'il porte encore `ancien`. */
 export async function rattacher(
   tx: Tx,
   r: { creneauId: string; evenementId: string | null; ancien: string | null },
@@ -162,29 +172,13 @@ export async function rattacher(
   return lignes.length > 0;
 }
 
-export type Bilan = { ouverts: number; deplaces: number; fermes: number; rattaches: number; conflits: number };
-
-export async function journaliser(
-  tx: Tx,
-  // `quand` : l'heure du passage, celle que lit la cadence — une seule horloge.
-  j: { quand: Date; accepte: boolean; motif: string | null; bilan?: Bilan },
-): Promise<void> {
-  const b = j.bilan ?? { ouverts: 0, deplaces: 0, fermes: 0, rattaches: 0, conflits: 0 };
-  await tx.$executeRaw`
-    INSERT INTO "ImportAgenda" ("recuLe", "accepte", "motif", "ouverts", "deplaces", "fermes", "rattaches", "conflits")
-    VALUES ((${j.quand}::timestamptz AT TIME ZONE 'UTC'), ${j.accepte}, ${j.motif},
-            ${b.ouverts}, ${b.deplaces}, ${b.fermes}, ${b.rattaches}, ${b.conflits})`;
-}
-
 /**
- * Un passage qui n'a pas pu lire l'agenda (Google en panne, accès retiré) :
- * journalisé comme refusé, pour que la cadence vaille aussi en panne — sans
- * lui, la crontab rappellerait Google chaque minute.
+ * Lie un créneau sans événement à celui que Rojer vient de créer, s'il est
+ * encore sans événement ; sinon, l'événement créé est repris par son heure au
+ * passage suivant.
  */
-export async function journaliserUnEchec(quand: Date, motif: "google" | "configuration"): Promise<void> {
-  await prisma.$executeRaw`
-    INSERT INTO "ImportAgenda" ("recuLe", "accepte", "motif")
-    VALUES ((${quand}::timestamptz AT TIME ZONE 'UTC'), false, ${motif})`;
+export async function lierEvenement(creneauId: string, evenementId: string): Promise<void> {
+  await prisma.$transaction((tx) => rattacher(tx, { creneauId, evenementId, ancien: null }));
 }
 
 /** La tâche quotidienne : le journal se garde un an. */

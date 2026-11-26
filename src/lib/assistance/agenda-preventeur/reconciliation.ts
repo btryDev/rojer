@@ -50,20 +50,13 @@ type Operations = {
 };
 
 /** Ce que Rojer fait d'un événement de l'agenda : le retitrer, et le remettre à une heure s'il y en a une. */
-type Consigne = { id: string; titre: string; remettre?: { debut: Date; fin: Date } };
+export type Consigne = { id: string; titre: string; remettre?: { debut: Date; fin: Date } };
 
-export type Conflit = { creneauId: string; debut: Date; fin: Date; nature: "deplace" | "supprime"; titre: string };
+export type Conflit = { creneauId: string; debut: Date; fin: Date; nature: "deplace" | "supprime" };
 
 export type Plan = {
   operations: Operations;
   consignes: Consigne[];
-  /**
-   * Les événements à recréer : ceux de créneaux réservés que l'agenda a
-   * perdus. `ancien` : l'événement supprimé, que le nouveau remplace. Les
-   * créneaux sans événement (heures découpées, script) se relisent après la
-   * transaction (`tache.ts`), pas ici.
-   */
-  aCreer: { creneauId: string; ancien: string | null; debut: Date; fin: Date; titre: string }[];
   conflits: Conflit[];
 };
 
@@ -78,7 +71,7 @@ const heure = (debut: Date, rang: number) => ({
   debut: new Date(instant(debut) + rang * DUREE_CRENEAU_MS),
   fin: new Date(instant(debut) + (rang + 1) * DUREE_CRENEAU_MS),
 });
-const memesHeures = (a: { debut: Date; fin: Date }, b: { debut: Date; fin: Date }) =>
+export const memesHeures = (a: { debut: Date; fin: Date }, b: { debut: Date; fin: Date }) =>
   instant(a.debut) === instant(b.debut) && instant(a.fin) === instant(b.fin);
 const parDebut = (a: EvenementRecu, b: EvenementRecu) =>
   instant(a.debut) - instant(b.debut) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
@@ -106,10 +99,10 @@ export function reconcilier(entree: { fenetre: Fenetre; evenements: EvenementRec
   const recus = entree.evenements.filter((ev) => parEvenement.has(ev.id) || dansFenetre(ev.debut)).sort(parDebut);
   const idsRecus = new Set(recus.map((ev) => ev.id));
 
-  const plan: Plan = { operations: { fermer: [], rattacher: [], ouvrir: [] }, consignes: [], aCreer: [], conflits: [] };
+  const plan: Plan = { operations: { fermer: [], rattacher: [], ouvrir: [] }, consignes: [], conflits: [] };
   const fermer = (c: CreneauConnu, deplacement?: true) =>
     plan.operations.fermer.push({ creneauId: c.id, evenementId: c.evenementId, ...(deplacement && { deplacement }) });
-  // L'occupation des débuts une fois l'envoi appliqué (`debut` est unique).
+  // L'occupation des débuts une fois le plan appliqué (`debut` est unique).
   const occupe = new Map<number, string>();
   // Les créneaux qu'un événement inconnu peut reprendre à leur début : ouverts
   // par script, ou liés à un événement que l'agenda ne rend plus.
@@ -138,7 +131,7 @@ export function reconcilier(entree: { fenetre: Fenetre; evenements: EvenementRec
       const titre = titreDuCreneau(c);
       const bouge = !memesHeures(ev, c);
       plan.consignes.push({ id: ev.id, titre, ...(bouge && { remettre: { debut: c.debut, fin: c.fin } }) });
-      if (bouge) plan.conflits.push({ creneauId: c.id, debut: c.debut, fin: c.fin, nature: "deplace", titre });
+      if (bouge) plan.conflits.push({ creneauId: c.id, debut: c.debut, fin: c.fin, nature: "deplace" });
     } else if (memesHeures(ev, c)) {
       occupe.set(instant(c.debut), c.id);
       plan.consignes.push({ id: ev.id, titre: TITRE.dispo });
@@ -202,8 +195,7 @@ export function reconcilier(entree: { fenetre: Fenetre; evenements: EvenementRec
           plan.operations.rattacher.push({ creneauId: deja.id, evenementId: null, ancien: deja.evenementId });
         }
         if (deja.reserve && deja.evenementId !== null) {
-          const titre = titreDuCreneau(deja);
-          plan.conflits.push({ creneauId: deja.id, debut: deja.debut, fin: deja.fin, nature: "supprime", titre });
+          plan.conflits.push({ creneauId: deja.id, debut: deja.debut, fin: deja.fin, nature: "supprime" });
         }
         continue;
       }
@@ -226,9 +218,10 @@ export function reconcilier(entree: { fenetre: Fenetre; evenements: EvenementRec
   for (const c of entree.creneaux) {
     if (!estOrphelin(c) || repris.has(c.id)) continue;
     if (c.reserve) {
-      const titre = titreDuCreneau(c);
-      plan.aCreer.push({ creneauId: c.id, ancien: c.evenementId, debut: c.debut, fin: c.fin, titre });
-      plan.conflits.push({ creneauId: c.id, debut: c.debut, fin: c.fin, nature: "supprime", titre });
+      // Un réservé ne se ferme jamais : détaché de l'événement perdu, il en
+      // reçoit un nouveau après la transaction, comme tout créneau sans événement.
+      plan.operations.rattacher.push({ creneauId: c.id, evenementId: null, ancien: c.evenementId });
+      plan.conflits.push({ creneauId: c.id, debut: c.debut, fin: c.fin, nature: "supprime" });
     } else {
       fermer(c);
     }

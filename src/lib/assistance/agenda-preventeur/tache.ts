@@ -3,18 +3,22 @@ import "server-only";
 // chaque minute (`taches/quotidiennes.ts`), un passage toutes les 15 minutes
 // (ADR-064, amendée le 2026-11-26 : plus d'agent ni de route).
 //
-// 1. Lire l'agenda (`google.ts`). Une lecture incomplète arrête tout : rien
+// 1. Prendre le passage (`prendreLePassage`) AVANT d'appeler Google : deux
+//    instances à la même minute n'en font qu'un, et une panne ne fait pas
+//    rappeler Google chaque minute.
+// 2. Lire l'agenda (`google.ts`). Une lecture incomplète arrête tout : rien
 //    n'est réconcilié sur une liste partielle.
-// 2. Réconcilier et appliquer en base, sous verrou (`synchronisation.ts`).
-// 3. Écrire dans l'agenda ce qui diffère : titres, heures à remettre, et les
-//    événements à créer, liés à leur créneau dès leur création. Une écriture
-//    qui échoue est reprise au passage suivant — tout est rejouable.
+// 3. Réconcilier et appliquer en base, sous verrou (`synchronisation.ts`).
+// 4. Écrire dans l'agenda ce qui diffère : titres, heures à remettre, puis les
+//    événements des créneaux qui n'en ont pas, liés dès leur création. Une
+//    écriture qui échoue — ou qui dépasse le plafond d'un passage — est
+//    reprise au passage suivant : tout est rejouable.
 //
 // Les problèmes vont à `ALERTES_EMAIL`, une fois par jour et par nature.
 
 import { alerterUneFoisParJour } from "@/lib/alertes";
 import { quandLeRendezVous } from "../rendez-vous-libelles";
-import { dernierPassageHorsVerrou, journaliserUnEchec, lierEvenement } from "./base";
+import { lierEvenement, marquerEchec, prendreLePassage, type Bilan } from "./base";
 import {
   ErreurGoogle,
   configurationGoogle,
@@ -24,8 +28,22 @@ import {
   type ConfigGoogle,
   type EvenementGoogle,
 } from "./google";
-import type { Conflit } from "./reconciliation";
-import { synchroniser, tropTot, type ACreer } from "./synchronisation";
+import { memesHeures, type Conflit, type Consigne } from "./reconciliation";
+import { INTERVALLE_MS, synchroniser, type ACreer } from "./synchronisation";
+
+/** La fenêtre lue : de maintenant à huit semaines (le client réserve sur un mois). */
+const FENETRE_MS = 56 * 24 * 60 * 60_000;
+/**
+ * Les écritures dans l'agenda d'un passage. Au-delà (premier branchement,
+ * agenda chargé), le reste part au passage suivant : le quota d'écriture de
+ * Google par utilisateur est faible, et la crontab tourne chaque minute.
+ */
+const ECRITURES_PAR_PASSAGE = 50;
+
+export type Passage =
+  | { etat: "hors-service" | "pas-encore" | "plafond" }
+  | { etat: "echec"; motif: string }
+  | { etat: "fait"; bilan: Bilan; agenda: { modifies: number; crees: number; echecs: number } };
 
 /** Un motif écrit par Rojer, jamais un message reçu (qui pourrait citer des données). */
 function motifDErreur(e: unknown): string {
@@ -33,14 +51,6 @@ function motifDErreur(e: unknown): string {
   if (e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError")) return "Google ne répond pas";
   return e instanceof Error ? `erreur inattendue (${e.name})` : "erreur inattendue";
 }
-
-/** La fenêtre lue : de maintenant à huit semaines (le client réserve sur un mois). */
-const FENETRE_MS = 56 * 24 * 60 * 60_000;
-
-export type Passage =
-  | { etat: "hors-service" | "pas-encore" | "deja-fait" | "plafond" }
-  | { etat: "echec"; motif: string }
-  | { etat: "fait"; bilan: object; agenda: { modifies: number; crees: number; echecs: number } };
 
 const PHRASE_CONFLIT: Record<Conflit["nature"], string> = {
   deplace: "Son événement a été déplacé dans l'agenda : Rojer le remet à son heure.",
@@ -61,22 +71,15 @@ async function signalerLesConflits(conflits: Conflit[], maintenant: Date): Promi
   }
 }
 
-/** Écrit dans l'agenda ce qui diffère de ce que Rojer y veut. */
-async function ecrireDansLAgenda(
-  config: ConfigGoogle,
-  lus: EvenementGoogle[],
-  consignes: { id: string; titre: string; remettre?: { debut: Date; fin: Date } }[],
-  aCreer: ACreer[],
-) {
+/** Écrit dans l'agenda ce qui diffère de ce que Rojer y veut, dans la limite d'un passage. */
+async function ecrireDansLAgenda(config: ConfigGoogle, lus: EvenementGoogle[], consignes: Consigne[], aCreer: ACreer[]) {
   const parId = new Map(lus.map((ev) => [ev.id, ev]));
   const bilan = { modifies: 0, crees: 0, echecs: 0 };
+  let restantes = ECRITURES_PAR_PASSAGE;
   for (const c of consignes) {
     const ev = parId.get(c.id);
-    if (!ev) continue;
-    const memeTitre = ev.titre === c.titre;
-    const memeHeure =
-      !c.remettre || (ev.debut.getTime() === c.remettre.debut.getTime() && ev.fin.getTime() === c.remettre.fin.getTime());
-    if (memeTitre && memeHeure) continue;
+    if (!ev || (ev.titre === c.titre && (!c.remettre || memesHeures(ev, c.remettre)))) continue;
+    if (restantes-- <= 0) return bilan;
     try {
       if (await modifierEvenement(config, ev, { titre: c.titre, ...(c.remettre ?? {}) })) bilan.modifies++;
     } catch (e) {
@@ -85,11 +88,11 @@ async function ecrireDansLAgenda(
     }
   }
   for (const a of aCreer) {
+    if (restantes-- <= 0) return bilan;
     try {
-      const id = await creerEvenement(config, a);
-      bilan.crees++;
       // Non lié (le créneau a changé entre-temps) : l'événement sera repris par son heure au passage suivant.
-      await lierEvenement({ creneauId: a.creneauId, ancien: a.ancien, evenementId: id });
+      await lierEvenement(a.creneauId, await creerEvenement(config, a));
+      bilan.crees++;
     } catch (e) {
       bilan.echecs++;
       console.error(`agenda : création non écrite — ${motifDErreur(e)}`);
@@ -99,20 +102,10 @@ async function ecrireDansLAgenda(
 }
 
 export async function synchroniserLAgenda(maintenant: Date): Promise<Passage> {
-  let config: ConfigGoogle | null;
-  try {
-    config = configurationGoogle();
-  } catch (e) {
-    if (!tropTot(await dernierPassageHorsVerrou(), maintenant)) {
-      await journaliserUnEchec(maintenant, "configuration");
-      await alerterUneFoisParJour("agenda:config", "Agenda du préventeur : configuration à corriger", [motifDErreur(e)], maintenant);
-    }
-    return { etat: "echec", motif: "configuration" };
-  }
+  const config = configurationGoogle();
   if (!config) return { etat: "hors-service" };
-  // Une économie avant d'appeler Google ; le verrou départage ensuite.
-  const dernier = await dernierPassageHorsVerrou();
-  if (tropTot(dernier, maintenant)) return { etat: "pas-encore" };
+  const passage = await prendreLePassage(maintenant, INTERVALLE_MS - 60_000);
+  if (!passage) return { etat: "pas-encore" };
 
   const fenetre = { depuis: maintenant, jusqua: new Date(maintenant.getTime() + FENETRE_MS) };
   let lus: EvenementGoogle[];
@@ -120,7 +113,7 @@ export async function synchroniserLAgenda(maintenant: Date): Promise<Passage> {
     lus = await listerEvenements(config, fenetre);
   } catch (e) {
     const motif = motifDErreur(e);
-    await journaliserUnEchec(maintenant, "google");
+    await marquerEchec(passage);
     await alerterUneFoisParJour("agenda:lecture", "Agenda du préventeur : lecture impossible", [
       `L'agenda n'a pas pu être lu (${motif}). Rien n'a changé dans Rojer ; la synchronisation reprendra toute seule.`,
       "Si ça dure : vérifier que l'agenda est toujours partagé avec le compte de service, et que sa clé n'a pas été révoquée.",
@@ -128,8 +121,7 @@ export async function synchroniserLAgenda(maintenant: Date): Promise<Passage> {
     return { etat: "echec", motif };
   }
 
-  const r = await synchroniser({ fenetre, evenements: lus.map(({ id, debut, fin }) => ({ id, debut, fin })) }, maintenant);
-  if (r.etat === "deja-fait") return { etat: "deja-fait" };
+  const r = await synchroniser({ fenetre, evenements: lus.map(({ id, debut, fin }) => ({ id, debut, fin })) }, passage);
   if (r.etat === "plafond") {
     await alerterUneFoisParJour("agenda:plafond", "Agenda du préventeur : passage refusé", [
       `Le passage aurait fermé ${r.fermetures} créneau(x) d'un coup : il est refusé, rien n'a changé.`,
@@ -153,10 +145,11 @@ export async function synchroniserLAgendaSansLever(maintenant: Date): Promise<Pa
   try {
     return await synchroniserLAgenda(maintenant);
   } catch (e) {
-    console.error(`agenda : synchronisation en échec — ${motifDErreur(e)}`);
-    await alerterUneFoisParJour("agenda:echec", "Agenda du préventeur : synchronisation en échec", [motifDErreur(e)], maintenant).catch(
+    const motif = motifDErreur(e);
+    console.error(`agenda : synchronisation en échec — ${motif}`);
+    await alerterUneFoisParJour("agenda:echec", "Agenda du préventeur : synchronisation en échec", [motif], maintenant).catch(
       () => undefined,
     );
-    return { etat: "echec", motif: motifDErreur(e) };
+    return { etat: "echec", motif };
   }
 }

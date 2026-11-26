@@ -16,19 +16,23 @@ describe.skipIf(!URL_BASE || !local)("synchronisation de l'agenda — PostgreSQL
   if (URL_BASE) process.env.DATABASE_URL = URL_BASE;
   const { prisma } = await import("@/lib/prisma");
   const { synchroniser, PLAFOND_FERMETURES, INTERVALLE_MS } = await import("./synchronisation");
+  const { prendreLePassage } = await import("./base");
 
   const H = 60 * 60 * 1000;
   const T0 = Date.parse("2099-03-02T08:00:00Z");
   const a = (heure: number) => new Date(T0 + heure * H);
   const fenetre = { depuis: a(-1), jusqua: a(24 * 60) };
   const debutDuTest = new Date();
-  // Chaque passage est espacé du précédent d'un intervalle : la cadence ne s'en mêle pas.
+  // Chaque passage est pris un intervalle après le précédent : la cadence ne s'en mêle pas.
   let tic = 0;
-  const passage = (evenements: { id: string; heure: number; duree?: number }[]) =>
-    synchroniser(
+  const passage = async (evenements: { id: string; heure: number; duree?: number }[]) => {
+    const id = await prendreLePassage(new Date(debutDuTest.getTime() + ++tic * INTERVALLE_MS), INTERVALLE_MS);
+    if (!id) throw new Error("passage non pris");
+    return synchroniser(
       { fenetre, evenements: evenements.map((e) => ({ id: e.id, debut: a(e.heure), fin: a(e.heure + (e.duree ?? 1)) })) },
-      new Date(debutDuTest.getTime() + ++tic * INTERVALLE_MS),
+      id,
     );
+  };
 
   const nettoyer = async () => {
     await prisma.$executeRaw`DELETE FROM "CreneauAssistance" WHERE "debut" >= '2099-01-01' AND "debut" < '2100-01-01'`;
@@ -57,9 +61,9 @@ describe.skipIf(!URL_BASE || !local)("synchronisation de l'agenda — PostgreSQL
 
   it("une plage découpée : les heures suivantes sont à créer, puis se lient", async () => {
     const r = await passage([{ id: "e1", heure: 2, duree: 3 }]);
-    expect(r.etat === "fait" && r.aCreer.map((c) => [c.debut.toISOString(), c.ancien, c.titre])).toEqual([
-      [a(3).toISOString(), null, "Dispo"],
-      [a(4).toISOString(), null, "Dispo"],
+    expect(r.etat === "fait" && r.aCreer.map((c) => [c.debut.toISOString(), c.titre])).toEqual([
+      [a(3).toISOString(), "Dispo"],
+      [a(4).toISOString(), "Dispo"],
     ]);
     expect((await creneaux()).map((c) => c.evenementAgendaId)).toEqual(["e1", null, null]);
   });
@@ -78,24 +82,27 @@ describe.skipIf(!URL_BASE || !local)("synchronisation de l'agenda — PostgreSQL
     expect(apres.some((c) => avant.includes(c.id))).toBe(false);
   });
 
-  it("un réservé ne bouge ni ne disparaît ; supprimé de l'agenda, il est à recréer à la place de l'ancien", async () => {
+  it("un réservé ne bouge ni ne disparaît ; supprimé de l'agenda, il est détaché et à recréer", async () => {
     await passage([{ id: "e1", heure: 2 }, { id: "e2", heure: 5 }, { id: "e3", heure: 8 }]);
     await reserver("e3");
     const r = await passage([{ id: "e1", heure: 3 }]);
-    expect(r.etat === "fait" && r.bilan).toEqual({ ouverts: 0, deplaces: 1, fermes: 1, rattaches: 0, conflits: 1 });
-    expect(r.etat === "fait" && r.aCreer.map((c) => [c.debut.toISOString(), c.ancien])).toEqual([[a(8).toISOString(), "e3"]]);
+    // Le réservé perdu est détaché (un « rattachement » à aucun événement), jamais fermé.
+    expect(r.etat === "fait" && r.bilan).toEqual({ ouverts: 0, deplaces: 1, fermes: 1, rattaches: 1, conflits: 1 });
+    // Détaché de l'événement perdu, il est à recréer, avec son titre de réservé.
+    expect(r.etat === "fait" && r.aCreer.map((c) => [c.debut.toISOString(), c.titre])).toEqual([[a(8).toISOString(), "Réservé"]]);
+    expect((await creneaux()).find((c) => c.reserve)?.evenementAgendaId).toBeNull();
     expect((await creneaux()).map((c) => [c.debut.toISOString(), c.reserve])).toEqual([
       [a(3).toISOString(), false],
       [a(8).toISOString(), true],
     ]);
   });
 
-  it("deux passages à la même minute : un seul fait le travail", async () => {
-    const lecture = { fenetre, evenements: [{ id: "e1", debut: a(2), fin: a(3) }] };
-    const maintenant = new Date(debutDuTest.getTime() + 999 * INTERVALLE_MS);
-    const [x, y] = await Promise.all([synchroniser(lecture, maintenant), synchroniser(lecture, maintenant)]);
-    expect([x.etat, y.etat].sort()).toEqual(["deja-fait", "fait"]);
-    expect(await creneaux()).toHaveLength(1);
+  it("deux instances à la même minute : une seule prend le passage, avant d'appeler Google", async () => {
+    const quand = new Date(debutDuTest.getTime() + 999 * INTERVALLE_MS);
+    const pris = await Promise.all([prendreLePassage(quand, INTERVALLE_MS), prendreLePassage(quand, INTERVALLE_MS)]);
+    expect(pris.filter(Boolean)).toHaveLength(1);
+    // Une minute plus tard, toujours pas : la cadence vaut aussi si le passage a échoué.
+    expect(await prendreLePassage(new Date(quand.getTime() + 60_000), INTERVALLE_MS)).toBeNull();
   });
 
   it("refuse un passage qui fermerait trop de créneaux, sans rien fermer", async () => {

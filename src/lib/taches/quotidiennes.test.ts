@@ -52,7 +52,7 @@ vi.mock("@/lib/assistance/agenda-preventeur/tache", () => ({
 }));
 vi.mock("@/lib/stripe/client", () => ({ clientStripe: vi.fn(), clientStripeWebhook: vi.fn() }));
 
-import { lancerTachesDuJour, lancerTachesQuotidiennes, secretDesTaches } from "./quotidiennes";
+import { appelAutorise, lancerTachesDuJour, lancerTachesQuotidiennes, secretDesTaches } from "./quotidiennes";
 import { POST } from "@/app/api/taches/chaque-minute/route";
 
 const SECRET = "s".repeat(40);
@@ -86,6 +86,12 @@ describe("tâches quotidiennes", () => {
     expect(secretDesTaches({ TACHES_SECRET: ` ${SECRET} ` })).toBe(SECRET);
   });
 
+  it("seul « Bearer <secret> » exact est autorisé", () => {
+    expect(appelAutorise(`Bearer ${SECRET}`, SECRET)).toBe(true);
+    for (const faux of [null, "", SECRET, `Bearer ${SECRET}x`, `bearer ${SECRET}`, `Bearer ${SECRET.slice(1)}`]) {
+      expect(appelAutorise(faux, SECRET)).toBe(false);
+    }
+  });
 
   it("route sans secret configuré : 404, rien n'est lancé", async () => {
     vi.stubEnv("TACHES_SECRET", "");

@@ -37,6 +37,29 @@ export const EVENEMENTS_ECOUTES = [
   "v1.charge.refunded",
 ] as const satisfies readonly NotificationStripe["type"][];
 
+/**
+ * Le corps brut, lu au plus `max` octets — que l'expéditeur annonce sa
+ * taille ou l'envoie par morceaux. `null` : trop gros.
+ */
+export async function lireCorpsBorne(request: Request, max = TAILLE_MAX_NOTIFICATION): Promise<string | null> {
+  if (Number(request.headers.get("content-length") ?? 0) > max) return null;
+  if (!request.body) return "";
+  const lecteur = request.body.getReader();
+  const morceaux: Uint8Array[] = [];
+  let taille = 0;
+  for (;;) {
+    const { done, value } = await lecteur.read();
+    if (done) break;
+    taille += value.byteLength;
+    if (taille > max) {
+      await lecteur.cancel();
+      return null;
+    }
+    morceaux.push(value);
+  }
+  return Buffer.concat(morceaux).toString("utf8");
+}
+
 export type Verification = { ok: true; notification: NotificationStripe } | { ok: false; motif: string };
 
 export function verifierNotificationStripe(

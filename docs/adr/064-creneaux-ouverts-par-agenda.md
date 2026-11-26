@@ -35,9 +35,14 @@
 > doit pouvoir appeler Rojer » — Rojer appelle Google lui-même.
 >
 > - **Appelant** : `lancerTaches` (crontab de chaque minute) lance
->   `agenda-preventeur/tache.ts`, un passage toutes les 15 minutes ; sous le
->   verrou, la cadence se lit sur le dernier passage du journal (deux
->   instances à la même minute n'en font qu'un).
+>   `agenda-preventeur/tache.ts`, après les tâches du jour, un passage toutes
+>   les 15 minutes. Le passage est PRIS au journal, sous verrou, AVANT
+>   d'appeler Google (`prendreLePassage`) : deux instances à la même minute
+>   n'en font qu'un, et une panne ne fait pas rappeler Google chaque minute.
+>   Au plus 50 écritures dans l'agenda par passage ; le reste suit.
+> - **Un seul chemin pour créer un événement** : tout créneau de la fenêtre
+>   sans événement (heure découpée, réservé dont l'événement a été perdu —
+>   détaché, jamais fermé —, script) reçoit le sien après la transaction.
 > - **Google** : compte de service `rojer-agenda@rojer-agenda.iam.gserviceaccount.com`
 >   (projet Cloud `rojer-agenda`, organisation btry.fr, aucun rôle), agenda
 >   partagé avec lui en « Apporter des modifications (privés en
@@ -51,7 +56,8 @@
 >   (`If-Match`), un événement changé par le préventeur n'est pas écrasé ;
 >   un événement créé est lié tout de suite à son créneau, et une réponse
 >   perdue se rattrape par l'heure au passage suivant (rattachement).
-> - **Retirés** : la route `/api/integrations/agenda/synchronisation`,
+> - **Retirés** : le module partagé `securite/requete-machine.ts` (sans
+>   second appelant une fois la route retirée), la route `/api/integrations/agenda/synchronisation`,
 >   `AGENDA_SECRET`, `envoi.ts`, les limites `agendaIp`/`agendaRoute`,
 >   l'anti-rejeu (`envoyeLe`), le contrôle « l'agent ne passe plus », le
 >   filtre anti-injection du nom (aucun modèle ne lit plus les titres : la
