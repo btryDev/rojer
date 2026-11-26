@@ -48,7 +48,7 @@ describe("reconcilier — créneaux libres : l'agenda fait foi", () => {
     expect(p.operations.fermer).toEqual([{ creneauId: "c1", evenementId: "e1" }]);
   });
 
-  it("une plage de quatre heures se découpe : la première heure reste à l'événement, les autres sont à créer", () => {
+  it("une plage de quatre heures se découpe : la première heure reste à l'événement, les autres s'ouvrent sans événement", () => {
     const p = reconcilier({ fenetre, evenements: [ev("e1", 2, 4)], creneaux: [] });
     expect(p.operations.ouvrir).toEqual([
       { evenementId: "e1", debut: a(2), fin: a(3) },
@@ -57,7 +57,8 @@ describe("reconcilier — créneaux libres : l'agenda fait foi", () => {
       { evenementId: null, debut: a(5), fin: a(6) },
     ]);
     expect(p.consignes).toEqual([{ id: "e1", titre: TITRE.dispo, remettre: { debut: a(2), fin: a(3) } }]);
-    expect(p.aCreer).toEqual([3, 4, 5].map((h) => ({ debut: a(h), fin: a(h + 1), titre: TITRE.dispo })));
+    // Leurs événements sont créés après la transaction, à partir des créneaux sans événement (`tache.ts`).
+    expect(p.aCreer).toEqual([]);
   });
 
   it("les événements créés au découpage se rattachent à leurs heures à l'envoi suivant", () => {
@@ -176,7 +177,7 @@ describe("reconcilier — créneaux réservés : Rojer fait foi", () => {
   it("un réservé supprimé de l'agenda n'est pas fermé : l'événement est à recréer", () => {
     const p = reconcilier({ fenetre, evenements: [], creneaux: [reserve("c1", 2, "e1")] });
     expect(p.operations.fermer).toEqual([]);
-    expect(p.aCreer).toEqual([{ debut: a(2), fin: a(3), titre: "Réservé — Boulangerie — visio" }]);
+    expect(p.aCreer).toEqual([{ creneauId: "c1", ancien: "e1", debut: a(2), fin: a(3), titre: "Réservé — Boulangerie — visio" }]);
     expect(p.conflits.map((c) => c.nature)).toEqual(["supprime"]);
   });
 
@@ -208,10 +209,9 @@ describe("reconcilier — créneaux réservés : Rojer fait foi", () => {
 });
 
 describe("reconcilier — créneaux ouverts par script", () => {
-  it("un créneau sans événement n'est jamais fermé : son événement est demandé à l'agent", () => {
+  it("un créneau sans événement n'est jamais fermé", () => {
     const p = reconcilier({ fenetre, evenements: [], creneaux: [creneau("c1", 2)] });
-    expect(Object.values(p.operations).every((l) => l.length === 0)).toBe(true);
-    expect(p.aCreer).toEqual([{ debut: a(2), fin: a(3), titre: TITRE.dispo }]);
+    expect(rien(p)).toBe(true);
   });
 
   it("un événement posé à son heure le rattache à l'agenda", () => {

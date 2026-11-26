@@ -8,11 +8,10 @@ ALTER TABLE "CreneauAssistance" ADD COLUMN "evenementAgendaId" TEXT;
 -- L'index unique de `evenementAgendaId` est posé seul, sans verrou, dans
 -- la migration suivante (`migrations-index.test.ts`).
 
--- CreateTable : le journal des envois de l'agent, hors compte.
+-- CreateTable : le journal des passages de la synchronisation, hors compte.
 CREATE TABLE "ImportAgenda" (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "recuLe" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "envoyeLe" TIMESTAMP(3) NOT NULL,
     "accepte" BOOLEAN NOT NULL,
     "motif" TEXT,
     "ouverts" INTEGER NOT NULL DEFAULT 0,
@@ -26,9 +25,6 @@ CREATE TABLE "ImportAgenda" (
 
 -- CreateIndex
 CREATE INDEX "ImportAgenda_recuLe_idx" ON "ImportAgenda"("recuLe");
-
--- CreateIndex
-CREATE INDEX "ImportAgenda_accepte_envoyeLe_idx" ON "ImportAgenda"("accepte", "envoyeLe");
 
 ALTER TABLE "ImportAgenda" ADD CONSTRAINT "ImportAgenda_motif_borne"
   CHECK ("motif" IS NULL OR char_length("motif") <= 40);

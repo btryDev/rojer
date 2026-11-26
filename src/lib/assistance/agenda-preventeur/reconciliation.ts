@@ -1,6 +1,6 @@
 // La réconciliation de l'agenda du préventeur avec les créneaux du rendez-vous
 // annuel (ADR-064 § 4). Fonction pure : l'état reçu de l'agenda et l'état en
-// base entrent, les opérations sur la base et les consignes de l'agent
+// base entrent, les opérations sur la base et les consignes à appliquer dans l'agenda
 // sortent. Rien n'y lit l'horloge ni la base.
 //
 // Qui fait foi (§ 1) : l'agenda pour un créneau libre, Rojer pour un créneau
@@ -13,7 +13,7 @@ const DUREE_CRENEAU_MS = 60 * 60 * 1000;
 /** Un événement plus long se découpe en créneaux d'une heure, jusqu'à cette durée (décision du 2026-11-25). */
 const HEURES_MAX = 10;
 
-/** Les titres que l'agent pose : tous fabriqués ici, aucun ne vient de l'agenda. */
+/** Les titres que Rojer pose dans l'agenda : tous fabriqués ici, aucun ne vient de l'agenda. */
 export const TITRE = {
   dispo: "Dispo",
   reserve: "Réservé",
@@ -44,11 +44,11 @@ export type CreneauConnu = {
 type Operations = {
   fermer: { creneauId: string; evenementId: string | null; deplacement?: true }[];
   rattacher: { creneauId: string; evenementId: string; ancien: string | null }[];
-  /** `evenementId` nul : une heure découpée, dont l'événement reste à créer (`aCreer`). */
+  /** `evenementId` nul : une heure découpée, dont l'événement est créé après coup (`tache.ts`). */
   ouvrir: { evenementId: string | null; debut: Date; fin: Date; deplacement?: true }[];
 };
 
-/** Ce que l'agent fait d'un événement : le retitrer, et le remettre à une heure s'il y en a une. */
+/** Ce que Rojer fait d'un événement de l'agenda : le retitrer, et le remettre à une heure s'il y en a une. */
 type Consigne = { id: string; titre: string; remettre?: { debut: Date; fin: Date } };
 
 export type Conflit = { creneauId: string; debut: Date; fin: Date; nature: "deplace" | "supprime"; titre: string };
@@ -56,8 +56,13 @@ export type Conflit = { creneauId: string; debut: Date; fin: Date; nature: "depl
 export type Plan = {
   operations: Operations;
   consignes: Consigne[];
-  /** Les événements à recréer : ceux de créneaux réservés que l'agenda a perdus. */
-  aCreer: { debut: Date; fin: Date; titre: string }[];
+  /**
+   * Les événements à recréer : ceux de créneaux réservés que l'agenda a
+   * perdus. `ancien` : l'événement supprimé, que le nouveau remplace. Les
+   * créneaux sans événement (heures découpées, script) se relisent après la
+   * transaction (`tache.ts`), pas ici.
+   */
+  aCreer: { creneauId: string; ancien: string | null; debut: Date; fin: Date; titre: string }[];
   conflits: Conflit[];
 };
 
@@ -176,7 +181,6 @@ export function reconcilier(entree: { fenetre: Fenetre; evenements: EvenementRec
       if (occupe.has(instant(h.debut))) continue; // une heure déjà tenue n'est pas ouverte deux fois
       occupe.set(instant(h.debut), `decoupe:${ev.id}:${rang}`);
       plan.operations.ouvrir.push({ evenementId: null, ...h });
-      plan.aCreer.push({ ...h, titre: TITRE.dispo });
     }
   };
 
@@ -191,17 +195,10 @@ export function reconcilier(entree: { fenetre: Fenetre; evenements: EvenementRec
 
   // 3. Les créneaux dont l'événement a disparu sans être repris.
   for (const c of entree.creneaux) {
-    // Un créneau sans événement (heure découpée que l'agent n'a pas créée,
-    // créneau ouvert par script) : son événement est (re)demandé, l'agenda
-    // montre tout ce qui est ouvert.
-    if (c.evenementId === null && dansFenetre(c.debut) && !repris.has(c.id)) {
-      plan.aCreer.push({ debut: c.debut, fin: c.fin, titre: titreDuCreneau(c) });
-      continue;
-    }
     if (!estOrphelin(c) || repris.has(c.id)) continue;
     if (c.reserve) {
       const titre = titreDuCreneau(c);
-      plan.aCreer.push({ debut: c.debut, fin: c.fin, titre });
+      plan.aCreer.push({ creneauId: c.id, ancien: c.evenementId, debut: c.debut, fin: c.fin, titre });
       plan.conflits.push({ creneauId: c.id, debut: c.debut, fin: c.fin, nature: "supprime", titre });
     } else {
       fermer(c);

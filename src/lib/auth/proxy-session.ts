@@ -57,9 +57,6 @@ const PUBLIC_PREFIXES = [
   "/api/stripe/webhook",
   // Les tâches (file Stripe, tâches du jour), appelées chaque minute par la crontab ; le secret partagé est leur garde.
   "/api/taches/chaque-minute",
-  // ADR-064 : la synchronisation de l'agenda du préventeur, appelée par un
-  // agent planifié ; son secret est sa garde.
-  "/api/integrations/agenda",
   "/robots.txt",
   // Le plan du site, pour les moteurs (2026-11-23, `app/sitemap.ts`).
   "/sitemap.xml",

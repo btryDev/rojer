@@ -192,10 +192,6 @@ const ROUTES_OUVERTES = new Map<string, string>([
     "les tâches quotidiennes (rappel de fin d'essai) : sans session, prouvées par le secret de la crontab ; elles n'écrivent dans aucun dossier",
   ],
   [
-    "app/api/integrations/agenda/synchronisation/route.ts:POST",
-    "l'agenda du préventeur (ADR-064) : sans session, prouvé par le secret de l'agent ; n'écrit que les créneaux libres, hors de tout dossier",
-  ],
-  [
     "app/api/stripe/webhook/route.ts:POST",
     "la notification de Stripe : sans session, prouvée par sa signature — c'est elle qui rouvre un compte impayé",
   ],

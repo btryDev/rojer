@@ -47,8 +47,8 @@ vi.mock("@/lib/stripe/config", () => ({ configurationStripe: () => ({ active: fa
 vi.mock("@/lib/auth/comptes-non-actives", () => ({ purgerComptesNonActives: vi.fn().mockResolvedValue({ supprimes: 0 }) }));
 vi.mock("@/lib/assistance/hors-pro", () => ({ annulerRendezVousHorsPro: vi.fn().mockResolvedValue({ annules: 0 }) }));
 vi.mock("@/lib/assistance/agenda-preventeur/base", () => ({ purgerLeJournalDeLAgenda: vi.fn().mockResolvedValue(0) }));
-vi.mock("@/lib/assistance/agenda-preventeur/synchronisation", () => ({
-  verifierQueLAgentPasse: vi.fn().mockResolvedValue({ silencieux: false }),
+vi.mock("@/lib/assistance/agenda-preventeur/tache", () => ({
+  synchroniserLAgendaSansLever: vi.fn().mockResolvedValue({ etat: "hors-service" }),
 }));
 vi.mock("@/lib/stripe/client", () => ({ clientStripe: vi.fn(), clientStripeWebhook: vi.fn() }));
 
@@ -118,7 +118,6 @@ describe("tâches quotidiennes", () => {
       comptesNonActives: { supprimes: 0 },
       evenementsOublies: undefined,
       journalAgenda: 0,
-      agentAgenda: { silencieux: false },
     });
     // Sans Stripe actif, la suppression reçoit `null` (elle ne supprime rien).
     expect(m.supprimer).toHaveBeenCalledWith(expect.any(Date), null);
@@ -157,7 +156,6 @@ describe("tâches quotidiennes", () => {
       comptesNonActives: { supprimes: 0 },
       evenementsOublies: undefined,
       journalAgenda: 0,
-      agentAgenda: { silencieux: false },
     });
     expect(m.rappels).not.toHaveBeenCalled();
     expect(m.renouvellement).not.toHaveBeenCalled();

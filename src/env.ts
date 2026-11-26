@@ -159,10 +159,12 @@ const schema = z
     // Les tâches (`taches/quotidiennes.ts`, `clevercloud/cron.json`, chaque
     // minute) : le secret que la crontab présente. Absente, la route répond 404.
     TACHES_SECRET: z.preprocess(vide, z.string().min(32, "doit faire au moins 32 caractères").optional()),
-    // La synchronisation de l'agenda du préventeur (ADR-064) : le secret que
-    // l'agent présente. Absente, la route répond 404. Distincte de
-    // TACHES_SECRET (`fautesDeContexte`).
-    AGENDA_SECRET: z.preprocess(vide, z.string().min(32, "doit faire au moins 32 caractères").optional()),
+    // La synchronisation de l'agenda du préventeur (ADR-064) : l'agenda Google
+    // et la clé du compte de service (le fichier JSON de Google, en base64),
+    // relue par `agenda-preventeur/google.ts`. Sans l'une ou l'autre, la
+    // synchronisation ne tourne pas.
+    AGENDA_GOOGLE_ID: optionnelle,
+    AGENDA_GOOGLE_CLE: optionnelle,
     // Les alertes d'exploitation (`lib/alertes.ts`) : échec durable de la
     // file Stripe, litige, remboursement. Absente, elles ne vont qu'au journal.
     ALERTES_EMAIL: z.preprocess(vide, z.string().email("doit être une adresse e-mail").optional()),
@@ -186,10 +188,11 @@ function fautesDeContexte(env: Env): { variable: string; message: string }[] {
         "requise en production : origine de confiance de l'authentification et adresse des liens envoyés par e-mail",
     });
   }
-  // ADR-064 § 3 : un secret par porte — celui de l'agenda n'ouvre pas les tâches.
-  const agenda = env.AGENDA_SECRET?.trim();
-  if (agenda && agenda === env.TACHES_SECRET?.trim()) {
-    fautes.push({ variable: "AGENDA_SECRET", message: "doit être différente de TACHES_SECRET" });
+  if (!vide(env.AGENDA_GOOGLE_ID) !== !vide(env.AGENDA_GOOGLE_CLE)) {
+    fautes.push({
+      variable: vide(env.AGENDA_GOOGLE_ID) ? "AGENDA_GOOGLE_ID" : "AGENDA_GOOGLE_CLE",
+      message: "va avec AGENDA_GOOGLE_ID et AGENDA_GOOGLE_CLE : l'une sans l'autre ne synchronise rien",
+    });
   }
   return fautes;
 }

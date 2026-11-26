@@ -45,12 +45,10 @@ describe("validerEnvironnement", () => {
     expect(e.message).not.toContain("court-et-secret");
   });
 
-  it("le secret de l'agenda (ADR-064) : 32 caractères au moins, et pas celui des tâches", () => {
-    expect(() => validerEnvironnement({ ...BASE, AGENDA_SECRET: "a".repeat(32), TACHES_SECRET: "t".repeat(32) })).not.toThrow();
-    expect(() => validerEnvironnement({ ...BASE, AGENDA_SECRET: "court" })).toThrow(/AGENDA_SECRET/);
-    expect(() => validerEnvironnement({ ...BASE, AGENDA_SECRET: "m".repeat(32), TACHES_SECRET: "m".repeat(32) })).toThrow(
-      /AGENDA_SECRET : doit être différente de TACHES_SECRET/,
-    );
+  it("l'agenda du préventeur (ADR-064) : l'agenda et la clé vont ensemble", () => {
+    expect(() => validerEnvironnement({ ...BASE, AGENDA_GOOGLE_ID: "a@group.calendar.google.com", AGENDA_GOOGLE_CLE: "e30=" })).not.toThrow();
+    expect(() => validerEnvironnement({ ...BASE, AGENDA_GOOGLE_ID: "a@group.calendar.google.com" })).toThrow(/AGENDA_GOOGLE_CLE/);
+    expect(() => validerEnvironnement({ ...BASE, AGENDA_GOOGLE_CLE: "e30=" })).toThrow(/AGENDA_GOOGLE_ID/);
   });
 
   it("l'URL publique est exigée en production, pas en développement", () => {

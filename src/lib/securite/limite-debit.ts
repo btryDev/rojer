@@ -113,13 +113,6 @@ export const LIMITES = {
    * sécurité du 2026-11-24).
    */
   rendezVousCompte: { max: 10, fenetreSecondes: 24 * 60 * 60 },
-  /**
-   * La synchronisation de l'agenda du préventeur (ADR-064 § 3, point 2) :
-   * douze appels par jour ouvré. Par réseau avant le secret ; pour toute la
-   * route après — de la place pour des essais à la main, pas pour une boucle.
-   */
-  agendaIp: { max: 20, fenetreSecondes: 60 * 60 },
-  agendaRoute: { max: 60, fenetreSecondes: 24 * 60 * 60 },
   /** Les questions à l'Assistance (ADR-050) : chacune écrit à l'équipe. */
   assistanceCompte: { max: 10, fenetreSecondes: 24 * 60 * 60 },
 } as const satisfies Record<string, Limite>;

@@ -35,7 +35,7 @@ import { controlerLesReglagesStripe } from "@/lib/stripe/controles";
 import { purgerComptesNonActives } from "@/lib/auth/comptes-non-actives";
 import { annulerRendezVousHorsPro } from "@/lib/assistance/hors-pro";
 import { purgerLeJournalDeLAgenda } from "@/lib/assistance/agenda-preventeur/base";
-import { verifierQueLAgentPasse } from "@/lib/assistance/agenda-preventeur/synchronisation";
+import { synchroniserLAgendaSansLever } from "@/lib/assistance/agenda-preventeur/tache";
 
 function horlogeReelle(): Date {
   return new Date();
@@ -84,8 +84,6 @@ export async function lancerTachesQuotidiennes(maintenant: Date) {
     evenementsOublies: await tenter("ménage des événements Stripe", () => oublierLesAnciens(maintenant)),
     // Le journal de l'agent de l'agenda du préventeur se garde un an (ADR-064).
     journalAgenda: await tenter("journal de l'agenda du préventeur", () => purgerLeJournalDeLAgenda(maintenant)),
-    // Un agent arrêté ne se voit nulle part : il se dit (ADR-064).
-    agentAgenda: await tenter("passage de l'agent de l'agenda", () => verifierQueLAgentPasse(maintenant)),
   });
   const stripe = config.active ? clientStripe(config) : null;
   // L'offre pas lancée (ou retirée) : la saisie est ouverte à tous, rien ne
@@ -141,13 +139,15 @@ async function signalerLaFile(maintenant: Date) {
 }
 
 /**
- * Ce que la crontab de chaque minute lance : la file Stripe, puis les tâches
- * du jour si elles sont dues (dès `HEURE_DES_TACHES`, une fois par jour civil).
+ * Ce que la crontab de chaque minute lance : la file Stripe, l'agenda du
+ * préventeur (un passage toutes les 15 minutes, ADR-064), puis les tâches du
+ * jour si elles sont dues (dès `HEURE_DES_TACHES`, une fois par jour civil).
  */
 export async function lancerTaches(maintenant: () => Date = horlogeReelle) {
   const config = configurationStripe();
   const fileStripe = config.active ? await traiterLaFileIci(clientStripeWebhook(config)) : null;
-  return { fileStripe, jour: await lancerTachesDuJour(maintenant()) };
+  const agenda = await synchroniserLAgendaSansLever(maintenant());
+  return { fileStripe, agenda, jour: await lancerTachesDuJour(maintenant()) };
 }
 
 /**

@@ -22,6 +22,48 @@
   - un événement correspond à un créneau d'une heure exactement ;
   - l'agent passe toutes les heures, de 8 h à 19 h, en semaine.
 
+> **[2026-11-26] Amendement : plus d'agent ni de route ; la crontab de Rojer
+> synchronise elle-même, par un compte de service Google.** Décision de la
+> propriétaire du 2026-11-25, sur une revue franche : l'agent ne faisait
+> qu'un travail mécanique (lire, envoyer, appliquer), et le modèle de langage
+> ajoutait de l'imprévisibilité (format des heures changé dès le premier
+> essai seul), une surface d'injection (le connecteur écrivait dans tous les
+> agendas de la propriétaire), un passage par heure au mieux et une
+> dépendance à une fonction en « research preview ». Prémisses tombées
+> (CLAUDE.md, règle 13) : « pas d'accès Google sans connecteur » — un compte
+> de service y donne accès, borné à l'agenda partagé avec lui ; « l'agent
+> doit pouvoir appeler Rojer » — Rojer appelle Google lui-même.
+>
+> - **Appelant** : `lancerTaches` (crontab de chaque minute) lance
+>   `agenda-preventeur/tache.ts`, un passage toutes les 15 minutes ; sous le
+>   verrou, la cadence se lit sur le dernier passage du journal (deux
+>   instances à la même minute n'en font qu'un).
+> - **Google** : compte de service `rojer-agenda@rojer-agenda.iam.gserviceaccount.com`
+>   (projet Cloud `rojer-agenda`, organisation btry.fr, aucun rôle), agenda
+>   partagé avec lui en « Apporter des modifications (privés en
+>   disponible/occupé) ». Clé en `AGENDA_GOOGLE_CLE` (JSON en base64), agenda
+>   en `AGENDA_GOOGLE_ID` ; sans l'un ou l'autre, rien ne tourne. Réglage
+>   Workspace : partage externe des agendas SECONDAIRES en modification (les
+>   principaux restent en disponibilité seule). Validé le 2026-11-26 :
+>   lecture, création, écriture conditionnelle (412 sur version périmée).
+> - **Fiabilité** : une lecture incomplète (page en erreur, plus de 1 000
+>   événements) arrête le passage ; les modifications sont conditionnelles
+>   (`If-Match`), un événement changé par le préventeur n'est pas écrasé ;
+>   un événement créé est lié tout de suite à son créneau, et une réponse
+>   perdue se rattrape par l'heure au passage suivant (rattachement).
+> - **Retirés** : la route `/api/integrations/agenda/synchronisation`,
+>   `AGENDA_SECRET`, `envoi.ts`, les limites `agendaIp`/`agendaRoute`,
+>   l'anti-rejeu (`envoyeLe`), le contrôle « l'agent ne passe plus », le
+>   filtre anti-injection du nom (aucun modèle ne lit plus les titres : la
+>   raison sociale reste sur une ligne, 40 caractères).
+> - **Alertes** (`ALERTES_EMAIL`, une fois par jour et par nature) : lecture
+>   impossible, plafond, écritures en échec, conflit sur un réservé.
+>
+> Le § 2 (« une route, un aller-retour »), le § 3 (garde de la route) et le
+> § 5 (« l'agent ») ci-dessous décrivent l'état d'avant : ils ne s'appliquent
+> plus, sauf le plafond de dégâts (§ 3, point 5), les écritures
+> conditionnelles (point 6) et le journal (point 7).
+
 ## Contexte
 
 L'ADR-063 a codé la réservation. Elle a laissé l'ouverture des créneaux hors
