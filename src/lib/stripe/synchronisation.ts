@@ -113,6 +113,12 @@ export function horlogeDeSuppression(
   return { sansAbonnementDepuis: laPlusRecente(dejaNotee ?? date(s?.ended_at) ?? relueLe, finEssai)! };
 }
 
+/** Une facture à zéro parce qu'une remise en couvre tout le montant (coupon de 100 %). */
+export function offerteParUneRemise(f: Pick<Stripe.Invoice, "subtotal" | "total" | "total_discount_amounts">): boolean {
+  const remise = (f.total_discount_amounts ?? []).reduce((somme, d) => somme + d.amount, 0);
+  return f.subtotal > 0 && f.total === 0 && remise >= f.subtotal;
+}
+
 /**
  * Le premier paiement CONFIRMÉ du client (ADR-053 § 14) : la date de la plus
  * ancienne facture payée — pas un état `active`. ~~Pas une facture à zéro
@@ -127,12 +133,6 @@ export function horlogeDeSuppression(
  * assumée : un paiement remboursé ou contesté reste un paiement — la
  * facture reste `paid` chez Stripe.
  */
-/** Une facture à zéro parce qu'une remise en couvre tout le montant (coupon de 100 %). */
-export function offerteParUneRemise(f: Pick<Stripe.Invoice, "subtotal" | "total" | "total_discount_amounts">): boolean {
-  const remise = (f.total_discount_amounts ?? []).reduce((somme, d) => somme + d.amount, 0);
-  return f.subtotal > 0 && f.total === 0 && remise >= f.subtotal;
-}
-
 export async function premierPaiement(stripe: Stripe, customerId: string): Promise<Date | null> {
   const payees = await toutLister(stripe.invoices.list({ customer: customerId, status: "paid", limit: 100 }, OPTIONS_WEBHOOK), 1000);
   const dates = payees

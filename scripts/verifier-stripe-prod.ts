@@ -42,12 +42,14 @@
  */
 import { execFileSync } from "node:child_process";
 import Stripe from "stripe";
-import { LOOKUP_KEYS, formuleDeLookupKey } from "../src/lib/abonnements/formules";
+import { INTERVALLE_STRIPE, LOOKUP_KEYS, formuleDeLookupKey } from "../src/lib/abonnements/formules";
+import { defautsDuPortail } from "../src/lib/stripe/controles";
+import { expirerSessionsOuvertes, ouvrirCheckout, ouvrirPortail } from "../src/lib/stripe/parcours";
 import { tauxConformes } from "../src/lib/stripe/tva";
+import { MONTANTS_CENTIMES } from "./stripe-installer-test";
 
 const APP_PROD = "app_818c5cef-038d-4b93-bf27-efc6a78b9e1c";
 const URL_PROD = "https://rojer.fr";
-const INTERVALLE = { mensuel: "month", annuel: "year" } as const;
 
 function refus(message: string): never {
   console.error(`Refusé : ${message}`);
@@ -143,24 +145,22 @@ async function catalogue(stripe: Stripe): Promise<{ priceId: string | null; taux
   let priceId: string | null = null;
   const liste = await appel("Prix (lecture)", () => stripe.prices.list({ lookup_keys: LOOKUP_KEYS, active: true, limit: 10 }));
   if (liste) {
-    const trouves = new Set<string>();
     for (const p of liste.data) {
       const cle = formuleDeLookupKey(p.lookup_key);
       if (!cle) continue;
       const fautes = [
         p.currency !== "eur" ? `devise ${p.currency}` : null,
-        p.recurring?.interval !== INTERVALLE[cle.periodicite] ? "intervalle contraire à la clé" : null,
-        p.unit_amount === null ? "sans montant" : null,
+        p.recurring?.interval !== INTERVALLE_STRIPE[cle.periodicite] ? "intervalle contraire à la clé" : null,
+        p.unit_amount !== MONTANTS_CENTIMES[cle.formule][cle.periodicite] ? "montant différent de la grille" : null,
       ].filter(Boolean);
       const montant = p.unit_amount === null ? "?" : `${(p.unit_amount / 100).toFixed(2).replace(".", ",")} €`;
       if (fautes.length) noter(`Prix ${p.lookup_key}`, "erreur", fautes.join(", "));
       else {
-        trouves.add(p.lookup_key!);
         priceId ??= p.id;
         noter(`Prix ${p.lookup_key}`, "ok", montant);
       }
     }
-    for (const k of LOOKUP_KEYS) if (!trouves.has(k) && !liste.data.some((p) => p.lookup_key === k)) noter(`Prix ${k}`, "erreur", "absent ou inactif");
+    for (const k of LOOKUP_KEYS) if (!liste.data.some((p) => p.lookup_key === k)) noter(`Prix ${k}`, "erreur", "absent ou inactif");
   }
 
   let tauxTva: string | null = null;
@@ -173,24 +173,20 @@ async function catalogue(stripe: Stripe): Promise<{ priceId: string | null; taux
     noter(
       "TVA 20 % incluse, France",
       conformes.length ? "ok" : "erreur",
-      conformes.length ? `${conformes.length} taux conforme(s)` : `aucun taux conforme (actif, inclus, 20 %, FR, type vat) : aucun abonnement ne se créerait. Taux actifs inclus : ${vus || "aucun"}`,
+      conformes.length ? `${conformes.length} taux conforme(s)` : `aucun taux conforme (actif, inclus, 20 %, FR, type TVA ou sans type) : aucun abonnement ne se créerait. Taux actifs inclus : ${vus || "aucun"}`,
     );
   }
 
   const portail = await appel("Portail client (lecture de la configuration)", () => stripe.billingPortal.configurations.list({ is_default: true, limit: 1 }));
-  const conf = portail?.data[0];
   if (portail) {
-    if (!conf) noter("Portail client", "erreur", "aucune configuration par défaut");
-    else {
-      const f = conf.features;
-      const fautes = [
-        f.subscription_update?.enabled ? "changement de formule OUVERT au portail (doit passer par Rojer)" : null,
-        !f.subscription_cancel?.enabled ? "résiliation fermée" : null,
-        !f.payment_method_update?.enabled ? "changement de carte fermé" : null,
-        !f.invoice_history?.enabled ? "historique des factures fermé" : null,
-      ].filter(Boolean);
-      noter("Portail client (réglages)", fautes.length ? "erreur" : "ok", fautes.length ? fautes.join(" ; ") : "carte, factures, résiliation ; formule fermée");
-    }
+    // La règle de la tâche quotidienne (`controles.ts`), plus la carte et les factures, que Rojer y envoie.
+    const conf = portail.data[0] ?? null;
+    const fautes = [
+      ...defautsDuPortail(conf),
+      conf && !conf.features.payment_method_update?.enabled ? "changement de carte fermé" : null,
+      conf && !conf.features.invoice_history?.enabled ? "historique des factures fermé" : null,
+    ].filter(Boolean);
+    noter("Portail client (réglages)", fautes.length ? "erreur" : "ok", fautes.length ? fautes.join(" ; ") : "carte, factures, résiliation en fin de période ; formule fermée");
   }
   return { priceId, tauxTva };
 }
@@ -232,29 +228,23 @@ async function surUnClientFictif(stripe: Stripe, priceId: string | null, tauxTva
   if (!client) return;
   try {
     await appel("Clients (écriture : modifier)", () => stripe.customers.update(client.id, { metadata: { verification: "rojer", relu: "oui" } }));
-    await appel("Clients (lecture d'un client)", () => stripe.customers.retrieve(client.id));
-    await appel("Portail client (ouvrir une session)", () => stripe.billingPortal.sessions.create({ customer: client.id, return_url: `${URL_PROD}/compte/abonnement` }));
+    await appel("Portail client (ouvrir une session, comme Rojer)", () => ouvrirPortail(stripe, { customerId: client.id, retour: `${URL_PROD}/compte/abonnement` }));
     if (!priceId || !tauxTva) {
       noter("Page de paiement (créer)", "erreur", "non essayée : prix ou TVA absents");
     } else {
-      // Les paramètres de `ouvrirCheckout` (parcours.ts) : un refus ici serait le refus du premier client.
-      const session = await appel("Page de paiement (créer, comme Rojer)", () =>
-        stripe.checkout.sessions.create({
-          mode: "subscription",
-          customer: client.id,
-          allowed_payment_method_types: ["card"],
-          line_items: [{ price: priceId, quantity: 1 }],
-          subscription_data: { metadata: { verification: "rojer" }, default_tax_rates: [tauxTva] },
-          ...(conditions ? { consent_collection: { terms_of_service: "required" as const } } : {}),
-          tax_id_collection: { enabled: true },
-          customer_update: { name: "auto", address: "auto" },
-          billing_address_collection: "required",
-          success_url: `${URL_PROD}/compte/abonnement`,
-          cancel_url: `${URL_PROD}/compte/abonnement`,
-          expires_at: Math.floor(Date.now() / 1000) + 31 * 60,
+      // La fonction même de Rojer : un refus ici serait le refus du premier client.
+      const ouverte = await appel("Page de paiement (créer, comme Rojer)", () =>
+        ouvrirCheckout(stripe, {
+          customerId: client.id,
+          priceId,
+          tauxTva,
+          metadata: { verification: "rojer" },
+          succes: `${URL_PROD}/compte/abonnement`,
+          annulation: `${URL_PROD}/compte/abonnement`,
+          conditions,
         }),
       );
-      if (session) await appel("Page de paiement (expirer, sans paiement)", () => stripe.checkout.sessions.expire(session.id));
+      if (ouverte) await appel("Page de paiement (expirer, sans paiement)", () => expirerSessionsOuvertes(stripe, client.id));
     }
   } finally {
     const supprime = await appel("Clients (écriture : supprimer)", () => stripe.customers.del(client.id));

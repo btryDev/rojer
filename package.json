@@ -35,7 +35,7 @@
     "comptes-test": "tsx --import ./scripts/server-only-hors-next.mjs scripts/comptes-test.ts",
     "deployer:preprod": "sh scripts/deployer-cc.sh preprod",
     "lire-preprod": "tsx scripts/lire-preprod.ts",
-    "verifier-stripe-prod": "tsx scripts/verifier-stripe-prod.ts"
+    "verifier-stripe-prod": "tsx --import ./scripts/server-only-hors-next.mjs scripts/verifier-stripe-prod.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1169.0",
