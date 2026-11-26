@@ -99,12 +99,13 @@ describe("colonnesDe", () => {
 });
 
 describe("premierPaiement", () => {
-  it("la plus ancienne facture payée d'un montant non nul ; rien tant qu'il n'y a que l'essai", async () => {
+  it("la plus ancienne facture payée, à zéro comprise (formule offerte par un coupon de 100 %)", async () => {
     const avec = (factures: object[]) =>
       ({ invoices: { list: vi.fn().mockReturnValue({ autoPagingToArray: vi.fn().mockResolvedValue(factures) }) } }) as unknown as Stripe;
     const f = (paye: number | null, montant: number) => ({ amount_paid: montant, status_transitions: { paid_at: paye } });
-    expect(await premierPaiement(avec([f(900, 2900), f(700, 8900), f(100, 0)]), "cus_1")).toEqual(new Date(700_000));
-    expect(await premierPaiement(avec([f(100, 0)]), "cus_1")).toBeNull();
+    expect(await premierPaiement(avec([f(900, 2900), f(700, 8900)]), "cus_1")).toEqual(new Date(700_000));
+    expect(await premierPaiement(avec([f(900, 2900), f(100, 0)]), "cus_1")).toEqual(new Date(100_000));
+    expect(await premierPaiement(avec([]), "cus_1")).toBeNull();
     expect(await premierPaiement(avec([f(null, 2900)]), "cus_1")).toBeNull();
   });
 });

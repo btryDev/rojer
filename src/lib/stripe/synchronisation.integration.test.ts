@@ -119,13 +119,13 @@ describe.skipIf(!URL_BASE || !local)("webhook Stripe — PostgreSQL réel", asyn
   const ligne = (compteId: string) => prisma.abonnement.findUnique({ where: { compteId } });
 
   describe("synchroniserClientStripe", () => {
-    it("premier paiement : la plus ancienne facture payée non nulle, écrite une fois, jamais écrasée", async () => {
+    it("premier paiement : la plus ancienne facture payée, écrite une fois, jamais écrasée", async () => {
       const facture = (paye: number, montant: number) => ({ amount_paid: montant, status_transitions: { paid_at: paye } });
       const actif = [abo({ id: "sub_1", status: "active", created: 1 })];
-      // Facture d'essai à zéro seulement : pas encore de paiement.
-      await synchroniserClientStripe(stripe(A, actif, undefined, [facture(500, 0)]), "cus_A", { maintenant: () => new Date(1000) });
+      // Aucune facture payée : pas encore de paiement.
+      await synchroniserClientStripe(stripe(A, actif, undefined, []), "cus_A", { maintenant: () => new Date(1000) });
       expect((await ligne(A))?.debutPayantLe).toBeNull();
-      await synchroniserClientStripe(stripe(A, actif, undefined, [facture(900, 2900), facture(700, 2900), facture(500, 0)]), "cus_A", { maintenant: () => new Date(2000) });
+      await synchroniserClientStripe(stripe(A, actif, undefined, [facture(900, 2900), facture(700, 2900)]), "cus_A", { maintenant: () => new Date(2000) });
       expect((await ligne(A))?.debutPayantLe).toEqual(new Date(700_000));
       // Une relecture plus tard (nouvelles factures, ou une liste vide) ne la déplace pas.
       await synchroniserClientStripe(stripe(A, actif, undefined, [facture(100, 2900)]), "cus_A", { maintenant: () => new Date(3000) });

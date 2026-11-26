@@ -115,9 +115,13 @@ export function horlogeDeSuppression(
 
 /**
  * Le premier paiement CONFIRMÉ du client (ADR-053 § 14) : la date de la plus
- * ancienne facture payée d'un montant non nul — pas un état `active`, et
- * pas une facture à zéro (couverte par un crédit ou une remise de 100 % : un
- * abonnement gratuit n'est pas prévu). Lue seulement tant que
+ * ancienne facture payée — pas un état `active`. ~~Pas une facture à zéro
+ * (couverte par un crédit ou une remise de 100 % : un abonnement gratuit
+ * n'est pas prévu).~~ [2026-11-26, décision de la propriétaire : une facture
+ * payée à zéro compte — c'est ainsi qu'une formule s'offre, par un coupon à
+ * 100 % posé dans le tableau de bord Stripe. Sans risque : Checkout n'accepte
+ * aucun code promo, et Rojer ne crée plus d'essai chez Stripe (ADR-053 § 9,
+ * amendé le 2026-11-16), d'où venaient les factures à zéro.] Lue seulement tant que
  * le compte n'en a pas : une fois écrite, elle ne change plus. Limite
  * assumée : un paiement remboursé ou contesté reste un paiement — la
  * facture reste `paid` chez Stripe.
@@ -125,7 +129,7 @@ export function horlogeDeSuppression(
 export async function premierPaiement(stripe: Stripe, customerId: string): Promise<Date | null> {
   const payees = await toutLister(stripe.invoices.list({ customer: customerId, status: "paid", limit: 100 }, OPTIONS_WEBHOOK), 1000);
   const dates = payees
-    .filter((f) => f.amount_paid > 0 && f.status_transitions?.paid_at)
+    .filter((f) => f.status_transitions?.paid_at)
     .map((f) => f.status_transitions.paid_at as number);
   return dates.length ? date(Math.min(...dates)) : null;
 }
