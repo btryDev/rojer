@@ -99,12 +99,26 @@ describe("colonnesDe", () => {
 });
 
 describe("premierPaiement", () => {
-  it("la plus ancienne facture payée d'un montant non nul ; rien tant qu'il n'y a que l'essai", async () => {
+  it("la plus ancienne facture payée d'un montant non nul, ou ramenée à zéro par une remise (coupon de 100 %)", async () => {
     const avec = (factures: object[]) =>
       ({ invoices: { list: vi.fn().mockReturnValue({ autoPagingToArray: vi.fn().mockResolvedValue(factures) }) } }) as unknown as Stripe;
-    const f = (paye: number | null, montant: number) => ({ amount_paid: montant, status_transitions: { paid_at: paye } });
+    const f = (paye: number | null, montant: number, autres: object = {}) => ({
+      amount_paid: montant,
+      subtotal: montant,
+      total: montant,
+      total_discount_amounts: [],
+      status_transitions: { paid_at: paye },
+      ...autres,
+    });
+    const offerte = (paye: number) => f(paye, 0, { subtotal: 89900, total: 0, total_discount_amounts: [{ amount: 89900 }] });
     expect(await premierPaiement(avec([f(900, 2900), f(700, 8900), f(100, 0)]), "cus_1")).toEqual(new Date(700_000));
+    // Zéro sans remise (essai, prorata) ou couvert par un crédit du client : pas un paiement.
     expect(await premierPaiement(avec([f(100, 0)]), "cus_1")).toBeNull();
+    expect(await premierPaiement(avec([f(100, 0, { subtotal: 2900, total: 2900 })]), "cus_1")).toBeNull();
+    // Remise partielle qui ne couvre pas tout : pas une formule offerte.
+    expect(await premierPaiement(avec([f(100, 0, { subtotal: 2900, total: 0, total_discount_amounts: [{ amount: 1000 }] })]), "cus_1")).toBeNull();
+    // Coupon de 100 % : compte.
+    expect(await premierPaiement(avec([f(900, 2900), offerte(100)]), "cus_1")).toEqual(new Date(100_000));
     expect(await premierPaiement(avec([f(null, 2900)]), "cus_1")).toBeNull();
   });
 });

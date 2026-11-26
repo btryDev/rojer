@@ -345,6 +345,8 @@ describe("parcours Stripe", () => {
         taux("txr_10", { percentage: 10 }),
         taux("txr_be", { country: "BE" }),
         taux("txr_sales", { tax_type: "sales_tax" }),
+        // Sans type (formulaire du tableau de bord, 2026-11-26) : accepté, mais plus récent.
+        taux("txr_sans_type", { tax_type: null, created: 15 }),
         taux("txr_sans_pays", { country: null }),
         taux("txr_recent", { created: 20 }),
         taux("txr_ancien", { created: 5 }),
@@ -361,5 +363,14 @@ describe("parcours Stripe", () => {
     // Absent : relu à chaque appel, pour que le taux créé entre-temps serve aussitôt.
     await tauxDeTva(stripe, 1000);
     expect(api.taxRates.list).toHaveBeenCalledTimes(3);
+
+    // Seul un taux sans type : il sert ; un autre type déclaré reste refusé.
+    oublierLesPrix();
+    api.taxRates.list.mockResolvedValueOnce({ data: [taux("txr_sales", { tax_type: "sales_tax" }), taux("txr_sans_type", { tax_type: null })] });
+    expect(await tauxDeTva(stripe, 0)).toBe("txr_sans_type");
+    // Un taux typé « vat » passe devant un taux sans type plus ancien.
+    oublierLesPrix();
+    api.taxRates.list.mockResolvedValueOnce({ data: [taux("txr_sans_type", { tax_type: null, created: 1 }), taux("txr_vat", { created: 50 })] });
+    expect(await tauxDeTva(stripe, 0)).toBe("txr_vat");
   });
 });

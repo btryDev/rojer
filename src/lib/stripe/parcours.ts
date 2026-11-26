@@ -489,7 +489,7 @@ export async function tauxDeTva(stripe: Stripe, maintenant = Date.now()): Promis
     console.error("stripe : aucun taux de TVA actif (20 %, France, type TVA, incluse dans le prix) — abonnements refusés");
     return null;
   }
-  if (conformes.length > 1) console.error(`stripe : ${conformes.length} taux de TVA conformes, le plus ancien est retenu`);
+  if (conformes.length > 1) console.error(`stripe : ${conformes.length} taux de TVA conformes, retenu : un typé « vat » d’abord, puis le plus ancien`);
   cacheTva = { lu: maintenant, id: conformes[0].id };
   return cacheTva.id;
 }

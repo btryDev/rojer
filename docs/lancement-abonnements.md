@@ -154,7 +154,7 @@ sur la préproduction, où fermer la saisie ne gêne personne.
    | Subscriptions, et Subscription schedules s'ils sont listés à part | écriture |
    | Checkout Sessions | écriture |
    | Customer portal | écriture [2026-11-16 : la tâche quotidienne relit aussi sa configuration, `billingPortal.configurations.list` — vérifier l'absence de 403 à la répétition] |
-   | Invoices | ~~lecture~~ ~~écriture [2026-11-16 : la reprise d'une pause annule une facture en attente d'une autre formule, `invoices.voidInvoice`]~~ lecture [2026-11-16, ADR-053 § 9 amendé : plus de pause, Rojer n'écrit plus aucune facture ; la tâche quotidienne liste les factures ouvertes d'un impayé] |
+   | Invoices | ~~lecture~~ ~~écriture [2026-11-16 : la reprise d'une pause annule une facture en attente d'une autre formule, `invoices.voidInvoice`]~~ ~~lecture [2026-11-16, ADR-053 § 9 amendé : plus de pause, Rojer n'écrit plus aucune facture ; la tâche quotidienne liste les factures ouvertes d'un impayé]~~ **écriture** [2026-11-26 : la suppression d'un compte annule et supprime ses factures ouvertes — `invoices.voidInvoice`, `del`, `finalizeInvoice`, `abonnements/suppression.ts` ; vérifié sur la clé de production par `pnpm verifier-stripe-prod`] |
    | Prices, Products | lecture |
    | Tax Rates | lecture |
    | ~~SetupIntents~~ | ~~lecture~~ [2026-11-16 : plus de Checkout « setup », ADR-053 § 9 amendé] |
@@ -163,6 +163,9 @@ sur la préproduction, où fermer la saisie ne gêne personne.
    | Charges | lecture [2026-11-16 : les remboursements, `charges.retrieve`, `traitement.ts`] |
 
    Tout le reste : aucun. La clé ne se colle jamais dans une conversation.
+   [2026-11-26 : sans préproduction, les droits de la clé de PRODUCTION se
+   vérifient par `pnpm verifier-stripe-prod` — chaque ressource appelée une
+   fois, sans paiement, client fictif supprimé.]
 3. Variables de la **préproduction** : `APP_ENV=preview`,
    `STRIPE_SECRET_KEY=rk_test_…`, `STRIPE_WEBHOOK_SECRET` (destination de
    test vers l'URL de préproduction), `TACHES_SECRET`,
