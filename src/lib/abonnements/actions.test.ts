@@ -134,7 +134,7 @@ describe("sAbonnerAction", () => {
     // La marque passe par le client borné : ses arguments doivent y être admis
     // (2026-11-26 — un filtre vers `Compte` y était refusé, et rien ne le testait).
     const portee = { compteId: "c1", userId: "u1" } as Parameters<typeof argumentsBornes>[3];
-    expect(() => argumentsBornes("Abonnement", "updateMany", m.marquer.mock.calls[0][0], portee)).not.toThrow();
+    expect(() => argumentsBornes("Abonnement", "updateMany", (m.marquer.mock.calls as unknown[][])[0][0], portee)).not.toThrow();
   });
 
   it("une suppression demandée entre la lecture et la marque : pas de paiement (ADR-058 § 8)", async () => {
