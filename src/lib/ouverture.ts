@@ -24,7 +24,9 @@
 //
 // Module sans `server-only` : les cartes d'offres, composant client, le lisent.
 
-export const OUVERT_AU_PUBLIC: boolean = false;
+// [2026-11-26, décision de la propriétaire : Stripe validé et vérifié en production
+// (`pnpm verifier-stripe-prod`, #385) — Rojer ouvre.]
+export const OUVERT_AU_PUBLIC: boolean = true;
 
 /** La page « Rojer ouvre bientôt ». */
 export const PAGE_BIENTOT = "/bientot";
