@@ -16,6 +16,9 @@
 # - `abonnements/suppression.integration` (ADR-058) : la suppression d'un
 #   compte sans abonnement depuis douze mois efface tout ce qu'il porte, et
 #   rien d'un autre compte ;
+# - `assistance/agenda-preventeur/synchronisation.integration` (ADR-064) : la
+#   synchronisation de l'agenda du préventeur, ses écritures conditionnelles,
+#   la prise du passage et le plafond ; ses créneaux sont en 2099 ;
 # - `stripe/synchronisation.integration` (ADR-053) : la prise en charge des
 #   événements Stripe et l'écriture conditionnelle de l'abonnement ; Stripe
 #   simulé, n'efface que ses propres lignes.
@@ -97,6 +100,7 @@ jobs:
           LIMITE_DEBIT_INTEGRATION_URL: postgresql://duerp:duerp@localhost:5432/rojer_integration_ci
           STRIPE_INTEGRATION_URL: postgresql://duerp:duerp@localhost:5432/rojer_integration_ci
           EFFECTIF_INTEGRATION_URL: postgresql://duerp:duerp@localhost:5432/rojer_integration_ci
+          AGENDA_INTEGRATION_URL: postgresql://duerp:duerp@localhost:5432/rojer_integration_ci
         # Un fichier après l'autre : ils partagent la base, et
         # client.integration, matrice-isolation et portee-etablissement la vident (TRUNCATE
         # "Entreprise", "Compte" et "User" CASCADE) : jamais en parallèle.
@@ -108,6 +112,7 @@ jobs:
           src/lib/mcp/etablissements-du-compte.integration
           src/lib/accessibilite/registre-vierge.integration
           src/lib/securite/limite-debit.integration
+          src/lib/assistance/agenda-preventeur/synchronisation.integration
           src/lib/calendrier/regeneration-bornee.integration
           src/lib/auth/sql-proprietaire.integration
           src/lib/auth/scope.integration

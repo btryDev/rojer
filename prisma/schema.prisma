@@ -2481,6 +2481,29 @@ model CreneauAssistance {
   /// Posé quand un compte prend le créneau, effacé quand il le rend.
   reserveLe DateTime?
   creeLe    DateTime  @default(now())
+  /// L'événement de l'agenda du préventeur qui porte le créneau (ADR-064) ;
+  /// `null` tant que Rojer ne l'a pas créé (heure découpée, créneau ouvert par
+  /// script).
+  evenementAgendaId String? @unique
+}
+
+/// Le journal des passages de la synchronisation de l'agenda du préventeur
+/// (ADR-064) : un passage, accepté ou refusé, et ce qu'il a fait. Aucun
+/// contenu d'événement. Sert aussi la cadence (dernier `recuLe`). Hors compte ;
+/// purgé après un an.
+model ImportAgenda {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  recuLe    DateTime @default(now())
+  accepte   Boolean
+  /// Le motif d'un refus : `plafond`, `google` (lecture impossible), `configuration`.
+  motif     String?
+  ouverts   Int      @default(0)
+  deplaces  Int      @default(0)
+  fermes    Int      @default(0)
+  rattaches Int      @default(0)
+  conflits  Int      @default(0)
+
+  @@index([recuLe])
 }
 
 enum ModeRendezVous {

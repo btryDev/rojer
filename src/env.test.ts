@@ -45,6 +45,20 @@ describe("validerEnvironnement", () => {
     expect(e.message).not.toContain("court-et-secret");
   });
 
+  it("l'agenda du préventeur (ADR-064) : l'agenda et la clé vont ensemble", () => {
+    expect(() => validerEnvironnement({ ...BASE, AGENDA_GOOGLE_ID: "a@group.calendar.google.com", AGENDA_GOOGLE_CLE: "e30=" })).not.toThrow();
+    const manquante = (env: Record<string, string>) => {
+      try {
+        validerEnvironnement({ ...BASE, ...env });
+      } catch (e) {
+        return (e as { variables: string[] }).variables;
+      }
+      return [];
+    };
+    expect(manquante({ AGENDA_GOOGLE_ID: "a@group.calendar.google.com" })).toEqual(["AGENDA_GOOGLE_CLE"]);
+    expect(manquante({ AGENDA_GOOGLE_CLE: "e30=" })).toEqual(["AGENDA_GOOGLE_ID"]);
+  });
+
   it("l'URL publique est exigée en production, pas en développement", () => {
     expect(() => validerEnvironnement(BASE)).not.toThrow();
     const prod = { ...BASE, NODE_ENV: "production", APP_ENV: "production" };

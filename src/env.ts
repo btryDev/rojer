@@ -159,6 +159,12 @@ const schema = z
     // Les tâches (`taches/quotidiennes.ts`, `clevercloud/cron.json`, chaque
     // minute) : le secret que la crontab présente. Absente, la route répond 404.
     TACHES_SECRET: z.preprocess(vide, z.string().min(32, "doit faire au moins 32 caractères").optional()),
+    // La synchronisation de l'agenda du préventeur (ADR-064) : l'agenda Google
+    // et la clé du compte de service (le fichier JSON de Google, en base64),
+    // relue par `agenda-preventeur/google.ts`. Sans l'une ou l'autre, la
+    // synchronisation ne tourne pas.
+    AGENDA_GOOGLE_ID: optionnelle,
+    AGENDA_GOOGLE_CLE: optionnelle,
     // Les alertes d'exploitation (`lib/alertes.ts`) : échec durable de la
     // file Stripe, litige, remboursement. Absente, elles ne vont qu'au journal.
     ALERTES_EMAIL: z.preprocess(vide, z.string().email("doit être une adresse e-mail").optional()),
@@ -174,16 +180,22 @@ const schema = z
  * temps au lieu de nommer toutes les fautes d'un coup.
  */
 function fautesDeContexte(env: Env): { variable: string; message: string }[] {
+  const fautes: { variable: string; message: string }[] = [];
   if (vide(env.NODE_ENV) === "production" && !vide(env.PUBLIC_APP_URL)) {
-    return [
-      {
-        variable: "PUBLIC_APP_URL",
-        message:
-          "requise en production : origine de confiance de l'authentification et adresse des liens envoyés par e-mail",
-      },
-    ];
+    fautes.push({
+      variable: "PUBLIC_APP_URL",
+      message:
+        "requise en production : origine de confiance de l'authentification et adresse des liens envoyés par e-mail",
+    });
   }
-  return [];
+  if (!vide(env.AGENDA_GOOGLE_ID) !== !vide(env.AGENDA_GOOGLE_CLE)) {
+    fautes.push({
+      // La variable qui MANQUE : `vide` rend la valeur quand elle est posée.
+      variable: vide(env.AGENDA_GOOGLE_ID) ? "AGENDA_GOOGLE_CLE" : "AGENDA_GOOGLE_ID",
+      message: "va avec AGENDA_GOOGLE_ID et AGENDA_GOOGLE_CLE : l'une sans l'autre ne synchronise rien",
+    });
+  }
+  return fautes;
 }
 
 export type EnvValide = z.infer<typeof schema>;

@@ -35,6 +35,8 @@ import { battre } from "./temoin";
 import { controlerLesReglagesStripe } from "@/lib/stripe/controles";
 import { purgerComptesNonActives } from "@/lib/auth/comptes-non-actives";
 import { annulerRendezVousHorsPro } from "@/lib/assistance/hors-pro";
+import { purgerLeJournalDeLAgenda } from "@/lib/assistance/agenda-preventeur/base";
+import { synchroniserLAgendaSansLever } from "@/lib/assistance/agenda-preventeur/tache";
 
 function horlogeReelle(): Date {
   return new Date();
@@ -87,6 +89,8 @@ export async function lancerTachesQuotidiennes(maintenant: Date) {
         }
       : {}),
     evenementsOublies: await tenter("ménage des événements Stripe", () => oublierLesAnciens(maintenant)),
+    // Le journal de la synchronisation de l'agenda du préventeur se garde un an (ADR-064).
+    journalAgenda: await tenter("journal de l'agenda du préventeur", () => purgerLeJournalDeLAgenda(maintenant)),
   });
   const stripe = config.active ? clientStripe(config) : null;
   // L'offre pas lancée (ou retirée) : la saisie est ouverte à tous, rien ne
@@ -142,13 +146,16 @@ async function signalerLaFile(maintenant: Date) {
 }
 
 /**
- * Ce que la crontab de chaque minute lance : la file Stripe, puis les tâches
- * du jour si elles sont dues (dès `HEURE_DES_TACHES`, une fois par jour civil).
+ * Ce que la crontab de chaque minute lance : la file Stripe, les tâches du
+ * jour si elles sont dues (dès `HEURE_DES_TACHES`, une fois par jour civil),
+ * puis l'agenda du préventeur (un passage toutes les 15 minutes, ADR-064) —
+ * en dernier : un Google lent ne retarde pas les tâches du jour.
  */
 export async function lancerTaches(maintenant: () => Date = horlogeReelle) {
   const config = configurationStripe();
   const fileStripe = config.active ? await traiterLaFileIci(clientStripeWebhook(config)) : null;
-  return { fileStripe, jour: await lancerTachesDuJour(maintenant()) };
+  const jour = await lancerTachesDuJour(maintenant());
+  return { fileStripe, jour, agenda: await synchroniserLAgendaSansLever(maintenant()) };
 }
 
 /**

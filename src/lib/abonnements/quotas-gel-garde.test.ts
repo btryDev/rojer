@@ -36,6 +36,8 @@ const SQL_BRUT_ECRIT: Record<string, string> = {
   "src/lib/auth/portee/client.ts": "l'extension (lecture seule)",
   "src/lib/assistance/creneaux.ts":
     "créneaux du rendez-vous annuel, hors compte (ADR-063) : rien n'y est gelé ; les actions qui les prennent et les rendent appellent verifierSaisie",
+  "src/lib/assistance/agenda-preventeur/base.ts":
+    "synchronisation de l'agenda du préventeur, hors session et hors compte (ADR-064) : créneaux libres et journal, aucune saisie d'un compte",
 };
 
 /**

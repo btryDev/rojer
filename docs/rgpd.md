@@ -641,6 +641,17 @@ retirer les lignes à porteur salarié plutôt que les anonymiser ? Voir
 
 ---
 
+[2026-11-26, ADR-064 : **Google Agenda** (Google Workspace de btry.fr).
+L'agenda des créneaux du rendez-vous annuel appartient à l'équipe ; Rojer y
+écrit, par un compte de service qui ne voit que cet agenda, le titre d'un
+créneau réservé : « Réservé — <raison sociale de la première entreprise du
+compte> — visio | téléphone ». La raison sociale peut être le nom d'une
+personne (entreprise individuelle). Rien d'autre ne sort : ni téléphone, ni
+sujet, ni adresse. Le titre redevient « Dispo » à l'annulation. Base légale :
+l'exécution du service souscrit (6.1.b), comme le rendez-vous lui-même
+(ADR-063 § 9). Google Workspace est à ajouter à cette liste avec les
+sous-traitants de Clever Cloud.]
+
 ## 7. Sécurité
 
 - HTTPS exclusivement en production.

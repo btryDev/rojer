@@ -110,6 +110,10 @@ export const CORRESPONDANCE = {
     horsCompte:
       "créneau d'une heure ouvert au rendez-vous annuel (ADR-063) : écrit hors de l'application (script, agenda), commun à tous les comptes, sans aucune donnée d'un compte",
   },
+  ImportAgenda: {
+    horsCompte:
+      "journal des passages de la synchronisation de l'agenda du préventeur (ADR-064) : heures et nombres, aucune donnée d'un compte",
+  },
 
   // Better Auth (ADR-052) : lues et écrites par son adaptateur, avec le client
   // hors compte (`auth/better-auth.ts`), avant toute identité.
