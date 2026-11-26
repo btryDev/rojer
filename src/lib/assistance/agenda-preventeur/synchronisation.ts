@@ -78,7 +78,7 @@ async function appliquer(tx: Prisma.TransactionClient, plan: Plan): Promise<{ bi
   }
   for (const r of aRattacher) {
     if (await rattacher(tx, r)) bilan.rattaches++;
-    else ecartes.add(r.evenementId);
+    else if (r.evenementId) ecartes.add(r.evenementId);
   }
   for (const o of aOuvrir) {
     // Un déplacé dont la fermeture n'a pas pris (réservé entre-temps) ne se rouvre pas.

@@ -14,7 +14,7 @@ import "server-only";
 
 import { alerterUneFoisParJour } from "@/lib/alertes";
 import { quandLeRendezVous } from "../rendez-vous-libelles";
-import { dernierPassageHorsVerrou, lierEvenement } from "./base";
+import { dernierPassageHorsVerrou, journaliserUnEchec, lierEvenement } from "./base";
 import {
   ErreurGoogle,
   configurationGoogle,
@@ -100,7 +100,10 @@ export async function synchroniserLAgenda(maintenant: Date): Promise<Passage> {
   try {
     config = configurationGoogle();
   } catch (e) {
-    await alerterUneFoisParJour("agenda:config", "Agenda du préventeur : configuration à corriger", [motifDErreur(e)], maintenant);
+    if (!tropTot(await dernierPassageHorsVerrou(), maintenant)) {
+      await journaliserUnEchec(maintenant, "configuration");
+      await alerterUneFoisParJour("agenda:config", "Agenda du préventeur : configuration à corriger", [motifDErreur(e)], maintenant);
+    }
     return { etat: "echec", motif: "configuration" };
   }
   if (!config) return { etat: "hors-service" };
@@ -114,6 +117,7 @@ export async function synchroniserLAgenda(maintenant: Date): Promise<Passage> {
     lus = await listerEvenements(config, fenetre);
   } catch (e) {
     const motif = motifDErreur(e);
+    await journaliserUnEchec(maintenant, "google");
     await alerterUneFoisParJour("agenda:lecture", "Agenda du préventeur : lecture impossible", [
       `L'agenda n'a pas pu être lu (${motif}). Rien n'a changé dans Rojer ; la synchronisation reprendra toute seule.`,
       "Si ça dure : vérifier que l'agenda est toujours partagé avec le compte de service, et que sa clé n'a pas été révoquée.",

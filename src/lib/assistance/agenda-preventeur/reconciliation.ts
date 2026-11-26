@@ -43,7 +43,8 @@ export type CreneauConnu = {
  */
 type Operations = {
   fermer: { creneauId: string; evenementId: string | null; deplacement?: true }[];
-  rattacher: { creneauId: string; evenementId: string; ancien: string | null }[];
+  /** `evenementId` nul : le créneau est gardé mais détaché, son événement est recréé après coup. */
+  rattacher: { creneauId: string; evenementId: string | null; ancien: string | null }[];
   /** `evenementId` nul : une heure découpée, dont l'événement est créé après coup (`tache.ts`). */
   ouvrir: { evenementId: string | null; debut: Date; fin: Date; deplacement?: true }[];
 };
@@ -156,15 +157,25 @@ export function reconcilier(entree: { fenetre: Fenetre; evenements: EvenementRec
     const heures = heuresPleines(ev);
     const premiere = heure(ev.debut, 0);
     const debut = instant(premiere.debut);
+    // Allongé sans bouger : l'événement garde le créneau de sa première heure,
+    // sous le même identifiant (revue du 2026-11-26 — un client qui l'a sous
+    // les yeux doit pouvoir le prendre).
+    const garde =
+      ancien && heures !== null && instant(ancien.debut) === debut && instant(ancien.fin) === instant(premiere.fin)
+        ? ancien
+        : undefined;
     const c = ancien ? undefined : rattachables.get(debut);
     const reprendre = c && instant(c.fin) === instant(premiere.fin) && (!occupe.has(debut) || occupe.get(debut) === c.id);
-    if (heures === null || (!reprendre && occupe.has(debut))) {
+    if (!garde && (heures === null || (!reprendre && occupe.has(debut)))) {
       if (ancien) fermer(ancien);
       plan.consignes.push({ id: ev.id, titre: heures === null ? TITRE.duree : TITRE.doublon });
       return;
     }
-    const remettre = heures > 1 ? { remettre: premiere } : {};
-    if (reprendre && c) {
+    const remettre = (heures ?? 1) > 1 ? { remettre: premiere } : {};
+    if (garde) {
+      occupe.set(debut, garde.id);
+      plan.consignes.push({ id: ev.id, titre: TITRE.dispo, ...remettre });
+    } else if (reprendre && c) {
       rattachables.delete(debut);
       repris.add(c.id);
       occupe.set(debut, c.id);
@@ -176,10 +187,28 @@ export function reconcilier(entree: { fenetre: Fenetre; evenements: EvenementRec
       plan.operations.ouvrir.push({ evenementId: ev.id, ...premiere, ...(ancien && { deplacement: true as const }) });
       plan.consignes.push({ id: ev.id, titre: TITRE.dispo, ...remettre });
     }
-    for (let rang = 1; rang < heures; rang++) {
+    for (let rang = 1; rang < (heures ?? 1); rang++) {
       const h = heure(ev.debut, rang);
-      if (occupe.has(instant(h.debut))) continue; // une heure déjà tenue n'est pas ouverte deux fois
-      occupe.set(instant(h.debut), `decoupe:${ev.id}:${rang}`);
+      const k = instant(h.debut);
+      const deja = rattachables.get(k);
+      if (deja && instant(deja.fin) === instant(h.fin) && (!occupe.has(k) || occupe.get(k) === deja.id)) {
+        // Un créneau tient déjà cette heure (créneaux fusionnés en une plage,
+        // créneau ouvert par script) : il est gardé, sous le même identifiant ;
+        // détaché de son ancien événement, il en reçoit un nouveau après coup.
+        rattachables.delete(k);
+        repris.add(deja.id);
+        occupe.set(k, deja.id);
+        if (deja.evenementId !== null) {
+          plan.operations.rattacher.push({ creneauId: deja.id, evenementId: null, ancien: deja.evenementId });
+        }
+        if (deja.reserve && deja.evenementId !== null) {
+          const titre = titreDuCreneau(deja);
+          plan.conflits.push({ creneauId: deja.id, debut: deja.debut, fin: deja.fin, nature: "supprime", titre });
+        }
+        continue;
+      }
+      if (occupe.has(k)) continue; // une heure déjà tenue n'est pas ouverte deux fois
+      occupe.set(k, `decoupe:${ev.id}:${rang}`);
       plan.operations.ouvrir.push({ evenementId: null, ...h });
     }
   };

@@ -2495,7 +2495,7 @@ model ImportAgenda {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   recuLe    DateTime @default(now())
   accepte   Boolean
-  /// Le motif d'un refus : `plafond`.
+  /// Le motif d'un refus : `plafond`, `google` (lecture impossible), `configuration`.
   motif     String?
   ouverts   Int      @default(0)
   deplaces  Int      @default(0)

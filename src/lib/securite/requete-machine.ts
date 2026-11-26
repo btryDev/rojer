@@ -1,7 +1,7 @@
 // Ce qu'une route appelée par une machine, sans session, partage avec les
-// autres : la comparaison du secret présenté, et la lecture bornée du corps.
-// Servi aux tâches (`/api/taches/chaque-minute`), au webhook Stripe et à la
-// synchronisation de l'agenda du préventeur (ADR-064).
+// autres : la comparaison du secret présenté, la lecture bornée du corps et
+// une réponse jamais mise en cache. Servi aux tâches
+// (`/api/taches/chaque-minute`) et au webhook Stripe.
 
 import { createHash, timingSafeEqual } from "node:crypto";
 
@@ -35,8 +35,7 @@ export async function lireCorpsBorne(request: Request, max: number): Promise<str
   return Buffer.concat(morceaux).toString("utf8");
 }
 
-/** Une réponse de route de machine : jamais mise en cache. */
-export function reponseMachine(status: number, corps?: unknown, entetes: Record<string, string> = {}): Response {
-  const headers = { "Cache-Control": "no-store", ...entetes };
-  return corps === undefined ? new Response(null, { status, headers }) : Response.json(corps, { status, headers });
+/** Une réponse de route de machine, sans corps : jamais mise en cache. */
+export function reponseMachine(status: number): Response {
+  return new Response(null, { status, headers: { "Cache-Control": "no-store" } });
 }

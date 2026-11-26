@@ -9,10 +9,11 @@ const m = vi.hoisted(() => ({
   synchroniser: vi.fn(),
   dernier: vi.fn(),
   lier: vi.fn(),
+  echec: vi.fn(),
   alerte: vi.fn(),
 }));
 vi.mock("@/lib/alertes", () => ({ alerterUneFoisParJour: m.alerte }));
-vi.mock("./base", () => ({ dernierPassageHorsVerrou: m.dernier, lierEvenement: m.lier }));
+vi.mock("./base", () => ({ dernierPassageHorsVerrou: m.dernier, lierEvenement: m.lier, journaliserUnEchec: m.echec }));
 vi.mock("./synchronisation", () => ({
   synchroniser: m.synchroniser,
   tropTot: (d: Date | null, t: Date) => d !== null && t.getTime() - d.getTime() < 14 * 60_000,
@@ -59,6 +60,8 @@ describe("synchroniserLAgenda", () => {
     expect(await synchroniserLAgenda(maintenant)).toEqual({ etat: "echec", motif: "lecture de l'agenda refusée (HTTP 403)" });
     expect(m.synchroniser).not.toHaveBeenCalled();
     expect(m.alerte).toHaveBeenCalledWith("agenda:lecture", expect.any(String), expect.any(Array), maintenant);
+    // Journalisé : la cadence de 15 minutes vaut aussi en panne (revue du 2026-11-26).
+    expect(m.echec).toHaveBeenCalledWith(maintenant, "google");
   });
 
   it("n'envoie à la base que des identifiants et des heures, jamais un titre", async () => {

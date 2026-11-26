@@ -72,7 +72,8 @@ const LONGUEUR_RAISON_SOCIALE = 40;
 
 /** « Réservé — <raison sociale> — visio » : la raison sociale de la première entreprise du compte. */
 export function titreReserve(raisonSociale: string | null, mode: ModeRendezVous): string {
-  const nom = raisonSociale ? surUneLigne(raisonSociale).slice(0, LONGUEUR_RAISON_SOCIALE).trim() : "";
+  // Coupée par caractères, pas par unités UTF-16 : un emoji n'est jamais tranché.
+  const nom = raisonSociale ? Array.from(surUneLigne(raisonSociale)).slice(0, LONGUEUR_RAISON_SOCIALE).join("").trim() : "";
   const comment = mode === "visio" ? "visio" : "téléphone";
   return nom ? `${TITRE.reserve} — ${nom} — ${comment}` : `${TITRE.reserve} — ${comment}`;
 }
@@ -152,7 +153,7 @@ export async function creneauxSansEvenement(tx: Tx, fenetre: Fenetre): Promise<L
 
 export async function rattacher(
   tx: Tx,
-  r: { creneauId: string; evenementId: string; ancien: string | null },
+  r: { creneauId: string; evenementId: string | null; ancien: string | null },
 ): Promise<boolean> {
   const lignes = await tx.$queryRaw<{ id: string }[]>`
     UPDATE "CreneauAssistance" SET "evenementAgendaId" = ${r.evenementId}
@@ -173,6 +174,17 @@ export async function journaliser(
     INSERT INTO "ImportAgenda" ("recuLe", "accepte", "motif", "ouverts", "deplaces", "fermes", "rattaches", "conflits")
     VALUES ((${j.quand}::timestamptz AT TIME ZONE 'UTC'), ${j.accepte}, ${j.motif},
             ${b.ouverts}, ${b.deplaces}, ${b.fermes}, ${b.rattaches}, ${b.conflits})`;
+}
+
+/**
+ * Un passage qui n'a pas pu lire l'agenda (Google en panne, accès retiré) :
+ * journalisé comme refusé, pour que la cadence vaille aussi en panne — sans
+ * lui, la crontab rappellerait Google chaque minute.
+ */
+export async function journaliserUnEchec(quand: Date, motif: "google" | "configuration"): Promise<void> {
+  await prisma.$executeRaw`
+    INSERT INTO "ImportAgenda" ("recuLe", "accepte", "motif")
+    VALUES ((${quand}::timestamptz AT TIME ZONE 'UTC'), false, ${motif})`;
 }
 
 /** La tâche quotidienne : le journal se garde un an. */

@@ -190,7 +190,8 @@ function fautesDeContexte(env: Env): { variable: string; message: string }[] {
   }
   if (!vide(env.AGENDA_GOOGLE_ID) !== !vide(env.AGENDA_GOOGLE_CLE)) {
     fautes.push({
-      variable: vide(env.AGENDA_GOOGLE_ID) ? "AGENDA_GOOGLE_ID" : "AGENDA_GOOGLE_CLE",
+      // La variable qui MANQUE : `vide` rend la valeur quand elle est posée.
+      variable: vide(env.AGENDA_GOOGLE_ID) ? "AGENDA_GOOGLE_CLE" : "AGENDA_GOOGLE_ID",
       message: "va avec AGENDA_GOOGLE_ID et AGENDA_GOOGLE_CLE : l'une sans l'autre ne synchronise rien",
     });
   }

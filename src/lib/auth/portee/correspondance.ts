@@ -112,7 +112,7 @@ export const CORRESPONDANCE = {
   },
   ImportAgenda: {
     horsCompte:
-      "journal des envois de l'agent qui synchronise l'agenda du préventeur (ADR-064) : heures et nombres, aucune donnée d'un compte",
+      "journal des passages de la synchronisation de l'agenda du préventeur (ADR-064) : heures et nombres, aucune donnée d'un compte",
   },
 
   // Better Auth (ADR-052) : lues et écrites par son adaptateur, avec le client

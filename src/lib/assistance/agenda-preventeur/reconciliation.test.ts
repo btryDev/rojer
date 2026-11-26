@@ -88,14 +88,43 @@ describe("reconcilier — créneaux libres : l'agenda fait foi", () => {
     }
   });
 
-  it("un créneau libre dont l'événement s'allonge à deux heures est rouvert et découpé", () => {
+  it("un créneau libre dont l'événement s'allonge garde son identifiant ; seules les heures nouvelles s'ouvrent", () => {
     const p = reconcilier({ fenetre, evenements: [ev("e1", 2, 2)], creneaux: [creneau("c1", 2, { evenementId: "e1" })] });
-    expect(p.operations.fermer).toEqual([{ creneauId: "c1", evenementId: "e1", deplacement: true }]);
-    expect(p.operations.ouvrir.map((o) => [o.evenementId, o.debut])).toEqual([
-      ["e1", a(2)],
-      [null, a(3)],
-    ]);
+    expect(p.operations.fermer).toEqual([]);
+    expect(p.operations.ouvrir).toEqual([{ evenementId: null, debut: a(3), fin: a(4) }]);
     expect(p.consignes).toEqual([{ id: "e1", titre: TITRE.dispo, remettre: { debut: a(2), fin: a(3) } }]);
+  });
+
+  it("des créneaux fusionnés en une plage gardent leurs identifiants : rien n'est fermé, le plafond n'est pas touché", () => {
+    const p = reconcilier({
+      fenetre,
+      evenements: [ev("e1", 2, 4)],
+      creneaux: [
+        creneau("c1", 2, { evenementId: "e1" }),
+        creneau("c2", 3, { evenementId: "e2" }),
+        creneau("c3", 4, { evenementId: "e3" }),
+        creneau("c4", 5, { evenementId: "e4" }),
+      ],
+    });
+    expect(p.operations.fermer).toEqual([]);
+    expect(p.operations.ouvrir).toEqual([]);
+    // Détachés de leurs anciens événements, ils en reçoivent un nouveau après la transaction.
+    expect(p.operations.rattacher).toEqual([
+      { creneauId: "c2", evenementId: null, ancien: "e2" },
+      { creneauId: "c3", evenementId: null, ancien: "e3" },
+      { creneauId: "c4", evenementId: null, ancien: "e4" },
+    ]);
+  });
+
+  it("un réservé englobé dans une plage est gardé, et son événement perdu est signalé", () => {
+    const p = reconcilier({
+      fenetre,
+      evenements: [ev("e1", 2, 2)],
+      creneaux: [creneau("c1", 2, { evenementId: "e1" }), reserve("c2", 3, "e2")],
+    });
+    expect(p.operations.fermer).toEqual([]);
+    expect(p.operations.rattacher).toEqual([{ creneauId: "c2", evenementId: null, ancien: "e2" }]);
+    expect(p.conflits.map((c) => [c.creneauId, c.nature])).toEqual([["c2", "supprime"]]);
   });
 
   it("un créneau libre dont l'événement prend une durée impossible est fermé et signalé", () => {
