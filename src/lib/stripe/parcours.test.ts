@@ -368,5 +368,9 @@ describe("parcours Stripe", () => {
     oublierLesPrix();
     api.taxRates.list.mockResolvedValueOnce({ data: [taux("txr_sales", { tax_type: "sales_tax" }), taux("txr_sans_type", { tax_type: null })] });
     expect(await tauxDeTva(stripe, 0)).toBe("txr_sans_type");
+    // Un taux typé « vat » passe devant un taux sans type plus ancien.
+    oublierLesPrix();
+    api.taxRates.list.mockResolvedValueOnce({ data: [taux("txr_sans_type", { tax_type: null, created: 1 }), taux("txr_vat", { created: 50 })] });
+    expect(await tauxDeTva(stripe, 0)).toBe("txr_vat");
   });
 });

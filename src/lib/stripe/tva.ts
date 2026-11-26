@@ -21,5 +21,6 @@ export const TVA = { pourcentage: 20, pays: "FR", type: "vat" } as const;
 export const estTauxDeTva = (t: Stripe.TaxRate) =>
   t.active && t.inclusive && t.percentage === TVA.pourcentage && t.country === TVA.pays && (t.tax_type ?? TVA.type) === TVA.type;
 
-/** Les taux conformes, le plus ancien d'abord : c'est lui qui sert. */
-export const tauxConformes = (taux: Stripe.TaxRate[]) => taux.filter(estTauxDeTva).sort((a, b) => a.created - b.created);
+/** Les taux conformes : un taux typé « vat » d'abord, puis le plus ancien — c'est le premier qui sert. */
+export const tauxConformes = (taux: Stripe.TaxRate[]) =>
+  taux.filter(estTauxDeTva).sort((a, b) => Number(b.tax_type === TVA.type) - Number(a.tax_type === TVA.type) || a.created - b.created);

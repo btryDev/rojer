@@ -118,18 +118,25 @@ export function horlogeDeSuppression(
  * ancienne facture payée — pas un état `active`. ~~Pas une facture à zéro
  * (couverte par un crédit ou une remise de 100 % : un abonnement gratuit
  * n'est pas prévu).~~ [2026-11-26, décision de la propriétaire : une facture
- * payée à zéro compte — c'est ainsi qu'une formule s'offre, par un coupon à
- * 100 % posé dans le tableau de bord Stripe. Sans risque : Checkout n'accepte
- * aucun code promo, et Rojer ne crée plus d'essai chez Stripe (ADR-053 § 9,
- * amendé le 2026-11-16), d'où venaient les factures à zéro.] Lue seulement tant que
+ * ramenée à zéro par une REMISE compte — c'est ainsi qu'une formule s'offre,
+ * par un coupon à 100 % posé dans le tableau de bord Stripe (Checkout
+ * n'accepte aucun code promo). Une facture à zéro pour une autre raison —
+ * crédit du client, prorata, ancien essai chez Stripe — ne compte toujours
+ * pas : `offerteParUneRemise`.] Lue seulement tant que
  * le compte n'en a pas : une fois écrite, elle ne change plus. Limite
  * assumée : un paiement remboursé ou contesté reste un paiement — la
  * facture reste `paid` chez Stripe.
  */
+/** Une facture à zéro parce qu'une remise en couvre tout le montant (coupon de 100 %). */
+export function offerteParUneRemise(f: Pick<Stripe.Invoice, "subtotal" | "total" | "total_discount_amounts">): boolean {
+  const remise = (f.total_discount_amounts ?? []).reduce((somme, d) => somme + d.amount, 0);
+  return f.subtotal > 0 && f.total === 0 && remise >= f.subtotal;
+}
+
 export async function premierPaiement(stripe: Stripe, customerId: string): Promise<Date | null> {
   const payees = await toutLister(stripe.invoices.list({ customer: customerId, status: "paid", limit: 100 }, OPTIONS_WEBHOOK), 1000);
   const dates = payees
-    .filter((f) => f.status_transitions?.paid_at)
+    .filter((f) => (f.amount_paid > 0 || offerteParUneRemise(f)) && f.status_transitions?.paid_at)
     .map((f) => f.status_transitions.paid_at as number);
   return dates.length ? date(Math.min(...dates)) : null;
 }

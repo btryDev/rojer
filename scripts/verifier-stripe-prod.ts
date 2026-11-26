@@ -215,6 +215,10 @@ async function gestesSansPaiement(stripe: Stripe) {
   );
   await sonde("Factures (écriture : annuler, à la suppression d'un compte)", () => stripe.invoices.voidInvoice("in_verification_rojer"));
   await sonde("Factures (écriture : supprimer un brouillon)", () => stripe.invoices.del("in_verification_rojer"));
+  await sonde("Factures (écriture : finaliser un brouillon)", () => stripe.invoices.finalizeInvoice("in_verification_rojer", { auto_advance: false }));
+  await sonde("Plannings d'abonnement (écriture : créer)", () => stripe.subscriptionSchedules.create({ from_subscription: "sub_verification_rojer" }));
+  await sonde("Plannings d'abonnement (écriture : libérer)", () => stripe.subscriptionSchedules.release("sub_sched_verification_rojer"));
+  await sonde("Factures (aperçu d'un changement de formule)", () => stripe.invoices.createPreview({ subscription: "sub_verification_rojer" }));
 }
 
 async function surUnClientFictif(stripe: Stripe, priceId: string | null, tauxTva: string | null, conditions: boolean) {
