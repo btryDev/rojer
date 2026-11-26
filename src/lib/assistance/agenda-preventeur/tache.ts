@@ -52,7 +52,10 @@ async function signalerLesConflits(conflits: Conflit[], maintenant: Date): Promi
     await alerterUneFoisParJour(
       `agenda:${c.creneauId}:${c.nature}`,
       "Agenda du préventeur : un créneau réservé a bougé",
-      [`Créneau réservé : ${quandLeRendezVous(c.debut, c.fin)} (${c.titre}).`, PHRASE_CONFLIT[c.nature], "Rien n'a changé dans Rojer."],
+      // La date seule : la raison sociale (parfois un nom de personne) ne va ni
+      // au journal ni à l'alerte (`lib/alertes.ts`, « jamais une donnée de
+      // l'utilisateur », revue de sécurité du 2026-11-26).
+      [`Créneau réservé : ${quandLeRendezVous(c.debut, c.fin)}.`, PHRASE_CONFLIT[c.nature], "Rien n'a changé dans Rojer."],
       maintenant,
     );
   }
