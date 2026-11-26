@@ -700,6 +700,63 @@ tard, après le lancement.
   onboardings simultanés… » (`creer-compte.integration.test.ts`), en échec trois
   fois le 2026-11-26 sur la CI de `main` — un vrai défaut, pas un test
   instable.
+- **Journaux de sécurité** (Claude, demande de la propriétaire du
+  2026-11-26) : prérequis du volet « sécurité » du point d'activité
+  (`point-activite`, inspiré du `health-monitor` de RiskBoard,
+  `GestBAT/scripts/health-monitor.ts`). Aujourd'hui Rojer n'écrit presque rien
+  de lisible pour ça : quelques lignes JSON éparses (`{ type: … }` :
+  `ecriture_gelee_refusee`, `envoi_mail_compte_plafonne`, refus du webhook
+  Stripe…), `alerter` (`lib/alertes.ts`) pour ce qui demande un geste humain,
+  et rien sur les connexions, les refus de limite de débit ni les sondes. À
+  faire :
+  1. **Un format, un seul point d'écriture** : une ligne JSON par événement,
+     `{ type, tag: "securite" | "auth", … }`, par une fonction unique (ex.
+     `journalSecurite`) — `clever logs --search "<tag>"` les retrouve.
+     **Jamais d'adresse IP ni d'e-mail en clair** : l'IP réduite à son
+     empreinte, comme la limite de débit (`ip-client.ts`, `cleLimite`) — la
+     politique de confidentialité le promet (« adresse IP réduite à une
+     empreinte ») ; l'utilisateur désigné par son identifiant.
+  2. **Les événements à écrire** :
+     - connexion réussie / refusée (mot de passe, code de double
+       authentification, code de secours), compte inconnu compris ;
+     - refus par la limite de débit (`refusParLimite`, `consommer` dans
+       `limite-debit.ts`), avec la clé de limite et non l'IP ;
+     - demande de réinitialisation du mot de passe, changement de mot de
+       passe, activation / retrait de la double authentification ;
+     - gestion du compte : invitation, changement de rôle, retrait d'un
+       membre, demande et annulation de suppression du compte (ADR-054,
+       ADR-058) ;
+     - accès sans session refusé : jeton `/acces` invalide, expiré ou hors
+       portée, code OTP refusé (ADR-007) ;
+     - connecteur MCP : jeton refusé, autorisation accordée / retirée
+       (ADR-062) ;
+     - webhook Stripe refusé (existe, `console.warn`) : le passer au même
+       format ;
+     - sondes de scanners (point 3).
+  3. **Sondes dans le proxy** (`src/proxy.ts`) : reconnaître les chemins de
+     scanners (`wp-*`, `phpmyadmin`, `.git`, `/.env`, `actuator`, `cgi-bin`,
+     extensions `.php` `.asp` `.aspx` `.jsp` `.cgi`), répondre 404 tout de
+     suite sans passer par la connexion ni la base, et journaliser. Modèle :
+     `GestBAT/src/proxy.ts` (`SCANNER_PATHS`, `SCANNER_EXTENSIONS`, l.10-45 et
+     l.235-248). Sans ce point, le compteur de sondes du point d'activité
+     reste à zéro.
+  4. **Origine des requêtes** : les actions serveur de Next vérifient déjà
+     l'origine ; relire les route handlers `POST` (hors webhook Stripe et
+     tâches, gardés par signature et secret) et journaliser un refus
+     d'origine s'il y en a un à poser.
+  5. **La lecture** : `point-activite` collecte par `clever logs --search`
+     borné (`perl -e 'alarm 15; exec @ARGV' clever logs --after 24h …`) et
+     classe comme RiskBoard — seuils de départ : plus de 10 connexions
+     refusées depuis une même empreinte = force brute (menace haute) ; plus
+     de 20 refus de connexion sur 24 h = menace moyenne ; sondes normales
+     sous 100 par jour. Chez RiskBoard ces seuils vivent dans les consignes
+     du skill, pas dans le code (`.claude/skills/health-check/SKILL.md`,
+     `.claude/agents/health-monitor.md`) ; les paliers propres à Rojer
+     restent à fixer.
+  6. **Conservation** : vérifier que les journaux de Clever Cloud ne
+     dépassent pas les trente jours promis par la politique de
+     confidentialité (« journaux techniques de l'hébergeur ») ; sinon,
+     ajuster le texte ou la rétention.
 
 ## Règles de travail qui valent ici
 
