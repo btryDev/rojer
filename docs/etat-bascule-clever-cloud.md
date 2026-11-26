@@ -678,6 +678,29 @@ légaux (branche `lot/textes-legaux`) ; décision de la propriétaire du
   (`components/landing/editeur.ts`) — LCEN, art. 1-1 ; à poser avant toute
   publication sur rojer.fr.
 
+### À faire après l'ouverture (2026-11-26)
+
+Relevés le jour de l'ouverture ; décision de la propriétaire : à faire plus
+tard, après le lancement.
+
+- **Témoin des tâches** (`TEMOIN_TACHES_URL`, propriétaire) : créer un témoin
+  par battement (healthchecks.io ou équivalent, période 1 jour, grâce 2 h) et
+  poser son adresse sur l'application de production. La tâche du jour l'appelle
+  une fois finie ; sans lui, une crontab arrêtée (file Stripe, rappels,
+  suppressions, synchro de l'agenda) ne se signale nulle part — les alertes de
+  Rojer partent de cette même crontab. Le démarrage le rappelle à chaque
+  déploiement (`avertissement_environnement`).
+- **Doublon de compte au premier onboarding** (Claude) : `compteDOnboarding`
+  (`src/lib/auth/membres.ts`) crée un compte, relit le plus ancien de la
+  personne et supprime le sien s'il n'est pas retenu. Deux validations dans la
+  même milliseconde (deux onglets) donnent le même `createdAt` : rien ne les
+  départage, et chaque onglet peut garder le sien — deux comptes vides, sans
+  fuite ni facturation. Correction : départager par l'identifiant quand les
+  dates sont égales. C'est ce que révèle le test d'intégration « deux premiers
+  onboardings simultanés… » (`creer-compte.integration.test.ts`), en échec trois
+  fois le 2026-11-26 sur la CI de `main` — un vrai défaut, pas un test
+  instable.
+
 ## Règles de travail qui valent ici
 
 - Ce fichier est **le même sur `main` et sur `cc`** : le modifier sur `main`
