@@ -26,8 +26,11 @@ import {
 } from "./base";
 import { dansLaFenetre, reconcilier, titreDuCreneau, type EvenementRecu, type Plan } from "./reconciliation";
 
-/** Un passage toutes les 15 minutes ; la crontab, elle, appelle chaque minute. */
-export const INTERVALLE_MS = 15 * 60_000;
+/**
+ * Un passage par minute, au rythme de la crontab (2026-11-26, décision de la
+ * propriétaire : Google suit presque en direct ; 15 minutes auparavant).
+ */
+export const INTERVALLE_MS = 60_000;
 /** Au-delà, un passage qui fermerait des créneaux est tenu pour un agenda mal lu. */
 export const PLAFOND_FERMETURES = 10;
 /** Un agenda vide qui fermerait au moins autant de créneaux est refusé. */

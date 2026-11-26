@@ -101,8 +101,8 @@ describe.skipIf(!URL_BASE || !local)("synchronisation de l'agenda — PostgreSQL
     const quand = new Date(debutDuTest.getTime() + 999 * INTERVALLE_MS);
     const pris = await Promise.all([prendreLePassage(quand, INTERVALLE_MS), prendreLePassage(quand, INTERVALLE_MS)]);
     expect(pris.filter(Boolean)).toHaveLength(1);
-    // Une minute plus tard, toujours pas : la cadence vaut aussi si le passage a échoué.
-    expect(await prendreLePassage(new Date(quand.getTime() + 60_000), INTERVALLE_MS)).toBeNull();
+    // Avant la fin du bail, toujours pas : la cadence vaut aussi si le passage a échoué.
+    expect(await prendreLePassage(new Date(quand.getTime() + INTERVALLE_MS / 2), INTERVALLE_MS)).toBeNull();
   });
 
   it("refuse un passage qui fermerait trop de créneaux, sans rien fermer", async () => {

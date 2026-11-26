@@ -148,7 +148,7 @@ async function signalerLaFile(maintenant: Date) {
 /**
  * Ce que la crontab de chaque minute lance : la file Stripe, les tâches du
  * jour si elles sont dues (dès `HEURE_DES_TACHES`, une fois par jour civil),
- * puis l'agenda du préventeur (un passage toutes les 15 minutes, ADR-064) —
+ * puis l'agenda du préventeur (un passage par minute, ADR-064) —
  * en dernier : un Google lent ne retarde pas les tâches du jour.
  */
 export async function lancerTaches(maintenant: () => Date = horlogeReelle) {
