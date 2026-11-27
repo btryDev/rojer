@@ -1,13 +1,9 @@
 # CLAUDE.md — Rojer, plateforme de pilotage de la prévention (TPE/PME)
 
-> **Bascule vers Clever Cloud en cours (2026-11-01).** ~~`main` = production
-> Vercel actuelle ; `cc` = future production (Better Auth, isolation des
-> comptes). Flux `main` → `cc` seulement.~~ [2026-11-13, décision de la
-> propriétaire : **`cc` est devenue `main`** — une seule branche, Better Auth
-> et isolation des comptes comprises. Vercel ne déploie plus rien ; la
-> préproduction est chez Clever Cloud, la production n'y existe pas encore.]
-> Reste à faire et règles : **`docs/a-faire.md`** — à lire avant toute
-> session.
+> **Production sur Clever Cloud (`rojer.fr`), ouverte le 2026-11-26.** Une
+> seule branche, `main` ; plus de préproduction depuis le 2026-11-25 : tests
+> locaux, puis production. Reste à faire et règles : **`docs/a-faire.md`** — à
+> lire avant toute session.
 
 ## Vision produit
 
