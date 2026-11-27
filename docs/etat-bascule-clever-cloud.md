@@ -495,6 +495,66 @@ Propriétaire :
   sauvegardes) ; organisation Clever Cloud propre à Rojer ; date de départ
   des douze mois pour les comptes créés avant l'offre (ADR-058).
 
+### Sécurité et surveillance de la production (relevé du 2026-11-27)
+
+État au 2026-11-27, comparé à RiskBoard (`GestBAT/scripts/health-monitor.ts`,
+`health-db-stats.ts`, `.claude/skills/health-check/SKILL.md`,
+`src/app/api/health/route.ts`, lus sans rien copier). Les journaux de
+sécurité eux-mêmes (format unique, événements, sondes du proxy, seuils) sont
+décrits dans la PR #393 ; ce qui suit les complète.
+
+Claude :
+1. **Remonter les erreurs serveur.** `onRequestError`
+   (`src/instrumentation.ts`) écrit une ligne JSON
+   `evenement: "erreur_requete"` sur stderr, sans chemin réel ni en-têtes.
+   Personne ne la lit et rien n'alerte : une page qui plante pour tous les
+   clients ne se voit qu'en ouvrant les journaux. À faire : les compter
+   dans le point d'activité (point 4), par route et par `digest` ; et une
+   alerte (`alerterUneFoisParJour`, `lib/alertes.ts`) au-delà d'un seuil, ou
+   dès la première erreur sur une route de paiement ou de signature.
+2. **Remonter les erreurs du navigateur.** `app/error.tsx` et
+   `app/global-error.tsx` affichent un écran d'incident, mais rien ne
+   part vers le serveur : une erreur qui ne naît que côté client est
+   invisible. À faire : une route de remontée bornée (limite de débit,
+   `digest`, motif de route, message tronqué ; jamais l'URL réelle ni les
+   données de la page). Même chose pour les violations de la CSP
+   (`report-to`), qui ne remontent nulle part aujourd'hui.
+3. **Route de santé `/api/health`.** Elle n'existe pas. Modèle RiskBoard :
+   `SELECT 1`, 200 si la base répond, 503 sinon, sans rien révéler
+   d'autre. Elle sert le contrôle de santé de Clever Cloud et une sonde
+   externe de disponibilité sur `rojer.fr` (propriétaire, point 7). Elle ne
+   remplace pas `TEMOIN_TACHES_URL`, qui surveille la crontab.
+4. **Script et skill du point d'activité.** `scripts/point-activite.ts` et
+   un skill qui l'exploite, sur le modèle de `health-monitor` : CPU et RAM
+   de l'instance (`clever metrics`), temps de réponse p50/p95/p99, part des
+   5xx et 4xx, état de `/api/health`, erreurs de requête (point 1),
+   sécurité (sondes, connexions refusées, limites de débit : PR #393),
+   derniers déploiements, volumes des tables (le pendant de
+   `health-db-stats.ts`, et de la section « D bis » de
+   `scripts/sante-base.sql`). Un rapport court : statut vert / orange /
+   rouge, anomalies seulement, actions. Collecte bornée dans le temps
+   (`perl -e 'alarm 15; exec @ARGV' clever logs …`). La lecture de la base
+   passe par l'utilisateur en lecture seule (section précédente).
+5. **Retirer l'outillage de la préprod**, qui n'existe plus : skills
+   `deployer-preprod` et `lire-preprod`, `scripts/lire-preprod.ts`,
+   commandes `deployer:preprod` et `lire-preprod` de `package.json`. Le
+   point d'activité les remplace pour la lecture.
+6. **Pages d'erreur statiques en anglais** (limite relevée le 2026-10-13,
+   en tête de `app/global-error.tsx`) : `_global-error.html` et `500.html`
+   sortent du composant de Next (« 500: This page couldn't load »).
+
+Propriétaire :
+7. **Sonde externe de disponibilité** (healthchecks.io, UptimeRobot ou
+   équivalent) sur `https://rojer.fr/api/health`, alerte par e-mail ; à
+   poser une fois le point 3 déployé.
+8. **Récupération après incident.** Jamais éprouvée. Restaurer une
+   sauvegarde de l'add-on PostgreSQL (`do-backup`, actif par défaut) sur
+   une base locale, noter le temps et la procédure, ici. Les fichiers
+   (Cellar) ne sont pas versionnés, par décision (2026-10-30, RGPD) : un
+   fichier effacé ou écrasé ne se rattrape pas ; l'écrire dans la
+   procédure. Les questions au support (restauration à un instant donné,
+   conservation des sauvegardes) en font partie (section précédente).
+
 ## Règles de travail qui valent ici
 
 - Ce fichier est **le même sur `main` et sur `cc`** : le modifier sur `main`
