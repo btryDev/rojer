@@ -8,7 +8,8 @@
 >
 > Détail et raisons : `docs/adr/053-abonnements-stripe.md`,
 > `docs/notes-chantier-abonnements-stripe.md` (§ 12 TVA et factures, § 13
-> rappels), `docs/etat-bascule-clever-cloud.md` (section Abonnements).
+> rappels), `docs/etat-bascule-clever-cloud.md` (section Abonnements, retiré le
+> 2026-11-27 : historique git).
 
 ## 0. Avant tout — hors Stripe
 

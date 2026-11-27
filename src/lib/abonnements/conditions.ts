@@ -96,8 +96,8 @@ export const CONDITIONS: Section[] = [
     titre: "8. L'expert (offre Pro)",
     // [2026-11-19, décision de la propriétaire : maintenu, à préciser ;
     // l'envoi des demandes vers l'expert (ADR-050) sera livré avant de
-    // vendre Pro — `docs/etat-bascule-clever-cloud.md`, « À faire après la
-    // bascule ».]
+    // vendre Pro — `docs/a-faire.md`, « Ce que les conditions générales
+    // promettent ».]
     paragraphes: [
       "L'offre Pro permet de poser des questions techniques de prévention à un expert désigné par BTRY, et d'obtenir un rendez-vous d'une heure par an, dans les conditions affichées sur la page des tarifs à la date de souscription.",
       "L'expert donne un avis technique de prévention, fondé sur les seules informations que le Client lui transmet. Il ne donne aucun avis ni aucune consultation juridique, ne se rend pas sur place, n'effectue aucune vérification réglementaire et ne prend aucune décision à la place du Client. BTRY s'engage à une réponse dans un délai raisonnable, sans délai garanti.",
