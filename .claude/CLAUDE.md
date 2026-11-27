@@ -6,8 +6,8 @@
 > propriétaire : **`cc` est devenue `main`** — une seule branche, Better Auth
 > et isolation des comptes comprises. Vercel ne déploie plus rien ; la
 > préproduction est chez Clever Cloud, la production n'y existe pas encore.]
-> État, règles et reste à faire : **`docs/etat-bascule-clever-cloud.md`** — à
-> lire avant toute session.
+> Reste à faire et règles : **`docs/a-faire.md`** — à lire avant toute
+> session.
 
 ## Vision produit
 
