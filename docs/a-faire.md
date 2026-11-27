@@ -8,6 +8,44 @@ s'écrit ici le jour où elle l'est, pas plus tard.
 Elle remplace `docs/etat-bascule-clever-cloud.md`, retiré le 2026-11-27 : la
 bascule est faite, son historique reste dans git.
 
+## Par priorité (proposée le 2026-11-27)
+
+Le détail de chaque point est dans les sections qui suivent. Critère : la
+production est ouverte au public ; d'abord ce qui casserait sans qu'on le
+voie, ou mettrait Rojer en défaut sur le plan légal.
+
+**1 — Cette semaine**
+1. Propriétaire : témoin des tâches (`TEMOIN_TACHES_URL`) — une crontab arrêtée ne se voit pas.
+2. Claude puis propriétaire : route `/api/health`, puis sonde externe sur `rojer.fr`.
+3. Claude : alerte sur les erreurs serveur (aujourd'hui sur stderr seulement).
+4. Propriétaire : restauration de sauvegarde éprouvée ; questions au support (restauration à un instant donné, conservation).
+5. Propriétaire : double authentification de `contact@btry.fr` sur le téléphone d'un collègue.
+6. Claude : mentions légales, téléphones de BTRY et de Clever Cloud (LCEN).
+7. Claude : page des tarifs, annuel payé d'avance et non remboursé (Data Act, art. 29.4).
+8. À confirmer : les demandes Pro partent-elles vers l'expert depuis #378 (Assistance) ?
+9. Propriétaire : DMARC, SPF, réglages Mailpace.
+
+**2 — Ce mois-ci**
+10. Claude : journaux de sécurité et sondes de scanners dans le proxy.
+11. Claude : script et skill du point d'activité.
+12. Claude : doublon de compte au premier onboarding.
+13. Claude : plafond d'établissements, onboarding quand même ouvert.
+14. Claude : Dependabot (19 élevées au 2026-11-27).
+15. Claude : `build-cc` obligatoire sur `main`.
+16. Claude : version des conditions acceptée au clic « S'abonner ».
+17. Claude : erreurs du navigateur et violations de la CSP.
+18. Claude : purge des passages de l'agenda (patch prêt).
+19. Propriétaire : date de départ des douze mois (ADR-058).
+20. Propriétaire : utilisateur de base en lecture seule ; organisation Clever Cloud propre à Rojer.
+
+**3 — Plus tard**
+21. Export complet des données d'un compte (Data Act).
+22. ASVS V6/V7 sur Better Auth ; décision sur la double authentification.
+23. MCP : journal des appels, limite de débit par adresse.
+24. Webhook Stripe : alerte sur une rafale de signatures refusées.
+25. 25 Mo admis par toutes les actions serveur (URL pré-signées).
+26. Ménage : pages d'erreur en anglais, erreur de build Better Auth, tables `Intervention`, comptes de test et dépendances mortes, outillage et section préprod du `CLAUDE.md`.
+
 ## Après l'ouverture (2026-11-26)
 
 Relevés le jour de l'ouverture ; décision de la propriétaire : à faire plus
