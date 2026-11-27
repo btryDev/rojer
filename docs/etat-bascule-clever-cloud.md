@@ -468,7 +468,7 @@ Claude (code, chacun en PR séparée, plan d'abord) :
 - **`build-cc` obligatoire sur `main`** : la condition `if:` du job couvre
   déjà `main`, mais la protection de `main` n'exige encore que `vitest` et
   `derive` (relevé le 2026-11-27).
-- **Trier les alertes Dependabot** (104 ouvertes au 2026-11-10) : mettre à
+- **Trier les alertes Dependabot** (52 au 2026-11-27 : 19 élevées, 27 moyennes, 6 faibles ; 104 au 2026-11-10) : mettre à
   jour ce qui est exploitable en production, écrire le motif pour le reste.
 - **Vérification ASVS V6/V7 sur Better Auth**, arrêtée le 2026-11-11 pour
   économiser (`docs/verification-asvs-L2-2026-10.md` décrit encore Supabase
