@@ -440,6 +440,61 @@ tard, après le lancement.
   fois le 2026-11-26 sur la CI de `main` — un vrai défaut, pas un test
   instable.
 
+### Reporté à plus tard, jamais écrit ailleurs (relevé du 2026-11-27)
+
+Ce qui a été dit « plus tard » en séance et ne figurait dans aucun document.
+Une partie vient de la liste « Ce qui reste avant la bascule », retirée le
+2026-11-27 parce que la production tourne : seuls les points encore ouverts
+sont repris ici.
+
+Claude (code, chacun en PR séparée, plan d'abord) :
+- **Purge des passages de l'agenda** (2026-11-26, « on verra ça après ») :
+  la synchro tourne chaque minute (#389) et garde chaque passage, soit
+  1 440 lignes par jour. Garder les passages vides 7 jours, les autres un an.
+  Le patch est prêt, tests verts en local, hors dépôt :
+  `~/.config/rojer/patchs/agenda-purge-passages-vides-2026-11-26.patch`
+  (ADR-064, `agenda-preventeur/base.ts`).
+- **Plafond d'établissements atteint, onboarding quand même ouvert**
+  (2026-11-26, « c'est mal fait, faudra corriger plus tard ») : avec
+  l'essai ou Essentiel (1 établissement), « Ajouter un établissement » mène
+  au parcours. La fenêtre d'accueil (`AccueilParcours`, `WizardShell.tsx`)
+  recouvre le bandeau du plafond (`motifDuPlafond`,
+  `app/onboarding/page.tsx`). Vérifier d'abord où le refus tombe ; piste :
+  dire le plafond dès le bouton et ne pas ouvrir le parcours.
+- **Faire taire l'erreur de build Better Auth « could not seed resources »**
+  (sans effet, relevée le 2026-11-26).
+- **Tables `Intervention` et `CommentaireIntervention`** (ADR-018, sans
+  code) : migration de suppression.
+- **`build-cc` obligatoire sur `main`** : la condition `if:` du job couvre
+  déjà `main`, mais la protection de `main` n'exige encore que `vitest` et
+  `derive` (relevé le 2026-11-27).
+- **Trier les alertes Dependabot** (104 ouvertes au 2026-11-10) : mettre à
+  jour ce qui est exploitable en production, écrire le motif pour le reste.
+- **Vérification ASVS V6/V7 sur Better Auth**, arrêtée le 2026-11-11 pour
+  économiser (`docs/verification-asvs-L2-2026-10.md` décrit encore Supabase
+  Auth). À y écrire : l'écart V11.4.2 (scrypt de Better Auth, N=2^14, gardé
+  par décision : pas de hachage fait main) et V6.3.3 (double
+  authentification proposée, non imposée : décision produit, la proposer ou
+  l'imposer aux propriétaires).
+- En queue de liste (décisions du 2026-11-17 et du 2026-11-23) : alerter
+  sur une rafale de signatures refusées au webhook Stripe ; 25 Mo admis par
+  toutes les actions serveur (déposer les fichiers par URL pré-signée, puis
+  abaisser `bodySizeLimit`) ; une ligne de journal par appel du connecteur
+  MCP ; limite de débit MCP par adresse IP (ne compter que les refus,
+  limiter par personne et par compte ; même défaut au guichet des jetons).
+
+Propriétaire :
+- **Double authentification de `contact@btry.fr`** (Google Workspace,
+  administratrice des règles depuis le 2026-11-26) : ses validations
+  arrivent sur le téléphone d'un collègue.
+- **Utilisateur de base en lecture seule** sur l'add-on de production, pour
+  lire la prod sans pouvoir écrire (accord requis) ; et ne plus laisser
+  `scripts/` (hors `demarrer-cc.sh`) ni `.claude/` sur l'instance.
+- **À confirmer, sinon à faire** : questions au support Clever Cloud
+  (chiffrement au repos, restauration à un instant donné, conservation des
+  sauvegardes) ; organisation Clever Cloud propre à Rojer ; date de départ
+  des douze mois pour les comptes créés avant l'offre (ADR-058).
+
 ## Règles de travail qui valent ici
 
 - Ce fichier est **le même sur `main` et sur `cc`** : le modifier sur `main`
